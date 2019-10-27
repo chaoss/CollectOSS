@@ -79,11 +79,14 @@
       else {
         this.endpoint({endpoints:[this.source],repos:[this.base]}).then((tuples:any) => {
           let ref = this.base.url || this.base.repo_name
+          if (ref.includes('/'))
+            ref = ref.split('/')[ref.split('/').length - 1]
           let values:any = []
           Object.keys(tuples[ref]).forEach((endpoint) => {
             values = tuples[ref][endpoint]
           })
           this.values = values
+          console.log("CHECK HERE", values, ref)
           this.loaded = true          
         })
       }

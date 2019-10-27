@@ -84,7 +84,7 @@ export default {
 
   watch: {
     '$store.state.common.startDate'() {
-      console.log('store startDate has changed');
+      // console.log('store startDate has changed');
       if (this.data) {
         this.spec(this.data);
       } else if (this.loadedData) {
@@ -92,7 +92,7 @@ export default {
       }
     }, 
     '$store.state.common.endDate'() {
-      console.log('store endDate has changed');
+      // console.log('store endDate has changed');
       if (this.data) {
         this.spec(this.data);
       } else if (this.loadedData) {
@@ -171,7 +171,7 @@ export default {
       for (var key in this.status) if (this.status[key]) allFalse = false;
     },
     renderError() {
-      // console.log("DLC","ERROR ERROR")
+      console.log("DLC","ERROR ERROR")
       this.error = true;
       this.loaded = true;
     },
@@ -182,9 +182,9 @@ export default {
       this.spec;
     },
     reloadImage(config) {
-      // console.log("DLC",config, this.source)
+      console.log("DLC",config, this.source)
       if (config.data.values.length == 0) {
-        // console.log("DLC","yo")
+        console.log("DLC","yo error")
         // this.spec;
         this.renderError();
         return;
@@ -216,7 +216,7 @@ export default {
       return ary;
     },
     spec(data) {
-      // console.log("DLC","DATAAAA", data, this.$store.state)
+      console.log("DLC","DATAAAA", data, this.$store.state)
 
       let repos = this.repos;
 
@@ -586,6 +586,7 @@ export default {
       let buildMetric = () => {
         var color = 0;
         repos.forEach(repo => {
+          if (!repo) return
           buildLines(
             "valueRolling" + repo.replace(/\//g, "").replace(/\./g, ""),
             colors[color],
@@ -614,13 +615,13 @@ export default {
         });
       } else {
         repos.forEach(repo => {
-          for (var x = 0; x < config.vconcat[0].layer.length; x++) {
-            if (
-              config.vconcat[0].layer[x] ==
-              getArea(repo.replace(/\//g, "").replace(/\./g, ""))
-            ) {
-              config.vconcat[0].layer[x] = {};
-              buildMetric();
+          console.log(repo)
+          if (repo) {
+            for (var x = 0; x < config.vconcat[0].layer.length; x++) {
+              if (config.vconcat[0].layer[x] == getArea(repo.replace(/\//g, "").replace(/\./g, ""))) {
+                config.vconcat[0].layer[x] = {};
+                buildMetric();
+              }
             }
           }
         });
@@ -786,25 +787,19 @@ export default {
 
         // We usually want to limit dates and convert the key to being vega-lite friendly
         let defaultProcess = (obj, key, field, count) => {
-          // console.log("DLC begin default process: ", obj, key, field, count)
+          console.log("DLC begin default process: ", obj, key, field, count)
           let d = obj[key];
           if (typeof field == "string") {
             field = [field];
           }
-          console.log(
-            "DLC",
-            "default process prior to convertKey:",
-            obj,
-            key,
-            field
-          );
+          console.log("DLC","default process prior to convertKey:",obj,key,field);
           // let goodField = null
           // for (let f in field) {
           //   if (f != 'date' && f != 'value' && f != 'field')
           //     goodField = f
           // }
           // d = AugurStats.convertKey(obj[key], field)
-          // console.log("DLC","default process prior to convertDates:",d, this.earliest, this.latest, 'date')
+          console.log("DLC","default process prior to convertDates:",d, this.earliest, this.latest, 'date')
           d = AugurStats.convertDates(d, this.earliest, this.latest, "date");
           return d;
         };
@@ -814,7 +809,7 @@ export default {
         let normalized = [];
         let aggregates = [];
         let buildLines = (obj, onCreateData, repo) => {
-          // console.log("DLC start of buildLines",obj, repo)
+          console.log("DLC start of buildLines",obj, repo)
           if (!obj) {
             return;
           }
@@ -826,7 +821,7 @@ export default {
           let count = 0;
 
           for (var key in obj) {
-            // console.log("DLC key:",key)
+            console.log("DLC key:",key)
             if (obj.hasOwnProperty(key)) {
               if (fields[key]) {
                 fields[key].forEach(field => {
@@ -834,7 +829,7 @@ export default {
                   count++;
                 });
               } else {
-                // console.log("DLC","hehrere",Array.isArray(obj[key]),obj, key)
+                console.log("DLC","hehrere",Array.isArray(obj[key]),obj, key)
                 if (Array.isArray(obj[key]) && obj[key].length > 0) {
                   let field = Object.keys(obj[key][0]).splice(1);
                   onCreateData(obj, key, field, count);
@@ -846,7 +841,7 @@ export default {
                     if (this.status[repo]) noRepoWithData = false;
                   });
                   if (noRepoWithData) {
-                    // console.log("DLC","logging no data for any repo error")
+                    console.log("DLC","logging no data for any repo error")
                     this.renderError();
                   }
                   //return
@@ -864,14 +859,17 @@ export default {
         let baseDate = null;
         let x = 0;
         this.repos.forEach(repo => {
-          buildLines(
-            data[repo],
-            (obj, key, field, count) => {
+          if (!repo) return
+          let ref = repo
+          if (ref.includes('/')){
+            ref = ref.split('/')[ref.split('/').length - 1]
+          }
+          buildLines(data[ref],(obj, key, field, count) => {
               // Build basic chart using rolling averages
               let d = defaultProcess(obj, key, field, count);
-              // console.log("DLC",d)
+              console.log("DLC",d)
               let rolling = null;
-              if (repo == this.repo && d[0]) baseDate = d[0].date;
+              if (ref == this.repo && d[0]) baseDate = d[0].date;
               else d = AugurStats.alignDates(d, baseDate, this.period);
               if (this.compare == "zscore") {
                 // && this.comparedRepos.length > 0
@@ -879,7 +877,7 @@ export default {
                   AugurStats.zscores(d, "value"),
                   "value",
                   this.period,
-                  repo
+                  ref
                 );
               } //else if (this.rawWeekly || this.disableRollingAverage) rolling = AugurStats.convertKey(d, 'value', 'value' + repo)
               else if (this.compare == "baseline") {
@@ -889,14 +887,14 @@ export default {
                     d,
                     "value",
                     this.period,
-                    repo
+                    ref
                   );
                 }
                 rolling = AugurStats.rollingAverage(
                   d,
                   "value",
                   this.period,
-                  repo
+                  ref
                 );
                 if (baselineVals) {
                   for (var i = 0; i < baselineVals.length; i++) {
@@ -906,31 +904,31 @@ export default {
                 }
               } else {
                 d = this.convertKey(d);
-                // console.log("DLC prerolling",d, this.period, repo)
+                console.log("DLC prerolling",d, this.period, ref)
                 rolling = AugurStats.rollingAverage(
                   d,
                   "value",
                   this.period,
-                  repo
+                  ref
                 );
-                // console.log("DLC rolling:",rolling)
+                console.log("DLC rolling:",rolling)
                 while (rolling[0].valueRolling == 0) rolling.shift();
                 rolling.forEach(tuple => {
                   tuple.date.setDate(tuple.date.getDate() + x);
                 });
-                // console.log("DLC",rolling)
+                console.log("DLC",rolling)
               }
 
               normalized.push(
-                AugurStats.standardDeviationLines(rolling, "valueRolling", repo)
+                AugurStats.standardDeviationLines(rolling, "valueRolling", ref)
               );
               aggregates.push(
-                AugurStats.convertKey(d, "value", "value" + repo)
+                AugurStats.convertKey(d, "value", "value" + ref)
               );
               legend.push(repo + " " + key);
               // colors.push(window.AUGUR_CHART_STYLE.brightColors[count])
             },
-            repo
+            ref
           );
           x++;
         });
@@ -963,11 +961,12 @@ export default {
             }
           }
           this.repos.forEach(repo => {
+            console.log(repo)
             if (!this.status[repo]) {
               let temp = JSON.parse(JSON.stringify(values));
+              console.log("setting name to ",repo + ": data n/a")
               temp = temp.map(datum => {
                 datum.name = repo + ": data n/a";
-
                 return datum;
               });
               values.push.apply(values, temp);
@@ -978,7 +977,10 @@ export default {
           config.data = { values: values };
           this.values = values;
 
-          if (values.length < 2) this.renderError();
+          if (values.length < 2) {
+            console.log("less than 2 datapoints error")
+            this.renderError();
+          }
           else {
             this.renderChart();
             this.loaded = true;
@@ -1014,12 +1016,14 @@ export default {
 
     if (this.base) {
       apiRepos.push(this.base);
-      // console.log("DLC base",this.base)
+      console.log("DLC base",this.base)
       let ref = this.base.url || this.base.repo_name;
+      if (ref.includes('/'))
+          ref = ref.split('/')[ref.split('/').length - 1]
       repos = [ref];
     } else {
       //allow to retrieve from route... eventually
-      // console.log(this.$router.currentRoute.params)
+      console.log(this.$router.currentRoute.params)
       // let ref = this.repoRelations[this.$router.currentRoute.params.group][this.$router.currentRoute.params.repo].url || this.repoRelations[this.$router.currentRoute.params.group][this.$router.currentRoute.params.repo].repo_name
       // repos.push(ref)
     }
@@ -1036,16 +1040,19 @@ export default {
       compares = this.$router.currentRoute.params.compares;
 
       if (compares in this.apiRepos) {
-        // console.log("DLC Api repos already loaded",this.apiRepos, compares)
+        console.log("DLC Api repos already loaded",this.apiRepos, compares)
         apiRepos.push(this.apiRepos[compares]);
         let ref =
           this.repoRelations[compares.split("/")[0]][compares.split("/")[1]]
             .url ||
           this.repoRelations[compares.split("/")[0]][compares.split("/")[1]]
             .repo_name;
-        repos.push(ref);
+        if (ref.includes('/'))
+          ref = ref.split('/')[ref.split('/').length - 1]
+        if (!repos.includes(ref))
+          repos.push(ref);
       } else {
-        // console.log("DLC Api repos not loaded, getting repo from route then setting comp repos: ", compares)
+        console.log("DLC Api repos not loaded, getting repo from route then setting comp repos: ", compares)
         let ids = !this.$router.currentRoute.params.comparedRepoIds
           ? []
           : this.$router.currentRoute.params.comparedRepoIds.split(",");
@@ -1055,7 +1062,7 @@ export default {
     }
     //got repo names
 
-    // console.log("DLC starting promises...")
+    console.log("DLC starting promises...")
     Promise.all(promises).then(() => {
       if (compares) {
         apiRepos.push(this.apiRepos[compares]);
@@ -1064,7 +1071,10 @@ export default {
             .url ||
           this.repoRelations[compares.split("/")[0]][compares.split("/")[1]]
             .repo_name;
-        repos.push(ref);
+        if (ref.includes('/'))
+          ref = ref.split('/')[ref.split('/').length - 1]
+        if (!repos.includes(ref))
+          repos.push(ref);
       }
 
       repos.forEach(repo => {
@@ -1075,7 +1085,7 @@ export default {
       if (this.data) {
         let dataFilled = true;
         Object.keys(this.data).forEach(key => {
-          // console.log("DLC",key, this.data[key])
+          console.log("DLC",key, this.data[key])
           if (this.data[key].length < 1) dataFilled = false;
         });
         if (dataFilled) {
@@ -1083,18 +1093,18 @@ export default {
           repos = Object.keys(this.data);
         }
       } else {
-        // console.log("DLC","did not detect data")
+        console.log("DLC","did not detect data")
         this.endpoint({ repos: apiRepos, endpoints: [this.source] })
           .then(data => {
             this.loadedData = data;
-            // console.log("DLC","YAA",data)
-            // console.log("DLC",Object.keys(data).length)
+            console.log("DLC","YAA",data)
+            console.log("DLC",Object.keys(data).length)
             if (Object.keys(this.loadedData).length > 0) {
               this.spec(this.loadedData);
             }// processData(data)
           })
           .catch(error => {
-            // console.log("DLC",error)
+            console.log("DLC catch error",error)
             this.renderError();
           }); // end batch request
       }
