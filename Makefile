@@ -3,6 +3,7 @@
 .PHONY: frontend install-ubuntu-dependencies version
 
 SERVECOMMAND=augur run
+ENABLE_HOUSEKEEPER=--enable-housekeeper
 OLDVERSION="null"
 EDITOR?="vi"
 MODEL=**
@@ -67,7 +68,7 @@ config:
 #
 dev-start: dev-stop
 	@ mkdir -p logs runtime
-	@ bash -c '$(SERVECOMMAND) >logs/backend.log 2>&1 & echo $$! > logs/backend.pid;'
+	@ bash -c '$(SERVECOMMAND) $(ENABLE_HOUSEKEEPER) >logs/backend.log 2>&1 & echo $$! > logs/backend.pid;'
 	@ bash -c 'sleep 4; cd frontend; npm run serve >../logs/frontend.log 2>&1 & echo $$! > ../logs/frontend.pid'
 	@ echo "Server     Description       Log                   Monitoring                   PID                        "
 	@ echo "------------------------------------------------------------------------------------------                 "

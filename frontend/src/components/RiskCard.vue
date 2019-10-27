@@ -11,10 +11,9 @@
     <h2 class="col riskCardHeader2" >CII Best Practices</h2>
     <button id="ciiBtn" class="riskCardButton">Retrieve CII information</button>
     <div id="overcii" class="riskCardDiv1">
-        <img class="col" width="200px" height="200px"
+        <img class="col riskCardDiv2" width="200px" height="200px"
         src="https://i.ibb.co/n8f7NjX/CIITPARENT.png"
-        href="https://bestpractices.coreinfrastructure.org/en"
-        class="riskCardDiv2">
+        href="https://bestpractices.coreinfrastructure.org/en">
         <br>
         <div id="CIIbp" class="riskCardDiv3 col-6">
             <div size="total">

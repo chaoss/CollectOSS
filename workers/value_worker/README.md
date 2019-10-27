@@ -1,4 +1,31 @@
 ## Readme File for Value Worker Creation
+
+### Installing the value worker: 
+1. Install the go language following operating system specific instructions at : https://golang.org/doc/install 
+2. Install scc with `go get -u github.com/boyter/scc/`
+3. set the `scc_bin` value in the value_worker block of `augur.config.json` to the location of the scc excecutable installed above. For example, `/home/sean/go/bin/scc`
+
+#### Housekeeper Block for `augur.config.json`
+
+```json
+      {
+    "delay": 100000,
+    "given": ["git_url"],
+    "model": "value",
+    "repo_group_id": 0
+      }
+```
+
+#### Worker Block for `augur.config.json`
+```json
+        "value_worker": {
+            "port": 58611,
+            "scc_bin": "/home/sean/go/bin/scc",
+            "switch": 0,
+            "workers": 1
+        }
+```
+
 1. This is how I ran SCC against facade repositories on a server: 
 `/root/go/bin/scc /home/sean/facade/git-repos/15/github.com/microprofile/wpsite/ . >> https:--github.com-microprofile-wpsite.git.csv`
 2. We want to wrap this in Python: https://github.com/boyter/scc as an Augur worker/plugin. 

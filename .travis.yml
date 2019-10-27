@@ -12,10 +12,9 @@ matrix:
     language: python
     python: '3.6'
     script:
-    - augur run > /dev/null 2>&1 &
-    - sleep 10
+    - augur run --no-enable-housekeeper > /dev/null 2>&1 &
+    - sleep 15
     - python -m pytest -ra augur/metrics/**/test_**_routes.py
 
 notifications:
-  slack:
-    secure: s6aj/0sNAiktZdd6w9Z4EBxUcrg1Y9j9PZbo5CFDucRingXKkBTrkn301OrPT8WK2Yawu7Znhh/x3PuxWGIO5Qi02RCD9aEnW2WkMXwS5lhgxurc4ju+894WPrJIABYWXzVsB3/HMuRoVyU15o/l2NeD6hZ+Oro80OA+KUXK9006044B301qGIpv5j9JXRwcdTGS4i+qXBWDxWltgfCRl1icUhULfhV0DtaSGt0AkkDaLbDVnr6Wkz70EIjpGmkf+sfR7EnGZizrCatayechhNUWWbJHnY7Z//U266gOVZYUCUrkAwtM32pHrPUF4jHkHs/cY6C4i8OPya8tSp/KXdyvh4nvHsoOyiX89K0Q7Q7URSaM1BpCMqTP1H+l9zKJKYj+wRuB1Ybap4rPB+8vwZLVwnU/n8ekhHh7ZSsrSsqytjxWG4SegS+tn/Gi/9aAhc/UFPkBdVdYAzDmDv+wiUJVPe5svBvCJFlpuOGaN1AfOfWpgDTEIXHvop9tBfUw+bTrtNye0pMwnH6lr/5HON2z6Onw6DgH9E9qJOgPalikFllrCOJwblzQ4UPTB7Cncmddga9M4txBcggt0M8ByIeF8twe1T36ZTCU7Wr/yA9NHYIv/IXzDQdIbmEN1xCFc3w1M5qeIcef9B7Ce17f0loHvjwYO7ftzt71Rz4S3DA=
+  slack: augurlabs:WdpwniZ9L5RqJyMfIk1n8DOU

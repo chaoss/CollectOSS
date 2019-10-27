@@ -122,27 +122,27 @@ def configure_workers(config, credentials):
             "facade_worker": {
                 "port": 56111,
                 "repo_directory": credentials['facade_repo_path'],
-                "switch": 1,
+                "switch": 0,
                 "workers": 1
             },
             "github_worker": {
                 "port": 56211,
-                "switch": 1,
+                "switch": 0,
                 "workers": 2 
             },
             "insight_worker": {
                 "port": 56311,
-                "switch": 1,
+                "switch": 0,
                 "workers": 1
             },
             "pull_request_worker": {
                 "port": 56411,
-                "switch": 1,
+                "switch": 0,
                 "workers": 1
             },
             "repo_info_worker": {
                 "port": 56511,
-                "switch": 1,
+                "switch": 0,
                 "workers": 1
             },
             "value_worker": {
@@ -158,7 +158,7 @@ def configure_workers(config, credentials):
             },
             "linux_badge_worker": {
                 "port": 56811,
-                "switch": 1,
+                "switch": 0,
                 "workers": 1
             }   
         }

@@ -85,9 +85,11 @@ EOF
 function set_local_db_credentials() {
 
   read -p "Database: " database
-  read -p "User: " user
+  read -p "User: " db_user
   read -p "Port: " port
   read -p "Password: " password
+
+  host="localhost"
 
   host="localhost"
   get_api_key_and_repo_path
@@ -118,12 +120,14 @@ function save_credentials() {
 }
 
 function create_db_schema() {
+
     psql -h $host -d $database -U $db_user -p $port -a -w -f persistence_schema/1-schema.sql
     psql -h $host -d $database -U $db_user -p $port -a -w -f persistence_schema/2-augur_data.sql
     psql -h $host -d $database -U $db_user -p $port -a -w -f persistence_schema/3-augur_operations.sql
     psql -h $host -d $database -U $db_user -p $port -a -w -f persistence_schema/4-spdx.sql
     psql -h $host -d $database -U $db_user -p $port -a -w -f persistence_schema/5-seed-data.sql
     psql -h $host -d $database -U $db_user -p $port -a -w -c "UPDATE settings SET VALUE = '$facade_repo_path' WHERE setting='repo_directory';"
+    echo "Schema created"
 
     echo "Would you like to load your database with some sample data provided by Augur?"
     select should_load_db in "Yes" "No"
@@ -155,10 +159,11 @@ do
     $install_locally )
         echo "Please set the credentials for your database."
         set_local_db_credentials
-        psql -h $host -d $database -U $db_user -p $port -a -w -c "CREATE DATABASE $database;"
-        psql -h $host -d $database -U $db_user -p $port -a -w -c "CREATE USER $db_user WITH ENCRYPTED PASSWORD '$password';"
-        psql -h $host -d $database -U $db_user -p $port -a -w -c "ALTER DATABASE $database OWNER TO $db_user;"
-        psql -h $host -d $database -U $db_user -p $port -a -w -c "GRANT ALL PRIVILEGES ON DATABASE $database TO $db_user;"
+        psql -h $host -p $port -a -w -c "CREATE DATABASE $database;"
+        psql -h $host -p $port -a -w -c "CREATE USER $db_user WITH ENCRYPTED PASSWORD '$password';"
+        psql -h $host -p $port -a -w -c "ALTER DATABASE $database OWNER TO $db_user;"
+        psql -h $host -p $port -a -w -c "GRANT ALL PRIVILEGES ON DATABASE $database TO $db_user;"
+        echo "DB created"
         create_db_schema
         break
       ;;
@@ -172,7 +177,6 @@ do
     $already_installed )
         echo "Please enter the credentials for your database."
         set_remote_db_credentials
-        psql -h $host -d $database -U $db_user -p $port -a -w -c "UPDATE augur_data.settings SET VALUE = '$facade_repo_path' WHERE setting='repo_directory';"
         break
       ;;
   esac
