@@ -16,7 +16,7 @@ We highly recommend using a database visualization tool to rapidly test and writ
 .. seealso::
     Details about Augur's schema can be found `here <../../architecture/data-model.html#schema-overview>`_.
 
-For this guide, we will be using the following PosgreSQL queries\:
+For this guide, we will be using the following PostgreSQL queries\:
 
   .. code-block:: postgresql
     :linenos:
@@ -52,10 +52,7 @@ For this guide, we will be using the following PosgreSQL queries\:
 
 Once you've written your SQL query, it's time to wrap it in a metric function. 
 
-Writing the function
----------------------
-
-``repo``/``repo_group`` Metric Functions
+``repo``/``repo_group`` functions
 -------------------------------------------
 
 Any new metric you want to implement must be implemented as a function in ``augur/metrics/<model>/<model>.py``, where ``model`` is the name of the conceptual data model for which the metric provides data. 
@@ -65,77 +62,147 @@ Any new metric you want to implement must be implemented as a function in ``augu
 
 __ ../../library-documentation/python.html#metric-modules
 
-Let's first break down the basic structure of one of these typical ``repo``/``repo_group`` metric functions. Note the in-line elaboration comments.
+Let's first break down the basic structure of one of these typical ``repo``/``repo_group`` metric functions. 
+As with most things, we'll start at the beginning: the function name and docstring.
 
     .. code-block:: python
         :linenos:
 
-        # we must call @annotate on the function to tell Augur this is a metric
-        @annotate(tag=<metric_tag>)
+        @annotate(tag=<metric-tag>)
         def <metric_name>(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
         """
         <brief description of the metric>
 
-        # this part will be the same for all repo/repo_group metrics
         :param repo_group_id: The repository's repo_group_id
         :param repo_id: The repository's repo_id, defaults to None
         :param period: To set the periodicity to 'day', 'week', 'month' or 'year', defaults to 'day'
         :param begin_date: Specifies the begin date, defaults to '1970-1-1 00:00:00'
         :param end_date: Specifies the end date, defaults to datetime.now()
-        :return: DataFrame of new issues/period
+        :return: DataFrame of <whatever the metric calculates, e.g. new issues per day>
         """
 
-        # if the begin_date doesn't exist, 
-        # then set it to the UNIX epoch to 
-        # retrieve all data from then until
-        # the end_date
+Here, we define a metric function called ``<metric_name>`` that requires a ``repo_group_id``, and optionally takes a ``repo_id``, ``period``, ``begin_date``, and ``end_date``. The reason why ``repo_id`` is optional will become clear shortly.
+
+When defining a function, you must provide a docstring with a brief description of what the metric calculates, as well as a description of the parameters and return type. For all ``repo``/``repo_group_id``, you can use the parameter/return type section in the snippet above. 
+
+.. note::
+
+    **All metric functions must return a DataFrame.**
+
+We must also decorate the function as a metric with ``@annotate``, and provide a valid metric tag. This decorator is what tells Augur that this is a metric function, so that the function will be available to be used in an endpoint. You must provide a ``<metric-tag>`` argument to this function, which by convention is the name of the metric function with a ``-`` in place of any ``_`` that may appear (e.g. a metric named ``issue_response_time`` would have the tag ``issue-reponse-time``).
+
+Next, we'll set our date parameters.
+
+    .. code-block:: python
+        :lineno-start: 14
+
         if not begin_date:
             begin_date = '1970-1-1 00:00:00'
 
-        # if the end_date doesn't exist, 
-        # then set it to the current time to 
-        # retrieve all data from the end_date until 
-        # the time the query is run
         if not end_date:
             end_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
+This sections handles the defaults for the ``begin_date`` and ``end_date`` query parameters, if they were not specified.
+
+Now, we'll set up and execute the correct SQL query. Before, we do that however, it's time to explain why a ``repo``/``repo_group`` metric function must be passed both a ``repo_id`` and a ``repo_group_id``.
+
+
+Every ``repo``/``repo_group_id`` metric function *must* contain the defintion for both the ``repo`` and ``repo_group`` form. This is because we feel that more often than not, the forms will be very similar, and having
+the SQL queries defined in the same function makes it easier to cross-reference one query when working on the other. Let's look at an example.
+
+First, the ``repo_group`` form\:
+
+    .. code-block:: python
+        :lineno-start: 20
+
         <metric_name_SQL> = ''
 
-        # if we are not passed in a repo_id, then we must be calculating
-        # the repo_group form of the metric
         if not repo_id:
-            issues_new_SQL = s.sql.text("""
+            <metric_name_SQL> = s.sql.text("""
                 <repo_group form of the query>
             """)
 
-            # execute the query with the given query parameters
-            results = pd.read_sql(issues_new_SQL, self.database, params={'repo_group_id': repo_group_id, 'period': period,'begin_date': begin_date, 'end_date': end_date})
+            results = pd.read_sql(<metric_name_SQL>, self.database, params={'repo_group_id': repo_group_id, 'period': period,'begin_date': begin_date, 'end_date': end_date})
 
             # if necessary, do some more transformations or calculations on the result
 
             return results
 
-        # otherwise (meaning we did recieve a repo_id), then we must be calculating
-        the repo form of the metric
+We know we need to execute the ``repo_group`` form because we were not given a ``repo_id`` to use, so instead we will use the ``repo_group_id`` that we were given.
+After setting the correct query and executing it, one may wish to do additional calculations or transformations of the data if necessary. After that, the results are returned.
+
+Now, let's look at the ``repo`` form\:
+
+    .. code-block:: python
+        :lineno-start: 33
+
         else:
             <metric_name_SQL> = s.sql.text("""
                 <repo form of the SQL query>
             """)
 
-            # execute the query with the given query parameters
-            results = pd.read_sql(issues_new_SQL, self.database, params={'repo_id': repo_id, 'period': period, 'begin_date': begin_date, 'end_date': end_date})
+            results = pd.read_sql(<metric_name_SQL>, self.database, params={'repo_id': repo_id, 'period': period, 'begin_date': begin_date, 'end_date': end_date})
 
             # if necessary, do some more transformations or calculations on the result
 
             return results
 
+In the ``else`` block of the ``if`` statement on line BLANK of snippet above this one, a ``repo_id`` has been passed in, and so that form will be calculated instead. As with the ``repo_group`` form, after retrieving the data, additional 
+calculations or transformations will be applied and then the results are returned.
+
+
 .. note:: 
     Query parameters (lines 40 & 54) are used to dynamically insert values (like the given ``repo_id``) into a SQL statement. The use of these query pameters in the ``pd.read_sql()`` method prevents SQL injection, and **must be used when implementing a metric**.
 
-.. note:: 
-    All metric functions **must** return a DataFrame.
+Now that we've looked at each piece of the template, let's look at it put together:
 
-Now that we've looked at the template, let's look at a specific example of the ``issues_new`` metric\:
+    .. code-block:: python
+        :linenos:
+
+        @annotate(tag=<metric_tag>)
+        def <metric_name>(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
+            """
+            <brief description of the metric>
+
+            :param repo_group_id: The repository's repo_group_id
+            :param repo_id: The repository's repo_id, defaults to None
+            :param period: To set the periodicity to 'day', 'week', 'month' or 'year', defaults to 'day'
+            :param begin_date: Specifies the begin date, defaults to '1970-1-1 00:00:00'
+            :param end_date: Specifies the end date, defaults to datetime.now()
+            :return: DataFrame of new issues/period
+            """
+
+            if not begin_date:
+                begin_date = '1970-1-1 00:00:00'
+
+            if not end_date:
+                end_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+            <metric_name_SQL> = ''
+
+            if not repo_id:
+                <metric_name_SQL> = s.sql.text("""
+                    <repo_group form of the query>
+                """)
+
+                results = pd.read_sql(<metric_name_SQL>, self.database, params={'repo_group_id': repo_group_id, 'period': period,'begin_date': begin_date, 'end_date': end_date})
+
+                # if necessary, do some more transformations or calculations on the result
+
+                return results
+
+            else:
+                <metric_name_SQL> = s.sql.text("""
+                    <repo form of the SQL query>
+                """)
+
+                results = pd.read_sql(<metric_name_SQL>, self.database, params={'repo_id': repo_id, 'period': period, 'begin_date': begin_date, 'end_date': end_date})
+
+                # if necessary, do some more transformations or calculations on the result
+
+                return results
+
+And now, with our sample ``issues_new`` metric.
 
   .. code-block:: python
     :linenos:
@@ -193,5 +260,17 @@ Now that we've looked at the template, let's look at a specific example of the `
 
         results = pd.read_sql(issues_new_SQL, self.database, params={'repo_id': repo_id, 'period': period, 'begin_date': begin_date, 'end_date': end_date})
         return results
+
+
+Other functions
+-----------------
+Not all metrics must be a ``repo``/``repo_group`` metric. If your metric doesn't return a timeseries or requires additional parameters, the process of creating a metric function is in essence the same, but might have a few key differences. For example, you might require a GitHub login for a contributor-specific metric, or you might define a metric that is only applicable to ``repo`` and not to ``repo_groups``. Regardless of the differences, all metrics **must**:
+
+1. Return a DataFrame
+2. Be decorated with ``@annotate``
+3. Have a complete docstring
+4. Have a unique function name
+
+Other than those 4 requirements, the rest is up to you!
 
 Now that we've implemented our metric function, it's time to move on to creating the endpoint.

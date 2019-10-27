@@ -99,6 +99,8 @@ export default {
                     console.log("Repos given to endpoint action: ", payload.endpoints[0],payload.repos)
                     payload.repos.forEach((repo: any) => {
                         let ref = repo.url || repo.repo_name
+                        if (ref.includes('/'))
+                            ref = ref.split('/')[ref.split('/').length - 1]
                         // tempCache[repo.rg_name] = tempCache[repo.rg_name] || {}
                         tempCache[ref] = tempCache[ref] || {}
                         
@@ -113,6 +115,8 @@ export default {
                         let i = 0
                         payload.repos.forEach((repo: any) => {
                             let ref = repo.url || repo.repo_name
+                            if (ref.includes('/'))
+                                ref = ref.split('/')[ref.split('/').length - 1]
 
                             payload.endpoints.forEach((endpoint: string) => {
                                 console.log(ref, tempCache, endpoint)
@@ -125,6 +129,8 @@ export default {
 
                         payload.repos.forEach((repo: any) => {
                             let ref = repo.url || repo.repo_name
+                            if (ref.includes('/'))
+                                ref = ref.split('/')[ref.split('/').length - 1]
                             payload.endpoints.forEach((endpoint: string) => {
                                 if (!tempCache[ref][endpoint])
                                     allDone = false
