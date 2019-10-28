@@ -154,11 +154,11 @@ Documentation
 --------------
 Run ``make docs`` to generate all documentation.
 
-``make python-docs``
+``make sphinx-docs``
 --------------------
-Run ``make python-docs`` to generate the library documentation.
+Run ``make sphinx-docs`` to generate the library documentation.
 
-Run ``make python-docs`` to generate the library documentation, and then to automatically open a new browser tab to view it.
+Run ``make sphinx-docs`` to generate the library documentation, and then to automatically open a new browser tab to view it.
 
 ``make api-docs``
 ------------------
