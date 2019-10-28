@@ -494,3 +494,11 @@ export default class Dashboard extends Vue {
 }
 </script>
 
+<style scoped>
+.card-post__image {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+</style>
