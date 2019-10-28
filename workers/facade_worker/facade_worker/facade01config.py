@@ -330,7 +330,7 @@ class Config:
 
     #### Global helper functions ####
 
-    def database_connection(self, db_host,db_user,db_pass,db_name, people, multi_threaded_connection):
+    def database_connection(self, db_host,db_user,db_pass,db_name, db_port, people, multi_threaded_connection):
 
     # Return a database connection based upon which interpreter we're using. CPython
     # can use any database connection, although MySQLdb is preferred over pymysql
@@ -348,7 +348,7 @@ class Config:
             password = db_pass,
             database = db_name,
             # charset = 'utf8mb4',
-            port=5432,
+            port=db_port,
             options=f'-c search_path={db_schema}',
             connect_timeout = 31536000,)
 

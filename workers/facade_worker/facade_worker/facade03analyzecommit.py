@@ -203,10 +203,12 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 	db_pass = json['password']
 	db_name = json['database']
 	db_host = json['host']
+	db_port = json['port']
 	db_user_people = json['user']
 	db_pass_people = json['password']
 	db_name_people = json['database']
 	db_host_people = json['host']
+	db_port_people = json['port']
 
 	# Set up new threadsafe database connections if multithreading. Otherwise
 	# use the gloabl database connections so we don't incur a performance
@@ -217,13 +219,15 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 			db_host,
 			db_user,
 			db_pass,
-			db_name, False, True)
+			db_name,
+			db_port, False, True)
 
 		db_people_local,cursor_people_local = cfg.database_connection(
 			db_host_people,
 			db_user_people,
 			db_pass_people,
-			db_name_people, True, True)
+			db_name_people,
+			db_port_people, True, True)
 
 	else:
 		db_local = cfg.db
