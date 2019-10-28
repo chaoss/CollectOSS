@@ -15,9 +15,9 @@
           </div>
           <div class="coverageCardDiv2">
             <strong>
-              <p> {{this.values[0]['sbom_scan']['Coverage']['TotalFiles']}}
-              <br> {{this.values[0]['sbom_scan']['Coverage']['DeclaredLicenseFiles']}}
-              <br> {{this.values[0]['sbom_scan']['Coverage']['PercentTotalLicenseCoverage']}} </p>
+              <p> {{ values[0]['sbom_scan']['Coverage']['TotalFiles'] }}
+              <br> {{ values[0]['sbom_scan']['Coverage']['DeclaredLicenseFiles'] }}
+              <br> {{ values[0]['sbom_scan']['Coverage']['PercentTotalLicenseCoverage'] }} </p>
             </strong>
           </div>
         </div>
