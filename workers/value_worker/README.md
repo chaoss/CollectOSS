@@ -1,4 +1,6 @@
 ## Readme File for Value Worker Creation
+Most of the installation for the value worker is handled by the general augur installation script. As noted there, the only thing you *have* to do is make sure that the `Go` programming language is installed. 
+
 
 ### Installing the value worker: 
 1. Install the go language following operating system specific instructions at : https://golang.org/doc/install 
