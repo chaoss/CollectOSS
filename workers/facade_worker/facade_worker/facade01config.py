@@ -348,7 +348,7 @@ class Config:
             password = db_pass,
             database = db_name,
             # charset = 'utf8mb4',
-            port=5433,
+            port=5432,
             options=f'-c search_path={db_schema}',
             connect_timeout = 31536000,)
 
