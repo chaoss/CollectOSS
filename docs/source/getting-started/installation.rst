@@ -23,7 +23,6 @@ Frontend:
 -  `node <https://nodejs.org/en/>`__
 -  `npm <https://www.npmjs.com/>`__
 
-
 0. Clone the repository.
 
 .. code:: bash
@@ -53,8 +52,8 @@ This process will:
 
 - install Augur’s backend and its dependencies 
 - install the included data collection workers and their dependencies
-- generate documentation files
-- set up the configuration file
-- optionally, install Augur’s frontend and its dependencies 
+- generate documentation
+- set up the configuration file
+- optionally install Augur’s frontend and its dependencies 
 
 Now that you've got everything installed, it's time to test it out!

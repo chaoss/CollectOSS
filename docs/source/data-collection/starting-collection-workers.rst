@@ -10,15 +10,16 @@ Workers are continuous collection processes that populate parts of Augur's data 
   :align: center   
 
 2. Until the worker starts, the broker listens for the worker on a port specified in the worker block of the augur.config.json file. Each block contains a minimum of four parameters: 
-    - model: The part of the model populated by the worker 
-    - given: The parameter passed into the model to scope collection
-    - delay: How long to pause between collection cycles, expressed in seconds
-    - repo_group_id: You can specify an array of repo_group_ids, or "0", which will collect all data for all repo_group_id's. 
-		   
-.. code-block:: json 
-    :linenos: 
 
-    "Housekeeper": {
+- model: The part of the model populated by the worker 
+- given: The parameter passed into the model to scope collection
+- delay: How long to pause between collection cycles, expressed in seconds
+- repo_group_id: You can specify an array of repo_group_ids, or "0", which will collect all data for all repo_group_id's. 
+
+
+.. code-block:: json
+
+    {
         "jobs": [
             {
                 "model": "issues",
@@ -58,7 +59,7 @@ Workers are continuous collection processes that populate parts of Augur's data 
                 "repo_group_id": 0
             }
         ]
-    },
+    }
 
 
 3. The data collected by the worker is determined by the models listed in the housekeeper block of the augur.config.json file. 
