@@ -393,6 +393,11 @@
     }
 
     onCompare(e: any) {
+      // ensure that a repository is selected
+      if (this.selectedRepos.length === 0) {
+        window.alert('Please select a repo first from the dropdown');
+        return;
+      }
       if (!this.isGroup) {
         console.log("onCompare: ", e, this.base)
         let comparedRepoIds = ''//String(this.base.repo_id)

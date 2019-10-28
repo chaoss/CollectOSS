@@ -24,11 +24,11 @@
                 <d-badge pill :class="['card-post__category', 'bg-' + (color_mapping[highest[idx].ri_metric].theme || 'info') ]">{{ highest[idx].ri_metric }} ({{ highest[idx].ri_field }})</d-badge>
                 <insight-chart style="" :data="insights[highest[idx].rg_name][highest[idx].repo_git][highest[idx].ri_metric]" :url="highest[idx].repo_git" :color="color_mapping[highest[idx].ri_metric].hex || '#FFC107'"></insight-chart>
 
-                <div class="card-post__author d-flex">
+                <!-- <div class="card-post__author d-flex">
                   <a href="#" :style="color_mapping[highest[idx].ri_metric].hex" class="card-post__author-avatar card-post__author-avatar--small dashboardDiv2">
                     <i class="material-icons dashboardI">{{ getDirection(insights[highest[idx].rg_name][highest[idx].repo_git][highest[idx].ri_metric]) }}</i>
                   </a>
-                </div>
+                </div> -->
               </div>
 
               <d-card-body v-if="loadedInsights">

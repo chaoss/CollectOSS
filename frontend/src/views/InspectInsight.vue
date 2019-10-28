@@ -119,11 +119,11 @@
               <d-badge pill :class="['card-post__category', 'bg-' + themes[idx] ]">{{ group }}</d-badge>
               <insight-chart style="" :data="insights[group][repo][metric]" :url="repo" :color="colors[idx]"></insight-chart>
 
-              <div class="card-post__author d-flex">
+              <!-- <div class="card-post__author d-flex">
                 <a href="#" :style="colors[idx]" class="card-post__author-avatar card-post__author-avatar--small" style="text-indent: 0; text-align: center; font-size: 1rem">
                   <i class="material-icons" style="position: relative; top: 50%; transform: translateY(-60%)">{{ getDirection(insights[group][repo][metric]) }}</i>
                 </a>
-              </div>
+              </div> -->
             </div>
             <d-card-body v-for="metric in Object.keys(insights[group][repo]).slice(0,1)">
               <h5 class="card-title">

@@ -2,7 +2,7 @@
   <div ref="holder" class="insightChartDiv">
     <spinner v-if="!loaded" class="insightChartSpinner"></spinner>
     <!-- <div v-if="loaded" class=""> -->
-    <vega-lite v-if="loaded" :spec="vegaSpec" :data="values"></vega-lite>
+    <vega-lite v-if="loaded" :spec="vegaSpec" :data="values" center="true"></vega-lite>
     <!-- <p> {{ chart }} </p> -->
 
     <!-- </div> -->
@@ -45,6 +45,7 @@ export default {
       this.values = this.data;
       this.vegaSpec = {
         $schema: "https://vega.github.io/schema/vega-lite/v2.json",
+        center: true, 
         width: specWidth, //263.7,
         height: specHeight, //166,
         padding: { left: specWidth * .1, top: 10, right: 0, bottom: 5 },
