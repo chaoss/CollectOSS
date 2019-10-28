@@ -252,59 +252,6 @@ export default {
             throw error;
         }
     },
-    // async loadRepoRelations(context:any, payload:any){
-    //     try {
-
-    //         context.dispatch('loadRepoGroups').then(() => {
-    //             context.state.getters.repoGroups.forEach((group: any): void => {
-    //                 repoGroups[group.rg_name] = group
-    //                 repoRelations[group.rg_name] = {};
-    //                 repos.filter((repo: any) => {
-    //                     return repo.rg_name === group.rg_name;
-    //                 }).forEach((repo: any) => {
-    //                     repoRelations[group.rg_name][repo.url] = repo
-    //                 });
-    //             });
-    //             context.commit('mutateCache', {
-    //                 property: 'repoRelations',
-    //                 with: repoRelations,
-    //             });
-    //         })
-    //     } catch(error) {
-    //         throw error;
-    //     }
-    // },
-    // getRepoRelations(context: any, payload: object) {
-    //     return new Promise ((resolve, reject) => {
-    //         setTimeout(() => {
-    //             let repoRelations = context.state.cache.getRepos || {};
-    //             let repoGroups = context.state.cache.getRepoGroups || {};
-    //             context.state.AugurAPI.getRepos().then((repos: object[]) => {
-    //                 context.state.AugurAPI.getRepoGroups().then((groups: object[]) => {
-    //                     // Move down between future relation endpoint
-    //                     groups.forEach((group: any): void => {
-    //                         repoGroups[group.rg_name] = group
-    //                         repoRelations[group.rg_name] = {};
-    //                         repos.filter((repo: any) => {
-    //                             return repo.rg_name === group.rg_name;
-    //                         }).forEach((repo: any) => {
-    //                             repoRelations[group.rg_name][repo.url] = repo
-    //                         });
-    //                     });
-    //                     context.commit('mutateCache', {
-    //                         property: 'repoRelations',
-    //                         with: repoRelations,
-    //                     });
-    //                     context.commit('mutateCache', {
-    //                         property: 'repoGroups',
-    //                         with: repoGroups,
-    //                     });
-    //                 });
-    //             resolve({ repoRelations, repoGroups });
-    //             });
-    //         }, 2000)
-    //     })
-    // },
     async addRepo(context: any, payload: any) {
         return new Promise((resolve, reject) => {
             setTimeout(()=> {

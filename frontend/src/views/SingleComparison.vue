@@ -7,7 +7,7 @@
           <d-breadcrumb-item :active="true" :text="base.repo_name" href="#" />
         </d-breadcrumb>
       </div>
-      <div class="col col-6" v-for="repo in compRepoNames">
+      <div class="col col-4" v-for="repo in compRepoNames">
         <ol class="breadcrumb singleComparison">
           <d-breadcrumb class="singleComparison"
             <d-breadcrumb-item :active="false" :text="repo.split('/')[0]" href="#"/>

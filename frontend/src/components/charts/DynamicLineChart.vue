@@ -227,7 +227,6 @@ export default {
       var colors = [
         "black",
         "#FF3647",
-        "#FF3647",
         "#4736FF",
         "#3cb44b",
         "#ffe119",
@@ -1052,11 +1051,11 @@ export default {
         if (!repos.includes(ref))
           repos.push(ref);
       } else {
-        console.log("DLC Api repos not loaded, getting repo from route then setting comp repos: ", compares)
         let ids = !this.$router.currentRoute.params.comparedRepoIds
           ? []
           : this.$router.currentRoute.params.comparedRepoIds.split(",");
-        promises.append(this.setComparedRepos({ names: [compares], ids: ids }));
+        console.log("DLC Api repos not loaded, getting repo from route then setting comp repos: ", ids, compares.split(','))
+        promises.push(this.setComparedRepos({ names: compares.split(','), ids: ids }));
       }
       //got api repos
     }
@@ -1065,16 +1064,23 @@ export default {
     console.log("DLC starting promises...")
     Promise.all(promises).then(() => {
       if (compares) {
-        apiRepos.push(this.apiRepos[compares]);
-        let ref =
-          this.repoRelations[compares.split("/")[0]][compares.split("/")[1]]
-            .url ||
-          this.repoRelations[compares.split("/")[0]][compares.split("/")[1]]
-            .repo_name;
-        if (ref.includes('/'))
-          ref = ref.split('/')[ref.split('/').length - 1]
-        if (!repos.includes(ref))
-          repos.push(ref);
+        console.log("DLC compares: ",compares.split(','))
+        compares.split(',').forEach((repo_idx) => {
+          console.log("dlc check split", typeof repo_idx, repo_idx, compares.split(','))
+          let repo = typeof repo_idx == 'string' ? repo_idx : compares.split(',')[repo_idx]
+          console.log("adding to apirepos: ", apiRepos, compares, this.apiRepos)
+          apiRepos.push(this.apiRepos[repo]);
+          console.log("setting ref for compared repo", repo)
+          let ref =
+            this.repoRelations[repo.split("/")[0]][repo.split("/")[1]]
+              .url ||
+            this.repoRelations[repo.split("/")[0]][repo.split("/")[1]]
+              .repo_name;
+          if (ref.includes('/'))
+            ref = ref.split('/')[ref.split('/').length - 1]
+          if (!repos.includes(ref))
+            repos.push(ref);
+        })
       }
 
       repos.forEach(repo => {
