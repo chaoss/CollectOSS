@@ -5,19 +5,21 @@
       <spinner v-if="!loaded"></spinner>
       
       <div v-if="loaded">
-        <p v-if="values === undefined">There are no license coverage metrics available for this repository.</p>
-        <div class="coverageCardDiv1">
-        <p> Total Files>
-          <p> Total Files
-          <br> Files with Declared Licenses
-          <br> License Coverage </p>
-        </div>
-        <div class="coverageCardDiv2">
-          <strong>
-            <p> {{this.values[0]['sbom_scan']['Coverage']['TotalFiles']}}
-            <br> {{this.values[0]['sbom_scan']['Coverage']['DeclaredLicenseFiles']}}
-            <br> {{this.values[0]['sbom_scan']['Coverage']['PercentTotalLicenseCoverage']}} </p>
-          </strong>
+        <p v-if="values.length == 0 || values == undefined">There are no license coverage metrics available for this repository.</p>
+        <div v-else>
+          <div class="coverageCardDiv1">
+          <p> Total Files>
+            <p> Total Files
+            <br> Files with Declared Licenses
+            <br> License Coverage </p>
+          </div>
+          <div class="coverageCardDiv2">
+            <strong>
+              <p> {{this.values[0]['sbom_scan']['Coverage']['TotalFiles']}}
+              <br> {{this.values[0]['sbom_scan']['Coverage']['DeclaredLicenseFiles']}}
+              <br> {{this.values[0]['sbom_scan']['Coverage']['PercentTotalLicenseCoverage']}} </p>
+            </strong>
+          </div>
         </div>
       </div>
       
@@ -86,7 +88,7 @@
             values = tuples[ref][endpoint]
           })
           this.values = values
-          console.log("CHECK HERE", values, ref)
+          console.log("Coverage card values", values, ref)
           this.loaded = true          
         })
       }

@@ -104,8 +104,7 @@ export default function Augur() {
 
                 console.log("HERE,",store)
                 let compares = !to.params.compares ? [] : to.params.compares.split(',');
-                let ids = []
-                ids = !to.params.comparedRepoIds ? [] : to.params.comparedRepoIds.split(',');
+                let ids = !to.params.comparedRepoIds ? [] : to.params.comparedRepoIds.split(',');
                 store.dispatch('compare/setComparedRepos', { 'names': compares, 'ids': ids }).then(() => {
                   next()
                 })
