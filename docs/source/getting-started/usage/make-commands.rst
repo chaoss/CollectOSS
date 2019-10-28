@@ -26,7 +26,7 @@ Development
 
 ``make dev``
 -------------
-To start the frontend and backend processes together, run ``make dev``.
+To start the frontend and backend servers together, run ``make dev``.
 The output should like something like this (note that your process IDs
 and network will be different):
 
