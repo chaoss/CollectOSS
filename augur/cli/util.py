@@ -58,7 +58,7 @@ def upgrade(app, from_directory):
 
 
 @cli.command('test', short_help='Test Augur')
-@click.option('--from-directory', '-f', type=click.Path(), help='Upgrade from a provided directroy rather than git.')
+@click.option('--from-directory', '-f', type=click.Path(), help='Upgrade from a provided directory rather than git.')
 @pass_application
 def test(app, from_directory):
     """
