@@ -12,17 +12,24 @@ if [[ $? -ne 0 ]]; then
   exit 1
 fi
 
+mkdir logs
+
 # backend
-util/scripts/install/backend.sh
+util/scripts/install/backend.sh > logs/backend.log
+
+# nomos scanner for dosocs
+util/scripts/install/nomos.sh > logs/nomos.log 2>logs/nomos.err 
 
 # workers
-util/scripts/install/workers.sh
+util/scripts/install/workers.sh >logs/workers.log 2>logs/workers.err 
 
 # docs
 util/scripts/install/docs.sh
 
 # config
 util/scripts/install/config.sh
+
+
 
 echo
 echo "Would you like to install Augur's frontend dependencies?"
