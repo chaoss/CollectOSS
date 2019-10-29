@@ -42,6 +42,13 @@
           :fields="['short_name']"
           title="License Declared">
         </license-table>
+        <br><br>
+        <download-card
+          v-if="loaded_sbom"
+          title="Software Bill of Materials"
+          :data="values"
+          source="sbom">
+        </download-card>
       </div>
       <div class="col-6">
         <cii-table
