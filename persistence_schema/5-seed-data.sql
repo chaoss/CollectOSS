@@ -29,6 +29,7 @@ INSERT INTO "augur_data"."settings" VALUES (3, 'utility_status', 'Idle', '1900-0
 COMMIT;
 
 
+
 -- Job for GitHub Worker
 BEGIN;
 INSERT INTO "augur_operations"."worker_job" VALUES ('issues', 5, 0, '203', 'The issues model consists of contributors, issues, issue events, issue labels, and issue comments.', 1997, '2019-10-19 14:17:40', 0, 22);
@@ -121,3 +122,8 @@ INSERT INTO "augur_data"."chaoss_metric_status" VALUES (79, 'experimental', 'lib
 INSERT INTO "augur_data"."chaoss_metric_status" VALUES (80, 'experimental', 'librariesio', 'metric', 'implemented', 'implemented', 'f', '/api/unstable/<owner>/<repo>/dependency_stats', NULL, 'Dependency Stats', 'experimental', '"dependency-stats"', 'Insight Worker', '0.0.1', 'librariesio', '2019-06-20 22:51:23', NULL);
 INSERT INTO "augur_data"."chaoss_metric_status" VALUES (81, 'experimental', 'librariesio', 'metric', 'implemented', 'implemented', 'f', '/api/unstable/<owner>/<repo>/dependents', NULL, 'Dependents', 'experimental', '"dependents"', 'Insight Worker', '0.0.1', 'librariesio', '2019-06-20 22:51:25', NULL);
 COMMIT;
+
+BEGIN;
+INSERT INTO "augur_data"."contributor_affiliations"("cntrb_id", "ca_id", "ca_domain", "ca_affiliation", "ca_start_date", "ca_active", "ca_last_modified", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (1, 25152, 'goggins.com', 'goggins', '2016-03-03', 1, '2019-10-29 12:22:25', NULL, NULL, NULL, '2019-10-29 17:22:30');
+COMMIT; 
+
