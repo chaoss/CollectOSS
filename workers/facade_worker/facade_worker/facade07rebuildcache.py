@@ -161,7 +161,7 @@ def fill_empty_affiliations(cfg):
                     "SET cmt_%s_affiliation = %%s "
                     "WHERE cmt_%s_email = %%s "
                     "AND cmt_%s_affiliation IS NULL "
-                    "AND cmt_%s_date >= %%s" %
+                    "AND cmt_%s_date >= TO_TIMESTAMP(%%s, 'YYYY-MM-DD HH MM SS')" %
                     (attribution, attribution, attribution, attribution))
 
                 cfg.cursor.execute(update, (match[0], email, match[1]))
@@ -206,7 +206,7 @@ def fill_empty_affiliations(cfg):
     affiliations_processed = cfg.get_setting('affiliations_processed')
 
     get_changed_affiliations = ("SELECT ca_domain FROM contributor_affiliations WHERE "
-        "ca_last_modified >= %s")
+        "ca_last_modified >= TO_TIMESTAMP(%s, 'YYYY-MM-DD HH MM SS'")
 
     cfg.cursor_people.execute(get_changed_affiliations, (affiliations_processed, ))
 
