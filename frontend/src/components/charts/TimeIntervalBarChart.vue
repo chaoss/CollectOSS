@@ -3,7 +3,7 @@
     <div class="groupedbarchart">
       <vega-lite :spec="spec" :data="values"></vega-lite>
       <p> {{ chart }} </p>
-      <div style="padding: 0 50px 0 50px; font-size: 12px">
+      <div class="timeIntervalChartDiv">
         <p>*The black "baseline" represents the averages of both LoC and commits for this repo across all months. Wherever this bar stretches to shows how far above or below the raw value of the statistic is from the regular average.</p>
       </div>
     </div>

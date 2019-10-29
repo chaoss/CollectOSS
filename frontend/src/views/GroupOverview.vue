@@ -1,7 +1,7 @@
 <template>
   <d-container fluid class="main-content-container px-4">
-        <d-breadcrumb style="margin:0; padding-top: 26px; padding-left: 0px">
-          <span style="padding-right:1rem">Repo Group:</span><d-breadcrumb-item :active="true" :text="base.rg_name" href="#" />
+        <d-breadcrumb class="groupOverview">
+          <span class="groupOverviewSpan">Repo Group:</span><d-breadcrumb-item :active="true" :text="base.rg_name" href="#" />
         </d-breadcrumb>
 
     <!-- Page Header -->
@@ -10,8 +10,6 @@
         <h3 class="page-title" style="font-size: 1rem">Insights</h3>
       </div>
     </div> -->
-    <!-- Compare Control -->
-    <compare-control></compare-control>
 
 <!--     <div class="row" style="transform: translateY(-0px) !important">
       <div class="col col-6" style="padding-right: 35px">

@@ -1,17 +1,19 @@
 <template>
   <d-container fluid class="main-content-container px-4">
     <div class="row">
-      <div class="col col-5">
-        <d-breadcrumb style="margin:0; padding-top: 26px; padding-left: 0px">
+      <div class="col col-4">
+        <d-breadcrumb class="singleComparison">
           <d-breadcrumb-item :active="false" :text="base.rg_name" href="#" @click="onRepoGroup({rg_name: base.rg_name, repo_group_id: base.repo_group_id})"/>
           <d-breadcrumb-item :active="true" :text="base.repo_name" href="#" />
         </d-breadcrumb>
       </div>
-      <div class="col col-3" v-for="repo in compRepoNames">
-        <d-breadcrumb style="margin:0; padding-top: 26px; padding-left: 0px">
-          <d-breadcrumb-item :active="false" :text="repo.split('/')[0]" href="#"/>
-          <d-breadcrumb-item :active="true" :text="repo.split('/')[1]" href="#" />
-        </d-breadcrumb>
+      <div class="col col-4" v-for="repo in compRepoNames">
+        <ol class="breadcrumb singleComparison">
+          <d-breadcrumb class="singleComparison"
+            <d-breadcrumb-item :active="false" :text="repo.split('/')[0]" href="#"/>
+            <d-breadcrumb-item :active="true" :text="repo.split('/')[1]" href="#" />
+          </d-breadcrumb>
+        </ol>
       </div>
       <!-- <div class="col col-6"></div> -->
     </div>
@@ -33,9 +35,9 @@
       </div>
     </div> -->
 
-    <div class="row" v-if="comparedRepos.names.length > 0">
+    <div class="row" v-if="getComparedReposNames.length > 0">
 
-      <div class="col col-6" style="padding-top:3rem">
+      <div class="col col-6 singleComparisonCol">
         <d-card>
           <dynamic-line-chart 
                       source="codeChanges"
@@ -46,7 +48,7 @@
         </d-card>
       </div>
 
-      <div class="col col-6" style="padding-top:3rem">
+      <div class="col col-6 singleComparisonCol">
         <d-card>
           <dynamic-line-chart 
                       source="codeChangesLines"
@@ -57,7 +59,7 @@
         </d-card>
       </div>
 
-      <div class="col col-6" style="padding-top:3rem">
+      <div class="col col-6 singleComparisonCol">
         <d-card>
           <dynamic-line-chart 
                       source="openIssuesCount"
@@ -69,7 +71,7 @@
       </div>
 
 
-      <div class="col col-6" style="padding-top:3rem">
+      <div class="col col-6 singleComparisonCol">
         <d-card>
           <dynamic-line-chart 
                       source="closedIssuesCount"
@@ -80,7 +82,7 @@
         </d-card>
       </div>
 
-      <div class="col col-6" style="padding-top:3rem">
+      <div class="col col-6 singleComparisonCol">
         <d-card>
           <dynamic-line-chart 
                       source="issuesNew"
@@ -91,7 +93,7 @@
         </d-card>
       </div> 
 
-      <div class="col col-6" style="padding-top:3rem">
+      <div class="col col-6 singleComparisonCol">
         <d-card>
           <dynamic-line-chart 
                       source="reviews"
@@ -102,7 +104,7 @@
         </d-card>
       </div> 
 
-      <div class="col col-6" style="padding-top:3rem">
+      <div class="col col-6 singleComparisonCol">
         <d-card>
           <dynamic-line-chart 
                       source="reviewsAccepted"
@@ -113,7 +115,7 @@
         </d-card>
       </div> 
 
-      <div class="col col-6" style="padding-top:3rem">
+      <div class="col col-6 singleComparisonCol">
         <d-card>
           <dynamic-line-chart 
                       source="reviewsDeclined"
@@ -301,6 +303,10 @@ export default class SingleComparison extends Vue {
 
   get compRepoNames () {
     return 'names' in this.comparedRepos ? this.comparedRepos.names : this.comparedRepos
+  }
+
+  get getComparedReposNames () {
+    return this.comparedRepos.names || []
   }
 
   created() {

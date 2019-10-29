@@ -67,6 +67,7 @@ class Server(object):
         self.worker_pids = []
 
         create_routes(self)
+        augur_app.metrics.create_routes(self)
 
         #####################################
         ###          UTILITY              ###
@@ -342,7 +343,7 @@ class Server(object):
                 return Response(response=body,
                                 status=200,
                                 mimetype="application/json")
-            generated_function.__name__ = func.__self__.__class__.__name__ + " _" + func.__name__
+            generated_function.__name__ = func.__class__.__name__ + " _" + func.__name__
             return generated_function
         else:
             def generated_function(*args, **kwargs):
@@ -350,7 +351,7 @@ class Server(object):
                 return Response(response=self.transform(func, args, kwargs, **request.args.to_dict()),
                                 status=200,
                                 mimetype="application/json")
-            generated_function.__name__ = func.__self__.__class__.__name__ + " _" + func.__name__
+            generated_function.__name__ = func.__class__.__name__ + " _" + func.__name__
             return generated_function
 
     def routify(self, func, type_):
@@ -368,7 +369,7 @@ class Server(object):
             return Response(response=data,
                             status=200,
                             mimetype="application/json")
-        generated_function.__name__ = func.__self__.__class__.__name__ + f"_{type_}_" + func.__name__
+        generated_function.__name__ = func.__class__.__name__ + f"_{type_}_" + func.__name__
         return generated_function
 
     def addRepoGroupMetric(self, function, endpoint, **kwargs):
@@ -416,7 +417,7 @@ class Server(object):
         #
         # Get the unbound function from the bound function's class so that we can modify metadata
         # across instances of that class.
-        real_func = getattr(function.__self__.__class__, function.__name__)
+        real_func = getattr(self._augur.metrics, function.__name__)
         annotate(endpoint=endpoint, **kwargs)(real_func)
 
     def admin(self):

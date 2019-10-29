@@ -48,7 +48,6 @@ from facade_worker.facade05repofetch import git_repo_initialize, check_for_repo_
 from facade_worker.facade06analyze import analysis
 from facade_worker.facade07rebuildcache import nuke_affiliations, fill_empty_affiliations, invalidate_caches, rebuild_unknown_affiliation_and_web_caches
 import logging
-logging.basicConfig(filename='worker.log', filemode='w', level=logging.INFO)
 # if platform.python_implementation() == 'PyPy':
 #   import pymysql
 # else:
@@ -68,8 +67,12 @@ class CollectorTask:
 
 class FacadeWorker:
     def __init__(self, config, task=None):
+        self.config = config
+        logging.basicConfig(filename='worker_{}.log'.format(self.config['id'].split('.')[len(self.config['id'].split('.')) - 1]), filemode='w', level=logging.INFO)
+        
         print('Worker (PID: {}) initializing...'.format(os.getpid()))
         logging.info('Worker (PID: {}) initializing...'.format(os.getpid()))
+        
         self._task = task
         self._child = None
         self._queue = Queue()
@@ -84,24 +87,28 @@ class FacadeWorker:
         db_pass = json['password']
         db_name = json['database']
         db_host = json['host']
+        db_port = json['port']
         db_user_people = json['user']
         db_pass_people = json['password']
         db_name_people = json['database']
         db_host_people = json['host']
+        db_port_people = json['port']
 
         # Open a general-purpose connection
         db,cursor = self.cfg.database_connection(
             db_host,
             db_user,
             db_pass,
-            db_name, False, False)
+            db_name, 
+            db_port,    False, False)
 
         # Open a connection for the people database
         db_people,cursor_people = self.cfg.database_connection(
             db_host_people,
             db_user_people,
             db_pass_people,
-            db_name_people, True, False)
+            db_name_people,
+            db_port_people, True, False)
 
         # Check if the database is current and update it if necessary
         try:

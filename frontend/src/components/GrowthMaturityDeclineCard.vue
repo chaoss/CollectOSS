@@ -1,14 +1,13 @@
 <template>
   <section>
     <!-- <h1>Growth, Maturity, and Decline</h1> -->
-    <div style="display: inline-block;">
-      <h2 style="display: inline-block; color: black !important">{{ $store.state.baseRepo }}</h2>
+    <div class="growthMaturity">
+      <h2 class="growthMaturityHeader">{{ $store.state.baseRepo }}</h2>
       <h2
-        style="display: inline-block;"
-        class="repolisting"
+        class=" growthMaturity repolisting"
         v-if="$store.state.comparedRepos.length > 0"
       >compared to:</h2>
-      <h2 style="display: inline-block;" v-for="(repo, index) in $store.state.comparedRepos">
+      <h2 class="growthMaturity" v-for="(repo, index) in $store.state.comparedRepos">
         <span
           v-bind:style="{ 'color': colors[index] }"
           @click

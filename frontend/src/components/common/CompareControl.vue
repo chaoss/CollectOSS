@@ -33,8 +33,8 @@
               <d-button @click="onReset">Reset</d-button>
             </d-button-group>
           </d-col>
-          <!--
-          <d-col cols="12" lg="3" :class="{'offset-md-3':isGroup}">
+          
+          <!-- <d-col cols="12" lg="3" :class="{'offset-md-3':isGroup}">
             <div v-d-toggle.my-collapse variant="primary" size="small" class="float-right"
                  @click="isCollpase = !isCollpase">
                <div v-if="isCollpase">More configuration options<i class="material-icons" style="font-size: 1.3rem
@@ -42,8 +42,8 @@
                <div v-if="!isCollpase">Less configuration options<i class="material-icons" style="font-size: 1.3rem">keyboard_arrow_up</i>
               </div>
             </div>
-          </d-col>
-          -->
+          </d-col> -->
+         
         </d-row>
         <d-row>
             <d-badge theme="primary" v-if="!isGroup" pill class="mx-2 mt-2" v-for="item in getSelectedRepos">
@@ -204,11 +204,13 @@
       ])
     },
     methods: {
+      ...mapMutations('common', [
+        'mutateStartDate', 
+        'mutateEndDate'        
+      ]), 
       ...mapMutations('compare', [
         'setCompare',
         'setVizOptions',
-        'mutateStartDateChange',
-        'mutateEndDateChange',
         'resetCompared',
         'mutateComparedRepo',
         'mutateComparedGroup'
@@ -262,8 +264,8 @@
     comparedRepos!:any;
     comparisionSize!:any;
 
-    mutateStartDateChange!: any;
-    mutateEndDateChange!: any;
+    mutateStartDate!: any;
+    mutateEndDate!: any;
     mutateComparedRepo!:any;
     mutateComparedGroup!:any;
     setCompare!:any;
@@ -383,14 +385,19 @@
     }
 
     onStartDate(e: any) {
-      this.mutateStartDateChange(e)
+      this.mutateStartDate(e)
     }
 
     onEndDate(e: any) {
-      this.mutateEndDateChange(e)
+      this.mutateEndDate(e)
     }
 
     onCompare(e: any) {
+      // ensure that a repository is selected
+      if (this.selectedRepos.length === 0) {
+        window.alert('Please select a repo first from the dropdown');
+        return;
+      }
       if (!this.isGroup) {
         console.log("onCompare: ", e, this.base)
         let comparedRepoIds = ''//String(this.base.repo_id)
@@ -445,8 +452,8 @@
       this.setVizOptions(
         initialState
       )
-      this.mutateStartDateChange(initialState.startDate)
-      this.mutateEndDateChange(initialState.endDate)
+      this.mutateStartDate(initialState.startDate)
+      this.mutateEndDate(initialState.endDate)
       this.resetCompared()
 
       if (!this.isGroup) {

@@ -99,14 +99,17 @@ export default function Augur() {
             NProgress.set(0.8);
 
             if(to.params.compares) {
-              console.log("HERE,",store)
-              let compares = !to.params.compares ? [] : to.params.compares.split(',');
-              let ids = []
-              ids = !to.params.comparedRepoIds ? [] : to.params.comparedRepoIds.split(',');
-              store.dispatch('compare/setComparedRepos', { 'names': compares, 'ids': ids }).then(() => {
-                next()
-              })
-              // return store.dispatch('compare/setComparedRepos', { 'names': compares, 'ids': ids })
+              if (to.params.compares != 'none_selected') {
+
+
+                console.log("HERE,",store)
+                let compares = !to.params.compares ? [] : to.params.compares.split(',');
+                let ids = !to.params.comparedRepoIds ? [] : to.params.comparedRepoIds.split(',');
+                store.dispatch('compare/setComparedRepos', { 'names': compares, 'ids': ids }).then(() => {
+                  next()
+                })
+                // return store.dispatch('compare/setComparedRepos', { 'names': compares, 'ids': ids })
+              }
             } else {
               loaded = true
             }

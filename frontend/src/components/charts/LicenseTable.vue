@@ -1,10 +1,11 @@
 <template>
   <d-card>
     <d-card-body :title="title" class="text-center">
+<<<<<<< Updated upstream
       <spinner v-if="!loaded"></spinner>
       <div v-if="loaded">
         <strong><p>Click on the names of highlighted licenses to learn more</p></strong>
-        <table style="width: 100%">
+        <table class="licenseTable">
           <thead class="bg-light">
             <th v-for="header in headers">{{header}}</th>
           </thead>

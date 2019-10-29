@@ -2,7 +2,8 @@
 
   
 
-  <div style="margin-bottom: 0 !important" class="tickchart ">
+<!-- <<<<<<< Updated upstream -->
+  <div class="normalizedStackedDiv1 tickchart">
     <!-- <div :id="source" style="padding: 0"></div> -->
     <vega-lite :spec="spec" :data="values"></vega-lite>
     <!-- <div style="position: relative; top: -0px !important; transform: translateY(-0rem)"class="form-item form-checkboxes tickradios">
@@ -240,7 +241,8 @@ export default {
                 "condition":{
                   "selection": {"not": "tooltip"}, "value": "transparent"
                 },
-                "value": "black"
+                // "value": "black"
+                "value": "transparent"
               }
             }
           }

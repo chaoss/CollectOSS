@@ -16,13 +16,11 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
 from augur.models.common import Base
 from augur import logger
+from augur.metrics import MetricDefinitions
 import augur.plugins
-import augur.datasources
 import logging
 
 logging.basicConfig(filename='test.log', level=logging.INFO)
-
-
 
 class Application(object):
     """Initalizes all classes from Augur using a config file or environment variables"""
@@ -104,13 +102,16 @@ class Application(object):
         self.session = self.__Session()
         Base.query = self.__Session.query_property()
 
-        # Initalize all objects to None
-        self.__metrics_status = None
+        self.metrics = MetricDefinitions(self)
+
+
+        # # Initalize all objects to None
+        # self.__metrics_status = None
         self._loaded_plugins = {}
 
         # Application.default_plugins
-        for plugin_name in Application.default_plugins:
-            self[plugin_name]
+        # for plugin_name in Application.default_plugins:
+        #     self[plugin_name]
 
 
 
@@ -130,11 +131,11 @@ class Application(object):
     @classmethod
     def import_plugins(cls):
         """
-        Imports all plugins and datasources 
+        Imports all plugins
         """
         if not hasattr(cls, 'plugins'):
             setattr(cls, 'plugins', {})
-        plugins = [augur.plugins, augur.datasources]
+        plugins = [augur.plugins]
         for module in plugins:
             for importer, modname, ispkg in pkgutil.iter_modules(module.__path__):
                 if ispkg:

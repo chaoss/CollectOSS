@@ -1,6 +1,6 @@
 <template>
   <d-container fluid class="main-content-container px-4">
-    <d-breadcrumb style="margin:0; padding-top: 26px; padding-left: 0px">
+    <d-breadcrumb class="repo_Overview">
       <d-breadcrumb-item :active="false" :text="base.rg_name" href="#" @click="onRepoGroup({rg_name: base.rg_name, repo_group_id: base.repo_group_id})"/>
       <d-breadcrumb-item :active="true" :text="base.repo_name" href="#" />
       <!-- <d-button style="line-height:1;transform: translateX(0.5rem) translateY(-0.1rem);"><d-link :to="{name: 'repo_risk', params: {repo: base.repo_name, group:base.rg_name}}"><span>Risk</span></d-link></d-button> -->
@@ -36,12 +36,6 @@
           <!--<div class="col col-12">
             <commit-chart source="changesByAuthor" :data="values['changesByAuthor']"></commit-chart>
           </div> -->
-
-          <!-- <d-row v-if="!loadedBars">
-            <d-col>
-              <spinner></spinner>
-            </d-col>
-          </d-row> -->
 
           <d-container>
             <d-row>
@@ -96,6 +90,29 @@
       </d-col>
       <d-col cols="12" md="6" lg="6" sm="12">
 
+  <!--       <d-row>
+          <d-col>
+            <d-card>
+              <pie-chart
+              title="Commits by User"
+              source="contributorsCodeDevelopment"
+              field="commits"
+              ></pie-chart>
+            </d-card>
+          </d-col>
+          <d-col>
+            <d-card>
+              <pie-chart
+              title="Lines of Code by User"
+              source="contributorsCodeDevelopment"
+              field="lines_added"
+              ></pie-chart>
+            </d-card>
+          </d-col>
+        </d-row>
+        
+        <p></p>
+ -->
         <coverage-card title="License Coverage" source="sbom"></coverage-card>
 
         <p></p>
@@ -108,7 +125,7 @@
             <lines-of-code-chart 
               v-if="loadedBars" 
               :data="values['changesByAuthor']" 
-              style="font-size: 0.6rem"
+              class="repo_Overview_Chart"
             ></lines-of-code-chart>
 
           </d-card-body>
@@ -117,7 +134,7 @@
 
     </d-row>
 
-    <d-row style="padding-top: 2rem">
+     <!-- <d-row style="padding-top: 2rem">
 
       <d-col>
         <d-card>
@@ -127,7 +144,7 @@
             
             <tick-chart 
               v-if="loadedBars" 
-              source="changesByAuthor" 
+              source="changesByAuthor5" 
               :data="values['changesByAuthor']"
             ></tick-chart>
 
@@ -135,12 +152,12 @@
         </d-card>
       </d-col>
 
-    </d-row>
+    </d-row> 
 
-    <p></p>
+    <p></p> -->
 
     <d-row>
-      <div class="col col-6" style="padding-top:3rem">
+      <div class="col col-6 repo_Overview_Col">
         <d-card>
           <dynamic-line-chart 
                       filedTime="date" 
@@ -153,7 +170,7 @@
         </d-card>
       </div> 
 
-      <div class="col col-6" style="padding-top:3rem">
+      <div class="col col-6 repo_Overview_Col">
         <d-card>
           <dynamic-line-chart 
                       filedTime="date" 
@@ -166,7 +183,7 @@
         </d-card>
       </div> 
 
-      <div class="col col-6" style="padding-top:3rem">
+      <div class="col col-6 repo_Overview_Col">
         <d-card>
           <dynamic-line-chart 
                       filedTime="date" 
@@ -179,7 +196,7 @@
         </d-card>
       </div> 
 
-      <div class="col col-6" style="padding-top:3rem">
+      <div class="col col-6 repo_Overview_Col">
         <d-card>
           <dynamic-line-chart 
                       filedTime="date" 
@@ -192,7 +209,7 @@
         </d-card>
       </div>
 
-      <div class="col col-6" style="padding-top:3rem">
+      <div class="col col-6 repo_Overview_Col">
         <d-card>
           <dynamic-line-chart 
                       filedTime="date" 
@@ -205,7 +222,7 @@
         </d-card>
       </div>
 
-      <div class="col col-6" style="padding-top:3rem">
+      <div class="col col-6 repo_Overview_Col">
         <d-card>
           <dynamic-line-chart 
                       filedTime="date" 
@@ -218,7 +235,7 @@
         </d-card>
       </div> 
 
-      <div class="col col-6" style="padding-top:3rem">
+      <div class="col col-6 repo_Overview_Col">
         <d-card>
 
           <dynamic-line-chart 
@@ -232,7 +249,7 @@
         </d-card>
       </div>
 
-      <div class="col col-6" style="padding-top:3rem">
+      <div class="col col-6 repo_Overview_Col">
         <d-card>
           <dynamic-line-chart 
                       source="codeChangesLines"
@@ -353,7 +370,9 @@ export default class RepoOverview extends Vue {
       Object.keys(tuples[ref]).forEach((endpoint) => {
         console.log(endpoint)
         this.values[endpoint] = tuples[ref][endpoint]
+        console.log("lines data: ", this.values)
       })
+
       this.loadedBars = true
     })
   }

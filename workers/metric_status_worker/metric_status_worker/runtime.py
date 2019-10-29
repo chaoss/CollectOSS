@@ -4,9 +4,6 @@ from metric_status_worker.worker import MetricStatusWorker
 import os
 import json
 
-logging.basicConfig(filename='worker.log', filemode='w', level=logging.INFO)
-
-
 def create_server(app, gw):
     """ Consists of AUGWOP endpoints for the broker to communicate to this worker
     Can post a new task to be added to the workers queue
@@ -60,6 +57,17 @@ def main(augur_url, host, port):
     server = read_config("Server", use_main_config=1)
     worker_info = read_config("Workers", use_main_config=1)['metric_status_worker']
     worker_port = worker_info['port'] if 'port' in worker_info else port
+
+    while True:
+        try:
+            r = requests.get("http://{}:{}/AUGWOP/heartbeat".format(server['host'],worker_port)).json()
+            if 'status' in r:
+                if r['status'] == 'alive':
+                    worker_port += 1
+        except:
+            break
+
+    logging.basicConfig(filename='worker_{}.log'.format(worker_port), filemode='w', level=logging.INFO)
 
     config = { 
             "id": "com.augurlabs.core.metric_status_worker",

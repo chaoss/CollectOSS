@@ -1,6 +1,6 @@
 <template>
   <d-container fluid class="main-content-container px-4">
-    <d-breadcrumb style="margin:0; padding-top: 26px; padding-left: 0px">
+    <d-breadcrumb class="riskMetrics">
       <d-breadcrumb-item :active="false" :text="base.rg_name" href="#" />
       <d-breadcrumb-item :active="true" :text="base.repo_name" href="#" />
     </d-breadcrumb>
@@ -10,7 +10,7 @@
     <div class="page-header row no-gutters py-4" >
       <div class="col-12 col-sm-4 text-center text-sm-left mb-0">
         <!-- <span class="text-uppercase page-subtitle">Components</span> -->
-        <h3 class="page-title" style="font-size: 1rem">Risk</h3>
+        <h3 class="page-title riskMetricsHeader">Risk</h3>
       </div>
     </div>
 
