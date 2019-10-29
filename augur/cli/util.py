@@ -1,5 +1,6 @@
 import click
 import os
+import subprocess
 import sys
 from augur.runtime import pass_application
 from augur.util import logger
@@ -66,3 +67,11 @@ def test(app, from_directory):
     """
     app.log.info(pyrcss.util.run_tests(from_directory=from_directory, dry_run=True))
     pyrcss.util.run_tests(from_directory=from_directory)
+
+@cli.command('kill', short_help='Kill Augur')
+@pass_application
+def kill(app):
+    """
+    kill running augur processes
+    """
+    subprocess.call('util/scripts/control/augurkill.sh')
