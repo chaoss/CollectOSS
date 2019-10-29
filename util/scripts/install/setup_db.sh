@@ -153,7 +153,7 @@ function create_db_schema() {
 echo "If you need to install Postgres, the downloads can be found here: https://www.postgresql.org/download/"
 echo
 install_locally="Would you like create the Augur database, user and schema LOCALLY?"
-install_remotely="Would you like to add the Augur schema to a REMOTE Postgres 10 or 11 database?"
+install_remotely="Would you like to add the Augur schema to an already created Postgres 10 or 11 database (local or remote)?"
 already_installed="Would you like to connect to a database already configured with Augur's schema? "
 echo
 

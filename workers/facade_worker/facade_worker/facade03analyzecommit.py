@@ -390,13 +390,15 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 		added,removed,whitespace)
 
 	# Remove the working commit.
-	remove_commit = ("DELETE FROM working_commits "
-		"WHERE repos_id = %s AND working_commit = %s")
-	cursor_local.execute(remove_commit, (repo_id,commit))
-	db_local.commit()
+	try: 
+		remove_commit = ("DELETE FROM working_commits "
+			"WHERE repos_id = %s AND working_commit = %s")
+		cursor_local.execute(remove_commit, (repo_id,commit))
+		db_local.commit()
 
-	cfg.log_activity('Debug','Completed and removed working commit: %s' % commit)
-
+		cfg.log_activity('Debug','Completed and removed working commit: %s' % commit)
+	except:
+		cfg.log_activity('Info', 'Some shit happened in removing this working commit jack: %s' % commit)
 	# If multithreading, clean up the local database
 
 	if multithreaded:

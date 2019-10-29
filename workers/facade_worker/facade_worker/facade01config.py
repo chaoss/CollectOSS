@@ -421,15 +421,18 @@ class Config:
             db_pass = json['password']
             db_name = json['database']
             db_host = json['host']
+            db_port = json['port']
             db_user_people = json['user']
             db_pass_people = json['password']
             db_name_people = json['database']
             db_host_people = json['host']
+            db_port_people = json['port']
             # Open a general-purpose connection
             db,cursor = self.database_connection(
                 db_host,
                 db_user,
                 db_pass,
-                db_name, False, False)
+                db_name,
+                db_port, False, False)
             self.cursor.execute(query, (level, status))
             self.db.commit()
