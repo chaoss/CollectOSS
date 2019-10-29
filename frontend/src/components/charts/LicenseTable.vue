@@ -10,9 +10,10 @@
           </thead>
           <tbody>
             <tr v-for="el in values">
-              <a v-bind:href="ldata[0][el['short_name']]" target="_blank">
+            <a v-bind:href="ldata[0][el['short_name']]" target="_blank">
                 <td>{{el['short_name']}}</td>
               </a>
+              <td>{{el['count']}}</td>
             </tr>
           </tbody>
         </table>

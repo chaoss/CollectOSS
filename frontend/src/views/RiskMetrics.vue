@@ -37,18 +37,11 @@
       <div class="col-6">
         <license-table
           source="licenseDeclared"
-          :headers="['Short Name']"
+          :headers="['Short Name', 'Count']"
           :ldata="licenses"
           :fields="['short_name']"
           title="License Declared">
         </license-table>
-        <br><br>
-        <download-card
-          v-if="loaded_sbom"
-          title="Software Bill of Materials"
-          :data="values"
-          source="sbom">
-        </download-card>
       </div>
       <div class="col-6">
         <cii-table
