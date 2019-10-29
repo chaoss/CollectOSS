@@ -46,7 +46,7 @@ def excpt(app):
 
 
 @cli.command('upgrade', short_help='Upgrade Augur')
-@click.option('--from-directory', '-f', type=click.Path(), help='Upgrade from a provided directroy rather than git.')
+@click.option('--from-directory', '-f', type=click.Path(), help='Upgrade from a provided directory rather than git.')
 @pass_application
 def upgrade(app, from_directory):
     """
