@@ -22,10 +22,11 @@ INSERT INTO "augur_data"."settings" VALUES (13, 'results_visibility', 'show', '2
 INSERT INTO "augur_data"."settings" VALUES (1, 'start_date', '2001-01-01', '1900-01-22 20:34:51');
 INSERT INTO "augur_data"."settings" VALUES (4, 'log_level', 'Debug', '2019-05-07 12:47:26');
 INSERT INTO "augur_data"."settings" VALUES (2, 'repo_directory', '$HOME/augur_repos/', '2019-05-07 12:47:26');
-INSERT INTO "augur_data"."settings" VALUES (8, 'affiliations_processed', '2019-06-17 17:49:58.004522+00', '1900-01-22 20:36:27');
-INSERT INTO "augur_data"."settings" VALUES (9, 'aliases_processed', '2019-06-17 17:49:58.0067+00', '1900-01-22 20:36:27');
 INSERT INTO "augur_data"."settings" VALUES (7, 'working_author', 'done', '1900-01-22 20:23:43');
 INSERT INTO "augur_data"."settings" VALUES (3, 'utility_status', 'Idle', '1900-01-22 20:38:07');
+INSERT INTO "augur_data"."settings"("id", "setting", "value", "last_modified") VALUES (8, 'affiliations_processed', '2001-10-29 12:22:25', '1900-01-22 20:36:27');
+INSERT INTO "augur_data"."settings"("id", "setting", "value", "last_modified") VALUES (9, 'aliases_processed', '2001-10-29 12:22:25', '1900-01-22 20:36:27');
+
 COMMIT;
 
 
