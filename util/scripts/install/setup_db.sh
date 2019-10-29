@@ -45,9 +45,13 @@ function get_api_key_and_repo_path() {
   echo
 
   while [ ! -d "$facade_repo_path" ]; do
+    mkdir $facade_repo_path
+  done
+
+  while [ ! -d "$facade_repo_path" ]; do
     echo
-    echo "Invalid path specified. Please provide a valid directory."
-    echo "The directory must already exist, and the path must be explicit (no environment variables allowed) and absolute."
+    echo "Invalid path specified. Could not create the directory."
+    echo "The directory must already exist and be absolute, or the base directory of the facade repository path must exist so we can create the directory for you."
     read -p "Facade repo path: " facade_repo_path
     echo
   done
