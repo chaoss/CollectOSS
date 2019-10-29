@@ -359,9 +359,10 @@ class Config:
             self.cursor_people = cursor
             self.db_people = db
         elif not multi_threaded_connection:
-            self.cursor = cursor
-            self.db = db
-            
+            #self.cursor = cursor
+            #self.db = db
+            self.cursor_people = cursor
+            self.db_people = db
 
         # else:
 
