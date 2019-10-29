@@ -12,4 +12,3 @@ echo "You hid behind a bunch of thistle,"
 echo "And shooted him dead with a great hoss pistol."
 echo "http://boston1775.blogspot.com/2014/07/o-burr-o-burr-what-hast-thou-done.html"
 echo "If Augur were Alexander Hamilton, I guess  you're Aaron Burr.  Augur is killed!"
-
