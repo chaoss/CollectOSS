@@ -398,7 +398,7 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 
 		cfg.log_activity('Debug','Completed and removed working commit: %s' % commit)
 	except:
-		cfg.log_activity('Info', 'Some shit happened in removing this working commit jack: %s' % commit)
+		cfg.log_activity('Info', 'Working Commit: %s' % commit)
 	# If multithreading, clean up the local database
 
 	if multithreaded:
