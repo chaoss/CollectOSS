@@ -330,7 +330,7 @@ class Config:
 
     #### Global helper functions ####
 
-    def database_connection(self, db_host,db_user,db_pass,db_name, people, multi_threaded_connection):
+    def database_connection(self, db_host,db_user,db_pass,db_name, db_port, people, multi_threaded_connection):
 
     # Return a database connection based upon which interpreter we're using. CPython
     # can use any database connection, although MySQLdb is preferred over pymysql
@@ -348,7 +348,7 @@ class Config:
             password = db_pass,
             database = db_name,
             # charset = 'utf8mb4',
-            port=5432,
+            port = db_port,
             options=f'-c search_path={db_schema}',
             connect_timeout = 31536000,)
 
@@ -359,9 +359,10 @@ class Config:
             self.cursor_people = cursor
             self.db_people = db
         elif not multi_threaded_connection:
-            self.cursor = cursor
-            self.db = db
-            
+            #self.cursor = cursor
+            #self.db = db
+            self.cursor_people = cursor
+            self.db_people = db
 
         # else:
 
@@ -421,15 +422,18 @@ class Config:
             db_pass = json['password']
             db_name = json['database']
             db_host = json['host']
+            db_port = json['port']
             db_user_people = json['user']
             db_pass_people = json['password']
             db_name_people = json['database']
             db_host_people = json['host']
+            db_port_people = json['port']
             # Open a general-purpose connection
             db,cursor = self.database_connection(
                 db_host,
                 db_user,
                 db_pass,
-                db_name, False, False)
+                db_name,
+                db_port, False, False)
             self.cursor.execute(query, (level, status))
             self.db.commit()

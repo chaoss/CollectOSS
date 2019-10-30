@@ -1,19 +1,18 @@
 <template>
   <d-card>
     <d-card-body :title="title" class="text-center">
-<<<<<<< Updated upstream
       <spinner v-if="!loaded"></spinner>
       <div v-if="loaded">
-        <strong><p>Click on the names of highlighted licenses to learn more</p></strong>
         <table class="licenseTable">
-          <thead class="bg-light">
+          <thead style="border:2pt solid #f7f7f7;" class="bg-light">
             <th v-for="header in headers">{{header}}</th>
           </thead>
-          <tbody>
-            <tr v-for="el in values">
-              <a v-bind:href="ldata[0][el['short_name']]" target="_blank">
+          <tbody style="border:2pt solid #f7f7f7;" >
+            <tr style="border-bottom:1.5pt solid #f7f7f7;" v-for="el in values">
+            <a v-bind:href="ldata[0][el['short_name']]" target="_blank">
                 <td>{{el['short_name']}}</td>
               </a>
+              <td>{{el['count']}}</td>
             </tr>
           </tbody>
         </table>

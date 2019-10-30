@@ -38,6 +38,9 @@ default:
 install:
 	@ ./util/scripts/install/install.sh
 
+install-augur-sbom: 
+	@ ./util/scripts/install/nomos.sh 
+
 version:
 	$(eval OLDVERSION=$(shell $(AUGUR_PYTHON) ./util/print-version.py))
 	@ echo "installed version: $(OLDVERSION)"
