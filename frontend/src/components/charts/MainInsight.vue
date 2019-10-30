@@ -65,8 +65,9 @@ export default {
         body = doc.getElementsByTagName("body")[0],
         x = win.innerWidth || docElem.clientWidth || body.clientWidth,
         y = win.innerHeight || docElem.clientHeight || body.clientHeight;
-      this.x = x;
-      this.y = y;
+      
+      this.x = this.$refs.holder.clientWidth;
+      this.y = this.$refs.holder.clientHeight;
       this.loaded = false;
       if (this.data) {
         let dataFilled = true;
@@ -98,10 +99,13 @@ export default {
       // })
       console.log(this.data, this.values);
 
+      // find scale for x axis
+      let minDate = new Date(this.values[0].date);
+      let maxDate = new Date(this.values[this.values.length - 1].date);
+
       let config = {
         // "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
-        width: this.x / 1.9,
-        height: this.y / 2.5,
+        width: this.x * .85,
         padding: { left: 0, top: 10, right: 20, bottom: 0 },
         selection: {
           grid: {
@@ -227,14 +231,14 @@ export default {
                 scale: {
                   domain: [
                     {
-                      year: 2018,
-                      month: new Date().getMonth(),
-                      date: new Date().getDate()
+                      year: minDate.getFullYear(),
+                      month: minDate.getMonth(),
+                      date: minDate.getDate()
                     },
                     {
-                      year: new Date().getFullYear(),
-                      month: new Date().getMonth(),
-                      date: new Date().getDate()
+                      year: maxDate.getFullYear(),
+                      month: maxDate.getMonth(),
+                      date: maxDate.getDate()
                     }
                   ]
                 }
@@ -376,5 +380,6 @@ export default {
 <style scoped>
 .mainInsightDiv {
   width: 100% !important;
+  margin: 40px auto;
 }
 </style>

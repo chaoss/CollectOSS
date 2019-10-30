@@ -469,6 +469,7 @@ export default class InspectInsight extends Vue {
 <style scoped>
 .main-insight-container {
   overflow: visible !important;
+  width: 52vw;
 }
 </style>
 
