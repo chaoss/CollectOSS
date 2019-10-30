@@ -37,7 +37,7 @@
       <div class="col-6">
         <license-table
           source="licenseDeclared"
-          :headers="['Short Name']"
+          :headers="['Short Name', 'Count']"
           :ldata="licenses"
           :fields="['short_name']"
           title="License Declared">
