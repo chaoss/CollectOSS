@@ -44,9 +44,9 @@ function get_api_key_and_repo_path() {
   read -p "Facade repo path: " facade_repo_path
   echo
 
-  while [ ! -d "$facade_repo_path" ]; do
-    mkdir $facade_repo_path
-  done
+  # while [ ! -d "$facade_repo_path" ]; do
+  #   mkdir $facade_repo_path
+  # done
 
   while [ ! -d "$facade_repo_path" ]; do
     echo
