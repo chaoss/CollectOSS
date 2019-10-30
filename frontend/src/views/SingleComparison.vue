@@ -1,17 +1,19 @@
 <template>
   <d-container fluid class="main-content-container px-4">
     <div class="row">
-      <div class="col col-5">
+      <div class="col col-4">
         <d-breadcrumb class="singleComparison">
           <d-breadcrumb-item :active="false" :text="base.rg_name" href="#" @click="onRepoGroup({rg_name: base.rg_name, repo_group_id: base.repo_group_id})"/>
           <d-breadcrumb-item :active="true" :text="base.repo_name" href="#" />
         </d-breadcrumb>
       </div>
-      <div class="col col-3" v-for="repo in compRepoNames">
-        <d-breadcrumb class="singleComparison"
-          <d-breadcrumb-item :active="false" :text="repo.split('/')[0]" href="#"/>
-          <d-breadcrumb-item :active="true" :text="repo.split('/')[1]" href="#" />
-        </d-breadcrumb>
+      <div class="col col-4" v-for="repo in compRepoNames">
+        <ol class="breadcrumb singleComparison">
+          <d-breadcrumb class="singleComparison"
+            <d-breadcrumb-item :active="false" :text="repo.split('/')[0]" href="#"/>
+            <d-breadcrumb-item :active="true" :text="repo.split('/')[1]" href="#" />
+          </d-breadcrumb>
+        </ol>
       </div>
       <!-- <div class="col col-6"></div> -->
     </div>

@@ -163,7 +163,7 @@ def sub_projects(self, repo_group_id, repo_id=None, begin_date=None, end_date=No
 @annotate(tag='sbom-download')
 def sbom_download(self, repo_group_id, repo_id=None):
     """REQUIRES SBOMS TO BE PRESENT IN THE DATABASE
-    
+
     :param repo_id: The repository's repo_id, defaults to None
     :return: dosocs sbom
     """
@@ -332,39 +332,22 @@ def license_declared(self, repo_group_id, repo_id=None):
     repo_id_SQL = None
     repo_name_list = None
 
-    if repo_id:
-        license_declared_SQL = s.sql.text("""
-            SELECT packages.name as name, short_name, licenses.comment as note
-            FROM packages,
-                files_licenses,
-                packages_files,
-                repo,
-                licenses
-            WHERE packages.name = repo.repo_name
-            and licenses.license_id = files_licenses.license_id
-            and repo_id = :repo_id
-            and packages.package_id = packages_files.package_id
-            and packages_files.file_id = files_licenses.file_id
-            GROUP BY packages.name, short_name, note
-        """)
-    else:
-        license_declared_SQL = s.sql.text("""
-            SELECT packages.name as name, short_name, licenses.comment as note
-            FROM packages,
-                files_licenses,
-                packages_files,
-                repo,
-                licenses
-            WHERE packages.name = repo.repo_name
-            and licenses.license_id = files_licenses.license_id
-            and repo_group_id = :repo_group_id
-            and packages.package_id = packages_files.package_id
-            and packages_files.file_id = files_licenses.file_id
-            GROUP BY packages.name, short_name, note
-        """)
+    license_declared_SQL = s.sql.text("""
+    select a.license_id, b.short_name, count(*) from files_licenses a, licenses b, augur_repo_map c, packages d, files e
+    where a.license_id = b.license_id
+    and
+    d.package_id = c.dosocs_pkg_id
+    and
+    e.file_id = a.file_id
+    and
+    e.package_id = d.package_id
+    and
+    c.repo_id = :repo_id
+    group by a.license_id, b.short_name
+    order by b.short_name;
+    """)
 
-    results = pd.read_sql(license_declared_SQL, self.spdx_db, params={'repo_id': repo_id, 'repo_group_id':repo_group_id})
-
+    results = pd.read_sql(license_declared_SQL, self.spdx_db, params={'repo_id': repo_id})
     return results
 
 @annotate(tag='license-coverage')

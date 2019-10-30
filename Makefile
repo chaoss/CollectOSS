@@ -1,74 +1,70 @@
-.PHONY: all test clean install python-docs api-docs python-docs dev-start dev-stop
-.PHONY: dev-restart monitor monitor-backend monitor-frontend upgrade
-.PHONY: frontend install-ubuntu-dependencies version
-
-SERVECOMMAND=augur run
+SERVE_COMMAND=augur run
 ENABLE_HOUSEKEEPER=--enable-housekeeper
 OLDVERSION="null"
 EDITOR?="vi"
 MODEL=**
 AUGUR_PIP?='pip'
 AUGUR_PYTHON?='python'
-AUGUR_PIP?='pip'
 
 default:
 	@ echo "Installation Commands:"
 	@ echo "    install                         Installs augur using pip"
-	@ echo "    clean                           Cleans the developer environment"
-	@ echo "    upgrade                         Pulls newest version, installs, performs migrations"
 	@ echo "    version                         Print the currently installed version"
 	@ echo "    config                          Creates a new augur.config.json"
+	@ echo "    clean                           Removes potentially troublesome compiled files"
+	@ echo "    rebuild                         Removes build/compiled files & binaries and reinstalls the project"
 	@ echo
 	@ echo "Development Commands:"
 	@ echo "    dev                             Starts the full stack and monitors the logs"
-	@ echo "    dev-start                       Runs 'make serve' and 'brunch w -s' in the background"
-	@ echo "    dev-stop                        Stops the backgrounded commands"
-	@ echo "    dev-restart                     Runs dev-stop then dev-restart"
+	@ echo "    dev-start                       Runs the backend and frontend servers in the background"
+	@ echo "    dev-stop                        Stops the backgrounded backend & frontend server commands"
+	@ echo "    dev-restart                     Runs dev-stop then dev-start"
 	@ echo
 	@ echo "Testing Commands:"
-	@ echo "    test                            Runs all pytest unit tests and API tests"
+	@ echo "    test MODEL={model}              Runs all pytest unit tests and API tests for the specified metrics model. Defaults to all"
 	@ echo "    test-functions MODEL={model}    Run pytest unit tests for the specified metrics model. Defaults to all"
 	@ echo "    test-routes MODEL={model}       Run API tests for the specified metrics model. Defaults to all"
 	@ echo
 	@ echo "Documentation Commands:"
-	@ echo "    python-docs                     Generates new Sphinx documentation"
-	@ echo "    api-docs                        Generates new apidocjs documentation"
+	@ echo "    sphinx-docs                     Generates the documentation using sphinx"
+	@ echo "    api-docs                        Generates the REST API documentation using apidocjs"
 	@ echo "    docs                            Generates all documentation"
-	@ echo
-	@ echo "Prototyping:"
-	@ echo "    jupyter                         Launches the jupyter"
-	@ echo "    create-jupyter-env              Creates a jupyter environment for Augur"
-	@ echo
-	@ echo "Upgrade/Migration Helpers:"
-	@ echo "    to-json                         Converts old augur.cfg to new augur.config.json"
-	@ echo "    to-env                          Converts augur.config.json to a script that exports those values as environment variables"
-
 
 
 #
 #  Installation
 #
+.PHONY: install version config
 install:
 	@ ./util/scripts/install/install.sh
+
+install-augur-sbom: 
+	@ ./util/scripts/install/nomos.sh 
 
 version:
 	$(eval OLDVERSION=$(shell $(AUGUR_PYTHON) ./util/print-version.py))
 	@ echo "installed version: $(OLDVERSION)"
 
-upgrade: version install-dev
-	@ $(AUGUR_PYTHON) util/post-upgrade.py $(OLDVERSION)
-	@ echo "Upgraded from $(OLDVERSION) to $(shell $(AUGUR_PYTHON) util/print-version.py)."
-
 config:
-	@ bash -c '$(AUGUR_PYTHON) util/make-config.py'
+	@ ./util/scripts/install/config.sh
+
+clean:
+	@ echo "Removing node_modules, logs, caches, and some other dumb stuff that can be annoying..."
+	@ rm -rf runtime node_modules frontend/node_modules frontend/public augur.egg-info .pytest_cache logs 
+	@ find . -name \*.pyc -delete
+	@ find . -type f -name "*.lock" -delete
+
+rebuild: clean
+	@ util/scripts/install/rebuild.sh
 
 
 #
 #  Development
 #
+.PHONY: dev-start dev-stop dev monitor-frontend monitor-backend monitor frontend backend-stop backend-start backend-restart backend clean rebuild
 dev-start: dev-stop
 	@ mkdir -p logs runtime
-	@ bash -c '$(SERVECOMMAND) $(ENABLE_HOUSEKEEPER) >logs/backend.log 2>&1 & echo $$! > logs/backend.pid;'
+	@ bash -c '$(SERVE_COMMAND) $(ENABLE_HOUSEKEEPER) >logs/backend.log 2>&1 & echo $$! > logs/backend.pid;'
 	@ bash -c 'sleep 4; cd frontend; npm run serve >../logs/frontend.log 2>&1 & echo $$! > ../logs/frontend.pid'
 	@ echo "Server     Description       Log                   Monitoring                   PID                        "
 	@ echo "------------------------------------------------------------------------------------------                 "
@@ -98,12 +94,8 @@ monitor:
 
 dev-restart: dev-stop dev-start
 
-server:
-	@ $(AUGUR_PYTHON) -m augur.server
-
 frontend:
-	@ bash -c 'cd frontend; brunch build'
-	@ bash -c '(sleep 4; cd frontend; brunch w -s >../logs/frontend.log 2>&1 & echo $$! > ../logs/frontend.pid)'
+	@ bash -c 'cd frontend; npm run serve'
 
 backend-stop:
 	@ bash -c 'if [[ -s logs/backend.pid  && (( `cat logs/backend.pid`  > 1 )) ]]; then printf "sending SIGTERM to python (Gunicorn) at PID $$(cat logs/backend.pid); "; kill `cat logs/backend.pid` ; rm logs/backend.pid  > /dev/null 2>&1; fi;'
@@ -111,95 +103,40 @@ backend-stop:
 
 backend-start:
 	@ mkdir -p logs runtime
-	@ bash -c '$(SERVECOMMAND) >logs/backend.log 2>&1 & echo $$! > logs/backend.pid;'
+	@ bash -c '$(SERVE_COMMAND) $(ENABLE_HOUSEKEEPER) >logs/backend.log 2>&1 & echo $$! > logs/backend.pid;'
 
 backend-restart: backend-stop backend-start
 
 backend: backend-restart
 
+
+#
+# Testing
+#
+.PHONY: test test-functions test-routes
 test: test-functions test-routes
 
 test-functions:
 	@ bash -c '$(AUGUR_PYTHON) -m pytest -ra -s augur/metrics/$(MODEL)/test_$(MODEL)_functions.py'
 
 test-routes:
-	@ python test/api/test_api.py $(MODEL)
+	@ $(AUGUR_PYTHON) test/api/test_api.py $(MODEL)
+
 
 # 
 # Documentation
 # 
-python-docs:
+.PHONY: sphinx-docs sphinx-docs-view api-docs api-docs-view docs
+sphinx-docs:
 	@ bash -c 'cd docs/ && rm -rf build/ && make html;'
 
-python-docs-view: python-docs
+sphinx-docs-view: sphinx-docs
 	@ bash -c 'open docs/build/html/index.html'
 
 api-docs:
-	@ bash -c 'cd docs && apidoc --debug -f "\.py" -i ../augur/ -o api/; rm -rf ../frontend/public/api_docs; mv api ../frontend/public/api_docs'
+	@ bash -c 'cd docs && apidoc -f "\.py" -i ../augur/ -o api/; rm -rf ../frontend/public/api_docs; mv api ../frontend/public/api_docs'
 
 api-docs-view: api-docs
 	@ bash -c "open frontend/public/api_docs/index.html"
 
-docs: api-docs python-docs
-
-.PHONY: unlock
-unlock:
-	find . -type f -name "*.lock" -delete
-
-clean:
-	@ echo "Removing node_modules, logs, caches, and some other dumb stuff that can be annoying..."
-	@ rm -rf runtime node_modules frontend/node_modules frontend/public augur.egg-info .pytest_cache logs 
-	@ find . -name \*.pyc -delete
-
-rebuild: clean
-	@ util/scripts/install/rebuild.sh
-
-
-
-
-#
-#  Prototyping
-#
-jupyter:
-		@ bash -c 'cd notebooks; jupyter notebook'
-
-create-jupyter-env:
-		bash -c '$(AUGUR_PYTHON) -m ipykernel install --user --name augur --display-name "Python (augur)";'
-
-
-#
-#  Upgrade helpers
-#
-.PHONY: to-json
-to-json:
-	@ bash -c '$(AUGUR_PYTHON) util/post-upgrade.py migrate_config_to_json'
-
-.PHONY: to-env
-to-env:
-	@ bash -c 'AUGUR_EXPORT_ENV=1; AUGUR_INIT_ONLY=1; augur'
-
-
-
-#
-#  System-specific
-#
-install-ubuntu-dependencies:
-	@ echo "Downloading NodeSource Installer..."
-	curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
-	@ echo "Installing Node..."
-	sudo apt-get install nodejs
-	@ echo "Downloading Anaconda Installer..."
-	curl -SL https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh > /tmp/conda.sh
-	@ echo "Installing Anaconda..."
-	bash /tmp/conda.sh
-	@ echo "Done. Please note the 'conda' command must be in your path for Makefile commands to work"
-
-
-install-os-x-dependencies:
-	@ echo "Downloading dependencies..."
-	brew install node
-	@ echo "Downloading Anaconda installer to ~/Downloads..."
-	curl -SL https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh > /tmp/conda.sh
-	@ echo "Installing Anaconda..."
-	bash /tmp/conda.sh
-	@ echo "Done. Please note the 'conda' command must be in your path for Makefile commands to work"
+docs: api-docs sphinx-docs

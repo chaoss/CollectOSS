@@ -6,9 +6,9 @@ logs/
 __pycache__/
 *$py.class
 *.pyc
-augur_venv/
 runtime/
 logs/
+frontend/public/api_docs/
 
 # C extensions
 *.so

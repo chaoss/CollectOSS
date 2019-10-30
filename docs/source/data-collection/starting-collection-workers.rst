@@ -4,23 +4,22 @@ Starting Data Collection Workers
 Workers are continuous collection processes that populate parts of Augur's data model. Each worker follows a consistent design that includes: 
 
 1. Having the housekeeper notify the broker of what work needs to be done (1), the worker notifying the housekeeper that its ready to work when it starts (2), the broker passing work to the worker (3), and the worker letting the broker know when its finished (4). 
-   
-.. _workers-dir:
 
 .. image:: workflow.png
   :alt: Housekeeper, Broker & Worker
   :align: center   
 
 2. Until the worker starts, the broker listens for the worker on a port specified in the worker block of the augur.config.json file. Each block contains a minimum of four parameters: 
-    - model: The part of the model populated by the worker 
-    - given: The parameter passed into the model to scope collection
-    - delay: How long to pause between collection cycles, expressed in seconds
-    - repo_group_id: You can specify an array of repo_group_ids, or "0", which will collect all data for all repo_group_id's. 
-		   
-.. code:: json 
-    :linenos: 
 
-    "Housekeeper": {
+- model: The part of the model populated by the worker 
+- given: The parameter passed into the model to scope collection
+- delay: How long to pause between collection cycles, expressed in seconds
+- repo_group_id: You can specify an array of repo_group_ids, or "0", which will collect all data for all repo_group_id's. 
+
+
+.. code-block:: json
+
+    {
         "jobs": [
             {
                 "model": "issues",
@@ -60,7 +59,7 @@ Workers are continuous collection processes that populate parts of Augur's data 
                 "repo_group_id": 0
             }
         ]
-    },
+    }
 
 
 3. The data collected by the worker is determined by the models listed in the housekeeper block of the augur.config.json file. 
@@ -68,9 +67,9 @@ Workers are continuous collection processes that populate parts of Augur's data 
 
 .. _workers-dir:
 
---------------------
+-------------------------------------------
 Locating the Workers: Augur's Oompa Loompas 
---------------------
+-------------------------------------------
 .. image:: workers-dir.png
   :alt: Augur Workers 
 

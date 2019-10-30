@@ -203,10 +203,12 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 	db_pass = json['password']
 	db_name = json['database']
 	db_host = json['host']
+	db_port = json['port']
 	db_user_people = json['user']
 	db_pass_people = json['password']
 	db_name_people = json['database']
 	db_host_people = json['host']
+	db_port_people = json['port']
 
 	# Set up new threadsafe database connections if multithreading. Otherwise
 	# use the gloabl database connections so we don't incur a performance
@@ -217,13 +219,15 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 			db_host,
 			db_user,
 			db_pass,
-			db_name, False, True)
+			db_name,
+			db_port, False, True)
 
 		db_people_local,cursor_people_local = cfg.database_connection(
 			db_host_people,
 			db_user_people,
 			db_pass_people,
-			db_name_people, True, True)
+			db_name_people,
+			db_port_people, True, True)
 
 	else:
 		db_local = cfg.db
@@ -386,13 +390,15 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 		added,removed,whitespace)
 
 	# Remove the working commit.
-	remove_commit = ("DELETE FROM working_commits "
-		"WHERE repos_id = %s AND working_commit = %s")
-	cursor_local.execute(remove_commit, (repo_id,commit))
-	db_local.commit()
+	try: 
+		remove_commit = ("DELETE FROM working_commits "
+			"WHERE repos_id = %s AND working_commit = %s")
+		cursor_local.execute(remove_commit, (repo_id,commit))
+		db_local.commit()
 
-	cfg.log_activity('Debug','Completed and removed working commit: %s' % commit)
-
+		cfg.log_activity('Debug','Completed and removed working commit: %s' % commit)
+	except:
+		cfg.log_activity('Info', 'Working Commit: %s' % commit)
 	# If multithreading, clean up the local database
 
 	if multithreaded:

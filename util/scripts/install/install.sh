@@ -12,17 +12,23 @@ if [[ $? -ne 0 ]]; then
   exit 1
 fi
 
+mkdir logs
+
 # backend
-util/scripts/install/backend.sh
+util/scripts/install/backend.sh > logs/backend-install.log 2>logs/backend-install.err 
+echo "Back End Installation Complete!  Check logs/backend-installer.log and logs/backend-installer.err"
 
 # workers
-util/scripts/install/workers.sh
+util/scripts/install/workers.sh >logs/workers.log 2>logs/workers.err 
+echo "Worker Installation Complete! Check logs/workers.log and logs/workers.err"
 
 # docs
 util/scripts/install/docs.sh
 
 # config
 util/scripts/install/config.sh
+
+
 
 echo
 echo "Would you like to install Augur's frontend dependencies?"

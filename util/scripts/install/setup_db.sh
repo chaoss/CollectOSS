@@ -44,10 +44,14 @@ function get_api_key_and_repo_path() {
   read -p "Facade repo path: " facade_repo_path
   echo
 
+  # while [ ! -d "$facade_repo_path" ]; do
+  #   mkdir $facade_repo_path
+  # done
+
   while [ ! -d "$facade_repo_path" ]; do
     echo
-    echo "Invalid path specified. Please provide a valid directory."
-    echo "The directory must already exist, and the path must be explicit (no environment variables allowed) and absolute."
+    echo "Invalid path specified. Could not create the directory."
+    echo "The directory must already exist and be absolute, or the base directory of the facade repository path must exist so we can create the directory for you."
     read -p "Facade repo path: " facade_repo_path
     echo
   done
@@ -126,7 +130,7 @@ function create_db_schema() {
     psql -h $host -d $database -U $db_user -p $port -a -w -f persistence_schema/3-augur_operations.sql
     psql -h $host -d $database -U $db_user -p $port -a -w -f persistence_schema/4-spdx.sql
     psql -h $host -d $database -U $db_user -p $port -a -w -f persistence_schema/5-seed-data.sql
-    psql -h $host -d $database -U $db_user -p $port -a -w -c "UPDATE settings SET VALUE = '$facade_repo_path' WHERE setting='repo_directory';"
+    psql -h $host -d $database -U $db_user -p $port -a -w -c "UPDATE augur_data.settings SET VALUE = '$facade_repo_path' WHERE setting='repo_directory';"
     echo "Schema created"
 
     echo "Would you like to load your database with some sample data provided by Augur?"
@@ -149,7 +153,7 @@ function create_db_schema() {
 echo "If you need to install Postgres, the downloads can be found here: https://www.postgresql.org/download/"
 echo
 install_locally="Would you like create the Augur database, user and schema LOCALLY?"
-install_remotely="Would you like to add the Augur schema to a REMOTE Postgres 10 or 11 database?"
+install_remotely="Would you like to add the Augur schema to an already created Postgres 10 or 11 database (local or remote)?"
 already_installed="Would you like to connect to a database already configured with Augur's schema? "
 echo
 

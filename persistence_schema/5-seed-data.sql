@@ -6,7 +6,7 @@ COMMIT;
 INSERT INTO "augur_data"."contributors"("cntrb_id", "cntrb_login", "cntrb_email", "cntrb_company", "cntrb_created_at", "cntrb_type", "cntrb_fake", "cntrb_deleted", "cntrb_long", "cntrb_lat", "cntrb_country_code", "cntrb_state", "cntrb_city", "cntrb_location", "cntrb_canonical", "gh_user_id", "gh_login", "gh_url", "gh_html_url", "gh_node_id", "gh_avatar_url", "gh_gravatar_id", "gh_followers_url", "gh_following_url", "gh_gists_url", "gh_starred_url", "gh_subscriptions_url", "gh_organizations_url", "gh_repos_url", "gh_events_url", "gh_received_events_url", "gh_type", "gh_site_admin", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (1, 'not-provided', NULL, NULL, '2019-06-13 11:33:39', NULL, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, 'nobody', 'http://fake.me', 'http://fake.me', 'x', 'http://fake.me', NULL, 'http://fake.me', 'http://fake.me', 'http://fake.me', 'http://fake.me', 'http://fake.me', 'http://fake.me', 'http://fake.me', 'http://fake.me', NULL, NULL, NULL, NULL, NULL, NULL, '2019-06-13 16:35:25');
 
 INSERT INTO "augur_data"."repo_groups"("repo_group_id", "rg_name", "rg_description", "rg_website", "rg_recache", "rg_last_modified", "rg_type", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (1, 'Rails', 'Rails Ecosystem.', '', 0, '2019-06-03 15:55:20', 'GitHub Organization', 'load', 'one', 'git', '2019-06-05 13:36:25');
-INSERT INTO "augur_data"."repo"("repo_id", "repo_group_id", "repo_git", "repo_path", "repo_name", "repo_added", "repo_status", "repo_type", "url", "owner_id", "description", "primary_language", "created_at", "forked_from", "updated_at", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (1, 1, 'https://github.com/rails/rails.git', 'github.com/rails/', 'rails', '2019-05-31 14:28:44', 'Complete', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'data load', 'one', 'git', '2019-06-05 18:41:14');
+INSERT INTO "augur_data"."repo"("repo_id", "repo_group_id", "repo_git", "repo_path", "repo_name", "repo_added", "repo_status", "repo_type", "url", "owner_id", "description", "primary_language", "created_at", "forked_from", "updated_at", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (1, 1, 'https://github.com/rails/rails.git', 'github.com/rails/', 'rails', '2019-05-31 14:28:44', 'New', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'data load', 'one', 'git', '2019-06-05 18:41:14');
 
 
 -- ----------------------------
@@ -22,11 +22,13 @@ INSERT INTO "augur_data"."settings" VALUES (13, 'results_visibility', 'show', '2
 INSERT INTO "augur_data"."settings" VALUES (1, 'start_date', '2001-01-01', '1900-01-22 20:34:51');
 INSERT INTO "augur_data"."settings" VALUES (4, 'log_level', 'Debug', '2019-05-07 12:47:26');
 INSERT INTO "augur_data"."settings" VALUES (2, 'repo_directory', '$HOME/augur_repos/', '2019-05-07 12:47:26');
-INSERT INTO "augur_data"."settings" VALUES (8, 'affiliations_processed', '2019-06-17 17:49:58.004522+00', '1900-01-22 20:36:27');
-INSERT INTO "augur_data"."settings" VALUES (9, 'aliases_processed', '2019-06-17 17:49:58.0067+00', '1900-01-22 20:36:27');
 INSERT INTO "augur_data"."settings" VALUES (7, 'working_author', 'done', '1900-01-22 20:23:43');
 INSERT INTO "augur_data"."settings" VALUES (3, 'utility_status', 'Idle', '1900-01-22 20:38:07');
+INSERT INTO "augur_data"."settings"("id", "setting", "value", "last_modified") VALUES (8, 'affiliations_processed', '2001-10-29 12:22:25', '1900-01-22 20:36:27');
+INSERT INTO "augur_data"."settings"("id", "setting", "value", "last_modified") VALUES (9, 'aliases_processed', '2001-10-29 12:22:25', '1900-01-22 20:36:27');
+
 COMMIT;
+
 
 
 -- Job for GitHub Worker
@@ -121,3 +123,8 @@ INSERT INTO "augur_data"."chaoss_metric_status" VALUES (79, 'experimental', 'lib
 INSERT INTO "augur_data"."chaoss_metric_status" VALUES (80, 'experimental', 'librariesio', 'metric', 'implemented', 'implemented', 'f', '/api/unstable/<owner>/<repo>/dependency_stats', NULL, 'Dependency Stats', 'experimental', '"dependency-stats"', 'Insight Worker', '0.0.1', 'librariesio', '2019-06-20 22:51:23', NULL);
 INSERT INTO "augur_data"."chaoss_metric_status" VALUES (81, 'experimental', 'librariesio', 'metric', 'implemented', 'implemented', 'f', '/api/unstable/<owner>/<repo>/dependents', NULL, 'Dependents', 'experimental', '"dependents"', 'Insight Worker', '0.0.1', 'librariesio', '2019-06-20 22:51:25', NULL);
 COMMIT;
+
+BEGIN;
+INSERT INTO "augur_data"."contributor_affiliations"("cntrb_id", "ca_id", "ca_domain", "ca_affiliation", "ca_start_date", "ca_active", "ca_last_modified", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (1, 25152, 'goggins.com', 'goggins', '2016-03-03', 1, '2019-10-29 12:22:25', NULL, NULL, NULL, '2019-10-29 17:22:30');
+COMMIT; 
+

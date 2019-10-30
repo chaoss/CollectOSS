@@ -1,0 +1,9 @@
+{
+  "dbname": "****",
+  "user": "****",
+  "password": "****",
+  "host": "localhost",
+  "port": 5433,
+  "dsfile": "2.0.tag.coverage",
+  "repos_path": "~/"
+}

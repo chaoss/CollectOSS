@@ -99,6 +99,8 @@ export default {
                     console.log("Repos given to endpoint action: ", payload.endpoints[0],payload.repos)
                     payload.repos.forEach((repo: any) => {
                         let ref = repo.url || repo.repo_name
+                        if (ref.includes('/'))
+                            ref = ref.split('/')[ref.split('/').length - 1]
                         // tempCache[repo.rg_name] = tempCache[repo.rg_name] || {}
                         tempCache[ref] = tempCache[ref] || {}
                         
@@ -113,6 +115,8 @@ export default {
                         let i = 0
                         payload.repos.forEach((repo: any) => {
                             let ref = repo.url || repo.repo_name
+                            if (ref.includes('/'))
+                                ref = ref.split('/')[ref.split('/').length - 1]
 
                             payload.endpoints.forEach((endpoint: string) => {
                                 console.log(ref, tempCache, endpoint)
@@ -125,6 +129,8 @@ export default {
 
                         payload.repos.forEach((repo: any) => {
                             let ref = repo.url || repo.repo_name
+                            if (ref.includes('/'))
+                                ref = ref.split('/')[ref.split('/').length - 1]
                             payload.endpoints.forEach((endpoint: string) => {
                                 if (!tempCache[ref][endpoint])
                                     allDone = false
@@ -246,59 +252,6 @@ export default {
             throw error;
         }
     },
-    // async loadRepoRelations(context:any, payload:any){
-    //     try {
-
-    //         context.dispatch('loadRepoGroups').then(() => {
-    //             context.state.getters.repoGroups.forEach((group: any): void => {
-    //                 repoGroups[group.rg_name] = group
-    //                 repoRelations[group.rg_name] = {};
-    //                 repos.filter((repo: any) => {
-    //                     return repo.rg_name === group.rg_name;
-    //                 }).forEach((repo: any) => {
-    //                     repoRelations[group.rg_name][repo.url] = repo
-    //                 });
-    //             });
-    //             context.commit('mutateCache', {
-    //                 property: 'repoRelations',
-    //                 with: repoRelations,
-    //             });
-    //         })
-    //     } catch(error) {
-    //         throw error;
-    //     }
-    // },
-    // getRepoRelations(context: any, payload: object) {
-    //     return new Promise ((resolve, reject) => {
-    //         setTimeout(() => {
-    //             let repoRelations = context.state.cache.getRepos || {};
-    //             let repoGroups = context.state.cache.getRepoGroups || {};
-    //             context.state.AugurAPI.getRepos().then((repos: object[]) => {
-    //                 context.state.AugurAPI.getRepoGroups().then((groups: object[]) => {
-    //                     // Move down between future relation endpoint
-    //                     groups.forEach((group: any): void => {
-    //                         repoGroups[group.rg_name] = group
-    //                         repoRelations[group.rg_name] = {};
-    //                         repos.filter((repo: any) => {
-    //                             return repo.rg_name === group.rg_name;
-    //                         }).forEach((repo: any) => {
-    //                             repoRelations[group.rg_name][repo.url] = repo
-    //                         });
-    //                     });
-    //                     context.commit('mutateCache', {
-    //                         property: 'repoRelations',
-    //                         with: repoRelations,
-    //                     });
-    //                     context.commit('mutateCache', {
-    //                         property: 'repoGroups',
-    //                         with: repoGroups,
-    //                     });
-    //                 });
-    //             resolve({ repoRelations, repoGroups });
-    //             });
-    //         }, 2000)
-    //     })
-    // },
     async addRepo(context: any, payload: any) {
         return new Promise((resolve, reject) => {
             setTimeout(()=> {

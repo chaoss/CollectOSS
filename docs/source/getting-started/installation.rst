@@ -1,28 +1,64 @@
-============================
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Installation
-============================
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+This documents details how to install Augur and its dependencies.
+
+================
 Dependencies
-----------------
+================
 
-Backend and data collection:
+Data collection
+---------------
+You will need:
 
--  `Git client <https://git-scm.com/book/en/v2/Getting-Started-Installing-Git>`__
+-  A `PostgreSQL 10 or higher <https://www.postgresql.org/download/>`__ installation.
+
+One of the reasons that Augur is so powerful is because of our `unified data model <../architecture/data-model.rst>`_.
+In order to ensure this data model remains performant even with large amounts of data, we use PostgreSQL as
+our database engine. 
+
+Before you start the installation, you will need to make sure you have write access to a PostgreSQL 10+ database.
+During the installation process you will be asked to provide the following credentials for the database:
+
+- database name
+- host
+- port
+- user
+- password for the user specified above
+
+The installation process will automatically set up the schema for the data model if it hasn't been created yet.
+After the schema has been set up, you'll be asked if you want to load the schema with some sample data (around 24 MB).
+If you're just curious about Augur and want to see our visualizations, this is a good way to get going quickly.
+
+.. note::
+
+    We also provide an option for connecting to a database with the schema already installed.
+
+Backend
+---------
+You will need:
+
 -  `GitHub Access Token <https://github.com/settings/tokens>`__ (no write access required)
 -  `Python 3.6 or higher <https://www.python.org/downloads/>`__
--  `pip <https://pip.pypa.io/en/stable/installing/>`__
--  A `PostgreSQL 11 <https://www.postgresql.org/download/>`__ installation.
 
-Note: in most cases, the installation process will automatically create the schema for you. However, if you so choose,
-you can in `install it yourself <../architecture/data-model.html#creating-the-schema>`_.
+Our REST API & data collection workers are written in Python 3, and a GitHub access key is **required** for data collection.
+We query the GitHub API to collect issue/pull request data, among other things.
 
-Frontend:
+Frontend
+---------
+You will need:
 
 -  `Vue.js <https://vuejs.org/>`__
 -  `vue-cli <https://cli.vuejs.org/>`__
 -  `node <https://nodejs.org/en/>`__
 -  `npm <https://www.npmjs.com/>`__
 
+We use Vue.js as our frontend web framework, and ``npm`` as our package manager.
+
+=================
+Installing Augur
+=================
 
 0. Clone the repository.
 
@@ -51,10 +87,13 @@ Frontend:
 
 This process will:
 
-- install Augur’s backend and its dependencies 
-- install the included data collection workers and their dependencies
-- generate documentation files
-- set up the configuration file
+- install Augur’s backend 
+- install the data collection workers
+- generate documentation
+- generate the configuration file
+- optionally, install the database schema and load sample data 
 - optionally, install Augur’s frontend and its dependencies 
 
-Now that you've got everything installed, it's time to test it out!
+Once everything is installed, you're ready to get started using Augur. Check out the `Makefile commands <usage/make-commands.html#development>`_ section to learn how to run Augur, or if you're interested in collecting your own data, check out the `data collection documentation <../data-collection/starting-collection-workers.html>`_.
+
+Happy hacking!
