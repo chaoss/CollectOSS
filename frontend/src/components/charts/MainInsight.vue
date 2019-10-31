@@ -100,8 +100,8 @@ export default {
       console.log(this.data, this.values);
 
       // find scale for x axis
-      let minDate = new Date(this.values[0].date);
-      let maxDate = new Date(this.values[this.values.length - 1].date);
+      let maxDate = new Date();
+      let minDate = new Date(maxDate.getFullYear() - 1, maxDate.getMonth(), maxDate.getDate());
 
       let config = {
         // "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
