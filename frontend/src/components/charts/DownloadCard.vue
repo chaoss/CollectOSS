@@ -1,9 +1,12 @@
 <template>
   <d-card>
+  <!--
+  {{values[0]['sbom_scan']["Document Information"]['DocumentName']}}
+  -->
     <d-card-body :title="title" class="text-center">
-      <p v-if="values === undefined">There is no SBOM download available for this repository.</p>
+      <p v-if="values.length == 0 || values[0] === undefined">There is no SBOM download available for this repository.</p>
       <button v-if="values" @click="download" style="border-radius:6px;" :msg=values>
-        <strong>Download SBOM (.json)</strong>
+        <strong>Download (.json)</strong>
       </button>
     </d-card-body>
   </d-card>
@@ -31,15 +34,6 @@
         'base'
       ]),
     },
-    methods: {
-      download(e) {
-      var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.$data.msg[0]));
-      let link = document.createElement('a')
-      link.setAttribute("href",     dataStr     );
-      link.setAttribute("download", "sbom_" + this.$data.msg[0]['sbom_scan']["SPDX Data"]['DocumentName'] + ".json");
-      link.click();
-      }
-    }
   })
   export default class CountBlock extends AppProps{
 
@@ -53,10 +47,12 @@
     }
 
     download(e: any) {
-      var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.values[0]));
+      var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.values[0]['sbom_scan']));
       let link = document.createElement('a')
+      console.log(link)
       link.setAttribute("href",     dataStr     );
-      link.setAttribute("download", "sbom_" + this.values[0]['sbom_scan']["SPDX Data"]['DocumentName'] + ".json");
+      console.log(link)
+      link.setAttribute("download", "sbom_" + this.values[0]['sbom_scan']["Document Information"]['DocumentName'] + ".json");
       link.click();
     }
 
