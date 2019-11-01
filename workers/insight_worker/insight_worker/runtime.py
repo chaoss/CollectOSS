@@ -53,7 +53,7 @@ def main(augur_url, host, port):
     #load credentials
     credentials = read_config("Database", use_main_config=1)
     server = read_config("Server", use_main_config=1)
-    worker_info = read_config("Workers", use_main_config=1)
+    worker_info = read_config("Workers", use_main_config=1)['insight_worker']
     worker_port = worker_info['port'] if 'port' in worker_info else port
 
     while True:
@@ -68,19 +68,21 @@ def main(augur_url, host, port):
     logging.basicConfig(filename='worker_{}.log'.format(worker_port), filemode='w', level=logging.INFO)
 
     config = {
-            "id": "com.augurlabs.core.insight_worker.{}".format(worker_port),
-            "broker_port": server["port"],
-            "broker_host": server["host"],
-            "zombie_id": 22,
-            "host": credentials["host"],
-            "location": "http://{}:{}".format(server["host"],worker_port),
-            "password": credentials["password"],
-            "port": credentials["port"],
-            "user": credentials["user"],
-            "endpoint": "http://{}:{}/api/unstable/metrics/status".format(server["host"],server['port']),
-            "database": credentials["database"],
-            "type": "string"
-        }
+        "id": "com.augurlabs.core.insight_worker.{}".format(worker_port),
+        "broker_port": server["port"],
+        "broker_host": server["host"],
+        "zombie_id": 22,
+        "training_days": worker_info['training_days'] if 'training_days' in worker_info else 365,
+        "anomaly_days": worker_info['anomaly_days'] if 'anomaly_days' in worker_info else 90,
+        "host": credentials["host"],
+        "location": "http://{}:{}".format(server["host"],worker_port),
+        "password": credentials["password"],
+        "port": credentials["port"],
+        "user": credentials["user"],
+        "endpoint": "http://{}:{}/api/unstable/metrics/status".format(server["host"],server['port']),
+        "database": credentials["database"],
+        "type": "string"
+    }
 
     #create instance of the worker
     app.insight_worker = InsightWorker(config) # declares the worker that will be running on this server with specified config
