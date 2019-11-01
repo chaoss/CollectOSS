@@ -45,7 +45,7 @@
         <br><br>
         <download-card
           v-if="loaded_sbom"
-          title="Software Bill of Materials"
+          title="SPDX Document"
           :data="values"
           source="sbom">
         </download-card>

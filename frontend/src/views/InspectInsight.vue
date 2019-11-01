@@ -31,7 +31,7 @@
             <div class="block-handle"></div>
           </d-card-header>
 
-          <d-card-body class="pt-0" style="margin-bottom: 126rem !important"> <!--  -->
+          <d-card-body ref="mainInsightContainer" class="pt-0 main-insight-container" style="margin-bottom: 126rem !important"> <!--  -->
             <!-- <d-row class="border-bottom py-2 bg-light">
 
               <d-col col sm="6" class="d-flex mb-2 mb-sm-0">
@@ -225,6 +225,11 @@ export default class InspectInsight extends Vue {
   endpoint!:any;
   addRepoGroup!:any;
   addRepo!:any;
+
+  mounted () {
+    console.log(`WINDOW WIDTH: ${window.innerWidth}`);
+    // this.$refs.mainInsightCo
+  }
 
   // 'created' lifecycle hook
   // Gets ran on component initialization, data collection should be handled here
@@ -460,4 +465,11 @@ export default class InspectInsight extends Vue {
 
 }
 </script>
+
+<style scoped>
+.main-insight-container {
+  overflow: visible !important;
+  width: 52vw;
+}
+</style>
 
