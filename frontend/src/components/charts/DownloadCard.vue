@@ -1,8 +1,5 @@
 <template>
   <d-card>
-  <!--
-  {{values[0]['sbom_scan']["Document Information"]['DocumentName']}}
-  -->
     <d-card-body :title="title" class="text-center">
       <p v-if="values.length == 0 || values[0] === undefined">There is no SBOM download available for this repository.</p>
       <button v-if="values" @click="download" style="border-radius:6px;" :msg=values>
@@ -47,13 +44,12 @@
     }
 
     download(e: any) {
-      var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.values[0]['sbom_scan']));
-      let link = document.createElement('a')
-      console.log(link)
-      link.setAttribute("href",     dataStr     );
-      console.log(link)
-      link.setAttribute("download", "sbom_" + this.values[0]['sbom_scan']["Document Information"]['DocumentName'] + ".json");
-      link.click();
+    let uriContent = URL.createObjectURL(new Blob([JSON.stringify(this.values[0]['sbom_scan'])], {type : 'text/json;charset=utf-8'}));
+    let link = document.createElement('a');
+    link.setAttribute('href', uriContent);
+    link.setAttribute('download', "sbom_" + this.values[0]['sbom_scan']["Document Information"]['DocumentName'] + ".json");
+    let event = new MouseEvent('click');
+    link.dispatchEvent(event);
     }
 
   }
