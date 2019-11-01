@@ -85,7 +85,7 @@ def grabreg(records, repo_id, dsfile):
     #proc = subprocess.call("dosocs2 print " + str(charvarerr) + " -T 2.0.tag.coverage", shell=True, stdout=f, stderr=f)
     pope = subprocess.Popen("dosocs2 print " + str(charvarerr) + " -T " + dsfile, shell=True, stdout=PIPE, stderr=PIPE)
     out, err = pope.communicate()
-    #if out:    
+    #if out:
         #with open('ex-raw.txt', 'w+') as example:
         #    example.write(out.decode('UTF-8'))
     if err:
@@ -103,7 +103,7 @@ def grabreg(records, repo_id, dsfile):
     cov_1 = re.findall(r'(TotalFiles): (.*)\n(DeclaredLicenseFiles): (.*)\n(PercentTotalLicenseCoverage): (.*)\n', out.decode('UTF-8'))
     return (doc_1, cre_1, pac_1, pac_lif_1, pac_2, fil_dat_1, fil_rel_1, bas_rel_1, cov_1)
 
-def scan(dbname, user, password, host, port, dsfile, ipath, schema):
+def scan(dbname, user, password, host, port, dsfile, ipath):
     connection = psycopg2.connect(
         user = user,
         password = password,
