@@ -2,20 +2,20 @@
   <div>
     <div :id="source"></div>
     <div class="horizontalBarChartDiv form-item form-checkboxes tickradios">
-        <div class="inputGroup ">
+         <div class="inputGroup ">
           <input id="totalradio" name="lines" value="1" type="radio" v-model="type">
-          <label id="front" for="totalradio">Total</label>
+         <!-- <label id="front" for="totalradio">Total</label> --> 
         </div>
         <div class="inputGroup ">
           <input id="netradio" name="lines" value="0" type="radio" v-model="type">
-          <label id="front" for="netradio">Net</label>
+         <!-- <label id="front" for="netradio">Net</label> -->
         </div>
         <div class="inputGroup ">
           <input id="addedradio" name="lines" value="2" type="radio" v-model="type">
-          <label id="front" for="addedradio">Added</label>
-        </div>
+         <!-- <label id="front" for="addedradio">Added</label> -->
+        </div> 
         
-    </div>
+    </div> 
   </div>
 </template>
 

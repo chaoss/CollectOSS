@@ -4,6 +4,6 @@
   "password": "****",
   "host": "localhost",
   "port": 5433,
-  "dsfile": "2.0.tag.coverage",
+  "dsfile": "3.0.tag",
   "repos_path": "~/"
 }

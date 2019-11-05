@@ -27,7 +27,7 @@ setup(
 
     packages=find_packages(exclude=('tests',)),
 
-    install_requires=['flask', 'numpy', 'requests', 'psycopg2-binary', 'click'],
+    install_requires=['flask', 'numpy', 'requests', 'psycopg2-binary', 'click', 'scipy'],
 
     entry_points={
         'console_scripts': [

@@ -3,23 +3,13 @@
     <d-card-body :title="title" class="text-center">
       <spinner v-if="!loaded"></spinner>
       <div v-if="loaded">
-        <p v-if="values.length == 0 || values == undefined">There are no license coverage metrics available for this repository.</p>
-        <div v-else>
-          <div class="coverageCardDiv1">
-            <p> Total Files
-            <br> Files with Declared Licenses
-            <br> License Coverage </p>
-          </div>
-          <div class="coverageCardDiv2">
-            <strong>
-              <p> {{ values[0]['sbom_scan']['License Coverage']['TotalFiles'] }}
-              <br> {{ values[0]['sbom_scan']['License Coverage']['DeclaredLicenseFiles'] }}
-              <br> {{ values[0]['sbom_scan']['License Coverage']['PercentTotalLicenseCoverage'] }} </p>
-            </strong>
-          </div>
-        </div>
+        <h4>{{ OSIpercent[0] }}%</h4>
+        <p>
+        OSI Approved: <strong>{{ OSIpercent[1] }}</strong> <br>
+        Not OSI Approved: <strong>{{ OSIpercent[2] }}</strong> <br>
+        Total: <strong>{{ OSIpercent[3] }}</strong> <br>
+        </p>
       </div>
-
     </d-card-body>
   </d-card>
 </template>
@@ -28,6 +18,7 @@
   import Spinner from '@/components/Spinner.vue'
   import  { Component, Vue } from 'vue-property-decorator';
   import {mapActions, mapGetters} from "vuex";
+  import * as check from './OSIapproved.json';
 
   const AppProps = Vue.extend({
     props: {
@@ -36,6 +27,7 @@
       source: String,
       headers: Array,
       fields: Array,
+      ldata: Array
     }
   })
 
@@ -44,6 +36,34 @@
       Spinner
     },
     computed: {
+        OSIpercent: function() {
+          let tcount = 0
+          let fcount = 0
+          console.log("ELEMENT")
+          console.log(check)
+          // @ts-ignore
+          for (let el of this.values) {
+            let count = el['count'];
+            let shortname = el['short_name'];
+            // @ts-ignore
+            let determin = check.default[shortname];
+            if (determin === true){
+              tcount += count
+            } else if (determin === false) {
+              fcount += count
+            }
+        }
+      let bigcount = (tcount + fcount)
+      let prepercent = tcount / (tcount + fcount)
+      console.log(tcount + fcount)
+      console.log(tcount)
+      console.log(fcount)
+      let percent = prepercent * 100
+      let fixed = 2 || 0;
+      fixed = Math.pow(10, fixed);
+      percent = Math.floor(percent * fixed) / fixed;
+      return [percent, tcount, fcount, bigcount]
+      },
       ...mapGetters('compare',[
         'comparedRepos',
         'base'
@@ -77,18 +97,21 @@
 
       else {
         this.endpoint({endpoints:[this.source],repos:[this.base]}).then((tuples:any) => {
+          console.log("sbom", tuples, this.base)
           let ref = this.base.url || this.base.repo_name
-          if (ref.includes('/'))
-            ref = ref.split('/')[ref.split('/').length - 1]
           let values:any = []
           Object.keys(tuples[ref]).forEach((endpoint) => {
+            console.log("sbom", ref, endpoint)
             values = tuples[ref][endpoint]
           })
+          console.log("sbom loaded", JSON.stringify(values))
           this.values = values
-          console.log("Coverage card values", values, ref)
           this.loaded = true
+          console.log(this.loaded, this.values)
+
         })
       }
     }
+
   }
 </script>

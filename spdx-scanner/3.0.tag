@@ -186,3 +186,15 @@ AnnotationComment: {{ annotation.comment | text }}
 ExternalDocumentRef: {{ er.id_string }} {{ er.uri }} SHA256: {{ er.sha256 }}
 {% endfor %}
 #}
+
+{% set cnt = [0] %}
+{% for file in package.files %}
+{% if file.license_info[0].short_name != None %}
+{% if cnt.append(cnt.pop() + 1) %}{% endif %}
+{% endif %}
+{% if loop.index == loop.length %}
+TotalFiles: {{ loop.index }}
+DeclaredLicenseFiles: {{ cnt[0] }}
+PercentTotalLicenseCoverage: {{ '%0.2f' %  ((cnt[0] / loop.index) * 100) | float }}%
+ {% endif %}
+{% endfor %}

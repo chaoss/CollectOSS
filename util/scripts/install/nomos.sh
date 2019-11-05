@@ -13,17 +13,17 @@ if [[ "$(type -t git)" == "" ]]; then
     exit 1
 fi
 
-# if [[ ! -d /usr/include/glib-2.0 ]]; then
-#     echo "[$0] Couldn't find glib-2.0 headers!"
-#     echo "[$0] Please install glib2-devel before continuing."
-#     exit 1
-# fi
+if [[ ! -d /usr/include/glib-2.0 ]]; then
+    echo "[$0] Couldn't find glib-2.0 headers!"
+    echo "[$0] Please install glib2-devel before continuing."
+    exit 1
+fi
 
-# if [[ "$(type -t gcc)" == "" ]]; then
-#     echo "[$0] Couldn't find gcc in your PATH!"
-#     echo "[$0] Please install gcc before continuing."
-#     exit 1
-# fi
+if [[ "$(type -t gcc)" == "" ]]; then
+    echo "[$0] Couldn't find gcc in your PATH!"
+    echo "[$0] Please install gcc before continuing."
+    exit 1
+fi
 
 REPO=$(mktemp -d)
 echo "[$0] git clone https://github.com/fossology/fossology $REPO"

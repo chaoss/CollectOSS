@@ -164,9 +164,8 @@ class GHRepoInfoWorker:
 
     def run(self):
         logging.info("Running...")
-        if self._child is None:
-            self._child = Process(target=self.collect, args=())
-            self._child.start()
+        self._child = Process(target=self.collect, args=())
+        self._child.start()
 
     def collect(self, repos=None):
 
