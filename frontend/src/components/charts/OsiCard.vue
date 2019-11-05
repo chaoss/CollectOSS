@@ -4,7 +4,7 @@
       <spinner v-if="!loaded"></spinner>
       <div v-if="loaded">
         <h4>{{ OSIpercent[0] }}%</h4>
-        <p> <br>
+        <p>
         OSI Approved: <strong>{{ OSIpercent[1] }}</strong> <br>
         Not OSI Approved: <strong>{{ OSIpercent[2] }}</strong> <br>
         Total: <strong>{{ OSIpercent[3] }}</strong> <br>
@@ -18,6 +18,7 @@
   import Spinner from '@/components/Spinner.vue'
   import  { Component, Vue } from 'vue-property-decorator';
   import {mapActions, mapGetters} from "vuex";
+  import * as check from './OSIapproved.json';
 
   const AppProps = Vue.extend({
     props: {
@@ -26,15 +27,13 @@
       source: String,
       headers: Array,
       fields: Array,
-      ldata: Array,
+      ldata: Array
     }
   })
 
-  import * as check from './OSIapproved.json';
   @Component({
     components: {
-      Spinner,
-      check
+      Spinner
     },
     computed: {
         OSIpercent: function() {
@@ -42,9 +41,11 @@
           let fcount = 0
           console.log("ELEMENT")
           console.log(check)
+          // @ts-ignore
           for (let el of this.values) {
             let count = el['count'];
             let shortname = el['short_name'];
+            // @ts-ignore
             let determin = check.default[shortname];
             if (determin === true){
               tcount += count
