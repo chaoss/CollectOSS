@@ -62,10 +62,11 @@ class Housekeeper:
             compatible_worker_found = False
             # Waiting for compatible worker
             while True:
-                for worker in list(broker._getvalue().keys()):
-                    # logging.info("{} {} {} {} {}".format(worker, model, broker[worker]['models'], given, broker[worker]['given']))
-                    if model in broker[worker]['models'] and given in broker[worker]['given']:
-                        compatible_worker_found = True
+                if not compatible_worker_found:
+                    for worker in list(broker._getvalue().keys()):
+                        # logging.info("{} {} {} {}".format(worker, model, broker[worker], given))
+                        if model in broker[worker]['models'] and given in broker[worker]['given']:
+                            compatible_worker_found = True
                 if compatible_worker_found:
                     logging.info("Housekeeper recognized that the broker has a worker that " + 
                         "can handle the {} model... beginning to distribute maintained tasks".format(model))
