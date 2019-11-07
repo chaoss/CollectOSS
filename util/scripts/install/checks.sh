@@ -1,10 +1,6 @@
 #!/bin/bash
 
-echo
-echo "***********************************************"
 echo "Checking for the correct version of Python 3..."
-echo "***********************************************"
-echo
 
 function check_python_version() {
   major_python_version=$($1 -c 'import sys; print(sys.version_info.major)')
@@ -41,11 +37,8 @@ else
   augur_python_command="python"
 fi
 
-echo
-echo "**********************************"
 echo "Checking for pip..."
-echo "**********************************"
-echo
+
 if [[ ! $(command -v pip) ]]; then
   echo "pip not found searching. Searching for pip3..."
   if [[ ! $(command -v pip3) ]]; then
@@ -59,11 +52,8 @@ else
   echo "Sufficient form of pip detected at `which pip`. Resuming installation..."
 fi
 
-echo
-echo "**********************************"
 echo "Checking for virtual environment..."
-echo "**********************************"
-echo
+
 if [[ -z "$VIRTUAL_ENV" ]]; then
   echo "*** We noticed you're not using a virtual environment. It is STRONGLY recommended to install Augur in its own virtual environment. ***"
   echo "*** Would you like to create a virtual environment? ***"

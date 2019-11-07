@@ -39,21 +39,34 @@ function get_api_key_and_repo_path() {
 
   echo
   echo "The Facade data collection worker needs to clone repositories to run its analysis."
-  echo "Please specify the directory to which these repos will be cloned."
-  echo "The directory must already exist, and the path must be explicit (no environment variables allowed) and absolute."
-  read -p "Facade repo path: " facade_repo_path
-  echo
+  echo "Would you like to use an existing directory, or create a new one?"
+  select create_facade_repo in "Create a new directory" "Use an existing directory"
+  do
+    case $create_facade_repo in
+      "Create a new directory" )
+          echo "** You MUST use an absolute path. **"
+          read -p "Desired directory name: " facade_repo_path
+          if [[ -d "$facade_repo_path" ]]; then
+            echo "That directory already exists. Continuing..."
+          else
+            mkdir "$facade_repo_path"
+            echo "Directory created."
+          fi
+          break
+        ;;
+      "Use an existing directory" )
+          echo "** You MUST use an absolute path. **"
+          read -p "Facade repo path: " facade_repo_path
 
-  # while [ ! -d "$facade_repo_path" ]; do
-  #   mkdir $facade_repo_path
-  # done
+          while [[ ! -d "$facade_repo_path" ]]; do
+            echo "That directory does not exist."
+            echo "** You MUST use an absolute path. **"
+            read -p "Facade repo path: " facade_repo_path
+          done
 
-  while [ ! -d "$facade_repo_path" ]; do
-    echo
-    echo "Invalid path specified. Could not create the directory."
-    echo "The directory must already exist and be absolute, or the base directory of the facade repository path must exist so we can create the directory for you."
-    read -p "Facade repo path: " facade_repo_path
-    echo
+          break
+        ;;
+    esac
   done
 
   [[ "${facade_repo_path}" != */ ]] && facade_repo_path="${facade_repo_path}/"

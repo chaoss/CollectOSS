@@ -42,7 +42,7 @@
                     Click here to see an overview of this repository's metrics
                   </d-tooltip>
                 </h5>
-                <p class="card-text d-inline-block mb-1 dashboardP">This repository had a sharp {{ getPhrase(insights[highest[idx].rg_name][highest[idx].repo_git][highest[idx].ri_metric]) }}</p>
+                <p class="card-text d-inline-block mb-1 dashboardP">This repository had {{ getPhrase(insights[highest[idx].rg_name][highest[idx].repo_git][highest[idx].ri_metric]) }}</p>
                 <d-row>
                   <d-col cols="12" sm="5">
                     <d-row>
@@ -449,12 +449,12 @@ export default class Dashboard extends Vue {
     this.timeframes[values[0].repo_git] = date + ' days ago'
     if (values[i+1]){
       if (values[i+1].value > values[i].value) 
-        return 'increase in ' + values[0].ri_metric + ' ' + date + ' days ago'
+        return 'a sharp increase in ' + values[0].ri_metric + ' ' + date + ' days ago'
       else
-        return 'decrease in ' + values[0].ri_metric + ' ' + date + ' days ago'
+        return 'a sharp decrease in ' + values[0].ri_metric + ' ' + date + ' days ago'
     }
     else {
-      return 'insight in ' + values[0].ri_metric + ' ' + date + ' days ago'
+      return 'an anomaly in ' + values[0].ri_metric + ' ' + date + ' days ago'
     }
   }
 
