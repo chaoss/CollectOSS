@@ -40,3 +40,12 @@ CREATE INDEX "reponameindexbtree" ON "augur_data"."repo" USING btree (
 CREATE INDEX "rgnameindex" ON "augur_data"."repo_groups" USING btree (
   "rg_name" ASC
 );
+
+CREATE INDEX "rggrouponrepoindex" ON "augur_data"."repo" USING btree (
+  "repo_group_id"
+);
+
+
+
+
+

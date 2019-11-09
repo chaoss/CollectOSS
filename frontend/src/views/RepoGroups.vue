@@ -151,7 +151,7 @@
     loadedGroups: boolean = false;
     loadedSparks: boolean = false;
     ascending:boolean = false;
-    sortColumn: string ='rg_last_modified';
+    sortColumn: string ='rg_name';
 
     // declare Vuex action and getter
 
