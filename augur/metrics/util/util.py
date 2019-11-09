@@ -49,7 +49,7 @@ def downloaded_repos(self):
             on
             repo.repo_id = b.repo_id
             JOIN repo_groups ON repo_groups.repo_group_id = repo.repo_group_id
-        order by rg_name
+        order by repo_name
     """)
     results = pd.read_sql(downloadedReposSQL, self.database)
     results['url'] = results['url'].apply(lambda datum: datum.split('//')[1])
