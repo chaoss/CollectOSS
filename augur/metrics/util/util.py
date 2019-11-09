@@ -93,7 +93,7 @@ def repos_in_repo_groups(self, repo_group_id):
             JOIN repo_groups ON repo_groups.repo_group_id = repo.repo_group_id
         WHERE
             repo_groups.repo_group_id = :repo_group_id
-        ORDER BY commits_all_time DESC
+        ORDER BY repo.repo_name DESC
     """)
 
     results = pd.read_sql(repos_in_repo_groups_SQL, self.database, params={'repo_group_id': repo_group_id})
