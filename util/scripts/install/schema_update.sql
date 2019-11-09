@@ -27,3 +27,8 @@ ALTER SEQUENCE "spdx"."projects_package_id_seq"
 OWNED BY "spdx"."projects"."package_id";
 
 ALTER SEQUENCE "spdx"."projects_package_id_seq" OWNER TO "augur";
+
+-- Index Update for Performance. 
+CREATE INDEX "reponameindex" ON "augur_data"."repo" USING hash (
+  "repo_name"
+);
