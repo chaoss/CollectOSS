@@ -377,11 +377,12 @@ class GHPullRequestWorker:
 
                 if len(new_prs) == 0:
                     logging.info('No more unknown PRs... Exiting pagination')
-                    break
+                    #break
                 else:
                     prs += new_prs
 
                 if 'next' not in r.links:
+                    logging.info('No next page ... ')
                     break
                 else:
                     url = r.links['next']['url']
