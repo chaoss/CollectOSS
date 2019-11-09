@@ -32,3 +32,11 @@ ALTER SEQUENCE "spdx"."projects_package_id_seq" OWNER TO "augur";
 CREATE INDEX "reponameindex" ON "augur_data"."repo" USING hash (
   "repo_name"
 );
+
+CREATE INDEX "reponameindexbtree" ON "augur_data"."repo" USING btree (
+  "repo_name"
+);
+
+CREATE INDEX "rgnameindex" ON "augur_data"."repo_groups" USING btree (
+  "rg_name" ASC
+);
