@@ -28,7 +28,7 @@ OWNED BY "spdx"."projects"."package_id";
 
 ALTER SEQUENCE "spdx"."projects_package_id_seq" OWNER TO "augur";
 
--- Index Update for Performance. 
+-- Index Update for Performance 
 CREATE INDEX "reponameindex" ON "augur_data"."repo" USING hash (
   "repo_name"
 );
@@ -43,6 +43,10 @@ CREATE INDEX "rgnameindex" ON "augur_data"."repo_groups" USING btree (
 
 CREATE INDEX "rggrouponrepoindex" ON "augur_data"."repo" USING btree (
   "repo_group_id"
+);
+
+CREATE INDEX "repogitindexrep" ON "augur_data"."repo" USING btree (
+  "repo_git"
 );
 
 
