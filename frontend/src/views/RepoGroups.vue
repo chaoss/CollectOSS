@@ -150,7 +150,7 @@
     themes: string[] = ['dark', 'info', 'royal-blue', 'warning'];
     loadedGroups: boolean = false;
     loadedSparks: boolean = false;
-    ascending:boolean = false;
+    ascending:boolean = true;
     sortColumn: string ='rg_name';
 
     // declare Vuex action and getter
