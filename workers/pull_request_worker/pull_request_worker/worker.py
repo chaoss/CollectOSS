@@ -677,6 +677,10 @@ class GHPullRequestWorker:
 
             self.pr_meta_id_inc = int(result.inserted_primary_key[0])
             self.results_counter += 1
+
+            if new_head[0]['repo']:
+                self.query_pr_repo(new_head[0]['repo'], 'head', self.pr_meta_id_inc)
+
         else:
             logging.info('No new PR Head data to add')
 
@@ -704,6 +708,10 @@ class GHPullRequestWorker:
 
             self.pr_meta_id_inc = int(result.inserted_primary_key[0])
             self.results_counter += 1
+
+            if new_base[0]['repo']:
+                self.query_pr_repo(new_base[0]['repo'], 'base', self.pr_meta_id_inc)
+
         else:
             logging.info('No new PR Base data to add')
 
@@ -789,6 +797,49 @@ class GHPullRequestWorker:
             self.results_counter += 1
 
         logging.info(f'Finished adding PR Message data for PR with id {pr_id}')
+
+    def query_pr_repo(self, pr_repo, pr_repo_type, pr_meta_id):
+        logging.info(f'Querying PR {pr_repo_type} repo')
+
+        pseudo_key_gh = 'id'
+        psuedo_key_augur = 'pr_src_repo_id'
+        table = 'pull_request_repo'
+        pr_repo_table_values = self.get_table_values({psuedo_key_augur: pseudo_key_gh}, [table])
+
+        new_pr_repo = self.check_duplicates([pr_repo], pr_repo_table_values, pseudo_key_gh)
+
+        if new_pr_repo:
+            if new_pr_repo[0]['owner'] and 'login' in new_pr_repo[0]['owner']:
+                cntrb_id = self.find_id_from_login(new_pr_repo[0]['owner']['login'])
+            else:
+                cntrb_id = 1
+
+            pr_repo = {
+                'pr_repo_meta_id': pr_meta_id,
+                'pr_repo_head_or_base': pr_repo_type,
+                'pr_src_repo_id': new_pr_repo[0]['id'],
+                # 'pr_src_node_id': new_pr_repo[0]['node_id'],
+                'pr_src_node_id': None,
+                'pr_repo_name': new_pr_repo[0]['name'],
+                'pr_repo_full_name': new_pr_repo[0]['full_name'],
+                'pr_repo_private_bool': new_pr_repo[0]['private'],
+                'pr_cntrb_id': cntrb_id,
+                'tool_source': self.tool_source,
+                'tool_version': self.tool_version,
+                'data_source': self.data_source,
+                'data_collection_date': datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+            }
+
+            result = self.db.execute(
+                self.pull_request_repo_table.insert().values(pr_repo)
+            )
+            logging.info(f'Added PR {pr_repo_type} repo {result.inserted_primary_key}')
+
+            self.results_counter += 1
+
+        logging.info(
+            f'Finished adding PR {pr_repo_type} Repo data for PR with id {self.pr_id_inc}'
+        )
 
 
     def query_contributors(self, entry_info):
