@@ -155,7 +155,7 @@ export default class Repos extends Vue{
 
   loadedRepos: boolean = false;
 
-  ascending:boolean = false;
+  ascending:boolean = true;
   sortColumn: string ='url';
   getRepoRelations!: any
   sortedRepos!:any
