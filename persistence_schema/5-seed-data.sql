@@ -31,9 +31,10 @@ COMMIT;
 
 
 
--- Job for GitHub Worker
+-- Job for GitHub Worker and Pull Request Worker
 BEGIN;
 INSERT INTO "augur_operations"."worker_job" VALUES ('issues', 5, 0, '203', 'The issues model consists of contributors, issues, issue events, issue labels, and issue comments.', 1997, '2019-10-19 14:17:40', 0, 22);
+INSERT INTO "augur_operations"."worker_job"("job_model", "state", "zombie_head", "since_id_str", "description", "last_count", "last_run", "analysis_state", "oauth_id") VALUES ('pull_requests', 5, 0, '0', 'The pull request model', 0, '2018-08-09 13:39:20', 0, 22);
 COMMIT;
 
 
