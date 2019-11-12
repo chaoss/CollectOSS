@@ -96,17 +96,13 @@ class GHRepoInfoWorker:
 
         logging.info('Getting max repo_info_id...')
         max_repo_info_id_sql = s.sql.text("""
-            SELECT MAX(repo_info_id) AS repo_info_id
-            FROM repo_info
+            select nextval('repo_info_repo_info_id_seq'::regclass) as repo_info_id
         """)
         rs = pd.read_sql(max_repo_info_id_sql, self.db)
 
-        repo_info_start_id = int(rs.iloc[0]['repo_info_id']) if rs.iloc[0]['repo_info_id'] is not None else 1
+        repo_info_start_id = int(rs.iloc[0]['repo_info_id']) 
 
-        if repo_info_start_id == 1:
-            self.info_id_inc = repo_info_start_id
-        else:
-            self.info_id_inc = repo_info_start_id + 1
+        self.info_id_inc = repo_info_start_id
 
         connected = False
         for i in range(5):
@@ -292,6 +288,13 @@ class GHRepoInfoWorker:
         # commit_count = self.query_commit_count(owner, repo)
 
         logging.info(f'Inserting repo info for repo with id:{repo_id}, owner:{owner}, name:{repo}')
+
+        repo_info_id_sql = s.sql.text("""
+            select nextval('repo_info_repo_info_id_seq'::regclass) as repo_info_id
+        """)
+        rsid = pd.read_sql(repo_info_id_sql, self.db)
+
+        self.info_id_inc = int(rsid.iloc[0]['repo_info_id']) 
 
         rep_inf = {
             'repo_info_id': self.info_id_inc,

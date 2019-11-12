@@ -44,6 +44,7 @@ class InsightWorker:
         self.finishing_task = False
         self.anomaly_days = self.config['anomaly_days']
         self.training_days = self.config['training_days']
+        self.confidence = self.config['confidence_interval'] / 100
 
         logging.info("Worker initializing...")
         
@@ -295,8 +296,7 @@ class InsightWorker:
 
             for key in raw_values.keys():
                 if len(raw_values[key]) > 0:
-                    confidence = 0.95
-                    mean, lower, upper = self.confidence_interval(raw_values[key], confidence=confidence)
+                    mean, lower, upper = self.confidence_interval(raw_values[key], confidence=self.confidence)
                     logging.info("Upper: {}, middle: {}, lower: {}".format(upper, mean, lower))
                     i = 0
                     discovery_index = None
@@ -336,7 +336,7 @@ class InsightWorker:
                                 'ri_value': date_filtered_raw_values[discovery_index][key],#date_filtered_raw_values[j][key],
                                 'ri_date': date_filtered_raw_values[discovery_index]['date'],#date_filtered_raw_values[j]['date'],
                                 'ri_score': score,
-                                'ri_detection_method': '95% confidence interval',
+                                'ri_detection_method': '{} confidence interval'.format(self.confidence),
                                 "tool_source": self.tool_source,
                                 "tool_version": self.tool_version,
                                 "data_source": self.data_source
@@ -362,7 +362,7 @@ class InsightWorker:
                                         'ri_date': tuple['date'],#date_filtered_raw_values[j]['date'],
                                         'ri_fresh': 0 if j < discovery_index else 1,
                                         'ri_score': score,
-                                        'ri_detection_method': '95% confidence interval',
+                                        'ri_detection_method': '{} confidence interval'.format(self.confidence),
                                         "tool_source": self.tool_source,
                                         "tool_version": self.tool_version,
                                         "data_source": self.data_source
@@ -463,9 +463,10 @@ class InsightWorker:
                     'insight': True,
                     # 'rg_name': repo['rg_name'],
                     'repo_git': repo['repo_git'],
-                    'value': insight['ri_value'],
-                    'field': insight['ri_field'],
-                    'metric': insight['ri_metric'],
+                    'value': insight['ri_value'], # y-value of data point that is the anomaly
+                    'date': insight['ri_date'], # date of data point that is the anomaly
+                    'field': insight['ri_field'], # name of the field from the endpoint that the anomaly was detected on
+                    'metric': insight['ri_metric'], # name of the metric the anomaly was detected on
                     'units_from_mean': units_from_mean,
                     'detection_method': insight['ri_detection_method']
                 }

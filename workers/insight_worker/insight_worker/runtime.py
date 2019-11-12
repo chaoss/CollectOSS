@@ -74,6 +74,7 @@ def main(augur_url, host, port):
         "zombie_id": 22,
         "training_days": worker_info['training_days'] if 'training_days' in worker_info else 365,
         "anomaly_days": worker_info['anomaly_days'] if 'anomaly_days' in worker_info else 90,
+        "confidence_interval": worker_info['confidence_interval'] if 'confidence_interval' in worker_info else 95,
         "host": credentials["host"],
         "location": "http://{}:{}".format(server["host"],worker_port),
         "password": credentials["password"],
