@@ -28,6 +28,7 @@ Your Augur instance must be compiled with publicly accessible domain that the fr
 nginx
 ------------------
 
+------------------
 nginx.conf 
 ------------------
 
@@ -100,6 +101,7 @@ nginx.conf
 		include /etc/nginx/sites-enabled/*;
 	}   
 
+--------------------
 Site Configuration 
 --------------------
 
