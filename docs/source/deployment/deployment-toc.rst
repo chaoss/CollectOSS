@@ -3,10 +3,6 @@ Deployment
 
 This section details describes production deployment of Augur. 
 
-nginx 
-----------------
-
-
 
 .. toctree::
    :maxdepth: 1
