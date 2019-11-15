@@ -320,6 +320,43 @@ def languages(self, repo_group_id, repo_id=None):
         results = pd.read_sql(languages_SQL, self.database, params={'repo_id': repo_id})
         return results
 
+@annotate(tag='license-files')
+def license_declared(self, repo_group_id, repo_id=None, license_id):
+        """Returns the files related to a license
+
+        :param repo_group_id: The repository's repo_group_id
+        :param repo_id: The repository's repo_id, defaults to None
+        :return: Declared License
+        """
+        license_declared_SQL = None
+        repo_id_SQL = None
+        repo_name_list = None
+
+        license_declared_SQL = s.sql.text("""
+        SELECT A
+            .license_id as the_license_id,
+            b.short_name as short_name,
+            f.file_name
+        FROM
+            files_licenses A,
+            licenses b,
+            augur_repo_map C,
+            packages d,
+            files e,
+            packages_files f
+        WHERE
+            A.license_id = b.license_id
+            AND d.package_id = C.dosocs_pkg_id
+            AND e.file_id = A.file_id
+            AND e.package_id = d.package_id
+            AND C.repo_id = :repo_id
+            AND e.file_id = f.file_id
+            AND b.license_id = :license_id
+        """)
+
+            results = pd.read_sql(license_declared_SQL, self.spdx_db, params={'repo_id': repo_id})
+            return results
+
 @annotate(tag='license-declared')
 def license_declared(self, repo_group_id, repo_id=None):
     """Returns the declared license
@@ -349,7 +386,7 @@ def license_declared(self, repo_group_id, repo_id=None):
         AND d.package_id = C.dosocs_pkg_id
         AND e.file_id = A.file_id
         AND e.package_id = d.package_id
-        AND C.repo_id = 25158
+        AND C.repo_id = :repo_id
         AND b.is_spdx_official = 't'
         GROUP BY
         the_license_id,
@@ -370,7 +407,7 @@ def license_declared(self, repo_group_id, repo_id=None):
         AND d.package_id = C.dosocs_pkg_id
         AND e.file_id = A.file_id
         AND e.package_id = d.package_id
-        AND C.repo_id = 25158
+        AND C.repo_id = :repo_id
         AND b.is_spdx_official = 'f'
         GROUP BY
         the_license_id,
