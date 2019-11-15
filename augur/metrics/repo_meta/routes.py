@@ -139,7 +139,7 @@ def create_repo_meta_routes(server):
     server.addRepoMetric(metrics.code_changes_lines, 'code-changes-lines')
 
     # TODO: document this
-    server.addRepoMetric(metrics.license_files, 'license-files')
+    server.addLicenseMetric(metrics.license_files, 'license-files')
 
     # TODO: document this
     server.addRepoMetric(metrics.sbom_download, 'sbom-download')

@@ -321,18 +321,18 @@ def languages(self, repo_group_id, repo_id=None):
         return results
 
 @annotate(tag='license-files')
-def license_files(self, repo_group_id, repo_id=None, license_id, spdx_binary):
+def license_files(self, license_id, spdx_binary, repo_group_id, repo_id=None,):
         """Returns the files related to a license
 
         :param repo_group_id: The repository's repo_group_id
         :param repo_id: The repository's repo_id, defaults to None
         :return: Declared License
         """
-        license_declared_SQL = None
+        license_data_SQL = None
         repo_id_SQL = None
         repo_name_list = None
 
-        license_declared_SQL = s.sql.text("""
+        license_data_SQL = s.sql.text("""
         SELECT A
             .license_id as the_license_id,    b.short_name as short_name,    f.file_name
         FROM
@@ -347,14 +347,14 @@ def license_files(self, repo_group_id, repo_id=None, license_id, spdx_binary):
             AND e.file_id = f.file_id
             AND b.is_spdx_official = :spdx_binary
             AND
-            (
-          b.license_id = :license_id
-            OR
-            b.license_id in ( 369,323,324,325,326,327,328,329,330,331,332,333,334,335,336,337,338,339,340,341,342,343,344,345,346,347,348,349,350,351,352,353,354,355,356,357,358,359,360,361,362,363,364,365,366,367,368,370,371,372,373,374,375,376,377,378,379,380,381,382,383,384,385,386,387,388,389,390,391,392,393,394,395,396,397,398,399,400,401,402,403,404,405,406,407,408,409,410,411,412,413,414,415,416,417,418,419,420,421,422,423,424,425,426,427,428,429,430,431,432,433,434,435,436,437,438,439,440,441,442,443,444,445,446,447,448,449,450,451,452,453,454,455,456,457,458,459,460,461,462,463,464,465,466,467,468,469,470,471,472,473,474,475,476,477,478,479,480,481,482));
+                (
+                b.license_id = :license_id
+                OR
+                b.license_id in ( 369,323,324,325,326,327,328,329,330,331,332,333,334,335,336,337,338,339,340,341,342,343,344,345,346,347,348,349,350,351,352,353,354,355,356,357,358,359,360,361,362,363,364,365,366,367,368,370,371,372,373,374,375,376,377,378,379,380,381,382,383,384,385,386,387,388,389,390,391,392,393,394,395,396,397,398,399,400,401,402,403,404,405,406,407,408,409,410,411,412,413,414,415,416,417,418,419,420,421,422,423,424,425,426,427,428,429,430,431,432,433,434,435,436,437,438,439,440,441,442,443,444,445,446,447,448,449,450,451,452,453,454,455,456,457,458,459,460,461,462,463,464,465,466,467,468,469,470,471,472,473,474,475,476,477,478,479,480,481,482));
                 """)
 
-            results = pd.read_sql(license_declared_SQL, self.spdx_db, params={'repo_id': repo_id, 'license_id': license_id, 'spdx_binary': spdx_binary})
-            return results
+        results = pd.read_sql(license_data_SQL, self.spdx_db, params={'repo_id': repo_id, 'spdx_binary': spdx_binary, 'license_id': license_id})
+        return results
 
 @annotate(tag='license-declared')
 def license_declared(self, repo_group_id, repo_id=None):

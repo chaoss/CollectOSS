@@ -372,6 +372,12 @@ class Server(object):
         generated_function.__name__ = func.__class__.__name__ + f"_{type_}_" + func.__name__
         return generated_function
 
+    def addLicenseMetric(self, function, endpoint, **kwargs):
+        endpoint = f'/{self.api_version}/<license_id>/<spdx_binary>/<repo_group_id>/<repo_id>/{endpoint}'
+        self.app.route(endpoint)(self.routify(function, 'license_metric'))
+        kwargs['endpoint_type'] = 'license_metric'
+        self.updateMetricMetadata(function, endpoint, **kwargs)
+
     def addRepoGroupMetric(self, function, endpoint, **kwargs):
         """Simplifies adding routes that accept repo_group_id"""
         endpoint = f'/{self.api_version}/repo-groups/<repo_group_id>/{endpoint}'
