@@ -23,7 +23,6 @@ do
       cd $WORKER
       rm -rf build/*;
       rm -rf dist/*;
-      python setup.py install;
       pip install -e .
       cd ../..
       echo "Installing $FORMATTED_WORKER"

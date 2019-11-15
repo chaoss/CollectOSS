@@ -1,14 +1,14 @@
 matrix:
   include:
   - name: Python Datasource Unit Tests
-    install: pip install -r requirements.txt; python setup.py install
+    install: pip install -r requirements.txt;
     language: python
     python: '3.6'
     script:
     - python -m pytest augur/metrics/**/test_**_functions.py
 
   - name: API Unit Tests
-    install: pip install -r requirements.txt; python setup.py install
+    install: pip install -r requirements.txt;
     language: python
     python: '3.6'
     script:
