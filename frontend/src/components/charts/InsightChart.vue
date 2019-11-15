@@ -2,7 +2,9 @@
   <div ref="holder" class="insightChartDiv">
     <spinner v-if="!loaded" class="insightChartSpinner"></spinner>
     <!-- <div v-if="loaded" class=""> -->
-    <vega-lite v-if="loaded" :spec="vegaSpec" :data="values" center="true"></vega-lite>
+    <vega-lite v-if="loaded" :spec="spec(vegaSpec)" :data="values" center="true" id="vegaChart"></vega-lite>
+
+    <!-- <vega-lite v-if="loaded" :spec="vegaSpec" :data="values" center="true" id="vegaChart"></vega-lite> -->
     <!-- <p> {{ chart }} </p> -->
 
     <!-- </div> -->
@@ -14,6 +16,8 @@
 import { mapState } from "vuex";
 import AugurStats from "@/AugurStats.ts";
 import Spinner from "../Spinner.vue";
+import vegaEmbed from "vega-embed";
+
 export default {
   props: ["url", "source", "title", "color", "data"],
   components: {
@@ -37,6 +41,12 @@ export default {
     });
   },
   methods: {
+    spec(vegaSpec) {
+      vegaEmbed('#vegaChart', vegaSpec, {
+        mode: 'vega-lite'
+      });
+      return vegaSpec;
+    }, 
     calculateVegaSpec() {
       this.loaded = false;
       console.log('inside calculate vega spec');
@@ -70,6 +80,9 @@ export default {
         }
       };
       this.loaded = true;
+      vegaEmbed('#vegaChart', this.vegaSpec, {
+        mode: 'vega-lite'
+      });
     },
     renderChart() {},
     convertKey(ary) {
