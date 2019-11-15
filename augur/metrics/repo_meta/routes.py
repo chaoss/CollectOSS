@@ -139,6 +139,9 @@ def create_repo_meta_routes(server):
     server.addRepoMetric(metrics.code_changes_lines, 'code-changes-lines')
 
     # TODO: document this
+    server.addRepoMetric(metrics.license_files, 'license-files')
+
+    # TODO: document this
     server.addRepoMetric(metrics.sbom_download, 'sbom-download')
 
     # @server.app.route('/{}/repo-groups/<repo_group_id>/code-changes'.format(server.api_version))
