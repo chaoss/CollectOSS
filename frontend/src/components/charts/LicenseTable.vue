@@ -12,7 +12,18 @@
             <a v-bind:href="ldata[0][el['short_name']]" target="_blank">
                 <td>{{el['short_name']}}</td>
               </a>
-              <td>{{el['count']}}</td>
+                <td>
+                  <div v-if="el['license_id'] < 500">
+                    <a :href="'http://localhost:5000/api/unstable/' + el['license_id'] + '/True/25151/25158/license-files'">
+                      {{el['count']}}
+                    </a>
+                  </div>
+                  <div v-if="el['license_id'] >= 500">
+                  <a :href="'http://localhost:5000/api/unstable/500/False/25151/25158/license-files'">
+                    {{el['count']}}
+                  </a>
+                  </div>
+                </td>
             </tr>
           </tbody>
         </table>
