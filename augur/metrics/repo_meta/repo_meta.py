@@ -189,8 +189,7 @@ def cii_best_practices_badge(self, repo_group_id, repo_id=None):
     # Welcome to the Twilight Zone
     if repo_id:
         cii_best_practices_badge_SQL = s.sql.text("""
-            SELECT repo_name, rg_name, repo_badging.badge_level, achieve_passing_status,
-                achieve_silver_status, tiered_percentage, repo_url, id, repo_badging.updated_at as date
+            SELECT repo_name, rg_name, repo_badging.data, repo_badging.created_at as date
             FROM repo_badging, repo, repo_groups
             WHERE repo.repo_group_id = repo_groups.repo_group_id AND repo.repo_id = repo_badging.repo_id
             AND repo_badging.repo_id = :repo_id
@@ -198,13 +197,11 @@ def cii_best_practices_badge(self, repo_group_id, repo_id=None):
             LIMIT 1
         """)
 
-        logger.debug(cii_best_practices_badge_SQL)
         params = {'repo_id': repo_id}
 
     else:
         cii_best_practices_badge_SQL = s.sql.text("""
-            SELECT repo_name, rg_name, repo_badging.badge_level, achieve_passing_status,
-                achieve_silver_status, tiered_percentage, repo_url, id, repo_badging.updated_at as date
+            SELECT repo_name, rg_name, repo_badging.data, repo_badging.created_at as date
             FROM repo_badging, repo, repo_groups
             WHERE repo.repo_group_id = repo_groups.repo_group_id AND repo.repo_id = repo_badging.repo_id
             AND repo.repo_group_id = :repo_group_id
@@ -212,10 +209,21 @@ def cii_best_practices_badge(self, repo_group_id, repo_id=None):
             LIMIT 1
         """)
 
-        logger.debug(cii_best_practices_badge_SQL)
         params = {'repo_group_id': repo_group_id, 'repo_id': repo_id}
 
-    return pd.read_sql(cii_best_practices_badge_SQL, self.database, params=params)
+    raw_df = pd.read_sql(cii_best_practices_badge_SQL, self.database, params=params)
+    badging_data = raw_df.iloc[0,2]
+
+    result = {
+        "repo_name": raw_df.iloc[0,0],
+        "rg_name": raw_df.iloc[0,1]
+    }
+
+    for item in badging_data.items():
+        if item[0] in ["badge_level", "achieve_passing_status", "achieve_silver_status", "tiered_percentage", "repo_url", "id"]:
+            result[item[0]] = item[1]
+
+    return pd.DataFrame(result, index=[0])
 
 @annotate(tag='forks')
 def forks(self, repo_group_id, repo_id=None):
