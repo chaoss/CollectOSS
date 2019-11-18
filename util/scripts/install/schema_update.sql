@@ -47,7 +47,7 @@ CREATE TABLE "augur_operations"."repos_fetch_log" (
 "date" timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP
 )
 WITHOUT OIDS;
-CREATE INDEX "repos_id,status" ON "repos_fetch_log" USING btree ("repos_id" "pg_catalog"."int4_ops" ASC NULLS LAST, "status" "pg_catalog"."text_ops" ASC NULLS LAST);
+CREATE INDEX "repos_id,statusops" ON "repos_fetch_log" USING btree ("repos_id" "pg_catalog"."int4_ops" ASC NULLS LAST, "status" "pg_catalog"."text_ops" ASC NULLS LAST);
 ALTER TABLE "augur_operations"."repos_fetch_log" OWNER TO "augur";
 
 CREATE TABLE "augur_operations"."working_commits" (
