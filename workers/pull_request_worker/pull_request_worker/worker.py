@@ -1,41 +1,12 @@
-import ast
-import json
-import logging
-import os
-import sys
-import time
-import traceback
-import datetime
+import ast, json, logging, os, sys, time, traceback, requests
+from datetime import datetime
 from multiprocessing import Process, Queue
 from urllib.parse import urlparse
 import pandas as pd
-import requests
 import sqlalchemy as s
 from sqlalchemy import MetaData
 from sqlalchemy.ext.automap import automap_base
-
-class CollectorTask:
-    """ Worker's perception of a task in its queue
-    Holds a message type (EXIT, TASK, etc) so the worker knows how to process the queue entry
-    and the github_url given that it will be collecting data for
-    """
-    def __init__(self, message_type='TASK', entry_info=None):
-        self.type = message_type
-        self.entry_info = entry_info
-
-
-def dump_queue(queue):
-    """
-    Empties all pending items in a queue and returns them in a list.
-
-    :param queue: The queue to be emptied.
-    """
-    result = []
-    queue.put("STOP")
-    for i in iter(queue.get, 'STOP'):
-        result.append(i)
-    # time.sleep(.1)
-    return result
+from workers.standard_methods import register_task_completion, register_task_failure, connect_to_broker, update_gh_rate_limit, record_model_process
 
 class GHPullRequestWorker:
     """
@@ -66,11 +37,7 @@ class GHPullRequestWorker:
         self.history_id = None
         self.finishing_task = False
 
-        url = "https://api.github.com"
-        response = requests.get(url=url, headers=self.headers)
-        self.rate_limit = int(response.headers['X-RateLimit-Remaining'])
-
-        specs = {
+        self.specs = {
             "id": self.config['id'],
             "location": self.config['location'],
             "qualifications":  [
@@ -195,21 +162,39 @@ class GHPullRequestWorker:
         self.assignee_id_inc = (assignee_start + 1)
         self.pr_meta_id_inc = (pr_meta_id_start + 1)
 
-        connected = False
-        for i in range(5):
-            try:
-                logging.info("attempt {}".format(i))
-                if i > 0:
-                    time.sleep(10)
-                requests.post('http://{}:{}/api/unstable/workers'.format(
-                    self.config['broker_host'],self.config['broker_port']), json=specs)
-                logging.info("Connection to the broker was successful")
-                connected = True
-                break
-            except requests.exceptions.ConnectionError:
-                logging.error('Cannot connect to the broker. Trying again...')
-        if not connected:
-            sys.exit('Could not connect to the broker after 5 attempts! Quitting...')
+        # Organize different keys available
+        self.oauths = []
+        self.headers = None
+
+        # Endpoint to hit solely to retrieve rate limit information from headers of the response
+        url = "https://api.github.com/users/gabe-heim"
+
+        # Make a list of api key in the config combined w keys stored in the database
+        oauthSQL = s.sql.text("""
+            SELECT * FROM worker_oauth WHERE access_token <> '{}'
+        """.format(config['key']))
+        for oauth in [{'oauth_id': 0, 'access_token': config['key']}] + json.loads(pd.read_sql(oauthSQL, self.helper_db, params={}).to_json(orient="records")):
+            # self.headers = {'Authorization': 'token %s' % oauth['access_token']}
+            self.headers = {'Authorization': 'token {}'.format(oauth['access_token']), 
+                        'Accept': 'application/vnd.github.vixen-preview+json'}
+            response = requests.get(url=url, headers=self.headers)
+            self.oauths.append({
+                    'oauth_id': oauth['oauth_id'],
+                    'key': oauth['access_token'],
+                    'rate_limit': int(response.headers['X-RateLimit-Remaining']),
+                    'seconds_to_reset': (datetime.fromtimestamp(int(response.headers['X-RateLimit-Reset'])) - datetime.now()).total_seconds()
+                })
+            logging.info("Found OAuth available for use: {}".format(self.oauths[-1]))
+
+        if len(self.oauths) == 0:
+            logging.info("No API keys detected, please include one in your config or in the worker_oauths table in the augur_operations schema of your database\n")
+
+        # First key to be used will be the one specified in the config (first element in 
+        #   self.oauths array will always be the key in use)
+        self.headers = {'Authorization': 'token %s' % self.oauths[0]['key']}
+
+        # Send broker hello message
+        connect_to_broker(self, logging.getLogger())
 
     def update_config(self, config):
         """ Method to update config and set a default
@@ -243,10 +228,8 @@ class GHPullRequestWorker:
 
         try:
             repo_id = int(rs.iloc[0]['repo_id'])
-            if value['job_type'] == "UPDATE":
-                self._queue.put(CollectorTask(message_type='TASK', entry_info={"task": value, "repo_id": repo_id}))
-            elif value['job_type'] == "MAINTAIN":
-                self._maintain_queue.put(CollectorTask(message_type='TASK', entry_info={"task": value, "repo_id": repo_id}))
+            if value['job_type'] == "UPDATE" or value['job_type'] == "MAINTAIN":
+                self._queue.put(value)
             if 'focused_task' in value:
                 if value['focused_task'] == 1:
                     self.finishing_task = True
@@ -254,7 +237,7 @@ class GHPullRequestWorker:
         except Exception as e:
             logging.error(f"error: {e}, or that repo is not in our database: {value}")
 
-        self._task = CollectorTask(message_type='TASK', entry_info={"task": value, "repo_id": repo_id})
+        self._task = value
         self.run()
 
     def cancel(self):
@@ -275,85 +258,44 @@ class GHPullRequestWorker:
         Determines what action to take based off the message type
         """
         while True:
-            time.sleep(2)
-            logging.info(f'Maintain Queue Empty: {self._maintain_queue.empty()}')
-            logging.info(f'Queue Empty: {self._queue.empty()}')
             if not self._queue.empty():
                 message = self._queue.get()
-                logging.info(f"Popped off message from Queue: {message.entry_info}")
-                self.working_on = "UPDATE"
-            elif not self._maintain_queue.empty():
-                message = self._maintain_queue.get()
-                logging.info(f"Popped off message from Maintain Queue: {message.entry_info}")
-                self.working_on = "MAINTAIN"
+                self.working_on = message['job_type']
             else:
                 break
+            logging.info("Popped off message: {}\n".format(str(message)))
 
-            if message.type == 'EXIT':
+            if message['job_type'] == 'STOP':
                 break
 
-            if message.type != 'TASK':
-                raise ValueError(f'{message.type} is not a recognized task type')
+            if message['job_type'] != 'MAINTAIN' and message['job_type'] != 'UPDATE':
+                raise ValueError('{} is not a recognized task type'.format(message['job_type']))
+                pass
 
-            if message.type == 'TASK':
-                try:
-                    github_url = message.entry_info['task']['given']['github_url']
-                    repo_id = message.entry_info['repo_id']
-                    self.query_pr({'github_url': github_url, 'repo_id': repo_id})
-                except Exception:
-                    # logging.error("Worker ran into an error for task: {}\n".format(message.entry_info['task']))
-                    # logging.error("Error encountered: " + str(e) + "\n")
-                    # # traceback.format_exc()
-                    # logging.info("Notifying broker and logging task failure in database...\n")
+            """ Query all repos with repo url of given task """
+            repoUrlSQL = s.sql.text("""
+                SELECT min(repo_id) as repo_id FROM repo WHERE repo_git = '{}'
+                """.format(message['given']['github_url']))
+            repo_id = int(pd.read_sql(repoUrlSQL, self.db, params={}).iloc[0]['repo_id'])
 
-                    logging.exception(f'Worker ran into an error for task {message.entry_info}')
-                    self.register_task_failure(message.entry_info['repo_id'],
-                                               message.entry_info['task']['given']['github_url'])
+            try:
+                if message['models'][0] == 'pull_requests':
+                    self.query_pr(message, repo_id)
+            except Exception as e:
+                register_task_failure(self, logging, message, repo_id, e)
+                pass
 
-                    # Add to history table
-                    task_history = {
-                        "repo_id": message.entry_info['repo_id'],
-                        "worker": self.config['id'],
-                        "job_model": message.entry_info['task']['models'][0],
-                        "oauth_id": self.config['zombie_id'],
-                        "timestamp": datetime.datetime.now(),
-                        "status": "Error",
-                        "total_results": self.results_counter
-                    }
-
-                    if self.history_id:
-                        self.helper_db.execute(self.history_table.update().where(self.history_table.c.history_id==self.history_id).values(task_history))
-                    else:
-                        r = self.helper_db.execute(self.history_table.insert().values(task_history))
-                        self.history_id = r.inserted_primary_key[0]
-
-                    logging.info(f"Recorded job error for: {message.entry_info['task']}")
-
-                    # Update job process table
-                    updated_job = {
-                        "since_id_str": message.entry_info['repo_id'],
-                        "last_count": self.results_counter,
-                        "last_run": datetime.datetime.now(),
-                        "analysis_state": 0
-                    }
-                    self.helper_db.execute(self.job_table.update().where(self.job_table.c.job_model==message.entry_info['task']['models'][0]).values(updated_job))
-                    logging.info("Updated job process for model: " + message.entry_info['task']['models'][0] + "\n")
-
-                    # Reset results counter for next task
-                    self.results_counter = 0
-                    pass
-
-    def query_pr(self, entry_info):
+    def query_pr(self, entry_info, repo_id):
         """Pull Request data collection function. Query GitHub API for PhubRs.
 
         :param entry_info: A dictionary consisiting of 'git_url' and 'repo_id'
         :type entry_info: dict
         """
-        github_url = entry_info['github_url']
-        repo_id = entry_info['repo_id']
+        github_url = entry_info['given']['github_url']
 
         logging.info('Beginning collection of Pull Requests...')
         logging.info(f'Repo ID: {repo_id}, Git URL: {github_url}')
+        record_model_process(self, logging, repo_id, 'pull_requests')
 
         owner, repo = self.get_owner_repo(github_url)
 
@@ -369,7 +311,7 @@ class GHPullRequestWorker:
         try:
             while True:
                 r = requests.get(url, headers=self.headers)
-                self.update_rate_limit(r)
+                update_gh_rate_limit(self, logging, r)
 
                 j = r.json()
 
@@ -387,9 +329,9 @@ class GHPullRequestWorker:
                 else:
                     url = r.links['next']['url']
 
-        except Exception:
+        except Exception as e:
             logging.exception('Encountered an error while paginating through PRs')
-            self.register_task_failure(repo_id, github_url)
+            register_task_failure(self, logging, entry_info, repo_id, e)
             return
 
         for pr_dict in prs:
@@ -433,7 +375,7 @@ class GHPullRequestWorker:
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
                 'data_source': 'GitHub API',
-                'data_collection_date': datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+                'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
             }
 
             result = self.db.execute(self.pull_requests_table.insert().values(pr))
@@ -449,7 +391,7 @@ class GHPullRequestWorker:
             logging.info(f"Inserted PR data for {owner}/{repo}")
             self.results_counter += 1
 
-        self.register_task_completion(entry_info, 'pull_requests')
+        register_task_completion(self, logging, entry_info, repo_id, 'pull_requests')
 
     def query_labels(self, labels, pr_id):
         logging.info('Querying PR Labels')
@@ -479,7 +421,7 @@ class GHPullRequestWorker:
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
                 'data_source': self.data_source,
-                'data_collection_date': datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+                'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
             }
 
             result = self.db.execute(self.pull_request_labels_table.insert().values(label))
@@ -504,7 +446,7 @@ class GHPullRequestWorker:
         try:
             while True:
                 r = requests.get(url, headers=self.headers)
-                self.update_rate_limit(r)
+                update_gh_rate_limit(self, logging, r)
 
                 j = r.json()
 
@@ -543,7 +485,7 @@ class GHPullRequestWorker:
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
                 'data_source': self.data_source,
-                'data_collection_date': datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+                'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
             }
 
             result = self.db.execute(self.pull_request_events_table.insert().values(pr_event))
@@ -587,7 +529,7 @@ class GHPullRequestWorker:
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
                 'data_source': self.data_source,
-                'data_collection_date': datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+                'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
             }
 
             result = self.db.execute(self.pull_request_reviewers_table.insert().values(reviewer))
@@ -631,7 +573,7 @@ class GHPullRequestWorker:
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
                 'data_source': self.data_source,
-                'data_collection_date': datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+                'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
             }
 
             result = self.db.execute(self.pull_request_assignees_table.insert().values(assignee))
@@ -669,7 +611,7 @@ class GHPullRequestWorker:
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
                 'data_source': self.data_source,
-                'data_collection_date': datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+                'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
             }
 
             result = self.db.execute(self.pull_request_meta_table.insert().values(pr_meta))
@@ -696,7 +638,7 @@ class GHPullRequestWorker:
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
                 'data_source': self.data_source,
-                'data_collection_date': datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+                'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
             }
 
             result = self.db.execute(self.pull_request_meta_table.insert().values(pr_meta))
@@ -724,7 +666,7 @@ class GHPullRequestWorker:
         try:
             while True:
                 r = requests.get(url, headers=self.headers)
-                self.update_rate_limit(r)
+                update_gh_rate_limit(self, logging, r)
 
                 j = r.json()
 
@@ -762,7 +704,7 @@ class GHPullRequestWorker:
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
                 'data_source': self.data_source,
-                'data_collection_date': datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+                'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
             }
 
             result = self.db.execute(self.message_table.insert().values(msg))
@@ -777,7 +719,7 @@ class GHPullRequestWorker:
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
                 'data_source': self.data_source,
-                'data_collection_date': datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+                'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
             }
 
             result = self.db.execute(
@@ -831,7 +773,7 @@ class GHPullRequestWorker:
         while True:
             logging.info("Hitting endpoint: " + url.format(i) + " ...")
             r = requests.get(url=url.format(i), headers=self.headers)
-            self.update_rate_limit(r)
+            update_gh_rate_limit(self, logging, r)
 
             # If it lists the last page then there is more than 1
             if 'last' in r.links and not multiple_pages and not self.finishing_task:
@@ -885,7 +827,7 @@ class GHPullRequestWorker:
                 cntrb_url = ("https://api.github.com/users/" + repo_contributor['login'])
                 logging.info("Hitting endpoint: " + cntrb_url)
                 r = requests.get(url=cntrb_url, headers=self.headers)
-                self.update_rate_limit(r)
+                update_gh_rate_limit(self, logging, r)
                 contributor = r.json()
 
                 company = None
@@ -992,7 +934,7 @@ class GHPullRequestWorker:
             cntrb_url = ("https://api.github.com/users/" + login)
             logging.info("Hitting endpoint: {} ...".format(cntrb_url))
             r = requests.get(url=cntrb_url, headers=self.headers)
-            self.update_rate_limit(r)
+            update_gh_rate_limit(self, logging, r)
             contributor = r.json()
 
             company = None
@@ -1052,88 +994,6 @@ class GHPullRequestWorker:
 
             return self.find_id_from_login(login)
 
-
-    def update_rate_limit(self, response):
-        # Try to get rate limit from request headers, sometimes it does not work (GH's issue)
-        #   In that case we just decrement from last recieved header count
-        try:
-            self.rate_limit = int(response.headers['X-RateLimit-Remaining'])
-            logging.info("[Rate Limit]: Recieved rate limit from headers")
-        except:
-            self.rate_limit -= 1
-            logging.info("[Rate Limit]: Headers did not work, had to decrement")
-        logging.info(f"[Rate Limit]: Updated rate limit, you have: {self.rate_limit} requests remaining")
-        if self.rate_limit <= 0:
-            reset_time = response.headers['X-RateLimit-Reset']
-            time_diff = datetime.datetime.fromtimestamp(int(reset_time)) - datetime.datetime.now()
-            logging.info(f"[Rate Limit]: Rate limit exceeded, waiting {time_diff.total_seconds()} seconds.")
-            time.sleep(time_diff.total_seconds())
-            self.rate_limit = int(response.headers['X-RateLimit-Limit'])
-
-    def register_task_completion(self, entry_info, model):
-        # Task to send back to broker
-        task_completed = {
-            'worker_id': self.config['id'],
-            'job_type': self.working_on,
-            'repo_id': entry_info['repo_id'],
-            'github_url': entry_info['github_url']
-        }
-        # # Add to history table
-        # task_history = {
-        #     "repo_id": entry_info['repo_id'],
-        #     "worker": self.config['id'],
-        #     "job_model": model,
-        #     "oauth_id": self.config['zombie_id'],
-        #     "timestamp": datetime.datetime.now(),
-        #     "status": "Success",
-        #     "total_results": self.results_counter
-        # }
-        # self.helper_db.execute(self.history_table.update().where(self.history_table.c.history_id==self.history_id).values(task_history))
-
-        # logging.info("Recorded job completion for: " + str(task_completed) + "\n")
-
-        # # Update job process table
-        # updated_job = {
-        #     "since_id_str": entry_info['repo_id'],
-        #     "last_count": self.results_counter,
-        #     "last_run": datetime.datetime.now(),
-        #     "analysis_state": 0
-        # }
-        # self.helper_db.execute(self.job_table.update().where(self.job_table.c.job_model==model).values(updated_job))
-        # logging.info("Update job process for model: " + model + "\n")
-
-        # Notify broker of completion
-        logging.info(f"Telling broker we completed task: {task_completed}")
-        logging.info(f"This task inserted {self.results_counter} tuples\n")
-
-        try:
-            requests.post('http://{}:{}/api/unstable/completed_task'.format(
-                self.config['broker_host'],self.config['broker_port']), json=task_completed)
-        except requests.exceptions.ConnectionError:
-            logging.info("Broker is booting and cannot accept the worker's message currently")
-        except Exception:
-            logging.exception('An unknown error occured while informing broker about task failure')
-
-        # Reset results counter for next task
-        self.results_counter = 0
-
-    def record_model_process(self, entry_info, model):
-        task_history = {
-            "repo_id": entry_info['repo_id'],
-            "worker": self.config['id'],
-            "job_model": model,
-            "oauth_id": self.config['zombie_id'],
-            "timestamp": datetime.datetime.now(),
-            "status": "Stopped",
-            "total_results": self.results_counter
-        }
-        if self.finishing_task:
-            result = self.helper_db.execute(self.history_table.update().where(self.history_table.c.history_id==self.history_id).values(task_history))
-        else:
-            result = self.helper_db.execute(self.history_table.insert().values(task_history))
-            logging.info("Record incomplete history tuple: " + str(result.inserted_primary_key))
-            self.history_id = int(result.inserted_primary_key[0])
-
     def check_duplicates(self, new_data, table_values, key):
         need_insertion = []
         for obj in new_data:
@@ -1144,25 +1004,3 @@ class GHPullRequestWorker:
                     need_insertion.append(obj)
         logging.info("[Filtering] Page recieved has {} tuples, while filtering duplicates this was reduced to {} tuples.".format(str(len(new_data)), str(len(need_insertion))))
         return need_insertion
-
-    def register_task_failure(self, repo_id, github_url):
-        task_failed = {
-            'worker_id': self.config['id'],
-            'job_type': self.working_on,
-            'repo_id': repo_id,
-            'github_url': github_url
-        }
-
-        logging.error('Task failed')
-        logging.error('Informing broker about Task Failure')
-        logging.info(f'This task inserted {self.results_counter} tuples\n')
-
-        try:
-            requests.post('http://{}:{}/api/unstable/task_error'.format(
-                self.config['broker_host'],self.config['broker_port']), json=task_failed)
-        except requests.exceptions.ConnectionError:
-            logging.error('Could not send task failure message to the broker')
-        except Exception:
-            logging.exception('An unknown error occured while informing broker about task failure')
-
-        self.results_counter = 0
