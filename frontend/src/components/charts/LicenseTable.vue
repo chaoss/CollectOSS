@@ -14,7 +14,7 @@
               </a>
                 <td>
                   <div v-if="el['license_id'] < 500">
-                    <a :href="'http://localhost:5000/api/unstable/' + el['license_id'] + '/True/25151/25158/license-files'">
+                    <a v-on:click="linfo(el['license_id'])">
                       {{el['count']}}
                     </a>
                   </div>
@@ -63,6 +63,18 @@
         'endpoint', // map `this.endpoint({...})` to `this.$store.dispatch('endpoint', {...})`
                     // uses: this.endpoint({endpoints: [], repos (optional): [], repoGroups (optional): []})
       ]),
+      linfo: function (e) {
+      console.log("**********************")
+      console.log(this.$store.state.common.apiRepos)
+      let repoID = this.$store.state.common.apiRepos[0].repo_id;
+      let groupID = this.$store.state.common.apiRepose[0].repo_group_id;
+        fetch(`http://localhost:5000/api/unstable/" + e + "/True/${groupID}/${repoID}/license-files`)
+          .then(res => res.json())
+          .then(res => {
+            console.log('LICENSE FILES');
+            console.log(res);
+        });
+      }
     }
   })
   export default class CountBlock extends AppProps{

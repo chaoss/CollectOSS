@@ -393,7 +393,7 @@ def license_declared(self, repo_group_id, repo_id=None):
         UNION
         SELECT
         500 as the_license_id,
-        'No Warranty' as short_name,
+        'No Assertion' as short_name,
         COUNT ( * )
         FROM
         files_licenses A,
