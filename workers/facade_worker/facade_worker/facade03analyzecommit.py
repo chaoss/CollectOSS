@@ -249,8 +249,10 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 		% (repo_loc,commit)], stdout=subprocess.PIPE, shell=True)
 
 	## Extra logging by Sean
-	fred = git_log.communicate()
-	cfg.log_activity('Debug','Git Log : %s' % fred)
+	barack, don = git_log.communicate()
+	cfg.log_activity('Debug','Git Log : %s' % barack)
+	cfg.log_activity('Debug','Git Log : %s' % don)
+
 	## 
 
 	# Stash the commit we're going to analyze so we can back it out if something
