@@ -49,6 +49,44 @@ CREATE INDEX "repogitindexrep" ON "augur_data"."repo" USING btree (
   "repo_git"
 );
 
+-- Repo Badging Table Update. 
+
+drop table repo_badging; 
+
+CREATE TABLE augur_data.repo_badging
+(
+    badge_collection_id bigint NOT NULL DEFAULT nextval('augur_data.repo_badging_badge_collection_id_seq'::regclass),
+    repo_id bigint,
+    data jsonb,
+	created_at timestamp(0) without time zone DEFAULT CURRENT_TIMESTAMP,
+    tool_source character varying(255) COLLATE pg_catalog."default",
+    tool_version character varying(255) COLLATE pg_catalog."default",
+    data_source character varying(255) COLLATE pg_catalog."default",
+    data_collection_date timestamp(0) without time zone DEFAULT CURRENT_TIMESTAMP
+)
+WITH (
+    OIDS = FALSE
+)
+TABLESPACE pg_default;
+
+ALTER TABLE "augur_data"."repo_badging" OWNER TO "augur";
+
+-- ----------------------------
+-- Primary Key structure for table repo_badging
+-- ----------------------------
+ALTER TABLE "augur_data"."repo_badging" ADD CONSTRAINT "repo_badging_pkey" PRIMARY KEY ("badge_collection_id");
+
+-- ----------------------------
+-- Foreign Keys structure for table repo_badging
+-- ----------------------------
+ALTER TABLE "augur_data"."repo_badging" ADD CONSTRAINT "fk_repo_badging_repo_1" FOREIGN KEY ("repo_id") REFERENCES "augur_data"."repo" ("repo_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+GRANT ALL ON TABLE augur_data.repo_badging TO augur;
+
+COMMENT ON TABLE augur_data.repo_badging
+    IS 'This will be collected from the LF’s Badging API
+https://bestpractices.coreinfrastructure.org/projects.json?pq=https%3A%2F%2Fgithub.com%2Fchaoss%2Faugur
+';
 
 
 
