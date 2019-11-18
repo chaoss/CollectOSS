@@ -1,3 +1,68 @@
+/***
+Database update script. For release 8. 
+
+***/ 
+
+
+-------------------------------------------------
+-- Database history table.  If the tables does not exist, then create it and populate it and run all this stuff. 
+-- This works for everything we already have deployed. After that, we will need the script to check the version in the table. 
+-- This release is version 8 of the schema. 
+-------------------------------------------------
+CREATE TABLE "augur_operations"."augur_settings" (
+"id" serial8 NOT NULL,
+"setting" varchar,
+"value" varchar,
+"last_modified" timestamp(0) DEFAULT CURRENT_DATE,
+PRIMARY KEY ("id") 
+)
+WITHOUT OIDS;
+ALTER TABLE "augur_operations"."augur_settings" OWNER TO "augur";
+
+
+INSERT INTO "augur_operations"."augur_settings"("id", "setting", "value", "last_modified") VALUES (1, 'augur_data_version', '8', '2019-11-18 08:41:51');
+
+-------------------------------------------------
+
+-------------------------------------------------
+
+
+
+
+-- New operations tables
+
+CREATE TABLE "augur_operations"."worker_settings_facade" (
+"id" int4 NOT NULL,
+"setting" varchar(32) COLLATE "default" NOT NULL,
+"value" varchar COLLATE "default" NOT NULL,
+"last_modified" timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+CONSTRAINT "settings_pkey" PRIMARY KEY ("id") 
+)
+WITHOUT OIDS;
+ALTER TABLE "augur_operations"."worker_settings_facade" OWNER TO "augur";
+
+CREATE TABLE "augur_operations"."repos_fetch_log" (
+"repos_id" int4 NOT NULL,
+"status" varchar(128) COLLATE "default" NOT NULL,
+"date" timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP
+)
+WITHOUT OIDS;
+CREATE INDEX "repos_id,status" ON "repos_fetch_log" USING btree ("repos_id" "pg_catalog"."int4_ops" ASC NULLS LAST, "status" "pg_catalog"."text_ops" ASC NULLS LAST);
+ALTER TABLE "augur_operations"."repos_fetch_log" OWNER TO "augur";
+
+CREATE TABLE "augur_operations"."working_commits" (
+"repos_id" int4 NOT NULL,
+"working_commit" varchar(40) COLLATE "default" DEFAULT 'NULL'::character varying
+)
+WITHOUT OIDS;
+ALTER TABLE "augur_operations"."working_commits" OWNER TO "augur";
+
+insert into "augur_operations"."worker_settings_facade"  select * from "augur_data"."settings"; 
+
+
+
+
+-- Contributor Alias Updates
 ALTER TABLE "augur_data"."contributors_aliases" ALTER COLUMN "data_collection_date" SET DEFAULT CURRENT_TIMESTAMP;
 
 CREATE SEQUENCE "spdx"."projects_package_id_seq" 
@@ -6,6 +71,8 @@ MINVALUE  1
 MAXVALUE 2147483647
 START 1
 CACHE 1;
+
+-- SPDX Updates
 
 ALTER TABLE "spdx"."files" DROP CONSTRAINT "files_project_id_fkey";
 
@@ -21,12 +88,13 @@ ALTER TABLE "spdx"."projects" DROP COLUMN "project_id";
 
 ALTER TABLE "spdx"."projects" ADD CONSTRAINT "projects_pkey" PRIMARY KEY ("package_id");
 
-SELECT setval('"spdx"."projects_package_id_seq"', 1, false);
+SELECT setval('"spdx"."projects_package_id_seq"', 1000000, false);
 
 ALTER SEQUENCE "spdx"."projects_package_id_seq"
 OWNED BY "spdx"."projects"."package_id";
 
 ALTER SEQUENCE "spdx"."projects_package_id_seq" OWNER TO "augur";
+
 
 -- Index Update for Performance 
 CREATE INDEX "reponameindex" ON "augur_data"."repo" USING hash (
@@ -48,6 +116,8 @@ CREATE INDEX "rggrouponrepoindex" ON "augur_data"."repo" USING btree (
 CREATE INDEX "repogitindexrep" ON "augur_data"."repo" USING btree (
   "repo_git"
 );
+
+
 
 -- Repo Badging Table Update. 
 
