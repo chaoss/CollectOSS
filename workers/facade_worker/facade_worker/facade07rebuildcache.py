@@ -162,7 +162,7 @@ def fill_empty_affiliations(cfg):
                     "WHERE cmt_%s_email = %%s "
                     "AND cmt_%s_affiliation IS NULL "
                     "AND cmt_%s_date >= TO_DATE(%%s, 'YYYY-MM-DD')" %
-                    (attribution, attribution, attribution, ca_start_date))
+                    (attribution, attribution, attribution, attribution))
 
                 cfg.cursor.execute(update, (match[0], email, match[1]))
                 cfg.db.commit()
