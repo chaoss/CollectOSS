@@ -188,9 +188,27 @@ class Housekeeper:
                         a.repo_id = d.repo_id AND 
                         b.repo_id = d.repo_id AND
                         b.data_collection_date = e.last_collected 
-                        {}
+                        {0}
                         GROUP BY a.repo_id, d.repo_id, b.pull_request_count
-                        ORDER BY ratio_abs;
+                    UNION
+                        SELECT repo_id,repo_git, 0 AS pull_request_count, repo_id AS pr_repo_id, 0 AS pr_collected_count, 
+                            0 AS prs_missing, 
+                            0 AS ratio_abs,
+                            0 AS ratio_prs 
+                        FROM repo 
+                        WHERE repo_id NOT IN (
+                            SELECT a.repo_id FROM repo a, pull_requests d, repo_info b, (
+                             SELECT repo_id, max(data_collection_date) AS last_collected FROM repo_info 
+                                GROUP BY repo_id 
+                                ORDER BY repo_id) e 
+                                WHERE a.repo_id = b.repo_id AND
+                                a.repo_id = d.repo_id AND 
+                                b.repo_id = d.repo_id AND
+                                b.data_collection_date = e.last_collected 
+                                {0}
+                            GROUP BY a.repo_id, d.repo_id, b.pull_request_count
+                        )
+                        ORDER BY ratio_abs
                     """.format(where_condition)) if job['model'] == 'pull_requests' else s.sql.text("""
                         SELECT a.repo_id, a.repo_git, b.issues_count, d.repo_id AS pr_repo_id,  count(*) AS issues_collected_count, 
                         (b.issues_count-count(*)) AS issues_missing, 
@@ -198,17 +216,37 @@ class Housekeeper:
                         (cast((count(*))AS DOUBLE PRECISION)/NULLIF(cast(b.issues_count AS DOUBLE PRECISION), 0)) AS ratio_issues
                         FROM repo a, issues d, repo_info b, 
                         (
-                             SELECT repo_id, max(data_collection_date) AS last_collected FROM repo_info 
+                            SELECT repo_id, max(data_collection_date) AS last_collected FROM repo_info 
                                 GROUP BY repo_id 
                                 ORDER BY repo_id) e 
-                        WHERE a.repo_id = b.repo_id AND
-                        a.repo_id = d.repo_id AND 
-                        b.repo_id = d.repo_id AND
-                           b.data_collection_date = e.last_collected
-                        AND d.pull_request_id IS NULL 
-                        {}
-                        GROUP BY a.repo_id, d.repo_id, b.issues_count
-                        ORDER BY ratio_abs;
+                            WHERE a.repo_id = b.repo_id AND
+                            a.repo_id = d.repo_id AND 
+                            b.repo_id = d.repo_id AND
+                               b.data_collection_date = e.last_collected
+                            AND d.pull_request_id IS NULL 
+                            {0}
+                            GROUP BY a.repo_id, d.repo_id, b.issues_count
+                    UNION
+                        SELECT repo_id,repo_git, 0 AS issues_count, repo_id AS pr_repo_id, 0 AS issues_collected_count, 
+                            0 AS issues_missing, 
+                            0 AS ratio_abs,
+                            0 AS ratio_issues 
+                        FROM repo 
+                        WHERE repo_id NOT IN (
+                        SELECT a.repo_id FROM repo a, issues d, repo_info b, 
+                        (
+                            SELECT repo_id, max(data_collection_date) AS last_collected FROM repo_info 
+                                GROUP BY repo_id 
+                                ORDER BY repo_id) e 
+                            WHERE a.repo_id = b.repo_id AND
+                            a.repo_id = d.repo_id AND 
+                            b.repo_id = d.repo_id AND
+                            b.data_collection_date = e.last_collected
+                            AND d.pull_request_id IS NULL 
+                            {0}
+                            GROUP BY a.repo_id, d.repo_id, b.issues_count
+                        )
+                        ORDER BY ratio_abs
                     """.format(where_condition)) if job['model'] == 'issues' else s.sql.text("""
                         SELECT repo_git, repo_id FROM repo {} ORDER BY repo_id ASC
                     """.format(where_condition))
