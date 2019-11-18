@@ -164,6 +164,9 @@ def fill_empty_affiliations(cfg):
                     "AND cmt_%s_date >= %%s" %
                     (attribution, attribution, attribution, attribution))
                     #"AND cmt_%s_date >= TO_TIMESTAMP(%%s, 'YYYY-MM-DD')" %
+                ## Extra logging by Sean
+                cfg.log_activity('Debug', update)
+                ##
                 cfg.cursor.execute(update, (match[0], email, match[1]))
                 cfg.db.commit()
 
