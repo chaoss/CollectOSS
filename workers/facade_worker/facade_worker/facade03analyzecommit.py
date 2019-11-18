@@ -241,7 +241,7 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 
 	# Read the git log
 
-	git_log = subprocess.Popen(["git --git-dir %s log --date = local -p -M %s -n1 "
+	git_log = subprocess.Popen(["git --git-dir %s log --date=local -p -M %s -n1 "
 		"--pretty=format:'"
 		"author_name: %%an%%nauthor_email: %%ae%%nauthor_date:%%ai%%n"
 		"committer_name: %%cn%%ncommitter_email: %%ce%%ncommitter_date: %%ci%%n"
