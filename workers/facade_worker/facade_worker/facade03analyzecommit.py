@@ -175,7 +175,7 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 					committer_name,committer_email,discover_alias(committer_email),committer_date,committer_timestamp,
 					added,removed,whitespace,committer_date,cfg.tool_source,cfg.tool_version,cfg.data_source))
 			except:
-				cfg.log_activity('Info', 'Something wrong in error log for timezone error')
+				cfg.log_activity('Info', 'Something wrong in error log for timezone error %s %s' % committer_timestamp,author_timestamp )
 
 		cfg.log_activity('Debug','Stored commit: %s' % commit)
 

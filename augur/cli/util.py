@@ -75,3 +75,11 @@ def kill(app):
     kill running augur processes
     """
     subprocess.call('util/scripts/control/augurkill.sh')
+
+@cli.command('repo-reset', short_help='Reset Repo Collection')
+@pass_application
+def kill(app):
+    """
+    kill running augur processes
+    """
+    subprocess.call('util/scripts/control/repo-reset.sh')
