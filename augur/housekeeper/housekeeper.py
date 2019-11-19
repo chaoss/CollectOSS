@@ -1,15 +1,12 @@
 """
 Keeps data up to date
 """
-
-import logging
-import requests
+import logging, requests, os, json, time
+from sqlalchemy.ext.automap import automap_base
 from multiprocessing import Process, Queue
-import time
 import sqlalchemy as s
 import pandas as pd
-import os
-import json
+from sqlalchemy import MetaData
 logging.basicConfig(filename='housekeeper.log')
 
 class Housekeeper:
@@ -30,6 +27,13 @@ class Housekeeper:
         helper_schema = 'augur_operations'
         self.helper_db = s.create_engine(DB_STR, poolclass = s.pool.NullPool,
             connect_args={'options': '-csearch_path={}'.format(helper_schema)})
+
+        helper_metadata = MetaData()
+        helper_metadata.reflect(self.helper_db, only=['worker_job'])
+        HelperBase = automap_base(metadata=helper_metadata)
+        HelperBase.prepare()
+
+        self.job_table = HelperBase.classes.worker_job.__table__
 
         repoUrlSQL = s.sql.text("""
             SELECT repo_git FROM repo
@@ -168,15 +172,84 @@ class Housekeeper:
 
         for job in jobs:
             if 'repo_group_id' in job:
-                if job['repo_group_id'] != 0:
-                    # Query all repos and last repo id
-                    repoUrlSQL = s.sql.text("""
-                            SELECT repo_git, repo_id FROM repo WHERE repo_group_id = {} ORDER BY repo_id ASC
-                        """.format(job['repo_group_id']))
-                else:
-                    repoUrlSQL = s.sql.text("""
-                            SELECT repo_git, repo_id FROM repo ORDER BY repo_id ASC
-                        """.format(job['repo_group_id']))
+                # If RG id is 0 then it just means to query all repos
+                where_and = 'AND' if job['model'] in ['issues', 'pull_requests'] else 'WHERE'
+                where_condition = '{} repo_group_id = {}'.format(where_and, job['repo_group_id']) if job['repo_group_id'] != 0 else ''
+                repoUrlSQL = s.sql.text("""
+                        SELECT a.repo_id, a.repo_git, b.pull_request_count, d.repo_id AS pr_repo_id,  count(*) AS pr_collected_count, 
+                        (b.pull_request_count-count(*)) AS prs_missing, 
+                        abs(cast((count(*))AS DOUBLE PRECISION)/NULLIF(cast(b.pull_request_count AS DOUBLE PRECISION), 0)) AS ratio_abs,
+                        (cast((count(*))AS DOUBLE PRECISION)/NULLIF(cast(b.pull_request_count AS DOUBLE PRECISION), 0)) AS ratio_prs
+                        FROM repo a, pull_requests d, repo_info b, (
+                             SELECT repo_id, max(data_collection_date) AS last_collected FROM repo_info 
+                                GROUP BY repo_id 
+                                ORDER BY repo_id) e 
+                        WHERE a.repo_id = b.repo_id AND
+                        a.repo_id = d.repo_id AND 
+                        b.repo_id = d.repo_id AND
+                        b.data_collection_date = e.last_collected 
+                        {0}
+                        GROUP BY a.repo_id, d.repo_id, b.pull_request_count
+                    UNION
+                        SELECT repo_id,repo_git, 0 AS pull_request_count, repo_id AS pr_repo_id, 0 AS pr_collected_count, 
+                            0 AS prs_missing, 
+                            0 AS ratio_abs,
+                            0 AS ratio_prs 
+                        FROM repo 
+                        WHERE repo_id NOT IN (
+                            SELECT a.repo_id FROM repo a, pull_requests d, repo_info b, (
+                             SELECT repo_id, max(data_collection_date) AS last_collected FROM repo_info 
+                                GROUP BY repo_id 
+                                ORDER BY repo_id) e 
+                                WHERE a.repo_id = b.repo_id AND
+                                a.repo_id = d.repo_id AND 
+                                b.repo_id = d.repo_id AND
+                                b.data_collection_date = e.last_collected 
+                                {0}
+                            GROUP BY a.repo_id, d.repo_id, b.pull_request_count
+                        )
+                        ORDER BY ratio_abs
+                    """.format(where_condition)) if job['model'] == 'pull_requests' else s.sql.text("""
+                        SELECT a.repo_id, a.repo_git, b.issues_count, d.repo_id AS pr_repo_id,  count(*) AS issues_collected_count, 
+                        (b.issues_count-count(*)) AS issues_missing, 
+                        abs(cast((count(*))AS DOUBLE PRECISION)/NULLIF(cast(b.issues_count AS DOUBLE PRECISION), 0)) AS ratio_abs,
+                        (cast((count(*))AS DOUBLE PRECISION)/NULLIF(cast(b.issues_count AS DOUBLE PRECISION), 0)) AS ratio_issues
+                        FROM repo a, issues d, repo_info b, 
+                        (
+                            SELECT repo_id, max(data_collection_date) AS last_collected FROM repo_info 
+                                GROUP BY repo_id 
+                                ORDER BY repo_id) e 
+                            WHERE a.repo_id = b.repo_id AND
+                            a.repo_id = d.repo_id AND 
+                            b.repo_id = d.repo_id AND
+                               b.data_collection_date = e.last_collected
+                            AND d.pull_request_id IS NULL 
+                            {0}
+                            GROUP BY a.repo_id, d.repo_id, b.issues_count
+                    UNION
+                        SELECT repo_id,repo_git, 0 AS issues_count, repo_id AS pr_repo_id, 0 AS issues_collected_count, 
+                            0 AS issues_missing, 
+                            0 AS ratio_abs,
+                            0 AS ratio_issues 
+                        FROM repo 
+                        WHERE repo_id NOT IN (
+                        SELECT a.repo_id FROM repo a, issues d, repo_info b, 
+                        (
+                            SELECT repo_id, max(data_collection_date) AS last_collected FROM repo_info 
+                                GROUP BY repo_id 
+                                ORDER BY repo_id) e 
+                            WHERE a.repo_id = b.repo_id AND
+                            a.repo_id = d.repo_id AND 
+                            b.repo_id = d.repo_id AND
+                            b.data_collection_date = e.last_collected
+                            AND d.pull_request_id IS NULL 
+                            {0}
+                            GROUP BY a.repo_id, d.repo_id, b.issues_count
+                        )
+                        ORDER BY ratio_abs
+                    """.format(where_condition)) if job['model'] == 'issues' else s.sql.text("""
+                        SELECT repo_git, repo_id FROM repo {} ORDER BY repo_id ASC
+                    """.format(where_condition))
                 rs = pd.read_sql(repoUrlSQL, self.db, params={})
                 if len(rs) == 0:
                     logging.info("Trying to send tasks for repo group with id: {}, but the repo group does not contain any repos".format(job['repo_group_id']))
@@ -191,6 +264,15 @@ class Housekeeper:
                         """.format(job['model']))
 
                     job_df = pd.read_sql(repoIdSQL, self.helper_db, params={})
+
+                    # If there is no job tuple found, insert one
+                    if len(job_df) == 0:
+                        job_tuple = {
+                            'job_model': job['model'],
+                            'oauth_id': 0
+                        }
+                        result = self.helper_db.execute(self.job_table.insert().values(job_tuple))
+                        logging.info("No job tuple for {} model was found, so one was inserted into the job table: {}".format(job['model'], job_tuple))
 
                     # If a last id is not recorded, start from beginning of repos 
                     #   (first id is not necessarily 0)
@@ -216,11 +298,13 @@ class Housekeeper:
 
 
                 # Rearrange repos so the one after the last one that 
-                #   was completed will be ran first
-                before_repos = rs.loc[rs['repo_id'].astype(int) < last_id]
-                after_repos = rs.loc[rs['repo_id'].astype(int) >= last_id]
+                #   was completed will be ran first (if prioritized ordering is not available/enabled)
+                reorganized_repos = rs
+                if job['model'] not in ['issues', 'pull_requests']:
+                    before_repos = rs.loc[rs['repo_id'].astype(int) < last_id]
+                    after_repos = rs.loc[rs['repo_id'].astype(int) >= last_id]
 
-                reorganized_repos = after_repos.append(before_repos)
+                    reorganized_repos = after_repos.append(before_repos)
 
                 if 'all_focused' in job:
                     reorganized_repos['focused_task'] = job['all_focused']

@@ -7,6 +7,8 @@ from sqlalchemy.ext.automap import automap_base
 from sqlalchemy import MetaData
 logging.basicConfig(filename='worker.log', level=logging.INFO, filemode='w')
 
+import ipdb
+
 class CollectorTask:
     """ Worker's perception of a task in its queue
     Holds a message type (EXIT, TASK, etc) so the worker knows how to process the queue entry
@@ -64,6 +66,7 @@ class BadgeWorker:
         self.DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(
             self.config['user'], self.config['password'], self.config['host'], self.config['port'], self.config['database']
         )
+        logging.info(self.DB_STR)
 
         dbschema='augur_data' # Searches left-to-right
         self.db = s.create_engine(self.DB_STR, poolclass=s.pool.NullPool,
@@ -77,6 +80,7 @@ class BadgeWorker:
         # such as 'only' to limit what tables we look at...
         metadata.reflect(self.db, only=['repo_badging'])
 
+
         # we can then produce a set of mappings from this MetaData.
         Base = automap_base(metadata=metadata)
 
@@ -85,18 +89,6 @@ class BadgeWorker:
 
         # mapped classes are ready
         self.table = Base.classes.repo_badging.__table__
-
-
-        # """ Query all repos """
-        repoUrlSQL = s.sql.text("""
-            SELECT repo_git, repo_id FROM repo
-            """)
-        rs = pd.read_sql(repoUrlSQL, self.db, params={})
-
-        #fill queue
-        for index, row in rs.iterrows():
-            entry_info = {"git_url": row["repo_git"], "repo_id": row["repo_id"]}
-            self._queue.put(CollectorTask(message_type='TASK', entry_info=entry_info))
 
         self.run()
 
@@ -158,11 +150,6 @@ class BadgeWorker:
         Query the github api for contributors and issues (not yet implemented)
         """
         git_url = str(num)
-
-        # Handles git url case by removing the extension
-        #if ".git" in git_url:
-        #    git_url = git_url[:-4]
-
         extension = "/en/projects/" + str(git_url) + ".json"
 
         url = self.config['endpoint'] + extension
@@ -170,15 +157,15 @@ class BadgeWorker:
         print(url)
         logging.info("Hitting endpoint: " + url + " ...\n")
         r = requests.get(url=url)
-        #print(r)
         data = r.json()
         if data != 0 and "404" not in str(r):
             #print(data)
             print("FOUND")
-            #data[0]['repo_id'] = entry_info['repo_id']
+            # data[0]['repo_id'] = entry_info['repo_id']
 
-            self.db.execute(self.table.insert().values(data))
-            #logging.info("Inserted badging info for repo: " + str(entry_info['repo_id']) + "\n")
+            # ipdb.set_trace()
+            self.db.execute(self.table.insert().values(data=data, tool_source="linux_badge_worker", tool_version="1.0", data_source="CII Badging API"))
+            # logging.info("Inserted badging info for repo: " + str(entry_info['repo_id']) + "\n")
             """
             task_completed = entry_info
             task_completed['worker_id'] = self.config['id']
