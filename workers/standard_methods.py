@@ -157,6 +157,7 @@ def update_gh_rate_limit(self, logging, response):
         url = "https://api.github.com/users/gabe-heim"
 
         for oauth in self.oauths:
+            logging.info("Inspecting rate limit info for oauth: {}\n".format(oauth))
             self.headers = {'Authorization': 'token %s' % oauth['access_token']}
             response = requests.get(url=url, headers=self.headers)
             oauth['rate_limit'] = int(response.headers['X-RateLimit-Remaining'])
