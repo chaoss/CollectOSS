@@ -248,6 +248,8 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 		"parents: %%p%%nEndPatch' "
 		% (repo_loc,commit)], stdout=subprocess.PIPE, shell=True)
 
+	## 
+
 	# Stash the commit we're going to analyze so we can back it out if something
 	# goes wrong later.
 	store_working_commit = ("INSERT INTO working_commits "
