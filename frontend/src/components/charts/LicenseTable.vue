@@ -14,14 +14,14 @@
               </a>
                 <td>
                   <div v-if="el['license_id'] < 500">
-                    <a v-on:click="linfo(el['license_id'])">
+                    <a href="javascript:void(0)" v-on:click="linfo(el['license_id'])">
                       {{el['count']}}
                     </a>
                   </div>
                   <div v-if="el['license_id'] >= 500">
-                  <a :href="'http://localhost:5000/api/unstable/500/False/25151/25158/license-files'">
-                    {{el['count']}}
-                  </a>
+                    <a href="javascript:void(0)" v-on:click="linfoF(el['license_id'])">
+                      {{el['count']}}
+                    </a>
                   </div>
                 </td>
             </tr>
@@ -63,16 +63,42 @@
         'endpoint', // map `this.endpoint({...})` to `this.$store.dispatch('endpoint', {...})`
                     // uses: this.endpoint({endpoints: [], repos (optional): [], repoGroups (optional): []})
       ]),
-      linfo: function (e) {
-      console.log("**********************")
-      console.log(this.$store.state.common.apiRepos)
-      let repoID = this.$store.state.common.apiRepos[0].repo_id;
-      let groupID = this.$store.state.common.apiRepose[0].repo_group_id;
-        fetch(`http://localhost:5000/api/unstable/" + e + "/True/${groupID}/${repoID}/license-files`)
-          .then(res => res.json())
-          .then(res => {
+      linfoF: function () {
+        let apiData = JSON.parse(JSON.stringify(this.$store.state.common.apiRepos))
+        let repoID = apiData[Object.keys(apiData)[0]].repo_id;
+        let groupID = apiData[Object.keys(apiData)[0]].repo_group_id;
+          fetch(`http://localhost:5000/api/unstable/500/False/${groupID}/${repoID}/license-files`)
+            .then(res => res.json())
+            .then(res => {
             console.log('LICENSE FILES');
-            console.log(res);
+            let res_refined:{ [index:string] : number } = {};
+            for(let i in res)
+              res_refined[Number(i)] = res[i].file_name
+            let uriContent = URL.createObjectURL(new Blob([JSON.stringify(res_refined, null, 2)], {type : 'text/json;charset=utf-8'}));
+            let link = document.createElement('a');
+            link.setAttribute('href', uriContent);
+            link.setAttribute('download', Object.keys(apiData)[0] + "." + res[0].short_name + ".files.json");
+            let event = new MouseEvent('click');
+            link.dispatchEvent(event);
+        });
+      },
+      linfo: function (license_id) {
+        let apiData = JSON.parse(JSON.stringify(this.$store.state.common.apiRepos))
+        let repoID = apiData[Object.keys(apiData)[0]].repo_id;
+        let groupID = apiData[Object.keys(apiData)[0]].repo_group_id;
+          fetch(`http://localhost:5000/api/unstable/${license_id}/True/${groupID}/${repoID}/license-files`)
+            .then(res => res.json())
+            .then(res => {
+            console.log('LICENSE FILES');
+            let res_refined:{ [index:string] : number } = {};
+            for(let i in res)
+              res_refined[Number(i)] = res[i].file_name
+            let uriContent = URL.createObjectURL(new Blob([JSON.stringify(res_refined, null, 2)], {type : 'text/json;charset=utf-8'}));
+            let link = document.createElement('a');
+            link.setAttribute('href', uriContent);
+            link.setAttribute('download', Object.keys(apiData)[0] + "." + res[0].short_name + ".files.json");
+            let event = new MouseEvent('click');
+            link.dispatchEvent(event);
         });
       }
     }
