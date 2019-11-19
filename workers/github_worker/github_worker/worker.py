@@ -128,7 +128,7 @@ class GitHubWorker:
             response = requests.get(url=url, headers=self.headers)
             self.oauths.append({
                     'oauth_id': oauth['oauth_id'],
-                    'key': oauth['access_token'],
+                    'access_token': oauth['access_token'],
                     'rate_limit': int(response.headers['X-RateLimit-Remaining']),
                     'seconds_to_reset': (datetime.fromtimestamp(int(response.headers['X-RateLimit-Reset'])) - datetime.now()).total_seconds()
                 })
@@ -139,7 +139,7 @@ class GitHubWorker:
 
         # First key to be used will be the one specified in the config (first element in 
         #   self.oauths array will always be the key in use)
-        self.headers = {'Authorization': 'token %s' % self.oauths[0]['key']}
+        self.headers = {'Authorization': 'token %s' % self.oauths[0]['access_token']}
 
         # Send broker hello message
         connect_to_broker(self, logging.getLogger())

@@ -176,9 +176,9 @@ def update_gh_rate_limit(self, logging, response):
             time.sleep(new_oauth['seconds_to_reset'])
 
         # Change headers to be using the new oauth's key
-        self.headers = {'Authorization': 'token %s' % new_oauth['key']}
+        self.headers = {'Authorization': 'token %s' % new_oauth['access_token']}
 
         # Make new oauth the 0th element in self.oauths so we know which one is in use
-        index = self.oauths.index('password2')
+        index = self.oauths.index(new_oauth)
         self.oauths[0], self.oauths[index] = self.oauths[index], self.oauths[0]
         logging.info("Using oauth: {}".format(self.oauths[0]))
