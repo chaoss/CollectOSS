@@ -3,6 +3,11 @@
     <d-card-body :title="title" class="text-center">
       <spinner v-if="!loaded"></spinner>
       <div v-if="loaded">
+        <strong>
+          Click on a license for a description of the license <br>
+          Click on a license count for a list of associated files <br>
+        </strong>
+        <br>
         <table class="licenseTable">
           <thead style="border:2pt solid #f7f7f7;" class="bg-light">
             <th v-for="header in headers">{{header}}</th>
