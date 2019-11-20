@@ -5,7 +5,7 @@
       <div v-if="loaded">
         <strong>
           Click on a license for a description of the license <br>
-          Click on a license count for a list of associated files <br>
+          Click on a license count to download a list of associated files <br>
         </strong>
         <br>
         <table class="licenseTable">
@@ -69,43 +69,70 @@
                     // uses: this.endpoint({endpoints: [], repos (optional): [], repoGroups (optional): []})
       ]),
       linfoF: function () {
-        let apiData = JSON.parse(JSON.stringify(this.$store.state.common.apiRepos))
-        let repoID = apiData[Object.keys(apiData)[0]].repo_id;
-        let groupID = apiData[Object.keys(apiData)[0]].repo_group_id;
+        // @ts-ignore
+        let type = window.performance.getEntriesByType("navigation")[0].type
+        let repoID = null;
+        let groupID = null;
+        let apiData = JSON.parse(JSON.stringify(this.$store.state.common.apiRepos));
+        // @ts-ignore
+        if (type === "reload") {
+          repoID = apiData[Object.keys(apiData)[0]].repo_id;
+          groupID = apiData[Object.keys(apiData)[0]].repo_group_id;
+        } else {
+          repoID = apiData[Object.keys(apiData)[1]].repo_id;
+          groupID = apiData[Object.keys(apiData)[1]].repo_group_id;
+        }
           fetch(`http://localhost:5000/api/unstable/500/False/${groupID}/${repoID}/license-files`)
             .then(res => res.json())
             .then(res => {
-            console.log('LICENSE FILES');
             let res_refined:{ [index:string] : number } = {};
             for(let i in res)
               res_refined[Number(i)] = res[i].file_name
             let uriContent = URL.createObjectURL(new Blob([JSON.stringify(res_refined, null, 2)], {type : 'text/json;charset=utf-8'}));
             let link = document.createElement('a');
             link.setAttribute('href', uriContent);
-            link.setAttribute('download', Object.keys(apiData)[0] + "." + res[0].short_name + ".files.json");
+            if (type === "reload") {
+              link.setAttribute('download', Object.keys(apiData)[0] + "." + res[0].short_name + ".files.json");
+            } else {
+              link.setAttribute('download', Object.keys(apiData)[1] + "." + res[0].short_name + ".files.json");
+            }
             let event = new MouseEvent('click');
             link.dispatchEvent(event);
         });
       },
       linfo: function (license_id) {
-        let apiData = JSON.parse(JSON.stringify(this.$store.state.common.apiRepos))
-        let repoID = apiData[Object.keys(apiData)[0]].repo_id;
-        let groupID = apiData[Object.keys(apiData)[0]].repo_group_id;
-          fetch(`http://localhost:5000/api/unstable/${license_id}/True/${groupID}/${repoID}/license-files`)
-            .then(res => res.json())
-            .then(res => {
-            console.log('LICENSE FILES');
-            let res_refined:{ [index:string] : number } = {};
-            for(let i in res)
-              res_refined[Number(i)] = res[i].file_name
-            let uriContent = URL.createObjectURL(new Blob([JSON.stringify(res_refined, null, 2)], {type : 'text/json;charset=utf-8'}));
-            let link = document.createElement('a');
-            link.setAttribute('href', uriContent);
-            link.setAttribute('download', Object.keys(apiData)[0] + "." + res[0].short_name + ".files.json");
-            let event = new MouseEvent('click');
-            link.dispatchEvent(event);
-        });
-      }
+        // @ts-ignore
+        let type = window.performance.getEntriesByType("navigation")[0].type
+        let repoID = null;
+        let groupID = null;
+        let apiData = JSON.parse(JSON.stringify(this.$store.state.common.apiRepos));
+        if (type === "reload") {
+          repoID = apiData[Object.keys(apiData)[0]].repo_id;
+          groupID = apiData[Object.keys(apiData)[0]].repo_group_id;
+        } else {
+          repoID = apiData[Object.keys(apiData)[1]].repo_id;
+          groupID = apiData[Object.keys(apiData)[1]].repo_group_id;
+        }
+          console.log("*********************")
+          console.log(repoID)
+            fetch(`http://localhost:5000/api/unstable/${license_id}/True/${groupID}/${repoID}/license-files`)
+              .then(res => res.json())
+              .then(res => {
+              let res_refined:{ [index:string] : number } = {};
+              for(let i in res)
+                res_refined[Number(i)] = res[i].file_name
+              let uriContent = URL.createObjectURL(new Blob([JSON.stringify(res_refined, null, 2)], {type : 'text/json;charset=utf-8'}));
+              let link = document.createElement('a');
+              link.setAttribute('href', uriContent);
+              if (type === "reload") {
+                link.setAttribute('download', Object.keys(apiData)[0] + "." + res[0].short_name + ".files.json");
+              } else {
+                link.setAttribute('download', Object.keys(apiData)[1] + "." + res[0].short_name + ".files.json");
+              }
+              let event = new MouseEvent('click');
+              link.dispatchEvent(event);
+          });
+        }
     }
   })
   export default class CountBlock extends AppProps{
