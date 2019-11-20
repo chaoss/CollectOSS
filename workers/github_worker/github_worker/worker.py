@@ -128,7 +128,7 @@ class GitHubWorker:
             response = requests.get(url=url, headers=self.headers)
             self.oauths.append({
                     'oauth_id': oauth['oauth_id'],
-                    'key': oauth['access_token'],
+                    'access_token': oauth['access_token'],
                     'rate_limit': int(response.headers['X-RateLimit-Remaining']),
                     'seconds_to_reset': (datetime.fromtimestamp(int(response.headers['X-RateLimit-Reset'])) - datetime.now()).total_seconds()
                 })
@@ -139,7 +139,7 @@ class GitHubWorker:
 
         # First key to be used will be the one specified in the config (first element in 
         #   self.oauths array will always be the key in use)
-        self.headers = {'Authorization': 'token %s' % self.oauths[0]['key']}
+        self.headers = {'Authorization': 'token %s' % self.oauths[0]['access_token']}
 
         # Send broker hello message
         connect_to_broker(self, logging.getLogger())
@@ -748,6 +748,9 @@ class GitHubWorker:
             
             j = r.json()
 
+            if len(j) == 0:
+                break
+                
             # Checking contents of requests with what we already have in the db
             j = self.assign_tuple_action(j, issue_table_values, 
                 {'comment_count': 'comments','issue_state': 'state'}, 
@@ -993,7 +996,7 @@ class GitHubWorker:
                 j = r.json()
 
                 # Checking contents of requests with what we already have in the db
-                new_comments = self.check_duplicates(j, event_table_values, pseudo_key_gh)
+                new_comments = self.check_duplicates(j, issue_comments_table_values, pseudo_key_gh)
                 if len(new_comments) == 0 and multiple_pages and 'last' in r.links:
                     if i - 1 != int(r.links['last']['url'][-6:].split('=')[1]):
                         logging.info("No more pages with unknown comments, breaking from pagination.\n")
