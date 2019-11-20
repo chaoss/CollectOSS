@@ -748,6 +748,9 @@ class GitHubWorker:
             
             j = r.json()
 
+            if len(j) == 0:
+                break
+                
             # Checking contents of requests with what we already have in the db
             j = self.assign_tuple_action(j, issue_table_values, 
                 {'comment_count': 'comments','issue_state': 'state'}, 
@@ -993,7 +996,7 @@ class GitHubWorker:
                 j = r.json()
 
                 # Checking contents of requests with what we already have in the db
-                new_comments = self.check_duplicates(j, event_table_values, pseudo_key_gh)
+                new_comments = self.check_duplicates(j, issue_comments_table_values, pseudo_key_gh)
                 if len(new_comments) == 0 and multiple_pages and 'last' in r.links:
                     if i - 1 != int(r.links['last']['url'][-6:].split('=')[1]):
                         logging.info("No more pages with unknown comments, breaking from pagination.\n")
