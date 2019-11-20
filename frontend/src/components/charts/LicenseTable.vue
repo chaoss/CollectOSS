@@ -94,7 +94,7 @@
             if (type === "reload") {
               link.setAttribute('download', Object.keys(apiData)[0] + "." + res[0].short_name + ".files.json");
             } else {
-              link.setAttribute('download', Object.keys(apiData)[1] + "." + res[0].short_name + ".files.json");
+              link.setAttribute('download', Object.keys(apiData)[1] + ".NOASSERTION.files.json");
             }
             let event = new MouseEvent('click');
             link.dispatchEvent(event);
