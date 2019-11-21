@@ -27,6 +27,11 @@ INSERT INTO "augur_operations"."augur_settings"("id", "setting", "value", "last_
 -------------------------------------------------
 
 
+-- Updates to commit timestamps
+ALTER TABLE "augur_data"."commits" ALTER COLUMN "cmt_author_timestamp" TYPE timestamptz(0) USING "cmt_author_timestamp"::timestamptz(0);
+
+ALTER TABLE "augur_data"."commits" ALTER COLUMN "cmt_committer_timestamp" TYPE timestamptz(0) USING "cmt_committer_timestamp"::timestamptz(0);
+
 
 
 -- New operations tables
