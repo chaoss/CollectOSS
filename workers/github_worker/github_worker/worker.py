@@ -464,7 +464,8 @@ class GitHubWorker:
                 cntrb_id = tuple['cntrb_id']
                 # Check existing contributors table tuple
                 existing_tuples = self.retrieve_tuple({'cntrb_email': tuple['commit_email']}, ['contributors'])
-                if len(existing_tuples) < 1:
+
+                def insert_cntrb():
                     # Prepare tuple for insertion to contributor table (build it off of the tuple queried)
                     cntrb = tuple
                     cntrb['cntrb_created_at'] = datetime.fromtimestamp(cntrb['cntrb_created_at']/1000)
@@ -481,8 +482,21 @@ class GitHubWorker:
                     self.results_counter += 1
                     self.cntrb_id_inc = int(result.inserted_primary_key[0])
                     alias_id = self.cntrb_id_inc
+
+                if len(existing_tuples) < 1:
+                    insert_cntrb()
                 elif len(existing_tuples) > 1:
-                    logging.info("THERE IS A CASE FOR A DUPLICATE CONTRIBUTOR in the contributors table AND NEED TO ADD DELETION LOGIC\n")
+                    logging.info("THERE IS A CASE FOR A DUPLICATE CONTRIBUTOR in the contributors table, we will delete all tuples with this cntrb_email and re-insert only 1\n")
+                    logging.info("For cntrb_email: {}".format(tuple['commit_email']))
+                    deleteSQL = """
+                        DELETE 
+                            FROM
+                                contributors
+                            WHERE
+                                cntrb_email = '{}'
+                    """.format(tuple['commit_email'])
+                    result = self.db.execute(deleteSQL)
+                    insert_cntrb()
                 else:
                     alias_id = existing_tuples[0]['cntrb_id']
 
@@ -492,7 +506,7 @@ class GitHubWorker:
                     alias_tuple = {
                         'cntrb_id': cntrb_id,
                         'cntrb_a_id': alias_id,
-                        'canonical_email': cntrb_email,
+                        'canonical_email': tuple['cntrb_canonical'],
                         'alias_email': commit_email,
                         'cntrb_active': 1,
                         "tool_source": self.tool_source,
