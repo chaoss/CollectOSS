@@ -13,6 +13,11 @@ Data collection
 You will need:
 
 -  A `PostgreSQL 10 or higher <https://www.postgresql.org/download/>`__ installation.
+   
+.. code::
+
+sudo apt-get install postgresql
+
 
 One of the reasons that Augur is so powerful is because of our `unified data model <../architecture/data-model.rst>`_.
 In order to ensure this data model remains performant even with large amounts of data, we use PostgreSQL as
@@ -63,6 +68,15 @@ You will need:
 -  `vue-cli <https://cli.vuejs.org/>`__
 -  `node <https://nodejs.org/en/>`__
 -  `npm <https://www.npmjs.com/>`__
+   
+.. code::
+
+    sudo apt-get install python3-pip
+    sudo pip3 install virtualenv 
+    sudo apt install npm
+    npm config set prefix ~/.npm
+    npm install -g @vue/cli
+    npm install vue.js 
 
 We use Vue.js as our frontend web framework, and ``npm`` as our package manager.
 
