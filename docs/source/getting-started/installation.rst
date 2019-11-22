@@ -31,8 +31,12 @@ During the installation process you will be asked to provide the following crede
 - port
 - user
 - password for the user specified above
-  
-.. note:: 
+
+.. note::
+
+   The code block below contains the commands you need to install postgres and create an augur user. 
+
+.. code:: 
 
     You can create a user in postgres using these commands: 
 
@@ -68,6 +72,10 @@ You will need:
 -  `vue-cli <https://cli.vuejs.org/>`__
 -  `node <https://nodejs.org/en/>`__
 -  `npm <https://www.npmjs.com/>`__
+
+.. note::
+
+   The code block below contains the commands you need to install these dependencies.  
    
 .. code::
 
