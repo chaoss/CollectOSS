@@ -26,6 +26,16 @@ During the installation process you will be asked to provide the following crede
 - port
 - user
 - password for the user specified above
+  
+.. note:: 
+
+    You can create a user in postgres using these commands: 
+
+    >sudo -u postgres 
+    >psql
+    postgres=# create database augur;
+    postgres=# create user augur with encrypted password 'mypass';
+    postgres=# grant all privileges on database augur to augur;
 
 The installation process will automatically set up the schema for the data model if it hasn't been created yet.
 After the schema has been set up, you'll be asked if you want to load the schema with some sample data (around 24 MB).
