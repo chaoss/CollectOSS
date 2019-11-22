@@ -38,10 +38,9 @@ During the installation process you will be asked to provide the following crede
 
 .. code:: 
 
-    You can create a user in postgres using these commands: 
-
-    >sudo -u postgres 
-    >psql
+    sudo apt-get install postgresql 
+    sudo -u postgres 
+    psql
     postgres=# create database augur;
     postgres=# create user augur with encrypted password 'mypass';
     postgres=# grant all privileges on database augur to augur;
