@@ -143,6 +143,7 @@ function create_db_schema() {
     psql -h $host -d $database -U $db_user -p $port -a -w -f persistence_schema/3-augur_operations.sql
     psql -h $host -d $database -U $db_user -p $port -a -w -f persistence_schema/4-spdx.sql
     psql -h $host -d $database -U $db_user -p $port -a -w -f persistence_schema/5-seed-data.sql
+    psql -h $host -d $database -U $db_user -p $port -a -w -f ./schema_update.sql
     psql -h $host -d $database -U $db_user -p $port -a -w -c "UPDATE augur_data.settings SET VALUE = '$facade_repo_path' WHERE setting='repo_directory';"
     echo "Schema created"
 
