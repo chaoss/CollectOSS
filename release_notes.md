@@ -12,5 +12,10 @@
         "port": "5002"
     },
 ```
+6. `git config merge.renameLimit 999999999` lets your facade worker move files when there are large reorganizations in some of your projects
+7. Sometimes when a repository moves, github will ask you for credentials. This caches them so your facade worker keeps runnign 
+ - `git config --global credential.helper cache`
+ - `git config --global credential.helper 'cache --timeout=600000000000000'`
+
 
  
