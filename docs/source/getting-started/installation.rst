@@ -13,6 +13,11 @@ Data collection
 You will need:
 
 -  A `PostgreSQL 10 or higher <https://www.postgresql.org/download/>`__ installation.
+   
+.. code::
+
+sudo apt-get install postgresql
+
 
 One of the reasons that Augur is so powerful is because of our `unified data model <../architecture/data-model.rst>`_.
 In order to ensure this data model remains performant even with large amounts of data, we use PostgreSQL as
@@ -26,6 +31,19 @@ During the installation process you will be asked to provide the following crede
 - port
 - user
 - password for the user specified above
+
+.. note::
+
+   The code block below contains the commands you need to install postgres and create an augur user. 
+
+.. code:: 
+
+    sudo apt-get install postgresql 
+    sudo -u postgres 
+    psql
+    postgres=# create database augur;
+    postgres=# create user augur with encrypted password 'mypass';
+    postgres=# grant all privileges on database augur to augur;
 
 The installation process will automatically set up the schema for the data model if it hasn't been created yet.
 After the schema has been set up, you'll be asked if you want to load the schema with some sample data (around 24 MB).
@@ -53,6 +71,19 @@ You will need:
 -  `vue-cli <https://cli.vuejs.org/>`__
 -  `node <https://nodejs.org/en/>`__
 -  `npm <https://www.npmjs.com/>`__
+
+.. note::
+
+   The code block below contains the commands you need to install these dependencies.  
+   
+.. code::
+
+    sudo apt-get install python3-pip
+    sudo pip3 install virtualenv 
+    sudo apt install npm
+    npm config set prefix ~/.npm
+    npm install -g @vue/cli
+    npm install vue.js 
 
 We use Vue.js as our frontend web framework, and ``npm`` as our package manager.
 

@@ -128,7 +128,7 @@ class GitHubWorker:
             response = requests.get(url=url, headers=self.headers)
             self.oauths.append({
                     'oauth_id': oauth['oauth_id'],
-                    'key': oauth['access_token'],
+                    'access_token': oauth['access_token'],
                     'rate_limit': int(response.headers['X-RateLimit-Remaining']),
                     'seconds_to_reset': (datetime.fromtimestamp(int(response.headers['X-RateLimit-Reset'])) - datetime.now()).total_seconds()
                 })
@@ -139,7 +139,7 @@ class GitHubWorker:
 
         # First key to be used will be the one specified in the config (first element in 
         #   self.oauths array will always be the key in use)
-        self.headers = {'Authorization': 'token %s' % self.oauths[0]['key']}
+        self.headers = {'Authorization': 'token %s' % self.oauths[0]['access_token']}
 
         # Send broker hello message
         connect_to_broker(self, logging.getLogger())
@@ -464,7 +464,8 @@ class GitHubWorker:
                 cntrb_id = tuple['cntrb_id']
                 # Check existing contributors table tuple
                 existing_tuples = self.retrieve_tuple({'cntrb_email': tuple['commit_email']}, ['contributors'])
-                if len(existing_tuples) < 1:
+
+                def insert_cntrb():
                     # Prepare tuple for insertion to contributor table (build it off of the tuple queried)
                     cntrb = tuple
                     cntrb['cntrb_created_at'] = datetime.fromtimestamp(cntrb['cntrb_created_at']/1000)
@@ -481,8 +482,21 @@ class GitHubWorker:
                     self.results_counter += 1
                     self.cntrb_id_inc = int(result.inserted_primary_key[0])
                     alias_id = self.cntrb_id_inc
+
+                if len(existing_tuples) < 1:
+                    insert_cntrb()
                 elif len(existing_tuples) > 1:
-                    logging.info("THERE IS A CASE FOR A DUPLICATE CONTRIBUTOR in the contributors table AND NEED TO ADD DELETION LOGIC\n")
+                    logging.info("THERE IS A CASE FOR A DUPLICATE CONTRIBUTOR in the contributors table, we will delete all tuples with this cntrb_email and re-insert only 1\n")
+                    logging.info("For cntrb_email: {}".format(tuple['commit_email']))
+                    deleteSQL = """
+                        DELETE 
+                            FROM
+                                contributors
+                            WHERE
+                                cntrb_email = '{}'
+                    """.format(tuple['commit_email'])
+                    result = self.db.execute(deleteSQL)
+                    insert_cntrb()
                 else:
                     alias_id = existing_tuples[0]['cntrb_id']
 
@@ -492,7 +506,7 @@ class GitHubWorker:
                     alias_tuple = {
                         'cntrb_id': cntrb_id,
                         'cntrb_a_id': alias_id,
-                        'canonical_email': cntrb_email,
+                        'canonical_email': tuple['cntrb_canonical'],
                         'alias_email': commit_email,
                         'cntrb_active': 1,
                         "tool_source": self.tool_source,
@@ -748,6 +762,9 @@ class GitHubWorker:
             
             j = r.json()
 
+            if len(j) == 0:
+                break
+                
             # Checking contents of requests with what we already have in the db
             j = self.assign_tuple_action(j, issue_table_values, 
                 {'comment_count': 'comments','issue_state': 'state'}, 
@@ -993,7 +1010,7 @@ class GitHubWorker:
                 j = r.json()
 
                 # Checking contents of requests with what we already have in the db
-                new_comments = self.check_duplicates(j, event_table_values, pseudo_key_gh)
+                new_comments = self.check_duplicates(j, issue_comments_table_values, pseudo_key_gh)
                 if len(new_comments) == 0 and multiple_pages and 'last' in r.links:
                     if i - 1 != int(r.links['last']['url'][-6:].split('=')[1]):
                         logging.info("No more pages with unknown comments, breaking from pagination.\n")
