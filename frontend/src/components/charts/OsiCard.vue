@@ -6,17 +6,13 @@
         <h4>{{ OSIpercent[0] }}%</h4>
         <p>
         OSI Approved:
-        <strong>
-          <a href="javascript:void(0)" v-on:click="list(true)">
+        <a href="javascript:void(0)" v-on:click="list(true)">
             {{ OSIpercent[1] }}
-          </a>
-        </strong> <br>
+        </a> <br>
         Not OSI Approved:
-        <strong>
-          <a href="javascript:void(0)" v-on:click="list(false)">
+        <a href="javascript:void(0)" v-on:click="list(false)">
             {{ OSIpercent[2] }}
-          </a>
-        </strong> <br>
+        </a> <br>
         Total:
         <strong>
           {{ OSIpercent[3] }}
