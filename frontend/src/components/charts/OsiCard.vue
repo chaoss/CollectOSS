@@ -5,9 +5,22 @@
       <div v-if="loaded">
         <h4>{{ OSIpercent[0] }}%</h4>
         <p>
-        OSI Approved: <strong>{{ OSIpercent[1] }}</strong> <br>
-        Not OSI Approved: <strong>{{ OSIpercent[2] }}</strong> <br>
-        Total: <strong>{{ OSIpercent[3] }}</strong> <br>
+        OSI Approved:
+        <strong>
+          <a href="javascript:void(0)" v-on:click="list(true)">
+            {{ OSIpercent[1] }}
+          </a>
+        </strong> <br>
+        Not OSI Approved:
+        <strong>
+          <a href="javascript:void(0)" v-on:click="list(false)">
+            {{ OSIpercent[2] }}
+          </a>
+        </strong> <br>
+        Total:
+        <strong>
+          {{ OSIpercent[3] }}
+        </strong> <br>
         </p>
       </div>
     </d-card-body>
@@ -43,26 +56,26 @@
           console.log(check)
           // @ts-ignore
           for (let el of this.values) {
-            let count = el['count'];
-            let shortname = el['short_name'];
-            // @ts-ignore
-            let determin = check.default[shortname];
-            if (determin === true){
-              tcount += count
-            } else if (determin === false) {
-              fcount += count
+              let count = el['count'];
+              let shortname = el['short_name'];
+              // @ts-ignore
+              let determin = check.default[shortname];
+              if (determin === true){
+                tcount += count
+              } else if (determin === false) {
+                fcount += count
+              }
             }
-        }
-      let bigcount = (tcount + fcount)
-      let prepercent = tcount / (tcount + fcount)
-      console.log(tcount + fcount)
-      console.log(tcount)
-      console.log(fcount)
-      let percent = prepercent * 100
-      let fixed = 2 || 0;
-      fixed = Math.pow(10, fixed);
-      percent = Math.floor(percent * fixed) / fixed;
-      return [percent, tcount, fcount, bigcount]
+          let bigcount = (tcount + fcount)
+          let prepercent = tcount / (tcount + fcount)
+          console.log(tcount + fcount)
+          console.log(tcount)
+          console.log(fcount)
+          let percent = prepercent * 100
+          let fixed = 2 || 0;
+          fixed = Math.pow(10, fixed);
+          percent = Math.floor(percent * fixed) / fixed;
+          return [percent, tcount, fcount, bigcount]
       },
       ...mapGetters('compare',[
         'comparedRepos',
@@ -70,6 +83,44 @@
       ]),
     },
     methods: {
+    list: function(indi) {
+      let oList = {}
+      let i = 0
+      for (let el of this.values) {
+        let count = el['count'];
+        let shortname = el['short_name'];
+        // @ts-ignore
+        let determin = check.default[shortname];
+        if (determin === true && indi == true){
+          oList[i] = shortname
+          i += 1
+        } else if (determin === false && indi == false) {
+          oList[i] = shortname
+          i += 1
+        }
+      }
+      let type = window.performance.getEntriesByType("navigation")[0].type
+      let apiData = JSON.parse(JSON.stringify(this.$store.state.common.apiRepos));
+      console.log(oList)
+      let uriContent = URL.createObjectURL(new Blob([JSON.stringify(oList, null, 2)], {type : 'text/json;charset=utf-8'}));
+      let link = document.createElement('a');
+      link.setAttribute('href', uriContent);
+      if (type === "reload") {
+        if (indi == true) {
+          link.setAttribute('download', Object.keys(apiData)[0] + ".approved.licenses.json");
+        } else {
+          link.setAttribute('download', Object.keys(apiData)[0] + ".notapproved.licenses.json");
+        }
+      } else {
+        if (indi == true) {
+          link.setAttribute('download', Object.keys(apiData)[1] + ".approved.licenses.json");
+        } else {
+          link.setAttribute('download', Object.keys(apiData)[1] + ".notapproved.licenses.json");
+        }
+      }
+      let event = new MouseEvent('click');
+      link.dispatchEvent(event);
+    },
       ...mapActions('common',[
         'endpoint', // map `this.endpoint({...})` to `this.$store.dispatch('endpoint', {...})`
                     // uses: this.endpoint({endpoints: [], repos (optional): [], repoGroups (optional): []})
