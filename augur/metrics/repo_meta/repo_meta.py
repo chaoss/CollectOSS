@@ -328,6 +328,42 @@ def languages(self, repo_group_id, repo_id=None):
         results = pd.read_sql(languages_SQL, self.database, params={'repo_id': repo_id})
         return results
 
+@annotate(tag='license-files')
+def license_files(self, license_id, spdx_binary, repo_group_id, repo_id=None,):
+        """Returns the files related to a license
+
+        :param repo_group_id: The repository's repo_group_id
+        :param repo_id: The repository's repo_id, defaults to None
+        :return: Declared License
+        """
+        license_data_SQL = None
+        repo_id_SQL = None
+        repo_name_list = None
+
+        license_data_SQL = s.sql.text("""
+        SELECT A
+            .license_id as the_license_id,    b.short_name as short_name,    f.file_name
+        FROM
+            files_licenses A,    licenses b,    augur_repo_map C,    packages d,    files e,
+            packages_files f
+        WHERE
+            A.license_id = b.license_id
+            AND d.package_id = C.dosocs_pkg_id
+            AND e.file_id = A.file_id
+            AND e.package_id = d.package_id
+            AND C.repo_id = :repo_id
+            AND e.file_id = f.file_id
+            AND b.is_spdx_official = :spdx_binary
+            AND
+                (
+                b.license_id = :license_id
+                OR
+                b.license_id in ( 369,323,324,325,326,327,328,329,330,331,332,333,334,335,336,337,338,339,340,341,342,343,344,345,346,347,348,349,350,351,352,353,354,355,356,357,358,359,360,361,362,363,364,365,366,367,368,370,371,372,373,374,375,376,377,378,379,380,381,382,383,384,385,386,387,388,389,390,391,392,393,394,395,396,397,398,399,400,401,402,403,404,405,406,407,408,409,410,411,412,413,414,415,416,417,418,419,420,421,422,423,424,425,426,427,428,429,430,431,432,433,434,435,436,437,438,439,440,441,442,443,444,445,446,447,448,449,450,451,452,453,454,455,456,457,458,459,460,461,462,463,464,465,466,467,468,469,470,471,472,473,474,475,476,477,478,479,480,481,482));
+                """)
+
+        results = pd.read_sql(license_data_SQL, self.spdx_db, params={'repo_id': repo_id, 'spdx_binary': spdx_binary, 'license_id': license_id})
+        return results
+
 @annotate(tag='license-declared')
 def license_declared(self, repo_group_id, repo_id=None):
     """Returns the declared license
@@ -341,18 +377,53 @@ def license_declared(self, repo_group_id, repo_id=None):
     repo_name_list = None
 
     license_declared_SQL = s.sql.text("""
-    select a.license_id, b.short_name, count(*) from files_licenses a, licenses b, augur_repo_map c, packages d, files e
-    where a.license_id = b.license_id
-    and
-    d.package_id = c.dosocs_pkg_id
-    and
-    e.file_id = a.file_id
-    and
-    e.package_id = d.package_id
-    and
-    c.repo_id = :repo_id
-    group by a.license_id, b.short_name
-    order by b.short_name;
+    select the_license_id as license_id, short_name, sum(count) as count from
+        (SELECT A
+        .license_id as the_license_id,
+        b.short_name as short_name,
+        COUNT ( * )
+        FROM
+        files_licenses A,
+        licenses b,
+        augur_repo_map C,
+        packages d,
+        files e
+        WHERE
+        A.license_id = b.license_id
+        AND d.package_id = C.dosocs_pkg_id
+        AND e.file_id = A.file_id
+        AND e.package_id = d.package_id
+        AND C.repo_id = :repo_id
+        AND b.is_spdx_official = 't'
+        GROUP BY
+        the_license_id,
+        b.short_name
+        UNION
+        SELECT
+        500 as the_license_id,
+        'No Assertion' as short_name,
+        COUNT ( * )
+        FROM
+        files_licenses A,
+        licenses b,
+        augur_repo_map C,
+        packages d,
+        files e
+        WHERE
+        A.license_id = b.license_id
+        AND d.package_id = C.dosocs_pkg_id
+        AND e.file_id = A.file_id
+        AND e.package_id = d.package_id
+        AND C.repo_id = :repo_id
+        AND b.is_spdx_official = 'f'
+        GROUP BY
+        the_license_id,
+        short_name) L
+    GROUP BY
+    the_license_id,
+    short_name
+    ORDER BY
+    short_name;
     """)
 
     results = pd.read_sql(license_declared_SQL, self.spdx_db, params={'repo_id': repo_id})
