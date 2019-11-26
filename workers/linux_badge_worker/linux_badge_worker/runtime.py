@@ -15,18 +15,16 @@ def create_server(app, gw):
         """ AUGWOP endpoint that gets hit to add a task to the workers queue or is used to get the heartbeat/status of worker
         """
         if request.method == 'POST': #will post a task to be added to the queue
-            print(request.json)
+            logging.info("Sending to work on task: {}".format(str(request.json)))
             app.gh_worker.task = request.json
-            #set task
-            return jsonify({"success": "sucess"})
+            return Response(response=request.json,
+                        status=200,
+                        mimetype="application/json")
         if request.method == 'GET': #will retrieve the current tasks/status of the worker
             return jsonify({
-                "status": gh_worker._queue if condition else condition_if_false,
-                "tasks": [{
-                    "given": list(gh_worker._queue)
-                }]
+                "status": "not implemented"
             })
-
+            
     @app.route("/AUGWOP/heartbeat", methods=['GET'])
     def heartbeat():
         if request.method == 'GET':
@@ -87,6 +85,7 @@ def main(augur_url, host, port):
     app.gh_worker = BadgeWorker(config) # declares the worker that will be running on this server with specified config
 
     create_server(app, None)
+    print(server['host'], worker_port)
     app.run(debug=app.debug, host=server['host'], port=worker_port)
 
 

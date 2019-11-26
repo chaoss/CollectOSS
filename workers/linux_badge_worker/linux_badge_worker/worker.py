@@ -5,9 +5,8 @@ import pandas as pd
 import sqlalchemy as s
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy import MetaData
-logging.basicConfig(filename='worker.log', level=logging.INFO, filemode='w')
-
 import ipdb
+from workers.standard_methods import register_task_completion, register_task_failure, connect_to_broker, update_gh_rate_limit, record_model_process
 
 class CollectorTask:
     """ Worker's perception of a task in its queue
@@ -45,8 +44,10 @@ class BadgeWorker:
         logging.info('Worker (PID: {}) initializing...'.format(str(os.getpid())))
         self.db = None
         self.table = None
+        self.finishing_task = False
+        self.working_on = None
 
-        specs = {
+        self.specs = {
             "id": "com.augurlabs.core.badge_worker",
             "location": self.config['location'],
             "qualifications":  [
@@ -72,14 +73,12 @@ class BadgeWorker:
         self.db = s.create_engine(self.DB_STR, poolclass=s.pool.NullPool,
             connect_args={'options': '-csearch_path={}'.format(dbschema)})
 
-
         # produce our own MetaData object
         metadata = MetaData()
 
         # we can reflect it ourselves from a database, using options
         # such as 'only' to limit what tables we look at...
         metadata.reflect(self.db, only=['repo_badging'])
-
 
         # we can then produce a set of mappings from this MetaData.
         Base = automap_base(metadata=metadata)
@@ -90,10 +89,8 @@ class BadgeWorker:
         # mapped classes are ready
         self.table = Base.classes.repo_badging.__table__
 
-        self.run()
-
-        requests.post('http://{}:{}/api/workers'.format(self.config['broker_host'],self.config['broker_port'], json=specs)) #hello message
-
+        # Send broker hello message
+        connect_to_broker(self, logging.getLogger())
 
     def update_config(self, config):
         """ Method to update config and set a default
@@ -119,25 +116,23 @@ class BadgeWorker:
         """ entry point for the broker to add a task to the queue
         Adds this task to the queue, and calls method to process queue
         """
-        git_url = value['given']['git_url']
+        
+        if value['job_type'] == "UPDATE" or value['job_type'] == "MAINTAIN":
+            self._queue.put(value)
 
-        """ Query all repos """
-        repoUrlSQL = s.sql.text("""
-            SELECT repo_id FROM repo WHERE repo_git = '{}'
-            """.format(git_url))
-        rs = pd.read_sql(repoUrlSQL, self.db, params={})
-        try:
-            self._queue.put(CollectorTask(message_type='TASK', entry_info={"git_url": git_url, "repo_id": rs.iloc[0]["repo_id"]}))
-
-        # list_queue = dump_queue(self._queue)
-        # logging.info("worker's queue after adding the job: " + list_queue)
-
-        except:
-            logging.info("that repo is not in our database")
-        if self._queue.empty():
-            if 'github.com' in git_url:
-                self._task = value
-                self.run()
+        if 'focused_task' in value:
+            if value['focused_task'] == 1:
+                logging.info("Focused task is ON\n")
+                self.finishing_task = True
+            else:
+                self.finishing_task = False
+                logging.info("Focused task is OFF\n")
+        else:
+            self.finishing_task = False
+            logging.info("focused task is OFF\n")
+        
+        self._task = value
+        self.run()
 
 
     def cancel(self):
@@ -145,7 +140,7 @@ class BadgeWorker:
         """
         self._task = None
 
-    def collect(self, num):
+    def badges_model(self, num):
         """ Data collection and storage method
         Query the github api for contributors and issues (not yet implemented)
         """
@@ -178,10 +173,42 @@ class BadgeWorker:
         #if num < 3500:
         #    self.collect(num + 1)
 
+    def collect(self):
+        """ Function to process each entry in the worker's task queue
+        Determines what action to take based off the message type
+        """
+        while True:
+            if not self._queue.empty():
+                message = self._queue.get()
+                self.working_on = message['job_type']
+            else:
+                break
+            logging.info("Popped off message: {}\n".format(str(message)))
+
+            if message['job_type'] == 'STOP':
+                break
+
+            if message['job_type'] != 'MAINTAIN' and message['job_type'] != 'UPDATE':
+                raise ValueError('{} is not a recognized task type'.format(message['job_type']))
+                pass
+
+            """ Query all repos with repo url of given task """
+            repoUrlSQL = s.sql.text("""
+                SELECT min(repo_id) as repo_id FROM repo WHERE repo_git = '{}'
+                """.format(message['given']['git_url']))
+            repo_id = int(pd.read_sql(repoUrlSQL, self.db, params={}).iloc[0]['repo_id'])
+
+            try:
+                if message['models'][0] == 'badges':
+                    self.badges_model(message, repo_id)
+            except Exception as e:
+                register_task_failure(self, logging, message, repo_id, e)
+                pass
+
     def run(self):
         """ Kicks off the processing of the queue if it is not already being processed
         Gets run whenever a new task is added
         """
-        # if not self._child:
-        for i in range(1571, 3500):
-            self.collect(i)
+        logging.info("Running...\n")
+        self._child = Process(target=self.collect, args=())
+        self._child.start()
