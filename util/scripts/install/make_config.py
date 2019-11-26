@@ -95,7 +95,7 @@ def configure_defaults(config):
                     "given": ["github_url"],
                     "delay": 1000000,
                     "repo_group_id": 0
-                }, 
+                },
                 {
                     "delay": 1000000,
                     "given": ["github_url"],
@@ -165,8 +165,7 @@ def configure_workers(config, credentials):
                     "port": 51242,
                     "switch": 0,
                     "workers": 1,
-                "tagfile": "3.0.tag",
-            "repo_directory": "/home/nebrethar"
+                "tagfile": "3.0.tag"
             }
         }
         print("Set default values for Workers")
