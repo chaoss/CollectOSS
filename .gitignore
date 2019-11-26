@@ -131,3 +131,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Augur-spdx
+./spdx-scanner/dosocs2.conf

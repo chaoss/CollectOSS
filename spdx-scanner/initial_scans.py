@@ -45,7 +45,7 @@ def scan(dbname, user, password, host, port, dsfile, ipath):
                 #Attempt to create new DoSOCS entry
                 print("CREATING NEW DOSOCS DOCUMENT")
                 print(path)
-                p = subprocess.call(['dosocs2', 'scan', str(path), '-f', 'dosocs2-c.conf'], shell=False, stdout=PIPE, stderr=PIPE)
+                p = subprocess.call(['dosocs2', 'scan', str(path), '-f', 'dosocs2.conf'], shell=False, stdout=PIPE, stderr=PIPE)
                 (output) = p
                 print("####################")
                 print(output)

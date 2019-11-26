@@ -19,15 +19,24 @@ if __name__ == "__main__":
         port = config["Database"]["port"]
         dsfile = config["Workers"]["license_worker"]["tagfile"]
         ipath = config["Workers"]["facade_worker"]["repo_directory"]
+        
         configtools = 'postgresql://{}:{}@{}:{}/{}'.format(
             user, password, host, port, dbname
         )
-        
+
+        print(configtools)
+        with open("dosocs2-example.conf") as configfile:
+            content = configfile.read()
+            content_new = re.sub('(connection_uri = .*)\n', "connection_uri = " + configtools + "\n", content)
+            print(content_new)
+            with open("dosocs2.conf","w+") as outfile:
+                outfile.write(content_new)
+
         print("---------------------")
         print("INITIAL SCANS RUNNING")
         print("---------------------")
-        s.scan(dbname, user, password, host, port, dsfile, ipath)
+        #s.scan(dbname, user, password, host, port, dsfile, ipath)
         print("------------------")
         print("SBOM SCANS RUNNING")
         print("------------------")
-        p.scan(dbname, user, password, host, port, dsfile, ipath)
+        #p.scan(dbname, user, password, host, port, dsfile, ipath)
