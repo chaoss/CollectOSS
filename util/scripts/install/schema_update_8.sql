@@ -70,7 +70,7 @@ insert into "augur_operations"."worker_settings_facade"  select * from "augur_da
 -- Contributor Alias Updates
 ALTER TABLE "augur_data"."contributors_aliases" ALTER COLUMN "data_collection_date" SET DEFAULT CURRENT_TIMESTAMP;
 
-CREATE SEQUENCE "spdx"."projects_package_id_seq" 
+CREATE SEQUENCE "spdx"."projects_package_id_seq_tw0" 
 INCREMENT 1
 MINVALUE  1
 MAXVALUE 2147483647
@@ -79,13 +79,13 @@ CACHE 1;
 
 -- SPDX Updates
 
-ALTER TABLE "spdx"."files" DROP CONSTRAINT "files_project_id_fkey";
+ALTER TABLE "spdx"."files" DROP CONSTRAINT  if exists  "files_project_id_fkey";
 
 ALTER TABLE "spdx"."files" ADD COLUMN "package_id" int4;
 
 ALTER TABLE "spdx"."files" DROP COLUMN "project_id";
 
-ALTER TABLE "spdx"."projects" DROP CONSTRAINT "projects_pkey";
+ALTER TABLE "spdx"."projects" DROP CONSTRAINT if exists  "projects_pkey";
 
 ALTER TABLE "spdx"."projects" ADD COLUMN "package_id" int4 NOT NULL DEFAULT nextval('"spdx".projects_package_id_seq'::regclass);
 
