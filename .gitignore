@@ -134,3 +134,4 @@ dmypy.json
 
 # Augur-spdx
 ./spdx-scanner/dosocs2.conf
+spdx-scanner/dosocs2.conf
