@@ -72,7 +72,7 @@ class GHPullRequestWorker:
             'pull_request_message_ref', 'pull_request_meta', 'pull_request_repo',
             'pull_request_reviewers', 'pull_request_teams', 'message'])
 
-        helper_metadata.reflect(self.helper_db, only=['worker_history', 'worker_job'])
+        helper_metadata.reflect(self.helper_db, only=['worker_history', 'worker_job', 'worker_oauth'])
 
         Base = automap_base(metadata=metadata)
         HelperBase = automap_base(metadata=helper_metadata)
@@ -175,7 +175,7 @@ class GHPullRequestWorker:
         """.format(config['key']))
         for oauth in [{'oauth_id': 0, 'access_token': config['key']}] + json.loads(pd.read_sql(oauthSQL, self.helper_db, params={}).to_json(orient="records")):
             # self.headers = {'Authorization': 'token %s' % oauth['access_token']}
-            self.headers = {'Authorization': 'token {}'.format(oauth['access_token']), 
+            self.headers = {'Authorization': 'token {}'.format(oauth['access_token']),
                         'Accept': 'application/vnd.github.vixen-preview+json'}
             response = requests.get(url=url, headers=self.headers)
             self.oauths.append({
@@ -189,7 +189,7 @@ class GHPullRequestWorker:
         if len(self.oauths) == 0:
             logging.info("No API keys detected, please include one in your config or in the worker_oauths table in the augur_operations schema of your database\n")
 
-        # First key to be used will be the one specified in the config (first element in 
+        # First key to be used will be the one specified in the config (first element in
         #   self.oauths array will always be the key in use)
         self.headers = {'Authorization': 'token %s' % self.oauths[0]['access_token']}
 
@@ -272,7 +272,7 @@ class GHPullRequestWorker:
                 raise ValueError('{} is not a recognized task type'.format(message['job_type']))
                 pass
 
-            """ Query all repos with repo url of given task """
+            # Query all repos with repo url of given task
             repoUrlSQL = s.sql.text("""
                 SELECT min(repo_id) as repo_id FROM repo WHERE repo_git = '{}'
                 """.format(message['given']['github_url']))
@@ -315,13 +315,13 @@ class GHPullRequestWorker:
 
                 j = r.json()
 
-                new_prs = self.check_duplicates(j, pr_table_values, pseudo_key_gh)
+                self.mark_new_records(j, pr_table_values, pseudo_key_gh)
 
-                if len(new_prs) == 0:
+                if len(j) == 0:
                     logging.info('No more unknown PRs... Exiting pagination')
                     #break
                 else:
-                    prs += new_prs
+                    prs += j
 
                 if 'next' not in r.links:
                     logging.info('No next page ... ')
@@ -336,51 +336,63 @@ class GHPullRequestWorker:
 
         for pr_dict in prs:
 
-            pr = {
-                'repo_id': repo_id,
-                'pr_url': pr_dict['url'],
-                'pr_src_id': pr_dict['id'],
-                'pr_src_node_id': None,
-                'pr_html_url': pr_dict['html_url'],
-                'pr_diff_url': pr_dict['diff_url'],
-                'pr_patch_url': pr_dict['patch_url'],
-                'pr_issue_url': pr_dict['issue_url'],
-                'pr_augur_issue_id': None,
-                'pr_src_number': pr_dict['number'],
-                'pr_src_state': pr_dict['state'],
-                'pr_src_locked': pr_dict['locked'],
-                'pr_src_title': pr_dict['title'],
-                'pr_augur_contributor_id': None,
-                'pr_body': pr_dict['body'],
-                'pr_created_at': pr_dict['created_at'],
-                'pr_updated_at': pr_dict['updated_at'],
-                'pr_closed_at': pr_dict['closed_at'],
-                'pr_merged_at': pr_dict['merged_at'],
-                'pr_merge_commit_sha': pr_dict['merge_commit_sha'],
-                'pr_teams': None,
-                'pr_milestone': pr_dict['milestone']['title'] if pr_dict['milestone'] else None,
-                'pr_commits_url': pr_dict['commits_url'],
-                'pr_review_comments_url': pr_dict['review_comments_url'],
-                'pr_review_comment_url': pr_dict['review_comment_url'],
-                'pr_comments_url': pr_dict['comments_url'],
-                'pr_statuses_url': pr_dict['statuses_url'],
-                'pr_meta_head_id': None,
-                'pr_meta_base_id': None,
-                'pr_src_issue_url': pr_dict['issue_url'],
-                'pr_src_comments_url': pr_dict['comments_url'], # NOTE: this seems redundant
-                'pr_src_review_comments_url': pr_dict['review_comments_url'], # this too
-                'pr_src_commits_url': pr_dict['commits_url'], # this one also seems redundant
-                'pr_src_statuses_url': pr_dict['statuses_url'],
-                'pr_src_author_association': pr_dict['author_association'],
-                'tool_source': self.tool_source,
-                'tool_version': self.tool_version,
-                'data_source': 'GitHub API',
-                'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
-            }
+            if pr_dict['to_insert']:
+                logging.info(f'PR {pr_dict["id"]} needs to be inserted')
 
-            result = self.db.execute(self.pull_requests_table.insert().values(pr))
-            logging.info(f"Added Pull Request: {result.inserted_primary_key}")
-            self.pr_id_inc = int(result.inserted_primary_key[0])
+                pr = {
+                    'repo_id': repo_id,
+                    'pr_url': pr_dict['url'],
+                    'pr_src_id': pr_dict['id'],
+                    'pr_src_node_id': None,
+                    'pr_html_url': pr_dict['html_url'],
+                    'pr_diff_url': pr_dict['diff_url'],
+                    'pr_patch_url': pr_dict['patch_url'],
+                    'pr_issue_url': pr_dict['issue_url'],
+                    'pr_augur_issue_id': None,
+                    'pr_src_number': pr_dict['number'],
+                    'pr_src_state': pr_dict['state'],
+                    'pr_src_locked': pr_dict['locked'],
+                    'pr_src_title': pr_dict['title'],
+                    'pr_augur_contributor_id': None,
+                    'pr_body': pr_dict['body'],
+                    'pr_created_at': pr_dict['created_at'],
+                    'pr_updated_at': pr_dict['updated_at'],
+                    'pr_closed_at': pr_dict['closed_at'],
+                    'pr_merged_at': pr_dict['merged_at'],
+                    'pr_merge_commit_sha': pr_dict['merge_commit_sha'],
+                    'pr_teams': None,
+                    'pr_milestone': pr_dict['milestone']['title'] if pr_dict['milestone'] else None,
+                    'pr_commits_url': pr_dict['commits_url'],
+                    'pr_review_comments_url': pr_dict['review_comments_url'],
+                    'pr_review_comment_url': pr_dict['review_comment_url'],
+                    'pr_comments_url': pr_dict['comments_url'],
+                    'pr_statuses_url': pr_dict['statuses_url'],
+                    'pr_meta_head_id': None,
+                    'pr_meta_base_id': None,
+                    'pr_src_issue_url': pr_dict['issue_url'],
+                    'pr_src_comments_url': pr_dict['comments_url'], # NOTE: this seems redundant
+                    'pr_src_review_comments_url': pr_dict['review_comments_url'], # this too
+                    'pr_src_commits_url': pr_dict['commits_url'], # this one also seems redundant
+                    'pr_src_statuses_url': pr_dict['statuses_url'],
+                    'pr_src_author_association': pr_dict['author_association'],
+                    'tool_source': self.tool_source,
+                    'tool_version': self.tool_version,
+                    'data_source': 'GitHub API',
+                    'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+                }
+
+                result = self.db.execute(self.pull_requests_table.insert().values(pr))
+                logging.info(f"Added Pull Request: {result.inserted_primary_key}")
+                self.pr_id_inc = int(result.inserted_primary_key[0])
+
+            else:
+                logging.info("PR does not need to be inserted. Fetching its id from DB")
+                pr_id_sql = s.sql.text("""
+                    SELECT pull_request_id FROM pull_requests
+                    WHERE pr_src_id={}
+                """.format(pr_dict['id']))
+
+                self.pr_id_inc = int(pd.read_sql(pr_id_sql, self.db).iloc[0]['pull_request_id'])
 
             self.query_labels(pr_dict['labels'], self.pr_id_inc)
             self.query_pr_events(owner, repo, pr_dict['number'], self.pr_id_inc)
@@ -438,7 +450,7 @@ class GHPullRequestWorker:
               + f'{gh_pr_no}/events?per_page=100')
 
         pseudo_key_gh = 'id'
-        psuedo_key_augur = 'pr_event_id'
+        psuedo_key_augur = 'issue_event_src_id'
         table = 'pull_request_events'
         pr_events_table_values = self.get_table_values({psuedo_key_augur: pseudo_key_gh}, [table])
 
@@ -592,10 +604,12 @@ class GHPullRequestWorker:
         table = 'pull_request_meta'
         meta_table_values = self.get_table_values({psuedo_key_augur: pseudo_key_gh}, [table])
 
-        new_head = self.check_duplicates([head], meta_table_values, pseudo_key_gh)
-        new_base = self.check_duplicates([base], meta_table_values, pseudo_key_gh)
+        new_head = [head]
+        new_base = [base]
+        self.mark_new_records(new_head, meta_table_values, pseudo_key_gh)
+        self.mark_new_records(new_base, meta_table_values, pseudo_key_gh)
 
-        if new_head:
+        if new_head[0]['to_insert']:
             if new_head[0]['user'] and 'login' in new_head[0]['user']:
                 cntrb_id = self.find_id_from_login(new_head[0]['user']['login'])
             else:
@@ -619,14 +633,20 @@ class GHPullRequestWorker:
 
             self.pr_meta_id_inc = int(result.inserted_primary_key[0])
             self.results_counter += 1
+        else:
+            pr_meta_id_sql = """
+                SELECT pr_repo_meta_id FROM pull_request_meta
+                WHERE pr_sha='{}'
+            """.format(new_head[0]['sha'])
 
-            if new_head[0]['repo']:
-                self.query_pr_repo(new_head[0]['repo'], 'head', self.pr_meta_id_inc)
+            self.pr_meta_id_inc = int(int(pd.read_sql(pr_meta_id_sql, self.db).iloc[0]['pr_repo_meta_id']))
 
+        if new_head[0]['repo']:
+            self.query_pr_repo(new_head[0]['repo'], 'head', self.pr_meta_id_inc)
         else:
             logging.info('No new PR Head data to add')
 
-        if new_base:
+        if new_base[0]['to_insert']:
             if new_base[0]['user'] and 'login' in new_base[0]['user']:
                 cntrb_id = self.find_id_from_login(new_base[0]['user']['login'])
             else:
@@ -650,10 +670,16 @@ class GHPullRequestWorker:
 
             self.pr_meta_id_inc = int(result.inserted_primary_key[0])
             self.results_counter += 1
+        else:
+            pr_meta_id_sql = """
+                SELECT pr_repo_meta_id FROM pull_request_meta
+                WHERE pr_sha='{}'
+            """.format(new_base[0]['sha'])
 
-            if new_base[0]['repo']:
-                self.query_pr_repo(new_base[0]['repo'], 'base', self.pr_meta_id_inc)
+            self.pr_meta_id_inc = int(int(pd.read_sql(pr_meta_id_sql, self.db).iloc[0]['pr_repo_meta_id']))
 
+        if new_base[0]['repo']:
+            self.query_pr_repo(new_base[0]['repo'], 'base', self.pr_meta_id_inc)
         else:
             logging.info('No new PR Base data to add')
 
@@ -769,7 +795,7 @@ class GHPullRequestWorker:
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
                 'data_source': self.data_source,
-                'data_collection_date': datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+                'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
             }
 
             result = self.db.execute(
@@ -1055,3 +1081,20 @@ class GHPullRequestWorker:
                     need_insertion.append(obj)
         logging.info("[Filtering] Page recieved has {} tuples, while filtering duplicates this was reduced to {} tuples.".format(str(len(new_data)), str(len(need_insertion))))
         return need_insertion
+
+    def mark_new_records(self, new_data, table_values, key):
+        """Adds a `to_insert` key to all the records in new_data.
+        Sets `to_insert` to `True` for new records and `False` for old records.
+
+        :param new_data: A dict of records
+        :type new_data: dict
+        :param table_values: A dataframe of records from the DB
+        :type table_values: pandas.Dataframe
+        :param key: Key that determines the uniqueness of records in both `new_data` & `table_value`
+        :type key: str
+        """
+        for record in new_data:
+            if not table_values.isin([record[key]]).any().any():
+                record['to_insert'] = True
+            else:
+                record['to_insert'] = False
