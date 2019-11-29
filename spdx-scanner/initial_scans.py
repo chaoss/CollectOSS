@@ -45,11 +45,13 @@ def scan(dbname, user, password, host, port, dsfile, ipath):
                 #Attempt to create new DoSOCS entry
                 print("CREATING NEW DOSOCS DOCUMENT")
                 print(path)
-                p = subprocess.call(['dosocs2', 'scan', str(path)], shell=False, stdout=PIPE, stderr=PIPE)
+                p = subprocess.call(['dosocs2', 'scan', str(path), '-f', 'dosocs2.conf'], shell=False, stdout=PIPE, stderr=PIPE)
                 (output) = p
                 print("####################")
                 print(output)
                 print("RECORD CREATED")
         else:
             print("DUPLICATE RECORD FOUND. SKIPPING")
+        cur.execute("update augur_repo_map a set dosocs_pkg_name = b.name from packages b where a.repo_path = b.download_location;")
+        cur.execute("update augur_repo_map a set dosocs_pkg_id = b.package_id from packages b where a.repo_path = b.download_location;")
     return
