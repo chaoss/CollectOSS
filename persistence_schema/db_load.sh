@@ -42,7 +42,7 @@ psql -h $host -d $database -U $db_user -p $port -a -w -c "\copy augur_data.repo_
 psql -h $host -d $database -U $db_user -p $port -a -w -c "\copy augur_data.repo_group_insights from  'persistence_schema/data/repo_group_insights.txt'" 
 psql -h $host -d $database -U $db_user -p $port -a -w -c "\copy augur_data.repo_ghtorrent_map from  'persistence_schema/data/repo_ghtorrent_map.txt'" 
 psql -h $host -d $database -U $db_user -p $port -a -w -c "\copy augur_data.repo_info from  'persistence_schema/data/repo_info.txt'" 
-psql -h $host -d $database -U $db_user -p $port -a -w -c "\copy augur_data.repo_badging from  'persistence_schema/data/repo_badging.txt'" 
+# psql -h $host -d $database -U $db_user -p $port -a -w -c "\copy augur_data.repo_badging from  'persistence_schema/data/repo_badging.txt'" 
 psql -h $host -d $database -U $db_user -p $port -a -w -c "\copy augur_data.repo_insights from  'persistence_schema/data/repo_insights.txt'" 
 psql -h $host -d $database -U $db_user -p $port -a -w -c "\copy augur_data.repo_insights_records from  'persistence_schema/data/repo_insights_records.txt'" 
 psql -h $host -d $database -U $db_user -p $port -a -w -c "\copy augur_data.repo_labor from  'persistence_schema/data/repo_labor.txt'" 
