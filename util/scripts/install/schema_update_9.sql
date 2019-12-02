@@ -1,2 +1,0 @@
-ALTER TABLE "augur_data"."issues" ADD CONSTRAINT "fk_issues_repo" FOREIGN KEY ("repo_id") REFERENCES "augur_data"."repo" ("repo_id") ON DELETE CASCADE ON UPDATE CASCADE;
-update "augur_operations"."augur_settings" set value = 9 where setting = 'augur_data_version'; 
