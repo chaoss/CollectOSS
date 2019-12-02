@@ -95,7 +95,7 @@ def configure_defaults(config):
                     "given": ["github_url"],
                     "delay": 1000000,
                     "repo_group_id": 0
-                }, 
+                },
                 {
                     "delay": 1000000,
                     "given": ["github_url"],
@@ -128,7 +128,7 @@ def configure_workers(config, credentials):
             "github_worker": {
                 "port": 56211,
                 "switch": 0,
-                "workers": 2 
+                "workers": 2
             },
             "insight_worker": {
                 "port": 56311,
@@ -160,7 +160,13 @@ def configure_workers(config, credentials):
                 "port": 56811,
                 "switch": 0,
                 "workers": 1
-            }   
+            },
+            "license_worker": {
+                    "port": 51242,
+                    "switch": 0,
+                    "workers": 1,
+                "tagfile": "3.0.tag"
+            }
         }
         print("Set default values for Workers")
 
