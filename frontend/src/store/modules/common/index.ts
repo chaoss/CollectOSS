@@ -22,7 +22,7 @@ const state = {
   baseGroup: '',
   comparedRepoGroups: new Array(),
   comparedRepos: new Array(),
-  trailingAverage: 180,
+  trailingAverage: 30,
   startDate: new Date('1 February 2011'),
   endDate: new Date(),
   compare: 'rolling',

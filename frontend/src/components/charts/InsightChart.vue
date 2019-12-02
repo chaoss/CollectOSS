@@ -30,11 +30,26 @@ export default {
     };
   },
   mounted() {
+    this.calculateVegaSpec();
     this.$nextTick(() => {
-      this.calculateVegaSpec();
+      
       window.onresize = this.calculateVegaSpec;
       console.log(window);
     });
+  },
+  computed: {
+    earliest () {
+      if (!this.values[0]) return null
+      let d = new Date(this.values[this.values.length - 1].date)
+      console.log(d)
+      d.setYear(d.getYear() - 1);
+      return d
+    },
+    latest () {
+      if (!this.values[0]) return null
+      let d = new Date(this.values[this.values.length - 1].date)
+      return d
+    }
   },
   methods: {
     calculateVegaSpec() {
@@ -43,31 +58,59 @@ export default {
       let specWidth = this.$refs.holder.clientWidth * 0.75;
       let specHeight = this.$refs.holder.clientHeight * 0.75;
       this.values = this.data;
+      this.includeNullDates()
       this.vegaSpec = {
         $schema: "https://vega.github.io/schema/vega-lite/v2.json",
         center: true, 
         width: specWidth, //263.7,
         height: specHeight, //166,
         padding: { left: specWidth * .1, top: 10, right: 0, bottom: 5 },
-        mark: {
-          type: "line",
-          interpolate: "basis"
-        },
-        encoding: {
-          x: {
-            timeUnit: "yearmonthdate",
-            field: "date",
-            type: "temporal",
-            axis: { grid: false, format: "%b %d" }
+        layer: [
+          {
+            mark: {
+              type: "line",
+              interpolate: "basis"
+            },
+            encoding: {
+              x: {
+                timeUnit: "yearmonthdate",
+                field: "date",
+                type: "temporal",
+                axis: { grid: false, format: "%b %d" }
+                // domain: [this.earliest, this.latest]
+              },
+              y: {
+                // "aggregate": "sum",
+                field: "value",
+                type: "quantitative",
+                axis: { grid: false, title: false, ticks: false }
+              },
+              color: { value: this.color }
+            }
           },
-          y: {
-            // "aggregate": "sum",
-            field: "value",
-            type: "quantitative",
-            axis: { grid: false, title: false, ticks: false }
-          },
-          color: { value: this.color }
-        }
+          {
+            mark: {
+              type: "line",
+              interpolate: "basis"
+            },
+            encoding: {
+              x: {
+                timeUnit: "yearmonthdate",
+                field: "date",
+                type: "temporal",
+                axis: { grid: false, format: "%b %d" }
+                // domain: [this.earliest, this.latest]
+              },
+              y: {
+                // "aggregate": "sum",
+                field: "test",
+                type: "quantitative",
+                axis: { grid: false, title: false, ticks: false }
+              },
+              opacity: { value: 0 }
+            }
+          }
+        ]
       };
       this.loaded = true;
     },
@@ -85,6 +128,12 @@ export default {
         el["field"] = field;
       });
       return ary;
+    },
+    includeNullDates () {
+      for (let date = new Date(this.values[0].date); date > (new Date(this.values[this.values.length - 1].date).setYear(2018)); date.setDate(date.getDate() - 1)){
+        this.values.unshift({'date': date, 'test': 1})
+      }
+        
     }
   }
 };
