@@ -116,7 +116,7 @@ export default {
   },
   computed: {
     getDescription() {
-      if (this.values[0]) return 'Each point on this line represents the 7 day trailing average of ' + this.values[0].field + '. The aim is to reflect a general trend that is visually interpretable by smoothing common one day spikes.'
+      if (this.values[0]) return 'Each point on this line represents the 7 day trailing average of ' + this.values[0].name.split(' ')[1] + '. The aim is to reflect a general trend that is visually interpretable by smoothing common one day spikes.'
         //The gray line is the 7 day trailing standard deviation for those points.
       else return ''
     },
