@@ -51,6 +51,7 @@
         </download-card>
       </div>
       <div class="col-6">
+        <!--
         <cii-table
           source="ciiBP"
           :headers="['Passing Status','Badge Level', 'Date']"
@@ -58,6 +59,7 @@
           title="CII Best Practices"
         ></cii-table>
         <br> <br>
+        -->
         <count-block
           title="Forks"
           source="forkCount"

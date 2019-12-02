@@ -82,19 +82,23 @@
     list: function(indi) {
       let oList = {}
       let i = 0
+      // @ts-ignore
       for (let el of this.values) {
         let count = el['count'];
         let shortname = el['short_name'];
         // @ts-ignore
         let determin = check.default[shortname];
         if (determin === true && indi == true){
+          // @ts-ignore
           oList[i] = shortname
           i += 1
         } else if (determin === false && indi == false) {
+          // @ts-ignore
           oList[i] = shortname
           i += 1
         }
       }
+      // @ts-ignore
       let type = window.performance.getEntriesByType("navigation")[0].type
       let apiData = JSON.parse(JSON.stringify(this.$store.state.common.apiRepos));
       console.log(oList)

@@ -74,7 +74,9 @@
         let repoID = null;
         let groupID = null;
         let apiData = JSON.parse(JSON.stringify(this.$store.state.common.apiRepos));
+        console.log(apiData)
         // @ts-ignore
+        let host = apiData[Object.keys(apiData)[0]]._host
         if (type === "reload") {
           repoID = apiData[Object.keys(apiData)[0]].repo_id;
           groupID = apiData[Object.keys(apiData)[0]].repo_group_id;
@@ -82,7 +84,7 @@
           repoID = apiData[Object.keys(apiData)[1]].repo_id;
           groupID = apiData[Object.keys(apiData)[1]].repo_group_id;
         }
-          fetch(`http://localhost:5000/api/unstable/500/False/${groupID}/${repoID}/license-files`)
+          fetch(`${host}/api/unstable/500/False/${groupID}/${repoID}/license-files`)
             .then(res => res.json())
             .then(res => {
             let res_refined:{ [index:string] : number } = {};
@@ -106,6 +108,8 @@
         let repoID = null;
         let groupID = null;
         let apiData = JSON.parse(JSON.stringify(this.$store.state.common.apiRepos));
+        // @ts-ignore
+        let host = apiData[Object.keys(apiData)[0]]._host
         if (type === "reload") {
           repoID = apiData[Object.keys(apiData)[0]].repo_id;
           groupID = apiData[Object.keys(apiData)[0]].repo_group_id;
@@ -115,7 +119,7 @@
         }
           console.log("*********************")
           console.log(repoID)
-            fetch(`http://localhost:5000/api/unstable/${license_id}/True/${groupID}/${repoID}/license-files`)
+            fetch(`${host}/api/unstable/${license_id}/True/${groupID}/${repoID}/license-files`)
               .then(res => res.json())
               .then(res => {
               let res_refined:{ [index:string] : number } = {};
