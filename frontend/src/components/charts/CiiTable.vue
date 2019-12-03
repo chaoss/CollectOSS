@@ -55,7 +55,7 @@
     // data props
     loaded: boolean = false
     values: any[] = []
-    
+
     // compare getters
     base!:any
     comparedRepos!:any
@@ -68,7 +68,7 @@
         this.loaded = true
         this.values = this.data[this.source]
       }
-      
+
       else {
         this.endpoint({endpoints:[this.source],repos:[this.base]}).then((tuples:any) => {
           let ref = this.base.url || this.base.repo_name
