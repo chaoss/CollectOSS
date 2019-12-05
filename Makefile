@@ -41,6 +41,9 @@ install:
 install-spdx:
 	@ ./util/scripts/install/install-spdx.sh
 
+install-spdx-sudo:
+	@ ./util/scripts/install/install-spdx-sudo.sh
+
 install-augur-sbom:
 	@ ./util/scripts/install/nomos.sh
 
