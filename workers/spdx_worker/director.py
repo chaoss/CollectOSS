@@ -13,7 +13,7 @@ if __name__ == "__main__":
     with open("../../augur.config.json") as json_file:
         config = json.load(json_file)
         dbname = config["Database"]["database"]
-        user = config["Database"]["name"]
+        user = config["Database"]["user"]
         password = config["Database"]["password"]
         host = config["Database"]["host"]
         port = config["Database"]["port"]
@@ -34,8 +34,8 @@ if __name__ == "__main__":
         print("---------------------")
         print("INITIAL SCANS RUNNING")
         print("---------------------")
-        #s.scan(dbname, user, password, host, port, dsfile, ipath)
+        s.scan(dbname, user, password, host, port, dsfile, ipath)
         print("------------------")
         print("SBOM SCANS RUNNING")
         print("------------------")
-        #p.scan(dbname, user, password, host, port, dsfile, ipath)
+        p.scan(dbname, user, password, host, port, dsfile, ipath)
