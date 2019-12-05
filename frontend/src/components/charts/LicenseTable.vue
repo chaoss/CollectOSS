@@ -108,7 +108,6 @@
         let repoID = null;
         let groupID = null;
         let apiData = JSON.parse(JSON.stringify(this.$store.state.common.apiRepos));
-        // @ts-ignore
         let host = apiData[Object.keys(apiData)[0]]._host
         if (type === "reload") {
           repoID = apiData[Object.keys(apiData)[0]].repo_id;
@@ -131,7 +130,7 @@
               if (type === "reload") {
                 link.setAttribute('download', Object.keys(apiData)[0] + "." + res[0].short_name + ".files.json");
               } else {
-                link.setAttribute('download', Object.keys(apiData)[1] + "." + res[0].short_name + ".files.json");
+                link.setAttribute('download', Object.keys(apiData)[1] + "." + res[1].short_name + ".files.json");
               }
               let event = new MouseEvent('click');
               link.dispatchEvent(event);
