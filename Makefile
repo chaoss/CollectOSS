@@ -38,8 +38,11 @@ default:
 install:
 	@ ./util/scripts/install/install.sh
 
-install-augur-sbom: 
-	@ ./util/scripts/install/nomos.sh 
+install-spdx:
+	@ ./util/scripts/install/install-spdx.sh
+
+install-augur-sbom:
+	@ ./util/scripts/install/nomos.sh
 
 version:
 	$(eval OLDVERSION=$(shell $(AUGUR_PYTHON) ./util/print-version.py))
@@ -50,7 +53,7 @@ config:
 
 clean:
 	@ echo "Removing node_modules, logs, caches, and some other dumb stuff that can be annoying..."
-	@ rm -rf runtime node_modules frontend/node_modules frontend/public augur.egg-info .pytest_cache logs 
+	@ rm -rf runtime node_modules frontend/node_modules frontend/public augur.egg-info .pytest_cache logs
 	@ find . -name \*.pyc -delete
 	@ find . -type f -name "*.lock" -delete
 
@@ -123,9 +126,9 @@ test-routes:
 	@ $(AUGUR_PYTHON) test/api/test_api.py $(MODEL)
 
 
-# 
+#
 # Documentation
-# 
+#
 .PHONY: sphinx-docs sphinx-docs-view api-docs api-docs-view docs
 sphinx-docs:
 	@ bash -c 'cd docs/ && rm -rf build/ && make html;'

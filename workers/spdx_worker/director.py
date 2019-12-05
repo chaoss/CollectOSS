@@ -10,7 +10,7 @@ import sbom_populate as p
 import initial_scans as s
 
 if __name__ == "__main__":
-    with open("../augur.config.json") as json_file:
+    with open("../../augur.config.json") as json_file:
         config = json.load(json_file)
         dbname = config["Database"]["database"]
         user = config["Database"]["name"]
@@ -26,6 +26,7 @@ if __name__ == "__main__":
 
         with open("dosocs2-example.conf") as configfile:
             content = configfile.read()
+            print(content)
             content_new = re.sub('(connection_uri = .*)\n', "connection_uri = " + configtools + "\n", content)
             with open("dosocs2.conf","w+") as outfile:
                 outfile.write(content_new)
