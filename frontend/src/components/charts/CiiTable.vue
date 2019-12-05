@@ -2,16 +2,15 @@
   <d-card>
     <d-card-body :title="title" class="text-center">
       <spinner v-if="!loaded"></spinner>
-
       <div v-if="loaded">
         <p v-if="values == undefined || values.length == 0">There is no CII Best Practices data for this repository</p>
-        <p v-for="el in values">
-          <img :src="'https://bestpractices.coreinfrastructure.org/projects/' + el.id + '/badge'" width = 40%>
+        <p v-for="value in values">
+          <img :src="'https://bestpractices.coreinfrastructure.org/projects/' + value.id + '/badge'" width = 40%>
           <br><br>
-          The badge status of <strong>{{el.repo_name}}</strong> is <strong>{{el.badge_level}}</strong>
-          <br> This information was last updated on <strong>{{el.date.split("T")[0]}}</strong>
-          <br> The CII ID is <strong>{{el.id}}</strong>
-          <br> More CII data for this project can be found at CII's <a :href="'https://bestpractices.coreinfrastructure.org/projects/' + el.id">best practices badging website.</a>
+          The badge status of this repository is <strong>{{value.badge_level}}</strong>
+          <br> The CII ID is <strong>{{value.id}}</strong>
+          <br> More CII data for this project can be found at CII's <a :href="'https://bestpractices.coreinfrastructure.org/projects/' + value.id">best practices badging website.</a>
+        </p>
         </p>
       </div>
     </d-card-body>

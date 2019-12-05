@@ -187,36 +187,20 @@ def cii_best_practices_badge(self, repo_group_id, repo_id=None):
     :return: CII best parctices badge level
     """
     # Welcome to the Twilight Zone
-    if repo_id:
-        cii_best_practices_badge_SQL = s.sql.text("""
-            SELECT repo_name, rg_name, repo_badging.data, repo_badging.created_at as date
-            FROM repo_badging, repo, repo_groups
-            WHERE repo.repo_group_id = repo_groups.repo_group_id AND repo.repo_id = repo_badging.repo_id
-            AND repo_badging.repo_id = :repo_id
-            ORDER BY date DESC
-            LIMIT 1
-        """)
+    cii_best_practices_badge_SQL = s.sql.text("""
+        SELECT data
+        from augur_data.repo_badging
+        where repo_id = :repo_id;
+    """)
 
-        params = {'repo_id': repo_id}
+    params = {'repo_id': repo_id}
 
-    else:
-        cii_best_practices_badge_SQL = s.sql.text("""
-            SELECT repo_name, rg_name, repo_badging.data, repo_badging.created_at as date
-            FROM repo_badging, repo, repo_groups
-            WHERE repo.repo_group_id = repo_groups.repo_group_id AND repo.repo_id = repo_badging.repo_id
-            AND repo.repo_group_id = :repo_group_id
-            ORDER BY date DESC
-            LIMIT 1
-        """)
+    raw_df = pd.read_sql(cii_best_practices_badge_SQL, self.database, params=params)\
 
-        params = {'repo_group_id': repo_group_id, 'repo_id': repo_id}
-
-    raw_df = pd.read_sql(cii_best_practices_badge_SQL, self.database, params=params)
-    badging_data = raw_df.iloc[0,2]
+    badging_data = raw_df.iloc[0,0]
 
     result = {
         "repo_name": raw_df.iloc[0,0],
-        "rg_name": raw_df.iloc[0,1]
     }
 
     for item in badging_data.items():
@@ -224,7 +208,6 @@ def cii_best_practices_badge(self, repo_group_id, repo_id=None):
             result[item[0]] = item[1]
 
     return pd.DataFrame(result, index=[0])
-
 @annotate(tag='forks')
 def forks(self, repo_group_id, repo_id=None):
     """
