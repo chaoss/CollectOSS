@@ -1,5 +1,5 @@
 #!/bin/bash
-cd spdx-scanner/
+cd workers/spdx_worker/
 if [ ! -d "augur-spdx/" ]
 then
   echo "Augur-SPDX has not been cloned"
@@ -11,3 +11,6 @@ fi
 cd augur-spdx
 pip3 install .
 ./scripts/install-nomos.sh
+cd ..
+pwd
+rm -r augur-spdx
