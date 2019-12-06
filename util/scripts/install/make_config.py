@@ -72,40 +72,60 @@ def configure_defaults(config):
         config['Housekeeper'] = {
             "jobs": [
                 {
-                    "delay": 150000,
-                    "given": ["github_url"],
-                    "model": "issues",
-                    "repo_group_id": 0,
-                    "all_focused": 1
+                "all_focused": 1,
+                "delay": 150000,
+                "given": [
+                    "github_url"
+                ],
+                "model": "issues",
+                "repo_group_id": 0
                 },
                 {
+                    "delay": 150000,
+                    "given": [
+                        "github_url"
+                    ],
                     "model": "repo_info",
-                    "given": ["github_url"],
-                    "delay": 150000,
                     "repo_group_id": 0
                 },
                 {
+                    "delay": 150000,
+                    "given": [
+                        "repo_group"
+                    ],
                     "model": "commits",
-                    "given": ["repo_group"],
-                    "delay": 150000,
                     "repo_group_id": 0
                 },
                 {
+                    "delay": 1000000,
+                    "given": [
+                        "github_url"
+                    ],
                     "model": "pull_requests",
-                    "given": ["github_url"],
-                    "delay": 1000000,
                     "repo_group_id": 0
                 },
                 {
                     "delay": 1000000,
-                    "given": ["github_url"],
+                    "given": [
+                        "github_url"
+                    ],
                     "model": "contributors",
                     "repo_group_id": 0
                 },
                 {
                     "delay": 1000000,
-                    "given": ["git_url"],
+                    "given": [
+                        "git_url"
+                    ],
                     "model": "insights",
+                    "repo_group_id": 0
+                },
+                {
+                    "delay": 1000000,
+                    "given": [
+                        "git_url"
+                    ],
+                    "model": "badges",
                     "repo_group_id": 0
                 }
             ]
