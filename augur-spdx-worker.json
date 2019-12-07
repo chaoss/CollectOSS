@@ -10,8 +10,8 @@
         "connection_string": "sqlite:///:memory:",
         "database": "augur_goggins_three",
         "host": "mudcats.augurlabs.io",
-        "key": "ec050828ccc3b1e490777913d010affb352565d0",
-        "password": "mcguire18",
+        "key": "xxxxxxx",
+        "password": "xxxxx",
         "port": "5433",
         "schema": "augur_data",
         "user": "augur"
@@ -37,7 +37,7 @@
         "run_analysis": 1
     },
     "GitHub": {
-        "apikey": "ec050828ccc3b1e490777913d010affb352565d0"
+        "apikey": "xxxxxxxxxx"
     },
     "Housekeeper": {
         "jobs": [
@@ -168,7 +168,7 @@
             "workers": 1
         }, 
        "license_worker": {
-           "port": 51242,
+           "port": 51333,
            "switch": 0,
            "workers": 1,
            "tagfile": "3.0.tag"
