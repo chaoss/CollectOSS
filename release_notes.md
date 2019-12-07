@@ -37,4 +37,10 @@
 
 ```
 
- 
+## First Collection notes:
+1. Run facade worker first. 
+2. Run contributors model of github worker (and issues model is ok)
+3. Key point: Run facade worker BEFORE the contributors model of the GitHub worker for optimal identity resolution. 
+
+
+
