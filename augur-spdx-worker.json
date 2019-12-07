@@ -7,14 +7,14 @@
         }
     },
     "Database": {
-        "connection_string": "sqlite:///:memory:",
-        "database": "augur_goggins_three",
+        "connection_string": "xxxx:///:memory:",
+        "database": "xxxxx",
         "host": "mudcats.augurlabs.io",
         "key": "xxxxxxx",
         "password": "xxxxx",
-        "port": "5433",
-        "schema": "augur_data",
-        "user": "augur"
+        "port": "xx",
+        "schema": "xxxxx",
+        "user": "xx"
     },
     "Development": {
         "developer": "0",
