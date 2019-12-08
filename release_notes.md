@@ -42,5 +42,10 @@
 2. Run contributors model of github worker (and issues model is ok)
 3. Key point: Run facade worker BEFORE the contributors model of the GitHub worker for optimal identity resolution. 
 
+## Server Configuration Notes
+1. include nginx instructions
+2. include EC2 instructions
+
+
 
 
