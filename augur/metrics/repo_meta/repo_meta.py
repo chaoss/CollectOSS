@@ -324,8 +324,8 @@ def license_files(self, license_id, spdx_binary, repo_group_id, repo_id=None,):
         repo_name_list = None
 
         license_data_SQL = s.sql.text("""
-        SELECT A
-            .license_id as the_license_id,    b.short_name as short_name,    f.file_name
+        SELECT DISTINCT
+            A.license_id as the_license_id,    b.short_name as short_name,    f.file_name
         FROM
             files_licenses A,    licenses b,    augur_repo_map C,    packages d,    files e,
             packages_files f
@@ -364,20 +364,22 @@ def license_declared(self, repo_group_id, repo_id=None):
         (SELECT A
         .license_id as the_license_id,
         b.short_name as short_name,
-        COUNT ( * )
+        COUNT ( DISTINCT f.file_name )
         FROM
         files_licenses A,
         licenses b,
         augur_repo_map C,
         packages d,
-        files e
+        files e,
+		packages_files f
         WHERE
         A.license_id = b.license_id
         AND d.package_id = C.dosocs_pkg_id
         AND e.file_id = A.file_id
+		AND e.file_id = f.file_id
         AND e.package_id = d.package_id
-        AND C.repo_id = :repo_id
-        AND b.is_spdx_official = 't'
+        AND C.repo_id = 25158
+        AND b.is_spdx_official = 'True'
         GROUP BY
         the_license_id,
         b.short_name
@@ -385,20 +387,22 @@ def license_declared(self, repo_group_id, repo_id=None):
         SELECT
         500 as the_license_id,
         'No Assertion' as short_name,
-        COUNT ( * )
+        COUNT ( DISTINCT f.file_name )
         FROM
         files_licenses A,
         licenses b,
         augur_repo_map C,
         packages d,
-        files e
+        files e,
+		packages_files f
         WHERE
         A.license_id = b.license_id
         AND d.package_id = C.dosocs_pkg_id
         AND e.file_id = A.file_id
+		AND e.file_id = f.file_id
         AND e.package_id = d.package_id
-        AND C.repo_id = :repo_id
-        AND b.is_spdx_official = 'f'
+        AND C.repo_id = 25158
+        AND b.is_spdx_official = 'False'
         GROUP BY
         the_license_id,
         short_name) L

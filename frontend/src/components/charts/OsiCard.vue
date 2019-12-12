@@ -4,19 +4,15 @@
       <spinner v-if="!loaded"></spinner>
       <div v-if="loaded">
         <h4>{{ OSIpercent[0] }}%</h4>
-        <p>
-        OSI Approved:
+        <p> <br>
+        OSI Approved: <strong>{{ OSIpercent[1] }}</strong> Files
         <a href="javascript:void(0)" v-on:click="list(true)">
-            {{ OSIpercent[1] }}
-        </a> <br>
-        Not OSI Approved:
+            <br> View Approved Licenses
+        </a> <br><br>
+        Not OSI Approved: <strong>{{ OSIpercent[2] }}</strong>
         <a href="javascript:void(0)" v-on:click="list(false)">
-            {{ OSIpercent[2] }}
-        </a> <br>
-        Total:
-        <strong>
-          {{ OSIpercent[3] }}
-        </strong> <br>
+            <br> View Non-Approved licenses
+        </a>
         </p>
       </div>
     </d-card-body>
