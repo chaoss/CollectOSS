@@ -26,7 +26,7 @@
            "tagfile": "3.0.tag"
         }
 ```
-9. Add the housekeeper task for the linux badge worker: 
+9. Add the housekeeper task for these workers: 
 ```
             {
                 "model": "badges",
@@ -35,6 +35,13 @@
                 "repo_group_id": 0
             }
 
+
+            {
+                "model": "value",
+                "delay": 100000,
+                "given": ["git_url"],
+                "repo_group_id": 0
+            }
 ```
 
 ## First Collection notes:
