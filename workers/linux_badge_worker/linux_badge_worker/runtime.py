@@ -57,16 +57,16 @@ def main(augur_url, host, port):
     worker_info = read_config("Workers", use_main_config=1)['linux_badge_worker']
     worker_port = worker_info['port'] if 'port' in worker_info else port
 
-    # while True:
-    #     try:
-    #         r = requests.get("http://{}:{}/AUGWOP/heartbeat".format(server['host'],worker_port)).json()
-    #         if 'status' in r:
-    #             if r['status'] == 'alive':
-    #                 worker_port += 1
-    #     except:
-    #         break
+    while True:
+        try:
+            r = requests.get("http://{}:{}/AUGWOP/heartbeat".format(server['host'],worker_port)).json()
+            if 'status' in r:
+                if r['status'] == 'alive':
+                    worker_port += 1
+        except:
+            break
 
-    # logging.basicConfig(filename='worker_{}.log'.format(worker_port), filemode='w', level=logging.INFO)
+    logging.basicConfig(filename='worker_{}.log'.format(worker_port), filemode='w', level=logging.INFO)
 
     config = {
             "id": "com.augurlabs.core.badge_worker",
@@ -91,7 +91,7 @@ def main(augur_url, host, port):
     create_server(app, None)
     logging.info("Starting Flask App with pid: " + str(os.getpid()) + "...")
 
-    # app.run(debug=app.debug, host=server['host'], port=worker_port)
+    app.run(debug=app.debug, host=server['host'], port=worker_port)
     if app.linux_badge_worker._child is not None:
         app.linux_badge_worker._child.terminate()
     try:
