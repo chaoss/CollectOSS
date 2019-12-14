@@ -45,9 +45,14 @@ def register_task_completion(self, logging, entry_info, repo_id, model):
         'worker_id': self.config['id'],
         'job_type': self.working_on,
         'repo_id': repo_id,
-        'github_url': entry_info['given']['github_url'],
         'job_model': model
     }
+    key = 'github_url' if 'github_url' in entry_info['given'] else 'git_url' if 'git_url' in entry_info['given'] else "INVALID_GIVEN"
+    task_completed[key] = entry_info['given']['github_url'] if 'github_url' in entry_info['given'] else entry_info['given']['git_url'] if 'git_url' in entry_info['given'] else "INVALID_GIVEN"
+    if key == 'INVALID_GIVEN':
+        register_task_failure(self, logging, entry_info, repo_id, "INVALID_GIVEN: not github nor git url")
+        return
+
     # Add to history table
     task_history = {
         "repo_id": repo_id,
@@ -182,3 +187,5 @@ def update_gh_rate_limit(self, logging, response):
         index = self.oauths.index(new_oauth)
         self.oauths[0], self.oauths[index] = self.oauths[index], self.oauths[0]
         logging.info("Using oauth: {}".format(self.oauths[0]))
+
+
