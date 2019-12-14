@@ -68,44 +68,72 @@ def configure_defaults(config):
         config['Plugins'] = []
         print("Set default values for Plugins...")
 
+    if not 'Frontend' in config:
+        config['Frontends'] = {
+            "Frontend": {
+                "host": "0.0.0.0",
+                "port": "5000"
+            }
+        }
+
     if not 'Housekeeper' in config:
         config['Housekeeper'] = {
             "jobs": [
                 {
+                    "focused_task": 1,
                     "delay": 150000,
-                    "given": ["github_url"],
+                    "given": [
+                        "github_url"
+                    ],
                     "model": "issues",
-                    "repo_group_id": 0,
-                    "all_focused": 1
+                    "repo_group_id": 0
                 },
                 {
+                    "delay": 150000,
+                    "given": [
+                        "github_url"
+                    ],
                     "model": "repo_info",
-                    "given": ["github_url"],
-                    "delay": 150000,
                     "repo_group_id": 0
                 },
                 {
+                    "delay": 150000,
+                    "given": [
+                        "repo_group"
+                    ],
                     "model": "commits",
-                    "given": ["repo_group"],
-                    "delay": 150000,
                     "repo_group_id": 0
                 },
                 {
+                    "delay": 1000000,
+                    "given": [
+                        "github_url"
+                    ],
                     "model": "pull_requests",
-                    "given": ["github_url"],
-                    "delay": 1000000,
                     "repo_group_id": 0
                 },
                 {
                     "delay": 1000000,
-                    "given": ["github_url"],
+                    "given": [
+                        "github_url"
+                    ],
                     "model": "contributors",
                     "repo_group_id": 0
                 },
                 {
                     "delay": 1000000,
-                    "given": ["git_url"],
+                    "given": [
+                        "git_url"
+                    ],
                     "model": "insights",
+                    "repo_group_id": 0
+                },
+                {
+                    "delay": 1000000,
+                    "given": [
+                        "git_url"
+                    ],
+                    "model": "badges",
                     "repo_group_id": 0
                 }
             ]
@@ -162,9 +190,9 @@ def configure_workers(config, credentials):
                 "workers": 1
             },
             "license_worker": {
-                    "port": 51242,
-                    "switch": 0,
-                    "workers": 1,
+                "port": 51242,
+                "switch": 0,
+                "workers": 1,
                 "tagfile": "3.0.tag"
             }
         }

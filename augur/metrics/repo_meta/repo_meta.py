@@ -187,36 +187,20 @@ def cii_best_practices_badge(self, repo_group_id, repo_id=None):
     :return: CII best parctices badge level
     """
     # Welcome to the Twilight Zone
-    if repo_id:
-        cii_best_practices_badge_SQL = s.sql.text("""
-            SELECT repo_name, rg_name, repo_badging.data, repo_badging.created_at as date
-            FROM repo_badging, repo, repo_groups
-            WHERE repo.repo_group_id = repo_groups.repo_group_id AND repo.repo_id = repo_badging.repo_id
-            AND repo_badging.repo_id = :repo_id
-            ORDER BY date DESC
-            LIMIT 1
-        """)
+    cii_best_practices_badge_SQL = s.sql.text("""
+        SELECT data
+        from augur_data.repo_badging
+        where repo_id = :repo_id;
+    """)
 
-        params = {'repo_id': repo_id}
+    params = {'repo_id': repo_id}
 
-    else:
-        cii_best_practices_badge_SQL = s.sql.text("""
-            SELECT repo_name, rg_name, repo_badging.data, repo_badging.created_at as date
-            FROM repo_badging, repo, repo_groups
-            WHERE repo.repo_group_id = repo_groups.repo_group_id AND repo.repo_id = repo_badging.repo_id
-            AND repo.repo_group_id = :repo_group_id
-            ORDER BY date DESC
-            LIMIT 1
-        """)
+    raw_df = pd.read_sql(cii_best_practices_badge_SQL, self.database, params=params)\
 
-        params = {'repo_group_id': repo_group_id, 'repo_id': repo_id}
-
-    raw_df = pd.read_sql(cii_best_practices_badge_SQL, self.database, params=params)
-    badging_data = raw_df.iloc[0,2]
+    badging_data = raw_df.iloc[0,0]
 
     result = {
         "repo_name": raw_df.iloc[0,0],
-        "rg_name": raw_df.iloc[0,1]
     }
 
     for item in badging_data.items():
@@ -224,7 +208,6 @@ def cii_best_practices_badge(self, repo_group_id, repo_id=None):
             result[item[0]] = item[1]
 
     return pd.DataFrame(result, index=[0])
-
 @annotate(tag='forks')
 def forks(self, repo_group_id, repo_id=None):
     """
@@ -341,8 +324,8 @@ def license_files(self, license_id, spdx_binary, repo_group_id, repo_id=None,):
         repo_name_list = None
 
         license_data_SQL = s.sql.text("""
-        SELECT A
-            .license_id as the_license_id,    b.short_name as short_name,    f.file_name
+        SELECT DISTINCT
+            A.license_id as the_license_id,    b.short_name as short_name,    f.file_name
         FROM
             files_licenses A,    licenses b,    augur_repo_map C,    packages d,    files e,
             packages_files f
@@ -381,20 +364,22 @@ def license_declared(self, repo_group_id, repo_id=None):
         (SELECT A
         .license_id as the_license_id,
         b.short_name as short_name,
-        COUNT ( * )
+        COUNT ( DISTINCT f.file_name )
         FROM
         files_licenses A,
         licenses b,
         augur_repo_map C,
         packages d,
-        files e
+        files e,
+		packages_files f
         WHERE
         A.license_id = b.license_id
         AND d.package_id = C.dosocs_pkg_id
         AND e.file_id = A.file_id
+		AND e.file_id = f.file_id
         AND e.package_id = d.package_id
-        AND C.repo_id = :repo_id
-        AND b.is_spdx_official = 't'
+        AND C.repo_id = 25158
+        AND b.is_spdx_official = 'True'
         GROUP BY
         the_license_id,
         b.short_name
@@ -402,20 +387,22 @@ def license_declared(self, repo_group_id, repo_id=None):
         SELECT
         500 as the_license_id,
         'No Assertion' as short_name,
-        COUNT ( * )
+        COUNT ( DISTINCT f.file_name )
         FROM
         files_licenses A,
         licenses b,
         augur_repo_map C,
         packages d,
-        files e
+        files e,
+		packages_files f
         WHERE
         A.license_id = b.license_id
         AND d.package_id = C.dosocs_pkg_id
         AND e.file_id = A.file_id
+		AND e.file_id = f.file_id
         AND e.package_id = d.package_id
-        AND C.repo_id = :repo_id
-        AND b.is_spdx_official = 'f'
+        AND C.repo_id = 25158
+        AND b.is_spdx_official = 'False'
         GROUP BY
         the_license_id,
         short_name) L

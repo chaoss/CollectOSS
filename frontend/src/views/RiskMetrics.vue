@@ -54,7 +54,7 @@
         <cii-table
           source="ciiBP"
           :headers="['Passing Status','Badge Level', 'Date']"
-          :fields="['achieve_passing_status', 'badge_level', 'date']"
+          :fields="['name', 'achieve_passing_status', 'badge_level', 'date']"
           title="CII Best Practices"
         ></cii-table>
         <br> <br>
