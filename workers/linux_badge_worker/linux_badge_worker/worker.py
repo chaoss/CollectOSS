@@ -149,23 +149,13 @@ class BadgeWorker:
         extension = "/projects.json?pq=https://" + (quote(git_url[0:-4]))
 
         url = self.config['endpoint'] + extension
-        logging.info("Hitting endpoint: " + url + " ...\n")
-        response = requests.get(url=url)
-        data = response.json()
+        logging.info("Hitting CII endpoint: " + url + " ...\n")
+        data = requests.get(url=url).json()
 
         if data != []:
-
-            df = pd.read_sql(s.sql.text("SELECT repo_id FROM augur_data.repo_badging"), self.db)
-            repo_IDs = df['repo_id'].values.tolist()
-
-            if repo_id in repo_IDs:
-                logging.info("Updating existing data for " + git_url)
-                self.db.execute(self.table.update().where(self.table.c.repo_id == repo_id).values(data=data))
-            else:
-                logging.info("Inserting new badging data for " + git_url)
-                self.db.execute(self.table.insert().values(repo_id=repo_id, data=data, tool_source="linux_badge_worker", tool_version="1.0", data_source="CII Badging API"))
-
-            # register_task_completion(self, logging, entry_info, repo_id, "badges")
+            logging.info("Inserting badging data for " + git_url)
+            self.db.execute(self.table.insert().values(repo_id=repo_id, data=data, tool_source="linux_badge_worker", tool_version="1.0", data_source="CII Badging API"))
+            register_task_completion(self, logging, entry_info, repo_id, "badges")
         else:
             logging.info("No CII data found for " + git_url)
 

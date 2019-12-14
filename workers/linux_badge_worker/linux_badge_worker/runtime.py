@@ -69,7 +69,7 @@ def main(augur_url, host, port):
     logging.basicConfig(filename='worker_{}.log'.format(worker_port), filemode='w', level=logging.INFO)
 
     config = {
-            "id": "com.augurlabs.core.badge_worker",
+            "id": "com.augurlabs.core.badge_worker.{}".format(worker_port),
             "location": "http://{}:{}".format(server['host'],worker_port),
             "broker_host": server['host'],
             "broker_port": server['port'],

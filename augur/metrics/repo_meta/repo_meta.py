@@ -186,16 +186,16 @@ def cii_best_practices_badge(self, repo_group_id, repo_id=None):
     :param repo_id: The repository's repo_id, defaults to None
     :return: CII best parctices badge level
     """
-    # Welcome to the Twilight Zone
     cii_best_practices_badge_SQL = s.sql.text("""
         SELECT data
-        from augur_data.repo_badging
-        where repo_id = :repo_id;
+        FROM augur_data.repo_badging
+        WHERE repo_id = :repo_id
+        ORDER BY created_at DESC
+        LIMIT 1
+
     """)
 
-    params = {'repo_id': repo_id}
-
-    raw_df = pd.read_sql(cii_best_practices_badge_SQL, self.database, params=params)\
+    raw_df = pd.read_sql(cii_best_practices_badge_SQL, self.database, params={'repo_id': repo_id})
 
     badging_data = raw_df.iloc[0,0]
 
@@ -208,6 +208,7 @@ def cii_best_practices_badge(self, repo_group_id, repo_id=None):
             result[item[0]] = item[1]
 
     return pd.DataFrame(result, index=[0])
+
 @annotate(tag='forks')
 def forks(self, repo_group_id, repo_id=None):
     """
