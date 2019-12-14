@@ -1,7 +1,6 @@
-from flask import Flask, jsonify, request
-import click
+from flask import Flask, jsonify, request, Response
+import click, os, json, requests, logging
 from linux_badge_worker.worker import BadgeWorker
-import os, json, logging
 
 def create_server(app, gw):
     """ Consists of AUGWOP endpoints for the broker to communicate to this worker
@@ -16,7 +15,7 @@ def create_server(app, gw):
         """
         if request.method == 'POST': #will post a task to be added to the queue
             logging.info("Sending to work on task: {}".format(str(request.json)))
-            app.gh_worker.task = request.json
+            app.linux_badge_worker.task = request.json
             return Response(response=request.json,
                         status=200,
                         mimetype="application/json")
@@ -24,7 +23,10 @@ def create_server(app, gw):
             return jsonify({
                 "status": "not implemented"
             })
-            
+        return Response(response=request.json,
+                        status=200,
+                        mimetype="application/json")
+
     @app.route("/AUGWOP/heartbeat", methods=['GET'])
     def heartbeat():
         if request.method == 'GET':
@@ -36,7 +38,7 @@ def create_server(app, gw):
     def augwop_config():
         """ Retrieve worker's config
         """
-        return app.gh_worker.config
+        return app.linux_badge_worker.config
 
 @click.command()
 @click.option('--augur-url', default='http://localhost:5000/', help='Augur URL')
@@ -44,9 +46,11 @@ def create_server(app, gw):
 @click.option('--port', default=51235, help='Port')
 def main(augur_url, host, port):
     """ Declares singular worker and creates the server and flask app that it will be running on
+    logging.basicConfig(level=logging.DEBUG)
     """
     app = Flask(__name__)
 
+    #load credentials
     credentials = read_config("Database", use_main_config=1)
     server = read_config("Server", use_main_config=1)
     worker_info = read_config("Workers", use_main_config=1)['linux_badge_worker']
@@ -82,11 +86,20 @@ def main(augur_url, host, port):
         }
 
     #create instance of the worker
-    app.gh_worker = BadgeWorker(config) # declares the worker that will be running on this server with specified config
-
+    app.linux_badge_worker = BadgeWorker(config) # declares the worker that will be running on this server with specified config
     create_server(app, None)
-    print(server['host'], worker_port)
+    logging.info("Starting Flask App with pid: " + str(os.getpid()) + "...")
+
     app.run(debug=app.debug, host=server['host'], port=worker_port)
+    if app.linux_badge_worker._child is not None:
+        app.linux_badge_worker._child.terminate()
+    try:
+        requests.post('http://{}:{}/api/unstable/workers/remove'.format(server['host'],server['port']), json={"id": config['id']})
+    except:
+        pass
+
+    logging.info("Killing Flask App: " + str(os.getpid()))
+    os.kill(os.getpid(), 9)
 
 
 def read_config(section, name=None, environment_variable=None, default=None, config_file='augur.config.json', no_config_file=0, use_main_config=0):

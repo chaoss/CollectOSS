@@ -1,11 +1,11 @@
 from multiprocessing import Process, Queue
 from urllib.parse import urlparse
-import requests, logging, os
+import requests, logging, os, json
+from urllib.parse import quote
 import pandas as pd
 import sqlalchemy as s
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy import MetaData
-import ipdb
 from workers.standard_methods import register_task_completion, register_task_failure, connect_to_broker, update_gh_rate_limit, record_model_process
 
 class CollectorTask:
@@ -40,15 +40,16 @@ class BadgeWorker:
         self._child = None
         self._queue = Queue()
         self.config = config
-        logging.basicConfig(filename='worker_{}.log'.format(self.config['id'].split('.')[len(self.config['id'].split('.')) - 1]), filemode='w', level=logging.INFO)
+        # logging.basicConfig(filename='worker_{}.log'.format(self.config['id'].split('.')[len(self.config['id'].split('.')) - 1]), filemode='w', level=logging.INFO)
         logging.info('Worker (PID: {}) initializing...'.format(str(os.getpid())))
         self.db = None
         self.table = None
         self.finishing_task = False
         self.working_on = None
+        self.results_counter = 0
 
         self.specs = {
-            "id": "com.augurlabs.core.badge_worker",
+            "id": self.config['id'],
             "location": self.config['location'],
             "qualifications":  [
                 {
@@ -140,38 +141,33 @@ class BadgeWorker:
         """
         self._task = None
 
-    def badges_model(self, num):
+    def badges_model(self, entry_info, repo_id):
         """ Data collection and storage method
         Query the github api for contributors and issues (not yet implemented)
         """
-        git_url = str(num)
-        extension = "/en/projects/" + str(git_url) + ".json"
+        git_url = entry_info['given']['git_url']
+        extension = "/projects.json?pq=https://" + (quote(git_url[0:-4]))
 
         url = self.config['endpoint'] + extension
-        print("******************")
-        print(url)
         logging.info("Hitting endpoint: " + url + " ...\n")
-        r = requests.get(url=url)
-        data = r.json()
-        if data != 0 and "404" not in str(r):
-            #print(data)
-            print("FOUND")
-            # data[0]['repo_id'] = entry_info['repo_id']
+        response = requests.get(url=url)
+        data = response.json()
 
-            # ipdb.set_trace()
-            self.db.execute(self.table.insert().values(data=data, tool_source="linux_badge_worker", tool_version="1.0", data_source="CII Badging API"))
-            # logging.info("Inserted badging info for repo: " + str(entry_info['repo_id']) + "\n")
-            """
-            task_completed = entry_info
-            task_completed['worker_id'] = self.config['id']
+        if data != []:
 
-            logging.info("Telling broker we completed task: " + str(task_completed) + "\n\n")
-            requests.post('http://localhost:5000/api/completed_task', json=entry_info['git_url'])
-            """
+            df = pd.read_sql(s.sql.text("SELECT repo_id FROM augur_data.repo_badging"), self.db)
+            repo_IDs = df['repo_id'].values.tolist()
+
+            if repo_id in repo_IDs:
+                logging.info("Updating existing data for " + git_url)
+                self.db.execute(self.table.update().where(self.table.c.repo_id == repo_id).values(data=data))
+            else:
+                logging.info("Inserting new badging data for " + git_url)
+                self.db.execute(self.table.insert().values(repo_id=repo_id, data=data, tool_source="linux_badge_worker", tool_version="1.0", data_source="CII Badging API"))
+
+            # register_task_completion(self, logging, entry_info, repo_id, "badges")
         else:
-            logging.info("Endpoint did not return any data.")
-        #if num < 3500:
-        #    self.collect(num + 1)
+            logging.info("No CII data found for " + git_url)
 
     def collect(self):
         """ Function to process each entry in the worker's task queue
