@@ -91,24 +91,7 @@ class BadgeWorker:
         self.table = Base.classes.repo_badging.__table__
 
         # Send broker hello message
-        # connect_to_broker(self, logging.getLogger())
-
-        message = {
-                "job_type": 'MAINTAIN', 
-                "models": ['badges'], 
-                "given": { 'git_url': 'github.com/chaoss/augur.git'}
-            }
-
-        self.badges_model(message, 1)
-        self.badges_model(message, 2)
-
-        message = {
-                "job_type": 'MAINTAIN', 
-                "models": ['badges'], 
-                "given": { 'git_url': 'github.com/ccarterlandis/augur.git'}
-            }
-
-        self.badges_model(message, 2)
+        connect_to_broker(self, logging.getLogger())
 
     def update_config(self, config):
         """ Method to update config and set a default
