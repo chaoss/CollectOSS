@@ -26,7 +26,6 @@ if __name__ == "__main__":
 
         with open("dosocs2-example.conf") as configfile:
             content = configfile.read()
-            print(content)
             content_new = re.sub('(connection_uri = .*)\n', "connection_uri = " + configtools + "\n", content)
             with open("dosocs2.conf","w+") as outfile:
                 outfile.write(content_new)
