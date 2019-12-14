@@ -50,17 +50,18 @@ class Housekeeper:
         self.__updater()
 
     @staticmethod
-    def updater_process(broker_host, broker_port, broker, model, given, delay, repos, repo_group_id=None):
+    def updater_process(broker_host, broker_port, broker, job):
         """
         Controls a given plugin's update process
         :param name: name of object to be updated 
         :param delay: time needed to update
         :param shared: shared object that is to also be updated
         """
+        repo_group_id = job['repo_group_id'] if 'repo_group_id' in job else None
         if repo_group_id:
-            logging.info('Housekeeper spawned {} model updater process for subsection {} with PID {}'.format(model, repo_group_id, os.getpid()))
+            logging.info('Housekeeper spawned {} model updater process for subsection {} with PID {}'.format(job['model'], repo_group_id, os.getpid()))
         else:
-            logging.info('Housekeeper spawned {} model updater process for repo {} with PID {}'.format(model, repos[0]['repo_id'], os.getpid()))
+            logging.info('Housekeeper spawned {} model updater process for repo {} with PID {}'.format(job['model'], job['repos'][0]['repo_id'], os.getpid()))
 
         try:
             compatible_worker_found = False
@@ -69,25 +70,25 @@ class Housekeeper:
                 if not compatible_worker_found:
                     for worker in list(broker._getvalue().keys()):
                         # logging.info("{} {} {} {}".format(worker, model, broker[worker], given))
-                        if model in broker[worker]['models'] and given in broker[worker]['given']:
+                        if job['model'] in broker[worker]['models'] and job['given'] in broker[worker]['given']:
                             compatible_worker_found = True
                 if compatible_worker_found:
                     logging.info("Housekeeper recognized that the broker has a worker that " + 
-                        "can handle the {} model... beginning to distribute maintained tasks".format(model))
+                        "can handle the {} model... beginning to distribute maintained tasks".format(job['model']))
                     time.sleep(4)
                     while True:
                         logging.info('Housekeeper updating {} model with given {}...'.format(
-                            model, given[0]))
+                            job['model'], job['given'][0]))
                         
-                        if given[0] == 'git_url' or given[0] == 'github_url':
-                            for repo in repos:
-                                if given[0] == 'github_url' and 'github.com' not in repo['repo_git']:
+                        if job['given'][0] == 'git_url' or job['given'][0] == 'github_url':
+                            for repo in job['repos']:
+                                if job['given'][0] == 'github_url' and 'github.com' not in repo['repo_git']:
                                     continue
-                                given_key = 'git_url' if given[0] == 'git_url' else 'github_url'
+                                given_key = 'git_url' if job['given'][0] == 'git_url' else 'github_url'
                                 task = {
-                                    "job_type": "MAINTAIN", 
-                                    "models": [model], 
-                                    "display_name": "{} model for url: {}".format(model, repo['repo_git']),
+                                    "job_type": job['job_type'] if 'job_type' in job else 'MAINTAIN', 
+                                    "models": [job['model']], 
+                                    "display_name": "{} model for url: {}".format(job['model'], repo['repo_git']),
                                     "given": {}
                                 }
                                 task['given'][given_key] = repo['repo_git']
@@ -99,14 +100,14 @@ class Housekeeper:
                                 except Exception as e:
                                     logging.info("Error encountered: {}".format(e))
 
-                                time.sleep(0.5)
-                        elif given[0] == 'repo_group':
+                                time.sleep(60)
+                        elif job['given'][0] == 'repo_group':
                             task = {
-                                    "job_type": "MAINTAIN", 
-                                    "models": [model], 
-                                    "display_name": "{} model for repo group id: {}".format(model, repo_group_id),
+                                    "job_type": job['job_type'] if 'job_type' in job else 'MAINTAIN', 
+                                    "models": [job['model']], 
+                                    "display_name": "{} model for repo group id: {}".format(job['model'], repo_group_id),
                                     "given": {
-                                        "repo_group": repos
+                                        "repo_group": job['repos']
                                     }
                                 }
                             try:
@@ -115,8 +116,8 @@ class Housekeeper:
                             except Exception as e:
                                 logging.info("Error encountered: {}".format(e))
 
-                        logging.info("Housekeeper finished sending {} tasks to the broker for it to distribute to your worker(s)".format(len(repos)))
-                        time.sleep(delay)
+                        logging.info("Housekeeper finished sending {} tasks to the broker for it to distribute to your worker(s)".format(len(job['repos'])))
+                        time.sleep(job['delay'])
                     break
                 time.sleep(3)
                 
@@ -126,16 +127,15 @@ class Housekeeper:
         except:
             raise
 
-    def __updater(self, updates=None):
+    def __updater(self, jobs=None):
         """
         Starts update processes
         """
         logging.info("Starting update processes...")
-        if updates is None:
-            updates = self.__updatable
-        for update in updates:
-            up = Process(target=self.updater_process, args=(self.broker_host,self.broker_port, self.broker, update['model'], 
-                update['given'], update['delay'], update['repos'], update['repo_group_id']), daemon=True)
+        if jobs is None:
+            jobs = self.__updatable
+        for job in jobs:
+            up = Process(target=self.updater_process, args=(self.broker_host, self.broker_port, self.broker, job), daemon=True)
             up.start()
             self.__processes.append(up)
 
@@ -171,11 +171,17 @@ class Housekeeper:
     def prep_jobs(self, jobs):
 
         for job in jobs:
-            if 'repo_group_id' in job:
+            if 'repo_group_id' in job or 'repo_ids' in job:
                 # If RG id is 0 then it just means to query all repos
                 where_and = 'AND' if job['model'] in ['issues', 'pull_requests'] else 'WHERE'
-                where_condition = '{} repo_group_id = {}'.format(where_and, job['repo_group_id']) if job['repo_group_id'] != 0 else ''
+                where_condition = '{} repo_group_id = {}'.format(where_and, job['repo_group_id']) if 'repo_group_id' in job and job['repo_group_id'] != 0 else ''
                 repoUrlSQL = s.sql.text("""
+                        SELECT *
+                        FROM repo
+                        WHERE repo_id IN ({})
+                    """.format( # Generator expression
+                        ",".join(str(x) for x in job['repo_ids']))) if 'repo_ids' in job else s.sql.text(
+                    """
                         SELECT a.repo_id, a.repo_git, b.pull_request_count, d.repo_id AS pr_repo_id,  count(*) AS pr_collected_count, 
                         (b.pull_request_count-count(*)) AS prs_missing, 
                         abs(cast((count(*))AS DOUBLE PRECISION)/NULLIF(cast(b.pull_request_count AS DOUBLE PRECISION), 0)) AS ratio_abs,
@@ -250,9 +256,9 @@ class Housekeeper:
                     """.format(where_condition)) if job['model'] == 'issues' else s.sql.text("""
                         SELECT repo_git, repo_id FROM repo {} ORDER BY repo_id ASC
                     """.format(where_condition))
-                rs = pd.read_sql(repoUrlSQL, self.db, params={})
-                if len(rs) == 0:
-                    logging.info("Trying to send tasks for repo group with id: {}, but the repo group does not contain any repos".format(job['repo_group_id']))
+                reorganized_repos = pd.read_sql(repoUrlSQL, self.db, params={})
+                if len(reorganized_repos) == 0:
+                    logging.info("Trying to send tasks for repo group, but the repo group does not contain any repos")
                     continue
 
                 if 'starting_repo_id' in job:
@@ -294,15 +300,12 @@ class Housekeeper:
                     if history_df.iloc[0]['status'] == 'Stopped':
                         self.history_id = int(history_df.iloc[0]['history_id'])
                         finishing_task = True
-                        # last_id += 1 #update to match history tuple val rather than just increment
-
 
                 # Rearrange repos so the one after the last one that 
                 #   was completed will be ran first (if prioritized ordering is not available/enabled)
-                reorganized_repos = rs
                 if job['model'] not in ['issues', 'pull_requests']:
-                    before_repos = rs.loc[rs['repo_id'].astype(int) < last_id]
-                    after_repos = rs.loc[rs['repo_id'].astype(int) >= last_id]
+                    before_repos = reorganized_repos.loc[reorganized_repos['repo_id'].astype(int) < last_id]
+                    after_repos = reorganized_repos.loc[reorganized_repos['repo_id'].astype(int) >= last_id]
 
                     reorganized_repos = after_repos.append(before_repos)
 
