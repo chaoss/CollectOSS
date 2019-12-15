@@ -187,8 +187,8 @@ class BadgeWorker:
         """ Data collection and storage method
         Query the CII API and store the result in the DB for the badges model
         """
-        logging.info("Collecting data for {}".format(git_url))
         git_url = entry_info['given']['git_url']
+        logging.info("Collecting data for {}".format(git_url))
         extension = "/projects.json?pq=" + (quote(git_url[0:-4]))
 
         url = self.config['endpoint'] + extension
