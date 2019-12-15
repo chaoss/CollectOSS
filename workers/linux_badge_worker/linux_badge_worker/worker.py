@@ -146,7 +146,7 @@ class BadgeWorker:
         Query the github api for contributors and issues (not yet implemented)
         """
         git_url = entry_info['given']['git_url']
-        extension = "/projects.json?pq=https://" + (quote(git_url[0:-4]))
+        extension = "/projects.json?pq=" + (quote(git_url[0:-4]))
 
         url = self.config['endpoint'] + extension
         logging.info("Hitting CII endpoint: " + url + " ...\n")
