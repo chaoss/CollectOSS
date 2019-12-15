@@ -133,7 +133,7 @@ class BadgeWorker:
 
         # Send broker hello message
         connect_to_broker(self, logging.getLogger())
-        logging.info("Connected to the broker...")
+        logging.info("Connected to the broker...\n")
 
     def update_config(self, config):
         """ Method to update config and set a default
@@ -172,7 +172,7 @@ class BadgeWorker:
                 logging.info("Focused task is OFF\n")
         else:
             self.finishing_task = False
-            logging.info("focused task is OFF\n")
+            logging.info("Focused task is OFF\n")
         
         self._task = value
         self.run()
@@ -185,13 +185,14 @@ class BadgeWorker:
 
     def badges_model(self, entry_info, repo_id):
         """ Data collection and storage method
-        Query the github api for contributors and issues (not yet implemented)
+        Query the CII API and store the result in the DB for the badges model
         """
+        logging.info("Collecting data for {}".format(git_url))
         git_url = entry_info['given']['git_url']
         extension = "/projects.json?pq=" + (quote(git_url[0:-4]))
 
         url = self.config['endpoint'] + extension
-        logging.info("Hitting CII endpoint: " + url + " ...\n")
+        logging.info("Hitting CII endpoint: " + url + " ...")
         data = requests.get(url=url).json()
 
         if data != []:
@@ -204,9 +205,8 @@ class BadgeWorker:
                                     data_source=__data_source__))
 
             self.results_counter += 1
-            register_task_completion(self, logging, entry_info, repo_id, "badges")
         else:
-            logging.info("No CII data found for " + git_url)
+            logging.info("No CII data found for {}\n".format(git_url))
 
     def collect(self):
         """ Function to process each entry in the worker's task queue
@@ -239,6 +239,8 @@ class BadgeWorker:
             except Exception as e:
                 register_task_failure(self, logging, message, repo_id, e)
                 pass
+
+        register_task_completion(self, logging, message, repo_id, "badges")
 
     def run(self):
         """ Kicks off the processing of the queue if it is not already being processed
