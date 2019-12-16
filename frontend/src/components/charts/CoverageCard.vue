@@ -48,12 +48,14 @@
     computed: {
       UsableValues: function() {
         let licenseCount = 0
+        // @ts-ignore
         for (let el of this.valuestwo) {
           let shortname = el['short_name'];
           if (shortname != "No Assertion"){
             licenseCount += el["count"]
           }
         }
+        // @ts-ignore
         const totalFiles = this.values[0]['sbom_scan']['License Coverage']['TotalFiles']
         let prepercent = licenseCount / totalFiles
         let percent = prepercent * 100
