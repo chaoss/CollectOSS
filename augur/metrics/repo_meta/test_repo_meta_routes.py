@@ -49,15 +49,8 @@ def test_sub_projects_by_repo(metrics):
     assert len(data) >= 1
     assert data[0]["sub_project_count"] > 0
 
-def test_cii_best_practices_badge_by_group(metrics):
-    response = requests.get('http://localhost:5000/api/unstable/repo-groups/21/cii-best-practices-badge')
-    print(response.content)
-    data = response.json()
-    assert response.status_code == 200
-    assert len(data) >= 1
-
 def test_cii_best_practices_badge_by_repo(metrics):
-    response = requests.get('http://localhost:5000/api/unstable/repo-groups/21/repos/21252/cii-best-practices-badge')
+    response = requests.get('http://localhost:5000/api/unstable/repo-groups/21/repos/21000/cii-best-practices-badge')
     print(response)
     data = response.json()
     assert response.status_code == 200
