@@ -5,16 +5,17 @@
       <div v-if="loaded">
         <p v-if="values.length == 0 || values == undefined">There are no license coverage metrics available for this repository.</p>
         <div v-else>
+          <p> <h4> {{ UsableValues[2] }}% </h4> </p>
           <div class="coverageCardDiv1">
             <p> Total Files
             <br> Files with Declared Licenses
-            <br> License Coverage </p>
+            <br> Files without Licenses </p>
           </div>
           <div class="coverageCardDiv2">
             <strong>
-              <p> {{ values[0]['sbom_scan']['License Coverage']['TotalFiles'] }}
-              <br> {{ values[0]['sbom_scan']['License Coverage']['DeclaredLicenseFiles'] }}
-              <br> {{ values[0]['sbom_scan']['License Coverage']['PercentTotalLicenseCoverage'] }} </p>
+              <p> {{ UsableValues[0] }}
+              <br> {{ UsableValues[1] }}
+              <br> {{ UsableValues[3] }} </p>
             </strong>
           </div>
         </div>
@@ -34,6 +35,8 @@
       title: String,
       data: Object,
       source: String,
+      datatwo: Object,
+      sourcetwo: String,
       headers: Array,
       fields: Array,
     }
@@ -44,6 +47,26 @@
       Spinner
     },
     computed: {
+      UsableValues: function() {
+        let licenseCount = 0
+        // @ts-ignore
+        for (let el of this.valuestwo) {
+          let shortname = el['short_name'];
+          if (shortname != "No Assertion"){
+            licenseCount += el["count"]
+          }
+        }
+        // @ts-ignore
+        const totalFiles = this.values[0]['sbom_scan']['License Coverage']['TotalFiles']
+        let prepercent = licenseCount / totalFiles
+        let percent = prepercent * 100
+        let fixed = 2 || 0;
+        fixed = Math.pow(10, fixed);
+        let licenseCoverage = Math.floor(percent * fixed) / fixed;
+        let differenceCount = totalFiles - licenseCount
+        let arrayofV = [totalFiles, licenseCount, licenseCoverage, differenceCount]
+        return arrayofV
+      },
       ...mapGetters('compare',[
         'comparedRepos',
         'base'
@@ -61,6 +84,7 @@
     // data props
     loaded: boolean = false
     values: any[] = []
+    valuestwo: any[] = []
 
     // compare getters
     base!:any
@@ -71,10 +95,9 @@
 
     created () {
       if (this.data) {
-        this.loaded = true
+      this.loaded = true
         this.values = this.data[this.source]
       }
-
       else {
         this.endpoint({endpoints:[this.source],repos:[this.base]}).then((tuples:any) => {
           let ref = this.base.url || this.base.repo_name
@@ -89,6 +112,27 @@
           this.loaded = true
         })
       }
+
+      if (this.datatwo) {
+        this.loaded = true
+        console.log("DATA LOADED")
+        this.valuestwo = this.datatwo[this.sourcetwo]
+      }
+      else {
+        this.endpoint({endpoints:[this.sourcetwo],repos:[this.base]}).then((tuples:any) => {
+          let ref = this.base.url || this.base.repo_name
+          if (ref.includes('/'))
+            ref = ref.split('/')[ref.split('/').length - 1]
+          let valuestwo:any = []
+          Object.keys(tuples[ref]).forEach((endpoint) => {
+            valuestwo = tuples[ref][endpoint]
+          })
+          this.valuestwo = valuestwo
+          console.log("Coverage card valuestwo", valuestwo, ref)
+          this.loaded = true
+        })
+      }
+
     }
   }
 </script>

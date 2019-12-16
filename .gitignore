@@ -133,6 +133,9 @@ dmypy.json
 .pyre/
 
 # Augur-spdx
+./spdx-scanner/dosocs2.conf
+spdx-scanner/dosocs2.conf
+spdx-scanner/augur-spdx/
 workers/spdx_worker/dosocs2.conf
 workers/spdx_worker/augur-spdx/
 workers/spdx_worker/ex-raw.txt

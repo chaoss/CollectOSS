@@ -3,8 +3,8 @@
     <d-card-body :title="title" class="text-center">
       <spinner v-if="!loaded"></spinner>
       <div v-if="loaded">
-        <h4>{{ OSIpercent[0] }}%</h4>
-        <p> <br>
+        <p> <h4>{{ OSIpercent[0] }}%</h4> </p>
+        <p> 
         OSI Approved: <strong>{{ OSIpercent[1] }}</strong> Files
         <a href="javascript:void(0)" v-on:click="list(true)">
             <br> View Approved Licenses
