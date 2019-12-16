@@ -137,3 +137,6 @@ dmypy.json
 spdx-scanner/dosocs2.conf
 spdx-scanner/augur-spdx/
 workers/spdx_worker/dosocs2.conf
+workers/spdx_worker/augur-spdx/
+workers/spdx_worker/ex-raw.txt
+workers/spdx_worker/ex.json
