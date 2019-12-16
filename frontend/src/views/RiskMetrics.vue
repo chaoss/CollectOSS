@@ -67,6 +67,7 @@
         <coverage-card
           title="License Coverage"
           source="sbom"
+          sourcetwo="licenseDeclared"
         ></coverage-card>
         <br><br>
         <osi-card
