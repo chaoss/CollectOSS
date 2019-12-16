@@ -1,8 +1,8 @@
 <template>
   <d-card>
     <d-card-body :title="title" class="text-center">
-      <spinner v-if="!loaded"></spinner>
-      <div v-if="loaded">
+      <spinner v-if="!allLoaded"></spinner>
+      <div v-if="allLoaded">
         <p v-if="values.length == 0 || values == undefined">There are no license coverage metrics available for this repository.</p>
         <div v-else>
           <p> <h4> {{ UsableValues[2] }}% </h4> </p>
@@ -47,6 +47,15 @@
       Spinner
     },
     computed: {
+      allLoaded: function() {
+        // @ts-ignore
+        if (this.loaded && this.loaded2) {
+          return true
+        }
+        else {
+          return false
+        }
+      },
       UsableValues: function() {
         let licenseCount = 0
         // @ts-ignore
@@ -83,6 +92,7 @@
 
     // data props
     loaded: boolean = false
+    loaded2: boolean = false
     values: any[] = []
     valuestwo: any[] = []
 
@@ -114,8 +124,7 @@
       }
 
       if (this.datatwo) {
-        this.loaded = true
-        console.log("DATA LOADED")
+        this.loaded2 = true
         this.valuestwo = this.datatwo[this.sourcetwo]
       }
       else {
@@ -129,7 +138,7 @@
           })
           this.valuestwo = valuestwo
           console.log("Coverage card valuestwo", valuestwo, ref)
-          this.loaded = true
+          this.loaded2 = true
         })
       }
 
