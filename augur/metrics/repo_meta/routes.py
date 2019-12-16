@@ -238,7 +238,7 @@ def create_repo_meta_routes(server):
     server.addRepoGroupMetric(metrics.cii_best_practices_badge, 'cii-best-practices-badge')
 
     """
-    @api {get} /repo-groups/:repo_group_id/cii-best-practices-badge CII Best Practices Badge (Repo)
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/cii-best-practices-badge CII Best Practices Badge (Repo)
     @apiName cii-best-practices-badge-repo
     @apiGroup Risk
     @apiDescription The CII Best Practices Badge level.
