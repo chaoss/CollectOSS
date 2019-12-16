@@ -5,16 +5,17 @@
       <div v-if="loaded">
         <p v-if="values.length == 0 || values == undefined">There are no license coverage metrics available for this repository.</p>
         <div v-else>
+          <p> <h4> {{ UsableValues[2] }}% </h4> </p>
           <div class="coverageCardDiv1">
             <p> Total Files
             <br> Files with Declared Licenses
-            <br> License Coverage </p>
+            <br> Files without Licenses </p>
           </div>
           <div class="coverageCardDiv2">
             <strong>
               <p> {{ UsableValues[0] }}
               <br> {{ UsableValues[1] }}
-              <br> {{ UsableValues[2] }}% </p>
+              <br> {{ UsableValues[3] }} </p>
             </strong>
           </div>
         </div>
@@ -62,7 +63,8 @@
         let fixed = 2 || 0;
         fixed = Math.pow(10, fixed);
         let licenseCoverage = Math.floor(percent * fixed) / fixed;
-        let arrayofV = [totalFiles, licenseCount, licenseCoverage]
+        let differenceCount = totalFiles - licenseCount
+        let arrayofV = [totalFiles, licenseCount, licenseCoverage, differenceCount]
         return arrayofV
       },
       ...mapGetters('compare',[

@@ -75,7 +75,7 @@
           :headers="['Short Name', 'Count']"
           :ldata="licenses"
           :fields="['short_name']"
-          title="Percent OSI-Approved Licenses">
+          title="Percent OSI-Approved Licenses by File">
         </osi-card>
       </div>
 
