@@ -14,9 +14,9 @@ You will need:
 
 -  A `PostgreSQL 10 or higher <https://www.postgresql.org/download/>`__ installation.
    
-.. code::
+.. code:: bash
 
-sudo apt-get install postgresql
+  sudo apt-get install postgresql
 
 
 One of the reasons that Augur is so powerful is because of our `unified data model <../architecture/data-model.rst>`_.
