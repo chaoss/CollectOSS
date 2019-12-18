@@ -49,10 +49,7 @@ def test_lines_changed_by_author(metrics):
 
 def test_cii_best_practices_badge(metrics):
     # repo
-    assert int(metrics.cii_best_practices_badge(21, 21252).iloc[0]['tiered_percentage']) >= 85
-
-    # repo_group
-    assert int(metrics.cii_best_practices_badge(21).iloc[0]['tiered_percentage']) > 1
+    assert int(metrics.cii_best_practices_badge(21, 21000).iloc[0]['tiered_percentage']) >= 85
 
 def test_languages(metrics):
     # TODO
