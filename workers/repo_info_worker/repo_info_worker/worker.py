@@ -72,6 +72,16 @@ class GHRepoInfoWorker:
         self.history_table = HelperBase.classes.worker_history.__table__
         self.job_table = HelperBase.classes.worker_job.__table__
 
+        maxHistorySQL = s.sql.text("""
+            SELECT max(history_id) AS history_id
+            FROM worker_history
+        """)
+        rs = pd.read_sql(maxMsgSQL, self.helper_db, params={})
+        self.history_id = int(rs.iloc[0]["history_id"]) if rs.iloc[0]["history_id"] is not None else 25150
+
+        # Increment so we are ready to insert the 'next one' of each of these most recent ids
+        self.history_id = self.history_id if self.finishing_task else self.history_id + 1
+
         # Organize different keys available
         self.oauths = []
         self.headers = None
