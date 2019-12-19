@@ -34,6 +34,7 @@ def record_model_process(self, logging, repo_id, model):
     if self.finishing_task:
         result = self.helper_db.execute(self.history_table.update().where(
             self.history_table.c.history_id==self.history_id).values(task_history))
+        self.history_id += 1
     else:
         result = self.helper_db.execute(self.history_table.insert().values(task_history))
         logging.info("Record incomplete history tuple: {}".format(result.inserted_primary_key))
@@ -188,4 +189,102 @@ def update_gh_rate_limit(self, logging, response):
         self.oauths[0], self.oauths[index] = self.oauths[index], self.oauths[0]
         logging.info("Using oauth: {}".format(self.oauths[0]))
 
+def paginate(self, url, pseudo_key_augur, pseudo_key_gh, table_values, update_col_map, duplicate_col_map, db_pkey):
+    # Paginate backwards through all the issues but get first page in order
+    #   to determine if there are multiple pages and if the 1st page covers all
+    i = 1
+    multiple_pages = False
+    results = []
+    while True: # (self, url)
+        logging.info("Hitting endpoint: " + url.format(i) + " ...\n")
+        r = requests.get(url=url.format(i), headers=self.headers)
+        update_gh_rate_limit(self, logging, r)
 
+        # Find last page so we can decrement from there
+        if 'last' in r.links and not multiple_pages and not self.finishing_task:
+            param = r.links['last']['url'][-6:]
+            i = int(param.split('=')[1]) + 1
+            logging.info("Multiple pages of request, last page is " + str(i - 1) + "\n")
+            multiple_pages = True
+        elif not multiple_pages and not self.finishing_task:
+            logging.info("Only 1 page of request\n")
+        elif self.finishing_task:
+            logging.info("Finishing a previous task, paginating forwards ..."
+                " excess rate limit requests will be made\n")
+        
+        j = r.json()
+
+        if len(j) == 0:
+            logging.info("Response was empty, breaking from pagination.\n")
+            break
+            
+        # Checking contents of requests with what we already have in the db
+        j = self.assign_tuple_action(j, table_values, update_col_map, duplicate_col_map, db_pkey)
+        if not j:
+            logging.info("Assigning tuple action failed, moving to next page.\n")
+            continue
+        to_add = [obj for obj in j if obj not in issues and obj['flag'] != 'none']
+        if len(to_add) == 0 and multiple_pages and 'last' in r.links:
+            logging.info("{}".format(r.links['last']))
+            if i - 1 != int(r.links['last']['url'][-6:].split('=')[1]):
+                logging.info("No more pages with unknown issues, breaking from pagination.\n")
+                break
+        issues += to_add
+
+        i = i + 1 if self.finishing_task else i - 1
+
+        # Since we already wouldve checked the first page... break
+        if (i == 1 and multiple_pages and not self.finishing_task) or i < 1 or len(j) == 0:
+            logging.info("No more pages to check, breaking from pagination.\n")
+            break
+
+def get_table_values(self, cols, tables, where_clause=""):
+    table_str = tables[0]
+    del tables[0]
+
+    col_str = cols[0]
+    del cols[0]
+
+    for table in tables:
+        table_str += ", " + table
+    for col in cols:
+        col_str += ", " + col
+
+    tableValuesSQL = s.sql.text("""
+        SELECT {} FROM {} {}
+    """.format(col_str, table_str, where_clause))
+    logging.info("Getting table values with the following PSQL query: \n{}\n".format(tableValuesSQL))
+    values = pd.read_sql(tableValuesSQL, self.db, params={})
+    return values
+
+def assign_tuple_action(self, new_data, table_values, update_col_map, duplicate_col_map, db_pkey):
+    """ map objects => { *our db col* : *gh json key*} """
+    need_insertion_count = 0
+    for obj in new_data:
+        if type(obj) != dict:
+            continue
+        obj['flag'] = 'none'
+        db_dupe_key = list(duplicate_key_map.keys())[0]
+        if table_values.isin([obj[duplicate_key_map[db_dupe_key]]]).any().any():
+            # logging.info("Tuple with github's {} key value already exists ".format(db_dupe_key) +
+            #     "exists in our db: {}\n".format(obj[duplicate_key_map[db_dupe_key]]))
+            try:
+                existing_tuple = table_values[table_values[db_dupe_key].isin(
+                    [obj[duplicate_key_map[db_dupe_key]]])].to_dict('records')[0]
+            except:
+                logging.info("IT FAILED BUT WE GOING")
+            logging.info(table_values[table_values[db_dupe_key].isin(
+                [obj[duplicate_key_map[db_dupe_key]]])].to_dict('records'))
+            for col in update_col_map.keys():
+                if update_col_map[col] in obj:
+                    if obj[update_col_map[col]] != existing_tuple[col]:
+                        logging.info("Tuple {} needs an " +
+                            "update for column: {}\n".format(obj[duplicate_key_map[db_dupe_key]], col, obj))
+                        obj['flag'] = 'need_update'
+                        obj['pkey'] = existing_tuple[db_pkey]
+        else:
+            obj['flag'] = 'need_insertion'
+            need_insertion_count += 1
+    logging.info("Page recieved has {} tuples, while filtering duplicates this ".format(len(new_data)) +
+        "was reduced to {} tuples.\n".format(need_insertion_count))
+    return new_data

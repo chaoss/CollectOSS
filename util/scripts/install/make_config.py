@@ -135,6 +135,12 @@ def configure_defaults(config):
                     ],
                     "model": "badges",
                     "repo_group_id": 0
+                },
+                {
+                    "model": "value",
+                    "delay": 100000,
+                    "given": ["git_url"],
+                    "repo_group_id": 0
                 }
             ]
         }

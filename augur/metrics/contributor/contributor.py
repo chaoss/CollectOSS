@@ -232,7 +232,7 @@ def contributors_new(self, repo_group_id, repo_id=None, period='day', begin_date
 
     if repo_id:
         contributorsNewSQL = s.sql.text("""
-            SELECT date_trunc(:period, b.created_at::DATE) AS contribute_at, COUNT(id) AS count, repo.repo_id, repo_name
+            SELECT date_trunc(:period, b.created_at::DATE) AS date, COUNT(id) AS new_contributors, repo.repo_id, repo_name
             FROM (
                     SELECT id as id, MIN(created_at) AS created_at, a.repo_id
                     FROM (
@@ -274,14 +274,14 @@ def contributors_new(self, repo_group_id, repo_id=None, period='day', begin_date
                         ) a
                     GROUP BY a.id, a.repo_id) b, repo
             WHERE repo.repo_id = b.repo_id
-            GROUP BY contribute_at, repo.repo_id, repo_name
+            GROUP BY date, repo.repo_id, repo_name
             """)
 
         results = pd.read_sql(contributorsNewSQL, self.database, params={'repo_id': repo_id, 'period': period,
                                                                    'begin_date': begin_date, 'end_date': end_date})
     else:
         contributorsNewSQL = s.sql.text("""
-            SELECT date_trunc(:period, b.created_at::DATE) AS contribute_at, COUNT(id) AS count, repo.repo_id, repo_name
+            SELECT date_trunc(:period, b.created_at::DATE) AS date, COUNT(id) AS new_contributors, repo.repo_id, repo_name
             FROM (
                     SELECT id as id, MIN(created_at) AS created_at, a.repo_id
                     FROM (
@@ -323,7 +323,7 @@ def contributors_new(self, repo_group_id, repo_id=None, period='day', begin_date
                         ) a
                     GROUP BY a.id, a.repo_id) b, repo
             WHERE repo.repo_id = b.repo_id
-            GROUP BY contribute_at, repo.repo_id, repo_name
+            GROUP BY date, repo.repo_id, repo_name
             """)
 
         results = pd.read_sql(contributorsNewSQL, self.database, params={'repo_group_id': repo_group_id, 'period': period,
