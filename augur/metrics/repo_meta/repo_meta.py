@@ -380,7 +380,7 @@ def license_declared(self, repo_group_id, repo_id=None):
         AND e.file_id = A.file_id
 		AND e.file_id = f.file_id
         AND e.package_id = d.package_id
-        AND C.repo_id = 25158
+        AND C.repo_id = :repo_id
         AND b.is_spdx_official = 'True'
         GROUP BY
         the_license_id,
@@ -403,7 +403,7 @@ def license_declared(self, repo_group_id, repo_id=None):
         AND e.file_id = A.file_id
 		AND e.file_id = f.file_id
         AND e.package_id = d.package_id
-        AND C.repo_id = 25158
+        AND C.repo_id = :repo_id
         AND b.is_spdx_official = 'False'
         GROUP BY
         the_license_id,
