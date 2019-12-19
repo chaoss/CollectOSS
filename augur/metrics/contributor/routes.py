@@ -94,14 +94,14 @@ def create_contributor_routes(server):
     @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "contribute_at": "2018-05-20T00:00:00.000Z",
-                            "count": 3,
+                            "date": "2018-05-20T00:00:00.000Z",
+                            "new_contributors": 3,
                             "repo_name": "rails",
                             "repo_id": 21000
                         },
                         {
-                            "contribute_at": "2019-06-03T00:00:00.000Z",
-                            "count": 23,
+                            "date": "2019-06-03T00:00:00.000Z",
+                            "new_contributors": 23,
                             "repo_name": "rails",
                             "repo_id": 21000
                         }
@@ -124,14 +124,14 @@ def create_contributor_routes(server):
     @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "contribute_at": "2018-05-20T00:00:00.000Z",
-                            "count": 3,
+                            "date": "2018-05-20T00:00:00.000Z",
+                            "new_contributors": 3,
                             "repo_name": "rails",
                             "repo_id": 21000
                         },
                         {
-                            "contribute_at": "2019-06-03T00:00:00.000Z",
-                            "count": 23,
+                            "date": "2019-06-03T00:00:00.000Z",
+                            "new_contributors": 23,
                             "repo_name": "rails",
                             "repo_id": 21000
                         }

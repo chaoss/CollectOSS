@@ -232,7 +232,7 @@ def contributors_new(self, repo_group_id, repo_id=None, period='day', begin_date
 
     if repo_id:
         contributorsNewSQL = s.sql.text("""
-            SELECT date_trunc(:period, b.created_at::DATE) AS contribute_at, COUNT(id) AS count, repo.repo_id, repo_name
+            SELECT date_trunc(:period, b.created_at::DATE) AS date, COUNT(id) AS new_contributors, repo.repo_id, repo_name
             FROM (
                     SELECT id as id, MIN(created_at) AS created_at, a.repo_id
                     FROM (
@@ -281,7 +281,7 @@ def contributors_new(self, repo_group_id, repo_id=None, period='day', begin_date
                                                                    'begin_date': begin_date, 'end_date': end_date})
     else:
         contributorsNewSQL = s.sql.text("""
-            SELECT date_trunc(:period, b.created_at::DATE) AS contribute_at, COUNT(id) AS count, repo.repo_id, repo_name
+            SELECT date_trunc(:period, b.created_at::DATE) AS date, COUNT(id) AS new_contributors, repo.repo_id, repo_name
             FROM (
                     SELECT id as id, MIN(created_at) AS created_at, a.repo_id
                     FROM (
