@@ -274,7 +274,7 @@ def contributors_new(self, repo_group_id, repo_id=None, period='day', begin_date
                         ) a
                     GROUP BY a.id, a.repo_id) b, repo
             WHERE repo.repo_id = b.repo_id
-            GROUP BY contribute_at, repo.repo_id, repo_name
+            GROUP BY date, repo.repo_id, repo_name
             """)
 
         results = pd.read_sql(contributorsNewSQL, self.database, params={'repo_id': repo_id, 'period': period,
@@ -323,7 +323,7 @@ def contributors_new(self, repo_group_id, repo_id=None, period='day', begin_date
                         ) a
                     GROUP BY a.id, a.repo_id) b, repo
             WHERE repo.repo_id = b.repo_id
-            GROUP BY contribute_at, repo.repo_id, repo_name
+            GROUP BY date, repo.repo_id, repo_name
             """)
 
         results = pd.read_sql(contributorsNewSQL, self.database, params={'repo_group_id': repo_group_id, 'period': period,
