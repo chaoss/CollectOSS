@@ -297,6 +297,10 @@ class GitHubWorker:
     def contributor_model(self, entry_info, repo_id):
         # self.insert_facade_contributors(self, entry_info)
 
+        # Contributors are part of this model, and finding all for the repo saves us 
+        #   from having to add them as we discover committers in the issue process
+        self.query_contributors(entry_info, repo_id)
+
         logging.info("Searching users for commits from the facade worker for repo with entry info: {}\n".format(entry_info))
 
         # Get all distinct combinations of emails and names by querying the repo's commits
