@@ -30,6 +30,7 @@ import ExploreInsights from './views/ExploreInsights.vue';
 import InspectInsight from './views/InspectInsight.vue';
 import RiskMetrics from "@/views/RiskMetrics.vue";
 import NProgress from "nprogress";
+import SlackConfig from './views/SlackConfig.vue';
 
 const routes = [
   {
@@ -43,6 +44,21 @@ const routes = [
           sidebar: MainSidebar,
           navbar: MainNavbar,
           content: Dashboard,
+        },
+      },
+    ],
+  },
+  {
+    path: '/slack-config',
+    component: Default,
+    children: [
+      {
+        path: '',
+        name: 'slack_config',
+        components: {
+          sidebar: MainSidebar,
+          navbar: MainNavbar,
+          content: SlackConfig,
         },
       },
     ],
