@@ -76,7 +76,7 @@ class GHRepoInfoWorker:
             SELECT max(history_id) AS history_id
             FROM worker_history
         """)
-        rs = pd.read_sql(maxMsgSQL, self.helper_db, params={})
+        rs = pd.read_sql(maxHistorySQL, self.helper_db, params={})
         self.history_id = int(rs.iloc[0]["history_id"]) if rs.iloc[0]["history_id"] is not None else 25150
 
         # Increment so we are ready to insert the 'next one' of each of these most recent ids
