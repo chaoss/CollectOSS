@@ -345,7 +345,7 @@ def lines_changed_by_author(self, repo_group_id, repo_id=None):
             FROM commits JOIN repo ON commits.repo_id = repo.repo_id
             WHERE commits.repo_id = :repo_id
             GROUP BY commits.repo_id, date_trunc('week', cmt_author_date::date), cmt_author_affiliation, cmt_author_email, repo_name
-            ORDER BY date_trunc('week', cmt_author_date::date) as cmt_author_date ASC;
+            ORDER BY date_trunc('week', cmt_author_date::date) ASC;
         """)
         results = pd.read_sql(linesChangedByAuthorSQL, self.database, params={"repo_id": repo_id})
         return results
