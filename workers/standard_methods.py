@@ -92,15 +92,10 @@ def register_task_completion(self, logging, entry_info, repo_id, model):
 
 def register_task_failure(self, logging, task, repo_id, e):
 
-    logging.debug("Worker ran into an error for task: {}".format(task))
-    logging.debug("Error encountered: " + repr(e))
-    logging.debug(f'This task inserted {self.results_counter} tuples before failure.')
-    logging.debug("Notifying broker and logging task failure in database...\n")
-
-    # logging.info("Worker ran into an error for task: {}".format(task))
-    # logging.info("Error encountered: " + repr(e))
-    # logging.info(f'This task inserted {self.results_counter} tuples before failure.')
-    # logging.info("Notifying broker and logging task failure in database...\n")
+    logging.info("Worker ran into an error for task: {}".format(task))
+    logging.info("Error encountered: " + repr(e))
+    logging.info(f'This task inserted {self.results_counter} tuples before failure.')
+    logging.info("Notifying broker and logging task failure in database...\n")
 
     github_url = task['given']['github_url']
 
