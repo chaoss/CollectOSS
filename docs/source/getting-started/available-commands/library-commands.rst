@@ -1,5 +1,5 @@
 ~~~~~~~~~~~~~~~~~~
-Library Commands
+Library Commmands
 ~~~~~~~~~~~~~~~~~~
 
 Augur provides a few handy scripts and options for controlling the backend processes. They're broken up into 3 main categories: ``run``, ``db``, and ``util``.

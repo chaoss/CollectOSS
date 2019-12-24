@@ -1,6 +1,6 @@
----------
-Usage
----------
+-----------------
+Controlling Augur
+-----------------
 
 Augur provides a variety of ways to interface with its systems.
 
@@ -11,5 +11,5 @@ To install the project, start the frontend & backend servers simultaneously, bui
 .. toctree::
    :maxdepth: 1
 
-   augur-commands
+   library-commands
    make-commands

@@ -1,8 +1,10 @@
 ~~~~~~~~~~~~~~~~~
-Makefile Commands
+``make`` Commands
 ~~~~~~~~~~~~~~~~~
 
 These are the commands available in the ``Makefile`` in the root ``augur/`` directory.
+If ``make`` is run by itself (literally just the command ``make``) in the root ``augur/`` directory 
+a condensed version of each description will be displayed for quick reference.
 
 ============
 Installation
@@ -10,15 +12,33 @@ Installation
 
 ``make install``
 ----------------
-Run ``make install`` to install the project and set up the configuration file.
+Installs the project dependencies, sets up default configuration file, and gathers database credentials.
+
+.. code-block:: bash
+
+  # example usage
+
+  > make install
 
 ``make clean``
 ----------------
-Run ``make clean`` to remove logs, caches, and other cruft that can get annoying.
+Removes logs, caches, and some other cruft that can get annoying. Use when things aren't building properly or you think an old version of augur is getting in the way.
+
+.. code-block:: bash
+
+  # example usage
+
+  > make clean
 
 ``make rebuild``
 ----------------
-``make rebuild`` is used to conjunction with ``make clean`` to remove all build/compiled files or binaries and reinstall the project. Useful for upgrading in place.
+Used in conjunction with ``make clean`` to remove all build/compiled files and binaries and reinstall the project. Useful for upgrading in place.
+
+.. code-block:: bash
+
+  # example usage
+
+  > make rebuild
 
 ============
 Development
@@ -26,12 +46,15 @@ Development
 
 ``make dev``
 -------------
-To start the frontend and backend servers together, run ``make dev``.
+Starts the frontend and backend servers together.
 The output should like something like this (note that your process IDs
 and network will be different):
 
-.. code:: bash
+.. code-block:: bash
 
+  # example usage
+
+  > make dev
    sending SIGTERM to node (npm) at PID 9239; bash: line 0: kill: (9239) - No such process
    sending SIGTERM to python (Gunicorn) at PID 9224; bash: line 0: kill: (9224) - No such process
 
@@ -98,70 +121,112 @@ the frontend section (in this example it’s
 
 ``make frontend``
 ------------------
-Run ``make frontend`` to start just the frontend server. To run just the backend server, see the ``augur`` commands `documentation`_.
+Start just the frontend server. To run just the backend server, see the ``augur`` commands `documentation`_.
 
 .. _documentation: augur-commands.html#run
 
 =======
 Testing
 =======
+These commands are used to run specific subsets of unit tests.
+
+Use the ``MODEL`` parameter to run tests for *one* specific model (examples below).
 
 ``make test``
 -------------
-Run ``make test`` to run all available unit tests for both the metric functions and their API endpoints.
-
-Use the ``MODEL`` parameter to run tests for *one* specific model.
-
-Example\:
+Runs  available unit tests for both the metric functions and their API endpoints with the given ``MODEl``, which will default to all.
 
 .. code-block:: bash
 
+  # example usage
+
+  # this will run ALL tests for JUST the issue model
+  > make test
+
   # this will run ALL tests for the issue model
-  make test MODEL=issue
+  > make test MODEL=issue
 
 ``make test-functions``
 ------------------------
-Run ``make test-functions`` to run all available unit tests for the metric functions.
-
-Use the ``MODEL`` parameter to run tests for *one* specific model.
-
-Example\:
+Runs unit tests for the metric functions with the given ``MODEl``, which will default to all.
 
 .. code-block:: bash
 
-  # this will run only metric function tests for the issue model
-  make test-functions MODEL=issue
+  # example usage
 
+  # this will run ALL metric function unit tests for JUST the issue model
+  > make test-functions
+
+  # this will run ALL metric function unit tests for the issue model
+  > make test-functions MODEL=issue
 
 ``make test-routes``
 ------------------------
-Run ``make test-routes`` to run all available unit tests for the metric API endpoints.
-
-Use the ``MODEL`` parameter to run tests for *one* specific model.
-
-Example\:
+Runs unit tests for the metric API with the given ``MODEl``, which will default to all.
 
 .. code-block:: bash
 
-  # this will run only API endpoint tests for the issue model
-  make test-routes MODEL=issue
+  # example usage
+
+  # this will run ALL metric API unit tests for JUST the issue model
+  > make test-routes
+
+  # this will run ALL metric API unit tests for the issue model
+  > make test-routes MODEL=issue
 
 ==============
 Documentation
 ==============
 
+Before making any documentation changes, please read the `documentation guide <../../documentation.html>`_.
+
 ``make docs``
 --------------
-Run ``make docs`` to generate all documentation.
+Generate both library and API documentation.
 
-``make sphinx-docs``
---------------------
-Run ``make sphinx-docs`` to generate the library documentation.
+.. code-block:: bash
 
-Run ``make sphinx-docs`` to generate the library documentation, and then to automatically open a new browser tab to view it.
+  # example usage
+
+  > make docs
+
+``make library-docs``
+----------------------
+Generate the library documentation (this documentation).
+
+.. code-block:: bash
+
+  # example usage
+
+  > make library-docs
+
+
+``make library-docs-view``
+--------------------------
+Generate the library documentation, and automatically open a new browser tab to view it.
+
+.. code-block:: bash
+
+  # example usage
+
+  > make library-docs-view
 
 ``make api-docs``
 ------------------
-Run ``make api-docs`` to generate the API documentation.
+Generate the API documentation.
 
-Run ``make api-docs`` to generate the API documentation, and then to automatically open a new browser tab to view it.
+.. code-block:: bash
+
+  # example usage
+
+  > make api-ddocs
+
+``make api-docs-view``
+-----------------------
+Generate the API documentation, and automatically open a new browser tab to view it.
+
+.. code-block:: bash
+
+  # example usage
+
+  > make api-docs-view

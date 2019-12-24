@@ -102,9 +102,9 @@ most commonly used directives.
 
 Building
 ~~~~~~~~
-To see your changes and make sure everything rendered correctly, run ``make sphinx-docs`` in the root 
+To see your changes and make sure everything rendered correctly, run ``make library-docs`` in the root 
 ``augur/`` directory, and then open ``docs/build/html/index.html`` in your web browser to view it. 
-After opening it once, just run ``make sphinx-docs`` and refresh the page in your browser to see the changes.
+After opening it once, just run ``make library-docs`` and refresh the page in your browser to see the changes.
 
 Hosting
 ~~~~~~~

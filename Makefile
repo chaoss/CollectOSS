@@ -26,7 +26,7 @@ default:
 	@ echo "    test-routes MODEL={model}       Run API tests for the specified metrics model. Defaults to all"
 	@ echo
 	@ echo "Documentation Commands:"
-	@ echo "    sphinx-docs                     Generates the documentation using sphinx"
+	@ echo "    library-docs                    Generates the documentation using sphinx"
 	@ echo "    api-docs                        Generates the REST API documentation using apidocjs"
 	@ echo "    docs                            Generates all documentation"
 
@@ -132,11 +132,11 @@ test-routes:
 #
 # Documentation
 #
-.PHONY: sphinx-docs sphinx-docs-view api-docs api-docs-view docs
-sphinx-docs:
+.PHONY: library-docs library-docs-view api-docs api-docs-view docs
+library-docs:
 	@ bash -c 'cd docs/ && rm -rf build/ && make html;'
 
-sphinx-docs-view: sphinx-docs
+library-docs-view: library-docs
 	@ bash -c 'open docs/build/html/index.html'
 
 api-docs:
@@ -145,4 +145,4 @@ api-docs:
 api-docs-view: api-docs
 	@ bash -c "open frontend/public/api_docs/index.html"
 
-docs: api-docs sphinx-docs
+docs: api-docs library-docs
