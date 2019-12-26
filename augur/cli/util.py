@@ -58,23 +58,14 @@ def upgrade(app, from_directory):
     # pyrcss.util.self_upgrade(from_directory=from_directory)
 
 
-@cli.command('test', short_help='Test Augur')
-@click.option('--from-directory', '-f', type=click.Path(), help='Upgrade from a provided directory rather than git.')
-@pass_application
-def test(app, from_directory):
-    """
-    Print the location of the interpreter that is running this
-    """
-    app.log.info(pyrcss.util.run_tests(from_directory=from_directory, dry_run=True))
-    pyrcss.util.run_tests(from_directory=from_directory)
-
 @cli.command('kill', short_help='Kill Augur')
 @pass_application
 def kill(app):
     """
     kill running augur processes
     """
-    subprocess.call('util/scripts/control/augurkill.sh')
+    os.chdir(os.path.dirname(os.path.realpath(__file__)))
+    subprocess.call("../../util/scripts/control/augurkill.sh")
 
 @cli.command('repo-reset', short_help='Reset Repo Collection')
 @pass_application
@@ -82,4 +73,5 @@ def kill(app):
     """
     kill running augur processes
     """
-    subprocess.call('util/scripts/control/repo-reset.sh')
+    os.chdir(os.path.dirname(os.path.realpath(__file__)))
+    subprocess.call('../../util/scripts/control/repo-reset.sh')
