@@ -151,7 +151,15 @@ class GHPullRequestWorker:
         rs = pd.read_sql(max_pr_meta_id_SQL, self.db)
         pr_meta_id_start = rs.iloc[0]['pr_meta_id'] if rs.iloc[0]['pr_meta_id'] else 25150
 
+        maxHistorySQL = s.sql.text("""
+            SELECT max(history_id) AS history_id
+            FROM worker_history
+        """)
+        rs = pd.read_sql(maxHistorySQL, self.helper_db, params={})
+        self.history_id = int(rs.iloc[0]["history_id"]) if rs.iloc[0]["history_id"] is not None else 25150        
+
         # Increment so we are ready to insert the 'next one' of each of these most recent ids
+        self.history_id = self.history_id if self.finishing_task else self.history_id + 1
         self.pr_id_inc = (pr_start + 1)
         self.cntrb_id_inc = (cntrb_start + 1)
         self.msg_id_inc = (msg_start + 1)
