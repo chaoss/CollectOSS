@@ -189,16 +189,20 @@ def update_gh_rate_limit(self, logging, response):
         self.oauths[0], self.oauths[index] = self.oauths[index], self.oauths[0]
         logging.info("Using oauth: {}".format(self.oauths[0]))
 
-def paginate(self, url, pseudo_key_augur, pseudo_key_gh, table_values, update_col_map, duplicate_col_map, db_pkey):
-    # Paginate backwards through all the issues but get first page in order
+def paginate(self, logging, url, duplicate_col_map, update_col_map, table, table_pkey, where_clause=""):
+    # Paginate backwards through all the tuples but get first page in order
     #   to determine if there are multiple pages and if the 1st page covers all
+    cols_query = list(duplicate_col_map.keys()) + list(update_col_map.keys()) + [table_pkey]
+    table_values = self.get_table_values(cols_query, [table], where_clause)
+
     i = 1
     multiple_pages = False
-    results = []
+    tuples = []
     while True: # (self, url)
         logging.info("Hitting endpoint: " + url.format(i) + " ...\n")
         r = requests.get(url=url.format(i), headers=self.headers)
         update_gh_rate_limit(self, logging, r)
+        logging.info("Analyzing page {} of {}\n".format(i, int(r.links['last']['url'][-6:].split('=')[1]) + 1 if 'last' in r.links else '*last page not known*'))
 
         # Find last page so we can decrement from there
         if 'last' in r.links and not multiple_pages and not self.finishing_task:
@@ -219,17 +223,17 @@ def paginate(self, url, pseudo_key_augur, pseudo_key_gh, table_values, update_co
             break
             
         # Checking contents of requests with what we already have in the db
-        j = self.assign_tuple_action(j, table_values, update_col_map, duplicate_col_map, db_pkey)
+        j = assign_tuple_action(self, logging, j, table_values, update_col_map, duplicate_col_map, table_pkey)
         if not j:
             logging.info("Assigning tuple action failed, moving to next page.\n")
             continue
-        to_add = [obj for obj in j if obj not in issues and obj['flag'] != 'none']
+        to_add = [obj for obj in j if obj not in tuples and obj['flag'] != 'none']
         if len(to_add) == 0 and multiple_pages and 'last' in r.links:
             logging.info("{}".format(r.links['last']))
             if i - 1 != int(r.links['last']['url'][-6:].split('=')[1]):
-                logging.info("No more pages with unknown issues, breaking from pagination.\n")
+                logging.info("No more pages with unknown tuples, breaking from pagination.\n")
                 break
-        issues += to_add
+        tuples += to_add
 
         i = i + 1 if self.finishing_task else i - 1
 
@@ -237,6 +241,8 @@ def paginate(self, url, pseudo_key_augur, pseudo_key_gh, table_values, update_co
         if (i == 1 and multiple_pages and not self.finishing_task) or i < 1 or len(j) == 0:
             logging.info("No more pages to check, breaking from pagination.\n")
             break
+
+    return tuples
 
 def get_table_values(self, cols, tables, where_clause=""):
     table_str = tables[0]
@@ -257,34 +263,38 @@ def get_table_values(self, cols, tables, where_clause=""):
     values = pd.read_sql(tableValuesSQL, self.db, params={})
     return values
 
-def assign_tuple_action(self, new_data, table_values, update_col_map, duplicate_col_map, db_pkey):
+def assign_tuple_action(self, logging, new_data, table_values, update_col_map, duplicate_col_map, table_pkey):
     """ map objects => { *our db col* : *gh json key*} """
     need_insertion_count = 0
+    need_update_count = 0
     for obj in new_data:
         if type(obj) != dict:
             continue
         obj['flag'] = 'none'
-        db_dupe_key = list(duplicate_key_map.keys())[0]
-        if table_values.isin([obj[duplicate_key_map[db_dupe_key]]]).any().any():
-            # logging.info("Tuple with github's {} key value already exists ".format(db_dupe_key) +
-            #     "exists in our db: {}\n".format(obj[duplicate_key_map[db_dupe_key]]))
-            try:
+        for db_dupe_key in list(duplicate_col_map.keys()):
+            if obj['flag'] == 'need_insertion' or obj['flag'] == 'need_update':
+                break
+            if table_values.isin([obj[duplicate_col_map[db_dupe_key]]]).any().any():
+                # try:
                 existing_tuple = table_values[table_values[db_dupe_key].isin(
-                    [obj[duplicate_key_map[db_dupe_key]]])].to_dict('records')[0]
-            except:
-                logging.info("IT FAILED BUT WE GOING")
-            logging.info(table_values[table_values[db_dupe_key].isin(
-                [obj[duplicate_key_map[db_dupe_key]]])].to_dict('records'))
-            for col in update_col_map.keys():
-                if update_col_map[col] in obj:
+                    [obj[duplicate_col_map[db_dupe_key]]])].to_dict('records')[0]
+                # except:
+                #     logging.info("IT FAILED BUT WE GOING")
+                # logging.info(table_values[table_values[db_dupe_key].isin(
+                #     [obj[duplicate_col_map[db_dupe_key]]])].to_dict('records'))
+                for col in update_col_map.keys():
+                    if update_col_map[col] not in obj:
+                        continue
                     if obj[update_col_map[col]] != existing_tuple[col]:
-                        logging.info("Tuple {} needs an " +
-                            "update for column: {}\n".format(obj[duplicate_key_map[db_dupe_key]], col, obj))
+                        logging.info("Found a tuple that needs an ".format(obj) +
+                            "update for column: {}\n".format(col)) #obj[duplicate_col_map[db_dupe_key]]
                         obj['flag'] = 'need_update'
-                        obj['pkey'] = existing_tuple[db_pkey]
-        else:
-            obj['flag'] = 'need_insertion'
-            need_insertion_count += 1
+                        obj['pkey'] = existing_tuple[table_pkey]
+                        need_update_count += 1
+                        break
+            else:
+                obj['flag'] = 'need_insertion'
+                need_insertion_count += 1
     logging.info("Page recieved has {} tuples, while filtering duplicates this ".format(len(new_data)) +
-        "was reduced to {} tuples.\n".format(need_insertion_count))
+        "was reduced to {} tuples, and {} tuple updates are needed.\n".format(need_insertion_count, need_update_count))
     return new_data
