@@ -1,5 +1,5 @@
 """ Helper methods constant across all workers """
-import requests, datetime, time
+import requests, datetime, time, traceback
 import sqlalchemy as s
 import pandas as pd
 
@@ -93,7 +93,10 @@ def register_task_completion(self, logging, entry_info, repo_id, model):
 def register_task_failure(self, logging, task, repo_id, e):
 
     logging.info("Worker ran into an error for task: {}".format(task))
-    logging.info("Error encountered: " + repr(e))
+    logging.info("Printing traceback...")
+    tb = traceback.format_exc()
+    logging.info(tb)
+
     logging.info(f'This task inserted {self.results_counter} tuples before failure.')
     logging.info("Notifying broker and logging task failure in database...\n")
 
