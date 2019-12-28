@@ -25,7 +25,7 @@ def test_contributors_new_by_group(metrics):
     data = response.json()
     assert response.status_code == 200
     assert len(data) >= 1
-    assert data[0]["count"] > 0
+    assert data[0]["new_contributors"] > 0
 
 
 def test_contributors_new_by_repo(metrics):
@@ -33,7 +33,7 @@ def test_contributors_new_by_repo(metrics):
     data = response.json()
     assert response.status_code == 200
     assert len(data) >= 1
-    assert data[0]["count"] > 0
+    assert data[0]["new_contributors"] > 0
 
 def test_top_committers_by_repo(metrics):
     response = requests.get('http://0.0.0.0:5000/api/unstable/repo-groups/22/repos/21334/top-committers')
