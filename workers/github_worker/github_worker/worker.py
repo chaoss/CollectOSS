@@ -731,7 +731,7 @@ class GitHubWorker:
             name = name[:-4]
 
         # Set base of endpoint url
-        url = ("https://api.github.com/repos/{0}/{1}/issues?per_page=100&state=all&page={}".format(owner, name))
+        url = ("https://api.github.com/repos/{}/{}".format(owner, name) + "/issues?per_page=100&state=all&page={}")
         
         # Get issues that we already have stored
         #   Set pseudo key (something other than PK) to 
