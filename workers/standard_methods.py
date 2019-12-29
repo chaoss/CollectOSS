@@ -99,13 +99,13 @@ def register_task_failure(self, logging, task, repo_id, e):
 
     logging.info(f'This task inserted {self.results_counter} tuples before failure.')
     logging.info("Notifying broker and logging task failure in database...\n")
-
-    github_url = task['given']['github_url']
+    key = 'github_url' if 'github_url' in entry_info['given'] else 'git_url' if 'git_url' in entry_info['given'] else "INVALID_GIVEN"
+    url = task['given'][key]
 
     """ Query all repos with repo url of given task """
     repoUrlSQL = s.sql.text("""
         SELECT min(repo_id) as repo_id FROM repo WHERE repo_git = '{}'
-        """.format(github_url))
+        """.format(url))
     repo_id = int(pd.read_sql(repoUrlSQL, self.db, params={}).iloc[0]['repo_id'])
 
     task['worker_id'] = self.config['id']
