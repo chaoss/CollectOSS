@@ -437,7 +437,7 @@ class GitHubWorker:
                 cntrb_gh_info = {
                     "cntrb_login": contributor['login'],
                     "cntrb_created_at": contributor['created_at'],
-                    "cntrb_email": email,
+                    "cntrb_email": cmt_cntrb['email'],
                     "cntrb_company": contributor['company'] if 'company' in contributor else None,
                     "cntrb_location": contributor['location'] if 'location' in contributor else None,
                     # "cntrb_type": , dont have a use for this as of now ... let it default to null
@@ -518,7 +518,7 @@ class GitHubWorker:
                         result = self.db.execute(deleteSQL)
                         insert_cntrb()
                     except Exception as e:
-                        logging.info("When trying to delete a duplicate contributor, worker ran into error: {}".format(e))
+                        logging.info("When trying to delete a duplicate contributor, worker ran into integrity error: {}".format(e))
                 else:
                     alias_id = existing_tuples[0]['cntrb_id']
 
