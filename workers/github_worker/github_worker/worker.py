@@ -483,7 +483,11 @@ class GitHubWorker:
                 def insert_cntrb():
                     # Prepare tuple for insertion to contributor table (build it off of the tuple queried)
                     cntrb = tuple
-                    cntrb['cntrb_created_at'] = datetime.fromtimestamp(cntrb['cntrb_created_at']/1000)
+                    try:
+                        created_at = datetime.fromtimestamp(cntrb['cntrb_created_at']/1000)
+                    except:
+                        created_at = None
+                    cntrb['cntrb_created_at'] = created_at
                     cntrb['cntrb_email'] = tuple['commit_email']
                     cntrb["tool_source"] = self.tool_source
                     cntrb["tool_version"] = self.tool_version
@@ -512,9 +516,9 @@ class GitHubWorker:
                     """.format(tuple['commit_email'])
                     try:
                         result = self.db.execute(deleteSQL)
+                        insert_cntrb()
                     except Exception as e:
                         logging.info("When trying to delete a duplicate contributor, worker ran into error: {}".format(e))
-                    insert_cntrb()
                 else:
                     alias_id = existing_tuples[0]['cntrb_id']
 
