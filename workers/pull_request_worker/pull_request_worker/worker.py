@@ -1102,6 +1102,8 @@ class GHPullRequestWorker:
         :type key: str
         """
         for record in new_data:
+            if type(record) != dict:
+                continue
             if not table_values.isin([record[key]]).any().any():
                 record['to_insert'] = True
             else:
