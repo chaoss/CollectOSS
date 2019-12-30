@@ -941,13 +941,15 @@ class GitHubWorker:
                     "tool_version": self.tool_version,
                     "data_source": self.data_source
                 }
+                try:
+                    result = self.db.execute(self.message_table.insert().values(issue_comment))
+                    logging.info("Primary key inserted into the message table: {}".format(result.inserted_primary_key))
+                    self.results_counter += 1
+                    self.msg_id_inc = int(result.inserted_primary_key[0])
 
-                result = self.db.execute(self.message_table.insert().values(issue_comment))
-                logging.info("Primary key inserted into the message table: {}".format(result.inserted_primary_key))
-                self.results_counter += 1
-                self.msg_id_inc = int(result.inserted_primary_key[0])
-
-                logging.info("Inserted issue comment with id: {}\n".format(self.msg_id_inc))
+                    logging.info("Inserted issue comment with id: {}\n".format(self.msg_id_inc))
+                except Exception as e:
+                    logging.info("Worker ran into error when inserting a message, likely had invalid characters. error: {}".format(e))
 
                 ### ISSUE MESSAGE REF TABLE ###
 

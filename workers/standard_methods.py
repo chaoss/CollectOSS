@@ -40,7 +40,7 @@ def record_model_process(self, logging, repo_id, model):
         logging.info("Record incomplete history tuple: {}".format(result.inserted_primary_key))
         self.history_id = int(result.inserted_primary_key[0])
 
-def register_task_completion(self, logging, entry_info, repo_id, model):
+def register_task_completion(self, logging, task, repo_id, model):
     # Task to send back to broker
     task_completed = {
         'worker_id': self.config['id'],
@@ -48,10 +48,10 @@ def register_task_completion(self, logging, entry_info, repo_id, model):
         'repo_id': repo_id,
         'job_model': model
     }
-    key = 'github_url' if 'github_url' in entry_info['given'] else 'git_url' if 'git_url' in entry_info['given'] else "INVALID_GIVEN"
-    task_completed[key] = entry_info['given']['github_url'] if 'github_url' in entry_info['given'] else entry_info['given']['git_url'] if 'git_url' in entry_info['given'] else "INVALID_GIVEN"
+    key = 'github_url' if 'github_url' in task['given'] else 'git_url' if 'git_url' in task['given'] else "INVALID_GIVEN"
+    task_completed[key] = task['given']['github_url'] if 'github_url' in task['given'] else task['given']['git_url'] if 'git_url' in task['given'] else "INVALID_GIVEN"
     if key == 'INVALID_GIVEN':
-        register_task_failure(self, logging, entry_info, repo_id, "INVALID_GIVEN: not github nor git url")
+        register_task_failure(self, logging, task, repo_id, "INVALID_GIVEN: not github nor git url")
         return
 
     # Add to history table
@@ -99,7 +99,7 @@ def register_task_failure(self, logging, task, repo_id, e):
 
     logging.info(f'This task inserted {self.results_counter} tuples before failure.')
     logging.info("Notifying broker and logging task failure in database...\n")
-    key = 'github_url' if 'github_url' in entry_info['given'] else 'git_url' if 'git_url' in entry_info['given'] else "INVALID_GIVEN"
+    key = 'github_url' if 'github_url' in task['given'] else 'git_url' if 'git_url' in task['given'] else "INVALID_GIVEN"
     url = task['given'][key]
 
     """ Query all repos with repo url of given task """
@@ -278,13 +278,8 @@ def assign_tuple_action(self, logging, new_data, table_values, update_col_map, d
             if obj['flag'] == 'need_insertion' or obj['flag'] == 'need_update':
                 break
             if table_values.isin([obj[duplicate_col_map[db_dupe_key]]]).any().any():
-                # try:
                 existing_tuple = table_values[table_values[db_dupe_key].isin(
                     [obj[duplicate_col_map[db_dupe_key]]])].to_dict('records')[0]
-                # except:
-                #     logging.info("IT FAILED BUT WE GOING")
-                # logging.info(table_values[table_values[db_dupe_key].isin(
-                #     [obj[duplicate_col_map[db_dupe_key]]])].to_dict('records'))
                 for col in update_col_map.keys():
                     if update_col_map[col] not in obj:
                         continue
