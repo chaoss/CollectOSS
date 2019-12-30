@@ -1,9 +1,16 @@
 """
 Keeps data up to date
 """
+<<<<<<< Updated upstream
 import logging, requests, os, json, time
+=======
+
+import logging
+import time
+from multiprocessing import Process
+import requests
+>>>>>>> Stashed changes
 from sqlalchemy.ext.automap import automap_base
-from multiprocessing import Process, Queue
 import sqlalchemy as s
 import pandas as pd
 from sqlalchemy import MetaData

@@ -2,9 +2,16 @@
 """
 Creates routes for the broker
 """
+<<<<<<< Updated upstream
 from flask import request, jsonify, Response
+=======
+
+>>>>>>> Stashed changes
 import logging
-import json, requests, time
+import time
+import subprocess
+import requests
+from flask import request, Response
 
 def worker_start(worker_name=None):
     process = subprocess.Popen("cd workers/{} && {}_start".format(worker_name,worker_name), shell=True)

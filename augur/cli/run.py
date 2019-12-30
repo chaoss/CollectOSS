@@ -1,12 +1,28 @@
+<<<<<<< Updated upstream
 from augur.runtime import pass_application
 from augur.util import logger
 from augur.server import Server
+=======
+#SPDX-License-Identifier: MIT
+"""
+Augur library commands for controlling the backend components
+"""
+
+import os
+import time
+import atexit
+import subprocess
+import multiprocessing as mp
+import click
+>>>>>>> Stashed changes
 import gunicorn.app.base
 from gunicorn.six import iteritems
 from gunicorn.arbiter import Arbiter
-import multiprocessing as mp
 from augur.housekeeper.housekeeper import Housekeeper
-import os, time, sys, atexit, click, subprocess
+
+from augur.runtime import pass_application
+from augur.util import logger
+from augur.server import Server
 
 @click.command('run')
 @click.option('--enable-housekeeper/--no-enable-housekeeper', default=True)

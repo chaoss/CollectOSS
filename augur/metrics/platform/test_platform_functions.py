@@ -1,6 +1,10 @@
+<<<<<<< Updated upstream
 import os
+=======
+#SPDX-License-Identifier: MIT
+
+>>>>>>> Stashed changes
 import pytest
-import pandas as pd
 
 @pytest.fixture(scope="module")
 def metrics():

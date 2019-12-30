@@ -1,4 +1,8 @@
+<<<<<<< Updated upstream
 from flask import Response
+=======
+#SPDX-License-Identifier: MIT
+>>>>>>> Stashed changes
 
 def create_commit_routes(server):
 
