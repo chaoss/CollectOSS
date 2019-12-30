@@ -1,4 +1,5 @@
-import os
+#SPDX-License-Identifier: MIT
+
 import pytest
 import pandas as pd
 

@@ -1,6 +1,6 @@
-import os
+#SPDX-License-Identifier: MIT
+
 import pytest
-import pandas as pd
 
 @pytest.fixture(scope="module")
 def metrics():

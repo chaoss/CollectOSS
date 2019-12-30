@@ -1,4 +1,5 @@
-import requests
+#SPDX-License-Identifier: MIT
+
 import pytest
 
 @pytest.fixture(scope="session")

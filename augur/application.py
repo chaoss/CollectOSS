@@ -5,9 +5,8 @@ Handles global context, I/O, and configuration
 
 import os
 import time
-import argparse
-import multiprocessing as mp
 import logging
+import multiprocessing as mp
 import json
 import pkgutil
 from beaker.cache import CacheManager
@@ -18,7 +17,6 @@ from augur.models.common import Base
 from augur import logger
 from augur.metrics import MetricDefinitions
 import augur.plugins
-import logging
 
 logging.basicConfig(filename='test.log', level=logging.INFO)
 

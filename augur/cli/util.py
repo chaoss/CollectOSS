@@ -1,9 +1,13 @@
-import click
+#SPDX-License-Identifier: MIT
+"""
+Miscellaneous Augur library commands for controlling the backend components
+"""
+
 import os
 import subprocess
-import sys
+import click
+
 from augur.runtime import pass_application
-from augur.util import logger
 
 @click.group('util', short_help='Miscellaneous utilities')
 def cli():

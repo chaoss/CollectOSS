@@ -3,10 +3,10 @@ Directory, which is for utility/non-metric endpoints.
 """
 
 import datetime
+import base64
 import sqlalchemy as s
 import pandas as pd
-import base64
-from augur.util import logger, annotate, add_metrics
+from augur.util import annotate, add_metrics
 
 @annotate(tag='repo-groups')
 def repo_groups(self):
