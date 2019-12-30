@@ -510,9 +510,29 @@ class GitHubWorker:
                     deleteSQL = """
                         DELETE 
                             FROM
-                                contributors
+                                contributors_aliases a
+                            USING 
+                                contributors c 
                             WHERE
-                                cntrb_email = '{}'
+                                c.cntrb_email = '{0}'
+                            AND
+                                c.cntrb_id = a.cntrb_a_id;
+
+                        DELETE 
+                            FROM
+                                contributors c 
+                            USING 
+                                contributors_aliases a
+                            WHERE
+                                c.cntrb_email = '{0}'
+                            AND
+                                c.cntrb_id NOT IN (select cntrb_id from contributors_aliases);
+
+                        -- DELETE 
+                        --     FROM contributors_aliases a
+                        --     USING contributors c
+                        --     WHERE c.cntrb_id = a.cntrb_id
+                        --     and c.cntrb_email = '';
                     """.format(tuple['commit_email'])
                     try:
                         result = self.db.execute(deleteSQL)
