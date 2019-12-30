@@ -5,11 +5,17 @@ Runs Augur with Gunicorn when called
 
 
 import os
+import augur.application
 import sys
 import click
-import augur.application
+import logging
+import coloredlogs
+import colored
+from augur.util import logger
+
 
 CONTEXT_SETTINGS = dict(auto_envvar_prefix='AUGUR_CLI')
+
 
 __pass_decorator = click.make_pass_decorator(augur.application.Application)
 def pass_application(function):

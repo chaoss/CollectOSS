@@ -1,5 +1,5 @@
 import sqlalchemy as s
-from augur.util import logger
+from augur.util import logger, add_metrics
 
 from .commit import create_commit_metrics, create_commit_routes
 from .contributor import create_contributor_metrics, create_contributor_routes

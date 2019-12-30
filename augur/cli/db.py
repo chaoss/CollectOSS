@@ -4,6 +4,7 @@ import sqlalchemy as s
 import pandas as pd
 from sqlalchemy import exc
 
+from augur.application import Application
 from augur.runtime import pass_application
 
 @click.group('db', short_help='Database utilities')

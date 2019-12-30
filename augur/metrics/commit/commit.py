@@ -2,10 +2,13 @@
 Metrics that provide data about commits & their associated activity
 """
 
+import inspect
+import sys
+import types
 import datetime
 import sqlalchemy as s
 import pandas as pd
-from augur.util import annotate, add_metrics
+from augur.util import logger, annotate, add_metrics
 
 @annotate(tag='committers')
 def committers(self, repo_group_id, repo_id=None, begin_date=None, end_date=None, period='month'):
