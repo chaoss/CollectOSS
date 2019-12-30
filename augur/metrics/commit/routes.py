@@ -1,4 +1,4 @@
-from flask import Response
+#SPDX-License-Identifier: MIT
 
 def create_commit_routes(server):
 

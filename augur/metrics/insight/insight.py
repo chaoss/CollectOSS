@@ -2,10 +2,9 @@
 Metrics that provide data about with insight detection and reporting
 """
 
-import datetime
 import sqlalchemy as s
 import pandas as pd
-from augur.util import logger, annotate, add_metrics
+from augur.util import annotate, add_metrics
 
 
 @annotate(tag='top-insights')

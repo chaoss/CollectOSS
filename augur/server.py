@@ -4,17 +4,15 @@ Creates a WSGI server that serves the Augur REST API
 """
 
 import json
+import os
 import base64
-from flask import Flask, request, Response, redirect, url_for, send_from_directory, render_template
+from flask import Flask, request, Response, send_from_directory
 from flask_cors import CORS
 from flask_login import current_user
 import pandas as pd
 import augur
 from augur.util import annotate, metric_metadata, logger
 from augur.routes import create_routes
-import os
-from augur.housekeeper.housekeeper import Housekeeper
-import logging
 
 AUGUR_API_VERSION = 'api/unstable'
 
