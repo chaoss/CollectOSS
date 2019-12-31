@@ -1,11 +1,8 @@
 """
 Keeps data up to date
 """
-
-import logging
-import time
+import logging, os, time, requests
 from multiprocessing import Process
-import requests
 from sqlalchemy.ext.automap import automap_base
 import sqlalchemy as s
 import pandas as pd
