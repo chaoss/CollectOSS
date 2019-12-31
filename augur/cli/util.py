@@ -19,19 +19,32 @@ def shell(app):
     app.shell()
 
 @cli.command('kill', short_help='Kill Augur')
-@pass_application
-def kill(app):
+def kill():
     """
-    kill running augur processes
+    Kill running augur processes
     """
-    os.chdir(os.path.dirname(os.path.realpath(__file__)))
-    subprocess.call("../../util/scripts/control/augurkill.sh")
+    run_control_script("../../util/scripts/control/augurkill.sh")
+
+@cli.command('list', short_help='List running Augur processes')
+def list():
+    """
+    List currently running augur processes
+    """
+    run_control_script("../../util/scripts/control/augur_processes.sh")
 
 @cli.command('repo-reset', short_help='Reset Repo Collection')
-@pass_application
 def kill(app):
     """
-    kill running augur processes
+    Reset the repo states to "New" in the database
     """
+    run_control_script("../../util/scripts/control/repo-reset.sh")
+
+
+def run_control_script(relative_script_path):
     os.chdir(os.path.dirname(os.path.realpath(__file__)))
-    subprocess.call('../../util/scripts/control/repo-reset.sh')
+    subprocess.call(relative_script_path)
+
+
+
+
+
