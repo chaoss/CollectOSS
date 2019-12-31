@@ -1,6 +1,0 @@
-name: augur
-channels:
-  - conda-forge
-  - defaults
-prefix: /Users/carterlandis/anaconda3/envs/augur
-
