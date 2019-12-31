@@ -150,10 +150,16 @@ def paginate(self, logging, url, duplicate_col_map, update_col_map, table, table
             
         # Checking contents of requests with what we already have in the db
         j = assign_tuple_action(self, logging, j, table_values, update_col_map, duplicate_col_map, table_pkey)
-        if not j:
+        if not j:# or type(j) != dict:
             logging.info("Assigning tuple action failed, moving to next page.\n")
+            i = i + 1 if self.finishing_task else i - 1
             continue
-        to_add = [obj for obj in j if obj not in tuples and obj['flag'] != 'none']
+        try:
+            to_add = [obj for obj in j if obj not in tuples and obj['flag'] != 'none']
+        except Exception as e:
+            logging.info("Failure accessing data of page: {}. moving to next page.\n".format(e))
+            i = i + 1 if self.finishing_task else i - 1
+            continue
         if len(to_add) == 0 and multiple_pages and 'last' in r.links:
             logging.info("{}".format(r.links['last']))
             if i - 1 != int(r.links['last']['url'][-6:].split('=')[1]):
