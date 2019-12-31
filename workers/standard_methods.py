@@ -1,7 +1,38 @@
 """ Helper methods constant across all workers """
-import requests, datetime, time, traceback
+import requests, datetime, time, traceback, json
 import sqlalchemy as s
 import pandas as pd
+
+def assign_tuple_action(self, logging, new_data, table_values, update_col_map, duplicate_col_map, table_pkey):
+    """ map objects => { *our db col* : *gh json key*} """
+    need_insertion_count = 0
+    need_update_count = 0
+    for obj in new_data:
+        if type(obj) != dict:
+            continue
+        obj['flag'] = 'none'
+        for db_dupe_key in list(duplicate_col_map.keys()):
+            if obj['flag'] == 'need_insertion' or obj['flag'] == 'need_update':
+                break
+            if table_values.isin([obj[duplicate_col_map[db_dupe_key]]]).any().any():
+                existing_tuple = table_values[table_values[db_dupe_key].isin(
+                    [obj[duplicate_col_map[db_dupe_key]]])].to_dict('records')[0]
+                for col in update_col_map.keys():
+                    if update_col_map[col] not in obj:
+                        continue
+                    if obj[update_col_map[col]] != existing_tuple[col]:
+                        logging.info("Found a tuple that needs an ".format(obj) +
+                            "update for column: {}\n".format(col)) #obj[duplicate_col_map[db_dupe_key]]
+                        obj['flag'] = 'need_update'
+                        obj['pkey'] = existing_tuple[table_pkey]
+                        need_update_count += 1
+                        break
+            else:
+                obj['flag'] = 'need_insertion'
+                need_insertion_count += 1
+    logging.info("Page recieved has {} tuples, while filtering duplicates this ".format(len(new_data)) +
+        "was reduced to {} tuples, and {} tuple updates are needed.\n".format(need_insertion_count, need_update_count))
+    return new_data
 
 def connect_to_broker(self, logging):
     connected = False
@@ -19,6 +50,125 @@ def connect_to_broker(self, logging):
             logging.error('Cannot connect to the broker. Trying again...')
     if not connected:
         sys.exit('Could not connect to the broker after 5 attempts! Quitting...')
+
+def get_max_id(self, logging, table, column, default=25150, operations_table=False):
+    maxIdSQL = s.sql.text("""
+        SELECT max({0}.{1}) AS {1}
+        FROM {0}
+    """.format(table, column))
+    db = self.db if not operations_table else self.helper_db
+    rs = pd.read_sql(maxIdSQL, db, params={})
+    if rs.iloc[0][column] is not None:
+        max_id = int(rs.iloc[0][column]) + 1  
+        logging.info("Found max id for {} column in the {} table: {}".format(column, table, max_id))
+    else:
+        max_id = default
+        logging.info("Could not find max id for {} column in the {} table... using default set to: {}".format(column, table, max_id))
+    return max_id
+
+def get_table_values(self, cols, tables, where_clause=""):
+    table_str = tables[0]
+    del tables[0]
+
+    col_str = cols[0]
+    del cols[0]
+
+    for table in tables:
+        table_str += ", " + table
+    for col in cols:
+        col_str += ", " + col
+
+    tableValuesSQL = s.sql.text("""
+        SELECT {} FROM {} {}
+    """.format(col_str, table_str, where_clause))
+    logging.info("Getting table values with the following PSQL query: \n{}\n".format(tableValuesSQL))
+    values = pd.read_sql(tableValuesSQL, self.db, params={})
+    return values
+
+def init_oauths(self, logging):
+    self.oauths = []
+    self.headers = None
+
+    # Endpoint to hit solely to retrieve rate limit information from headers of the response
+    url = "https://api.github.com/users/gabe-heim"
+
+    # Make a list of api key in the config combined w keys stored in the database
+    oauthSQL = s.sql.text("""
+        SELECT * FROM worker_oauth WHERE access_token <> '{}'
+    """.format(self.config['key']))
+    for oauth in [{'oauth_id': 0, 'access_token': self.config['key']}] + json.loads(pd.read_sql(oauthSQL, self.helper_db, params={}).to_json(orient="records")):
+        self.headers = {'Authorization': 'token %s' % oauth['access_token']}
+        logging.info("Getting rate limit info for oauth: {}".format(oauth))
+        response = requests.get(url=url, headers=self.headers)
+        self.oauths.append({
+                'oauth_id': oauth['oauth_id'],
+                'access_token': oauth['access_token'],
+                'rate_limit': int(response.headers['X-RateLimit-Remaining']),
+                'seconds_to_reset': (datetime.datetime.fromtimestamp(int(response.headers['X-RateLimit-Reset'])) - datetime.datetime.now()).total_seconds()
+            })
+        logging.info("Found OAuth available for use: {}".format(self.oauths[-1]))
+
+    if len(self.oauths) == 0:
+        logging.info("No API keys detected, please include one in your config or in the worker_oauths table in the augur_operations schema of your database\n")
+
+    # First key to be used will be the one specified in the config (first element in 
+    #   self.oauths array will always be the key in use)
+    self.headers = {'Authorization': 'token %s' % self.oauths[0]['access_token']}
+
+def paginate(self, logging, url, duplicate_col_map, update_col_map, table, table_pkey, where_clause=""):
+    # Paginate backwards through all the tuples but get first page in order
+    #   to determine if there are multiple pages and if the 1st page covers all
+    cols_query = list(duplicate_col_map.keys()) + list(update_col_map.keys()) + [table_pkey]
+    table_values = self.get_table_values(cols_query, [table], where_clause)
+
+    i = 1
+    multiple_pages = False
+    tuples = []
+    while True: # (self, url)
+        logging.info("Hitting endpoint: " + url.format(i) + " ...\n")
+        r = requests.get(url=url.format(i), headers=self.headers)
+        update_gh_rate_limit(self, logging, r)
+        logging.info("Analyzing page {} of {}\n".format(i, int(r.links['last']['url'][-6:].split('=')[1]) + 1 if 'last' in r.links else '*last page not known*'))
+
+        # Find last page so we can decrement from there
+        if 'last' in r.links and not multiple_pages and not self.finishing_task:
+            param = r.links['last']['url'][-6:]
+            i = int(param.split('=')[1]) + 1
+            logging.info("Multiple pages of request, last page is " + str(i - 1) + "\n")
+            multiple_pages = True
+        elif not multiple_pages and not self.finishing_task:
+            logging.info("Only 1 page of request\n")
+        elif self.finishing_task:
+            logging.info("Finishing a previous task, paginating forwards ..."
+                " excess rate limit requests will be made\n")
+        
+        j = r.json()
+
+        if len(j) == 0:
+            logging.info("Response was empty, breaking from pagination.\n")
+            break
+            
+        # Checking contents of requests with what we already have in the db
+        j = assign_tuple_action(self, logging, j, table_values, update_col_map, duplicate_col_map, table_pkey)
+        if not j:
+            logging.info("Assigning tuple action failed, moving to next page.\n")
+            continue
+        to_add = [obj for obj in j if obj not in tuples and obj['flag'] != 'none']
+        if len(to_add) == 0 and multiple_pages and 'last' in r.links:
+            logging.info("{}".format(r.links['last']))
+            if i - 1 != int(r.links['last']['url'][-6:].split('=')[1]):
+                logging.info("No more pages with unknown tuples, breaking from pagination.\n")
+                break
+        tuples += to_add
+
+        i = i + 1 if self.finishing_task else i - 1
+
+        # Since we already wouldve checked the first page... break
+        if (i == 1 and multiple_pages and not self.finishing_task) or i < 1 or len(j) == 0:
+            logging.info("No more pages to check, breaking from pagination.\n")
+            break
+
+    return tuples
 
 def record_model_process(self, logging, repo_id, model):
 
@@ -191,108 +341,3 @@ def update_gh_rate_limit(self, logging, response):
         index = self.oauths.index(new_oauth)
         self.oauths[0], self.oauths[index] = self.oauths[index], self.oauths[0]
         logging.info("Using oauth: {}".format(self.oauths[0]))
-
-def paginate(self, logging, url, duplicate_col_map, update_col_map, table, table_pkey, where_clause=""):
-    # Paginate backwards through all the tuples but get first page in order
-    #   to determine if there are multiple pages and if the 1st page covers all
-    cols_query = list(duplicate_col_map.keys()) + list(update_col_map.keys()) + [table_pkey]
-    table_values = self.get_table_values(cols_query, [table], where_clause)
-
-    i = 1
-    multiple_pages = False
-    tuples = []
-    while True: # (self, url)
-        logging.info("Hitting endpoint: " + url.format(i) + " ...\n")
-        r = requests.get(url=url.format(i), headers=self.headers)
-        update_gh_rate_limit(self, logging, r)
-        logging.info("Analyzing page {} of {}\n".format(i, int(r.links['last']['url'][-6:].split('=')[1]) + 1 if 'last' in r.links else '*last page not known*'))
-
-        # Find last page so we can decrement from there
-        if 'last' in r.links and not multiple_pages and not self.finishing_task:
-            param = r.links['last']['url'][-6:]
-            i = int(param.split('=')[1]) + 1
-            logging.info("Multiple pages of request, last page is " + str(i - 1) + "\n")
-            multiple_pages = True
-        elif not multiple_pages and not self.finishing_task:
-            logging.info("Only 1 page of request\n")
-        elif self.finishing_task:
-            logging.info("Finishing a previous task, paginating forwards ..."
-                " excess rate limit requests will be made\n")
-        
-        j = r.json()
-
-        if len(j) == 0:
-            logging.info("Response was empty, breaking from pagination.\n")
-            break
-            
-        # Checking contents of requests with what we already have in the db
-        j = assign_tuple_action(self, logging, j, table_values, update_col_map, duplicate_col_map, table_pkey)
-        if not j:
-            logging.info("Assigning tuple action failed, moving to next page.\n")
-            continue
-        to_add = [obj for obj in j if obj not in tuples and obj['flag'] != 'none']
-        if len(to_add) == 0 and multiple_pages and 'last' in r.links:
-            logging.info("{}".format(r.links['last']))
-            if i - 1 != int(r.links['last']['url'][-6:].split('=')[1]):
-                logging.info("No more pages with unknown tuples, breaking from pagination.\n")
-                break
-        tuples += to_add
-
-        i = i + 1 if self.finishing_task else i - 1
-
-        # Since we already wouldve checked the first page... break
-        if (i == 1 and multiple_pages and not self.finishing_task) or i < 1 or len(j) == 0:
-            logging.info("No more pages to check, breaking from pagination.\n")
-            break
-
-    return tuples
-
-def get_table_values(self, cols, tables, where_clause=""):
-    table_str = tables[0]
-    del tables[0]
-
-    col_str = cols[0]
-    del cols[0]
-
-    for table in tables:
-        table_str += ", " + table
-    for col in cols:
-        col_str += ", " + col
-
-    tableValuesSQL = s.sql.text("""
-        SELECT {} FROM {} {}
-    """.format(col_str, table_str, where_clause))
-    logging.info("Getting table values with the following PSQL query: \n{}\n".format(tableValuesSQL))
-    values = pd.read_sql(tableValuesSQL, self.db, params={})
-    return values
-
-def assign_tuple_action(self, logging, new_data, table_values, update_col_map, duplicate_col_map, table_pkey):
-    """ map objects => { *our db col* : *gh json key*} """
-    need_insertion_count = 0
-    need_update_count = 0
-    for obj in new_data:
-        if type(obj) != dict:
-            continue
-        obj['flag'] = 'none'
-        for db_dupe_key in list(duplicate_col_map.keys()):
-            if obj['flag'] == 'need_insertion' or obj['flag'] == 'need_update':
-                break
-            if table_values.isin([obj[duplicate_col_map[db_dupe_key]]]).any().any():
-                existing_tuple = table_values[table_values[db_dupe_key].isin(
-                    [obj[duplicate_col_map[db_dupe_key]]])].to_dict('records')[0]
-                for col in update_col_map.keys():
-                    if update_col_map[col] not in obj:
-                        continue
-                    if obj[update_col_map[col]] != existing_tuple[col]:
-                        logging.info("Found a tuple that needs an ".format(obj) +
-                            "update for column: {}\n".format(col)) #obj[duplicate_col_map[db_dupe_key]]
-                        obj['flag'] = 'need_update'
-                        obj['pkey'] = existing_tuple[table_pkey]
-                        need_update_count += 1
-                        break
-            else:
-                obj['flag'] = 'need_insertion'
-                need_insertion_count += 1
-    logging.info("Page recieved has {} tuples, while filtering duplicates this ".format(len(new_data)) +
-        "was reduced to {} tuples, and {} tuple updates are needed.\n".format(need_insertion_count, need_update_count))
-    return new_data
