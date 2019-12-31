@@ -65,7 +65,8 @@ class GitHubWorker:
 
         metadata.reflect(self.db, only=['contributors', 'issues', 'issue_labels', 'message',
             'issue_message_ref', 'issue_events','issue_assignees','contributors_aliases',
-            'pull_request_assignees', 'pull_request_events', 'pull_request_reviewers', 'pull_request_meta'])
+            'pull_request_assignees', 'pull_request_events', 'pull_request_reviewers', 'pull_request_meta',
+            'pull_request_repo'])
         helper_metadata.reflect(self.helper_db, only=['worker_history', 'worker_job', 'worker_oauth'])
 
         Base = automap_base(metadata=metadata)
@@ -86,6 +87,7 @@ class GitHubWorker:
         self.contributors_aliases_table = Base.classes.contributors_aliases.__table__
         self.pull_request_reviewers_table = Base.classes.pull_request_reviewers.__table__
         self.pull_request_meta_table = Base.classes.pull_request_meta.__table__
+        self.pull_request_repo_table = Base.classes.pull_request_repo.__table__
 
         self.history_table = HelperBase.classes.worker_history.__table__
         self.job_table = HelperBase.classes.worker_job.__table__
@@ -474,6 +476,7 @@ class GitHubWorker:
                 update_col = {'cntrb_id': self.cntrb_id_inc}
                 reporter_col = {'reporter_id': self.cntrb_id_inc}
                 pr_assignee_col = {'contrib_id': self.cntrb_id_inc}
+                pr_repo_col = {'pr_cntrb_id': self.cntrb_id_inc}
                 for id in dupe_ids:
                     alias_result = self.db.execute(self.contributors_aliases_table.update().where(
                         self.contributors_aliases_table.c.cntrb_a_id==id['cntrb_id']).values(alias_update_col))
@@ -520,6 +523,10 @@ class GitHubWorker:
                     pr_meta_result = self.db.execute(self.pull_request_meta_table.update().where(
                         self.pull_request_meta_table.c.cntrb_id==id['cntrb_id']).values(update_col))
                     logging.info("Updated cntrb_id column for tuple in the pull_request_meta table with value: {} replaced with new cntrb id: {}".format(id['cntrb_id'], self.cntrb_id_inc))
+
+                    pr_repo_result = self.db.execute(self.pull_request_repo_table.update().where(
+                        self.pull_request_repo_table.c.pr_cntrb_id==id['cntrb_id']).values(pr_repo_col))
+                    logging.info("Updated cntrb_id column for tuple in the pull_request_repo table with value: {} replaced with new cntrb id: {}".format(id['cntrb_id'], self.cntrb_id_inc))
 
                 deleteSQL = """
                     DELETE 
