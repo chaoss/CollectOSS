@@ -19,7 +19,7 @@ from augur.util import logger
 from augur.server import Server
 
 @click.command('run')
-@click.option('--enable-housekeeper/--no-enable-housekeeper', default=True)
+@click.option('--enable-housekeeper/--disable-housekeeper', default=True)
 @pass_application
 def cli(app, enable_housekeeper):
 
