@@ -126,7 +126,7 @@ test-functions:
 	@ bash -c '$(AUGUR_PYTHON) -m pytest -ra -s augur/metrics/$(MODEL)/test_$(MODEL)_functions.py'
 
 test-routes:
-	@ $(AUGUR_PYTHON) test/api/test_api.py $(MODEL)
+	@ $(AUGUR_PYTHON) test/api/runner.py $(MODEL)
 
 
 #
