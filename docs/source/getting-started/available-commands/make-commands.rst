@@ -160,7 +160,7 @@ Runs unit tests for the metric functions with the given ``MODEl``, which will de
   # this will run ALL metric function unit tests for the issue model
   > make test-metrics MODEL=issue
 
-``make test-routes``
+``make test-metrics-api``
 ------------------------
 Runs unit tests for the metric API with the given ``MODEl``, which will default to all.
 
@@ -169,10 +169,10 @@ Runs unit tests for the metric API with the given ``MODEl``, which will default 
   # example usage
 
   # this will run ALL metric API unit tests for JUST the issue model
-  > make test-routes
+  > make test-metrics-api
 
   # this will run ALL metric API unit tests for the issue model
-  > make test-routes MODEL=issue
+  > make test-metrics-api MODEL=issue
 
 ==============
 Documentation

@@ -23,7 +23,7 @@ default:
 	@ echo "Testing Commands:"
 	@ echo "    test MODEL={model}              Runs all pytest unit tests and API tests for the specified metrics model. Defaults to all"
 	@ echo "    test-metrics MODEL={model}    Run pytest unit tests for the specified metrics model. Defaults to all"
-	@ echo "    test-routes MODEL={model}       Run API tests for the specified metrics model. Defaults to all"
+	@ echo "    test-metrics-api MODEL={model}       Run API tests for the specified metrics model. Defaults to all"
 	@ echo
 	@ echo "Documentation Commands:"
 	@ echo "    library-docs                    Generates the documentation using sphinx"
@@ -119,14 +119,14 @@ backend: backend-restart
 #
 # Testing
 #
-.PHONY: test test-metrics test-routes
-test: test-metrics test-routes
+.PHONY: test test-metrics test-metrics-api
+test: test-metrics test-metrics-api
 
 test-metrics:
-	@ bash -c 'tox -e --recreate py-unit'
+	@ bash -c 'tox -e py-metrics'
 
-test-routes:
-	@ bash -c 'tox -e --recreate py-api'
+test-metrics-api:
+	@ bash -c 'tox -e py-metrics_api'
 
 test-all:
 	@ bash -c 'tox -e ALL'
