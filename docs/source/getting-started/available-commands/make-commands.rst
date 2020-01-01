@@ -146,7 +146,7 @@ Runs  available unit tests for both the metric functions and their API endpoints
   # this will run ALL tests for the issue model
   > make test MODEL=issue
 
-``make test-functions``
+``make test-metrics``
 ------------------------
 Runs unit tests for the metric functions with the given ``MODEl``, which will default to all.
 
@@ -155,10 +155,10 @@ Runs unit tests for the metric functions with the given ``MODEl``, which will de
   # example usage
 
   # this will run ALL metric function unit tests for JUST the issue model
-  > make test-functions
+  > make test-metrics
 
   # this will run ALL metric function unit tests for the issue model
-  > make test-functions MODEL=issue
+  > make test-metrics MODEL=issue
 
 ``make test-routes``
 ------------------------

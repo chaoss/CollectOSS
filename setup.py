@@ -124,12 +124,11 @@ setup(
     ],
     extras_require={
         'dev': ['check-manifest'],
-        'test': ['coverage'],
+        'test': ['tox==3.14.3'],
     },
     entry_points={
         'console_scripts': [
-            'augur=augur.runtime:run',
-            'augur_run=augur.cli.run:run'
+            'augur=augur.runtime:run'
         ],
     },
 )

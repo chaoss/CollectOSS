@@ -22,7 +22,7 @@ default:
 	@ echo
 	@ echo "Testing Commands:"
 	@ echo "    test MODEL={model}              Runs all pytest unit tests and API tests for the specified metrics model. Defaults to all"
-	@ echo "    test-functions MODEL={model}    Run pytest unit tests for the specified metrics model. Defaults to all"
+	@ echo "    test-metrics MODEL={model}    Run pytest unit tests for the specified metrics model. Defaults to all"
 	@ echo "    test-routes MODEL={model}       Run API tests for the specified metrics model. Defaults to all"
 	@ echo
 	@ echo "Documentation Commands:"
@@ -119,14 +119,17 @@ backend: backend-restart
 #
 # Testing
 #
-.PHONY: test test-functions test-routes
-test: test-functions test-routes
+.PHONY: test test-metrics test-routes
+test: test-metrics test-routes
 
-test-functions:
-	@ bash -c '$(AUGUR_PYTHON) -m pytest -ra -s augur/metrics/$(MODEL)/test_$(MODEL)_functions.py'
+test-metrics:
+	@ bash -c 'tox -e --recreate py-unit'
 
 test-routes:
-	@ $(AUGUR_PYTHON) test/api/runner.py $(MODEL)
+	@ bash -c 'tox -e --recreate py-api'
+
+test-all:
+	@ bash -c 'tox -e ALL'
 
 
 #
