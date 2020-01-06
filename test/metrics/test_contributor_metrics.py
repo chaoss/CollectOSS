@@ -45,10 +45,8 @@ def test_top_committers(metrics):
     assert metrics.top_committers(24, year=2017, threshold=0.7).iloc[0]['commits'] > 0
     assert metrics.top_committers(24, 21000, year=2017).iloc[0]['commits'] > 0
     assert metrics.top_committers(24, 21000, year=2017, threshold=0.7).iloc[0]['commits'] > 0
-
-    # these asserts fail now that we're in 2020
-    # assert metrics.top_committers(24).iloc[0]['commits'] > 0
-    # assert metrics.top_committers(24, 21000).iloc[0]['commits'] > 0
+    assert metrics.top_committers(24).iloc[0]['commits'] > 0
+    assert metrics.top_committers(24, 21000).iloc[0]['commits'] > 0
 
 def test_committer(metrics):
     assert metrics.committers(21,period='year').iloc[0]['count'] > 100

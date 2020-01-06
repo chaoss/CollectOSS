@@ -1,29 +1,35 @@
+os: linux
 dist: xenial
-matrix:
+language: python
+jobs:
   include:
     - name: 3.6 Metrics
-    python: 3.6
+      python: 3.6
       env: TOXENV=py36-metrics
+
     - name: 3.6 Metrics API
-    python: 3.6
+      python: 3.6
       env: TOXENV=py36-metrics_api
 
     - name: 3.7 Metrics
-    python: 3.7
+      python: 3.7
       env: TOXENV=py37-metrics
+
     - name: 3.7 Metrics API
-    python: 3.7
+      python: 3.7
       env: TOXENV=py37-metrics_api
 
     - name: 3.8 Metrics
-    python: 3.8
+      python: 3.8
       env: TOXENV=py38-metrics
+
     - name: 3.8 Metrics API
-    python: 3.8
+      python: 3.8
       env: TOXENV=py38-metrics_api
 
 install:
-  - pip install -r requirements.txt; pip install tox
+  - pip install -r requirements.txt
+  - pip install tox
 
 script:
   - tox

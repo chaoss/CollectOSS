@@ -29,7 +29,56 @@ class Application(object):
         """
         # Open the config file
         self.__already_exported = {}
-        self.__default_config = { 'Plugins': [] }
+        self.__default_config = {
+            "Cache": {
+                "config": {
+                    "cache.data_dir": "runtime/cache/",
+                    "cache.lock_dir": "runtime/cache/",
+                    "cache.type": "file"
+                }
+            },
+            "Database": {
+                "connection_string": "sqlite:///:memory:",
+                "database": "augur",
+                "host": "localhost",
+                "key": "key",
+                "password": "password",
+                "port": 5432,
+                "schema": "augur_data",
+                "user": "augur"
+            },
+            "Development": {
+                "developer": "0",
+                "interactive": "0"
+            },
+            "Facade": {
+                "check_updates": 1,
+                "clone_repos": 1,
+                "create_xlsx_summary_files": 1,
+                "delete_marked_repos": 0,
+                "fix_affiliations": 1,
+                "force_analysis": 1,
+                "force_invalidate_caches": 1,
+                "force_updates": 1,
+                "limited_run": 0,
+                "multithreaded": 0,
+                "nuke_stored_affiliations": 0,
+                "pull_repos": 1,
+                "rebuild_caches": 1,
+                "run_analysis": 1
+            },
+            "Housekeeper": {
+                "jobs": []
+            },
+            "Plugins": [],
+            "Server": {
+                "cache_expire": "3600",
+                "host": "0.0.0.0",
+                "port": "5000",
+                "workers": "1"
+            },
+            "Workers": {}
+         }
         self.__using_config_file = True
         self.__config_bad = False
         self.__config_file_path = os.path.abspath(os.getenv('AUGUR_CONFIG_FILE', config_file))
@@ -37,6 +86,7 @@ class Application(object):
         self.__runtime_location = 'runtime/'
         self.__export_env = os.getenv('AUGUR_ENV_EXPORT', '0') == '1'
         self.__shell_config = None
+
         if os.getenv('AUGUR_ENV_ONLY', '0') != '1' and no_config_file == 0:
             try:
                 self.__config_file = open(self.__config_file_path, 'r+')
