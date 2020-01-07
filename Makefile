@@ -2,7 +2,6 @@ SERVE_COMMAND=augur run
 ENABLE_HOUSEKEEPER=--enable-housekeeper
 OLDVERSION="null"
 EDITOR?="vi"
-MODEL=**
 AUGUR_PIP?='pip'
 AUGUR_PYTHON?='python'
 
@@ -21,9 +20,9 @@ default:
 	@ echo "    dev-restart                     Runs dev-stop then dev-start"
 	@ echo
 	@ echo "Testing Commands:"
-	@ echo "    test MODEL={model}              Runs all pytest unit tests and API tests for the specified metrics model. Defaults to all"
-	@ echo "    test-metrics MODEL={model}    Run pytest unit tests for the specified metrics model. Defaults to all"
-	@ echo "    test-metrics-api MODEL={model}       Run API tests for the specified metrics model. Defaults to all"
+	@ echo "    test                            Runs all unit tests and API tests"
+	@ echo "    test-metrics                    Run unit tests for the specified metrics model"
+	@ echo "    test-metrics-api                Run API tests for the specified metrics model"
 	@ echo
 	@ echo "Documentation Commands:"
 	@ echo "    library-docs                    Generates the documentation using sphinx"
@@ -128,7 +127,7 @@ test-metrics:
 test-metrics-api:
 	@ bash -c 'tox -e py-metrics_api'
 
-test-all:
+test-python-versions:
 	@ bash -c 'tox -e ALL'
 
 

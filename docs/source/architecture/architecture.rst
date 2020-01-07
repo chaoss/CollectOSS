@@ -26,6 +26,7 @@ Technologies
 -  `Gunicorn <http://docs.gunicorn.org/en/stable/>`__
 -  `Docker <https://docs.docker.com/>`__
 -  `pytest <https://docs.pytest.org/en/latest/>`__
+-  `tox <https://docs.pytest.org/en/latest/>`__
 -  `Sphinx <http://www.sphinx-doc.org/en/master/>`__
 -  `apidocjs <http://apidocjs.com/>`__
 
