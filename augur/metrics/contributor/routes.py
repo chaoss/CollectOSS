@@ -41,11 +41,10 @@ def create_contributor_routes(server):
                         }
                     ]
     """
-    server.addRepoGroupMetric(
-        metrics.contributors, 'contributors')
+    server.addRepoGroupMetric(metrics.contributors, 'contributors')
 
     """
-    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/contributors Contributors (Repo)
+    @api {get} /repos/:repo_id/contributors Contributors (Repo)
     @apiName Contributors(Repo)
     @apiGroup Evolution
     @apiDescription List of contributors and their contributions.
@@ -78,8 +77,7 @@ def create_contributor_routes(server):
                         }
                     ]
     """
-    server.addRepoMetric(
-        metrics.contributors, 'contributors')
+    server.addRepoMetric(metrics.contributors, 'contributors')
 
     """
     @api {get} /repo-groups/:repo_group_id/contributors-new New Contributors (Repo Group)
@@ -107,11 +105,10 @@ def create_contributor_routes(server):
                         }
                     ]
     """
-    server.addRepoGroupMetric(
-        metrics.contributors_new, 'contributors-new')
+    server.addRepoGroupMetric(metrics.contributors_new, 'contributors-new')
 
     """
-    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/contributors-new New Contributors (Repo)
+    @api {get} /repos/:repo_id/contributors-new New Contributors (Repo)
     @apiName New Contributors(Repo)
     @apiGroup Evolution
     @apiDescription Time series of number of new contributors during a certain period.
@@ -137,11 +134,10 @@ def create_contributor_routes(server):
                         }
                     ]
     """
-    server.addRepoMetric(
-        metrics.contributors_new, 'contributors-new')
+    server.addRepoMetric(metrics.contributors_new, 'contributors-new')
 
     """
-    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/committers Committers(Repo)
+    @api {get} /repos/:repo_id/committers Committers(Repo)
     @apiName committers-repo
     @apiGroup Risk
     @apiDescription Number of persons contributing with an accepted commit for the first time.
@@ -170,8 +166,7 @@ def create_contributor_routes(server):
                         }
                     ]
     """
-    server.addRepoMetric(
-        metrics.committers, 'committers')
+    server.addRepoMetric(metrics.committers, 'committers')
 
     """
     @api {get} /repo-groups/:repo_group_id/Committers (Repo Group)
@@ -202,8 +197,7 @@ def create_contributor_routes(server):
                         }
                     ]
     """
-    server.addRepoGroupMetric(
-        metrics.committers, 'committers')
+    server.addRepoGroupMetric(metrics.committers, 'committers')
 
     """
     @api {get} /repo-groups/:repo_group_id/lines-changed-by-author Lines Changed by Author(Repo)
@@ -304,7 +298,7 @@ def create_contributor_routes(server):
     server.addRepoGroupMetric(metrics.top_committers, 'top-committers')
 
     """
-    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/top-committers Top Committers (Repo)
+    @api {get} /repos/:repo_id/top-committers Top Committers (Repo)
     @apiName top-committers-repo
     @apiGroup Experimental
     @apiDescription Returns a list of contributors contributing N% of all commits.
