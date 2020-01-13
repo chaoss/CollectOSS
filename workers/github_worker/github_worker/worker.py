@@ -18,51 +18,54 @@ class GitHubWorker:
     """
     def __init__(self, config, task=None):
         self.config = config
+        # Format the port the worker is running on to the name of the 
+        #   log file so we can tell multiple instances apart
         logging.basicConfig(filename='worker_{}.log'.format(self.config['id'].split('.')[len(self.config['id'].split('.')) - 1]), filemode='w', level=logging.INFO)
         logging.info('Worker (PID: {}) initializing...'.format(str(os.getpid())))
 
-        self._task = task
-        self._child = None
-        self._queue = Queue()
-        self.working_on = None
-        self.db = None
-        self.table = None
+        self._task = task # task currently being worked on (dict)
+        self._child = None # process of currently running task (multiprocessing process)
+        self._queue = Queue() # tasks stored here 1 at a time (in a mp queue so it can translate across multiple processes)
+        self.db = None # sql alchemy db session
+
+        # These 3 are included in every tuple the worker inserts (data collection info)
         self.tool_source = 'GitHub API Worker'
         self.tool_version = '0.0.3' # See __init__.py
         self.data_source = 'GitHub API'
-        self.results_counter = 0
-        self.history_id = None
-        self.finishing_task = False
+
+        self.results_counter = 0 # count of tuples inserted in the database (to store stats for each task in op tables)
+        self.finishing_task = True # if we are finishing a previous task, pagination works differenty
 
         self.specs = {
-            "id": self.config['id'],
-            "location": self.config['location'],
+            "id": self.config['id'], # what the broker knows this worker as
+            "location": self.config['location'], # host + port worker is running on (so broker can send tasks here)
             "qualifications":  [
                 {
-                    "given": [["github_url"]],
-                    "models":["issues", "contributors"]
+                    "given": [["github_url"]], # type of repo this worker can be given as a task
+                    "models":["issues", "contributors"] # models this worker can fill for a repo as a task
                 }
             ],
             "config": [self.config]
         }
 
-        self.DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(
+        DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(
             self.config['user'], self.config['password'], self.config['host'], self.config['port'], self.config['database']
         )
 
-        #Database connections
-        logging.info("Making database connections... {}".format(self.DB_STR))
-        dbschema = 'augur_data'
-        self.db = s.create_engine(self.DB_STR, poolclass = s.pool.NullPool,
-            connect_args={'options': '-csearch_path={}'.format(dbschema)})
+        # Create an sqlalchemy engine for both database schemas
+        logging.info("Making database connections... {}".format(DB_STR))
+        db_schema = 'augur_data'
+        self.db = s.create_engine(DB_STR, poolclass = s.pool.NullPool,
+            connect_args={'options': '-csearch_path={}'.format(db_schema)})
 
         helper_schema = 'augur_operations'
-        self.helper_db = s.create_engine(self.DB_STR, poolclass = s.pool.NullPool,
+        self.helper_db = s.create_engine(DB_STR, poolclass = s.pool.NullPool,
             connect_args={'options': '-csearch_path={}'.format(helper_schema)})
 
         metadata = MetaData()
         helper_metadata = MetaData()
 
+        # Reflect only the tables we will use for each schema's metadata object
         metadata.reflect(self.db, only=['contributors', 'issues', 'issue_labels', 'message',
             'issue_message_ref', 'issue_events','issue_assignees','contributors_aliases',
             'pull_request_assignees', 'pull_request_events', 'pull_request_reviewers', 'pull_request_meta',
@@ -75,6 +78,7 @@ class GitHubWorker:
         Base.prepare()
         HelperBase.prepare()
 
+        # So we can access all our tables when inserting, updating, etc
         self.contributors_table = Base.classes.contributors.__table__
         self.issues_table = Base.classes.issues.__table__
         self.issue_labels_table = Base.classes.issue_labels.__table__
@@ -135,9 +139,12 @@ class GitHubWorker:
         """ entry point for the broker to add a task to the queue
         Adds this task to the queue, and calls method to process queue
         """
+        # If the task has one of our "valid" job types
         if value['job_type'] == "UPDATE" or value['job_type'] == "MAINTAIN":
             self._queue.put(value)
 
+        # Setting that causes paginating through ALL pages, not just unknown ones
+        # This setting is set by the housekeeper and is attached to the task before it gets sent here
         if 'focused_task' in value:
             if value['focused_task'] == 1:
                 logging.info("Focused task is ON\n")
@@ -156,6 +163,7 @@ class GitHubWorker:
         Gets run whenever a new task is added
         """
         logging.info("Running...\n")
+        # Spawn a subprocess to handle message reading and performing the tasks
         self._child = Process(target=self.collect, args=())
         self._child.start()
             
@@ -165,8 +173,7 @@ class GitHubWorker:
         """
         while True:
             if not self._queue.empty():
-                message = self._queue.get()
-                self.working_on = message['job_type']
+                message = self._queue.get() # Get the task off our MP queue
             else:
                 break
             logging.info("Popped off message: {}\n".format(str(message)))
@@ -174,17 +181,21 @@ class GitHubWorker:
             if message['job_type'] == 'STOP':
                 break
 
+            # If task is not a valid job type
             if message['job_type'] != 'MAINTAIN' and message['job_type'] != 'UPDATE':
                 raise ValueError('{} is not a recognized task type'.format(message['job_type']))
                 pass
 
-            """ Query all repos with repo url of given task """
+            # Query repo_id corresponding to repo url of given task 
             repoUrlSQL = s.sql.text("""
                 SELECT min(repo_id) as repo_id FROM repo WHERE repo_git = '{}'
                 """.format(message['given']['github_url']))
             repo_id = int(pd.read_sql(repoUrlSQL, self.db, params={}).iloc[0]['repo_id'])
 
+            # Model method calls wrapped in try/except so that any unexpected error that occurs can be caught
+            #   and worker can move onto the next task without stopping
             try:
+                # Call method corresponding to model sent in task
                 if message['models'][0] == 'contributors':
                     self.contributor_model(message, repo_id)
                 if message['models'][0] == 'issues':
@@ -431,7 +442,8 @@ class GitHubWorker:
             # Check existing contributors table tuple
             existing_tuples = self.retrieve_tuple({'cntrb_email': tuple['commit_email']}, ['contributors'])
 
-            def insert_cntrb():
+            def insert_alias_to_contributors():
+                """ Method to insert alias tuple into the contributor table """
                 # Prepare tuple for insertion to contributor table (build it off of the tuple queried)
                 cntrb = tuple
                 try:
@@ -454,12 +466,12 @@ class GitHubWorker:
                 alias_id = self.cntrb_id_inc
 
             if len(existing_tuples) < 1:
-                insert_cntrb()
+                insert_alias_to_contributors()
             elif len(existing_tuples) > 1:
                 logging.info("THERE IS A CASE FOR A DUPLICATE CONTRIBUTOR in the contributors table, we will delete all tuples with this cntrb_email and re-insert only 1\n")
                 logging.info("For cntrb_email: {}".format(tuple['commit_email']))
                 
-                insert_cntrb()
+                insert_alias_to_contributors()
 
                 # fix all dupe references to dupe cntrb ids before we delete them 
                 dupeIdsSQL = s.sql.text("""
@@ -764,7 +776,9 @@ class GitHubWorker:
             name = name[:-4]
 
         # Set base of endpoint url
-        url = ("https://api.github.com/repos/{}/{}".format(owner, name) + "/issues?per_page=100&state=all&page={}")
+        url = "https://api.github.com/repos/{}/{}".format(owner, name)
+
+        issues_url = url + "/issues?per_page=100&state=all&page={}"
         
         # Get issues that we already have stored
         #   Set pseudo key (something other than PK) to 
@@ -775,7 +789,7 @@ class GitHubWorker:
         duplicate_col_map = {'gh_issue_id': 'id'}
 
         #list to hold issues needing insertion
-        issues = paginate(self, logging, url, duplicate_col_map, update_col_map, table, table_pkey, 
+        issues = paginate(self, logging, issues_url, duplicate_col_map, update_col_map, table, table_pkey, 
             'WHERE repo_id = {}'.format(repo_id))
 
         # Discover and remove duplicates before we start inserting
@@ -1137,9 +1151,11 @@ class GitHubWorker:
                     event['cntrb_id'] = self.find_id_from_login(event['actor']['login'])
                     if event['cntrb_id'] is None:
                         logging.info("SOMETHING WRONG WITH FINDING ID FROM LOGIN")
-                        event['cntrb_id'] = None
+                        continue
+                        # event['cntrb_id'] = None
                 else:
-                    event['cntrb_id'] = None
+                    continue
+                    # event['cntrb_id'] = None
 
                 issue_event = {
                     "issue_event_src_id": event['id'],
