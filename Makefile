@@ -122,13 +122,13 @@ backend: backend-restart
 test: test-metrics test-metrics-api
 
 test-metrics:
-	@ bash -c 'tox -e py-metrics'
+	@ bash -c 'tox -e py-metrics 2>&1 | tee logs/metrics_test.log'
 
 test-metrics-api:
-	@ bash -c 'tox -e py-metrics_api'
+	@ bash -c 'tox -e py-metrics_api 2>&1 | tee logs/metrics_api_test.log'
 
 test-python-versions:
-	@ bash -c 'tox -e ALL'
+	@ bash -c 'tox -e ALL 2>&1 | tee logs/metrics_ALL.log'
 
 
 #

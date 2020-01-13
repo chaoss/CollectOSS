@@ -260,7 +260,7 @@ def create_util_routes(server):
     server.addRepoGroupMetric(metrics.aggregate_summary, 'aggregate-summary')
 
     """
-    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/aggregate-summary Aggregate Summary (Repo)
+    @api {get} /repos/:repo_id/aggregate-summary Aggregate Summary (Repo)
     @apiName aggregate-summary-repo
     @apiGroup Experimental
     @apiDescription Returns the current count of watchers, stars, and forks and the counts of all commits, committers, and pull requests merged between a given beginning and end date (default between now and 365 days ago).
