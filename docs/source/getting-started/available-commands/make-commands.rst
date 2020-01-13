@@ -128,13 +128,11 @@ Start just the frontend server. To run just the backend server, see the ``augur`
 =======
 Testing
 =======
-These commands are used to run specific subsets of unit tests.
-
-Use the ``MODEL`` parameter to run tests for *one* specific model (examples below).
+These commands are used to run specific subsets of unit tests. We use ``tox`` to manage the test environments, and ``pytest`` as the test runner. Each of these commands except for ``make test-pythons-versions`` will use your default Python version, while ``make test-python-versions`` will test all supported Python versions. 
 
 ``make test``
 -------------
-Runs  available unit tests for both the metric functions and their API endpoints with the given ``MODEl``, which will default to all.
+Runs available  tests for both the metric functions and their API endpoints.
 
 .. code-block:: bash
 
@@ -143,36 +141,38 @@ Runs  available unit tests for both the metric functions and their API endpoints
   # this will run ALL tests for JUST the issue model
   > make test
 
-  # this will run ALL tests for the issue model
-  > make test MODEL=issue
-
-``make test-functions``
+``make test-metrics``
 ------------------------
-Runs unit tests for the metric functions with the given ``MODEl``, which will default to all.
+Runs unit tests for the metric functions.
 
 .. code-block:: bash
 
   # example usage
 
-  # this will run ALL metric function unit tests for JUST the issue model
-  > make test-functions
+  # this will run ALL metric function unit tests
+  > make test-metrics
 
-  # this will run ALL metric function unit tests for the issue model
-  > make test-functions MODEL=issue
-
-``make test-routes``
+``make test-metrics-api``
 ------------------------
-Runs unit tests for the metric API with the given ``MODEl``, which will default to all.
+Runs tests for the metrics API.
 
 .. code-block:: bash
 
   # example usage
 
-  # this will run ALL metric API unit tests for JUST the issue model
-  > make test-routes
+  # this will run ALL metric API tests
+  > make test-metrics-api
 
-  # this will run ALL metric API unit tests for the issue model
-  > make test-routes MODEL=issue
+``make test-python-versions``
+------------------------
+Runs all tests under all currently supported versions of Python (3.6 and above).
+
+.. code-block:: bash
+
+  # example usage
+
+  # this will run ALL metric API tests
+  > make test-python-versions
 
 ==============
 Documentation

@@ -17,7 +17,7 @@ Example\:
 
 .. note::
 
-  The built-in data collection housekeeper can significantly slow down startup. If you're debugging or testing the server/API and don't need to do any data collection, pass the ``--no-enable-housekeeper`` flag to prevent it from starting up.
+  The built-in data collection housekeeper can significantly slow down startup. If you're debugging or testing the server/API and don't need to do any data collection, pass the ``--disable-housekeeper`` flag to prevent it from starting up.
 
 
 ``db`` 

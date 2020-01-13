@@ -2,7 +2,6 @@ SERVE_COMMAND=augur run
 ENABLE_HOUSEKEEPER=--enable-housekeeper
 OLDVERSION="null"
 EDITOR?="vi"
-MODEL=**
 AUGUR_PIP?='pip'
 AUGUR_PYTHON?='python'
 
@@ -21,9 +20,9 @@ default:
 	@ echo "    dev-restart                     Runs dev-stop then dev-start"
 	@ echo
 	@ echo "Testing Commands:"
-	@ echo "    test MODEL={model}              Runs all pytest unit tests and API tests for the specified metrics model. Defaults to all"
-	@ echo "    test-functions MODEL={model}    Run pytest unit tests for the specified metrics model. Defaults to all"
-	@ echo "    test-routes MODEL={model}       Run API tests for the specified metrics model. Defaults to all"
+	@ echo "    test                            Runs all unit tests and API tests"
+	@ echo "    test-metrics                    Run unit tests for the specified metrics model"
+	@ echo "    test-metrics-api                Run API tests for the specified metrics model"
 	@ echo
 	@ echo "Documentation Commands:"
 	@ echo "    library-docs                    Generates the documentation using sphinx"
@@ -119,14 +118,17 @@ backend: backend-restart
 #
 # Testing
 #
-.PHONY: test test-functions test-routes
-test: test-functions test-routes
+.PHONY: test test-metrics test-metrics-api
+test: test-metrics test-metrics-api
 
-test-functions:
-	@ bash -c '$(AUGUR_PYTHON) -m pytest -ra -s augur/metrics/$(MODEL)/test_$(MODEL)_functions.py'
+test-metrics:
+	@ bash -c 'tox -e py-metrics'
 
-test-routes:
-	@ $(AUGUR_PYTHON) test/api/test_api.py $(MODEL)
+test-metrics-api:
+	@ bash -c 'tox -e py-metrics_api'
+
+test-python-versions:
+	@ bash -c 'tox -e ALL'
 
 
 #
