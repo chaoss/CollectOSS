@@ -100,7 +100,7 @@ class Housekeeper:
                                 except Exception as e:
                                     logging.info("Error encountered: {}".format(e))
 
-                                time.sleep(60)
+                                time.sleep(90)
                         elif job['given'][0] == 'repo_group':
                             task = {
                                     "job_type": job['job_type'] if 'job_type' in job else 'MAINTAIN', 
