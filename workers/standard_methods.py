@@ -10,11 +10,14 @@ def assign_tuple_action(self, logging, new_data, table_values, update_col_map, d
     for obj in new_data:
         if type(obj) != dict:
             continue
-        obj['flag'] = 'none'
+        obj['flag'] = 'none' # default of no action needed
         for db_dupe_key in list(duplicate_col_map.keys()):
             if obj['flag'] == 'need_insertion' or obj['flag'] == 'need_update':
                 break
-            if table_values.isin([obj[duplicate_col_map[db_dupe_key]]]).any().any():
+            if not table_values.isin([obj[duplicate_col_map[db_dupe_key]]]).any().any():
+                obj['flag'] = 'need_insertion'
+                need_insertion_count += 1
+            elif update_col_map:
                 existing_tuple = table_values[table_values[db_dupe_key].isin(
                     [obj[duplicate_col_map[db_dupe_key]]])].to_dict('records')[0]
                 for col in update_col_map.keys():
@@ -27,9 +30,6 @@ def assign_tuple_action(self, logging, new_data, table_values, update_col_map, d
                         obj['pkey'] = existing_tuple[table_pkey]
                         need_update_count += 1
                         break
-            else:
-                obj['flag'] = 'need_insertion'
-                need_insertion_count += 1
     logging.info("Page recieved has {} tuples, while filtering duplicates this ".format(len(new_data)) +
         "was reduced to {} tuples, and {} tuple updates are needed.\n".format(need_insertion_count, need_update_count))
     return new_data
@@ -118,7 +118,8 @@ def init_oauths(self, logging):
 def paginate(self, logging, url, duplicate_col_map, update_col_map, table, table_pkey, where_clause=""):
     # Paginate backwards through all the tuples but get first page in order
     #   to determine if there are multiple pages and if the 1st page covers all
-    cols_query = list(duplicate_col_map.keys()) + list(update_col_map.keys()) + [table_pkey]
+    update_keys = list(update_col_map.keys()) if update_col_map else []
+    cols_query = list(duplicate_col_map.keys()) + update_keys + [table_pkey]
     table_values = self.get_table_values(cols_query, [table], where_clause)
 
     i = 1
@@ -142,7 +143,10 @@ def paginate(self, logging, url, duplicate_col_map, update_col_map, table, table
             logging.info("Finishing a previous task, paginating forwards ..."
                 " excess rate limit requests will be made\n")
         
-        j = r.json()
+        try:
+            j = r.json()
+        except:
+            j = json.loads(json.dumps(j))
 
         if len(j) == 0:
             logging.info("Response was empty, breaking from pagination.\n")

@@ -606,77 +606,26 @@ class GitHubWorker:
             name = name[:-4]
 
         # Set the base of the url and place to hold contributors to insert
-        url = ("https://api.github.com/repos/" + owner + "/" + 
+        contributors_url = ("https://api.github.com/repos/" + owner + "/" + 
             name + "/contributors?per_page=100&page={}")
-        contributors = []
 
-        # Get values of tuples we already have in our table
-        pseudo_key_gh = 'login'
-        pseudo_key_augur = 'cntrb_login'
+        # Get contributors that we already have stored
+        #   Set our duplicate and update column map keys (something other than PK) to 
+        #   check dupicates/needed column updates with
         table = 'contributors'
-        cntrb_table_values = self.get_table_values([pseudo_key_augur, 'cntrb_email', 'cntrb_id'], [table])
+        table_pkey = 'cntrb_id'
+        update_col_map = {'cntrb_email': 'email'}
+        duplicate_col_map = {'cntrb_login': 'login'}
 
-        # Paginate backwards through all the contributors but starting with
-        #   the first one in order to get last page # and check if 1st page 
-        #   covers all of them
-        i = 1
-        multiple_pages = False
-        while True:
-            logging.info("Hitting endpoint: " + url.format(i) + " ...\n")
-            r = requests.get(url=url.format(i), headers=self.headers)
-            update_gh_rate_limit(self, logging, r)
-
-            # If it lists the last page then there is more than 1
-            if ('last' in r.links and not multiple_pages) and not self.finishing_task:
-                param = r.links['last']['url'][-6:]
-                i = int(param.split('=')[1]) + 1
-                logging.info("Multiple pages of request, last page is " + str(i - 1) + "\n")
-                multiple_pages = True
-            elif not multiple_pages and not self.finishing_task:
-                logging.info("Only 1 page of request\n")
-            elif self.finishing_task:
-                logging.info("Finishing a previous task, paginating forwards ... excess rate limit requests will be made\n")
-
-            # The contributors endpoints has issues with getting json from request
+        #list to hold contributors needing insertion or update
+        contributors = paginate(self, logging, contributors_url, duplicate_col_map, update_col_map, table, table_pkey)
+        
+        logging.info("Count of contributors needing insertion: " + str(len(contributors)) + "\n")
+        
+        for repo_contributor in contributors:
             try:
-                j = r.json()
-            except Exception as e:
-                logging.info("Caught exception: " + str(e) + "....\n")
-                logging.info("Some kind of issue CHECKTHIS  " + url + " ...\n")
-                j = json.loads(json.dumps(j))
-            else:
-                # logging.info("JSON seems ill-formed " + str(r) + "....\n")
-                j = json.loads(json.dumps(j))
-
-            if r.status_code == 204:
-                j = []
-            
-            # Checking contents of requests with what we already have in the db
-            # new_contributors = self.check_duplicates(j, cntrb_table_values, pseudo_key_gh)
-            j = self.assign_tuple_action(j, cntrb_table_values, 
-                {'cntrb_email': 'email'}, {pseudo_key_augur: pseudo_key_gh}, 'cntrb_id')
-            
-            if len(j) != 0:
-                to_add = [obj for obj in j if obj not in contributors and obj['flag'] != 'none']
-                if len(to_add) == 0 and multiple_pages and 'last' in r.links:
-                    if i - 1 != int(r.links['last']['url'][-6:].split('=')[1]):
-                        logging.info("No more pages with unknown contributors, breaking from pagination.\n")
-                        break
-                contributors += to_add
-
-            i = i + 1 if self.finishing_task else i - 1
-
-            if (i == 1 and multiple_pages and not self.finishing_task) or i < 1 or len(j) == 0:
-                logging.info("No more pages to check, breaking from pagination.\n")
-                break
-            
-        try:
-            logging.info("Count of contributors needing insertion: " + str(len(contributors)) + "\n")
-
-            for repo_contributor in contributors:
-
                 # Need to hit this single contributor endpoint to get extra data including...
-                #   created at
+                #   `created at`
                 #   i think that's it
                 cntrb_url = ("https://api.github.com/users/" + repo_contributor['login'])
                 logging.info("Hitting endpoint: " + cntrb_url + " ...\n")
@@ -736,22 +685,23 @@ class GitHubWorker:
                     result = self.db.execute(self.contributors_table.insert().values(cntrb))
                     logging.info("Primary key inserted into the contributors table: {}".format(result.inserted_primary_key))
                     self.results_counter += 1
-    
+
                     logging.info("Inserted contributor: " + contributor['login'] + "\n")
 
                     # Increment our global track of the cntrb id for the possibility of it being used as a FK
                     self.cntrb_id_inc = int(result.inserted_primary_key[0])
 
-        except Exception as e:
-            logging.info("Caught exception: " + str(e))
-            logging.info("Contributor not defined. Please contact the manufacturers of Soylent Green " + url + " ...\n")
-            logging.info("Cascading Contributor Anomalie from missing repo contributor data: " + url + " ...\n")
-        else:
-            if len(contributors) > 2:
-                logging.info("Well, that contributor list of len {} with last 3 tuples as: {} just don't except because we hit the else-block\n".format(str(len(contributors)), str(contributors[-3:])))    
+            except Exception as e:
+                logging.info("Caught exception: " + str(e))
+                logging.info("Contributor not defined. Please contact the manufacturers of Soylent Green " + url + " ...\n")
+                logging.info("Cascading Contributor Anomalie from missing repo contributor data: " + url + " ...\n")
+                continue
+            else:
+                if len(contributors) > 2:
+                    logging.info("Well, that contributor list of len {} with last 3 tuples as: {} just don't except because we hit the else-block\n".format(str(len(contributors)), str(contributors[-3:])))    
+                continue
 
     def issues_model(self, entry_info, repo_id):
-
         """ Data collection function
         Query the GitHub API for issues
         """
@@ -909,64 +859,20 @@ class GitHubWorker:
 
 
             #### Messages/comments and events insertion 
-            #    (we collected events above but never inserted them)
+            comments_url = url + "/comments?per_page=100&page={}"
 
-            comments_url = url + "/comments?per_page=100&page="#{}"
-            issue_comments = []
-            
-            # Get comments that we already have stored
-            #   Set pseudo key (something other than PK) to 
-            #   check dupicates with
-            pseudo_key_gh = 'created_at'
-            pseudo_key_augur = 'msg_timestamp'
+            # Get contributors that we already have stored
+            #   Set our duplicate and update column map keys (something other than PK) to 
+            #   check dupicates/needed column updates with
             table = 'message'
-            issue_comments_table_values = self.get_table_values([pseudo_key_augur], [table], 
-                # "WHERE pltfrm_id = {}".format(repo_id))
-                "WHERE msg_id IN (SELECT msg_id FROM issue_message_ref WHERE issue_id = {})".format(self.issue_id_inc))
-            
-            # Paginate backwards through all the comments but get first page in order
-            #   to determine if there are multiple pages and if the 1st page covers all
-            i = 1
-            multiple_pages = False
+            table_pkey = 'msg_id'
+            update_col_map = None #updates for comments not necessary
+            duplicate_col_map = {'msg_timestamp': 'created_at'}
 
-            while True:
-                # try:
-                logging.info("Hitting endpoint: {}...\n".format((comments_url + str(i))))
-                # except:
-                #     logging.info("Hitting endpoint: {}...\n")
-                r = requests.get(url=(comments_url + str(i)), headers=self.headers)
-                update_gh_rate_limit(self, logging, r)
-
-                # Find last page so we can decrement from there
-                if 'last' in r.links and not multiple_pages and not self.finishing_task:
-                    param = r.links['last']['url'][-6:]
-                    i = int(param.split('=')[1]) + 1
-                    logging.info("Multiple pages of request, last page is " + str(i - 1) + "\n")
-                    multiple_pages = True
-                elif not multiple_pages and not self.finishing_task:
-                    logging.info("Only 1 page of request\n")
-                elif self.finishing_task:
-                    logging.info("Finishing a previous task, paginating forwards ..."
-                        " excess rate limit requests will be made\n")
-
-                j = r.json()
-
-                # Checking contents of requests with what we already have in the db
-                new_comments = self.check_duplicates(j, issue_comments_table_values, pseudo_key_gh)
-                if len(new_comments) == 0 and multiple_pages and 'last' in r.links:
-                    if i - 1 != int(r.links['last']['url'][-6:].split('=')[1]):
-                        logging.info("No more pages with unknown comments, breaking from pagination.\n")
-                        break
-                elif len(new_comments) != 0:
-                    to_add = [obj for obj in new_comments if obj not in issue_comments]
-                    issue_comments += to_add
-
-                i = i + 1 if self.finishing_task else i - 1
-
-                # Since we already wouldve checked the first page... break
-                if (i == 1 and multiple_pages and not self.finishing_task) or i < 1 or len(j) == 0:
-                    logging.info("No more pages to check, breaking from pagination.\n")
-                    break
+            #list to hold contributors needing insertion or update
+            issue_comments = paginate(self, logging, comments_url, duplicate_col_map, update_col_map, table, table_pkey, 
+                where_clause="WHERE msg_id IN (SELECT msg_id FROM issue_message_ref WHERE issue_id = {})".format(
+                    self.issue_id_inc))
                 
             logging.info("Number of comments needing insertion: {}\n".format(len(issue_comments)))
 
@@ -1010,7 +916,7 @@ class GitHubWorker:
                 logging.info("Primary key inserted into the issue_message_ref table: {}".format(result.inserted_primary_key))
                 self.results_counter += 1                
         
-            # Base of the url for comment and event endpoints
+            # Base of the url for event endpoints
             url = ("https://api.github.com/repos/" + owner + "/" + name + "/issues/" + str(issue_dict['number']))
 
             # Get events ready in case the issue is closed and we need to insert the closer's id
