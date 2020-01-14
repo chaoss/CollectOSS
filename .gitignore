@@ -9,6 +9,7 @@ __pycache__/
 runtime/
 logs/
 frontend/public/api_docs/
+*.err
 
 # C extensions
 *.so

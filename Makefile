@@ -114,6 +114,9 @@ backend-restart: backend-stop backend-start
 
 backend: backend-restart
 
+deploy: 
+	@ ./util/scripts/control/deploy.sh
+
 
 #
 # Testing

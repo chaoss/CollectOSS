@@ -1,8 +1,22 @@
 #!/bin/bash
 
+if [[ ! -d logs ]]; then
+    mkdir logs
+fi
+
 echo
 echo "**********************************"
-echo "Installing workers and their dependencies..."
+echo "Starting augur..."
+echo "**********************************"
+echo
+
+nohup augur run > logs/augur.log 2> logs/augur.err &
+
+sleep 180
+
+echo
+echo "**********************************"
+echo "Starting workers..."
 echo "**********************************"
 echo
 
@@ -16,16 +30,16 @@ do
 
       echo
       echo "**********************************"
-      echo "Installing $FORMATTED_WORKER..."
+      echo "Starting $FORMATTED_WORKER..."
       echo "**********************************"
       echo
 
       cd $WORKER
-      rm -rf build/*;
-      rm -rf dist/*;
-      pip install -e .
+      WORKER_CMD="_start"
+      WORKER_CMD="${FORMATTED_WORKER}_start"
+      nohup $WORKER_CMD > "${FORMATTED_WORKER}.log" 2> "${FORMATTED_WORKER}.err" &
       cd ../..
-      echo "Installing $FORMATTED_WORKER"
+      sleep 30
 
     fi
 done
