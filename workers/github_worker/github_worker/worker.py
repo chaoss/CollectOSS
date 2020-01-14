@@ -797,12 +797,41 @@ class GitHubWorker:
                     issue_dict['id']))
                 self.issue_id_inc = issue_dict['pkey']
             elif issue_dict['flag'] == 'need_insertion':
-                result = self.db.execute(self.issues_table.insert().values(issue))
-                logging.info("Primary key inserted into the issues table: " + str(result.inserted_primary_key))
-                self.results_counter += 1
-                self.issue_id_inc = int(result.inserted_primary_key[0])
-                logging.info("Inserted issue with our issue_id being: {}".format(self.issue_id_inc) + 
-                    " and title of: {} and gh_issue_num of: {}\n".format(issue_dict['title'],issue_dict['number']))
+                try:
+                    result = self.db.execute(self.issues_table.insert().values(issue))
+                    logging.info("Primary key inserted into the issues table: " + str(result.inserted_primary_key))
+                    self.results_counter += 1
+                    self.issue_id_inc = int(result.inserted_primary_key[0])
+                    logging.info("Inserted issue with our issue_id being: {}".format(self.issue_id_inc) + 
+                        " and title of: {} and gh_issue_num of: {}\n".format(issue_dict['title'],issue_dict['number']))
+                except Exception as e:
+                    logging.info("When inserting an issue, ran into the following error: {}".format(e))
+                    logging.info("Here are the fields for the failed issue:")
+                    logging.info(issue_dict['repo_id'])
+                    logging.info(self.find_id_from_login(issue_dict['user']['login']))
+                    logging.info(pr_id)
+                    logging.info(pr_id)
+                    logging.info(issue_dict['created_at'])
+                    logging.info(issue_dict['title'])
+                    logging.info(issue_dict['body'])
+                    logging.info(issue_dict['comments'])
+                    logging.info(issue_dict['updated_at'])
+                    logging.info(issue_dict['closed_at'])
+                    logging.info(issue_dict['repository_url'])
+                    logging.info(issue_dict['url'])
+                    logging.info(issue_dict['labels_url'])
+                    logging.info(issue_dict['comments_url'])
+                    logging.info(issue_dict['events_url'])
+                    logging.info(issue_dict['html_url'])
+                    logging.info(issue_dict['state'])
+                    logging.info(issue_dict['node_id'])
+                    logging.info(issue_dict['id'])
+                    logging.info(issue_dict['number'])
+                    logging.info(issue_dict['user']['id'])
+                    continue
+                else:
+                    logging.info("Failed exception printing")
+                    continue
 
             # Check if the assignee key's value is already recorded in the assignees key's value
             #   Create a collective list of unique assignees
@@ -978,17 +1007,12 @@ class GitHubWorker:
             cntrb_id = None
             if 'closed_at' in issue_dict:
                 for event in issue_events:
-                    logging.info(str(event))
-                    logging.info(str(event['event']))
                     if str(event['event']) != "closed":
                         logging.info("not closed, continuing")
                         continue
-                    logging.info("event closed")
                     if not event['actor']:
                         continue
-                    logging.info("there is event actor")
                     cntrb_id = self.find_id_from_login(event['actor']['login'])
-                    logging.info("cntrb_id: {}".format(cntrb_id))
                     if cntrb_id is not None:
                         break
                         
