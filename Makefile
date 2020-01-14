@@ -119,6 +119,10 @@ run:
 
 deploy: rebuild run
 
+status:
+	@ ./util/scripts/control/status.sh
+
+
 
 #
 # Testing
