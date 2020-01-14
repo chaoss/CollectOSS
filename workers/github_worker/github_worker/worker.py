@@ -843,7 +843,8 @@ class GitHubWorker:
             if collected_assignees[0] is not None:
                 logging.info("Count of assignees to insert for this issue: " + str(len(collected_assignees)) + "\n")
                 for assignee_dict in collected_assignees:
-
+                    if type(assignee_dict) != dict:
+                        continue
                     assignee = {
                         "issue_id": self.issue_id_inc,
                         "cntrb_id": self.find_id_from_login(assignee_dict['login']),

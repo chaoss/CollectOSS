@@ -397,7 +397,7 @@ def update_gh_rate_limit(self, logging, response):
                 logging.info("Lower wait time found in oauth with same rate limit: {}".format(oauth))
                 new_oauth = oauth
 
-        if new_oauth['rate_limit'] <= 0:
+        if new_oauth['rate_limit'] <= 0 and new_oauth['seconds_to_reset'] > 0:
             logging.info("No oauths with >0 rate limit were found, waiting for oauth with smallest wait time: {}".format(new_oauth))
             time.sleep(new_oauth['seconds_to_reset'])
 
