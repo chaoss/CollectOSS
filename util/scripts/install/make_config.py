@@ -80,7 +80,7 @@ def configure_defaults(config):
         config['Housekeeper'] = {
             "jobs": [
                 {
-                    "focused_task": 1,
+                    "all_focused": 1,
                     "delay": 150000,
                     "given": [
                         "github_url"

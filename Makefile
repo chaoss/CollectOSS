@@ -114,8 +114,10 @@ backend-restart: backend-stop backend-start
 
 backend: backend-restart
 
-deploy: 
+run:
 	@ ./util/scripts/control/deploy.sh
+
+deploy: rebuild run
 
 
 #
