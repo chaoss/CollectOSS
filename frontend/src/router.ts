@@ -56,8 +56,6 @@ const routes = [
         path: '',
         name: 'slack_config',
         components: {
-          sidebar: MainSidebar,
-          navbar: MainNavbar,
           content: SlackConfig,
         },
       },
