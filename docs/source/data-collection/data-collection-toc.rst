@@ -7,6 +7,7 @@ This section details how to use Augur's built-in data collection workers.
    :maxdepth: 1
 
    starting-collection-workers
+   augur-start-workers
    augur.config.json-explained
    worker-details
 
