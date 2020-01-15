@@ -125,6 +125,19 @@ Start just the frontend server. To run just the backend server, see the ``augur`
 
 .. _documentation: augur-commands.html#run
 
+``make run``
+-------------
+Start augur and all the installed data collection workers in the background. Use ``make status`` to quickly 
+check the logs after you've started them.
+
+``make status``
+----------------
+Display the last 10 lines of all augur and worker log/error files.
+
+``make deploy``
+----------------
+Rebuild the project and its dependencies, and then start the data collection (using ``make run``).
+
 =======
 Testing
 =======
@@ -153,7 +166,7 @@ Runs unit tests for the metric functions.
   > make test-metrics
 
 ``make test-metrics-api``
-------------------------
+--------------------------
 Runs tests for the metrics API.
 
 .. code-block:: bash
@@ -164,7 +177,7 @@ Runs tests for the metrics API.
   > make test-metrics-api
 
 ``make test-python-versions``
-------------------------
+-----------------------------
 Runs all tests under all currently supported versions of Python (3.6 and above).
 
 .. code-block:: bash
