@@ -82,7 +82,7 @@ Workers Block of augur.config.json
 Models Block of augur.config.json
 ---------------------------
 
-You can disable the contributors block
+You can disable the contributors block by adding three underscores and the word disabled to the end of the model name, as illustrated below in the contributors model: `"model": "contributors___disabled"`.
 
 .. code-block:: json
 
