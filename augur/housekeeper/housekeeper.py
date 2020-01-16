@@ -57,6 +57,7 @@ class Housekeeper:
         :param delay: time needed to update
         :param shared: shared object that is to also be updated
         """
+        logging.info("HOB: {}".format(job))
         repo_group_id = job['repo_group_id'] if 'repo_group_id' in job else None
         if repo_group_id:
             logging.info('Housekeeper spawned {} model updater process for subsection {} with PID {}'.format(job['model'], repo_group_id, os.getpid()))
@@ -259,6 +260,7 @@ class Housekeeper:
                 reorganized_repos = pd.read_sql(repoUrlSQL, self.db, params={})
                 if len(reorganized_repos) == 0:
                     logging.info("Trying to send tasks for repo group, but the repo group does not contain any repos")
+                    job['repos'] = []
                     continue
 
                 if 'starting_repo_id' in job:
