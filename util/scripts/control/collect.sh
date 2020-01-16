@@ -6,16 +6,6 @@ fi
 
 echo
 echo "**********************************"
-echo "Starting augur..."
-echo "**********************************"
-echo
-
-nohup augur run > logs/augur.log 2> logs/augur.err &
-
-sleep 180
-
-echo
-echo "**********************************"
 echo "Starting workers..."
 echo "**********************************"
 echo
