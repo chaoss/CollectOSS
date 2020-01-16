@@ -1201,7 +1201,7 @@ class GitHubWorker:
                 "cntrb_email": email,
                 "cntrb_company": company,
                 "cntrb_location": location,
-                "cntrb_created_at": contributor['created_at'],                
+                "cntrb_created_at": contributor['created_at'] if 'created_at' in contributor else None,                
                 "cntrb_canonical": canonical_email,
                 "gh_user_id": contributor['id'],
                 "gh_login": contributor['login'],
