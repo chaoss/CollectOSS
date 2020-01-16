@@ -125,18 +125,24 @@ Start just the frontend server. To run just the backend server, see the ``augur`
 
 .. _documentation: augur-commands.html#run
 
+``make augur``
+-------------
+Start augur in the background.
+
+``make collect``
+-------------
+Start all the installed data collection workers in the background. Use ``make status`` to quickly 
+check the logs after you've started them.
+
 ``make run``
 -------------
-Start augur and all the installed data collection workers in the background. Use ``make status`` to quickly 
+Start both augur AND all the installed data collection workers in the background. Use ``make status`` to quickly 
 check the logs after you've started them.
 
 ``make status``
 ----------------
 Display the last 10 lines of all augur and worker log/error files.
 
-``make deploy``
-----------------
-Rebuild the project and its dependencies, and then start the data collection (using ``make run``).
 
 =======
 Testing

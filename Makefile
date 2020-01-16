@@ -114,14 +114,21 @@ backend-restart: backend-stop backend-start
 
 backend: backend-restart
 
-run:
-	@ ./util/scripts/control/deploy.sh
+augur:
+	@ ./util/scripts/control/augur.sh
 
-deploy: rebuild run
+collect:
+	@ ./util/scripts/control/collect.sh
+
+run: 
+	@ ./util/scripts/control/augur.sh
+	echo "Waiting for the server to start... (this will take about 3 minutes)"
+	echo "In the meantime, consider taking a short break - you've earned it!"
+	sleep 180
+	@ ./util/scripts/control/collect.sh
 
 status:
 	@ ./util/scripts/control/status.sh
-
 
 
 #
