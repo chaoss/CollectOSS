@@ -105,6 +105,7 @@ setup(
         'snowballstemmer==2.0.0',
         'soupsieve==1.9.4',
         'Sphinx==2.2.1',
+        'sphinx-rtd-theme==0.4.3',
         'sphinxcontrib-applehelp==1.0.1',
         'sphinxcontrib-devhelp==1.0.1',
         'sphinxcontrib-htmlhelp==1.0.2',

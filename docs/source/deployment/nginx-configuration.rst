@@ -1,7 +1,14 @@
 Web Server Configuration 
 ------------------------
 
-Configuring nginx for Augur to run behind nginx requires you to have certain options available for symlinks and other basic nginx options. The `nginx.conf` file below is one example of a configuration known to work. 
+Configuring nginx for Augur to run behind nginx requires you to have certain options available for symlinks and other basic nginx options. The `nginx.conf` file below is one example of a configuration known to work.
+
+Once you have nginx configured, issue these commands to make sure everything is loaded and configured correctly: 
+
+1. sudo nginx -t to make sure its configured correctly. 
+	`nginx: the configuration file /etc/nginx/nginx.conf syntax is ok`
+	`nginx: configuration file /etc/nginx/nginx.conf test is successful`
+2. sudo systemctl restart nginx 
 
 ------------------
 Server Compilation 

@@ -9,7 +9,6 @@ This section details describes production deployment of Augur.
 
    deployment-starting
    nginx-configuration
-   augur-start-workers
 
 
 **THIS SECTION IS UNDER CONSTRUCTION.**
