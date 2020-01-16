@@ -40,11 +40,10 @@ Detailed Steps
 
 .. code-block:: json
 
-    "Frontends": {
-        "Frontend": {
+"Frontend": {
             "host": "test.augurlabs.io",
             "port": "5003"
-        }    
+        } 
 
 12. Then do a `make rebuild`
 
