@@ -168,11 +168,16 @@ def fill_empty_affiliations(cfg):
                     ## Extra logging by Sean
                     cfg.log_activity('Debug', update)
                     ##
-                    cfg.cursor.execute(update, (match[0], email, match[1]))
-                    cfg.db.commit()
+                    try: 
+
+                        cfg.cursor.execute(update, (match[0], email, match[1]))
+                        cfg.db.commit()
+                    except Exception as e: 
+                        cfg.log_activity('Info', 'Attribution matching failed for %s ' %  email)
+
 
             except Exception as e:
-                cfg.log_activity('Info', 'Attribution matching failed for %s %s %s' % match[0], email, match[1])
+                cfg.log_activity('Info', 'Attribution matching failed for %s ' %  email)
             else:
                 cfg.log_activity('Info', 'Attribution matching failed and exception logging failed')
             finally:
