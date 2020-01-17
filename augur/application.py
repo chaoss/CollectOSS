@@ -39,11 +39,11 @@ class Application(object):
 
         self.__default_config = {}
         self.__path_to_default_config = os.path.dirname(os.path.realpath(__file__)) + '/default.config.json'
-        try:
-            with open(self.__path_to_default_config) as default_config:
-                self.__default_config = json.load(default_config)
-        except Exception as e:
-            logger.debug("Error reading default.config.json " + str(e))
+        # try:
+        #     with open(self.__path_to_default_config) as default_config:
+        #         self.__default_config = json.load(default_config)
+        # except Exception as e:
+        #     logger.debug("Error reading default.config.json " + str(e))
 
 
         if no_config_file == True:
