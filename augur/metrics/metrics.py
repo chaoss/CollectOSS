@@ -18,7 +18,7 @@ class MetricDefinitions():
         self.projects = None
 
         self.user = self.app.read_config('Database', 'user', 'AUGUR_DB_USER', 'augur')
-        self.password = self.app.read_config('Database', 'password', 'AUGUR_DB_PASS', 'password')
+        self.password = self.app.read_config('Database', 'password', 'AUGUR_DB_PASSWORD', 'password')
         self.host = self.app.read_config('Database', 'host', 'AUGUR_DB_HOST', '127.0.0.1')
         self.port = self.app.read_config('Database', 'port', 'AUGUR_DB_PORT', '5433')
         self.dbname = self.app.read_config('Database', 'database', 'AUGUR_DB_NAME', 'augur')
