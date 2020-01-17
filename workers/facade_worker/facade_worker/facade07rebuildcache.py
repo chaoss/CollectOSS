@@ -175,7 +175,6 @@ def fill_empty_affiliations(cfg):
                     except Exception as e: 
                         cfg.log_activity('Info', 'Attribution matching failed for %s ' %  email)
 
-
             except Exception as e:
                 cfg.log_activity('Info', 'Attribution matching failed for %s ' %  email)
             else:
