@@ -1,9 +1,8 @@
-from flask import Response
+#SPDX-License-Identifier: MIT
 
 def create_repo_meta_routes(server):
 
     metrics = server._augur.metrics
-
 
     """
     @api {get} /repo-groups/:repo_group_id/code-changes Code Changes (Repo Group)
@@ -40,7 +39,7 @@ def create_repo_meta_routes(server):
     server.addRepoGroupMetric(metrics.code_changes, 'code-changes')
 
     """
-    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/code-changes Code Changes (Repo)
+    @api {get} /repos/:repo_id/code-changes Code Changes (Repo)
     @apiName code-changes-repo
     @apiGroup Evolution
     @apiDescription Time series number of commits during a certain period.
@@ -104,7 +103,7 @@ def create_repo_meta_routes(server):
     server.addRepoGroupMetric(metrics.code_changes_lines, 'code-changes-lines')
 
     """
-    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/code-changes-lines Code Changes Lines (Repo)
+    @api {get} /repos/:repo_id/code-changes-lines Code Changes Lines (Repo)
     @apiName code-changes-lines-repo
     @apiGroup Evolution
     @apiDescription Time series of lines added & removed during a certain period.
@@ -137,6 +136,9 @@ def create_repo_meta_routes(server):
                     ]
     """
     server.addRepoMetric(metrics.code_changes_lines, 'code-changes-lines')
+
+    # TODO: document this
+    server.addLicenseMetric(metrics.license_files, 'license-files')
 
     # TODO: document this
     server.addRepoMetric(metrics.sbom_download, 'sbom-download')
@@ -192,7 +194,7 @@ def create_repo_meta_routes(server):
         metrics.sub_projects, 'sub-projects')
 
     """
-    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/sub-projects Sub-Projects (Repo)
+    @api {get} /repos/:repo_id/sub-projects Sub-Projects (Repo)
     @apiName Sub-Projects(Repo)
     @apiGroup Evolution
     @apiDescription Number of sub-projects.
@@ -235,7 +237,7 @@ def create_repo_meta_routes(server):
     server.addRepoGroupMetric(metrics.cii_best_practices_badge, 'cii-best-practices-badge')
 
     """
-    @api {get} /repo-groups/:repo_group_id/cii-best-practices-badge CII Best Practices Badge (Repo)
+    @api {get} /repos/:repo_id/cii-best-practices-badge CII Best Practices Badge (Repo)
     @apiName cii-best-practices-badge-repo
     @apiGroup Risk
     @apiDescription The CII Best Practices Badge level.
@@ -290,7 +292,7 @@ def create_repo_meta_routes(server):
     server.addRepoGroupMetric(metrics.forks, 'forks')
 
     """
-    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/forks Forks (Repo)
+    @api {get} /repos/:repo_id/forks Forks (Repo)
     @apiName forks-repo
     @apiGroup Risk
     @apiDescription A time series of fork count.
@@ -337,7 +339,7 @@ def create_repo_meta_routes(server):
     server.addRepoGroupMetric(metrics.fork_count, 'fork-count')
 
     """
-    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/fork-count Fork Count (Repo)
+    @api {get} /repos/:repo_id/fork-count Fork Count (Repo)
     @apiName fork-count-repo
     @apiGroup Risk
     @apiDescription Fork count.
@@ -437,7 +439,7 @@ def create_repo_meta_routes(server):
     server.addRepoMetric(metrics.license_count, 'license-count')
 
     """
-    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/license-coverage License Coverage(Repo)
+    @api {get} /repos/:repo_id/license-coverage License Coverage(Repo)
     @apiName license-coverage-repo
     @apiGroup Risk
     @apiDescription Number of persons contributing with an accepted commit for the first time.
@@ -483,7 +485,7 @@ def create_repo_meta_routes(server):
     server.addRepoGroupMetric(metrics.license_coverage, 'license-coverage')
 
     """
-    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/license-declared License Declared(Repo)
+    @api {get} /repos/:repo_id/license-declared License Declared(Repo)
     @apiName license-declared-repo
     @apiGroup Risk
     @apiDescription Number of persons contributing with an accepted commit for the first time.
@@ -562,7 +564,7 @@ def create_repo_meta_routes(server):
     server.addRepoGroupMetric(metrics.stars, 'stars')
 
     """
-    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/stars Stars (Repo)
+    @api {get} /repos/:repo_id/stars Stars (Repo)
     @apiName stars-repo
     @apiGroup Value
     @apiDescription A time series of stars count.
@@ -607,7 +609,7 @@ def create_repo_meta_routes(server):
     server.addRepoGroupMetric(metrics.stars_count, 'stars-count')
 
     """
-    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/stars-count Stars Count (Repo)
+    @api {get} /repos/:repo_id/stars-count Stars Count (Repo)
     @apiName stars-count-repo
     @apiGroup Value
     @apiDescription Stars count.
@@ -660,7 +662,7 @@ def create_repo_meta_routes(server):
     server.addRepoGroupMetric(metrics.watchers, 'watchers')
 
     """
-    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/watchers Watchers (Repo)
+    @api {get} /repos/:repo_id/watchers Watchers (Repo)
     @apiName watchers-repo
     @apiGroup Value
     @apiDescription A time series of watchers count.
@@ -705,7 +707,7 @@ def create_repo_meta_routes(server):
     server.addRepoGroupMetric(metrics.watchers_count, 'watchers-count')
 
     """
-    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/watchers-count watchers Count (Repo)
+    @api {get} /repos/:repo_id/watchers-count watchers Count (Repo)
     @apiName watchers-count-repo
     @apiGroup Value
     @apiDescription Watchers count.

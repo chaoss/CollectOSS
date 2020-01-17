@@ -2,7 +2,6 @@ SERVE_COMMAND=augur run
 ENABLE_HOUSEKEEPER=--enable-housekeeper
 OLDVERSION="null"
 EDITOR?="vi"
-MODEL=**
 AUGUR_PIP?='pip'
 AUGUR_PYTHON?='python'
 
@@ -21,12 +20,12 @@ default:
 	@ echo "    dev-restart                     Runs dev-stop then dev-start"
 	@ echo
 	@ echo "Testing Commands:"
-	@ echo "    test MODEL={model}              Runs all pytest unit tests and API tests for the specified metrics model. Defaults to all"
-	@ echo "    test-functions MODEL={model}    Run pytest unit tests for the specified metrics model. Defaults to all"
-	@ echo "    test-routes MODEL={model}       Run API tests for the specified metrics model. Defaults to all"
+	@ echo "    test                            Runs all unit tests and API tests"
+	@ echo "    test-metrics                    Run unit tests for the specified metrics model"
+	@ echo "    test-metrics-api                Run API tests for the specified metrics model"
 	@ echo
 	@ echo "Documentation Commands:"
-	@ echo "    sphinx-docs                     Generates the documentation using sphinx"
+	@ echo "    library-docs                    Generates the documentation using sphinx"
 	@ echo "    api-docs                        Generates the REST API documentation using apidocjs"
 	@ echo "    docs                            Generates all documentation"
 
@@ -38,8 +37,14 @@ default:
 install:
 	@ ./util/scripts/install/install.sh
 
-install-augur-sbom: 
-	@ ./util/scripts/install/nomos.sh 
+install-spdx:
+	@ ./util/scripts/install/install-spdx.sh
+
+install-spdx-sudo:
+	@ ./util/scripts/install/install-spdx-sudo.sh
+
+install-augur-sbom:
+	@ ./util/scripts/install/nomos.sh
 
 version:
 	$(eval OLDVERSION=$(shell $(AUGUR_PYTHON) ./util/print-version.py))
@@ -50,7 +55,7 @@ config:
 
 clean:
 	@ echo "Removing node_modules, logs, caches, and some other dumb stuff that can be annoying..."
-	@ rm -rf runtime node_modules frontend/node_modules frontend/public augur.egg-info .pytest_cache logs 
+	@ rm -rf runtime node_modules frontend/node_modules frontend/public augur.egg-info .pytest_cache logs
 	@ find . -name \*.pyc -delete
 	@ find . -type f -name "*.lock" -delete
 
@@ -109,28 +114,47 @@ backend-restart: backend-stop backend-start
 
 backend: backend-restart
 
+augur:
+	@ ./util/scripts/control/augur.sh
+
+collect:
+	@ ./util/scripts/control/collect.sh
+
+run:
+	@ ./util/scripts/control/augur.sh
+	@ echo "Waiting for the server to start... (this will take about 3 minutes)"
+	@ echo "In the meantime, consider taking a short break - you've earned it!"
+	@ sleep 180
+	@ ./util/scripts/control/collect.sh
+
+status:
+	@ ./util/scripts/control/status.sh
+
 
 #
 # Testing
 #
-.PHONY: test test-functions test-routes
-test: test-functions test-routes
+.PHONY: test test-metrics test-metrics-api
+test: test-metrics test-metrics-api
 
-test-functions:
-	@ bash -c '$(AUGUR_PYTHON) -m pytest -ra -s augur/metrics/$(MODEL)/test_$(MODEL)_functions.py'
+test-metrics:
+	@ bash -c 'tox -e py-metrics 2>&1 | tee logs/metrics_test.log'
 
-test-routes:
-	@ $(AUGUR_PYTHON) test/api/test_api.py $(MODEL)
+test-metrics-api:
+	@ bash -c 'tox -e py-metrics_api 2>&1 | tee logs/metrics_api_test.log'
+
+test-python-versions:
+	@ bash -c 'tox -e ALL 2>&1 | tee logs/metrics_ALL.log'
 
 
-# 
+#
 # Documentation
-# 
-.PHONY: sphinx-docs sphinx-docs-view api-docs api-docs-view docs
-sphinx-docs:
+#
+.PHONY: library-docs library-docs-view api-docs api-docs-view docs
+library-docs:
 	@ bash -c 'cd docs/ && rm -rf build/ && make html;'
 
-sphinx-docs-view: sphinx-docs
+library-docs-view: library-docs
 	@ bash -c 'open docs/build/html/index.html'
 
 api-docs:
@@ -139,4 +163,4 @@ api-docs:
 api-docs-view: api-docs
 	@ bash -c "open frontend/public/api_docs/index.html"
 
-docs: api-docs sphinx-docs
+docs: api-docs library-docs

@@ -93,7 +93,7 @@ export default class AugurStats {
       console.log(addon.replace(/\./g,''))
       addon = addon.replace(/\./g,'')
   
-      let extension = addon//(addon['githubURL']).split('/').join('');
+      let extension = addon
       console.log(extension)
       mean = mean || AugurStats.averageArray(flat)
       let distances = flat.map((e:number) => {
@@ -106,8 +106,8 @@ export default class AugurStats {
           newObj[key + extension] = e[key]
         }
         newObj['date' + addon] = newObj.date
-        newObj['upper' + extension] = e[key] + Math.sqrt(AugurStats.averageArray(distances))
-        newObj['lower' + extension] = e[key] - Math.sqrt(AugurStats.averageArray(distances))
+        // newObj['upper' + extension] = e[key] + Math.sqrt(AugurStats.averageArray(distances))
+        // newObj['lower' + extension] = e[key] - Math.sqrt(AugurStats.averageArray(distances))
         return newObj
       })
     }

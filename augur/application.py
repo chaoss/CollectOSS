@@ -5,9 +5,8 @@ Handles global context, I/O, and configuration
 
 import os
 import time
-import argparse
-import multiprocessing as mp
 import logging
+import multiprocessing as mp
 import json
 import pkgutil
 from beaker.cache import CacheManager
@@ -18,42 +17,106 @@ from augur.models.common import Base
 from augur import logger
 from augur.metrics import MetricDefinitions
 import augur.plugins
-import logging
 
 logging.basicConfig(filename='test.log', level=logging.INFO)
 
 class Application(object):
     """Initalizes all classes from Augur using a config file or environment variables"""
 
-    def __init__(self, config_file='augur.config.json', no_config_file=0, description='Augur application', config=None):
+    def __init__(self, default_config_file_path='augur.config.json', no_config_file=0, config=None):
         """
         Reads config, creates DB session, and initializes cache
         """
         # Open the config file
+        self.__config_file_name = 'augur.config.json'
         self.__already_exported = {}
-        self.__default_config = { 'Plugins': [] }
+        self.__default_config = {
+            "Cache": {
+                "config": {
+                    "cache.data_dir": "runtime/cache/",
+                    "cache.lock_dir": "runtime/cache/",
+                    "cache.type": "file"
+                }
+            },
+            "Database": {
+                "connection_string": "sqlite:///:memory:",
+                "database": "augur",
+                "host": "localhost",
+                "key": "key",
+                "password": "password",
+                "port": 5432,
+                "schema": "augur_data",
+                "user": "augur"
+            },
+            "Development": {
+                "developer": "0",
+                "interactive": "0"
+            },
+            "Facade": {
+                "check_updates": 1,
+                "clone_repos": 1,
+                "create_xlsx_summary_files": 1,
+                "delete_marked_repos": 0,
+                "fix_affiliations": 1,
+                "force_analysis": 1,
+                "force_invalidate_caches": 1,
+                "force_updates": 1,
+                "limited_run": 0,
+                "multithreaded": 0,
+                "nuke_stored_affiliations": 0,
+                "pull_repos": 1,
+                "rebuild_caches": 1,
+                "run_analysis": 1
+            },
+            "Housekeeper": {
+                "jobs": []
+            },
+            "Plugins": [],
+            "Server": {
+                "cache_expire": "3600",
+                "host": "0.0.0.0",
+                "port": "5000",
+                "workers": "1"
+            },
+            "Workers": {}
+         }
+
+        _root_augur_dir_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+        _possible_config_paths = [self.__config_file_name, _root_augur_dir_path + "/" + self.__config_file_name, f"/opt/augur/{self.__config_file_name}"]
+        _config_file_path = default_config_file_path
+
+        for location in _possible_config_paths:
+            try:
+                f = open(location, "r+")
+                _config_file_path = os.path.abspath(location)
+                f.close()
+                logging.info("Using config file at " + os.path.abspath(location))
+                break
+            except FileNotFoundError:
+                pass
+
         self.__using_config_file = True
         self.__config_bad = False
-        self.__config_file_path = os.path.abspath(os.getenv('AUGUR_CONFIG_FILE', config_file))
+        self.__config_file_path = os.path.abspath(os.getenv('AUGUR_CONFIG_FILE', _config_file_path))
         self.__config_location = os.path.dirname(self.__config_file_path)
         self.__runtime_location = 'runtime/'
         self.__export_env = os.getenv('AUGUR_ENV_EXPORT', '0') == '1'
         self.__shell_config = None
+
         if os.getenv('AUGUR_ENV_ONLY', '0') != '1' and no_config_file == 0:
             try:
                 self.__config_file = open(self.__config_file_path, 'r+')
             except:
-                logger.info('Couldn\'t open {}, attempting to create. If you have a augur.cfg, you can convert it to a json file using "make to-json"'.format(config_file))
+                logger.info('Couldn\'t open {}, attempting to create.'.format(self.__config_file_name))
                 if not os.path.exists(self.__config_location):
                     os.makedirs(self.__config_location)
                 self.__config_file = open(self.__config_file_path, 'w+')
                 self.__config_bad = True
-            # Options to export the loaded configuration as environment variables for Docker
-           
+
             if self.__export_env:
-                export_filename = os.getenv('AUGUR_ENV_EXPORT_FILE', 'augur.cfg.sh')
+                export_filename = os.getenv('AUGUR_ENV_EXPORT_FILE', 'augur.config.json.sh')
                 self.__export_file = open(export_filename, 'w+')
-                logger.info('Exporting {} to environment variable export statements in {}'.format(config_file, export_filename))
+                logger.info('Exporting {} to environment variable export statements in {}'.format(self.__config_file_name, export_filename))
                 self.__export_file.write('#!/bin/bash\n')
 
             # Load the config file
@@ -93,27 +156,14 @@ class Application(object):
         cache_parsed = parse_cache_config_options(cache_config)
         self.cache = CacheManager(**cache_parsed)
 
-        # Create DB Session
-        self.db = None
-        self.session = None
-        db_str = self.read_config('Database', 'connection_string', 'AUGUR_DATABASE', 'sqlite:///:memory:')
-        self.db = create_engine(db_str)
-        self.__Session = scoped_session(sessionmaker(bind=self.db))
-        self.session = self.__Session()
-        Base.query = self.__Session.query_property()
-
         self.metrics = MetricDefinitions(self)
 
-
         # # Initalize all objects to None
-        # self.__metrics_status = None
         self._loaded_plugins = {}
 
         # Application.default_plugins
         # for plugin_name in Application.default_plugins:
         #     self[plugin_name]
-
-
 
     def __getitem__(self, plugin_name):
         """

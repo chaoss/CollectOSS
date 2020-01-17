@@ -5,11 +5,11 @@ Provides shared functions that do not fit in a class of their own
 import os
 import re
 import logging
-import coloredlogs
-import beaker
 import inspect
 import types
 import sys
+import coloredlogs
+import beaker
 
 # Logging
 coloredlogs.install(level=os.getenv('AUGUR_LOG_LEVEL', 'INFO'))

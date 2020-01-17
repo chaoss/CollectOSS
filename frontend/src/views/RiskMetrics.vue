@@ -54,7 +54,7 @@
         <cii-table
           source="ciiBP"
           :headers="['Passing Status','Badge Level', 'Date']"
-          :fields="['achieve_passing_status', 'badge_level', 'date']"
+          :fields="['name', 'achieve_passing_status', 'badge_level', 'date']"
           title="CII Best Practices"
         ></cii-table>
         <br> <br>
@@ -67,7 +67,16 @@
         <coverage-card
           title="License Coverage"
           source="sbom"
+          sourcetwo="licenseDeclared"
         ></coverage-card>
+        <br><br>
+        <osi-card
+          source="licenseDeclared"
+          :headers="['Short Name', 'Count']"
+          :ldata="licenses"
+          :fields="['short_name']"
+          title="Percent OSI-Approved Licenses by File">
+        </osi-card>
       </div>
 
       </div>
@@ -89,6 +98,7 @@
   import CiiTable from "@/components/charts/CiiTable.vue";
   import DownloadCard from "@/components/charts/DownloadCard.vue";
   import CoverageCard from "@/components/charts/CoverageCard.vue";
+  import OsiCard from "@/components/charts/OsiCard.vue";
   // import PieChart from "@/components/charts/PieChart.vue";
   import Licenses from "@/components/Licenses.json";
   import router from "@/router";
@@ -103,7 +113,8 @@
       LicenseTable,
       CiiTable,
       DownloadCard,
-      CoverageCard
+      CoverageCard,
+      OsiCard
       // PieChart,
     },
     methods: {

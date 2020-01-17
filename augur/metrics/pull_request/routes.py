@@ -1,4 +1,4 @@
-from flask import Response
+#SPDX-License-Identifier: MIT
 
 def create_pull_request_routes(server):
 
@@ -45,7 +45,7 @@ def create_pull_request_routes(server):
     server.addRepoGroupMetric(metrics.reviews, 'reviews')
 
     """
-    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/reviews Reviews (Repo)
+    @api {get} /repos/:repo_id/reviews Reviews (Repo)
     @apiName reviews-repo
     @apiGroup Evolution
     @apiDescription Time series of number of new reviews / pull requests opened within a certain period.
@@ -111,7 +111,7 @@ def create_pull_request_routes(server):
     server.addRepoGroupMetric(metrics.reviews_accepted, 'reviews-accepted')
 
     """
-    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/reviews-accepted Reviews Accepted (Repo)
+    @api {get} /repos/:repo_id/reviews-accepted Reviews Accepted (Repo)
     @apiName reviews-accepted-repo
     @apiGroup Evolution
     @apiDescription Time series of number of accepted reviews / pull requests opened within a certain period.
@@ -177,7 +177,7 @@ def create_pull_request_routes(server):
     server.addRepoGroupMetric(metrics.reviews_declined, 'reviews-declined')
 
     """
-    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/reviews-declined Reviews Declined (Repo)
+    @api {get} /repos/:repo_id/reviews-declined Reviews Declined (Repo)
     @apiName reviews-declined-repo
     @apiGroup Evolution
     @apiDescription Time series of number of declined reviews / pull requests opened within a certain period.
@@ -248,7 +248,7 @@ def create_pull_request_routes(server):
     server.addRepoGroupMetric(metrics.review_duration, 'review-duration')
 
     """
-    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/review-duration review Duration (Repo)
+    @api {get} /repos/:repo_id/review-duration review Duration (Repo)
     @apiName review-duration-repo
     @apiGroup Evolution
     @apiDescription Time since an review/pull request is proposed until it is accepted.
@@ -305,7 +305,7 @@ def create_pull_request_routes(server):
         metrics.pull_requests_merge_contributor_new, 'pull-requests-merge-contributor-new')
 
     """
-    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/pull-requests-merge-contributor-new New Contributors of Commits (Repo)
+    @api {get} /repos/:repo_id/pull-requests-merge-contributor-new New Contributors of Commits (Repo)
     @apiName New Contributors of Commits(Repo)
     @apiGroup Evolution
     @apiDescription Number of persons contributing with an accepted commit for the first time.
@@ -360,7 +360,7 @@ def create_pull_request_routes(server):
     server.addRepoGroupMetric(metrics.pull_request_acceptance_rate, 'pull-request-acceptance-rate')
 
     """
-    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/pull-request-acceptance-rate Pull Request Acceptance Rate (Repo)
+    @api {get} /repos/:repo_id/pull-request-acceptance-rate Pull Request Acceptance Rate (Repo)
     @apiName pull-request-acceptance-rate-repo
     @apiGroup Experimental
     @apiDescription Timeseries of pull request acceptance rate (expressed as the ratio of pull requests merged on a date to the count of pull requests opened on a date)

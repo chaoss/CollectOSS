@@ -1,4 +1,4 @@
-from flask import Response
+#SPDX-License-Identifier: MIT
 
 def create_issue_routes(server):
 
@@ -39,7 +39,7 @@ def create_issue_routes(server):
     server.addRepoGroupMetric(metrics.issues_new, 'issues-new')
 
     """
-    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/issues-new Issues New (Repo)
+    @api {get} /repos/:repo_id/issues-new Issues New (Repo)
     @apiName issues-new-repo
     @apiGroup Evolution
     @apiDescription Time series of number of new issues opened during a certain period.
@@ -105,7 +105,7 @@ def create_issue_routes(server):
     server.addRepoGroupMetric(metrics.issues_active, 'issues-active')
 
     """
-    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/issues-active Issues Active (Repo)
+    @api {get} /repos/:repo_id/issues-active Issues Active (Repo)
     @apiName issues-active-repo
     @apiGroup Evolution
     @apiDescription Time series of number of issues that showed some activity during a certain period.
@@ -171,7 +171,7 @@ def create_issue_routes(server):
     server.addRepoGroupMetric(metrics.issues_closed, 'issues-closed')
 
     """
-    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/issues-closed Issues Closed (Repo)
+    @api {get} /repos/:repo_id/issues-closed Issues Closed (Repo)
     @apiName issues-closed-repo
     @apiGroup Evolution
     @apiDescription Time series of number of issues closed during a certain period.
@@ -242,7 +242,7 @@ def create_issue_routes(server):
     server.addRepoGroupMetric(metrics.issue_duration, 'issue-duration')
 
     """
-    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/issue-backlog Issue Duration (Repo)
+    @api {get} /repos/:repo_id/issue-backlog Issue Duration (Repo)
     @apiName issue-duration-repo
     @apiGroup Evolution
     @apiDescription Time since an issue is proposed until it is closed.
@@ -308,7 +308,7 @@ def create_issue_routes(server):
     server.addRepoGroupMetric(metrics.issue_participants, 'issue-participants')
 
     """
-    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/issue-participants Issue Participants (Repo)
+    @api {get} /repos/:repo_id/issue-participants Issue Participants (Repo)
     @apiName issue-participants-repo
     @apiGroup Evolution
     @apiDescription How many persons participated in the discussion of issues.
@@ -364,7 +364,7 @@ def create_issue_routes(server):
     server.addRepoGroupMetric(metrics.issue_backlog, 'issue-backlog')
 
     """
-    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/issue-backlog Issue Backlog (Repo)
+    @api {get} /repos/:repo_id/issue-backlog Issue Backlog (Repo)
     @apiName issue-backlog-repo
     @apiGroup Evolution
     @apiDescription Number of issues currently open.
@@ -405,7 +405,7 @@ def create_issue_routes(server):
     server.addRepoGroupMetric(metrics.issue_throughput, 'issue-throughput')
 
     """
-    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/issue-throughput Issue Throughput (Repo)
+    @api {get} /repos/:repo_id/issue-throughput Issue Throughput (Repo)
     @apiName issue-throughput-repo
     @apiGroup Evolution
     @apiDescription Ratio of issues closed to total issues.
@@ -452,7 +452,7 @@ def create_issue_routes(server):
         metrics.issues_first_time_opened, 'issues-first-time-opened')
 
     """
-    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/issues-first-time-opened New Contributors of Issues (Repo)
+    @api {get} /repos/:repo_id/issues-first-time-opened New Contributors of Issues (Repo)
     @apiName New Contributors of Issues(Repo)
     @apiGroup Evolution
     @apiDescription Number of persons opening an issue for the first time.
@@ -509,7 +509,7 @@ def create_issue_routes(server):
         metrics.issues_first_time_closed, 'issues-first-time-closed')
 
     """
-    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/issues-first-time-closed Closed Issues New Contributors (Repo)
+    @api {get} /repos/:repo_id/issues-first-time-closed Closed Issues New Contributors (Repo)
     @apiName Closed Issues New Contributors(Repo)
     @apiGroup Evolution
     @apiDescription Number of persons closing an issue for the first time.
@@ -584,7 +584,7 @@ def create_issue_routes(server):
     server.addRepoMetric(metrics.open_issues_count, 'open-issues-count')
 
     """
-    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/closed-issues-count Closed Issues Count (Repo Group)
+    @api {get} /repos/:repo_id/closed-issues-count Closed Issues Count (Repo Group)
     @apiName closed-issues-count-repo-group
     @apiGroup Evolution
     @apiDescription Count of closed issues.
@@ -659,7 +659,7 @@ def create_issue_routes(server):
         metrics.issues_open_age, 'issues-open-age')
 
     """
-    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/issues-open-age Open Issue Age (Repo)
+    @api {get} /repos/:repo_id/issues-open-age Open Issue Age (Repo)
     @apiName Open Issue Age(Repo)
     @apiGroup Evolution
     @apiDescription Age of open issues.
@@ -718,7 +718,7 @@ def create_issue_routes(server):
         metrics.issues_closed_resolution_duration, 'issues-closed-resolution-duration')
 
     """
-    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/issues-closed-resolution-duration Closed Issue Resolution Duration (Repo)
+    @api {get} /repos/:repo_id/issues-closed-resolution-duration Closed Issue Resolution Duration (Repo)
     @apiName Closed Issue Resolution Duration(Repo)
     @apiGroup Evolution
     @apiDescription Duration of time for issues to be resolved.
@@ -776,7 +776,7 @@ def create_issue_routes(server):
     server.addRepoGroupMetric(metrics.issues_maintainer_response_duration, 'issues-maintainer-response-duration')
 
     """
-    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/issues-maintainer-response-duration Issue Response Time (Repo)
+    @api {get} /repos/:repo_id/issues-maintainer-response-duration Issue Response Time (Repo)
     @apiName Issue Response Time(Repo)
     @apiGroup Evolution
     @apiDescription Duration of time for issues to be resolved.
@@ -820,7 +820,7 @@ def create_issue_routes(server):
     server.addRepoGroupMetric(metrics.average_issue_resolution_time, 'average-issue-resolution-time')
 
     """
-    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/avgerage-issue-resolution-time Average Issue Resolution Time (Repo)
+    @api {get} /repos/:repo_id/avgerage-issue-resolution-time Average Issue Resolution Time (Repo)
     @apiName average-issue-resolution-time-repo
     @apiGroup Risk
     @apiDescription The average issue resolution time.
@@ -866,7 +866,7 @@ def create_issue_routes(server):
     server.addRepoGroupMetric(metrics.issue_comments_mean, 'issue-comments-mean')
 
     """
-    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/issue-comments-mean Issue Comments Mean (Repo)
+    @api {get} /repos/:repo_id/issue-comments-mean Issue Comments Mean (Repo)
     @apiName issue-comments-mean-repo
     @apiGroup Experimental
     @apiDescription Mean(Average) of issue comments per day.
@@ -917,7 +917,7 @@ def create_issue_routes(server):
     server.addRepoGroupMetric(metrics.issue_comments_mean_std, 'issue-comments-mean-std')
 
     """
-    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/issue-comments-mean-std Issue Comments Mean Std (Repo)
+    @api {get} /repos/:repo_id/issue-comments-mean-std Issue Comments Mean Std (Repo)
     @apiName issue-comments-mean-repo
     @apiGroup Experimental
     @apiDescription Mean(Average) and Standard Deviation of issue comments per day.

@@ -9,6 +9,7 @@ __pycache__/
 runtime/
 logs/
 frontend/public/api_docs/
+*.err
 
 # C extensions
 *.so
@@ -116,6 +117,7 @@ venv.bak/
 .spyderproject
 .spyproject
 
+
 # Rope project settings
 .ropeproject
 
@@ -127,5 +129,15 @@ venv.bak/
 .dmypy.json
 dmypy.json
 
+
 # Pyre type checker
 .pyre/
+
+# Augur-spdx
+./spdx-scanner/dosocs2.conf
+spdx-scanner/dosocs2.conf
+spdx-scanner/augur-spdx/
+workers/spdx_worker/dosocs2.conf
+workers/spdx_worker/augur-spdx/
+workers/spdx_worker/ex-raw.txt
+workers/spdx_worker/ex.json

@@ -1,6 +1,6 @@
 from multiprocessing import Process, Queue
 from urllib.parse import urlparse
-import requests
+import requests, sys
 import pandas as pd
 import sqlalchemy as s
 from sqlalchemy.ext.automap import automap_base
@@ -42,6 +42,9 @@ class InsightWorker:
         self.refresh = True
         self.send_insights = True
         self.finishing_task = False
+        self.anomaly_days = self.config['anomaly_days']
+        self.training_days = self.config['training_days']
+        self.confidence = self.config['confidence_interval'] / 100
 
         logging.info("Worker initializing...")
         
@@ -102,8 +105,21 @@ class InsightWorker:
         self.history_table = HelperBase.classes.worker_history.__table__
         self.job_table = HelperBase.classes.worker_job.__table__
 
-        requests.post('http://{}:{}/api/unstable/workers'.format(
-            self.config['broker_host'],self.config['broker_port']), json=specs) #hello message
+        connected = False
+        for i in range(5):
+            try:
+                logging.info("attempt {}".format(i))
+                if i > 0:
+                    time.sleep(10)
+                requests.post('http://{}:{}/api/unstable/workers'.format(
+                    self.config['broker_host'],self.config['broker_port']), json=specs)
+                logging.info("Connection to the broker was successful")
+                connected = True
+                break
+            except requests.exceptions.ConnectionError:
+                logging.error('Cannot connect to the broker. Trying again...')
+        if not connected:
+            sys.exit('Could not connect to the broker after 5 attempts! Quitting...')
 
 
     def update_config(self, config):
@@ -231,24 +247,21 @@ class InsightWorker:
                 logging.info("Endpoint with url: {} returned an empty response. Moving on to next endpoint.\n".format(url))
                 continue
 
-            # ci after past year insights after 90 days
             # num issues, issue comments, num commits, num pr, comments pr
             logging.info("Found the following unique keys for this endpoint: {}".format(unique_keys))
             date_filtered_data = []
             i = 0
             not_timeseries = False
+            begin_date = datetime.datetime.now()
+
+            # Subtract configurable amount of time
+            begin_date = begin_date - datetime.timedelta(days=self.training_days)
+            begin_date = begin_date.strftime('%Y-%m-%d')
             for dict in data:
-                begin_date = datetime.datetime.now()
-                # Subtract 1 year and leap year check
-                try:
-                    begin_date = begin_date.replace(year=begin_date.year-1)
-                except ValueError:
-                    begin_date = begin_date.replace(year=begin_date.year-1, day=begin_date.day-1)
-                begin_date = begin_date.strftime('%Y-%m-%d')
                 try:
                     if dict['date'] > begin_date:
                         date_filtered_data = data[i:]
-                        logging.info("data 365 days ago date found: {}, {}".format(dict['date'], begin_date))
+                        logging.info("data {} days ago date found: {}, {}".format(self.training_days, dict['date'], begin_date))
                         break
                 except:
                     logging.info("Endpoint {} is not a timeseries, moving to next".format(endpoint))
@@ -261,13 +274,14 @@ class InsightWorker:
             date_found_index = None
             date_found = False
             x = 0
-            begin_date = datetime.datetime.now() - datetime.timedelta(days=90)
+            
+            begin_date = datetime.datetime.now() - datetime.timedelta(days=self.anomaly_days)
             for dict in date_filtered_data:
                 dict_date = datetime.datetime.strptime(dict['date'], '%Y-%m-%dT%H:%M:%S.%fZ')#2018-08-20T00:00:00.000Z
                 if dict_date > begin_date and not date_found:
                     date_found = True
                     date_found_index = x
-                    logging.info("raw values 90 days ago date found: {}, {}".format(dict['date'], begin_date))
+                    logging.info("raw values within {} days ago date found: {}, {}".format(self.anomaly_days, dict['date'], begin_date))
                 x += 1
                 for key in unique_keys:
                     try:
@@ -282,8 +296,7 @@ class InsightWorker:
 
             for key in raw_values.keys():
                 if len(raw_values[key]) > 0:
-                    confidence = 0.95
-                    mean, lower, upper = self.confidence_interval(raw_values[key], confidence=confidence)
+                    mean, lower, upper = self.confidence_interval(raw_values[key], confidence=self.confidence)
                     logging.info("Upper: {}, middle: {}, lower: {}".format(upper, mean, lower))
                     i = 0
                     discovery_index = None
@@ -323,7 +336,7 @@ class InsightWorker:
                                 'ri_value': date_filtered_raw_values[discovery_index][key],#date_filtered_raw_values[j][key],
                                 'ri_date': date_filtered_raw_values[discovery_index]['date'],#date_filtered_raw_values[j]['date'],
                                 'ri_score': score,
-                                'ri_detection_method': '95% confidence interval',
+                                'ri_detection_method': '{} confidence interval'.format(self.confidence),
                                 "tool_source": self.tool_source,
                                 "tool_version": self.tool_version,
                                 "data_source": self.data_source
@@ -349,7 +362,7 @@ class InsightWorker:
                                         'ri_date': tuple['date'],#date_filtered_raw_values[j]['date'],
                                         'ri_fresh': 0 if j < discovery_index else 1,
                                         'ri_score': score,
-                                        'ri_detection_method': '95% confidence interval',
+                                        'ri_detection_method': '{} confidence interval'.format(self.confidence),
                                         "tool_source": self.tool_source,
                                         "tool_version": self.tool_version,
                                         "data_source": self.data_source
@@ -433,18 +446,27 @@ class InsightWorker:
 
     def send_insight(self, insight, units_from_mean):
         try:
-            begin_date = datetime.datetime.now() - datetime.timedelta(days=30)
+            repoSQL = s.sql.text("""
+                SELECT repo_git, rg_name 
+                FROM repo, repo_groups
+                WHERE repo_id = {}
+            """.format(insight['repo_id']))
+
+            repo = pd.read_sql(repoSQL, self.db, params={}).iloc[0]
+            
+            begin_date = datetime.datetime.now() - datetime.timedelta(days=self.anomaly_days)
             dict_date = datetime.datetime.strptime(insight['ri_date'], '%Y-%m-%dT%H:%M:%S.%fZ')#2018-08-20T00:00:00.000Z
-            logging.info("about to send to jonah")
+            # logging.info("about to send to jonah")
             if dict_date > begin_date and self.send_insights:
-                logging.info("Insight less than 7 days ago date found: {}\n\nSending to Jonah...".format(insight))
+                logging.info("Insight less than {} days ago date found: {}\n\nSending to Jonah...".format(self.anomaly_days, insight))
                 to_send = {
                     'insight': True,
-                    'rg_name': insight['rg_name'],
-                    'repo_git': insight['repo_git'],
-                    'value': insight['ri_value'],
-                    'field': insight['ri_field'],
-                    'metric': insight['ri_metric'],
+                    # 'rg_name': repo['rg_name'],
+                    'repo_git': repo['repo_git'],
+                    'value': insight['ri_value'], # y-value of data point that is the anomaly
+                    'date': insight['ri_date'], # date of data point that is the anomaly
+                    'field': insight['ri_field'], # name of the field from the endpoint that the anomaly was detected on
+                    'metric': insight['ri_metric'], # name of the metric the anomaly was detected on
                     'units_from_mean': units_from_mean,
                     'detection_method': insight['ri_detection_method']
                 }

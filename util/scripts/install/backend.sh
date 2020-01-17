@@ -9,5 +9,4 @@ echo
 pip install xlsxwriter setuptools;
 pip install sphinx rtd_sphinx_theme;
 npm install apidoc;
-python setup.py install;
 pip install -e .; 

@@ -16,14 +16,13 @@ do
 
       echo
       echo "**********************************"
-      echo "Installing $(basename $(pwd))..."
+      echo "Installing $FORMATTED_WORKER..."
       echo "**********************************"
       echo
 
       cd $WORKER
       rm -rf build/*;
       rm -rf dist/*;
-      python setup.py install;
       pip install -e .
       cd ../..
       echo "Installing $FORMATTED_WORKER"

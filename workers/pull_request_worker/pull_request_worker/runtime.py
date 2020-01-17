@@ -63,6 +63,7 @@ def main(augur_url, host, port):
 
     while True:
         try:
+            print("Trying port: {}\n".format(worker_port))
             r = requests.get("http://{}:{}/AUGWOP/heartbeat".format(server['host'],worker_port)).json()
             if 'status' in r:
                 if r['status'] == 'alive':
@@ -71,14 +72,6 @@ def main(augur_url, host, port):
             break
 
     logging.basicConfig(filename='worker_{}.log'.format(worker_port), filemode='w', level=logging.INFO)
-
-    while True:
-        try:
-            r = requests.get("http://{}:{}".format(server['host'],worker_port) + '/AUGWOP/task')
-            if r.status == 200:
-                worker_port += 1
-        except:
-            break
 
     config = {
             "id": "com.augurlabs.core.pull_request_worker.{}".format(worker_port),
@@ -106,7 +99,6 @@ def main(augur_url, host, port):
 
     create_server(app, None)
     logging.info("Starting Flask App with pid: " + str(os.getpid()) + "...")
-
 
     app.run(debug=app.debug, host=server['host'], port=worker_port)
     if app.gh_pr_worker._child is not None:
