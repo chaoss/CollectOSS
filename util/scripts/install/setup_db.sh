@@ -4,32 +4,6 @@ PS3="
 Please type the number corresponding to your selection and then press the Enter/Return key.
 Your choice: "
 
-function generate_config_file() {
-
-  echo
-  echo "**********************************"
-  echo "Generating configuration file..."
-  echo "**********************************"
-  echo
-
-  INSTALL_SCRIPT_HOME="util/scripts/install"
-  cd $INSTALL_SCRIPT_HOME
-
-  if [[ -e temp.config.json ]]; then
-    rm temp.config.json
-  fi
-
-  touch temp.config.json
-
-  echo "$1" > temp.config.json
-
-  python make_config.py
-
-  rm temp.config.json
-
-  cd ../../.. #get back to augur root
-}
-
 function get_api_key_and_repo_path() {
   echo
   echo "Additionally, you'll need to provide a valid GitHub API key."
@@ -45,23 +19,23 @@ function get_api_key_and_repo_path() {
     case $create_facade_repo in
       "Create a new directory" )
           echo "** You MUST use an absolute path. **"
-          read -p "Desired directory name: " facade_repo_path
-          if [[ -d "$facade_repo_path" ]]; then
+          read -p "Desired directory name: " facade_repo_directory
+          if [[ -d "$facade_repo_directory" ]]; then
             echo "That directory already exists. Continuing..."
           else
-            mkdir "$facade_repo_path"
+            mkdir "$facade_repo_directory"
             echo "Directory created."
           fi
           break
         ;;
       "Use an existing directory" )
           echo "** You MUST use an absolute path. **"
-          read -p "Facade repo path: " facade_repo_path
+          read -p "Facade repo path: " facade_repo_directory
 
-          while [[ ! -d "$facade_repo_path" ]]; do
+          while [[ ! -d "$facade_repo_directory" ]]; do
             echo "That directory does not exist."
             echo "** You MUST use an absolute path. **"
-            read -p "Facade repo path: " facade_repo_path
+            read -p "Facade repo path: " facade_repo_directory
           done
 
           break
@@ -69,13 +43,13 @@ function get_api_key_and_repo_path() {
     esac
   done
 
-  [[ "${facade_repo_path}" != */ ]] && facade_repo_path="${facade_repo_path}/"
+  [[ "${facade_repo_directory}" != */ ]] && facade_repo_directory="${facade_repo_directory}/"
 
 }
 
 function set_remote_db_credentials() {
 
-  read -p "Database: " database
+  read -p "Database: " db_name
   read -p "Host: " host
   read -p "Port: " port
   read -p "User: " db_user
@@ -83,70 +57,48 @@ function set_remote_db_credentials() {
 
   get_api_key_and_repo_path
 
-  IFS='' read -r -d '' config <<EOF
-    {
-      "database": "$database",
-      "host": "$host",
-      "port": $port,
-      "db_user": "$db_user",
-      "password": "$password",
-      "key": "$github_api_key",
-      "github_api_key": "$github_api_key",
-      "facade_repo_path": "$facade_repo_path"
-    }
-EOF
-
   save_credentials
 }
 
 function set_local_db_credentials() {
 
-  read -p "Database: " database
+  read -p "Database: " db_name
   read -p "User: " db_user
   read -p "Port: " port
   read -p "Password: " password
 
   host="localhost"
 
-  host="localhost"
   get_api_key_and_repo_path
-
-  IFS='' read -r -d '' config <<EOF
-  {
-    "database": "$database",
-    "host": "$host",
-    "port": $port,
-    "db_user": "$db_user",
-    "password": "$password",
-    "key": "$github_api_key",
-    "github_api_key": "$github_api_key",
-    "facade_repo_path": "$facade_repo_path"
-  }
-EOF
 
   save_credentials
 }
 
 function save_credentials() {
 
-  generate_config_file "$config"
+  echo
+  echo "**********************************"
+  echo "Generating configuration file..."
+  echo "**********************************"
+  echo
 
-  echo $host:$port:$database:$db_user:$password >> ~/.pgpass 
+  augur configure generate --db_name $db_name --db_host $host --db_port $port --db_user $db_user --db_password $password --github_api_key $github_api_key --facade_repo_directory $facade_repo_directory
+  echo $host:$port:$db_name:$db_user:$password >> ~/.pgpass 
   chmod 0600 ~/.pgpass 
 
 }
 
 function create_db_schema() {
 
-    psql -h $host -d $database -U $db_user -p $port -a -w -f persistence_schema/1-schema.sql
-    psql -h $host -d $database -U $db_user -p $port -a -w -f persistence_schema/2-augur_data.sql
-    psql -h $host -d $database -U $db_user -p $port -a -w -f persistence_schema/3-augur_operations.sql
-    psql -h $host -d $database -U $db_user -p $port -a -w -f persistence_schema/4-spdx.sql
-    psql -h $host -d $database -U $db_user -p $port -a -w -f persistence_schema/5-seed-data.sql
-    psql -h $host -d $database -U $db_user -p $port -a -w -f persistence_schema/6-schema_update_8.sql
-    psql -h $host -d $database -U $db_user -p $port -a -w -f persistence_schema/7-schema_update_9.sql
+    psql -h $host -d $db_name -U $db_user -p $port -a -w -f persistence_schema/1-schema.sql
+    psql -h $host -d $db_name -U $db_user -p $port -a -w -f persistence_schema/2-augur_data.sql
+    psql -h $host -d $db_name -U $db_user -p $port -a -w -f persistence_schema/3-augur_operations.sql
+    psql -h $host -d $db_name -U $db_user -p $port -a -w -f persistence_schema/4-spdx.sql
+    psql -h $host -d $db_name -U $db_user -p $port -a -w -f persistence_schema/5-seed-data.sql
+    psql -h $host -d $db_name -U $db_user -p $port -a -w -f persistence_schema/6-schema_update_8.sql
+    psql -h $host -d $db_name -U $db_user -p $port -a -w -f persistence_schema/7-schema_update_9.sql
 
-    psql -h $host -d $database -U $db_user -p $port -a -w -c "UPDATE augur_data.settings SET VALUE = '$facade_repo_path' WHERE setting='repo_directory';"
+    psql -h $host -d $db_name -U $db_user -p $port -a -w -c "UPDATE augur_data.settings SET VALUE = '$facade_repo_directory' WHERE setting='repo_directory';"
     echo "Schema created"
 
     echo "Would you like to load your database with some sample data provided by Augur?"
@@ -155,7 +107,7 @@ function create_db_schema() {
       case $should_load_db in
         "Yes" )
           "Loading database with sample dataset."
-          persistence_schema/db_load.sh $host $database $db_user $port
+          persistence_schema/db_load.sh $host $db_name $db_user $port
           break
           ;;
         "No" )
@@ -179,10 +131,10 @@ do
     $install_locally )
         echo "Please set the credentials for your database."
         set_local_db_credentials
-        psql -h $host -p $port -a -w -c "CREATE DATABASE $database;"
+        psql -h $host -p $port -a -w -c "CREATE DATABASE $db_name;"
         psql -h $host -p $port -a -w -c "CREATE USER $db_user WITH ENCRYPTED PASSWORD '$password';"
-        psql -h $host -p $port -a -w -c "ALTER DATABASE $database OWNER TO $db_user;"
-        psql -h $host -p $port -a -w -c "GRANT ALL PRIVILEGES ON DATABASE $database TO $db_user;"
+        psql -h $host -p $port -a -w -c "ALTER DATABASE $db_name OWNER TO $db_user;"
+        psql -h $host -p $port -a -w -c "GRANT ALL PRIVILEGES ON DATABASE $db_name TO $db_user;"
         echo "DB created"
         create_db_schema
         break

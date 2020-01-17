@@ -10,8 +10,8 @@
         "connection_string": "sqlite:///:memory:",
         "database": "augur",
         "host": "localhost",
-        "key": "invalid_key",
-        "password": "password",
+        "key": "key",
+        "password": "augur",
         "port": 5432,
         "schema": "augur_data",
         "user": "augur"
@@ -107,7 +107,7 @@
     "Workers": {
         "facade_worker": {
             "port": 56111,
-            "repo_directory": "/home/repos/",
+            "repo_directory": "repos/",
             "switch": 0,
             "workers": 1
         },

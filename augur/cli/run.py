@@ -14,14 +14,14 @@ from gunicorn.six import iteritems
 from gunicorn.arbiter import Arbiter
 from augur.housekeeper.housekeeper import Housekeeper
 
-from augur.runtime import pass_application
+# from augur.runtime import pass_application
 from augur.util import logger
 from augur.server import Server
 
 @click.command('run')
 @click.option('--enable-housekeeper/--disable-housekeeper', default=True)
-@pass_application
-def cli(app, enable_housekeeper):
+@click.pass_context
+def cli(ctx, enable_housekeeper):
 
     def get_process_id(name):
         """Return process ids found by name or command
@@ -29,6 +29,8 @@ def cli(app, enable_housekeeper):
         child = subprocess.Popen(['pgrep', '-f', name], stdout=subprocess.PIPE, shell=False)
         response = child.communicate()[0]
         return [int(pid) for pid in response.split()]
+
+    app = ctx.obj
 
     mp.set_start_method('forkserver', force=True)
     app.schedule_updates()

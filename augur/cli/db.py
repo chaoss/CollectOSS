@@ -4,7 +4,7 @@ import sqlalchemy as s
 import pandas as pd
 from sqlalchemy import exc
 
-from augur.runtime import pass_application
+# from augur.runtime import pass_application
 
 @click.group('db', short_help='Database utilities')
 def cli():
@@ -12,8 +12,9 @@ def cli():
 
 @cli.command('add_repos', short_help="Add repositories to Augur's database")
 @click.argument('filename', type=click.Path(exists=True))
-@pass_application
-def add_repos(app, filename):
+@click.pass_context
+def add_repos(ctx, filename):
+    app = ctx.obj
 
     db = get_db_connection(app)
 
@@ -42,8 +43,9 @@ def add_repos(app, filename):
                 # I know it's weird
 
 @cli.command('get_repo_groups', short_help="List all repo groups and their associated IDs")
-@pass_application
-def get_repo_groups(app):
+@click.pass_context
+def get_repo_groups(ctx):
+    app = ctx.obj
 
     db = get_db_connection(app)
 
@@ -54,8 +56,9 @@ def get_repo_groups(app):
 
 @cli.command('add_repo_groups', short_help="Create new repo groups in Augur's database")
 @click.argument('filename', type=click.Path(exists=True))
-@pass_application
-def add_repo_groups(app, filename):
+@click.pass_context
+def add_repo_groups(ctx, filename):
+    app = ctx.obj
 
     db = get_db_connection(app)
 

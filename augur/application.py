@@ -18,123 +18,85 @@ from augur import logger
 from augur.metrics import MetricDefinitions
 import augur.plugins
 
-logging.basicConfig(filename='test.log', level=logging.INFO)
+logging.basicConfig(level=logging.INFO)
 
 class Application(object):
     """Initalizes all classes from Augur using a config file or environment variables"""
 
-    def __init__(self, default_config_file_path='augur.config.json', no_config_file=0, config=None):
+    def __init__(self, no_config_file=False, given_config=None):
         """
         Reads config, creates DB session, and initializes cache
         """
         # Open the config file
+        self._root_augur_dir_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
         self.__config_file_name = 'augur.config.json'
-        self.__already_exported = {}
-        self.__default_config = {
-            "Cache": {
-                "config": {
-                    "cache.data_dir": "runtime/cache/",
-                    "cache.lock_dir": "runtime/cache/",
-                    "cache.type": "file"
-                }
-            },
-            "Database": {
-                "connection_string": "sqlite:///:memory:",
-                "database": "augur",
-                "host": "localhost",
-                "key": "key",
-                "password": "password",
-                "port": 5432,
-                "schema": "augur_data",
-                "user": "augur"
-            },
-            "Development": {
-                "developer": "0",
-                "interactive": "0"
-            },
-            "Facade": {
-                "check_updates": 1,
-                "clone_repos": 1,
-                "create_xlsx_summary_files": 1,
-                "delete_marked_repos": 0,
-                "fix_affiliations": 1,
-                "force_analysis": 1,
-                "force_invalidate_caches": 1,
-                "force_updates": 1,
-                "limited_run": 0,
-                "multithreaded": 0,
-                "nuke_stored_affiliations": 0,
-                "pull_repos": 1,
-                "rebuild_caches": 1,
-                "run_analysis": 1
-            },
-            "Housekeeper": {
-                "jobs": []
-            },
-            "Plugins": [],
-            "Server": {
-                "cache_expire": "3600",
-                "host": "0.0.0.0",
-                "port": "5000",
-                "workers": "1"
-            },
-            "Workers": {}
-         }
-
-        _root_augur_dir_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-        _possible_config_paths = [self.__config_file_name, _root_augur_dir_path + "/" + self.__config_file_name, f"/opt/augur/{self.__config_file_name}"]
-        _config_file_path = default_config_file_path
-
-        for location in _possible_config_paths:
-            try:
-                f = open(location, "r+")
-                _config_file_path = os.path.abspath(location)
-                f.close()
-                logging.info("Using config file at " + os.path.abspath(location))
-                break
-            except FileNotFoundError:
-                pass
-
-        self.__using_config_file = True
+        self.__default_config_file_path = self._root_augur_dir_path + '/' + self.__config_file_name
         self.__config_bad = False
-        self.__config_file_path = os.path.abspath(os.getenv('AUGUR_CONFIG_FILE', _config_file_path))
-        self.__config_location = os.path.dirname(self.__config_file_path)
+        self.__already_exported = {}
         self.__runtime_location = 'runtime/'
         self.__export_env = os.getenv('AUGUR_ENV_EXPORT', '0') == '1'
         self.__shell_config = None
 
-        if os.getenv('AUGUR_ENV_ONLY', '0') != '1' and no_config_file == 0:
-            try:
-                self.__config_file = open(self.__config_file_path, 'r+')
-            except:
-                logger.info('Couldn\'t open {}, attempting to create.'.format(self.__config_file_name))
-                if not os.path.exists(self.__config_location):
-                    os.makedirs(self.__config_location)
-                self.__config_file = open(self.__config_file_path, 'w+')
-                self.__config_bad = True
+        self.__default_config = {}
+        self.__path_to_default_config = os.path.dirname(os.path.realpath(__file__)) + '/default.config.json'
+        try:
+            with open(self.__path_to_default_config) as default_config:
+                self.__default_config = json.load(default_config)
+        except Exception as e:
+            logger.debug("Error reading default.config.json " + str(e))
 
-            if self.__export_env:
-                export_filename = os.getenv('AUGUR_ENV_EXPORT_FILE', 'augur.config.json.sh')
-                self.__export_file = open(export_filename, 'w+')
-                logger.info('Exporting {} to environment variable export statements in {}'.format(self.__config_file_name, export_filename))
-                self.__export_file.write('#!/bin/bash\n')
 
-            # Load the config file
-            try:
-                config_text = self.__config_file.read()
-                self.__config = json.loads(config_text)
-            except json.decoder.JSONDecodeError as e:
-                if not self.__config_bad:
-                    self.__using_config_file = False
-                    logger.error('%s could not be parsed, using defaults. Fix that file, or delete it and run this again to regenerate it. Error: %s', self.__config_file_path, str(e))
-
-                self.__config = self.__default_config
-        else:
+        if no_config_file == True:
             self.__using_config_file = False
             self.__config = self.__default_config
+        else:
+            _possible_config_paths = [self.__config_file_name, self.__default_config_file_path, f"/opt/augur/{self.__config_file_name}"]
+            _config_file_path = self.__default_config_file_path
 
-        if isinstance(config, dict):
-            self.__config.update(config)
+            for location in _possible_config_paths:
+                try:
+                    f = open(location, "r+")
+                    _config_file_path = os.path.abspath(location)
+                    f.close()
+                    break
+                except FileNotFoundError:
+                    pass
+
+            self.__using_config_file = True
+            self.__config_file_path = os.path.abspath(os.getenv('AUGUR_CONFIG_FILE', _config_file_path))
+            self.__config_location = os.path.dirname(self.__config_file_path)
+
+            if os.getenv('AUGUR_ENV_ONLY', '0') != '1' and no_config_file == False:
+                try:
+                    self.__config_file = open(self.__config_file_path, 'r+')
+                except:
+                    logger.info('Couldn\'t open {}, attempting to create.'.format(self.__config_file_name))
+                    if not os.path.exists(self.__config_file_path):
+                        with open(self.__config_file_path, "w+") as file_handle:
+                            json.dump(self.__default_config, file_handle)
+                    self.__config_file = open(self.__config_file_path, 'r+')
+
+                if self.__export_env:
+                    export_filename = os.getenv('AUGUR_ENV_EXPORT_FILE', 'augur.config.json.sh')
+                    self.__export_file = open(export_filename, 'w+')
+                    logger.info('Exporting {} to environment variable export statements in {}'.format(self.__config_file_name, export_filename))
+                    self.__export_file.write('#!/bin/bash\n')
+
+                # Load the config file
+                try:
+                    config_text = self.__config_file.read()
+                    self.__config = json.loads(config_text)
+                except json.decoder.JSONDecodeError as e:
+                    if not self.__config_bad:
+                        self.__using_config_file = False
+                        logger.error('%s could not be parsed, using defaults. Fix that file, or delete it and run this again to regenerate it. Error: %s', self.__config_file_path, str(e))
+                    self.__config = self.__default_config
+            else:
+                self.__using_config_file = False
+                self.__config = self.__default_config
+
+        if isinstance(given_config, dict):
+            self.__config.update(given_config)
 
         # List of data sources that can do periodic updates
         self.__updatable = []
@@ -143,16 +105,20 @@ class Application(object):
         # Create cache
         cache_config = {
             'cache.type': 'file',
-            'cache.data_dir': self.path('$(RUNTIME)/cache/'),
-            'cache.lock_dir': self.path('$(RUNTIME)/cache/')
+            'cache.data_dir': 'cache/',
+            'cache.lock_dir': 'cache/'
         }
-        cache_config.update(self.read_config('Cache', 'config', None, cache_config))
-        cache_config['cache.data_dir'] = self.path(cache_config['cache.data_dir'])
-        cache_config['cache.lock_dir'] = self.path(cache_config['cache.lock_dir'])
+
+        if self.__using_config_file:
+            cache_config.update(self.read_config('Cache', 'config', None, cache_config))
+            cache_config['cache.data_dir'] = self.path(cache_config['cache.data_dir'])
+            cache_config['cache.lock_dir'] = self.path(cache_config['cache.lock_dir'])
+
         if not os.path.exists(cache_config['cache.data_dir']):
             os.makedirs(cache_config['cache.data_dir'])
         if not os.path.exists(cache_config['cache.lock_dir']):
             os.makedirs(cache_config['cache.lock_dir'])
+
         cache_parsed = parse_cache_config_options(cache_config)
         self.cache = CacheManager(**cache_parsed)
 
@@ -324,14 +290,15 @@ class Application(object):
         Parse args and generates a valid config if the given one is bad
         """
         # Close files and save config
-        if self.__config_bad:
-            logger.info('Regenerating config with missing values...')
+        if self.__using_config_file:
+            if self.__config_bad:
+                logger.info('Regenerating config with missing values...')
+                self.__config_file.close()
+                self.__config_file = open(self.__config_file_path, 'w')
+                config_text = json.dumps(self.__config, sort_keys=True, indent=4)
+                config_text = config_text.replace(self.__config_location, '$(AUGUR)')
+                self.__config_file.write(config_text)
             self.__config_file.close()
-            self.__config_file = open(self.__config_file_path, 'w')
-            config_text = json.dumps(self.__config, sort_keys=True, indent=4)
-            config_text = config_text.replace(self.__config_location, '$(AUGUR)')
-            self.__config_file.write(config_text)
-        self.__config_file.close()
 
     def path_relative_to_config(self, path):
         """
@@ -339,10 +306,13 @@ class Application(object):
 
         :param path: specified path of variable
         """
-        if not os.path.isabs(path):
-            return os.path.join(self.__config_location, path)
+        if not self.__using_config_file:
+            if not os.path.isabs(path):
+                return os.path.join(self.__config_location, path)
+            else:
+                return path
         else:
-            return path
+            return None
 
     def update_all(self):
         """
