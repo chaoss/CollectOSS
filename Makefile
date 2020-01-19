@@ -5,6 +5,11 @@ EDITOR?="vi"
 AUGUR_PIP?='pip'
 AUGUR_PYTHON?='python'
 
+DOCKER_IMAGE_NAME?='augurlabs/augur'
+DOCKER_IMAGE_TAG?='latest'
+DOCKER_CONTAINER_NAME?='augurlabs/augur'
+AUGUR_PORT?=5000
+
 default:
 	@ echo "Installation Commands:"
 	@ echo "    install                         Installs augur using pip"
@@ -129,6 +134,14 @@ run:
 
 status:
 	@ ./util/scripts/control/status.sh
+
+docker-build:
+	@ bash -c 'docker build -t $(DOCKER_IMAGE_NAME) -f util/packaging/docker/Dockerfile .'
+
+docker-run:
+	@ bash -c 'docker run -p $(AUGUR_PORT):$(AUGUR_PORT) --name $(DOCKER_CONTAINER_NAME) --env-file env.txt $(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG)'
+
+
 
 
 #

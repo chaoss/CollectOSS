@@ -12,6 +12,8 @@ logs/
 cache/
 frontend/public/api_docs/
 *.err
+.tox
+env.txt
 
 # C extensions
 *.so

@@ -125,7 +125,7 @@ def generate(db_name, db_host, db_user, db_port, db_password, github_api_key, fa
         "Plugins": [],
         "Server": {
             "cache_expire": "3600",
-            "host": "127.0.0.1",
+            "host": "0.0.0.0",
             "port": "5000",
             "workers": "4"
         },
