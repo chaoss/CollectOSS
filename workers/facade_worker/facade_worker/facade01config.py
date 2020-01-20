@@ -84,142 +84,7 @@ class Config:
         # the current schema. After executing the database operations, call
         # increment_db to bring it up to the version with which it is now compliant.
 
-        print("Attempting database update")
-
-        if version < 0:
-
-            increment_db(0)
-
-        if version < 1:
-            # for commit f49b2f0e46b32997a72508bc83a6b1e834069588
-            add_update_frequency = ("INSERT INTO settings (setting,value) "
-                "VALUES ('update_frequency',24)")
-            self.cursor.execute(add_update_frequency)
-            self.db.commit
-
-            increment_db(1)
-
-        if version < 2:
-            add_recache_to_projects = ("ALTER TABLE projects ADD COLUMN "
-                "recache BOOL DEFAULT TRUE")
-            self.cursor.execute(add_recache_to_projects)
-            self.db.commit
-
-            increment_db(2)
-
-        if version < 3:
-            add_results_setting = ("INSERT INTO settings (setting,value) "
-                "VALUES ('results_visibility','show')")
-            self.cursor.execute(add_results_setting)
-            self.db.commit
-
-            increment_db(3)
-
-        if version < 4:
-            add_working_commits_table = ("CREATE TABLE IF NOT EXISTS working_commits ("
-                "repos_id INT UNSIGNED NOT NULL,"
-                "working_commit VARCHAR(40))")
-
-            self.cursor.execute(add_working_commits_table)
-            self.db.commit
-
-            # Make sure all working commits are processed
-
-            get_working_commits = ("SELECT id,working_commit "
-                "FROM repos WHERE working_commit > ''")
-
-            self.cursor.execute(get_working_commits)
-
-            working_commits = list(self.cursor)
-
-            for commit in working_commits:
-                trim_commit(commit['id'],commit['working_commit'])
-
-            # Now it's safe to discard the (now unused) column
-
-            remove_working_commit_column = ("ALTER TABLE repos DROP COLUMN "
-                "working_commit")
-
-            self.cursor.execute(remove_working_commit_column)
-            self.db.commit
-
-            increment_db(4)
-
-        if version < 5:
-
-            add_weekly_project_cache = ("CREATE TABLE IF NOT EXISTS project_weekly_cache ("
-                "projects_id INT UNSIGNED NOT NULL,"
-                "email VARCHAR(128) NOT NULL,"
-                "affiliation VARCHAR(128),"
-                "week TINYINT UNSIGNED NOT NULL,"
-                "year SMALLINT UNSIGNED NOT NULL,"
-                "added BIGINT UNSIGNED NOT NULL,"
-                "removed BIGINT UNSIGNED NOT NULL,"
-                "whitespace BIGINT UNSIGNED NOT NULL,"
-                "files BIGINT UNSIGNED NOT NULL,"
-                "patches BIGINT UNSIGNED NOT NULL,"
-                "INDEX `projects_id,year,affiliation` (projects_id,year,affiliation),"
-                "INDEX `projects_id,year,email` (projects_id,year,email),"
-                "INDEX `projects_id,affiliation` (projects_id,affiliation),"
-                "INDEX `projects_id,email` (projects_id,email))")
-
-            self.cursor.execute(add_weekly_project_cache)
-            self.db.commit
-
-            add_weekly_repo_cache = ("CREATE TABLE IF NOT EXISTS repo_weekly_cache ("
-                "repos_id INT UNSIGNED NOT NULL,"
-                "email VARCHAR(128) NOT NULL,"
-                "affiliation VARCHAR(128),"
-                "week TINYINT UNSIGNED NOT NULL,"
-                "year SMALLINT UNSIGNED NOT NULL,"
-                "added BIGINT UNSIGNED NOT NULL,"
-                "removed BIGINT UNSIGNED NOT NULL,"
-                "whitespace BIGINT UNSIGNED NOT NULL,"
-                "files BIGINT UNSIGNED NOT NULL,"
-                "patches BIGINT UNSIGNED NOT NULL,"
-                "INDEX `repos_id,year,affiliation` (repos_id,year,affiliation),"
-                "INDEX `repos_id,year,email` (repos_id,year,email),"
-                "INDEX `repos_id,affiliation` (repos_id,affiliation),"
-                "INDEX `repos_id,email` (repos_id,email))")
-
-            self.cursor.execute(add_weekly_repo_cache)
-            self.db.commit
-
-            increment_db(5)
-
-        if version < 6:
-
-            # As originally written, the UNIQUE wasn't working because it allowed
-            # multiple NULL values in end_date.
-
-            drop_special_tags_constraint = ("ALTER TABLE special_tags "
-                "DROP INDEX `email,start_date,end_date,tag`")
-
-            self.cursor.execute(drop_special_tags_constraint)
-            self.db.commit
-
-            add_unique_in_special_tags = ("ALTER TABLE special_tags "
-                "ADD UNIQUE `email,start_date,tag` (email,start_date,tag)")
-
-            self.cursor.execute(add_unique_in_special_tags)
-            self.db.commit
-
-            increment_db(6)
-
-        if version < 7:
-
-            # Using NULL for en unbounded nd_date in special_tags ended up being
-            # difficult when doing certain types of reports. The logic is much
-            # cleaner if we just use an end_date that is ridiculously far into the
-            # future.
-
-            remove_null_end_dates_in_special_tags = ("UPDATE special_tags "
-                "SET end_date = '9999-12-31' WHERE end_date IS NULL")
-
-            self.cursor.execute(remove_null_end_dates_in_special_tags)
-            self.db.commit
-
-            increment_db(7)
+        print("Legacy Facade Block for DB UPDATE. No longer used. ")
 
         print("No further database updates.\n")
 
@@ -364,21 +229,10 @@ class Config:
             self.cursor_people = cursor
             self.db_people = db
 
-        # else:
-
-        #   db = MySQLdb.connect(
-        #       host = db_host,
-        #       user = db_user,
-        #       passwd = db_pass,
-        #       db = db_name,
-        #       charset = 'utf8mb4',
-        #       connect_timeout = 31536000)
-
-        #   self.cursor = db.self.cursor(MySQLdb.self.cursors.DictCursor)
-        
         # Figure out how much we're going to log
         self.log_level = self.get_setting('log_level')
-
+        #Not getting debug logging for some reason. 
+        self.log_level = 'Debug'
         return db, cursor
         
 

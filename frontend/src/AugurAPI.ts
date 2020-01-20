@@ -468,6 +468,7 @@ class Repo extends BaseRepo{
     this.addRepoMetric('forkCount','fork-count')
     this.addRepoMetric('languages','languages')
     this.addRepoMetric('committers','committers')
+    this.addRepoMetric('licenseFiles','license-files')
     this.addRepoMetric('licenseDeclared','license-declared')
     this.addRepoMetric('sbom','sbom-download')
     this.addRepoMetric('ciiBP','cii-best-practices-badge')

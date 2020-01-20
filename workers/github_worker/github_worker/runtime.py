@@ -73,7 +73,6 @@ def main(augur_url, host, port):
             "broker_port": server['port'],
             "broker_host": server['host'],
             "location": "http://{}:{}".format(server['host'],worker_port),
-            "zombie_id": 22,
             "host": credentials["host"],
             "key": credentials["key"],
             "password": credentials["password"],

@@ -9,8 +9,9 @@ import _ from 'lodash';
 
 var config = require('../../augur.config.json')
 const AugurAPIModule = require('@/AugurAPI').default;
-var port = config['Server']['port'] ? ':' + config['Server']['port'] : ''
-const AugurAPI = new AugurAPIModule('http://' + config['Server']['host'] + port);
+var port = config['Frontend'] ? (config['Frontend']['port'] ? ':' + config['Frontend']['port'] : '') : (config['Server']['port'] ? ':' + config['Server']['port'] : '')
+var host = config['Frontend'] ? (config['Frontend']['host']) : (config['Server']['host'])
+const AugurAPI = new AugurAPIModule('http://' + host + port);
 
 import Errors from './views/Errors.vue';
 import Tables from './views/Tables.vue';
@@ -29,6 +30,7 @@ import ExploreInsights from './views/ExploreInsights.vue';
 import InspectInsight from './views/InspectInsight.vue';
 import RiskMetrics from "@/views/RiskMetrics.vue";
 import NProgress from "nprogress";
+import SlackConfig from './views/SlackConfig.vue';
 
 const routes = [
   {
@@ -42,6 +44,21 @@ const routes = [
           sidebar: MainSidebar,
           navbar: MainNavbar,
           content: Dashboard,
+        },
+      },
+    ],
+  },
+  {
+    path: '/slack-config',
+    component: Default,
+    children: [
+      {
+        path: '',
+        name: 'slack_config',
+        components: {
+          sidebar: MainSidebar,
+          navbar: MainNavbar,
+          content: SlackConfig,
         },
       },
     ],

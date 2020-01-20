@@ -4,17 +4,15 @@ Creates a WSGI server that serves the Augur REST API
 """
 
 import json
+import os
 import base64
-from flask import Flask, request, Response, redirect, url_for, send_from_directory, render_template
+from flask import Flask, request, Response, send_from_directory
 from flask_cors import CORS
 from flask_login import current_user
 import pandas as pd
 import augur
 from augur.util import annotate, metric_metadata, logger
 from augur.routes import create_routes
-import os
-from augur.housekeeper.housekeeper import Housekeeper
-import logging
 
 AUGUR_API_VERSION = 'api/unstable'
 
@@ -354,23 +352,33 @@ class Server(object):
             generated_function.__name__ = func.__class__.__name__ + " _" + func.__name__
             return generated_function
 
-    def routify(self, func, type_):
+    def routify(self, func, endpoint_type):
         """
         Wraps a metric function allowing it to be mapped to a route,
         get request args and also transforms the metric functions's
         output to json
 
         :param func: The function to be wrapped
-        :param type_: The type of API endpoint, i.e. 'repo_group' or 'repo'
+        :param endpoint_type: The type of API endpoint, i.e. 'repo_group' or 'repo'
         """
         def generated_function(*args, **kwargs):
             kwargs.update(request.args.to_dict())
+
+            if 'repo_group_id' not in kwargs:
+                kwargs['repo_group_id'] = 1
+
             data = self.transform(func, args, kwargs)
             return Response(response=data,
                             status=200,
                             mimetype="application/json")
-        generated_function.__name__ = func.__class__.__name__ + f"_{type_}_" + func.__name__
+        generated_function.__name__ = f"{endpoint_type}_" + func.__name__
         return generated_function
+
+    def addLicenseMetric(self, function, endpoint, **kwargs):
+        endpoint = f'/{self.api_version}/<license_id>/<spdx_binary>/<repo_group_id>/<repo_id>/{endpoint}'
+        self.app.route(endpoint)(self.routify(function, 'license_metric'))
+        kwargs['endpoint_type'] = 'license_metric'
+        self.updateMetricMetadata(function, endpoint, **kwargs)
 
     def addRepoGroupMetric(self, function, endpoint, **kwargs):
         """Simplifies adding routes that accept repo_group_id"""
@@ -379,10 +387,12 @@ class Server(object):
         kwargs['endpoint_type'] = 'repo_group'
         self.updateMetricMetadata(function, endpoint, **kwargs)
 
-    def addRepoMetric(self, function, endpoint, **kwargs):
+    def addRepoMetric(self, function, metric_endpoint, **kwargs):
         """Simplifies adding routes that accept repo_group_id and repo_id"""
-        endpoint = f'/{self.api_version}/repo-groups/<repo_group_id>/repos/<repo_id>/{endpoint}'
+        endpoint = f'/{self.api_version}/repos/<repo_id>/{metric_endpoint}'
+        deprecated_endpoint = f'/{self.api_version}/repo-groups/<repo_group_id>/repos/<repo_id>/{metric_endpoint}'
         self.app.route(endpoint)(self.routify(function, 'repo'))
+        self.app.route(deprecated_endpoint)(self.routify(function, 'deprecated_repo'))
         kwargs['endpoint_type'] = 'repo'
         self.updateMetricMetadata(function, endpoint, **kwargs)
 
@@ -391,12 +401,6 @@ class Server(object):
         endpoint = '/{}/<owner>/<repo>/{}'.format(self.api_version, endpoint)
         self.app.route(endpoint)(self.flaskify(function, cache=cache))
         self.updateMetricMetadata(function, endpoint, **kwargs)
-
-    def addGitMetric(self, function, endpoint, cache=True):
-        """Simplifies adding git routes"""
-        endpoint = '/{}/git/{}'.format(self.api_version, endpoint)
-        self.app.route(endpoint)(self.flaskify(function, cache=cache))
-        self.updateMetricMetadata(function, endpoint=endpoint, metric_type='git')
 
     def addTimeseries(self, function, endpoint):
         """

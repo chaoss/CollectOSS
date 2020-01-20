@@ -2,13 +2,10 @@
 Metrics that provide data about commits & their associated activity
 """
 
-import inspect
-import sys
-import types
 import datetime
 import sqlalchemy as s
 import pandas as pd
-from augur.util import logger, annotate, add_metrics
+from augur.util import annotate, add_metrics
 
 @annotate(tag='committers')
 def committers(self, repo_group_id, repo_id=None, begin_date=None, end_date=None, period='month'):
@@ -30,35 +27,63 @@ def committers(self, repo_group_id, repo_id=None, begin_date=None, end_date=None
     if repo_id:
         committersSQL = s.sql.text(
             """
-                SELECT
-                    date_trunc(:period, commits.cmt_author_date::date) as date,
+                SELECT DATE,
                     repo_name,
                     rg_name,
-                    count(cmt_author_name)
+                    COUNT ( author_count ) 
                 FROM
-                    commits, repo, repo_groups
-                WHERE
-                    commits.repo_id = :repo_id AND commits.repo_id = repo.repo_id
-                    AND repo.repo_group_id = repo_groups.repo_group_id
-                    AND commits.cmt_author_date BETWEEN :begin_date and :end_date
-                GROUP BY date, repo_name, rg_name
-                ORDER BY date DESC
+                    (
+                    SELECT
+                        date_trunc(:period, commits.cmt_author_date::date) as date,
+                        repo_name,
+                        rg_name,
+                        cmt_author_name,
+                        cmt_author_email,
+                        COUNT ( cmt_author_name ) AS author_count 
+                    FROM
+                        commits, repo, repo_groups
+                    WHERE
+                        commits.repo_id = :repo_id AND commits.repo_id = repo.repo_id
+                        AND repo.repo_group_id = repo_groups.repo_group_id
+                        AND commits.cmt_author_date BETWEEN :begin_date and :end_date
+                    GROUP BY date, repo_name, rg_name, cmt_author_name, cmt_author_email 
+                    ORDER BY date DESC
+                    ) C
+                GROUP BY
+                    C.DATE,
+                    repo_name,
+                    rg_name 
+                ORDER BY C.DATE desc 
             """
         )
     else:
         committersSQL = s.sql.text(
             """
-            SELECT
-                date_trunc(:period, commits.cmt_author_date::date) as date,
-                rg_name,
-                count(cmt_author_name)
-            FROM
-                commits, repo, repo_groups
-            WHERE
-                repo.repo_group_id = repo_groups.repo_group_id AND repo.repo_group_id = :repo_group_id
-                AND repo.repo_id = commits.repo_id
-                AND commits.cmt_author_date BETWEEN :begin_date and :end_date
-            GROUP BY date, rg_name
+                SELECT DATE,
+                    rg_name,
+                    COUNT ( author_count ) 
+                FROM
+                    (
+                    SELECT
+                        date_trunc(:period, commits.cmt_author_date::date) as date,
+                        rg_name,
+                        cmt_author_name,
+                        cmt_author_email,
+                        COUNT ( cmt_author_name ) AS author_count 
+                    FROM
+                        commits, repo, repo_groups
+                    WHERE
+                        commits.repo_id = repo.repo_id
+                        AND repo.repo_group_id = repo_groups.repo_group_id
+                        AND commits.cmt_author_date BETWEEN :begin_date and :end_date
+                        AND repo.repo_group_id = :repo_group_id
+                    GROUP BY date, rg_name, cmt_author_name, cmt_author_email 
+                    ORDER BY date DESC
+                    ) C
+                GROUP BY
+                    C.DATE,
+                    rg_name 
+                ORDER BY C.DATE desc 
             """
         )
 
@@ -240,6 +265,109 @@ def annual_commit_count_ranked_by_repo_in_repo_group(self, repo_group_id, repo_i
     results = pd.read_sql(cdRgTpRankedCommitsSQL, self.database, params={ "repo_group_id": repo_group_id,
     "repo_id": repo_id})
     return results
+
+@annotate(tag='top-committers')
+def top_committers(self, repo_group_id, repo_id=None, year=None, threshold=0.5):
+    """
+    Returns a list of contributors contributing N% of all commits.
+
+    :param repo_group_id: Repo group ID
+    :param repo_id: Repo ID.
+    :param year: Year. eg: 2018, 2107. Defaults to current year.
+    :param threshold: The threshold to specify N%. Defaults to 0.5
+    """
+    threshold = float(threshold)
+    if threshold < 0 or threshold > 1:
+        raise ValueError('threshold should be between 0 and 1')
+
+    if year is None:
+        year = datetime.datetime.now().year
+
+    if not repo_id:
+        total_commits_SQL = s.sql.text("""
+            SELECT SUM(patches)::int
+            FROM
+                (SELECT repo_group_id, email, year, patches
+                FROM dm_repo_group_annual
+                WHERE year = :year AND repo_group_id = :repo_group_id
+                ORDER BY patches DESC) a
+        """)
+
+        results = pd.read_sql(total_commits_SQL, self.database,
+                            params={'year': year, 'repo_group_id': repo_group_id})
+    else:
+        total_commits_SQL = s.sql.text("""
+            SELECT SUM(patches)::int
+            FROM
+                (SELECT repo_id, email, year, patches
+                FROM dm_repo_annual
+                WHERE year = :year AND repo_id = :repo_id
+                ORDER BY patches DESC) a
+        """)
+
+        results = pd.read_sql(total_commits_SQL, self.database,
+                            params={'year': year, 'repo_id': repo_id})
+
+    total_commits = int(results.iloc[0]['sum'])
+    threshold_commits = round(threshold * total_commits)
+
+    if not repo_id:
+        committers_SQL = s.sql.text("""
+            SELECT
+                a.repo_group_id,
+                rg_name AS repo_group_name,
+                a.email,
+                SUM(a.patches)::int AS commits
+            FROM
+                (SELECT repo_group_id, email, year, patches
+                FROM dm_repo_group_annual
+                WHERE year = :year AND repo_group_id = :repo_group_id
+                ORDER BY patches DESC) a, repo_groups
+            WHERE a.repo_group_id = repo_groups.repo_group_id
+            GROUP BY a.repo_group_id, repo_group_name, a.email
+            ORDER BY commits DESC
+        """)
+
+        results = pd.read_sql(committers_SQL, self.database,
+                            params={'year': year, 'repo_group_id': repo_group_id})
+    else:
+        committers_SQL = s.sql.text("""
+            SELECT
+                a.repo_id,
+                repo.repo_name,
+                a.email,
+                SUM(a.patches)::int AS commits
+            FROM
+                (SELECT repo_id, email, year, patches
+                FROM dm_repo_annual
+                WHERE year = :year AND repo_id = :repo_id
+                ORDER BY patches DESC) a, repo
+            WHERE a.repo_id = repo.repo_id
+            GROUP BY a.repo_id, repo.repo_name, a.email
+            ORDER BY commits DESC
+        """)
+
+        results = pd.read_sql(committers_SQL, self.database,
+                              params={'year': year, 'repo_id': repo_id})
+
+    cumsum = 0
+    for i, row in results.iterrows():
+        cumsum += row['commits']
+        if cumsum >= threshold_commits:
+            results = results[:i + 1]
+            break
+
+    if not repo_id:
+        rg_name = results.iloc[0]['repo_group_name']
+        results.loc[i+1] = [repo_group_id, rg_name, 'other_contributors',
+                            int(total_commits - cumsum)]
+    else:
+        repo_name = results.iloc[0]['repo_name']
+        results.loc[i+1] = [repo_id, repo_name, 'other_contributors',
+                            int(total_commits - cumsum)]
+
+    return results
+
 
 def create_commit_metrics(metrics):
     add_metrics(metrics, __name__)

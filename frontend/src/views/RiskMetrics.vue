@@ -54,7 +54,7 @@
         <cii-table
           source="ciiBP"
           :headers="['Passing Status','Badge Level', 'Date']"
-          :fields="['achieve_passing_status', 'badge_level', 'date']"
+          :fields="['name', 'achieve_passing_status', 'badge_level', 'date']"
           title="CII Best Practices"
         ></cii-table>
         <br> <br>
@@ -67,6 +67,7 @@
         <coverage-card
           title="License Coverage"
           source="sbom"
+          sourcetwo="licenseDeclared"
         ></coverage-card>
         <br><br>
         <osi-card
@@ -74,7 +75,7 @@
           :headers="['Short Name', 'Count']"
           :ldata="licenses"
           :fields="['short_name']"
-          title="Percent OSI-Approved Licenses">
+          title="Percent OSI-Approved Licenses by File">
         </osi-card>
       </div>
 

@@ -13,7 +13,7 @@
       <d-nav-item :active="true" class="active">Overview</d-nav-item>
       <d-nav-item><d-link :to="{name: 'repo_risk', params: {repo: base.repo_name, group:base.rg_name}}"><span>Risk</span></d-link></d-nav-item>
     </d-nav> -->
-    
+
     <!-- Compare Control -->
     <compare-control></compare-control>
 
@@ -26,12 +26,12 @@
     </div> -->
 
     <p></p>
-    
+
     <d-row>
-      
+
       <d-col cols="12" md="6" lg="6" sm="12">
         <d-card> <!-- :style="loaderPadding(loadedBars)" > -->
-          
+
           <!-- look to add commit chart? -->
           <!--<div class="col col-12">
             <commit-chart source="changesByAuthor" :data="values['changesByAuthor']"></commit-chart>
@@ -44,9 +44,9 @@
 
                   <spinner v-if="!loadedBars"></spinner>
 
-                  <normalized-stacked-bar-chart 
-                  v-if="loadedBars" 
-                  source="changesByAuthor1" 
+                  <normalized-stacked-bar-chart
+                  v-if="loadedBars"
+                  source="changesByAuthor1"
                   :data="values['changesByAuthor']"
                   ></normalized-stacked-bar-chart>
 
@@ -60,14 +60,14 @@
 
                   <spinner v-if="!loadedBars"></spinner>
 
-                  <horizontal-bar-chart 
+                  <horizontal-bar-chart
                   v-if="loadedBars"
-                  measure="lines" 
-                  title="Average Lines of Code Per Commit" 
-                  source="changesByAuthor2" 
+                  measure="lines"
+                  title="Average Lines of Code Per Commit"
+                  source="changesByAuthor2"
                   :data="values['changesByAuthor']"
                   ></horizontal-bar-chart>
-                  
+
                 </d-card-body>
               </d-col>
             </d-row>
@@ -110,21 +110,22 @@
             </d-card>
           </d-col>
         </d-row>
-        
+
         <p></p>
  -->
-        <coverage-card title="License Coverage" source="sbom"></coverage-card>
+        <coverage-card title="License Coverage" source="sbom"
+        sourcetwo="licenseDeclared"></coverage-card>
 
         <p></p>
 
         <d-card>
           <d-card-body title="Lines of code added by the top 10 authors" class="text-center">
-            
+
             <spinner v-if="!loadedBars"></spinner>
-            
-            <lines-of-code-chart 
-              v-if="loadedBars" 
-              :data="values['changesByAuthor']" 
+
+            <lines-of-code-chart
+              v-if="loadedBars"
+              :data="values['changesByAuthor']"
               class="repo_Overview_Chart"
             ></lines-of-code-chart>
 
@@ -139,12 +140,12 @@
       <d-col>
         <d-card>
           <d-card-body title="Lines of code added by the top 10 authors visualized" class="text-center">
-            
+
             <spinner v-if="!loadedBars"></spinner>
-            
-            <tick-chart 
-              v-if="loadedBars" 
-              source="changesByAuthor5" 
+
+            <tick-chart
+              v-if="loadedBars"
+              source="changesByAuthor5"
               :data="values['changesByAuthor']"
             ></tick-chart>
 
@@ -152,15 +153,15 @@
         </d-card>
       </d-col>
 
-    </d-row> 
+    </d-row>
 
     <p></p> -->
 
     <d-row>
       <div class="col col-6 repo_Overview_Col">
         <d-card>
-          <dynamic-line-chart 
-                      filedTime="date" 
+          <dynamic-line-chart
+                      filedTime="date"
                       fieldCount="pull_requests"
                       source="reviews"
                       title="Reviews (Pull Requests) / Week"
@@ -168,12 +169,12 @@
                       cite-text="Reviews"
           ></dynamic-line-chart>
         </d-card>
-      </div> 
+      </div>
 
       <div class="col col-6 repo_Overview_Col">
         <d-card>
-          <dynamic-line-chart 
-                      filedTime="date" 
+          <dynamic-line-chart
+                      filedTime="date"
                       fieldCount="pull_requests"
                       source="reviewsAccepted"
                       title="Reviews (Pull Requests) Accepted / Week"
@@ -181,12 +182,12 @@
                       cite-text="Reviews Accepted"
           ></dynamic-line-chart>
         </d-card>
-      </div> 
+      </div>
 
       <div class="col col-6 repo_Overview_Col">
         <d-card>
-          <dynamic-line-chart 
-                      filedTime="date" 
+          <dynamic-line-chart
+                      filedTime="date"
                       fieldCount="pull_requests"
                       source="reviewsDeclined"
                       title="Reviews (Pull Requests) Declined / Week"
@@ -194,12 +195,12 @@
                       cite-text="Reviews Declined"
           ></dynamic-line-chart>
         </d-card>
-      </div> 
+      </div>
 
       <div class="col col-6 repo_Overview_Col">
         <d-card>
-          <dynamic-line-chart 
-                      filedTime="date" 
+          <dynamic-line-chart
+                      filedTime="date"
                       fieldCount="open_count"
                       source="openIssuesCount"
                       title="Open Issues / Week"
@@ -211,8 +212,8 @@
 
       <div class="col col-6 repo_Overview_Col">
         <d-card>
-          <dynamic-line-chart 
-                      filedTime="date" 
+          <dynamic-line-chart
+                      filedTime="date"
                       fieldCount="closed_count"
                       source="closedIssuesCount"
                       title="Closed Issues / Week"
@@ -224,8 +225,8 @@
 
       <div class="col col-6 repo_Overview_Col">
         <d-card>
-          <dynamic-line-chart 
-                      filedTime="date" 
+          <dynamic-line-chart
+                      filedTime="date"
                       fieldCount="issues"
                       source="issuesNew"
                       title="New Issues / Week"
@@ -233,17 +234,17 @@
                       cite-text="New Issues"
           ></dynamic-line-chart>
         </d-card>
-      </div> 
+      </div>
 
       <div class="col col-6 repo_Overview_Col">
         <d-card>
 
-          <dynamic-line-chart 
+          <dynamic-line-chart
                       source="codeChanges"
                       title="Code Changes (Commits) / Week"
                       cite-url=""
                       cite-text="Code Changes"
-                      filedTime="date" 
+                      filedTime="date"
                       fieldCount="commit_count"
           ></dynamic-line-chart>
         </d-card>
@@ -251,12 +252,12 @@
 
       <div class="col col-6 repo_Overview_Col">
         <d-card>
-          <dynamic-line-chart 
+          <dynamic-line-chart
                       source="codeChangesLines"
                       title="Lines of Code Added / Week"
                       cite-url=""
                       cite-text="Code Changes Lines"
-                      filedTime="date" 
+                      filedTime="date"
                       fieldCount="added"
           ></dynamic-line-chart>
         </d-card>
@@ -264,7 +265,7 @@
 
     </d-row>
 
-  </d-container> 
+  </d-container>
 </template>
 
 <script lang="ts">
@@ -330,7 +331,7 @@ import LineChart from "@/components/charts/LineChart.vue";
     ...mapGetters('compare',[
       'base'
     ]),
-    
+
   },
 })
 
@@ -362,7 +363,7 @@ export default class RepoOverview extends Vue {
 
   created() {
     // let repo = null
-    // if (this.base) 
+    // if (this.base)
     //   repo = this.base
     // else repo = this.rout
     this.endpoint({endpoints:this.barEndpoints,repos:[this.base]}).then((tuples:any) => {
@@ -387,9 +388,9 @@ export default class RepoOverview extends Vue {
   }
 
   loaderPadding (loaded: any) {
-    if (loaded) 
-      return "" 
-    else 
+    if (loaded)
+      return ""
+    else
       return "padding-top: 3rem"
   }
 
@@ -397,4 +398,3 @@ export default class RepoOverview extends Vue {
 
 }
 </script>
-

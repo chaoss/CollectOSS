@@ -1,26 +1,27 @@
-import click
+#SPDX-License-Identifier: MIT
+"""
+Augur library commands for controlling the backend components
+"""
+
 import os
-import sys
-from augur.runtime import pass_application
-from augur.util import logger
-from augur.server import Server
+import time
+import atexit
+import subprocess
+import multiprocessing as mp
+import click
 import gunicorn.app.base
 from gunicorn.six import iteritems
 from gunicorn.arbiter import Arbiter
-import multiprocessing as mp
 from augur.housekeeper.housekeeper import Housekeeper
-import sched
-import os
-import time
-import sys
-import atexit
-import click
-import subprocess
+
+# from augur.runtime import pass_application
+from augur.util import logger
+from augur.server import Server
 
 @click.command('run')
-@click.option('--enable-housekeeper/--no-enable-housekeeper', default=True)
-@pass_application
-def cli(app, enable_housekeeper):
+@click.option('--enable-housekeeper/--disable-housekeeper', default=True)
+@click.pass_context
+def cli(ctx, enable_housekeeper):
 
     def get_process_id(name):
         """Return process ids found by name or command
@@ -28,6 +29,8 @@ def cli(app, enable_housekeeper):
         child = subprocess.Popen(['pgrep', '-f', name], stdout=subprocess.PIPE, shell=False)
         response = child.communicate()[0]
         return [int(pid) for pid in response.split()]
+
+    app = ctx.obj
 
     mp.set_start_method('forkserver', force=True)
     app.schedule_updates()
@@ -115,7 +118,7 @@ def cli(app, enable_housekeeper):
                     broker_host=app.read_config('Server', 'host', 'AUGUR_HOST', 'localhost'),
                     broker_port=app.read_config('Server', 'port', 'AUGUR_PORT', '5000'),
                     user=app.read_config('Database', 'user', 'AUGUR_DB_USER', 'root'),
-                    password=app.read_config('Database', 'password', 'AUGUR_DB_PASS', 'password'),
+                    password=app.read_config('Database', 'password', 'AUGUR_DB_PASSWORD', 'password'),
                     host=app.read_config('Database', 'host', 'AUGUR_DB_HOST', '127.0.0.1'),
                     port=app.read_config('Database', 'port', 'AUGUR_DB_PORT', '3306'),
                     dbname=app.read_config('Database', 'database', 'AUGUR_DB_NAME', 'msr14')
@@ -136,7 +139,7 @@ def cli(app, enable_housekeeper):
     master = Arbiter(AugurGunicornApp(options, manager=manager, broker=broker, housekeeper=housekeeper)).run()
 
 def worker_start(worker_name=None, instance_number=0):
-    time.sleep(45 * instance_number)
+    time.sleep(90 * instance_number)
     process = subprocess.Popen("cd workers/{} && {}_start".format(worker_name,worker_name), shell=True)
 
 class AugurGunicornApp(gunicorn.app.base.BaseApplication):

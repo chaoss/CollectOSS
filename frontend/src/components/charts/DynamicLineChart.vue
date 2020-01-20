@@ -37,6 +37,7 @@
         <a class="button graph-download download" ref="downloadJSON" role="button">&#11015; JSON</a></div>
     </div>
     -->
+    <div>{{ getDescription }}</div>
   </d-card-body>
 </template>
 
@@ -114,6 +115,11 @@ export default {
     }
   },
   computed: {
+    getDescription() {
+      if (this.values[0]) return 'Each point on this line represents the 7 day trailing average of ' + this.values[0].name.split(' ')[1] + '. The aim is to reflect a general trend that is visually interpretable by smoothing common one day spikes.'
+        //The gray line is the 7 day trailing standard deviation for those points.
+      else return ''
+    },
     gitRepos() {
       return this.$store.getters.gitRepo;
     },
@@ -917,7 +923,6 @@ export default {
                 });
                 console.log("DLC",rolling)
               }
-
               normalized.push(
                 AugurStats.standardDeviationLines(rolling, "valueRolling", ref)
               );
