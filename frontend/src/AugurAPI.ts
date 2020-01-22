@@ -1,9 +1,82 @@
 /* tslint:disable */
 var $ = require('jquery')
 var _ = require('lodash')
+var AWS = require("aws-sdk");
 
 interface __reverseEndpointMap {
   [key: string]: any; // Add index signature
+}
+
+export default class SlackSettingSync {
+  AWS.config.update({
+    region: "us-east-1",
+    credentials: new AWS.SharedIniFileCredentials()
+  });
+
+
+
+  let client = new AWS.DynamoDB.DocumentClient();
+  static async getUser (email, teamId) {
+    var params = {
+        TableName: "auggie-users",
+        Key: {
+            "email": `${email}:${teamId}`
+        }
+    };
+
+    let result = await this.client.get(params).promise();
+
+    return result;
+  }
+
+  static async updateTracking (email, teamId, repos, groups) {
+    const params = {
+      "TableName": "auggie-users",
+      "Key": {"email": `${email}:${teamId}`},
+      "UpdateExpression": "SET interestedGroups = :valGroup, interestedRepos = :valRepo",
+      "ExpressionAttributeValues": {
+        ":valGroup": {
+            "L": groups
+        },
+        ":valRepo": {
+            "L": repos
+        }
+      }
+    };
+ 
+      let response = await docClient.update(params).promise();
+      console.log(response);
+    }
+  }
+
+
+  // static convertKey (data:any, key:any, newName:string = "value") {
+  //   newName = newName || "value"
+  //   if (Array.isArray(data[0])) {
+  //     data = data.map((datum:any) => {
+  //       return AugurStats.convertKey(datum, key)
+  //     })
+  //   } else if (key.length > 1){
+  //     return data.map((d:any) => {
+  //       let obj:any = {
+  //         date: d.date,
+  //         field: d[key[1]]
+  //       }
+  //       obj[newName] = d[key]
+  //       return obj
+  //     })
+  //   }
+  //   else{
+  //     return data.map((d:any) => {
+  //       let obj:any = {
+  //         date: d.date,
+  //       }
+  //       obj[newName] = d[key] || 0
+  //       return obj
+  //     })
+  //   }
+  //   return data
+  // }
 }
 
 export default class AugurAPI {

@@ -10,6 +10,7 @@ runtime/
 logs/
 frontend/public/api_docs/
 *.err
+*.icloud
 
 # C extensions
 *.so
