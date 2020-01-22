@@ -119,7 +119,7 @@ backend-restart: backend-stop backend-start
 
 backend: backend-restart
 
-augur:
+augur-start:
 	@ ./util/scripts/control/augur.sh
 
 collect:
