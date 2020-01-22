@@ -252,13 +252,19 @@ import SlackSettingSync from "@/AugurAPI";
 
 @Component({
   methods: {
-    getUser: function(email, teamId) {
+    getUser: async function(email, teamId) {
+      this.getUser(email, teamId);
       //method will return user object with host, interestedRepos and interestedGroups
-      SlackSettingSync.getUser(email, teamId);
-    }
-    updateTracking: function(email, teamId, repos, groups) {
-      SlackSettingSync.updateTracking(email, teamId, repos, groups);
-    }
+      // SlackSettingSync.getUser(email, teamId);
+    },
+    updateTracking: async function(email, teamId, repos, groups) {
+      this.updateTracking(email, teamId, repos, groups);
+      // SlackSettingSync.updateTracking(email, teamId, repos, groups);
+    },
+    ...mapActions('common',[
+      'getUser',
+      'updateTracking'
+    ])
   },
   computed: {
 
@@ -267,7 +273,11 @@ import SlackSettingSync from "@/AugurAPI";
 
   },
 })
-export default class SlackConfig extends Vue {}
+export default class SlackConfig extends Vue {
+  // Allow access to vuex actions
+  getUser!:any;
+  updateTracking!:any;
+}
 
 // export default {
 //   components: {

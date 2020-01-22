@@ -1,5 +1,11 @@
 import Repo from '@/AugurAPI';
 import RepoGroup from '@/AugurAPI';
+var AWS = require("aws-sdk");
+AWS.config.update({
+  region: "us-east-1",
+  credentials: new AWS.SharedIniFileCredentials()
+});
+
 export default {
     retrieveRepoIds (context: any, payload: any){
         
@@ -292,5 +298,37 @@ export default {
                 resolve(group)
             })
         })
+    },
+    async getUser(email:string, teamId:string) {
+        let client = new AWS.DynamoDB.DocumentClient();
+        var params = {
+            TableName: "auggie-users",
+            Key: {
+                "email": `${email}:${teamId}`
+            }
+        };
+
+        let result = await client.get(params).promise();
+
+        return result;
+    },
+    async updateTracking (email, teamId, repos, groups) {
+        let client = new AWS.DynamoDB.DocumentClient();
+        const params = {
+          "TableName": "auggie-users",
+          "Key": {"email": `${email}:${teamId}`},
+          "UpdateExpression": "SET interestedGroups = :valGroup, interestedRepos = :valRepo",
+          "ExpressionAttributeValues": {
+            ":valGroup": {
+                "L": groups
+            },
+            ":valRepo": {
+                "L": repos
+            }
+          }
+        };
+     
+        let response = await client.update(params).promise();
+        console.log(response);
     }
 };
