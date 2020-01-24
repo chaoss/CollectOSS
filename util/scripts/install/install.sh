@@ -25,7 +25,7 @@ util/scripts/install/workers.sh >logs/workers.log 2>logs/workers.err
 echo "Done!"
 
 echo "Generating documentation..."
-util/scripts/install/docs.sh
+util/scripts/install/api_docs.sh
 echo "Done!"
 
 echo "Generating config..."

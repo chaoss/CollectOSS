@@ -171,7 +171,7 @@ library-docs-view: library-docs
 	@ bash -c 'open docs/build/html/index.html'
 
 api-docs:
-	@ bash -c 'cd docs && apidoc -f "\.py" -i ../augur/ -o api/; rm -rf ../frontend/public/api_docs; mv api ../frontend/public/api_docs'
+	@ util/scripts/install/api_docs.sh
 
 api-docs-view: api-docs
 	@ bash -c "open frontend/public/api_docs/index.html"
