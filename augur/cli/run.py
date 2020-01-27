@@ -119,7 +119,7 @@ def cli(ctx, enable_housekeeper):
                     broker_port=app.read_config('Server', 'port', 'AUGUR_PORT', '5000'),
                     user=app.read_config('Database', 'user', 'AUGUR_DB_USER', 'root'),
                     password=app.read_config('Database', 'password', 'AUGUR_DB_PASSWORD', 'password'),
-                    host=app.read_config('Database', 'host', 'AUGUR_DB_HOST', '127.0.0.1'),
+                    host=app.read_config('Database', 'host', 'AUGUR_DB_HOST', '0.0.0.0'),
                     port=app.read_config('Database', 'port', 'AUGUR_DB_PORT', '3306'),
                     dbname=app.read_config('Database', 'database', 'AUGUR_DB_NAME', 'msr14')
                 )

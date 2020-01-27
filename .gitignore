@@ -1,6 +1,7 @@
 # Augur
 augur.config.json
 !default.config.json
+!frontend.config.json
 
 node_modules/
 logs/

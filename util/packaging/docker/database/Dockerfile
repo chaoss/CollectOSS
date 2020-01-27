@@ -1,18 +1,11 @@
-FROM mariadb:10
+FROM postgres:10
 
-RUN mkdir /data
-WORKDIR /data
+RUN rm -rf /augur_data
+RUN mkdir /augur_data
 
-# Download database dump
-RUN apt-get update && apt-get install -y curl && \
-    curl -O https://ghtstorage.blob.core.windows.net/downloads/msr14-mysql.gz
+ENV POSTGRES_PASSWORD "password"
+ENV POSTGRES_USER "augur"
+ENV POSTGRES_DB "augur"
+ENV POSTGRES_DB "augur"
 
-# Configure it to work with the database we will create
-RUN echo 'CREATE DATABASE msr14; USE msr14;' > 02-msr14-mysql.sql && \
-    gunzip -c msr14-mysql.gz >> 02-msr14-mysql.sql && \
-    mv 02-msr14-mysql.sql /docker-entrypoint-initdb.d/msr-mysql.sql
-
-EXPOSE 3306
-
-# Run the database
-CMD ["/usr/bin/mysqld"]
+COPY ./persistence_schema/generate /docker-entrypoint-initdb.d/
