@@ -89,7 +89,7 @@ def get_db_connection(app):
 
     user = app.read_config('Database', 'user', 'AUGUR_DB_USER', 'augur')
     password = app.read_config('Database', 'password', 'AUGUR_DB_PASSWORD', 'password')
-    host = app.read_config('Database', 'host', 'AUGUR_DB_HOST', '127.0.0.1')
+    host = app.read_config('Database', 'host', 'AUGUR_DB_HOST', '0.0.0.0')
     port = app.read_config('Database', 'port', 'AUGUR_DB_PORT', '5433')
     dbname = app.read_config('Database', 'database', 'AUGUR_DB_NAME', 'augur')
     schema = app.read_config('Database', 'schema', 'AUGUR_DB_SCHEMA', 'augur_data')
