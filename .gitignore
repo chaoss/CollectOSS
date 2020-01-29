@@ -11,6 +11,7 @@ logs/
 frontend/public/api_docs/
 *.err
 *.icloud
+frontend/src/store/modules/common/awsCreds.json
 
 # C extensions
 *.so

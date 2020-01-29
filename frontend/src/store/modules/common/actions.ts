@@ -1,13 +1,16 @@
 import Repo from '@/AugurAPI';
 import RepoGroup from '@/AugurAPI';
 var AWS = require("aws-sdk");
-AWS.config.update({
-  region: "us-east-1",
-  credentials: new AWS.SharedIniFileCredentials()
-});
+
+// AWS.config.update({
+//   region: "us-east-1",
+//   credentials: new AWS.SharedIniFileCredentials()
+// });
 
 export default {
+
     retrieveRepoIds (context: any, payload: any){
+        AWS.config.loadFromPath('awsCreds.json');
         
         let parseUrl = (repo_name: string) => {
             if (repo_name.includes('https://github.com/'))
