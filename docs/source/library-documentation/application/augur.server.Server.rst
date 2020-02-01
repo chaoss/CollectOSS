@@ -14,9 +14,10 @@ augur.server.Server
    .. autosummary::
    
       ~Server.__init__
-      ~Server.addGitMetric
       ~Server.addMetric
       ~Server.addTimeseries
+      ~Server.addRepoMetric
+      ~Server.addRepoGroupMetric
       ~Server.flaskify
       ~Server.transform
       ~Server.updateMetricMetadata

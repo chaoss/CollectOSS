@@ -129,6 +129,10 @@ def generate(db_name, db_host, db_user, db_port, db_password, github_api_key, fa
             "port": "5000",
             "workers": "4"
         },
+        "Frontend": {
+            "host": "0.0.0.0",
+            "port": "5000"
+        },
         "Workers": {
             "facade_worker": {
                 "port": 56111,
