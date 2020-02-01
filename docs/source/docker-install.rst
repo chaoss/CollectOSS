@@ -30,10 +30,10 @@ After you run ``git clone https://github.com/chaoss/augur.git``, to install the 
     psql -h localhost -d augur -U augur -p 5432 -a -w -f persistence_schema/generate/3-augur_operations.sql
     psql -h localhost -d augur -U augur -p 5432 -a -w -f persistence_schema/generate/4-spdx.sql
     psql -h localhost -d augur -U augur -p 5432 -a -w -f persistence_schema/generate/5-seed-data.sql
-    psql -h localhost -d augur -U augur -p 5432 -a -w -f persistence_schema/generate/6-schema_update_8.sql
+    psql -h localhost -d augur -U augur -p 5432 -a -w -f persistence_schema/enerate/6-schema_update_8.sql
     psql -h localhost -d augur -U augur -p 5432 -a -w -f persistence_schema/generate/7-schema_update_9.sql
 
-    psql -h localhost -d augur -U augur -p augur -a -w -c "UPDATE augur_data.settings SET VALUE = 'repos/' WHERE setting='repo_directory';"
+    psql -h localhost -d augur -U augur -p 5432 augur -a -w -c "UPDATE augur_data.settings SET VALUE = 'repos/' WHERE setting='repo_directory';"
 
 And load a small sample dataset:
 
