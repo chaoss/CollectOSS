@@ -5,9 +5,14 @@ ENV STATIC_INDEX 0
 COPY ./util/packaging/docker/augur/uwsgi.ini /app/uwsgi.ini
 COPY ./util/packaging/docker/augur/prestart.sh /app/prestart.sh
 
-RUN mkdir /augur
 WORKDIR /augur
-ADD . /augur
-RUN pip install --upgrade .
+ADD . .
+RUN pip install -r requirements.txt
+
+RUN augur configure generate --file util/packaging/docker/docker.config.json
+RUN cat augur.config.json > echo.txt
+RUN cat echo.txt
+
+RUN mkdir repos/
 
 EXPOSE 5000
