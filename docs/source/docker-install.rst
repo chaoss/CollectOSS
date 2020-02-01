@@ -25,13 +25,13 @@ After you run ``git clone https://github.com/chaoss/augur.git``, to install the 
 
 .. code:: bash
 
-    psql -h localhost -d augur -U augur -p 5432 -a -w -f persistence_schema/1-schema.sql
-    psql -h localhost -d augur -U augur -p 5432 -a -w -f persistence_schema/2-augur_data.sql
-    psql -h localhost -d augur -U augur -p 5432 -a -w -f persistence_schema/3-augur_operations.sql
-    psql -h localhost -d augur -U augur -p 5432 -a -w -f persistence_schema/4-spdx.sql
-    psql -h localhost -d augur -U augur -p 5432 -a -w -f persistence_schema/5-seed-data.sql
-    psql -h localhost -d augur -U augur -p 5432 -a -w -f persistence_schema/6-schema_update_8.sql
-    psql -h localhost -d augur -U augur -p 5432 -a -w -f persistence_schema/7-schema_update_9.sql
+    psql -h localhost -d augur -U augur -p 5432 -a -w -f persistence_schema/generate/1-schema.sql
+    psql -h localhost -d augur -U augur -p 5432 -a -w -f persistence_schema/generate/2-augur_data.sql
+    psql -h localhost -d augur -U augur -p 5432 -a -w -f persistence_schema/generate/3-augur_operations.sql
+    psql -h localhost -d augur -U augur -p 5432 -a -w -f persistence_schema/generate/4-spdx.sql
+    psql -h localhost -d augur -U augur -p 5432 -a -w -f persistence_schema/generate/5-seed-data.sql
+    psql -h localhost -d augur -U augur -p 5432 -a -w -f persistence_schema/generate/6-schema_update_8.sql
+    psql -h localhost -d augur -U augur -p 5432 -a -w -f persistence_schema/generate/7-schema_update_9.sql
 
     psql -h localhost -d augur -U augur -p augur -a -w -c "UPDATE augur_data.settings SET VALUE = 'repos/' WHERE setting='repo_directory';"
 
