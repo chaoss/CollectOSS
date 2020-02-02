@@ -110,40 +110,40 @@
         },
         "Workers": {
             "facade_worker": {
-                "port": 56111,
+                "port": 5010,
                 "repo_directory": "repos/",
                 "switch": 1,
                 "workers": 1
             },
             "github_worker": {
-                "port": 56211,
+                "port": 5020,
                 "switch": 1,
-                "workers": 2
+                "workers": 1
             },
             "insight_worker": {
-                "port": 56311,
+                "port": 5030,
                 "switch": 1,
-                "workers": 2
+                "workers": 1
             },
             "linux_badge_worker": {
-                "port": 56811,
+                "port": 5040,
                 "switch": 1,
                 "workers": 1
             },
             "metric_status_worker": {
-                "port": 56711,
+                "port": 5050,
                 "switch": 1,
                 "workers": 1
             },
             "pull_request_worker": {
-                "port": 56411,
+                "port": 5060,
                 "switch": 1,
-                "workers": 2
+                "workers": 1
             },
             "repo_info_worker": {
-                "port": 56511,
+                "port": 5070,
                 "switch": 1,
-                "workers": 2
+                "workers": 1
             }
         }
     }

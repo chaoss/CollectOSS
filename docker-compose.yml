@@ -5,6 +5,7 @@ services:
        restart: unless-stopped
        ports:
          - 5000:5000
+         - 5010-5080:5010-5080
        env_file: env.txt
 
       frontend:

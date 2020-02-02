@@ -10,9 +10,9 @@ ADD . .
 RUN pip install -r requirements.txt
 
 RUN augur configure generate --file util/packaging/docker/docker.config.json
-RUN cat augur.config.json > echo.txt
-RUN cat echo.txt
-
+RUN ./util/scripts/install/workers.sh
 RUN mkdir repos/
 
 EXPOSE 5000
+
+CMD ["augur", "run"]

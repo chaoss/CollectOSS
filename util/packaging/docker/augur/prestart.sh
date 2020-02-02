@@ -1,3 +1,3 @@
 #!bash
 
-augur run --disable-housekeeper &
+sleep 15
