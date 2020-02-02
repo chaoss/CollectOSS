@@ -4,10 +4,12 @@
     <div class="page-header row no-gutters py-4">
       <div class="col-12 col-sm-4 text-center text-sm-left mb-0">
         <span class="text-uppercase page-subtitle">Viewing all</span>
-        <h3 class="page-title">Repo Groups</h3>
+        <div class="title-container">
+          <h3 class="page-title">Repo Groups</h3>
+          <button>Manage Repos</button>
+        </div>
       </div>
     </div>
-
 
     <!-- Default Light Table -->
     <div class="row">
@@ -25,35 +27,54 @@
             <table style="table-layout:fixed;" class="table mb-0">
               <thead class="bg-light">
                 <tr>
-                  <th scope="col" class="border-0" v-on:click="sortTable('rg_name')"> 
+                  <th scope="col" class="border-0" v-on:click="sortTable('rg_name')">
                     <div class="row">
                       <div class="col col-9">Name</div>
-                      <div class="arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'rg_name' == sortColumn">
-                      </div>
+                      <div
+                        class="arrow"
+                        v-bind:class="ascending ? 'arrow_up' : 'arrow_down'"
+                        v-if="'rg_name' == sortColumn"
+                      ></div>
                     </div>
                   </th>
-                  <th scope="col" class="border-0" v-on:click="sortTable('rg_description')"> 
+                  <th scope="col" class="border-0" v-on:click="sortTable('rg_description')">
                     <div class="row">
                       <div class="col col-9">Description</div>
-                      <div class="arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'rg_description' == sortColumn"></div>
+                      <div
+                        class="arrow"
+                        v-bind:class="ascending ? 'arrow_up' : 'arrow_down'"
+                        v-if="'rg_description' == sortColumn"
+                      ></div>
                     </div>
                   </th>
-                  <th scope="col" class="border-0" v-on:click="sortTable('rg_website')"> 
+                  <th scope="col" class="border-0" v-on:click="sortTable('rg_website')">
                     <div class="row">
                       <div class="col col-9">Website</div>
-                      <div class="arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'rg_website' == sortColumn"></div>
+                      <div
+                        class="arrow"
+                        v-bind:class="ascending ? 'arrow_up' : 'arrow_down'"
+                        v-if="'rg_website' == sortColumn"
+                      ></div>
                     </div>
                   </th>
-                  <th scope="col" class="border-0" v-on:click="sortTable('rg_last_modified')"> 
+                  <th scope="col" class="border-0" v-on:click="sortTable('rg_last_modified')">
                     <div class="row">
                       <div class="col col-9">Last Modified</div>
-                      <div class="arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'rg_last_modified' == sortColumn"></div>
+                      <div
+                        class="arrow"
+                        v-bind:class="ascending ? 'arrow_up' : 'arrow_down'"
+                        v-if="'rg_last_modified' == sortColumn"
+                      ></div>
                     </div>
                   </th>
-                  <th scope="col" class="border-0" v-on:click="sortTable('rg_type')"> 
+                  <th scope="col" class="border-0" v-on:click="sortTable('rg_type')">
                     <div class="row">
                       <div class="col col-9">Type</div>
-                      <div class="arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'rg_type' == sortColumn"></div>
+                      <div
+                        class="arrow"
+                        v-bind:class="ascending ? 'arrow_up' : 'arrow_down'"
+                        v-if="'rg_type' == sortColumn"
+                      ></div>
                     </div>
                   </th>
                   <!-- <th scope="col" class="border-0" v-on:click="sortTable('repo_count')"> 
@@ -61,7 +82,7 @@
                       <div class="col col-9">Repo Count</div>
                       <div class="arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'repo_count' == sortColumn"></div>
                     </div>
-                  </th> -->
+                  </th>-->
                   <!-- <th scope="col" class="border-0">Options</th> -->
                 </tr>
               </thead>
@@ -97,7 +118,7 @@
                         Add this repo group to your current compared repos
                       </d-tooltip>
                     </div>
-                  </td> -->
+                  </td>-->
                 </tr>
               </tbody>
             </table>
@@ -108,85 +129,101 @@
   </div>
 </template>
 
+<style scoped>
+.title-container {
+  display: flex;
+}
+
+.title-container > button {
+  background-color: white;
+  color: #007BFF;
+  border: none;
+  box-shadow: 1px 1px 0 4px black;
+}
+</style>
+
 <script lang="ts">
-  import Component from 'vue-class-component';
-  import Vue from 'vue';
-  import {mapActions, mapGetters, mapMutations} from "vuex";
-  import Spinner from "@/components/Spinner.vue";
-  @Component({
-    components: {
-      Spinner,
-    },
-    methods: {
-      ...mapActions('common',[
-        'endpoint', // map `this.endpoint({...})` to `this.$store.dispatch('endpoint', {...})`
-                    // uses: this.endpoint({endpoints: [], repos (optional): [], repoGroups (optional): []})
-        'getRepoRelations',
-        'loadRepoGroups',
-        'addRepoGroup',
-      ]),
-      ...mapMutations('common',[
-        'setCompareType',
-      ]),
-      ...mapActions('compare', [
-        'addComparedGroup',
-        'setBaseGroup'
-      ])
-    },
-    computed: {
-      ...mapGetters('common',[
-        'sortedRepoGroups',
-        'repoGroups'
-      ])
-    },
-  })
-
-  export default class RepoGroups extends Vue{
-    colors: string[] = ["#343A40", "#24a2b7", "#159dfb", "#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"];
-    testEndpoints: string[] = ['issuesClosed', 'codeChangesLines', 'issueNew'];
-    testTimeframes: string[] = ['past 1 month', 'past 3 months', 'past 2 weeks'];
-    repos: any[] = [];
-    repo_relations:any[] =  [];
-    themes: string[] = ['dark', 'info', 'royal-blue', 'warning'];
-    loadedGroups: boolean = false;
-    loadedSparks: boolean = false;
-    ascending:boolean = true;
-    sortColumn: string ='rg_name';
-
-    // declare Vuex action and getter
-
-    getRepoRelations!: any;
-    loadRepoGroups!:any;
-    repo_groups!:any[];
-    sortedRepoGroups!:any[];
-    addRepoGroup!:any;
-    setBaseGroup!:any;
-
-    // compare module store
-    addComparedGroup!:any;
-
-    created() {
-      if(!this.loadedGroups){
-        this.loadRepoGroups().then(() => {
-          this.loadedGroups = true
-        })
-      }
-    }
-
-    sortTable(col: string) {
-      if (this.sortColumn === col) {
-        this.ascending = !this.ascending;
-      } else {
-        this.ascending = true;
-        this.sortColumn = col;
-      }
-    }
-
-    onRepoGroup(e:any) {
-      this.$router.push({
-        name: 'group_overview',
-        params:{group:e.rg_name, repo_group_id: e.repo_group_id}
-      })
-    } 
+import Component from "vue-class-component";
+import Vue from "vue";
+import { mapActions, mapGetters, mapMutations } from "vuex";
+import Spinner from "@/components/Spinner.vue";
+@Component({
+  components: {
+    Spinner
+  },
+  methods: {
+    ...mapActions("common", [
+      "endpoint", // map `this.endpoint({...})` to `this.$store.dispatch('endpoint', {...})`
+      // uses: this.endpoint({endpoints: [], repos (optional): [], repoGroups (optional): []})
+      "getRepoRelations",
+      "loadRepoGroups",
+      "addRepoGroup"
+    ]),
+    ...mapMutations("common", ["setCompareType"]),
+    ...mapActions("compare", ["addComparedGroup", "setBaseGroup"])
+  },
+  computed: {
+    ...mapGetters("common", ["sortedRepoGroups", "repoGroups"])
   }
+})
+export default class RepoGroups extends Vue {
+  colors: string[] = [
+    "#343A40",
+    "#24a2b7",
+    "#159dfb",
+    "#FF3647",
+    "#4736FF",
+    "#3cb44b",
+    "#ffe119",
+    "#f58231",
+    "#911eb4",
+    "#42d4f4",
+    "#f032e6"
+  ];
+  testEndpoints: string[] = ["issuesClosed", "codeChangesLines", "issueNew"];
+  testTimeframes: string[] = ["past 1 month", "past 3 months", "past 2 weeks"];
+  repos: any[] = [];
+  repo_relations: any[] = [];
+  themes: string[] = ["dark", "info", "royal-blue", "warning"];
+  loadedGroups: boolean = false;
+  loadedSparks: boolean = false;
+  ascending: boolean = true;
+  sortColumn: string = "rg_name";
+
+  // declare Vuex action and getter
+
+  getRepoRelations!: any;
+  loadRepoGroups!: any;
+  repo_groups!: any[];
+  sortedRepoGroups!: any[];
+  addRepoGroup!: any;
+  setBaseGroup!: any;
+
+  // compare module store
+  addComparedGroup!: any;
+
+  created() {
+    if (!this.loadedGroups) {
+      this.loadRepoGroups().then(() => {
+        this.loadedGroups = true;
+      });
+    }
+  }
+
+  sortTable(col: string) {
+    if (this.sortColumn === col) {
+      this.ascending = !this.ascending;
+    } else {
+      this.ascending = true;
+      this.sortColumn = col;
+    }
+  }
+
+  onRepoGroup(e: any) {
+    this.$router.push({
+      name: "group_overview",
+      params: { group: e.rg_name, repo_group_id: e.repo_group_id }
+    });
+  }
+}
 </script>
