@@ -1,34 +1,31 @@
 <template>
   <div class="login-card">
     <img src="../../assets/logo.png" alt />
-    <div class="input-container username">
-      <label for="username">Username:</label>
-      <input
-        type="text"
-        name="username"
-        id="input"
-        v-model="username"
-        v-on:keydown="keyboardInputListener($event)"
-      />
-    </div>
-    <div class="input-container">
-      <label for="password">Password:</label>
-      <input
-        type="password"
-        name="password"
-        ref="passwordInput"
-        id="input"
-        v-model="password"
-        v-on:keydown="keyboardInputListener($event)"
-      />
-    </div>
-    <button v-on:click="$router.push('/dashboard')" ref="loginButton">Login</button>
+    <aug-text-input
+      text="Username"
+      inputName="username"
+      class="aug-input"
+      @valueUpdated="setUsername"
+    />
+    <aug-text-input
+      text="Password"
+      inputName="password"
+      class="aug-input"
+      @valueUpdated="setPassword"
+      :password="true"
+    />
+    <aug-button text="Login" @click="$router.push('/dashboard')" ref="loginButton" />
   </div>
 </template>
 
+
+
+
 <script>
+import AugButton from "../AugButton.vue";
+import AugTextInput from "../AugTextInput.vue";
+
 export default {
-  name: "LoginCard",
   data() {
     return {
       username: "",
@@ -36,23 +33,38 @@ export default {
     };
   },
   methods: {
+    // listeners for keyboard presses during user input
     keyboardInputListener(e) {
       if (e.key === "Enter") {
         switch (e.originalTarget.name) {
           case "username":
-              this.$refs.passwordInput.focus();
-              break;
-          case 'password':
-              this.$refs.loginButton.click();
-              break;
+            this.$refs.passwordInput.focus();
+            break;
+          case "password":
+            this.$refs.loginButton.$el.click();
+            break;
         }
       }
+    },
+    setPassword(value) {
+      this.password = value;
+    },
+    setUsername(value) {
+      this.username = value;
     }
+  },
+  name: "LoginCard",
+  components: {
+    AugButton,
+    AugTextInput
   }
 };
 </script>
 
-<style>
+
+
+
+<style scoped>
 .login-card {
   display: flex;
   flex-direction: column;
@@ -64,8 +76,6 @@ export default {
   margin: auto;
   margin-top: 8vh;
   border-radius: 4px;
-  /* height: 90vh; */
-  /* max-height: 500px; */
   box-shadow: 0px 0px 20px #cdcdcd;
 }
 
@@ -73,48 +83,17 @@ export default {
   margin-top: 2.2rem;
 }
 
-img {
-  width: 90%;
-  /* border-bottom: 1px solid #cdcdcd; */
-  /* box-shadow: 0 10px 10px -15px black; */
-  user-select: none;
-}
-
-.input-container {
-  width: 80%;
-  max-width: 300px;
-}
-
-.input-container > input {
-  margin: auto;
-  width: 95%;
-}
-
-.input-container > label {
-  display: block;
-  font-weight: 100;
-}
-
 .username {
   margin-top: 1rem;
 }
 
-button {
-  padding: 0.3rem 4rem;
-  /* background-image: linear-gradient(to bottom right, #0188EC, rgb(46, 163, 253)); */
-  background-color: #efefef;
-  border: 1px solid #b5b5b5;
-  border-radius: 4px;
-  margin-bottom: 2rem;
-  font-size: 1.3rem;
-  color: #232323;
-  font-weight: 100;
-  transition: border 0.2s ease, color 0.2s ease;
+img {
+  width: 90%;
+  user-select: none;
 }
 
-button:hover {
-  border: 1px solid #0188ec;
-  color: #0188ec;
-  cursor: pointer;
+.aug-input {
+  width: 80%;
+  max-width: 300px;
 }
 </style>
