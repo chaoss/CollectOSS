@@ -11,23 +11,22 @@ export default {
 };
 </script>
 
-<style>
+<style scoped>
 button {
   padding: 0.3rem 4rem;
-  /* background-image: linear-gradient(to bottom right, #0188EC, rgb(46, 163, 253)); */
-  background-color: #efefef;
-  border: 1px solid #b5b5b5;
+  background-color: var(--light-grey);
+  border: 1px solid var(--grey);
   border-radius: 4px;
   margin-bottom: 2rem;
   font-size: 1.3rem;
-  color: #232323;
+  color: var(--dark-grey);
   font-weight: 100;
   transition: border 0.2s ease, color 0.2s ease;
 }
 
 button:hover {
-  border: 1px solid #0188ec;
-  color: #0188ec;
+  border: 1px solid var(--light-blue);
+  color: var(--light-blue);
   cursor: pointer;
 }
 </style>

@@ -1,0 +1,6 @@
+seperate augheader into components (menu bar, nav, and nav-link)
+make nav-links style conditional to current page
+
+pull currently stored repositories and display
+
+implement repo groups (drag n drop, send to different group, etc)

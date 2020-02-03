@@ -33,9 +33,19 @@ export default {
 <style scoped>
 label {
     display: block;
+    color: var(--dark-grey);
 }
 
 input {
     width: 100%;
+    font-size: 1rem;
+    padding: .4rem;
+    border: 1px solid var(--grey);
+    border-radius: 3px;
+    transition: border .2s ease;
+}
+
+input:focus {
+    border: 1px solid var(--light-blue);
 }
 </style>

@@ -1,7 +1,9 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 import Login from '../components/Login/Login.vue';
-// import Dashboard from '../views/Dashboard.js';
+import Dashboard from '../components/Dashboard/Dashboard.vue';
+import ManageRepos from '../components/Dashboard/ManageRepos/ManageRepos.vue';
+import AnalyzeRepos from '../components/Dashboard/AnalyzeRepos/AnalyzeRepos.vue';
 
 Vue.use(VueRouter)
 
@@ -11,11 +13,21 @@ const routes = [
     name: 'login',
     component: Login
   },
-  // {
-  //   path: '/dashboard',
-  //   name: 'dashboard',
-  //   component: Dashboard
-  // }
+  {
+    path: '/dashboard',
+    name: 'dashboard',
+    component: Dashboard, 
+    children: [
+      {
+        path: 'manage', 
+        component: ManageRepos
+      }, 
+      {
+        path: 'analyze', 
+        component: AnalyzeRepos
+      }
+    ]
+  }
 ]
 
 const router = new VueRouter({
