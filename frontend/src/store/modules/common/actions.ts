@@ -9,9 +9,7 @@ var AWS = require("aws-sdk");
 
 export default {
 
-    retrieveRepoIds (context: any, payload: any){
-        AWS.config.loadFromPath('awsCreds.json');
-        
+    retrieveRepoIds (context: any, payload: any){        
         let parseUrl = (repo_name: string) => {
             if (repo_name.includes('https://github.com/'))
                 repo_name = repo_name.substr(19)
@@ -303,6 +301,8 @@ export default {
         })
     },
     async getUser(email:string, teamId:string) {
+        AWS.config.loadFromPath('awsCreds.json');
+
         let client = new AWS.DynamoDB.DocumentClient();
         var params = {
             TableName: "auggie-users",
@@ -316,6 +316,8 @@ export default {
         return result;
     },
     async updateTracking (email, teamId, repos, groups) {
+        AWS.config.loadFromPath('awsCreds.json');
+
         let client = new AWS.DynamoDB.DocumentClient();
         const params = {
           "TableName": "auggie-users",
