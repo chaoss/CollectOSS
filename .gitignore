@@ -1,7 +1,10 @@
-# Augur
+# Config
 augur.config.json
 !default.config.json
 !frontend.config.json
+env.txt
+augur_export_env.txt
+
 
 node_modules/
 logs/
@@ -14,7 +17,6 @@ cache/
 frontend/public/api_docs/
 *.err
 .tox
-env.txt
 
 # C extensions
 *.so

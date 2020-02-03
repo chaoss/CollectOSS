@@ -9,22 +9,7 @@ import json
 
 ENVVAR_PREFIX = "AUGUR_"
 
-@click.group('configure', short_help='Generate an augur.config.json')
-def cli():
-    pass
-
-@cli.command('generate', short_help='Generate an augur.config.json')
-@click.option('--db_name', help="Database name for your data collection database", envvar=ENVVAR_PREFIX + 'DB_NAME')
-@click.option('--db_host', help="Host for your data collection database", envvar=ENVVAR_PREFIX + 'DB_HOST')
-@click.option('--db_user', help="User for your data collection database", envvar=ENVVAR_PREFIX + 'DB_USER')
-@click.option('--db_port', help="Port for your data collection database", envvar=ENVVAR_PREFIX + 'DB_PORT')
-@click.option('--db_password', help="Password for your data collection database", envvar=ENVVAR_PREFIX + 'DB_PASSWORD')
-@click.option('--github_api_key', help="GitHub API key for data collection from the GitHub API", envvar=ENVVAR_PREFIX + 'GITHUB_API_KEY')
-@click.option('--facade_repo_directory', help="Directory on the database server where Facade should clone repos", envvar=ENVVAR_PREFIX + 'FACADE_REPO_DIRECTORY')
-@click.option('--file', type=click.Path(exists=True))
-def generate(db_name, db_host, db_user, db_port, db_password, github_api_key, facade_repo_directory, file):
-
-    config = {
+default_config = {
         "Cache": {
             "config": {
                 "cache.data_dir": "runtime/cache/",
@@ -180,7 +165,22 @@ def generate(db_name, db_host, db_user, db_port, db_password, github_api_key, fa
         }
     }
 
-    # os.chdir(os.path.dirname(os.path.realpath(__file__)))
+@click.group('configure', short_help='Generate an augur.config.json')
+def cli():
+    pass
+
+@cli.command('generate', short_help='Generate an augur.config.json')
+@click.option('--db_name', help="Database name for your data collection database", envvar=ENVVAR_PREFIX + 'DB_NAME')
+@click.option('--db_host', help="Host for your data collection database", envvar=ENVVAR_PREFIX + 'DB_HOST')
+@click.option('--db_user', help="User for your data collection database", envvar=ENVVAR_PREFIX + 'DB_USER')
+@click.option('--db_port', help="Port for your data collection database", envvar=ENVVAR_PREFIX + 'DB_PORT')
+@click.option('--db_password', help="Password for your data collection database", envvar=ENVVAR_PREFIX + 'DB_PASSWORD')
+@click.option('--github_api_key', help="GitHub API key for data collection from the GitHub API", envvar=ENVVAR_PREFIX + 'GITHUB_API_KEY')
+@click.option('--facade_repo_directory', help="Directory on the database server where Facade should clone repos", envvar=ENVVAR_PREFIX + 'FACADE_REPO_DIRECTORY')
+@click.option('--file', type=click.Path(exists=True))
+def generate(db_name, db_host, db_user, db_port, db_password, github_api_key, facade_repo_directory, file):
+
+    config = default_config
 
     if db_name is not None:
         config['Database']['database'] = db_name

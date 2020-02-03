@@ -14,7 +14,6 @@ from gunicorn.six import iteritems
 from gunicorn.arbiter import Arbiter
 from augur.housekeeper.housekeeper import Housekeeper
 
-# from augur.runtime import pass_application
 from augur.util import logger
 from augur.server import Server
 
