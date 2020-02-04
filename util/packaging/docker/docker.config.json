@@ -105,7 +105,7 @@
             "workers": "4"
         },
         "Frontend": {
-            "host": "0.0.0.0",
+            "host": "augur",
             "port": "5000"
         },
         "Workers": {

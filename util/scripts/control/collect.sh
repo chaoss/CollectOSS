@@ -1,9 +1,5 @@
 #!/bin/bash
 
-if [[ ! -d logs ]]; then
-    mkdir logs
-fi
-
 echo
 echo "**********************************"
 echo "Starting workers..."

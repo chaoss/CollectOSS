@@ -3,7 +3,7 @@ augur.config.json
 !default.config.json
 !frontend.config.json
 env.txt
-augur_export_env.txt
+augur_export_env.sh
 
 
 node_modules/

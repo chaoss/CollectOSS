@@ -128,10 +128,11 @@ collect:
 
 run:
 	@ ./util/scripts/control/augur.sh
-	@ echo "Waiting for the server to start... (this will take about 3 minutes)"
+	@ echo "Waiting for the server to start... (this will take a moment)"
 	@ echo "In the meantime, consider taking a short break - you've earned it!"
-	@ sleep 180
+	@ sleep 60
 	@ ./util/scripts/control/collect.sh
+	@ echo "Workers have been started. Happy collecting!"
 
 status:
 	@ ./util/scripts/control/status.sh

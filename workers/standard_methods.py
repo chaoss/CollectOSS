@@ -1,5 +1,5 @@
 """ Helper methods constant across all workers """
-import requests, datetime, time, traceback, json, os
+import requests, datetime, time, traceback, json, os, sys
 import sqlalchemy as s
 import pandas as pd
 

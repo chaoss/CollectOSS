@@ -134,7 +134,9 @@ default_config = {
             "insight_worker": {
                 "port": 56311,
                 "switch": 0,
-                "workers": 2
+                "workers": 2,
+                "anomaly_days": 30,
+                "confidence_interval": .95
             },
             "linux_badge_worker": {
                 "port": 56811,
@@ -182,6 +184,14 @@ def generate(db_name, db_host, db_user, db_port, db_password, github_api_key, fa
 
     config = default_config
 
+    if file != None:
+        try:
+            with open(os.path.abspath(file), 'r') as f:
+                config = json.load(f)
+                print('Predefined config successfully loaded')
+        except Exception as e:
+            print(f"Error opening {file}: {str(e)}")
+
     if db_name is not None:
         config['Database']['database'] = db_name
     if db_host is not None:
@@ -198,14 +208,6 @@ def generate(db_name, db_host, db_user, db_port, db_password, github_api_key, fa
         config['Workers']['facade_worker']['repo_directory'] = facade_repo_directory
 
     config['Database']['schema'] = "augur_data"
-
-    if file != None:
-        try:
-            with open(os.path.abspath(file), 'r') as f:
-                config = json.load(f)
-                print('Predefined config successfully loaded')
-        except Exception as e:
-            print(f"Error opening {file}: {str(e)}")
 
     try:
         with open(os.path.abspath('augur.config.json'), 'w') as f:

@@ -1,4 +1,4 @@
-FROM tiangolo/uwsgi-nginx-flask:python3.6
+FROM tiangolo/uwsgi-nginx-flask:python3.6 as build-stage
 
 ENV STATIC_INDEX 0
 
@@ -9,10 +9,14 @@ WORKDIR /augur
 ADD . .
 RUN pip install -r requirements.txt
 
-RUN augur configure generate --file util/packaging/docker/docker.config.json
 RUN ./util/scripts/install/workers.sh
+
 RUN mkdir repos/
 
 EXPOSE 5000
+
+FROM build-stage
+RUN augur configure generate --file ./util/packaging/docker/docker.config.json
+
 
 CMD ["augur", "run"]
