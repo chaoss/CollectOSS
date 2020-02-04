@@ -22,8 +22,8 @@
 
 
 <script>
-import AugButton from "../AugButton.vue";
-import AugTextInput from "../AugTextInput.vue";
+import AugButton from "../BaseComponents/AugButton.vue";
+import AugTextInput from "../BaseComponents/AugTextInput.vue";
 
 export default {
   data() {
@@ -33,7 +33,7 @@ export default {
     };
   },
   methods: {
-    // listeners for keyboard presses during user input
+    // listeners for keyboard presses during user input (specifically for 'Enter')
     keyboardInputListener(e) {
       if (e.key === "Enter") {
         switch (e.originalTarget.name) {

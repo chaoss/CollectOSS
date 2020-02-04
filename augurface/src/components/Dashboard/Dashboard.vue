@@ -1,23 +1,20 @@
 <template>
   <div id="Dashboard">
-      <aug-header />
+      <dashboard-header />
       <router-view />
   </div>
 </template>
 
 <script>
-import AugHeader from './AugHeader.vue';
+import DashboardHeader from './dashboardHeader/DashboardHeader.vue';
 
 export default {
     name: "Dashboard", 
     components: {
-        AugHeader
+        DashboardHeader
     }
 };
 </script>
 
 <style>
-#Dashboard {
-    /* height: 150vh; */
-}
 </style>

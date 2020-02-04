@@ -5,9 +5,12 @@
 <script>
 export default {
     name: 'AugButton', 
-    props: [
-        'text'
-    ]
+    props: {
+      text: {
+        type: String, 
+        required: false
+      }
+    }
 };
 </script>
 
