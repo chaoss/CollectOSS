@@ -7,6 +7,11 @@ import base64
 import sqlalchemy as s
 import pandas as pd
 from augur.util import annotate, add_metrics
+import boto3
+import json
+from boto3.dynamodb.conditions import Key, Attr
+import os
+
 
 @annotate(tag='repo-groups')
 def repo_groups(self):
@@ -359,6 +364,63 @@ def aggregate_summary(self, repo_group_id, repo_id=None, begin_date=None, end_da
         results = pd.read_sql(summarySQL, self.database, params={'repo_id': repo_id,
                                                         'begin_date': begin_date, 'end_date': end_date})
         return results
+
+@annotate(tag='get-auggie-user')
+def get_auggie_user(metric, body):
+    profile_name = 'augur'
+    if os.environ.get('AUGUR_IS_PROD'):
+        profile_name = 'default'
+    client = boto3.Session(region_name='us-east-1', profile_name=profile_name).client('dynamodb')
+    response = client.get_item(
+        TableName="auggie-users",
+             Key={
+                 "email": {"S":'{}:{}'.format(body["email"],body["teamID"])}
+             }
+    )
+    user = response['Item']
+
+    filteredUser = {
+        "interestedRepos":user["interestedRepos"],
+        "interestedGroups":user["interestedGroups"],
+        "host":user["host"]
+    }
+   
+
+    return filteredUser
+
+
+@annotate(tag='update-auggie-user-tracking')
+def update_tracking(metric, body):
+    profile_name = 'augur'
+    if os.environ.get('AUGUR_IS_PROD'):
+        profile_name = 'default'
+    client = boto3.Session(region_name='us-east-1', profile_name=profile_name).client('dynamodb')
+    response = client.update_item(
+        TableName="auggie-users",
+        Key={
+            "email": {"S": '{}:{}'.format(body["email"], body["teamID"])}
+        },
+        UpdateExpression="SET interestedGroups = :valGroup, interestedRepos = :valRepo",
+        ExpressionAttributeValues={
+            ":valGroup": {
+                "L": body["groups"]
+            },
+            ":valRepo": {
+                "L": body["repos"]
+            }
+        },
+        ReturnValues="ALL_NEW"
+    )
+
+    updated_values = response['Attributes']
+
+    filtered_values = {
+        "interestedRepos": updated_values["interestedRepos"],
+        "interestedGroups": updated_values["interestedGroups"],
+        "host": updated_values["host"]
+    }
+
+    return filtered_values
 
 def create_util_metrics(metrics):
     add_metrics(metrics, __name__)

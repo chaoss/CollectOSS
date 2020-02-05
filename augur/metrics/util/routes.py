@@ -1,4 +1,5 @@
 from flask import Response
+from flask import request
 
 def create_util_routes(server):
 
@@ -191,8 +192,24 @@ def create_util_routes(server):
                         status=200,
                         mimetype='application/json')
 
+
+    @server.app.route('/auggie/get_user', methods=['POST'])
+    def get_auggie_user():
+        print(request.json)
+        arg = [request.json]
+        response = server.transform(metrics.get_auggie_user, args=arg)
+        return Response(response=response, status=200, mimetype="application/json")
+
+    @server.app.route('/auggie/update_tracking', methods=['POST'])
+    def update_auggie_user_tracking():
+        print(request.json)
+        arg = [request.json]
+        response = server.transform(metrics.update_tracking, args=arg)
+        return Response(response=response, status=200, mimetype="application/json")
+
     server.addRepoGroupMetric(metrics.get_issues, 'get-issues')
     server.addRepoMetric(metrics.get_issues, 'get-issues')
+    
 
     """
     @api {get} /top-insights Top Insights

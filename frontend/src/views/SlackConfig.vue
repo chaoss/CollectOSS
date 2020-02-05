@@ -4,6 +4,7 @@
       <!-- <div class="col-12 col-sm-4 text-center text-sm-left mb-0"> -->
         <!-- <span class="text-uppercase page-subtitle">Viewing all</span> -->
         <h3 id="page-title">Auggie</h3>
+        <button @click="getUser('testemail', '420')">PUSHIT</button>
       </div>
     </div>
 
@@ -252,8 +253,12 @@ import SlackSettingSync from "@/AugurAPI";
 
 @Component({
   methods: {
+    ...mapActions('common',[
+      'getAuggieUser',
+      'updateTracking'
+    ]),
     getUser: async function(email, teamId) {
-      this.getUser(email, teamId);
+      this.getAuggieUser(email, teamId);
       //method will return user object with host, interestedRepos and interestedGroups
       // SlackSettingSync.getUser(email, teamId);
     },
@@ -261,10 +266,6 @@ import SlackSettingSync from "@/AugurAPI";
       this.updateTracking(email, teamId, repos, groups);
       // SlackSettingSync.updateTracking(email, teamId, repos, groups);
     },
-    ...mapActions('common',[
-      'getUser',
-      'updateTracking'
-    ])
   },
   computed: {
 

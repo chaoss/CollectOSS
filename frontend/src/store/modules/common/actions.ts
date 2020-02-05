@@ -2,11 +2,6 @@ import Repo from '@/AugurAPI';
 import RepoGroup from '@/AugurAPI';
 var AWS = require("aws-sdk");
 
-// AWS.config.update({
-//   region: "us-east-1",
-//   credentials: new AWS.SharedIniFileCredentials()
-// });
-
 export default {
 
     retrieveRepoIds (context: any, payload: any){        
@@ -300,40 +295,72 @@ export default {
             })
         })
     },
-    async getUser(email:string, teamId:string) {
-        AWS.config.loadFromPath('awsCreds.json');
+    async getAuggieUser(email:string, teamID:string) {
+        // AWS.config.loadFromPath('awsCreds.json');
 
-        let client = new AWS.DynamoDB.DocumentClient();
-        var params = {
-            TableName: "auggie-users",
-            Key: {
-                "email": `${email}:${teamId}`
-            }
-        };
+        // let client = new AWS.DynamoDB.DocumentClient();
+        // var params = {
+        //     TableName: "auggie-users",
+        //     Key: {
+        //         "email": `${email}:${teamId}`
+        //     }
+        // };
 
-        let result = await client.get(params).promise();
+        fetch('http://localhost:5000/auggie/get_user', {
+            method: 'POST', 
+            headers: {
+                'Content-Type': 'application/json'
+            }, 
+            body: JSON.stringify({
+                email, 
+                teamID
+            }), 
+        })
+        .then(res => res.json())
+        .then(res => {
+            console.log(res);
+        });
 
-        return result;
+        // let result = await client.get(params).promise();
+
+        // return result;
     },
-    async updateTracking (email, teamId, repos, groups) {
-        AWS.config.loadFromPath('awsCreds.json');
+    async updateTracking (email: any, teamID: any, repos: any, groups: any) {
+        // AWS.config.loadFromPath('awsCreds.json');
 
-        let client = new AWS.DynamoDB.DocumentClient();
-        const params = {
-          "TableName": "auggie-users",
-          "Key": {"email": `${email}:${teamId}`},
-          "UpdateExpression": "SET interestedGroups = :valGroup, interestedRepos = :valRepo",
-          "ExpressionAttributeValues": {
-            ":valGroup": {
-                "L": groups
+        // let client = new AWS.DynamoDB.DocumentClient();
+        // const params = {
+        //   "TableName": "auggie-users",
+        //   "Key": {"email": `${email}:${teamId}`},
+        //   "UpdateExpression": "SET interestedGroups = :valGroup, interestedRepos = :valRepo",
+        //   "ExpressionAttributeValues": {
+        //     ":valGroup": {
+        //         "L": groups
+        //     },
+        //     ":valRepo": {
+        //         "L": repos
+        //     }
+        //   }
+        // };
+
+        fetch('http://localhost:5000/auggie/update_tracking', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
             },
-            ":valRepo": {
-                "L": repos
-            }
-          }
-        };
+            body: JSON.stringify({
+                email,
+                teamID,
+                groups,
+                repos
+            }),
+        })
+            .then(res => res.json())
+            .then(res => {
+                console.log(res);
+            });
      
-        let response = await client.update(params).promise();
-        console.log(response);
+        // let response = await client.update(params).promise();
+        // console.log(response);
     }
 };
