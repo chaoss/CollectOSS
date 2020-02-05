@@ -71,9 +71,9 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(repo,index) in sortedRepos(sortColumn,ascending)" v-bind:item="repo">
+                <tr v-for="repo in sortedRepos(sortColumn,ascending)" v-bind:item="repo" :key="repo.url">
                   <td>
-                    <a href="#" @click="onGitRepo(repo)">{{ repo.url }}</a>
+                    <a href="#" @click="onGitRepo(repo.rg_name, repo.repo_name)">{{ repo.url }}</a>
                   </td>
                   <td>{{ repo.rg_name }}</td>
                   <!-- <td>{{ repo.description }}</td> -->
@@ -183,11 +183,18 @@ export default class Repos extends Vue{
       }
   }
 
-  onGitRepo (e: any) {
-    this.$router.push({
-      name: 'repo_overview',
-      params: {group:e.rg_name, repo:e.repo_name, repo_group_id: e.repo_group_id, repo_id: e.repo_id, url:e.url}
-    })
+  onGitRepo (rg_name: String, repo_name: String) {
+    // this.$router.push({
+    //   name: 'repo_overview',
+    //   params: {group:e.rg_name, repo:e.repo_name, repo_group_id: e.repo_group_id, repo_id: e.repo_id, url:e.url}
+    // }, () => {
+    //   console.dir(e);
+    // });
+    if (typeof(rg_name) === 'undefined' || typeof(repo_name) === 'undefined') {
+      window.alert('Error - repo name not found in store');
+    } else {
+      this.$router.push(`repo/${rg_name}/${repo_name}/overview`);
+    }
   }
 }
 
