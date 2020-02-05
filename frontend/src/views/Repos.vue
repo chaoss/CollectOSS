@@ -190,10 +190,13 @@ export default class Repos extends Vue{
     // }, () => {
     //   console.dir(e);
     // });
-    if (typeof(rg_name) === 'undefined' || typeof(repo_name) === 'undefined') {
+    if (typeof rg_name === 'undefined' || typeof repo_name === 'undefined') {
       window.alert('Error - repo name not found in store');
     } else {
-      this.$router.push(`repo/${rg_name}/${repo_name}/overview`);
+      this.$router.push(`repo/${rg_name}/${repo_name}/overview`, () => {
+        console.log(`RG_NAME: ${rg_name}`);
+        console.log(`REPO_NAME: ${repo_name}`);
+      });
     }
   }
 }
