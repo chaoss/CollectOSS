@@ -192,6 +192,7 @@ export default class Repos extends Vue{
     // });
     if (typeof rg_name === 'undefined' || typeof repo_name === 'undefined') {
       window.alert('Error - repo name not found in store');
+      console.log(this.sortedRepos(this.sortColumn,this.ascending));
     } else {
       this.$router.push(`repo/${rg_name}/${repo_name}/overview`, () => {
         console.log(`RG_NAME: ${rg_name}`);
