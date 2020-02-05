@@ -111,6 +111,10 @@
       else {
         this.endpoint({endpoints:[this.source],repos:[this.base]}).then((tuples:any) => {
           let ref = this.base.url || this.base.repo_name
+          console.log('BASE: ');
+          console.log(this.base);
+          console.log('REF: ');
+          console.log(ref);
           if (ref.includes('/'))
             ref = ref.split('/')[ref.split('/').length - 1]
           let values:any = []
@@ -130,6 +134,10 @@
       else {
         this.endpoint({endpoints:[this.sourcetwo],repos:[this.base]}).then((tuples:any) => {
           let ref = this.base.url || this.base.repo_name
+          console.log('BASE: ');
+          console.dir(this.base);
+          console.log('REF: ');
+          console.log(ref);
           if (ref.includes('/'))
             ref = ref.split('/')[ref.split('/').length - 1]
           let valuestwo:any = []

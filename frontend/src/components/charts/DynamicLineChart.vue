@@ -1022,6 +1022,10 @@ export default {
       apiRepos.push(this.base);
       console.log("DLC base",this.base)
       let ref = this.base.url || this.base.repo_name;
+      console.log('BASE: ');
+      console.dir(this.base);
+      console.log('REF: ');
+      console.log(ref);
       if (ref.includes('/'))
           ref = ref.split('/')[ref.split('/').length - 1]
       repos = [ref];

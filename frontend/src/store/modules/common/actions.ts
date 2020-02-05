@@ -99,6 +99,10 @@ export default {
                     console.log("Repos given to endpoint action: ", payload.endpoints[0],payload.repos)
                     payload.repos.forEach((repo: any) => {
                         let ref = repo.url || repo.repo_name
+                        console.log('REPO: ');
+                        console.dir(repo);
+                        console.log('REF: ');
+                        console.log(ref);
                         if (ref.includes('/'))
                             ref = ref.split('/')[ref.split('/').length - 1]
                         // tempCache[repo.rg_name] = tempCache[repo.rg_name] || {}
