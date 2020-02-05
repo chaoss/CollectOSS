@@ -190,7 +190,7 @@ export default class Repos extends Vue{
     // }, () => {
     //   console.dir(e);
     // });
-    if (typeof rg_name === 'undefined' || typeof repo_name === 'undefined') {
+    if (rg_name == null || repo_name == null ) {
       window.alert('Error - repo name not found in store');
       console.log(this.sortedRepos(this.sortColumn,this.ascending));
     } else {
