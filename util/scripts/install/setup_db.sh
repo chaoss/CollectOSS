@@ -90,13 +90,13 @@ function save_credentials() {
 
 function create_db_schema() {
 
-    psql -h $host -d $db_name -U $db_user -p $port -a -w -f persistence_schema/1-schema.sql
-    psql -h $host -d $db_name -U $db_user -p $port -a -w -f persistence_schema/2-augur_data.sql
-    psql -h $host -d $db_name -U $db_user -p $port -a -w -f persistence_schema/3-augur_operations.sql
-    psql -h $host -d $db_name -U $db_user -p $port -a -w -f persistence_schema/4-spdx.sql
-    psql -h $host -d $db_name -U $db_user -p $port -a -w -f persistence_schema/5-seed-data.sql
-    psql -h $host -d $db_name -U $db_user -p $port -a -w -f persistence_schema/6-schema_update_8.sql
-    psql -h $host -d $db_name -U $db_user -p $port -a -w -f persistence_schema/7-schema_update_9.sql
+    psql -h $host -d $db_name -U $db_user -p $port -a -w -f persistence_schema/generate/1-schema.sql
+    psql -h $host -d $db_name -U $db_user -p $port -a -w -f persistence_schema/generate/2-augur_data.sql
+    psql -h $host -d $db_name -U $db_user -p $port -a -w -f persistence_schema/generate/3-augur_operations.sql
+    psql -h $host -d $db_name -U $db_user -p $port -a -w -f persistence_schema/generate/4-spdx.sql
+    psql -h $host -d $db_name -U $db_user -p $port -a -w -f persistence_schema/generate/5-seed-data.sql
+    psql -h $host -d $db_name -U $db_user -p $port -a -w -f persistence_schema/generate/6-schema_update_8.sql
+    psql -h $host -d $db_name -U $db_user -p $port -a -w -f persistence_schema/generate/7-schema_update_9.sql
 
     psql -h $host -d $db_name -U $db_user -p $port -a -w -c "UPDATE augur_data.settings SET VALUE = '$facade_repo_directory' WHERE setting='repo_directory';"
     echo "Schema created"
