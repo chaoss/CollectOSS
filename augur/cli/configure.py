@@ -129,14 +129,15 @@ default_config = {
             "github_worker": {
                 "port": 56211,
                 "switch": 0,
-                "workers": 2
+                "workers": 1
             },
             "insight_worker": {
                 "port": 56311,
                 "switch": 0,
-                "workers": 2,
-                "anomaly_days": 30,
-                "confidence_interval": .95
+                "workers": 1,
+                "training_days": 365,
+                "anomaly_days": 90,
+                "confidence_interval": 95
             },
             "linux_badge_worker": {
                 "port": 56811,
@@ -151,12 +152,12 @@ default_config = {
             "pull_request_worker": {
                 "port": 56411,
                 "switch": 0,
-                "workers": 2
+                "workers": 1
             },
             "repo_info_worker": {
                 "port": 56511,
                 "switch": 0,
-                "workers": 2
+                "workers": 1
             },
             "value_worker": {
                 "port": 56611,
@@ -179,18 +180,23 @@ def cli():
 @click.option('--db_password', help="Password for your data collection database", envvar=ENVVAR_PREFIX + 'DB_PASSWORD')
 @click.option('--github_api_key', help="GitHub API key for data collection from the GitHub API", envvar=ENVVAR_PREFIX + 'GITHUB_API_KEY')
 @click.option('--facade_repo_directory', help="Directory on the database server where Facade should clone repos", envvar=ENVVAR_PREFIX + 'FACADE_REPO_DIRECTORY')
-@click.option('--file', type=click.Path(exists=True))
-def generate(db_name, db_host, db_user, db_port, db_password, github_api_key, facade_repo_directory, file):
+@click.option('--rc-config-file', type=click.Path(exists=True))
+def generate(db_name, db_host, db_user, db_port, db_password, github_api_key, facade_repo_directory, rc_config_file):
 
     config = default_config
+    rc_config = None
 
-    if file != None:
+    if rc_config_file != None:
         try:
-            with open(os.path.abspath(file), 'r') as f:
-                config = json.load(f)
+            with open(os.path.abspath(rc_config_file), 'r') as f:
+                rc_config = json.load(f)
                 print('Predefined config successfully loaded')
         except Exception as e:
-            print(f"Error opening {file}: {str(e)}")
+            print(f"Error opening {rc_config_file}: {str(e)}")
+
+    for item in rc_config.items():
+        for index, key in enumerate(list(item[1].keys())):
+            config[item[0]][key] = list(item[1].values())[index]
 
     if db_name is not None:
         config['Database']['database'] = db_name
@@ -207,12 +213,9 @@ def generate(db_name, db_host, db_user, db_port, db_password, github_api_key, fa
     if facade_repo_directory is not None:
         config['Workers']['facade_worker']['repo_directory'] = facade_repo_directory
 
-    config['Database']['schema'] = "augur_data"
-
     try:
         with open(os.path.abspath('augur.config.json'), 'w') as f:
             json.dump(config, f, indent=4)
             print('augur.config.json successfully created')
     except Exception as e:
         print("Error writing augur.config.json " + str(e))
-

@@ -186,6 +186,7 @@ compose-run-with-database:
 	@ docker-compose -f docker-compose.yml -f database-compose.yml up --build
 	@ docker-compose down --remove-orphans
 
+docker-build: docker-build-augur docker-build-frontend docker-build-database
 
 docker-build-augur:
 	@ docker build -t augurlabs/augur:latest -f util/packaging/docker/augur/Dockerfile .

@@ -1,20 +1,25 @@
 # Augur
 augur.config.json
 !default.config.json
-node_modules/
+frontend/node_modules/
+notebooks/
+cache/
+
+# Logs
 logs/
+*.log
+*.err
+.git/
+
+# Docs
+frontend/public/api_docs/
+docs/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *$py.class
 *.pyc
 runtime/
-logs/
-frontend/public/api_docs/
-*.err
-.git/
-.git
-.tox/
-.tox
 
 # Augur-spdx
 ./spdx-scanner/dosocs2.conf

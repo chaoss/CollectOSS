@@ -83,8 +83,9 @@ def main(augur_url, host, port):
             "database": read_config('Database', 'database', 'AUGUR_DB_DATABASE', 'database'),
             "endpoint": "https://bestpractices.coreinfrastructure.org/projects.json",
             "anomaly_days": worker_info['anomaly_days'],
-            "training_days": worker_info['training_days']
-        }    
+            "training_days": worker_info['training_days'],
+            "confidence_interval": worker_info['confidence_interval']
+        }
 
     #create instance of the worker
     app.insight_worker = InsightWorker(config) # declares the worker that will be running on this server with specified config

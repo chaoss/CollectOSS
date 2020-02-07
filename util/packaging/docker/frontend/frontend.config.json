@@ -1,0 +1,6 @@
+{
+    "Frontend": {
+        "host": "augur",
+        "port": "5000"
+    }
+}
