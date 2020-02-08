@@ -12,6 +12,10 @@ export default {
     name: "Dashboard", 
     components: {
         DashboardHeader
+    }, 
+    beforeCreate() {
+        this.$store.dispatch('reposModule/retrieveRepoGroups');
+        this.$store.dispatch('reposModule/retrieveRepos');
     }
 };
 </script>
