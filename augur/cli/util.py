@@ -7,14 +7,11 @@ import os
 import subprocess
 import click
 
-from augur.runtime import pass_application
-
 @click.group('util', short_help='Miscellaneous utilities')
 def cli():
     pass
 
 @cli.command('shell', short_help='Drop into a shell')
-@pass_application
 def shell(app):
     app.shell()
 
@@ -38,7 +35,6 @@ def kill(app):
     Reset the repo states to "New" in the database
     """
     run_control_script("../../util/scripts/control/repo-reset.sh")
-
 
 def run_control_script(relative_script_path):
     os.chdir(os.path.dirname(os.path.realpath(__file__)))

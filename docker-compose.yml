@@ -1,0 +1,34 @@
+version: '3'
+services:
+
+   augur:
+     build:
+      context: .
+      dockerfile: util/packaging/docker/augur/Dockerfile
+     image: augurlabs/augur:latest
+     restart: always
+     volumes:
+       - .:/augur
+     ports:
+       - 5000:5000
+     env_file: env.txt
+
+   database:
+    build:
+      context: .
+      dockerfile: util/packaging/docker/database/Dockerfile
+    image: postgres:10
+    restart: always
+    volumes:
+     - .:/augur_data
+
+   frontend:
+    build:
+      context: .
+      dockerfile: util/packaging/docker/frontend/Dockerfile
+    image: node:10
+    restart: always
+    volumes:
+      - .:/augur_frontend
+    ports:
+        - 8080:8080

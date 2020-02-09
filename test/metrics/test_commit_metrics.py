@@ -25,5 +25,5 @@ def test_top_committers(metrics):
     assert metrics.top_committers(24, 21000).iloc[0]['commits'] > 0
 
 def test_committer(metrics):
-    assert metrics.committers(21,period='year').iloc[0]['count'] > 100
-    assert metrics.committers(20,21000,period='year').iloc[0]['count'] > 100
+    assert metrics.committers(21,period='year').iloc[0]['count'] > 0
+    assert metrics.committers(20,21000,period='year').iloc[0]['count'] > 0

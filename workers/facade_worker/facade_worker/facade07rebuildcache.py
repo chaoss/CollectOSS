@@ -156,19 +156,31 @@ def fill_empty_affiliations(cfg):
 
             cfg.log_activity('Debug','Found domain match for %s' % email)
 
-            for match in matches:
-                update = ("UPDATE commits "
-                    "SET cmt_%s_affiliation = %%s "
-                    "WHERE cmt_%s_email = %%s "
-                    "AND cmt_%s_affiliation IS NULL "
-                    "AND cmt_%s_date >= %%s" %
-                    (attribution, attribution, attribution, attribution))
-                    #"AND cmt_%s_date >= TO_TIMESTAMP(%%s, 'YYYY-MM-DD')" %
-                ## Extra logging by Sean
-                cfg.log_activity('Debug', update)
-                ##
-                cfg.cursor.execute(update, (match[0], email, match[1]))
-                cfg.db.commit()
+            try:             
+                for match in matches:
+                    update = ("UPDATE commits "
+                        "SET cmt_%s_affiliation = %%s "
+                        "WHERE cmt_%s_email = %%s "
+                        "AND cmt_%s_affiliation IS NULL "
+                        "AND cmt_%s_date >= %%s" %
+                        (attribution, attribution, attribution, attribution))
+                        #"AND cmt_%s_date >= TO_TIMESTAMP(%%s, 'YYYY-MM-DD')" %
+                    ## Extra logging by Sean
+                    cfg.log_activity('Debug', update)
+                    ##
+                    try: 
+
+                        cfg.cursor.execute(update, (match[0], email, match[1]))
+                        cfg.db.commit()
+                    except Exception as e: 
+                        cfg.log_activity('Info', 'Attribution matching failed for %s ' %  email)
+
+            except Exception as e:
+                cfg.log_activity('Info', 'Attribution matching failed for %s ' %  email)
+            else:
+                cfg.log_activity('Info', 'Attribution matching failed and exception logging failed')
+            finally:
+                cfg.log_activity('Info', 'Attribution matching failed and exception logging failed and the exception to the exception failed.')
 
     def discover_alias(email):
 

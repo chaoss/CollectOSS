@@ -11,5 +11,3 @@ echo "**********************************"
 echo
 
 nohup augur run > logs/augur.log 2> logs/augur.err &
-
-sleep 180
