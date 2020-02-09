@@ -2,6 +2,7 @@
 import requests, datetime, time, traceback, json
 import sqlalchemy as s
 import pandas as pd
+import os
 
 def assign_tuple_action(self, logging, new_data, table_values, update_col_map, duplicate_col_map, table_pkey):
     """ map objects => { *our db col* : *gh json key*} """
@@ -38,18 +39,18 @@ def connect_to_broker(self, logging):
     connected = False
     for i in range(5):
         try:
-            logging.info("attempt {}".format(i))
+            logging.info("attempt {}\n".format(i))
             if i > 0:
                 time.sleep(10)
             requests.post('http://{}:{}/api/unstable/workers'.format(
                 self.config['broker_host'],self.config['broker_port']), json=self.specs)
-            logging.info("Connection to the broker was successful")
+            logging.info("Connection to the broker was successful\n")
             connected = True
             break
         except requests.exceptions.ConnectionError:
-            logging.error('Cannot connect to the broker. Trying again...')
+            logging.error('Cannot connect to the broker. Trying again...\n')
     if not connected:
-        sys.exit('Could not connect to the broker after 5 attempts! Quitting...')
+        sys.exit('Could not connect to the broker after 5 attempts! Quitting...\n')
 
 def get_max_id(self, logging, table, column, default=25150, operations_table=False):
     maxIdSQL = s.sql.text("""
@@ -60,10 +61,10 @@ def get_max_id(self, logging, table, column, default=25150, operations_table=Fal
     rs = pd.read_sql(maxIdSQL, db, params={})
     if rs.iloc[0][column] is not None:
         max_id = int(rs.iloc[0][column]) + 1  
-        logging.info("Found max id for {} column in the {} table: {}".format(column, table, max_id))
+        logging.info("Found max id for {} column in the {} table: {}\n".format(column, table, max_id))
     else:
         max_id = default
-        logging.info("Could not find max id for {} column in the {} table... using default set to: {}".format(column, table, max_id))
+        logging.info("Could not find max id for {} column in the {} table... using default set to: {}\n".format(column, table, max_id))
     return max_id
 
 def get_table_values(self, cols, tables, where_clause=""):
@@ -98,7 +99,7 @@ def init_oauths(self, logging):
     """.format(self.config['key']))
     for oauth in [{'oauth_id': 0, 'access_token': self.config['key']}] + json.loads(pd.read_sql(oauthSQL, self.helper_db, params={}).to_json(orient="records")):
         self.headers = {'Authorization': 'token %s' % oauth['access_token']}
-        logging.info("Getting rate limit info for oauth: {}".format(oauth))
+        logging.info("Getting rate limit info for oauth: {}\n".format(oauth))
         response = requests.get(url=url, headers=self.headers)
         self.oauths.append({
                 'oauth_id': oauth['oauth_id'],
@@ -106,7 +107,7 @@ def init_oauths(self, logging):
                 'rate_limit': int(response.headers['X-RateLimit-Remaining']),
                 'seconds_to_reset': (datetime.datetime.fromtimestamp(int(response.headers['X-RateLimit-Reset'])) - datetime.datetime.now()).total_seconds()
             })
-        logging.info("Found OAuth available for use: {}".format(self.oauths[-1]))
+        logging.info("Found OAuth available for use: {}\n".format(self.oauths[-1]))
 
     if len(self.oauths) == 0:
         logging.info("No API keys detected, please include one in your config or in the worker_oauths table in the augur_operations schema of your database\n")
@@ -254,7 +255,7 @@ def record_model_process(self, logging, repo_id, model):
         self.history_id += 1
     else:
         result = self.helper_db.execute(self.history_table.insert().values(task_history))
-        logging.info("Record incomplete history tuple: {}".format(result.inserted_primary_key))
+        logging.info("Record incomplete history tuple: {}\n".format(result.inserted_primary_key))
         self.history_id = int(result.inserted_primary_key[0])
 
 def register_task_completion(self, logging, task, repo_id, model):
