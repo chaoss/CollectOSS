@@ -67,6 +67,8 @@ def main(augur_url, host, port):
         except:
             break
 
+    # Format the port the worker is running on to the name of the 
+    #   log file so we can tell multiple instances apart
     logging.basicConfig(filename='worker_{}.log'.format(worker_port), filemode='w', level=logging.INFO)
 
     config = { 
@@ -102,5 +104,3 @@ def main(augur_url, host, port):
     
     logging.info("Killing Flask App: " + str(os.getpid()))
     os.kill(os.getpid(), 9)
-
-
