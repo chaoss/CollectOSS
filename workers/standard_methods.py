@@ -126,11 +126,25 @@ def paginate(self, logging, url, duplicate_col_map, update_col_map, table, table
     i = 1
     multiple_pages = False
     tuples = []
-    while True: # (self, url)
-        logging.info("Hitting endpoint: " + url.format(i) + " ...\n")
-        r = requests.get(url=url.format(i), headers=self.headers)
-        update_gh_rate_limit(self, logging, r)
-        logging.info("Analyzing page {} of {}\n".format(i, int(r.links['last']['url'][-6:].split('=')[1]) + 1 if 'last' in r.links else '*last page not known*'))
+    while True:
+        num_attempts = 3
+        success = False
+        for attempt in range(num_attempts):
+            logging.info("Hitting endpoint: " + url.format(i) + " ...\n")
+            r = requests.get(url=url.format(i), headers=self.headers)
+            update_gh_rate_limit(self, logging, r)
+            logging.info("Analyzing page {} of {}\n".format(i, int(r.links['last']['url'][-6:].split('=')[1]) + 1 if 'last' in r.links else '*last page not known*'))
+
+            try:
+                j = r.json()
+            except:
+                j = json.loads(json.dumps(r.text))
+
+            if type(j) != dict:
+                success = True
+                break
+        if not success:
+            continue
 
         # Find last page so we can decrement from there
         if 'last' in r.links and not multiple_pages and not self.finishing_task:
@@ -144,25 +158,24 @@ def paginate(self, logging, url, duplicate_col_map, update_col_map, table, table
             logging.info("Finishing a previous task, paginating forwards ..."
                 " excess rate limit requests will be made\n")
         
-        try:
-            j = r.json()
-        except:
-            j = json.loads(json.dumps(j))
-
         if len(j) == 0:
             logging.info("Response was empty, breaking from pagination.\n")
             break
+
+        if type(j) == str:
+            logging.info("J was string: {}\n".format(j))
+            j = json.loads(j)
             
         # Checking contents of requests with what we already have in the db
         j = assign_tuple_action(self, logging, j, table_values, update_col_map, duplicate_col_map, table_pkey)
-        if not j:# or type(j) != dict:
+        if not j:
             logging.info("Assigning tuple action failed, moving to next page.\n")
             i = i + 1 if self.finishing_task else i - 1
             continue
         try:
             to_add = [obj for obj in j if obj not in tuples and obj['flag'] != 'none']
         except Exception as e:
-            logging.info("Failure accessing data of page: {}. moving to next page.\n".format(e))
+            logging.info("Failure accessing data of page: {}. Moving to next page.\n".format(e))
             i = i + 1 if self.finishing_task else i - 1
             continue
         if len(to_add) == 0 and multiple_pages and 'last' in r.links:
@@ -392,14 +405,14 @@ def update_gh_rate_limit(self, logging, response):
 
             # Update oauth to switch to if a higher limit is found
             if oauth['rate_limit'] > new_oauth['rate_limit']:
-                logging.info("Higher rate limit found in oauth: {}".format(oauth))
+                logging.info("Higher rate limit found in oauth: {}\n".format(oauth))
                 new_oauth = oauth
             elif oauth['rate_limit'] == new_oauth['rate_limit'] and oauth['seconds_to_reset'] < new_oauth['seconds_to_reset']:
-                logging.info("Lower wait time found in oauth with same rate limit: {}".format(oauth))
+                logging.info("Lower wait time found in oauth with same rate limit: {}\n".format(oauth))
                 new_oauth = oauth
 
         if new_oauth['rate_limit'] <= 0 and new_oauth['seconds_to_reset'] > 0:
-            logging.info("No oauths with >0 rate limit were found, waiting for oauth with smallest wait time: {}".format(new_oauth))
+            logging.info("No oauths with >0 rate limit were found, waiting for oauth with smallest wait time: {}\n".format(new_oauth))
             time.sleep(new_oauth['seconds_to_reset'])
 
         # Change headers to be using the new oauth's key
@@ -408,4 +421,4 @@ def update_gh_rate_limit(self, logging, response):
         # Make new oauth the 0th element in self.oauths so we know which one is in use
         index = self.oauths.index(new_oauth)
         self.oauths[0], self.oauths[index] = self.oauths[index], self.oauths[0]
-        logging.info("Using oauth: {}".format(self.oauths[0]))
+        logging.info("Using oauth: {}\n".format(self.oauths[0]))
