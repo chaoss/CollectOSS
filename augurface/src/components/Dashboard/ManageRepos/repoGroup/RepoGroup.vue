@@ -1,7 +1,7 @@
 <template>
-  <div id="RepoGroup" @click="collapse()">
+  <div id="RepoGroup" @click="collapse()" :class="{ open : !isCollapsed }">
     <div id="repo-group-header">
-      <h1>{{ repoGroupObject.rg_name }}</h1>
+      <h1>{{ repoGroupObject.rg_name }} ({{ repoGroupObject.repo_group_id }}) </h1>
       <div class="buttons">
         <img src="https://img.icons8.com/material-rounded/24/000000/menu-2.png" id="menu-button" />
         <img
@@ -16,7 +16,7 @@
     </div>
     <transition name="ease">
       <div id="repos" v-if="!isCollapsed">
-        <p>id: {{ repoGroupObject.repo_group_id }}</p>
+        <p>individual repos metadata will go here</p>
       </div>
     </transition>
   </div>
@@ -70,6 +70,15 @@ p {
   margin: 0;
 }
 
+h1 {
+    font-size: 1.5rem;
+}
+
+p {
+    padding: 1rem;
+    color: grey;
+}
+
 #repo-group-header {
   display: flex;
   justify-content: space-between;
@@ -111,5 +120,9 @@ p {
 
 p {
   height: 200px;
+}
+
+.open {
+    background-color: var(--light-grey) !important;
 }
 </style>
