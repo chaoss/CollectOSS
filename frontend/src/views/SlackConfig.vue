@@ -5,6 +5,7 @@
         <!-- <span class="text-uppercase page-subtitle">Viewing all</span> -->
         <h3 id="page-title">Auggie</h3>
         <button @click="getUser('testemail', '420')">PUSHIT</button>
+        <a href="https://slack.com/oauth/authorize?scope=identity.basic,identity.email,identity.team&client_id=370453254753.908657290918"><img alt="Sign in with Slack" height="40" width="172" src="https://platform.slack-edge.com/img/sign_in_with_slack.png" srcset="https://platform.slack-edge.com/img/sign_in_with_slack.png 1x, https://platform.slack-edge.com/img/sign_in_with_slack@2x.png 2x"/></a>
       </div>
     </div>
 
@@ -266,6 +267,10 @@ import SlackSettingSync from "@/AugurAPI";
       this.updateTracking(email, teamId, repos, groups);
       // SlackSettingSync.updateTracking(email, teamId, repos, groups);
     },
+    handleSlackToken: async function(code) {
+      // Should be triggered when user arrives with 'code' paramater from Slack (post sign-in)
+
+    }
   },
   computed: {
 
