@@ -20,7 +20,6 @@ button {
   background-color: var(--light-grey);
   border: 1px solid var(--grey);
   border-radius: 4px;
-  margin-bottom: 2rem;
   font-size: 1.3rem;
   color: var(--dark-grey);
   font-weight: 100;
