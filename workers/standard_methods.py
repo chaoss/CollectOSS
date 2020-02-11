@@ -67,7 +67,7 @@ def get_max_id(self, logging, table, column, default=25150, operations_table=Fal
         logging.info("Could not find max id for {} column in the {} table... using default set to: {}\n".format(column, table, max_id))
     return max_id
 
-def get_table_values(self, cols, tables, where_clause=""):
+def get_table_values(self, logging, cols, tables, where_clause=""):
     table_str = tables[0]
     del tables[0]
 
@@ -107,7 +107,7 @@ def init_oauths(self, logging):
                 'rate_limit': int(response.headers['X-RateLimit-Remaining']),
                 'seconds_to_reset': (datetime.datetime.fromtimestamp(int(response.headers['X-RateLimit-Reset'])) - datetime.datetime.now()).total_seconds()
             })
-        logging.info("Found OAuth available for use: {}\n".format(self.oauths[-1]))
+        logging.info("Found OAuth available for use: {}\n\n".format(self.oauths[-1]))
 
     if len(self.oauths) == 0:
         logging.info("No API keys detected, please include one in your config or in the worker_oauths table in the augur_operations schema of your database\n")
@@ -121,15 +121,15 @@ def paginate(self, logging, url, duplicate_col_map, update_col_map, table, table
     #   to determine if there are multiple pages and if the 1st page covers all
     update_keys = list(update_col_map.keys()) if update_col_map else []
     cols_query = list(duplicate_col_map.keys()) + update_keys + [table_pkey]
-    table_values = self.get_table_values(cols_query, [table], where_clause)
+    table_values = get_table_values(self, logging, cols_query, [table], where_clause)
 
     i = 1
     multiple_pages = False
     tuples = []
     while True:
-        num_attempts = 3
+        num_attempts = 0
         success = False
-        for attempt in range(num_attempts):
+        while num_attempts < 3:
             logging.info("Hitting endpoint: " + url.format(i) + " ...\n")
             r = requests.get(url=url.format(i), headers=self.headers)
             update_gh_rate_limit(self, logging, r)
@@ -143,8 +143,18 @@ def paginate(self, logging, url, duplicate_col_map, update_col_map, table, table
             if type(j) != dict:
                 success = True
                 break
+            else:
+                logging.info("Request returned a dict: {}\n".format(j))
+                if j['message'] == 'Not Found':
+                    logging.info("Github repo was not found or does not exist for endpoint: {}\n".format(url))
+                    break
+                if j['message'] == 'You have triggered an abuse detection mechanism. Please wait a few minutes before you try again.':
+                    num_attempts -= 1
+                    update_gh_rate_limit(self, logging, r, temporarily_disable=True)
+                if j['message'] == 'Bad credentials':
+                    update_gh_rate_limit(self, logging, r, bad_credentials=True)
         if not success:
-            continue
+            break
 
         # Find last page so we can decrement from there
         if 'last' in r.links and not multiple_pages and not self.finishing_task:
@@ -323,12 +333,12 @@ def register_task_completion(self, logging, task, repo_id, model):
 
 def register_task_failure(self, logging, task, repo_id, e):
 
-    logging.info("Worker ran into an error for task: {}".format(task))
-    logging.info("Printing traceback...")
+    logging.info("Worker ran into an error for task: {}\n".format(task))
+    logging.info("Printing traceback...\n")
     tb = traceback.format_exc()
     logging.info(tb)
 
-    logging.info(f'This task inserted {self.results_counter} tuples before failure.')
+    logging.info(f'This task inserted {self.results_counter} tuples before failure.\n')
     logging.info("Notifying broker and logging task failure in database...\n")
     key = 'github_url' if 'github_url' in task['given'] else 'git_url' if 'git_url' in task['given'] else "INVALID_GIVEN"
     url = task['given'][key]
@@ -344,9 +354,9 @@ def register_task_failure(self, logging, task, repo_id, e):
         requests.post("http://{}:{}/api/unstable/task_error".format(
             self.config['broker_host'],self.config['broker_port']), json=task)
     except requests.exceptions.ConnectionError:
-        logging.error('Could not send task failure message to the broker')
+        logging.error('Could not send task failure message to the broker\n')
     except Exception:
-        logging.exception('An error occured while informing broker about task failure')
+        logging.exception('An error occured while informing broker about task failure\n')
 
     # Add to history table
     task_history = {
@@ -375,15 +385,23 @@ def register_task_failure(self, logging, task, repo_id, e):
     # Reset results counter for next task
     self.results_counter = 0    
 
-def update_gh_rate_limit(self, logging, response):
+def update_gh_rate_limit(self, logging, response, bad_credentials=False, temporarily_disable=False):
     # Try to get rate limit from request headers, sometimes it does not work (GH's issue)
     #   In that case we just decrement from last recieved header count
-    try:
-        self.oauths[0]['rate_limit'] = int(response.headers['X-RateLimit-Remaining'])
-        logging.info("Recieved rate limit from headers\n")
-    except:
-        self.oauths[0]['rate_limit'] -= 1
-        logging.info("Headers did not work, had to decrement\n")
+    if bad_credentials and len(self.oauths) > 1:
+        logging.info("Deleting oauth with bad credentials: {}".format(self.oauths[0]))
+        del self.oauths[0]
+
+    if temporarily_disable:
+        logging.info("Github thinks we are abusing their api. Preventing use of this key until it resets...\n")
+        self.oauths[0]['rate_limit'] = 0
+    else:
+        try:
+            self.oauths[0]['rate_limit'] = int(response.headers['X-RateLimit-Remaining'])
+            logging.info("Recieved rate limit from headers\n")
+        except:
+            self.oauths[0]['rate_limit'] -= 1
+            logging.info("Headers did not work, had to decrement\n")
     logging.info("Updated rate limit, you have: " + 
         str(self.oauths[0]['rate_limit']) + " requests remaining.\n")
     if self.oauths[0]['rate_limit'] <= 0:
@@ -396,7 +414,8 @@ def update_gh_rate_limit(self, logging, response):
         # Endpoint to hit solely to retrieve rate limit information from headers of the response
         url = "https://api.github.com/users/gabe-heim"
 
-        for oauth in self.oauths:
+        other_oauths = self.oauths[0:] if len(self.oauths) > 1 else []
+        for oauth in other_oauths:
             logging.info("Inspecting rate limit info for oauth: {}\n".format(oauth))
             self.headers = {'Authorization': 'token %s' % oauth['access_token']}
             response = requests.get(url=url, headers=self.headers)
@@ -415,10 +434,10 @@ def update_gh_rate_limit(self, logging, response):
             logging.info("No oauths with >0 rate limit were found, waiting for oauth with smallest wait time: {}\n".format(new_oauth))
             time.sleep(new_oauth['seconds_to_reset'])
 
-        # Change headers to be using the new oauth's key
-        self.headers = {'Authorization': 'token %s' % new_oauth['access_token']}
-
         # Make new oauth the 0th element in self.oauths so we know which one is in use
         index = self.oauths.index(new_oauth)
         self.oauths[0], self.oauths[index] = self.oauths[index], self.oauths[0]
         logging.info("Using oauth: {}\n".format(self.oauths[0]))
+
+        # Change headers to be using the new oauth's key
+        self.headers = {'Authorization': 'token %s' % self.oauths[0]['access_token']}
