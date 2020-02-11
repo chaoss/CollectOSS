@@ -21,7 +21,7 @@ def code_changes(self, repo_group_id, repo_id=None, period='week', begin_date=No
     :return: DataFrame of commits/period
     """
     if not begin_date:
-        begin_date = '1970-1-1 00:00:00:00'
+        begin_date = '1970-1-1 00:00:00'
     if not end_date:
         end_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
