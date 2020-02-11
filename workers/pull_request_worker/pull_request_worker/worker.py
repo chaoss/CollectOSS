@@ -6,7 +6,7 @@ import pandas as pd
 import sqlalchemy as s
 from sqlalchemy import MetaData
 from sqlalchemy.ext.automap import automap_base
-from workers.standard_methods import register_task_completion, register_task_failure, connect_to_broker, update_gh_rate_limit, record_model_process
+from workers.standard_methods import init_oauths, get_max_id, register_task_completion, register_task_failure, connect_to_broker, update_gh_rate_limit, record_model_process, paginate
 
 class GHPullRequestWorker:
     """
@@ -24,8 +24,7 @@ class GHPullRequestWorker:
         self.config = config
         LOG_FORMAT = '%(levelname)s:[%(name)s]: %(message)s'
         logging.basicConfig(filename='worker_{}.log'.format(self.config['id'].split('.')[len(self.config['id'].split('.')) - 1]), filemode='w', level=logging.INFO, format=LOG_FORMAT)
-        logging.info('Worker (PID: {}) initializing...'.format(str(os.getpid())))
-        # logger = logging.getLogger('PullRequestWorker')
+        logging.info('Worker (PID: {}) initializing...\n'.format(str(os.getpid())))
         self.db = None
         self.table = None
         self.API_KEY = self.config['key']
@@ -35,7 +34,7 @@ class GHPullRequestWorker:
         self.results_counter = 0
         self.headers = {'Authorization': f'token {self.API_KEY}'}
         self.history_id = None
-        self.finishing_task = False
+        self.finishing_task = True
 
         self.specs = {
             "id": self.config['id'],
@@ -55,7 +54,7 @@ class GHPullRequestWorker:
         )
 
         #Database connections
-        logging.info("Making database connections...")
+        logging.info("Making database connections...\n")
         dbschema = 'augur_data'
         self.db = s.create_engine(self.DB_STR, poolclass = s.pool.NullPool,
             connect_args={'options': '-csearch_path={}'.format(dbschema)})
@@ -95,114 +94,34 @@ class GHPullRequestWorker:
         self.history_table = HelperBase.classes.worker_history.__table__
         self.job_table = HelperBase.classes.worker_job.__table__
 
-        logging.info("Querying starting ids info...")
-
-        max_pr_id_SQL = s.sql.text("""
-            SELECT max(pull_request_id) AS pr_id FROM pull_requests
-        """)
-        rs = pd.read_sql(max_pr_id_SQL, self.db)
-        pr_start = int(rs.iloc[0]['pr_id']) if rs.iloc[0]['pr_id'] is not None else 25150
-
-        max_cntrb_id_SQL = s.sql.text("""
-            SELECT max(cntrb_id) AS cntrb_id FROM contributors
-        """)
-        rs = pd.read_sql(max_cntrb_id_SQL, self.db)
-        cntrb_start = int(rs.iloc[0]["cntrb_id"]) if rs.iloc[0]["cntrb_id"] is not None else 25150
-
-        max_msg_id_SQL = s.sql.text("""
-            SELECT max(msg_id) AS msg_id FROM message
-        """)
-        rs = pd.read_sql(max_msg_id_SQL, self.db)
-        msg_start = int(rs.iloc[0]["msg_id"]) if rs.iloc[0]["msg_id"] is not None else 25150
-
-        max_pr_msg_ref_id_SQL = s.sql.text("""
-            SELECT MAX(pr_msg_ref_id) AS pr_msg_ref_id FROM pull_request_message_ref
-        """)
-        rs = pd.read_sql(max_pr_msg_ref_id_SQL, self.db)
-        pr_msg_ref_start = int(rs.iloc[0]['pr_msg_ref_id']) if rs.iloc[0]['pr_msg_ref_id'] else 25150
-
-        max_pr_labels_id_SQL = s.sql.text("""
-            SELECT max(pr_label_id) AS label_id FROM pull_request_labels
-        """)
-        rs = pd.read_sql(max_pr_labels_id_SQL, self.db)
-        label_start = int(rs.iloc[0]['label_id']) if rs.iloc[0]['label_id'] else 25150
-
-        max_pr_event_id_SQL = s.sql.text("""
-            SELECT MAX(pr_event_id) AS event_id FROM pull_request_events
-        """)
-        rs = pd.read_sql(max_pr_event_id_SQL, self.db)
-        event_start = int(rs.iloc[0]['event_id']) if rs.iloc[0]['event_id'] else 25150
-
-        max_reviewer_id_SQL = s.sql.text("""
-            SELECT MAX(pr_reviewer_map_id) AS reviewer_id FROM pull_request_reviewers
-        """)
-        rs = pd.read_sql(max_reviewer_id_SQL, self.db)
-        reviewer_start = rs.iloc[0]['reviewer_id'] if rs.iloc[0]['reviewer_id'] else 25150
-
-        max_assignee_id_SQL = s.sql.text("""
-            SELECT MAX(pr_assignee_map_id) AS assignee_id FROM pull_request_assignees
-        """)
-        rs = pd.read_sql(max_assignee_id_SQL, self.db)
-        assignee_start = rs.iloc[0]['assignee_id'] if rs.iloc[0]['assignee_id'] else 25150
-
-        max_pr_meta_id_SQL = s.sql.text("""
-            SELECT MAX(pr_repo_meta_id) AS pr_meta_id FROM pull_request_meta
-        """)
-        rs = pd.read_sql(max_pr_meta_id_SQL, self.db)
-        pr_meta_id_start = rs.iloc[0]['pr_meta_id'] if rs.iloc[0]['pr_meta_id'] else 25150
-
-        maxHistorySQL = s.sql.text("""
-            SELECT max(history_id) AS history_id
-            FROM worker_history
-        """)
-        rs = pd.read_sql(maxHistorySQL, self.helper_db, params={})
-        self.history_id = int(rs.iloc[0]["history_id"]) if rs.iloc[0]["history_id"] is not None else 25150        
+        logging.info("Querying starting ids info...\n")
 
         # Increment so we are ready to insert the 'next one' of each of these most recent ids
-        self.history_id = self.history_id if self.finishing_task else self.history_id + 1
-        self.pr_id_inc = (pr_start + 1)
-        self.cntrb_id_inc = (cntrb_start + 1)
-        self.msg_id_inc = (msg_start + 1)
-        self.pr_msg_ref_id_inc = (pr_msg_ref_start + 1)
-        self.label_id_inc = (label_start + 1)
-        self.event_id_inc = (event_start + 1)
-        self.reviewer_id_inc = (reviewer_start + 1)
-        self.assignee_id_inc = (assignee_start + 1)
-        self.pr_meta_id_inc = (pr_meta_id_start + 1)
+        self.history_id = get_max_id(self, logging, 'worker_history', 'history_id', operations_table=True) + 1
+        self.pr_id_inc = get_max_id(self, logging, 'pull_requests', 'pull_request_id')
+        self.cntrb_id_inc = get_max_id(self, logging, 'contributors', 'cntrb_id')
+        self.msg_id_inc = get_max_id(self, logging, 'message', 'msg_id')
+        self.pr_msg_ref_id_inc = get_max_id(self, logging, 'pull_request_message_ref', 'pr_msg_ref_id')
+        self.label_id_inc = get_max_id(self, logging, 'pull_request_labels', 'pr_label_id')
+        self.event_id_inc = get_max_id(self, logging, 'pull_request_events', 'pr_event_id')
+        self.reviewer_id_inc = get_max_id(self, logging, 'pull_request_reviewers', 'pr_reviewer_map_id')
+        self.assignee_id_inc = get_max_id(self, logging, 'pull_request_assignees', 'pr_assignee_map_id')
+        self.pr_meta_id_inc = get_max_id(self, logging, 'pull_request_meta', 'pr_repo_meta_id')
 
-        # Organize different keys available
-        self.oauths = []
-        self.headers = None
-
-        # Endpoint to hit solely to retrieve rate limit information from headers of the response
-        url = "https://api.github.com/users/gabe-heim"
-
-        # Make a list of api key in the config combined w keys stored in the database
-        oauthSQL = s.sql.text("""
-            SELECT * FROM worker_oauth WHERE access_token <> '{}'
-        """.format(config['key']))
-        for oauth in [{'oauth_id': 0, 'access_token': config['key']}] + json.loads(pd.read_sql(oauthSQL, self.helper_db, params={}).to_json(orient="records")):
-            # self.headers = {'Authorization': 'token %s' % oauth['access_token']}
-            self.headers = {'Authorization': 'token {}'.format(oauth['access_token']),
-                        'Accept': 'application/vnd.github.vixen-preview+json'}
-            response = requests.get(url=url, headers=self.headers)
-            self.oauths.append({
-                    'oauth_id': oauth['oauth_id'],
-                    'access_token': oauth['access_token'],
-                    'rate_limit': int(response.headers['X-RateLimit-Remaining']),
-                    'seconds_to_reset': (datetime.fromtimestamp(int(response.headers['X-RateLimit-Reset'])) - datetime.now()).total_seconds()
-                })
-            logging.info("Found OAuth available for use: {}".format(self.oauths[-1]))
-
-        if len(self.oauths) == 0:
-            logging.info("No API keys detected, please include one in your config or in the worker_oauths table in the augur_operations schema of your database\n")
-
-        # First key to be used will be the one specified in the config (first element in
-        #   self.oauths array will always be the key in use)
-        self.headers = {'Authorization': 'token %s' % self.oauths[0]['access_token']}
+        # Organize different api keys/oauths available
+        init_oauths(self, logging)
 
         # Send broker hello message
         connect_to_broker(self, logging.getLogger())
+
+        self.pull_requests_model({
+                                "job_type": 'MAINTAIN', 
+                                "models": ['pull_requests'], 
+                                "display_name": "pull_requests model for url: https://github.com/rails/rails.git",
+                                "given": {
+                                    "github_url": 'https://github.com/rails/rails.git'
+                                }
+                            }, 21000)
 
     def update_config(self, config):
         """ Method to update config and set a default
@@ -230,7 +149,7 @@ class GHPullRequestWorker:
         github_url = value['given']['github_url']
 
         repo_url_SQL = s.sql.text("""
-            SELECT min(repo_id) as repo_id FROM repo WHERE repo_git = '{}'
+                SELECT min(repo_id) as repo_id FROM repo WHERE repo_git = '{}'
             """.format(github_url))
         rs = pd.read_sql(repo_url_SQL, self.db, params={})
 
@@ -243,7 +162,7 @@ class GHPullRequestWorker:
                     self.finishing_task = True
 
         except Exception as e:
-            logging.error(f"error: {e}, or that repo is not in our database: {value}")
+            logging.error(f"error: {e}, or that repo is not in our database: {value}\n")
 
         self._task = value
         self.run()
@@ -257,7 +176,7 @@ class GHPullRequestWorker:
         """ Kicks off the processing of the queue if it is not already being processed
         Gets run whenever a new task is added
         """
-        logging.info("Running...")
+        logging.info("Running...\n")
         self._child = Process(target=self.collect, args=())
         self._child.start()
 
@@ -288,12 +207,12 @@ class GHPullRequestWorker:
 
             try:
                 if message['models'][0] == 'pull_requests':
-                    self.query_pr(message, repo_id)
+                    self.pull_requests_model(message, repo_id)
             except Exception as e:
                 register_task_failure(self, logging, message, repo_id, e)
                 pass
 
-    def query_pr(self, entry_info, repo_id):
+    def pull_requests_model(self, entry_info, repo_id):
         """Pull Request data collection function. Query GitHub API for PhubRs.
 
         :param entry_info: A dictionary consisiting of 'git_url' and 'repo_id'
@@ -301,51 +220,34 @@ class GHPullRequestWorker:
         """
         github_url = entry_info['given']['github_url']
 
-        logging.info('Beginning collection of Pull Requests...')
-        logging.info(f'Repo ID: {repo_id}, Git URL: {github_url}')
+        logging.info('Beginning collection of Pull Requests...\n')
+        logging.info(f'Repo ID: {repo_id}, Git URL: {github_url}\n')
         record_model_process(self, logging, repo_id, 'pull_requests')
 
         owner, repo = self.get_owner_repo(github_url)
 
         url = (f'https://api.github.com/repos/{owner}/{repo}/'
-               + f'pulls?state=all&direction=asc&per_page=100')
+               + 'pulls?state=all&direction=asc&per_page=100&page={}')
 
-        pseudo_key_gh = 'id'
-        psuedo_key_augur = 'pr_src_id'
+        # Get pull requests that we already have stored
+        #   Set pseudo key (something other than PK) to 
+        #   check dupicates with
         table = 'pull_requests'
-        pr_table_values = self.get_table_values({psuedo_key_augur: pseudo_key_gh}, [table])
+        table_pkey = 'pull_request_id'
+        update_col_map = {'pr_src_state': 'state'} #'updated_at': 'updated_at', 'closed_at': 'closed_at', 'comment_count': 'comments', 
+        duplicate_col_map = {'pr_src_id': 'id'}
 
-        prs = []
-        try:
-            while True:
-                r = requests.get(url, headers=self.headers)
-                update_gh_rate_limit(self, logging, r)
+        #list to hold pull requests needing insertion
+        prs = paginate(self, logging, url, duplicate_col_map, update_col_map, table, table_pkey, 
+            'WHERE repo_id = {}'.format(repo_id))
 
-                j = r.json()
-
-                self.mark_new_records(j, pr_table_values, pseudo_key_gh)
-
-                if len(j) == 0:
-                    logging.info('No more unknown PRs... Exiting pagination')
-                    #break
-                else:
-                    prs += j
-
-                if 'next' not in r.links:
-                    logging.info('No next page ... ')
-                    break
-                else:
-                    url = r.links['next']['url']
-
-        except Exception as e:
-            logging.exception('Encountered an error while paginating through PRs')
-            register_task_failure(self, logging, entry_info, repo_id, e)
-            return
+        # Discover and remove duplicates before we start inserting
+        logging.info("Count of pull requests needing update or insertion: " + str(len(prs)) + "\n")
 
         for pr_dict in prs:
 
-            if pr_dict['to_insert']:
-                logging.info(f'PR {pr_dict["id"]} needs to be inserted')
+            if pr_dict['flag'] == 'need_insertion':
+                logging.info(f'PR {pr_dict["id"]} needs to be inserted\n')
 
                 pr = {
                     'repo_id': repo_id,
@@ -414,7 +316,7 @@ class GHPullRequestWorker:
         register_task_completion(self, logging, entry_info, repo_id, 'pull_requests')
 
     def query_labels(self, labels, pr_id):
-        logging.info('Querying PR Labels')
+        logging.info('Querying PR Labels\n')
         pseudo_key_gh = 'id'
         psuedo_key_augur = 'pr_src_id'
         table = 'pull_request_labels'
@@ -423,10 +325,10 @@ class GHPullRequestWorker:
         new_labels = self.check_duplicates(labels, pr_labels_table_values, pseudo_key_gh)
 
         if len(new_labels) == 0:
-            logging.info('No new labels to add')
+            logging.info('No new labels to add\n')
             return
 
-        logging.info(f'Found {len(new_labels)} labels')
+        logging.info(f'Found {len(new_labels)} labels\n')
 
         for label_dict in new_labels:
 
@@ -445,46 +347,30 @@ class GHPullRequestWorker:
             }
 
             result = self.db.execute(self.pull_request_labels_table.insert().values(label))
-            logging.info(f"Added PR Label: {result.inserted_primary_key}")
-            logging.info(f"Inserted PR Labels data for PR with id {pr_id}")
+            logging.info(f"Added PR Label: {result.inserted_primary_key}\n")
+            logging.info(f"Inserted PR Labels data for PR with id {pr_id}\n")
 
             self.results_counter += 1
             self.label_id_inc = int(result.inserted_primary_key[0])
 
     def query_pr_events(self, owner, repo, gh_pr_no, pr_id):
-        logging.info('Querying PR Events')
+        logging.info('Querying PR Events\n')
 
-        url = (f'https://api.github.com/repos/{owner}/{repo}/issues/'
-              + f'{gh_pr_no}/events?per_page=100')
+        url = (f'https://api.github.com/repos/{owner}/{repo}/issues/{gh_pr_no}' +
+            '/events?per_page=100&page={}')
 
-        pseudo_key_gh = 'id'
-        psuedo_key_augur = 'issue_event_src_id'
+        # Get pull request events that we already have stored
+        #   Set our duplicate and update column map keys (something other than PK) to 
+        #   check dupicates/needed column updates with
         table = 'pull_request_events'
-        pr_events_table_values = self.get_table_values({psuedo_key_augur: pseudo_key_gh}, [table])
+        table_pkey = 'pr_event_id'
+        update_col_map = {}
+        duplicate_col_map = {'issue_event_src_id': 'id'}
 
-        pr_events = []
-        try:
-            while True:
-                r = requests.get(url, headers=self.headers)
-                update_gh_rate_limit(self, logging, r)
-
-                j = r.json()
-
-                new_pr_events = self.check_duplicates(j, pr_events_table_values, pseudo_key_gh)
-
-                if len(new_pr_events) == 0:
-                    logging.info('No new PR Events to add... Exiting Pagination')
-                    break
-                else:
-                    pr_events += new_pr_events
-
-                if 'next' not in r.links:
-                    break
-                else:
-                    url = r.links['next']['url']
-        except Exception:
-            logging.exception('Encountered an error while paginating through PR Events')
-            return
+        #list to hold contributors needing insertion or update
+        pr_events = paginate(self, logging, url, duplicate_col_map, update_col_map, table, table_pkey)
+        
+        logging.info("Count of pull request events needing insertion: " + str(len(pr_events)) + "\n")
 
         for pr_event_dict in pr_events:
 
@@ -509,12 +395,12 @@ class GHPullRequestWorker:
             }
 
             result = self.db.execute(self.pull_request_events_table.insert().values(pr_event))
-            logging.info(f"Added PR Event: {result.inserted_primary_key}")
+            logging.info(f"Added PR Event: {result.inserted_primary_key}\n")
 
             self.results_counter += 1
             self.event_id_inc = int(result.inserted_primary_key[0])
 
-        logging.info(f"Inserted PR Events data for PR with id {pr_id}")
+        logging.info(f"Inserted PR Events data for PR with id {pr_id}\n")
 
     def query_reviewers(self, reviewers, pr_id):
         logging.info('Querying Reviewers')
@@ -696,37 +582,21 @@ class GHPullRequestWorker:
     def query_pr_comments(self, owner, repo, gh_pr_no, pr_id):
         logging.info('Querying PR Comments')
 
-        url = (f'https://api.github.com/repos/{owner}/{repo}/issues/'
-              + f'{gh_pr_no}/comments?per_page=100')
+        url = (f'https://api.github.com/repos/{owner}/{repo}/issues/{gh_pr_no}' +
+            '/comments?per_page=100&page={}')
 
-        pseudo_key_gh = 'id'
-        psuedo_key_augur = 'pr_message_ref_src_comment_id'
+        # Get pull request comments that we already have stored
+        #   Set our duplicate and update column map keys (something other than PK) to 
+        #   check dupicates/needed column updates with
         table = 'pull_request_message_ref'
-        pr_message_table_values = self.get_table_values({psuedo_key_augur: pseudo_key_gh}, [table])
+        table_pkey = 'pr_msg_ref_id'
+        update_col_map = {}
+        duplicate_col_map = {'pr_message_ref_src_comment_id': 'id'}
 
-        pr_messages = []
-        try:
-            while True:
-                r = requests.get(url, headers=self.headers)
-                update_gh_rate_limit(self, logging, r)
-
-                j = r.json()
-
-                new_pr_messages = self.check_duplicates(j, pr_message_table_values, pseudo_key_gh)
-
-                if len(new_pr_messages) == 0:
-                    logging.info('No new PR Comments to add... Exiting Pagination')
-                    break
-                else:
-                    pr_messages += new_pr_messages
-
-                if 'next' not in r.links:
-                    break
-                else:
-                    url = r.links['next']['url']
-        except Exception as e:
-            logging.error(f'Caught Exception on url {url}')
-            logging.error(str(e))
+        #list to hold contributors needing insertion or update
+        pr_messages = paginate(self, logging, url, duplicate_col_map, update_col_map, table, table_pkey)
+        
+        logging.info("Count of pull request comments needing insertion: " + str(len(pr_messages)) + "\n")
 
         for pr_msg_dict in pr_messages:
 
@@ -816,172 +686,6 @@ class GHPullRequestWorker:
         logging.info(
             f'Finished adding PR {pr_repo_type} Repo data for PR with id {self.pr_id_inc}'
         )
-
-
-    def query_contributors(self, entry_info):
-
-        """ Data collection function
-        Query the GitHub API for contributors
-        """
-        logging.info("Querying contributors with given entry info: " + str(entry_info))
-
-        # Url of repo we are querying for
-        url = entry_info['github_url']
-
-        # Extract owner/repo from the url for the endpoint
-        path = urlparse(url)
-        split = path[2].split('/')
-
-        owner = split[1]
-        name = split[2]
-
-        # Handles git url case by removing the extension
-        if ".git" in name:
-            name = name[:-4]
-
-        # Set the base of the url and place to hold contributors to insert
-        url = ("https://api.github.com/repos/" + owner + "/" +
-            name + "/contributors?per_page=100&page={}")
-        contributors = []
-
-        # Get values of tuples we already have in our table
-        pseudo_key_gh = 'login'
-        pseydo_key_augur = 'cntrb_login'
-        table = 'contributors'
-        cntrb_table_values = self.get_table_values({pseydo_key_augur: pseudo_key_gh}, [table])
-
-        # Paginate backwards through all the contributors but starting with
-        #   the first one in order to get last page # and check if 1st page
-        #   covers all of them
-        i = 1
-        multiple_pages = False
-        while True:
-            logging.info("Hitting endpoint: " + url.format(i) + " ...")
-            r = requests.get(url=url.format(i), headers=self.headers)
-            update_gh_rate_limit(self, logging, r)
-
-            # If it lists the last page then there is more than 1
-            if 'last' in r.links and not multiple_pages and not self.finishing_task:
-                param = r.links['last']['url'][-6:]
-                i = int(param.split('=')[1]) + 1
-                logging.info("Multiple pages of request, last page is " + str(i - 1))
-                multiple_pages = True
-            elif not multiple_pages and not self.finishing_task:
-                logging.info("Only 1 page of request\n")
-            elif self.finishing_task:
-                logging.info("Finishing a previous task, paginating forwards ... excess rate limit requests will be made")
-
-            # The contributors endpoints has issues with getting json from request
-            try:
-                j = r.json()
-            except Exception as e:
-                logging.info("Caught exception: " + str(e))
-                logging.info("Some kind of issue CHECKTHIS  " + url)
-                j = json.loads(json.dumps(j))
-            else:
-                logging.info("JSON seems ill-formed " + str(r))
-                j = json.loads(json.dumps(j))
-
-            if r.status_code == 204:
-                j = []
-
-            # Checking contents of requests with what we already have in the db
-            new_contributors = self.check_duplicates(j, cntrb_table_values, pseudo_key_gh)
-            if len(new_contributors) == 0 and multiple_pages and 'last' in r.links:
-                if i - 1 != int(r.links['last']['url'][-6:].split('=')[1]):
-                    logging.info("No more pages with unknown contributors, breaking from pagination.")
-                    break
-            elif len(new_contributors) != 0:
-                to_add = [obj for obj in new_contributors if obj not in contributors]
-                contributors += to_add
-
-            i = i + 1 if self.finishing_task else i - 1
-
-            if i == 1 and multiple_pages or i < 1 or len(j) == 0:
-                logging.info("No more pages to check, breaking from pagination.")
-                break
-
-        try:
-            logging.info("Count of contributors needing insertion: " + str(len(contributors)))
-
-            for repo_contributor in contributors:
-
-                # Need to hit this single contributor endpoint to get extra data including...
-                #   created at
-                #   i think that's it
-                cntrb_url = ("https://api.github.com/users/" + repo_contributor['login'])
-                logging.info("Hitting endpoint: " + cntrb_url)
-                r = requests.get(url=cntrb_url, headers=self.headers)
-                update_gh_rate_limit(self, logging, r)
-                contributor = r.json()
-
-                company = None
-                location = None
-                email = None
-                if 'company' in contributor:
-                    company = contributor['company']
-                if 'location' in contributor:
-                    location = contributor['location']
-                if 'email' in contributor:
-                    email = contributor['email']
-
-                # aliasSQL = s.sql.text("""
-                #     SELECT canonical_email
-                #     FROM contributors_aliases
-                #     WHERE alias_email = {}
-                # """.format(contributor['email']))
-                # rs = pd.read_sql(aliasSQL, self.db, params={})
-
-                canonical_email = None#rs.iloc[0]["canonical_email"]
-
-                cntrb = {
-                    "cntrb_login": contributor['login'],
-                    "cntrb_created_at": contributor['created_at'],
-                    "cntrb_email": email,
-                    "cntrb_company": company,
-                    "cntrb_location": location,
-                    # "cntrb_type": , dont have a use for this as of now ... let it default to null
-                    "cntrb_canonical": canonical_email,
-                    "gh_user_id": contributor['id'],
-                    "gh_login": contributor['login'],
-                    "gh_url": contributor['url'],
-                    "gh_html_url": contributor['html_url'],
-                    "gh_node_id": contributor['node_id'],
-                    "gh_avatar_url": contributor['avatar_url'],
-                    "gh_gravatar_id": contributor['gravatar_id'],
-                    "gh_followers_url": contributor['followers_url'],
-                    "gh_following_url": contributor['following_url'],
-                    "gh_gists_url": contributor['gists_url'],
-                    "gh_starred_url": contributor['starred_url'],
-                    "gh_subscriptions_url": contributor['subscriptions_url'],
-                    "gh_organizations_url": contributor['organizations_url'],
-                    "gh_repos_url": contributor['repos_url'],
-                    "gh_events_url": contributor['events_url'],
-                    "gh_received_events_url": contributor['received_events_url'],
-                    "gh_type": contributor['type'],
-                    "gh_site_admin": contributor['site_admin'],
-                    "tool_source": self.tool_source,
-                    "tool_version": self.tool_version,
-                    "data_source": self.data_source
-                }
-
-                # Commit insertion to table
-                result = self.db.execute(self.contributors_table.insert().values(cntrb))
-                logging.info("Primary key inserted into the contributors table: " + str(result.inserted_primary_key))
-                self.results_counter += 1
-
-                logging.info("Inserted contributor: " + contributor['login'])
-
-                # Increment our global track of the cntrb id for the possibility of it being used as a FK
-                self.cntrb_id_inc = int(result.inserted_primary_key[0])
-
-        except Exception as e:
-            logging.info("Caught exception: " + str(e))
-            logging.info("Contributor not defined. Please contact the manufacturers of Soylent Green " + url + " ...\n")
-            logging.info("Cascading Contributor Anomalie from missing repo contributor data: " + url + " ...\n")
-        else:
-            if len(contributors) > 2:
-                logging.info("Well, that contributor list of len {} with last 3 tuples as: {} just don't except because we hit the else-block yo\n".format(str(len(contributors)), str(contributors[-3:])))
 
     def get_owner_repo(self, github_url):
         split = github_url.split('/')
