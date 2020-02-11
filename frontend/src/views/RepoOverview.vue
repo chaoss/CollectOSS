@@ -164,6 +164,7 @@
             title="Reviews (Pull Requests) / Week"
             cite-url
             cite-text="Reviews"
+            :smoothing="true"
           ></dynamic-line-chart>
         </d-card>
       </div>
@@ -177,6 +178,7 @@
             title="Reviews (Pull Requests) Accepted / Week"
             cite-url
             cite-text="Reviews Accepted"
+            :smoothing="true"
           ></dynamic-line-chart>
         </d-card>
       </div>
@@ -190,6 +192,7 @@
             title="Reviews (Pull Requests) Declined / Week"
             cite-url
             cite-text="Reviews Declined"
+            :smoothing="true"
           ></dynamic-line-chart>
         </d-card>
       </div>
@@ -203,6 +206,7 @@
             title="Open Issues / Week"
             cite-url
             cite-text="Open Issues"
+            :smoothing="true"
           ></dynamic-line-chart>
         </d-card>
       </div>
@@ -216,6 +220,7 @@
             title="Closed Issues / Week"
             cite-url
             cite-text="Closed Issues"
+            :smoothing="true"
           ></dynamic-line-chart>
         </d-card>
       </div>
@@ -229,6 +234,7 @@
             title="New Issues / Week"
             cite-url
             cite-text="New Issues"
+            :smoothing="true"
           ></dynamic-line-chart>
         </d-card>
       </div>
@@ -242,6 +248,7 @@
             cite-text="Code Changes"
             filedTime="date"
             fieldCount="commit_count"
+            :smoothing="true"
           ></dynamic-line-chart>
         </d-card>
       </div>
@@ -255,6 +262,7 @@
             cite-text="Code Changes Lines"
             filedTime="date"
             fieldCount="added"
+            :smoothing="true"
           ></dynamic-line-chart>
         </d-card>
       </div>
