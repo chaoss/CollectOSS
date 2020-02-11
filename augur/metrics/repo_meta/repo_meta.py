@@ -6,9 +6,10 @@ import datetime
 import sqlalchemy as s
 import pandas as pd
 from augur.util import logger, annotate, add_metrics
+import math
 
 @annotate(tag='code-changes')
-def code_changes(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
+def code_changes(self, repo_group_id, repo_id=None, period='week', begin_date=None, end_date=None):
     """
     Returns a timeseries of the count of commits.
 
@@ -48,17 +49,22 @@ def code_changes(self, repo_group_id, repo_id=None, period='day', begin_date=Non
         code_changes_SQL = s.sql.text("""
             SELECT
                 repo_name,
-                date_trunc(:period, cmt_committer_date::DATE) as date,
-                COUNT(DISTINCT cmt_commit_hash) as commit_count
-            FROM commits JOIN repo ON commits.repo_id = repo.repo_id
-            WHERE commits.repo_id = :repo_id
-            AND cmt_committer_date BETWEEN :begin_date AND :end_date
-            GROUP BY date, repo_name
-            ORDER BY date
+                week,
+                YEAR,
+                SUM(patches) AS commit_count
+            FROM dm_repo_weekly JOIN repo ON dm_repo_weekly.repo_id = repo.repo_id
+            WHERE dm_repo_weekly.repo_id = 21000
+            AND YEAR = 2019
+            GROUP BY repo_name, week, YEAR
+            ORDER BY week
         """)
 
         results = pd.read_sql(code_changes_SQL, self.database, params={'repo_id': repo_id, 'period': period,
                                                                  'begin_date': begin_date, 'end_date': end_date})
+
+        results['week'] = results['week'].apply(lambda x: x - 1)
+        results['date'] = results['year'].astype(str) + ' ' + results['week'].astype(str) + ' 0'
+        results['date'] = results['date'].apply(lambda x: datetime.datetime.strptime(x, "%Y %W %w"))
         return results
 
 @annotate(tag='code-changes-lines')
