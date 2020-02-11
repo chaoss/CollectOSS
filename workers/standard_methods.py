@@ -2,6 +2,7 @@
 import requests, datetime, time, traceback, json
 import sqlalchemy as s
 import pandas as pd
+import os
 
 def assign_tuple_action(self, logging, new_data, table_values, update_col_map, duplicate_col_map, table_pkey):
     """ map objects => { *our db col* : *gh json key*} """
@@ -38,18 +39,18 @@ def connect_to_broker(self, logging):
     connected = False
     for i in range(5):
         try:
-            logging.info("attempt {}".format(i))
+            logging.info("attempt {}\n".format(i))
             if i > 0:
                 time.sleep(10)
             requests.post('http://{}:{}/api/unstable/workers'.format(
                 self.config['broker_host'],self.config['broker_port']), json=self.specs)
-            logging.info("Connection to the broker was successful")
+            logging.info("Connection to the broker was successful\n")
             connected = True
             break
         except requests.exceptions.ConnectionError:
-            logging.error('Cannot connect to the broker. Trying again...')
+            logging.error('Cannot connect to the broker. Trying again...\n')
     if not connected:
-        sys.exit('Could not connect to the broker after 5 attempts! Quitting...')
+        sys.exit('Could not connect to the broker after 5 attempts! Quitting...\n')
 
 def get_max_id(self, logging, table, column, default=25150, operations_table=False):
     maxIdSQL = s.sql.text("""
@@ -60,10 +61,10 @@ def get_max_id(self, logging, table, column, default=25150, operations_table=Fal
     rs = pd.read_sql(maxIdSQL, db, params={})
     if rs.iloc[0][column] is not None:
         max_id = int(rs.iloc[0][column]) + 1  
-        logging.info("Found max id for {} column in the {} table: {}".format(column, table, max_id))
+        logging.info("Found max id for {} column in the {} table: {}\n".format(column, table, max_id))
     else:
         max_id = default
-        logging.info("Could not find max id for {} column in the {} table... using default set to: {}".format(column, table, max_id))
+        logging.info("Could not find max id for {} column in the {} table... using default set to: {}\n".format(column, table, max_id))
     return max_id
 
 def get_table_values(self, cols, tables, where_clause=""):
@@ -98,7 +99,7 @@ def init_oauths(self, logging):
     """.format(self.config['key']))
     for oauth in [{'oauth_id': 0, 'access_token': self.config['key']}] + json.loads(pd.read_sql(oauthSQL, self.helper_db, params={}).to_json(orient="records")):
         self.headers = {'Authorization': 'token %s' % oauth['access_token']}
-        logging.info("Getting rate limit info for oauth: {}".format(oauth))
+        logging.info("Getting rate limit info for oauth: {}\n".format(oauth))
         response = requests.get(url=url, headers=self.headers)
         self.oauths.append({
                 'oauth_id': oauth['oauth_id'],
@@ -106,7 +107,7 @@ def init_oauths(self, logging):
                 'rate_limit': int(response.headers['X-RateLimit-Remaining']),
                 'seconds_to_reset': (datetime.datetime.fromtimestamp(int(response.headers['X-RateLimit-Reset'])) - datetime.datetime.now()).total_seconds()
             })
-        logging.info("Found OAuth available for use: {}".format(self.oauths[-1]))
+        logging.info("Found OAuth available for use: {}\n".format(self.oauths[-1]))
 
     if len(self.oauths) == 0:
         logging.info("No API keys detected, please include one in your config or in the worker_oauths table in the augur_operations schema of your database\n")
@@ -125,11 +126,25 @@ def paginate(self, logging, url, duplicate_col_map, update_col_map, table, table
     i = 1
     multiple_pages = False
     tuples = []
-    while True: # (self, url)
-        logging.info("Hitting endpoint: " + url.format(i) + " ...\n")
-        r = requests.get(url=url.format(i), headers=self.headers)
-        update_gh_rate_limit(self, logging, r)
-        logging.info("Analyzing page {} of {}\n".format(i, int(r.links['last']['url'][-6:].split('=')[1]) + 1 if 'last' in r.links else '*last page not known*'))
+    while True:
+        num_attempts = 3
+        success = False
+        for attempt in range(num_attempts):
+            logging.info("Hitting endpoint: " + url.format(i) + " ...\n")
+            r = requests.get(url=url.format(i), headers=self.headers)
+            update_gh_rate_limit(self, logging, r)
+            logging.info("Analyzing page {} of {}\n".format(i, int(r.links['last']['url'][-6:].split('=')[1]) + 1 if 'last' in r.links else '*last page not known*'))
+
+            try:
+                j = r.json()
+            except:
+                j = json.loads(json.dumps(r.text))
+
+            if type(j) != dict:
+                success = True
+                break
+        if not success:
+            continue
 
         # Find last page so we can decrement from there
         if 'last' in r.links and not multiple_pages and not self.finishing_task:
@@ -143,25 +158,24 @@ def paginate(self, logging, url, duplicate_col_map, update_col_map, table, table
             logging.info("Finishing a previous task, paginating forwards ..."
                 " excess rate limit requests will be made\n")
         
-        try:
-            j = r.json()
-        except:
-            j = json.loads(json.dumps(j))
-
         if len(j) == 0:
             logging.info("Response was empty, breaking from pagination.\n")
             break
+
+        if type(j) == str:
+            logging.info("J was string: {}\n".format(j))
+            j = json.loads(j)
             
         # Checking contents of requests with what we already have in the db
         j = assign_tuple_action(self, logging, j, table_values, update_col_map, duplicate_col_map, table_pkey)
-        if not j:# or type(j) != dict:
+        if not j:
             logging.info("Assigning tuple action failed, moving to next page.\n")
             i = i + 1 if self.finishing_task else i - 1
             continue
         try:
             to_add = [obj for obj in j if obj not in tuples and obj['flag'] != 'none']
         except Exception as e:
-            logging.info("Failure accessing data of page: {}. moving to next page.\n".format(e))
+            logging.info("Failure accessing data of page: {}. Moving to next page.\n".format(e))
             i = i + 1 if self.finishing_task else i - 1
             continue
         if len(to_add) == 0 and multiple_pages and 'last' in r.links:
@@ -254,7 +268,7 @@ def record_model_process(self, logging, repo_id, model):
         self.history_id += 1
     else:
         result = self.helper_db.execute(self.history_table.insert().values(task_history))
-        logging.info("Record incomplete history tuple: {}".format(result.inserted_primary_key))
+        logging.info("Record incomplete history tuple: {}\n".format(result.inserted_primary_key))
         self.history_id = int(result.inserted_primary_key[0])
 
 def register_task_completion(self, logging, task, repo_id, model):
@@ -391,14 +405,14 @@ def update_gh_rate_limit(self, logging, response):
 
             # Update oauth to switch to if a higher limit is found
             if oauth['rate_limit'] > new_oauth['rate_limit']:
-                logging.info("Higher rate limit found in oauth: {}".format(oauth))
+                logging.info("Higher rate limit found in oauth: {}\n".format(oauth))
                 new_oauth = oauth
             elif oauth['rate_limit'] == new_oauth['rate_limit'] and oauth['seconds_to_reset'] < new_oauth['seconds_to_reset']:
-                logging.info("Lower wait time found in oauth with same rate limit: {}".format(oauth))
+                logging.info("Lower wait time found in oauth with same rate limit: {}\n".format(oauth))
                 new_oauth = oauth
 
         if new_oauth['rate_limit'] <= 0 and new_oauth['seconds_to_reset'] > 0:
-            logging.info("No oauths with >0 rate limit were found, waiting for oauth with smallest wait time: {}".format(new_oauth))
+            logging.info("No oauths with >0 rate limit were found, waiting for oauth with smallest wait time: {}\n".format(new_oauth))
             time.sleep(new_oauth['seconds_to_reset'])
 
         # Change headers to be using the new oauth's key
@@ -407,4 +421,4 @@ def update_gh_rate_limit(self, logging, response):
         # Make new oauth the 0th element in self.oauths so we know which one is in use
         index = self.oauths.index(new_oauth)
         self.oauths[0], self.oauths[index] = self.oauths[index], self.oauths[0]
-        logging.info("Using oauth: {}".format(self.oauths[0]))
+        logging.info("Using oauth: {}\n".format(self.oauths[0]))

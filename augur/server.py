@@ -397,9 +397,10 @@ class Server(object):
         self.updateMetricMetadata(function, endpoint, **kwargs)
 
     def addMetric(self, function, endpoint, cache=True, **kwargs):
-        """Simplifies adding routes that only accept owner/repo"""
-        endpoint = '/{}/<owner>/<repo>/{}'.format(self.api_version, endpoint)
-        self.app.route(endpoint)(self.flaskify(function, cache=cache))
+        """Simplifies adding routes that dont accept group/repo ids"""
+        endpoint = '/{}/{}'.format(self.api_version, endpoint)
+        self.app.route(endpoint)(self.flaskify(function, 'general_metric'))
+        kwargs['endpoint_type'] = 'general_metric'
         self.updateMetricMetadata(function, endpoint, **kwargs)
 
     def addTimeseries(self, function, endpoint):
