@@ -53,8 +53,7 @@ def code_changes(self, repo_group_id, repo_id=None, period='week', begin_date=No
                 YEAR,
                 SUM(patches) AS commit_count
             FROM dm_repo_weekly JOIN repo ON dm_repo_weekly.repo_id = repo.repo_id
-            WHERE dm_repo_weekly.repo_id = 21000
-            AND YEAR = 2019
+            WHERE dm_repo_weekly.repo_id = :repo_id
             GROUP BY repo_name, week, YEAR
             ORDER BY week
         """)
@@ -65,6 +64,7 @@ def code_changes(self, repo_group_id, repo_id=None, period='week', begin_date=No
         results['week'] = results['week'].apply(lambda x: x - 1)
         results['date'] = results['year'].astype(str) + ' ' + results['week'].astype(str) + ' 0'
         results['date'] = results['date'].apply(lambda x: datetime.datetime.strptime(x, "%Y %W %w"))
+        results = results[(results['date'] >= begin_date) & (results['date'] <= end_date)]
         return results
 
 @annotate(tag='code-changes-lines')
