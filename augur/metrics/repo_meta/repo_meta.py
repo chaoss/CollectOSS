@@ -20,7 +20,7 @@ def code_changes(self, repo_group_id, repo_id=None, period='day', begin_date=Non
     :return: DataFrame of commits/period
     """
     if not begin_date:
-        begin_date = '1970-1-1 00:00:00:00'
+        begin_date = '1970-1-1 00:00:00'
     if not end_date:
         end_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
@@ -29,36 +29,44 @@ def code_changes(self, repo_group_id, repo_id=None, period='day', begin_date=Non
     if not repo_id:
         code_changes_SQL = s.sql.text("""
             SELECT
-                commits.repo_id,
                 repo_name,
-                date_trunc(:period, cmt_committer_date::DATE) as date,
-                COUNT(DISTINCT cmt_commit_hash) as commit_count
-            FROM commits JOIN repo ON repo.repo_id = commits.repo_id
-            WHERE commits.repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
-            AND cmt_committer_date BETWEEN :begin_date AND :end_date
-            GROUP BY commits.repo_id, date, repo_name
-            ORDER BY commits.repo_id, date
+                week,
+                YEAR,
+                SUM(patches) AS commit_count
+            FROM dm_repo_weekly JOIN repo ON dm_repo_weekly.repo_id = repo.repo_id
+            WHERE dm_repo_weekly.repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
+            GROUP BY repo_name, week, YEAR
+            ORDER BY week
         """)
 
         results = pd.read_sql(code_changes_SQL, self.database, params={'repo_group_id': repo_group_id, 'period': period,
                                                                  'begin_date': begin_date, 'end_date': end_date})
+        results['week'] = results['week'].apply(lambda x: x - 1)
+        results['date'] = results['year'].astype(str) + ' ' + results['week'].astype(str) + ' 0'
+        results['date'] = results['date'].apply(lambda x: datetime.datetime.strptime(x, "%Y %W %w"))
+        results = results[(results['date'] >= begin_date) & (results['date'] <= end_date)]
         return results
 
     else:
         code_changes_SQL = s.sql.text("""
             SELECT
                 repo_name,
-                date_trunc(:period, cmt_committer_date::DATE) as date,
-                COUNT(DISTINCT cmt_commit_hash) as commit_count
-            FROM commits JOIN repo ON commits.repo_id = repo.repo_id
-            WHERE commits.repo_id = :repo_id
-            AND cmt_committer_date BETWEEN :begin_date AND :end_date
-            GROUP BY date, repo_name
-            ORDER BY date
+                week,
+                YEAR,
+                SUM(patches) AS commit_count
+            FROM dm_repo_weekly JOIN repo ON dm_repo_weekly.repo_id = repo.repo_id
+            WHERE dm_repo_weekly.repo_id = :repo_id
+            GROUP BY repo_name, week, YEAR
+            ORDER BY week
         """)
 
         results = pd.read_sql(code_changes_SQL, self.database, params={'repo_id': repo_id, 'period': period,
                                                                  'begin_date': begin_date, 'end_date': end_date})
+
+        results['week'] = results['week'].apply(lambda x: x - 1)
+        results['date'] = results['year'].astype(str) + ' ' + results['week'].astype(str) + ' 0'
+        results['date'] = results['date'].apply(lambda x: datetime.datetime.strptime(x, "%Y %W %w"))
+        results = results[(results['date'] >= begin_date) & (results['date'] <= end_date)]
         return results
 
 @annotate(tag='code-changes-lines')
