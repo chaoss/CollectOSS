@@ -37,7 +37,7 @@
         <a class="button graph-download download" ref="downloadJSON" role="button">&#11015; JSON</a></div>
     </div>
     -->
-    <div>{{ getDescription }}</div>
+    <div v-if="smoothing">{{ getDescription }}</div>
   </d-card-body>
 </template>
 
@@ -58,7 +58,8 @@ export default {
     "alwaysByDate",
     "domain",
     "data",
-    "endpoints"
+    "endpoints", 
+    "smoothing"
   ],
   components: {
     Spinner
@@ -863,6 +864,14 @@ export default {
         let baselineVals = null;
         let baseDate = null;
         let x = 0;
+
+        // // TOGGLE SMOOTHING
+        let smoothingValue = this.$store.state.common.trailingAverage;
+        if (this.smoothing === false) {
+          smoothingValue = 4;
+          console.log(`smoothing disabled for ${this.title}`);
+        }
+
         this.repos.forEach(repo => {
           if (!repo) return
           let ref = repo
@@ -875,13 +884,13 @@ export default {
               console.log("DLC",d)
               let rolling = null;
               if (ref == this.repo && d[0]) baseDate = d[0].date;
-              else d = AugurStats.alignDates(d, baseDate, this.period);
+              else d = AugurStats.alignDates(d, baseDate, smoothingValue);
               if (this.compare == "zscore") {
                 // && this.comparedRepos.length > 0
                 rolling = AugurStats.rollingAverage(
                   AugurStats.zscores(d, "value"),
                   "value",
-                  this.period,
+                  smoothingValue,
                   ref
                 );
               } //else if (this.rawWeekly || this.disableRollingAverage) rolling = AugurStats.convertKey(d, 'value', 'value' + repo)
@@ -891,14 +900,14 @@ export default {
                   baselineVals = AugurStats.rollingAverage(
                     d,
                     "value",
-                    this.period,
+                    smoothingValue,
                     ref
                   );
                 }
                 rolling = AugurStats.rollingAverage(
                   d,
                   "value",
-                  this.period,
+                  smoothingValue,
                   ref
                 );
                 if (baselineVals) {
@@ -909,11 +918,11 @@ export default {
                 }
               } else {
                 d = this.convertKey(d);
-                console.log("DLC prerolling",d, this.period, ref)
+                console.log("DLC prerolling",d, smoothingValue, ref)
                 rolling = AugurStats.rollingAverage(
                   d,
                   "value",
-                  this.period,
+                  smoothingValue,
                   ref
                 );
                 console.log("DLC rolling:",rolling)
@@ -1022,10 +1031,6 @@ export default {
       apiRepos.push(this.base);
       console.log("DLC base",this.base)
       let ref = this.base.url || this.base.repo_name;
-      console.log('BASE: ');
-      console.dir(this.base);
-      console.log('REF: ');
-      console.log(ref);
       if (ref.includes('/'))
           ref = ref.split('/')[ref.split('/').length - 1]
       repos = [ref];
