@@ -248,7 +248,7 @@
             cite-text="Code Changes"
             filedTime="date"
             fieldCount="commit_count"
-            :smoothing="false"
+            :smoothing="true"
           ></dynamic-line-chart>
         </d-card>
       </div>
