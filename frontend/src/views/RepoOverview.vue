@@ -365,10 +365,6 @@ export default class RepoOverview extends Vue {
     this.endpoint({ endpoints: this.barEndpoints, repos: [this.base] }).then(
       (tuples: any) => {
         let ref = this.base.url || this.base.repo_name;
-        console.log("BASE: ");
-        console.dir(this.base);
-        console.log("REF: ");
-        console.log(ref);
         Object.keys(tuples[ref]).forEach(endpoint => {
           console.log(endpoint);
           this.values[endpoint] = tuples[ref][endpoint];
