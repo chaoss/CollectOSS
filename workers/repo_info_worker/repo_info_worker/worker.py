@@ -262,31 +262,45 @@ class GHRepoInfoWorker:
             }
         """ % (owner, repo)
 
-        logging.info(f'Hitting endpoint {url}')
-        try:
+        num_attempts = 3
+        success = False
+        for attempt in range(num_attempts):
+            logging.info("Hitting endpoint: {} ...\n".format(url))
             r = requests.post(url, json={'query': query}, headers=self.headers)
             update_gh_rate_limit(self, logging, r)
-            j = r.json()
+
+            try:
+                j = r.json()
+            except:
+                j = json.loads(json.dumps(r.text))
+
             if 'errors' in j:
-                register_task_failure(self, logging, task, repo_id, ValueError(f"[GitHub API]: {j['errors'][0]['type']}: {j['errors'][0]['message']}"))
+                logging.info(j)
+                logging.info(j['errors'])
+                register_task_failure(self, logging, task, repo_id, j['errors'][0]['message'])
                 return
 
-            j = j['data']['repository']
-        except requests.exceptions.ConnectionError as e:
-            register_task_failure(self, logging, task, repo_id, e)
-            return
-        except Exception as e:
-            register_task_failure(self, logging, task, repo_id, e)
+            if 'data' in j:
+                success = True
+                j = j['data']['repository']
+                break
+            else:
+                logging.info("Request returned a non-data dict: {}\n".format(j))
+                if j['message'] == 'Not Found':
+                    logging.info("Github repo was not found or does not exist for endpoint: {}\n".format(url))
+                    break
+                if j['message'] == 'You have triggered an abuse detection mechanism. Please wait a few minutes before you try again.':
+                    num_attempts -= 1
+                    update_gh_rate_limit(self, logging, r, temporarily_disable=True)
+                if j['message'] == 'Bad credentials':
+                    update_gh_rate_limit(self, logging, r, bad_credentials=True)
+        if not success:
+            register_task_failure(self, logging, task, repo_id, "Failed to hit endpoint: {}".format(url))
             return
 
         committers_count = self.query_committers_count(owner, repo)
-        # commit_count = self.query_commit_count(owner, repo)
 
-        logging.info(f'Inserting repo info for repo with id:{repo_id}, owner:{owner}, name:{repo}')
-        # logging.info("1 {}\n\n\n".format(j))
-        # logging.info("2 {}\n\n\n".format(j['ref']))
-        # logging.info("3 {}\n\n\n".format(j['ref']['target']))
-        # logging.info("4 {}\n\n\n".format(j['ref']['target']['history']))
+        logging.info(f'Inserting repo info for repo with id:{repo_id}, owner:{owner}, name:{repo}\n')
         rep_inf = {
             'repo_id': repo_id,
             'last_updated': j['updatedAt'] if 'updatedAt' in j else None,
@@ -325,16 +339,16 @@ class GHRepoInfoWorker:
         }
 
         result = self.db.execute(self.repo_info_table.insert().values(rep_inf))
-        logging.info(f"Primary Key inserted into repo_info table: {result.inserted_primary_key}")
+        logging.info(f"Primary Key inserted into repo_info table: {result.inserted_primary_key}\n")
         self.results_counter += 1
 
-        logging.info(f"Inserted info for {owner}/{repo}")
+        logging.info(f"Inserted info for {owner}/{repo}\n")
 
         #Register this task as completed
         register_task_completion(self, logging.getLogger(), task, repo_id, "repo_info")
 
     def query_committers_count(self, owner, repo):
-        logging.info('Querying committers count')
+        logging.info('Querying committers count\n')
         url = f'https://api.github.com/repos/{owner}/{repo}/contributors?per_page=100'
         committers = 0
 
@@ -349,32 +363,7 @@ class GHRepoInfoWorker:
                 else:
                     url = r.links['next']['url']
         except Exception:
-            logging.exception('An error occured while querying contributor count')
+            logging.exception('An error occured while querying contributor count\n')
 
         return committers
-
-    # def query_commit_count(self, owner, repo):
-    #     logging.info('Querying commit count')
-    #     commits_url = f'https://api.github.com/repos/{owner}/{repo}/commits'
-    #     r = requests.get(commits_url, headers=self.headers)
-    #     update_gh_rate_limit(self, logging, r)
-
-    #     first_commit_sha = None
-    #     last_commit_sha = r.json()[0]['sha']
-
-    #     if 'last' in r.links:
-    #         r = requests.get(r.links['last']['url'], headers=self.headers)
-    #         update_gh_rate_limit(self, logging, r)
-
-    #         first_commit_sha = r.json()[-1]['sha']
-
-    #     else:
-    #         first_commit_sha = r.json()[-1]['sha']
-
-    #     compare_url = (f'https://api.github.com/repos/{owner}/{repo}/'
-    #                 + f'compare/{first_commit_sha}...{last_commit_sha}')
-    #     r = requests.get(compare_url, headers=self.headers)
-    #     update_gh_rate_limit(self, logging, r)
-
-    #     return r.json()['total_commits'] + 1
 

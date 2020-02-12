@@ -821,3 +821,13 @@ def create_repo_meta_routes(server):
 
     # TODO: document this
     server.addRepoMetric(metrics.lines_of_code_commit_counts_by_calendar_year_grouped,'lines-of-code-commit-counts-by-calendar-year-grouped')
+
+    # TODO: document this
+    server.addMetric(metrics.average_weekly_commits, 'average-weekly-commits')
+
+    # TODO: document this
+    server.addRepoMetric(metrics.average_weekly_commits, 'average-weekly-commits')
+
+    # TODO: document this
+    server.addRepoGroupMetric(metrics.average_weekly_commits, 'average-weekly-commits')
+    
