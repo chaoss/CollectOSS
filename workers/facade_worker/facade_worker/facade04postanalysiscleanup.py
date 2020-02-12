@@ -36,8 +36,6 @@ import os
 import getopt
 import xlsxwriter
 import configparser
-import logging
-logging.basicConfig(filename='worker.log', filemode='w', level=logging.INFO)
 
 def git_repo_cleanup(cfg):
 

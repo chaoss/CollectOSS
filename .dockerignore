@@ -1,6 +1,5 @@
 # Augur
 augur.config.json
-!default.config.json
 frontend/node_modules/
 notebooks/
 cache/

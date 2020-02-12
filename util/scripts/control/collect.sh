@@ -10,7 +10,7 @@ for WORKER in $(ls -d workers/*/)
 do
     if [[ $WORKER == *"_worker"* ]]; then
 
-      if [[ $WORKER != *"spdx_worker"* ]]; then
+      if [[ $WORKER != *"spdx_worker"* && $WORKER != *"value_worker"* ]]; then
 
         # make it pretty for formatting
         FORMATTED_WORKER=${WORKER/#workers\//}
@@ -25,7 +25,7 @@ do
         cd $WORKER
         WORKER_CMD="_start"
         WORKER_CMD="${FORMATTED_WORKER}_start"
-        nohup $WORKER_CMD > "${FORMATTED_WORKER}.log" 2> "${FORMATTED_WORKER}.err" &
+        nohup $WORKER_CMD 1> /dev/null 2> /dev/null &
         cd ../..
         sleep 30
       fi

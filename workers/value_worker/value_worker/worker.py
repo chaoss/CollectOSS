@@ -14,12 +14,6 @@ import sqlalchemy as s
 from sqlalchemy import MetaData
 from sqlalchemy.ext.automap import automap_base
 
-
-LOG_FORMAT = '%(levelname)s:[%(name)s]: %(message)s'
-logging.basicConfig(filename='worker.log', filemode='w', level=logging.INFO, format=LOG_FORMAT)
-logger = logging.getLogger('ValueWorker')
-
-
 class CollectorTask:
     """
     Worker's perception of a task in its queue.
@@ -53,7 +47,6 @@ class ValueWorker:
     :param task: most recent task the broker added to the worker's queue
     """
     def __init__(self, config, task=None):
-        logger.info(f'Worker (PID: {os.getpid()}) initializing...')
         self._task = task
         self._child = None
         self._queue = Queue()
@@ -71,6 +64,8 @@ class ValueWorker:
         self.history_id = None
         self.finishing_task = False
         self.scc_bin = self.config['scc_bin']
+        logging.basicConfig(filename='worker_{}.log'.format(self.config['id'].split('.')[len(self.config['id'].split('.')) - 1]), filemode='w', level=logging.INFO)
+        logging.info(f'Worker (PID: {os.getpid()}) initializing...')
 
         url = "https://api.github.com"
         response = requests.get(url=url, headers=self.headers)

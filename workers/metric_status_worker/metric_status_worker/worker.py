@@ -17,9 +17,6 @@ from github import Github
 from sqlalchemy import MetaData
 from sqlalchemy.ext.automap import automap_base
 
-logging.basicConfig(filename='worker.log', level=logging.INFO, filemode='w')
-
-
 class CollectorTask:
     """ Worker's perception of a task in its queue
     Holds a message type (EXIT, TASK, etc) so the worker knows how to process the queue entry
@@ -29,7 +26,6 @@ class CollectorTask:
     def __init__(self, message_type='TASK', entry_info=None):
         self.type = message_type
         self.entry_info = entry_info
-
 
 def dump_queue(queue):
     """

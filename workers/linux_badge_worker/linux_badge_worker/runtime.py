@@ -47,7 +47,6 @@ def create_server(app):
 @click.option('--port', default=51235, help='Port')
 def main(augur_url, host, port):
     """ Declares singular worker and creates the server and flask app that it will be running on
-    logging.basicConfig(level=logging.DEBUG)
     """
 
     app = Flask(__name__)
@@ -56,7 +55,7 @@ def main(augur_url, host, port):
     broker_host = read_config("Server", "host", "AUGUR_HOST", "0.0.0.0")
     broker_port = read_config("Server", "port", "AUGUR_PORT", 5000)
     database_host = read_config('Database', 'host', 'AUGUR_DB_HOST', 'host')
-    worker_info = read_config('Workers', 'insight_worker', None, None)
+    worker_info = read_config('Workers', 'linux_badge_worker', None, None)
 
     worker_port = worker_info['port'] if 'port' in worker_info else port
 
@@ -81,8 +80,8 @@ def main(augur_url, host, port):
             "password": read_config('Database', 'password', 'AUGUR_DB_PASSWORD', 'password'),
             "port": read_config('Database', 'port', 'AUGUR_DB_PORT', 'port'),
             "user": read_config('Database', 'user', 'AUGUR_DB_USER', 'user'),
-            "database": read_config('Database', 'database', 'AUGUR_DB_DATABASE', 'database'),
-            "endpoint": "https://bestpractices.coreinfrastructure.org/projects.json",
+            "database": read_config('Database', 'database', 'AUGUR_DB_NAME', 'database'),
+            "endpoint": "https://bestpractices.coreinfrastructure.org/projects.json?pq=",
             "display_name": "",
             "description": "",
             "required": 1,

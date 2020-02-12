@@ -16,7 +16,7 @@ def create_server(app, gw):
         """
         if request.method == 'POST': #will post a task to be added to the queue
             logging.info("Sending to work on task: {}".format(str(request.json)))
-            app.gh_worker.task = request.json
+            app.github_worker.task = request.json
             return Response(response=request.json,
                         status=200,
                         mimetype="application/json")
@@ -39,7 +39,7 @@ def create_server(app, gw):
     def augwop_config():
         """ Retrieve worker's config
         """
-        return app.gh_worker.config
+        return app.github_worker.config
 
 @click.command()
 @click.option('--augur-url', default='http://localhost:5000/', help='Augur URL')
@@ -54,7 +54,7 @@ def main(augur_url, host, port):
     broker_host = read_config("Server", "host", "AUGUR_HOST", "0.0.0.0")
     broker_port = read_config("Server", "port", "AUGUR_PORT", 5000)
     database_host = read_config('Database', 'host', 'AUGUR_DB_HOST', 'host')
-    worker_info = read_config('Workers', 'insight_worker', None, None)
+    worker_info = read_config('Workers', 'github_worker', None, None)
 
     worker_port = worker_info['port'] if 'port' in worker_info else port
 
@@ -81,7 +81,7 @@ def main(augur_url, host, port):
             "password": read_config('Database', 'password', 'AUGUR_DB_PASSWORD', 'password'),
             "port": read_config('Database', 'port', 'AUGUR_DB_PORT', 'port'),
             "user": read_config('Database', 'user', 'AUGUR_DB_USER', 'user'),
-            "database": read_config('Database', 'database', 'AUGUR_DB_DATABASE', 'database'),
+            "database": read_config('Database', 'database', 'AUGUR_DB_NAME', 'database'),
             "endpoint": "https://bestpractices.coreinfrastructure.org/projects.json",
             "display_name": "",
             "description": "",
@@ -90,13 +90,13 @@ def main(augur_url, host, port):
         }
 
     #create instance of the worker
-    app.gh_worker = GitHubWorker(config) # declares the worker that will be running on this server with specified config
+    app.github_worker = GitHubWorker(config) # declares the worker that will be running on this server with specified config
     create_server(app, None)
     logging.info("Starting Flask App with pid: " + str(os.getpid()) + "...")
 
     app.run(debug=app.debug, host=host, port=worker_port)
-    if app.gh_worker._child is not None:
-        app.gh_worker._child.terminate()
+    if app.github_worker._child is not None:
+        app.github_worker._child.terminate()
     try:
         requests.post('http://{}:{}/api/unstable/workers/remove'.format(broker_host, broker_port), json={"id": config['id']})
     except:

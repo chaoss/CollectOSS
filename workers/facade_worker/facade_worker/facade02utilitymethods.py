@@ -36,14 +36,6 @@ import os
 import getopt
 import xlsxwriter
 import configparser
-import logging
-logging.basicConfig(filename='worker.log', filemode='w', level=logging.INFO)
-# if platform.python_implementation() == 'PyPy':
-# 	import pymysql
-# else:
-# 	import MySQLdb
-
-
 
 def update_repo_log(cfg, repos_id,status):
 

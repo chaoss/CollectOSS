@@ -1,3 +1,1 @@
 #!bash
-
-sleep 15

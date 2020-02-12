@@ -121,18 +121,18 @@ default_config = {
         },
         "Workers": {
             "facade_worker": {
-                "port": 56111,
+                "port": 50100,
                 "repo_directory": "repos/",
                 "switch": 0,
                 "workers": 1
             },
             "github_worker": {
-                "port": 56211,
+                "port": 50200,
                 "switch": 0,
                 "workers": 1
             },
             "insight_worker": {
-                "port": 56311,
+                "port": 50300,
                 "switch": 0,
                 "workers": 1,
                 "training_days": 365,
@@ -140,27 +140,27 @@ default_config = {
                 "confidence_interval": 95
             },
             "linux_badge_worker": {
-                "port": 56811,
+                "port": 50400,
                 "switch": 0,
                 "workers": 1
             },
             "metric_status_worker": {
-                "port": 56711,
+                "port": 50500,
                 "switch": 0,
                 "workers": 1
             },
             "pull_request_worker": {
-                "port": 56411,
+                "port": 50600,
                 "switch": 0,
                 "workers": 1
             },
             "repo_info_worker": {
-                "port": 56511,
+                "port": 50700,
                 "switch": 0,
                 "workers": 1
             },
             "value_worker": {
-                "port": 56611,
+                "port": 50800,
                 "scc_bin": "scc",
                 "switch": 0,
                 "workers": 1
@@ -190,13 +190,25 @@ def generate(db_name, db_host, db_user, db_port, db_password, github_api_key, fa
         try:
             with open(os.path.abspath(rc_config_file), 'r') as f:
                 rc_config = json.load(f)
+                for item in rc_config.items():
+                    if item[0] == 'Workers':
+                        for index in range(0, len(item[1])):
+                            key = list(item[1].keys())[index]
+                            secondary_dict = list(item[1].values())[index]
+
+                            for secondary_dict_index in range(0, len(secondary_dict)):
+                                secondary_key = list(secondary_dict.keys())[secondary_dict_index]
+                                value = list(secondary_dict.values())[secondary_dict_index]
+
+                                config[item[0]][key][secondary_key] = value
+                    else:
+                        for index, key in enumerate(list(item[1].keys())):
+                            config[item[0]][key] = list(item[1].values())[index]
+
                 print('Predefined config successfully loaded')
+
         except Exception as e:
             print(f"Error opening {rc_config_file}: {str(e)}")
-
-    for item in rc_config.items():
-        for index, key in enumerate(list(item[1].keys())):
-            config[item[0]][key] = list(item[1].values())[index]
 
     if db_name is not None:
         config['Database']['database'] = db_name

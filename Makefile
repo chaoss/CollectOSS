@@ -60,8 +60,8 @@ config:
 
 clean:
 	@ echo "Removing node_modules, logs, caches, and some other dumb stuff that can be annoying..."
-	@ rm -rf runtime node_modules frontend/node_modules frontend/public augur.egg-info .pytest_cache logs
-	@ rm -rf workers/**/*.log workers/**/*.err
+	@ rm -rf frontend/public .pytest_cache logs *.out
+	@ rm -rf workers/**/*.log workers/**/*.err workers/**/*.out
 	@ find . -name \*.pyc -delete
 	@ find . -type f -name "*.lock" -delete
 
@@ -109,7 +109,7 @@ frontend:
 	@ bash -c 'cd frontend; npm run serve'
 
 backend-stop:
-	@ bash -c 'if [[ -s logs/backend.pid  && (( `cat logs/backend.pid`  > 1 )) ]]; then printf "sending SIGTERM to python (Gunicorn) at PID $$(cat logs/backend.pid); "; kill `cat logs/backend.pid` ; rm logs/backend.pid  > /dev/null 2>&1; fi;'
+	@ bash -c 'augur util kill'
 	@ echo
 
 backend-start:
@@ -127,12 +127,7 @@ collect:
 	@ ./util/scripts/control/collect.sh
 
 run:
-	@ ./util/scripts/control/augur.sh
-	@ echo "Waiting for the server to start... (this will take a moment)"
-	@ echo "In the meantime, consider taking a short break - you've earned it!"
-	@ sleep 60
-	@ ./util/scripts/control/collect.sh
-	@ echo "Workers have been started. Happy collecting!"
+	@ ./util/scripts/control/run.sh
 
 status:
 	@ ./util/scripts/control/status.sh
@@ -183,6 +178,10 @@ compose-run:
 	@ docker-compose down --remove-orphans
 
 compose-run-with-database:
+	@ echo "**************************************************************************"
+	@ echo "Make sure there are removed NO database credentials from the env.txt file!"
+	@ echo "**************************************************************************"
+	@ echo
 	@ docker-compose -f docker-compose.yml -f database-compose.yml up --build
 	@ docker-compose down --remove-orphans
 
@@ -199,7 +198,7 @@ docker-build-database:
 
 
 docker-run-augur:
-	@ docker run -p 5000:5000 --name augur_latest augurlabs/augur:latest
+	@ docker run -p 5000:5000 --name augur_latest --env-file env.txt augurlabs/augur:latest
 
 docker-run-frontend:
 	@ docker run -p 8080:8080 --name augur_frontend-dev augurlabs/augur:frontend-dev
