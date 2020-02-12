@@ -6,7 +6,6 @@
         <span class="text-uppercase page-subtitle">Viewing all</span>
         <div class="title-container">
           <h3 class="page-title">Repo Groups</h3>
-          <button>Manage Repos</button>
         </div>
       </div>
     </div>
