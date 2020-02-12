@@ -21,4 +21,4 @@ RUN mkdir repos/
 FROM worker-stage as production-stage
 RUN augur configure generate --rc-config-file ./util/packaging/docker/docker.config.json
 
-CMD augur db add_repo_groups repo_group_load_sample.csv; augur db add_repos repo_load_sample.csv; augur run
+CMD augur run
