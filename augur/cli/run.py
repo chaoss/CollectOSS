@@ -139,7 +139,7 @@ def cli(ctx, enable_housekeeper):
     master = Arbiter(AugurGunicornApp(options, manager=manager, broker=broker, housekeeper=housekeeper)).run()
 
 def worker_start(worker_name=None, instance_number=0):
-    time.sleep(90 * instance_number)
+    time.sleep(120 * instance_number)
     process = subprocess.Popen("cd workers/{} && {}_start".format(worker_name,worker_name), shell=True)
 
 class AugurGunicornApp(gunicorn.app.base.BaseApplication):
