@@ -59,9 +59,9 @@ class Housekeeper:
         """
         repo_group_id = job['repo_group_id'] if 'repo_group_id' in job else None
         if repo_group_id:
-            logging.info('Housekeeper spawned {} model updater process for subsection {} with PID {}'.format(job['model'], repo_group_id, os.getpid()))
+            logging.info('Housekeeper spawned {} model updater process for subsection {} with PID {}\n'.format(job['model'], repo_group_id, os.getpid()))
         else:
-            logging.info('Housekeeper spawned {} model updater process for repo {} with PID {}'.format(job['model'], job['repos'][0]['repo_id'], os.getpid()))
+            logging.info('Housekeeper spawned {} model updater process for repo {} with PID {}\n'.format(job['model'], job['repos'][0]['repo_id'], os.getpid()))
 
         try:
             compatible_worker_found = False
@@ -75,9 +75,9 @@ class Housekeeper:
                             compatible_worker_found = True
                 if compatible_worker_found:
                     logging.info("Housekeeper recognized that the broker has a worker that " + 
-                        "can handle the {} model... beginning to distribute maintained tasks".format(job['model']))
+                        "can handle the {} model... beginning to distribute maintained tasks\n".format(job['model']))
                     while True:
-                        logging.info('Housekeeper updating {} model with given {}...'.format(
+                        logging.info('Housekeeper updating {} model with given {}...\n'.format(
                             job['model'], job['given'][0]))
                         
                         if job['given'][0] == 'git_url' or job['given'][0] == 'github_url':
@@ -98,7 +98,7 @@ class Housekeeper:
                                     requests.post('http://{}:{}/api/unstable/task'.format(
                                         broker_host,broker_port), json=task, timeout=10)
                                 except Exception as e:
-                                    logging.info("Error encountered: {}".format(e))
+                                    logging.info("Error encountered: {}\n".format(e))
 
                                 time.sleep(15)
                         elif job['given'][0] == 'repo_group':
@@ -114,9 +114,9 @@ class Housekeeper:
                                 requests.post('http://{}:{}/api/unstable/task'.format(
                                     broker_host,broker_port), json=task, timeout=10)
                             except Exception as e:
-                                logging.info("Error encountered: {}".format(e))
+                                logging.info("Error encountered: {}\n".format(e))
 
-                        logging.info("Housekeeper finished sending {} tasks to the broker for it to distribute to your worker(s)".format(len(job['repos'])))
+                        logging.info("Housekeeper finished sending {} tasks to the broker for it to distribute to your worker(s)\n".format(len(job['repos'])))
                         time.sleep(job['delay'])
                     break
                 time.sleep(3)
