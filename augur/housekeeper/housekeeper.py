@@ -224,13 +224,14 @@ class Housekeeper:
                             * 
                         FROM
                             (
-                                ( SELECT repo_id, issues_enabled, COUNT ( * ) AS meta_count 
-                                FROM repo_info 
-                                WHERE issues_enabled = 'true' 
-                                GROUP BY repo_id, issues_enabled 
-                                ORDER BY repo_id ) zz
+                                ( SELECT repo_git, repo.repo_id, issues_enabled, COUNT ( * ) AS meta_count 
+                                FROM repo_info, repo
+                                WHERE repo.repo_id = repo_info.repo_id 
+                                AND issues_enabled = 'true' 
+                                GROUP BY repo.repo_id, issues_enabled 
+                                ORDER BY repo.repo_id ) zz
                                 LEFT OUTER JOIN (
-                                SELECT repo_git, A.repo_id,
+                                SELECT A.repo_id,
                                     A.repo_name,
                                     b.issues_count,
                                     d.repo_id AS issue_repo_id,
