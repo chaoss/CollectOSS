@@ -112,7 +112,7 @@ def create_broker_routes(server):
             worker_found = True
         # Otherwise, let the frontend know that the request can't be served
         if not worker_found:
-            logging.info(f"Augur does not have knowledge of any workers that are capable of handing the request: {}\n".format(task))
+            logging.info("Augur does not have knowledge of any workers that are capable of handing the request: {}\n".format(task))
 
         return Response(response=task,
                         status=200,
