@@ -405,7 +405,11 @@ def update_gh_rate_limit(self, logging, response, bad_credentials=False, tempora
     logging.info("Updated rate limit, you have: " + 
         str(self.oauths[0]['rate_limit']) + " requests remaining.\n")
     if self.oauths[0]['rate_limit'] <= 0:
-        reset_time = response.headers['X-RateLimit-Reset']
+        try:
+            reset_time = response.headers['X-RateLimit-Reset']
+        except Exception as e:
+            logging.info("Could not get reset time from headers because of error: {}".format(error))
+            reset_time = 3600
         time_diff = datetime.datetime.fromtimestamp(int(reset_time)) - datetime.datetime.now()
         logging.info("Rate limit exceeded, checking for other available keys to use.\n")
 
