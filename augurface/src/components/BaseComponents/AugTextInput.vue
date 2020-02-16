@@ -6,6 +6,7 @@
         v-model="value"
         v-on:keydown="$emit('keydown', $event)"
         :type="password ? 'password' : 'text'"
+        :placeholder="placeholder"
       />
   </div>
 </template>
@@ -20,7 +21,8 @@ export default {
     props: [
         'text', 
         'inputName', 
-        'password'
+        'password', 
+        'placeholder'
     ], 
     watch: {
         value(val) {

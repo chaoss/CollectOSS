@@ -4,7 +4,7 @@
           <aug-button text="Create Group" />
       </div>
       <div class="column">
-          <aug-button text="Collapse All" />
+          <aug-button text="Collapse All" @click="$emit('collapseAll')"/>
       </div>
   </div>
 </template>

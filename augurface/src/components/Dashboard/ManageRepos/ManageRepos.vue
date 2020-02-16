@@ -1,7 +1,8 @@
 <template>
   <div id="ManageRepos">
-    <manage-buttons />
-    <repo-group v-for="rg in $store.state.reposModule.repoGroups" :key="rg.repo_group_id" :repoGroupObject="rg" />
+    <manage-buttons @collapseAll="collapseAll()"/>
+    <repo-group v-for="rg in $store.state.reposModule.repoGroups" :key="rg.repo_group_id" :repoGroupObject="rg" ref="repoGroups"/>
+
   </div>
 </template>
 
@@ -14,6 +15,11 @@ export default {
   components: {
     RepoGroup, 
     ManageButtons
+  }, 
+  methods: {
+    collapseAll() {
+      this.$refs.repoGroups.forEach(rg => rg.collapse());
+    }
   }
 };
 </script>
