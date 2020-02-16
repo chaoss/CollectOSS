@@ -1,5 +1,5 @@
 <template>
-  <div id="RepoGroup" @click="collapse()" :class="{ open : !isCollapsed }">
+  <div id="RepoGroup" @click="flipCollapse()" :class="{ open : !isCollapsed }">
     <div id="repo-group-header">
       <h1>{{ repoGroupObject.rg_name }} ({{ repoGroupObject.repo_group_id }}) </h1>
       <div class="buttons">
@@ -15,16 +15,31 @@
       </div>
     </div>
     <transition name="ease">
-      <div id="repos" v-if="!isCollapsed">
-        <p>individual repos metadata will go here</p>
+      <div id="repos" v-if="!isCollapsed" @click="stopEventPropagation($event)">
+        <div id="add-repos-input">
+          <aug-text-input text="add repos" placeholder="comma seperated git urls" inputName="urls" @valueUpdated="setUrlsInput"/>
+          <aug-button text="add" @click="addRepos()"/>
+        </div>
+        <div class="repo-list">
+          <repo v-for="repo in reposInGroup()" :key="repo.repo_id" :repo_name="repo.repo_name"/>
+        </div>
       </div>
     </transition>
   </div>
 </template>
 
 <script>
+import AugTextInput from '../../../BaseComponents/AugTextInput.vue';
+import AugButton from '../../../BaseComponents/AugButton.vue';
+import Repo from './Repo.vue';
+
 export default {
   name: "RepoGroup",
+  components: {
+    AugTextInput, 
+    AugButton, 
+    Repo
+  }, 
   props: {
     repoGroupObject: {
       type: Object,
@@ -38,18 +53,36 @@ export default {
   },
   data() {
     return {
-      isCollapsed: true
+      isCollapsed: true, 
+      urlsInput: ''
     };
   },
   methods: {
-    collapse() {
+    flipCollapse() {
       this.isCollapsed = !this.isCollapsed;
+    }, 
+    collapse() {
+      this.isCollapsed = true;
+    }, 
+    stopEventPropagation(e) {
+      e.stopPropagation();
+    }, 
+    setUrlsInput(val) {
+      this.urlsInput = val;
+    }, 
+    addRepos() {
+      let urls = this.urlsInput.split(',').map(url => url.trim());
+      console.log(urls);
+      // this is where ill make request
+    }, 
+    reposInGroup() {
+      return this.$store.state.reposModule.repos.filter(repo => repo.repo_group_id === this.repoGroupObject.repo_group_id);
     }
   }
 };
 </script>
 
-<style>
+<style scoped>
 #RepoGroup {
   background-color: white;
   width: 90%;
@@ -96,7 +129,6 @@ p {
 }
 
 #repos {
-  background-color: white;
   position: relative;
   top: .3rem;
 }
@@ -115,7 +147,7 @@ p {
 
 .ease-leave,
 .ease-enter-to {
-  max-height: 400px;
+  max-height: 80vh;
 }
 
 p {
@@ -124,5 +156,25 @@ p {
 
 .open {
     background-color: var(--light-grey) !important;
+}
+
+#add-repos-input {
+  width: 70%;
+  justify-content: flex-start;
+  display: flex;
+  align-items: flex-end;
+}
+
+#add-repos-input > * {
+  margin-right: 2rem;
+}
+
+#add-repos-input button {
+  background-color: white;
+}
+
+.repo-list {
+  margin-top: 1rem;
+  border-bottom: 1px solid var(--grey);
 }
 </style>
