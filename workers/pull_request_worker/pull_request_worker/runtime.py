@@ -1,7 +1,4 @@
-import json
-import logging
-import os
-import click
+import json, logging, os, click
 import requests
 from flask import Flask, Response, jsonify, request
 from pull_request_worker.worker import GHPullRequestWorker
@@ -18,8 +15,7 @@ def create_server(app, gw):
     def augwop_task():
         """ AUGWOP endpoint that gets hit to add a task to the workers queue or is used to get the heartbeat/status of worker
         """
-        # POST a task to be added to the queue
-        if request.method == 'POST':
+        if request.method == 'POST': # POST a task to be added to the queue
             logging.info("Sending to work on task: {}".format(str(request.json)))
             app.gh_pr_worker.task = request.json
             return Response(response=request.json,
@@ -62,9 +58,10 @@ def main(augur_url, host, port):
     worker_info = read_config('Workers', 'pull_request_worker', None, None)
 
     worker_port = worker_info['port'] if 'port' in worker_info else port
-
+    
     while True:
         try:
+            print("New pull request worker trying port: {}\n".format(worker_port))
             r = requests.get("http://{}:{}/AUGWOP/heartbeat".format(host, worker_port)).json()
             if 'status' in r:
                 if r['status'] == 'alive':

@@ -143,7 +143,7 @@ def cli(ctx, enable_housekeeper):
     master = Arbiter(AugurGunicornApp(options, manager=manager, broker=broker, housekeeper=housekeeper)).run()
 
 def worker_start(worker_name=None, instance_number=0, worker_port=None):
-    time.sleep(90 * instance_number)
+    time.sleep(120 * instance_number)
     destination = subprocess.DEVNULL
     try:
         destination = open("workers/{}/worker_{}.log".format(worker_name, worker_port), "a+")

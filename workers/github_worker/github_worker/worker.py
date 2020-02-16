@@ -7,7 +7,7 @@ from sqlalchemy import MetaData
 import requests, time, logging, json, os
 from datetime import datetime
 from sqlalchemy.ext.declarative import declarative_base
-from workers.standard_methods import init_oauths, get_max_id, register_task_completion, register_task_failure, connect_to_broker, update_gh_rate_limit, record_model_process, paginate
+from workers.standard_methods import get_table_values, init_oauths, get_max_id, register_task_completion, register_task_failure, connect_to_broker, update_gh_rate_limit, record_model_process, paginate
 
 class GitHubWorker:
     """ Worker that collects data from the Github API and stores it in our database
@@ -105,10 +105,8 @@ class GitHubWorker:
 
         self.msg_id_inc = get_max_id(self, logging, 'message', 'msg_id')
 
-        self.history_id = get_max_id(self, logging, 'worker_history', 'history_id', operations_table=True)
-
         # Increment so we are ready to insert the 'next one' of each of these most recent ids
-        self.history_id = self.history_id if self.finishing_task else self.history_id + 1
+        self.history_id = get_max_id(self, logging, 'worker_history', 'history_id', operations_table=True) + 1
 
         # Organize different api keys/oauths available
         init_oauths(self, logging)
@@ -959,7 +957,7 @@ class GitHubWorker:
             pseudo_key_gh = 'url'
             pseudo_key_augur = 'node_url'
             table = 'issue_events'
-            event_table_values = self.get_table_values([pseudo_key_augur], [table], "WHERE issue_id = {}".format(self.issue_id_inc))
+            event_table_values = get_table_values(self, logging, [pseudo_key_augur], [table], "WHERE issue_id = {}".format(self.issue_id_inc))
             
             # Paginate backwards through all the events but get first page in order
             #   to determine if there are multiple pages and if the 1st page covers all
@@ -1121,25 +1119,6 @@ class GitHubWorker:
 
         #Register this task as completed
         register_task_completion(self, logging.getLogger(), entry_info, repo_id, "issues")
-            
-    def get_table_values(self, cols, tables, where_clause=""):
-        table_str = tables[0]
-        del tables[0]
-
-        col_str = cols[0]
-        del cols[0]
-
-        for table in tables:
-            table_str += ", " + table
-        for col in cols:
-            col_str += ", " + col
-
-        tableValuesSQL = s.sql.text("""
-            SELECT {} FROM {} {}
-        """.format(col_str, table_str, where_clause))
-        logging.info("Getting table values with the following PSQL query: \n{}".format(tableValuesSQL))
-        values = pd.read_sql(tableValuesSQL, self.db, params={})
-        return values
 
     def retrieve_tuple(self, key_values, tables):
         table_str = tables[0]

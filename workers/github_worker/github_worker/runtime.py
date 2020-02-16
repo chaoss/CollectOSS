@@ -58,8 +58,9 @@ def main(augur_url, host, port):
 
     worker_port = worker_info['port'] if 'port' in worker_info else port
 
-    while True:
-        try:
+    while True: # for multiple instances of workers
+        try: # trying each port for an already-alive worker until a free port is found
+            print("New github worker trying port: {}\n".format(worker_port))
             r = requests.get("http://{}:{}/AUGWOP/heartbeat".format(host, worker_port)).json()
             if 'status' in r:
                 if r['status'] == 'alive':

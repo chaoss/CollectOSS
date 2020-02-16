@@ -114,15 +114,6 @@ class GHPullRequestWorker:
         # Send broker hello message
         connect_to_broker(self, logging.getLogger())
 
-        self.pull_requests_model({
-                                "job_type": 'MAINTAIN', 
-                                "models": ['pull_requests'], 
-                                "display_name": "pull_requests model for url: https://github.com/rails/rails.git",
-                                "given": {
-                                    "github_url": 'https://github.com/rails/rails.git'
-                                }
-                            }, 21000)
-
     def update_config(self, config):
         """ Method to update config and set a default
         """
