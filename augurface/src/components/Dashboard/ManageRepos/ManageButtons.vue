@@ -7,7 +7,7 @@
           text="Add Repos from User/Organization"
           placeholder="organization/username..."
         />
-        <aug-button text="Add" />
+        <aug-button text="Add" @click="importReposFromOrganization()"/>
       </div>
       <div class="column">
         <aug-button text="Refresh" @click="refreshRepos()" />
@@ -20,7 +20,7 @@
           text="New Repo Group"
           placeholder="repo group name..."
         />
-        <aug-button text="Create" />
+        <aug-button text="Create" @click="createGroup()"/>
       </div>
       <div class="column">
         <aug-button text="Collapse All" @click="$emit('collapseAll')" />
@@ -44,6 +44,14 @@ export default {
       this.$store.commit("reposModule/setGroupsLoaded", false);
       this.$store.dispatch("reposModule/retrieveRepoGroups");
       this.$store.dispatch("reposModule/retrieveRepos");
+    }, 
+    createGroup() {
+        // fetch request
+        // then -> commit new group to vuex
+    }, 
+    importReposFromOrganization() {
+        // fetch request
+        // then -> commit new repos to vuex
     }
   }
 };

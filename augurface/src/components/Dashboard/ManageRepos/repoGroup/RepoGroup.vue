@@ -73,7 +73,8 @@ export default {
     addRepos() {
       let urls = this.urlsInput.split(',').map(url => url.trim());
       console.log(urls);
-      // this is where ill make request
+      // fetch request
+      // then -> commit new repos to vuex
     }, 
     reposInGroup() {
       return this.$store.state.reposModule.repos.filter(repo => repo.repo_group_id === this.repoGroupObject.repo_group_id);
