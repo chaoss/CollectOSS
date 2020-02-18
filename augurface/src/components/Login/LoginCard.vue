@@ -14,7 +14,7 @@
       @valueUpdated="setPassword"
       :password="true"
     />
-    <aug-button text="Login" @click="$router.push('/dashboard')" ref="loginButton" />
+    <aug-button text="Login" @click="$router.push('/dashboard/manage')" ref="loginButton" />
   </div>
 </template>
 
