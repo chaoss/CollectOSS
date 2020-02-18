@@ -10,7 +10,7 @@
         <aug-button text="Add" />
       </div>
       <div class="column">
-        <aug-button text="Refresh" />
+        <aug-button text="Refresh" @click="refreshRepos()" />
       </div>
     </div>
     <div class="row">
@@ -37,6 +37,14 @@ export default {
   components: {
     AugButton,
     AugTextInput
+  },
+  methods: {
+    refreshRepos() {
+      this.$store.commit("reposModule/setReposLoaded", false);
+      this.$store.commit("reposModule/setGroupsLoaded", false);
+      this.$store.dispatch("reposModule/retrieveRepoGroups");
+      this.$store.dispatch("reposModule/retrieveRepos");
+    }
   }
 };
 </script>
@@ -55,7 +63,7 @@ export default {
 }
 
 button {
-    background-color: white !important;
+  background-color: white !important;
 }
 
 .row {

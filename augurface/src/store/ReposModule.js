@@ -5,7 +5,9 @@ export default  {
     namespaced: true, 
     state: {
       repoGroups: [], 
-      repos: []
+      repos: [], 
+      reposLoaded: false, 
+      groupsLoaded: false
     },
     mutations: {
       setRepoGroups(state, newValue) {
@@ -13,7 +15,13 @@ export default  {
       }, 
       setRepos(state, newValue) {
           state.repos = newValue;
-      }
+      }, 
+      setReposLoaded(state, newValue) {
+        state.reposLoaded = newValue;
+      }, 
+      setGroupsLoaded(state, newValue) {
+        state.groupsLoaded = newValue;
+      }, 
     },
     actions: {
         retrieveRepos(context) {
@@ -46,6 +54,7 @@ export default  {
                     return filteredRG;
                 })
                 commit('setRepos', filteredResponse);
+                commit('setReposLoaded', true);
             }
 
           });
@@ -76,12 +85,18 @@ export default  {
                     return filteredRG;
                 })
                 commit('setRepoGroups', filteredResponse);
+                commit('setGroupsLoaded', true);
             }
 
           });
       }
     },
     getters: {
-  
+      isLoaded(state) {
+        return state.reposLoaded && state.groupsLoaded;
+      }, 
+      isGroupsLoaded(state) {
+        return state.groupsLoaded;
+      }
     }
   }
