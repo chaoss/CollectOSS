@@ -77,6 +77,7 @@ export default {
   margin-top: 8vh;
   border-radius: 4px;
   box-shadow: 0px 0px 20px #cdcdcd;
+  padding-bottom: 2rem;
 }
 
 .login-card > * {
