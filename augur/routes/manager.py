@@ -84,7 +84,6 @@ class Repo_manager():
     def __init__(self, orgname, dbconn):
         self.org = orgname
         self.conn = dbconn
-        self.token = "443c7725328e9b32f885be6fcff97ddcf84a15a5"
 
     def insert_repo(self, orgid, given_org, reponame):
         """creates a new repo record"""
