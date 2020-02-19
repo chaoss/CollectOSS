@@ -56,9 +56,9 @@ To run Augur without the database container (don't forget to provide your creden
 
 .. note::
 
-    To start it in the background, append (``-d``) to the end.
+    To start the containers in the background, append (``-d``) to the end. You can then use ``docker attatch <container SHA>`` to view the logs of a running container.
 
-After killing the container, to remove everything run ``docker-compose down --remove-orphans``.
+To stop the container, run ``docker-compose down --remove-orphans``. The flag is necessary to kill the database container.
 
 
 Interacting with the Augur
