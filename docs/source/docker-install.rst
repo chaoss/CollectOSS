@@ -1,6 +1,9 @@
 Docker Installation
 =====================
 
+Getting Started
+---------------
+
 Before we begin, make sure you have everything you need installed:
 
 -  A `PostgreSQL 10 or higher <https://www.postgresql.org/download/>`__ installation
@@ -13,43 +16,16 @@ Before we begin, make sure you have everything you need installed:
 - `Docker <https://www.docker.com/community-edition>`__
 - `Docker Compose <https://docs.docker.com/compose/install/>`__
 
-We provide a database container alongside the data collection/API container and the frontend container, but we also support using an external database. To configure one, follow the instructions in the `data collection <getting-started/installation.html#data-collection>`__ of the installation, and once you're done, return to this guide to install the schemas and get the container running. Make sure to save the credentials for the database; you'll need them again.
-
-
-Installing the DB schema
--------------------------
-
-To install the necessary schemas and load a sample dataset, you'll need to clone augur to get access to the ``.sql`` files. While still connected to your database server, run the following commands to clone the repo and install the schemas. ``db_name`` is the name of the database you configured in the previous section, ``$db_user`` is the name of the role you created, and ``$db_port`` is the port on which Postgres is accepting connections (usually, this is the default port ``5432``).
-
-.. code:: bash
-
-    git clone https://github.com/chaoss/augur.git
-    cd augur/
-    psql -h localhost -d $db_name -U $db_user -p $db_port -a -w -f persistence_schema/generate/1-schema.sql
-    psql -h localhost -d $db_name -U $db_user -p $db_port -a -w -f persistence_schema/generate/2-augur_data.sql
-    psql -h localhost -d $db_name -U $db_user -p $db_port -a -w -f persistence_schema/generate/3-augur_operations.sql
-    psql -h localhost -d $db_name -U $db_user -p $db_port -a -w -f persistence_schema/generate/4-spdx.sql
-    psql -h localhost -d $db_name -U $db_user -p $db_port -a -w -f persistence_schema/generate/5-seed-data.sql
-    psql -h localhost -d $db_name -U $db_user -p $db_port -a -w -f persistence_schema/enerate/6-schema_update_8.sql
-    psql -h localhost -d $db_name -U $db_user -p $db_port -a -w -f persistence_schema/generate/7-schema_update_9.sql
-
-    psql -h localhost -d augur -U augur -p 5432 augur -a -w -c "UPDATE augur_data.settings SET VALUE = 'repos/' WHERE setting='repo_directory';"
-
-And load a small sample dataset:
-
-.. code:: bash
-
-    persistence_schema/db_load.sh localhost augur augur 5432
+We provide a database container alongside the data collection/API container and the frontend container, but we also support using an external database. To configure one, follow the instructions in the `data collection <getting-started/installation.html#data-collection>`__ of the installation, and once you're done, return to this guide to install the schemas and get the container running. Make sure to save the credentials for the database; you'll need them again. If you're not sure which to use, we recommend using the database container for ease of setup.
 
 Configuring the containers
 --------------------------
 
-Next, fill out your values for the following variables in a file called ``env.txt`` in the root ``augur/`` directory. Note that if you're using the database container, you only need the first two lines.
+Next, we'll need to provide some configuration values so the data collection workers will function correctly. Fill out your values for the following variables in a file called ``env.txt`` in the root ``augur/`` directory. Note that if you're using the database container, you only need the first lines.
 
 .. code:: bash
 
     AUGUR_GITHUB_API_KEY=<your credentials here>
-    AUGUR_PORT=5000
 
     //only necessary if connecting to an external database
     AUGUR_DB_USER=<your credentials here>
@@ -61,31 +37,18 @@ Next, fill out your values for the following variables in a file called ``env.tx
 
 .. note::
 
-    ``AUGUR_GITHUB_API_KEY`` is needed for the GitHub worker to collect data from the GitHub API. ``AUGUR_FACADE_REPO_DIRECTORY`` is where the Facade worker will store the repos it clones for analysis. Change ``AUGUR_PORT`` only if port 5000 is already taken on your machine.
+    ``AUGUR_GITHUB_API_KEY`` is needed for the GitHub worker to collect data from the GitHub API. ``AUGUR_FACADE_REPO_DIRECTORY`` is where the Facade worker will store the repos it clones for analysis.
 
 Running the containers
 ----------------------
 
-Running with the database container
-=======================================
-
-To start the container:
+To run Augur with the database container:
 
 .. code:: bash
 
     docker-compose -f docker-compose.yml -f database-compose.yaml up --build
 
-.. note::
-
-    To start it in the background, append (``-d``) to the end.
-
-After killing the container, to remove everything run ``docker-compose down --remove-orphans``.
-
-
-Running without the database container
-=======================================
-
-To start the container:
+To run Augur without the database container (don't forget to provide your credentials in the ``env.txt`` file, as mentioned above):
 
 .. code:: bash
 
@@ -95,7 +58,7 @@ To start the container:
 
     To start it in the background, append (``-d``) to the end.
 
-After killing the container, to remove everything run ``docker-compose down``.
+After killing the container, to remove everything run ``docker-compose down --remove-orphans``.
 
 
 Interacting with the Augur
@@ -114,18 +77,8 @@ Once you see the following lines, the backend is up and available at ``http://lo
     [2020-01-20 20:28:15 +0000] [51] [INFO] Booting worker with pid: 51
     [2020-01-20 20:28:15 +0000] [52] [INFO] Booting worker with pid: 52
 
-Similarly, once you see the following lines, the frontend is up and available at ``http://localhost:8080``.
+However, they'll likely fly right past you on your terminal, but once you start seeing messages from the housekeeper and broker, the server should be up. Keep pinging every few moments - we'll have a better fix for this soon.
 
-.. code-block:: 
-
-    frontend_1  |  DONE  Compiled successfully in 43415ms11:40:57 PM
-    frontend_1  |
-    frontend_1  | No type errors found
-    frontend_1  | No lint errors found
-    frontend_1  | Version: typescript 3.5.3, tslint 5.18.0
-    frontend_1  | Time: 20475ms
-    frontend_1  |
-    frontend_1  |   App running at:
-    frontend_1  |   - Local:   http://localhost:8080/
+The frontend will automatically be available on port ``8080``, as the files are hosted statically.
 
 Now you're good to go! Augur will automatically start collecting data in the background and populating the database, and you're free to start exploring the frontend and gathering data.
