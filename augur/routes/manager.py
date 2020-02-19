@@ -7,7 +7,6 @@ import logging
 import time
 import subprocess
 import requests
-from ..cli import db
 import sqlalchemy as s
 from sqlalchemy import exc
 import pandas as pd
@@ -22,7 +21,7 @@ def create_manager_routes(server):
             adds repos belonging to any user or group to an existing augur repo group
             'repos' are in the form org/repo, user/repo, or maybe even a full url 
         """
-        conn = db.get_db_connection(server._augur)
+        conn = server._augur.db
         data = request.json
         group = data['group']
         repos = data['repos']
@@ -56,7 +55,7 @@ def create_manager_routes(server):
         """ creates a new augur repo group and adds to it the given organization or user's repos
             takes an organization or user name 
         """
-        conn = db.get_db_connection(server._augur)
+        conn = server._augur.db
         data = request.json
         errors = ""
         group = data['group']
