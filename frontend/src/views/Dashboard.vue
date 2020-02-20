@@ -47,6 +47,22 @@
                   <d-col cols="12" sm="5">
                     <d-row>
                       <d-col cols="12" sm="12">
+                        <d-button 
+                        :id="'ev' + idx" 
+                        size="sm" 
+                        @click="onGitRepo(insights[highest[idx].rg_name][highest[idx].repo_git][highest[idx].ri_metric][0])" 
+                       
+                        class="dashboardButton d-flex btn-white ml-auto mr-auto ml-sm-auto mr-sm-0 mt-3 mt-sm-0">Evolution &rarr;</d-button>
+                        <d-tooltip 
+                          :target="'#ev' + idx"
+                          container=".shards-demo--example--tooltip-01"
+                          placement="right"
+                          offset="20">
+                          Click to see evolution metrics for this repo.
+                        </d-tooltip>
+                      </d-col>
+                      
+                      <!-- <d-col cols="12" sm="12">
                         <span class="text-muted dashboardP">{{ timeframes[highest[idx].repo_git] }}</span>
                       </d-col>
                       <p></p>
@@ -63,7 +79,7 @@
                           offset="20">
                           Click to see more about this insight.
                         </d-tooltip>
-                      </d-col>
+                      </d-col> -->
                     </d-row>
                   </d-col>
                   <!-- View Full Report -->
@@ -72,21 +88,7 @@
                     <d-row>
                       
 
-                      <d-col cols="12" sm="12">
-                        <d-button 
-                        :id="'ev' + idx" 
-                        size="sm" 
-                        @click="onGitRepo(insights[highest[idx].rg_name][highest[idx].repo_git][highest[idx].ri_metric][0])" 
-                       
-                        class="dashboardButton d-flex btn-white ml-auto mr-auto ml-sm-auto mr-sm-0 mt-3 mt-sm-0">Evolution &rarr;</d-button>
-                        <d-tooltip 
-                          :target="'#ev' + idx"
-                          container=".shards-demo--example--tooltip-01"
-                          placement="right"
-                          offset="20">
-                          Click to see evolution metrics for this repo.
-                        </d-tooltip>
-                      </d-col>
+                      
                       <p></p>
                       <d-col cols="12" sm="12">
                         <d-button theme="secondary" :id="'ri' + idx" size="sm" @click="onRisk(insights[highest[idx].rg_name][highest[idx].repo_git][highest[idx].ri_metric][0])" class="dashboardButton d-flex btn-white ml-auto mr-auto ml-sm-auto mr-sm-0 mt-3 mt-sm-0">Risk &rarr;</d-button>
@@ -98,6 +100,7 @@
                           Click to see risk metrics for this repo.
                         </d-tooltip>
                       </d-col>
+                      
                     </d-row>
                   </d-col>
                 </d-row>
@@ -222,6 +225,7 @@ export default class Dashboard extends Vue {
     'code-changes-lines': { 'hex': "#FF3647", 'theme': 'danger' },
     'issues-new': { 'hex': "#159dfb", 'theme': 'royal-blue' },
     'reviews': { 'hex': '#343a40', 'theme': 'dark' },
+    'contributors-new': { 'hex': "#FFC107", 'theme': 'warning' }
   }
   // themes: string[] = ['info', 'danger','royal-blue', 'warning', 'dark'];
   loadedInsights: boolean = false
@@ -263,9 +267,14 @@ export default class Dashboard extends Vue {
       })
 
       Promise.all(addingGroupPromises).then((groups: any) => {
+        this.highest_frame = []
         let dupesAllowed = this.desiredTopInsights - groups.length
+        let count = 0
         groups.forEach((group: any) => {
+          if (count < 12)
+            this.highest_frame.push({})
           relevantApiGroups.push(this.apiGroups[group.rg_name])
+          count += 1
         })
 
         this.endpoint({repoGroups: relevantApiGroups, endpoints: ['topInsights']}).then((tuples: any) => {
