@@ -21,7 +21,7 @@ def create_manager_routes(server):
             adds repos belonging to any user or group to an existing augur repo group
             'repos' are in the form org/repo, user/repo, or maybe even a full url 
         """
-        conn = server._augur.db
+        conn = get_db_connection(server._augur)
         data = request.json
         group = data['group']
         repos = data['repos']
@@ -55,8 +55,7 @@ def create_manager_routes(server):
         """ creates a new augur repo group and adds to it the given organization or user's repos
             takes an organization or user name 
         """
-        conn = server._augur.db
-        print(conn)
+        conn = get_db_connection(server._augur)
         data = request.json
         errors = ""
         group = data['group']
@@ -75,7 +74,7 @@ def create_manager_routes(server):
             errors = "failed to add repos to group"
             
         if errors: res = errors
-        else: res = json.dumps({'group_id': group_id, 'rg_name': group})
+        else: res = json.dumps({'group_id': str(group_id), 'rg_name': group})
         return Response(response=res,
                         status=200,
                         mimetype="application/json")
@@ -184,3 +183,18 @@ class Git_string():
     def get_repo_name(self):
         repo = self.name
         return repo[repo.find('/')+1:]
+
+def get_db_connection(app):
+
+    user = app.read_config('Database', 'user', 'AUGUR_DB_USER', 'augur')
+    password = app.read_config('Database', 'password', 'AUGUR_DB_PASS', 'password')
+    host = app.read_config('Database', 'host', 'AUGUR_DB_HOST', '127.0.0.1')
+    port = app.read_config('Database', 'port', 'AUGUR_DB_PORT', '5433')
+    dbname = app.read_config('Database', 'database', 'AUGUR_DB_NAME', 'augur')
+    schema = app.read_config('Database', 'schema', 'AUGUR_DB_SCHEMA', 'augur_data')
+
+    DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(
+            user, password, host, port, dbname
+    )
+
+    return s.create_engine(DB_STR, poolclass=s.pool.NullPool)
