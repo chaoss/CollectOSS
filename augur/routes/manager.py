@@ -37,13 +37,20 @@ def create_manager_routes(server):
                 repo_name = url.get_repo_name()
                 repo_parent = url.org_of_repo()
                 if man.insert_repo(group_id, repo_parent, repo_name):
-                    success.append(repo_name)
+                    r={}
+                    r['repo_group_id'] = str(group_id)
+                    r['repo_id'] = str(man.repo_id(repo_parent, repo_name))
+                    r['repo_name'] = repo_name
+                    r['rg_name'] = group
+                    r['url'] = man.repo_git(group, repo_name)
+                    success.append(r)
                 else:
                     errors.append(repo_name)
             else:
                 errors.append(repo)
 
-        summary = json.dumps({'sucess':success, 'failures': errors})
+        summary = {'sucess': success, 'failures': errors}
+        summary = json.dumps(summary)
         print(summary)
         return Response(response=summary,
                         status=200,
@@ -91,14 +98,30 @@ class Repo_manager():
                 tool_source, tool_version, data_source, data_collection_date)
             VALUES (:repo_group_id, :repo_git, 'New', 'CLI', 1.0, 'Git', CURRENT_TIMESTAMP)    
         """)
-        repogit = "https://github.com/" + given_org + "/" + reponame
+        repogit = self.repo_git(given_org, reponame)
         try:
             pd.read_sql(insert, self.conn, params={'repo_group_id': int(orgid), 'repo_git': repogit})
         except exc.ResourceClosedError:
             return True
         else:
             return False
-        
+
+    def repo_git(self, org, repo):
+        return "https://github.com/" + org + "/" + repo
+
+    def repo_id(self, org, repo_name):
+        """returns the repo_id of given repo"""
+        select = s.sql.text("""
+            SELECT repo_id
+            FROM augur_data.repo
+            WHERE repo_git = :repogit
+            LIMIT 1
+        """)
+        repo_git = self.repo_git(org, repo_name)
+        result = pd.read_sql(select, self.conn, params={'repogit': repo_git})
+        return result.values[0][0]
+
+
     def get_org_id(self):
         """returns repo_group_id or -1 if not present"""
         select = s.sql.text("""
