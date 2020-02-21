@@ -51,7 +51,6 @@ def create_manager_routes(server):
 
         summary = {'sucess': success, 'failures': errors}
         summary = json.dumps(summary)
-        print(summary)
         return Response(response=summary,
                         status=200,
                         mimetype="application/json")
