@@ -42,7 +42,7 @@ def create_manager_routes(server):
                     r['repo_id'] = str(man.repo_id(repo_parent, repo_name))
                     r['repo_name'] = repo_name
                     r['rg_name'] = group
-                    r['url'] = man.repo_git(group, repo_name)
+                    r['url'] = man.repo_git(repo_parent, repo_name)
                     success.append(r)
                 else:
                     errors.append(repo_name)
