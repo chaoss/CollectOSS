@@ -56,6 +56,7 @@ def create_manager_routes(server):
             takes an organization or user name 
         """
         conn = server._augur.db
+        print(conn)
         data = request.json
         errors = ""
         group = data['group']
@@ -74,7 +75,7 @@ def create_manager_routes(server):
             errors = "failed to add repos to group"
             
         if errors: res = errors
-        else: res = "created repo group"
+        else: res = json.dumps({'group_id': group_id, 'rg_name': group})
         return Response(response=res,
                         status=200,
                         mimetype="application/json")
