@@ -6,6 +6,7 @@
           inputName="organizationName"
           text="Add Repos from User/Organization"
           placeholder="organization/username..."
+          @valueUpdated="setOrgUsernameInput"
         />
         <aug-button text="Add" @click="importReposFromOrganization()"/>
       </div>
@@ -19,6 +20,7 @@
           inputName="groupName"
           text="New Repo Group"
           placeholder="repo group name..."
+          @valueUpdated="setGroupNameInput"
         />
         <aug-button text="Create" @click="createGroup()"/>
       </div>
@@ -37,7 +39,13 @@ export default {
   components: {
     AugButton,
     AugTextInput
-  },
+  }, 
+  data() {
+    return {
+      groupNameInput: "", 
+      orgUsernameInput: ""
+    }
+  }, 
   methods: {
     refreshRepos() {
       this.$store.commit("reposModule/setReposLoaded", false);
@@ -52,6 +60,24 @@ export default {
     importReposFromOrganization() {
         // fetch request
         // then -> commit new repos to vuex
+        let requestObject = {
+          group: this.orgUsernameInput
+        };
+        fetch(`http://localhost:5000/${this.$store.state.utilModule.baseEndpointUrl}/add-repo-group`, {
+          method: 'POST', 
+          headers: {
+            'Content-Type': 'application/json'
+          }, 
+          body: JSON.stringify(requestObject)
+        })
+        .then(res => res.text())
+        .then(res => console.log(res));
+    }, 
+    setGroupNameInput(newValue) {
+      this.groupNameInput = newValue;
+    }, 
+    setOrgUsernameInput(newValue) {
+      this.orgUsernameInput = newValue;
     }
   }
 };
