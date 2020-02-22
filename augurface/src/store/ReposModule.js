@@ -22,6 +22,14 @@ export default  {
       setGroupsLoaded(state, newValue) {
         state.groupsLoaded = newValue;
       }, 
+      addRepos(state, newRepos) {
+        console.log(state);
+        console.log(newRepos);
+        let combinedRepos = [];
+        combinedRepos = [...state.repos, ...newRepos]
+        state.repos = combinedRepos;
+        // state.repos = [].concat(state.repos, newRepos);
+      }
     },
     actions: {
         retrieveRepos(context) {
@@ -97,6 +105,14 @@ export default  {
       }, 
       isGroupsLoaded(state) {
         return state.groupsLoaded;
+      }, 
+      getReposInGroup: (state) => (rg_id) => {
+        console.log('state in reposmodule');
+        console.log(state);
+        return state.repos.filter(repo => repo.repo_group_id === rg_id);
+      }, 
+      getRepoGroups(state) {
+        return state.repoGroups;
       }
     }
   }

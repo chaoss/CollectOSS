@@ -7,7 +7,7 @@
     </div>
     <div class="groups" v-if="isLoaded">
       <repo-group
-        v-for="rg in $store.state.reposModule.repoGroups"
+        v-for="rg in getRepoGroups"
         :key="rg.repo_group_id"
         :repoGroupObject="rg"
         ref="repoGroups"
@@ -36,7 +36,7 @@ export default {
     return {};
   },
   computed: {
-    ...mapGetters("reposModule", ["isLoaded", "isGroupsLoaded"])
+    ...mapGetters("reposModule", ["isLoaded", "isGroupsLoaded", "getRepoGroups"])
   }
 };
 </script>

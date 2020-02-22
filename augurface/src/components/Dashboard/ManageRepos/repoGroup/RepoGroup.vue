@@ -1,7 +1,7 @@
 <template>
   <div id="RepoGroup" @click="flipCollapse()" :class="{ open : !isCollapsed }">
     <div id="repo-group-header">
-      <h1>{{ repoGroupObject.rg_name }} ({{ repoGroupObject.repo_group_id }}) </h1>
+      <h1>{{ repoGroupObject.rg_name }} ({{ repoGroupObject.repo_group_id }})</h1>
       <div class="buttons">
         <img src="https://img.icons8.com/material-rounded/24/000000/menu-2.png" id="menu-button" />
         <img
@@ -17,11 +17,20 @@
     <transition name="ease">
       <div id="repos" v-if="!isCollapsed" @click="stopEventPropagation($event)">
         <div id="add-repos-input">
-          <aug-text-input text="add repos" placeholder="comma seperated git urls" inputName="urls" @valueUpdated="setUrlsInput"/>
-          <aug-button text="add" @click="addRepos()"/>
+          <aug-text-input
+            text="add repos"
+            placeholder="comma seperated git urls"
+            inputName="urls"
+            @valueUpdated="setUrlsInput"
+          />
+          <aug-button text="add" @click="addRepos()" />
         </div>
         <div class="repo-list">
-          <repo v-for="repo in reposInGroup()" :key="repo.repo_id" :repo_name="repo.repo_name"/>
+          <repo
+            v-for="repo in getReposInGroup(repoGroupObject.repo_group_id)"
+            :key="repo.repo_id"
+            :repo_name="repo.repo_name"
+          />
         </div>
       </div>
     </transition>
@@ -29,17 +38,18 @@
 </template>
 
 <script>
-import AugTextInput from '../../../BaseComponents/AugTextInput.vue';
-import AugButton from '../../../BaseComponents/AugButton.vue';
-import Repo from './Repo.vue';
+import AugTextInput from "../../../BaseComponents/AugTextInput.vue";
+import AugButton from "../../../BaseComponents/AugButton.vue";
+import Repo from "./Repo.vue";
+import { mapGetters } from "vuex";
 
 export default {
   name: "RepoGroup",
   components: {
-    AugTextInput, 
-    AugButton, 
+    AugTextInput,
+    AugButton,
     Repo
-  }, 
+  },
   props: {
     repoGroupObject: {
       type: Object,
@@ -53,32 +63,72 @@ export default {
   },
   data() {
     return {
-      isCollapsed: true, 
-      urlsInput: ''
+      isCollapsed: true,
+      urlsInput: "", 
     };
+  },
+  computed: {
+    ...mapGetters("reposModule", ["getReposInGroup"]), 
+    reposInGroup: function() {
+      return this.$store.state.reposModule.repos.filter(
+        repo => repo.repo_group_id === this.repoGroupObject.repo_group_id
+      );
+    }
   },
   methods: {
     flipCollapse() {
       this.isCollapsed = !this.isCollapsed;
-    }, 
+    },
     collapse() {
       this.isCollapsed = true;
-    }, 
+    },
     stopEventPropagation(e) {
       e.stopPropagation();
-    }, 
+    },
     setUrlsInput(val) {
       this.urlsInput = val;
-    }, 
+    },
     addRepos() {
-      let urls = this.urlsInput.split(',').map(url => url.trim());
+      let urls = this.urlsInput.split(",").map(url => url.trim());
       console.log(urls);
+      let requestBody = {
+        group: this.repoGroupObject.rg_name,
+        repos: urls
+      };
+
+      fetch(
+        `http://localhost:5000/${this.$store.state.utilModule.baseEndpointUrl}/add-repos`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(requestBody)
+        }
+      )
+        .then(res => {
+          console.log(`STATUS: ${res.status}`);
+          if (res.status === 200) {
+            return res.json();
+          } else {
+            return null;
+          }
+        })
+
+        .then(res => {
+          if (res) {
+            console.log(res.sucess);
+            this.$store.commit('reposModule/addRepos', res.sucess);
+          }
+        });
       // fetch request
       // then -> commit new repos to vuex
-    }, 
-    reposInGroup() {
-      return this.$store.state.reposModule.repos.filter(repo => repo.repo_group_id === this.repoGroupObject.repo_group_id);
-    }
+    },
+    // reposInGroup() {
+    //   return this.$store.state.reposModule.repos.filter(
+    //     repo => repo.repo_group_id === this.repoGroupObject.repo_group_id
+    //   );
+    // }
   }
 };
 </script>
@@ -105,12 +155,12 @@ p {
 }
 
 h1 {
-    font-size: 1.5rem;
+  font-size: 1.5rem;
 }
 
 p {
-    padding: 1rem;
-    color: grey;
+  padding: 1rem;
+  color: grey;
 }
 
 #repo-group-header {
@@ -131,12 +181,12 @@ p {
 
 #repos {
   position: relative;
-  top: .3rem;
+  top: 0.3rem;
 }
 
 .ease-enter-active,
 .ease-leave-active {
-  transition: max-height 0.3s, padding-top .3s;
+  transition: max-height 0.3s, padding-top 0.3s, height .3s;
   height: auto;
   overflow: hidden;
 }
@@ -156,7 +206,7 @@ p {
 }
 
 .open {
-    background-color: var(--light-grey) !important;
+  background-color: var(--light-grey) !important;
 }
 
 #add-repos-input {
