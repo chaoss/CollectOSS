@@ -2,29 +2,39 @@
   <div id="ManageButtons">
     <div class="row">
       <div class="column">
+        <!-- import repos -->
         <aug-text-input
           inputName="organizationName"
-          text="Add Repos from User/Organization"
+          text="Import repos from user/organization"
           placeholder="organization/username..."
           @valueUpdated="setOrgUsernameInput"
         />
-        <aug-button text="Add" @click="importReposFromOrganization()"/>
+        <aug-button text="Import" @click="importReposFromOrganization()" />
+        <img
+          v-if="isImporting"
+          src="../../../assets/loading.gif"
+          alt="adding repos..."
+          style="width: 35px; transform: translateX(-15px);"
+        />
       </div>
       <div class="column">
+        <!-- refresh repos -->
         <aug-button text="Refresh" @click="refreshRepos()" />
       </div>
     </div>
     <div class="row">
       <div class="column">
+        <!-- create group -->
         <aug-text-input
           inputName="groupName"
-          text="New Repo Group"
+          text="Create new repo group"
           placeholder="repo group name..."
           @valueUpdated="setGroupNameInput"
         />
-        <aug-button text="Create" @click="createGroup()"/>
+        <aug-button text="Create" @click="createGroup()" />
       </div>
       <div class="column">
+        <!-- collapse repos -->
         <aug-button text="Collapse All" @click="$emit('collapseAll')" />
       </div>
     </div>
@@ -34,48 +44,76 @@
 <script>
 import AugButton from "../../BaseComponents/AugButton.vue";
 import AugTextInput from "../../BaseComponents/AugTextInput.vue";
+import { mapGetters } from "vuex";
 export default {
   name: "ManageButtons",
   components: {
     AugButton,
     AugTextInput
-  }, 
+  },
   data() {
     return {
-      groupNameInput: "", 
-      orgUsernameInput: ""
+      groupNameInput: "",
+      orgUsernameInput: "",
+      isImporting: false,
+      isCreating: false
+    };
+  },
+  computed: {
+    ...mapGetters("reposModule", ["isLoaded"]),
+    isDisabled() {
+      return !this.isLoaded || this.isImporting || this.isCreating;
     }
-  }, 
+  },
   methods: {
     refreshRepos() {
+      if (this.isDisabled) {
+        console.log("disabled");
+        return;
+      }
       this.$store.commit("reposModule/setReposLoaded", false);
       this.$store.commit("reposModule/setGroupsLoaded", false);
       this.$store.dispatch("reposModule/retrieveRepoGroups");
       this.$store.dispatch("reposModule/retrieveRepos");
-    }, 
+    },
     createGroup() {
-        // fetch request
-        // then -> commit new group to vuex
-    }, 
+      if (this.isDisabled) {
+        console.log("disabled");
+        return;
+      }
+      // fetch request
+      // then -> commit new group to vuex
+      console.log("endpoint not yet configured for creating new repo groups");
+    },
     importReposFromOrganization() {
-        // fetch request
-        // then -> commit new repos to vuex
-        let requestObject = {
-          group: this.orgUsernameInput
-        };
-        fetch(`http://localhost:5000/${this.$store.state.utilModule.baseEndpointUrl}/add-repo-group`, {
-          method: 'POST', 
-          headers: {
-            'Content-Type': 'application/json'
-          }, 
-          body: JSON.stringify(requestObject)
+      if (this.isDisabled) {
+        console.log("disabled");
+        return;
+      }
+      this.isImporting = true;
+      // fetch request
+      // then -> commit new repos to vuex
+      let requestObject = {
+        group: this.orgUsernameInput
+      };
+      fetch(`${this.$store.state.utilModule.baseEndpointUrl}/add-repo-group`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(requestObject)
+      })
+        .then(res => {
+          this.isImporting = false;
+          return res.json();
         })
-        .then(res => res.text())
-        .then(res => console.log(res));
-    }, 
+        .then(res => {
+          this.$store.commit("reposModule/addGroup", res);
+        }); // this is where we will take returned data from response and add to state
+    },
     setGroupNameInput(newValue) {
       this.groupNameInput = newValue;
-    }, 
+    },
     setOrgUsernameInput(newValue) {
       this.orgUsernameInput = newValue;
     }
@@ -83,13 +121,10 @@ export default {
 };
 </script>
 
-<style>
+<style scoped>
 #ManageButtons {
   width: 90%;
   max-width: 1200px;
-  /* display: flex; */
-  /* justify-content: space-between; */
-  /* align-items: flex-end; */
   margin: 0;
   background-color: var(--light-grey);
   padding: 1rem;

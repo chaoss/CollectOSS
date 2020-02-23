@@ -2,7 +2,7 @@
 export default {
     namespaced: true, 
     state: {
-      baseEndpointUrl: 'api/unstable', 
+      baseEndpointUrl: 'http://localhost:5000/api/unstable', 
     },
     mutation: {
       setBaseEndpointUrl(state, newValue) {
