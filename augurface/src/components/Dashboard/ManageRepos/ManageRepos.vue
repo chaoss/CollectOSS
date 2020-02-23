@@ -1,10 +1,13 @@
 <template>
   <div id="ManageRepos">
-    <manage-buttons @collapseAll="collapseAll()" v-if="isLoaded"/>
+    <!-- button controls -->
+    <manage-buttons @collapseAll="collapseAll()"/>
+    <!-- loading spinner -->
     <div class="loading" v-if="!isLoaded">
       <img src="../../../assets/loading.gif" alt="loading repos" />
       <p>loading repositories...</p>
     </div>
+    <!-- repo groups -->
     <div class="groups" v-if="isLoaded">
       <repo-group
         v-for="rg in getRepoGroups"
@@ -31,10 +34,7 @@ export default {
     collapseAll() {
       this.$refs.repoGroups.forEach(rg => rg.collapse());
     }
-  },
-  data() {
-    return {};
-  },
+  }, 
   computed: {
     ...mapGetters("reposModule", ["isLoaded", "isGroupsLoaded", "getRepoGroups"])
   }
@@ -55,6 +55,10 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+
+.loading {
+  margin-top: 2rem;
 }
 
 .loading > img {

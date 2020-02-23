@@ -29,6 +29,8 @@ export default {
 header {
   background-color: white;
   box-shadow: 0 0 20px 0 var(--grey);
+  z-index: 10;
+  position: relative;
 }
 
 img {

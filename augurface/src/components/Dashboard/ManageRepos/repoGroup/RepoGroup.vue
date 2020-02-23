@@ -18,12 +18,13 @@
       <div id="repos" v-if="!isCollapsed" @click="stopEventPropagation($event)">
         <div id="add-repos-input">
           <aug-text-input
-            text="add repos"
+            text="Add repos to group"
             placeholder="comma seperated git urls"
             inputName="urls"
             @valueUpdated="setUrlsInput"
           />
           <aug-button text="add" @click="addRepos()" />
+          <img v-if="isCurrentlyAddingRepos" src="../../../../assets/loading.gif" alt="adding repos..." style="width: 35px; transform: translateX(-15px);">
         </div>
         <div class="repo-list">
           <repo
@@ -65,16 +66,12 @@ export default {
     return {
       isCollapsed: true,
       urlsInput: "", 
+      isCurrentlyAddingRepos: false
     };
   },
   computed: {
-    ...mapGetters("reposModule", ["getReposInGroup"]), 
-    reposInGroup: function() {
-      return this.$store.state.reposModule.repos.filter(
-        repo => repo.repo_group_id === this.repoGroupObject.repo_group_id
-      );
-    }
-  },
+    ...mapGetters("reposModule", ["getReposInGroup"])
+  }, 
   methods: {
     flipCollapse() {
       this.isCollapsed = !this.isCollapsed;
@@ -82,22 +79,32 @@ export default {
     collapse() {
       this.isCollapsed = true;
     },
+    open() {
+      this.isCollapsed = false;
+    }, 
     stopEventPropagation(e) {
-      e.stopPropagation();
+      e.stopPropagation();    // keep events from propogating to parent components
     },
     setUrlsInput(val) {
       this.urlsInput = val;
     },
     addRepos() {
+      if (this.isCurrentlyAddingRepos) {
+        return;
+      }
+
+      this.isCurrentlyAddingRepos = true;
+
+      // setup
       let urls = this.urlsInput.split(",").map(url => url.trim());
-      console.log(urls);
       let requestBody = {
         group: this.repoGroupObject.rg_name,
         repos: urls
       };
 
+      // make request
       fetch(
-        `http://localhost:5000/${this.$store.state.utilModule.baseEndpointUrl}/add-repos`,
+        `${this.$store.state.utilModule.baseEndpointUrl}/add-repos`,
         {
           method: "POST",
           headers: {
@@ -114,21 +121,14 @@ export default {
             return null;
           }
         })
-
         .then(res => {
           if (res) {
-            console.log(res.sucess);
+            // update state
             this.$store.commit('reposModule/addRepos', res.sucess);
+            this.isCurrentlyAddingRepos = false;
           }
         });
-      // fetch request
-      // then -> commit new repos to vuex
     },
-    // reposInGroup() {
-    //   return this.$store.state.reposModule.repos.filter(
-    //     repo => repo.repo_group_id === this.repoGroupObject.repo_group_id
-    //   );
-    // }
   }
 };
 </script>
