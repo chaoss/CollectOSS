@@ -1,8 +1,10 @@
 # Augur
 augur.config.json
-frontend/node_modules/
 notebooks/
 cache/
+
+**/node_modules
+**/dist
 
 # Logs
 logs/

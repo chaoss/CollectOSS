@@ -33,7 +33,7 @@ def export_env(ctx):
     app.export_config(section='Server', name='port', environment_variable='AUGUR_PORT', default=defaults['port'])
 
     app.export_config(section='Database', name='host', environment_variable='AUGUR_DB_HOST', default=defaults['host'])
-    app.export_config(section='Database', name='name', environment_variable='AUGUR_DB_NAME', default=defaults['name'])
+    app.export_config(section='Database', name='database', environment_variable='AUGUR_DB_NAME', default=defaults['name'])
     app.export_config(section='Database', name='port', environment_variable='AUGUR_DB_PORT', default=defaults['db_port'])
     app.export_config(section='Database', name='user', environment_variable='AUGUR_DB_USER', default=defaults['user'])
     app.export_config(section='Database', name='password', environment_variable='AUGUR_DB_PASSWORD', default=defaults['password'])
