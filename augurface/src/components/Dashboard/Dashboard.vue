@@ -16,8 +16,8 @@ export default {
     DashboardHeader
   },
   beforeCreate() {
-    this.$store.dispatch("reposModule/retrieveRepoGroups");
-    this.$store.dispatch("reposModule/retrieveRepos");
+    this.$store.dispatch("reposModule/retrieveRepoGroups", true);
+    this.$store.dispatch("reposModule/retrieveRepos", true);
   }
 };
 </script>

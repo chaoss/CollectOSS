@@ -30,7 +30,7 @@
           <repo
             v-for="repo in getReposInGroup(repoGroupObject.repo_group_id)"
             :key="repo.repo_id"
-            :repo_name="repo.repo_name"
+            :repo="repo"
           />
         </div>
       </div>
