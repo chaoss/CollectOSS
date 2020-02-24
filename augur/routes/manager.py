@@ -78,8 +78,9 @@ def create_manager_routes(server):
         except:
             errors = "failed to add repos to group"
 
-        if errors: res = errors
-        else: res = json.dumps({'group_id': str(group_id), 'rg_name': group})
+        # if errors: res = errors
+        # else: res = json.dumps({'group_id': str(group_id), 'rg_name': group})
+        res = json.dumps({'group_id': str(group_id), 'rg_name': group})
         return Response(response=res,
                         status=200,
                         mimetype="application/json")
