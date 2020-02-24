@@ -3,7 +3,8 @@ import VueRouter from 'vue-router'
 import Login from '../components/Login/Login.vue';
 import Dashboard from '../components/Dashboard/Dashboard.vue';
 import ManageRepos from '../components/Dashboard/ManageRepos/ManageRepos.vue';
-import AnalyzeRepos from '../components/Dashboard/AnalyzeRepos/AnalyzeRepos.vue';
+// import AnalyzeRepos from '../components/Dashboard/AnalyzeRepos/AnalyzeRepos.vue';
+import AboutAugur from '../components/Dashboard/AboutAugur/AboutAugur.vue';
 
 Vue.use(VueRouter)
 
@@ -22,9 +23,13 @@ const routes = [
         path: 'manage', 
         component: ManageRepos
       }, 
+      // {
+      //   path: 'analyze', 
+      //   component: AnalyzeRepos
+      // }, 
       {
-        path: 'analyze', 
-        component: AnalyzeRepos
+        path: 'about', 
+        component: AboutAugur
       }
     ]
   }

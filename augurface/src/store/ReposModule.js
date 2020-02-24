@@ -25,9 +25,11 @@ export default {
     },
     addRepos(state, newRepos) {
       Vue.set(state, 'repos', [...state.repos, ...newRepos]);
+      sessionStorage.setItem('__augursessionstorage__repos', JSON.stringify(state.repos));
     },
     addGroup(state, newGroup) {
       Vue.set(state, 'repoGroups', [...state.repoGroups, newGroup]);
+      sessionStorage.setItem('__augursessionstorage__groups', JSON.stringify(state.repoGroups));
     }
   },
   actions: {
@@ -37,15 +39,15 @@ export default {
 
       // check local storage for cached repos
       if (checkCache) {
-        let reposRetrievedFromLocalStorage = localStorage.getItem('__augurlocalstorage__repos');
-        if (reposRetrievedFromLocalStorage != null) {
-          commit('setRepos', JSON.parse(reposRetrievedFromLocalStorage));
+        let reposRetrievedFromSessionStorage = sessionStorage.getItem('__augursessionstorage__repos');
+        if (reposRetrievedFromSessionStorage != null) {
+          commit('setRepos', JSON.parse(reposRetrievedFromSessionStorage));
           commit('setReposLoaded', true);
           return;
         }
       }
 
-      // make request (if nothing is in localstorage)
+      // make request (if nothing is in sessionStorage)
       return fetch(`${rootState.utilModule.baseEndpointUrl}/repos`)
         .then(res => {
           if (res.status !== 200) {
@@ -72,7 +74,7 @@ export default {
               filteredRepo.repo_id = String(filteredRepo.repo_id);
               return filteredRepo;
             })
-            localStorage.setItem('__augurlocalstorage__repos', JSON.stringify(filteredResponse));
+            sessionStorage.setItem('__augursessionstorage__repos', JSON.stringify(filteredResponse));
             commit('setRepos', filteredResponse);
             commit('setReposLoaded', true);
           }
@@ -84,9 +86,9 @@ export default {
 
       // check local storage for cached repo groups
       if (checkCache) {
-        let groupsRetrievedFromLocalStorage = localStorage.getItem('__augurlocalstorage__groups');
-        if (groupsRetrievedFromLocalStorage != null) {
-          commit('setRepoGroups', JSON.parse(groupsRetrievedFromLocalStorage));
+        let groupsRetrievedFromSessionStorage = sessionStorage.getItem('__augursessionstorage__groups');
+        if (groupsRetrievedFromSessionStorage != null) {
+          commit('setRepoGroups', JSON.parse(groupsRetrievedFromSessionStorage));
           commit('setGroupsLoaded', true);
           return;
         }
@@ -114,7 +116,7 @@ export default {
               filteredRG.repo_group_id = String(filteredRG.repo_group_id);
               return filteredRG;
             })
-            localStorage.setItem('__augurlocalstorage__groups', JSON.stringify(filteredResponse));
+            sessionStorage.setItem('__augursessionstorage__groups', JSON.stringify(filteredResponse));
             commit('setRepoGroups', filteredResponse);
             commit('setGroupsLoaded', true);
           }
