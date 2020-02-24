@@ -14,7 +14,7 @@ export default {
     return {
       links: [
         { text: "MANAGE REPOS", path: "/dashboard/manage" },
-        { text: "ANALYZE REPOS", path: "/dashboard/analyze" },
+        // { text: "ANALYZE REPOS", path: "/dashboard/analyze" },
         { text: "ABOUT AUGUR", path: "/dashboard/about" }
       ]
     };
