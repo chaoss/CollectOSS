@@ -1,6 +1,7 @@
 <template>
   <div id="repo">
-      {{ repo_name }}
+      <p>{{ repo.url }}</p>
+      <p>id: {{ repo.repo_id }}</p>
   </div>
 </template>
 
@@ -8,9 +9,19 @@
 export default {
     name: 'repo', 
     props: {
-        repo_name: {
-            type: String, 
-            required: true
+        repo: {
+            type: Object, 
+            required: true, 
+            default: () => {
+                return {
+                    repo_id: '-1', 
+                    repo_name: 'sample repo', 
+                    description: 'sample description', 
+                    repo_group_id: '-1', 
+                    rg_name: 'sample group', 
+                    url: 'sample/url/something.git'
+                }
+            }
         }
     }
 }
@@ -23,11 +34,18 @@ export default {
     padding: 1rem;
     color: var(--light-blue);
     font-size: 1.1rem;
+    display: flex;
+    justify-content: space-between;
 }
 
 #repo:hover {
     background-color: var(--light-grey);
     cursor: pointer;
     text-shadow: 1px 1px var(--grey);
+}
+
+p {
+    padding: .5rem;
+    margin: 0;
 }
 </style>

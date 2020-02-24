@@ -25,17 +25,27 @@ export default {
     },
     addRepos(state, newRepos) {
       Vue.set(state, 'repos', [...state.repos, ...newRepos]);
-    }, 
+    },
     addGroup(state, newGroup) {
       Vue.set(state, 'repoGroups', [...state.repoGroups, newGroup]);
     }
   },
   actions: {
-    retrieveRepos(context) {
+    retrieveRepos(context, checkCache) {
       // setup
       let { rootState, commit } = context;
 
-      // make request
+      // check local storage for cached repos
+      if (checkCache) {
+        let reposRetrievedFromLocalStorage = localStorage.getItem('__augurlocalstorage__repos');
+        if (reposRetrievedFromLocalStorage != null) {
+          commit('setRepos', JSON.parse(reposRetrievedFromLocalStorage));
+          commit('setReposLoaded', true);
+          return;
+        }
+      }
+
+      // make request (if nothing is in localstorage)
       return fetch(`${rootState.utilModule.baseEndpointUrl}/repos`)
         .then(res => {
           if (res.status !== 200) {
@@ -62,14 +72,25 @@ export default {
               filteredRepo.repo_id = String(filteredRepo.repo_id);
               return filteredRepo;
             })
+            localStorage.setItem('__augurlocalstorage__repos', JSON.stringify(filteredResponse));
             commit('setRepos', filteredResponse);
             commit('setReposLoaded', true);
           }
         });
     },
-    retrieveRepoGroups(context) {
+    retrieveRepoGroups(context, checkCache) {
       // setup
       let { rootState, commit } = context;
+
+      // check local storage for cached repo groups
+      if (checkCache) {
+        let groupsRetrievedFromLocalStorage = localStorage.getItem('__augurlocalstorage__groups');
+        if (groupsRetrievedFromLocalStorage != null) {
+          commit('setRepoGroups', JSON.parse(groupsRetrievedFromLocalStorage));
+          commit('setGroupsLoaded', true);
+          return;
+        }
+      }
 
       // make request
       return fetch(`${rootState.utilModule.baseEndpointUrl}/repo-groups`)
@@ -93,6 +114,7 @@ export default {
               filteredRG.repo_group_id = String(filteredRG.repo_group_id);
               return filteredRG;
             })
+            localStorage.setItem('__augurlocalstorage__groups', JSON.stringify(filteredResponse));
             commit('setRepoGroups', filteredResponse);
             commit('setGroupsLoaded', true);
           }

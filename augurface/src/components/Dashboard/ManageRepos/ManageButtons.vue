@@ -73,8 +73,8 @@ export default {
       }
       this.$store.commit("reposModule/setReposLoaded", false);
       this.$store.commit("reposModule/setGroupsLoaded", false);
-      this.$store.dispatch("reposModule/retrieveRepoGroups");
-      this.$store.dispatch("reposModule/retrieveRepos");
+      this.$store.dispatch("reposModule/retrieveRepoGroups", false);
+      this.$store.dispatch("reposModule/retrieveRepos", false);
     },
     createGroup() {
       if (this.isDisabled) {
