@@ -7,8 +7,8 @@ This section details describes production deployment of Augur.
 .. toctree::
    :maxdepth: 1
 
+   deployment-starting
    nginx-configuration
-   augur-start-workers
 
 
 **THIS SECTION IS UNDER CONSTRUCTION.**

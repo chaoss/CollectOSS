@@ -1,11 +1,16 @@
+import os
+from datetime import datetime
+import logging
+import requests
+import json
+from urllib.parse import quote
 from multiprocessing import Process, Queue
-from urllib.parse import urlparse
-import requests, logging, os
+
+from linux_badge_worker import __data_source__, __tool_source__, __tool_version__
 import pandas as pd
 import sqlalchemy as s
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy import MetaData
-import ipdb
 from workers.standard_methods import register_task_completion, register_task_failure, connect_to_broker, update_gh_rate_limit, record_model_process
 
 class CollectorTask:
@@ -29,26 +34,27 @@ def dump_queue(queue):
     return result
 
 class BadgeWorker:
-    """ Worker that collects data from the Github API and stores it in our database
-    task: most recent task the broker added to the worker's queue
-    child: current process of the queue being ran
-    queue: queue of tasks to be fulfilled
-    config: holds info like api keys, descriptions, and database connection strings
+    """ Worker that collects repo badging data from CII
+    config: database credentials, broker information, and ID
     """
     def __init__(self, config, task=None):
-        self._task = task
-        self._child = None
-        self._queue = Queue()
-        self.config = config
-        logging.basicConfig(filename='worker_{}.log'.format(self.config['id'].split('.')[len(self.config['id'].split('.')) - 1]), filemode='w', level=logging.INFO)
         logging.info('Worker (PID: {}) initializing...'.format(str(os.getpid())))
+        self.config = config
+
         self.db = None
-        self.table = None
+        self.repo_badging_table = None
+
+        self._task = task
+        self._queue = Queue()
+        self._child = None
+
+        self.history_id = None
         self.finishing_task = False
         self.working_on = None
+        self.results_counter = 0
 
         self.specs = {
-            "id": "com.augurlabs.core.badge_worker",
+            "id": self.config['id'],
             "location": self.config['location'],
             "qualifications":  [
                 {
@@ -59,38 +65,75 @@ class BadgeWorker:
             "config": [self.config]
         }
 
-        """
-        Connect to GHTorrent
-
-        :param dbstr: The [database string](http://docs.sqlalchemy.org/en/latest/core/engines.html) to connect to the GHTorrent database
-        """
-        self.DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(
-            self.config['user'], self.config['password'], self.config['host'], self.config['port'], self.config['database']
+        self._db_str = 'postgresql://{}:{}@{}:{}/{}'.format(
+            self.config['user'],
+            self.config['password'],
+            self.config['host'],
+            self.config['port'],
+            self.config['database']
         )
-        logging.info(self.DB_STR)
 
-        dbschema='augur_data' # Searches left-to-right
-        self.db = s.create_engine(self.DB_STR, poolclass=s.pool.NullPool,
+        dbschema = 'augur_data'
+        self.db = s.create_engine(self._db_str, poolclass=s.pool.NullPool,
             connect_args={'options': '-csearch_path={}'.format(dbschema)})
 
-        # produce our own MetaData object
+        helper_schema = 'augur_operations'
+        self.helper_db = s.create_engine(self._db_str, poolclass = s.pool.NullPool,
+            connect_args={'options': '-csearch_path={}'.format(helper_schema)})
+        logging.info("Database connection established...")
+
         metadata = MetaData()
+        helper_metadata = MetaData()
 
-        # we can reflect it ourselves from a database, using options
-        # such as 'only' to limit what tables we look at...
         metadata.reflect(self.db, only=['repo_badging'])
+        helper_metadata.reflect(self.helper_db, only=['worker_history', 'worker_job', 'worker_oauth'])
 
-        # we can then produce a set of mappings from this MetaData.
         Base = automap_base(metadata=metadata)
+        HelperBase = automap_base(metadata=helper_metadata)
 
-        # calling prepare() just sets up mapped classes and relationships.
         Base.prepare()
+        HelperBase.prepare()
 
-        # mapped classes are ready
-        self.table = Base.classes.repo_badging.__table__
+        self.history_table = HelperBase.classes.worker_history.__table__
+        self.job_table = HelperBase.classes.worker_job.__table__
+        self.repo_badging_table = Base.classes.repo_badging.__table__
+        logging.info("ORM setup complete...")
+
+        # Organize different api keys/oauths available
+        self.oauths = []
+        self.headers = None
+
+        # Endpoint to hit solely to retrieve rate limit information from headers of the response
+        url = "https://api.github.com/users/gabe-heim"
+
+        # Make a list of api key in the config combined w keys stored in the database
+        oauth_sql = s.sql.text("""
+            SELECT * FROM worker_oauth WHERE access_token <> '{}'
+        """.format(0))
+
+        for oauth in [{'oauth_id': 0, 'access_token': 0}] + json.loads(pd.read_sql(oauth_sql, self.helper_db, params={}).to_json(orient="records")):
+            self.headers = {'Authorization': 'token %s' % oauth['access_token']}
+            logging.info("Getting rate limit info for oauth: {}".format(oauth))
+            response = requests.get(url=url, headers=self.headers)
+            self.oauths.append({
+                'oauth_id': oauth['oauth_id'],
+                'access_token': oauth['access_token'],
+                'rate_limit': int(response.headers['X-RateLimit-Remaining']),
+                'seconds_to_reset': (datetime.fromtimestamp(int(response.headers['X-RateLimit-Reset'])) \
+                                                                - datetime.now()).total_seconds()
+            })
+            logging.info("Found OAuth available for use: {}".format(self.oauths[-1]))
+
+        if len(self.oauths) == 0:
+            logging.info("No API keys detected, please include one in your config or in the worker_oauths table in the augur_operations schema of your database\n")
+
+        # First key to be used will be the one specified in the config (first element in
+        #   self.oauths array will always be the key in use)
+        self.headers = {'Authorization': 'token %s' % self.oauths[0]['access_token']}
 
         # Send broker hello message
         connect_to_broker(self, logging.getLogger())
+        logging.info("Connected to the broker...\n")
 
     def update_config(self, config):
         """ Method to update config and set a default
@@ -129,7 +172,7 @@ class BadgeWorker:
                 logging.info("Focused task is OFF\n")
         else:
             self.finishing_task = False
-            logging.info("focused task is OFF\n")
+            logging.info("Focused task is OFF\n")
         
         self._task = value
         self.run()
@@ -140,38 +183,30 @@ class BadgeWorker:
         """
         self._task = None
 
-    def badges_model(self, num):
+    def badges_model(self, entry_info, repo_id):
         """ Data collection and storage method
-        Query the github api for contributors and issues (not yet implemented)
+        Query the CII API and store the result in the DB for the badges model
         """
-        git_url = str(num)
-        extension = "/en/projects/" + str(git_url) + ".json"
+        git_url = entry_info['given']['git_url']
+        logging.info("Collecting data for {}".format(git_url))
+        extension = "/projects.json?pq=" + (quote(git_url[0:-4]))
 
         url = self.config['endpoint'] + extension
-        print("******************")
-        print(url)
-        logging.info("Hitting endpoint: " + url + " ...\n")
-        r = requests.get(url=url)
-        data = r.json()
-        if data != 0 and "404" not in str(r):
-            #print(data)
-            print("FOUND")
-            # data[0]['repo_id'] = entry_info['repo_id']
+        logging.info("Hitting CII endpoint: " + url + " ...")
+        data = requests.get(url=url).json()
 
-            # ipdb.set_trace()
-            self.db.execute(self.table.insert().values(data=data, tool_source="linux_badge_worker", tool_version="1.0", data_source="CII Badging API"))
-            # logging.info("Inserted badging info for repo: " + str(entry_info['repo_id']) + "\n")
-            """
-            task_completed = entry_info
-            task_completed['worker_id'] = self.config['id']
+        if data != []:
+            logging.info("Inserting badging data for " + git_url)
+            self.db.execute(self.repo_badging_table.insert()\
+                            .values(repo_id=repo_id,
+                                    data=data,
+                                    tool_source=__tool_source__,
+                                    tool_version=__tool_version__,
+                                    data_source=__data_source__))
 
-            logging.info("Telling broker we completed task: " + str(task_completed) + "\n\n")
-            requests.post('http://localhost:5000/api/completed_task', json=entry_info['git_url'])
-            """
+            self.results_counter += 1
         else:
-            logging.info("Endpoint did not return any data.")
-        #if num < 3500:
-        #    self.collect(num + 1)
+            logging.info("No CII data found for {}\n".format(git_url))
 
     def collect(self):
         """ Function to process each entry in the worker's task queue
@@ -204,6 +239,8 @@ class BadgeWorker:
             except Exception as e:
                 register_task_failure(self, logging, message, repo_id, e)
                 pass
+
+        register_task_completion(self, logging, message, repo_id, "badges")
 
     def run(self):
         """ Kicks off the processing of the queue if it is not already being processed

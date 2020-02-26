@@ -16,5 +16,5 @@ rm -rf build/ dist/ docs/build/ workers/**/build/** workers/**/dist**
 #rebuild everything
 util/scripts/install/backend.sh
 util/scripts/install/workers.sh
-util/scripts/install/docs.sh
+util/scripts/install/api_docs.sh
 util/scripts/install/frontend.sh

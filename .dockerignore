@@ -1,0 +1,9 @@
+# Augur
+augur.config.json
+.tox
+.git
+.github
+logs
+cache
+__runtime__
+

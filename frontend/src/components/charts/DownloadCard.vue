@@ -3,7 +3,7 @@
     <d-card-body :title="title" class="text-center">
       <p v-if="values.length == 0 || values[0] === undefined">There is no SBOM download available for this repository.</p>
       <button v-if="values" @click="download" style="border-radius:6px;" :msg=values>
-        <strong>Download (.json)</strong>
+        <strong>Download</strong>
       </button>
     </d-card-body>
   </d-card>

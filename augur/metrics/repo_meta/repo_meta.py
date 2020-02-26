@@ -6,9 +6,10 @@ import datetime
 import sqlalchemy as s
 import pandas as pd
 from augur.util import logger, annotate, add_metrics
+import math
 
 @annotate(tag='code-changes')
-def code_changes(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
+def code_changes(self, repo_group_id, repo_id=None, period='week', begin_date=None, end_date=None):
     """
     Returns a timeseries of the count of commits.
 
@@ -20,7 +21,7 @@ def code_changes(self, repo_group_id, repo_id=None, period='day', begin_date=Non
     :return: DataFrame of commits/period
     """
     if not begin_date:
-        begin_date = '1970-1-1 00:00:00:00'
+        begin_date = '1970-1-1 00:00:00'
     if not end_date:
         end_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
@@ -29,36 +30,44 @@ def code_changes(self, repo_group_id, repo_id=None, period='day', begin_date=Non
     if not repo_id:
         code_changes_SQL = s.sql.text("""
             SELECT
-                commits.repo_id,
                 repo_name,
-                date_trunc(:period, cmt_committer_date::DATE) as date,
-                COUNT(DISTINCT cmt_commit_hash) as commit_count
-            FROM commits JOIN repo ON repo.repo_id = commits.repo_id
-            WHERE commits.repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
-            AND cmt_committer_date BETWEEN :begin_date AND :end_date
-            GROUP BY commits.repo_id, date, repo_name
-            ORDER BY commits.repo_id, date
+                week,
+                YEAR,
+                SUM(patches) AS commit_count
+            FROM dm_repo_weekly JOIN repo ON dm_repo_weekly.repo_id = repo.repo_id
+            WHERE dm_repo_weekly.repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
+            GROUP BY repo_name, week, YEAR
+            ORDER BY week
         """)
 
         results = pd.read_sql(code_changes_SQL, self.database, params={'repo_group_id': repo_group_id, 'period': period,
                                                                  'begin_date': begin_date, 'end_date': end_date})
+        results['week'] = results['week'].apply(lambda x: x - 1)
+        results['date'] = results['year'].astype(str) + ' ' + results['week'].astype(str) + ' 0'
+        results['date'] = results['date'].apply(lambda x: datetime.datetime.strptime(x, "%Y %W %w"))
+        results = results[(results['date'] >= begin_date) & (results['date'] <= end_date)]
         return results
 
     else:
         code_changes_SQL = s.sql.text("""
             SELECT
                 repo_name,
-                date_trunc(:period, cmt_committer_date::DATE) as date,
-                COUNT(DISTINCT cmt_commit_hash) as commit_count
-            FROM commits JOIN repo ON commits.repo_id = repo.repo_id
-            WHERE commits.repo_id = :repo_id
-            AND cmt_committer_date BETWEEN :begin_date AND :end_date
-            GROUP BY date, repo_name
-            ORDER BY date
+                week,
+                YEAR,
+                SUM(patches) AS commit_count
+            FROM dm_repo_weekly JOIN repo ON dm_repo_weekly.repo_id = repo.repo_id
+            WHERE dm_repo_weekly.repo_id = :repo_id
+            GROUP BY repo_name, week, YEAR
+            ORDER BY week
         """)
 
         results = pd.read_sql(code_changes_SQL, self.database, params={'repo_id': repo_id, 'period': period,
                                                                  'begin_date': begin_date, 'end_date': end_date})
+
+        results['week'] = results['week'].apply(lambda x: x - 1)
+        results['date'] = results['year'].astype(str) + ' ' + results['week'].astype(str) + ' 0'
+        results['date'] = results['date'].apply(lambda x: datetime.datetime.strptime(x, "%Y %W %w"))
+        results = results[(results['date'] >= begin_date) & (results['date'] <= end_date)]
         return results
 
 @annotate(tag='code-changes-lines')
@@ -186,21 +195,20 @@ def cii_best_practices_badge(self, repo_group_id, repo_id=None):
     :param repo_id: The repository's repo_id, defaults to None
     :return: CII best parctices badge level
     """
-    # Welcome to the Twilight Zone
     cii_best_practices_badge_SQL = s.sql.text("""
         SELECT data
-        from augur_data.repo_badging
-        where repo_id = :repo_id;
+        FROM augur_data.repo_badging
+        WHERE repo_id = :repo_id
+        ORDER BY created_at DESC
+        LIMIT 1
     """)
 
-    params = {'repo_id': repo_id}
+    raw_df = pd.read_sql(cii_best_practices_badge_SQL, self.database, params={'repo_id': repo_id})
 
-    raw_df = pd.read_sql(cii_best_practices_badge_SQL, self.database, params=params)\
-
-    badging_data = raw_df.iloc[0,0]
+    badging_data = raw_df.iloc[0,0][0]
 
     result = {
-        "repo_name": raw_df.iloc[0,0],
+        "repo_name": badging_data['name'],
     }
 
     for item in badging_data.items():
@@ -208,6 +216,7 @@ def cii_best_practices_badge(self, repo_group_id, repo_id=None):
             result[item[0]] = item[1]
 
     return pd.DataFrame(result, index=[0])
+
 @annotate(tag='forks')
 def forks(self, repo_group_id, repo_id=None):
     """
@@ -324,8 +333,8 @@ def license_files(self, license_id, spdx_binary, repo_group_id, repo_id=None,):
         repo_name_list = None
 
         license_data_SQL = s.sql.text("""
-        SELECT A
-            .license_id as the_license_id,    b.short_name as short_name,    f.file_name
+        SELECT DISTINCT
+            A.license_id as the_license_id,    b.short_name as short_name,    f.file_name
         FROM
             files_licenses A,    licenses b,    augur_repo_map C,    packages d,    files e,
             packages_files f
@@ -364,20 +373,22 @@ def license_declared(self, repo_group_id, repo_id=None):
         (SELECT A
         .license_id as the_license_id,
         b.short_name as short_name,
-        COUNT ( * )
+        COUNT ( DISTINCT f.file_name )
         FROM
         files_licenses A,
         licenses b,
         augur_repo_map C,
         packages d,
-        files e
+        files e,
+		packages_files f
         WHERE
         A.license_id = b.license_id
         AND d.package_id = C.dosocs_pkg_id
         AND e.file_id = A.file_id
+		AND e.file_id = f.file_id
         AND e.package_id = d.package_id
         AND C.repo_id = :repo_id
-        AND b.is_spdx_official = 't'
+        AND b.is_spdx_official = 'True'
         GROUP BY
         the_license_id,
         b.short_name
@@ -385,20 +396,22 @@ def license_declared(self, repo_group_id, repo_id=None):
         SELECT
         500 as the_license_id,
         'No Assertion' as short_name,
-        COUNT ( * )
+        COUNT ( DISTINCT f.file_name )
         FROM
         files_licenses A,
         licenses b,
         augur_repo_map C,
         packages d,
-        files e
+        files e,
+		packages_files f
         WHERE
         A.license_id = b.license_id
         AND d.package_id = C.dosocs_pkg_id
         AND e.file_id = A.file_id
+		AND e.file_id = f.file_id
         AND e.package_id = d.package_id
         AND C.repo_id = :repo_id
-        AND b.is_spdx_official = 'f'
+        AND b.is_spdx_official = 'False'
         GROUP BY
         the_license_id,
         short_name) L
@@ -822,7 +835,7 @@ def annual_lines_of_code_count_ranked_by_repo_in_repo_group(self, repo_group_id,
 
 
     results = pd.read_sql(cdRgTpRankedCommitsSQL, self.database, params={ "repo_group_id": repo_group_id,
-    "repo_id": repo_id})
+        "repo_id": repo_id})
     return results
 
 @annotate(tag='lines-of-code-commit-counts-by-calendar-year-grouped')
@@ -875,6 +888,23 @@ def lines_of_code_commit_counts_by_calendar_year_grouped(self, repo_url, calenda
         """)
 
     results = pd.read_sql(cdRepTpIntervalLocCommitsSQL, self.database, params={"repourl": '%{}%'.format(repo_url), 'calendar_year': calendar_year})
+    return results
+
+@annotate(tag='average-weekly-commits')
+def average_weekly_commits(self, repo_group_id=None, repo_id=None, calendar_year=2019):
+    extra_and = "AND repo.repo_group_id = :repo_group_id" if repo_group_id and not repo_id else "AND repo.repo_id = :repo_id" if repo_group_id and repo_id else ""
+    average_weekly_commits_sql = s.sql.text("""
+        SELECT repo.repo_id, repo.repo_name, year, sum(patches)/52 AS average_weekly_commits 
+        FROM dm_repo_annual, repo
+        WHERE YEAR = :calendar_year -- or other year
+        AND dm_repo_annual.repo_id = repo.repo_id 
+        {}
+        GROUP BY repo.repo_id, repo.repo_name, YEAR
+        ORDER BY repo_name
+    """.format(extra_and))
+
+    results = pd.read_sql(average_weekly_commits_sql, self.database, params={"repo_group_id": repo_group_id,
+        "repo_id": repo_id, "calendar_year": calendar_year})
     return results
 
 def create_repo_meta_metrics(metrics):

@@ -26,13 +26,13 @@ Example:
     server.addRepoGroupMetric(metrics.issues_new, 'issues-new')
 
 
-For the ``repo`` form of a metric, use ``server.addRepoMetric(metrics.<metric>, '<endpoint>')``. This will create the endpoint ``/repo-groups/:repo_group_id/repos/:repo_id/<endpoint>`` which exposes the ``<metric>`` metric function.
+For the ``repo`` form of a metric, use ``server.addRepoMetric(metrics.<metric>, '<endpoint>')``. This will create the endpoint ``/repos/:repo_id/<endpoint>`` which exposes the ``<metric>`` metric function.
 
 Example:
 
   .. code-block:: python
 
-    # this line will add the endpoint /repo-groups/:repo_group_id/repos/:repo_id/issues-new, which exposes the issues_new function we wrote in the previous section
+    # this line will add the endpoint /repos/:repo_id/issues-new, which exposes the issues_new function we wrote in the previous section
     # the given :repo_group_id and :repo_id will automatically be passed to the issues_new function 
     server.addRepoMetric(metrics.issues_new, 'issues-new')
 

@@ -29,7 +29,7 @@
 
       <div class="nav-wrapper">
           <d-nav class="flex-column mainSideBarNav">
-            <li v-for="(item, navItemIdx) in items" :key="navItemIdx" class="nav-item dropdown">
+            <li v-for="(item, navItemIdx) in items" :key="navItemIdx" class="nav-item dropdown" @click="checkForRepoRouteChange($event)">
               <d-link class="mainSideBarLink" :class="['nav-link', item.items && item.items.length ? 'dropdown-toggle' : '']" :to="item.to" v-d-toggle="`snc-${navItemIdx}`">
                 <div class="item-icon-wrapper" v-if="item.htmlBefore" v-html="item.htmlBefore" />
                 <span v-if="item.title" class="mainSideBarV">{{ item.title }}</span>
@@ -129,7 +129,8 @@
       }, {
         title: 'Repos',
         to: {
-          name: 'repos',
+          name: 'group_overview',
+          params: { }
         },
         htmlBefore: '<i class="material-icons">table_chart</i>',
         htmlAfter: '',
@@ -186,6 +187,22 @@
         this.$router.push({
           name: 'repos'
         })
+      }
+    }
+    findRepoGroup() {
+      console.log(Object.keys(this.$store.state.common.apiGroups));
+    }
+    checkForRepoRouteChange(e: any) {
+      console.log(e);
+      if (e.target.innerHTML !== 'Repos') {
+        return;
+      }
+      let currentlySelectedRepoGroup = Object.keys(this.$store.state.common.apiGroups)[Object.keys(this.$store.state.common.apiGroups).length - 1].split('/')[0];
+      console.log('HERE: ' + currentlySelectedRepoGroup);
+      if (currentlySelectedRepoGroup === 'undefined') {
+        this.$router.push({ name: 'repo_groups' });
+      } else {
+        this.$router.push(`group/${currentlySelectedRepoGroup}/overview`);
       }
     }
   }

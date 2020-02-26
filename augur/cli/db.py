@@ -4,8 +4,7 @@ import sqlalchemy as s
 import pandas as pd
 from sqlalchemy import exc
 
-from augur.application import Application
-from augur.runtime import pass_application
+# from augur.runtime import pass_application
 
 @click.group('db', short_help='Database utilities')
 def cli():
@@ -13,8 +12,9 @@ def cli():
 
 @cli.command('add_repos', short_help="Add repositories to Augur's database")
 @click.argument('filename', type=click.Path(exists=True))
-@pass_application
-def add_repos(app, filename):
+@click.pass_context
+def add_repos(ctx, filename):
+    app = ctx.obj
 
     db = get_db_connection(app)
 
@@ -43,8 +43,9 @@ def add_repos(app, filename):
                 # I know it's weird
 
 @cli.command('get_repo_groups', short_help="List all repo groups and their associated IDs")
-@pass_application
-def get_repo_groups(app):
+@click.pass_context
+def get_repo_groups(ctx):
+    app = ctx.obj
 
     db = get_db_connection(app)
 
@@ -55,8 +56,9 @@ def get_repo_groups(app):
 
 @cli.command('add_repo_groups', short_help="Create new repo groups in Augur's database")
 @click.argument('filename', type=click.Path(exists=True))
-@pass_application
-def add_repo_groups(app, filename):
+@click.pass_context
+def add_repo_groups(ctx, filename):
+    app = ctx.obj
 
     db = get_db_connection(app)
 
@@ -86,8 +88,8 @@ def add_repo_groups(app, filename):
 def get_db_connection(app):
 
     user = app.read_config('Database', 'user', 'AUGUR_DB_USER', 'augur')
-    password = app.read_config('Database', 'password', 'AUGUR_DB_PASS', 'password')
-    host = app.read_config('Database', 'host', 'AUGUR_DB_HOST', '127.0.0.1')
+    password = app.read_config('Database', 'password', 'AUGUR_DB_PASSWORD', 'password')
+    host = app.read_config('Database', 'host', 'AUGUR_DB_HOST', '0.0.0.0')
     port = app.read_config('Database', 'port', 'AUGUR_DB_PORT', '5433')
     dbname = app.read_config('Database', 'database', 'AUGUR_DB_NAME', 'augur')
     schema = app.read_config('Database', 'schema', 'AUGUR_DB_SCHEMA', 'augur_data')

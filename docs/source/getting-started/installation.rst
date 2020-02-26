@@ -14,9 +14,9 @@ You will need:
 
 -  A `PostgreSQL 10 or higher <https://www.postgresql.org/download/>`__ installation.
    
-.. code::
+.. code:: bash
 
-sudo apt-get install postgresql
+  sudo apt-get install postgresql
 
 
 One of the reasons that Augur is so powerful is because of our `unified data model <../architecture/data-model.rst>`_.
@@ -26,15 +26,13 @@ our database engine.
 Before you start the installation, you will need to make sure you have write access to a PostgreSQL 10+ database.
 During the installation process you will be asked to provide the following credentials for the database:
 
-- database name
-- host
-- port
-- user
-- password for the user specified above
+- database name (`AUGUR_DB_NAME`)
+- host (`AUGUR_DB_HOST`)
+- user (`AUGUR_DB_USER`)
+- password (`AUGUR_DB_PASSWORD`)
+- port (`AUGUR_DB_PORT`)
 
-.. note::
-
-   The code block below contains the commands you need to install postgres and create an augur user. 
+To install postgres and create both a user and database:
 
 .. code:: 
 
@@ -42,10 +40,10 @@ During the installation process you will be asked to provide the following crede
     sudo -u postgres 
     psql
     postgres=# create database augur;
-    postgres=# create user augur with encrypted password 'mypass';
+    postgres=# create user augur with encrypted password 'password';
     postgres=# grant all privileges on database augur to augur;
 
-The installation process will automatically set up the schema for the data model if it hasn't been created yet.
+The regular installation process will automatically set up the schema for the data model if it hasn't been created yet.
 After the schema has been set up, you'll be asked if you want to load the schema with some sample data (around 24 MB).
 If you're just curious about Augur and want to see our visualizations, this is a good way to get going quickly.
 

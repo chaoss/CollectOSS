@@ -1,5 +1,5 @@
 import sqlalchemy as s
-from augur.util import logger, add_metrics
+from augur.util import logger
 
 from .commit import create_commit_metrics, create_commit_routes
 from .contributor import create_contributor_metrics, create_contributor_routes
@@ -18,8 +18,8 @@ class MetricDefinitions():
         self.projects = None
 
         self.user = self.app.read_config('Database', 'user', 'AUGUR_DB_USER', 'augur')
-        self.password = self.app.read_config('Database', 'password', 'AUGUR_DB_PASS', 'password')
-        self.host = self.app.read_config('Database', 'host', 'AUGUR_DB_HOST', '127.0.0.1')
+        self.password = self.app.read_config('Database', 'password', 'AUGUR_DB_PASSWORD', 'password')
+        self.host = self.app.read_config('Database', 'host', 'AUGUR_DB_HOST', '0.0.0.0')
         self.port = self.app.read_config('Database', 'port', 'AUGUR_DB_PORT', '5433')
         self.dbname = self.app.read_config('Database', 'database', 'AUGUR_DB_NAME', 'augur')
         self.schema = self.app.read_config('Database', 'schema', 'AUGUR_DB_SCHEMA', 'augur_data')

@@ -71,6 +71,7 @@
       linfoF: function () {
         // @ts-ignore
         let type = window.performance.getEntriesByType("navigation")[0].type
+        console.log(type)
         let repoID = null;
         let groupID = null;
         let apiData = JSON.parse(JSON.stringify(this.$store.state.common.apiRepos));
@@ -94,7 +95,7 @@
             let link = document.createElement('a');
             link.setAttribute('href', uriContent);
             if (type === "reload") {
-              link.setAttribute('download', Object.keys(apiData)[0] + "." + res[0].short_name + ".files.json");
+              link.setAttribute('download', Object.keys(apiData)[0] + ".NOASSERTION.files.json");
             } else {
               link.setAttribute('download', Object.keys(apiData)[1] + ".NOASSERTION.files.json");
             }
@@ -105,6 +106,7 @@
       linfo: function (license_id) {
         // @ts-ignore
         let type = window.performance.getEntriesByType("navigation")[0].type
+        console.log(type)
         let repoID = null;
         let groupID = null;
         let apiData = JSON.parse(JSON.stringify(this.$store.state.common.apiRepos));

@@ -10,5 +10,5 @@ This documentation is intended as an entry-level introduction for the Augur proj
 
    what-is-augur
    installation
-   usage/usage-toc
+   available-commands/available-commands-toc
    create-a-metric/create-a-metric-toc

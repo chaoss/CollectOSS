@@ -19,10 +19,6 @@ augur.runtime
 
    .. autosummary::
    
-      AugurGunicornApp
-   
-   
-
-   
+      AugurMultiCommand
    
    

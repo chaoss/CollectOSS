@@ -48,7 +48,7 @@ For this guide, we will be using the following PostgreSQL queries\:
     ORDER BY date;
 
 .. note::
-    ``:period``, ``:repo_group_id``, ``:begin_date``, ``:end_date``, and ``:repo_id`` are all query parameters When you're testing, you'll need to use actual values, like ``20`` for the ``:repo_id``. We'll cover more on query parameters in the section below.
+    ``:period``, ``:repo_group_id``, ``:begin_date``, ``:end_date``, and ``:repo_id`` are all query parameters. When you're testing, you'll need to use actual values, like ``20`` for the ``:repo_id``. We'll cover more on query parameters in the section below.
 
 Once you've written your SQL query, it's time to wrap it in a metric function. 
 

@@ -1,7 +1,14 @@
 Web Server Configuration 
-----------------
+------------------------
 
-Configuring nginx for Augur to run behind nginx requires you to have certain options available for symlinks and other basic nginx options. The `nginx.conf` file below is one example of a configuration known to work. 
+Configuring nginx for Augur to run behind nginx requires you to have certain options available for symlinks and other basic nginx options. The `nginx.conf` file below is one example of a configuration known to work.
+
+Once you have nginx configured, issue these commands to make sure everything is loaded and configured correctly: 
+
+1. sudo nginx -t to make sure its configured correctly. 
+	`nginx: the configuration file /etc/nginx/nginx.conf syntax is ok`
+	`nginx: configuration file /etc/nginx/nginx.conf test is successful`
+2. sudo systemctl restart nginx 
 
 ------------------
 Server Compilation 
@@ -13,12 +20,14 @@ Your Augur instance must be compiled with publicly accessible domain that the fr
 
 .. code-block:: json 
 
-    "Server": {
-        "cache_expire": 3600,
-        "host": "you.domain.tld",
-        "port": "5000",
-        "workers": 8
-    },
+	{
+	    "Server": {
+	        "cache_expire": 3600,
+	        "host": "you.domain.tld",
+	        "port": "5000",
+	        "workers": 8
+	    }
+    }
 
 2.   Compile augur (this wires the host and port into the front end so people pulling the web pages of Augur, in the `frontend/` subdirectory are referring to the right endpoints for this instance.): `make rebuild` 
 3.   Run Augur: `nohup augur run >augur.log 2>augur.err &` 
@@ -32,7 +41,7 @@ nginx
 nginx.conf 
 ------------------
 
-.. code-block:: json
+.. code-block::
 
 	user www-data;
 	worker_processes auto;
@@ -107,7 +116,7 @@ Site Configuration
 
 This file will be located in your `/etc/nginx/sites-enabled` directory in most deployments. **Note that Augur's backend server must be running** 
 
-.. code-block:: json
+.. code-block::
 
 		server {
 		        listen 80;

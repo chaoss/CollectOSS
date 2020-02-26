@@ -16,7 +16,7 @@ do
 
       echo
       echo "**********************************"
-      echo "Installing $(basename $(pwd))..."
+      echo "Installing $FORMATTED_WORKER..."
       echo "**********************************"
       echo
 

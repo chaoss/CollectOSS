@@ -1,20 +1,36 @@
-matrix:
+os: linux
+dist: xenial
+language: python
+jobs:
   include:
-  - name: Python Datasource Unit Tests
-    install: pip install -r requirements.txt;
-    language: python
-    python: '3.6'
-    script:
-    - python -m pytest augur/metrics/**/test_**_functions.py
+    - name: 3.6 Metrics
+      python: 3.6
+      env: TOXENV=py36-metrics
 
-  - name: API Unit Tests
-    install: pip install -r requirements.txt;
-    language: python
-    python: '3.6'
-    script:
-    - augur run --no-enable-housekeeper > /dev/null 2>&1 &
-    - sleep 15
-    - python -m pytest -ra augur/metrics/**/test_**_routes.py
+    - name: 3.6 Metrics API
+      python: 3.6
+      env: TOXENV=py36-metrics_api
 
-notifications:
-  slack: augurlabs:WdpwniZ9L5RqJyMfIk1n8DOU
+    - name: 3.7 Metrics
+      python: 3.7
+      env: TOXENV=py37-metrics
+
+    - name: 3.7 Metrics API
+      python: 3.7
+      env: TOXENV=py37-metrics_api
+
+    - name: 3.8 Metrics
+      python: 3.8
+      env: TOXENV=py38-metrics
+
+    - name: 3.8 Metrics API
+      python: 3.8
+      env: TOXENV=py38-metrics_api
+
+install:
+  - pip install -r requirements.txt
+  - pip install tox
+  - augur configure generate
+
+script:
+  - tox
