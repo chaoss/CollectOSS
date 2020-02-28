@@ -42,7 +42,7 @@ class GHPullRequestWorker:
             "qualifications":  [
                 {
                     "given": [["github_url"]],
-                    "models":["pull_requests"]
+                    "models":["pull_requests", 'pull_request_commits']
                 }
             ],
             "config": [self.config]
@@ -69,7 +69,7 @@ class GHPullRequestWorker:
         metadata.reflect(self.db, only=['contributors', 'pull_requests',
             'pull_request_assignees', 'pull_request_events', 'pull_request_labels',
             'pull_request_message_ref', 'pull_request_meta', 'pull_request_repo',
-            'pull_request_reviewers', 'pull_request_teams', 'message'])
+            'pull_request_reviewers', 'pull_request_teams', 'message', 'pull_request_commits'])
 
         helper_metadata.reflect(self.helper_db, only=['worker_history', 'worker_job', 'worker_oauth'])
 
@@ -90,6 +90,7 @@ class GHPullRequestWorker:
         self.pull_request_reviewers_table = Base.classes.pull_request_reviewers.__table__
         self.pull_request_teams_table = Base.classes.pull_request_teams.__table__
         self.message_table = Base.classes.message.__table__
+        self.pull_request_commits_table = Base.classes.pull_request_commits.__table__
 
         self.history_table = HelperBase.classes.worker_history.__table__
         self.job_table = HelperBase.classes.worker_job.__table__
@@ -199,9 +200,54 @@ class GHPullRequestWorker:
             try:
                 if message['models'][0] == 'pull_requests':
                     self.pull_requests_model(message, repo_id)
+                if message['models'][0] == 'pull_request_commits':
+                    self.pull_request_commits_model(message, repo_id)
             except Exception as e:
                 register_task_failure(self, logging, message, repo_id, e)
                 pass
+
+    def pull_request_commits_model(self, task_info, repo_id):
+        """ Queries the commits related to each pull request already inserted in the db """
+
+        # query existing PRs and the respective url we will append the commits url to
+        pr_url_sql = s.sql.text("""
+            SELECT DISTINCT pr_url, pull_requests.pull_request_id
+            FROM pull_requests, pull_request_meta
+            WHERE pull_request_meta.pr_head_or_base = 'base'
+            AND pr_src_meta_label LIKE '%master'
+            AND pull_requests.pull_request_id = pull_request_meta.pull_request_id
+            AND repo_id = {}
+        """.format(repo_id))
+        urls = pd.read_sql(pr_url_sql, self.db, params={})
+
+        for pull_request in urls.itertuples(): # for each url of PRs we have inserted
+            commits_url = pull_request.pr_url + '/commits?page={}'
+            table = 'pull_request_commits'
+            table_pkey = 'pr_cmt_id'
+            duplicate_col_map = {'pr_cmt_sha': 'sha'}
+            update_col_map = {}
+
+            # Use helper paginate function to iterate the commits url and check for dupes
+            pr_commits = paginate(self, logging, commits_url, duplicate_col_map, update_col_map, table, table_pkey, 
+                where_clause="where pull_request_id = {}".format(pull_request.pull_request_id))
+
+            for pr_commit in pr_commits: # post-pagination, iterate results
+                if pr_commit['flag'] == 'need_insertion': # if non-dupe
+                    pr_commit_row = {
+                        'pull_request_id': pull_request.pull_request_id,
+                        'pr_cmt_sha': pr_commit['sha'],
+                        'pr_cmt_node_id': pr_commit['node_id'],
+                        'pr_cmt_message': pr_commit['commit']['message'],
+                        # 'pr_cmt_comments_url': pr_commit['comments_url'],
+                        'tool_source': self.tool_source,
+                        'tool_version': self.tool_version,
+                        'data_source': 'GitHub API',
+                    }
+                    result = self.db.execute(self.pull_request_commits_table.insert().values(pr_commit_row))
+                    logging.info(f"Inserted Pull Request Commit: {result.inserted_primary_key}\n")
+
+        # helper method to sync completion to broker and db
+        register_task_completion(self, logging, task_info, repo_id, 'pull_request_commits')
 
     def pull_requests_model(self, entry_info, repo_id):
         """Pull Request data collection function. Query GitHub API for PhubRs.
@@ -237,54 +283,61 @@ class GHPullRequestWorker:
 
         for pr_dict in prs:
 
+            pr = {
+                'repo_id': repo_id,
+                'pr_url': pr_dict['url'],
+                'pr_src_id': pr_dict['id'],
+                'pr_src_node_id': None,
+                'pr_html_url': pr_dict['html_url'],
+                'pr_diff_url': pr_dict['diff_url'],
+                'pr_patch_url': pr_dict['patch_url'],
+                'pr_issue_url': pr_dict['issue_url'],
+                'pr_augur_issue_id': None,
+                'pr_src_number': pr_dict['number'],
+                'pr_src_state': pr_dict['state'],
+                'pr_src_locked': pr_dict['locked'],
+                'pr_src_title': pr_dict['title'],
+                'pr_augur_contributor_id': None,
+                'pr_body': pr_dict['body'],
+                'pr_created_at': pr_dict['created_at'],
+                'pr_updated_at': pr_dict['updated_at'],
+                'pr_closed_at': pr_dict['closed_at'],
+                'pr_merged_at': pr_dict['merged_at'],
+                'pr_merge_commit_sha': pr_dict['merge_commit_sha'],
+                'pr_teams': None,
+                'pr_milestone': pr_dict['milestone']['title'] if pr_dict['milestone'] else None,
+                'pr_commits_url': pr_dict['commits_url'],
+                'pr_review_comments_url': pr_dict['review_comments_url'],
+                'pr_review_comment_url': pr_dict['review_comment_url'],
+                'pr_comments_url': pr_dict['comments_url'],
+                'pr_statuses_url': pr_dict['statuses_url'],
+                'pr_meta_head_id': None,
+                'pr_meta_base_id': None,
+                'pr_src_issue_url': pr_dict['issue_url'],
+                'pr_src_comments_url': pr_dict['comments_url'], # NOTE: this seems redundant
+                'pr_src_review_comments_url': pr_dict['review_comments_url'], # this too
+                'pr_src_commits_url': pr_dict['commits_url'], # this one also seems redundant
+                'pr_src_statuses_url': pr_dict['statuses_url'],
+                'pr_src_author_association': pr_dict['author_association'],
+                'tool_source': self.tool_source,
+                'tool_version': self.tool_version,
+                'data_source': 'GitHub API',
+                'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+            }
+
             if pr_dict['flag'] == 'need_insertion':
                 logging.info(f'PR {pr_dict["id"]} needs to be inserted\n')
-
-                pr = {
-                    'repo_id': repo_id,
-                    'pr_url': pr_dict['url'],
-                    'pr_src_id': pr_dict['id'],
-                    'pr_src_node_id': None,
-                    'pr_html_url': pr_dict['html_url'],
-                    'pr_diff_url': pr_dict['diff_url'],
-                    'pr_patch_url': pr_dict['patch_url'],
-                    'pr_issue_url': pr_dict['issue_url'],
-                    'pr_augur_issue_id': None,
-                    'pr_src_number': pr_dict['number'],
-                    'pr_src_state': pr_dict['state'],
-                    'pr_src_locked': pr_dict['locked'],
-                    'pr_src_title': pr_dict['title'],
-                    'pr_augur_contributor_id': None,
-                    'pr_body': pr_dict['body'],
-                    'pr_created_at': pr_dict['created_at'],
-                    'pr_updated_at': pr_dict['updated_at'],
-                    'pr_closed_at': pr_dict['closed_at'],
-                    'pr_merged_at': pr_dict['merged_at'],
-                    'pr_merge_commit_sha': pr_dict['merge_commit_sha'],
-                    'pr_teams': None,
-                    'pr_milestone': pr_dict['milestone']['title'] if pr_dict['milestone'] else None,
-                    'pr_commits_url': pr_dict['commits_url'],
-                    'pr_review_comments_url': pr_dict['review_comments_url'],
-                    'pr_review_comment_url': pr_dict['review_comment_url'],
-                    'pr_comments_url': pr_dict['comments_url'],
-                    'pr_statuses_url': pr_dict['statuses_url'],
-                    'pr_meta_head_id': None,
-                    'pr_meta_base_id': None,
-                    'pr_src_issue_url': pr_dict['issue_url'],
-                    'pr_src_comments_url': pr_dict['comments_url'], # NOTE: this seems redundant
-                    'pr_src_review_comments_url': pr_dict['review_comments_url'], # this too
-                    'pr_src_commits_url': pr_dict['commits_url'], # this one also seems redundant
-                    'pr_src_statuses_url': pr_dict['statuses_url'],
-                    'pr_src_author_association': pr_dict['author_association'],
-                    'tool_source': self.tool_source,
-                    'tool_version': self.tool_version,
-                    'data_source': 'GitHub API',
-                    'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
-                }
 
                 result = self.db.execute(self.pull_requests_table.insert().values(pr))
                 logging.info(f"Added Pull Request: {result.inserted_primary_key}")
                 self.pr_id_inc = int(result.inserted_primary_key[0])
+
+            elif pr_dict['flag'] == 'need_update':
+                result = self.db.execute(self.pull_requests_table.update().where(
+                    self.pull_requests_table.c.pr_src_id==pr_dict['id']).values(pr))
+                logging.info("Updated tuple in the pull_requests table with existing pr_src_id: {}".format(
+                    pr_dict['id']))
+                self.pr_id_inc = pr_dict['pkey']
 
             else:
                 logging.info("PR does not need to be inserted. Fetching its id from DB")
