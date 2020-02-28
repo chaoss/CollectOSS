@@ -60,7 +60,8 @@ config:
 
 clean:
 	@ echo "Removing node_modules, logs, caches, and some other dumb stuff that can be annoying..."
-	@ rm -rf runtime node_modules frontend/node_modules frontend/public augur.egg-info .pytest_cache logs
+	@ rm -rf frontend/public .pytest_cache logs *.out
+	@ rm -rf workers/**/*.log workers/**/*.err workers/**/*.out
 	@ find . -name \*.pyc -delete
 	@ find . -type f -name "*.lock" -delete
 
@@ -108,7 +109,7 @@ frontend:
 	@ bash -c 'cd frontend; npm run serve'
 
 backend-stop:
-	@ bash -c 'if [[ -s logs/backend.pid  && (( `cat logs/backend.pid`  > 1 )) ]]; then printf "sending SIGTERM to python (Gunicorn) at PID $$(cat logs/backend.pid); "; kill `cat logs/backend.pid` ; rm logs/backend.pid  > /dev/null 2>&1; fi;'
+	@ bash -c 'augur util kill'
 	@ echo
 
 backend-start:
@@ -126,23 +127,10 @@ collect:
 	@ ./util/scripts/control/collect.sh
 
 run:
-	@ ./util/scripts/control/augur.sh
-	@ echo "Waiting for the server to start... (this will take about 3 minutes)"
-	@ echo "In the meantime, consider taking a short break - you've earned it!"
-	@ sleep 180
-	@ ./util/scripts/control/collect.sh
+	@ ./util/scripts/control/run.sh
 
 status:
 	@ ./util/scripts/control/status.sh
-
-docker-build:
-	@ bash -c 'docker build -t $(DOCKER_IMAGE_NAME) -f util/packaging/docker/augur/Dockerfile .'
-
-docker-run:
-	@ bash -c 'docker run -p $(AUGUR_PORT):$(AUGUR_PORT) --name $(DOCKER_CONTAINER_NAME) --env-file env.txt $(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG)'
-
-
-
 
 #
 # Testing
@@ -177,3 +165,44 @@ api-docs-view: api-docs
 	@ bash -c "open frontend/public/api_docs/index.html"
 
 docs: api-docs library-docs
+
+
+#
+# Docker Shortcuts
+# 
+.PHONY: compose-run compose-run-with-database
+.PHONY: build-augur run-augur build-frontend run-frontend build-database run-database 
+
+compose-run:
+	@ docker-compose -f docker-compose.yml up --build
+	@ docker-compose down --remove-orphans
+
+compose-run-with-database:
+	@ echo "**************************************************************************"
+	@ echo "Make sure there are removed NO database credentials from the env.txt file!"
+	@ echo "**************************************************************************"
+	@ echo
+	@ docker-compose -f docker-compose.yml -f database-compose.yml up --build
+	@ docker-compose down --remove-orphans
+
+docker-build: docker-build-augur docker-build-frontend docker-build-database
+
+docker-build-augur:
+	@ docker build -t augurlabs/augur:latest -f util/packaging/docker/augur/Dockerfile .
+
+docker-build-frontend:
+	@ docker build -t augurlabs/augur:frontend-dev -f util/packaging/docker/frontend/Dockerfile .
+
+docker-build-database:
+	@ docker build -t augurlabs/augur:database-dev -f util/packaging/docker/database/Dockerfile .
+
+
+docker-run-augur:
+	@ docker run -p 5000:5000 --name augur_latest --env-file env.txt augurlabs/augur:latest
+
+docker-run-frontend:
+	@ docker run -p 8080:8080 --name augur_frontend-dev augurlabs/augur:frontend-dev
+
+docker-run-database:
+	@ docker run -p 5432:5432 --name augur_database-dev augurlabs/augur:database-dev
+

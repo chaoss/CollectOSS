@@ -10,4 +10,4 @@ echo "Starting augur..."
 echo "**********************************"
 echo
 
-nohup augur run > logs/augur.log 2> logs/augur.err &
+nohup augur run 1> logs/augur.log 2> logs/augur.log &
