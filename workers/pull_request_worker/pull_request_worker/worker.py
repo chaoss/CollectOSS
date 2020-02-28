@@ -213,8 +213,8 @@ class GHPullRequestWorker:
         pr_url_sql = s.sql.text("""
             SELECT DISTINCT pr_url, pull_requests.pull_request_id
             FROM pull_requests, pull_request_meta
-            WHERE pull_request_meta.pr_head_or_base = 'base'
-            AND pr_src_meta_label LIKE '%master'
+            WHERE pr_src_meta_label LIKE '%master'
+            --AND pull_request_meta.pr_head_or_base = 'base'
             AND pull_requests.pull_request_id = pull_request_meta.pull_request_id
             AND repo_id = {}
         """.format(repo_id))
