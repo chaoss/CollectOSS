@@ -3,7 +3,7 @@
         "host": "database"
     },
     "Server": {
-        "host": "augur"
+        "host": "0.0.0.0"
     },
     "Workers": {
             "facade_worker": {
