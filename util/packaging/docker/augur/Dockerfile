@@ -1,10 +1,17 @@
 FROM python:3.6-slim-buster as build-stage
 
-COPY ./util/packaging/docker/augur/install_packages.sh .
-RUN ./install_packages.sh
-
 LABEL maintainer="c@carterlandis.com"
 LABEL version="0.1.0"
+
+ENV STATIC_INDEX 0
+COPY ./util/packaging/docker/augur/uwsgi.ini /app/uwsgi.ini
+COPY ./util/packaging/docker/augur/prestart.sh /app/prestart.sh
+
+WORKDIR /augur
+COPY . .
+
+RUN rm -rf frontend/
+RUN rm -rf schema/
 
 WORKDIR /augur
 
