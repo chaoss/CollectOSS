@@ -5,11 +5,9 @@ Creates routes for the manager
 
 import logging
 import time
-import subprocess
 import requests
 import sqlalchemy as s
 from sqlalchemy import exc
-import pandas as pd
 from flask import request, Response
 import json
 
@@ -21,35 +19,33 @@ def create_manager_routes(server):
             adds repos belonging to any user or group to an existing augur repo group
             'repos' are in the form org/repo, user/repo, or maybe even a full url 
         """
-        conn = get_db_connection(server._augur)
-        data = request.json
-        group = data['group']
-        repos = data['repos']
-        
-        man = Repo_manager(group, conn)
-        group_id = man.get_org_id() #we can assume a valid group here
-        errors = []
+        db_connection = get_db_engine(server._augur).connect()
+        group = request.json['group']
+        repo_manager = Repo_insertion_manager(group, db_connection)
+        group_id = repo_manager.get_org_id()
+        errors = {}
+        errors['invalid_inputs'] = []
+        errors['failed_records'] = []
         success = []
+        repos = request.json['repos']
         for repo in repos:
             url = Git_string(repo)
             url.clean_full_string()
-            if url.is_repo(): #need to test because we requre org/repo or full git url
+            try: #need to test because we require org/repo or full git url
+                url.is_repo()
                 repo_name = url.get_repo_name()
-                repo_parent = url.org_of_repo()
-                if man.insert_repo(group_id, repo_parent, repo_name):
-                    r={}
-                    r['repo_group_id'] = str(group_id)
-                    r['repo_id'] = str(man.repo_id(repo_parent, repo_name))
-                    r['repo_name'] = repo_name
-                    r['rg_name'] = group
-                    r['url'] = man.repo_git(repo_parent, repo_name)
-                    success.append(r)
-                else:
-                    errors.append(repo_name)
-            else:
-                errors.append(repo)
+                repo_parent = url.get_repo_organization()
+            except ValueError:
+                errors['invalid_inputs'].append(repo)
+            else:   
+                try:
+                    repo_id = repo_manager.insert_repo(group_id, repo_parent, repo_name)
+                except exc.SQLAlchemyError:
+                    errors['failed_records'].append(repo_name)
+                else: 
+                    success.append(get_inserted_repo(group_id, repo_id, repo_name, group, repo_manager.github_urlify(repo_parent, repo_name)))
 
-        summary = {'sucess': success, 'failures': errors}
+        summary = {'repos_inserted': success, 'repos_not_inserted': errors}
         summary = json.dumps(summary)
         return Response(response=summary,
                         status=200,
@@ -61,116 +57,123 @@ def create_manager_routes(server):
         """ creates a new augur repo group and adds to it the given organization or user's repos
             takes an organization or user name 
         """
-        conn = get_db_connection(server._augur)
-        data = request.json
-        errors = ""
-        group = data['group']
-        man = Repo_manager(group, conn)
-        group_id = man.get_org_id()
-        if group_id < 0:
-            try:
-                group_id = man.new_org()
-            except:
-                errors = "failed to create group"
+        conn = get_db_engine(server._augur)
+        group = request.json['group']
+        repo_manager = Repo_insertion_manager(group, conn)
+        summary = {}
+        summary['group_errors'] = []
+        summary['failed_repo_records'] = []
+        summary['repo_records_created'] = []
+        
         try:
-            repos = man.get_repos()
-            for repo in repos:
-                man.insert_repo(group_id, group, repo)
-        except:
-            errors = "failed to add repos to group"
-            
-        if errors: res = errors
-        else: res = json.dumps({'group_id': str(group_id), 'rg_name': group})
-        return Response(response=res,
+            group_id = repo_manager.get_org_id()
+        except TypeError:
+            try:
+                group_id = repo_manager.insert_repo_group()
+            except TypeError:
+                summary['group_errors'].append("failed to create group")
+            else:
+                group_exists = True
+        else:
+            group_exists = True
+
+        if group_exists:
+            summary['group_id'] = str(group_id)
+            summary['rg_name'] = group
+            try:
+                repos = repo_manager.fetch_repos()
+                for repo in repos:
+                    try:
+                        repo_id = repo_manager.insert_repo(group_id, group, repo)
+                    except exc.SQLAlchemyError:
+                        summary['failed_repo_records'].append(repo)
+                    else:
+                        summary['repo_records_created'].append(get_inserted_repo(group_id, repo_id, repo, group, repo_manager.github_urlify(group, repo)))
+            except requests.ConnectionError:
+                summary['group_errors'] = "failed to find the group's child repos"
+
+        summary = json.dumps(summary)
+        return Response(response=summary,
                         status=200,
                         mimetype="application/json")
+    
+    def get_inserted_repo(groupid, repoid, reponame, groupname, url):
+        inserted_repo={}
+        inserted_repo['repo_group_id'] = str(groupid)
+        inserted_repo['repo_id'] = str(repoid)
+        inserted_repo['repo_name'] = reponame
+        inserted_repo['rg_name'] = groupname
+        inserted_repo['url'] = url
+        return inserted_repo
 
-class Repo_manager():
-    def __init__(self, orgname, dbconn):
-        self.org = orgname
-        self.conn = dbconn
+class Repo_insertion_manager():
+    def __init__(self, organization_name, database_connection):
+        self.org = organization_name
+        self.db = database_connection
 
     def insert_repo(self, orgid, given_org, reponame):
         """creates a new repo record"""
-        insert = s.sql.text("""
+        insert_repo_query = s.sql.text("""
             INSERT INTO augur_data.repo(repo_group_id, repo_git, repo_status,
                 tool_source, tool_version, data_source, data_collection_date)
-            VALUES (:repo_group_id, :repo_git, 'New', 'CLI', 1.0, 'Git', CURRENT_TIMESTAMP)    
+            VALUES (:repo_group_id, :repo_git, 'New', 'CLI', 1.0, 'Git', CURRENT_TIMESTAMP)
+            RETURNING repo_id
         """)
-        repogit = self.repo_git(given_org, reponame)
-        try:
-            pd.read_sql(insert, self.conn, params={'repo_group_id': int(orgid), 'repo_git': repogit})
-        except exc.ResourceClosedError:
-            return True
-        else:
-            return False
+        repogit = self.github_urlify(given_org, reponame)
+        insert_repo_query = insert_repo_query.bindparams(repo_group_id = int(orgid), repo_git = repogit)
+        result = self.db.execute(insert_repo_query).fetchone()
+        return result['repo_id']
 
-    def repo_git(self, org, repo):
+    def github_urlify(self, org, repo):
         return "https://github.com/" + org + "/" + repo
 
-    def repo_id(self, org, repo_name):
-        """returns the repo_id of given repo"""
-        select = s.sql.text("""
-            SELECT repo_id
-            FROM augur_data.repo
-            WHERE repo_git = :repogit
-            LIMIT 1
-        """)
-        repo_git = self.repo_git(org, repo_name)
-        result = pd.read_sql(select, self.conn, params={'repogit': repo_git})
-        return result.values[0][0]
-
-
     def get_org_id(self):
-        """returns repo_group_id or -1 if not present"""
-        select = s.sql.text("""
+        select_group_query = s.sql.text("""
             SELECT repo_group_id
             FROM augur_data.repo_groups
-            WHERE rg_name = :orgname
+            WHERE rg_name = :group_name
         """)
-        result = pd.read_sql(select, self.conn, params={'orgname': self.org})
-        if result.empty:
-            return -1
-        else:
-            return result.values[0][0] 
-
-    def new_org(self):
-        """creates a new repo_group record"""
-        insert = s.sql.text("""
+        select_group_query = select_group_query.bindparams(group_name = self.org)
+        result = self.db.execute(select_group_query)
+        row = result.fetchone()
+        return row['repo_group_id']
+        
+    def insert_repo_group(self):
+        """creates a new repo_group record and returns its id"""
+        insert_group_query = s.sql.text("""
             INSERT INTO augur_data.repo_groups(rg_name, rg_description, rg_website, rg_recache, rg_last_modified, rg_type, 
                 tool_source, tool_version, data_source, data_collection_date)
-            VALUES (:neworgname, '', '', 1, CURRENT_TIMESTAMP, 'Unknown', 'Loaded by user', 1.0, 'Git', CURRENT_TIMESTAMP);
+            VALUES (:group_name, '', '', 1, CURRENT_TIMESTAMP, 'Unknown', 'Loaded by user', 1.0, 'Git', CURRENT_TIMESTAMP)
+            RETURNING repo_group_id
         """)
-        try:
-            pd.read_sql(insert, self.conn, params={'neworgname': self.org})
-        except exc.ResourceClosedError:
-            return self.get_org_id()
-        else:
-            raise Exception
+        insert_group_query = insert_group_query.bindparams(group_name = self.org)
+        result = self.db.execute(insert_group_query)
+        row = result.fetchone()
+        return row['repo_group_id']
 
-    def get_repos(self):
-        """return repos belonging to the given organization"""
+    def fetch_repos(self):
+        """uses the github api to return repos belonging to the given organization"""
         repos = []
         page = 1
-        url = self.inc_url(page)
+        url = self.paginate(page)
         res = requests.get(url).json()
         while res:
             for repo in res:
                 repos.append(repo['name'])
             page += 1
-            res = requests.get(self.inc_url(page)).json()
+            res = requests.get(self.paginate(page)).json()
         return repos
 
-    def inc_url(self, page):
-        url = 'https://api.github.com/orgs/' + self.org +'/repos?per_page=100&page='+ str(page)
-        return url
+    def paginate(self, page):
+        url = "https://api.github.com/orgs/{}/repos?per_page=100&page={}"
+        return url.format(self.org, str(page))
 
         
 
 class Git_string():
     """ represents possible repo, org or username arguments """
-    def __init__(self, arg):
-        self.name = arg
+    def __init__(self, string_to_process):
+        self.name = string_to_process
 
     def clean_full_string(self):
         """remove trailing slash, protocol, and source if present"""
@@ -194,11 +197,11 @@ class Git_string():
             if char == '/':
                 slash_count += 1
         if slash_count == 1:
-            return True
+            return
         else:
-            return False
+            raise ValueError
         
-    def org_of_repo(self):
+    def get_repo_organization(self):
         org = self.name
         return org[:org.find('/')]
 
@@ -206,14 +209,13 @@ class Git_string():
         repo = self.name
         return repo[repo.find('/')+1:]
 
-def get_db_connection(app):
+def get_db_engine(app):
 
     user = app.read_config('Database', 'user', 'AUGUR_DB_USER', 'augur')
     password = app.read_config('Database', 'password', 'AUGUR_DB_PASS', 'password')
     host = app.read_config('Database', 'host', 'AUGUR_DB_HOST', '127.0.0.1')
     port = app.read_config('Database', 'port', 'AUGUR_DB_PORT', '5433')
     dbname = app.read_config('Database', 'database', 'AUGUR_DB_NAME', 'augur')
-    schema = app.read_config('Database', 'schema', 'AUGUR_DB_SCHEMA', 'augur_data')
 
     DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(
             user, password, host, port, dbname
