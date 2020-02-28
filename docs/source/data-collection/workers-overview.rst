@@ -16,8 +16,8 @@ Workers are continuous collection processes that populate parts of Augur's data 
 - delay: How long to pause between collection cycles, expressed in seconds
 - repo_group_id: You can specify an array of repo_group_ids, or "0", which will collect all data for all repo_group_id's. 
 
-Augur Model Block: 
------------------
+Augur Model Block
+-------------------
 
 .. code-block:: json
 

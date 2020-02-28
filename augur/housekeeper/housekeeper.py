@@ -57,28 +57,27 @@ class Housekeeper:
         :param delay: time needed to update
         :param shared: shared object that is to also be updated
         """
-        logging.info("HOB: {}".format(job))
         repo_group_id = job['repo_group_id'] if 'repo_group_id' in job else None
         if repo_group_id:
-            logging.info('Housekeeper spawned {} model updater process for subsection {} with PID {}'.format(job['model'], repo_group_id, os.getpid()))
+            logging.info('Housekeeper spawned {} model updater process for subsection {} with PID {}\n'.format(job['model'], repo_group_id, os.getpid()))
         else:
-            logging.info('Housekeeper spawned {} model updater process for repo {} with PID {}'.format(job['model'], job['repos'][0]['repo_id'], os.getpid()))
+            logging.info('Housekeeper spawned {} model updater process for repo {} with PID {}\n'.format(job['model'], job['repos'][0]['repo_id'], os.getpid()))
 
         try:
             compatible_worker_found = False
             # Waiting for compatible worker
             while True:
                 if not compatible_worker_found:
+                    # logging.info("On model updater process: {}\n".format(job['model']))
                     for worker in list(broker._getvalue().keys()):
-                        # logging.info("{} {} {} {}".format(worker, model, broker[worker], given))
+                        # logging.info("Checking keys for worker {}. : {}\n".format(worker, broker[worker].keys()))
                         if job['model'] in broker[worker]['models'] and job['given'] in broker[worker]['given']:
                             compatible_worker_found = True
                 if compatible_worker_found:
                     logging.info("Housekeeper recognized that the broker has a worker that " + 
-                        "can handle the {} model... beginning to distribute maintained tasks".format(job['model']))
-                    time.sleep(4)
+                        "can handle the {} model... beginning to distribute maintained tasks\n".format(job['model']))
                     while True:
-                        logging.info('Housekeeper updating {} model with given {}...'.format(
+                        logging.info('Housekeeper updating {} model with given {}...\n'.format(
                             job['model'], job['given'][0]))
                         
                         if job['given'][0] == 'git_url' or job['given'][0] == 'github_url':
@@ -99,9 +98,9 @@ class Housekeeper:
                                     requests.post('http://{}:{}/api/unstable/task'.format(
                                         broker_host,broker_port), json=task, timeout=10)
                                 except Exception as e:
-                                    logging.info("Error encountered: {}".format(e))
+                                    logging.info("Error encountered: {}\n".format(e))
 
-                                time.sleep(90)
+                                time.sleep(15)
                         elif job['given'][0] == 'repo_group':
                             task = {
                                     "job_type": job['job_type'] if 'job_type' in job else 'MAINTAIN', 
@@ -115,9 +114,9 @@ class Housekeeper:
                                 requests.post('http://{}:{}/api/unstable/task'.format(
                                     broker_host,broker_port), json=task, timeout=10)
                             except Exception as e:
-                                logging.info("Error encountered: {}".format(e))
+                                logging.info("Error encountered: {}\n".format(e))
 
-                        logging.info("Housekeeper finished sending {} tasks to the broker for it to distribute to your worker(s)".format(len(job['repos'])))
+                        logging.info("Housekeeper finished sending {} tasks to the broker for it to distribute to your worker(s)\n".format(len(job['repos'])))
                         time.sleep(job['delay'])
                     break
                 time.sleep(3)
@@ -177,84 +176,95 @@ class Housekeeper:
                 where_and = 'AND' if job['model'] in ['issues', 'pull_requests'] else 'WHERE'
                 where_condition = '{} repo_group_id = {}'.format(where_and, job['repo_group_id']) if 'repo_group_id' in job and job['repo_group_id'] != 0 else ''
                 repoUrlSQL = s.sql.text("""
-                        SELECT *
-                        FROM repo
-                        WHERE repo_id IN ({})
-                    """.format( # Generator expression
-                        ",".join(str(x) for x in job['repo_ids']))) if 'repo_ids' in job else s.sql.text(
-                    """
-                        SELECT a.repo_id, a.repo_git, b.pull_request_count, d.repo_id AS pr_repo_id,  count(*) AS pr_collected_count, 
-                        (b.pull_request_count-count(*)) AS prs_missing, 
-                        abs(cast((count(*))AS DOUBLE PRECISION)/NULLIF(cast(b.pull_request_count AS DOUBLE PRECISION), 0)) AS ratio_abs,
-                        (cast((count(*))AS DOUBLE PRECISION)/NULLIF(cast(b.pull_request_count AS DOUBLE PRECISION), 0)) AS ratio_prs
-                        FROM repo a, pull_requests d, repo_info b, (
-                             SELECT repo_id, max(data_collection_date) AS last_collected FROM repo_info 
-                                GROUP BY repo_id 
-                                ORDER BY repo_id) e 
-                        WHERE a.repo_id = b.repo_id AND
-                        a.repo_id = d.repo_id AND 
-                        b.repo_id = d.repo_id AND
-                        b.data_collection_date = e.last_collected 
-                        {0}
-                        GROUP BY a.repo_id, d.repo_id, b.pull_request_count
-                    UNION
-                        SELECT repo_id,repo_git, 0 AS pull_request_count, repo_id AS pr_repo_id, 0 AS pr_collected_count, 
-                            0 AS prs_missing, 
-                            0 AS ratio_abs,
-                            0 AS ratio_prs 
-                        FROM repo 
-                        WHERE repo_id NOT IN (
-                            SELECT a.repo_id FROM repo a, pull_requests d, repo_info b, (
-                             SELECT repo_id, max(data_collection_date) AS last_collected FROM repo_info 
-                                GROUP BY repo_id 
-                                ORDER BY repo_id) e 
-                                WHERE a.repo_id = b.repo_id AND
-                                a.repo_id = d.repo_id AND 
-                                b.repo_id = d.repo_id AND
-                                b.data_collection_date = e.last_collected 
-                                {0}
-                            GROUP BY a.repo_id, d.repo_id, b.pull_request_count
-                        )
-                        ORDER BY ratio_abs
-                    """.format(where_condition)) if job['model'] == 'pull_requests' else s.sql.text("""
-                        SELECT a.repo_id, a.repo_git, b.issues_count, d.repo_id AS pr_repo_id,  count(*) AS issues_collected_count, 
-                        (b.issues_count-count(*)) AS issues_missing, 
-                        abs(cast((count(*))AS DOUBLE PRECISION)/NULLIF(cast(b.issues_count AS DOUBLE PRECISION), 0)) AS ratio_abs,
-                        (cast((count(*))AS DOUBLE PRECISION)/NULLIF(cast(b.issues_count AS DOUBLE PRECISION), 0)) AS ratio_issues
-                        FROM repo a, issues d, repo_info b, 
-                        (
-                            SELECT repo_id, max(data_collection_date) AS last_collected FROM repo_info 
-                                GROUP BY repo_id 
-                                ORDER BY repo_id) e 
-                            WHERE a.repo_id = b.repo_id AND
-                            a.repo_id = d.repo_id AND 
-                            b.repo_id = d.repo_id AND
-                               b.data_collection_date = e.last_collected
-                            AND d.pull_request_id IS NULL 
-                            {0}
-                            GROUP BY a.repo_id, d.repo_id, b.issues_count
-                    UNION
-                        SELECT repo_id,repo_git, 0 AS issues_count, repo_id AS pr_repo_id, 0 AS issues_collected_count, 
-                            0 AS issues_missing, 
-                            0 AS ratio_abs,
-                            0 AS ratio_issues 
-                        FROM repo 
-                        WHERE repo_id NOT IN (
-                        SELECT a.repo_id FROM repo a, issues d, repo_info b, 
-                        (
-                            SELECT repo_id, max(data_collection_date) AS last_collected FROM repo_info 
-                                GROUP BY repo_id 
-                                ORDER BY repo_id) e 
-                            WHERE a.repo_id = b.repo_id AND
-                            a.repo_id = d.repo_id AND 
-                            b.repo_id = d.repo_id AND
-                            b.data_collection_date = e.last_collected
-                            AND d.pull_request_id IS NULL 
-                            {0}
-                            GROUP BY a.repo_id, d.repo_id, b.issues_count
-                        )
-                        ORDER BY ratio_abs
-                    """.format(where_condition)) if job['model'] == 'issues' else s.sql.text("""
+                        SELECT
+                            * 
+                        FROM
+                            (
+                                ( SELECT repo_git, repo.repo_id, issues_enabled, COUNT ( * ) AS meta_count 
+                                FROM repo_info, repo
+                                WHERE repo.repo_id = repo_info.repo_id 
+                                GROUP BY repo.repo_id, issues_enabled 
+                                ORDER BY repo.repo_id ) zz
+                                LEFT OUTER JOIN (
+                                SELECT A.repo_id,
+                                    A.repo_name,
+                                    b.pull_request_count,
+                                    d.repo_id AS pull_request_repo_id,
+                                    e.last_collected,
+                                    COUNT ( * ) AS pull_request_count,
+                                    (
+                                    b.pull_request_count - COUNT ( * )) AS pull_requests_missing,
+                                    ABS (
+                                    CAST (( COUNT ( * )) AS DOUBLE PRECISION ) / CAST ( b.pull_request_count + 1 AS DOUBLE PRECISION )) AS ratio_abs,
+                                    (
+                                    CAST (( COUNT ( * )) AS DOUBLE PRECISION ) / CAST ( b.pull_request_count + 1 AS DOUBLE PRECISION )) AS ratio_issues 
+                                FROM
+                                    augur_data.repo A,
+                                    augur_data.pull_requests d,
+                                    augur_data.repo_info b,
+                                    ( SELECT repo_id, MAX ( data_collection_date ) AS last_collected FROM augur_data.repo_info GROUP BY repo_id ORDER BY repo_id ) e 
+                                WHERE
+                                    A.repo_id = b.repo_id 
+                                    AND A.repo_id = d.repo_id 
+                                    AND b.repo_id = d.repo_id 
+                                    AND e.repo_id = A.repo_id 
+                                    AND b.data_collection_date = e.last_collected 
+                                    -- AND d.pull_request_id IS NULL 
+                                GROUP BY
+                                    A.repo_id,
+                                    d.repo_id,
+                                    b.pull_request_count,
+                                    e.last_collected 
+                                ORDER BY ratio_abs
+                                ) yy ON zz.repo_id = yy.repo_id 
+                            ) D 
+                        ORDER BY ratio_abs NULLS FIRST
+                    """) if job['model'] == 'pull_requests' else s.sql.text("""
+                        SELECT
+                            * 
+                        FROM
+                            (
+                                ( SELECT repo_git, repo.repo_id, issues_enabled, COUNT ( * ) AS meta_count 
+                                FROM repo_info, repo
+                                WHERE repo.repo_id = repo_info.repo_id 
+                                AND issues_enabled = 'true' 
+                                GROUP BY repo.repo_id, issues_enabled 
+                                ORDER BY repo.repo_id ) zz
+                                LEFT OUTER JOIN (
+                                SELECT A.repo_id,
+                                    A.repo_name,
+                                    b.issues_count,
+                                    d.repo_id AS issue_repo_id,
+                                    e.last_collected,
+                                    COUNT ( * ) AS issues_collected_count,
+                                    (
+                                    b.issues_count - COUNT ( * )) AS issues_missing,
+                                    ABS (
+                                    CAST (( COUNT ( * )) AS DOUBLE PRECISION ) / CAST ( b.issues_count + 1 AS DOUBLE PRECISION )) AS ratio_abs,
+                                    (
+                                    CAST (( COUNT ( * )) AS DOUBLE PRECISION ) / CAST ( b.issues_count + 1 AS DOUBLE PRECISION )) AS ratio_issues 
+                                FROM
+                                    augur_data.repo A,
+                                    augur_data.issues d,
+                                    augur_data.repo_info b,
+                                    ( SELECT repo_id, MAX ( data_collection_date ) AS last_collected FROM augur_data.repo_info GROUP BY repo_id ORDER BY repo_id ) e 
+                                WHERE
+                                    A.repo_id = b.repo_id 
+                                    AND A.repo_id = d.repo_id 
+                                    AND b.repo_id = d.repo_id 
+                                    AND e.repo_id = A.repo_id 
+                                    AND b.data_collection_date = e.last_collected 
+                                    AND d.pull_request_id IS NULL 
+                                GROUP BY
+                                    A.repo_id,
+                                    d.repo_id,
+                                    b.issues_count,
+                                    e.last_collected 
+                                ORDER BY ratio_abs 
+                                ) yy ON zz.repo_id = yy.repo_id 
+                            ) D
+                        ORDER BY ratio_abs NULLS FIRST
+                    """) if job['model'] == 'issues' else s.sql.text(""" 
                         SELECT repo_git, repo_id FROM repo {} ORDER BY repo_id ASC
                     """.format(where_condition))
                 reorganized_repos = pd.read_sql(repoUrlSQL, self.db, params={})

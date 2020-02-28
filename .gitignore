@@ -1,15 +1,20 @@
 # Augur
 augur.config.json
+!default.config.json
+!frontend.config.json
+
 node_modules/
 logs/
-# Byte-compiled / optimized / DLL files
 __pycache__/
 *$py.class
 *.pyc
 runtime/
 logs/
+cache/
 frontend/public/api_docs/
 *.err
+.tox
+env.txt
 
 # C extensions
 *.so

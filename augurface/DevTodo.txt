@@ -1,0 +1,3 @@
+pull currently stored repositories and display
+
+implement repo groups (drag n drop, send to different group, etc)

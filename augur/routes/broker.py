@@ -71,8 +71,9 @@ def create_broker_routes(server):
         for given_component in list(task['given'].keys()):
             given.append(given_component)
         model = task['models'][0]
-        if task['job_type'] != 'MAINTAIN':
-            logging.info("Broker recieved a new user task ... checking for compatible workers for given: " + str(given) + " and model(s): " + str(model) + "")
+        logging.info("Broker recieved a new user task ... checking for compatible workers for given: " + str(given) + " and model(s): " + str(model) + "\n")
+
+        logging.info("Broker's list of all workers: {}\n".format(server.broker._getvalue().keys()))
 
         worker_found = False
         compatible_workers = {}
@@ -82,35 +83,36 @@ def create_broker_routes(server):
             if type(server.broker[worker_id]._getvalue()) != dict:
                 continue
 
+            logging.info("Considering compatible worker: {}\n".format(worker_id))
+
             # Group workers by type (all gh workers grouped together etc)
             worker_type = worker_id.split('.')[len(worker_id.split('.'))-2]
             compatible_workers[worker_type] = compatible_workers[worker_type] if worker_type in compatible_workers else {'task_load': len(server.broker[worker_id]['user_queue']) + len(server.broker[worker_id]['maintain_queue']), 'worker_id': worker_id}
             
             # Make worker that is prioritized the one with the smallest sum of task queues
             if (len(server.broker[worker_id]['user_queue']) + len(server.broker[worker_id]['maintain_queue'])) < min([compatible_workers[w]['task_load'] for w in compatible_workers.keys() if worker_type == w]):
+                logging.info("Worker id: {} has the smallest task load encountered so far: {}\n".format(worker_id, len(server.broker[worker_id]['user_queue']) + len(server.broker[worker_id]['maintain_queue'])))
                 compatible_workers[worker_type]['task_load'] = len(server.broker[worker_id]['user_queue']) + len(server.broker[worker_id]['maintain_queue'])
                 compatible_workers[worker_type]['worker_id'] = worker_id
 
         for worker_type in compatible_workers.keys():
             worker_id = compatible_workers[worker_type]['worker_id']
             worker = server.broker[worker_id]
-            logging.info("Compatible worker: {} with smallest task load: {} found to work on task: {}".format(worker_id, len(server.broker[worker_id]['user_queue']) + len(server.broker[worker_id]['maintain_queue']), task))
-
-            # if task['job_type'] == "SELECTIVE":
+            logging.info("Final compatible worker chosen: {} with smallest task load: {} found to work on task: {}\n".format(worker_id, len(server.broker[worker_id]['user_queue']) + len(server.broker[worker_id]['maintain_queue']), task))
 
             if task['job_type'] == "UPDATE":
                 worker['user_queue'].append(task)
-                logging.info("Added task for model: {}. New length of worker {}'s user queue: {}".format(model, worker_id, str(len(server.broker[worker_id]['user_queue']))))
+                logging.info("Added task for model: {}. New length of worker {}'s user queue: {}\n".format(model, worker_id, str(len(server.broker[worker_id]['user_queue']))))
             elif task['job_type'] == "MAINTAIN":
                 worker['maintain_queue'].append(task)
-                logging.info("Added task for model: {}. New length of worker {}'s maintain queue: {}".format(model, worker_id, str(len(server.broker[worker_id]['maintain_queue']))))
+                logging.info("Added task for model: {}. New length of worker {}'s maintain queue: {}\n".format(model, worker_id, str(len(server.broker[worker_id]['maintain_queue']))))
 
             if worker['status'] == 'Idle':
                 send_task(worker)
             worker_found = True
         # Otherwise, let the frontend know that the request can't be served
         if not worker_found:
-            logging.info(f"Augur does not have knowledge of any workers that are capable of handing the request: " + str(task))
+            logging.info("Augur does not have knowledge of any workers that are capable of handing the request: {}\n".format(task))
 
         return Response(response=task,
                         status=200,
@@ -122,7 +124,7 @@ def create_broker_routes(server):
             and telling the broker to add this worker to the set it maintains
         """
         worker = request.json
-        logging.info("Recieved HELLO message from worker: " + worker['id'])
+        logging.info("Recieved HELLO message from worker: {}\n".format(worker['id']))
         if worker['id'] not in server.broker:
             server.broker[worker['id']] = server.manager.dict()
             server.broker[worker['id']]['id'] = worker['id']
@@ -137,7 +139,7 @@ def create_broker_routes(server):
             server.broker[worker['id']]['status'] = 'Idle'
             server.broker[worker['id']]['location'] = worker['location']
         else:
-            logging.info("Worker: {} has been reconnected.".format(worker['id']))
+            logging.info("Worker: {} has been reconnected.\n".format(worker['id']))
             models = server.broker[worker['id']]['models']
             givens = server.broker[worker['id']]['given']
             user_queue = server.broker[worker['id']]['user_queue']

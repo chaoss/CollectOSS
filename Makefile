@@ -5,6 +5,11 @@ EDITOR?="vi"
 AUGUR_PIP?='pip'
 AUGUR_PYTHON?='python'
 
+DOCKER_IMAGE_NAME?='augurlabs/augur'
+DOCKER_IMAGE_TAG?='latest'
+DOCKER_CONTAINER_NAME?='augurlabs/augur'
+AUGUR_PORT?=5000
+
 default:
 	@ echo "Installation Commands:"
 	@ echo "    install                         Installs augur using pip"
@@ -114,7 +119,7 @@ backend-restart: backend-stop backend-start
 
 backend: backend-restart
 
-augur:
+augur-start:
 	@ ./util/scripts/control/augur.sh
 
 collect:
@@ -129,6 +134,14 @@ run:
 
 status:
 	@ ./util/scripts/control/status.sh
+
+docker-build:
+	@ bash -c 'docker build -t $(DOCKER_IMAGE_NAME) -f util/packaging/docker/augur/Dockerfile .'
+
+docker-run:
+	@ bash -c 'docker run -p $(AUGUR_PORT):$(AUGUR_PORT) --name $(DOCKER_CONTAINER_NAME) --env-file env.txt $(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG)'
+
+
 
 
 #
@@ -158,7 +171,7 @@ library-docs-view: library-docs
 	@ bash -c 'open docs/build/html/index.html'
 
 api-docs:
-	@ bash -c 'cd docs && apidoc -f "\.py" -i ../augur/ -o api/; rm -rf ../frontend/public/api_docs; mv api ../frontend/public/api_docs'
+	@ util/scripts/install/api_docs.sh
 
 api-docs-view: api-docs
 	@ bash -c "open frontend/public/api_docs/index.html"

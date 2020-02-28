@@ -126,11 +126,11 @@ Start just the frontend server. To run just the backend server, see the ``augur`
 .. _documentation: augur-commands.html#run
 
 ``make augur``
--------------
+---------------
 Start augur in the background.
 
 ``make collect``
--------------
+-----------------
 Start all the installed data collection workers in the background. Use ``make status`` to quickly 
 check the logs after you've started them.
 
