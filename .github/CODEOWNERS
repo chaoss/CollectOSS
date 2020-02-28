@@ -4,7 +4,7 @@
 
 /frontend/ @gabe-heim @michaelwoodruffdev
 
-/persistence_schema @sgoggins
+/schema @sgoggins
 
 /workers/ @ccarterlandis @gabe-heim @sgoggins
 

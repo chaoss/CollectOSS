@@ -1,5 +1,8 @@
 FROM node:11 as build-stage
 
+LABEL maintainer="c@carterlandis.com"
+LABEL version="0.1.0"
+
 WORKDIR augur_frontend/
 COPY ./util/packaging/docker/frontend/frontend.config.json .
 RUN cp frontend.config.json augur.config.json
