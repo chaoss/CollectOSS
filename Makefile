@@ -171,7 +171,7 @@ docs: api-docs library-docs
 # Docker Shortcuts
 # 
 .PHONY: compose-run compose-run-with-database
-.PHONY: build-augur run-augur build-frontend run-frontend build-database run-database 
+.PHONY: build-backend run-backend build-frontend run-frontend build-database run-database 
 
 compose-run:
 	@ docker-compose -f docker-compose.yml up --build
@@ -185,9 +185,9 @@ compose-run-with-database:
 	@ docker-compose -f docker-compose.yml -f database-compose.yml up --build
 	@ docker-compose down --remove-orphans
 
-docker-build: docker-build-augur docker-build-frontend docker-build-database
+docker-build: docker-build-backend docker-build-frontend docker-build-database
 
-docker-build-augur:
+docker-build-backend:
 	@ docker build -t augurlabs/augur:latest -f util/packaging/docker/augur/Dockerfile .
 
 docker-build-frontend:
@@ -197,7 +197,7 @@ docker-build-database:
 	@ docker build -t augurlabs/augur:database-dev -f util/packaging/docker/database/Dockerfile .
 
 
-docker-run-augur:
+docker-run-backend:
 	@ docker run -d -p 5000:5000 --name augur_backend --env-file env.txt augurlabs/augur:latest
 
 docker-run-frontend:
