@@ -58,6 +58,48 @@ def pull_requests_merge_contributor_new(self, repo_group_id, repo_id=None, perio
                                       'end_date': end_date})
     return results
 
+@annotate(tag='pull-requests-closed-no-merge')
+def pull_requests_closed_no_merge(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
+    """
+    Returns a timeseries of the which were closed but not merged
+
+    :param repo_id: The repository's id
+    :param repo_group_id: The repository's group id
+    :param period: To set the periodicity to 'day', 'week', 'month' or 'year', defaults to 'day'
+    :param begin_date: Specifies the begin date, defaults to '1970-1-1 00:00:00'
+    :param end_date: Specifies the end date, defaults to datetime.now()
+    :return: DataFrame of persons/period
+    """
+    if not begin_date:
+        begin_date = '1970-1-1 00:00:01'
+    if not end_date:
+        end_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+    if repo_id:
+        closedNoMerge = s.sql.text("""
+            SELECT DATE_TRUNC(:period, pull_requests.pr_closed_at) AS closed_date,
+            COUNT(pull_request_id)
+            FROM pull_requests WHERE repo_id = :repo_id and pull_requests.pr_closed_at is NOT NULL and
+            pull_requests.pr_merged_at is NULL
+        """)
+        results = pd.read_sql(closedNoMerge, self.database, params={'repo_id': repo_id, 'period': period,
+                                                                     'begin_date': begin_date,
+                                                                     'end_date': end_date})
+
+    else:
+        closedNoMerge = s.sql.text("""
+            SELECT DATE_TRUNC(:period, pull_requests.pr_closed_at) AS closed_date,
+            COUNT(pull_request_id)
+            FROM pull_requests WHERE repo_id in (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
+            and pull_requests.pr_closed_at is NOT NULL and pull_requests.pr_merged_at is NULL
+        """)
+
+        results = pd.read_sql(closedNoMerge, self.database,
+                              params={'repo_group_id': repo_group_id, 'period': period,
+                                      'begin_date': begin_date,
+                                      'end_date': end_date})
+    return results
+
 @annotate(tag='reviews')
 def reviews(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
     """ Returns a timeseris of new reviews or pull requests opened
