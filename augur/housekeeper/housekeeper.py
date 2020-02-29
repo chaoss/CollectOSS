@@ -172,8 +172,10 @@ class Housekeeper:
         for job in jobs:
             if 'repo_group_id' in job or 'repo_ids' in job:
                 # If RG id is 0 then it just means to query all repos
-                where_and = 'AND' if job['model'] in ['issues', 'pull_requests'] else 'WHERE'
-                where_condition = '{} repo_group_id = {}'.format(where_and, job['repo_group_id']) if 'repo_group_id' in job and job['repo_group_id'] != 0 else ''
+                where_and = 'AND' if job['model'] in ['issues', 'pull_requests'] and 'repo_group_id' in job else 'WHERE'
+                where_condition = '{} repo_group_id = {}'.format(where_and, job['repo_group_id']
+                    ) if 'repo_group_id' in job and job['repo_group_id'] != 0 else '{} repo.repo_id IN ({})'.format(
+                    where_and, ",".join(str(id) for id in job['repo_ids'])) if 'repo_ids' in job else ''
                 repoUrlSQL = s.sql.text("""
                         SELECT
                             * 
@@ -185,8 +187,8 @@ class Housekeeper:
                                 GROUP BY repo.repo_id, issues_enabled 
                                 ORDER BY repo.repo_id ) zz
                                 LEFT OUTER JOIN (
-                                SELECT A.repo_id,
-                                    A.repo_name,
+                                SELECT repo.repo_id,
+                                    repo.repo_name,
                                     b.pull_request_count,
                                     d.repo_id AS pull_request_repo_id,
                                     e.last_collected,
@@ -198,19 +200,20 @@ class Housekeeper:
                                     (
                                     CAST (( COUNT ( * )) AS DOUBLE PRECISION ) / CAST ( b.pull_request_count + 1 AS DOUBLE PRECISION )) AS ratio_issues 
                                 FROM
-                                    augur_data.repo A,
+                                    augur_data.repo,
                                     augur_data.pull_requests d,
                                     augur_data.repo_info b,
                                     ( SELECT repo_id, MAX ( data_collection_date ) AS last_collected FROM augur_data.repo_info GROUP BY repo_id ORDER BY repo_id ) e 
                                 WHERE
-                                    A.repo_id = b.repo_id 
-                                    AND A.repo_id = d.repo_id 
+                                    repo.repo_id = b.repo_id 
+                                    AND repo.repo_id = d.repo_id 
                                     AND b.repo_id = d.repo_id 
-                                    AND e.repo_id = A.repo_id 
+                                    AND e.repo_id = repo.repo_id 
                                     AND b.data_collection_date = e.last_collected 
+                                    {}
                                     -- AND d.pull_request_id IS NULL 
                                 GROUP BY
-                                    A.repo_id,
+                                    repo.repo_id,
                                     d.repo_id,
                                     b.pull_request_count,
                                     e.last_collected 
@@ -218,7 +221,7 @@ class Housekeeper:
                                 ) yy ON zz.repo_id = yy.repo_id 
                             ) D 
                         ORDER BY ratio_abs NULLS FIRST
-                    """) if job['model'] == 'pull_requests' else s.sql.text("""
+                    """.format(where_condition)) if job['model'] == 'pull_requests' and 'repo_group_id' in job else s.sql.text("""
                         SELECT
                             * 
                         FROM
@@ -230,8 +233,8 @@ class Housekeeper:
                                 GROUP BY repo.repo_id, issues_enabled 
                                 ORDER BY repo.repo_id ) zz
                                 LEFT OUTER JOIN (
-                                SELECT A.repo_id,
-                                    A.repo_name,
+                                SELECT repo.repo_id,
+                                    repo.repo_name,
                                     b.issues_count,
                                     d.repo_id AS issue_repo_id,
                                     e.last_collected,
@@ -243,19 +246,20 @@ class Housekeeper:
                                     (
                                     CAST (( COUNT ( * )) AS DOUBLE PRECISION ) / CAST ( b.issues_count + 1 AS DOUBLE PRECISION )) AS ratio_issues 
                                 FROM
-                                    augur_data.repo A,
+                                    augur_data.repo,
                                     augur_data.issues d,
                                     augur_data.repo_info b,
                                     ( SELECT repo_id, MAX ( data_collection_date ) AS last_collected FROM augur_data.repo_info GROUP BY repo_id ORDER BY repo_id ) e 
                                 WHERE
-                                    A.repo_id = b.repo_id 
-                                    AND A.repo_id = d.repo_id 
+                                    repo.repo_id = b.repo_id 
+                                    AND repo.repo_id = d.repo_id 
                                     AND b.repo_id = d.repo_id 
-                                    AND e.repo_id = A.repo_id 
+                                    AND e.repo_id = repo.repo_id 
                                     AND b.data_collection_date = e.last_collected 
-                                    AND d.pull_request_id IS NULL 
+                                    AND d.pull_request_id IS NULL
+                                    {} 
                                 GROUP BY
-                                    A.repo_id,
+                                    repo.repo_id,
                                     d.repo_id,
                                     b.issues_count,
                                     e.last_collected 
@@ -263,7 +267,7 @@ class Housekeeper:
                                 ) yy ON zz.repo_id = yy.repo_id 
                             ) D
                         ORDER BY ratio_abs NULLS FIRST
-                    """) if job['model'] == 'issues' else s.sql.text(""" 
+                    """.format(where_condition)) if job['model'] == 'issues' and 'repo_group_id' in job else s.sql.text(""" 
                         SELECT repo_git, repo_id FROM repo {} ORDER BY repo_id ASC
                     """.format(where_condition))
                 reorganized_repos = pd.read_sql(repoUrlSQL, self.db, params={})
@@ -344,6 +348,7 @@ class Housekeeper:
                 rs = rs.to_dict('records')
 
                 job['repos'] = rs
+            # time.sleep(120)
 
         return jobs
 
