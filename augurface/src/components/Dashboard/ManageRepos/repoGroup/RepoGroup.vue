@@ -123,8 +123,9 @@ export default {
         })
         .then(res => {
           if (res) {
+            console.log(res);
             // update state
-            this.$store.commit('reposModule/addRepos', res.sucess);
+            this.$store.commit('reposModule/addRepos', res.repos_inserted);
             this.isCurrentlyAddingRepos = false;
           }
         });

@@ -82,8 +82,11 @@ def create_manager_routes(server):
             summary['rg_name'] = group
             try:
                 repos = repo_manager.fetch_repos()
+                i = 0
                 for repo in repos:
                     try:
+                        i += 1
+                        print(str(i))
                         repo_id = repo_manager.insert_repo(group_id, group, repo)
                     except exc.SQLAlchemyError:
                         summary['failed_repo_records'].append(repo)

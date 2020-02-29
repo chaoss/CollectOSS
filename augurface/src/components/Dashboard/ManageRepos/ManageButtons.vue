@@ -5,8 +5,8 @@
         <!-- import repos -->
         <aug-text-input
           inputName="organizationName"
-          text="Import repos from user/organization"
-          placeholder="organization/username..."
+          text="Import repos from organization"
+          placeholder="organization name..."
           @valueUpdated="setOrgUsernameInput"
         />
         <aug-button text="Import" @click="importReposFromOrganization()" />
@@ -83,7 +83,7 @@ export default {
       }
       // fetch request
       // then -> commit new group to vuex
-      console.log("endpoint not yet configured for creating new repo groups");
+      window.alert("Coming soon!");
     },
     importReposFromOrganization() {
       if (this.isDisabled) {
@@ -105,11 +105,22 @@ export default {
       })
         .then(res => {
           this.isImporting = false;
-          return res.json();
+
+          if (res.status === 500) {
+            console.log("Server error (possible invalid organization name)");
+            window.alert('Possible invalid organization name entered. Import failed.');
+            return null;
+          } else {
+            return res.json();
+          }
         })
         .then(res => {
-          this.$store.commit("reposModule/addGroup", res);
-        }); // this is where we will take returned data from response and add to state
+          if (res != null) {
+            window.alert('successfully imported github organization');
+            this.$store.commit("reposModule/addRepos", res.repo_records_created)
+            this.$store.commit("reposModule/addGroup", { repo_group_id: res.group_id, rg_name: res.rg_name });
+          }
+        });
     },
     setGroupNameInput(newValue) {
       this.groupNameInput = newValue;

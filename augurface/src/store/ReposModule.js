@@ -24,12 +24,15 @@ export default {
       Vue.set(state, 'groupsLoaded', newValue);
     },
     addRepos(state, newRepos) {
-      Vue.set(state, 'repos', [...state.repos, ...newRepos]);
+      let nonConflictingPreviousRepos = state.repos.filter(r => newRepos.find(re => re.repo_id === r.repo_id) == null);
+      Vue.set(state, 'repos', [...nonConflictingPreviousRepos, ...newRepos]);
       sessionStorage.setItem('__augursessionstorage__repos', JSON.stringify(state.repos));
     },
     addGroup(state, newGroup) {
-      Vue.set(state, 'repoGroups', [...state.repoGroups, newGroup]);
-      sessionStorage.setItem('__augursessionstorage__groups', JSON.stringify(state.repoGroups));
+      if (state.repoGroups.find(rg => rg.repo_group_id === newGroup.repo_group_id) == null) {
+        Vue.set(state, 'repoGroups', [...state.repoGroups, newGroup]);
+        sessionStorage.setItem('__augursessionstorage__groups', JSON.stringify(state.repoGroups));
+      }
     }
   },
   actions: {
