@@ -377,3 +377,23 @@ def create_pull_request_routes(server):
                     ]
     """
     server.addRepoMetric(metrics.pull_request_acceptance_rate, 'pull-request-acceptance-rate')
+
+
+    """
+    @api {get} /repos/:repo_id/pull-request-acceptance-rate Pull Request Acceptance Rate (Repo)
+    @apiName pull-request-acceptance-rate-repo
+    @apiGroup Experimental
+    @apiDescription Timeseries of pull request which were closed but not merged
+    @apiParam {string} repo_group_id Repository Group ID.
+    @apiParam {string} repo_id Repository ID.
+    @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "date": "2019-01-01T00:00:00.000Z",
+                            "rate": 5.3333333333
+                        }
+                    ]
+    """
+    server.addRepoMetric(metrics.pull_requests_closed_no_merge, 'pull-requests-closed-no-merge')
