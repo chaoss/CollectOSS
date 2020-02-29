@@ -9,7 +9,6 @@ ENV POSTGRES_DB "augur"
 
 WORKDIR augur_data/
 
-RUN rm -r /docker-entrypoint-initdb.d/*.*
 COPY ./schema/generate/ /docker-entrypoint-initdb.d/
 
 EXPOSE 5432

@@ -188,17 +188,17 @@ compose-run-with-database:
 docker-build: docker-build-backend docker-build-frontend docker-build-database
 
 docker-build-backend:
-	@ docker build -t augurlabs/augur:latest -f util/packaging/docker/augur/Dockerfile .
+	@ docker build -t augurlabs/augur:backend -f util/docker/augur/Dockerfile .
 
 docker-build-frontend:
-	@ docker build -t augurlabs/augur:frontend-dev -f util/packaging/docker/frontend/Dockerfile .
+	@ docker build -t augurlabs/augur:frontend-dev -f util/docker/frontend/Dockerfile .
 
 docker-build-database:
-	@ docker build -t augurlabs/augur:database-dev -f util/packaging/docker/database/Dockerfile .
+	@ docker build -t augurlabs/augur:database-dev -f util/docker/database/Dockerfile .
 
 
 docker-run-backend:
-	@ docker run -d -p 5000:5000 --name augur_backend --env-file env.txt augurlabs/augur:latest
+	@ docker run -d -p 5000:5000 --name augur_backend --env-file env.txt augurlabs/augur:backend
 
 docker-run-frontend:
 	@ docker run -d -p 8080:8080 --name augur_frontend augurlabs/augur:frontend-dev

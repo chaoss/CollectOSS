@@ -4,7 +4,7 @@ LABEL maintainer="c@carterlandis.com"
 LABEL version="0.1.0"
 
 WORKDIR augur_frontend/
-COPY ./util/packaging/docker/frontend/frontend.config.json .
+COPY ./util/docker/frontend/frontend.config.json .
 RUN cp frontend.config.json augur.config.json
 
 WORKDIR frontend/
@@ -17,7 +17,7 @@ RUN npm run build
 
 FROM nginx as production-stage
 COPY --from=build-stage /augur_frontend/frontend/dist /usr/share/nginx/html
-COPY ./util/packaging/docker/frontend/nginx.conf /etc/nginx/nginx.conf
+COPY ./util/docker/frontend/nginx.conf /etc/nginx/nginx.conf
 
 EXPOSE 8080
 

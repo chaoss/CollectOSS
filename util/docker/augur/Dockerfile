@@ -1,17 +1,10 @@
 FROM python:3.6-slim-buster as build-stage
 
+COPY ./util/docker/augur/install_packages.sh .
+RUN ./install_packages.sh
+
 LABEL maintainer="c@carterlandis.com"
 LABEL version="0.1.0"
-
-ENV STATIC_INDEX 0
-COPY ./util/packaging/docker/augur/uwsgi.ini /app/uwsgi.ini
-COPY ./util/packaging/docker/augur/prestart.sh /app/prestart.sh
-
-WORKDIR /augur
-COPY . .
-
-RUN rm -rf frontend/
-RUN rm -rf schema/
 
 WORKDIR /augur
 
@@ -22,12 +15,14 @@ COPY ./requirements.txt .
 COPY ./setup.py .
 COPY ./fastentrypoints.py .
 COPY ./augur/ ./augur/
-RUN pip install --quiet .
+RUN pip install .
 
-COPY ./util/packaging/docker/docker.config.json .
-RUN augur configure generate --rc-config-file docker.config.json
 RUN mkdir repos/;
+COPY ./workers/ ./workers/
 COPY ./util/scripts/install/workers.sh .
+
+COPY ./util/docker/docker.config.json .
+RUN augur configure generate --rc-config-file docker.config.json
 RUN ./workers.sh
 
-CMD augur run
+CMD augur run --disable-housekeeper
