@@ -127,7 +127,8 @@ def generate(db_name, db_host, db_user, db_port, db_password, github_api_key, fa
             "cache_expire": "3600",
             "host": "0.0.0.0",
             "port": "5000",
-            "workers": "4"
+            "workers": 4,
+            "timeout": 60
         },
         "Frontend": {
             "host": "0.0.0.0",
