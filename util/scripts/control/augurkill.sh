@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 
 if [[ "$VIRTUAL_ENV" ]]; then
     echo "Killing augur processes."

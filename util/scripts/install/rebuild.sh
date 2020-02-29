@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 
 util/scripts/install/checks.sh
 

@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 
 ./util/scripts/control/augur.sh
 echo "Waiting for the server to start... (this will take a moment)"

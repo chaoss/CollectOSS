@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 
 if [[ ! -d logs ]]; then
     mkdir logs

@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 
 echo "Checking for the correct version of Python 3..."
 
