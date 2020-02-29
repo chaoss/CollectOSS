@@ -13,13 +13,12 @@ COPY ./README.md .
 
 COPY ./requirements.txt .
 COPY ./setup.py .
-COPY ./fastentrypoints.py .
 COPY ./augur/ ./augur/
 RUN pip install .
 
 RUN mkdir repos/;
 COPY ./workers/ ./workers/
-COPY ./util/scripts/install/workers.sh .
+COPY ./scripts/install/workers.sh .
 
 COPY ./util/docker/docker.config.json .
 RUN augur configure generate --rc-config-file docker.config.json

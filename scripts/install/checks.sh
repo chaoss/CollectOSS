@@ -1,5 +1,5 @@
 #!/bin/bash
-set -euo pipefail
+
 
 echo "Checking for the correct version of Python 3..."
 
@@ -77,7 +77,7 @@ if [[ -z "$VIRTUAL_ENV" ]]; then
               "n" )
                   echo
                   echo "Please create the virtual environment and return to the installation when you're finished."
-                  echo "When you're creating the environment, please do not create it inside this directory. The recommended location is `$HOME`/.virtualenvs."
+                  echo "When you're creating the environment, please do not create it inside this directory. The recommended location is $HOME/.virtualenvs."
                   echo
                   exit 1
                 ;;

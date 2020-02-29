@@ -7,6 +7,8 @@ echo "Installing workers and their dependencies..."
 echo "**********************************"
 echo
 
+target=$1
+
 for WORKER in $(ls -d workers/*/)
 do
     if [[ $WORKER == *"_worker"* ]]; then
@@ -26,7 +28,11 @@ do
         cd $WORKER
         rm -rf build/*;
         rm -rf dist/*;
-        pip install -e .
+        if [[ $target == *"prod"* ]]; then
+            pip install .
+        else
+            pip install -e .
+        fi
         cd ../..
       fi
 

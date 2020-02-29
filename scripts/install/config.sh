@@ -12,7 +12,7 @@ if [[ ! -e augur.config.json ]]; then
   echo "Setting up the database configuration..."
   echo "**********************************"
   echo
-  util/scripts/install/setup_db.sh
+  scripts/install/setup_db.sh
 else
   echo "** Config file was found. Resuming installation... **"
 fi

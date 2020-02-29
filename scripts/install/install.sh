@@ -7,7 +7,7 @@ Your choice: "
 
 # check for python, pip, and a virtual environment being active
 # if the script exit value != 0 indicating some failure, then stop
-util/scripts/install/checks.sh
+scripts/install/checks.sh
 
 if [[ $? -ne 0 ]]; then
   exit 1
@@ -17,20 +17,24 @@ if [[ ! -d logs ]]; then
     mkdir logs
 fi
 
-echo "Installing backend dependencies..."
-util/scripts/install/backend.sh > logs/backend-install.log 2>logs/backend-install.err 
+target=${1-prod}
+
+echo "Installing the backend and its dependencies..."
+scripts/install/backend.sh $target > logs/backend-installation.log 2>&1
 echo "Done!"
 
-echo "Installing worker dependencies..."
-util/scripts/install/workers.sh >logs/workers.log 2>logs/workers.err 
+echo "Installing workers and their dependencies..."
+scripts/install/workers.sh $target > logs/workers-installation.log 2>&1
 echo "Done!"
 
-echo "Generating documentation..."
-util/scripts/install/api_docs.sh
-echo "Done!"
+if [[ $target == *"dev"* ]]; then
+  echo "Generating documentation..."
+  scripts/install/api_docs.sh > logs/api-doc-generation.log 2>&1
+  echo "Done!"
+fi
 
-echo "Generating config..."
-util/scripts/install/config.sh
+echo "Generating a config file..."
+scripts/install/config.sh > logs/config-generation.log 2>&1
 echo "Done!"
 
 echo
@@ -40,7 +44,7 @@ select choice in "y" "n"
 do
   case $choice in
     "y" )
-      util/scripts/install/frontend.sh
+      scripts/install/frontend.sh > logs/frontend-installation.log 2>&1
       break
       ;;
     "n" )

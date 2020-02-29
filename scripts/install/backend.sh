@@ -1,5 +1,5 @@
 #!/bin/bash
-set -euo pipefail
+set -eo pipefail
 
 echo
 echo "**********************************"
@@ -7,6 +7,12 @@ echo "Installing backend dependencies..."
 echo "**********************************"
 echo
 
-pip install xlsxwriter setuptools sphinx;
-pip install -e .; 
-npm install apidoc;
+target=$1
+
+if [[ $target == *"prod"* ]]; then
+    pip install .
+else
+    pip install -e .[dev]
+    npm install apidoc;
+fi
+

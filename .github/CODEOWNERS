@@ -10,7 +10,7 @@
 
 /test/ @ccarterlandis
 /util/packaging @ccarterlandis
-/util/scripts @ccarterlandis
+/scripts/ @ccarterlandis
 /docs/ @ccarterlandis
 /.dockerignore @ccarterlandis
 /.travis.yml @ccarterlandis
