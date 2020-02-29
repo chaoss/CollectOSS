@@ -7,9 +7,8 @@ AUGUR_PORT?=5000
 
 default:
 	@ echo "Installation Commands:"
-	@ echo "    install                         Installs augur using pip"
-	@ echo "    version                         Print the currently installed version"
-	@ echo "    config                          Creates a new augur.config.json"
+	@ echo "    install                         Installs Augur's full stack for production"
+	@ echo "    install                         Installs Augur's full stack for development"
 	@ echo "    clean                           Removes potentially troublesome compiled files"
 	@ echo "    rebuild                         Removes build/compiled files & binaries and reinstalls the project"
 	@ echo
@@ -109,17 +108,11 @@ backend-restart: backend-stop backend-start
 
 backend: backend-restart
 
-augur-start:
-	@ ./scripts/control/augur.sh
-
-collect:
-	@ ./scripts/control/collect.sh
-
-run:
-	@ ./scripts/control/run.sh
-
 status:
-	@ ./scripts/control/status.sh
+	@ ./scripts/control/status.sh quick
+
+status-interactive:
+	@ ./scripts/control/status.sh interactive
 
 #
 # Testing
@@ -161,9 +154,9 @@ docs: api-docs library-docs
 
 #
 # Docker Shortcuts
-# 
-.PHONY: compose-run compose-run-database
+# .PHONY: compose-run compose-run-database
 .PHONY: build-backend run-backend build-frontend run-frontend build-database run-database 
+
 
 compose-run:
 	@ docker-compose -f docker-compose.yml up --build
