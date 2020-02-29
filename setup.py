@@ -41,7 +41,7 @@ setup(
         "requests",
         "flask_cors",
         "flask_wtf",
-        "psycopg2",
+        "psycopg2-binary",
         "click",
         "gunicorn==19.9.0"
     ],

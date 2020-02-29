@@ -19,12 +19,11 @@ setup(
     author="Augurlabs",
     author_email="s@goggins.com",
     description="Augur Worker that collects data from the CII badging API",
-    long_description=read("README.rst"),
     packages=find_packages(exclude=('tests',)),
     install_requires=[
         'flask', 
         'requests', 
-        'psycopg2', 
+        'psycopg2-binary', 
         'click'
     ],
     entry_points={

@@ -19,13 +19,12 @@ setup(
     author="Augurlabs",
     author_email="s@goggins.com",
     description="Augur Worker that parses and collects git log data",
-    long_description=read("README.rst"),
     packages=find_packages(exclude=('tests',)),
     install_requires=[
         'flask', 
         'requests', 
         'xlsxwriter', 
-        'psycopg2', 
+        'psycopg2-binary', 
         'click'
     ],
     entry_points={

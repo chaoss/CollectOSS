@@ -19,7 +19,6 @@ setup(
     author="Augurlabs",
     author_email="s@goggins.com",
     description="Augur Worker that discovers and stores data anomalies",
-    long_description=read("README.rst"),
     packages=find_packages(exclude=('tests',)),
     install_requires=[
         'flask', 
