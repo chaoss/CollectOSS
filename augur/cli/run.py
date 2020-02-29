@@ -133,11 +133,13 @@ def cli(ctx, enable_housekeeper):
     host = app.read_config('Server', 'host', 'AUGUR_HOST', '0.0.0.0')
     port = app.read_config('Server', 'port', 'AUGUR_PORT', '5000')
     workers = int(app.read_config('Server', 'workers', 'AUGUR_WORKERS', mp.cpu_count()))
+    timeout = int(app.read_config('Server', 'timeout', 'AUGUR_TIMEOUT', 60))
     options = {
         'bind': '%s:%s' % (host, port),
         'workers': workers,
         'accesslog': '-',
         'access_log_format': '%(h)s - %(t)s - %(r)s',
+        'timeout': timeout
     }
     logger.info('Starting server...')
     master = Arbiter(AugurGunicornApp(options, manager=manager, broker=broker, housekeeper=housekeeper)).run()
