@@ -7,8 +7,7 @@ if [[ $? -ne 0 ]]; then
   exit 1
 fi
 
-#remove build files
-rm -rf build/ dist/ docs/build/ workers/**/build/** workers/**/dist** node_modules frontend/node_modules
+scripts/install/clean.sh
 
 #rebuild everything
 scripts/install/backend.sh

@@ -1,13 +1,8 @@
 SERVE_COMMAND=augur run
 ENABLE_HOUSEKEEPER=--enable-housekeeper
-OLDVERSION="null"
 EDITOR?="vi"
 AUGUR_PIP?='pip'
 AUGUR_PYTHON?='python'
-
-DOCKER_IMAGE_NAME?='augurlabs/augur'
-DOCKER_IMAGE_TAG?='latest'
-DOCKER_CONTAINER_NAME?='augurlabs/augur'
 AUGUR_PORT?=5000
 
 default:
@@ -38,7 +33,9 @@ default:
 #
 #  Installation
 #
-.PHONY: install version config
+.PHONY: install install-dev 
+.PHONY: install-spdx install-spdx-sudo install-augur-sbom 
+.PHONY: clean rebuild
 install:
 	@ ./scripts/install/install.sh prod
 
@@ -55,13 +52,9 @@ install-augur-sbom:
 	@ ./scripts/install/nomos.sh
 
 clean:
-	@ echo "Removing node_modules, logs, caches, and some other dumb stuff that can be annoying..."
-	@ rm -rf frontend/public .pytest_cache logs *.out
-	@ rm -rf workers/**/*.log workers/**/*.err workers/**/*.out
-	@ find . -name \*.pyc -delete
-	@ find . -type f -name "*.lock" -delete
+	@ scripts/install/clean.sh
 
-rebuild: clean
+rebuild:
 	@ scripts/install/rebuild.sh
 
 
@@ -132,6 +125,7 @@ status:
 # Testing
 #
 .PHONY: test test-metrics test-metrics-api
+
 test: test-metrics test-metrics-api
 
 test-metrics:
@@ -147,7 +141,9 @@ test-python-versions:
 #
 # Documentation
 #
-.PHONY: library-docs library-docs-view api-docs api-docs-view docs
+.PHONY: library-docs library-docs-view 
+.PHONY:api-docs api-docs-view docs
+
 library-docs:
 	@ bash -c 'cd docs/ && rm -rf build/ && make html;'
 
@@ -166,20 +162,18 @@ docs: api-docs library-docs
 #
 # Docker Shortcuts
 # 
-.PHONY: compose-run compose-run-with-database
+.PHONY: compose-run compose-run-database
 .PHONY: build-backend run-backend build-frontend run-frontend build-database run-database 
 
 compose-run:
 	@ docker-compose -f docker-compose.yml up --build
-	@ docker-compose down --remove-orphans
 
-compose-run-with-database:
+compose-run-database:
 	@ echo "**************************************************************************"
-	@ echo "Make sure there are removed NO database credentials from the env.txt file!"
+	@ echo "Make sure there are no database credentials in the env.txt!"
 	@ echo "**************************************************************************"
 	@ echo
 	@ docker-compose -f docker-compose.yml -f database-compose.yml up --build
-	@ docker-compose down --remove-orphans
 
 docker-build: docker-build-backend docker-build-frontend docker-build-database
 
@@ -187,18 +181,18 @@ docker-build-backend:
 	@ docker build -t augurlabs/augur:backend -f util/docker/augur/Dockerfile .
 
 docker-build-frontend:
-	@ docker build -t augurlabs/augur:frontend-dev -f util/docker/frontend/Dockerfile .
+	@ docker build -t augurlabs/augur:frontend -f util/docker/frontend/Dockerfile .
 
 docker-build-database:
-	@ docker build -t augurlabs/augur:database-dev -f util/docker/database/Dockerfile .
+	@ docker build -t augurlabs/augur:database -f util/docker/database/Dockerfile .
 
 
 docker-run-backend:
 	@ docker run -d -p 5000:5000 --name augur_backend --env-file env.txt augurlabs/augur:backend
 
 docker-run-frontend:
-	@ docker run -d -p 8080:8080 --name augur_frontend augurlabs/augur:frontend-dev
+	@ docker run -d -p 8080:8080 --name augur_frontend augurlabs/augur:frontend
 
 docker-run-database:
-	@ docker run -d -p 5432:5432 --name augur_database augurlabs/augur:database-dev
+	@ docker run -d -p 5432:5432 --name augur_database augurlabs/augur:database
 
