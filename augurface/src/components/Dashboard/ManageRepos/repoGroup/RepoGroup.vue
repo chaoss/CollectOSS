@@ -17,14 +17,19 @@
     <transition name="ease">
       <div id="repos" v-if="!isCollapsed" @click="stopEventPropagation($event)">
         <div id="add-repos-input">
-          <aug-text-input
+          <aug-text-area
             text="Add repos to group"
             placeholder="comma seperated git urls"
             inputName="urls"
             @valueUpdated="setUrlsInput"
           />
           <aug-button text="add" @click="addRepos()" />
-          <img v-if="isCurrentlyAddingRepos" src="../../../../assets/loading.gif" alt="adding repos..." style="width: 35px; transform: translateX(-15px);">
+          <img
+            v-if="isCurrentlyAddingRepos"
+            src="../../../../assets/loading.gif"
+            alt="adding repos..."
+            style="width: 35px; transform: translateX(-15px);"
+          />
         </div>
         <div class="repo-list">
           <repo
@@ -39,7 +44,8 @@
 </template>
 
 <script>
-import AugTextInput from "../../../BaseComponents/AugTextInput.vue";
+// import AugTextInput from "../../../BaseComponents/AugTextInput.vue";
+import AugTextArea from "../../../BaseComponents/AugTextArea.vue";
 import AugButton from "../../../BaseComponents/AugButton.vue";
 import Repo from "./Repo.vue";
 import { mapGetters } from "vuex";
@@ -47,7 +53,8 @@ import { mapGetters } from "vuex";
 export default {
   name: "RepoGroup",
   components: {
-    AugTextInput,
+    // AugTextInput,
+    AugTextArea,
     AugButton,
     Repo
   },
@@ -65,13 +72,13 @@ export default {
   data() {
     return {
       isCollapsed: true,
-      urlsInput: "", 
+      urlsInput: "",
       isCurrentlyAddingRepos: false
     };
   },
   computed: {
     ...mapGetters("reposModule", ["getReposInGroup"])
-  }, 
+  },
   methods: {
     flipCollapse() {
       this.isCollapsed = !this.isCollapsed;
@@ -81,9 +88,9 @@ export default {
     },
     open() {
       this.isCollapsed = false;
-    }, 
+    },
     stopEventPropagation(e) {
-      e.stopPropagation();    // keep events from propogating to parent components
+      e.stopPropagation(); // keep events from propogating to parent components
     },
     setUrlsInput(val) {
       this.urlsInput = val;
@@ -103,16 +110,13 @@ export default {
       };
 
       // make request
-      fetch(
-        `${this.$store.state.utilModule.baseEndpointUrl}/add-repos`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(requestBody)
-        }
-      )
+      fetch(`${this.$store.state.utilModule.baseEndpointUrl}/add-repos`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(requestBody)
+      })
         .then(res => {
           console.log(`STATUS: ${res.status}`);
           if (res.status === 200) {
@@ -125,11 +129,11 @@ export default {
           if (res) {
             console.log(res);
             // update state
-            this.$store.commit('reposModule/addRepos', res.repos_inserted);
+            this.$store.commit("reposModule/addRepos", res.repos_inserted);
             this.isCurrentlyAddingRepos = false;
           }
         });
-    },
+    }
   }
 };
 </script>
@@ -183,11 +187,13 @@ p {
 #repos {
   position: relative;
   top: 0.3rem;
+  border-top: 1px solid var(--grey);
+  padding-top: 1rem;
 }
 
 .ease-enter-active,
 .ease-leave-active {
-  transition: max-height 0.3s, padding-top 0.3s, height .3s;
+  transition: max-height 0.3s, padding-top 0.3s, height 0.3s;
   height: auto;
   overflow: hidden;
 }
@@ -218,7 +224,7 @@ p {
 }
 
 #add-repos-input > * {
-  margin-right: 2rem;
+  margin-right: 1rem;
 }
 
 #add-repos-input button {
@@ -228,5 +234,7 @@ p {
 .repo-list {
   margin-top: 1rem;
   border-bottom: 1px solid var(--grey);
+  /* border-top: 1px solid var(--grey); */
+
 }
 </style>
