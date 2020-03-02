@@ -171,7 +171,7 @@ compose-run-database:
 docker-build: docker-build-backend docker-build-frontend docker-build-database
 
 docker-build-backend:
-	@ docker build -t augurlabs/augur:backend -f util/docker/augur/Dockerfile .
+	@ docker build -t augurlabs/augur:backend -f util/docker/backend/Dockerfile .
 
 docker-build-frontend:
 	@ docker build -t augurlabs/augur:frontend -f util/docker/frontend/Dockerfile .
