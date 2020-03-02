@@ -61,7 +61,7 @@ class Application(object):
             except json.decoder.JSONDecodeError as e:
                 logger.warn('%s could not be parsed, using defaults. Fix that file, or delete it and run this again to regenerate it. Error: %s', config_file_path, str(e))
         else:
-            logger.warn('%s could not be parsed, using defaults. Error: %s', config_file_path, str(e))
+            logger.warn('%s could not be parsed, using defaults. Error: %s', str(e))
 
         self.load_env_configuration()
 
