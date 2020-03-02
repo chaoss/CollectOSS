@@ -21,15 +21,17 @@ def cli():
 def export_env(ctx):
     app = ctx.obj
 
-    app.export_config(section='Database', name='key', environment_variable='AUGUR_GITHUB_API_KEY', default=default_config['Database']['key'])
-    app.export_config(section='Server', name='port', environment_variable='AUGUR_PORT', default=int(default_config['Server']['port']))
-    app.export_config(section='Database', name='host', environment_variable='AUGUR_DB_HOST', default=default_config['Database']['host'])
-    app.export_config(section='Database', name='database', environment_variable='AUGUR_DB_NAME', default=default_config['Database']['database'])
-    app.export_config(section='Database', name='port', environment_variable='AUGUR_DB_PORT', default=int(default_config['Database']['port']))
-    app.export_config(section='Database', name='user', environment_variable='AUGUR_DB_USER', default=default_config['Database']['user'])
-    app.export_config(section='Database', name='password', environment_variable='AUGUR_DB_PASSWORD', default=default_config['Database']['password'])
-    app.export_config(section=None, name=None, environment_variable='AUGUR_FACADE_REPO_DIRECTORY', default=default_config['Workers']['facade_worker']['repo_directory'])
+    export_file = open(os.getenv('AUGUR_EXPORT_FILE', 'augur_export_env.sh'), 'w+')
+    export_file.write('#!/bin/bash')
+    export_file.write('\n')
+    env_file = open(os.getenv('AUGUR_ENV_FILE', 'augur_env.txt'), 'w+')
 
+    for env_var in app.env_config.items():
+        export_file.write('export ' + env_var[0] + '="' + str(env_var[1]) + '"\n')
+        env_file.write(env_var[0] + '=' + str(env_var[1]) + '\n')
+
+    export_file.close()
+    env_file.close()
 
 @cli.command('kill', short_help='Kill Augur')
 def kill():

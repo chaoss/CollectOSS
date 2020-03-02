@@ -43,7 +43,8 @@ setup(
         "flask_wtf",
         "psycopg2-binary",
         "click",
-        "gunicorn==19.9.0"
+        "gunicorn==19.9.0",
+        "six>=1.14.0"
     ],
     extras_require={
         "dev": ["tox", "pytest", "ipdb", "sphinx","sphinx_rtd_theme"],
