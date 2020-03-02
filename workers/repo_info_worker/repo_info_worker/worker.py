@@ -114,7 +114,7 @@ class GHRepoInfoWorker:
         self.headers = {'Authorization': 'token %s' % self.oauths[0]['access_token']}
 
         # Send broker hello message
-        connect_to_broker(self, logging.getLogger())
+        connect_to_broker(self)
 
     @property
     def task(self):
@@ -197,7 +197,7 @@ class GHRepoInfoWorker:
         github_url = task['given']['github_url']
 
         logging.info("Beginning filling the repo_info model for repo: " + github_url + "\n")
-        record_model_process(self, logging, repo_id, 'repo_info')
+        record_model_process(self, repo_id, 'repo_info')
 
         owner, repo = self.get_owner_repo(github_url)
 
@@ -267,7 +267,7 @@ class GHRepoInfoWorker:
         for attempt in range(num_attempts):
             logging.info("Hitting endpoint: {} ...\n".format(url))
             r = requests.post(url, json={'query': query}, headers=self.headers)
-            update_gh_rate_limit(self, logging, r)
+            update_gh_rate_limit(self, r)
 
             try:
                 j = r.json()
@@ -275,9 +275,8 @@ class GHRepoInfoWorker:
                 j = json.loads(json.dumps(r.text))
 
             if 'errors' in j:
-                logging.info(j)
-                logging.info(j['errors'])
-                register_task_failure(self, logging, task, repo_id, j['errors'][0]['message'])
+                logging.info("Error!: {}".format(j['errors']))
+                register_task_failure(self, task, repo_id, j['errors'][0]['message'])
                 return
 
             if 'data' in j:
@@ -291,11 +290,11 @@ class GHRepoInfoWorker:
                     break
                 if j['message'] == 'You have triggered an abuse detection mechanism. Please wait a few minutes before you try again.':
                     num_attempts -= 1
-                    update_gh_rate_limit(self, logging, r, temporarily_disable=True)
+                    update_gh_rate_limit(self, r, temporarily_disable=True)
                 if j['message'] == 'Bad credentials':
-                    update_gh_rate_limit(self, logging, r, bad_credentials=True)
+                    update_gh_rate_limit(self, r, bad_credentials=True)
         if not success:
-            register_task_failure(self, logging, task, repo_id, "Failed to hit endpoint: {}".format(url))
+            register_task_failure(self, task, repo_id, "Failed to hit endpoint: {}".format(url))
             return
 
         committers_count = self.query_committers_count(owner, repo)
@@ -345,7 +344,7 @@ class GHRepoInfoWorker:
         logging.info(f"Inserted info for {owner}/{repo}\n")
 
         #Register this task as completed
-        register_task_completion(self, logging.getLogger(), task, repo_id, "repo_info")
+        register_task_completion(self, task, repo_id, "repo_info")
 
     def query_committers_count(self, owner, repo):
         logging.info('Querying committers count\n')
@@ -355,7 +354,7 @@ class GHRepoInfoWorker:
         try:
             while True:
                 r = requests.get(url, headers=self.headers)
-                update_gh_rate_limit(self, logging, r)
+                update_gh_rate_limit(self, r)
                 committers += len(r.json())
 
                 if 'next' not in r.links:
