@@ -78,9 +78,13 @@ def pull_requests_closed_no_merge(self, repo_group_id, repo_id=None, period='day
     if repo_id:
         closedNoMerge = s.sql.text("""
             SELECT DATE_TRUNC(:period, pull_requests.pr_closed_at) AS closed_date,
-            COUNT(pull_request_id)
-            FROM pull_requests WHERE repo_id = :repo_id and pull_requests.pr_closed_at is NOT NULL and
+            COUNT(pull_request_id) as pr_count
+            FROM pull_requests JOIN repo ON pull_requests.repo_id = repo.repo_id
+            WHERE pull_requests.repo_id = :repo_id
+            AND pull_requests.pr_closed_at is NOT NULL AND
             pull_requests.pr_merged_at is NULL
+            GROUP BY closed_date, pull_request_id
+            ORDER BY closed_date
         """)
         results = pd.read_sql(closedNoMerge, self.database, params={'repo_id': repo_id, 'period': period,
                                                                      'begin_date': begin_date,
@@ -89,9 +93,11 @@ def pull_requests_closed_no_merge(self, repo_group_id, repo_id=None, period='day
     else:
         closedNoMerge = s.sql.text("""
             SELECT DATE_TRUNC(:period, pull_requests.pr_closed_at) AS closed_date,
-            COUNT(pull_request_id)
-            FROM pull_requests WHERE repo_id in (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
+            COUNT(pull_request_id) as pr_count
+            FROM pull_requests JOIN repo ON pull_requests.repo_id = repo.repo_id WHERE pull_requests.repo_id in (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
             and pull_requests.pr_closed_at is NOT NULL and pull_requests.pr_merged_at is NULL
+            GROUP BY closed_date, pull_request_id
+            ORDER BY closed_date
         """)
 
         results = pd.read_sql(closedNoMerge, self.database,
