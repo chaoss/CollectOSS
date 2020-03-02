@@ -19,3 +19,9 @@ def test_pull_requests_merge_contributor_new_by_repo(metrics):
     assert len(data) >= 1
     assert data[0]["count"] > 0
 
+def test_pull_requests_closed_no_merge(metrics):
+    response = requests.get('http://localhost:5000/api/unstable/repo/20/pull-request-closed-no-merge')
+    data = response.json()
+    assert response.status_code == 200
+    assert len(data) >= 1
+    assert data[0]["count"] > 0
