@@ -380,8 +380,8 @@ def create_pull_request_routes(server):
 
 
     """
-    @api {get} /repos/:repo_id/pull-request-acceptance-rate Pull Request Acceptance Rate (Repo)
-    @apiName pull-request-acceptance-rate-repo
+    @api {get} /repos/:repo_id/pull-request-closed-no-merge Pull Request Closed but not merged(Repo)
+    @apiName pull-request-closed-no-merge
     @apiGroup Experimental
     @apiDescription Timeseries of pull request which were closed but not merged
     @apiParam {string} repo_group_id Repository Group ID.
