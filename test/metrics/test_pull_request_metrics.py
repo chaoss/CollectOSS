@@ -29,8 +29,6 @@ def test_pull_request_acceptance_rate(metrics):
 
 def test_pull_request_closed_no_merge(metrics):
     assert metrics.pull_requests_closed_no_merge(10).iloc[0]['pr_count'] > 0
-    print(metrics.pull_requests_closed_no_merge(1, 25430, begin_date='2018-1-1 00:00:00',
-                                     end_date='2019-12-31 23:59:59'))
     assert metrics.pull_requests_closed_no_merge(1, 25430, begin_date='2018-1-1 00:00:00',
                                      end_date='2019-12-31 23:59:59').iloc[0]['pr_count'] > 0
 
