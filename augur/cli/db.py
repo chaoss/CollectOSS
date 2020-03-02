@@ -107,12 +107,12 @@ def update_repo_directory(ctx, repo_directory):
 
 def get_db_connection(app):
 
-    user = app.read_config('Database', 'user', 'AUGUR_DB_USER', 'augur')
-    password = app.read_config('Database', 'password', 'AUGUR_DB_PASSWORD', 'password')
-    host = app.read_config('Database', 'host', 'AUGUR_DB_HOST', '0.0.0.0')
-    port = app.read_config('Database', 'port', 'AUGUR_DB_PORT', '5433')
-    dbname = app.read_config('Database', 'database', 'AUGUR_DB_NAME', 'augur')
-    schema = app.read_config('Database', 'schema', 'AUGUR_DB_SCHEMA', 'augur_data')
+    user = app.read_config('Database', 'user')
+    password = app.read_config('Database', 'password')
+    host = app.read_config('Database', 'host')
+    port = app.read_config('Database', 'port')
+    dbname = app.read_config('Database', 'name')
+    schema = app.read_config('Database', 'schema')
 
     DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(
             user, password, host, port, dbname
