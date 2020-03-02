@@ -2,6 +2,7 @@ import json, logging, os, click
 import requests
 from flask import Flask, Response, jsonify, request
 from pull_request_worker.worker import GHPullRequestWorker
+from workers.standard_methods import read_config
 
 def create_server(app, gw):
     """ Consists of AUGWOP endpoints for the broker to communicate to this worker
@@ -51,15 +52,17 @@ def main(augur_url, host, port):
     app = Flask(__name__)
 
     #load credentials
-    credentials = read_config("Database", use_main_config=1)
-    server = read_config("Server", use_main_config=1)
-    worker_info = read_config("Workers", use_main_config=1)['pull_request_worker']
+    broker_host = read_config("Server", "host", "AUGUR_HOST", "0.0.0.0")
+    broker_port = read_config("Server", "port", "AUGUR_PORT", 5000)
+    database_host = read_config('Database', 'host', 'AUGUR_DB_HOST', 'host')
+    worker_info = read_config('Workers', 'pull_request_worker', None, None)
+
     worker_port = worker_info['port'] if 'port' in worker_info else port
     
     while True:
         try:
             print("New pull request worker trying port: {}\n".format(worker_port))
-            r = requests.get("http://{}:{}/AUGWOP/heartbeat".format(server['host'],worker_port)).json()
+            r = requests.get("http://{}:{}/AUGWOP/heartbeat".format(host, worker_port)).json()
             if 'status' in r:
                 if r['status'] == 'alive':
                     worker_port += 1
@@ -68,22 +71,20 @@ def main(augur_url, host, port):
 
     logging.basicConfig(filename='worker_{}.log'.format(worker_port), filemode='w', level=logging.INFO)
 
-    config = {
+    config = { 
             "id": "com.augurlabs.core.pull_request_worker.{}".format(worker_port),
-            "broker_port": server['port'],
-            "broker_host": server['host'],
-            "location": "http://{}:{}".format(server['host'],worker_port),
-            "zombie_id": 22,
-            "host": credentials["host"],
-            "key": credentials["key"],
-            "password": credentials["password"],
-            "port": credentials["port"],
-            "user": credentials["user"],
-            "database": credentials["database"],
-            "table": "pull_requests",
-            "endpoint": "api.github.com",
-            "display_name": "Pull Request Worker",
-            "description": "A GitHub worker to fetch PR data",
+            "broker_port": broker_port,
+            "broker_host": broker_host,
+            "location": "http://{}:{}".format(read_config('Server', 'host', 'AUGUR_HOST', 'localhost'),worker_port),
+            "host": database_host,
+            "key": read_config("Database", "key", "AUGUR_GITHUB_API_KEY", "key"),
+            "password": read_config('Database', 'password', 'AUGUR_DB_PASSWORD', 'password'),
+            "port": read_config('Database', 'port', 'AUGUR_DB_PORT', 'port'),
+            "user": read_config('Database', 'user', 'AUGUR_DB_USER', 'user'),
+            "database": read_config('Database', 'database', 'AUGUR_DB_NAME', 'database'),
+            "endpoint": "https://bestpractices.coreinfrastructure.org/projects.json",
+            "display_name": "",
+            "description": "",
             "required": 1,
             "type": "string"
         }
@@ -95,7 +96,7 @@ def main(augur_url, host, port):
     create_server(app, None)
     logging.info("Starting Flask App with pid: " + str(os.getpid()) + "...")
 
-    app.run(debug=app.debug, host=server['host'], port=worker_port)
+    app.run(debug=app.debug, host=host, port=worker_port)
     if app.gh_pr_worker._child is not None:
         app.gh_pr_worker._child.terminate()
     try:
@@ -106,60 +107,3 @@ def main(augur_url, host, port):
     logging.info("Killing Flask App: " + str(os.getpid()))
     os.kill(os.getpid(), 9)
 
-
-
-def read_config(section, name=None, environment_variable=None, default=None, config_file='augur.config.json', no_config_file=0, use_main_config=0):
-    """
-    Read a variable in specified section of the config file, unless provided an environment variable
-
-    :param section: location of given variable
-    :param name: name of variable
-    """
-
-
-    __config_bad = False
-    if use_main_config == 0:
-        __config_file_path = os.path.abspath(os.getenv('AUGUR_CONFIG_FILE', config_file))
-    else:
-        __config_file_path = os.path.abspath(os.path.dirname(os.path.dirname(os.getcwd())) + '/augur.config.json')
-
-    __config_location = os.path.dirname(__config_file_path)
-    __export_env = os.getenv('AUGUR_ENV_EXPORT', '0') == '1'
-    __default_config = { 'Database': {"host": "nekocase.augurlabs.io"} }
-
-    if os.getenv('AUGUR_ENV_ONLY', '0') != '1' and no_config_file == 0:
-        try:
-            __config_file = open(__config_file_path, 'r+')
-        except:
-            # logger.info('Couldn\'t open {}, attempting to create. If you have a augur.cfg, you can convert it to a json file using "make to-json"'.format(config_file))
-            if not os.path.exists(__config_location):
-                os.makedirs(__config_location)
-            __config_file = open(__config_file_path, 'w+')
-            __config_bad = True
-
-
-        # Options to export the loaded configuration as environment variables for Docker
-
-        if __export_env:
-
-            export_filename = os.getenv('AUGUR_ENV_EXPORT_FILE', 'augur.cfg.sh')
-            __export_file = open(export_filename, 'w+')
-            # logger.info('Exporting {} to environment variable export statements in {}'.format(config_file, export_filename))
-            __export_file.write('#!/bin/bash\n')
-
-        # Load the config file and return [section][name]
-        try:
-            config_text = __config_file.read()
-            __config = json.loads(config_text)
-            if name is not None:
-                return(__config[section][name])
-            else:
-                return(__config[section])
-
-        except json.decoder.JSONDecodeError as e:
-            if not __config_bad:
-                __using_config_file = False
-                # logger.error('%s could not be parsed, using defaults. Fix that file, or delete it and run this again to regenerate it. Error: %s', __config_file_path, str(e))
-
-            __config = __default_config
-            return(__config[section][name])

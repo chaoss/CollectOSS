@@ -189,7 +189,7 @@ class BadgeWorker:
         """
         git_url = entry_info['given']['git_url']
         logging.info("Collecting data for {}".format(git_url))
-        extension = "/projects.json?pq=" + (quote(git_url[0:-4]))
+        extension = quote(git_url[0:-4])
 
         url = self.config['endpoint'] + extension
         logging.info("Hitting CII endpoint: " + url + " ...")
@@ -207,6 +207,8 @@ class BadgeWorker:
             self.results_counter += 1
         else:
             logging.info("No CII data found for {}\n".format(git_url))
+
+        register_task_completion(self, logging, entry_info, repo_id, "badges")
 
     def collect(self):
         """ Function to process each entry in the worker's task queue
@@ -239,8 +241,6 @@ class BadgeWorker:
             except Exception as e:
                 register_task_failure(self, logging, message, repo_id, e)
                 pass
-
-        register_task_completion(self, logging, message, repo_id, "badges")
 
     def run(self):
         """ Kicks off the processing of the queue if it is not already being processed

@@ -68,9 +68,8 @@ class Housekeeper:
             # Waiting for compatible worker
             while True:
                 if not compatible_worker_found:
-                    # logging.info("On model updater process: {}\n".format(job['model']))
+                    # logging.info(list(broker._getvalue().keys()))
                     for worker in list(broker._getvalue().keys()):
-                        # logging.info("Checking keys for worker {}. : {}\n".format(worker, broker[worker].keys()))
                         if job['model'] in broker[worker]['models'] and job['given'] in broker[worker]['given']:
                             compatible_worker_found = True
                 if compatible_worker_found:

@@ -4,7 +4,6 @@ echo "augur logs"
 echo "*****************************"
 
 tail logs/augur.log
-tail logs/augur.err
 
 echo
 echo "*****************************"
@@ -24,8 +23,6 @@ do
 
       cd $WORKER
       tail *.log
-      tail *.err
-      tail "${FORMATTED_WORKER}.err"
       echo
       echo
       cd ../..

@@ -23,9 +23,9 @@ def create_server(app, gw):
 
         if request.method == 'GET': #will retrieve the current tasks/status of the worker
             return jsonify({
-                "status": insight_worker._queue if condition else condition_if_false,
+                "status": app.insight_worker._queue,
                 "tasks": [{
-                    "given": list(insight_worker._queue)
+                    "given": list(app.insight_worker._queue)
                 }]
             })
 
@@ -52,14 +52,16 @@ def main(augur_url, host, port):
     app = Flask(__name__)
 
     #load credentials
-    credentials = read_config("Database", use_main_config=1)
-    server = read_config("Server", use_main_config=1)
-    worker_info = read_config("Workers", use_main_config=1)['insight_worker']
+    broker_host = read_config("Server", "host", "AUGUR_HOST", "0.0.0.0")
+    broker_port = read_config("Server", "port", "AUGUR_PORT", 5000)
+    database_host = read_config('Database', 'host', 'AUGUR_DB_HOST', 'host')
+    worker_info = read_config('Workers', 'insight_worker', None, None)
+
     worker_port = worker_info['port'] if 'port' in worker_info else port
 
     while True:
         try:
-            r = requests.get("http://{}:{}/AUGWOP/heartbeat".format(server['host'],worker_port)).json()
+            r = requests.get("http://{}:{}/AUGWOP/heartbeat".format(host, worker_port)).json()
             if 'status' in r:
                 if r['status'] == 'alive':
                     worker_port += 1
@@ -68,35 +70,29 @@ def main(augur_url, host, port):
 
     logging.basicConfig(filename='worker_{}.log'.format(worker_port), filemode='w', level=logging.INFO)
 
-    config = {
-        "id": "com.augurlabs.core.insight_worker.{}".format(worker_port),
-        "broker_port": server["port"],
-        "broker_host": server["host"],
-        "key": credentials["key"],
-        "metrics": worker_info['metrics'] if 'metrics' in worker_info else {"issues-new": "issues", 
-                    "code-changes": "commit_count", "code-changes-lines": "added", 
-                    "reviews": "pull_requests", "contributors-new": "new_contributors"},
-        "contamination": worker_info['contamination'] if 'contamination' in worker_info else 0.041,
-        "training_days": worker_info['training_days'] if 'training_days' in worker_info else 365,
-        "anomaly_days": worker_info['anomaly_days'] if 'anomaly_days' in worker_info else 90,
-        "confidence_interval": worker_info['confidence_interval'] if 'confidence_interval' in worker_info else 95,
-        "host": credentials["host"],
-        "location": "http://{}:{}".format(server["host"],worker_port),
-        "password": credentials["password"],
-        "port": credentials["port"],
-        "user": credentials["user"],
-        "endpoint": "http://{}:{}/api/unstable/metrics/status".format(server["host"],server['port']),
-        "database": credentials["database"],
-        "type": "string"
-    }
+    config = { 
+            "id": "com.augurlabs.core.insight_worker.{}".format(worker_port),
+            "broker_port": broker_port,
+            "broker_host": broker_host,
+            "location": "http://{}:{}".format(read_config('Server', 'host', 'AUGUR_HOST', 'localhost'),worker_port),
+            "host": database_host,
+            "key": read_config("Database", "key", "AUGUR_GITHUB_API_KEY", "key"),
+            "password": read_config('Database', 'password', 'AUGUR_DB_PASSWORD', 'password'),
+            "port": read_config('Database', 'port', 'AUGUR_DB_PORT', 'port'),
+            "user": read_config('Database', 'user', 'AUGUR_DB_USER', 'user'),
+            "database": read_config('Database', 'database', 'AUGUR_DB_NAME', 'database'),
+            "endpoint": "https://bestpractices.coreinfrastructure.org/projects.json",
+            "anomaly_days": worker_info['anomaly_days'],
+            "training_days": worker_info['training_days'],
+            "confidence_interval": worker_info['confidence_interval']
+        }
 
     #create instance of the worker
     app.insight_worker = InsightWorker(config) # declares the worker that will be running on this server with specified config
     
     create_server(app, None)
-    host = server['host']
-    print("Starting Flask App on host {} with port {} with pid: ".format(server['host'], worker_port) + str(os.getpid()) + "...")
-    app.run(debug=app.debug, host=server['host'], port=worker_port)
+    print("Starting Flask App on host {} with port {} with pid: ".format(broker_host, worker_port) + str(os.getpid()) + "...")
+    app.run(debug=app.debug, host=host, port=worker_port)
     print("Killing Flask App: {} and telling broker that this worker is disconnected.".format(str(os.getpid())))
     try:
         logging.info("Sending disconnected message to broker... @ -> {} with info: {}\n".format('http://{}:{}/api/unstable/workers'.format(
