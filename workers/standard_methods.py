@@ -1,5 +1,5 @@
 """ Helper methods constant across all workers """
-import requests, datetime, time, traceback, json
+import requests, datetime, time, traceback, json, os, sys
 import sqlalchemy as s
 import pandas as pd
 import os
@@ -205,62 +205,51 @@ def paginate(self, logging, url, duplicate_col_map, update_col_map, table, table
 
     return tuples
 
-def read_config(section, name=None, environment_variable=None, default=None, config_file='augur.config.json', no_config_file=0, use_main_config=0):
+def read_config(section, name=None, environment_variable=None, default=None, config_file_path='../../augur.config.json', no_config_file=0, use_main_config=0):
     """
     Read a variable in specified section of the config file, unless provided an environment variable
 
     :param section: location of given variable
     :param name: name of variable
     """
+    _config_file_name = 'augur.config.json'
+    _config_bad = False
+    _already_exported = {}
+    _runtime_location = 'runtime/'
+    _default_config = {}
+    _config_file = None
 
-    __config_bad = False
-    if use_main_config == 0:
-        __config_file_path = os.path.abspath(os.getenv('AUGUR_CONFIG_FILE', config_file))
-    else:        
-        __config_file_path = os.path.abspath(os.path.dirname(os.path.dirname(os.getcwd())) + '/augur.config.json')
+    try:
+        _config_file = open(config_file_path, 'r+')
+    except:
+        print('Couldn\'t open {}'.format(_config_file_name))
 
-    __config_location = os.path.dirname(__config_file_path)
-    __export_env = os.getenv('AUGUR_ENV_EXPORT', '0') == '1'
-    __default_config = { 'Database': {"host": "nekocase.augurlabs.io"} }
+    # Load the config file
+    try:
+        config_text = _config_file.read()
+        _config = json.loads(config_text)
+    except json.decoder.JSONDecodeError as e:
+        if not _config_bad:
+            _using_config_file = False
+            print('%s could not be parsed, using defaults. Fix that file, or delete it and run this again to regenerate it. Error: %s', _config_file_path, str(e))
+        _config = _default_config
 
-    if os.getenv('AUGUR_ENV_ONLY', '0') != '1' and no_config_file == 0:
+    value = None
+    if environment_variable is not None:
+        value = os.getenv(environment_variable)
+    if value is None:
         try:
-            __config_file = open(__config_file_path, 'r+')
-        except:
-            # logger.info('Couldn\'t open {}, attempting to create. If you have a augur.cfg, you can convert it to a json file using "make to-json"'.format(config_file))
-            if not os.path.exists(__config_location):
-                os.makedirs(__config_location)
-            __config_file = open(__config_file_path, 'w+')
-            __config_bad = True
-
-
-        # Options to export the loaded configuration as environment variables for Docker
-        if __export_env:
-            
-            export_filename = os.getenv('AUGUR_ENV_EXPORT_FILE', 'augur.cfg.sh')
-            __export_file = open(export_filename, 'w+')
-            # logger.info('Exporting {} to environment variable export statements in {}'.format(config_file, export_filename))
-            __export_file.write('#!/bin/bash\n')
-
-        # Load the config file and return [section][name]
-        try:
-            config_text = __config_file.read()
-            __config = json.loads(config_text)
             if name is not None:
-                return(__config[section][name])
+                value = _config[section][name]
             else:
-                return(__config[section])
+                value = _config[section]
+        except Exception as e:
+            value = default
+            if not section in _config:
+                _config[section] = {}
 
-        except json.decoder.JSONDecodeError as e:
-            if not __config_bad:
-                __using_config_file = False
-                # logger.error('%s could not be parsed, using defaults. Fix that file, or delete it and run this again to regenerate it. Error: %s', __config_file_path, str(e))
+    return value
 
-            __config = __default_config
-            try:
-                return(__config[section][name])
-            except:
-                return(__config[section])
 
 def record_model_process(self, logging, repo_id, model):
 

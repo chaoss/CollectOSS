@@ -32,19 +32,21 @@ class Application(object):
         self.__config_file_name = 'augur.config.json'
         self.__default_config_file_path = self._root_augur_dir_path + '/' + self.__config_file_name
         self.__config_bad = False
-        self.__already_exported = {}
         self.__runtime_location = 'runtime/'
-        self.__export_env = os.getenv('AUGUR_ENV_EXPORT', '0') == '1'
         self.__shell_config = None
+        self.__export_filename = os.getenv('AUGUR_EXPORT_FILE', 'augur_export_env.sh')
+        self.__env_filename = os.getenv('AUGUR_ENV_FILE', 'env.txt')
+        self.__export_file = None
+        self.__env_file = None
+
+        if os.getenv('AUGUR_ENV_EXPORT', 0) == '1':
+            self.__export_file = open(self.__export_filename, 'w+')
+            self.__export_file.write('#!/bin/bash')
+            self.__export_file.write('\n')
+            self.__env_file = open(self.__env_filename, 'w+')
 
         self.__default_config = {}
         self.__path_to_default_config = os.path.dirname(os.path.realpath(__file__)) + '/default.config.json'
-        # try:
-        #     with open(self.__path_to_default_config) as default_config:
-        #         self.__default_config = json.load(default_config)
-        # except Exception as e:
-        #     logger.debug("Error reading default.config.json " + str(e))
-
 
         if no_config_file == True:
             self.__using_config_file = False
@@ -75,12 +77,6 @@ class Application(object):
                         with open(self.__config_file_path, "w+") as file_handle:
                             json.dump(self.__default_config, file_handle)
                     self.__config_file = open(self.__config_file_path, 'r+')
-
-                if self.__export_env:
-                    export_filename = os.getenv('AUGUR_ENV_EXPORT_FILE', 'augur.config.json.sh')
-                    self.__export_file = open(export_filename, 'w+')
-                    logger.info('Exporting {} to environment variable export statements in {}'.format(self.__config_file_name, export_filename))
-                    self.__export_file.write('#!/bin/bash\n')
 
                 # Load the config file
                 try:
@@ -255,15 +251,22 @@ class Application(object):
                 if self.__using_config_file:
                     self.__config_bad = True
                     self.__config[section][name] = default
-        if (environment_variable is not None
-                and value is not None
-                and self.__export_env
-                and not hasattr(self.__already_exported, environment_variable)):
-            self.__export_file.write('export ' + environment_variable + '="' + str(value) + '"\n')
-            self.__already_exported[environment_variable] = True
+
         if os.getenv('AUGUR_DEBUG_LOG_ENV', '0') == '1':
             logger.debug('{}:{} = {}'.format(section, name, value))
+
         return value
+
+    def export_config(self, section=None, name=None, environment_variable=None, default=None):
+        """
+        Read a variable in specified section of the config file, unless provided an environment variable
+
+        :param section: location of given variable
+        :param name: name of variable
+        """
+        value = self.read_config(section, name, environment_variable, default)
+        self.__export_file.write('export ' + environment_variable + '="' + str(value) + '"\n')
+        self.__env_file.write(environment_variable + '=' + str(value) + '\n')
 
     @property
     def shell(self, banner1='-- Augur Shell --', **kwargs):

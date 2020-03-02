@@ -1,0 +1,28 @@
+{
+    "Database": {
+        "host": "database"
+    },
+    "Server": {
+        "host": "augur"
+    },
+    "Workers": {
+            "facade_worker": {
+                "switch": 1
+            },
+            "github_worker": {
+                "switch": 1
+            },
+            "insight_worker": {
+                "switch": 1
+            },
+            "linux_badge_worker": {
+                "switch": 1
+            },
+            "pull_request_worker": {
+                "switch": 1
+            },
+            "repo_info_worker": {
+                "switch": 1
+            }
+        }
+}

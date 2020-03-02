@@ -72,7 +72,7 @@ def add_repo_groups(ctx, filename):
     with open(filename) as create_repo_groups_file:
         data = csv.reader(create_repo_groups_file, delimiter=',')
         for row in data:
-            print(f"\nTrying repo group with name {row[1]} and ID {row[0]}...")
+            print(f"Trying repo group with name {row[1]} and ID {row[0]}...")
             try:
                 if int(row[0]) not in repo_group_IDs:
                     repo_group_IDs.append(int(row[0]))
@@ -80,10 +80,30 @@ def add_repo_groups(ctx, filename):
                 else:
                     print(f"Repo group with ID {row[1]} for repo group {row[1]} already exists, skipping...")
             except exc.ResourceClosedError as error:
-                print(f"Successfully inserted {row[1]}.")
+                print(f"Successfully inserted {row[1]}.\n")
                 # pd.read_sql() will throw an AttributeError when it can't sucessfully "fetch" any rows from the result.
                 # Since there's no rows to fetch after a successful insert, this is how we know it worked.
                 # I know it's weird, sue me (jk please don't)
+
+@cli.command('update_repo_directory', short_help="Update Facade worker repo cloning directory")
+@click.argument('repo_directory')
+@click.pass_context
+def update_repo_directory(ctx, repo_directory):
+    app = ctx.obj
+
+    db = get_db_connection(app)
+
+    updateRepoDirectorySQL = s.sql.text("""
+        UPDATE augur_data.settings SET VALUE = :repo_directory WHERE setting='repo_directory';
+    """)
+
+    try:
+        pd.read_sql(updateRepoDirectorySQL, db, params={'repo_directory': repo_directory})
+    except exc.ResourceClosedError as error:
+        print(f"Successfully updated the Facade worker repo directory.")
+        # pd.read_sql() will throw an AttributeError when it can't sucessfully "fetch" any rows from the result.
+        # Since there's no rows to fetch after a successful insert, this is how we know it worked.
+        # I know it's weird, sue me (jk please don't)
 
 def get_db_connection(app):
 

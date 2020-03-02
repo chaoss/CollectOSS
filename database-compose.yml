@@ -1,0 +1,9 @@
+version: '3'
+services:
+   database:
+    image: augurlabs/augur:database-dev
+    restart: unless-stopped
+    volumes:
+     - .:/augur_data
+    ports:
+     - 5432:5432

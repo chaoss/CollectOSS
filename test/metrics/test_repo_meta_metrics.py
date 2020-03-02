@@ -17,10 +17,10 @@ def test_code_changes(metrics):
     assert metrics.code_changes(23, period='year').isin([pd.Timestamp('2009-01-01T00:00:00+00:00'), 21350, 2]).any().any()
 
     #begin_date & end_date
-    assert metrics.code_changes(23, 21350, period='month', begin_date='2009',
-                                 end_date='2011-05').isin([pd.Timestamp('2009-02-01T00:00:00+00:00'), 2]).any().any()
-    assert metrics.code_changes(23, period='month', begin_date='2009',
-                                 end_date='2011-05').isin([pd.Timestamp('2011-02-01T00:00:00+00:00'), 21420, 4]).any().any()
+    assert metrics.code_changes(23, 21350, begin_date='2009',
+                                      end_date='2011-05').isin([pd.Timestamp('2009-03-01'), 2]).any().any()
+    assert metrics.code_changes(23, begin_date='2009',
+                                 end_date='2011-05').isin([pd.Timestamp('2011-03-06'), 21420, 4]).any().any()
 
 def test_code_changes_lines(metrics):
     #repo_id

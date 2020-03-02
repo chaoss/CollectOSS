@@ -47,7 +47,11 @@ from facade_worker.facade04postanalysiscleanup import git_repo_cleanup
 from facade_worker.facade05repofetch import git_repo_initialize, check_for_repo_updates, force_repo_updates, force_repo_analysis, git_repo_updates
 from facade_worker.facade06analyze import analysis
 from facade_worker.facade07rebuildcache import nuke_affiliations, fill_empty_affiliations, invalidate_caches, rebuild_unknown_affiliation_and_web_caches
+
+from workers.standard_methods import read_config
+
 import logging
+
 # if platform.python_implementation() == 'PyPy':
 #   import pymysql
 # else:
@@ -69,10 +73,8 @@ class FacadeWorker:
     def __init__(self, config, task=None):
         self.config = config
         logging.basicConfig(filename='worker_{}.log'.format(self.config['id'].split('.')[len(self.config['id'].split('.')) - 1]), filemode='w', level=logging.INFO)
-        
-        print('Worker (PID: {}) initializing...'.format(os.getpid()))
         logging.info('Worker (PID: {}) initializing...'.format(os.getpid()))
-        
+
         self._task = task
         self._child = None
         self._queue = Queue()
@@ -82,17 +84,16 @@ class FacadeWorker:
         ### The real program starts here ###
 
         # Set up the database
-        json = self.cfg.read_config("Database", use_main_config=1)#self.cfg.migrate_database_config("Credentials")
-        db_user = json['user']
-        db_pass = json['password']
-        db_name = json['database']
-        db_host = json['host']
-        db_port = json['port']
-        db_user_people = json['user']
-        db_pass_people = json['password']
-        db_name_people = json['database']
-        db_host_people = json['host']
-        db_port_people = json['port']
+        db_user = self.config['user']
+        db_pass = self.config['password']
+        db_name = self.config['database']
+        db_host = self.config['host']
+        db_port = self.config['port']
+        db_user_people = self.config['user']
+        db_pass_people = self.config['password']
+        db_name_people = self.config['database']
+        db_host_people = self.config['host']
+        db_port_people = self.config['port']
 
         # Open a general-purpose connection
         db,cursor = self.cfg.database_connection(
@@ -237,23 +238,23 @@ class FacadeWorker:
     def commit_model(self):
 
         # Figure out what we need to do
-        limited_run = self.cfg.read_config("Facade",name="limited_run",use_main_config=1,default=0)
-        delete_marked_repos = self.cfg.read_config("Facade",name="delete_marked_repos",use_main_config=1, default=0)
-        pull_repos = self.cfg.read_config("Facade",name="pull_repos",use_main_config=1,default=0)
-        clone_repos = self.cfg.read_config("Facade",name="clone_repos",use_main_config=1,default=1)
-        check_updates = self.cfg.read_config("Facade",name="check_updates",use_main_config=1,default=0)
-        force_updates = self.cfg.read_config("Facade",name="force_updates",use_main_config=1,default=0)
-        run_analysis = self.cfg.read_config("Facade",name="run_analysis",use_main_config=1,default=0)
-        force_analysis = self.cfg.read_config("Facade",name="force_analysis",use_main_config=1,default=0)
-        nuke_stored_affiliations = self.cfg.read_config("Facade",name="nuke_stored_affiliations",use_main_config=1, default=0)
-        fix_affiliations = self.cfg.read_config("Facade",name="fix_affiliations",use_main_config=1,default=1)
-        force_invalidate_caches = self.cfg.read_config("Facade",name="force_invalidate_caches",use_main_config=1, default=0)
-        rebuild_caches = self.cfg.read_config("Facade",name="rebuild_caches",use_main_config=1,default=1) #if abs((datetime.datetime.strptime(self.cfg.get_setting('aliases_processed')[:-3], 
+        limited_run = read_config("Facade", name="limited_run", default=0)
+        delete_marked_repos = read_config("Facade", name="delete_marked_repos", default=0)
+        pull_repos = read_config("Facade", name="pull_repos", default=0)
+        clone_repos = read_config("Facade", name="clone_repos", default=1)
+        check_updates = read_config("Facade", name="check_updates", default=0)
+        force_updates = read_config("Facade", name="force_updates", default=0)
+        run_analysis = read_config("Facade", name="run_analysis", default=0)
+        force_analysis = read_config("Facade", name="force_analysis", default=0)
+        nuke_stored_affiliations = read_config("Facade", name="nuke_stored_affiliations", default=0)
+        fix_affiliations = read_config("Facade", name="fix_affiliations", default=1)
+        force_invalidate_caches = read_config("Facade", name="force_invalidate_caches", default=0)
+        rebuild_caches = read_config("Facade", name="rebuild_caches", default=1) #if abs((datetime.datetime.strptime(self.cfg.get_setting('aliases_processed')[:-3], 
             # '%Y-%m-%d %I:%M:%S.%f') - datetime.datetime.now()).total_seconds()) // 3600 > int(self.cfg.get_setting(
             #   'update_frequency')) else 0
-        force_invalidate_caches = self.cfg.read_config("Facade",name="force_invalidate_caches",use_main_config=1,default=0)
-        create_xlsx_summary_files = self.cfg.read_config("Facade",name="create_xlsx_summary_files",use_main_config=1,default=0)
-        multithreaded = self.cfg.read_config("Facade",name="multithreaded",use_main_config=1,default=1)
+        force_invalidate_caches = read_config("Facade", name="force_invalidate_caches", default=0)
+        create_xlsx_summary_files = read_config("Facade", name="create_xlsx_summary_files", default=0)
+        multithreaded = read_config("Facade", name="multithreaded", default=1)
 
         opts,args = getopt.getopt(sys.argv[1:],'hdpcuUaAmnfIrx')
         for opt in opts:
