@@ -7,8 +7,9 @@ from sqlalchemy import MetaData
 import requests, time, logging, json, os
 from datetime import datetime
 from sqlalchemy.ext.declarative import declarative_base
-from workers.standard_methods import get_table_values, init_oauths, get_max_id, register_task_completion, register_task_failure, connect_to_broker, update_gh_rate_limit, record_model_process, paginate
-from helpers import Helpers
+from workers.standard_methods import get_table_values, init_oauths, \
+     get_max_id, register_task_completion, register_task_failure, connect_to_broker, \
+     update_gh_rate_limit, record_model_process, paginate, check_duplicates
 
 class GitHubWorker:
     """ Worker that collects data from the Github API and stores it in our database
@@ -985,8 +986,7 @@ class GitHubWorker:
                 j = r.json()
 
                 # Checking contents of requests with what we already have in the db
-                helper_class = Helpers()
-                new_events = helper_class.check_duplicates(j, event_table_values, pseudo_key_gh)
+                new_events = check_duplicates(j, event_table_values, pseudo_key_gh)
                 if len(new_events) == 0 and multiple_pages and 'last' in r.links:
                     if i - 1 != int(r.links['last']['url'][-6:].split('=')[1]):
                         logging.info("No more pages with unknown events, breaking from pagination.\n")
