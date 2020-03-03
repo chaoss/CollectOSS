@@ -30,12 +30,15 @@ export default {
 <style scoped>
 #repo {
     background-color: white;
-    border-top: 1px solid var(--grey);
+    border: 1px solid var(--grey);
+    border-bottom: 0;
     padding: 1rem;
     color: var(--light-blue);
     font-size: 1.1rem;
     display: flex;
     justify-content: space-between;
+    width: 94%;
+    margin: auto;
 }
 
 #repo:hover {

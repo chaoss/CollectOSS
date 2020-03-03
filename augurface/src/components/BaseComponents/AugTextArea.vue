@@ -28,16 +28,17 @@ export default {
   flex-direction: column !important;
   justify-content: flex-start;
   align-items: flex-start;
+  max-width: 90%;
 }
 
 textarea {
-  /* min-width: 800px !important; */
   padding: .5rem;
   font-size: .8rem;
   border-radius: 5px;
   border: 1px solid var(--grey);
-  max-width: 900px;
-  max-height: 400px;
+  max-width: 100%;
+  max-height: 800px;
+  min-width: 300px;
   width: 400px;
   height: 50px;
 }
