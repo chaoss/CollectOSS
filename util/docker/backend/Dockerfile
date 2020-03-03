@@ -24,4 +24,4 @@ COPY ./util/docker/docker.config.json .
 RUN augur configure generate --rc-config-file docker.config.json
 RUN ./workers.sh
 
-CMD augur run --disable-housekeeper
+CMD augur run
