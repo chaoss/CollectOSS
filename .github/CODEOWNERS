@@ -1,0 +1,20 @@
+*.py @ccarterlandis @gabe-heim
+
+/augur/ @ccarterlandis @gabe-heim
+
+/frontend/ @gabe-heim @michaelwoodruffdev
+
+/schema @sgoggins
+
+/workers/ @ccarterlandis @gabe-heim @sgoggins
+
+/test/ @ccarterlandis
+/util/packaging @ccarterlandis
+/scripts/ @ccarterlandis
+/docs/ @ccarterlandis
+/.dockerignore @ccarterlandis
+/.travis.yml @ccarterlandis
+*compose.yml @ccarterlandis
+/readthedocs.yml @ccarterlandis
+/Makefile @ccarterlandis
+/tox.ini @ccarterlandis

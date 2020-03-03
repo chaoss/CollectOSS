@@ -28,8 +28,7 @@ jobs:
       env: TOXENV=py38-metrics_api
 
 install:
-  - pip install -r requirements.txt
-  - pip install tox
+  - pip install .[dev]
   - augur configure generate
 
 script:

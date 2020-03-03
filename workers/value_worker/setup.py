@@ -19,7 +19,7 @@ setup(
     url="https://github.com/chaoss/augur",
     license='MIT',
 
-    author="Augur Team",
+    author="Augurlabs",
     author_email="s@goggins.com",
 
     description="Augur Worker that gathers value data",

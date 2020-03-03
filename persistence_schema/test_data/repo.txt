@@ -1,5 +1,0 @@
-25431	20	https://github.com/chaoss/grimoirelab.git	github.com/chaoss/	grimoirelab	2019-10-19 16:03:01	Complete		\N	\N	\N	\N	\N	\N	\N	CLI	1.0	Git	2019-10-19 16:03:01
-25432	20	https://github.com/chaoss/wg-evolution.git	github.com/chaoss/	wg-evolution	2019-10-19 16:03:01	Complete		\N	\N	\N	\N	\N	\N	\N	CLI	1.0	Git	2019-10-19 16:03:01
-25433	20	https://github.com/chaoss/wg-risk.git	github.com/chaoss/	wg-risk	2019-10-19 16:03:01	Complete		\N	\N	\N	\N	\N	\N	\N	CLI	1.0	Git	2019-10-19 16:03:01
-25434	20	https://github.com/chaoss/wg-common.git	github.com/chaoss/	wg-common	2019-10-19 16:03:01	Complete		\N	\N	\N	\N	\N	\N	\N	CLI	1.0	Git	2019-10-19 16:03:01
-25430	10	https://github.com/chaoss/augur.git	github.com/chaoss/	augur	2019-10-19 16:03:01	Complete		\N	\N	\N	\N	\N	\N	\N	CLI	1.0	Git	2019-10-19 16:03:01
