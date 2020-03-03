@@ -38,7 +38,7 @@ scripts/install/workers.sh $target > logs/workers-installation.log 2>&1
 echo "Done!"
 
 echo "Generating a config file..."
-scripts/install/config.sh > logs/config-generation.log 2>&1
+scripts/install/config.sh
 echo "Done!"
 
 
