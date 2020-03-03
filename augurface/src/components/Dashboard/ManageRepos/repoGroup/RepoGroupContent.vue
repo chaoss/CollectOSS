@@ -1,5 +1,5 @@
 <template>
-  <div id="RepoGroupContent" @click="stopEventPropagation">
+  <div id="RepoGroupContent">
     <div id="add-repos-input">
       <aug-text-area
         text="Add repos to group"
