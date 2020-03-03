@@ -51,10 +51,10 @@ install-augur-sbom:
 	@ ./scripts/install/nomos.sh
 
 clean:
-	@ scripts/install/clean.sh
+	@ scripts/control/clean.sh
 
 rebuild:
-	@ scripts/install/rebuild.sh
+	@ scripts/control/rebuild.sh
 
 
 #
