@@ -1,18 +1,15 @@
 <template>
   <div id="ManageRepos">
-    <!-- button controls -->
     <manage-buttons @collapseAll="collapseAll()"/>
-    <!-- loading spinner -->
     <div class="loading" v-if="!isLoaded">
       <img src="../../../assets/loading.gif" alt="loading repos" />
       <p>loading repositories...</p>
     </div>
-    <!-- repo groups -->
     <div class="groups" v-if="isLoaded">
       <repo-group
         v-for="rg in getRepoGroups"
         :key="rg.repo_group_id"
-        :repoGroupObject="rg"
+        :repoGroup="rg"
         ref="repoGroups"
       />
     </div>
