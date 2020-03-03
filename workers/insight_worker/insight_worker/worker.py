@@ -93,10 +93,10 @@ class InsightWorker:
         self.job_table = HelperBase.classes.worker_job.__table__
 
         # Organize different api keys/oauths available
-        init_oauths(self, logging)
+        init_oauths(self)
 
         # Send broker hello message
-        connect_to_broker(self, logging)
+        connect_to_broker(self)
 
         # self.insights_model({
         #                         "job_type": 'MAINTAIN', 
@@ -181,14 +181,14 @@ class InsightWorker:
                 if message['models'][0] == 'insights':
                     self.insights_model(message, repo_id)
             except Exception as e:
-                register_task_failure(self, logging, message, repo_id, e)
+                register_task_failure(self, message, repo_id, e)
                 pass
 
     def insights_model(self, entry_info, repo_id):
 
         # Update table of endpoints before we query them all
         logging.info("Discovering insights for task with entry info: {}\n".format(entry_info))
-        record_model_process(self, logging, repo_id, 'insights')
+        record_model_process(self, repo_id, 'insights')
 
         """ Collect data """   
         base_url = 'http://localhost:5002/api/unstable/repo-groups/9999/repos/{}/'.format(repo_id)
@@ -226,7 +226,7 @@ class InsightWorker:
         # If none of the endpoints returned data
         if df.size == 0:
             logging.info("None of the provided endpoints provided data for this repository. Anomaly detection is 'done'.\n")
-            register_task_completion(self, logging, entry_info, repo_id, "insights")
+            register_task_completion(self, entry_info, repo_id, "insights")
 
         to_model_columns = df.columns[0:len(self.metrics)+1]
 
@@ -374,15 +374,15 @@ class InsightWorker:
                     logging.info("error occurred while storing datapoint: {}\n".format(repr(e)))
                     break
 
-        register_task_completion(self, logging, entry_info, repo_id, "insights")
+        register_task_completion(self, entry_info, repo_id, "insights")
         
     def confidence_interval_insights(self, entry_info):
-        """ Anomaly detection function based on confidence intervals
+        """ Anomaly detection method based on confidence intervals
         """
 
         # Update table of endpoints before we query them all
         logging.info("Discovering insights for task with entry info: {}".format(entry_info))
-        record_model_process(self, logging, repo_id, 'insights')
+        record_model_process(self, repo_id, 'insights')
 
         # Set the endpoints we want to discover insights for
         endpoints = [{'cm_info': "issues-new"}, {'cm_info': "code-changes"}, {'cm_info': "code-changes-lines"}, 
