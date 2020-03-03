@@ -1,4 +1,5 @@
 from os import walk, chdir, environ
+from sys import exit
 from subprocess import call
 import csv
 import click
@@ -107,25 +108,45 @@ def update_repo_directory(ctx, repo_directory):
         # Since there's no rows to fetch after a successful insert, this is how we know it worked.
         # I know it's weird, sue me (jk please don't)
 
-@cli.command('create-schema', short_help="Update Facade worker repo cloning directory")
+@cli.command('create-schema', short_help="Create schema in the configured database")
 @click.pass_context
 def create_schema(ctx):
     app = ctx.obj
+    check_pgpass_credentials(app)
+    run_psql_command(app, '-f', 'schema/0-all.sql')
 
-    chdir(app.root_augur_dir)
-    with open(environ['HOME'] + '/.pgpass', 'a') as pgpass_file:
-        pgpass_file.write(str(app.read_config('Database', 'host')) \
+@cli.command('load-data', short_help="Load sample data into the configured database")
+@click.pass_context
+def load_data(ctx):
+    app = ctx.obj
+    check_pgpass_credentials(app)
+    run_psql_command(app, '-f', 'schema/load_data.sql')
+
+def run_psql_command(app, target_type, target):
+    if target_type not in ['-f', '-c']:
+        print("Invalid target type. Exiting...")
+        exit(1)
+
+    call(['psql', '-h', app.read_config('Database', 'host'),\
+      '-d', app.read_config('Database', 'name'),\
+      '-U', app.read_config('Database', 'user'),\
+      '-p', str(app.read_config('Database', 'port')),\
+      '-a', '-w', target_type, target
+    ])
+
+def check_pgpass_credentials(app):
+     with open(environ['HOME'] + '/.pgpass', 'a+') as pgpass_file:
+        end = pgpass_file.tell()
+        credentials_string = str(app.read_config('Database', 'host')) \
                           + ':' + str(app.read_config('Database', 'port')) \
                           + ':' + str(app.read_config('Database', 'name')) \
                           + ':' + str(app.read_config('Database', 'user')) \
-                          + ':' + str(app.read_config('Database', 'password')))
-    call(['psql', '-h', app.read_config('Database', 'host'),\
-          '-d', app.read_config('Database', 'name'),\
-          '-U', app.read_config('Database', 'user'),\
-          '-p', str(app.read_config('Database', 'port')),\
-          '-a', '-w', '-f', 'schema/0-all.sql'
-         ])
-
+                          + ':' + str(app.read_config('Database', 'password'))
+        pgpass_file.seek(0)
+        if credentials_string.lower() not in [''.join(line.split()).lower() for line in pgpass_file.readlines()]:
+            print("Database credentials not found in $HOME/.pgpass. Adding credentials...")
+            pgpass_file.seek(end)
+            pgpass_file.write(credentials_string + '\n')
 
 def get_db_connection(app):
 
