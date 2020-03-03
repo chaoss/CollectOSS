@@ -35,7 +35,8 @@ class Application(object):
         self.__env_file = None
         self.config = default_config
         self.env_config = {}
-        default_config_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__))) + '/' + self.config_file_name
+        self.root_augur_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+        default_config_path = self.root_augur_dir + '/' + self.config_file_name
         using_config_file = False
 
 
@@ -61,7 +62,7 @@ class Application(object):
             except json.decoder.JSONDecodeError as e:
                 logger.warn('%s could not be parsed, using defaults. Fix that file, or delete it and run this again to regenerate it. Error: %s', config_file_path, str(e))
         else:
-            logger.warn('%s could not be parsed, using defaults. Error: %s', str(e))
+            logger.warn('%s could not be parsed, using defaults.')
 
         self.load_env_configuration()
 
@@ -104,7 +105,7 @@ class Application(object):
         self.set_env_value(section='Database', name='key', environment_variable='AUGUR_GITHUB_API_KEY')
         self.set_env_value(section='Server', name='port', environment_variable='AUGUR_PORT')
         self.set_env_value(section='Database', name='host', environment_variable='AUGUR_DB_HOST')
-        self.set_env_value(section='Database', name='database', environment_variable='AUGUR_DB_NAME')
+        self.set_env_value(section='Database', name='name', environment_variable='AUGUR_DB_NAME')
         self.set_env_value(section='Database', name='port', environment_variable='AUGUR_DB_PORT')
         self.set_env_value(section='Database', name='user', environment_variable='AUGUR_DB_USER')
         self.set_env_value(section='Database', name='password', environment_variable='AUGUR_DB_PASSWORD')

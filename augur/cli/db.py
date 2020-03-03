@@ -1,3 +1,5 @@
+from os import walk, chdir, environ
+from subprocess import call
 import csv
 import click
 import sqlalchemy as s
@@ -105,6 +107,26 @@ def update_repo_directory(ctx, repo_directory):
         # Since there's no rows to fetch after a successful insert, this is how we know it worked.
         # I know it's weird, sue me (jk please don't)
 
+@cli.command('create-schema', short_help="Update Facade worker repo cloning directory")
+@click.pass_context
+def create_schema(ctx):
+    app = ctx.obj
+
+    chdir(app.root_augur_dir)
+    with open(environ['HOME'] + '/.pgpass', 'a') as pgpass_file:
+        pgpass_file.write(str(app.read_config('Database', 'host')) \
+                          + ':' + str(app.read_config('Database', 'port')) \
+                          + ':' + str(app.read_config('Database', 'name')) \
+                          + ':' + str(app.read_config('Database', 'user')) \
+                          + ':' + str(app.read_config('Database', 'password')))
+    call(['psql', '-h', app.read_config('Database', 'host'),\
+          '-d', app.read_config('Database', 'name'),\
+          '-U', app.read_config('Database', 'user'),\
+          '-p', str(app.read_config('Database', 'port')),\
+          '-a', '-w', '-f', 'schema/0-all.sql'
+         ])
+
+
 def get_db_connection(app):
 
     user = app.read_config('Database', 'user')
@@ -119,3 +141,5 @@ def get_db_connection(app):
     )
 
     return s.create_engine(DB_STR, poolclass=s.pool.NullPool)
+
+
