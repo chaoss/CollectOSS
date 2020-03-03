@@ -7,7 +7,7 @@ if [[ $? -ne 0 ]]; then
   exit 1
 fi
 
-scripts/install/clean.sh
+scripts/control/clean.sh
 
 #rebuild everything
 scripts/install/backend.sh
