@@ -132,7 +132,7 @@ class BadgeWorker:
         self.headers = {'Authorization': 'token %s' % self.oauths[0]['access_token']}
 
         # Send broker hello message
-        connect_to_broker(self, logging.getLogger())
+        connect_to_broker(self)
         logging.info("Connected to the broker...\n")
 
     def update_config(self, config):
@@ -208,7 +208,7 @@ class BadgeWorker:
         else:
             logging.info("No CII data found for {}\n".format(git_url))
 
-        register_task_completion(self, logging, entry_info, repo_id, "badges")
+        register_task_completion(self, entry_info, repo_id, "badges")
 
     def collect(self):
         """ Function to process each entry in the worker's task queue
@@ -239,7 +239,7 @@ class BadgeWorker:
                 if message['models'][0] == 'badges':
                     self.badges_model(message, repo_id)
             except Exception as e:
-                register_task_failure(self, logging, message, repo_id, e)
+                register_task_failure(self, message, repo_id, e)
                 pass
 
     def run(self):

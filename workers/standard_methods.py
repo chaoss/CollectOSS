@@ -3,9 +3,9 @@ import requests, datetime, time, traceback, json, os, sys
 import sqlalchemy as s
 import pandas as pd
 import os
-import logging
+import sys, logging
 
-def assign_tuple_action(self, logging, new_data, table_values, update_col_map, duplicate_col_map, table_pkey):
+def assign_tuple_action(self, new_data, table_values, update_col_map, duplicate_col_map, table_pkey):
     """ map objects => { *our db col* : *gh json key*} """
     need_insertion_count = 0
     need_update_count = 0
@@ -36,7 +36,7 @@ def assign_tuple_action(self, logging, new_data, table_values, update_col_map, d
         "was reduced to {} tuples, and {} tuple updates are needed.\n".format(need_insertion_count, need_update_count))
     return new_data
 
-def connect_to_broker(self, logging):
+def connect_to_broker(self):
     connected = False
     for i in range(5):
         try:
@@ -53,7 +53,7 @@ def connect_to_broker(self, logging):
     if not connected:
         sys.exit('Could not connect to the broker after 5 attempts! Quitting...\n')
 
-def get_max_id(self, logging, table, column, default=25150, operations_table=False):
+def get_max_id(self, table, column, default=25150, operations_table=False):
     maxIdSQL = s.sql.text("""
         SELECT max({0}.{1}) AS {1}
         FROM {0}
@@ -68,7 +68,7 @@ def get_max_id(self, logging, table, column, default=25150, operations_table=Fal
         logging.info("Could not find max id for {} column in the {} table... using default set to: {}\n".format(column, table, max_id))
     return max_id
 
-def get_table_values(self, logging, cols, tables, where_clause=""):
+def get_table_values(self, cols, tables, where_clause=""):
     table_str = tables[0]
     del tables[0]
 
@@ -87,7 +87,7 @@ def get_table_values(self, logging, cols, tables, where_clause=""):
     values = pd.read_sql(tableValuesSQL, self.db, params={})
     return values
 
-def init_oauths(self, logging):
+def init_oauths(self):
     self.oauths = []
     self.headers = None
 
@@ -117,12 +117,12 @@ def init_oauths(self, logging):
     #   self.oauths array will always be the key in use)
     self.headers = {'Authorization': 'token %s' % self.oauths[0]['access_token']}
 
-def paginate(self, logging, url, duplicate_col_map, update_col_map, table, table_pkey, where_clause=""):
+def paginate(self, url, duplicate_col_map, update_col_map, table, table_pkey, where_clause=""):
     # Paginate backwards through all the tuples but get first page in order
     #   to determine if there are multiple pages and if the 1st page covers all
     update_keys = list(update_col_map.keys()) if update_col_map else []
     cols_query = list(duplicate_col_map.keys()) + update_keys + [table_pkey]
-    table_values = get_table_values(self, logging, cols_query, [table], where_clause)
+    table_values = get_table_values(self, cols_query, [table], where_clause)
 
     i = 1
     multiple_pages = False
@@ -133,7 +133,7 @@ def paginate(self, logging, url, duplicate_col_map, update_col_map, table, table
         while num_attempts < 3:
             logging.info("Hitting endpoint: " + url.format(i) + " ...\n")
             r = requests.get(url=url.format(i), headers=self.headers)
-            update_gh_rate_limit(self, logging, r)
+            update_gh_rate_limit(self, r)
             logging.info("Analyzing page {} of {}\n".format(i, int(r.links['last']['url'][-6:].split('=')[1]) + 1 if 'last' in r.links else '*last page not known*'))
 
             try:
@@ -151,9 +151,9 @@ def paginate(self, logging, url, duplicate_col_map, update_col_map, table, table
                     break
                 if j['message'] == 'You have triggered an abuse detection mechanism. Please wait a few minutes before you try again.':
                     num_attempts -= 1
-                    update_gh_rate_limit(self, logging, r, temporarily_disable=True)
+                    update_gh_rate_limit(self, r, temporarily_disable=True)
                 if j['message'] == 'Bad credentials':
-                    update_gh_rate_limit(self, logging, r, bad_credentials=True)
+                    update_gh_rate_limit(self, r, bad_credentials=True)
         if not success:
             break
 
@@ -178,7 +178,7 @@ def paginate(self, logging, url, duplicate_col_map, update_col_map, table, table
             j = json.loads(j)
             
         # Checking contents of requests with what we already have in the db
-        j = assign_tuple_action(self, logging, j, table_values, update_col_map, duplicate_col_map, table_pkey)
+        j = assign_tuple_action(self, j, table_values, update_col_map, duplicate_col_map, table_pkey)
         if not j:
             logging.info("Assigning tuple action failed, moving to next page.\n")
             i = i + 1 if self.finishing_task else i - 1
@@ -231,7 +231,7 @@ def read_config(section, name=None, environment_variable=None, default=None, con
     except json.decoder.JSONDecodeError as e:
         if not _config_bad:
             _using_config_file = False
-            print('%s could not be parsed, using defaults. Fix that file, or delete it and run this again to regenerate it. Error: %s', _config_file_path, str(e))
+            print('{} could not be parsed, using defaults. Fix that file, or delete it and run this again to regenerate it. Error: {}'.format(config_file_path, str(e)))
         _config = _default_config
 
     value = None
@@ -251,7 +251,7 @@ def read_config(section, name=None, environment_variable=None, default=None, con
     return value
 
 
-def record_model_process(self, logging, repo_id, model):
+def record_model_process(self, repo_id, model):
 
     task_history = {
         "repo_id": repo_id,
@@ -271,7 +271,7 @@ def record_model_process(self, logging, repo_id, model):
         logging.info("Record incomplete history tuple: {}\n".format(result.inserted_primary_key))
         self.history_id = int(result.inserted_primary_key[0])
 
-def register_task_completion(self, logging, task, repo_id, model):
+def register_task_completion(self, task, repo_id, model):
     # Task to send back to broker
     task_completed = {
         'worker_id': self.config['id'],
@@ -282,7 +282,7 @@ def register_task_completion(self, logging, task, repo_id, model):
     key = 'github_url' if 'github_url' in task['given'] else 'git_url' if 'git_url' in task['given'] else "INVALID_GIVEN"
     task_completed[key] = task['given']['github_url'] if 'github_url' in task['given'] else task['given']['git_url'] if 'git_url' in task['given'] else "INVALID_GIVEN"
     if key == 'INVALID_GIVEN':
-        register_task_failure(self, logging, task, repo_id, "INVALID_GIVEN: not github nor git url")
+        register_task_failure(self, task, repo_id, "INVALID_GIVEN: not github nor git url")
         return
 
     # Add to history table
@@ -321,7 +321,7 @@ def register_task_completion(self, logging, task, repo_id, model):
     # Reset results counter for next task
     self.results_counter = 0
 
-def register_task_failure(self, logging, task, repo_id, e):
+def register_task_failure(self, task, repo_id, e):
 
     logging.info("Worker ran into an error for task: {}\n".format(task))
     logging.info("Printing traceback...\n")
@@ -375,11 +375,11 @@ def register_task_failure(self, logging, task, repo_id, e):
     # Reset results counter for next task
     self.results_counter = 0    
 
-def update_gh_rate_limit(self, logging, response, bad_credentials=False, temporarily_disable=False):
+def update_gh_rate_limit(self, response, bad_credentials=False, temporarily_disable=False):
     # Try to get rate limit from request headers, sometimes it does not work (GH's issue)
     #   In that case we just decrement from last recieved header count
     if bad_credentials and len(self.oauths) > 1:
-        logging.info("Deleting oauth with bad credentials: {}".format(self.oauths[0]))
+        logging.info("Removing oauth with bad credentials from consideration: {}".format(self.oauths[0]))
         del self.oauths[0]
 
     if temporarily_disable:
