@@ -98,22 +98,22 @@ class GHPullRequestWorker:
         logging.info("Querying starting ids info...\n")
 
         # Increment so we are ready to insert the 'next one' of each of these most recent ids
-        self.history_id = get_max_id(self, logging, 'worker_history', 'history_id', operations_table=True) + 1
-        self.pr_id_inc = get_max_id(self, logging, 'pull_requests', 'pull_request_id')
-        self.cntrb_id_inc = get_max_id(self, logging, 'contributors', 'cntrb_id')
-        self.msg_id_inc = get_max_id(self, logging, 'message', 'msg_id')
-        self.pr_msg_ref_id_inc = get_max_id(self, logging, 'pull_request_message_ref', 'pr_msg_ref_id')
-        self.label_id_inc = get_max_id(self, logging, 'pull_request_labels', 'pr_label_id')
-        self.event_id_inc = get_max_id(self, logging, 'pull_request_events', 'pr_event_id')
-        self.reviewer_id_inc = get_max_id(self, logging, 'pull_request_reviewers', 'pr_reviewer_map_id')
-        self.assignee_id_inc = get_max_id(self, logging, 'pull_request_assignees', 'pr_assignee_map_id')
-        self.pr_meta_id_inc = get_max_id(self, logging, 'pull_request_meta', 'pr_repo_meta_id')
+        self.history_id = get_max_id(self, 'worker_history', 'history_id', operations_table=True) + 1
+        self.pr_id_inc = get_max_id(self, 'pull_requests', 'pull_request_id')
+        self.cntrb_id_inc = get_max_id(self, 'contributors', 'cntrb_id')
+        self.msg_id_inc = get_max_id(self, 'message', 'msg_id')
+        self.pr_msg_ref_id_inc = get_max_id(self, 'pull_request_message_ref', 'pr_msg_ref_id')
+        self.label_id_inc = get_max_id(self, 'pull_request_labels', 'pr_label_id')
+        self.event_id_inc = get_max_id(self, 'pull_request_events', 'pr_event_id')
+        self.reviewer_id_inc = get_max_id(self, 'pull_request_reviewers', 'pr_reviewer_map_id')
+        self.assignee_id_inc = get_max_id(self, 'pull_request_assignees', 'pr_assignee_map_id')
+        self.pr_meta_id_inc = get_max_id(self, 'pull_request_meta', 'pr_repo_meta_id')
 
         # Organize different api keys/oauths available
-        init_oauths(self, logging)
+        init_oauths(self)
 
         # Send broker hello message
-        connect_to_broker(self, logging.getLogger())
+        connect_to_broker(self)
 
     def update_config(self, config):
         """ Method to update config and set a default
@@ -203,7 +203,7 @@ class GHPullRequestWorker:
                 if message['models'][0] == 'pull_request_commits':
                     self.pull_request_commits_model(message, repo_id)
             except Exception as e:
-                register_task_failure(self, logging, message, repo_id, e)
+                register_task_failure(self, message, repo_id, e)
                 pass
 
     def pull_request_commits_model(self, task_info, repo_id):
@@ -228,7 +228,7 @@ class GHPullRequestWorker:
             update_col_map = {}
 
             # Use helper paginate function to iterate the commits url and check for dupes
-            pr_commits = paginate(self, logging, commits_url, duplicate_col_map, update_col_map, table, table_pkey, 
+            pr_commits = paginate(self, commits_url, duplicate_col_map, update_col_map, table, table_pkey, 
                 where_clause="where pull_request_id = {}".format(pull_request.pull_request_id))
 
             for pr_commit in pr_commits: # post-pagination, iterate results
@@ -247,7 +247,7 @@ class GHPullRequestWorker:
                     logging.info(f"Inserted Pull Request Commit: {result.inserted_primary_key}\n")
 
         # helper method to sync completion to broker and db
-        register_task_completion(self, logging, task_info, repo_id, 'pull_request_commits')
+        register_task_completion(self, task_info, repo_id, 'pull_request_commits')
 
     def pull_requests_model(self, entry_info, repo_id):
         """Pull Request data collection function. Query GitHub API for PhubRs.
@@ -259,7 +259,7 @@ class GHPullRequestWorker:
 
         logging.info('Beginning collection of Pull Requests...\n')
         logging.info(f'Repo ID: {repo_id}, Git URL: {github_url}\n')
-        record_model_process(self, logging, repo_id, 'pull_requests')
+        record_model_process(self, repo_id, 'pull_requests')
 
         owner, repo = self.get_owner_repo(github_url)
 
@@ -275,7 +275,7 @@ class GHPullRequestWorker:
         duplicate_col_map = {'pr_src_id': 'id'}
 
         #list to hold pull requests needing insertion
-        prs = paginate(self, logging, url, duplicate_col_map, update_col_map, table, table_pkey, 
+        prs = paginate(self, url, duplicate_col_map, update_col_map, table, table_pkey, 
             'WHERE repo_id = {}'.format(repo_id))
 
         # Discover and remove duplicates before we start inserting
@@ -357,7 +357,7 @@ class GHPullRequestWorker:
             logging.info(f"Inserted PR data for {owner}/{repo}")
             self.results_counter += 1
 
-        register_task_completion(self, logging, entry_info, repo_id, 'pull_requests')
+        register_task_completion(self, entry_info, repo_id, 'pull_requests')
 
     def query_labels(self, labels, pr_id):
         logging.info('Querying PR Labels\n')
@@ -412,7 +412,7 @@ class GHPullRequestWorker:
         duplicate_col_map = {'issue_event_src_id': 'id'}
 
         #list to hold contributors needing insertion or update
-        pr_events = paginate(self, logging, url, duplicate_col_map, update_col_map, table, table_pkey)
+        pr_events = paginate(self, url, duplicate_col_map, update_col_map, table, table_pkey)
         
         logging.info("Count of pull request events needing insertion: " + str(len(pr_events)) + "\n")
 
@@ -638,7 +638,7 @@ class GHPullRequestWorker:
         duplicate_col_map = {'pr_message_ref_src_comment_id': 'id'}
 
         #list to hold contributors needing insertion or update
-        pr_messages = paginate(self, logging, url, duplicate_col_map, update_col_map, table, table_pkey)
+        pr_messages = paginate(self, url, duplicate_col_map, update_col_map, table, table_pkey)
         
         logging.info("Count of pull request comments needing insertion: " + str(len(pr_messages)) + "\n")
 
@@ -767,7 +767,7 @@ class GHPullRequestWorker:
             cntrb_url = ("https://api.github.com/users/" + login)
             logging.info("Hitting endpoint: {} ...".format(cntrb_url))
             r = requests.get(url=cntrb_url, headers=self.headers)
-            update_gh_rate_limit(self, logging, r)
+            update_gh_rate_limit(self, r)
             contributor = r.json()
 
             company = None

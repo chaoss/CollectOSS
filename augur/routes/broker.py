@@ -26,12 +26,12 @@ def send_task(worker_proxy):
     j = r.json()
 
     if 'status' not in j:
-        logging.info("Worker: {}'s heartbeat did not return a response, setting worker status as 'Disconnected'".format(worker_id))
+        logging.info("Worker: {}'s heartbeat did not return a response, setting worker status as 'Disconnected'\n".format(worker_id))
         worker_proxy['status'] = 'Disconnected'
         return
 
     if j['status'] != 'alive':
-        logging.info("Worker: {} is busy, setting its status as so.".format(worker_id))
+        logging.info("Worker: {} is busy, setting its status as so.\n".format(worker_id))
         return
 
     # Want to check user-created job requests first
@@ -43,16 +43,16 @@ def send_task(worker_proxy):
         new_task = maintain_queue.pop(0)
 
     else:
-        logging.info("Both queues are empty for worker {}".format(worker_id))
+        logging.info("Both queues are empty for worker {}\n".format(worker_id))
         worker_proxy['status'] = 'Idle'
         return     
 
-    logging.info("Worker {} is idle, preparing to send the {} task to {}".format(worker_id, new_task['display_name'], task_endpoint))
+    logging.info("Worker {} is idle, preparing to send the {} task to {}\n".format(worker_id, new_task['display_name'], task_endpoint))
     try:
         requests.post(task_endpoint, json=new_task)
         worker_proxy['status'] = 'Working'
     except:
-        logging.info("Sending Worker: {} a task did not return a response, setting worker status as 'Disconnected'".format(worker_id))
+        logging.info("Sending Worker: {} a task did not return a response, setting worker status as 'Disconnected'\n".format(worker_id))
         worker_proxy['status'] = 'Disconnected'
         # If the worker died, then restart it
         worker_start(worker_id.split('.')[len(worker_id.split('.')) - 2])
@@ -157,7 +157,7 @@ def create_broker_routes(server):
     def sync_queue():
         task = request.json
         worker = task['worker_id']
-        logging.info("Message recieved that worker " + worker + " completed task: " + str(task))
+        logging.info("Message recieved that worker {} completed task: {}\n".format(worker,task))
         try:
             models = server.broker[worker]['models']
             givens = server.broker[worker]['given']
@@ -167,8 +167,8 @@ def create_broker_routes(server):
             if server.broker[worker]['status'] != 'Disconnected':
                 send_task(server.broker[worker])
         except Exception as e:
-            logging.info("Ran into error: {}".format(repr(e)))
-            logging.info("A past instance of the {} worker finished a previous leftover task.".format(worker))
+            logging.info("Ran into error: {}\n".format(repr(e)))
+            logging.info("A past instance of the {} worker finished a previous leftover task.\n".format(worker))
 
         return Response(response=task,
                         status=200,
@@ -190,7 +190,7 @@ def create_broker_routes(server):
     @server.app.route('/{}/workers/remove'.format(server.api_version), methods=['POST'])
     def remove_worker():
         worker = request.json
-        logging.info("Recieved a message to disconnect worker: {}".format(worker))
+        logging.info("Recieved a message to disconnect worker: {}\n".format(worker))
         server.broker[worker['id']]['status'] = 'Disconnected'
         return Response(response=worker,
                         status=200,
@@ -200,13 +200,13 @@ def create_broker_routes(server):
     def task_error():
         task = request.json
         worker_id = task['worker_id']
-        logging.info("Recieved a message that {} ran into an error on task: {}".format(worker_id, task))
+        logging.info("Recieved a message that {} ran into an error on task: {}\n".format(worker_id, task))
         if worker_id in server.broker:
             if server.broker[worker_id]['status'] != 'Disconnected':
-                logging.info("{} ran into error while completing task: {}".format(worker_id, task))
+                logging.info("{} ran into error while completing task: {}\n".format(worker_id, task))
                 send_task(server.broker[worker_id])
         else:
-            logging.info("A previous instance of {} ran into error while completing task: {}".format(worker_id, task))
+            logging.info("A previous instance of {} ran into error while completing task: {}\n".format(worker_id, task))
         return Response(response=request.json,
                         status=200,
                         mimetype="application/json")

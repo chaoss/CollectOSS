@@ -101,20 +101,20 @@ class GitHubWorker:
         # Get max ids so we know where we are in our insertion and to have the current id when inserting FK's
         logging.info("Querying starting ids info...\n")
 
-        self.issue_id_inc = get_max_id(self, logging, 'issues', 'issue_id')
+        self.issue_id_inc = get_max_id(self, 'issues', 'issue_id')
 
-        self.cntrb_id_inc = get_max_id(self, logging, 'contributors', 'cntrb_id')
+        self.cntrb_id_inc = get_max_id(self, 'contributors', 'cntrb_id')
 
-        self.msg_id_inc = get_max_id(self, logging, 'message', 'msg_id')
+        self.msg_id_inc = get_max_id(self, 'message', 'msg_id')
 
         # Increment so we are ready to insert the 'next one' of each of these most recent ids
-        self.history_id = get_max_id(self, logging, 'worker_history', 'history_id', operations_table=True) + 1
+        self.history_id = get_max_id(self, 'worker_history', 'history_id', operations_table=True) + 1
 
         # Organize different api keys/oauths available
-        init_oauths(self, logging)
+        init_oauths(self)
 
         # Send broker hello message
-        connect_to_broker(self, logging)
+        connect_to_broker(self)
 
     def update_config(self, config):
         """ Method to update config and set a default
@@ -201,7 +201,7 @@ class GitHubWorker:
                 if message['models'][0] == 'issues':
                     self.issues_model(message, repo_id)
             except Exception as e:
-                register_task_failure(self, logging, message, repo_id, e)
+                register_task_failure(self, message, repo_id, e)
                 pass
 
     def insert_commit_contributors(self, entry_info):
@@ -366,7 +366,7 @@ class GitHubWorker:
 
                 logging.info("Hitting endpoint: " + url + " ...\n")
                 r = requests.get(url=url, headers=self.headers)
-                update_gh_rate_limit(self, logging, r)
+                update_gh_rate_limit(self, r)
                 results = r.json()
 
                 # If no matches or bad response, continue with other contributors
@@ -389,7 +389,7 @@ class GitHubWorker:
                 cntrb_url = ("https://api.github.com/users/" + match['login'])
                 logging.info("Hitting endpoint: " + cntrb_url + " ...\n")
                 r = requests.get(url=cntrb_url, headers=self.headers)
-                update_gh_rate_limit(self, logging, r)
+                update_gh_rate_limit(self, r)
                 contributor = r.json()
 
                 # Fill in all github information
@@ -583,7 +583,7 @@ class GitHubWorker:
                 logging.info("THERE IS A CASE FOR A DUPLICATE CONTRIBUTOR in the alias table AND NEED TO ADD DELETION LOGIC\n")
 
         #Register this task as completed
-        register_task_completion(self, logging, entry_info, repo_id, "contributors")
+        register_task_completion(self, entry_info, repo_id, "contributors")
 
     def query_contributors(self, entry_info, repo_id):
 
@@ -618,7 +618,7 @@ class GitHubWorker:
         duplicate_col_map = {'cntrb_login': 'login'}
 
         #list to hold contributors needing insertion or update
-        contributors = paginate(self, logging, contributors_url, duplicate_col_map, update_col_map, table, table_pkey)
+        contributors = paginate(self, contributors_url, duplicate_col_map, update_col_map, table, table_pkey)
         
         logging.info("Count of contributors needing insertion: " + str(len(contributors)) + "\n")
         
@@ -630,7 +630,7 @@ class GitHubWorker:
                 cntrb_url = ("https://api.github.com/users/" + repo_contributor['login'])
                 logging.info("Hitting endpoint: " + cntrb_url + " ...\n")
                 r = requests.get(url=cntrb_url, headers=self.headers)
-                update_gh_rate_limit(self, logging, r)
+                update_gh_rate_limit(self, r)
                 contributor = r.json()
 
                 company = None
@@ -709,7 +709,7 @@ class GitHubWorker:
         github_url = entry_info['given']['github_url']
 
         logging.info("Beginning filling the issues model for repo: " + github_url + "\n")
-        record_model_process(self, logging, repo_id, 'issues')
+        record_model_process(self, repo_id, 'issues')
 
         # Contributors are part of this model, and finding all for the repo saves us 
         #   from having to add them as we discover committers in the issue process
@@ -739,7 +739,7 @@ class GitHubWorker:
         duplicate_col_map = {'gh_issue_id': 'id'}
 
         #list to hold issues needing insertion
-        issues = paginate(self, logging, issues_url, duplicate_col_map, update_col_map, table, table_pkey, 
+        issues = paginate(self, issues_url, duplicate_col_map, update_col_map, table, table_pkey, 
             'WHERE repo_id = {}'.format(repo_id))
 
         # Discover and remove duplicates before we start inserting
@@ -900,7 +900,7 @@ class GitHubWorker:
             duplicate_col_map = {'msg_timestamp': 'created_at'}
 
             #list to hold contributors needing insertion or update
-            issue_comments = paginate(self, logging, comments_url, duplicate_col_map, update_col_map, table, table_pkey, 
+            issue_comments = paginate(self, comments_url, duplicate_col_map, update_col_map, table, table_pkey, 
                 where_clause="WHERE msg_id IN (SELECT msg_id FROM issue_message_ref WHERE issue_id = {})".format(
                     self.issue_id_inc))
                 
@@ -959,7 +959,7 @@ class GitHubWorker:
             pseudo_key_gh = 'url'
             pseudo_key_augur = 'node_url'
             table = 'issue_events'
-            event_table_values = get_table_values(self, logging, [pseudo_key_augur], [table], "WHERE issue_id = {}".format(self.issue_id_inc))
+            event_table_values = get_table_values(self, [pseudo_key_augur], [table], "WHERE issue_id = {}".format(self.issue_id_inc))
             
             # Paginate backwards through all the events but get first page in order
             #   to determine if there are multiple pages and if the 1st page covers all
@@ -969,7 +969,7 @@ class GitHubWorker:
             while True:
                 logging.info("Hitting endpoint: " + events_url.format(i) + " ...\n")
                 r = requests.get(url=events_url.format(i), headers=self.headers)
-                update_gh_rate_limit(self, logging, r)
+                update_gh_rate_limit(self, r)
 
                 # Find last page so we can decrement from there
                 if 'last' in r.links and not multiple_pages and not self.finishing_task:
@@ -1021,7 +1021,7 @@ class GitHubWorker:
                     cntrb_url = ("https://api.github.com/users/" + event['actor']['login'])
                     logging.info("Hitting endpoint: " + cntrb_url + " ...\n")
                     r = requests.get(url=cntrb_url, headers=self.headers)
-                    update_gh_rate_limit(self, logging, r)
+                    update_gh_rate_limit(self, r)
                     contributor = r.json()
 
                     company = None
@@ -1120,7 +1120,7 @@ class GitHubWorker:
             self.issue_id_inc += 1
 
         #Register this task as completed
-        register_task_completion(self, logging.getLogger(), entry_info, repo_id, "issues")
+        register_task_completion(self, entry_info, repo_id, "issues")
 
     def retrieve_tuple(self, key_values, tables):
         table_str = tables[0]
@@ -1155,7 +1155,7 @@ class GitHubWorker:
             cntrb_url = ("https://api.github.com/users/" + login)
             logging.info("Hitting endpoint: {} ...\n".format(cntrb_url))
             r = requests.get(url=cntrb_url, headers=self.headers)
-            update_gh_rate_limit(self, logging, r)
+            update_gh_rate_limit(self, r)
             contributor = r.json()
 
             company = None
