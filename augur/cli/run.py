@@ -3,12 +3,9 @@
 Augur library commands for controlling the backend components
 """
 
-import os
-import time
-import atexit
-import subprocess
+from copy import deepcopy
+import os, time, atexit, subprocess, click
 import multiprocessing as mp
-import click
 import gunicorn.app.base
 from gunicorn.six import iteritems
 from gunicorn.arbiter import Arbiter
@@ -103,7 +100,7 @@ def cli(ctx, enable_housekeeper):
 
     if enable_housekeeper:
         logger.info("Booting housekeeper...")
-        jobs = app.read_config('Housekeeper', 'jobs', 'AUGUR_JOBS', [])
+        jobs = deepcopy(app.read_config('Housekeeper', 'jobs', 'AUGUR_JOBS', []))
         try:
             housekeeper = Housekeeper(
                     jobs,
