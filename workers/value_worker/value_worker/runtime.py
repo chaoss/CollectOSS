@@ -66,7 +66,11 @@ def main(augur_url, host, port, scc_bin):
     broker_host = read_config("Server", "host", "AUGUR_HOST", "0.0.0.0")
     broker_port = read_config("Server", "port", "AUGUR_PORT", 5000)
     database_host = read_config('Database', 'host', 'AUGUR_DB_HOST', 'host')
-    worker_info = read_config('Workers', 'value_worker', None, None)
+    worker_info = read_config('Workers', 'value_worker', None, 
+        {
+            "port": 37300,
+            "scc_bin": "/home/sean/go/bin/scc"
+        })
 
     worker_port = worker_info['port'] if 'port' in worker_info else port
 
@@ -93,6 +97,7 @@ def main(augur_url, host, port, scc_bin):
             "user": read_config('Database', 'user', 'AUGUR_DB_USER', 'user'),
             "database": read_config('Database', 'database', 'AUGUR_DB_NAME', 'database'),
             "endpoint": "https://bestpractices.coreinfrastructure.org/projects.json",
+            'scc_bin': worker_info['scc_bin'],
             "display_name": "",
             "description": "",
             "required": 1,
