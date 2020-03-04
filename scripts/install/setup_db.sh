@@ -1,5 +1,4 @@
 #!/bin/bash
-set -euo pipefail
 
 PS3="
 Please type the number corresponding to your selection and then press the Enter/Return key.
