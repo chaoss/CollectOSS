@@ -1,20 +1,14 @@
 SERVE_COMMAND=augur run
 ENABLE_HOUSEKEEPER=--enable-housekeeper
-OLDVERSION="null"
 EDITOR?="vi"
 AUGUR_PIP?='pip'
 AUGUR_PYTHON?='python'
-
-DOCKER_IMAGE_NAME?='augurlabs/augur'
-DOCKER_IMAGE_TAG?='latest'
-DOCKER_CONTAINER_NAME?='augurlabs/augur'
 AUGUR_PORT?=5000
 
 default:
 	@ echo "Installation Commands:"
-	@ echo "    install                         Installs augur using pip"
-	@ echo "    version                         Print the currently installed version"
-	@ echo "    config                          Creates a new augur.config.json"
+	@ echo "    install                         Installs Augur's full stack for production"
+	@ echo "    install                         Installs Augur's full stack for development"
 	@ echo "    clean                           Removes potentially troublesome compiled files"
 	@ echo "    rebuild                         Removes build/compiled files & binaries and reinstalls the project"
 	@ echo
@@ -38,35 +32,29 @@ default:
 #
 #  Installation
 #
-.PHONY: install version config
+.PHONY: install install-dev 
+.PHONY: install-spdx install-spdx-sudo install-augur-sbom 
+.PHONY: clean rebuild
 install:
-	@ ./util/scripts/install/install.sh
+	@ ./scripts/install/install.sh prod
+
+install-dev:
+	@ ./scripts/install/install.sh dev
 
 install-spdx:
-	@ ./util/scripts/install/install-spdx.sh
+	@ ./scripts/install/install-spdx.sh
 
 install-spdx-sudo:
-	@ ./util/scripts/install/install-spdx-sudo.sh
+	@ ./scripts/install/install-spdx-sudo.sh
 
 install-augur-sbom:
-	@ ./util/scripts/install/nomos.sh
-
-version:
-	$(eval OLDVERSION=$(shell $(AUGUR_PYTHON) ./util/print-version.py))
-	@ echo "installed version: $(OLDVERSION)"
-
-config:
-	@ ./util/scripts/install/config.sh
+	@ ./scripts/install/nomos.sh
 
 clean:
-	@ echo "Removing node_modules, logs, caches, and some other dumb stuff that can be annoying..."
-	@ rm -rf frontend/public .pytest_cache logs *.out
-	@ rm -rf workers/**/*.log workers/**/*.err workers/**/*.out
-	@ find . -name \*.pyc -delete
-	@ find . -type f -name "*.lock" -delete
+	@ scripts/install/clean.sh
 
-rebuild: clean
-	@ util/scripts/install/rebuild.sh
+rebuild:
+	@ scripts/install/rebuild.sh
 
 
 #
@@ -120,22 +108,17 @@ backend-restart: backend-stop backend-start
 
 backend: backend-restart
 
-augur-start:
-	@ ./util/scripts/control/augur.sh
-
-collect:
-	@ ./util/scripts/control/collect.sh
-
-run:
-	@ ./util/scripts/control/run.sh
-
 status:
-	@ ./util/scripts/control/status.sh
+	@ ./scripts/control/status.sh quick
+
+status-interactive:
+	@ ./scripts/control/status.sh interactive
 
 #
 # Testing
 #
 .PHONY: test test-metrics test-metrics-api
+
 test: test-metrics test-metrics-api
 
 test-metrics:
@@ -151,7 +134,9 @@ test-python-versions:
 #
 # Documentation
 #
-.PHONY: library-docs library-docs-view api-docs api-docs-view docs
+.PHONY: library-docs library-docs-view 
+.PHONY:api-docs api-docs-view docs
+
 library-docs:
 	@ bash -c 'cd docs/ && rm -rf build/ && make html;'
 
@@ -159,7 +144,7 @@ library-docs-view: library-docs
 	@ bash -c 'open docs/build/html/index.html'
 
 api-docs:
-	@ util/scripts/install/api_docs.sh
+	@ scripts/install/api_docs.sh
 
 api-docs-view: api-docs
 	@ bash -c "open frontend/public/api_docs/index.html"
@@ -169,40 +154,38 @@ docs: api-docs library-docs
 
 #
 # Docker Shortcuts
-# 
-.PHONY: compose-run compose-run-with-database
-.PHONY: build-augur run-augur build-frontend run-frontend build-database run-database 
+# .PHONY: compose-run compose-run-database
+.PHONY: build-backend run-backend build-frontend run-frontend build-database run-database 
+
 
 compose-run:
 	@ docker-compose -f docker-compose.yml up --build
-	@ docker-compose down --remove-orphans
 
-compose-run-with-database:
+compose-run-database:
 	@ echo "**************************************************************************"
-	@ echo "Make sure there are removed NO database credentials from the env.txt file!"
+	@ echo "Make sure there are no database credentials in the env.txt!"
 	@ echo "**************************************************************************"
 	@ echo
 	@ docker-compose -f docker-compose.yml -f database-compose.yml up --build
-	@ docker-compose down --remove-orphans
 
-docker-build: docker-build-augur docker-build-frontend docker-build-database
+docker-build: docker-build-backend docker-build-frontend docker-build-database
 
-docker-build-augur:
-	@ docker build -t augurlabs/augur:latest -f util/packaging/docker/augur/Dockerfile .
+docker-build-backend:
+	@ docker build -t augurlabs/augur:backend -f util/docker/backend/Dockerfile .
 
 docker-build-frontend:
-	@ docker build -t augurlabs/augur:frontend-dev -f util/packaging/docker/frontend/Dockerfile .
+	@ docker build -t augurlabs/augur:frontend -f util/docker/frontend/Dockerfile .
 
 docker-build-database:
-	@ docker build -t augurlabs/augur:database-dev -f util/packaging/docker/database/Dockerfile .
+	@ docker build -t augurlabs/augur:database -f util/docker/database/Dockerfile .
 
 
-docker-run-augur:
-	@ docker run -p 5000:5000 --name augur_latest --env-file env.txt augurlabs/augur:latest
+docker-run-backend:
+	@ docker run -d -p 5000:5000 --name augur_backend --env-file env.txt augurlabs/augur:backend
 
 docker-run-frontend:
-	@ docker run -p 8080:8080 --name augur_frontend-dev augurlabs/augur:frontend-dev
+	@ docker run -d -p 8080:8080 --name augur_frontend augurlabs/augur:frontend
 
 docker-run-database:
-	@ docker run -p 5432:5432 --name augur_database-dev augurlabs/augur:database-dev
+	@ docker run -d -p 5432:5432 --name augur_database augurlabs/augur:database
 

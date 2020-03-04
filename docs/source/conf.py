@@ -21,7 +21,7 @@ import os
 import sys
 import sphinx_rtd_theme
 
-exec(open("../../augur/metadata.py").read())
+exec(open("../../metadata.py").read())
 
 sys.path.insert(0, os.path.abspath('../../../augur'))
 

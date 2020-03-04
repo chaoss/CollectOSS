@@ -24,7 +24,7 @@ From your local terminal, run the following commands, where ``<host>`` the serve
 
 It's recommended you use the default database name ``augur`` and the default user ``augur`` as shown below, but they are not required.
 
-Make sure to also replace the ``/path/to/augur/`` with the path to the root ``augur/`` directory from your current directory; if you're in the the root ``augur/`` directory, then ``persistence_schema/0-all.sql`` should work just fine. 
+Make sure to also replace the ``/path/to/augur/`` with the path to the root ``augur/`` directory from your current directory; if you're in the the root ``augur/`` directory, then ``schema/0-all.sql`` should work just fine. 
 
 .. code:: bash
 
@@ -32,7 +32,7 @@ Make sure to also replace the ``/path/to/augur/`` with the path to the root ``au
     psql -h <host> -p <port> -c "CREATE USER augur WITH ENCRYPTED PASSWORD '<password>';"
     psql -h <host> -p <port> -c "ALTER DATABASE augur OWNER TO augur;"
     psql -h <host> -p <port> -c "GRANT ALL PRIVILEGES ON DATABASE augur TO augur;"
-    psql -h <host> -d augur -U augur -p <port> -a -w -f /path/to/augur/persistence_schema/0-all.sql
+    psql -h <host> -d augur -U augur -p <port> -a -w -f /path/to/augur/schema/0-all.sql
 
 Example (note this will **not**) work\:
 
@@ -42,7 +42,7 @@ Example (note this will **not**) work\:
     psql -h example.com -p 5432 -c "CREATE USER augur WITH ENCRYPTED PASSWORD 'password123';"
     psql -h example.com -p 5432 -c "ALTER DATABASE augur OWNER TO augur;"
     psql -h example.com -p 5432 -c "GRANT ALL PRIVILEGES ON DATABASE augur TO augur;"
-    psql -h example.com -d augur -U augur -p 5432 -a -w -f /Users/carterlandis/augur/persistence_schema/0-all.sql
+    psql -h example.com -d augur -U augur -p 5432 -a -w -f /Users/carterlandis/augur/schema/0-all.sql
 
 
 ----------------
