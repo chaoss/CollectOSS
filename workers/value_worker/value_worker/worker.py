@@ -89,7 +89,7 @@ class ValueWorker:
         )
 
         #Database connections
-        logger.info("Making database connections...")
+        logging.info("Making database connections...")
         dbschema = 'augur_data'
         self.db = s.create_engine(self.DB_STR, poolclass = s.pool.NullPool,
             connect_args={'options': '-csearch_path={}'.format(dbschema)})
@@ -121,7 +121,7 @@ class ValueWorker:
             requests.post('http://{}:{}/api/unstable/workers'.format(
                 self.config['broker_host'],self.config['broker_port']), json=specs)
         except:
-            logger.info("Broker's port is busy, worker will not be able to accept tasks, "
+            logging.info("Broker's port is busy, worker will not be able to accept tasks, "
                 "please restart Augur if you want this worker to attempt connection again.")
 
     def update_config(self, config):
@@ -165,7 +165,7 @@ class ValueWorker:
                     self.finishing_task = True
 
         except Exception as e:
-            logger.error(f"error: {e}, or that repo is not in our database: {value}")
+            logging.error(f"error: {e}, or that repo is not in our database: {value}")
 
         self._task = CollectorTask(message_type='TASK', entry_info={"task": value})
         self.run()
@@ -179,7 +179,7 @@ class ValueWorker:
         """ Kicks off the processing of the queue if it is not already being processed
         Gets run whenever a new task is added
         """
-        logger.info("Running...")
+        logging.info("Running...")
         self._child = Process(target=self.collect, args=())
         self._child.start()
 
@@ -192,25 +192,25 @@ class ValueWorker:
 
         for repo in repos:
             try:
-                logger.info(f'Adding Repo Labor Data for Repo: {repo}')
+                logging.info(f'Adding Repo Labor Data for Repo: {repo}')
                 self.generate_value_data(repo['repo_id'], repo['path'])
             except Exception as e:
-                logger.error(f'Error occured for Repo: {repo}')
-                logger.exception(e)
+                logging.error(f'Error occured for Repo: {repo}')
+                logging.exception(e)
 
         self.register_task_completion('value')
 
         # while True:
         #     time.sleep(2)
-        #     logger.info(f'Maintain Queue Empty: {self._maintain_queue.empty()}')
-        #     logger.info(f'Queue Empty: {self._queue.empty()}')
+        #     logging.info(f'Maintain Queue Empty: {self._maintain_queue.empty()}')
+        #     logging.info(f'Queue Empty: {self._queue.empty()}')
         #     if not self._queue.empty():
         #         message = self._queue.get()
-        #         logger.info(f"Popped off message from Queue: {message.entry_info}")
+        #         logging.info(f"Popped off message from Queue: {message.entry_info}")
         #         self.working_on = "UPDATE"
         #     elif not self._maintain_queue.empty():
         #         message = self._maintain_queue.get()
-        #         logger.info(f"Popped off message from Maintain Queue: {message.entry_info}")
+        #         logging.info(f"Popped off message from Maintain Queue: {message.entry_info}")
         #         self.working_on = "MAINTAIN"
         #     else:
         #         break
@@ -232,12 +232,12 @@ class ValueWorker:
         #             self.register_task_completion('value')
 
         #         except Exception:
-        #             # logger.error("Worker ran into an error for task: {}\n".format(message.entry_info['task']))
-        #             # logger.error("Error encountered: " + str(e) + "\n")
+        #             # logging.error("Worker ran into an error for task: {}\n".format(message.entry_info['task']))
+        #             # logging.error("Error encountered: " + str(e) + "\n")
         #             # # traceback.format_exc()
-        #             # logger.info("Notifying broker and logging task failure in database...\n")
+        #             # logging.info("Notifying broker and logging task failure in database...\n")
 
-        #             logger.exception(f'Worker ran into an error for task {message.entry_info}')
+        #             logging.exception(f'Worker ran into an error for task {message.entry_info}')
         #             self.register_task_failure(message.entry_info['repo_id'],
         #                                        message.entry_info['task']['given']['git_url'])
 
@@ -258,7 +258,7 @@ class ValueWorker:
         #                 r = self.helper_db.execute(self.history_table.insert().values(task_history))
         #                 self.history_id = r.inserted_primary_key[0]
 
-        #             logger.info(f"Recorded job error for: {message.entry_info['task']}")
+        #             logging.info(f"Recorded job error for: {message.entry_info['task']}")
 
         #             # Update job process table
         #             updated_job = {
@@ -268,7 +268,7 @@ class ValueWorker:
         #                 "analysis_state": 0
         #             }
         #             self.helper_db.execute(self.job_table.update().where(self.job_table.c.job_model==message.entry_info['task']['models'][0]).values(updated_job))
-        #             logger.info("Updated job process for model: " + message.entry_info['task']['models'][0] + "\n")
+        #             logging.info("Updated job process for model: " + message.entry_info['task']['models'][0] + "\n")
 
         #             # Reset results counter for next task
         #             self.results_counter = 0
@@ -280,8 +280,8 @@ class ValueWorker:
         :param repo_id: Repository ID
         :param path: Absolute path of the Repostiory
         """
-        logger.info('Running `scc`....')
-        logger.info(f'Repo ID: {repo_id}, Path: {path}')
+        logging.info('Running `scc`....')
+        logging.info(f'Repo ID: {repo_id}, Path: {path}')
 
         output = subprocess.check_output([self.scc_bin, '-f', 'json', path])
         records = json.loads(output.decode('utf8'))
@@ -306,7 +306,7 @@ class ValueWorker:
                 }
 
                 result = self.db.execute(self.repo_labor_table.insert().values(repo_labor))
-                logger.info(f"Added Repo Labor Data: {result.inserted_primary_key}")
+                logging.info(f"Added Repo Labor Data: {result.inserted_primary_key}")
 
     def register_task_completion(self, model):
         # Task to send back to broker
@@ -318,16 +318,16 @@ class ValueWorker:
         }
 
         # Notify broker of completion
-        logger.info(f"Telling broker we completed task: {task_completed}")
-        logger.info(f"This task inserted {self.results_counter} tuples\n")
+        logging.info(f"Telling broker we completed task: {task_completed}")
+        logging.info(f"This task inserted {self.results_counter} tuples\n")
 
         try:
             requests.post('http://{}:{}/api/unstable/completed_task'.format(
                 self.config['broker_host'],self.config['broker_port']), json=task_completed)
         except requests.exceptions.ConnectionError:
-            logger.info("Broker is booting and cannot accept the worker's message currently")
+            logging.info("Broker is booting and cannot accept the worker's message currently")
         except Exception:
-            logger.exception('An unknown error occured while informing broker about task failure')
+            logging.exception('An unknown error occured while informing broker about task failure')
 
         # Reset results counter for next task
         self.results_counter = 0
@@ -340,16 +340,16 @@ class ValueWorker:
             'git_url': git_url
         }
 
-        logger.error('Task failed')
-        logger.error('Informing broker about Task Failure')
-        logger.info(f'This task inserted {self.results_counter} tuples\n')
+        logging.error('Task failed')
+        logging.error('Informing broker about Task Failure')
+        logging.info(f'This task inserted {self.results_counter} tuples\n')
 
         try:
             requests.post('http://{}:{}/api/unstable/task_error'.format(
                 self.config['broker_host'],self.config['broker_port']), json=task_failed)
         except requests.exceptions.ConnectionError:
-            logger.error('Could not send task failure message to the broker')
+            logging.error('Could not send task failure message to the broker')
         except Exception:
-            logger.exception('An unknown error occured while informing broker about task failure')
+            logging.exception('An unknown error occured while informing broker about task failure')
 
         self.results_counter = 0
