@@ -47,8 +47,7 @@ setup(
         "six>=1.14.0"
     ],
     extras_require={
-        "dev": ["tox", "pytest", "ipdb", "sphinx","sphinx_rtd_theme"],
-        "xlsx": ["xlsxwriter"]
+        "dev": ["tox", "pytest", "ipdb", "sphinx","sphinx_rtd_theme"]
     },
     entry_points={
         "console_scripts": [
