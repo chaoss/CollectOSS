@@ -7,13 +7,11 @@ import sqlalchemy as s
 import pandas as pd
 from sqlalchemy import exc
 
-# from augur.runtime import pass_application
-
 @click.group('db', short_help='Database utilities')
 def cli():
     pass
 
-@cli.command('add_repos', short_help="Add repositories to Augur's database")
+@cli.command('add-repos', short_help="Add repositories to Augur's database")
 @click.argument('filename', type=click.Path(exists=True))
 @click.pass_context
 def add_repos(ctx, filename):
@@ -45,7 +43,7 @@ def add_repos(ctx, filename):
                 # Since there's no rows to fetch after a successful insert, this is how we know it worked.
                 # I know it's weird
 
-@cli.command('get_repo_groups', short_help="List all repo groups and their associated IDs")
+@cli.command('get-repo-groups', short_help="List all repo groups and their associated IDs")
 @click.pass_context
 def get_repo_groups(ctx):
     app = ctx.obj
@@ -57,7 +55,7 @@ def get_repo_groups(ctx):
 
     return df
 
-@cli.command('add_repo_groups', short_help="Create new repo groups in Augur's database")
+@cli.command('add-repo-groups', short_help="Create new repo groups in Augur's database")
 @click.argument('filename', type=click.Path(exists=True))
 @click.pass_context
 def add_repo_groups(ctx, filename):
@@ -88,7 +86,7 @@ def add_repo_groups(ctx, filename):
                 # Since there's no rows to fetch after a successful insert, this is how we know it worked.
                 # I know it's weird, sue me (jk please don't)
 
-@cli.command('update_repo_directory', short_help="Update Facade worker repo cloning directory")
+@cli.command('update-repo-directory', short_help="Update Facade worker repo cloning directory")
 @click.argument('repo_directory')
 @click.pass_context
 def update_repo_directory(ctx, repo_directory):
@@ -108,21 +106,50 @@ def update_repo_directory(ctx, repo_directory):
         # Since there's no rows to fetch after a successful insert, this is how we know it worked.
         # I know it's weird, sue me (jk please don't)
 
+# I'm not sure if this is the correct way to do this
+# TODO: Use default user and credentials if possible to create the database
+# @cli.command('init-database', short_help="Create database on the configured port")
+# @click.option('--name', default='augur')
+# @click.option('--user', default='augur')
+# @click.option('--password', default='augur')
+# @click.option('--host', default='localhost')
+# @click.option('--port', default='5432')
+# @click.pass_context
+# def init_database(ctx, name, user, password, host, port):
+#     app = ctx.obj
+#     config = {
+#         'Database': {
+#             'name': name,
+#             'user': user,
+#             'password': password,
+#             'host': host,
+#             'port': port
+#         }
+#     }
+#     check_pgpass_credentials(config)
+#     run_db_creation_psql_command(host, port, user, name, f'CREATE DATABASE {name};')
+#     run_db_creation_psql_command(host, port, user, name, f'CREATE USER {user} WITH ENCRYPTED PASSWORD \'{password}\';')
+#     run_db_creation_psql_command(host, port, user, name, f'ALTER DATABASE {name} OWNER TO {user};')
+#     run_db_creation_psql_command(host, port, user, name, f'GRANT ALL PRIVILEGES ON DATABASE {name} TO {user};')
+
 @cli.command('create-schema', short_help="Create schema in the configured database")
 @click.pass_context
 def create_schema(ctx):
     app = ctx.obj
-    check_pgpass_credentials(app)
-    run_psql_command(app, '-f', 'schema/0-all.sql')
+    check_pgpass_credentials(app.config)
+    run_psql_command_in_database(app, '-f', 'schema/create_schema.sql')
 
 @cli.command('load-data', short_help="Load sample data into the configured database")
 @click.pass_context
 def load_data(ctx):
     app = ctx.obj
-    check_pgpass_credentials(app)
-    run_psql_command(app, '-f', 'schema/load_data.sql')
+    check_pgpass_credentials(app.config)
+    run_psql_command_in_database(app, '-f', 'schema/sample_data/load_sample_data.sql')
 
-def run_psql_command(app, target_type, target):
+def run_db_creation_psql_command(host, port, user, name, command):
+    call(['psql', '-h', host, '-p', port, '-U', user, '-d', name, '-a', '-w', '-c', command])
+
+def run_psql_command_in_database(app, target_type, target):
     if target_type not in ['-f', '-c']:
         print("Invalid target type. Exiting...")
         exit(1)
@@ -134,14 +161,14 @@ def run_psql_command(app, target_type, target):
       '-a', '-w', target_type, target
     ])
 
-def check_pgpass_credentials(app):
-     with open(environ['HOME'] + '/.pgpass', 'a+') as pgpass_file:
+def check_pgpass_credentials(config):
+    with open(environ['HOME'] + '/.pgpass', 'a+') as pgpass_file:
         end = pgpass_file.tell()
-        credentials_string = str(app.read_config('Database', 'host')) \
-                          + ':' + str(app.read_config('Database', 'port')) \
-                          + ':' + str(app.read_config('Database', 'name')) \
-                          + ':' + str(app.read_config('Database', 'user')) \
-                          + ':' + str(app.read_config('Database', 'password'))
+        credentials_string = str(config['Database']['host']) \
+                          + ':' + str(config['Database']['port']) \
+                          + ':' + str(config['Database']['name']) \
+                          + ':' + str(config['Database']['name']) \
+                          + ':' + str(config['Database']['password'])
         pgpass_file.seek(0)
         if credentials_string.lower() not in [''.join(line.split()).lower() for line in pgpass_file.readlines()]:
             print("Database credentials not found in $HOME/.pgpass. Adding credentials...")

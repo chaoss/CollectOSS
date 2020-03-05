@@ -92,7 +92,10 @@ class Application(object):
         if section is not None:
             value = self.config[section]
             if name is not None:
-                value = self.config[section][name]
+                try:
+                    value = self.config[section][name]
+                except KeyError as e:
+                    pass
         else:
             value = None
 

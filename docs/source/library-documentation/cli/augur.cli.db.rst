@@ -10,7 +10,7 @@ augur.cli.db
    .. autosummary::
    
       add_repos
-      add_repo_groups
+      add-repo-groups
       get_repo_groups
    
    
