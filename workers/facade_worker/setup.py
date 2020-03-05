@@ -25,7 +25,8 @@ setup(
         'requests', 
         'xlsxwriter', 
         'psycopg2-binary', 
-        'click'
+        'click',
+        'pymysql'
     ],
     entry_points={
         'console_scripts': [
