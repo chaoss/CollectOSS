@@ -180,6 +180,9 @@ docker-build-frontend:
 docker-build-database:
 	@ docker build -t augurlabs/augur:database -f util/docker/database/Dockerfile .
 
+docker-build-testing-database:
+	@ docker build -t augurlabs/augur:testing-database -f util/docker/testing-database/Dockerfile .
+
 
 docker-run-backend:
 	@ docker run -d -p 5000:5000 --name augur_backend --env-file augur_env.txt augurlabs/augur:backend
@@ -188,5 +191,8 @@ docker-run-frontend:
 	@ docker run -d -p 8080:8080 --name augur_frontend augurlabs/augur:frontend
 
 docker-run-database:
-	@ docker run -p 5432:5432 --name augur_database augurlabs/augur:database
+	@ docker run -d -p 5432:5432 --name augur_database augurlabs/augur:database
+
+docker-run-testing-database:
+	@ docker run -d -p 5432:5432 --name augur_test_database augurlabs/augur:testing-database
 
