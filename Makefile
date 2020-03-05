@@ -154,7 +154,8 @@ docs: api-docs library-docs
 
 #
 # Docker Shortcuts
-# .PHONY: compose-run compose-run-database
+#
+.PHONY: compose-run compose-run-database
 .PHONY: build-backend run-backend build-frontend run-frontend build-database run-database 
 
 
@@ -187,5 +188,5 @@ docker-run-frontend:
 	@ docker run -d -p 8080:8080 --name augur_frontend augurlabs/augur:frontend
 
 docker-run-database:
-	@ docker run -d -p 5432:5432 --name augur_database augurlabs/augur:database
+	@ docker run -p 5432:5432 --name augur_database augurlabs/augur:database
 

@@ -24,9 +24,9 @@ Example\:
 ========
 The collection of the ``db`` commands is for interacting with the database. 
 
-``add_repos``
+``add-repos``
 --------------
-The ``add_repos`` command is used to load new repos. When given a path to correctly formatted ``.csv`` file, it will insert each repo specified in the file into its corresponding repo group in the database that's specified in the config file.
+The ``add-repos`` command is used to load new repos. When given a path to correctly formatted ``.csv`` file, it will insert each repo specified in the file into its corresponding repo group in the database that's specified in the config file.
 
 The ``.csv`` file must have the following format:
 .. code-block::
@@ -42,16 +42,16 @@ Example\:
 .. code:: bash
 
   # to add repos to the database
-  augur db add_repos repos.csv
+  augur db add-repos repos.csv
 
   # contents of repos.csv
   1,https://github.com/chaoss/augur.git
   2,https://github.com/chaoss/wg-evolution.git
   3,https://github.com/chaoss/metrics.git
 
-``add_repo_groups``
+``add-repo-groups``
 --------------------
-The ``add_repo_groups`` command is used to create new repo groups. When given a path to correctly formatted ``.csv`` file, it will create each repo group specified in the file with the corresponding ID and name.
+The ``add-repo-groups`` command is used to create new repo groups. When given a path to correctly formatted ``.csv`` file, it will create each repo group specified in the file with the corresponding ID and name.
 
 The ``.csv`` file must have the following format:
 .. code-block::
@@ -68,7 +68,7 @@ Example\:
 .. code:: bash
 
   # to add repos to the database
-  augur db add_repo_groups repo_groups.csv
+  augur db add-repo-groups repo_groups.csv
 
   # contents of repo_groups.csv
   20,Apache Camel
@@ -77,16 +77,16 @@ Example\:
   23,Apache Tomcat
 
 
-``get_repo_groups``
+``get-repo-groups``
 --------------------
-The ``get_repo_groups`` command will return the ID, name, and description of all repo groups in the database.
+The ``get-repo-groups`` command will return the ID, name, and description of all repo groups in the database.
 
 Example\:
 
 .. code:: bash
 
   # to add repos to the database
-  augur db get_repo_groups
+  augur db get-repo-groups
 
    repo_group_id  rg_name    rg_description
    1              Default    Default repo group
