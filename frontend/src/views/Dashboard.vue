@@ -56,7 +56,6 @@
                         <d-tooltip 
                           :target="'#ev' + idx"
                           container=".shards-demo--example--tooltip-01"
-                          placement="right"
                           offset="20">
                           Click to see evolution metrics for this repo.
                         </d-tooltip>
