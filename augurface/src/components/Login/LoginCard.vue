@@ -14,7 +14,7 @@
       @valueUpdated="setPassword"
       :password="true"
     />
-    <aug-button text="Login" @click="$router.push('/dashboard')" ref="loginButton" />
+    <aug-button text="Login" @click="$router.push('/dashboard/manage')" ref="loginButton" />
   </div>
 </template>
 
@@ -77,6 +77,7 @@ export default {
   margin-top: 8vh;
   border-radius: 4px;
   box-shadow: 0px 0px 20px #cdcdcd;
+  padding-bottom: 2rem;
 }
 
 .login-card > * {

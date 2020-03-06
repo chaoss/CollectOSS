@@ -14,7 +14,7 @@ export default {
     return {
       links: [
         { text: "MANAGE REPOS", path: "/dashboard/manage" },
-        { text: "ANALYZE REPOS", path: "/dashboard/analyze" },
+        // { text: "ANALYZE REPOS", path: "/dashboard/analyze" },
         { text: "ABOUT AUGUR", path: "/dashboard/about" }
       ]
     };
@@ -29,6 +29,8 @@ export default {
 header {
   background-color: white;
   box-shadow: 0 0 20px 0 var(--grey);
+  z-index: 10;
+  position: relative;
 }
 
 img {

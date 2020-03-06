@@ -82,8 +82,11 @@ def create_manager_routes(server):
             summary['rg_name'] = group
             try:
                 repos = repo_manager.fetch_repos()
+                i = 0
                 for repo in repos:
                     try:
+                        i += 1
+                        print(str(i))
                         repo_id = repo_manager.insert_repo(group_id, group, repo)
                     except exc.SQLAlchemyError:
                         summary['failed_repo_records'].append(repo)
@@ -211,11 +214,11 @@ class Git_string():
 
 def get_db_engine(app):
 
-    user = app.read_config('Database', 'user', 'AUGUR_DB_USER', 'augur')
-    password = app.read_config('Database', 'password', 'AUGUR_DB_PASS', 'password')
-    host = app.read_config('Database', 'host', 'AUGUR_DB_HOST', '127.0.0.1')
-    port = app.read_config('Database', 'port', 'AUGUR_DB_PORT', '5433')
-    dbname = app.read_config('Database', 'database', 'AUGUR_DB_NAME', 'augur')
+    user = app.read_config('Database', 'user')
+    password = app.read_config('Database', 'password')
+    host = app.read_config('Database', 'host')
+    port = app.read_config('Database', 'port')
+    dbname = app.read_config('Database', 'name')
 
     DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(
             user, password, host, port, dbname

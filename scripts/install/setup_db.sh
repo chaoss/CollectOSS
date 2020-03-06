@@ -1,5 +1,4 @@
 #!/bin/bash
-set -euo pipefail
 
 PS3="
 Please type the number corresponding to your selection and then press the Enter/Return key.
@@ -91,14 +90,7 @@ function save_credentials() {
 
 function create_db_schema() {
 
-    psql -h $host -d $db_name -U $db_user -p $port -a -w -f schema/generate/1-schema.sql
-    psql -h $host -d $db_name -U $db_user -p $port -a -w -f schema/generate/2-augur_data.sql
-    psql -h $host -d $db_name -U $db_user -p $port -a -w -f schema/generate/3-augur_operations.sql
-    psql -h $host -d $db_name -U $db_user -p $port -a -w -f schema/generate/4-spdx.sql
-    psql -h $host -d $db_name -U $db_user -p $port -a -w -f schema/generate/5-seed-data.sql
-    psql -h $host -d $db_name -U $db_user -p $port -a -w -f schema/generate/6-schema_update_8.sql
-    psql -h $host -d $db_name -U $db_user -p $port -a -w -f schema/generate/7-schema_update_9.sql
-
+    augur db create-schema
     psql -h $host -d $db_name -U $db_user -p $port -a -w -c "UPDATE augur_data.settings SET VALUE = '$facade_repo_directory' WHERE setting='repo_directory';"
     echo "Schema created"
 
@@ -108,7 +100,7 @@ function create_db_schema() {
       case $should_load_db in
         "Yes" )
           "Loading database with sample dataset."
-          schema/db_load.sh $host $db_name $db_user $port
+          augur db load-data
           break
           ;;
         "No" )
