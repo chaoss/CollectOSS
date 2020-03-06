@@ -212,11 +212,11 @@ class GHPullRequestWorker:
         # query existing PRs and the respective url we will append the commits url to
         pr_url_sql = s.sql.text("""
             SELECT DISTINCT pr_url, pull_requests.pull_request_id
-            FROM pull_requests, pull_request_meta
-            WHERE pr_src_meta_label LIKE '%master'
-            --AND pull_request_meta.pr_head_or_base = 'base'
+            FROM pull_requests--, pull_request_meta
+            WHERE repo_id = {}
             AND pull_requests.pull_request_id = pull_request_meta.pull_request_id
-            AND repo_id = {}
+            --AND pr_src_meta_label LIKE '%master'
+            --AND pull_request_meta.pr_head_or_base = 'base'
         """.format(repo_id))
         urls = pd.read_sql(pr_url_sql, self.db, params={})
 
