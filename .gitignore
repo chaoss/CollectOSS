@@ -3,6 +3,7 @@ augur.config.json
 !default.config.json
 !frontend.config.json
 env.txt
+augur_env.txt
 pyenv.txt
 augur_export_env.sh
 
