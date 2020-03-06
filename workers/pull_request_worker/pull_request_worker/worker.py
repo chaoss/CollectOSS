@@ -214,7 +214,7 @@ class GHPullRequestWorker:
             SELECT DISTINCT pr_url, pull_requests.pull_request_id
             FROM pull_requests--, pull_request_meta
             WHERE repo_id = {}
-            AND pull_requests.pull_request_id = pull_request_meta.pull_request_id
+            --AND pull_requests.pull_request_id = pull_request_meta.pull_request_id
             --AND pr_src_meta_label LIKE '%master'
             --AND pull_request_meta.pr_head_or_base = 'base'
         """.format(repo_id))
