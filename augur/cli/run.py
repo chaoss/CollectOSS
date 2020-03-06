@@ -29,7 +29,6 @@ def cli(ctx, enable_housekeeper):
     app = ctx.obj
 
     mp.set_start_method('forkserver', force=True)
-    app.schedule_updates()
     master = None
 
     manager = None
@@ -76,10 +75,6 @@ def cli(ctx, enable_housekeeper):
 
         if master is not None:
             master.halt()
-        logger.info("Shutting down app updates...")
-        app.shutdown_updates()
-        logger.info("Finalizing config...")
-        app.finalize_config()
         logger.info("Shutting down housekeeper updates...")
         if housekeeper is not None:
             housekeeper.shutdown_updates()
@@ -100,18 +95,18 @@ def cli(ctx, enable_housekeeper):
 
     if enable_housekeeper:
         logger.info("Booting housekeeper...")
-        jobs = deepcopy(app.read_config('Housekeeper', 'jobs', 'AUGUR_JOBS', []))
+        jobs = deepcopy(app.read_config('Housekeeper', 'jobs'))
         try:
             housekeeper = Housekeeper(
                     jobs,
                     broker,
-                    broker_host=app.read_config('Server', 'host', 'AUGUR_HOST', 'localhost'),
-                    broker_port=app.read_config('Server', 'port', 'AUGUR_PORT', '5000'),
-                    user=app.read_config('Database', 'user', 'AUGUR_DB_USER', 'augur'),
-                    password=app.read_config('Database', 'password', 'AUGUR_DB_PASSWORD', 'password'),
-                    host=app.read_config('Database', 'host', 'AUGUR_DB_HOST', '0.0.0.0'),
-                    port=app.read_config('Database', 'port', 'AUGUR_DB_PORT', '5432'),
-                    dbname=app.read_config('Database', 'database', 'AUGUR_DB_NAME', 'augur')
+                    broker_host=app.read_config('Server', 'host'),
+                    broker_port=app.read_config('Server', 'port'),
+                    user=app.read_config('Database', 'user'),
+                    password=app.read_config('Database', 'password'),
+                    host=app.read_config('Database', 'host'),
+                    port=app.read_config('Database', 'port'),
+                    dbname=app.read_config('Database', 'name')
                 )
         except KeyboardInterrupt as e:
             exit()
@@ -127,10 +122,10 @@ def cli(ctx, enable_housekeeper):
                         worker_process.start()
                         worker_processes.append(worker_process)
 
-    host = app.read_config('Server', 'host', 'AUGUR_HOST', '0.0.0.0')
-    port = app.read_config('Server', 'port', 'AUGUR_PORT', '5000')
-    workers = int(app.read_config('Server', 'workers', 'AUGUR_WORKERS', mp.cpu_count()))
-    timeout = int(app.read_config('Server', 'timeout', 'AUGUR_TIMEOUT', 60))
+    host = app.read_config('Server', 'host')
+    port = app.read_config('Server', 'port')
+    workers = int(app.read_config('Server', 'workers'))
+    timeout = int(app.read_config('Server', 'timeout'))
     options = {
         'bind': '%s:%s' % (host, port),
         'workers': workers,
