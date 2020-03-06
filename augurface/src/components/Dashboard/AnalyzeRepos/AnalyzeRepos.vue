@@ -1,5 +1,7 @@
 <template>
-  <div id="AnalyzeRepos">Analyze Repos</div>
+  <div id="AnalyzeRepos">
+    <h1>AnalyzeRepos</h1>
+  </div>
 </template>
 
 <script>
