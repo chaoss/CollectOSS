@@ -55,7 +55,7 @@ def main(augur_url, host, port):
     broker_host = read_config("Server", "host", "AUGUR_HOST", "0.0.0.0")
     broker_port = read_config("Server", "port", "AUGUR_PORT", 5000)
     database_host = read_config('Database', 'host', 'AUGUR_DB_HOST', 'host')
-    worker_info = read_config('Workers', 'insight_worker', None, None)
+    worker_info = read_config('Workers', 'insight_worker', None, {})
 
     worker_port = worker_info['port'] if 'port' in worker_info else port
 
@@ -82,9 +82,13 @@ def main(augur_url, host, port):
             "user": read_config('Database', 'user', 'AUGUR_DB_USER', 'user'),
             "database": read_config('Database', 'database', 'AUGUR_DB_NAME', 'database'),
             "endpoint": "https://bestpractices.coreinfrastructure.org/projects.json",
-            "anomaly_days": worker_info['anomaly_days'],
-            "training_days": worker_info['training_days'],
-            "confidence_interval": worker_info['confidence_interval']
+            "anomaly_days": worker_info['anomaly_days'] if 'anomaly_days' in worker_info else 2,
+            "training_days": worker_info['training_days'] if 'training_days' in worker_info else 365,
+            "confidence_interval": worker_info['confidence_interval'] if 'confidence_interval' in worker_info else .95,
+            "contamination": worker_info['contamination'] if 'contamination' in worker_info else 0.041,
+            'metrics': worker_info['metrics'] if 'metrics' in worker_info else {"issues-new": "issues", 
+                "code-changes": "commit_count", "code-changes-lines": "added", 
+                "reviews": "pull_requests", "contributors-new": "new_contributors"}
         }
 
     #create instance of the worker
