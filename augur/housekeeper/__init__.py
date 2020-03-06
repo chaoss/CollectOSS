@@ -17,7 +17,7 @@
 #                 password=self._augur.read_config('Database', 'password', 'AUGUR_DB_PASSWORD', 'password'),
 #                 host=self._augur.read_config('Database', 'host', 'AUGUR_DB_HOST', '0.0.0.0'),
 #                 port=self._augur.read_config('Database', 'port', 'AUGUR_DB_PORT', '3306'),
-#                 dbname=self._augur.read_config('Database', 'database', 'AUGUR_DB_NAME', 'msr14')
+#                 dbname=self._augur.read_config('Database', 'name', 'AUGUR_DB_NAME', 'msr14')
 #             )
 
 

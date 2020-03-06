@@ -10,26 +10,14 @@ import json
 ENVVAR_PREFIX = "AUGUR_"
 
 default_config = {
-        "Cache": {
-            "config": {
-                "cache.data_dir": "runtime/cache/",
-                "cache.lock_dir": "runtime/cache/",
-                "cache.type": "file"
-            }
-        },
         "Database": {
-            "connection_string": "sqlite:///:memory:",
-            "database": "augur",
+            "name": "augur",
             "host": "localhost",
             "key": "key",
             "password": "augur",
             "port": 5432,
             "schema": "augur_data",
             "user": "augur"
-        },
-        "Development": {
-            "developer": "0",
-            "interactive": "0"
         },
         "Facade": {
             "check_updates": 1,
@@ -108,7 +96,6 @@ default_config = {
                 }
             ]
         },
-        "Plugins": [],
         "Server": {
             "cache_expire": "3600",
             "host": "0.0.0.0",
