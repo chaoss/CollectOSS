@@ -6,3 +6,4 @@
 \i schema/generate/6-schema_update_8.sql
 \i schema/generate/7-schema_update_9.sql
 \i schema/generate/8-schema_update_10.sql
+\i schema/generate/8-schema_update_11_pr_commits.sql
