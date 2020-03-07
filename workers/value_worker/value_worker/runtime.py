@@ -95,7 +95,7 @@ def main(augur_url, host, port, scc_bin):
             "password": read_config('Database', 'password', 'AUGUR_DB_PASSWORD', 'password'),
             "port": read_config('Database', 'port', 'AUGUR_DB_PORT', 'port'),
             "user": read_config('Database', 'user', 'AUGUR_DB_USER', 'user'),
-            "database": read_config('Database', 'database', 'AUGUR_DB_NAME', 'database'),
+            "database": read_config('Database', 'name', 'AUGUR_DB_NAME', 'database'),
             "endpoint": "https://bestpractices.coreinfrastructure.org/projects.json",
             'scc_bin': worker_info['scc_bin'],
             "display_name": "",

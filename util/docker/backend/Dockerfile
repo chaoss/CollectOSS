@@ -8,20 +8,22 @@ LABEL version="0.1.0"
 
 WORKDIR /augur
 
-# setup.py requires the README.md for the description 
-COPY ./README.md . 
-
+COPY ./README.md .
 COPY ./requirements.txt .
-COPY ./setup.py .
+COPY ./dev_requirements.txt .
 COPY ./augur/ ./augur/
+COPY ./scripts/ ./scripts/
+COPY ./util/ ./util/
+COPY ./metadata.py .
+COPY ./tox.ini .
+COPY ./setup.py .
+COPY ./workers/ ./workers/
+
 RUN pip install .
+RUN ./scripts/install/workers.sh prod
 
 RUN mkdir repos/;
-COPY ./workers/ ./workers/
-COPY ./scripts/install/workers.sh .
-
 COPY ./util/docker/docker.config.json .
 RUN augur configure generate --rc-config-file docker.config.json
-RUN ./workers.sh
 
 CMD augur run
