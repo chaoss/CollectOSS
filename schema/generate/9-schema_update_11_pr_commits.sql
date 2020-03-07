@@ -45,4 +45,4 @@ CREATE INDEX "repos_id,statusops" ON "augur_data"."repos_fetch_log" USING btree 
 );
 
 
-update "augur_operations"."augur_settings" set value = 9 where setting = 'augur_data_version'; 
+update "augur_operations"."augur_settings" set value = 11 where setting = 'augur_data_version'; 
