@@ -188,14 +188,14 @@ docker-build-testing-database:
 
 
 docker-run-backend:
-	@ docker run -p 5000:5000 --name augur_backend --env-file augur_env.txt augurlabs/augur:backend
+	@ docker run -d -p 5000:5000 --name augur_backend --env-file augur_env.txt augurlabs/augur:backend
 
 docker-run-frontend:
-	@ docker run -p 8080:8080 --name augur_frontend augurlabs/augur:frontend
+	@ docker run -d -p 8080:8080 --name augur_frontend augurlabs/augur:frontend
 
 docker-run-database:
-	@ docker run -p 5432:5432 --name augur_database augurlabs/augur:database
+	@ docker run -d -p 5432:5432 --name augur_database augurlabs/augur:database
 
 docker-run-testing-database:
-	@ docker run -p 5432:5432 --name augur_test_database augurlabs/augur:testing-database
+	@ docker run -d -p 5432:5432 --name augur_test_database augurlabs/augur:testing-database
 
