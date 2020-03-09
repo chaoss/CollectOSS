@@ -191,7 +191,7 @@ class InsightWorker:
         record_model_process(self, repo_id, 'insights')
 
         """ Collect data """   
-        base_url = 'http://localhost:5002/api/unstable/repo-groups/9999/repos/{}/'.format(repo_id)
+        base_url = 'http://{}:{}/api/unstable/repo-groups/9999/repos/{}/'.format(self.config['broker_host'], self.config['broker_port'], repo_id)
         
         # Dataframe to hold all endpoint results
         # Subtract configurable amount of time
