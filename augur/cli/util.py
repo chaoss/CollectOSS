@@ -4,7 +4,7 @@ Miscellaneous Augur library commands for controlling the backend components
 """
 
 import os
-import subprocess
+from subprocess import call
 import click
 import pandas as pd
 import sqlalchemy as s
@@ -38,14 +38,26 @@ def kill():
     """
     Kill running augur processes
     """
-    run_control_script("../../scripts/control/kill.sh")
+    run_control_script("scripts/control/kill.sh")
 
 @cli.command('list', short_help='List running Augur processes')
 def list():
     """
     List currently running augur processes
     """
-    run_control_script("../../scripts/control/processes.sh")
+    run_control_script("scripts/control/processes.sh")
+
+@cli.command('status', short_help='List running Augur processes')
+@click.option('--interactive', is_flag=True, help='Display all log files simultaneously with less')
+def list(interactive):
+    """
+    List currently running augur processes
+    """
+    if not interactive:
+        run_control_script("scripts/control/status.sh", "quick")
+    else:
+        run_control_script("scripts/control/status.sh", "interactive")
+
 
 @cli.command('repo-reset', short_help='Reset Repo Collection')
 @click.pass_context
@@ -60,6 +72,9 @@ def repo_reset(ctx):
 
     print("Repos successfully reset.")
 
-def run_control_script(relative_script_path):
-    os.chdir(os.path.dirname(os.path.realpath(__file__)))
-    subprocess.call(relative_script_path)
+def run_control_script(relative_script_path, flag=None):
+    os.chdir(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
+    if flag:
+        call(["./{}".format(relative_script_path), flag])
+    else:
+        call(relative_script_path)

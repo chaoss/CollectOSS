@@ -201,7 +201,7 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 
 	db_user = read_config('Database', 'user', 'AUGUR_DB_USER', 'augur')
 	db_pass = read_config('Database', 'password', 'AUGUR_DB_PASSWORD', 'augur')
-	db_name = read_config('Database', 'database', 'AUGUR_DB_NAME', 'augur')
+	db_name = read_config('Database', 'name', 'AUGUR_DB_NAME', 'augur')
 	db_host = read_config('Database', 'host', 'AUGUR_DB_HOST', 'localhost')
 	db_port = read_config('Database', 'port', 'AUGUR_DB_PORT', 5432)
 	db_user_people = db_user
