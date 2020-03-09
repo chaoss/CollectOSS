@@ -33,6 +33,10 @@ def export_env(ctx):
     export_file.close()
     env_file.close()
 
+@cli.command('export-deps')
+def export_deps():
+    run_control_script("export_dependencies.sh")
+
 @cli.command('kill', short_help='Kill Augur')
 def kill_processes():
     """
