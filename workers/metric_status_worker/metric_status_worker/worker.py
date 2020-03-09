@@ -27,17 +27,6 @@ class CollectorTask:
         self.type = message_type
         self.entry_info = entry_info
 
-def dump_queue(queue):
-    """
-    Empties all pending items in a queue and returns them in a list.
-    """
-    result = []
-    queue.put("STOP")
-    for i in iter(queue.get, 'STOP'):
-        result.append(i)
-    # time.sleep(.1)
-    return result
-
 
 class MetricStatusWorker:
     def __init__(self, config, task=None):
