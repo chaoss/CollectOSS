@@ -111,12 +111,6 @@ backend-restart: backend-stop backend-start
 
 backend: backend-restart
 
-status:
-	@ ./scripts/control/status.sh quick
-
-status-interactive:
-	@ ./scripts/control/status.sh interactive
-
 #
 # Testing
 #
