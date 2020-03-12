@@ -1,2 +1,2 @@
-augur.config.file reference
+augur.config.json reference
 ===============================
