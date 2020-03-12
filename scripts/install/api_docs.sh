@@ -7,7 +7,7 @@ echo "Building API documentation..."
 echo "**********************************"
 echo
 
-cd docs 
+cd docs
 
 apidoc -f "\.py" -i ../augur/ -o api/
 
