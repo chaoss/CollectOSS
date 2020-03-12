@@ -13,4 +13,4 @@ This documentation is intended as an entry-level introduction for the Augur proj
    installation
    collecting-data
    configuration-file-reference
-   command-line-interface/command-line-interface-toc
+   command-line-interface/toc

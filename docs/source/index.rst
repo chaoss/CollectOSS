@@ -11,10 +11,11 @@ Augur is a software suite that provides open source health and sustainability me
 .. toctree::
    :maxdepth: 2
    
-   getting-started/getting-started-toc
-   docker/docker-toc
+   getting-started/toc
+   docker/toc
 
-.. development-guide/development-guide-toc
-.. library-documentation/library-documentation-toc
-.. schema/schema-toc
-.. deployment/deployment-toc
+
+.. development-guide/toc
+.. library-documentation/toc
+.. schema/toc
+.. deployment/toc
