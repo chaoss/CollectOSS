@@ -4,4 +4,4 @@ services:
     image: augurlabs/augur:database
     restart: unless-stopped
     ports:
-     - 5432:5432
+     - 5434:5432
