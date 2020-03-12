@@ -1,2 +1,2 @@
-``augur.config.file`` Reference
+augur.config.file reference
 ===============================
