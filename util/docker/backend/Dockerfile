@@ -10,20 +10,16 @@ WORKDIR /augur
 
 COPY ./README.md .
 COPY ./requirements.txt .
-COPY ./dev_requirements.txt .
-COPY ./augur/ ./augur/
-COPY ./scripts/ ./scripts/
-COPY ./util/ ./util/
+COPY ./augur/ augur/
 COPY ./metadata.py .
-COPY ./tox.ini .
 COPY ./setup.py .
-COPY ./workers/ ./workers/
+COPY ./scripts/ scripts/
+COPY ./workers/ workers/
 
 RUN pip install .
 RUN ./scripts/install/workers.sh prod
 
-RUN mkdir repos/;
 COPY ./util/docker/docker.config.json .
-RUN augur configure generate --rc-config-file docker.config.json
+RUN augur configure generate --rc-config-file docker.config.json; mkdir repos/;
 
-CMD augur run
+CMD augur db update-repo-directory /augur/repos/; augur run
