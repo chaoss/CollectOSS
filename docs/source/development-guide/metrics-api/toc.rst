@@ -1,2 +1,2 @@
-``augur util``
+Metrics API
 ===============
