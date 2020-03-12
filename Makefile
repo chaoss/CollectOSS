@@ -13,10 +13,9 @@ default:
 	@ echo "    rebuild                         Removes build/compiled files & binaries and reinstalls the project"
 	@ echo
 	@ echo "Development Commands:"
-	@ echo "    dev                             Starts the full stack and monitors the logs"
+	@ echo "    dev                             Starts the full stack in the background"
 	@ echo "    dev-start                       Runs the backend and frontend servers in the background"
 	@ echo "    dev-stop                        Stops the backgrounded backend & frontend server commands"
-	@ echo "    dev-restart                     Runs dev-stop then dev-start"
 	@ echo
 	@ echo "Testing Commands:"
 	@ echo "    test                            Runs all unit tests and API tests"
@@ -64,58 +63,17 @@ rebuild-dev:
 #  Development
 #
 .PHONY: dev-start dev-stop dev monitor-frontend monitor-backend monitor frontend backend-stop backend-start backend-restart backend clean rebuild
+
 dev-start: dev-stop
-	@ mkdir -p logs runtime
-	@ bash -c '$(SERVE_COMMAND) $(ENABLE_HOUSEKEEPER) >logs/backend.log 2>&1 & echo $$! > logs/backend.pid;'
-	@ bash -c 'sleep 4; cd frontend; npm run serve >../logs/frontend.log 2>&1 & echo $$! > ../logs/frontend.pid'
-	@ echo "Server     Description       Log                   Monitoring                   PID                        "
-	@ echo "------------------------------------------------------------------------------------------                 "
-	@ echo "Frontend   Brunch            logs/frontend.log     make monitor-backend         $$( cat logs/frontend.pid ) "
-	@ echo "Backend    Augur/Gunicorn    logs/backend.log      make monitor-frontend        $$( cat logs/backend.pid  ) "
-	@ echo
-	@ echo "Monitor both:  make monitor  "
-	@ echo "Restart and monitor: make dev"
-	@ echo "Restart servers:  make dev-start "
-	@ echo "Stop servers:  make dev-stop "
+	@ scripts/control/start_augur.sh
+	@ scripts/control/start_frontend.sh
 
-dev-stop:
-	@ bash -c 'if [[ -s logs/frontend.pid && (( `cat logs/frontend.pid` > 1 )) ]]; then printf "sending SIGTERM to node (Brunch) at PID $$(cat logs/frontend.pid); "; kill `cat logs/frontend.pid`; rm logs/frontend.pid > /dev/null 2>&1; fi;'
-	@ bash -c 'if [[ -s logs/backend.pid  && (( `cat logs/backend.pid`  > 1 )) ]]; then printf "sending SIGTERM to python (Gunicorn) at PID $$(cat logs/backend.pid); "; kill `cat logs/backend.pid` ; rm logs/backend.pid  > /dev/null 2>&1; fi;'
-	@ echo
+dev-stop: 
+	@ augur/cli/scripts/kill_processes.sh
+	@ scripts/control/kill_frontend.sh
 
-dev: dev-restart monitor
+dev: dev-stop dev-start
 
-monitor-frontend:
-	@ less +F logs/frontend.log
-
-monitor-backend:
-	@ less +F logs/backend.log
-
-monitor:
-	@ tail -f logs/frontend.log -f logs/backend.log 2>/dev/null
-
-dev-restart: dev-stop dev-start
-
-frontend:
-	@ bash -c 'cd frontend; npm run serve'
-
-backend-stop:
-	@ bash -c 'augur util kill'
-	@ echo
-
-backend-start:
-	@ mkdir -p logs runtime
-	@ bash -c '$(SERVE_COMMAND) $(ENABLE_HOUSEKEEPER) >logs/backend.log 2>&1 & echo $$! > logs/backend.pid;'
-
-backend-restart: backend-stop backend-start
-
-backend: backend-restart
-
-status:
-	@ ./scripts/control/status.sh quick
-
-status-interactive:
-	@ ./scripts/control/status.sh interactive
 
 #
 # Testing
@@ -188,14 +146,14 @@ docker-build-testing-database:
 
 
 docker-run-backend:
-	@ docker run -p 5000:5000 --name augur_backend --env-file augur_env.txt augurlabs/augur:backend
+	@ docker run -d -p 5000:5000 --name augur_backend --env-file augur_env.txt augurlabs/augur:backend
 
 docker-run-frontend:
-	@ docker run -p 8080:8080 --name augur_frontend augurlabs/augur:frontend
+	@ docker run -d -p 8080:8080 --name augur_frontend augurlabs/augur:frontend
 
 docker-run-database:
-	@ docker run -p 5432:5432 --name augur_database augurlabs/augur:database
+	@ docker run -d -p 5432:5432 --name augur_database augurlabs/augur:database
 
 docker-run-testing-database:
-	@ docker run -p 5432:5432 --name augur_test_database augurlabs/augur:testing-database
+	@ docker run -d -p 5432:5432 --name augur_test_database augurlabs/augur:testing-database
 
