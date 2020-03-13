@@ -448,3 +448,14 @@ def check_duplicates(new_data, table_values, key):
     logging.info("Page recieved has {} tuples, while filtering duplicates this ".format(str(len(new_data))) +
         "was reduced to {} tuples.\n".format(str(len(need_insertion))))
     return need_insertion
+
+def dump_queue(queue):
+    """
+    Empties all pending items in a queue and returns them in a list.
+    """
+    result = []
+    queue.put("STOP")
+    for i in iter(queue.get, 'STOP'):
+        result.append(i)
+    # time.sleep(.1)
+    return result
