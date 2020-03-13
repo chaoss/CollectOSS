@@ -42,13 +42,14 @@ def kill_processes(ctx):
     Kill running augur processes
     """
     processes = get_augur_processes()
-    for process in processes:
-        if process.pid != os.getpid():
-            print(f"Killing {process.pid}: {' '.join(process.info['cmdline'][1:])}")
-            try:
-                process.send_signal(signal.SIGTERM)
-            except NoSuchProcess as e:
-                pass
+    if processes != []:
+        for process in processes:
+            if process.pid != os.getpid():
+                print(f"Killing {process.pid}: {' '.join(process.info['cmdline'][1:])}")
+                try:
+                    process.send_signal(signal.SIGTERM)
+                except NoSuchProcess as e:
+                    pass
 
 @cli.command('list', short_help='List running Augur processes')
 def list_processes():
