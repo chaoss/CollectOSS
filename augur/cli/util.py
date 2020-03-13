@@ -4,7 +4,9 @@ Miscellaneous Augur library commands for controlling the backend components
 """
 
 import os
-from subprocess import call
+import signal
+from subprocess import call, run
+import psutil
 import click
 import pandas as pd
 import sqlalchemy as s
@@ -33,34 +35,39 @@ def export_env(ctx):
     export_file.close()
     env_file.close()
 
-@cli.command('export-deps')
-def export_deps():
-    run_control_script("export_dependencies.sh")
-
-@cli.command('kill', short_help='Kill Augur')
-def kill_processes():
+@cli.command('kill', short_help='Kill all currently running Augur processes')
+@click.pass_context
+def kill_processes(ctx):
     """
     Kill running augur processes
     """
-    run_control_script("kill_processes.sh")
+    processes = get_augur_processes()
+    if processes != []:
+        for process in processes:
+            if process.pid != os.getpid():
+                print(f"Killing {process.pid}: {' '.join(process.info['cmdline'][1:])}")
+                try:
+                    process.send_signal(signal.SIGTERM)
+                except NoSuchProcess as e:
+                    pass
 
 @cli.command('list', short_help='List running Augur processes')
 def list_processes():
     """
     List currently running augur processes
     """
-    run_control_script("list_processes.sh")
+    processes = get_augur_processes()
+    for process in processes:
+        print(process.pid, " ".join(process.info['cmdline'][1:]))
 
-@cli.command('status', short_help='List running Augur processes')
-@click.option('--interactive', is_flag=True, help='Display all log files simultaneously with less')
-def status(interactive):
-    """
-    List currently running augur processes
-    """
-    if not interactive:
-        run_control_script("status.sh", "quick")
-    else:
-        run_control_script("status.sh", "interactive")
+def get_augur_processes():
+    processes = []
+    for process in psutil.process_iter(['cmdline', 'name', 'environ']):
+        if process.info['cmdline'] is not None:
+            if 'VIRTUAL_ENV' in list(process.info['environ'].keys()) and 'Python' in process.info['name']:
+                if process.pid != os.getpid():
+                    processes.append(process)
+    return processes
 
 @cli.command('repo-reset', short_help='Reset Repo Collection')
 @click.pass_context
@@ -74,11 +81,3 @@ def repo_reset(ctx):
     db.execute("UPDATE augur_data.repo SET repo_path = NULL, repo_name = NULL, repo_status = 'New'; TRUNCATE augur_data.commits CASCADE; ")
 
     print("Repos successfully reset.")
-
-def run_control_script(script_name, options=None):
-    script_path = "/augur/cli/scripts/" + script_name
-    os.chdir(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
-    if options:
-        call([f"./{script_path}", options])
-    else:
-        call([f"./{script_path}"])
