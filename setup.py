@@ -43,6 +43,7 @@ setup(
         "flask_wtf",
         "psycopg2-binary",
         "click",
+        "psutil",
         "gunicorn==19.9.0",
         "six>=1.14.0"
     ],
