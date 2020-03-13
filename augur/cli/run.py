@@ -15,12 +15,19 @@ from augur.util import logger
 from augur.server import Server
 
 from augur.cli.util import kill_processes
+import time
 
 @click.command('run')
 @click.option('--enable-housekeeper/--disable-housekeeper', default=True)
+@click.option('--skip-cleanup', is_flag=True, default=False)
 @click.pass_context
-def cli(ctx, enable_housekeeper):
-    ctx.invoke(kill_processes)
+def cli(ctx, enable_housekeeper, skip_cleanup):
+    if not skip_cleanup:
+        logger.info("Cleaning up old Augur processes. Just a moment please...")
+        ctx.invoke(kill_processes)
+        time.sleep(2)
+    else:
+        logger.info("Skipping cleanup processes.")
 
     def get_process_id(name):
         """Return process ids found by name or command
