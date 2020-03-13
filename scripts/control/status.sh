@@ -2,7 +2,6 @@
 
 monitor=${1-quick}
 
-
 if [[ $monitor == "quick" ]]; then
   if [[ -d logs/augur.log ]]; then
     echo "augur logs"
