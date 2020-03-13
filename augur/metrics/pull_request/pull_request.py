@@ -372,7 +372,7 @@ def pull_request_acceptance_rate(self, repo_group_id, repo_id=None, begin_date=N
                     WHERE action = 'merged'
                     AND issues.pull_request IS NOT NULL 
                     AND repo_group_id = :repo_group_id
-                    AND issue_events.created_at BETWEEN :begin_date AND :end_date
+                    AND issue_events.created_at BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD HH24:MI:SS') AND to_timestamp(:end_date, 'YYYY-MM-DD HH24:MI:SS')
                     GROUP BY accepted_on
                     ORDER BY accepted_on
                 ) accepted
@@ -385,7 +385,7 @@ def pull_request_acceptance_rate(self, repo_group_id, repo_id=None, begin_date=N
                     WHERE action = 'ready_for_review'
                     AND issues.pull_request IS NOT NULL 
                     AND repo_group_id = :repo_group_id
-                    AND issue_events.created_at BETWEEN :begin_date AND :end_date
+                    AND issue_events.created_at BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD HH24:MI:SS') AND to_timestamp(:end_date, 'YYYY-MM-DD HH24:MI:SS')
                     GROUP BY date_created
                     ORDER BY date_created
                 ) opened
@@ -405,7 +405,7 @@ def pull_request_acceptance_rate(self, repo_group_id, repo_id=None, begin_date=N
                     WHERE action = 'merged'
                     AND issues.pull_request IS NOT NULL
                     AND repo_id = :repo_id
-                    AND issue_events.created_at BETWEEN :begin_date AND :end_date
+                    AND issue_events.created_at BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD HH24:MI:SS') AND to_timestamp(:end_date, 'YYYY-MM-DD HH24:MI:SS')
                     GROUP BY accepted_on
                     ORDER BY accepted_on
                 ) accepted
@@ -417,7 +417,7 @@ def pull_request_acceptance_rate(self, repo_group_id, repo_id=None, begin_date=N
                     WHERE action = 'ready_for_review'
                     AND issues.pull_request IS NOT NULL 
                     AND repo_id = :repo_id
-                    AND issue_events.created_at BETWEEN :begin_date AND :end_date
+                    AND issue_events.created_at BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD HH24:MI:SS') AND to_timestamp(:end_date, 'YYYY-MM-DD HH24:MI:SS')
                     GROUP BY date_created
                     ORDER BY date_created
                 ) opened

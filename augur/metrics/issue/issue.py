@@ -111,7 +111,7 @@ def issues_first_time_closed(self, repo_group_id, repo_id=None, period='day', be
                     AND repo.repo_id = issues.repo_id
                     AND issues.pull_request IS NULL 
                     AND issues.issue_id = issue_events.issue_id
-                    And issue_events.created_at BETWEEN :begin_date AND :end_date
+                    And issue_events.created_at BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD HH24:MI:SS') AND to_timestamp(:end_date, 'YYYY-MM-DD HH24:MI:SS')
                     GROUP BY issue_events.cntrb_id, repo_name
                 ) AS iss_close
             GROUP BY issue_date, repo_name
@@ -133,7 +133,7 @@ def issues_first_time_closed(self, repo_group_id, repo_id=None, period='day', be
                     AND action = 'closed'
                     AND repo.repo_id = issues.repo_id
                     AND issues.issue_id = issue_events.issue_id
-                    And issue_events.created_at BETWEEN :begin_date AND :end_date
+                    And issue_events.created_at BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD HH24:MI:SS') AND to_timestamp(:end_date, 'YYYY-MM-DD HH24:MI:SS')
                     GROUP BY issue_events.cntrb_id, repo.repo_id, repo_name
                 ) AS iss_close
             GROUP BY repo_id, repo_name,issue_date
