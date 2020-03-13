@@ -35,41 +35,38 @@ def export_env(ctx):
     export_file.close()
     env_file.close()
 
-@cli.command('kill', short_help='Kill Augur')
+@cli.command('kill', short_help='Kill all currently running Augur processes')
 @click.pass_context
 def kill_processes(ctx):
     """
     Kill running augur processes
     """
-    processes = ctx.invoke(list_processes)
+    processes = get_augur_processes()
     for process in processes:
-        process.send_signal(signal.SIGTERM)
+        if process.pid != os.getpid():
+            print(f"Killing {process.pid}: {' '.join(process.info['cmdline'][1:])}")
+            try:
+                process.send_signal(signal.SIGTERM)
+            except NoSuchProcess as e:
+                pass
 
 @cli.command('list', short_help='List running Augur processes')
 def list_processes():
     """
     List currently running augur processes
     """
+    processes = get_augur_processes()
+    for process in processes:
+        print(process.pid, " ".join(process.info['cmdline'][1:]))
+
+def get_augur_processes():
     processes = []
     for process in psutil.process_iter(['cmdline', 'name', 'environ']):
         if process.info['cmdline'] is not None:
             if 'VIRTUAL_ENV' in list(process.info['environ'].keys()) and 'Python' in process.info['name']:
-                if process.pid is not os.getpid():
-                    print(process.pid, " ".join(process.info['cmdline'][1:]))
+                if process.pid != os.getpid():
                     processes.append(process)
     return processes
-
-@cli.command('status', short_help='List running Augur processes')
-@click.option('--interactive', is_flag=True, help='Display all log files simultaneously with less')
-def status(interactive):
-    """
-    List currently running augur processes
-    """
-    print(os.getcwd())
-    # if not interactive:
-    #     run_control_script("status.sh", "quick")
-    # else:
-    #     run_control_script("status.sh", "interactive")
 
 @cli.command('repo-reset', short_help='Reset Repo Collection')
 @click.pass_context

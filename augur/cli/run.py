@@ -14,10 +14,13 @@ from augur.housekeeper.housekeeper import Housekeeper
 from augur.util import logger
 from augur.server import Server
 
+from augur.cli.util import kill_processes
+
 @click.command('run')
 @click.option('--enable-housekeeper/--disable-housekeeper', default=True)
 @click.pass_context
 def cli(ctx, enable_housekeeper):
+    ctx.invoke(kill_processes)
 
     def get_process_id(name):
         """Return process ids found by name or command
