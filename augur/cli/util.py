@@ -63,7 +63,7 @@ def list_processes():
 def get_augur_processes():
     processes = []
     for process in psutil.process_iter(['cmdline', 'name', 'environ']):
-        if process.info['cmdline'] is not None:
+        if process.info['cmdline'] is not None and process.info['environ'] is not None:
             if 'VIRTUAL_ENV' in list(process.info['environ'].keys()) and 'Python' in process.info['name']:
                 if process.pid != os.getpid():
                     processes.append(process)
