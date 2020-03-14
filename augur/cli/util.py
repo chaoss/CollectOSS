@@ -48,7 +48,7 @@ def kill_processes(ctx):
                 print(f"Killing {process.pid}: {' '.join(process.info['cmdline'][1:])}")
                 try:
                     process.send_signal(signal.SIGTERM)
-                except NoSuchProcess as e:
+                except psutil.NoSuchProcess as e:
                     pass
 
 @cli.command('list', short_help='List running Augur processes')
@@ -64,7 +64,7 @@ def get_augur_processes():
     processes = []
     for process in psutil.process_iter(['cmdline', 'name', 'environ']):
         if process.info['cmdline'] is not None and process.info['environ'] is not None:
-            if 'VIRTUAL_ENV' in list(process.info['environ'].keys()) and 'Python' in process.info['name']:
+            if 'VIRTUAL_ENV' in list(process.info['environ'].keys()) and 'python' in process.info['name'].lower():
                 if process.pid != os.getpid():
                     processes.append(process)
     return processes
