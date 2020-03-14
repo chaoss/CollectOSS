@@ -95,7 +95,7 @@ def cli(ctx, enable_housekeeper):
 
     if enable_housekeeper:
         logger.info("Booting housekeeper...")
-        jobs = app.read_config('Housekeeper', 'jobs')
+        jobs = deepcopy(app.read_config('Housekeeper', 'jobs'))
         try:
             housekeeper = Housekeeper(
                     jobs,
