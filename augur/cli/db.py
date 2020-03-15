@@ -106,6 +106,19 @@ def update_repo_directory(ctx, repo_directory):
         # Since there's no rows to fetch after a successful insert, this is how we know it worked.
         # I know it's weird, sue me (jk please don't)
 
+@cli.command('version', short_help="Get the version of the configured database")
+@click.pass_context
+def get_db_version(ctx):
+    db = get_db_connection(ctx.obj)
+
+    db_version_sql = s.sql.text("""
+        SELECT * FROM augur_operations.augur_settings WHERE setting = 'augur_data_version'
+    """)
+
+    result = db.execute(db_version_sql)
+
+    print(f"Augur DB version: {result.fetchone()[2]}")
+
 # I'm not sure if this is the correct way to do this
 # TODO: Use default user and credentials if possible to create the database
 # @cli.command('init-database', short_help="Create database on the configured port")
