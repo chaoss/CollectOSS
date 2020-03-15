@@ -212,6 +212,7 @@ def read_config(section, name=None, environment_variable=None, default=None, con
     :param section: location of given variable
     :param name: name of variable
     """
+    config_file_path = os.getenv("AUGUR_CONFIG_FILE", config_file_path)
     _config_file_name = 'augur.config.json'
     _config_bad = False
     _already_exported = {}
@@ -448,3 +449,14 @@ def check_duplicates(new_data, table_values, key):
     logging.info("Page recieved has {} tuples, while filtering duplicates this ".format(str(len(new_data))) +
         "was reduced to {} tuples.\n".format(str(len(need_insertion))))
     return need_insertion
+
+def dump_queue(queue):
+    """
+    Empties all pending items in a queue and returns them in a list.
+    """
+    result = []
+    queue.put("STOP")
+    for i in iter(queue.get, 'STOP'):
+        result.append(i)
+    # time.sleep(.1)
+    return result

@@ -13,7 +13,7 @@ for WORKER in $(ls -d workers/*/)
 do
     if [[ $WORKER == *"_worker"* ]]; then
 
-      if [[ $WORKER != *"spdx_worker"* && $WORKER != *"value_worker"* ]]; then
+      if [[ $WORKER != *"spdx_worker"* ]]; then
 
         # make it pretty for formatting
         FORMATTED_WORKER=${WORKER/#workers\//}
