@@ -1,5 +1,6 @@
 from os import walk, chdir, environ
 from sys import exit
+from collections import OrderedDict
 from subprocess import call
 import csv
 import click
@@ -108,16 +109,48 @@ def update_repo_directory(ctx, repo_directory):
 
 @cli.command('version', short_help="Get the version of the configured database")
 @click.pass_context
-def get_db_version(ctx):
-    db = get_db_connection(ctx.obj)
+def print_db_version(ctx):
+    print(f"Augur DB version: {get_db_version(ctx.obj)}")
+
+@cli.command('upgrade', short_help="Upgrade the configured database to the latest version")
+@click.pass_context
+def upgrade_db_version(ctx):
+    # current_db_version = get_db_version(ctx.obj)
+    current_db_version = 8
+
+    update_scripts_filenames = []
+    for (_, _, filenames) in walk('schema/generate'):
+        update_scripts_filenames.extend([file for file in filenames if 'update' in file])
+        # files_temp.extend([file.split("-")[1][14:].split(".")[0] for file in filenames if 'update' in file])
+        break
+
+    target_version_script_map = {}
+    for script in update_scripts_filenames:
+        upgrades_to = int(script.split("-")[1][14:].split(".")[0])
+        target_version_script_map[upgrades_to] = str(script)
+
+    target_version_script_map = OrderedDict(sorted(target_version_script_map.items()))
+
+    most_recent_version = list(target_version_script_map.keys())[-1]
+    if current_db_version == most_recent_version:
+        print("Your database is already up to date. ")
+    elif current_db_version > most_recent_version:
+        print(f"Unrecognized version: {current_db_version}\nThe most recent version is {most_recent_version}. Please contact your system administrator to resolve this error.")
+
+    for target_version, script_location in target_version_script_map.items():
+        if target_version == current_db_version + 1:
+            print("Upgrading from", current_db_version, "to", target_version)
+            run_psql_command_in_database(ctx.obj, '-f', f"schema/generate/{script_location}")
+            current_db_version += 1
+
+def get_db_version(app):
+    db = get_db_connection(app)
 
     db_version_sql = s.sql.text("""
         SELECT * FROM augur_operations.augur_settings WHERE setting = 'augur_data_version'
     """)
 
-    result = db.execute(db_version_sql)
-
-    print(f"Augur DB version: {result.fetchone()[2]}")
+    return int(db.execute(db_version_sql).fetchone()[2])
 
 # I'm not sure if this is the correct way to do this
 # TODO: Use default user and credentials if possible to create the database
