@@ -1,2 +1,2 @@
-Using ``docker-compose``
+Docker Compose
 =========================

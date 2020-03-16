@@ -1,2 +1,2 @@
-Interacting with the containers
+Controlling the containers
 ================================
