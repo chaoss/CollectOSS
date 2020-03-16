@@ -51,10 +51,6 @@ def create_manager_routes(server):
                         status=200,
                         mimetype="application/json")
 
-<<<<<<< HEAD
-=======
-    
->>>>>>> bring in Max's changes to manager.py
     @server.app.route('/{}/add-repo-group'.format(server.api_version), methods=['POST'])
     def add_repo_group():
         """ creates a new augur repo group and adds to it the given organization or user's repos
