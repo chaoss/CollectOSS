@@ -115,8 +115,7 @@ def print_db_version(ctx):
 @cli.command('upgrade', short_help="Upgrade the configured database to the latest version")
 @click.pass_context
 def upgrade_db_version(ctx):
-    # current_db_version = get_db_version(ctx.obj)
-    current_db_version = 8
+    current_db_version = get_db_version(ctx.obj)
 
     update_scripts_filenames = []
     for (_, _, filenames) in walk('schema/generate'):
