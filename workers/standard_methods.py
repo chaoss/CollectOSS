@@ -212,6 +212,7 @@ def read_config(section, name=None, environment_variable=None, default=None, con
     :param section: location of given variable
     :param name: name of variable
     """
+    config_file_path = os.getenv("AUGUR_CONFIG_FILE", config_file_path)
     _config_file_name = 'augur.config.json'
     _config_bad = False
     _already_exported = {}
