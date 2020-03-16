@@ -1,2 +1,2 @@
-Using ``docker``
+Docker
 =================

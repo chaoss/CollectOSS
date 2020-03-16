@@ -1,2 +1,0 @@
-Docker Environment Configuration
-================================
