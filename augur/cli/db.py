@@ -212,7 +212,7 @@ def check_pgpass_credentials(config):
         credentials_string = str(config['Database']['host']) \
                           + ':' + str(config['Database']['port']) \
                           + ':' + str(config['Database']['name']) \
-                          + ':' + str(config['Database']['name']) \
+                          + ':' + str(config['Database']['user']) \
                           + ':' + str(config['Database']['password'])
         pgpass_file.seek(0)
         if credentials_string.lower() not in [''.join(line.split()).lower() for line in pgpass_file.readlines()]:
