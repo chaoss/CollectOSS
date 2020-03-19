@@ -20,17 +20,19 @@ Our core team has a long standing interest in social computing, software enginee
 
 Our members:
 
+- `Derek Howard <https://howderek.com>`_
 - `Sean P. Goggins <http://www.seangoggins.net>`_
 - `Matt Germonprez <https://goo.gl/E87KdK>`_
-- `Derek Howard <https://howderek.com>`_
 - `Gabe Heim <https://github.com/gabe-heim>`_
 - `Matt Snell <https://github.com/Nebrethar>`_
 - `Jonah Zukosky <https://github.com/jonahz5222>`_
-- `Elita Nelson <https://github.com/ElitaNelson>`_
 - `Carolyn Perniciaro <https://github.com/CMPerniciaro>`_
+- `Elita Nelson <https://github.com/ElitaNelson>`_
+- `Michael Woodruff <https://github.com/michaelwoodruffdev/>`_
 - `Max Balk <https://github.com/maxbalk/>`_
 - `Andrew Brain <https://github.com/ABrain7710>`_
 - `Carter Landis <https://carterlandis.com>`_
+
 
 Overview
 ~~~~~~~~~~~~~~~~
