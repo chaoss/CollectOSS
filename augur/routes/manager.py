@@ -63,16 +63,21 @@ def create_manager_routes(server):
         summary['group_errors'] = []
         summary['failed_repo_records'] = []
         summary['repo_records_created'] = []
-        
+        group_exists = False
         try:
+            #look for group in augur db
             group_id = repo_manager.get_org_id()
         except TypeError:
-            try:
-                group_id = repo_manager.insert_repo_group()
-            except TypeError:
-                summary['group_errors'].append("failed to create group")
+            #look for group on github
+            if repo_manager.group_exists_gh():
+                try:
+                    group_id = repo_manager.insert_repo_group()
+                except TypeError:
+                    summary['group_errors'].append("failed to create group")
+                else:
+                    group_exists = True
             else:
-                group_exists = True
+                summary['group_errors'].append("could not locate group in database or on github")
         else:
             group_exists = True
 
@@ -81,11 +86,8 @@ def create_manager_routes(server):
             summary['rg_name'] = group
             try:
                 repos = repo_manager.fetch_repos()
-                i = 0
                 for repo in repos:
                     try:
-                        i += 1
-                        print(str(i))
                         repo_id = repo_manager.insert_repo(group_id, group, repo)
                     except exc.SQLAlchemyError:
                         summary['failed_repo_records'].append(repo)
@@ -112,6 +114,15 @@ class Repo_insertion_manager():
     def __init__(self, organization_name, database_connection):
         self.org = organization_name
         self.db = database_connection
+
+    def group_exists_gh(self):
+        url = url = "https://api.github.com/orgs/{}".format(self.org)
+        res = requests.get(url).json()
+        try:
+            if res['message'] == "Not Found":
+                return False
+        except KeyError:
+            return True
 
     def insert_repo(self, orgid, given_org, reponame):
         """creates a new repo record"""
