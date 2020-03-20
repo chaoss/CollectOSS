@@ -91,24 +91,8 @@ function save_credentials() {
 function create_db_schema() {
 
     augur db create-schema
-    psql -h $host -d $db_name -U $db_user -p $port -a -w -c "UPDATE augur_data.settings SET VALUE = '$facade_repo_directory' WHERE setting='repo_directory';"
     echo "Schema created"
 
-    echo "Would you like to load your database with some sample data provided by Augur?"
-    select should_load_db in "Yes" "No"
-    do
-      case $should_load_db in
-        "Yes" )
-          "Loading database with sample dataset."
-          augur db load-data
-          break
-          ;;
-        "No" )
-          echo "Database will not be loaded. Resuming installation..."
-          break
-          ;;
-      esac
-    done
 }
 
 echo "If you need to install Postgres, the downloads can be found here: https://www.postgresql.org/download/"
