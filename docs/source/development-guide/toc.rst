@@ -14,12 +14,14 @@ If you have questions or would like to help please open an issue on GitHub_.
 .. toctree::
    :maxdepth: 1
 
-   create-a-metric/toc
-   frontend/toc
-   make/toc
-   metrics-api/toc
-   testing/toc
-   workers/toc
-   cli
-   documentation
    overview
+   make/toc
+
+
+.. metrics-api/toc
+.. workers/toc
+.. cli
+.. frontend/toc
+.. testing/toc
+.. documentation
+.. create-a-metric/toc
