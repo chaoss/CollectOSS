@@ -1,9 +1,7 @@
 Installation
 =============
 
-This section of the documentation details how to build Augur and its data workers from source. We currently
-only support installation of Augur from source on macOS, Ubuntu, and Fedora (but most UNIX-like systems will
-probably work with a few tweaks). If you don't have a required dependency, please follow the provided links to install and
+This section of the documentation details how to build Augur and its data workers from source. We currently officially support installation of Augur from source on macOS, Ubuntu, and Fedora (but most UNIX-like systems will probably work with a few tweaks). If you don't have a required dependency, please follow the provided links to install and
 configure each piece of software.
 
 Dependencies
