@@ -9,7 +9,7 @@ Augur
 Augur is a software suite that provides open source health and sustainability metrics through a web app, REST API, and Python library. We collect data for a list of given repositories, normalize it into our schema, and provide a variety of `CHAOSS metrics <https://github.com/chaoss/metrics>`_ about said data. These metrics are available both through our `frontend visualizations <http://augur.osshealth.io>`_ and our `backend API <http://augur.osshealth.io/api_docs/>`_.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    
    getting-started/toc
    docker/toc
