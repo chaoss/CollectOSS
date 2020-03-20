@@ -98,8 +98,8 @@ test-python-versions:
 .PHONY: library-docs library-docs-view 
 .PHONY:api-docs api-docs-view docs
 
-test-db:
-	@ docker run -d -p 5434:5432 --name augur_test_database augurlabs/augur:test_data
+test-data:
+	@ docker run -d -p 5434:5432 --name augur_test_data augurlabs/augur:test_data
 
 library-docs:
 	@ bash -c 'cd docs/ && rm -rf build/ && make html;'
@@ -152,5 +152,5 @@ docker-run-frontend:
 	@ docker run -d -p 8080:8080 --name augur_frontend augurlabs/augur:frontend
 
 docker-run-database:
-	@ docker run -p 5434:5432 --name augur_database augurlabs/augur:database
+	@ docker run -d -p 5434:5432 --name augur_database augurlabs/augur:database
 
