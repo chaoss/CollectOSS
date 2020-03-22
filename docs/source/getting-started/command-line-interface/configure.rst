@@ -1,5 +1,5 @@
-``augur util``
-===============
+``augur configure``
+====================
 
 **THIS SECTION IS UNDER CONSTRUCTION.**
 
