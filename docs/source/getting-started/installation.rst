@@ -80,5 +80,8 @@ Lines that start with a ``$`` denote a bash command.
   
   If you think something went wrong, you can use ``make clean`` to delete the build files, then run ``make install`` again.
 
+.. note::
+
+  If you choose to install Augur's frontend, you might see a bunch of ``node-pre-gyp`` and ``canvas`` errors the installation logs after they're done. These are harmless and are caused by a few of our dependencies. If they seem to be causing you trouble, feel free to open an `issue <https://github.com/chaoss/augur/issues>`_ on our GitHub.
 
 Once everything is installed, you're ready to `configure your data collection workers <collecting-data.html>`_!
