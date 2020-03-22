@@ -12,17 +12,16 @@ If you're not familiar with Docker, their `starting guide <https://www.docker.co
 
 The rest of this section of the documentation assumes you have a working installation of Docker as well as some familiarity with basic Docker concepts and a few basic Docker and Docker Compose commands.
 
-If this is your first time using Docker with Augur, you'll need to read the section below to set up your environment. If you just came for the commands and usage guidelines:
+If this is your first time using Docker with Augur, you'll need to read the section below to set up your environment. If you just came for the commands and usage guidelines, you can skip to the Table of Contents.
 
 .. toctree::
    :maxdepth: 1
 
-   docker-compose
    docker
+   docker-compose
    usage
 
-
-Getting Started
+Introduction
 ________________
 
 Credentials
