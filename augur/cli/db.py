@@ -171,6 +171,33 @@ def load_data(ctx):
     app = ctx.obj
     check_pgpass_credentials(app.config)
 
+@cli.command('init-database', short_help="Create database on the configured port")
+@click.option('--default-db-name', default='postgres')
+@click.option('--default-user', default='postgres')
+@click.option('--default-password', default='postgres')
+@click.option('--target-db-name', default='augur')
+@click.option('--target-user', default='augur')
+@click.option('--target-password', default='augur')
+@click.option('--host', default='localhost')
+@click.option('--port', default='5432')
+@click.pass_context
+def init_database(ctx, default_db_name, default_user, default_password, target_db_name, target_user, target_password, host, port):
+    app = ctx.obj
+    config = {
+        'Database': {
+            'name': default_db_name,
+            'user': default_user,
+            'password': default_password,
+            'host': host,
+            'port': port
+        }
+    }
+    check_pgpass_credentials(config)
+    run_db_creation_psql_command(host, port, default_user, default_db_name, f'CREATE DATABASE {target_db_name};')
+    run_db_creation_psql_command(host, port, default_user, default_db_name, f'CREATE USER {target_user} WITH ENCRYPTED PASSWORD \'{target_password}\';')
+    run_db_creation_psql_command(host, port, default_user, default_db_name, f'ALTER DATABASE {target_db_name} OWNER TO {target_user};')
+    run_db_creation_psql_command(host, port, default_user, default_db_name, f'GRANT ALL PRIVILEGES ON DATABASE {target_db_name} TO {target_user};')
+
 def run_db_creation_psql_command(host, port, user, name, command):
     call(['psql', '-h', host, '-p', port, '-U', user, '-d', name, '-a', '-w', '-c', command])
 
