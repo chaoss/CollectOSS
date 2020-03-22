@@ -151,32 +151,6 @@ def get_db_version(app):
 
     return int(db.execute(db_version_sql).fetchone()[2])
 
-# I'm not sure if this is the correct way to do this
-# TODO: Use default user and credentials if possible to create the database
-# @cli.command('init-database', short_help="Create database on the configured port")
-# @click.option('--name', default='augur')
-# @click.option('--user', default='augur')
-# @click.option('--password', default='augur')
-# @click.option('--host', default='localhost')
-# @click.option('--port', default='5432')
-# @click.pass_context
-# def init_database(ctx, name, user, password, host, port):
-#     app = ctx.obj
-#     config = {
-#         'Database': {
-#             'name': name,
-#             'user': user,
-#             'password': password,
-#             'host': host,
-#             'port': port
-#         }
-#     }
-#     check_pgpass_credentials(config)
-#     run_db_creation_psql_command(host, port, user, name, f'CREATE DATABASE {name};')
-#     run_db_creation_psql_command(host, port, user, name, f'CREATE USER {user} WITH ENCRYPTED PASSWORD \'{password}\';')
-#     run_db_creation_psql_command(host, port, user, name, f'ALTER DATABASE {name} OWNER TO {user};')
-#     run_db_creation_psql_command(host, port, user, name, f'GRANT ALL PRIVILEGES ON DATABASE {name} TO {user};')
-
 @cli.command('create-schema', short_help="Create schema in the configured database")
 @click.pass_context
 def create_schema(ctx):
@@ -190,6 +164,12 @@ def load_data(ctx):
     app = ctx.obj
     check_pgpass_credentials(app.config)
     run_psql_command_in_database(app, '-f', 'schema/sample_data/load_sample_data.sql')
+
+@cli.command('check-pgpass', short_help="Check the ~/.pgpass file for Augur's database credentials")
+@click.pass_context
+def load_data(ctx):
+    app = ctx.obj
+    check_pgpass_credentials(app.config)
 
 def run_db_creation_psql_command(host, port, user, name, command):
     call(['psql', '-h', host, '-p', port, '-U', user, '-d', name, '-a', '-w', '-c', command])

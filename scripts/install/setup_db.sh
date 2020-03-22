@@ -83,8 +83,7 @@ function save_credentials() {
   echo
 
   augur configure generate --db_name $db_name --db_host $host --db_port $port --db_user $db_user --db_password $password --github_api_key $github_api_key --facade_repo_directory $facade_repo_directory
-  echo $host:$port:$db_name:$db_user:$password >> ~/.pgpass 
-  chmod 0600 ~/.pgpass 
+  augur db check-pgpass
 
 }
 
