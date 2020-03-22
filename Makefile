@@ -8,7 +8,7 @@ AUGUR_PORT?=5000
 default:
 	@ echo "Installation Commands:"
 	@ echo "    install                         Installs Augur's full stack for production"
-	@ echo "    install                         Installs Augur's full stack for development"
+	@ echo "    install-dev                     Installs Augur's full stack for development"
 	@ echo "    clean                           Removes potentially troublesome compiled files"
 	@ echo "    rebuild                         Removes build/compiled files & binaries and reinstalls the project"
 	@ echo
@@ -118,7 +118,7 @@ docs: api-docs library-docs
 
 #
 # Docker Shortcuts
-#
+# Do not use these unless you know what they mean.
 .PHONY: compose-run compose-run-database
 .PHONY: build-backend run-backend build-frontend run-frontend build-database run-database 
 
