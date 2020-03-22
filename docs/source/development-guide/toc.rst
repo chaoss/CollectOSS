@@ -7,16 +7,15 @@ This is the development guide for Augur. See our `Contributing to Augur <https:/
 
 If you have questions or would like to help please open an issue on GitHub_.
 
-.. _GitHub: https://github.com/chaoss/augur
-
+.. _GitHub: https://github.com/chaoss/augur/issues
 
 
 .. toctree::
    :maxdepth: 1
 
-   overview
+   installation
    make/toc
-
+   documentation
 
 .. metrics-api/toc
 .. workers/toc

@@ -76,4 +76,9 @@ Lines that start with a ``$`` denote a bash command.
 
    $ make install
 
+.. note::
+  
+  If you think something went wrong, you can use ``make clean`` to delete the build files, then run ``make install`` again.
+
+
 Once everything is installed, you're ready to `configure your data collection workers <collecting-data.html>`_!
