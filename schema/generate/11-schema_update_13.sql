@@ -10,4 +10,4 @@ ALTER TABLE "augur_data"."contributor_affiliations" DROP COLUMN "ca_active";
 
 ALTER TABLE "augur_data"."contributor_affiliations" DROP COLUMN "ca_last_modified";
 
-update "augur_operations"."augur_settings" set value = 14 where setting = 'augur_data_version'; 
+update "augur_operations"."augur_settings" set value = 13 where setting = 'augur_data_version'; 
