@@ -69,7 +69,7 @@ dev-start: dev-stop
 	@ scripts/control/start_frontend.sh
 
 dev-stop: 
-	@ augur/cli/scripts/kill_processes.sh
+	@ augur util kill
 	@ scripts/control/kill_frontend.sh
 
 dev: dev-stop dev-start
