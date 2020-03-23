@@ -65,13 +65,27 @@ Worker-specific configuration options
 
 We recommend leaving the defaults in place for the insight worker, but if you want to see other metrics or anomalies for a different time period, you can change them.
 
+
 - ``training_days``, which specifies the date range that the ``insight_worker`` should use as its baseline for the statistical comparison. Defaults to ``365``, meaning that the worker will identify metrics that have had anomalies compared to their values over the course of the past year, starting at the current date.
 
 - ``anomaly_days``, which specifies the date range in which the ``insight_worker`` should look for anomalies. Defaults to ``2``, meaning that the worker will detect anomalies that have only occured within the past two days, starting at the current date.
 
-- ``metrics``, which specifies the metrics the ``insight_worker`` should gather anomalies for. This is structured as flat JSON object with each metric having the form "``anomaly_name``": "``metric``". Defaults to the following\:
+- ``contamination``, which is the "sensitivity" parameter for detecting anomalies. Acts as an estimated percentage of the training_days that are expected to be anomalous. The default is ``0.041`` for the default training days of 365: 4.1% of 365 days means that about 15 data points of the 365 days are expected to be anomalous.
 
-  .. code-block:: 
+- ``metrics``, which specifies which metrics the ``insight_worker`` should run the anomaly detection algorithm on. This is structured like so\:
+
+.. code-block::
+
+    {
+        'endpoint_name_1': 'field_1_of_endpoint',
+        'endpoint_name_1': 'field_2_of_endpoint',
+        'endpoint_name_2': 'field_1_of_endpoint',
+        ...
+    } 
+
+And defaults to the following\:
+
+.. code-block:: 
 
     {
         "issues-new": "issues", 

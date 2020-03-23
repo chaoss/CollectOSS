@@ -23,7 +23,7 @@ If you're a newcomer to to PostgreSQL, follow their excellent instructions `here
 Creating a Database
 ~~~~~~~~~~~~~~~~~~~~~
 
-After you've created your PostgreSQL instance, you'll need to setup a database in which to install the schema, as well as set up a dedicated augur user. You can do this with the SQL commands below.
+After you've created your PostgreSQL instance, you'll need to setup a database in which to install the schema, as well as set up a dedicated augur user. You can do this with the SQL commands below (be sure to change the password!).
 
 .. code:: 
     
