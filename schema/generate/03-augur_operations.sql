@@ -96,7 +96,7 @@ CREATE TABLE "augur_operations"."worker_job" (
   "state" int4 NOT NULL DEFAULT 0,
   "zombie_head" int4,
   "since_id_str" varchar(255) COLLATE "pg_catalog"."default" NOT NULL DEFAULT '0'::character varying,
-  "description" varchar(255) COLLATE "pg_catalog"."default" DEFAULT 'I am a lazy piece of shit and I did not enter a description'::character varying,
+  "description" varchar(255) COLLATE "pg_catalog"."default" DEFAULT 'None'::character varying,
   "last_count" int4,
   "last_run" timestamp(0) DEFAULT NULL::timestamp without time zone,
   "analysis_state" int4 DEFAULT 0,
