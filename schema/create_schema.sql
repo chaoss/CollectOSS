@@ -11,3 +11,6 @@
 \i schema/generate/08-schema_update_10.sql
 \i schema/generate/09-schema_update_11.sql
 \i schema/generate/10-schema_update_12.sql
+\i schema/generate/10-schema_update_12.sql
+\i schema/generate/11-schema_update_13.sql
+\i schema/generate/12-schema_update_14.sql
