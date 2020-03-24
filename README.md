@@ -32,7 +32,7 @@ If you have any issues, please feel free to request to email straight into our s
 ## Contributing
 ----------------
 
-To contribute to Augur, please follow the guidelines found in our [CONTRIBUTING.md](CONTRIBUTING.md) and our [Code of Conduct](CODE_OF_CONDUCT.md). Augur is a welcoming development community that is open to anyone and everyone of every skill level!
+To contribute to Augur, follow the guidelines found in our [CONTRIBUTING.md](CONTRIBUTING.md) and our [Code of Conduct](CODE_OF_CONDUCT.md). Augur is a welcoming development community that is open to anyone and everyone of every skill level!
 
 Check out our [documentation](https://oss-augur.readthedocs.io/en/documentation/) for information about our system.
 
