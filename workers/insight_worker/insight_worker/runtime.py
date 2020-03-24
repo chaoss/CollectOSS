@@ -15,7 +15,7 @@ def create_server(app, gw):
         """ AUGWOP endpoint that gets hit to add a task to the workers queue or is used to get the heartbeat/status of worker
         """
         if request.method == 'POST': #will post a task to be added to the queue
-            logging.info("Sending to work on task: {}".format(str(request.json)))
+            logging.info("Sending to work on task: {}\n".format(str(request.json)))
             app.insight_worker.task = request.json
             
             #set task
@@ -80,7 +80,7 @@ def main(augur_url, host, port):
             "password": read_config('Database', 'password', 'AUGUR_DB_PASSWORD', 'password'),
             "port": read_config('Database', 'port', 'AUGUR_DB_PORT', 'port'),
             "user": read_config('Database', 'user', 'AUGUR_DB_USER', 'user'),
-            "database": read_config('Database', 'database', 'AUGUR_DB_NAME', 'database'),
+            "database": read_config('Database', 'name', 'AUGUR_DB_NAME', 'database'),
             "endpoint": "https://bestpractices.coreinfrastructure.org/projects.json",
             "anomaly_days": worker_info['anomaly_days'] if 'anomaly_days' in worker_info else 2,
             "training_days": worker_info['training_days'] if 'training_days' in worker_info else 365,

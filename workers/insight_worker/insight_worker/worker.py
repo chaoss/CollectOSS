@@ -10,7 +10,7 @@ import numpy as np
 import scipy.stats
 import datetime
 from sklearn.ensemble import IsolationForest
-from workers.standard_methods import init_oauths, get_max_id, register_task_completion, register_task_failure, connect_to_broker, update_gh_rate_limit, record_model_process, paginate
+from workers.standard_methods import * #init_oauths, get_table_values, get_max_id, register_task_completion, register_task_failure, connect_to_broker, update_gh_rate_limit, record_model_process, paginate
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -33,7 +33,7 @@ class InsightWorker:
         self.tool_version = '0.0.3' # See __init__.py
         self.data_source = 'Augur API'
         self.refresh = True
-        self.send_insights = True
+        self.send_insights = False
         self.finishing_task = False
         self.anomaly_days = self.config['anomaly_days']
         self.training_days = self.config['training_days']
@@ -97,15 +97,6 @@ class InsightWorker:
 
         # Send broker hello message
         connect_to_broker(self)
-
-        # self.insights_model({
-        #                         "job_type": 'MAINTAIN', 
-        #                         "models": ['insights'], 
-        #                         "display_name": "insights model for url: https://github.com/rails/rails.git",
-        #                         "given": {
-        #                             "git_url": 'https://github.com/rails/rails.git'
-        #                         }
-        #                     }, 21000)
 
     def update_config(self, config):
         """ Method to update config and set a default
@@ -186,12 +177,12 @@ class InsightWorker:
 
     def insights_model(self, entry_info, repo_id):
 
-        # Update table of endpoints before we query them all
         logging.info("Discovering insights for task with entry info: {}\n".format(entry_info))
         record_model_process(self, repo_id, 'insights')
 
-        """ Collect data """   
-        base_url = 'http://localhost:5002/api/unstable/repo-groups/9999/repos/{}/'.format(repo_id)
+        """ Collect data """
+        base_url = 'http://{}:{}/api/unstable/repo-groups/9999/repos/{}/'.format(
+            self.config['broker_host'], self.config['broker_port'], repo_id)
         
         # Dataframe to hold all endpoint results
         # Subtract configurable amount of time
@@ -220,13 +211,54 @@ class InsightWorker:
             metric_df = pd.DataFrame.from_records(data)
             metric_df.index = pd.to_datetime(metric_df['date'], utc=True).dt.date
             df = df.join(metric_df[field]).fillna(0)
-            df.rename(columns = {field: "{} - {}".format(endpoint, field)}, inplace = True)
-        """ End collect data """
+            df.rename(columns={field: "{} - {}".format(endpoint, field)}, inplace=True)
+
+        """ End collect endpoint data """
 
         # If none of the endpoints returned data
         if df.size == 0:
             logging.info("None of the provided endpoints provided data for this repository. Anomaly detection is 'done'.\n")
             register_task_completion(self, entry_info, repo_id, "insights")
+            return
+
+        """ Deletion of old insights """
+
+        # Delete previous insights not in the anomaly_days param
+        min_date = datetime.datetime.now() - datetime.timedelta(days=self.anomaly_days)
+        logging.info("MIN DATE: {}\n".format(min_date))
+        logging.info("Deleting out of date records ...\n")
+        delete_record_SQL = s.sql.text("""
+            DELETE 
+                FROM
+                    repo_insights_records
+                WHERE
+                    repo_id = :repo_id
+                    AND ri_date < :min_date
+        """)
+        result = self.db.execute(delete_record_SQL, repo_id=repo_id, min_date=min_date)
+
+        logging.info("Deleting out of date data points ...\n")
+        delete_points_SQL = s.sql.text("""
+            DELETE 
+                FROM
+                    repo_insights
+                USING (
+                    SELECT ri_metric, ri_field 
+                    FROM (
+                        SELECT * 
+                        FROM repo_insights
+                        WHERE ri_fresh = TRUE
+                        AND repo_id = :repo_id
+                        AND ri_date < :min_date
+                    ) old_insights
+                ) to_delete
+                WHERE repo_insights.ri_metric = to_delete.ri_metric
+                AND repo_insights.ri_field = to_delete.ri_field
+        """)
+        result = self.db.execute(delete_points_SQL, repo_id=repo_id, min_date=min_date)
+
+        # get table values to check for dupes later on
+        insight_table_values = get_table_values(self, ['*'], ['repo_insights_records'], where_clause="WHERE repo_id = {}".format(repo_id))
 
         to_model_columns = df.columns[0:len(self.metrics)+1]
 
@@ -243,7 +275,7 @@ class InsightWorker:
             
             # Categorise anomalies as 0 - no anomaly, 1 - low anomaly , 2 - high anomaly
             df['anomaly_class'].loc[df['anomaly_class'] == 1] = 0
-            df['anomaly_class'].loc[df['anomaly_class'] == -1] = 2
+            df['anomaly_class'].loc[(df['anomaly_class'] == -1) & (df[metric] != 0) & (df[metric] != 1)] = 2
             max_anomaly_score = df['score'].loc[df['anomaly_class'] == 2].max()
             medium_percentile = df['score'].quantile(0.24)
             df['anomaly_class'].loc[(df['score'] > max_anomaly_score) & (df['score'] <= medium_percentile)] = 1
@@ -288,9 +320,6 @@ class InsightWorker:
             # Split into endpoint and field name
             split = metric.split(" - ")
 
-            # Delete all previous insights
-            self.clear_insights(repo_id, split[0], split[1])
-
             most_recent_anomaly_date = None
             most_recent_anomaly = None
 
@@ -299,13 +328,14 @@ class InsightWorker:
             while True:
 
                 if anomaly_df.loc[anomaly_df['anomaly_class'] == 2].empty:
-                    logging.info("No more anomalies to be found\n")
+                    logging.info("No more anomalies to be found for metric: {}\n".format(metric))
                     break
 
                 next_recent_anomaly_date = anomaly_df.loc[anomaly_df['anomaly_class'] == 2]['anomaly_class'].idxmax()
-                logging.info("Next ost recent date: \n{}\n".format(next_recent_anomaly_date))
+                logging.info("Next most recent date: \n{}\n".format(next_recent_anomaly_date))
                 next_recent_anomaly = anomaly_df.loc[anomaly_df.index == next_recent_anomaly_date]
-                logging.info("Next most recent anomaly: \n{}\n".format(next_recent_anomaly))
+                logging.info("Next most recent anomaly: \n{}\n{}\n".format(next_recent_anomaly.columns.values, 
+                    next_recent_anomaly.values))
 
                 if insight_count == 0:
                     most_recent_anomaly_date = next_recent_anomaly_date
@@ -316,29 +346,39 @@ class InsightWorker:
                 ts = (date64 - np.datetime64('1970-01-01T00:00:00Z')) / np.timedelta64(1, 's')
                 ts = datetime.datetime.utcfromtimestamp(ts)
 
-                # Insert record in records table and send record to slack bot
-                record = {
-                    'repo_id': repo_id,
-                    'ri_metric': split[0],
-                    'ri_field': split[1],
-                    'ri_value': next_recent_anomaly.iloc[0][metric],
-                    'ri_date': ts,
-                    'ri_score': next_recent_anomaly.iloc[0]['score'],
-                    'ri_detection_method': 'Isolation Forest',
-                    "tool_source": self.tool_source,
-                    "tool_version": self.tool_version,
-                    "data_source": self.data_source
-                }
-                result = self.db.execute(self.repo_insights_records_table.insert().values(record))
-                logging.info("Primary key inserted into the repo_insights_records table: {}\n".format(result.inserted_primary_key))
-                self.results_counter += 1
+                insight_exists = ((insight_table_values['ri_date'] == ts) & \
+                    (insight_table_values['ri_metric'] == split[0]) & (insight_table_values['ri_field'] == split[1])).any()
 
-                # Send insight to Jonah for slack bot
-                self.send_insight(record, abs(next_recent_anomaly.iloc[0][metric] - mean))
+                if insight_exists:
+
+                    # Insert record in records table and send record to slack bot
+                    record = {
+                        'repo_id': repo_id,
+                        'ri_metric': split[0],
+                        'ri_field': split[1],
+                        'ri_value': next_recent_anomaly.iloc[0][metric],
+                        'ri_date': ts,
+                        'ri_score': next_recent_anomaly.iloc[0]['score'],
+                        'ri_detection_method': 'Isolation Forest',
+                        "tool_source": self.tool_source,
+                        "tool_version": self.tool_version,
+                        "data_source": self.data_source
+                    }
+                    result = self.db.execute(self.repo_insights_records_table.insert().values(record))
+                    logging.info("Primary key inserted into the repo_insights_records table: {}\n".format(
+                        result.inserted_primary_key))
+                    self.results_counter += 1
+
+                    # Send insight to Jonah for slack bot
+                    self.send_insight(record, abs(next_recent_anomaly.iloc[0][metric] - mean))
+
+                    insight_count += 1
+                else:
+                    logging.info("Duplicate insight found, skipping insertion. "
+                        "Continuing iteration of anomalies...\n")
 
                 anomaly_df = anomaly_df[anomaly_df.index < next_recent_anomaly_date]
 
-                insight_count += 1
 
             # If no insights for this metric were found, then move onto next metric
             # (since there is no need to insert the endpoint results below)
@@ -367,7 +407,8 @@ class InsightWorker:
                         "data_source": self.data_source
                     }
                     result = self.db.execute(self.repo_insights_table.insert().values(data_point))
-                    logging.info("Primary key inserted into the repo_insights table: {}\n".format(result.inserted_primary_key))
+                    logging.info("Primary key inserted into the repo_insights table: {}\n".format(
+                        result.inserted_primary_key))
 
                     logging.info("Inserted data point for metric: {}, date: {}, value: {}\n".format(metric, ts, tuple._3))
                 except Exception as e:
@@ -420,7 +461,8 @@ class InsightWorker:
 
             def is_unique_key(key):
                 """ Helper method used to find which keys we want to analyze in each data point """
-                return 'date' not in key and key != 'repo_group_id' and key != 'repo_id' and key != 'repo_name' and key != 'rg_name'
+                return 'date' not in key and key != 'repo_group_id' and key != 'repo_id' and (
+                    key != 'repo_name') and key != 'rg_name'
             
             # Filter out keys that we do not want to analyze (e.g. repo_id)
             raw_values = {}
@@ -675,7 +717,7 @@ class InsightWorker:
             result = self.db.execute(deleteSQL)
         except Exception as e:
             logging.info("Error occured deleting insight slot: {}".format(e))
-        
+
     def clear_insight(self, repo_id, new_score, new_metric, new_field):
         logging.info("Checking if insight slots filled...")
 
