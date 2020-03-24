@@ -25,20 +25,6 @@ class CollectorTask:
         self.type = message_type
         self.entry_info = entry_info
 
-
-def dump_queue(queue):
-    """
-    Empties all pending items in a queue and returns them in a list.
-
-    :param queue: The queue to be emptied.
-    """
-    result = []
-    queue.put("STOP")
-    for i in iter(queue.get, 'STOP'):
-        result.append(i)
-    # time.sleep(.1)
-    return result
-
 class ValueWorker:
     """
     Worker that sythesises Value related data from the git repostiories and stores it in our database.

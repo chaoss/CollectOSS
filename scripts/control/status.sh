@@ -1,13 +1,13 @@
 #!/bin/bash
-set -euo pipefail
 
 monitor=${1-quick}
 
-echo "augur logs"
-echo "*****************************"
-
 if [[ $monitor == "quick" ]]; then
-  tail -n 20 logs/augur.log
+  if [[ -d logs/augur.log ]]; then
+    echo "augur logs"
+    echo "*****************************"
+    tail -n 20 logs/augur.log
+  fi
 
   for WORKER in $(ls -d workers/*/)
   do
@@ -29,5 +29,5 @@ if [[ $monitor == "quick" ]]; then
       fi
   done
 else
-  less +F logs/augur.log workers/**/*.log
+  less -F logs/augur.log workers/**/*.log
 fi

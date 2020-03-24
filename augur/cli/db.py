@@ -1,5 +1,6 @@
 from os import walk, chdir, environ
 from sys import exit
+from collections import OrderedDict
 from subprocess import call
 import csv
 import click
@@ -106,31 +107,49 @@ def update_repo_directory(ctx, repo_directory):
         # Since there's no rows to fetch after a successful insert, this is how we know it worked.
         # I know it's weird, sue me (jk please don't)
 
-# I'm not sure if this is the correct way to do this
-# TODO: Use default user and credentials if possible to create the database
-# @cli.command('init-database', short_help="Create database on the configured port")
-# @click.option('--name', default='augur')
-# @click.option('--user', default='augur')
-# @click.option('--password', default='augur')
-# @click.option('--host', default='localhost')
-# @click.option('--port', default='5432')
-# @click.pass_context
-# def init_database(ctx, name, user, password, host, port):
-#     app = ctx.obj
-#     config = {
-#         'Database': {
-#             'name': name,
-#             'user': user,
-#             'password': password,
-#             'host': host,
-#             'port': port
-#         }
-#     }
-#     check_pgpass_credentials(config)
-#     run_db_creation_psql_command(host, port, user, name, f'CREATE DATABASE {name};')
-#     run_db_creation_psql_command(host, port, user, name, f'CREATE USER {user} WITH ENCRYPTED PASSWORD \'{password}\';')
-#     run_db_creation_psql_command(host, port, user, name, f'ALTER DATABASE {name} OWNER TO {user};')
-#     run_db_creation_psql_command(host, port, user, name, f'GRANT ALL PRIVILEGES ON DATABASE {name} TO {user};')
+@cli.command('version', short_help="Get the version of the configured database")
+@click.pass_context
+def print_db_version(ctx):
+    print(f"Augur DB version: {get_db_version(ctx.obj)}")
+
+@cli.command('upgrade', short_help="Upgrade the configured database to the latest version")
+@click.pass_context
+def upgrade_db_version(ctx):
+    current_db_version = get_db_version(ctx.obj)
+
+    update_scripts_filenames = []
+    for (_, _, filenames) in walk('schema/generate'):
+        update_scripts_filenames.extend([file for file in filenames if 'update' in file])
+        # files_temp.extend([file.split("-")[1][14:].split(".")[0] for file in filenames if 'update' in file])
+        break
+
+    target_version_script_map = {}
+    for script in update_scripts_filenames:
+        upgrades_to = int(script.split("-")[1][14:].split(".")[0])
+        target_version_script_map[upgrades_to] = str(script)
+
+    target_version_script_map = OrderedDict(sorted(target_version_script_map.items()))
+
+    most_recent_version = list(target_version_script_map.keys())[-1]
+    if current_db_version == most_recent_version:
+        print("Your database is already up to date. ")
+    elif current_db_version > most_recent_version:
+        print(f"Unrecognized version: {current_db_version}\nThe most recent version is {most_recent_version}. Please contact your system administrator to resolve this error.")
+
+    for target_version, script_location in target_version_script_map.items():
+        if target_version == current_db_version + 1:
+            print("Upgrading from", current_db_version, "to", target_version)
+            run_psql_command_in_database(ctx.obj, '-f', f"schema/generate/{script_location}")
+            current_db_version += 1
+
+def get_db_version(app):
+    db = get_db_connection(app)
+
+    db_version_sql = s.sql.text("""
+        SELECT * FROM augur_operations.augur_settings WHERE setting = 'augur_data_version'
+    """)
+
+    return int(db.execute(db_version_sql).fetchone()[2])
 
 @cli.command('create-schema', short_help="Create schema in the configured database")
 @click.pass_context
@@ -145,6 +164,39 @@ def load_data(ctx):
     app = ctx.obj
     check_pgpass_credentials(app.config)
     run_psql_command_in_database(app, '-f', 'schema/sample_data/load_sample_data.sql')
+
+@cli.command('check-pgpass', short_help="Check the ~/.pgpass file for Augur's database credentials")
+@click.pass_context
+def load_data(ctx):
+    app = ctx.obj
+    check_pgpass_credentials(app.config)
+
+@cli.command('init-database', short_help="Create database on the configured port")
+@click.option('--default-db-name', default='postgres')
+@click.option('--default-user', default='postgres')
+@click.option('--default-password', default='postgres')
+@click.option('--target-db-name', default='augur')
+@click.option('--target-user', default='augur')
+@click.option('--target-password', default='augur')
+@click.option('--host', default='localhost')
+@click.option('--port', default='5432')
+@click.pass_context
+def init_database(ctx, default_db_name, default_user, default_password, target_db_name, target_user, target_password, host, port):
+    app = ctx.obj
+    config = {
+        'Database': {
+            'name': default_db_name,
+            'user': default_user,
+            'password': default_password,
+            'host': host,
+            'port': port
+        }
+    }
+    check_pgpass_credentials(config)
+    run_db_creation_psql_command(host, port, default_user, default_db_name, f'CREATE DATABASE {target_db_name};')
+    run_db_creation_psql_command(host, port, default_user, default_db_name, f'CREATE USER {target_user} WITH ENCRYPTED PASSWORD \'{target_password}\';')
+    run_db_creation_psql_command(host, port, default_user, default_db_name, f'ALTER DATABASE {target_db_name} OWNER TO {target_user};')
+    run_db_creation_psql_command(host, port, default_user, default_db_name, f'GRANT ALL PRIVILEGES ON DATABASE {target_db_name} TO {target_user};')
 
 def run_db_creation_psql_command(host, port, user, name, command):
     call(['psql', '-h', host, '-p', port, '-U', user, '-d', name, '-a', '-w', '-c', command])
@@ -167,7 +219,7 @@ def check_pgpass_credentials(config):
         credentials_string = str(config['Database']['host']) \
                           + ':' + str(config['Database']['port']) \
                           + ':' + str(config['Database']['name']) \
-                          + ':' + str(config['Database']['name']) \
+                          + ':' + str(config['Database']['user']) \
                           + ':' + str(config['Database']['password'])
         pgpass_file.seek(0)
         if credentials_string.lower() not in [''.join(line.split()).lower() for line in pgpass_file.readlines()]:

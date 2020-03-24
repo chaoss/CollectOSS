@@ -101,7 +101,6 @@ class Server(object):
             """
             status = {
                 'status': 'OK',
-                'plugins': [p for p in self._augur._loaded_plugins]
             }
             return Response(response=json.dumps(status),
                             status=200,
