@@ -21,11 +21,11 @@ target=${1-prod}
 
 if [[ $target == *"dev"* ]]; then
   echo
-  echo "*****INSTALLING FOR PROD*****"
+  echo "*****INSTALLING FOR DEVELOPMENT*****"
   echo
 else
   echo
-  echo "*****INSTALLING FOR DEVELOPMENT*****"
+  echo "*****INSTALLING FOR PRODUCTION*****"
   echo
 fi
 

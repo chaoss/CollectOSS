@@ -121,11 +121,13 @@ default_config = {
             },
             "insight_worker": {
                 "port": 50300,
+                "metrics": {"issues-new": "issues", "code-changes": "commit_count", "code-changes-lines": "added", 
+                           "reviews": "pull_requests", "contributors-new": "new_contributors"},
+                "contamination": 0.041,
                 "switch": 0,
                 "workers": 1,
                 "training_days": 365,
-                "anomaly_days": 90,
-                "confidence_interval": 95
+                "anomaly_days": 2
             },
             "linux_badge_worker": {
                 "port": 50400,
@@ -199,7 +201,9 @@ def generate(db_name, db_host, db_user, db_port, db_password, github_api_key, fa
             print(f"Error opening {rc_config_file}: {str(e)}")
 
     if db_name is not None:
-        config['Database']['database'] = db_name
+        config['Database']['database'] = db_name # this is for backwards compatibility
+    if db_name is not None:
+        config['Database']['name'] = db_name
     if db_host is not None:
         config['Database']['host'] = db_host
     if db_port is not None:

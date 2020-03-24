@@ -10,3 +10,4 @@ COMMENT ON COLUMN "augur_data"."pull_requests"."pr_src_id" IS 'The pr_src_id is 
 
 COMMENT ON COLUMN "augur_data"."pull_requests"."pr_src_number" IS 'The pr_src_number is unique within a repository.';
 
+update "augur_operations"."augur_settings" set value = 10 where setting = 'augur_data_version'; 

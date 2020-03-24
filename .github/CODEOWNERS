@@ -8,8 +8,13 @@
 
 /workers/ @ccarterlandis @gabe-heim @sgoggins
 
+/README.md @sgoggins @ccarterlandis
+/CONTRIBUTING.md @sgoggins @ccarterlandis
+/LICENSE @sgoggins
+/CODE_OF_CONDUCT.md @sgoggins
+
 /test/ @ccarterlandis
-/util/packaging @ccarterlandis
+/util/docker @ccarterlandis
 /scripts/ @ccarterlandis
 /docs/ @ccarterlandis
 /.dockerignore @ccarterlandis
@@ -18,3 +23,5 @@
 /readthedocs.yml @ccarterlandis
 /Makefile @ccarterlandis
 /tox.ini @ccarterlandis
+*requirements.txt @ccarterlandis
+/setup.py @ccarterlandis

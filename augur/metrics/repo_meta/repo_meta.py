@@ -710,7 +710,7 @@ calendar year (a new repo in that year), show all commits for that year (total f
     :param repo_group: the group of repositories to analyze
     """
     if calendar_year == None:
-        calendar_year = 2019
+        calendar_year = datetime.datetime.now().strftime('%Y')
 
     cdRgNewrepRankedCommitsSQL = None
 
@@ -849,7 +849,7 @@ def lines_of_code_commit_counts_by_calendar_year_grouped(self, repo_url, calenda
     """
 
     if calendar_year == None:
-        calendar_year = 2018
+        calendar_year = datetime.datetime.now().strftime('%Y')
 
     if interval == None:
         interval = 'month'

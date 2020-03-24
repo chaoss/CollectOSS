@@ -4,7 +4,9 @@ Miscellaneous Augur library commands for controlling the backend components
 """
 
 import os
-import subprocess
+import signal
+from subprocess import call, run
+import psutil
 import click
 import pandas as pd
 import sqlalchemy as s
@@ -33,19 +35,39 @@ def export_env(ctx):
     export_file.close()
     env_file.close()
 
-@cli.command('kill', short_help='Kill Augur')
-def kill():
+@cli.command('kill', short_help='Kill all currently running Augur processes')
+@click.pass_context
+def kill_processes(ctx):
     """
     Kill running augur processes
     """
-    run_control_script("../../scripts/control/kill.sh")
+    processes = get_augur_processes()
+    if processes != []:
+        for process in processes:
+            if process.pid != os.getpid():
+                print(f"Killing {process.pid}: {' '.join(process.info['cmdline'][1:])}")
+                try:
+                    process.send_signal(signal.SIGTERM)
+                except psutil.NoSuchProcess as e:
+                    pass
 
 @cli.command('list', short_help='List running Augur processes')
-def list():
+def list_processes():
     """
     List currently running augur processes
     """
-    run_control_script("../../scripts/control/processes.sh")
+    processes = get_augur_processes()
+    for process in processes:
+        print(process.pid, " ".join(process.info['cmdline'][1:]))
+
+def get_augur_processes():
+    processes = []
+    for process in psutil.process_iter(['cmdline', 'name', 'environ']):
+        if process.info['cmdline'] is not None and process.info['environ'] is not None:
+            if 'VIRTUAL_ENV' in list(process.info['environ'].keys()) and 'python' in ''.join(process.info['cmdline'][:]).lower():
+                if process.pid != os.getpid():
+                    processes.append(process)
+    return processes
 
 @cli.command('repo-reset', short_help='Reset Repo Collection')
 @click.pass_context
@@ -59,7 +81,3 @@ def repo_reset(ctx):
     db.execute("UPDATE augur_data.repo SET repo_path = NULL, repo_name = NULL, repo_status = 'New'; TRUNCATE augur_data.commits CASCADE; ")
 
     print("Repos successfully reset.")
-
-def run_control_script(relative_script_path):
-    os.chdir(os.path.dirname(os.path.realpath(__file__)))
-    subprocess.call(relative_script_path)

@@ -32,6 +32,3 @@ COPY ./util/docker/frontend/nginx.conf /etc/nginx/nginx.conf
 EXPOSE 8080
 
 CMD ["nginx", "-g", "daemon off;"]
-
-
-# CMD ["npm", "run", "serve"]
