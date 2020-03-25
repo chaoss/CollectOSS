@@ -84,7 +84,7 @@ function save_credentials() {
   echo
 
   augur configure generate --db_name $db_name --db_host $host --db_port $port --db_user $db_user --db_password $password --github_api_key $github_api_key --facade_repo_directory $facade_repo_directory
-  # augur db check-pgpass
+  augur db check-pgpass
 
 }
 
@@ -133,18 +133,18 @@ do
         echo
         set_db_credentials true
 
-        # augur db init-database \
-        # --default-db-name $default_db_name \
-        # --default-user $default_user \
-        # --default-password $default_password \
-        # --target-db-name $db_name \
-        # --target-user $db_user \
-        # --target-password $password \
-        # --host $host \
-        # --port $port
+        augur db init-database \
+        --default-db-name $default_db_name \
+        --default-user $default_user \
+        --default-password $default_password \
+        --target-db-name $db_name \
+        --target-user $db_user \
+        --target-password $password \
+        --host $host \
+        --port $port
 
-        # create_db_schema
-        # echo "DB created."
+        create_db_schema
+        echo "DB created."
         break
       ;;
     $install_remotely )
