@@ -27,6 +27,7 @@ Augur Data
 
 The ``augur_data`` schema contains *most* of the information analyzed
 and constructed by Augur. The origin’s of the data inside of augur are:
+
 1. ``workers/augur_github_worker``: Pulls data from the GitHub API.
 Presently this is focused on issues, including issue_comments,
 issue_events, issue_labels and contributors. Note that all messages are
