@@ -33,18 +33,23 @@ issue_events, issue_labels and contributors. Note that all messages are
 stored in Augur in the ``messages`` table. This is to facilitate easy
 analysis of the tone and characteristics of text communication in a
 project from one place.
+
 2. ``workers/facade_worker``: Based on
 http://www.github.com/brianwarner/facade, but substantially modified in
 the fork located at http://github.com/sgoggins/facade. The modifications
 include modularization of code, connections to Postgresql data instead
 of MySQL and other changes noted in the commit logs.
+
 3. ``workers/insight_worker``: Generates summarizations from raw data
 gathered from commits, issues, and other info.
+
 4. ``workers/linux_badge_worker``: Pulls data from the Linux Foundation’s
 badging program.
+
 5. ``workers/value_worker``: Populates the table
 ``repo_labor`` using the “SCC” tool provided the
 https://github.com/boyter/scc project. “SCC” required Go to be installed on your system. Visit `this resource for instructions on Go installation<https://golang.org/doc/install>`_.
+
 6. ``workers/pull_request_worker``: Please add the technical details.
 
 Augur Operations
