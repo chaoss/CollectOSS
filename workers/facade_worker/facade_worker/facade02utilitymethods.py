@@ -61,7 +61,7 @@ def trim_commit(cfg, repo_id,commit):
 		cfg.cursor.execute(remove_commit, (repo_id, commit))
 		cfg.db.commit()
 	except:
-		cfg.log_activity('Debug','Cursor was closed, making another connection to db')
+		cfg.log_activity('Info','Cursor was closed, making another connection to db')
 		db_user = read_config('Database', 'user', 'AUGUR_DB_USER', 'augur')
 		db_pass = read_config('Database', 'password', 'AUGUR_DB_PASSWORD', 'augur')
 		db_name = read_config('Database', 'name', 'AUGUR_DB_NAME', 'augur')

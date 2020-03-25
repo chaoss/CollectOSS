@@ -208,7 +208,9 @@ class Config:
         try:
             self.cursor.execute(query, (level, status))
             self.db.commit()
-        except:
+        except Exception as e:
+            logging.info('Error encountered: {}\n'.format(e))
+
             # Set up the database
             db_user = read_config('Database', 'user', 'AUGUR_DB_USER', 'augur')
             db_pass = read_config('Database', 'password', 'AUGUR_DB_PASSWORD', 'augur')
