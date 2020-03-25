@@ -59,15 +59,17 @@ Presently this is focused on issues, including issue_comments,
 issue_events, issue_labels and contributors. Note that all messages are
 stored in Augur in the ``messages`` table. This is to facilitate easy
 analysis of the tone and characteristics of text communication in a
-project from one place. 2. ``workers/facade_worker``: Based on
+project from one place.
+2. ``workers/facade_worker``: Based on
 http://www.github.com/brianwarner/facade, but substantially modified in
 the fork located at http://github.com/sgoggins/facade. The modifications
 include modularization of code, connections to Postgresql data instead
-of MySQL and other changes noted in the commit logs. 3.
-``workers/insight_worker``: Generates summarizations from raw data
-gathered from commits, issues, and other info. 4.
-``workers/linux_badge_worker``: Pulls data from the Linux Foundation’s
-badging program. 5. ``workers/code_analysis``: Populates the table
+of MySQL and other changes noted in the commit logs.
+3. ``workers/insight_worker``: Generates summarizations from raw data
+gathered from commits, issues, and other info.
+4. ``workers/linux_badge_worker``: Pulls data from the Linux Foundation’s
+badging program.
+5. ``workers/code_analysis``: Populates the table
 ``repo_labor`` using the “SCC” tool provided the
 https://github.com/boyter/scc project. This worker is presently in
 development and not deployed.
