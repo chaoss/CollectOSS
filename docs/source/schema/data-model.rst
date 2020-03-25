@@ -16,34 +16,7 @@ This document details how to create the schema as well as some information on it
 Creating the schema
 -----------------------
 
-This section assumes you have already installed or have access to an
-installation of PostgreSQL 10 or 11. More information on PostgreSQL can
-be found `here <https://www.postgresql.org/>`__.
-
-From your local terminal, run the following commands, where ``<host>`` the server where your PostgreSQL installation is running, ``<port>`` is the port on which your installation is exposed, and ``<password>`` is a password of your choice.
-
-It's recommended you use the default database name ``augur`` and the default user ``augur`` as shown below, but they are not required.
-
-Make sure to also replace the ``/path/to/augur/`` with the path to the root ``augur/`` directory from your current directory; if you're in the the root ``augur/`` directory, then ``schema/create_schema.sql`` should work just fine. 
-
-.. code:: bash
-
-    psql -h <host> -p <port> -c "CREATE DATABASE augur;"
-    psql -h <host> -p <port> -c "CREATE USER augur WITH ENCRYPTED PASSWORD '<password>';"
-    psql -h <host> -p <port> -c "ALTER DATABASE augur OWNER TO augur;"
-    psql -h <host> -p <port> -c "GRANT ALL PRIVILEGES ON DATABASE augur TO augur;"
-    psql -h <host> -d augur -U augur -p <port> -a -w -f /path/to/augur/schema/create_schema.sql
-
-Example (note this will **not**) work\:
-
-.. code:: bash
-
-    psql -h example.com -p 5432 -c "CREATE DATABASE augur;"
-    psql -h example.com -p 5432 -c "CREATE USER augur WITH ENCRYPTED PASSWORD 'password123';"
-    psql -h example.com -p 5432 -c "ALTER DATABASE augur OWNER TO augur;"
-    psql -h example.com -p 5432 -c "GRANT ALL PRIVILEGES ON DATABASE augur TO augur;"
-    psql -h example.com -d augur -U augur -p 5432 -a -w -f /Users/carterlandis/augur/schema/create_schema.sql
-
+The process for creating the schema is detailed in the `database section<../getting-started/database.html>`_ of the Getting Started guide.
 
 ----------------
 Schema Overview
@@ -69,10 +42,10 @@ of MySQL and other changes noted in the commit logs.
 gathered from commits, issues, and other info.
 4. ``workers/linux_badge_worker``: Pulls data from the Linux Foundation’s
 badging program.
-5. ``workers/code_analysis``: Populates the table
+5. ``workers/value_worker``: Populates the table
 ``repo_labor`` using the “SCC” tool provided the
-https://github.com/boyter/scc project. This worker is presently in
-development and not deployed.
+https://github.com/boyter/scc project. “SCC” required Go to be installed on your system. Visit `this resource for instructions on Go installation<https://golang.org/doc/install>`_.
+6. ``workers/pull_request_worker``: Please add the technical details.
 
 Augur Operations
 ----------------
