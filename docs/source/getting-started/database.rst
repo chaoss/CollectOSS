@@ -1,7 +1,7 @@
 Database Setup
 ===============
 
-One of the reasons that Augur is so powerful is because of our `unified data model <https://oss-augur.readthedocs.io/en/dev/architecture/data-model.html>`_.
+One of the reasons that Augur is so powerful is because of our `unified data model <../schema/data-model.html>`_.
 In order to ensure this data model remains performant even with large amounts of data, we use PostgreSQL as
 our database engine. 
 
@@ -16,7 +16,7 @@ PostgreSQL Installation
 Before you can install our schema, you will need to make sure you have write access to a PostgreSQL 10 or later database. If you're for the fastest possible way to get Augur started or you're setting up for local development, you can use our `database container <../docker/docker.html>`_. If you're looking to collect data long term, we suggest following the rest of this tutorial and setting up a persistent PostgreSQL installation.
 
 .. warning::
-    If you want to collect data long term, we strongly suggest `against using a Docker container for your database <https://vsupalov.com/database-in-docker/>`_.
+    If you want to collect data over the long term, we strongly advise against `using a Docker container for your database <https://vsupalov.com/database-in-docker/>`_.
 
 If you're a newcomer to to PostgreSQL, follow their excellent instructions `here <https://www.postgresql.org/docs/12/tutorial-install.html>`_ to set it up for your machine of choice. We recommend using ``Postgres.app`` if you're on macOS, but if you're running a Linux distribution or are looking for an alternative to ``Postgres.app`` then pgAdmin is a great open source tool, albeit one with a somewhat cumbersome UI.
 
