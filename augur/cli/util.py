@@ -64,9 +64,12 @@ def get_augur_processes():
     processes = []
     for process in psutil.process_iter(['cmdline', 'name', 'environ']):
         if process.info['cmdline'] is not None and process.info['environ'] is not None:
-            if 'VIRTUAL_ENV' in list(process.info['environ'].keys()) and 'python' in ''.join(process.info['cmdline'][:]).lower():
-                if process.pid != os.getpid():
-                    processes.append(process)
+            try:
+                if os.getenv('VIRTUAL_ENV') in process.info['environ']['VIRTUAL_ENV'] and 'python' in ''.join(process.info['cmdline'][:]).lower():
+                    if process.pid != os.getpid():
+                        processes.append(process)
+            except KeyError:
+                pass
     return processes
 
 @cli.command('repo-reset', short_help='Reset Repo Collection')
