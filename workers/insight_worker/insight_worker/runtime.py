@@ -15,7 +15,7 @@ def create_server(app, gw):
         """ AUGWOP endpoint that gets hit to add a task to the workers queue or is used to get the heartbeat/status of worker
         """
         if request.method == 'POST': #will post a task to be added to the queue
-            logging.info("Sending to work on task: {}".format(str(request.json)))
+            logging.info("Sending to work on task: {}\n".format(str(request.json)))
             app.insight_worker.task = request.json
             
             #set task

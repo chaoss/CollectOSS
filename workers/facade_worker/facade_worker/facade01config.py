@@ -161,16 +161,13 @@ class Config:
             connect_timeout = 31536000,)
 
         cursor = db.cursor()#pymysql.cursors.DictCursor)
-        self.cursor = cursor
-        self.db = db
+
         if people and not multi_threaded_connection:
             self.cursor_people = cursor
             self.db_people = db
         elif not multi_threaded_connection:
-            #self.cursor = cursor
-            #self.db = db
-            self.cursor_people = cursor
-            self.db_people = db
+            self.cursor = cursor
+            self.db = db
 
         # Figure out how much we're going to log
         self.log_level = self.get_setting('log_level')
@@ -211,7 +208,9 @@ class Config:
         try:
             self.cursor.execute(query, (level, status))
             self.db.commit()
-        except:
+        except Exception as e:
+            logging.info('Error encountered: {}\n'.format(e))
+
             # Set up the database
             db_user = read_config('Database', 'user', 'AUGUR_DB_USER', 'augur')
             db_pass = read_config('Database', 'password', 'AUGUR_DB_PASSWORD', 'augur')

@@ -165,17 +165,19 @@ def fill_empty_affiliations(cfg):
                         "AND cmt_%s_date >= %%s" %
                         (attribution, attribution, attribution, attribution))
                         #"AND cmt_%s_date >= TO_TIMESTAMP(%%s, 'YYYY-MM-DD')" %
-                    ## Extra logging by Sean
-                    cfg.log_activity('Debug', update)
-                    ##
+
+                    cfg.log_activity('Debug', 'attr: {} \nmatch:{}'.format(attribution, match))
+
                     try: 
 
                         cfg.cursor.execute(update, (match[0], email, match[1]))
                         cfg.db.commit()
                     except Exception as e: 
-                        cfg.log_activity('Info', 'Attribution matching failed for %s ' %  email)
+                        cfg.log_activity('Info', 'Error encountered: {}'.format(e))
+                        cfg.log_activity('Info', 'Affiliation insertion failed for %s ' %  email)
 
             except Exception as e:
+                cfg.log_activity('Info', 'Error encountered: {}'.format(e))
                 cfg.log_activity('Info', 'Attribution matching failed for %s ' %  email)
             else:
                 cfg.log_activity('Info', 'Attribution matching failed and exception logging failed')
@@ -220,10 +222,10 @@ def fill_empty_affiliations(cfg):
 
     affiliations_processed = cfg.get_setting('affiliations_processed')
 
-    get_changed_affiliations = ("SELECT ca_domain FROM contributor_affiliations WHERE "
-        "ca_last_modified >= timestamptz  %s")
+    get_changed_affiliations = ("SELECT ca_domain FROM contributor_affiliations"# WHERE "
+        #"ca_last_used >= timestamptz  %s")
 
-    cfg.cursor_people.execute(get_changed_affiliations, (affiliations_processed, ))
+    cfg.cursor_people.execute(get_changed_affiliations)#, (affiliations_processed, ))
 
     changed_affiliations = list(cfg.cursor_people)
 

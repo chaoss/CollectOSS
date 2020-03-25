@@ -4,6 +4,7 @@ import sqlalchemy as s
 import pandas as pd
 import os
 import sys, logging
+from urllib.parse import urlparse
 
 def assign_tuple_action(self, new_data, table_values, update_col_map, duplicate_col_map, table_pkey):
     """ map objects => { *our db col* : *gh json key*} """
@@ -65,7 +66,8 @@ def get_max_id(self, table, column, default=25150, operations_table=False):
         logging.info("Found max id for {} column in the {} table: {}\n".format(column, table, max_id))
     else:
         max_id = default
-        logging.info("Could not find max id for {} column in the {} table... using default set to: {}\n".format(column, table, max_id))
+        logging.info("Could not find max id for {} column in the {} table... using default set to: \
+            {}\n".format(column, table, max_id))
     return max_id
 
 def get_table_values(self, cols, tables, where_clause=""):
@@ -141,10 +143,10 @@ def paginate(self, url, duplicate_col_map, update_col_map, table, table_pkey, wh
             except:
                 j = json.loads(json.dumps(r.text))
 
-            if type(j) != dict:
+            if type(j) != dict and type(j) != str:
                 success = True
                 break
-            else:
+            elif type(j) == dict:
                 logging.info("Request returned a dict: {}\n".format(j))
                 if j['message'] == 'Not Found':
                     logging.info("Github repo was not found or does not exist for endpoint: {}\n".format(url))
@@ -154,6 +156,13 @@ def paginate(self, url, duplicate_col_map, update_col_map, table, table_pkey, wh
                     update_gh_rate_limit(self, r, temporarily_disable=True)
                 if j['message'] == 'Bad credentials':
                     update_gh_rate_limit(self, r, bad_credentials=True)
+            elif type(j) == str:
+                logging.info("J was string: {}\n".format(j))
+                if '<!DOCTYPE html>' in j:
+                    logging.info("HTML was returned, trying again...\n")
+                else:
+                    j = json.loads(j)
+                    success = True
         if not success:
             break
 
@@ -172,10 +181,6 @@ def paginate(self, url, duplicate_col_map, update_col_map, table, table_pkey, wh
         if len(j) == 0:
             logging.info("Response was empty, breaking from pagination.\n")
             break
-
-        if type(j) == str:
-            logging.info("J was string: {}\n".format(j))
-            j = json.loads(j)
             
         # Checking contents of requests with what we already have in the db
         j = assign_tuple_action(self, j, table_values, update_col_map, duplicate_col_map, table_pkey)
@@ -204,6 +209,122 @@ def paginate(self, url, duplicate_col_map, update_col_map, table, table_pkey, wh
             break
 
     return tuples
+
+def query_contributors(self, entry_info, repo_id):
+
+    """ Data collection function
+    Query the GitHub API for contributors
+    """
+    logging.info("Querying contributors with given entry info: " + str(entry_info) + "\n")
+
+    github_url = entry_info['given']['github_url'] if 'github_url' in entry_info['given'] else entry_info['given']['git_url']
+
+    # Extract owner/repo from the url for the endpoint
+    path = urlparse(github_url)
+    split = path[2].split('/')
+
+    owner = split[1]
+    name = split[2]
+
+    # Handles git url case by removing the extension
+    if ".git" in name:
+        name = name[:-4]
+
+    # Set the base of the url and place to hold contributors to insert
+    contributors_url = ("https://api.github.com/repos/" + owner + "/" + 
+        name + "/contributors?per_page=100&page={}")
+
+    # Get contributors that we already have stored
+    #   Set our duplicate and update column map keys (something other than PK) to 
+    #   check dupicates/needed column updates with
+    table = 'contributors'
+    table_pkey = 'cntrb_id'
+    update_col_map = {'cntrb_email': 'email'}
+    duplicate_col_map = {'cntrb_login': 'login'}
+
+    #list to hold contributors needing insertion or update
+    contributors = paginate(self, contributors_url, duplicate_col_map, update_col_map, table, table_pkey)
+    
+    logging.info("Count of contributors needing insertion: " + str(len(contributors)) + "\n")
+    
+    for repo_contributor in contributors:
+        try:
+            # Need to hit this single contributor endpoint to get extra data including...
+            #   `created at`
+            #   i think that's it
+            cntrb_url = ("https://api.github.com/users/" + repo_contributor['login'])
+            logging.info("Hitting endpoint: " + cntrb_url + " ...\n")
+            r = requests.get(url=cntrb_url, headers=self.headers)
+            update_gh_rate_limit(self, r)
+            contributor = r.json()
+
+            company = None
+            location = None
+            email = None
+            if 'company' in contributor:
+                company = contributor['company']
+            if 'location' in contributor:
+                location = contributor['location']
+            if 'email' in contributor:
+                email = contributor['email']
+                canonical_email = contributor['email']
+
+            cntrb = {
+                "cntrb_login": contributor['login'],
+                "cntrb_created_at": contributor['created_at'],
+                "cntrb_email": email,
+                "cntrb_company": company,
+                "cntrb_location": location,
+                # "cntrb_type": , dont have a use for this as of now ... let it default to null
+                "cntrb_canonical": canonical_email,
+                "gh_user_id": contributor['id'],
+                "gh_login": contributor['login'],
+                "gh_url": contributor['url'],
+                "gh_html_url": contributor['html_url'],
+                "gh_node_id": contributor['node_id'],
+                "gh_avatar_url": contributor['avatar_url'],
+                "gh_gravatar_id": contributor['gravatar_id'],
+                "gh_followers_url": contributor['followers_url'],
+                "gh_following_url": contributor['following_url'],
+                "gh_gists_url": contributor['gists_url'],
+                "gh_starred_url": contributor['starred_url'],
+                "gh_subscriptions_url": contributor['subscriptions_url'],
+                "gh_organizations_url": contributor['organizations_url'],
+                "gh_repos_url": contributor['repos_url'],
+                "gh_events_url": contributor['events_url'],
+                "gh_received_events_url": contributor['received_events_url'],
+                "gh_type": contributor['type'],
+                "gh_site_admin": contributor['site_admin'],
+                "tool_source": self.tool_source,
+                "tool_version": self.tool_version,
+                "data_source": self.data_source
+            }
+
+            # Commit insertion to table
+            if repo_contributor['flag'] == 'need_update':
+                result = self.db.execute(self.contributors_table.update().where(
+                    self.history_table.c.cntrb_email==email).values(cntrb))
+                logging.info("Updated tuple in the contributors table with existing email: {}".format(email))
+                self.cntrb_id_inc = repo_contributor['pkey']
+            elif repo_contributor['flag'] == 'need_insertion':
+                result = self.db.execute(self.contributors_table.insert().values(cntrb))
+                logging.info("Primary key inserted into the contributors table: {}".format(result.inserted_primary_key))
+                self.results_counter += 1
+
+                logging.info("Inserted contributor: " + contributor['login'] + "\n")
+
+                # Increment our global track of the cntrb id for the possibility of it being used as a FK
+                self.cntrb_id_inc = int(result.inserted_primary_key[0])
+
+        except Exception as e:
+            logging.info("Caught exception: " + str(e))
+            logging.info("Contributor not defined. Please contact the manufacturers of Soylent Green " + url + " ...\n")
+            logging.info("Cascading Contributor Anomalie from missing repo contributor data: " + url + " ...\n")
+            continue
+        else:
+            if len(contributors) > 2:
+                logging.info("Well, that contributor list of len {} with last 3 tuples as: {} just don't except because we hit the else-block\n".format(str(len(contributors)), str(contributors[-3:])))    
+            continue
 
 def read_config(section, name=None, environment_variable=None, default=None, config_file_path='../../augur.config.json', no_config_file=0, use_main_config=0):
     """
@@ -374,7 +495,27 @@ def register_task_failure(self, task, repo_id, e):
     logging.info("Updated job process for model: " + task['models'][0] + "\n")
 
     # Reset results counter for next task
-    self.results_counter = 0    
+    self.results_counter = 0  
+
+def retrieve_tuple(self, key_values, tables):
+    table_str = tables[0]
+    del tables[0]
+
+    key_values_items = list(key_values.items())
+    for col, value in [key_values_items[0]]:
+        where_str = col + " = '" + value + "'"
+    del key_values_items[0]
+
+    for col, value in key_values_items:
+        where_str += ' AND ' + col + " = '" + value + "'"
+    for table in tables:
+        table_str += ", " + table
+
+    retrieveTupleSQL = s.sql.text("""
+        SELECT * FROM {} WHERE {}
+        """.format(table_str, where_str))
+    values = json.loads(pd.read_sql(retrieveTupleSQL, self.db, params={}).to_json(orient="records"))
+    return values  
 
 def update_gh_rate_limit(self, response, bad_credentials=False, temporarily_disable=False):
     # Try to get rate limit from request headers, sometimes it does not work (GH's issue)
