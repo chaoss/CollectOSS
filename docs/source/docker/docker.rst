@@ -36,6 +36,7 @@ To start a container, use the command below. ``<container_name`` can be whatever
 .. code::
 
     # in the root augur/ directory
+
     $ docker run -p <host_port>:<docker_port> --name <container_name> <tag_name>
 
 Running the test database

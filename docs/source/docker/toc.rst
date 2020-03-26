@@ -68,10 +68,6 @@ You can copy and paste the below example, but don't forget to change the values 
 
 .. note::
 
-    macOS users only: if you are trying to run Augur in a Docker container and are pointing it to a local database instance using either another Docker container or a local database, you'll need to set ``AUGUR_DB_HOST`` to ``host.docker.internal``. This is a limitation of networking Docker Desktop for Mac; see the Docker `docs <https://docs.docker.com/docker-for-mac/networking/#i-want-to-connect-from-a-container-to-a-service-on-the-host>`_ for more info.
-
-.. note::
-
   If you're using the ``test_data`` image instead of your database image, you'll need to add ``AUGUR_DB_NAME=test_data`` to your ``augur_env.txt`` to override the default database image name.
 
 Now that you've created your config file, you're ready to get going.
