@@ -67,8 +67,8 @@ You can copy and paste the below example, but don't forget to change the values 
     AUGUR_DB_PASSWORD=augur
 
 .. note::
-    macOS users only: if you are trying to run Augur in a Docker container and point it to a **local (non-Docker)** database instance, you'll need to set ``AUGUR_DB_HOST`` to ``host.docker.internal``.
-    This is a limitation of networking Docker Desktop for Mac; see the Docker `docs <https://docs.docker.com/docker-for-mac/networking/#i-want-to-connect-from-a-container-to-a-service-on-the-host>`_ for more info.
+
+  If you're using the ``test_data`` image instead of your database image, you'll need to add ``AUGUR_DB_NAME=test_data`` to your ``augur_env.txt`` to override the default database image name.
 
 Now that you've created your config file, you're ready to get going.
 If you're doing data collection or just want to try out Augur, you'll want to use Docker Compose. If you're installing Augur for local development, we recommend using the more fine-grained `Docker <docker.html>`_ commands to build and run the containers individually. 

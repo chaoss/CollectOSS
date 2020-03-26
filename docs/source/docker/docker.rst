@@ -36,7 +36,8 @@ To start a container, use the command below. ``<container_name`` can be whatever
 .. code::
 
     # in the root augur/ directory
-    $ docker run -d -p <host_port>:<docker_port> --name <container_name> <tag_name>
+
+    $ docker run -p <host_port>:<docker_port> --name <container_name> <tag_name>
 
 Running the test database
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -46,9 +47,4 @@ We recommend using the following command to start it up:
 
 .. code::
 
-    $ docker run -d -p 5434:5432 --name augur_test augurlabs/augur:test_data
-
-.. note::
-
-    Note the external port of ``5434``; you can use whatever you like, but we chose this port to avoid conflict with other possible PostgreSQL instances on your machine, as the default PostgreSQL port is ``5432``.
-
+    $ docker run -p <host_port>:5432 --name augur_test augurlabs/augur:test_data

@@ -8,7 +8,9 @@ Setting up the database
 
 If they so desired, developers can set up a persistent instance of PostgreSQL on either the local machine or a remote server. The instructions for doing so can be found in the `database <../getting-started/database.html>`_ portion of the Getting Started section
 
+
 However, during the course of development, you might find that you need to reset your database often, especially if you are working on the data collection components of Augur. To this end, we recommend developers make use of our Docker images to quickly provision and terminate database instances in a lightweight and reproducible manner.
+
 
 More information about Augur's Docker images can be found `here <../docker/docker.html>`_. If you're new to our Docker process, we recommend following the `introduction section <../docker/toc.html>`_ first.
 

@@ -13,7 +13,8 @@ To use it, first start the two services (we recommend using `Docker Compose <doc
 .. code::
 
     # this example uses the database image, but will work with an external one as well
-    $ docker-compose -d -f docker-compose.yml -f database-compose.yml up
+
+    $ docker-compose -f docker-compose.yml -f database-compose.yml up
 
 Then, navigate to ``http://localhost:8080/augurface/`` in your browser - note the trailing slash! You can click through the Login button (it is just a placeholder), and then you will be able to use the UI to automatically import repository groups from GitHub organizations, or manually create and edit them. Deleting repos or repo groups is not currently supported, but would be a great contribution! ;)
 

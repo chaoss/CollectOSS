@@ -16,7 +16,7 @@ To run Augur **without** the database container :
 
 .. code:: bash
 
-    docker-compose -d -f docker-compose.yml up
+    docker-compose -f docker-compose.yml up
 
 .. warning::
 
@@ -26,7 +26,7 @@ To run Augur **with** the database container:
 
 .. code:: bash
 
-    docker-compose -d -f docker-compose.yml -f database-compose.yml up
+    docker-compose -f docker-compose.yml -f database-compose.yml up
 
 If you want to use the ``test_data`` image with the data preloaded, change the ``image`` line of ``database-compose.yml`` to\:
 
