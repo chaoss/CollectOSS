@@ -222,7 +222,7 @@ def fill_empty_affiliations(cfg):
 
     affiliations_processed = cfg.get_setting('affiliations_processed')
 
-    get_changed_affiliations = ("SELECT ca_domain FROM contributor_affiliations"# WHERE "
+    get_changed_affiliations = ("SELECT ca_domain FROM contributor_affiliations")# WHERE "
         #"ca_last_used >= timestamptz  %s")
 
     cfg.cursor_people.execute(get_changed_affiliations)#, (affiliations_processed, ))
