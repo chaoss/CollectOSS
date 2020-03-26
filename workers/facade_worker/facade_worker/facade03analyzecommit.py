@@ -185,10 +185,10 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 		## Commented out so as to not update contributors
 		## sean: 11/6/2019
 		## Goal: Address with the contributors model worker
-		# try: 
-		# 	update_contributors(author_email, committer_email, author_name, committer_name) 
-		# except Exception: #print(e) 
-		# 	cfg.log_activity('Info', str(traceback.print_exc()))
+		try: 
+			update_contributors(author_email, committer_email, author_name, committer_name) 
+		except Exception: #print(e) 
+			cfg.log_activity('Info', str(traceback.print_exc()))
 
 ### The real function starts here ###
 
