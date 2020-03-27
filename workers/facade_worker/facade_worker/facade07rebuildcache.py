@@ -156,33 +156,33 @@ def fill_empty_affiliations(cfg):
 
             cfg.log_activity('Debug','Found domain match for %s' % email)
 
-            try:             
-                for match in matches:
-                    update = ("UPDATE commits "
-                        "SET cmt_%s_affiliation = %%s "
-                        "WHERE cmt_%s_email = %%s "
-                        "AND cmt_%s_affiliation IS NULL "
-                        "AND cmt_%s_date >= %%s" %
-                        (attribution, attribution, attribution, attribution))
-                        #"AND cmt_%s_date >= TO_TIMESTAMP(%%s, 'YYYY-MM-DD')" %
+            # try:             
+            for match in matches:
+                update = ("UPDATE commits "
+                    "SET cmt_%s_affiliation = %%s "
+                    "WHERE cmt_%s_email = %%s "
+                    "AND cmt_%s_affiliation IS NULL "
+                    "AND cmt_%s_date::date >= %%s::date" %
+                    (attribution, attribution, attribution, attribution))
+                    #"AND cmt_%s_date >= TO_TIMESTAMP(%%s, 'YYYY-MM-DD')" %
 
-                    cfg.log_activity('Debug', 'attr: {} \nmatch:{}'.format(attribution, match))
+                cfg.log_activity('Info', 'attr: {} \nmatch:{}\nsql: {}'.format(attribution, match, update))
 
-                    try: 
+                try: 
+                    cfg.cursor.execute(update, (match[0], email, match[1]))
+                    cfg.db.commit()
+                except Exception as e: 
+                    cfg.log_activity('Info', 'Error encountered: {}'.format(e))
+                    cfg.log_activity('Info', 'Affiliation insertion failed for %s ' %  email)
 
-                        cfg.cursor.execute(update, (match[0], email, match[1]))
-                        cfg.db.commit()
-                    except Exception as e: 
-                        cfg.log_activity('Info', 'Error encountered: {}'.format(e))
-                        cfg.log_activity('Info', 'Affiliation insertion failed for %s ' %  email)
-
-            except Exception as e:
-                cfg.log_activity('Info', 'Error encountered: {}'.format(e))
-                cfg.log_activity('Info', 'Attribution matching failed for %s ' %  email)
-            else:
-                cfg.log_activity('Info', 'Attribution matching failed and exception logging failed')
-            finally:
-                cfg.log_activity('Info', 'Attribution matching failed and exception logging failed and the exception to the exception failed.')
+            # except Exception as e:
+            #     cfg.log_activity('Info', '1st Error encountered: {}'.format(e))
+            #     cfg.log_activity('Info', 'Attribution matching failed for %s ' %  email)
+            # except Exception as e:
+            #     logging.info('2nd Error encountered: {}'.format(e))
+            #     cfg.log_activity('Info', 'Attribution matching failed and exception logging failed')
+            # else:
+            #     cfg.log_activity('Info', 'Attribution matching failed and exception logging failed and the exception to the exception failed.')
 
     def discover_alias(email):
 
@@ -222,7 +222,7 @@ def fill_empty_affiliations(cfg):
 
     affiliations_processed = cfg.get_setting('affiliations_processed')
 
-    get_changed_affiliations = ("SELECT ca_domain FROM contributor_affiliations"# WHERE "
+    get_changed_affiliations = ("SELECT ca_domain FROM contributor_affiliations")# WHERE "
         #"ca_last_used >= timestamptz  %s")
 
     cfg.cursor_people.execute(get_changed_affiliations)#, (affiliations_processed, ))
