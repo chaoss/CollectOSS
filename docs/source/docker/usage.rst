@@ -38,7 +38,7 @@ If you need to access a running container (perhaps to check the worker logs) or 
 Viewing container logs
 -------------------------
 
-By default, the only logs shown by the container are the logs of Augur's main data collection process. If you started your container(s) in the background, and want to view these logs again, running the following command in the root ``augur`` directory\:
+By default, the only logs shown by the container are the logs of Augur's main data collection process. If you started your container(s) in the background, and want to view these logs again, run the following command in the root ``augur`` directory\:
 
 .. code::
 
