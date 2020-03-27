@@ -16,7 +16,7 @@ This document details how to create the schema as well as some information on it
 Creating the schema
 -----------------------
 
-The process for creating the schema is detailed in the `database section<../getting-started/database.html>`_ of the Getting Started guide.
+The process for creating the schema is detailed in the  `database section <../getting-started/database.html>`_ of the Getting Started guide.
 
 ----------------
 Schema Overview
@@ -49,9 +49,9 @@ badging program.
 
 5. ``workers/value_worker``: Populates the table
 ``repo_labor`` using the “SCC” tool provided the
-https://github.com/boyter/scc project. “SCC” required Go to be installed on your system. Visit `this resource for instructions on Go installation<https://golang.org/doc/install>`_.
+https://github.com/boyter/scc project. “SCC” required Go to be installed on your system. Visit `this resource <https://golang.org/doc/install>`__ for instructions on Go installation.
 
-6. ``workers/pull_request_worker``: Please add the technical details.
+6. ``workers/pull_request_worker``: Collects Pull Request related data such as commits, contributors,assignees, etc. from the Github API and stores it in the Augur database.
 
 Augur Operations
 ----------------
