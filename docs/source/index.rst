@@ -21,6 +21,7 @@ Otherwise, feel free to hop right into the docs!
 .. schema/toc
 .. deployment/toc
 
+
 What is Augur?
 ~~~~~~~~~~~~~~~~
 
@@ -52,4 +53,6 @@ Our members:
 - `Max Balk <https://github.com/maxbalk/>`_
 - `Andrew Brain <https://github.com/ABrain7710>`_
 - `Carter Landis <https://carterlandis.com>`_
+=======
+
 
