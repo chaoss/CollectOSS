@@ -162,11 +162,11 @@ def fill_empty_affiliations(cfg):
                         "SET cmt_%s_affiliation = %%s "
                         "WHERE cmt_%s_email = %%s "
                         "AND cmt_%s_affiliation IS NULL "
-                        "AND cmt_%s_date >= %%s" %
+                        "AND cmt_%s_date::date >= %%s::date" %
                         (attribution, attribution, attribution, attribution))
                         #"AND cmt_%s_date >= TO_TIMESTAMP(%%s, 'YYYY-MM-DD')" %
 
-                    cfg.log_activity('Debug', 'attr: {} \nmatch:{}'.format(attribution, match))
+                    cfg.log_activity('Info', 'attr: {} \nmatch:{}'.format(attribution, match))
 
                     try: 
 
