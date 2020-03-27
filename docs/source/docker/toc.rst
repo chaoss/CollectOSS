@@ -1,7 +1,7 @@
 Docker
 =====================
 
-Augur provides several Docker images designed to you started with our software as quickly as possible. They are:
+Augur provides several Docker images designed to get you started with our software as quickly as possible. They are:
 
 - ``augurlabs/augur:backend``, our backend data collection and metrics API
 - ``augurlabs/augur:frontend``, our metrics visualization frontend

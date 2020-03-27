@@ -10,7 +10,7 @@ Augur provides a separate Docker image for each layer of our application (databa
 Building the images
 --------------------
 
-All ``Dockerfiles`` and other Docker-related files are located in ``util/docker/<service_name>``, where ``<service_name>`` is either ``backend``, ``frontend``, or ``database``. To build these images image locally, use the following command, being sure to replace ``<tag_name>`` and ``<service_name>`` as appropriate.
+All ``Dockerfiles`` and other Docker-related files are located in ``util/docker/<service_name>``, where ``<service_name>`` is either ``backend``, ``frontend``, or ``database``. To build these images locally, use the following command, being sure to replace ``<tag_name>`` and ``<service_name>`` as appropriate.
 
 .. code::
 
@@ -24,7 +24,7 @@ All ``Dockerfiles`` and other Docker-related files are located in ``util/docker/
 Running containers
 -------------------
 
-To start a container, use the command below. ``<container_name`` can be whatever you like, but ``<tag_name>`` should be the same as in the previous step, or the tag of one of the official images.
+To start a container, use the command below. ``<container_name>`` can be whatever you like, but ``<tag_name>`` should be the same as in the previous step, or the tag of one of the official images.
 
 .. note::
 

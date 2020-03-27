@@ -69,7 +69,7 @@ Lines that start with a ``$`` denote a bash command.
 - install Augur’s metrics API
 - install Augur's Python data collection workers
 - generate a configuration file using your database credentials
-- if needed, create the schema in your configuired database
+- if needed, create the schema in your configured database
 - optionally, install Augur’s frontend and its dependencies 
 
 .. code:: bash
