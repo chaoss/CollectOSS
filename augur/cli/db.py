@@ -1,5 +1,6 @@
-from os import walk, chdir, environ
+from os import walk, chdir, environ, chmod
 from sys import exit
+import stat
 from collections import OrderedDict
 from subprocess import call
 import csv
@@ -214,7 +215,9 @@ def run_psql_command_in_database(app, target_type, target):
     ])
 
 def check_pgpass_credentials(config):
-    with open(environ['HOME'] + '/.pgpass', 'a+') as pgpass_file:
+    pgpass_file_path = environ['HOME'] + '/.pgpass'
+    chmod(pgpass_file_path, stat.S_IWRITE | stat.S_IREAD)
+    with open(pgpass_file_path, 'a+') as pgpass_file:
         end = pgpass_file.tell()
         credentials_string = str(config['Database']['host']) \
                           + ':' + str(config['Database']['port']) \
