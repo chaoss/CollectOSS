@@ -6,7 +6,7 @@ import os
 import sys, logging
 from urllib.parse import urlparse
 
-def assign_tuple_action(self, new_data, table_values, update_col_map, duplicate_col_map, table_pkey):
+def assign_tuple_action(self, new_data, table_values, update_col_map, duplicate_col_map, table_pkey, value_update_col_map={}):
     """ map objects => { *our db col* : *gh json key*} """
     need_insertion_count = 0
     need_update_count = 0
@@ -16,23 +16,38 @@ def assign_tuple_action(self, new_data, table_values, update_col_map, duplicate_
         obj['flag'] = 'none' # default of no action needed
         for db_dupe_key in list(duplicate_col_map.keys()):
             if obj['flag'] == 'need_insertion' or obj['flag'] == 'need_update':
-                break
+                break # stop iterating columns because we already know what action is needed
+                
             if not table_values.isin([obj[duplicate_col_map[db_dupe_key]]]).any().any():
                 obj['flag'] = 'need_insertion'
                 need_insertion_count += 1
-            elif update_col_map:
-                existing_tuple = table_values[table_values[db_dupe_key].isin(
-                    [obj[duplicate_col_map[db_dupe_key]]])].to_dict('records')[0]
-                for col in update_col_map.keys():
-                    if update_col_map[col] not in obj:
-                        continue
-                    if obj[update_col_map[col]] != existing_tuple[col]:
-                        logging.info("Found a tuple that needs an ".format(obj) +
-                            "update for column: {}\n".format(col)) #obj[duplicate_col_map[db_dupe_key]]
-                        obj['flag'] = 'need_update'
-                        obj['pkey'] = existing_tuple[table_pkey]
-                        need_update_count += 1
-                        break
+                continue
+            elif not update_col_map:
+                continue
+
+            existing_tuple = table_values[table_values[db_dupe_key].isin(
+                [obj[duplicate_col_map[db_dupe_key]]])].to_dict('records')[0]
+
+            # If we need to check the values of the existing tuple to determine if an update is needed
+            for augur_col, value_check in value_update_col_map().items():
+                if existing_tuple[augur_col] != value_check:
+                    continue
+                logging.info("Found a tuple that needs an update for column: {}\n".format(augur_col)) 
+                obj['flag'] = 'need_update'
+                obj['pkey'] = existing_tuple[table_pkey]
+                need_update_count += 1
+
+            # Now check the existing tuple's values against the response values to determine if an update is needed
+            for col in update_col_map.keys():
+                if update_col_map[col] not in obj:
+                    continue
+                if obj[update_col_map[col]] == existing_tuple[col]:
+                    continue
+                logging.info("Found a tuple that needs an update for column: {}\n".format(col)) 
+                obj['flag'] = 'need_update'
+                obj['pkey'] = existing_tuple[table_pkey]
+                need_update_count += 1
+
     logging.info("Page recieved has {} tuples, while filtering duplicates this ".format(len(new_data)) +
         "was reduced to {} tuples, and {} tuple updates are needed.\n".format(need_insertion_count, need_update_count))
     return new_data
@@ -53,6 +68,70 @@ def connect_to_broker(self):
             logging.error('Cannot connect to the broker. Trying again...\n')
     if not connected:
         sys.exit('Could not connect to the broker after 5 attempts! Quitting...\n')
+
+def find_id_from_login(self, login):
+        idSQL = s.sql.text("""
+            SELECT cntrb_id FROM contributors WHERE cntrb_login = '{}'
+            """.format(login))
+        rs = pd.read_sql(idSQL, self.db, params={})
+        data_list = [list(row) for row in rs.itertuples(index=False)] 
+        try:
+            return data_list[0][0]
+        except:
+            logging.info("contributor needs to be added...")
+            cntrb_url = ("https://api.github.com/users/" + login)
+            logging.info("Hitting endpoint: {} ...\n".format(cntrb_url))
+            r = requests.get(url=cntrb_url, headers=self.headers)
+            update_gh_rate_limit(self, r)
+            contributor = r.json()
+
+            company = None
+            location = None
+            email = None
+            if 'company' in contributor:
+                company = contributor['company']
+            if 'location' in contributor:
+                location = contributor['location']
+            if 'email' in contributor:
+                email = contributor['email']
+
+            cntrb = {
+                "cntrb_login": contributor['login'] if 'login' in contributor else None,
+                "cntrb_email": email,
+                "cntrb_company": company,
+                "cntrb_location": location,
+                "cntrb_created_at": contributor['created_at'] if 'created_at' in contributor else None,                
+                "cntrb_canonical": canonical_email,
+                "gh_user_id": contributor['id'],
+                "gh_login": contributor['login'],
+                "gh_url": contributor['url'],
+                "gh_html_url": contributor['html_url'],
+                "gh_node_id": contributor['node_id'],
+                "gh_avatar_url": contributor['avatar_url'],
+                "gh_gravatar_id": contributor['gravatar_id'],
+                "gh_followers_url": contributor['followers_url'],
+                "gh_following_url": contributor['following_url'],
+                "gh_gists_url": contributor['gists_url'],
+                "gh_starred_url": contributor['starred_url'],
+                "gh_subscriptions_url": contributor['subscriptions_url'],
+                "gh_organizations_url": contributor['organizations_url'],
+                "gh_repos_url": contributor['repos_url'],
+                "gh_events_url": contributor['events_url'],
+                "gh_received_events_url": contributor['received_events_url'],
+                "gh_type": contributor['type'],
+                "gh_site_admin": contributor['site_admin'],
+                "tool_source": self.tool_source,
+                "tool_version": self.tool_version,
+                "data_source": self.data_source
+            }
+            result = self.db.execute(self.contributors_table.insert().values(cntrb))
+            logging.info("Primary key inserted into the contributors table: " + str(result.inserted_primary_key))
+            self.results_counter += 1
+            self.cntrb_id_inc = int(result.inserted_primary_key[0])
+
+            logging.info("Inserted contributor: " + contributor['login'] + "\n")
+            
+            return self.find_id_from_login(login)
 
 def get_max_id(self, table, column, default=25150, operations_table=False):
     maxIdSQL = s.sql.text("""
@@ -119,7 +198,7 @@ def init_oauths(self):
     #   self.oauths array will always be the key in use)
     self.headers = {'Authorization': 'token %s' % self.oauths[0]['access_token']}
 
-def paginate(self, url, duplicate_col_map, update_col_map, table, table_pkey, where_clause=""):
+def paginate(self, url, duplicate_col_map, update_col_map, table, table_pkey, where_clause="", value_update_col_map={}):
     # Paginate backwards through all the tuples but get first page in order
     #   to determine if there are multiple pages and if the 1st page covers all
     update_keys = list(update_col_map.keys()) if update_col_map else []
@@ -183,7 +262,7 @@ def paginate(self, url, duplicate_col_map, update_col_map, table, table_pkey, wh
             break
             
         # Checking contents of requests with what we already have in the db
-        j = assign_tuple_action(self, j, table_values, update_col_map, duplicate_col_map, table_pkey)
+        j = assign_tuple_action(self, j, table_values, update_col_map, duplicate_col_map, table_pkey, value_update_col_map)
         if not j:
             logging.info("Assigning tuple action failed, moving to next page.\n")
             i = i + 1 if self.finishing_task else i - 1
@@ -210,7 +289,7 @@ def paginate(self, url, duplicate_col_map, update_col_map, table, table_pkey, wh
 
     return tuples
 
-def query_contributors(self, entry_info, repo_id):
+def query_github_contributors(self, entry_info, repo_id):
 
     """ Data collection function
     Query the GitHub API for contributors
