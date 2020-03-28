@@ -263,8 +263,7 @@ class GHPullRequestWorker:
 
         owner, repo = self.get_owner_repo(github_url)
 
-        url = (f'https://api.github.com/repos/{owner}/{repo}/'
-               + 'pulls?state=all&direction=asc&per_page=100&page={}')
+        url = (f'https://api.github.com/repos/{owner}/{repo}/pulls?state=all&direction=asc&per_page=100&page={}')
 
         # Get pull requests that we already have stored
         #   Set pseudo key (something other than PK) to 
@@ -276,7 +275,8 @@ class GHPullRequestWorker:
 
         #list to hold pull requests needing insertion
         prs = paginate(self, url, duplicate_col_map, update_col_map, table, table_pkey, 
-            'WHERE repo_id = {}'.format(repo_id))
+            where_clause='WHERE repo_id = {}'.format(repo_id),
+            value_update_col_map={'pr_augur_contributor_id': None})
 
         # Discover and remove duplicates before we start inserting
         logging.info("Count of pull requests needing update or insertion: " + str(len(prs)) + "\n")
@@ -297,7 +297,7 @@ class GHPullRequestWorker:
                 'pr_src_state': pr_dict['state'],
                 'pr_src_locked': pr_dict['locked'],
                 'pr_src_title': pr_dict['title'],
-                'pr_augur_contributor_id': None,
+                'pr_augur_contributor_id': find_id_from_login(pr_dict['user']['login']),
                 'pr_body': pr_dict['body'],
                 'pr_created_at': pr_dict['created_at'],
                 'pr_updated_at': pr_dict['updated_at'],
