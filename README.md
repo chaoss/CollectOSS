@@ -22,7 +22,7 @@ If this is not feasible for you, please reach out to us at [p9j0r6s0m4a0t8v5@aug
 
 ## Data Collection
 
-Please [follow the instructions](https://oss-augur.readthedocs.io/en/master/getting-started/usage.html#db) for collecting data about specific repositories of interest. We are also currently working on putting together an easily distributable sample database to enable people to get going faster.
+Please [follow the instructions](https://oss-augur.readthedocs.io/en/master/getting-started/installation.html#data-collection) for collecting data about specific repositories of interest. We are also currently working on putting together an easily distributable sample database to enable people to get going faster.
 
 <!-- TODO: link to worker docs once they're done -->
 <!-- If you are collecting data of your own, you must [start up the workers](./docs/setup/augur-get-workers-going.md). -->
