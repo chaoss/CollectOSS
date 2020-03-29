@@ -237,6 +237,7 @@ def paginate(self, url, duplicate_col_map, update_col_map, table, table_pkey, wh
     # Paginate backwards through all the tuples but get first page in order
     #   to determine if there are multiple pages and if the 1st page covers all
     update_keys = list(update_col_map.keys()) if update_col_map else []
+    update_keys += list(value_update_col_map.keys()) if value_update_col_map else []
     cols_query = list(duplicate_col_map.keys()) + update_keys + [table_pkey]
     table_values = get_table_values(self, cols_query, [table], where_clause)
 
