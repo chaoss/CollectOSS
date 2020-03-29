@@ -17,7 +17,7 @@ def assign_tuple_action(self, new_data, table_values, update_col_map, duplicate_
         for db_dupe_key in list(duplicate_col_map.keys()):
             if obj['flag'] == 'need_insertion' or obj['flag'] == 'need_update':
                 break # stop iterating columns because we already know what action is needed
-                
+
             if not table_values.isin([obj[duplicate_col_map[db_dupe_key]]]).any().any():
                 obj['flag'] = 'need_insertion'
                 need_insertion_count += 1
@@ -30,6 +30,8 @@ def assign_tuple_action(self, new_data, table_values, update_col_map, duplicate_
 
             # If we need to check the values of the existing tuple to determine if an update is needed
             for augur_col, value_check in value_update_col_map().items():
+                logging.info('Value checking augur col {} of value {} with specified check of {}'.format(
+                    augur_col, existing_tuple[augur_col], value_check))
                 if existing_tuple[augur_col] != value_check:
                     continue
                 logging.info("Found a tuple that needs an update for column: {}\n".format(augur_col)) 
@@ -52,6 +54,19 @@ def assign_tuple_action(self, new_data, table_values, update_col_map, duplicate_
         "was reduced to {} tuples, and {} tuple updates are needed.\n".format(need_insertion_count, need_update_count))
     return new_data
 
+def check_duplicates(new_data, table_values, key):
+    need_insertion = []
+    for obj in new_data:
+        if type(obj) == dict:
+            if not table_values.isin([obj[key]]).any().any():
+                need_insertion.append(obj)
+            # else:
+                # logging.info("Tuple with github's {} key value already".format(key) +
+                #     "exists in our db: {}\n".format(str(obj[key])))
+    logging.info("Page recieved has {} tuples, while filtering duplicates this ".format(str(len(new_data))) +
+        "was reduced to {} tuples.\n".format(str(len(need_insertion))))
+    return need_insertion
+
 def connect_to_broker(self):
     connected = False
     for i in range(5):
@@ -68,6 +83,17 @@ def connect_to_broker(self):
             logging.error('Cannot connect to the broker. Trying again...\n')
     if not connected:
         sys.exit('Could not connect to the broker after 5 attempts! Quitting...\n')
+
+def dump_queue(queue):
+    """
+    Empties all pending items in a queue and returns them in a list.
+    """
+    result = []
+    queue.put("STOP")
+    for i in iter(queue.get, 'STOP'):
+        result.append(i)
+    # time.sleep(.1)
+    return result
 
 def find_id_from_login(self, login):
         idSQL = s.sql.text("""
@@ -396,13 +422,8 @@ def query_github_contributors(self, entry_info, repo_id):
                 self.cntrb_id_inc = int(result.inserted_primary_key[0])
 
         except Exception as e:
-            logging.info("Caught exception: " + str(e))
-            logging.info("Contributor not defined. Please contact the manufacturers of Soylent Green " + url + " ...\n")
-            logging.info("Cascading Contributor Anomalie from missing repo contributor data: " + url + " ...\n")
-            continue
-        else:
-            if len(contributors) > 2:
-                logging.info("Well, that contributor list of len {} with last 3 tuples as: {} just don't except because we hit the else-block\n".format(str(len(contributors)), str(contributors[-3:])))    
+            logging.info("Caught exception: {}".format(e))
+            logging.info("Cascading Contributor Anomalie from missing repo contributor data: {} ...\n".format(cntrb_url))
             continue
 
 def read_config(section, name=None, environment_variable=None, default=None, config_file_path='../../augur.config.json', no_config_file=0, use_main_config=0):
@@ -656,27 +677,3 @@ def update_gh_rate_limit(self, response, bad_credentials=False, temporarily_disa
 
         # Change headers to be using the new oauth's key
         self.headers = {'Authorization': 'token %s' % self.oauths[0]['access_token']}
-
-def check_duplicates(new_data, table_values, key):
-    need_insertion = []
-    for obj in new_data:
-        if type(obj) == dict:
-            if not table_values.isin([obj[key]]).any().any():
-                need_insertion.append(obj)
-            # else:
-                # logging.info("Tuple with github's {} key value already".format(key) +
-                #     "exists in our db: {}\n".format(str(obj[key])))
-    logging.info("Page recieved has {} tuples, while filtering duplicates this ".format(str(len(new_data))) +
-        "was reduced to {} tuples.\n".format(str(len(need_insertion))))
-    return need_insertion
-
-def dump_queue(queue):
-    """
-    Empties all pending items in a queue and returns them in a list.
-    """
-    result = []
-    queue.put("STOP")
-    for i in iter(queue.get, 'STOP'):
-        result.append(i)
-    # time.sleep(.1)
-    return result
