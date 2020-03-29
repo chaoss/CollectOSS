@@ -259,7 +259,7 @@ class Housekeeper:
                         SELECT repo_git, repo_id FROM repo {} ORDER BY repo_id ASC
                     """.format(where_condition))
                 
-                reorganized_repos = pd.read_sql(repoUrlSQL, self.db, params={})
+                reorganized_repos = pd.read_sql(repo_url_sql, self.db, params={})
                 if len(reorganized_repos) == 0:
                     logging.info("Trying to send tasks for repo group, but the repo group does not contain any repos: {}".format(repoUrlSQL))
                     job['repos'] = []
