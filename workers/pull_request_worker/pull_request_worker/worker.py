@@ -546,7 +546,7 @@ class GHPullRequestWorker:
 
         pr_meta_dict = {
             'head': assign_tuple_action(self, [head], meta_table_values, update_col_map, duplicate_col_map, 
-                table_pkey, value_update_col_map={'pr_src_meta_label': None})[0]
+                table_pkey, value_update_col_map={'pr_src_meta_label': None})[0],
             'base': assign_tuple_action(self, [base], meta_table_values, update_col_map, duplicate_col_map, 
                 table_pkey, value_update_col_map={'pr_src_meta_label': None})[0]
         }
