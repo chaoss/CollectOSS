@@ -12,43 +12,49 @@ def assign_tuple_action(self, new_data, table_values, update_col_map, duplicate_
     need_update_count = 0
     for obj in new_data:
         if type(obj) != dict:
+            logging.info('Moving to next tuple, tuple is not dict: {}'.format(obj))
             continue
+
         obj['flag'] = 'none' # default of no action needed
         for db_dupe_key in list(duplicate_col_map.keys()):
-            if obj['flag'] == 'need_insertion' or obj['flag'] == 'need_update':
-                break # stop iterating columns because we already know what action is needed
 
-            if not table_values.isin([obj[duplicate_col_map[db_dupe_key]]]).any().any():
-                obj['flag'] = 'need_insertion'
-                need_insertion_count += 1
-                continue
-            elif not update_col_map:
+            if table_values.isin([obj[duplicate_col_map[db_dupe_key]]]).any().any():
                 continue
 
-            existing_tuple = table_values[table_values[db_dupe_key].isin(
+            logging.info('Found a tuple that needs insertion based on dupe key: {}\n'.format(db_dupe_key))
+            obj['flag'] = 'need_insertion'
+            need_insertion_count += 1
+            break
+
+        if obj['flag'] == 'need_insertion':
+            logging.info('Already determined that current tuple needs insertion, skipping checking updates. '
+                'Moving to next tuple.\n')
+            continue
+
+        existing_tuple = table_values[table_values[db_dupe_key].isin(
                 [obj[duplicate_col_map[db_dupe_key]]])].to_dict('records')[0]
 
-            # If we need to check the values of the existing tuple to determine if an update is needed
-            for augur_col, value_check in value_update_col_map().items():
-                logging.info('Value checking augur col {} of value {} with specified check of {}'.format(
-                    augur_col, existing_tuple[augur_col], value_check))
-                if existing_tuple[augur_col] != value_check:
-                    continue
-                logging.info("Found a tuple that needs an update for column: {}\n".format(augur_col)) 
-                obj['flag'] = 'need_update'
-                obj['pkey'] = existing_tuple[table_pkey]
-                need_update_count += 1
+        # If we need to check the values of the existing tuple to determine if an update is needed
+        for augur_col, value_check in value_update_col_map().items():
+            logging.info('Value checking augur col {} of value {} with specified check of {}'.format(
+                augur_col, existing_tuple[augur_col], value_check))
+            if existing_tuple[augur_col] != value_check:
+                continue
+            logging.info("Found a tuple that needs an update for column: {}\n".format(augur_col)) 
+            obj['flag'] = 'need_update'
+            obj['pkey'] = existing_tuple[table_pkey]
+            need_update_count += 1
 
-            # Now check the existing tuple's values against the response values to determine if an update is needed
-            for col in update_col_map.keys():
-                if update_col_map[col] not in obj:
-                    continue
-                if obj[update_col_map[col]] == existing_tuple[col]:
-                    continue
-                logging.info("Found a tuple that needs an update for column: {}\n".format(col)) 
-                obj['flag'] = 'need_update'
-                obj['pkey'] = existing_tuple[table_pkey]
-                need_update_count += 1
+        # Now check the existing tuple's values against the response values to determine if an update is needed
+        for col in update_col_map.keys():
+            if update_col_map[col] not in obj:
+                continue
+            if obj[update_col_map[col]] == existing_tuple[col]:
+                continue
+            logging.info("Found a tuple that needs an update for column: {}\n".format(col)) 
+            obj['flag'] = 'need_update'
+            obj['pkey'] = existing_tuple[table_pkey]
+            need_update_count += 1
 
     logging.info("Page recieved has {} tuples, while filtering duplicates this ".format(len(new_data)) +
         "was reduced to {} tuples, and {} tuple updates are needed.\n".format(need_insertion_count, need_update_count))
