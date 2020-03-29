@@ -378,7 +378,6 @@ def create_pull_request_routes(server):
     """
     server.addRepoMetric(metrics.pull_request_acceptance_rate, 'pull-request-acceptance-rate')
 
-
     """
     @api {get} /repos/:repo_id/pull-request-closed-no-merge Pull Request Closed but not merged(Repo)
     @apiName pull-request-closed-no-merge
@@ -414,3 +413,41 @@ def create_pull_request_routes(server):
                     ]
     """
     server.addRepoGroupMetric(metrics.pull_requests_closed_no_merge, 'pull-requests-closed-no-merge')
+
+    """
+    @api {get} /repos/:repo_id/pull-request-closed-no-merge Pull Request Closed but not merged(Repo)
+    @apiName pull-request-closed-no-merge
+    @apiGroup Experimental
+    @apiDescription ___
+    @apiParam {string} repo_id Repository ID.
+    @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    ___
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "date": "2019-01-01T00:00:00.000Z",
+                            "pr_count": 3
+                        }
+                    ]
+    """
+    server.addRepoMetric(metrics.pull_request_merged_status_counts, 'pull-request-merged-status-counts')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/pull-request-closed-no-merge Pull Request Closed but not merged(Repo)
+    @apiName pull-request-closed-no-merge
+    @apiGroup Experimental
+    @apiDescription Timeseries of pull request which were closed but not merged
+    @apiParam {string} repo_group_id Repository Group ID.
+    @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "date": "2019-01-01T00:00:00.000Z",
+                            "pr_count": 3
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(metrics.pull_request_merged_status_counts, 'pull-request-merged-status-counts')
+
