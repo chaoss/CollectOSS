@@ -539,11 +539,14 @@ class GHPullRequestWorker:
         logging.info('Querying PR Meta')
 
         table = 'pull_request_meta'
-        meta_table_values = get_table_values({psuedo_key_augur: pseudo_key_gh}, [table])
-
         duplicate_col_map = {'pr_sha': 'sha'}
         update_col_map = {}
         table_pkey = 'pr_repo_meta_id'
+
+        update_keys = list(update_col_map.keys()) if update_col_map else []
+        update_keys += list(value_update_col_map.keys()) if value_update_col_map else []
+        cols_query = list(duplicate_col_map.keys()) + update_keys + [table_pkey]
+        meta_table_values = get_table_values(self, cols_query, [table], 'WHERE repo_id = {}'.format(repo_id))
 
         pr_meta_dict = {
             'head': assign_tuple_action(self, [head], meta_table_values, update_col_map, duplicate_col_map, 
