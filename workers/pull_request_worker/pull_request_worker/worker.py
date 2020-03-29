@@ -263,7 +263,8 @@ class GHPullRequestWorker:
 
         owner, repo = self.get_owner_repo(github_url)
 
-        url = (f'https://api.github.com/repos/{owner}/{repo}/pulls?state=all&direction=asc&per_page=100&page={}')
+        url = (f'https://api.github.com/repos/{owner}/{repo}/pulls?state=all&' +
+            'direction=asc&per_page=100&page={}')
 
         # Get pull requests that we already have stored
         #   Set pseudo key (something other than PK) to 
