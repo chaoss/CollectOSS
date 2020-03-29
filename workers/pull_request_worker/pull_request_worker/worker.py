@@ -551,7 +551,7 @@ class GHPullRequestWorker:
                 table_pkey, value_update_col_map={'pr_src_meta_label': None})[0]
         }
 
-        for pr_side, pr_meta_data in pr_meta_dict.items()
+        for pr_side, pr_meta_data in pr_meta_dict.items():
             pr_meta = {
                 'pull_request_id': pr_id,
                 'pr_head_or_base': pr_side,
