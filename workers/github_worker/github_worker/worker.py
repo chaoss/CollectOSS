@@ -829,9 +829,6 @@ class GitHubWorker:
                     logging.info(issue_dict['number'])
                     logging.info(issue_dict['user']['id'])
                     continue
-                else:
-                    logging.info("Failed exception printing")
-                    continue
 
             # Check if the assignee key's value is already recorded in the assignees key's value
             #   Create a collective list of unique assignees
