@@ -36,7 +36,7 @@ def assign_tuple_action(self, new_data, table_values, update_col_map, duplicate_
                 [obj[duplicate_col_map[db_dupe_key]]])].to_dict('records')[0]
 
         # If we need to check the values of the existing tuple to determine if an update is needed
-        for augur_col, value_check in value_update_col_map().items():
+        for augur_col, value_check in value_update_col_map.items():
             logging.info('Value checking augur col {} of value {} with specified check of {}'.format(
                 augur_col, existing_tuple[augur_col], value_check))
             if existing_tuple[augur_col] != value_check:
