@@ -174,18 +174,17 @@ class Housekeeper:
         for job in jobs:
             if 'repo_group_id' in job or 'repo_ids' in job:
                 # If RG id is 0 then it just means to query all repos
-                where_and = 'AND' if job['model'] in ['issues', 'pull_requests'] and 'repo_group_id' in job else 'WHERE'
+                where_and = 'AND' if job['model'] == 'issues' and 'repo_group_id' in job else 'WHERE'
                 where_condition = '{} repo_group_id = {}'.format(where_and, job['repo_group_id']
                     ) if 'repo_group_id' in job and job['repo_group_id'] != 0 else '{} repo.repo_id IN ({})'.format(
                     where_and, ",".join(str(id) for id in job['repo_ids'])) if 'repo_ids' in job else ''
-                repoUrlSQL = s.sql.text("""
+                repo_url_sql = s.sql.text("""
                         SELECT
                             * 
                         FROM
                             (
                                 ( SELECT repo_git, repo.repo_id, issues_enabled, COUNT ( * ) AS meta_count 
-                                FROM repo_info, repo
-                                WHERE repo.repo_id = repo_info.repo_id 
+                                FROM repo left outer join repo_info on repo.repo_id = repo_info.repo_id
                                 GROUP BY repo.repo_id, issues_enabled 
                                 ORDER BY repo.repo_id ) zz
                                 LEFT OUTER JOIN (
@@ -194,7 +193,6 @@ class Housekeeper:
                                     b.pull_request_count,
                                     d.repo_id AS pull_request_repo_id,
                                     e.last_collected,
-                                    COUNT ( * ) AS pull_request_count,
                                     (
                                     b.pull_request_count - COUNT ( * )) AS pull_requests_missing,
                                     ABS (
@@ -202,18 +200,12 @@ class Housekeeper:
                                     (
                                     CAST (( COUNT ( * )) AS DOUBLE PRECISION ) / CAST ( b.pull_request_count + 1 AS DOUBLE PRECISION )) AS ratio_issues 
                                 FROM
-                                    augur_data.repo,
-                                    augur_data.pull_requests d,
-                                    augur_data.repo_info b,
-                                    ( SELECT repo_id, MAX ( data_collection_date ) AS last_collected FROM augur_data.repo_info GROUP BY repo_id ORDER BY repo_id ) e 
-                                WHERE
-                                    repo.repo_id = b.repo_id 
-                                    AND repo.repo_id = d.repo_id 
-                                    AND b.repo_id = d.repo_id 
-                                    AND e.repo_id = repo.repo_id 
-                                    AND b.data_collection_date = e.last_collected 
-                                    {}
-                                    -- AND d.pull_request_id IS NULL 
+                                    augur_data.repo left outer join  
+                                    augur_data.pull_requests d on d.repo_id = repo.repo_id left outer join 
+                                                                        ( SELECT repo_id, MAX ( data_collection_date ) AS last_collected FROM augur_data.repo_info GROUP BY repo_id ORDER BY repo_id ) e 
+                                    on e.repo_id = d.repo_id left outer join 
+                                    augur_data.repo_info b on e.repo_id = b.repo_id and b.data_collection_date = e.last_collected
+                                {}                      
                                 GROUP BY
                                     repo.repo_id,
                                     d.repo_id,
@@ -229,9 +221,8 @@ class Housekeeper:
                         FROM
                             (
                                 ( SELECT repo_git, repo.repo_id, issues_enabled, COUNT ( * ) AS meta_count 
-                                FROM repo_info, repo
-                                WHERE repo.repo_id = repo_info.repo_id 
-                                AND issues_enabled = 'true' 
+                                FROM repo left outer join repo_info on repo.repo_id = repo_info.repo_id
+                                --WHERE issues_enabled = 'true' 
                                 GROUP BY repo.repo_id, issues_enabled 
                                 ORDER BY repo.repo_id ) zz
                                 LEFT OUTER JOIN (
@@ -248,18 +239,13 @@ class Housekeeper:
                                     (
                                     CAST (( COUNT ( * )) AS DOUBLE PRECISION ) / CAST ( b.issues_count + 1 AS DOUBLE PRECISION )) AS ratio_issues 
                                 FROM
-                                    augur_data.repo,
-                                    augur_data.issues d,
-                                    augur_data.repo_info b,
+                                    augur_data.repo left outer join  
+                                    augur_data.pull_requests d on d.repo_id = repo.repo_id left outer join 
+                                    augur_data.repo_info b on d.repo_id = b.repo_id left outer join
                                     ( SELECT repo_id, MAX ( data_collection_date ) AS last_collected FROM augur_data.repo_info GROUP BY repo_id ORDER BY repo_id ) e 
-                                WHERE
-                                    repo.repo_id = b.repo_id 
-                                    AND repo.repo_id = d.repo_id 
-                                    AND b.repo_id = d.repo_id 
-                                    AND e.repo_id = repo.repo_id 
-                                    AND b.data_collection_date = e.last_collected 
-                                    AND d.pull_request_id IS NULL
-                                    {} 
+                                                                        on e.repo_id = d.repo_id and b.data_collection_date = e.last_collected
+                                WHERE d.pull_request_id IS NULL
+                                {}
                                 GROUP BY
                                     repo.repo_id,
                                     d.repo_id,
@@ -272,6 +258,7 @@ class Housekeeper:
                     """.format(where_condition)) if job['model'] == 'issues' and 'repo_group_id' in job else s.sql.text(""" 
                         SELECT repo_git, repo_id FROM repo {} ORDER BY repo_id ASC
                     """.format(where_condition))
+                
                 reorganized_repos = pd.read_sql(repoUrlSQL, self.db, params={})
                 if len(reorganized_repos) == 0:
                     logging.info("Trying to send tasks for repo group, but the repo group does not contain any repos: {}".format(repoUrlSQL))
