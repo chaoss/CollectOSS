@@ -10,7 +10,8 @@ def assign_tuple_action(self, new_data, table_values, update_col_map, duplicate_
     """ map objects => { *our db col* : *gh json key*} """
     need_insertion_count = 0
     need_update_count = 0
-    for obj in new_data:
+    for i, obj in enumerate(new_data) :
+        logging.info('Checking tuple #{}\n'.format(i))
         if type(obj) != dict:
             logging.info('Moving to next tuple, tuple is not dict: {}'.format(obj))
             continue
