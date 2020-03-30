@@ -298,7 +298,7 @@ class GHPullRequestWorker:
                 'pr_src_state': pr_dict['state'],
                 'pr_src_locked': pr_dict['locked'],
                 'pr_src_title': pr_dict['title'],
-                'pr_augur_contributor_id': find_id_from_login(pr_dict['user']['login']),
+                'pr_augur_contributor_id': find_id_from_login(self, pr_dict['user']['login']),
                 'pr_body': pr_dict['body'],
                 'pr_created_at': pr_dict['created_at'],
                 'pr_updated_at': pr_dict['updated_at'],
@@ -420,7 +420,7 @@ class GHPullRequestWorker:
         for pr_event_dict in pr_events:
 
             if pr_event_dict['actor']:
-                cntrb_id = find_id_from_login(pr_event_dict['actor']['login'])
+                cntrb_id = find_id_from_login(self, pr_event_dict['actor']['login'])
             else:
                 cntrb_id = 1
 
@@ -470,7 +470,7 @@ class GHPullRequestWorker:
         for reviewers_dict in reviewers:
 
             if 'login' in reviewers_dict:
-                cntrb_id = find_id_from_login(reviewers_dict['login'])
+                cntrb_id = find_id_from_login(self, reviewers_dict['login'])
             else:
                 cntrb_id = 1
 
@@ -514,7 +514,7 @@ class GHPullRequestWorker:
         for assignee_dict in assignees:
 
             if 'login' in assignee_dict:
-                cntrb_id = find_id_from_login(assignee_dict['login'])
+                cntrb_id = find_id_from_login(self, assignee_dict['login'])
             else:
                 cntrb_id = 1
 
@@ -562,7 +562,7 @@ class GHPullRequestWorker:
                 'pr_src_meta_label': pr_meta_data['label'],
                 'pr_src_meta_ref': pr_meta_data['ref'],
                 'pr_sha': pr_meta_data['sha'],
-                'cntrb_id': find_id_from_login(pr_meta_data['user']['login']),
+                'cntrb_id': find_id_from_login(self, pr_meta_data['user']['login']),
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
                 'data_source': self.data_source,
@@ -584,55 +584,18 @@ class GHPullRequestWorker:
 
                 self.pr_meta_id_inc = int(result.inserted_primary_key[0])
                 self.results_counter += 1
-        else:
-            pr_meta_id_sql = """
-                SELECT pr_repo_meta_id FROM pull_request_meta
-                WHERE pr_sha='{}'
-            """.format(new_head[0]['sha'])
-
-            self.pr_meta_id_inc = int(int(pd.read_sql(pr_meta_id_sql, self.db).iloc[0]['pr_repo_meta_id']))
-
-        if new_head[0]['repo']:
-            self.query_pr_repo(new_head[0]['repo'], 'head', self.pr_meta_id_inc)
-        else:
-            logging.info('No new PR Head data to add')
-
-        if new_base[0]['to_insert']:
-            if new_base[0]['user'] and 'login' in new_base[0]['user']:
-                cntrb_id = find_id_from_login(new_base[0]['user']['login'])
             else:
-                cntrb_id = 1
+                pr_meta_id_sql = """
+                    SELECT pr_repo_meta_id FROM pull_request_meta
+                    WHERE pr_sha='{}'
+                """.format(pr_meta_data['sha'])
 
-            pr_meta = {
-                'pull_request_id': pr_id,
-                'pr_head_or_base': 'base',
-                'pr_src_meta_label': new_base[0]['label'],
-                'pr_src_meta_ref': new_base[0]['ref'],
-                'pr_sha': new_base[0]['sha'],
-                'cntrb_id': cntrb_id,
-                'tool_source': self.tool_source,
-                'tool_version': self.tool_version,
-                'data_source': self.data_source,
-                'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
-            }
+                self.pr_meta_id_inc = int(pd.read_sql(pr_meta_id_sql, self.db).iloc[0]['pr_repo_meta_id'])
 
-            result = self.db.execute(self.pull_request_meta_table.insert().values(pr_meta))
-            logging.info(f'Added PR Base {result.inserted_primary_key}')
-
-            self.pr_meta_id_inc = int(result.inserted_primary_key[0])
-            self.results_counter += 1
-        else:
-            pr_meta_id_sql = """
-                SELECT pr_repo_meta_id FROM pull_request_meta
-                WHERE pr_sha='{}'
-            """.format(new_base[0]['sha'])
-
-            self.pr_meta_id_inc = int(int(pd.read_sql(pr_meta_id_sql, self.db).iloc[0]['pr_repo_meta_id']))
-
-        if new_base[0]['repo']:
-            self.query_pr_repo(new_base[0]['repo'], 'base', self.pr_meta_id_inc)
-        else:
-            logging.info('No new PR Base data to add')
+            if pr_meta_data['repo']:
+                self.query_pr_repo(pr_meta_data['repo'], pr_side, self.pr_meta_id_inc)
+            else:
+                logging.info('No new PR Head data to add')
 
         logging.info(f'Finished inserting PR Head & Base data for PR with id {pr_id}')
 
@@ -658,7 +621,7 @@ class GHPullRequestWorker:
         for pr_msg_dict in pr_messages:
 
             if pr_msg_dict['user'] and 'login' in pr_msg_dict['user']:
-                cntrb_id = find_id_from_login(pr_msg_dict['user']['login'])
+                cntrb_id = find_id_from_login(self, pr_msg_dict['user']['login'])
             else:
                 cntrb_id = 1
 
@@ -713,7 +676,7 @@ class GHPullRequestWorker:
 
         if new_pr_repo:
             if new_pr_repo[0]['owner'] and 'login' in new_pr_repo[0]['owner']:
-                cntrb_id = find_id_from_login(new_pr_repo[0]['owner']['login'])
+                cntrb_id = find_id_from_login(self, new_pr_repo[0]['owner']['login'])
             else:
                 cntrb_id = 1
 
