@@ -6,7 +6,7 @@ import pandas as pd
 import sqlalchemy as s
 from sqlalchemy import MetaData
 from sqlalchemy.ext.automap import automap_base
-from workers.standard_methods import init_oauths, get_max_id, register_task_completion, register_task_failure, connect_to_broker, update_gh_rate_limit, record_model_process, paginate
+from workers.standard_methods import *
 
 class GHPullRequestWorker:
     """
