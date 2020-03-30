@@ -53,6 +53,4 @@ Our members:
 - `Max Balk <https://github.com/maxbalk/>`_
 - `Andrew Brain <https://github.com/ABrain7710>`_
 - `Carter Landis <https://carterlandis.com>`_
-=======
-
 
