@@ -372,7 +372,6 @@ class GHPullRequestWorker:
         table_pkey = 'pr_label_id'
 
         update_keys = list(update_col_map.keys()) if update_col_map else []
-        update_keys += list(value_update_col_map.keys()) if value_update_col_map else []
         cols_query = list(duplicate_col_map.keys()) + update_keys + [table_pkey]
 
         pr_labels_table_values = get_table_values(self, cols_query, [table], 'WHERE repo_id = {}'.format(repo_id))
@@ -466,7 +465,6 @@ class GHPullRequestWorker:
         table_pkey = 'pr_reviewer_map_id'
 
         update_keys = list(update_col_map.keys()) if update_col_map else []
-        update_keys += list(value_update_col_map.keys()) if value_update_col_map else []
         cols_query = list(duplicate_col_map.keys()) + update_keys + [table_pkey]
 
         reviewers_table_values = get_table_values(self, cols_query, [table], 'WHERE repo_id = {}'.format(repo_id))
@@ -511,7 +509,6 @@ class GHPullRequestWorker:
         table_pkey = 'pr_assignee_map_id'
 
         update_keys = list(update_col_map.keys()) if update_col_map else []
-        update_keys += list(value_update_col_map.keys()) if value_update_col_map else []
         cols_query = list(duplicate_col_map.keys()) + update_keys + [table_pkey]
 
         assignee_table_values = get_table_values(self, cols_query, [table], 'WHERE repo_id = {}'.format(repo_id))
@@ -552,7 +549,6 @@ class GHPullRequestWorker:
         table_pkey = 'pr_repo_meta_id'
 
         update_keys = list(update_col_map.keys()) if update_col_map else []
-        update_keys += list(value_update_col_map.keys()) if value_update_col_map else []
         cols_query = list(duplicate_col_map.keys()) + update_keys + [table_pkey]
         meta_table_values = get_table_values(self, cols_query, [table], 'WHERE repo_id = {}'.format(repo_id))
 
@@ -678,7 +674,6 @@ class GHPullRequestWorker:
         table_pkey = 'pr_repo_id'
 
         update_keys = list(update_col_map.keys()) if update_col_map else []
-        update_keys += list(value_update_col_map.keys()) if value_update_col_map else []
         cols_query = list(duplicate_col_map.keys()) + update_keys + [table_pkey]
 
         pr_repo_table_values = get_table_values(self, cols_query, [table], 'WHERE repo_id = {}'.format(repo_id))
