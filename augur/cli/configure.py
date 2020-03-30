@@ -73,11 +73,11 @@ default_config = {
                 {
                     "delay": 1000000,
                     "given": [
-                        "github_url"
+                        "git_url"
                     ],
                     "model": "contributors",
                     "repo_group_id": 0
-                },
+                },                
                 {
                     "delay": 1000000,
                     "given": [
@@ -119,12 +119,12 @@ default_config = {
             "facade_worker": {
                 "port": 50100,
                 "repo_directory": "repos/",
-                "switch": 0,
+                "switch": 1,
                 "workers": 1
             },
             "github_worker": {
                 "port": 50200,
-                "switch": 0,
+                "switch": 1,
                 "workers": 1
             },
             "insight_worker": {
@@ -139,7 +139,7 @@ default_config = {
             },
             "linux_badge_worker": {
                 "port": 50400,
-                "switch": 0,
+                "switch": 1,
                 "workers": 1
             },
             "metric_status_worker": {
@@ -149,18 +149,23 @@ default_config = {
             },
             "pull_request_worker": {
                 "port": 50600,
-                "switch": 0,
+                "switch": 1,
                 "workers": 1
             },
             "repo_info_worker": {
                 "port": 50700,
-                "switch": 0,
+                "switch": 1,
                 "workers": 1
             },
             "value_worker": {
                 "port": 50800,
                 "scc_bin": "scc",
                 "switch": 0,
+                "workers": 1
+            },
+            "contributor_worker": {
+                "port": 50900,
+                "switch": 1,
                 "workers": 1
             }
         }
