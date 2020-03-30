@@ -304,7 +304,8 @@ class GitHubWorker:
                     logging.info("Inserted issue with our issue_id being: {}".format(self.issue_id_inc) + 
                         " and title of: {} and gh_issue_num of: {}\n".format(issue_dict['title'],issue_dict['number']))
                 except Exception as e:
-                    logging.info("When inserting an issue, ran into the following error: {}".format(e))
+                    logging.info("When inserting an issue, ran into the following error: {}\n".format(e))
+                    logging.info(issue)
                     continue
 
             # Check if the assignee key's value is already recorded in the assignees key's value

@@ -214,9 +214,6 @@ class GHPullRequestWorker:
             SELECT DISTINCT pr_url, pull_requests.pull_request_id
             FROM pull_requests--, pull_request_meta
             WHERE repo_id = {}
-            --AND pull_requests.pull_request_id = pull_request_meta.pull_request_id
-            --AND pr_src_meta_label LIKE '%master'
-            --AND pull_request_meta.pr_head_or_base = 'base'
         """.format(repo_id))
         urls = pd.read_sql(pr_url_sql, self.db, params={})
 
@@ -374,7 +371,7 @@ class GHPullRequestWorker:
         update_keys = list(update_col_map.keys()) if update_col_map else []
         cols_query = list(duplicate_col_map.keys()) + update_keys + [table_pkey]
 
-        pr_labels_table_values = get_table_values(self, cols_query, [table], 'WHERE repo_id = {}'.format(repo_id))
+        pr_labels_table_values = get_table_values(self, cols_query, [table])
 
         new_labels = assign_tuple_action(self, labels, pr_labels_table_values, update_col_map, duplicate_col_map, 
                 table_pkey)
@@ -467,7 +464,7 @@ class GHPullRequestWorker:
         update_keys = list(update_col_map.keys()) if update_col_map else []
         cols_query = list(duplicate_col_map.keys()) + update_keys + [table_pkey]
 
-        reviewers_table_values = get_table_values(self, cols_query, [table], 'WHERE repo_id = {}'.format(repo_id))
+        reviewers_table_values = get_table_values(self, cols_query, [table])
 
         new_reviewers = assign_tuple_action(self, reviewers, reviewers_table_values, update_col_map, duplicate_col_map, 
                 table_pkey)
@@ -511,7 +508,7 @@ class GHPullRequestWorker:
         update_keys = list(update_col_map.keys()) if update_col_map else []
         cols_query = list(duplicate_col_map.keys()) + update_keys + [table_pkey]
 
-        assignee_table_values = get_table_values(self, cols_query, [table], 'WHERE repo_id = {}'.format(repo_id))
+        assignee_table_values = get_table_values(self, cols_query, [table])
 
         assignees = assign_tuple_action(self, assignees, assignee_table_values, update_col_map, duplicate_col_map, 
                 table_pkey)
@@ -550,7 +547,7 @@ class GHPullRequestWorker:
 
         update_keys = list(update_col_map.keys()) if update_col_map else []
         cols_query = list(duplicate_col_map.keys()) + update_keys + [table_pkey]
-        meta_table_values = get_table_values(self, cols_query, [table], 'WHERE repo_id = {}'.format(repo_id))
+        meta_table_values = get_table_values(self, cols_query, [table])
 
         pr_meta_dict = {
             'head': assign_tuple_action(self, [head], meta_table_values, update_col_map, duplicate_col_map, 
@@ -676,7 +673,7 @@ class GHPullRequestWorker:
         update_keys = list(update_col_map.keys()) if update_col_map else []
         cols_query = list(duplicate_col_map.keys()) + update_keys + [table_pkey]
 
-        pr_repo_table_values = get_table_values(self, cols_query, [table], 'WHERE repo_id = {}'.format(repo_id))
+        pr_repo_table_values = get_table_values(self, cols_query, [table])
 
         new_pr_repo = assign_tuple_action(self, [pr_repo], pr_repo_table_values, update_col_map, duplicate_col_map, 
                 table_pkey)[0]
