@@ -100,68 +100,69 @@ def dump_queue(queue):
     return result
 
 def find_id_from_login(self, login):
-        idSQL = s.sql.text("""
-            SELECT cntrb_id FROM contributors WHERE cntrb_login = '{}'
-            """.format(login))
-        rs = pd.read_sql(idSQL, self.db, params={})
-        data_list = [list(row) for row in rs.itertuples(index=False)] 
-        try:
-            return data_list[0][0]
-        except:
-            logging.info("contributor needs to be added...")
-            cntrb_url = ("https://api.github.com/users/" + login)
-            logging.info("Hitting endpoint: {} ...\n".format(cntrb_url))
-            r = requests.get(url=cntrb_url, headers=self.headers)
-            update_gh_rate_limit(self, r)
-            contributor = r.json()
+    idSQL = s.sql.text("""
+        SELECT cntrb_id FROM contributors WHERE cntrb_login = '{}'
+        """.format(login))
+    rs = pd.read_sql(idSQL, self.db, params={})
+    data_list = [list(row) for row in rs.itertuples(index=False)]
+    try:
+        return data_list[0][0]
+    except:
+        logging.info("contributor needs to be added...")
 
-            company = None
-            location = None
-            email = None
-            if 'company' in contributor:
-                company = contributor['company']
-            if 'location' in contributor:
-                location = contributor['location']
-            if 'email' in contributor:
-                email = contributor['email']
+    cntrb_url = ("https://api.github.com/users/" + login)
+    logging.info("Hitting endpoint: {} ...\n".format(cntrb_url))
+    r = requests.get(url=cntrb_url, headers=self.headers)
+    update_gh_rate_limit(self, r)
+    contributor = r.json()
 
-            cntrb = {
-                "cntrb_login": contributor['login'] if 'login' in contributor else None,
-                "cntrb_email": email,
-                "cntrb_company": company,
-                "cntrb_location": location,
-                "cntrb_created_at": contributor['created_at'] if 'created_at' in contributor else None,                
-                "cntrb_canonical": canonical_email,
-                "gh_user_id": contributor['id'],
-                "gh_login": contributor['login'],
-                "gh_url": contributor['url'],
-                "gh_html_url": contributor['html_url'],
-                "gh_node_id": contributor['node_id'],
-                "gh_avatar_url": contributor['avatar_url'],
-                "gh_gravatar_id": contributor['gravatar_id'],
-                "gh_followers_url": contributor['followers_url'],
-                "gh_following_url": contributor['following_url'],
-                "gh_gists_url": contributor['gists_url'],
-                "gh_starred_url": contributor['starred_url'],
-                "gh_subscriptions_url": contributor['subscriptions_url'],
-                "gh_organizations_url": contributor['organizations_url'],
-                "gh_repos_url": contributor['repos_url'],
-                "gh_events_url": contributor['events_url'],
-                "gh_received_events_url": contributor['received_events_url'],
-                "gh_type": contributor['type'],
-                "gh_site_admin": contributor['site_admin'],
-                "tool_source": self.tool_source,
-                "tool_version": self.tool_version,
-                "data_source": self.data_source
-            }
-            result = self.db.execute(self.contributors_table.insert().values(cntrb))
-            logging.info("Primary key inserted into the contributors table: " + str(result.inserted_primary_key))
-            self.results_counter += 1
-            self.cntrb_id_inc = int(result.inserted_primary_key[0])
+    company = None
+    location = None
+    email = None
+    if 'company' in contributor:
+        company = contributor['company']
+    if 'location' in contributor:
+        location = contributor['location']
+    if 'email' in contributor:
+        email = contributor['email']
 
-            logging.info("Inserted contributor: " + contributor['login'] + "\n")
-            
-            return self.find_id_from_login(login)
+    cntrb = {
+        "cntrb_login": contributor['login'] if 'login' in contributor else None,
+        "cntrb_email": email,
+        "cntrb_company": company,
+        "cntrb_location": location,
+        "cntrb_created_at": contributor['created_at'] if 'created_at' in contributor else None,                
+        "cntrb_canonical": None,
+        "gh_user_id": contributor['id'],
+        "gh_login": contributor['login'],
+        "gh_url": contributor['url'],
+        "gh_html_url": contributor['html_url'],
+        "gh_node_id": contributor['node_id'],
+        "gh_avatar_url": contributor['avatar_url'],
+        "gh_gravatar_id": contributor['gravatar_id'],
+        "gh_followers_url": contributor['followers_url'],
+        "gh_following_url": contributor['following_url'],
+        "gh_gists_url": contributor['gists_url'],
+        "gh_starred_url": contributor['starred_url'],
+        "gh_subscriptions_url": contributor['subscriptions_url'],
+        "gh_organizations_url": contributor['organizations_url'],
+        "gh_repos_url": contributor['repos_url'],
+        "gh_events_url": contributor['events_url'],
+        "gh_received_events_url": contributor['received_events_url'],
+        "gh_type": contributor['type'],
+        "gh_site_admin": contributor['site_admin'],
+        "tool_source": self.tool_source,
+        "tool_version": self.tool_version,
+        "data_source": self.data_source
+    }
+    result = self.db.execute(self.contributors_table.insert().values(cntrb))
+    logging.info("Primary key inserted into the contributors table: " + str(result.inserted_primary_key))
+    self.results_counter += 1
+    self.cntrb_id_inc = int(result.inserted_primary_key[0])
+
+    logging.info("Inserted contributor: " + contributor['login'] + "\n")
+    
+    return find_id_from_login(self, login)
 
 def get_max_id(self, table, column, default=25150, operations_table=False):
     maxIdSQL = s.sql.text("""
