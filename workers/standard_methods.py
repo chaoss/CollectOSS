@@ -162,7 +162,7 @@ def find_id_from_login(self, login):
 
     logging.info("Inserted contributor: " + contributor['login'] + "\n")
     
-    return self.find_id_from_login(login)
+    return find_id_from_login(self, login)
 
 def get_max_id(self, table, column, default=25150, operations_table=False):
     maxIdSQL = s.sql.text("""
