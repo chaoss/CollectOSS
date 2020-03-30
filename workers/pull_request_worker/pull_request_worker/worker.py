@@ -6,7 +6,7 @@ import pandas as pd
 import sqlalchemy as s
 from sqlalchemy import MetaData
 from sqlalchemy.ext.automap import automap_base
-from workers.standard_methods import init_oauths, get_max_id, register_task_completion, register_task_failure, connect_to_broker, update_gh_rate_limit, record_model_process, paginate
+from workers.standard_methods import *
 
 class GHPullRequestWorker:
     """
@@ -214,9 +214,6 @@ class GHPullRequestWorker:
             SELECT DISTINCT pr_url, pull_requests.pull_request_id
             FROM pull_requests--, pull_request_meta
             WHERE repo_id = {}
-            --AND pull_requests.pull_request_id = pull_request_meta.pull_request_id
-            --AND pr_src_meta_label LIKE '%master'
-            --AND pull_request_meta.pr_head_or_base = 'base'
         """.format(repo_id))
         urls = pd.read_sql(pr_url_sql, self.db, params={})
 
@@ -263,20 +260,21 @@ class GHPullRequestWorker:
 
         owner, repo = self.get_owner_repo(github_url)
 
-        url = (f'https://api.github.com/repos/{owner}/{repo}/'
-               + 'pulls?state=all&direction=asc&per_page=100&page={}')
+        url = (f'https://api.github.com/repos/{owner}/{repo}/pulls?state=all&' +
+            'direction=asc&per_page=100&page={}')
 
         # Get pull requests that we already have stored
         #   Set pseudo key (something other than PK) to 
         #   check dupicates with
         table = 'pull_requests'
         table_pkey = 'pull_request_id'
-        update_col_map = {'pr_src_state': 'state'} #'updated_at': 'updated_at', 'closed_at': 'closed_at', 'comment_count': 'comments', 
+        update_col_map = {'pr_src_state': 'state'} 
         duplicate_col_map = {'pr_src_id': 'id'}
 
         #list to hold pull requests needing insertion
         prs = paginate(self, url, duplicate_col_map, update_col_map, table, table_pkey, 
-            'WHERE repo_id = {}'.format(repo_id))
+            where_clause='WHERE repo_id = {}'.format(repo_id),
+            value_update_col_map={'pr_augur_contributor_id': None})
 
         # Discover and remove duplicates before we start inserting
         logging.info("Count of pull requests needing update or insertion: " + str(len(prs)) + "\n")
@@ -297,7 +295,7 @@ class GHPullRequestWorker:
                 'pr_src_state': pr_dict['state'],
                 'pr_src_locked': pr_dict['locked'],
                 'pr_src_title': pr_dict['title'],
-                'pr_augur_contributor_id': None,
+                'pr_augur_contributor_id': find_id_from_login(self, pr_dict['user']['login']),
                 'pr_body': pr_dict['body'],
                 'pr_created_at': pr_dict['created_at'],
                 'pr_updated_at': pr_dict['updated_at'],
@@ -321,8 +319,7 @@ class GHPullRequestWorker:
                 'pr_src_author_association': pr_dict['author_association'],
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
-                'data_source': 'GitHub API',
-                'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+                'data_source': 'GitHub API'
             }
 
             if pr_dict['flag'] == 'need_insertion':
@@ -361,16 +358,23 @@ class GHPullRequestWorker:
 
     def query_labels(self, labels, pr_id):
         logging.info('Querying PR Labels\n')
-        pseudo_key_gh = 'id'
-        psuedo_key_augur = 'pr_src_id'
-        table = 'pull_request_labels'
-        pr_labels_table_values = self.get_table_values({psuedo_key_augur: pseudo_key_gh}, [table])
 
-        new_labels = self.check_duplicates(labels, pr_labels_table_values, pseudo_key_gh)
-
-        if len(new_labels) == 0:
+        if len(labels) == 0:
             logging.info('No new labels to add\n')
             return
+
+        table = 'pull_request_labels'
+        duplicate_col_map = {'pr_src_id': 'id'}
+        update_col_map = {}
+        table_pkey = 'pr_label_id'
+
+        update_keys = list(update_col_map.keys()) if update_col_map else []
+        cols_query = list(duplicate_col_map.keys()) + update_keys + [table_pkey]
+
+        pr_labels_table_values = get_table_values(self, cols_query, [table])
+
+        new_labels = assign_tuple_action(self, labels, pr_labels_table_values, update_col_map, duplicate_col_map, 
+                table_pkey)
 
         logging.info(f'Found {len(new_labels)} labels\n')
 
@@ -386,16 +390,16 @@ class GHPullRequestWorker:
                 'pr_src_default_bool': label_dict['default'],
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
-                'data_source': self.data_source,
-                'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+                'data_source': self.data_source
             }
 
-            result = self.db.execute(self.pull_request_labels_table.insert().values(label))
-            logging.info(f"Added PR Label: {result.inserted_primary_key}\n")
-            logging.info(f"Inserted PR Labels data for PR with id {pr_id}\n")
+            if label_dict['flag'] == 'need_insertion':
+                result = self.db.execute(self.pull_request_labels_table.insert().values(label))
+                logging.info(f"Added PR Label: {result.inserted_primary_key}\n")
+                logging.info(f"Inserted PR Labels data for PR with id {pr_id}\n")
 
-            self.results_counter += 1
-            self.label_id_inc = int(result.inserted_primary_key[0])
+                self.results_counter += 1
+                self.label_id_inc = int(result.inserted_primary_key[0])
 
     def query_pr_events(self, owner, repo, gh_pr_no, pr_id):
         logging.info('Querying PR Events\n')
@@ -419,7 +423,7 @@ class GHPullRequestWorker:
         for pr_event_dict in pr_events:
 
             if pr_event_dict['actor']:
-                cntrb_id = self.find_id_from_login(pr_event_dict['actor']['login'])
+                cntrb_id = find_id_from_login(self, pr_event_dict['actor']['login'])
             else:
                 cntrb_id = 1
 
@@ -434,8 +438,7 @@ class GHPullRequestWorker:
                 'node_url': pr_event_dict['url'],
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
-                'data_source': self.data_source,
-                'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+                'data_source': self.data_source
             }
 
             result = self.db.execute(self.pull_request_events_table.insert().values(pr_event))
@@ -453,23 +456,23 @@ class GHPullRequestWorker:
             logging.info('No reviewers to add')
             return
 
-        pseudo_key_gh = 'id'
-        psuedo_key_augur = 'pr_reviewer_map_id'
         table = 'pull_request_reviewers'
-        reviewers_table_values = self.get_table_values({psuedo_key_augur: pseudo_key_gh}, [table])
+        duplicate_col_map = {'pr_reviewer_map_id': 'id'}
+        update_col_map = {}
+        table_pkey = 'pr_reviewer_map_id'
 
-        new_reviewers = self.check_duplicates(reviewers, reviewers_table_values, pseudo_key_gh)
+        update_keys = list(update_col_map.keys()) if update_col_map else []
+        cols_query = list(duplicate_col_map.keys()) + update_keys + [table_pkey]
 
-        if len(new_reviewers) == 0:
-            logging.info('No new reviewers to add')
-            return
+        reviewers_table_values = get_table_values(self, cols_query, [table])
 
-        logging.info(f'Found {len(new_reviewers)} reviewers')
+        new_reviewers = assign_tuple_action(self, reviewers, reviewers_table_values, update_col_map, duplicate_col_map, 
+                table_pkey)
 
-        for reviewers_dict in reviewers:
+        for reviewers_dict in new_reviewers:
 
             if 'login' in reviewers_dict:
-                cntrb_id = self.find_id_from_login(reviewers_dict['login'])
+                cntrb_id = find_id_from_login(self, reviewers_dict['login'])
             else:
                 cntrb_id = 1
 
@@ -478,15 +481,15 @@ class GHPullRequestWorker:
                 'cntrb_id': cntrb_id,
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
-                'data_source': self.data_source,
-                'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+                'data_source': self.data_source
             }
 
-            result = self.db.execute(self.pull_request_reviewers_table.insert().values(reviewer))
-            logging.info(f"Added PR Reviewer {result.inserted_primary_key}")
+            if reviewers_dict['flag'] == 'need_insertion':
+                result = self.db.execute(self.pull_request_reviewers_table.insert().values(reviewer))
+                logging.info(f"Added PR Reviewer {result.inserted_primary_key}")
 
-            self.reviewer_id_inc = int(result.inserted_primary_key[0])
-            self.results_counter += 1
+                self.reviewer_id_inc = int(result.inserted_primary_key[0])
+                self.results_counter += 1
 
         logging.info(f"Finished inserting PR Reviewer data for PR with id {pr_id}")
 
@@ -497,23 +500,23 @@ class GHPullRequestWorker:
             logging.info('No assignees to add')
             return
 
-        pseudo_key_gh = 'id'
-        psuedo_key_augur = 'pr_assignee_map_id'
         table = 'pull_request_assignees'
-        assignee_table_values = self.get_table_values({psuedo_key_augur: pseudo_key_gh}, [table])
+        duplicate_col_map = {'pr_assignee_map_id': 'id'}
+        update_col_map = {}
+        table_pkey = 'pr_assignee_map_id'
 
-        new_assignees = self.check_duplicates(assignees, assignee_table_values, pseudo_key_gh)
+        update_keys = list(update_col_map.keys()) if update_col_map else []
+        cols_query = list(duplicate_col_map.keys()) + update_keys + [table_pkey]
 
-        if len(new_assignees) == 0:
-            logging.info('No new assignees to add')
-            return
+        assignee_table_values = get_table_values(self, cols_query, [table])
 
-        logging.info(f'Found {len(new_assignees)} assignees')
+        assignees = assign_tuple_action(self, assignees, assignee_table_values, update_col_map, duplicate_col_map, 
+                table_pkey)
 
         for assignee_dict in assignees:
 
             if 'login' in assignee_dict:
-                cntrb_id = self.find_id_from_login(assignee_dict['login'])
+                cntrb_id = find_id_from_login(self, assignee_dict['login'])
             else:
                 cntrb_id = 1
 
@@ -522,104 +525,80 @@ class GHPullRequestWorker:
                 'contrib_id': cntrb_id,
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
-                'data_source': self.data_source,
-                'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+                'data_source': self.data_source
             }
 
-            result = self.db.execute(self.pull_request_assignees_table.insert().values(assignee))
-            logging.info(f'Added PR Assignee {result.inserted_primary_key}')
+            if assignee_dict['flag'] == 'need_insertion':
+                result = self.db.execute(self.pull_request_assignees_table.insert().values(assignee))
+                logging.info(f'Added PR Assignee {result.inserted_primary_key}')
 
-            self.assignee_id_inc = int(result.inserted_primary_key[0])
-            self.results_counter += 1
+                self.assignee_id_inc = int(result.inserted_primary_key[0])
+                self.results_counter += 1
 
         logging.info(f'Finished inserting PR Assignee data for PR with id {pr_id}')
 
-    def query_pr_meta(self, head, base,  pr_id):
+    def query_pr_meta(self, head, base, pr_id):
         logging.info('Querying PR Meta')
 
-        pseudo_key_gh = 'sha'
-        psuedo_key_augur = 'pr_sha'
         table = 'pull_request_meta'
-        meta_table_values = self.get_table_values({psuedo_key_augur: pseudo_key_gh}, [table])
+        duplicate_col_map = {'pr_sha': 'sha'}
+        update_col_map = {}
+        value_update_col_map = {'pr_src_meta_label': None}
+        table_pkey = 'pr_repo_meta_id'
 
-        new_head = [head]
-        new_base = [base]
-        self.mark_new_records(new_head, meta_table_values, pseudo_key_gh)
-        self.mark_new_records(new_base, meta_table_values, pseudo_key_gh)
+        update_keys = list(update_col_map.keys()) if update_col_map else []
+        update_keys += list(value_update_col_map.keys())
+        cols_query = list(duplicate_col_map.keys()) + update_keys + [table_pkey]
 
-        if new_head[0]['to_insert']:
-            if new_head[0]['user'] and 'login' in new_head[0]['user']:
-                cntrb_id = self.find_id_from_login(new_head[0]['user']['login'])
-            else:
-                cntrb_id = 1
+        meta_table_values = get_table_values(self, cols_query, [table])
 
+        pr_meta_dict = {
+            'head': assign_tuple_action(self, [head], meta_table_values, update_col_map, duplicate_col_map, 
+                table_pkey, value_update_col_map=value_update_col_map)[0],
+            'base': assign_tuple_action(self, [base], meta_table_values, update_col_map, duplicate_col_map, 
+                table_pkey, value_update_col_map=value_update_col_map)[0]
+        }
+
+        for pr_side, pr_meta_data in pr_meta_dict.items():
             pr_meta = {
                 'pull_request_id': pr_id,
-                'pr_head_or_base': 'head',
-                'pr_src_meta_label': new_head[0]['label'],
-                'pr_src_meta_ref': new_head[0]['ref'],
-                'pr_sha': new_head[0]['sha'],
-                'cntrb_id': cntrb_id,
+                'pr_head_or_base': pr_side,
+                'pr_src_meta_label': pr_meta_data['label'],
+                'pr_src_meta_ref': pr_meta_data['ref'],
+                'pr_sha': pr_meta_data['sha'],
+                'cntrb_id': find_id_from_login(self, pr_meta_data['user']['login']),
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
-                'data_source': self.data_source,
-                'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+                'data_source': self.data_source
             }
 
-            result = self.db.execute(self.pull_request_meta_table.insert().values(pr_meta))
-            logging.info(f'Added PR Head {result.inserted_primary_key}')
+            if pr_meta_data['flag'] == 'need_update':
+                result = self.db.execute(self.issues_table.update().where(
+                        self.pull_request_meta_table.c.pr_sha==pr_meta['pr_sha'] and
+                        self.pull_request_meta_table.c.pr_head_or_base==pr_side 
+                    ).values(pr_meta))
+                logging.info("Updated tuple in the issues table with existing gh_issue_id: {}".format(
+                    issue_dict['id']))
+                self.issue_id_inc = issue_dict['pkey']
+            elif pr_meta_data['flag'] == 'need_insertion':
 
-            self.pr_meta_id_inc = int(result.inserted_primary_key[0])
-            self.results_counter += 1
-        else:
-            pr_meta_id_sql = """
-                SELECT pr_repo_meta_id FROM pull_request_meta
-                WHERE pr_sha='{}'
-            """.format(new_head[0]['sha'])
+                result = self.db.execute(self.pull_request_meta_table.insert().values(pr_meta))
+                logging.info(f'Added PR Head {result.inserted_primary_key}')
 
-            self.pr_meta_id_inc = int(int(pd.read_sql(pr_meta_id_sql, self.db).iloc[0]['pr_repo_meta_id']))
-
-        if new_head[0]['repo']:
-            self.query_pr_repo(new_head[0]['repo'], 'head', self.pr_meta_id_inc)
-        else:
-            logging.info('No new PR Head data to add')
-
-        if new_base[0]['to_insert']:
-            if new_base[0]['user'] and 'login' in new_base[0]['user']:
-                cntrb_id = self.find_id_from_login(new_base[0]['user']['login'])
+                self.pr_meta_id_inc = int(result.inserted_primary_key[0])
+                self.results_counter += 1
             else:
-                cntrb_id = 1
+                pr_meta_id_sql = """
+                    SELECT pr_repo_meta_id FROM pull_request_meta
+                    WHERE pr_sha='{}'
+                """.format(pr_meta_data['sha'])
 
-            pr_meta = {
-                'pull_request_id': pr_id,
-                'pr_head_or_base': 'base',
-                'pr_src_meta_label': new_base[0]['label'],
-                'pr_src_meta_ref': new_base[0]['ref'],
-                'pr_sha': new_base[0]['sha'],
-                'cntrb_id': cntrb_id,
-                'tool_source': self.tool_source,
-                'tool_version': self.tool_version,
-                'data_source': self.data_source,
-                'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
-            }
+                self.pr_meta_id_inc = int(pd.read_sql(pr_meta_id_sql, self.db).iloc[0]['pr_repo_meta_id'])
 
-            result = self.db.execute(self.pull_request_meta_table.insert().values(pr_meta))
-            logging.info(f'Added PR Base {result.inserted_primary_key}')
-
-            self.pr_meta_id_inc = int(result.inserted_primary_key[0])
-            self.results_counter += 1
-        else:
-            pr_meta_id_sql = """
-                SELECT pr_repo_meta_id FROM pull_request_meta
-                WHERE pr_sha='{}'
-            """.format(new_base[0]['sha'])
-
-            self.pr_meta_id_inc = int(int(pd.read_sql(pr_meta_id_sql, self.db).iloc[0]['pr_repo_meta_id']))
-
-        if new_base[0]['repo']:
-            self.query_pr_repo(new_base[0]['repo'], 'base', self.pr_meta_id_inc)
-        else:
-            logging.info('No new PR Base data to add')
+            if pr_meta_data['repo']:
+                self.query_pr_repo(pr_meta_data['repo'], pr_side, self.pr_meta_id_inc)
+            else:
+                logging.info('No new PR Head data to add')
 
         logging.info(f'Finished inserting PR Head & Base data for PR with id {pr_id}')
 
@@ -645,7 +624,7 @@ class GHPullRequestWorker:
         for pr_msg_dict in pr_messages:
 
             if pr_msg_dict['user'] and 'login' in pr_msg_dict['user']:
-                cntrb_id = self.find_id_from_login(pr_msg_dict['user']['login'])
+                cntrb_id = find_id_from_login(self, pr_msg_dict['user']['login'])
             else:
                 cntrb_id = 1
 
@@ -659,8 +638,7 @@ class GHPullRequestWorker:
                 'cntrb_id': cntrb_id,
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
-                'data_source': self.data_source,
-                'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+                'data_source': self.data_source
             }
 
             result = self.db.execute(self.message_table.insert().values(msg))
@@ -674,8 +652,7 @@ class GHPullRequestWorker:
                 'pr_message_ref_src_node_id': pr_msg_dict['node_id'],
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
-                'data_source': self.data_source,
-                'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+                'data_source': self.data_source
             }
 
             result = self.db.execute(
@@ -691,45 +668,46 @@ class GHPullRequestWorker:
     def query_pr_repo(self, pr_repo, pr_repo_type, pr_meta_id):
         logging.info(f'Querying PR {pr_repo_type} repo')
 
-        pseudo_key_gh = 'id'
-        psuedo_key_augur = 'pr_src_repo_id'
         table = 'pull_request_repo'
-        pr_repo_table_values = self.get_table_values({psuedo_key_augur: pseudo_key_gh}, [table])
+        duplicate_col_map = {'pr_src_repo_id': 'id'}
+        update_col_map = {}
+        table_pkey = 'pr_repo_id'
 
-        new_pr_repo = self.check_duplicates([pr_repo], pr_repo_table_values, pseudo_key_gh)
+        update_keys = list(update_col_map.keys()) if update_col_map else []
+        cols_query = list(duplicate_col_map.keys()) + update_keys + [table_pkey]
 
-        if new_pr_repo:
-            if new_pr_repo[0]['owner'] and 'login' in new_pr_repo[0]['owner']:
-                cntrb_id = self.find_id_from_login(new_pr_repo[0]['owner']['login'])
-            else:
-                cntrb_id = 1
+        pr_repo_table_values = get_table_values(self, cols_query, [table])
 
-            pr_repo = {
-                'pr_repo_meta_id': pr_meta_id,
-                'pr_repo_head_or_base': pr_repo_type,
-                'pr_src_repo_id': new_pr_repo[0]['id'],
-                # 'pr_src_node_id': new_pr_repo[0]['node_id'],
-                'pr_src_node_id': None,
-                'pr_repo_name': new_pr_repo[0]['name'],
-                'pr_repo_full_name': new_pr_repo[0]['full_name'],
-                'pr_repo_private_bool': new_pr_repo[0]['private'],
-                'pr_cntrb_id': cntrb_id,
-                'tool_source': self.tool_source,
-                'tool_version': self.tool_version,
-                'data_source': self.data_source,
-                'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
-            }
+        new_pr_repo = assign_tuple_action(self, [pr_repo], pr_repo_table_values, update_col_map, duplicate_col_map, 
+                table_pkey)[0]
 
-            result = self.db.execute(
-                self.pull_request_repo_table.insert().values(pr_repo)
-            )
+        if new_pr_repo['owner'] and 'login' in new_pr_repo['owner']:
+            cntrb_id = find_id_from_login(self, new_pr_repo['owner']['login'])
+        else:
+            cntrb_id = 1
+
+        pr_repo = {
+            'pr_repo_meta_id': pr_meta_id,
+            'pr_repo_head_or_base': pr_repo_type,
+            'pr_src_repo_id': new_pr_repo['id'],
+            # 'pr_src_node_id': new_pr_repo[0]['node_id'],
+            'pr_src_node_id': None,
+            'pr_repo_name': new_pr_repo['name'],
+            'pr_repo_full_name': new_pr_repo['full_name'],
+            'pr_repo_private_bool': new_pr_repo['private'],
+            'pr_cntrb_id': cntrb_id,
+            'tool_source': self.tool_source,
+            'tool_version': self.tool_version,
+            'data_source': self.data_source
+        }
+
+        if new_pr_repo['flag'] == 'need_insertion':
+            result = self.db.execute(self.pull_request_repo_table.insert().values(pr_repo))
             logging.info(f'Added PR {pr_repo_type} repo {result.inserted_primary_key}')
 
             self.results_counter += 1
 
-        logging.info(
-            f'Finished adding PR {pr_repo_type} Repo data for PR with id {self.pr_id_inc}'
-        )
+            logging.info(f'Finished adding PR {pr_repo_type} Repo data for PR with id {self.pr_id_inc}')
 
     def get_owner_repo(self, github_url):
         split = github_url.split('/')
@@ -742,117 +720,3 @@ class GHPullRequestWorker:
 
         return owner, repo
 
-    def get_table_values(self, cols, tables):
-        table_str = tables[0]
-        del tables[0]
-        for table in tables:
-            table_str += ", " + table
-        for col in cols.keys():
-            colSQL = s.sql.text("""
-                SELECT {} FROM {}
-                """.format(col, table_str))
-            values = pd.read_sql(colSQL, self.db, params={})
-            return values
-
-    def find_id_from_login(self, login):
-        idSQL = s.sql.text("""
-            SELECT cntrb_id FROM contributors WHERE cntrb_login = '{}'
-            """.format(login))
-        rs = pd.read_sql(idSQL, self.db, params={})
-        data_list = [list(row) for row in rs.itertuples(index=False)]
-        try:
-            return data_list[0][0]
-        except:
-            logging.info(f"Contributor '{login}' needs to be added...")
-            cntrb_url = ("https://api.github.com/users/" + login)
-            logging.info("Hitting endpoint: {} ...".format(cntrb_url))
-            r = requests.get(url=cntrb_url, headers=self.headers)
-            update_gh_rate_limit(self, r)
-            contributor = r.json()
-
-            company = None
-            location = None
-            email = None
-            if 'company' in contributor:
-                company = contributor['company']
-            if 'location' in contributor:
-                location = contributor['location']
-            if 'email' in contributor:
-                email = contributor['email']
-
-            # aliasSQL = s.sql.text("""
-            #     SELECT canonical_email
-            #     FROM contributors_aliases
-            #     WHERE alias_email = {}
-            # """.format(contributor['email']))
-            # rs = pd.read_sql(aliasSQL, self.db, params={})
-
-            canonical_email = None#rs.iloc[0]["canonical_email"]
-
-            cntrb = {
-                "cntrb_login": contributor['login'] if 'login' in contributor else None,
-                "cntrb_email": email,
-                "cntrb_company": company,
-                "cntrb_location": location,
-                "cntrb_created_at": contributor['created_at'],
-                "cntrb_canonical": canonical_email,
-                "gh_user_id": contributor['id'],
-                "gh_login": contributor['login'],
-                "gh_url": contributor['url'],
-                "gh_html_url": contributor['html_url'],
-                "gh_node_id": contributor['node_id'],
-                "gh_avatar_url": contributor['avatar_url'],
-                "gh_gravatar_id": contributor['gravatar_id'],
-                "gh_followers_url": contributor['followers_url'],
-                "gh_following_url": contributor['following_url'],
-                "gh_gists_url": contributor['gists_url'],
-                "gh_starred_url": contributor['starred_url'],
-                "gh_subscriptions_url": contributor['subscriptions_url'],
-                "gh_organizations_url": contributor['organizations_url'],
-                "gh_repos_url": contributor['repos_url'],
-                "gh_events_url": contributor['events_url'],
-                "gh_received_events_url": contributor['received_events_url'],
-                "gh_type": contributor['type'],
-                "gh_site_admin": contributor['site_admin'],
-                "tool_source": self.tool_source,
-                "tool_version": self.tool_version,
-                "data_source": self.data_source
-            }
-            result = self.db.execute(self.contributors_table.insert().values(cntrb))
-            logging.info("Primary key inserted into the contributors table: " + str(result.inserted_primary_key))
-            self.results_counter += 1
-            self.cntrb_id_inc = int(result.inserted_primary_key[0])
-
-            logging.info("Inserted contributor: " + contributor['login'])
-
-            return self.find_id_from_login(login)
-
-    def check_duplicates(self, new_data, table_values, key):
-        need_insertion = []
-        for obj in new_data:
-            if type(obj) == dict:
-                # if table_values.isin([obj[key]]).any().any():
-                    # logging.info("Tuple with github's {} key value already exists in our db: {}\n".format(key, str(obj[key])))
-                if not table_values.isin([obj[key]]).any().any():
-                    need_insertion.append(obj)
-        logging.info("[Filtering] Page recieved has {} tuples, while filtering duplicates this was reduced to {} tuples.".format(str(len(new_data)), str(len(need_insertion))))
-        return need_insertion
-
-    def mark_new_records(self, new_data, table_values, key):
-        """Adds a `to_insert` key to all the records in new_data.
-        Sets `to_insert` to `True` for new records and `False` for old records.
-
-        :param new_data: A dict of records
-        :type new_data: dict
-        :param table_values: A dataframe of records from the DB
-        :type table_values: pandas.Dataframe
-        :param key: Key that determines the uniqueness of records in both `new_data` & `table_value`
-        :type key: str
-        """
-        for record in new_data:
-            if type(record) != dict:
-                continue
-            if not table_values.isin([record[key]]).any().any():
-                record['to_insert'] = True
-            else:
-                record['to_insert'] = False
