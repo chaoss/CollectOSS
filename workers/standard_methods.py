@@ -11,7 +11,6 @@ def assign_tuple_action(self, new_data, table_values, update_col_map, duplicate_
     need_insertion_count = 0
     need_update_count = 0
     for i, obj in enumerate(new_data) :
-        logging.info('Checking tuple #{}\n'.format(i))
         if type(obj) != dict:
             logging.info('Moving to next tuple, tuple is not dict: {}'.format(obj))
             continue
@@ -37,8 +36,6 @@ def assign_tuple_action(self, new_data, table_values, update_col_map, duplicate_
 
         # If we need to check the values of the existing tuple to determine if an update is needed
         for augur_col, value_check in value_update_col_map.items():
-            logging.info('Value checking augur col {} of value {} with specified check of {}'.format(
-                augur_col, existing_tuple[augur_col], value_check))
             if existing_tuple[augur_col] != value_check:
                 continue
             logging.info("Found a tuple that needs an update for column: {}\n".format(augur_col)) 
@@ -48,7 +45,6 @@ def assign_tuple_action(self, new_data, table_values, update_col_map, duplicate_
 
         # Now check the existing tuple's values against the response values to determine if an update is needed
         for col in update_col_map.keys():
-            logging.info('Checking augur col {} for update with github col {}'.format(
                 col, update_col_map[col]))
             if update_col_map[col] not in obj:
                 continue
