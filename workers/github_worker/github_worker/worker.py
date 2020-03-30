@@ -212,7 +212,7 @@ class GitHubWorker:
 
         # Contributors are part of this model, and finding all for the repo saves us 
         #   from having to add them as we discover committers in the issue process
-        self.query_contributors(entry_info, repo_id)
+        query_contributors(entry_info, repo_id)
 
         # Extract the owner/repo for the endpoint
         path = urlparse(github_url)
