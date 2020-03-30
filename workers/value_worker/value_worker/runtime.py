@@ -72,6 +72,7 @@ def main(augur_url, host, port, scc_bin):
             "scc_bin": "/home/sean/go/bin/scc"
         })
 
+
     worker_port = worker_info['port'] if 'port' in worker_info else port
 
     while True:
@@ -98,10 +99,7 @@ def main(augur_url, host, port, scc_bin):
             "database": read_config('Database', 'name', 'AUGUR_DB_NAME', 'database'),
             "endpoint": "https://bestpractices.coreinfrastructure.org/projects.json",
             'scc_bin': worker_info['scc_bin'],
-            "display_name": "",
-            "description": "",
-            "required": 1,
-            "type": "string"
+            'repo_directory': read_config('Workers', 'facade_worker', None, None)['repo_directory'],
         }
 
     # Create the worker that will be running on this server with specified config
