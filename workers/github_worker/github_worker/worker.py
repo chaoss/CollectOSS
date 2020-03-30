@@ -268,7 +268,7 @@ class GitHubWorker:
                 "pull_request_id": pr_id,
                 "created_at": issue_dict['created_at'],
                 "issue_title": issue_dict['title'],
-                "issue_body": issue_dict['body'],
+                "issue_body": issue_dict['body'].replace("0x00", "____"),
                 "comment_count": issue_dict['comments'],
                 "updated_at": issue_dict['updated_at'],
                 "closed_at": issue_dict['closed_at'],

@@ -543,17 +543,20 @@ class GHPullRequestWorker:
         table = 'pull_request_meta'
         duplicate_col_map = {'pr_sha': 'sha'}
         update_col_map = {}
+        value_update_col_map = {'pr_src_meta_label': None}
         table_pkey = 'pr_repo_meta_id'
 
         update_keys = list(update_col_map.keys()) if update_col_map else []
+        update_keys += list(value_update_col_map.keys()) if value_update_col_map else []
         cols_query = list(duplicate_col_map.keys()) + update_keys + [table_pkey]
+
         meta_table_values = get_table_values(self, cols_query, [table])
 
         pr_meta_dict = {
             'head': assign_tuple_action(self, [head], meta_table_values, update_col_map, duplicate_col_map, 
-                table_pkey, value_update_col_map={'pr_src_meta_label': None})[0],
+                table_pkey, value_update_col_map=value_update_col_map)[0],
             'base': assign_tuple_action(self, [base], meta_table_values, update_col_map, duplicate_col_map, 
-                table_pkey, value_update_col_map={'pr_src_meta_label': None})[0]
+                table_pkey, value_update_col_map=value_update_col_map)[0]
         }
 
         for pr_side, pr_meta_data in pr_meta_dict.items():
