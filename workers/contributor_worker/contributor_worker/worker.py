@@ -414,7 +414,9 @@ class ContributorWorker:
             AND not exists (SELECT cntrb_email FROM contributors where cntrb_email = cmt_author_email)
             and (cmt_author_date, cmt_author_name) in (
                 select Max(cmt_author_date) as date, cmt_author_name
-                from commits as c where c.cmt_author_email = commits.cmt_author_email
+                from commits as c 
+                where c.cmt_author_email = commits.cmt_author_email
+                and repo_id = :repo_id
                 group by cmt_author_name
                 order by date desc
                 limit 1
@@ -427,7 +429,9 @@ class ContributorWorker:
             AND not exists (SELECT cntrb_email FROM augur_data.contributors where cntrb_email = cmt_committer_email)
             and (cmt_committer_date, cmt_committer_name) in (
                 select Max(cmt_committer_date) as date, cmt_committer_name
-                from augur_data.commits as c where c.cmt_committer_email = commits.cmt_committer_email
+                from augur_data.commits as c 
+                where c.cmt_committer_email = commits.cmt_committer_email
+                and repo_id = :repo_id
                 group by cmt_committer_name
                 order by date desc
                 limit 1
