@@ -42,11 +42,13 @@ Each worker has 3 configuration options that are standard across all workers. Th
 
 The standard options are:
 
-- ``port``, which is the base TCP port the worker will use the communicate with Augur's broker. Defaults to ``50x00``, where ``x`` is between 1 and 8 depending on the worker.
-- ``switch``, a binary flag indicating if the worker should be autostarted with Augur. Defaults to ``0`` (false).
-- ``workers``, which is the number of instances of the worker that Augur should spawn. Defaults to ``1``.
+- ``switch``, a binary flag indicating if the worker should automatically be started with Augur. Defaults to ``0`` (false).
+- ``workers``, which is the number of instances of the worker that Augur should spawn if ``switch`` is set to ``1``. Defaults to ``1``.
+- ``port``, which is the base TCP port the worker will use the communicate with Augur's broker. Defaults to ``50x00``, where ``x`` is between 1 and 8 depending on the worker. If the ``workers`` parameter is > 1, then workers will bind to ``port`` + ``i`` for the ``i``th worker spawned
 
-For your first collection run, we suggest turning on the ``switch`` flag for the ``facade_worker``, the ``github_worker``, the ``pull_request_worker``, the ``repo_info_worker``, and the ``linux_badge_worker``. Once those have collected all data (which could vary in time based on how many repos you're collecting), then we suggest running the ``value_worker`` (if you have it installed) and the ``insight_worker``. This is because the ``value_worker`` depends the source files of the repositories cloned by the ``facade_worker``, and the ``insight_worker`` uses the data from all the other workers to identify anomalies in the data by by performing statistical analysis on the data returned from Augur's metrics API.
+For your first collection run, we suggest turning on the ``switch`` flag for the ``facade_worker``, the ``github_worker``, the ``pull_request_worker``, the ``repo_info_worker``, and the ``linux_badge_worker``. The data collection time can vary greatly, depending on the number of repos you're collecting and what kind of machine you're running on.
+
+Once those have collected all data, we suggest then running the ``value_worker`` (if you have it installed) and the ``insight_worker``. This is because the ``value_worker`` depends the source files of the repositories cloned by the ``facade_worker``, and the ``insight_worker`` uses the data from all the other workers to identify anomalies in the data by by performing statistical analysis on the data returned from Augur's metrics API.
 
 Keeping ``workers`` at 1 should be fine for small collection sets, but if you have a lot of repositories to collect data for, you can raise it. We also suggest double checking that the ports ``50100`` through ``50800`` are free on your machine. For each ``worker`` instance, the worker will find the next lowest available port starting at value of ``port`` (e.g. worker one has ``501000``, worker 2 has ``50101``, worker 3 has ``50102``, etc), so if you're going to use multiple instances you'll need to check those ports as well.
 
@@ -63,8 +65,7 @@ Worker-specific configuration options
 ``insight_worker``
 ::::::::::::::::::
 
-We recommend leaving the defaults in place for the insight worker, but if you want to see other metrics or anomalies for a different time period, you can change them.
-
+We recommend leaving the defaults in place for the insight worker unless you interested in other metrics, or anomalies for a different time period. 
 
 - ``training_days``, which specifies the date range that the ``insight_worker`` should use as its baseline for the statistical comparison. Defaults to ``365``, meaning that the worker will identify metrics that have had anomalies compared to their values over the course of the past year, starting at the current date.
 
