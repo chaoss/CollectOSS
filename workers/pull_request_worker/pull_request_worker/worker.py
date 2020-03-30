@@ -547,7 +547,7 @@ class GHPullRequestWorker:
         table_pkey = 'pr_repo_meta_id'
 
         update_keys = list(update_col_map.keys()) if update_col_map else []
-        update_keys += list(value_update_col_map.keys()) if value_update_col_map else []
+        update_keys += list(value_update_col_map.keys())
         cols_query = list(duplicate_col_map.keys()) + update_keys + [table_pkey]
 
         meta_table_values = get_table_values(self, cols_query, [table])
