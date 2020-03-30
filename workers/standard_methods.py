@@ -45,7 +45,6 @@ def assign_tuple_action(self, new_data, table_values, update_col_map, duplicate_
 
         # Now check the existing tuple's values against the response values to determine if an update is needed
         for col in update_col_map.keys():
-                col, update_col_map[col]))
             if update_col_map[col] not in obj:
                 continue
             if obj[update_col_map[col]] == existing_tuple[col]:
