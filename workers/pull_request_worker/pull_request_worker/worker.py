@@ -322,8 +322,7 @@ class GHPullRequestWorker:
                 'pr_src_author_association': pr_dict['author_association'],
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
-                'data_source': 'GitHub API',
-                'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+                'data_source': 'GitHub API'
             }
 
             if pr_dict['flag'] == 'need_insertion':
@@ -387,8 +386,7 @@ class GHPullRequestWorker:
                 'pr_src_default_bool': label_dict['default'],
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
-                'data_source': self.data_source,
-                'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+                'data_source': self.data_source
             }
 
             result = self.db.execute(self.pull_request_labels_table.insert().values(label))
@@ -435,8 +433,7 @@ class GHPullRequestWorker:
                 'node_url': pr_event_dict['url'],
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
-                'data_source': self.data_source,
-                'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+                'data_source': self.data_source
             }
 
             result = self.db.execute(self.pull_request_events_table.insert().values(pr_event))
@@ -479,8 +476,7 @@ class GHPullRequestWorker:
                 'cntrb_id': cntrb_id,
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
-                'data_source': self.data_source,
-                'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+                'data_source': self.data_source
             }
 
             result = self.db.execute(self.pull_request_reviewers_table.insert().values(reviewer))
@@ -523,8 +519,7 @@ class GHPullRequestWorker:
                 'contrib_id': cntrb_id,
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
-                'data_source': self.data_source,
-                'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+                'data_source': self.data_source
             }
 
             result = self.db.execute(self.pull_request_assignees_table.insert().values(assignee))
@@ -565,8 +560,7 @@ class GHPullRequestWorker:
                 'cntrb_id': find_id_from_login(self, pr_meta_data['user']['login']),
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
-                'data_source': self.data_source,
-                'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+                'data_source': self.data_source
             }
 
             if pr_meta_data['flag'] == 'need_update':
@@ -635,8 +629,7 @@ class GHPullRequestWorker:
                 'cntrb_id': cntrb_id,
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
-                'data_source': self.data_source,
-                'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+                'data_source': self.data_source
             }
 
             result = self.db.execute(self.message_table.insert().values(msg))
@@ -650,8 +643,7 @@ class GHPullRequestWorker:
                 'pr_message_ref_src_node_id': pr_msg_dict['node_id'],
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
-                'data_source': self.data_source,
-                'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+                'data_source': self.data_source
             }
 
             result = self.db.execute(
@@ -692,8 +684,7 @@ class GHPullRequestWorker:
                 'pr_cntrb_id': cntrb_id,
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
-                'data_source': self.data_source,
-                'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+                'data_source': self.data_source
             }
 
             result = self.db.execute(
