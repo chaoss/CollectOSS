@@ -93,6 +93,14 @@ default_config = {
                     ],
                     "model": "badges",
                     "repo_group_id": 0
+                },
+                {
+                    "delay": 1000000,
+                    "given": [
+                        "git_url"
+                    ],
+                    "model": "value",
+                    "repo_group_id": 0
                 }
             ]
         },
