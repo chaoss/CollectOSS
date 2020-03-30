@@ -263,7 +263,7 @@ class GitHubWorker:
             # Begin on the actual issue...
             issue = {
                 "repo_id": issue_dict['repo_id'],
-                "reporter_id": find_id_from_login(issue_dict['user']['login']),
+                "reporter_id": find_id_from_login(self, issue_dict['user']['login']),
                 "pull_request": pr_id,
                 "pull_request_id": pr_id,
                 "created_at": issue_dict['created_at'],
@@ -321,7 +321,7 @@ class GitHubWorker:
                         continue
                     assignee = {
                         "issue_id": self.issue_id_inc,
-                        "cntrb_id": find_id_from_login(assignee_dict['login']),
+                        "cntrb_id": find_id_from_login(self, assignee_dict['login']),
                         "tool_source": self.tool_source,
                         "tool_version": self.tool_version,
                         "data_source": self.data_source,
@@ -382,7 +382,7 @@ class GitHubWorker:
 
             for comment in issue_comments:
                 try:
-                    commenter_cntrb_id = find_id_from_login(comment['user']['login'])
+                    commenter_cntrb_id = find_id_from_login(self, comment['user']['login'])
                 except:
                     commenter_cntrb_id = None
                 issue_comment = {
@@ -487,7 +487,7 @@ class GitHubWorker:
                         continue
                     if not event['actor']:
                         continue
-                    cntrb_id = find_id_from_login(event['actor']['login'])
+                    cntrb_id = find_id_from_login(self, event['actor']['login'])
                     if cntrb_id is not None:
                         break
                         
@@ -553,7 +553,7 @@ class GitHubWorker:
 
             for event in issue_events:
                 if event['actor'] is not None:
-                    event['cntrb_id'] = find_id_from_login(event['actor']['login'])
+                    event['cntrb_id'] = find_id_from_login(self, event['actor']['login'])
                     if event['cntrb_id'] is None:
                         logging.info("SOMETHING WRONG WITH FINDING ID FROM LOGIN")
                         continue
