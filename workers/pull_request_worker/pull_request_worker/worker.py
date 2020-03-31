@@ -274,7 +274,7 @@ class GHPullRequestWorker:
         #list to hold pull requests needing insertion
         prs = paginate(self, url, duplicate_col_map, update_col_map, table, table_pkey, 
             where_clause='WHERE repo_id = {}'.format(repo_id),
-            value_update_col_map={'pr_augur_contributor_id': None})
+            value_update_col_map={'pr_augur_contributor_id': float('nan')})
 
         # Discover and remove duplicates before we start inserting
         logging.info("Count of pull requests needing update or insertion: " + str(len(prs)) + "\n")

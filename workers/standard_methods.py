@@ -1,5 +1,5 @@
 """ Helper methods constant across all workers """
-import requests, datetime, time, traceback, json, os, sys
+import requests, datetime, time, traceback, json, os, sys, math
 import sqlalchemy as s
 import pandas as pd
 import os
@@ -10,7 +10,7 @@ def assign_tuple_action(self, new_data, table_values, update_col_map, duplicate_
     """ map objects => { *our db col* : *gh json key*} """
     need_insertion_count = 0
     need_update_count = 0
-    for i, obj in enumerate(new_data) :
+    for i, obj in enumerate(new_data):
         if type(obj) != dict:
             logging.info('Moving to next tuple, tuple is not dict: {}'.format(obj))
             continue
@@ -36,12 +36,18 @@ def assign_tuple_action(self, new_data, table_values, update_col_map, duplicate_
 
         # If we need to check the values of the existing tuple to determine if an update is needed
         for augur_col, value_check in value_update_col_map.items():
-            if existing_tuple[augur_col] != value_check:
+            not_nan_check = not (math.isnan(value_check) and math.isnan(existing_tuple[augur_col])) if value_check is not None else True
+            if existing_tuple[augur_col] != value_check and not_nan_check:
                 continue
             logging.info("Found a tuple that needs an update for column: {}\n".format(augur_col)) 
             obj['flag'] = 'need_update'
             obj['pkey'] = existing_tuple[table_pkey]
             need_update_count += 1
+
+        if obj['flag'] == 'need_update':
+            logging.info('Already determined that current tuple needs update, skipping checking further updates. '
+                'Moving to next tuple.\n')
+            continue
 
         # Now check the existing tuple's values against the response values to determine if an update is needed
         for col in update_col_map.keys():
@@ -271,9 +277,16 @@ def paginate(self, url, duplicate_col_map, update_col_map, table, table_pkey, wh
                 logging.info("J was string: {}\n".format(j))
                 if '<!DOCTYPE html>' in j:
                     logging.info("HTML was returned, trying again...\n")
+                elif len(j) == 0:
+                    logging.info("Empty string, trying again...\n")
                 else:
-                    j = json.loads(j)
-                    success = True
+                    try:
+                        j = json.loads(j)
+                        success = True
+                        break
+                    except:
+                        pass
+            num_attempts += 1
         if not success:
             break
 

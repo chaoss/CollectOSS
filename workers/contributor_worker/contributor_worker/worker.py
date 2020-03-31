@@ -414,7 +414,9 @@ class ContributorWorker:
             AND not exists (SELECT cntrb_email FROM contributors where cntrb_email = cmt_author_email)
             and (cmt_author_date, cmt_author_name) in (
                 select Max(cmt_author_date) as date, cmt_author_name
-                from commits as c where c.cmt_author_email = commits.cmt_author_email
+                from commits as c 
+                where c.cmt_author_email = commits.cmt_author_email
+                and repo_id = :repo_id
                 group by cmt_author_name
                 order by date desc
                 limit 1
@@ -427,7 +429,9 @@ class ContributorWorker:
             AND not exists (SELECT cntrb_email FROM augur_data.contributors where cntrb_email = cmt_committer_email)
             and (cmt_committer_date, cmt_committer_name) in (
                 select Max(cmt_committer_date) as date, cmt_committer_name
-                from augur_data.commits as c where c.cmt_committer_email = commits.cmt_committer_email
+                from augur_data.commits as c 
+                where c.cmt_committer_email = commits.cmt_committer_email
+                and repo_id = :repo_id
                 group by cmt_committer_name
                 order by date desc
                 limit 1
@@ -494,13 +498,18 @@ class ContributorWorker:
             """ Insert alias tuple into the contributor table """
 
             # Prepare tuple for insertion to contributor table (build it off of the tuple queried)
-            cntrb = tuple
+            cntrb = tuple.copy()
             try:
-                created_at = datetime.fromtimestamp(cntrb['cntrb_created_at']/1000)
+                cntrb['cntrb_created_at'] = datetime.fromtimestamp(cntrb['cntrb_created_at']/1000)
             except:
-                created_at = None
-            cntrb['cntrb_created_at'] = created_at
-            cntrb['cntrb_email'] = tuple['commit_email']
+                cntrb['cntrb_created_at'] = None
+
+            try:
+                cntrb['cntrb_last_used'] = datetime.fromtimestamp(cntrb['cntrb_last_used']/1000)
+            except:
+                cntrb['cntrb_last_used'] = None
+
+            cntrb['cntrb_email'] = cntrb['commit_email']
             cntrb["tool_source"] = self.tool_source
             cntrb["tool_version"] = self.tool_version
             cntrb["data_source"] = self.data_source
