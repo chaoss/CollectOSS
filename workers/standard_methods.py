@@ -271,9 +271,16 @@ def paginate(self, url, duplicate_col_map, update_col_map, table, table_pkey, wh
                 logging.info("J was string: {}\n".format(j))
                 if '<!DOCTYPE html>' in j:
                     logging.info("HTML was returned, trying again...\n")
+                elif len(j) == 0:
+                    logging.info("Empty string, trying again...\n")
                 else:
-                    j = json.loads(j)
-                    success = True
+                    try:
+                        j = json.loads(j)
+                        success = True
+                        break
+                    except:
+                        pass
+            num_attempts += 1
         if not success:
             break
 
