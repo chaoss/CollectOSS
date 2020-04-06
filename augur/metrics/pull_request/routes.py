@@ -414,3 +414,234 @@ def create_pull_request_routes(server):
                     ]
     """
     server.addRepoGroupMetric(metrics.pull_requests_closed_no_merge, 'pull-requests-closed-no-merge')
+
+    """
+    @api {get} /repos/:repo_id/pull-request-time-to-close Pull Request time to close(Repo)
+    @apiName pull-request-time-to-close
+    @apiGroup Experimental
+    @apiDescription Average time to close pull requests with merged_status and the time frame
+    @apiParam {string} repo_id Repository ID.
+    @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string= day, week, month, year} [group_by= month] Group By specification. E.g. values: 'day', 'week', 'month', or 'year'
+    @apiParam {string= hours, days} [time_unit = hours] Unit of Time Specification.  E.g. values: 'hours', or 'days'
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "date": "2019-01-01T00:00:00.000Z",
+                            "pr_count": 3
+                        }
+                    ]
+    """
+    server.addRepoMetric(metrics.pull_request_time_to_close, 'pull-request-time-to-close')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/pull-request-time-to-close Pull Request time to close(Repo)
+    @apiName pull-request-time-to-close
+    @apiGroup Experimental
+    @apiDescription Average time to close pull requests with merged_status and the time frame
+    @apiParam {string} repo_group_id Repository Group ID.
+    @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "date": "2019-01-01T00:00:00.000Z",
+                            "pr_count": 3
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(metrics.pull_request_time_to_close, 'pull-request-time-to-close')
+
+    """
+    @api {get} /repos/:repo_id/pull-request-time-between-responses Pull Request time between responses(Repo)
+    @apiName pull-request-time-between-responses
+    @apiGroup Experimental
+    @apiDescription Avegage time between responeses with merged_status and the time frame
+    @apiParam {string} repo_id Repository ID.
+    @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string= day, week, month, year} [group_by= month] Group By specification. E.g. values: 'day', 'week', 'month', or 'year'
+    @apiParam {string= minutes, hours} [time_unit = hours] Unit of Time Specification.  E.g. values: 'minutes', or 'hours'
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "date": "2019-01-01T00:00:00.000Z",
+                            "pr_count": 3
+                        }
+                    ]
+    """
+    server.addRepoMetric(metrics.pull_request_time_between_responses, 'pull-request-time-between-responses')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/pull-request-time-bewteen-responseses Pull Request time between responses(Repo)
+    @apiName pull-request-time-between-responses
+    @apiGroup Experimental
+    @apiDescription Avegage time between responeses with merged_status and the time frame
+    @apiParam {string} repo_id Repository ID.
+    @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string= day, week, month, year} [group_by= month] Group By specification. E.g. values: 'day', 'week', 'month', or 'year'
+    @apiParam {string= hours, days} [time_unit = hours] Unit of Time Specification.  E.g. values: 'hours', or 'days'
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "date": "2019-01-01T00:00:00.000Z",
+                            "pr_count": 3
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(metrics.pull_request_time_between_responses, 'pull-request-time-between-responses')
+
+    """
+    @api {get} /repos/:repo_id/pull_request_average_commit_counts Pull Request average commit counts(Repo)
+    @apiName pull-request-average-commit-counts
+    @apiGroup Experimental
+    @apiDescription Average commits per pull request, with merged status and time frame
+    @apiParam {string} repo_id Repository ID.
+    @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string= day, week, month, year} [group_by= month] Group By specification. E.g. values: 'day', 'week', 'month', or 'year'
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "date": "2019-01-01T00:00:00.000Z",
+                            "pr_count": 3
+                        }
+                    ]
+    """
+    server.addRepoMetric(metrics.pull_request_average_commit_counts, 'pull-request-average-commit-counts')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/pull-request-average-commit-counts Pull Request average commit counts(Repo)
+    @apiName pull-request-average-commit-counts
+    @apiGroup Experimental
+    @apiDescription Average commits per pull request, with merged status and time frame
+    @apiParam {string} repo_id Repository ID.
+    @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string= day, week, month, year} [group_by= month] Group By specification. E.g. values: 'day', 'week', 'month', or 'year'
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "date": "2019-01-01T00:00:00.000Z",
+                            "pr_count": 3
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(metrics.pull_request_average_commit_counts, 'pull-request-average-commit-counts')
+
+    """
+    @api {get} /repos/:repo_id/pull-request-average-metric-counts Pull Request average metric counts(Repo)
+    @apiName pull-request-average-metric-counts
+    @apiGroup Experimental
+    @apiDescription Average of several metric counts with merged status and time frame
+    @apiParam {string} repo_id Repository ID.
+    @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string= day, week, month, year} [group_by= month] Group By specification. E.g. values: 'day', 'week', 'month', or 'year'
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "date": "2019-01-01T00:00:00.000Z",
+                            "pr_count": 3
+                        }
+                    ]
+    """
+    server.addRepoMetric(metrics.pull_request_average_metric_counts, 'pull-request-average-metric-counts')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/pull-request-average-metric-counts Pull Request average metric counts(Repo)
+    @apiName pull-request-average-metric-counts
+    @apiGroup Experimental
+    @apiDescription Average of several metric counts with merged status and time frame
+    @apiParam {string} repo_id Repository ID.
+    @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string= day, week, month, year} [group_by= month] Group By specification. E.g. values: 'day', 'week', 'month', or 'year'
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "date": "2019-01-01T00:00:00.000Z",
+                            "pr_count": 3
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(metrics.pull_request_average_metric_counts, 'pull-request-average-metric-counts')
+
+    """
+    @api {get} /repos/:repo_id/pull-request-merged-status-counts Pull Request merged status counts(Repo)
+    @apiName pull-request-merged-status-counts
+    @apiGroup Experimental
+    @apiDescription Merged and Rejected Counts, along with the total pull request count, and time frame
+    @apiParam {string} repo_id Repository ID.
+    @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string= day, week, month, year} [group_by= month] Group By specification. E.g. values: 'day', 'week', 'month', or 'year'
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "date": "2019-01-01T00:00:00.000Z",
+                            "pr_count": 3
+                        }
+                    ]
+    """
+    server.addRepoMetric(metrics.pull_request_merged_status_counts, 'pull-request-merged-status-counts')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/pull-request-merged-status-counts Pull Request merged status counts(Repo)
+    @apiName pull-request-merged-status-counts
+    @apiGroup Experimental
+    @apiDescription Merged and Rejected Counts, along with the total pull request count, and time frame
+    @apiParam {string} repo_id Repository ID.
+    @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string= day, week, month, year} [group_by= month] Group By specification. E.g. values: 'day', 'week', 'month', or 'year'
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "date": "2019-01-01T00:00:00.000Z",
+                            "pr_count": 3
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(metrics.pull_request_merged_status_counts, 'pull-request-merged-status-counts')
+
+    """
+    @api {get} /repos/:repo_id/pull-request-time-to-responses-and-close Pull Request time to responses and close(Repo)
+    @apiName pull-request-time-to-responses-and-close
+    @apiGroup Experimental
+    @apiDescription Merged and Rejected Counts, along with the total pull request count, and time frame
+    @apiParam {string} repo_id Repository ID.
+    @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string= day, week, month, year} [group_by= month] Group By specification. E.g. values: 'day', 'week', 'month', or 'year'
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "date": "2019-01-01T00:00:00.000Z",
+                            "pr_count": 3
+                        }
+                    ]
+    """
+    server.addRepoMetric(metrics.pull_request_time_to_responses_and_close, 'pull-request-time-to-responses-and-close')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/pull-request-time-to-responses-and-close Pull Request time to responses and close(Repo)
+    @apiName pull-request-time-to-responses-and-close
+    @apiGroup Experimental
+    @apiDescription Merged and Rejected Counts, along with the total pull request count, and time frame
+    @apiParam {string} repo_id Repository ID.
+    @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string= day, week, month, year} [group_by= month] Group By specification. E.g. values: 'day', 'week', 'month', or 'year'
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "date": "2019-01-01T00:00:00.000Z",
+                            "pr_count": 3
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(metrics.pull_request_time_to_responses_and_close, 'pull-request-time-to-responses-and-close')
+
