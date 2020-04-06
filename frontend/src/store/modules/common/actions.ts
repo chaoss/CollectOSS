@@ -355,12 +355,29 @@ export default {
                 repos
             }),
         })
-            .then(res => res.json())
-            .then(res => {
-                console.log(res);
-            });
+        .then(res => res.json())
+        .then(res => {
+            console.log(res);
+        });
      
         // let response = await client.update(params).promise();
         // console.log(response);
+    },
+    async slackLogin(code: any) {
+        fetch('http://localhost:5000/auggie/slack_login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                code,
+            }),
+        })
+        .then(res => res.json())
+        .then(res => {
+            console.log(res);
+        });
     }
+
+
 };

@@ -252,11 +252,13 @@ import Component from 'vue-class-component';
 import Vue from 'vue';
 import SlackSettingSync from "@/AugurAPI";
 
+
 @Component({
   methods: {
     ...mapActions('common',[
       'getAuggieUser',
-      'updateTracking'
+      'updateTracking',
+      'slackLogin'
     ]),
     getUser: async function(email, teamId) {
       this.getAuggieUser(email, teamId);
@@ -269,7 +271,14 @@ import SlackSettingSync from "@/AugurAPI";
     },
     handleSlackToken: async function(code) {
       // Should be triggered when user arrives with 'code' paramater from Slack (post sign-in)
+      this.slackLogin(code);
 
+    },
+    
+  },
+  beforeMount() {
+    if (this.$route.query.code) {
+      this.handleSlackToken(this.$route.query.code);
     }
   },
   computed: {

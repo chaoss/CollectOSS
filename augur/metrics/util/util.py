@@ -11,6 +11,8 @@ import boto3
 import json
 from boto3.dynamodb.conditions import Key, Attr
 import os
+import requests
+import slack
 
 
 @annotate(tag='repo-groups')
@@ -421,6 +423,26 @@ def update_tracking(metric, body):
     }
 
     return filtered_values
+
+
+@annotate(tag='slack_login')
+def slack_login(metric, body):
+    print("slack_login")
+    r = requests.get(url=f'https://slack.com/api/oauth.access?code={body["code"]}&client_id={os.environ["AUGGIE_CLIENT_ID"]}&client_secret={os.environ["AUGGIE_CLIENT_SECRET"]}')
+    data = r.json()
+
+    token = data["access_token"]
+    team_id = data["team_id"]
+    client = slack.WebClient(token=token)
+
+    user_response = client.users.identity()
+
+    email = user_response["user"]["email"]
+
+    return json.dumps({
+        'team_id': team_id,
+        'email': email
+    })
 
 def create_util_metrics(metrics):
     add_metrics(metrics, __name__)
