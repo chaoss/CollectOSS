@@ -21,7 +21,10 @@ import os
 import sys
 import sphinx_rtd_theme
 
-exec(open("../../metadata.py").read())
+here = os.path.abspath(os.path.dirname(__file__))
+
+exec(open(os.path.join(here, "../../metadata.py")).read())
+
 
 sys.path.insert(0, os.path.abspath('../../../augur'))
 
@@ -59,9 +62,9 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = 'Augur'
-copyright = 'CHAOSS & Augurlabs 2019'
-author = 'Carter Landis, Sean Goggins, Gabe Heim, and Derek Howard'
+project = __name__
+copyright = __copyright__
+author = 'Carter Landis'
 
 
 
