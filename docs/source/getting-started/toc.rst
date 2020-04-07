@@ -21,5 +21,4 @@ If you want to get Augur up and running locally just to test it out, we have `Do
    database
    installation
    collecting-data
-   configuration-file-reference
    command-line-interface/toc
