@@ -1,13 +1,19 @@
 <template>
   <div id="Repo">
       <p>{{ name }} ({{ group }})</p>
+      <aug-checkbox />
   </div>
 </template>
 
 <script>
+import AugCheckbox from "./BaseComponents/AugCheckbox.vue";
+
 export default {
     name: "Repo", 
-    props: ["name", "group", "id", "deletable"]
+    props: ["name", "group", "id", "deletable"], 
+    components: {
+        AugCheckbox
+    }
 }
 </script>
 
