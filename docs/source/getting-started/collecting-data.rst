@@ -44,7 +44,7 @@ The standard options are:
 
 - ``switch``, a binary flag indicating if the worker should automatically be started with Augur. Defaults to ``0`` (false).
 - ``workers``, which is the number of instances of the worker that Augur should spawn if ``switch`` is set to ``1``. Defaults to ``1``.
-- ``port``, which is the base TCP port the worker will use the communicate with Augur's broker. Defaults to ``50x00``, where ``x`` is between 1 and 8 depending on the worker. If the ``workers`` parameter is > 1, then workers will bind to ``port`` + ``i`` for the ``i``th worker spawned
+- ``port``, which is the base TCP port the worker will use the communicate with Augur's broker. Defaults to ``50x00``, where ``x`` is between 1 and 8 depending on the worker. If the ``workers`` parameter is > 1, then workers will bind to ``port`` + ``i`` for the 'i' th worker spawned
 
 For your first collection run, we suggest turning on the ``switch`` flag for the ``facade_worker``, the ``github_worker``, the ``pull_request_worker``, the ``repo_info_worker``, and the ``linux_badge_worker``. The data collection time can vary greatly, depending on the number of repos you're collecting and what kind of machine you're running on.
 
