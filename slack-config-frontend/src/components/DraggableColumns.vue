@@ -168,6 +168,10 @@ export default {
   border-radius: 2rem;
 }
 
+h3 {
+  margin-top: 0;
+}
+
 .column {
   padding: 1rem;
   width: 40%;

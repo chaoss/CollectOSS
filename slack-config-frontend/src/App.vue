@@ -3,7 +3,6 @@
     <h1>Auggie Configuration</h1>
     <slack-login @submit="setConnectionInfo" v-if="!loggedIn" />
     <slack-config v-if="loggedIn" />
-    <h2 v-if="loggedIn">logged in</h2>
   </div>
 </template>
 

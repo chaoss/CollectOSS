@@ -1,16 +1,19 @@
 <template>
   <div id="SlackConfig">
-      <draggable-columns />
+      <draggable-columns ref="repoColumns"/>
+        <tracking-options @save="save"/>
   </div>
 </template>
 
 <script>
 import DraggableColumns from "./DraggableColumns.vue";
+import TrackingOptions from "./TrackingOptions.vue";
 
 export default {
     name: "SlackConfig", 
     components: {
-        DraggableColumns
+        DraggableColumns, 
+        TrackingOptions
     }, 
     data() {
         return {
@@ -31,6 +34,15 @@ export default {
                 }
             ]
         }
+    }, 
+    methods: {
+        save(trackingOptions) {
+            let requestObject = {
+                trackedRepos: this.$refs.repoColumns.trackedRepos, 
+                trackingOptions: trackingOptions
+            }
+            console.log(requestObject);
+        }
     }
 }
 </script>
@@ -38,12 +50,8 @@ export default {
 <style scoped>
 #SlackConfig {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     justify-content: space-between;
     flex-wrap: wrap;
-}
-
-.draggable-column {
-    border: 1px solid grey;
 }
 </style>

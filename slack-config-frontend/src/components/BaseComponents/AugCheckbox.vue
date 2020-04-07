@@ -24,7 +24,13 @@ export default {
 <style>
 #AugCheckbox {
     border: 1px solid var(--grey);
-    padding: .1rem .2rem;
+    max-width: 1rem;
+    max-height: 1rem;
+    padding: .2rem;
+}
+
+#AugCheckbox:hover {
+    cursor: pointer;
 }
 
 i {
