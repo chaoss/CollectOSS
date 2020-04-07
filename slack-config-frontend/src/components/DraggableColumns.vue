@@ -18,7 +18,8 @@
           :group="repo.repoGroup"
           :key="repo.repoName + repo.repoGroup"
           v-show="hostSearchFilter(repo.repoName + repo.repoGroup)"
-          :deletable="true"
+          :deletable="false"
+          :checkable="true"
         />
       </draggable>
     </div>
@@ -41,6 +42,8 @@
           :group="repo.repoGroup"
           :key="repo.repoName + repo.repoGroup"
           v-show="trackedSearchFilter(repo.repoName + repo.repoGroup)"
+          :checkable="false"
+          :deletable="true"
         />
       </draggable>
     </div>
