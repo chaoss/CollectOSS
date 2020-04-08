@@ -160,13 +160,6 @@ def create_schema(ctx):
     check_pgpass_credentials(app.config)
     run_psql_command_in_database(app, '-f', 'schema/create_schema.sql')
 
-@cli.command('load-data', short_help="Load sample data into the configured database")
-@click.pass_context
-def load_data(ctx):
-    app = ctx.obj
-    check_pgpass_credentials(app.config)
-    run_psql_command_in_database(app, '-f', 'schema/sample_data/load_sample_data.sql')
-
 @cli.command('check-pgpass', short_help="Check the ~/.pgpass file for Augur's database credentials")
 @click.pass_context
 def load_data(ctx):
