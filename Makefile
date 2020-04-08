@@ -1,5 +1,4 @@
 SERVE_COMMAND=augur run
-ENABLE_HOUSEKEEPER=--enable-housekeeper
 EDITOR?="vi"
 AUGUR_PIP?='pip'
 AUGUR_PYTHON?='python'
