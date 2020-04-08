@@ -127,7 +127,7 @@ compose-run:
 
 compose-run-database:
 	@ echo "**************************************************************************"
-	@ echo "Make sure there are no database credentials in augur_env.txt!"
+	@ echo "Make sure there are no database credentials in docker_env.txt!"
 	@ echo "**************************************************************************"
 	@ echo
 	@ docker-compose -f docker-compose.yml -f database-compose.yml up --build
@@ -145,7 +145,7 @@ docker-build-database:
 
 
 docker-run-backend:
-	@ docker run -d -p 5000:5000 --name augur_backend --env-file augur_env.txt augurlabs/augur:backend
+	@ docker run -d -p 5000:5000 --name augur_backend --env-file docker_env.txt augurlabs/augur:backend
 
 docker-run-frontend:
 	@ docker run -d -p 8080:8080 --name augur_frontend augurlabs/augur:frontend

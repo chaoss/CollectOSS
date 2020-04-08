@@ -26,7 +26,7 @@ def export_env(ctx):
     export_file = open(os.getenv('AUGUR_EXPORT_FILE', 'augur_export_env.sh'), 'w+')
     export_file.write('#!/bin/bash')
     export_file.write('\n')
-    env_file = open(os.getenv('AUGUR_ENV_FILE', 'augur_env.txt'), 'w+')
+    env_file = open(os.getenv('AUGUR_ENV_FILE', 'docker_env.txt'), 'w+')
 
     for env_var in app.env_config.items():
         export_file.write('export ' + env_var[0] + '="' + str(env_var[1]) + '"\n')
