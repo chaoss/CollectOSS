@@ -566,7 +566,8 @@ class GHPullRequestWorker:
                 'pr_src_meta_label': pr_meta_data['label'],
                 'pr_src_meta_ref': pr_meta_data['ref'],
                 'pr_sha': pr_meta_data['sha'],
-                'cntrb_id': find_id_from_login(self, pr_meta_data['user']['login']),
+                'cntrb_id': find_id_from_login(self, pr_meta_data['user']['login']) if pr_meta_data['user'] \
+                    and 'login' in pr_meta_data['user'],
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
                 'data_source': self.data_source
