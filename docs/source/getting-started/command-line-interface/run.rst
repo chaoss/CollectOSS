@@ -1,12 +1,27 @@
 ============
-Run Commands
+Run Command
 ============
 
 ``augur run``
 =============
 
-**THIS SECTION IS UNDER CONSTRUCTION.**
+The ``augur run`` command is used to start and stop augur processes. (LOOK AT THIS)
 
-If you have questions or would like to help please open an issue on GitHub_.
+``augur run``
+-------------
+The ``augur run`` command is used to (insert blurb here).
 
-.. _GitHub: https://github.com/chaoss/augur/issues
+Example\:
+
+.. code:: bash
+
+  # to (insert what augur run does here)
+  augur run 
+
+  Date Time User's-Terminal Info Cleaning up Augur processes
+  Date Time User's-Terminal Info Booting broker and its manager 
+  ...
+  Date Time User's-Terminal Info Housekeeper has finished booting
+  Date Time User's-Terminal Info Shutting down housekeeper updates
+  Date Time User's-Terminal Info Killing main augur process 
+
