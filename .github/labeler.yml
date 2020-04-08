@@ -1,41 +1,41 @@
 database:
-  - ./schema/*
-  - ./schema/**/*
+  - schema/*
+  - schema/**/*
 
 backend:
-  - ./augur/*
-  - ./augur/**/*
+  - augur/*
+  - augur/**/*
 
 frontend:
-  - ./frontend/src/*
-  - ./frontend/src/**/*
+  - frontend/src/*
+  - frontend/src/**/*
 
 installation:
-  - ./scripts/install/*
-  - ./scripts/install/**/*
+  - scripts/install/*
+  - scripts/install/**/*
 
 CLI:
-  - ./augur/cli/*
-  - ./augur/cli/**/*
+  - augur/cli/*
+  - augur/cli/**/*
 
 metric:
-  - ./augur/metrics/*
-  - ./augur/metrics/**/*
+  - augur/metrics/*
+  - augur/metrics/**/*
 
 testing:
-  - ./test/*
-  - ./test/**/*
-  - ./tox.ini
+  - test/*
+  - test/**/*
+  - tox.ini
 
 workers:
-  - ./workers/*
-  - ./workers/**/*
+  - workers/*
+  - workers/**/*
 
 docker:
-  - ./util/docker/*
-  - ./util/docker/**/*
+  - util/docker/*
+  - util/docker/**/*
   - .dockerignore
 
 documentation:
-  - ./docs/source/*
-  - ./docs/source/**/*
+  - docs/source/*
+  - docs/source/**/*
