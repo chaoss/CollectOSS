@@ -13,10 +13,13 @@ from sqlalchemy import exc
 def cli():
     pass
 
-@cli.command('add-repos', short_help="Add repositories to Augur's database")
+@cli.command('add-repos')
 @click.argument('filename', type=click.Path(exists=True))
 @click.pass_context
 def add_repos(ctx, filename):
+    """
+    Add repositories to Augur's database
+    """
     app = ctx.obj
 
     db = get_db_connection(app)
@@ -45,9 +48,12 @@ def add_repos(ctx, filename):
                 # Since there's no rows to fetch after a successful insert, this is how we know it worked.
                 # I know it's weird
 
-@cli.command('get-repo-groups', short_help="List all repo groups and their associated IDs")
+@cli.command('get-repo-groups')
 @click.pass_context
 def get_repo_groups(ctx):
+    """
+    List all repo groups and their associated IDs
+    """
     app = ctx.obj
 
     db = get_db_connection(app)
@@ -57,10 +63,13 @@ def get_repo_groups(ctx):
 
     return df
 
-@cli.command('add-repo-groups', short_help="Create new repo groups in Augur's database")
+@cli.command('add-repo-groups')
 @click.argument('filename', type=click.Path(exists=True))
 @click.pass_context
 def add_repo_groups(ctx, filename):
+    """
+    Create new repo groups in Augur's database
+    """
     app = ctx.obj
 
     db = get_db_connection(app)
@@ -88,10 +97,13 @@ def add_repo_groups(ctx, filename):
                 # Since there's no rows to fetch after a successful insert, this is how we know it worked.
                 # I know it's weird, sue me (jk please don't)
 
-@cli.command('update-repo-directory', short_help="Update Facade worker repo cloning directory")
+@cli.command('update-repo-directory')
 @click.argument('repo_directory')
 @click.pass_context
 def update_repo_directory(ctx, repo_directory):
+    """
+    Update Facade worker repo cloning directory
+    """
     app = ctx.obj
 
     db = get_db_connection(app)
@@ -118,14 +130,20 @@ def get_db_version(app):
 
     return int(db.execute(db_version_sql).fetchone()[2])
 
-@cli.command('print-db-version', short_help="Get the version of the configured database")
+@cli.command('print-db-version')
 @click.pass_context
 def print_db_version(ctx):
+    """
+    Get the version of the configured database
+    """
     print(f"Augur DB version: {get_db_version(ctx.obj)}")
 
-@cli.command('upgrade-db-version', short_help="Upgrade the configured database to the latest version")
+@cli.command('upgrade-db-version')
 @click.pass_context
 def upgrade_db_version(ctx):
+    """
+    Upgrade the configured database to the latest version
+    """
     current_db_version = get_db_version(ctx.obj)
 
     update_scripts_filenames = []
@@ -153,9 +171,12 @@ def upgrade_db_version(ctx):
             run_psql_command_in_database(ctx.obj, '-f', f"schema/generate/{script_location}")
             current_db_version += 1
 
-@cli.command('create-schema', short_help="Create schema in the configured database")
+@cli.command('create-schema')
 @click.pass_context
 def create_schema(ctx):
+    """
+    Create schema in the configured database
+    """
     app = ctx.obj
     check_pgpass_credentials(app.config)
     run_psql_command_in_database(app, '-f', 'schema/create_schema.sql')
@@ -166,7 +187,7 @@ def load_data(ctx):
     app = ctx.obj
     check_pgpass_credentials(app.config)
 
-@cli.command('init-database', short_help="Create database on the configured port")
+@cli.command('init-database')
 @click.option('--default-db-name', default='postgres')
 @click.option('--default-user', default='postgres')
 @click.option('--default-password', default='postgres')
@@ -177,6 +198,9 @@ def load_data(ctx):
 @click.option('--port', default='5432')
 @click.pass_context
 def init_database(ctx, default_db_name, default_user, default_password, target_db_name, target_user, target_password, host, port):
+    """
+    Create database with the given credentials using the given maintenance database 
+    """
     app = ctx.obj
     config = {
         'Database': {

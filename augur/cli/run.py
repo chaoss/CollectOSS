@@ -17,11 +17,14 @@ from augur.server import Server
 from augur.cli.util import kill_processes
 import time
 
-@click.command('run')
-@click.option('--disable-housekeeper', is_flag=True, default=False)
-@click.option('--skip-cleanup', is_flag=True, default=False)
+@click.command("run")
+@click.option("--disable-housekeeper", is_flag=True, default=False, help="Turns off the housekeeper")
+@click.option("--skip-cleanup", is_flag=True, default=False, help="Disables the old process cleanup that runs before Augur starts")
 @click.pass_context
 def cli(ctx, disable_housekeeper, skip_cleanup):
+    """
+    Start Augur's backend server
+    """
     if not skip_cleanup:
         logger.info("Cleaning up old Augur processes. Just a moment please...")
         ctx.invoke(kill_processes)

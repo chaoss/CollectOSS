@@ -175,7 +175,7 @@ default_config = {
 def cli():
     pass
 
-@cli.command('generate', short_help='Generate an augur.config.json')
+@cli.command('generate')
 @click.option('--db_name', help="Database name for your data collection database", envvar=ENVVAR_PREFIX + 'DB_NAME')
 @click.option('--db_host', help="Host for your data collection database", envvar=ENVVAR_PREFIX + 'DB_HOST')
 @click.option('--db_user', help="User for your data collection database", envvar=ENVVAR_PREFIX + 'DB_USER')
@@ -185,6 +185,9 @@ def cli():
 @click.option('--facade_repo_directory', help="Directory on the database server where Facade should clone repos", envvar=ENVVAR_PREFIX + 'FACADE_REPO_DIRECTORY')
 @click.option('--rc-config-file', help="File containing existing config whose values will be used as the defaults", type=click.Path(exists=True))
 def generate(db_name, db_host, db_user, db_port, db_password, github_api_key, facade_repo_directory, rc_config_file):
+    """
+    Generate an augur.config.json
+    """
 
     config = default_config
     rc_config = None
