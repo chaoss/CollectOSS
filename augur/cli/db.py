@@ -108,12 +108,22 @@ def update_repo_directory(ctx, repo_directory):
         # Since there's no rows to fetch after a successful insert, this is how we know it worked.
         # I know it's weird, sue me (jk please don't)
 
-@cli.command('version', short_help="Get the version of the configured database")
+# get_db_version is a helper function to print_db_version and upgrade_db_version
+def get_db_version(app):
+    db = get_db_connection(app)
+
+    db_version_sql = s.sql.text("""
+        SELECT * FROM augur_operations.augur_settings WHERE setting = 'augur_data_version'
+    """)
+
+    return int(db.execute(db_version_sql).fetchone()[2])
+
+@cli.command('print-db-version', short_help="Get the version of the configured database")
 @click.pass_context
 def print_db_version(ctx):
     print(f"Augur DB version: {get_db_version(ctx.obj)}")
 
-@cli.command('upgrade', short_help="Upgrade the configured database to the latest version")
+@cli.command('upgrade-db-version', short_help="Upgrade the configured database to the latest version")
 @click.pass_context
 def upgrade_db_version(ctx):
     current_db_version = get_db_version(ctx.obj)
@@ -142,15 +152,6 @@ def upgrade_db_version(ctx):
             print("Upgrading from", current_db_version, "to", target_version)
             run_psql_command_in_database(ctx.obj, '-f', f"schema/generate/{script_location}")
             current_db_version += 1
-
-def get_db_version(app):
-    db = get_db_connection(app)
-
-    db_version_sql = s.sql.text("""
-        SELECT * FROM augur_operations.augur_settings WHERE setting = 'augur_data_version'
-    """)
-
-    return int(db.execute(db_version_sql).fetchone()[2])
 
 @cli.command('create-schema', short_help="Create schema in the configured database")
 @click.pass_context

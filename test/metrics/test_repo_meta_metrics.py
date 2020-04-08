@@ -38,11 +38,11 @@ def test_code_changes_lines(metrics):
 def test_sub_projects(metrics):
 
     # repo group
-    assert metrics.sub_projects(20).iloc[0]['sub_project_count'] > 0
+    assert metrics.sub_projects(10).iloc[0]['sub_project_count'] > 0
 
     # repo id
     assert metrics.sub_projects(
-        20, repo_id=25430).iloc[0]['sub_project_count'] > 0
+        10, repo_id=25430).iloc[0]['sub_project_count'] > 0
 
 def test_lines_changed_by_author(metrics):
     assert metrics.lines_changed_by_author(10).iloc[0].additions > 0
