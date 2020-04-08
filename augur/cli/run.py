@@ -17,11 +17,14 @@ from augur.server import Server
 from augur.cli.util import kill_processes
 import time
 
-@click.command('run')
-@click.option('--enable-housekeeper/--disable-housekeeper', default=True)
-@click.option('--skip-cleanup', is_flag=True, default=False)
+@click.command("run")
+@click.option("--disable-housekeeper", is_flag=True, default=False, help="Turns off the housekeeper")
+@click.option("--skip-cleanup", is_flag=True, default=False, help="Disables the old process cleanup that runs before Augur starts")
 @click.pass_context
-def cli(ctx, enable_housekeeper, skip_cleanup):
+def cli(ctx, disable_housekeeper, skip_cleanup):
+    """
+    Start Augur's backend server
+    """
     if not skip_cleanup:
         logger.info("Cleaning up old Augur processes. Just a moment please...")
         ctx.invoke(kill_processes)
@@ -53,7 +56,7 @@ def cli(ctx, enable_housekeeper, skip_cleanup):
     worker_pids = []
     worker_processes = []
 
-    if enable_housekeeper:
+    if not disable_housekeeper:
         if not controller:
             return
         for worker in controller.keys():
@@ -103,7 +106,7 @@ def cli(ctx, enable_housekeeper, skip_cleanup):
         os.kill(os.getpid(), 9)
         os._exit(0)
 
-    if enable_housekeeper:
+    if not disable_housekeeper:
         logger.info("Booting housekeeper...")
         jobs = deepcopy(app.read_config('Housekeeper', 'jobs'))
         try:

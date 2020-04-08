@@ -21,12 +21,15 @@ def cli():
 @cli.command('export-env')
 @click.pass_context
 def export_env(ctx):
+    """
+    Exports your GitHub key and database credentials
+    """
     app = ctx.obj
 
     export_file = open(os.getenv('AUGUR_EXPORT_FILE', 'augur_export_env.sh'), 'w+')
     export_file.write('#!/bin/bash')
     export_file.write('\n')
-    env_file = open(os.getenv('AUGUR_ENV_FILE', 'augur_env.txt'), 'w+')
+    env_file = open(os.getenv('AUGUR_ENV_FILE', 'docker_env.txt'), 'w+')
 
     for env_var in app.env_config.items():
         export_file.write('export ' + env_var[0] + '="' + str(env_var[1]) + '"\n')
@@ -35,11 +38,11 @@ def export_env(ctx):
     export_file.close()
     env_file.close()
 
-@cli.command('kill', short_help='Kill all currently running Augur processes')
+@cli.command('kill')
 @click.pass_context
 def kill_processes(ctx):
     """
-    Kill running augur processes
+    Terminates all currently running backend Augur processes, including any workers. Will only work in a virtual environment.    
     """
     processes = get_augur_processes()
     if processes != []:
@@ -51,10 +54,10 @@ def kill_processes(ctx):
                 except psutil.NoSuchProcess as e:
                     pass
 
-@cli.command('list', short_help='List running Augur processes')
+@cli.command('list',)
 def list_processes():
     """
-    List currently running augur processes
+    Outputs the name and process ID (PID) of all currently running backend Augur processes, including any workers. Will only work in a virtual environment.    
     """
     processes = get_augur_processes()
     for process in processes:
@@ -72,11 +75,11 @@ def get_augur_processes():
                 pass
     return processes
 
-@cli.command('repo-reset', short_help='Reset Repo Collection')
+@cli.command('repo-reset')
 @click.pass_context
 def repo_reset(ctx):
     """
-    Reset the repo states to "New" in the database
+    Refresh repo collection to force data collection
     """
     app = ctx.obj
     db = get_db_connection(app)

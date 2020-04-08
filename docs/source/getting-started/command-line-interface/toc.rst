@@ -2,13 +2,13 @@
 Command Line Interface
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-Augur provides a few handy scripts and options for controlling the backend processes. They're broken up into 3 main categories: ``run``, ``db``, and ``util``.
+Augur provides a command line interface (CLI) for controlling interacting with the system. They're broken up into 4 categories: ``run``, ``db``, and ``util``. 
 
-**THIS SECTION IS UNDER CONSTRUCTION.**
+Each command is invoked by first specifying the category, then the command name, and then the parameters/options; e.g. the ``list`` command under ``augur util`` would be invoked as ``augur util list --option1 ...``. ``run`` only has a single command, so it is invoked as ``augur run``.
 
-If you have questions or would like to help please open an issue on GitHub_.
+.. note::
 
-.. _GitHub: https://github.com/chaoss/augur/issues
+    Throughout this section of the documentation, all lines that start with a ``$`` denote a ``bash`` command, and lines with ``>`` denote some sample output of command.
 
 .. toctree::
    :maxdepth: 1

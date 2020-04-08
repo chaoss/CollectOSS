@@ -31,7 +31,7 @@ To start a container, use the command below. ``<container_name>`` can be whateve
     If you are running the ``backend`` service, then ``<docker_port>`` needs to be ``5000``; for ``frontend`` and ``database`` the ports are ``8080`` and ``5432``. You can set the ``<host_port>`` to any **available** port on your machine for any of the services.
 
 .. note::
-    If you are running the backend service, you'll also need to add ``--env-file augur_env.txt`` to your command in order to make the container aware of your configuration file.
+    If you are running the backend service, you'll also need to add ``--env-file docker_env.txt`` to your command in order to make the container aware of your configuration file.
 
 .. code::
 
