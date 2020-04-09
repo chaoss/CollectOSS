@@ -151,8 +151,7 @@ do
         echo "Please enter the credentials for the database."
         set_db_credentials
         # https://www.youtube.com/watch?v=rs9wuaVV33I
-        echo "Installing the schema..."
-        # create_db_schema
+        create_db_schema
         break
       ;;
     $already_installed )

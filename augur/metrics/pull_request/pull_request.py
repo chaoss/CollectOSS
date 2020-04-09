@@ -1,4 +1,4 @@
-"""
+f"""
 Metrics that provide data about pull requests & their associated activity
 """
 
@@ -807,6 +807,55 @@ def pull_request_average_time_to_responses_and_close(self, repo_group_id, repo_i
 
     return avg_pr_time_to_responses_and_close
 
+@annotate(tag='pull-request-merged-status-counts')
+def pull_request_merged_status_counts(self, repo_group_id, repo_id=None, begin_date='1970-1-1 00:00:01', end_date=None, group_by='week'):
+    """
+    _____
+
+    :param repo_group_id: The repository's repo_group_id
+    :param repo_id: The repository's repo_id, defaults to None
+    :param begin_date: pull requests opened after this date
+    :____
+    :
+    :return: ____
+    """
+
+    if not end_date:
+        end_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+    unit_options = ['year', 'month', 'week', 'day']
+    time_group_bys = []
+    for time_unit in unit_options.copy():
+        if group_by not in unit_options:
+            continue
+        time_group_bys.append('closed_{}'.format(time_unit))
+        del unit_options[0]
+
+    if not repo_id:
+        pr_all_sql = s.sql.text("""
+            
+        """)
+    else:
+        pr_all_sql = s.sql.text("""
+            SELECT 
+                pull_request_id as pull_request_count,
+                CASE WHEN pr_merged_at IS NULL THEN 'Rejected' ELSE 'Merged' end as merged_status,
+                date_part( 'year', pr_closed_at :: DATE ) AS closed_year,
+                date_part( 'month', pr_closed_at :: DATE ) AS closed_month,
+                date_part( 'week', pr_closed_at :: DATE ) AS closed_week,
+                date_part( 'day', pr_closed_at :: DATE ) AS closed_day
+            from pull_requests
+            where repo_id = :repo_id
+                AND pr_created_at::date >= :begin_date ::date
+                AND pr_closed_at::date <= :end_date ::date
+        """)
+
+    pr_all = pd.read_sql(pr_all_sql, self.database, params={'repo_group_id': repo_group_id, 
+        'repo_id': repo_id, 'begin_date': begin_date, 'end_date': end_date})
+
+    pr_counts = pr_all.groupby(['merged_status'] + time_group_bys).count().reset_index()[time_group_bys + ['merged_status', 'pull_request_count']]
+    
+    return pr_counts
 
 def create_pull_request_metrics(metrics):
     add_metrics(metrics, __name__)

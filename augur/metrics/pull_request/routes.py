@@ -378,7 +378,6 @@ def create_pull_request_routes(server):
     """
     server.addRepoMetric(metrics.pull_request_acceptance_rate, 'pull-request-acceptance-rate')
 
-
     """
     @api {get} /repos/:repo_id/pull-request-closed-no-merge Pull Request Closed but not merged(Repo)
     @apiName pull-request-closed-no-merge
@@ -434,7 +433,6 @@ def create_pull_request_routes(server):
                     ]
     """
     server.addRepoMetric(metrics.pull_request_average_time_to_close, 'pull-request-average-time-to-close')
-
     """
     @api {get} /repo-groups/:repo_group_id/pull-request-average-time-to-close Pull Request average time to close(Repo)
     @apiName pull-request-average-time-to-close
@@ -608,4 +606,7 @@ def create_pull_request_routes(server):
                     ]
     """
     server.addRepoGroupMetric(metrics.pull_request_average_time_to_responses_and_close, 'pull-request-average-time-to-responses-and-close')
+
+    server.addRepoGroupMetric(metrics.pull_request_merged_status_counts, 'pull-request-merged-status-counts')
+
 

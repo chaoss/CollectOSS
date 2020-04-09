@@ -73,11 +73,11 @@ default_config = {
                 {
                     "delay": 1000000,
                     "given": [
-                        "github_url"
+                        "git_url"
                     ],
                     "model": "contributors",
                     "repo_group_id": 0
-                },
+                },                
                 {
                     "delay": 1000000,
                     "given": [
@@ -92,6 +92,14 @@ default_config = {
                         "git_url"
                     ],
                     "model": "badges",
+                    "repo_group_id": 0
+                },
+                {
+                    "delay": 1000000,
+                    "given": [
+                        "git_url"
+                    ],
+                    "model": "value",
                     "repo_group_id": 0
                 }
             ]
@@ -111,12 +119,12 @@ default_config = {
             "facade_worker": {
                 "port": 50100,
                 "repo_directory": "repos/",
-                "switch": 0,
+                "switch": 1,
                 "workers": 1
             },
             "github_worker": {
                 "port": 50200,
-                "switch": 0,
+                "switch": 1,
                 "workers": 1
             },
             "insight_worker": {
@@ -131,7 +139,7 @@ default_config = {
             },
             "linux_badge_worker": {
                 "port": 50400,
-                "switch": 0,
+                "switch": 1,
                 "workers": 1
             },
             "metric_status_worker": {
@@ -141,18 +149,23 @@ default_config = {
             },
             "pull_request_worker": {
                 "port": 50600,
-                "switch": 0,
+                "switch": 1,
                 "workers": 1
             },
             "repo_info_worker": {
                 "port": 50700,
-                "switch": 0,
+                "switch": 1,
                 "workers": 1
             },
             "value_worker": {
                 "port": 50800,
                 "scc_bin": "scc",
                 "switch": 0,
+                "workers": 1
+            },
+            "contributor_worker": {
+                "port": 50900,
+                "switch": 1,
                 "workers": 1
             }
         }
@@ -162,7 +175,7 @@ default_config = {
 def cli():
     pass
 
-@cli.command('generate', short_help='Generate an augur.config.json')
+@cli.command('generate')
 @click.option('--db_name', help="Database name for your data collection database", envvar=ENVVAR_PREFIX + 'DB_NAME')
 @click.option('--db_host', help="Host for your data collection database", envvar=ENVVAR_PREFIX + 'DB_HOST')
 @click.option('--db_user', help="User for your data collection database", envvar=ENVVAR_PREFIX + 'DB_USER')
@@ -170,8 +183,11 @@ def cli():
 @click.option('--db_password', help="Password for your data collection database", envvar=ENVVAR_PREFIX + 'DB_PASSWORD')
 @click.option('--github_api_key', help="GitHub API key for data collection from the GitHub API", envvar=ENVVAR_PREFIX + 'GITHUB_API_KEY')
 @click.option('--facade_repo_directory', help="Directory on the database server where Facade should clone repos", envvar=ENVVAR_PREFIX + 'FACADE_REPO_DIRECTORY')
-@click.option('--rc-config-file', type=click.Path(exists=True))
+@click.option('--rc-config-file', help="File containing existing config whose values will be used as the defaults", type=click.Path(exists=True))
 def generate(db_name, db_host, db_user, db_port, db_password, github_api_key, facade_repo_directory, rc_config_file):
+    """
+    Generate an augur.config.json
+    """
 
     config = default_config
     rc_config = None

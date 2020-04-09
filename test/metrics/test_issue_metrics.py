@@ -52,10 +52,10 @@ def test_issues_closed(metrics):
 
 def test_issue_duration(metrics):
     # repo
-    assert metrics.issue_duration(10, 25430).iloc[0]['duration'] == '0 days 04:30:52.000000000'
+    assert metrics.issue_duration(10, 25430).iloc[0]['duration'] == '1 days 02:21:29.000000000'
 
     # repo_group
-    assert metrics.issue_duration(10).iloc[0]['duration'] == '0 days 04:30:52.000000000'
+    assert metrics.issue_duration(10).iloc[0]['duration'] == '1 days 02:21:29.000000000'
 
 def test_issue_participants(metrics):
     # repo
@@ -126,11 +126,11 @@ def test_issues_closed_resolution_duration(metrics):
 def test_average_issue_resolution_time(metrics):
     #repo
     assert metrics.average_issue_resolution_time(10, 25430).isin(
-        ['augur-1', '62 days 22:16:34.824786']).any().any()
+        ['augur', '61 days 12:20:43.791667']).any().any()
 
     # repo_group
     assert metrics.average_issue_resolution_time(10).isin(
-        ['wg-evolution-1', '60 days 17:55:26.910112']).any().any()
+        ['grimoirelab', ' 67 days 22:41:55.260417']).any().any()
 
 def test_issues_maintainer_response_duration(metrics):
     assert metrics.issues_maintainer_response_duration(10, 25430).iloc[0].average_days_comment > 0
