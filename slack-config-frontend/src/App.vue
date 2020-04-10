@@ -1,6 +1,9 @@
 <template>
   <div id="app">
-    <h1>Auggie Configuration</h1>
+    <div class="heading-row">
+      <img src="./assets/auggie.png" alt />
+      <h1>Auggie Configuration</h1>
+    </div>
     <slack-login @submit="setConnectionInfo" v-if="!loggedIn" />
     <slack-config v-if="loggedIn" />
   </div>
@@ -11,48 +14,48 @@ import SlackLogin from "./components/SlackLogin.vue";
 import SlackConfig from "./components/SlackConfig.vue";
 
 export default {
-  name: 'App',
+  name: "App",
   components: {
-    SlackLogin, 
+    SlackLogin,
     SlackConfig
-  }, 
+  },
   data() {
     return {
-      loggedIn: false, 
+      loggedIn: false,
       connectionInfo: {
-        instanceUrl: "http://localhost:5000", 
-        email: "michaelwoodruffdev@gmail.com", 
+        instanceUrl: "http://localhost:5000",
+        email: "michaelwoodruffdev@gmail.com",
         teamId: "augurlabs"
       }
-    }
-  }, 
+    };
+  },
   methods: {
     setConnectionInfo(info) {
       this.connectionInfo = info;
       this.loggedIn = true;
       fetch(`${this.connectionInfo.instanceUrl}/api/unstable/auggie/get_user`, {
-        method: "POST", 
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json'
-        }, 
+          "Content-Type": "application/json"
+        },
         body: JSON.stringify({
-          email: this.connectionInfo.email, 
+          email: this.connectionInfo.email,
           teamID: this.connectionInfo.teamId
         })
       })
-      .then(res => {
-        console.log(res.status);
-        return res.json();
-      })
-      .then(res => {
-        console.log(res);
-      });
+        .then(res => {
+          console.log(res.status);
+          return res.json();
+        })
+        .then(res => {
+          console.log(res);
+        });
     }
-  }, 
+  },
   mounted() {
     console.log("mounted");
   }
-}
+};
 </script>
 
 <style>
@@ -64,4 +67,12 @@ export default {
   color: #2c3e50;
   margin-top: 60px;
 }
+</style>
+
+<style scoped>
+  img {
+    width: 200px;
+    box-shadow: 0 0 20px var(--grey);
+  }
+  
 </style>

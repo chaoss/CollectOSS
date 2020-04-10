@@ -1,6 +1,6 @@
 <template>
   <div id="SlackLogin">
-    <aug-text-input
+    <!-- <aug-text-input
       inputName="instanceUrl"
       text="augur instance url"
       placeholder="..."
@@ -9,19 +9,20 @@
     />
     <aug-text-input inputName="email" text="email" placeholder="..." class="text-input" @valueUpdated="setEmail"/>
     <aug-text-input inputName="teamId" text="Team ID" placeholder="..." class="text-input" @valueUpdated="setTeamId"/>
-    <aug-button text="Submit" @click="submit" class="aug-button"/>
+    <aug-button text="Submit" @click="submit" class="aug-button"/> -->
+    <a href="https://slack.com/oauth/authorize?scope=identity.basic,identity.email,identity.team&client_id=370453254753.908657290918&redirect_uri=http%3A%2F%2Flocalhost%3A8080" target="_blank"><img src="https://api.slack.com/img/sign_in_with_slack.png" /></a>
   </div>
 </template>
 
 <script>
-import AugTextInput from "./BaseComponents/AugTextInput.vue";
-import AugButton from "./BaseComponents/AugButton.vue";
+// import AugTextInput from "./BaseComponents/AugTextInput.vue";
+// import AugButton from "./BaseComponents/AugButton.vue";
 
 export default {
   name: "SlackLogin",
   components: {
-    AugTextInput, 
-    AugButton
+    // AugTextInput, 
+    // AugButton
   },
   data() {
     return {
@@ -74,5 +75,14 @@ export default {
 
 .aug-button {
     margin-top: 2rem !important;
+}
+
+img {
+  transition: box-shadow .3s ease;
+  border-radius: 7px;
+}
+
+img:hover {
+  box-shadow: 0 0 10px var(--grey);
 }
 </style>
