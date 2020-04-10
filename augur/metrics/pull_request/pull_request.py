@@ -1,4 +1,4 @@
-f"""
+"""
 Metrics that provide data about pull requests & their associated activity
 """
 
@@ -808,16 +808,15 @@ def pull_request_average_time_to_responses_and_close(self, repo_group_id, repo_i
     return avg_pr_time_to_responses_and_close
 
 @annotate(tag='pull-request-merged-status-counts')
-def pull_request_merged_status_counts(self, repo_group_id, repo_id=None, begin_date='1970-1-1 00:00:01', end_date=None, group_by='week'):
-    """
-    _____
-
+def pull_request_merged_status_counts(self, repo_group_id, repo_id=None, begin_date='1970-1-1 00:00:01', end_date=None, group_by='month'):
+    """ Merged status counts with time frames
+    
     :param repo_group_id: The repository's repo_group_id
     :param repo_id: The repository's repo_id, defaults to None
-    :param begin_date: pull requests opened after this date
-    :____
-    :
-    :return: ____
+    :param group_by: The time frame the data is grouped by, options are: 'day', 'week', 'month' or 'year', defaults to 'month'
+    :param begin_date: Specifies the begin date, defaults to '1970-1-1 00:00:00'
+    :param end_date: Specifies the end date, defaults to datetime.now()
+    :return: DataFrame of merged status counts
     """
 
     if not end_date:
@@ -853,9 +852,9 @@ def pull_request_merged_status_counts(self, repo_group_id, repo_id=None, begin_d
     pr_all = pd.read_sql(pr_all_sql, self.database, params={'repo_group_id': repo_group_id, 
         'repo_id': repo_id, 'begin_date': begin_date, 'end_date': end_date})
 
-    pr_counts = pr_all.groupby(['merged_status'] + time_group_bys).count().reset_index()[time_group_bys + ['merged_status', 'pull_request_count']]
+    pr_merged_counts = pr_all.groupby(['merged_status'] + time_group_bys).count().reset_index()[time_group_bys + ['merged_status', 'pull_request_count']]
     
-    return pr_counts
+    return pr_merged_counts
 
 def create_pull_request_metrics(metrics):
     add_metrics(metrics, __name__)

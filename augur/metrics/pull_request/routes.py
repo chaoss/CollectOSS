@@ -486,7 +486,7 @@ def create_pull_request_routes(server):
     @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
     @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
     @apiParam {string= day, week, month, year} [group_by= month] Group By specification. E.g. values: 'day', 'week', 'month', or 'year'
-    @apiParam {string= hours, days} [time_unit = hours] Unit of Time Specification.  E.g. values: 'hours', or 'days'
+    @apiParam {string= minutes, hours} [time_unit = hours] Unit of Time Specification.  E.g. values: 'minutes', or 'hours'
     @apiSuccessExample {json} Success-Response:
                     [
                         {
@@ -654,7 +654,45 @@ def create_pull_request_routes(server):
                     ]
     """
     server.addRepoGroupMetric(metrics.pull_request_average_time_to_responses_and_close, 'pull-request-average-time-to-responses-and-close')
-
+    """
+    @api {get} /repos/:repo_id/pull-request-merged-status-counts Pull Request merged status counts(Repo)
+    @apiName pull-request-merged-status-counts
+    @apiGroup Experimental
+    @apiDescription Merged status counts with time frame
+    @apiParam {string} repo_id Repository ID.
+    @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string= day, week, month, year} [group_by= month] Group By specification. E.g. values: 'day', 'week', 'month', or 'year'
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "closed_year": 2017.0
+                            "closed_month": 5.0
+                            "merged_status": "Merged"
+                            "pull_request_count": 266
+                        }
+                    ]
+    """
+    server.addRepoMetric(metrics.pull_request_merged_status_counts, 'pull-request-merged-status-counts')
+    """
+    @api {get} /repo-groups/:repo_group_id/pull-request-merged-status-counts Pull Request merged status counts(Repo)
+    @apiName pull-request-merged-status-counts
+    @apiGroup Experimental
+    @apiDescription Merged status counts with time frame
+    @apiParam {string} repo_id Repository ID.
+    @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string= day, week, month, year} [group_by= month] Group By specification. E.g. values: 'day', 'week', 'month', or 'year'
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "closed_year": 2017.0
+                            "closed_month": 5.0
+                            "merged_status": "Merged"
+                            "pull_request_count": 266
+                        }
+                    ]
+    """
     server.addRepoGroupMetric(metrics.pull_request_merged_status_counts, 'pull-request-merged-status-counts')
 
 
