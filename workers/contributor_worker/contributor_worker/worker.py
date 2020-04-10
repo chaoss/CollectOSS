@@ -396,7 +396,7 @@ class ContributorWorker:
                     "data_source": self.data_source
                 }
                 result = self.db.execute(self.contributors_table.update().where(
-                    self.contributors_table.c.cntrb_id==contributor['cntrb_id']).values(cntrb_gh_info))
+                    self.contributors_table.c.cntrb_id==self.cntrb_id_inc).values(cntrb_gh_info))
                 logging.info("Updated existing tuple in the contributors table with github info after "
                     "a successful search query on a facade commit's author : {} {}\n".format(contributor, cntrb_gh_info))
 
