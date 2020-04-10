@@ -1,5 +1,0 @@
-# Release Notes
-
-## Fixes 🛠
-
-## Features 🚀

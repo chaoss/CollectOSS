@@ -4,7 +4,6 @@ SPDX-License-Identifier: MIT
 Install augur package with pip.
 """
 from setuptools import setup, find_packages
-from codecs import open
 from os import path
 
 here = path.abspath(path.dirname(__file__))
@@ -13,19 +12,20 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, "README.md"), encoding="utf-8") as f:
     long_description = f.read()
 
+exec(open("metadata.py").read())
+
 setup(
-    name="augur",
-    version="0.11.0",
+    name=__slug__,
+    version=__version__,
     include_package_data=True,
-    description="Library/Server for data related to the health and sustainability of OSS",
+    description=__short_description__,
     long_description=long_description,
-    url="https://github.com/chaoss/augur",
+    url=__url__,
     author="Derek Howard",
     author_email="derek@howderek.com",
     packages=find_packages(),
-    license="MIT",
+    license=__license__,
     classifiers=[
-        "Development Status :: 1 - Planning",
         "Intended Audience :: Developers",
         "Topic :: Software Development :: Version Control",
         "License :: OSI Approved :: MIT License",

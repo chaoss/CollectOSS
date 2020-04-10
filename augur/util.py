@@ -15,9 +15,6 @@ import beaker
 coloredlogs.install(level=os.getenv('AUGUR_LOG_LEVEL', 'INFO'))
 logger = logging.getLogger('augur')
 
-# end imports
-# (don't remove the above line, it's for a script)
-
 def getFileID(path):
     """
     Returns file ID of given object
