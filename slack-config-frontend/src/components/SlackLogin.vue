@@ -10,7 +10,9 @@
     <aug-text-input inputName="email" text="email" placeholder="..." class="text-input" @valueUpdated="setEmail"/>
     <aug-text-input inputName="teamId" text="Team ID" placeholder="..." class="text-input" @valueUpdated="setTeamId"/>
     <aug-button text="Submit" @click="submit" class="aug-button"/> -->
-    <a href="https://slack.com/oauth/authorize?scope=identity.basic,identity.email,identity.team&client_id=370453254753.908657290918&redirect_uri=http%3A%2F%2Flocalhost%3A8080" target="_blank"><img src="https://api.slack.com/img/sign_in_with_slack.png" /></a>
+    <img src="../assets/auggie.png" alt="" class="logo">
+    <h1>Auggie SlackBot Configuration</h1>
+    <a href="https://slack.com/oauth/authorize?scope=identity.basic,identity.email,identity.team&client_id=370453254753.908657290918&redirect_uri=http%3A%2F%2Flocalhost%3A8080" target="_blank"><img src="https://api.slack.com/img/sign_in_with_slack.png" class="slack-button"/></a>
   </div>
 </template>
 
@@ -63,6 +65,7 @@ export default {
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
+  margin-top: 6rem;
 }
 
 #SlackLogin > * {
@@ -77,12 +80,18 @@ export default {
     margin-top: 2rem !important;
 }
 
-img {
+.slack-button {
   transition: box-shadow .3s ease;
   border-radius: 7px;
 }
 
-img:hover {
-  box-shadow: 0 0 10px var(--grey);
+.slack-button:hover {
+  box-shadow: 0 0 5px var(--grey);
+}
+
+.logo {
+  width: 200px;
+  box-shadow: 0 0 10px var(--dark-grey);
+  border-radius: 20px;
 }
 </style>

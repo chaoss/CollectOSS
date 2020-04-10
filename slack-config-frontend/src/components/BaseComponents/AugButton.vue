@@ -24,6 +24,7 @@ button {
   color: var(--dark-grey);
   font-weight: 100;
   transition: border 0.2s ease, color 0.2s ease;
+  text-align: center;
 }
 button:hover {
   border: 1px solid var(--light-blue);

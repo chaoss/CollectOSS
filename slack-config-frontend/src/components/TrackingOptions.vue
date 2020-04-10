@@ -103,6 +103,7 @@ export default {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
+  background-color: white;
 }
 
 .checkbox-w-label {

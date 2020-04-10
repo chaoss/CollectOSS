@@ -2,11 +2,14 @@
   <div id="DraggableColumns">
     <div class="column">
       <h3>Host Repos</h3>
-      <aug-text-input
-        placeholder="search host repos..."
-        @valueUpdated="setHostSearch"
-        class="text-input"
-      />
+      <div class="column-controls">
+        <aug-text-input
+          placeholder="search host repos..."
+          @valueUpdated="setHostSearch"
+          class="search-input"
+        />
+        <aug-button text="Refresh" class="column-button" />
+      </div>
       <draggable
         class="draggable-column"
         :list="hostRepos"
@@ -25,11 +28,14 @@
     </div>
     <div class="column">
       <h3>Tracked Repos</h3>
-      <aug-text-input
-        placeholder="search tracked repos..."
-        @valueUpdated="setTrackedSearch"
-        class="text-input"
-      />
+      <div class="column-controls">
+        <aug-text-input
+          placeholder="search tracked repos..."
+          @valueUpdated="setTrackedSearch"
+          class="search-input"
+        />
+        <aug-button text="Clear" class="column-button" @click="clearTrackedRepos" />
+      </div>
       <draggable
         class="draggable-column"
         :list="trackedRepos"
@@ -54,13 +60,15 @@
 import draggable from "vuedraggable";
 import Repo from "./Repo.vue";
 import AugTextInput from "./BaseComponents/AugTextInput.vue";
+import AugButton from "./BaseComponents/AugButton.vue";
 
 export default {
   name: "DraggableColumns",
   components: {
     draggable,
     Repo,
-    AugTextInput
+    AugTextInput,
+    AugButton
   },
   methods: {
     setHostSearch(newValue) {
@@ -81,9 +89,12 @@ export default {
     },
     trackedSearchFilter(repoKey) {
       return repoKey.includes(this.trackedSearch);
-    }, 
+    },
     hostSearchFilter(repoKey) {
       return repoKey.includes(this.hostSearch);
+    },
+    clearTrackedRepos() {
+      this.trackedRepos = [];
     }
   },
   data() {
@@ -171,6 +182,17 @@ export default {
   border-radius: 2rem;
 }
 
+.column-controls {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.column-button {
+  width: 35%;
+  margin-left: 5%;
+}
+
 h3 {
   margin-top: 0;
 }
@@ -188,8 +210,7 @@ h3 {
   overflow: auto;
 }
 
-.text-input {
+.search-input {
   width: 60%;
-  margin-bottom: 1rem;
 }
 </style>

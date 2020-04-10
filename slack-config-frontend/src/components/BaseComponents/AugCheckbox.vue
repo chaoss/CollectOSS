@@ -1,5 +1,5 @@
 <template>
-  <div id="AugCheckbox" @click="flipIsChecked" :class="{ checked: isChecked }">
+  <div id="AugCheckbox" @click.stop="flipIsChecked" :class="{ checked: isChecked }">
       <i class="fas fa-check" :class="{ checkmarkChecked: isChecked }"></i>
   </div>
 </template>
