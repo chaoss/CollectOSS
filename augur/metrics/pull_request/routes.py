@@ -427,8 +427,10 @@ def create_pull_request_routes(server):
     @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "date": "2019-01-01T00:00:00.000Z",
-                            "pr_count": 3
+                            "closed_year":2017.0
+                            "closed_month":4.0
+                            "merged_status":"Merged"
+                            "average_hours_to_close":0.7305555556
                         }
                     ]
     """
@@ -444,8 +446,10 @@ def create_pull_request_routes(server):
     @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "date": "2019-01-01T00:00:00.000Z",
-                            "pr_count": 3
+                            "closed_year": 2017.0
+                            "closed_month": 4.0
+                            "merged_status": "Merged"
+                            "average_hours_to_close": 0.7305555556
                         }
                     ]
     """
@@ -464,8 +468,10 @@ def create_pull_request_routes(server):
     @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "date": "2019-01-01T00:00:00.000Z",
-                            "pr_count": 3
+                            "closed_year": 2017.0
+                            "closed_month": 4.0
+                            "merged_status": "Merged"
+                            "average_hours_between_responses": 0.0256481482
                         }
                     ]
     """
@@ -484,8 +490,10 @@ def create_pull_request_routes(server):
     @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "date": "2019-01-01T00:00:00.000Z",
-                            "pr_count": 3
+                            "closed_year": 2017.0
+                            "closed_month": 4.0
+                            "merged_status": "Merged"
+                            "average_hours_between_responses": 0.0256481482
                         }
                     ]
     """
@@ -503,8 +511,10 @@ def create_pull_request_routes(server):
     @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "date": "2019-01-01T00:00:00.000Z",
-                            "pr_count": 3
+                            "closed_year": 2017.0
+                            "closed_month": 4.0
+                            "merged_status": "Merged"
+                            "average_commits_per_pull_request": 6.3333333333
                         }
                     ]
     """
@@ -522,8 +532,10 @@ def create_pull_request_routes(server):
     @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "date": "2019-01-01T00:00:00.000Z",
-                            "pr_count": 3
+                            "closed_year": 2017.0
+                            "closed_month": 4.0
+                            "merged_status": "Merged"
+                            "average_commits_per_pull_request": 6.3333333333
                         }
                     ]
     """
@@ -541,8 +553,22 @@ def create_pull_request_routes(server):
     @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "date": "2019-01-01T00:00:00.000Z",
-                            "pr_count": 3
+                            "merged_status": "Merged"
+                            "closed_year": 2017.0
+                            "closed_month": 5.0
+                            "average_assigned_count": 2.2641509434
+                            "average_review_requested_count": 4.4245283019
+                            "average_labeled_count": 1.3773584906
+                            "average_unlabeled_count": 0.6320754717
+                            "average_subscribed_count": 18.0094339623
+                            "average_mentioned_count": 18.0094339623
+                            "average_referenced_count": 7.3679245283
+                            "average_closed_count": 3.4339622642
+                            "average_head_ref_force_pushed_count": 6.7924528302
+                            "average_head_ref_deleted_count": 1.4811320755
+                            "average_milestoned_count": 0.2264150943
+                            "average_merged_count": 3.4056603774
+                            "average_comment_count": 3.4056603774
                         }
                     ]
     """
@@ -560,8 +586,22 @@ def create_pull_request_routes(server):
     @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "date": "2019-01-01T00:00:00.000Z",
-                            "pr_count": 3
+                            "merged_status": "Merged"
+                            "closed_year": 2017.0
+                            "closed_month": 5.0
+                            "average_assigned_count": 2.2641509434
+                            "average_review_requested_count": 4.4245283019
+                            "average_labeled_count": 1.3773584906
+                            "average_unlabeled_count": 0.6320754717
+                            "average_subscribed_count": 18.0094339623
+                            "average_mentioned_count": 18.0094339623
+                            "average_referenced_count": 7.3679245283
+                            "average_closed_count": 3.4339622642
+                            "average_head_ref_force_pushed_count": 6.7924528302
+                            "average_head_ref_deleted_count": 1.4811320755
+                            "average_milestoned_count": 0.2264150943
+                            "average_merged_count": 3.4056603774
+                            "average_comment_count": 3.4056603774
                         }
                     ]
     """
@@ -580,8 +620,12 @@ def create_pull_request_routes(server):
     @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "date": "2019-01-01T00:00:00.000Z",
-                            "pr_count": 3
+                            "closed_year": 2017.0
+                            "closed_month": 3.0
+                            "merged_status": "Rejected"
+                            "average_days_to_first_response": 0.001505
+                            "average_days_to_last_response": 0.009606
+                            "average_days_to_close": 0.011377
                         }
                     ]
     """
@@ -600,8 +644,12 @@ def create_pull_request_routes(server):
     @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "date": "2019-01-01T00:00:00.000Z",
-                            "pr_count": 3
+                            "closed_year": 2017.0
+                            "closed_month": 3.0
+                            "merged_status": "Rejected"
+                            "average_days_to_first_response": 0.001505
+                            "average_days_to_last_response": 0.009606
+                            "average_days_to_close": 0.011377
                         }
                     ]
     """
