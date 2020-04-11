@@ -456,7 +456,44 @@ def pull_request_average_time_to_close(self, repo_group_id, repo_id=None, group_
 
     if not repo_id:
         pr_all_SQL = s.sql.text("""
-            
+        SELECT     
+            repo_id,
+            repo_name,
+            repo_group_id,
+            rg_name AS repo_group_name,
+            date_part( 'year', pr_closed_at :: DATE ) AS closed_year,
+            date_part( 'month', pr_closed_at :: DATE ) AS closed_month,
+            date_part('week', pr_closed_at :: DATE) AS closed_week,
+            date_part('day', pr_closed_at :: DATE) AS closed_day,
+            EXTRACT (epoch FROM time_to_close)/ 86400 AS average_days_to_close,
+            EXTRACT (epoch FROM time_to_close)/ 3600 AS average_hours_to_close,
+        CASE WHEN pr_merged_at IS NULL THEN 'Rejected' ELSE 'Merged' END AS merged_status,
+            count(*) AS num_pull_requests
+        FROM (
+        SELECT 
+            pull_requests.pull_request_id,
+            pull_requests.repo_id,
+            repo_name,
+            repo.repo_group_id,
+            rg_name,
+            pr_closed_at,
+            pr_created_at,
+            pr_closed_at - pr_created_at AS time_to_close,
+            pr_merged_at
+        FROM pull_request_message_ref, message, repo_groups,
+        pull_requests JOIN repo ON pull_requests.repo_id = repo.repo_id
+        WHERE pull_requests.repo_id IN 
+             (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
+        AND repo.repo_id = pull_requests.repo_id
+        AND pull_requests.pull_request_id = pull_request_message_ref.pull_request_id
+        AND pull_request_message_ref.msg_id = message.msg_id
+        AND repo.repo_group_id = repo_groups.repo_group_id
+        AND pr_created_at::DATE >= :begin_date ::DATE
+        AND pr_closed_at::DATE <= :end_date ::DATE
+        GROUP BY pull_requests.pull_request_id, repo.repo_name, repo.repo_group_id, repo_groups.rg_name
+        ) time_between_responses
+        GROUP BY merged_status, time_between_responses.pr_closed_at, time_between_responses.time_to_close, time_between_responses.repo_id, time_between_responses.repo_name, time_between_responses.repo_group_id, time_between_responses.rg_name
+        ORDER BY merged_status
         """)
 
     else:
@@ -492,7 +529,10 @@ def pull_request_average_time_to_close(self, repo_group_id, repo_id=None, group_
     pr_all = pd.read_sql(pr_all_SQL, self.database,
         params={'repo_id': repo_id, 'repo_group_id':repo_group_id,
                 'begin_date': begin_date, 'end_date': end_date})
-    pr_avg_time_to_close = pr_all.groupby(['merged_status'] + time_group_bys).mean().reset_index()[time_group_bys + ['merged_status', 'average_{}_to_close'.format(time_unit)]]
+    if not repo_id:
+        pr_avg_time_to_close = pr_all.groupby(['merged_status', 'repo_id', 'repo_name', 'repo_group_id', 'repo_group_name'] + time_group_bys).mean().reset_index()[['merged_status', 'repo_id', 'repo_name', 'repo_group_id', 'repo_group_name'] + time_group_bys + ['average_{}_to_close'.format(time_unit)]]
+    else:
+        pr_avg_time_to_close = pr_all.groupby(['merged_status'] + time_group_bys).mean().reset_index()[time_group_bys + ['merged_status', 'average_{}_to_close'.format(time_unit)]]
 
     return pr_avg_time_to_close
 
