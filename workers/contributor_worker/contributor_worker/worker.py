@@ -332,10 +332,19 @@ class ContributorWorker:
                     url = 'https://api.github.com/search/users?q={}+in:email+fullname:{}+{}'.format(
                         cmt_cntrb['email'],cmt_cntrb['fname'],cmt_cntrb['lname'])
                 except:
-                    cmt_cntrb = {'fname': contributor['commit_name'].split()[0], 'lname': '',
-                        'email': contributor['commit_email']}
-                    url = 'https://api.github.com/search/users?q={}+in:email+fullname:{}'.format(
-                        cmt_cntrb['email'],cmt_cntrb['fname'])
+                    try:
+                        cmt_cntrb = {
+                            'fname': contributor['commit_name'].split()[0], 
+                            'email': contributor['commit_email']
+                        }
+                        url = 'https://api.github.com/search/users?q={}+in:email+fullname:{}'.format(
+                            cmt_cntrb['email'],cmt_cntrb['fname'])
+                    except:
+                        cmt_cntrb = {
+                            'email': contributor['commit_email']
+                        }
+                        url = 'https://api.github.com/search/users?q={}+in:email'.format(
+                            cmt_cntrb['email'])
 
                 logging.info("Hitting endpoint: " + url + " ...\n")
                 r = requests.get(url=url, headers=self.headers)
