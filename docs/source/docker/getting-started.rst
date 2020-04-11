@@ -29,7 +29,7 @@ First, you'll need to clone the repository. In your terminal, run:
     $ git clone https://github.com/chaoss/augur.git
     $ cd augur/
 
-Now, create a file in this directory called ``augur_env.txt``. If you are using Docker Compose, you will only need to enter your access token (as shown on the first line below).
+Now, create a file in this directory called ``docker_env.txt``. If you are using Docker Compose, you will only need to enter your access token (as shown on the first line below).
 
 You can copy and paste the below example, but don't forget to change the values to match your database credentials!
 
@@ -45,7 +45,7 @@ You can copy and paste the below example, but don't forget to change the values 
 
 .. note::
 
-  If you're using the ``test_data`` image instead of your database image, you'll need to add ``AUGUR_DB_NAME=test_data`` to your ``augur_env.txt`` to override the default database image name.
+  If you're using the ``test_data`` image instead of your database image, you'll need to add ``AUGUR_DB_NAME=test_data`` to your ``docker_env.txt`` to override the default database image name.
 
 Now that you've created your config file, you're ready to get going.
 If you're doing data collection or just want to try out Augur, you'll want to use Docker Compose. If you're installing Augur for local development, we recommend using the more fine-grained `Docker <docker.html>`_ commands to build and run the containers individually. Using Docker Compose is still a good way to try out the system as a whole before you start developing, and it doesn't hurt to know either!

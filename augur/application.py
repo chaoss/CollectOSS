@@ -106,13 +106,11 @@ class Application(object):
 
     def load_env_configuration(self):
         self.set_env_value(section='Database', name='key', environment_variable='AUGUR_GITHUB_API_KEY')
-        self.set_env_value(section='Server', name='port', environment_variable='AUGUR_PORT')
         self.set_env_value(section='Database', name='host', environment_variable='AUGUR_DB_HOST')
         self.set_env_value(section='Database', name='name', environment_variable='AUGUR_DB_NAME')
         self.set_env_value(section='Database', name='port', environment_variable='AUGUR_DB_PORT')
         self.set_env_value(section='Database', name='user', environment_variable='AUGUR_DB_USER')
         self.set_env_value(section='Database', name='password', environment_variable='AUGUR_DB_PASSWORD')
-        self.set_env_value(section='facade_worker', name='repo_directory', environment_variable='AUGUR_FACADE_REPO_DIRECTORY', sub_config=self.config['Workers'])
 
     def set_env_value(self, section, name, environment_variable, sub_config=None):
         """
