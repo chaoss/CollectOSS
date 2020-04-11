@@ -30,7 +30,7 @@ within three business days (and, typically, one business day). Once one of our m
 
 We require all commits to be signed off with a [Developer Certificate of Origin](https://developercertificate.org/) in accordance with the [CHAOSS charter](https://chaoss.community/about/charter/#user-content-8-intellectual-property-policy). This can be easily done by using the `-s` flag when using `git commit`. For example: `git commit -s -m "Update README.md"`. **Any pull requests containing commits that are not signed off will not be eligible for merge until the commits have been signed off.** 
 
-## Resources
+## Community Resources
 
 ### Augur
 - [Stable documentation (`master` branch)](https://oss-augur.readthedocs.io/en/master/)
@@ -46,6 +46,8 @@ We require all commits to be signed off with a [Developer Certificate of Origin]
 - [Risk Metrics Working Group](https://github.com/chaoss/wg-risk)
 - [Value Metrics Working Group](https://github.com/chaoss/wg-value)
 - [Diversity & Inclusion Metrics Working Group](https://github.com/chaoss/wg-diversity-inclusion)
+
+## Technical Resources
 
 ### Git & GitHub
 - [How to contribute to Open Source](https://opensource.guide/how-to-contribute/)

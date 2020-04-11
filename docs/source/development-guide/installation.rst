@@ -21,7 +21,7 @@ The process for installing Augur's source code for development is essentially th
 
 **However**, when running the installation script, use the following command instead:
 
-.. code:: bash
+.. code-block:: bash
 
    $ make install-dev
 
