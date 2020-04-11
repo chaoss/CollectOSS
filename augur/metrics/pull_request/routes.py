@@ -534,17 +534,21 @@ def create_pull_request_routes(server):
     @apiName pull-request-average-commit-counts
     @apiGroup Experimental
     @apiDescription Average commits per pull request, with merged status and time frame
-    @apiParam {string} repo_id Repository ID.
+    @apiParam {string} repo_group_id Repository Group ID.
     @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
     @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
     @apiParam {string= day, week, month, year} [group_by= month] Group By specification. E.g. values: 'day', 'week', 'month', or 'year'
     @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "closed_year": 2017.0
-                            "closed_month": 4.0
-                            "merged_status": "Merged"
-                            "average_commits_per_pull_request": 6.3333333333
+                            merged_status": "Merged"
+                            "repo_id": 26214
+                            "repo_name": "RIOT"
+                            "repo_group_id": 25159
+                            "repo_group_name": "Competitors"
+                            "closed_year": 2013.0
+                            "closed_month": 2.0
+                            "average_commits_per_pull_request": 3.0
                         }
                     ]
     """

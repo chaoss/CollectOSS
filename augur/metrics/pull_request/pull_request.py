@@ -566,43 +566,43 @@ def pull_request_average_time_between_responses(self, repo_group_id, repo_id=Non
     if not repo_id:
         pr_all_SQL = s.sql.text("""
             SELECT      
-            repo_id,
-            repo_name,
-            repo_group_id,
-            rg_name AS repo_group_name,
-            date_part( 'year', pr_closed_at :: DATE ) AS closed_year,
-            date_part( 'month', pr_closed_at :: DATE ) AS closed_month,
-            date_part( 'week', pr_closed_at :: DATE ) AS closed_week,
-            date_part( 'day', pr_closed_at :: DATE ) AS closed_day,
-            (EXTRACT(epoch FROM average_time_between_responses)/3600) AS average_hours_between_responses,
-            (EXTRACT(epoch FROM average_time_between_responses)/60) AS average_minutes_between_responses,
-        CASE WHEN pr_merged_at IS NULL THEN 'Rejected' ELSE 'Merged' END AS merged_status,
-            count(*) AS num_pull_requests
-        FROM (
-        SELECT 
-            repo_name,
-            repo_groups.repo_group_id,
-            rg_name,
-            pull_requests.repo_id,
-            pull_requests.pull_request_id,
-            pr_closed_at,
-            pr_created_at,
-            pr_merged_at,
-            (MAX(message.msg_timestamp) - MIN(message.msg_timestamp)) / COUNT(DISTINCT message.msg_timestamp) AS average_time_between_responses
-        FROM pull_request_message_ref, message, repo_groups,
-        pull_requests JOIN repo ON pull_requests.repo_id = repo.repo_id
-        WHERE pull_requests.repo_id IN 
-            (SELECT repo_id FROM repo WHERE repo_group_id = 25159)
-        AND repo.repo_id = pull_requests.repo_id
-        AND pull_requests.pull_request_id = pull_request_message_ref.pull_request_id
-        AND pull_request_message_ref.msg_id = message.msg_id
-        AND repo_groups.repo_group_id = repo.repo_group_id
-        AND pr_created_at::DATE >= :begin_date ::DATE
-        AND pr_closed_at::DATE <=  :end_date ::DATE
-        GROUP BY pull_requests.pull_request_id, repo.repo_id, repo.repo_name, repo_groups.repo_group_id, repo_groups.rg_name
-        ) time_between_responses
-        GROUP BY closed_year, closed_month, merged_status, time_between_responses.pr_closed_at, time_between_responses.average_time_between_responses, time_between_responses.repo_id, time_between_responses.repo_name, time_between_responses.repo_group_id, time_between_responses.rg_name
-        """)
+                repo_id,
+                repo_name,
+                repo_group_id,
+                rg_name AS repo_group_name,
+                date_part( 'year', pr_closed_at :: DATE ) AS closed_year,
+                date_part( 'month', pr_closed_at :: DATE ) AS closed_month,
+                date_part( 'week', pr_closed_at :: DATE ) AS closed_week,
+                date_part( 'day', pr_closed_at :: DATE ) AS closed_day,
+                (EXTRACT(epoch FROM average_time_between_responses)/3600) AS average_hours_between_responses,
+                (EXTRACT(epoch FROM average_time_between_responses)/60) AS average_minutes_between_responses,
+            CASE WHEN pr_merged_at IS NULL THEN 'Rejected' ELSE 'Merged' END AS merged_status,
+                count(*) AS num_pull_requests
+            FROM (
+            SELECT 
+                repo_name,
+                repo_groups.repo_group_id,
+                rg_name,
+                pull_requests.repo_id,
+                pull_requests.pull_request_id,
+                pr_closed_at,
+                pr_created_at,
+                pr_merged_at,
+                (MAX(message.msg_timestamp) - MIN(message.msg_timestamp)) / COUNT(DISTINCT message.msg_timestamp) AS average_time_between_responses
+            FROM pull_request_message_ref, message, repo_groups,
+            pull_requests JOIN repo ON pull_requests.repo_id = repo.repo_id
+            WHERE pull_requests.repo_id IN 
+                (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
+            AND repo.repo_id = pull_requests.repo_id
+            AND pull_requests.pull_request_id = pull_request_message_ref.pull_request_id
+            AND pull_request_message_ref.msg_id = message.msg_id
+            AND repo_groups.repo_group_id = repo.repo_group_id
+            AND pr_created_at::DATE >= :begin_date ::DATE
+            AND pr_closed_at::DATE <=  :end_date ::DATE
+            GROUP BY pull_requests.pull_request_id, repo.repo_id, repo.repo_name, repo_groups.repo_group_id, repo_groups.rg_name
+            ) time_between_responses
+            GROUP BY closed_year, closed_month, merged_status, time_between_responses.pr_closed_at, time_between_responses.average_time_between_responses, time_between_responses.repo_id, time_between_responses.repo_name, time_between_responses.repo_group_id, time_between_responses.rg_name
+            """)
 
     else:
         pr_all_SQL = s.sql.text("""
@@ -671,8 +671,45 @@ def pull_request_average_commit_counts(self, repo_group_id, repo_id=None, group_
 
     if not repo_id:
         pr_all_SQL = s.sql.text("""
-            
-        """)
+        SELECT 
+            repo_id,
+            repo_name,
+            repo_group_id,
+            repo_group_name,
+            CASE WHEN pr_merged_at IS NULL THEN 'Rejected' ELSE 'Merged' END AS merged_status,
+            date_part( 'year', pr_closed_at :: DATE ) AS closed_year,
+            date_part( 'month', pr_closed_at :: DATE ) AS closed_month,
+            date_part( 'week', pr_closed_at :: DATE ) AS closed_week,
+            date_part( 'day', pr_closed_at :: DATE ) AS closed_day,
+            commit_count AS average_commits_per_pull_request,
+            count(*) AS pr_count
+            FROM (
+            SELECT 
+                pull_requests.repo_id,
+                repo.repo_name,
+                repo_groups.repo_group_id,
+                rg_name AS repo_group_name,
+                pull_request_commits.pull_request_id, 
+                count(DISTINCT pr_cmt_sha) AS commit_count,
+                pr_merged_at,
+                pr_closed_at,
+                pr_created_at
+            FROM augur_data.pull_request_commits, augur_data.pull_request_meta,augur_data.repo_groups, 
+            augur_data.pull_requests JOIN repo ON pull_requests.repo_id = repo.repo_id
+            WHERE pull_requests.repo_id IN 
+                (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
+                AND pull_requests.pull_request_id = pull_request_commits.pull_request_id
+                AND pull_requests.pull_request_id = pull_request_meta.pull_request_id
+                AND pr_cmt_sha <> pull_requests.pr_merge_commit_sha
+                AND pr_cmt_sha <> pull_request_meta.pr_sha
+                AND repo_groups.repo_group_id = repo.repo_group_id
+                AND pr_created_at::DATE >= :begin_date ::DATE
+                AND pr_closed_at::DATE <=  :end_date ::DATE
+            GROUP BY pull_request_commits.pull_request_id, pr_merged_at, pr_closed_at, pr_created_at, repo.repo_name, pull_requests.repo_id, repo_groups.rg_name, repo_groups.repo_group_id
+            ORDER BY pr_created_at
+            ) data
+            GROUP BY closed_year, merged_status, data.pr_closed_at, data.commit_count, data.repo_id, data.repo_name, data.repo_group_id, data.repo_group_name
+            """)
 
     else:
         pr_all_SQL = s.sql.text("""
@@ -708,7 +745,10 @@ def pull_request_average_commit_counts(self, repo_group_id, repo_id=None, group_
     pr_all = pd.read_sql(pr_all_SQL, self.database,
         params={'repo_id': repo_id, 'repo_group_id':repo_group_id,
                 'begin_date': begin_date, 'end_date': end_date})
-    pr_avg_commit_counts = pr_all.groupby(['merged_status'] + time_group_bys).mean().reset_index()[time_group_bys + ['merged_status', 'average_commits_per_pull_request']]
+    if not repo_id:
+        pr_avg_commit_counts = pr_all.groupby(['merged_status', 'repo_id', 'repo_name', 'repo_group_id', 'repo_group_name'] + time_group_bys).mean().reset_index()[['merged_status', 'repo_id', 'repo_name', 'repo_group_id', 'repo_group_name'] + time_group_bys + ['average_commits_per_pull_request']]
+    else:        
+        pr_avg_commit_counts = pr_all.groupby(['merged_status'] + time_group_bys).mean().reset_index()[time_group_bys + ['merged_status', 'average_commits_per_pull_request']]
 
     return pr_avg_commit_counts
 
