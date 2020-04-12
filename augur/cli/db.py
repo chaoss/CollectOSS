@@ -1,4 +1,5 @@
-from os import walk, chdir, environ, chmod
+from os import walk, chdir, environ, chmod, path
+import os
 from sys import exit
 import stat
 from collections import OrderedDict
@@ -183,7 +184,7 @@ def create_schema(ctx):
 
 @cli.command('check-pgpass', short_help="Check the ~/.pgpass file for Augur's database credentials")
 @click.pass_context
-def load_data(ctx):
+def check_pgpass(ctx):
     app = ctx.obj
     check_pgpass_credentials(app.config)
 
@@ -234,7 +235,18 @@ def run_psql_command_in_database(app, target_type, target):
 
 def check_pgpass_credentials(config):
     pgpass_file_path = environ['HOME'] + '/.pgpass'
-    chmod(pgpass_file_path, stat.S_IWRITE | stat.S_IREAD)
+
+    if not path.isfile(pgpass_file_path):
+        print("~/.pgpass does not exist, creating.")
+        open(pgpass_file_path, 'w+')
+        chmod(pgpass_file_path, stat.S_IWRITE | stat.S_IREAD)
+
+    pgpass_file_mask = oct(os.stat(pgpass_file_path).st_mode & 0o777)
+
+    if pgpass_file_mask != '0o600':
+        print("Updating ~/.pgpass file permissions.")
+        chmod(pgpass_file_path, stat.S_IWRITE | stat.S_IREAD)
+
     with open(pgpass_file_path, 'a+') as pgpass_file:
         end = pgpass_file.tell()
         credentials_string = str(config['Database']['host']) \
