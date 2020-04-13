@@ -9,20 +9,13 @@ import statistics, logging, os, json, time
 import numpy as np
 import scipy.stats
 import datetime
-
-def dump_queue(queue):
-    """
-    Empties all pending items in a queue and returns them in a list.
-    """
-    result = []
-    queue.put("STOP")
-    for i in iter(queue.get, 'STOP'):
-        result.append(i)
-    # time.sleep(.1)
-    return result
+from sklearn.ensemble import IsolationForest
+from workers.standard_methods import * #init_oauths, get_table_values, get_max_id, register_task_completion, register_task_failure, connect_to_broker, update_gh_rate_limit, record_model_process, paginate
+import warnings
+warnings.filterwarnings('ignore')
 
 class InsightWorker:
-    """ Worker that collects data from the Github API and stores it in our database
+    """ Worker that detects anomalies on a select few of our metrics
     task: most recent task the broker added to the worker's queue
     child: current process of the queue being ran
     queue: queue of tasks to be fulfilled
@@ -31,24 +24,24 @@ class InsightWorker:
     def __init__(self, config, task=None):
         self.config = config
         logging.basicConfig(filename='worker_{}.log'.format(self.config['id'].split('.')[len(self.config['id'].split('.')) - 1]), filemode='w', level=logging.INFO)
-        logging.info('Worker (PID: {}) initializing...'.format(str(os.getpid())))
+        logging.info('Worker (PID: {}) initializing...\n'.format(str(os.getpid())))
         self._task = task
         self._child = None
         self._queue = Queue()
         self.db = None
         self.tool_source = 'Insight Worker'
-        self.tool_version = '0.0.2' # See __init__.py
+        self.tool_version = '0.0.3' # See __init__.py
         self.data_source = 'Augur API'
         self.refresh = True
-        self.send_insights = True
+        self.send_insights = False
         self.finishing_task = False
         self.anomaly_days = self.config['anomaly_days']
         self.training_days = self.config['training_days']
+        self.contamination = self.config['contamination']
         self.confidence = self.config['confidence_interval'] / 100
-
-        logging.info("Worker initializing...")
+        self.metrics = self.config['metrics']
         
-        specs = {
+        self.specs = {
             "id": self.config['id'],
             "location": self.config['location'],
             "qualifications":  [
@@ -60,19 +53,13 @@ class InsightWorker:
             "config": [self.config]
         }
 
-        self.metric_results_counter = 0
-        self.insight_results_counter = 0
+        self.results_counter = 0
 
-        """
-        Connect to GHTorrent
-        
-        :param dbstr: The [database string](http://docs.sqlalchemy.org/en/latest/core/engines.html) to connect to the GHTorrent database
-        """
         self.DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(
             self.config['user'], self.config['password'], self.config['host'], self.config['port'], self.config['database']
         )
 
-        dbschema='augur_data' # Searches left-to-right
+        dbschema = 'augur_data'
         self.db = s.create_engine(self.DB_STR, poolclass=s.pool.NullPool,
             connect_args={'options': '-csearch_path={}'.format(dbschema)})
 
@@ -105,22 +92,11 @@ class InsightWorker:
         self.history_table = HelperBase.classes.worker_history.__table__
         self.job_table = HelperBase.classes.worker_job.__table__
 
-        connected = False
-        for i in range(5):
-            try:
-                logging.info("attempt {}".format(i))
-                if i > 0:
-                    time.sleep(10)
-                requests.post('http://{}:{}/api/unstable/workers'.format(
-                    self.config['broker_host'],self.config['broker_port']), json=specs)
-                logging.info("Connection to the broker was successful")
-                connected = True
-                break
-            except requests.exceptions.ConnectionError:
-                logging.error('Cannot connect to the broker. Trying again...')
-        if not connected:
-            sys.exit('Could not connect to the broker after 5 attempts! Quitting...')
+        # Organize different api keys/oauths available
+        init_oauths(self)
 
+        # Send broker hello message
+        connect_to_broker(self)
 
     def update_config(self, config):
         """ Method to update config and set a default
@@ -145,23 +121,11 @@ class InsightWorker:
         """ entry point for the broker to add a task to the queue
         Adds this task to the queue, and calls method to process queue
         """
-        repo_git = value['given']['git_url']
-
-        """ Query all repos """
-        repoUrlSQL = s.sql.text("""
-            SELECT repo_id, repo_group_id FROM repo WHERE repo_git = '{}'
-            """.format(repo_git))
-        rs = pd.read_sql(repoUrlSQL, self.db, params={})
-        try:
-            self._queue.put({"git_url": repo_git, 
-                "repo_id": int(rs.iloc[0]["repo_id"]), "repo_group_id": int(rs.iloc[0]["repo_group_id"]), "job_type": value['job_type']})
-        except Exception as e:
-            logging.info("that repo is not in our database, {}".format(e))
-        if self._queue.empty(): 
-            if 'github.com' in repo_git:
-                self._task = value
-                self.run()
-
+        if value['job_type'] == "UPDATE" or value['job_type'] == "MAINTAIN":
+            self._queue.put(value)
+        
+        self._task = value
+        self.run()
 
     def cancel(self):
         """ Delete/cancel current task
@@ -181,21 +145,285 @@ class InsightWorker:
         Determines what action to take based off the message type
         """
         while True:
-            time.sleep(2)
             if not self._queue.empty():
-                message = self._queue.get()
-            # else:
-            #     break
-                self.discover_insights(message)
+                message = self._queue.get() # Get the task off our MP queue
+            else:
+                break
+            logging.info("Popped off message: {}\n".format(str(message)))
 
-    def discover_insights(self, entry_info):
-        """ Data collection function
-        Query the github api for contributors and issues (not yet implemented)
+            if message['job_type'] == 'STOP':
+                break
+
+            # If task is not a valid job type
+            if message['job_type'] != 'MAINTAIN' and message['job_type'] != 'UPDATE':
+                raise ValueError('{} is not a recognized task type'.format(message['job_type']))
+                pass
+
+            # Query repo_id corresponding to repo url of given task 
+            repoUrlSQL = s.sql.text("""
+                SELECT min(repo_id) as repo_id FROM repo WHERE repo_git = '{}'
+                """.format(message['given']['git_url']))
+            repo_id = int(pd.read_sql(repoUrlSQL, self.db, params={}).iloc[0]['repo_id'])
+
+            # Model method calls wrapped in try/except so that any unexpected error that occurs can be caught
+            #   and worker can move onto the next task without stopping
+            try:
+                # Call method corresponding to model sent in task
+                if message['models'][0] == 'insights':
+                    self.insights_model(message, repo_id)
+            except Exception as e:
+                register_task_failure(self, message, repo_id, e)
+                pass
+
+    def insights_model(self, entry_info, repo_id):
+
+        logging.info("Discovering insights for task with entry info: {}\n".format(entry_info))
+        record_model_process(self, repo_id, 'insights')
+
+        """ Collect data """
+        base_url = 'http://{}:{}/api/unstable/repo-groups/9999/repos/{}/'.format(
+            self.config['broker_host'], self.config['broker_port'], repo_id)
+        
+        # Dataframe to hold all endpoint results
+        # Subtract configurable amount of time
+        begin_date = datetime.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - datetime.timedelta(days=self.training_days)
+        index = pd.date_range(begin_date, periods=self.training_days, freq='D')
+        df = pd.DataFrame(index=index)
+        
+        # Hit and discover insights for every endpoint we care about
+        for endpoint, field in self.metrics.items():
+            # Hit endpoint
+            url = base_url + endpoint
+            logging.info("Hitting endpoint: " + url + "\n")
+            try:
+                data = requests.get(url=url).json()
+            except:
+                data = json.loads(json.dumps(requests.get(url=url).text))
+
+            if len(data) == 0:
+                logging.info("Endpoint with url: {} returned an empty response. Moving on to next endpoint.\n".format(url))
+                continue
+                
+            if 'date' not in data[0]:
+                logging.info("Endpoint {} is not a timeseries, moving to next endpoint.\n".format(endpoint))
+                continue
+            
+            metric_df = pd.DataFrame.from_records(data)
+            metric_df.index = pd.to_datetime(metric_df['date'], utc=True).dt.date
+            df = df.join(metric_df[field]).fillna(0)
+            df.rename(columns={field: "{} - {}".format(endpoint, field)}, inplace=True)
+
+        """ End collect endpoint data """
+
+        # If none of the endpoints returned data
+        if df.size == 0:
+            logging.info("None of the provided endpoints provided data for this repository. Anomaly detection is 'done'.\n")
+            register_task_completion(self, entry_info, repo_id, "insights")
+            return
+
+        """ Deletion of old insights """
+
+        # Delete previous insights not in the anomaly_days param
+        min_date = datetime.datetime.now() - datetime.timedelta(days=self.anomaly_days)
+        logging.info("MIN DATE: {}\n".format(min_date))
+        logging.info("Deleting out of date records ...\n")
+        delete_record_SQL = s.sql.text("""
+            DELETE 
+                FROM
+                    repo_insights_records
+                WHERE
+                    repo_id = :repo_id
+                    AND ri_date < :min_date
+        """)
+        result = self.db.execute(delete_record_SQL, repo_id=repo_id, min_date=min_date)
+
+        logging.info("Deleting out of date data points ...\n")
+        delete_points_SQL = s.sql.text("""
+            DELETE 
+                FROM
+                    repo_insights
+                USING (
+                    SELECT ri_metric, ri_field 
+                    FROM (
+                        SELECT * 
+                        FROM repo_insights
+                        WHERE ri_fresh = TRUE
+                        AND repo_id = :repo_id
+                        AND ri_date < :min_date
+                    ) old_insights
+                ) to_delete
+                WHERE repo_insights.ri_metric = to_delete.ri_metric
+                AND repo_insights.ri_field = to_delete.ri_field
+        """)
+        result = self.db.execute(delete_points_SQL, repo_id=repo_id, min_date=min_date)
+
+        # get table values to check for dupes later on
+        insight_table_values = get_table_values(self, ['*'], ['repo_insights_records'], where_clause="WHERE repo_id = {}".format(repo_id))
+
+        to_model_columns = df.columns[0:len(self.metrics)+1]
+
+        model = IsolationForest(n_estimators=100, max_samples='auto', contamination=float(self.contamination), \
+                        max_features=1.0, bootstrap=False, n_jobs=-1, random_state=32, verbose=0)
+        model.fit(df[to_model_columns])
+
+        def classify_anomalies(df,metric):
+            df = df.sort_values(by='date_col', ascending=False)
+            
+            # Shift metric values by one date to find the percentage chage between current and previous data point
+            df['shift'] = df[metric].shift(-1)
+            df['percentage_change'] = ((df[metric] - df['shift']) / df[metric]) * 100
+            
+            # Categorise anomalies as 0 - no anomaly, 1 - low anomaly , 2 - high anomaly
+            df['anomaly_class'].loc[df['anomaly_class'] == 1] = 0
+            df['anomaly_class'].loc[(df['anomaly_class'] == -1) & (df[metric] != 0) & (df[metric] != 1)] = 2
+            max_anomaly_score = df['score'].loc[df['anomaly_class'] == 2].max()
+            medium_percentile = df['score'].quantile(0.24)
+            df['anomaly_class'].loc[(df['score'] > max_anomaly_score) & (df['score'] <= medium_percentile)] = 1
+            return df
+
+        for i, metric in enumerate(to_model_columns):
+
+            # Fit the model to the data returned from the endpoints
+            model.fit(df.iloc[:,i:i+1])
+            pred = model.predict(df.iloc[:,i:i+1])
+
+            # Create df and adopt previous index from when we called the endpoints
+            anomaly_df = pd.DataFrame()
+            anomaly_df['date_col'] = df.index
+            anomaly_df.index = df.index
+            
+            # Find decision function to find the score and classify anomalies
+            anomaly_df['score'] = model.decision_function(df.iloc[:,i:i+1])
+            anomaly_df[metric] = df.iloc[:,i:i+1]
+            anomaly_df['anomaly_class'] = pred
+
+            # Get the indexes of outliers in order to compare the metrics with use case anomalies if required
+            outliers = anomaly_df.loc[anomaly_df['anomaly_class'] == -1]
+            outlier_index = list(outliers.index)
+            anomaly_df = classify_anomalies(anomaly_df,metric)
+
+            # Filter the anomaly_df by days we want to detect anomalies
+            begin_detection_date = datetime.datetime.now() - datetime.timedelta(days=self.anomaly_days)
+            detection_tuples = anomaly_df.index > begin_detection_date
+            anomaly_df = anomaly_df.loc[detection_tuples]
+
+            # Make a copy of the df for logging of individual tuples in the repo_insights table
+            anomaly_df_copy = anomaly_df.copy()
+
+            # Calculate mean
+            mean = anomaly_df[metric].mean()
+
+            # Make columns numeric for argmax to function properly
+            for col in anomaly_df.columns:
+                anomaly_df[col] = pd.to_numeric(anomaly_df[col])
+
+            # Split into endpoint and field name
+            split = metric.split(" - ")
+
+            most_recent_anomaly_date = None
+            most_recent_anomaly = None
+
+            insight_count = 0
+
+            while True:
+
+                if anomaly_df.loc[anomaly_df['anomaly_class'] == 2].empty:
+                    logging.info("No more anomalies to be found for metric: {}\n".format(metric))
+                    break
+
+                next_recent_anomaly_date = anomaly_df.loc[anomaly_df['anomaly_class'] == 2]['anomaly_class'].idxmax()
+                logging.info("Next most recent date: \n{}\n".format(next_recent_anomaly_date))
+                next_recent_anomaly = anomaly_df.loc[anomaly_df.index == next_recent_anomaly_date]
+                logging.info("Next most recent anomaly: \n{}\n{}\n".format(next_recent_anomaly.columns.values, 
+                    next_recent_anomaly.values))
+
+                if insight_count == 0:
+                    most_recent_anomaly_date = next_recent_anomaly_date
+                    most_recent_anomaly = next_recent_anomaly
+
+                # Format numpy 64 date into timestamp
+                date64 = next_recent_anomaly.index.values[0]
+                ts = (date64 - np.datetime64('1970-01-01T00:00:00Z')) / np.timedelta64(1, 's')
+                ts = datetime.datetime.utcfromtimestamp(ts)
+
+                insight_exists = ((insight_table_values['ri_date'] == ts) & \
+                    (insight_table_values['ri_metric'] == split[0]) & (insight_table_values['ri_field'] == split[1])).any()
+
+                if not insight_exists:
+
+                    # Insert record in records table and send record to slack bot
+                    record = {
+                        'repo_id': repo_id,
+                        'ri_metric': split[0],
+                        'ri_field': split[1],
+                        'ri_value': next_recent_anomaly.iloc[0][metric],
+                        'ri_date': ts,
+                        'ri_score': next_recent_anomaly.iloc[0]['score'],
+                        'ri_detection_method': 'Isolation Forest',
+                        "tool_source": self.tool_source,
+                        "tool_version": self.tool_version,
+                        "data_source": self.data_source
+                    }
+                    result = self.db.execute(self.repo_insights_records_table.insert().values(record))
+                    logging.info("Primary key inserted into the repo_insights_records table: {}\n".format(
+                        result.inserted_primary_key))
+                    self.results_counter += 1
+
+                    # Send insight to Jonah for slack bot
+                    self.send_insight(record, abs(next_recent_anomaly.iloc[0][metric] - mean))
+
+                    insight_count += 1
+                else:
+                    logging.info("Duplicate insight found, skipping insertion. "
+                        "Continuing iteration of anomalies...\n")
+
+                anomaly_df = anomaly_df[anomaly_df.index < next_recent_anomaly_date]
+
+
+            # If no insights for this metric were found, then move onto next metric
+            # (since there is no need to insert the endpoint results below)
+            if insight_count == 0:
+                continue
+
+            # Begin inserting to table to build frontend charts
+            for tuple in anomaly_df_copy.itertuples():
+                try:
+                    # Format numpy 64 date into timestamp
+                    date64 = tuple.Index
+                    ts = (date64 - np.datetime64('1970-01-01T00:00:00Z')) / np.timedelta64(1, 's')
+                    ts = datetime.datetime.utcfromtimestamp(ts)
+
+                    data_point = {
+                        'repo_id': repo_id,
+                        'ri_metric': split[0],
+                        'ri_field': split[1],
+                        'ri_value': tuple._3,
+                        'ri_date': ts,
+                        'ri_fresh': 0 if date64 < most_recent_anomaly_date else 1,
+                        'ri_score': most_recent_anomaly.iloc[0]['score'],
+                        'ri_detection_method': 'Isolation Forest',
+                        "tool_source": self.tool_source,
+                        "tool_version": self.tool_version,
+                        "data_source": self.data_source
+                    }
+                    result = self.db.execute(self.repo_insights_table.insert().values(data_point))
+                    logging.info("Primary key inserted into the repo_insights table: {}\n".format(
+                        result.inserted_primary_key))
+
+                    logging.info("Inserted data point for metric: {}, date: {}, value: {}\n".format(metric, ts, tuple._3))
+                except Exception as e:
+                    logging.info("error occurred while storing datapoint: {}\n".format(repr(e)))
+                    break
+
+        register_task_completion(self, entry_info, repo_id, "insights")
+        
+    def confidence_interval_insights(self, entry_info):
+        """ Anomaly detection method based on confidence intervals
         """
 
         # Update table of endpoints before we query them all
         logging.info("Discovering insights for task with entry info: {}".format(entry_info))
-        self.record_model_process(entry_info, 'insights')
+        record_model_process(self, repo_id, 'insights')
 
         # Set the endpoints we want to discover insights for
         endpoints = [{'cm_info': "issues-new"}, {'cm_info': "code-changes"}, {'cm_info': "code-changes-lines"}, 
@@ -220,7 +448,7 @@ class InsightWorker:
                 self.config['broker_host'],self.config['broker_port'], entry_info['repo_group_id'])
         else:
             base_url = 'http://{}:{}/api/unstable/repo-groups/9999/repos/{}/'.format(
-                self.config['broker_host'],self.config['broker_port'], entry_info['repo_id'])
+                self.config['broker_host'],self.config['broker_port'], repo_id)
 
         # Hit and discover insights for every endpoint we care about
         for endpoint in endpoints:
@@ -233,7 +461,8 @@ class InsightWorker:
 
             def is_unique_key(key):
                 """ Helper method used to find which keys we want to analyze in each data point """
-                return 'date' not in key and key != 'repo_group_id' and key != 'repo_id' and key != 'repo_name' and key != 'rg_name'
+                return 'date' not in key and key != 'repo_group_id' and key != 'repo_id' and (
+                    key != 'repo_name') and key != 'rg_name'
             
             # Filter out keys that we do not want to analyze (e.g. repo_id)
             raw_values = {}
@@ -322,15 +551,15 @@ class InsightWorker:
                         # Check if new insight has a better score than other insights in its place, use result
                         #   to determine if we continue in the insertion process (0 for no insertion, 1 for record
                         #   insertion, 2 for record and insight data points insertion)
-                        instructions = self.clear_insight(entry_info['repo_id'], score, endpoint['cm_info'], key)
-                        # self.clear_insight(entry_info['repo_id'], score, endpoint['cm_info'] + ' ({})'.format(key))
+                        instructions = self.clear_insight(repo_id, score, endpoint['cm_info'], key)
+                        # self.clear_insight(repo_id, score, endpoint['cm_info'] + ' ({})'.format(key))
 
                         # Use result from clearing function to determine if we need to insert the record
                         if instructions['record']:
 
                             # Insert record in records table and send record to slack bot
                             record = {
-                                'repo_id': int(entry_info['repo_id']),
+                                'repo_id': int(repo_id),
                                 'ri_metric': endpoint['cm_info'],
                                 'ri_field': key,
                                 'ri_value': date_filtered_raw_values[discovery_index][key],#date_filtered_raw_values[j][key],
@@ -343,7 +572,7 @@ class InsightWorker:
                             }
                             result = self.db.execute(self.repo_insights_records_table.insert().values(record))
                             logging.info("Primary key inserted into the repo_insights_records table: {}".format(result.inserted_primary_key))
-                            self.insight_results_counter += 1
+                            self.results_counter += 1
                             # Send insight to Jonah for slack bot
                             self.send_insight(record, abs(date_filtered_raw_values[discovery_index][key] - mean))
 
@@ -355,7 +584,7 @@ class InsightWorker:
                             for tuple in date_filtered_raw_values:
                                 try:
                                     data_point = {
-                                        'repo_id': int(entry_info['repo_id']),
+                                        'repo_id': int(repo_id),
                                         'ri_metric': endpoint['cm_info'],
                                         'ri_field': key,
                                         'ri_value': tuple[key],#date_filtered_raw_values[j][key],
@@ -381,42 +610,23 @@ class InsightWorker:
 
         self.register_task_completion(entry_info, "insights")
 
-    def record_model_process(self, entry_info, model):
-
-        task_history = {
-            "repo_id": entry_info['repo_id'],
-            "worker": self.config['id'],
-            "job_model": model,
-            "oauth_id": self.config['zombie_id'],
-            "timestamp": datetime.datetime.now(),
-            "status": "Stopped",
-            "total_results": self.insight_results_counter
-        }
-        if self.finishing_task:
-            result = self.helper_db.execute(self.history_table.update().where(
-                self.history_table.c.history_id==self.history_id).values(task_history))
-        else:
-            result = self.helper_db.execute(self.history_table.insert().values(task_history))
-            logging.info("Record incomplete history tuple: {}".format(result.inserted_primary_key))
-            self.history_id = int(result.inserted_primary_key[0])
-
     def register_task_completion(self, entry_info, model):
         # Task to send back to broker
         task_completed = {
             'worker_id': self.config['id'],
             'job_type': entry_info['job_type'],
-            'repo_id': entry_info['repo_id'],
+            'repo_id': repo_id,
             'git_url': entry_info['git_url']
         }
         # Add to history table
         task_history = {
-            "repo_id": entry_info['repo_id'],
+            "repo_id": repo_id,
             "worker": self.config['id'],
             "job_model": model,
             "oauth_id": self.config['zombie_id'],
             "timestamp": datetime.datetime.now(),
             "status": "Success",
-            "total_results": self.insight_results_counter
+            "total_results": self.results_counter
         }
         self.helper_db.execute(self.history_table.update().where(
             self.history_table.c.history_id==self.history_id).values(task_history))
@@ -425,8 +635,8 @@ class InsightWorker:
 
         # Update job process table
         updated_job = {
-            "since_id_str": entry_info['repo_id'],
-            "last_count": self.insight_results_counter,
+            "since_id_str": repo_id,
+            "last_count": self.results_counter,
             "last_run": datetime.datetime.now(),
             "analysis_state": 0
         }
@@ -436,13 +646,13 @@ class InsightWorker:
 
         # Notify broker of completion
         logging.info("Telling broker we completed task: " + str(task_completed) + "\n\n" + 
-            "This task inserted: " + str(self.insight_results_counter) + " tuples.\n\n")
+            "This task inserted: " + str(self.results_counter) + " tuples.\n\n")
 
         requests.post('http://{}:{}/api/unstable/completed_task'.format(
             self.config['broker_host'],self.config['broker_port']), json=task_completed)
 
         # Reset results counter for next task
-        self.insight_results_counter = 0
+        self.results_counter = 0
 
     def send_insight(self, insight, units_from_mean):
         try:
@@ -455,26 +665,58 @@ class InsightWorker:
             repo = pd.read_sql(repoSQL, self.db, params={}).iloc[0]
             
             begin_date = datetime.datetime.now() - datetime.timedelta(days=self.anomaly_days)
-            dict_date = datetime.datetime.strptime(insight['ri_date'], '%Y-%m-%dT%H:%M:%S.%fZ')#2018-08-20T00:00:00.000Z
-            # logging.info("about to send to jonah")
-            if dict_date > begin_date and self.send_insights:
+            dict_date = insight['ri_date'].strftime("%Y-%m-%d %H:%M:%S")
+            if insight['ri_date'] > begin_date and self.send_insights:
                 logging.info("Insight less than {} days ago date found: {}\n\nSending to Jonah...".format(self.anomaly_days, insight))
                 to_send = {
                     'insight': True,
                     # 'rg_name': repo['rg_name'],
                     'repo_git': repo['repo_git'],
                     'value': insight['ri_value'], # y-value of data point that is the anomaly
-                    'date': insight['ri_date'], # date of data point that is the anomaly
+                    'date': dict_date, # date of data point that is the anomaly
                     'field': insight['ri_field'], # name of the field from the endpoint that the anomaly was detected on
                     'metric': insight['ri_metric'], # name of the metric the anomaly was detected on
                     'units_from_mean': units_from_mean,
                     'detection_method': insight['ri_detection_method']
                 }
-                requests.post('https://fgrmv7bswc.execute-api.us-east-2.amazonaws.com/dev/insight-event', json=to_send)
+                requests.post('https://ejmoq97307.execute-api.us-east-1.amazonaws.com/dev/insight-event', json=to_send)
         except Exception as e:
             logging.info("sending insight to jonah failed: {}".format(e))
 
+    def clear_insights(self, repo_id, new_endpoint, new_field):
 
+        logging.info("Deleting all tuples in repo_insights_records table with info: "
+            "repo {} endpoint {} field {}".format(repo_id, new_endpoint, new_field))
+        deleteSQL = """
+            DELETE 
+                FROM
+                    repo_insights_records I
+                WHERE
+                    repo_id = {}
+                    AND ri_metric = '{}'
+                    AND ri_field = '{}'
+        """.format(repo_id, new_endpoint, new_field)
+        try:
+            result = self.db.execute(deleteSQL)
+        except Exception as e:
+            logging.info("Error occured deleting insight slot: {}".format(e))
+
+        # Delete all insights 
+        logging.info("Deleting all tuples in repo_insights table with info: "
+            "repo {} endpoint {} field {}".format(repo_id, new_endpoint, new_field))        
+        deleteSQL = """
+            DELETE 
+                FROM
+                    repo_insights I
+                WHERE
+                    repo_id = {}
+                    AND ri_metric = '{}'
+                    AND ri_field = '{}'
+        """.format(repo_id, new_endpoint, new_field)
+        try:
+            result = self.db.execute(deleteSQL)
+        except Exception as e:
+            logging.info("Error occured deleting insight slot: {}".format(e))
 
     def clear_insight(self, repo_id, new_score, new_metric, new_field):
         logging.info("Checking if insight slots filled...")
@@ -611,7 +853,7 @@ class InsightWorker:
             # Commit metric insertion to the chaoss metrics table
             result = self.db.execute(self.chaoss_metric_status_table.insert().values(tuple))
             logging.info("Primary key inserted into the metrics table: " + str(result.inserted_primary_key))
-            self.metric_results_counter += 1
+            self.results_counter += 1
 
             logging.info("Inserted metric: " + metric['display_name'] + "\n")
 

@@ -1,29 +1,20 @@
-import json
-import logging
-import os
-import subprocess
-import sys
-import time
+import os, subprocess
 from datetime import datetime
-from multiprocessing import Process, Queue
-from urllib.parse import urlparse
-
-import pandas as pd
+import logging
 import requests
+import json
+from urllib.parse import quote
+from multiprocessing import Process, Queue
+
+from value_worker import __data_source__, __tool_source__, __tool_version__
+import pandas as pd
 import sqlalchemy as s
-from sqlalchemy import MetaData
 from sqlalchemy.ext.automap import automap_base
-
-
-LOG_FORMAT = '%(levelname)s:[%(name)s]: %(message)s'
-logging.basicConfig(filename='worker.log', filemode='w', level=logging.INFO, format=LOG_FORMAT)
-logger = logging.getLogger('ValueWorker')
-
+from sqlalchemy import MetaData
+from workers.standard_methods import register_task_completion, register_task_failure, connect_to_broker, update_gh_rate_limit, record_model_process
 
 class CollectorTask:
-    """
-    Worker's perception of a task in its queue.
-
+    """ Worker's perception of a task in its queue
     Holds a message type (EXIT, TASK, etc) so the worker knows how to process the queue entry
     and the github_url given that it will be collecting data for
     """
@@ -31,52 +22,24 @@ class CollectorTask:
         self.type = message_type
         self.entry_info = entry_info
 
-
-def dump_queue(queue):
-    """
-    Empties all pending items in a queue and returns them in a list.
-
-    :param queue: The queue to be emptied.
-    """
-    result = []
-    queue.put("STOP")
-    for i in iter(queue.get, 'STOP'):
-        result.append(i)
-    # time.sleep(.1)
-    return result
-
 class ValueWorker:
-    """
-    Worker that sythesises Value related data from the git repostiories and stores it in our database.
-
-    :param config: holds info like api keys, descriptions, and database connection strings
-    :param task: most recent task the broker added to the worker's queue
-    """
     def __init__(self, config, task=None):
-        logger.info(f'Worker (PID: {os.getpid()}) initializing...')
-        self._task = task
-        self._child = None
-        self._queue = Queue()
-        self._maintain_queue = Queue()
-        self.working_on = None
+        logging.info('Worker (PID: {}) initializing...'.format(str(os.getpid())))
         self.config = config
+
         self.db = None
-        self.table = None
-        self.API_KEY = self.config['key']
-        self.tool_source = 'Value Worker'
-        self.tool_version = '0.0.1' # See __init__.py
-        self.data_source = 'scc'
-        self.results_counter = 0
-        self.headers = {'Authorization': f'token {self.API_KEY}'}
+        self.value_table = None
+
+        self._task = task
+        self._queue = Queue()
+        self._child = None
+
         self.history_id = None
         self.finishing_task = False
-        self.scc_bin = self.config['scc_bin']
+        self.working_on = None
+        self.results_counter = 0
 
-        url = "https://api.github.com"
-        response = requests.get(url=url, headers=self.headers)
-        self.rate_limit = int(response.headers['X-RateLimit-Remaining'])
-
-        specs = {
+        self.specs = {
             "id": self.config['id'],
             "location": self.config['location'],
             "qualifications":  [
@@ -88,27 +51,28 @@ class ValueWorker:
             "config": [self.config]
         }
 
-        self.DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(
-            self.config['user'], self.config['password'], self.config['host'],
-            self.config['port'], self.config['database']
+        self._db_str = 'postgresql://{}:{}@{}:{}/{}'.format(
+            self.config['user'],
+            self.config['password'],
+            self.config['host'],
+            self.config['port'],
+            self.config['database']
         )
 
-        #Database connections
-        logger.info("Making database connections...")
         dbschema = 'augur_data'
-        self.db = s.create_engine(self.DB_STR, poolclass = s.pool.NullPool,
+        self.db = s.create_engine(self._db_str, poolclass=s.pool.NullPool,
             connect_args={'options': '-csearch_path={}'.format(dbschema)})
 
         helper_schema = 'augur_operations'
-        self.helper_db = s.create_engine(self.DB_STR, poolclass = s.pool.NullPool,
+        self.helper_db = s.create_engine(self._db_str, poolclass = s.pool.NullPool,
             connect_args={'options': '-csearch_path={}'.format(helper_schema)})
+        logging.info("Database connection established...")
 
         metadata = MetaData()
         helper_metadata = MetaData()
 
         metadata.reflect(self.db, only=['repo_labor'])
-
-        helper_metadata.reflect(self.helper_db, only=['worker_history', 'worker_job'])
+        helper_metadata.reflect(self.helper_db, only=['worker_history', 'worker_job', 'worker_oauth'])
 
         Base = automap_base(metadata=metadata)
         HelperBase = automap_base(metadata=helper_metadata)
@@ -117,28 +81,59 @@ class ValueWorker:
         HelperBase.prepare()
 
         self.repo_labor_table = Base.classes.repo_labor.__table__
-
         self.history_table = HelperBase.classes.worker_history.__table__
         self.job_table = HelperBase.classes.worker_job.__table__
 
-        try:
-            # Hello message
-            requests.post('http://{}:{}/api/unstable/workers'.format(
-                self.config['broker_host'],self.config['broker_port']), json=specs)
-        except:
-            logger.info("Broker's port is busy, worker will not be able to accept tasks, "
-                "please restart Augur if you want this worker to attempt connection again.")
+        logging.info("ORM setup complete...")
+
+        # Organize different api keys/oauths available
+        self.oauths = []
+        self.headers = None
+
+        # Endpoint to hit solely to retrieve rate limit information from headers of the response
+        url = "https://api.github.com/users/gabe-heim"
+
+        # Make a list of api key in the config combined w keys stored in the database
+        oauth_sql = s.sql.text("""
+            SELECT * FROM worker_oauth WHERE access_token <> '{}'
+        """.format(0))
+
+        for oauth in [{'oauth_id': 0, 'access_token': 0}] + json.loads(pd.read_sql(oauth_sql, self.helper_db, params={}).to_json(orient="records")):
+            self.headers = {'Authorization': 'token %s' % oauth['access_token']}
+            logging.info("Getting rate limit info for oauth: {}".format(oauth))
+            response = requests.get(url=url, headers=self.headers)
+            self.oauths.append({
+                'oauth_id': oauth['oauth_id'],
+                'access_token': oauth['access_token'],
+                'rate_limit': int(response.headers['X-RateLimit-Remaining']),
+                'seconds_to_reset': (datetime.fromtimestamp(int(response.headers['X-RateLimit-Reset'])) \
+                                                                - datetime.now()).total_seconds()
+            })
+            logging.info("Found OAuth available for use: {}".format(self.oauths[-1]))
+
+        if len(self.oauths) == 0:
+            logging.info("No API keys detected, please include one in your config or in the worker_oauths table in the augur_operations schema of your database\n")
+
+        # First key to be used will be the one specified in the config (first element in
+        #   self.oauths array will always be the key in use)
+        self.headers = {'Authorization': 'token %s' % self.oauths[0]['access_token']}
+
+        # Send broker hello message
+        connect_to_broker(self)
+        logging.info("Connected to the broker...\n")
 
     def update_config(self, config):
-        """ Method to update config and set a default """
+        """ Method to update config and set a default
+        """
         self.config = {
+            "key": "",
             "display_name": "",
             "description": "",
             "required": 1,
             "type": "string"
         }
         self.config.update(config)
-        self.API_KEY = self.config['key']
+        self.API_KEY = self.config['github_api_key']
 
     @property
     def task(self):
@@ -148,136 +143,54 @@ class ValueWorker:
 
     @task.setter
     def task(self, value):
-        """
-        Entry point for the broker to add a task to the queue
+        """ entry point for the broker to add a task to the queue
         Adds this task to the queue, and calls method to process queue
         """
-        git_url = value['given']['git_url']
+        
+        if value['job_type'] == "UPDATE" or value['job_type'] == "MAINTAIN":
+            self._queue.put(value)
 
-        repo_url_SQL = s.sql.text("""
-            SELECT min(repo_id) as repo_id FROM repo WHERE repo_git = '{}'
-            """.format(git_url))
-        rs = pd.read_sql(repo_url_SQL, self.db, params={})
-
-        try:
-            repo_id = int(rs.iloc[0]['repo_id'])
-            if value['job_type'] == "UPDATE":
-                self._queue.put(CollectorTask(message_type='TASK', entry_info={"task": value, "repo_id": repo_id}))
-            elif value['job_type'] == "MAINTAIN":
-                self._maintain_queue.put(CollectorTask(message_type='TASK', entry_info={"task": value, "repo_id": repo_id}))
-            if 'focused_task' in value:
-                if value['focused_task'] == 1:
-                    self.finishing_task = True
-
-        except Exception as e:
-            logger.error(f"error: {e}, or that repo is not in our database: {value}")
-
-        self._task = CollectorTask(message_type='TASK', entry_info={"task": value})
+        if 'focused_task' in value:
+            if value['focused_task'] == 1:
+                logging.info("Focused task is ON\n")
+                self.finishing_task = True
+            else:
+                self.finishing_task = False
+                logging.info("Focused task is OFF\n")
+        else:
+            self.finishing_task = False
+            logging.info("Focused task is OFF\n")
+        
+        self._task = value
         self.run()
+
 
     def cancel(self):
         """ Delete/cancel current task
         """
         self._task = None
 
-    def run(self):
-        """ Kicks off the processing of the queue if it is not already being processed
-        Gets run whenever a new task is added
+    def value_model(self, entry_info, repo_id):
+        """ Data collection and storage method
         """
-        logger.info("Running...")
-        self._child = Process(target=self.collect, args=())
-        self._child.start()
+        logging.info(entry_info)
+        logging.info(repo_id)
 
-    def collect(self):
-        """ Function to process each entry in the worker's task queue
-        Determines what action to take based off the message type
-        """
-        repos = requests.get('http://{}:{}/api/unstable/dosocs/repos'.format(
-                self.config['broker_host'],self.config['broker_port'])).json()
+        repo_path_sql = s.sql.text("""
+            SELECT repo_id, CONCAT(repo_group_id || chr(47) || repo_path || repo_name) AS path
+            FROM repo
+            WHERE repo_id = :repo_id
+        """)
 
-        for repo in repos:
-            try:
-                logger.info(f'Adding Repo Labor Data for Repo: {repo}')
-                self.generate_value_data(repo['repo_id'], repo['path'])
-            except Exception as e:
-                logger.error(f'Error occured for Repo: {repo}')
-                logger.exception(e)
+        relative_repo_path = self.db.execute(repo_path_sql, {'repo_id': repo_id}).fetchone()[1]
+        absolute_repo_path = self.config['repo_directory'] + relative_repo_path
 
-        self.register_task_completion('value')
+        try:
+            self.generate_value_data(repo_id, absolute_repo_path)
+        except Exception as e:
+            logging.error(e)
 
-        # while True:
-        #     time.sleep(2)
-        #     logger.info(f'Maintain Queue Empty: {self._maintain_queue.empty()}')
-        #     logger.info(f'Queue Empty: {self._queue.empty()}')
-        #     if not self._queue.empty():
-        #         message = self._queue.get()
-        #         logger.info(f"Popped off message from Queue: {message.entry_info}")
-        #         self.working_on = "UPDATE"
-        #     elif not self._maintain_queue.empty():
-        #         message = self._maintain_queue.get()
-        #         logger.info(f"Popped off message from Maintain Queue: {message.entry_info}")
-        #         self.working_on = "MAINTAIN"
-        #     else:
-        #         break
-
-        #     if message.type == 'EXIT':
-        #         break
-
-        #     if message.type != 'TASK':
-        #         raise ValueError(f'{message.type} is not a recognized task type')
-
-        #     if message.type == 'TASK':
-        #         try:
-        #             repos = requests.get('http://{}:{}/api/unstable/dosocs/repos'.format(
-        #                         self.config['broker_host'],self.config['broker_port'])).json()
-
-        #             for repo in repos:
-        #                 self.generate_value_data(repo['repo_id'], repo['path'])
-
-        #             self.register_task_completion('value')
-
-        #         except Exception:
-        #             # logger.error("Worker ran into an error for task: {}\n".format(message.entry_info['task']))
-        #             # logger.error("Error encountered: " + str(e) + "\n")
-        #             # # traceback.format_exc()
-        #             # logger.info("Notifying broker and logging task failure in database...\n")
-
-        #             logger.exception(f'Worker ran into an error for task {message.entry_info}')
-        #             self.register_task_failure(message.entry_info['repo_id'],
-        #                                        message.entry_info['task']['given']['git_url'])
-
-        #             # Add to history table
-        #             task_history = {
-        #                 "repo_id": message.entry_info['repo_id'],
-        #                 "worker": self.config['id'],
-        #                 "job_model": message.entry_info['task']['models'][0],
-        #                 "oauth_id": self.config['zombie_id'],
-        #                 "timestamp": datetime.datetime.now(),
-        #                 "status": "Error",
-        #                 "total_results": self.results_counter
-        #             }
-
-        #             if self.history_id:
-        #                 self.helper_db.execute(self.history_table.update().where(self.history_table.c.history_id==self.history_id).values(task_history))
-        #             else:
-        #                 r = self.helper_db.execute(self.history_table.insert().values(task_history))
-        #                 self.history_id = r.inserted_primary_key[0]
-
-        #             logger.info(f"Recorded job error for: {message.entry_info['task']}")
-
-        #             # Update job process table
-        #             updated_job = {
-        #                 "since_id_str": message.entry_info['repo_id'],
-        #                 "last_count": self.results_counter,
-        #                 "last_run": datetime.datetime.now(),
-        #                 "analysis_state": 0
-        #             }
-        #             self.helper_db.execute(self.job_table.update().where(self.job_table.c.job_model==message.entry_info['task']['models'][0]).values(updated_job))
-        #             logger.info("Updated job process for model: " + message.entry_info['task']['models'][0] + "\n")
-
-        #             # Reset results counter for next task
-        #             self.results_counter = 0
-        #             pass
+        register_task_completion(self, entry_info, repo_id, "value")
 
     def generate_value_data(self, repo_id, path):
         """Runs scc on repo and stores data in database
@@ -285,10 +198,10 @@ class ValueWorker:
         :param repo_id: Repository ID
         :param path: Absolute path of the Repostiory
         """
-        logger.info('Running `scc`....')
-        logger.info(f'Repo ID: {repo_id}, Path: {path}')
+        logging.info('Running `scc`....')
+        logging.info(f'Repo ID: {repo_id}, Path: {path}')
 
-        output = subprocess.check_output([self.scc_bin, '-f', 'json', path])
+        output = subprocess.check_output([self.config['scc_bin'], '-f', 'json', path])
         records = json.loads(output.decode('utf8'))
 
         for record in records:
@@ -304,57 +217,51 @@ class ValueWorker:
                     'comment_lines': file['Comment'],
                     'blank_lines': file['Blank'],
                     'code_complexity': file['Complexity'],
-                    'tool_source': self.tool_source,
-                    'tool_version': self.tool_version,
-                    'data_source': 'scc',
+                    'tool_source': __tool_source__,
+                    'tool_version': __tool_version__,
+                    'data_source': __data_source__,
                     'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
                 }
 
                 result = self.db.execute(self.repo_labor_table.insert().values(repo_labor))
-                logger.info(f"Added Repo Labor Data: {result.inserted_primary_key}")
+                logging.info(f"Added Repo Labor Data: {result.inserted_primary_key}")
 
-    def register_task_completion(self, model):
-        # Task to send back to broker
-        task_completed = {
-            'worker_id': self.config['id'],
-            'job_type': self.working_on,
-            'repo_id': '0',
-            'git_url': 'None'
-        }
+    def collect(self):
+        """ Function to process each entry in the worker's task queue
+        Determines what action to take based off the message type
+        """
+        while True:
+            if not self._queue.empty():
+                message = self._queue.get()
+                self.working_on = message['job_type']
+            else:
+                break
+            logging.info("Popped off message: {}\n".format(str(message)))
 
-        # Notify broker of completion
-        logger.info(f"Telling broker we completed task: {task_completed}")
-        logger.info(f"This task inserted {self.results_counter} tuples\n")
+            if message['job_type'] == 'STOP':
+                break
 
-        try:
-            requests.post('http://{}:{}/api/unstable/completed_task'.format(
-                self.config['broker_host'],self.config['broker_port']), json=task_completed)
-        except requests.exceptions.ConnectionError:
-            logger.info("Broker is booting and cannot accept the worker's message currently")
-        except Exception:
-            logger.exception('An unknown error occured while informing broker about task failure')
+            if message['job_type'] != 'MAINTAIN' and message['job_type'] != 'UPDATE':
+                raise ValueError('{} is not a recognized task type'.format(message['job_type']))
+                pass
 
-        # Reset results counter for next task
-        self.results_counter = 0
+            """ Query all repos with repo url of given task """
+            repoUrlSQL = s.sql.text("""
+                SELECT min(repo_id) as repo_id FROM repo WHERE repo_git = '{}'
+                """.format(message['given']['git_url']))
+            repo_id = int(pd.read_sql(repoUrlSQL, self.db, params={}).iloc[0]['repo_id'])
 
-    def register_task_failure(self, repo_id, git_url):
-        task_failed = {
-            'worker_id': self.config['id'],
-            'job_type': self.working_on,
-            'repo_id': repo_id,
-            'git_url': git_url
-        }
+            try:
+                if message['models'][0] == 'value':
+                    self.value_model(message, repo_id)
+            except Exception as e:
+                register_task_failure(self, message, repo_id, e)
+                pass
 
-        logger.error('Task failed')
-        logger.error('Informing broker about Task Failure')
-        logger.info(f'This task inserted {self.results_counter} tuples\n')
-
-        try:
-            requests.post('http://{}:{}/api/unstable/task_error'.format(
-                self.config['broker_host'],self.config['broker_port']), json=task_failed)
-        except requests.exceptions.ConnectionError:
-            logger.error('Could not send task failure message to the broker')
-        except Exception:
-            logger.exception('An unknown error occured while informing broker about task failure')
-
-        self.results_counter = 0
+    def run(self):
+        """ Kicks off the processing of the queue if it is not already being processed
+        Gets run whenever a new task is added
+        """
+        logging.info("Running...\n")
+        self._child = Process(target=self.collect, args=())
+        self._child.start()

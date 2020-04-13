@@ -3,25 +3,34 @@
 Augur library commands for controlling the backend components
 """
 
-import os
-import time
-import atexit
-import subprocess
+from copy import deepcopy
+import os, time, atexit, subprocess, click
 import multiprocessing as mp
-import click
 import gunicorn.app.base
 from gunicorn.six import iteritems
 from gunicorn.arbiter import Arbiter
 from augur.housekeeper.housekeeper import Housekeeper
 
-from augur.runtime import pass_application
 from augur.util import logger
 from augur.server import Server
 
-@click.command('run')
-@click.option('--enable-housekeeper/--disable-housekeeper', default=True)
-@pass_application
-def cli(app, enable_housekeeper):
+from augur.cli.util import kill_processes
+import time
+
+@click.command("run")
+@click.option("--disable-housekeeper", is_flag=True, default=False, help="Turns off the housekeeper")
+@click.option("--skip-cleanup", is_flag=True, default=False, help="Disables the old process cleanup that runs before Augur starts")
+@click.pass_context
+def cli(ctx, disable_housekeeper, skip_cleanup):
+    """
+    Start Augur's backend server
+    """
+    if not skip_cleanup:
+        logger.info("Cleaning up old Augur processes. Just a moment please...")
+        ctx.invoke(kill_processes)
+        time.sleep(2)
+    else:
+        logger.info("Skipping cleanup processes.")
 
     def get_process_id(name):
         """Return process ids found by name or command
@@ -30,8 +39,9 @@ def cli(app, enable_housekeeper):
         response = child.communicate()[0]
         return [int(pid) for pid in response.split()]
 
+    app = ctx.obj
+
     mp.set_start_method('forkserver', force=True)
-    app.schedule_updates()
     master = None
 
     manager = None
@@ -46,7 +56,7 @@ def cli(app, enable_housekeeper):
     worker_pids = []
     worker_processes = []
 
-    if enable_housekeeper:
+    if not disable_housekeeper:
         if not controller:
             return
         for worker in controller.keys():
@@ -65,12 +75,6 @@ def cli(app, enable_housekeeper):
                     except:
                         logger.info("Worker process {} already killed".format(pid))
 
-            for i in range(controller[worker]['workers']):
-                logger.info("Booting {} #{}".format(worker, i + 1))
-                worker_process = mp.Process(target=worker_start, kwargs={'worker_name': worker, 'instance_number': i}, daemon=True)
-                worker_process.start()
-                worker_processes.append(worker_process)
-
     @atexit.register
     def exit():
         try:
@@ -84,10 +88,6 @@ def cli(app, enable_housekeeper):
 
         if master is not None:
             master.halt()
-        logger.info("Shutting down app updates...")
-        app.shutdown_updates()
-        logger.info("Finalizing config...")
-        app.finalize_config()
         logger.info("Shutting down housekeeper updates...")
         if housekeeper is not None:
             housekeeper.shutdown_updates()
@@ -106,39 +106,58 @@ def cli(app, enable_housekeeper):
         os.kill(os.getpid(), 9)
         os._exit(0)
 
-    if enable_housekeeper:
+    if not disable_housekeeper:
         logger.info("Booting housekeeper...")
-        jobs = app.read_config('Housekeeper', 'jobs', 'AUGUR_JOBS', [])
+        jobs = deepcopy(app.read_config('Housekeeper', 'jobs'))
         try:
             housekeeper = Housekeeper(
                     jobs,
                     broker,
-                    broker_host=app.read_config('Server', 'host', 'AUGUR_HOST', 'localhost'),
-                    broker_port=app.read_config('Server', 'port', 'AUGUR_PORT', '5000'),
-                    user=app.read_config('Database', 'user', 'AUGUR_DB_USER', 'root'),
-                    password=app.read_config('Database', 'password', 'AUGUR_DB_PASS', 'password'),
-                    host=app.read_config('Database', 'host', 'AUGUR_DB_HOST', '127.0.0.1'),
-                    port=app.read_config('Database', 'port', 'AUGUR_DB_PORT', '3306'),
-                    dbname=app.read_config('Database', 'database', 'AUGUR_DB_NAME', 'msr14')
+                    broker_host=app.read_config('Server', 'host'),
+                    broker_port=app.read_config('Server', 'port'),
+                    user=app.read_config('Database', 'user'),
+                    password=app.read_config('Database', 'password'),
+                    host=app.read_config('Database', 'host'),
+                    port=app.read_config('Database', 'port'),
+                    dbname=app.read_config('Database', 'name')
                 )
         except KeyboardInterrupt as e:
             exit()
 
-    host = app.read_config('Server', 'host', 'AUGUR_HOST', '0.0.0.0')
-    port = app.read_config('Server', 'port', 'AUGUR_PORT', '5000')
-    workers = int(app.read_config('Server', 'workers', 'AUGUR_WORKERS', mp.cpu_count()))
+        logger.info("Housekeeper has finished booting.")
+
+        if controller:
+            for worker in controller.keys():
+                if controller[worker]['switch']:
+                    for i in range(controller[worker]['workers']):
+                        logger.info("Booting {} #{}".format(worker, i + 1))
+                        worker_process = mp.Process(target=worker_start, kwargs={'worker_name': worker, 'instance_number': i, 'worker_port': controller[worker]['port']}, daemon=True)
+                        worker_process.start()
+                        worker_processes.append(worker_process)
+
+    host = app.read_config('Server', 'host')
+    port = app.read_config('Server', 'port')
+    workers = int(app.read_config('Server', 'workers'))
+    timeout = int(app.read_config('Server', 'timeout'))
     options = {
         'bind': '%s:%s' % (host, port),
         'workers': workers,
         'accesslog': '-',
         'access_log_format': '%(h)s - %(t)s - %(r)s',
+        'timeout': timeout
     }
     logger.info('Starting server...')
     master = Arbiter(AugurGunicornApp(options, manager=manager, broker=broker, housekeeper=housekeeper)).run()
 
-def worker_start(worker_name=None, instance_number=0):
-    time.sleep(90 * instance_number)
-    process = subprocess.Popen("cd workers/{} && {}_start".format(worker_name,worker_name), shell=True)
+def worker_start(worker_name=None, instance_number=0, worker_port=None):
+    time.sleep(120 * instance_number)
+    destination = subprocess.DEVNULL
+    try:
+        destination = open("workers/{}/worker_{}.log".format(worker_name, worker_port), "a+")
+    except IOError as e:
+        logger.error("Error opening log file for auto-started worker {}: {}".format(worker_name, e))
+    process = subprocess.Popen("cd workers/{} && {}_start".format(worker_name,worker_name), shell=True, stdout=destination, stderr=subprocess.STDOUT)
+    logger.info("{} booted.".format(worker_name))
 
 class AugurGunicornApp(gunicorn.app.base.BaseApplication):
     """

@@ -201,7 +201,7 @@ def create_contributor_routes(server):
 
     """
     @api {get} /repo-groups/:repo_group_id/lines-changed-by-author Lines Changed by Author(Repo)
-    @apiNames lines-changed-by-author
+    @apiName lines-changed-by-author
     @apiGroup Experimental
     @apiDescription Returns number of lines changed per author per day
     @apiParam {string} repo_group_id Repository Group ID
@@ -230,7 +230,7 @@ def create_contributor_routes(server):
 
     """
     @api {get} /repo-groups/:repo_group_id/lines-changed-by-author Lines Changed by Author(Repo)
-    @apiNames lines-changed-by-author
+    @apiName lines-changed-by-author
     @apiGroup Experimental
     @apiDescription Count of closed issues.
                     <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/contributors-new.md">CHAOSS Metric Definition</a>

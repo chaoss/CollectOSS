@@ -1,0 +1,27 @@
+*.py @ccarterlandis @gabe-heim
+
+/augur/ @ccarterlandis @gabe-heim
+
+/frontend/ @gabe-heim @michaelwoodruffdev
+
+/schema @sgoggins
+
+/workers/ @ccarterlandis @gabe-heim @sgoggins
+
+/README.md @sgoggins @ccarterlandis
+/CONTRIBUTING.md @sgoggins @ccarterlandis
+/LICENSE @sgoggins
+/CODE_OF_CONDUCT.md @sgoggins
+
+/test/ @ccarterlandis
+/util/docker @ccarterlandis
+/scripts/ @ccarterlandis
+/docs/ @ccarterlandis
+/.dockerignore @ccarterlandis
+/.travis.yml @ccarterlandis
+*compose.yml @ccarterlandis
+/readthedocs.yml @ccarterlandis
+/Makefile @ccarterlandis
+/tox.ini @ccarterlandis
+*requirements.txt @ccarterlandis
+/setup.py @ccarterlandis

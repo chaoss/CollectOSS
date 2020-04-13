@@ -2,7 +2,9 @@
   <div ref="holder" class="insightChartDiv">
     <spinner v-if="!loaded" class="insightChartSpinner"></spinner>
     <!-- <div v-if="loaded" class=""> -->
-    <vega-lite v-if="loaded" :spec="vegaSpec" :data="values" center="true"></vega-lite>
+    <vega-lite v-if="loaded" :spec="spec(vegaSpec)" :data="values" center="true" id="vegaChart"></vega-lite>
+
+    <!-- <vega-lite v-if="loaded" :spec="vegaSpec" :data="values" center="true" id="vegaChart"></vega-lite> -->
     <!-- <p> {{ chart }} </p> -->
 
     <!-- </div> -->
@@ -14,6 +16,8 @@
 import { mapState } from "vuex";
 import AugurStats from "@/AugurStats.ts";
 import Spinner from "../Spinner.vue";
+import vegaEmbed from "vega-embed";
+
 export default {
   props: ["url", "source", "title", "color", "data"],
   components: {
@@ -40,9 +44,9 @@ export default {
   computed: {
     earliest () {
       if (!this.values[0]) return null
-      let d = new Date(this.values[this.values.length - 1].date)
+      let d = new Date(this.values[0].date)
       console.log(d)
-      d.setYear(d.getYear() - 1);
+      d.setYear(2020);
       return d
     },
     latest () {
@@ -52,6 +56,12 @@ export default {
     }
   },
   methods: {
+    spec(vegaSpec) {
+      vegaEmbed('#vegaChart', vegaSpec, {
+        mode: 'vega-lite'
+      });
+      return vegaSpec;
+    }, 
     calculateVegaSpec() {
       this.loaded = false;
       console.log('inside calculate vega spec');
@@ -59,6 +69,7 @@ export default {
       let specHeight = this.$refs.holder.clientHeight * 0.75;
       this.values = this.data;
       this.includeNullDates()
+      // console.log("YOYOYOYO", this.earliest, this.latest, this.values)
       this.vegaSpec = {
         $schema: "https://vega.github.io/schema/vega-lite/v2.json",
         center: true, 
@@ -73,11 +84,11 @@ export default {
             },
             encoding: {
               x: {
-                timeUnit: "yearmonthdate",
+                // timeUnit: "yearmonthdate",
                 field: "date",
                 type: "temporal",
-                axis: { grid: false, format: "%b %d" }
-                // domain: [this.earliest, this.latest]
+                axis: { grid: false, format: "%b %d" },
+                domain: [this.earliest, this.latest]
               },
               y: {
                 // "aggregate": "sum",
@@ -88,31 +99,34 @@ export default {
               color: { value: this.color }
             }
           },
-          {
-            mark: {
-              type: "line",
-              interpolate: "basis"
-            },
-            encoding: {
-              x: {
-                timeUnit: "yearmonthdate",
-                field: "date",
-                type: "temporal",
-                axis: { grid: false, format: "%b %d" }
-                // domain: [this.earliest, this.latest]
-              },
-              y: {
-                // "aggregate": "sum",
-                field: "test",
-                type: "quantitative",
-                axis: { grid: false, title: false, ticks: false }
-              },
-              opacity: { value: 0 }
-            }
-          }
+          // {
+          //   mark: {
+          //     type: "line",
+          //     interpolate: "basis"
+          //   },
+          //   encoding: {
+          //     x: {
+          //       // timeUnit: "yearmonthdate",
+          //       field: "date",
+          //       type: "temporal",
+          //       axis: { grid: false, format: "%b %d" },
+          //       domain: [this.earliest, this.latest]
+          //     },
+          //     y: {
+          //       // "aggregate": "sum",
+          //       field: "test",
+          //       type: "quantitative",
+          //       axis: { grid: false, title: false, ticks: false }
+          //     },
+          //     opacity: { value: 0 }
+          //   }
+          // }
         ]
       };
       this.loaded = true;
+      vegaEmbed('#vegaChart', this.vegaSpec, {
+        mode: 'vega-lite'
+      });
     },
     renderChart() {},
     convertKey(ary) {

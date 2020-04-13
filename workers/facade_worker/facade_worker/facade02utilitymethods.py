@@ -36,14 +36,6 @@ import os
 import getopt
 import xlsxwriter
 import configparser
-import logging
-logging.basicConfig(filename='worker.log', filemode='w', level=logging.INFO)
-# if platform.python_implementation() == 'PyPy':
-# 	import pymysql
-# else:
-# 	import MySQLdb
-
-
 
 def update_repo_log(cfg, repos_id,status):
 
@@ -65,8 +57,38 @@ def trim_commit(cfg, repo_id,commit):
 		"WHERE repo_id=%s "
 		"AND cmt_commit_hash=%s")
 
-	cfg.cursor.execute(remove_commit, (repo_id, commit))
-	cfg.db.commit()
+	try:
+		cfg.cursor.execute(remove_commit, (repo_id, commit))
+		cfg.db.commit()
+	except:
+		cfg.log_activity('Info','Cursor was closed, making another connection to db')
+		db_user = read_config('Database', 'user', 'AUGUR_DB_USER', 'augur')
+		db_pass = read_config('Database', 'password', 'AUGUR_DB_PASSWORD', 'augur')
+		db_name = read_config('Database', 'name', 'AUGUR_DB_NAME', 'augur')
+		db_host = read_config('Database', 'host', 'AUGUR_DB_HOST', 'localhost')
+		db_port = read_config('Database', 'port', 'AUGUR_DB_PORT', 5432)
+		db_user_people = db_user
+		db_pass_people = db_pass
+		db_name_people = db_name
+		db_host_people = db_host
+		db_port_people = db_port
+
+		db,cursor = cfg.database_connection(
+			db_host,
+			db_user,
+			db_pass,
+			db_name,
+			db_port, False, False)
+
+		db_people,cursor_people = cfg.database_connection(
+			db_host_people,
+			db_user_people,
+			db_pass_people,
+			db_name_people,
+			db_port_people, True, False)
+
+		cfg.cursor.execute(remove_commit, (repo_id, commit))
+		cfg.db.commit()
 
 	cfg.log_activity('Debug','Trimmed commit: %s' % commit)
 

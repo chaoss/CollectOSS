@@ -1,23 +1,20 @@
 SERVE_COMMAND=augur run
-ENABLE_HOUSEKEEPER=--enable-housekeeper
-OLDVERSION="null"
 EDITOR?="vi"
 AUGUR_PIP?='pip'
 AUGUR_PYTHON?='python'
+AUGUR_PORT?=5000
 
 default:
 	@ echo "Installation Commands:"
-	@ echo "    install                         Installs augur using pip"
-	@ echo "    version                         Print the currently installed version"
-	@ echo "    config                          Creates a new augur.config.json"
+	@ echo "    install                         Installs Augur's full stack for production"
+	@ echo "    install-dev                     Installs Augur's full stack for development"
 	@ echo "    clean                           Removes potentially troublesome compiled files"
 	@ echo "    rebuild                         Removes build/compiled files & binaries and reinstalls the project"
 	@ echo
 	@ echo "Development Commands:"
-	@ echo "    dev                             Starts the full stack and monitors the logs"
+	@ echo "    dev                             Starts the full stack in the background"
 	@ echo "    dev-start                       Runs the backend and frontend servers in the background"
 	@ echo "    dev-stop                        Stops the backgrounded backend & frontend server commands"
-	@ echo "    dev-restart                     Runs dev-stop then dev-start"
 	@ echo
 	@ echo "Testing Commands:"
 	@ echo "    test                            Runs all unit tests and API tests"
@@ -33,101 +30,55 @@ default:
 #
 #  Installation
 #
-.PHONY: install version config
+.PHONY: install install-dev 
+.PHONY: install-spdx install-spdx-sudo install-augur-sbom 
+.PHONY: clean rebuild
 install:
-	@ ./util/scripts/install/install.sh
+	@ ./scripts/install/install.sh prod
+
+install-dev:
+	@ ./scripts/install/install.sh dev
 
 install-spdx:
-	@ ./util/scripts/install/install-spdx.sh
+	@ ./scripts/install/install-spdx.sh
 
 install-spdx-sudo:
-	@ ./util/scripts/install/install-spdx-sudo.sh
+	@ ./scripts/install/install-spdx-sudo.sh
 
 install-augur-sbom:
-	@ ./util/scripts/install/nomos.sh
-
-version:
-	$(eval OLDVERSION=$(shell $(AUGUR_PYTHON) ./util/print-version.py))
-	@ echo "installed version: $(OLDVERSION)"
-
-config:
-	@ ./util/scripts/install/config.sh
+	@ ./scripts/install/nomos.sh
 
 clean:
-	@ echo "Removing node_modules, logs, caches, and some other dumb stuff that can be annoying..."
-	@ rm -rf runtime node_modules frontend/node_modules frontend/public augur.egg-info .pytest_cache logs
-	@ find . -name \*.pyc -delete
-	@ find . -type f -name "*.lock" -delete
+	@ scripts/control/clean.sh
 
-rebuild: clean
-	@ util/scripts/install/rebuild.sh
+rebuild:
+	@ scripts/control/rebuild.sh prod
+
+rebuild-dev:
+	@ scripts/control/rebuild.sh dev
 
 
 #
 #  Development
 #
 .PHONY: dev-start dev-stop dev monitor-frontend monitor-backend monitor frontend backend-stop backend-start backend-restart backend clean rebuild
+
 dev-start: dev-stop
-	@ mkdir -p logs runtime
-	@ bash -c '$(SERVE_COMMAND) $(ENABLE_HOUSEKEEPER) >logs/backend.log 2>&1 & echo $$! > logs/backend.pid;'
-	@ bash -c 'sleep 4; cd frontend; npm run serve >../logs/frontend.log 2>&1 & echo $$! > ../logs/frontend.pid'
-	@ echo "Server     Description       Log                   Monitoring                   PID                        "
-	@ echo "------------------------------------------------------------------------------------------                 "
-	@ echo "Frontend   Brunch            logs/frontend.log     make monitor-backend         $$( cat logs/frontend.pid ) "
-	@ echo "Backend    Augur/Gunicorn    logs/backend.log      make monitor-frontend        $$( cat logs/backend.pid  ) "
-	@ echo
-	@ echo "Monitor both:  make monitor  "
-	@ echo "Restart and monitor: make dev"
-	@ echo "Restart servers:  make dev-start "
-	@ echo "Stop servers:  make dev-stop "
+	@ scripts/control/start_augur.sh
+	@ scripts/control/start_frontend.sh
 
-dev-stop:
-	@ bash -c 'if [[ -s logs/frontend.pid && (( `cat logs/frontend.pid` > 1 )) ]]; then printf "sending SIGTERM to node (Brunch) at PID $$(cat logs/frontend.pid); "; kill `cat logs/frontend.pid`; rm logs/frontend.pid > /dev/null 2>&1; fi;'
-	@ bash -c 'if [[ -s logs/backend.pid  && (( `cat logs/backend.pid`  > 1 )) ]]; then printf "sending SIGTERM to python (Gunicorn) at PID $$(cat logs/backend.pid); "; kill `cat logs/backend.pid` ; rm logs/backend.pid  > /dev/null 2>&1; fi;'
-	@ echo
+dev-stop: 
+	@ augur util kill
+	@ scripts/control/kill_frontend.sh
 
-dev: dev-restart monitor
-
-monitor-frontend:
-	@ less +F logs/frontend.log
-
-monitor-backend:
-	@ less +F logs/backend.log
-
-monitor:
-	@ tail -f logs/frontend.log -f logs/backend.log 2>/dev/null
-
-dev-restart: dev-stop dev-start
-
-frontend:
-	@ bash -c 'cd frontend; npm run serve'
-
-backend-stop:
-	@ bash -c 'if [[ -s logs/backend.pid  && (( `cat logs/backend.pid`  > 1 )) ]]; then printf "sending SIGTERM to python (Gunicorn) at PID $$(cat logs/backend.pid); "; kill `cat logs/backend.pid` ; rm logs/backend.pid  > /dev/null 2>&1; fi;'
-	@ echo
-
-backend-start:
-	@ mkdir -p logs runtime
-	@ bash -c '$(SERVE_COMMAND) $(ENABLE_HOUSEKEEPER) >logs/backend.log 2>&1 & echo $$! > logs/backend.pid;'
-
-backend-restart: backend-stop backend-start
-
-backend: backend-restart
-
-run:
-	@ ./util/scripts/control/deploy.sh
-
-deploy: rebuild run
-
-status:
-	@ ./util/scripts/control/status.sh
-
+dev: dev-stop dev-start
 
 
 #
 # Testing
 #
 .PHONY: test test-metrics test-metrics-api
+
 test: test-metrics test-metrics-api
 
 test-metrics:
@@ -143,7 +94,12 @@ test-python-versions:
 #
 # Documentation
 #
-.PHONY: library-docs library-docs-view api-docs api-docs-view docs
+.PHONY: library-docs library-docs-view 
+.PHONY:api-docs api-docs-view docs
+
+test-data:
+	@ docker run -d -p 5434:5432 --name augur_test_data augurlabs/augur:test_data
+
 library-docs:
 	@ bash -c 'cd docs/ && rm -rf build/ && make html;'
 
@@ -151,9 +107,49 @@ library-docs-view: library-docs
 	@ bash -c 'open docs/build/html/index.html'
 
 api-docs:
-	@ bash -c 'cd docs && apidoc -f "\.py" -i ../augur/ -o api/; rm -rf ../frontend/public/api_docs; mv api ../frontend/public/api_docs'
+	@ scripts/install/api_docs.sh
 
 api-docs-view: api-docs
 	@ bash -c "open frontend/public/api_docs/index.html"
 
 docs: api-docs library-docs
+
+
+#
+# Docker Shortcuts
+# Do not use these unless you know what they mean.
+.PHONY: compose-run compose-run-database
+.PHONY: build-backend run-backend build-frontend run-frontend build-database run-database 
+
+
+compose-run:
+	@ docker-compose -f docker-compose.yml up --build
+
+compose-run-database:
+	@ echo "**************************************************************************"
+	@ echo "Make sure there are no database credentials in docker_env.txt!"
+	@ echo "**************************************************************************"
+	@ echo
+	@ docker-compose -f docker-compose.yml -f database-compose.yml up --build
+
+docker-build: docker-build-backend docker-build-frontend docker-build-database
+
+docker-build-backend:
+	@ docker build -t augurlabs/augur:backend -f util/docker/backend/Dockerfile .
+
+docker-build-frontend:
+	@ docker build -t augurlabs/augur:frontend -f util/docker/frontend/Dockerfile .
+
+docker-build-database:
+	@ docker build -t augurlabs/augur:database -f util/docker/database/Dockerfile .
+
+
+docker-run-backend:
+	@ docker run -d -p 5000:5000 --name augur_backend --env-file docker_env.txt augurlabs/augur:backend
+
+docker-run-frontend:
+	@ docker run -d -p 8080:8080 --name augur_frontend augurlabs/augur:frontend
+
+docker-run-database:
+	@ docker run -d -p 5434:5432 --name augur_database augurlabs/augur:database
+
