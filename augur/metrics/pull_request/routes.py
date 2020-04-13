@@ -653,7 +653,7 @@ def create_pull_request_routes(server):
     @apiName pull-request-average-time-to-responses-and-close
     @apiGroup Experimental
     @apiDescription Average time to first reponse, last response, and time to close with merged status and time frame
-    @apiParam {string} repo_id Repository ID.
+    @apiParam {string} repo_group_id Repository Group ID.
     @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
     @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
     @apiParam {string= day, week, month, year} [group_by= month] Group By specification. E.g. values: 'day', 'week', 'month', or 'year'
@@ -661,12 +661,16 @@ def create_pull_request_routes(server):
     @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "closed_year": 2017.0
-                            "closed_month": 3.0
-                            "merged_status": "Rejected"
-                            "average_days_to_first_response": 0.001505
-                            "average_days_to_last_response": 0.009606
-                            "average_days_to_close": 0.011377
+                            "merged_status": "Merged"
+                            "repo_id": 26218
+                            "repo_name": "mbed-os"
+                            "repo_group_id": 25159
+                            "repo_group_name": "Competitors"
+                            "closed_year": 2013.0
+                            "closed_month": 4.0
+                            "average_days_to_first_response" :3.80191
+                            "average_days_to_last_response": 4.990035
+                            "average_days_to_close": 9.823125
                         }
                     ]
     """

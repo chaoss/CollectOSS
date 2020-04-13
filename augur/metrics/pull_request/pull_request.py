@@ -945,7 +945,48 @@ def pull_request_average_time_to_responses_and_close(self, repo_group_id, repo_i
 
     if not repo_id:
         pr_all_SQL = s.sql.text("""
-            
+        SELECT 
+            repo_id,
+            repo_name,
+            repo_group_id,
+            repo_group_name,
+            EXTRACT(epoch FROM(first_response_time - pr_created_at)/86400) AS average_days_to_first_response,
+            EXTRACT(epoch FROM(first_response_time - pr_created_at)/3600) AS average_hours_to_first_response,
+            EXTRACT(epoch FROM(last_response_time - pr_created_at)/86400) AS average_days_to_last_response,
+            EXTRACT(epoch FROM(last_response_time - pr_created_at)/3600) AS average_hours_to_last_response,
+            EXTRACT(epoch FROM(pr_closed_at - pr_created_at)/86400) AS average_days_to_close,
+            EXTRACT(epoch FROM(pr_closed_at - pr_created_at)/3600) AS average_hours_to_close,
+            CASE WHEN pr_merged_at IS NULL THEN 'Rejected' ELSE 'Merged' END AS merged_status,
+            date_part( 'year', pr_closed_at :: DATE ) AS closed_year,
+            date_part( 'month', pr_closed_at :: DATE ) AS closed_month,
+            date_part( 'week', pr_closed_at :: DATE ) AS closed_week,
+            date_part( 'day', pr_closed_at :: DATE ) AS closed_day,
+            count(*) AS num_pull_requests
+        FROM (
+        SELECT
+            pull_requests.repo_id, 
+            repo.repo_name,
+            repo_groups.repo_group_id,
+            rg_name AS repo_group_name,
+            pull_requests.pull_request_id,
+            MIN(message.msg_timestamp) AS first_response_time,
+            MAX(message.msg_timestamp) AS last_response_time,
+            pull_requests.pr_closed_at,
+            pr_created_at,
+            pull_requests.pr_merged_at
+        FROM pull_request_message_ref, message, repo_groups,
+        pull_requests JOIN repo ON pull_requests.repo_id = repo.repo_id
+        WHERE pull_requests.repo_id IN 
+            (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
+            AND repo.repo_id = pull_requests.repo_id
+            AND pull_requests.pull_request_id = pull_request_message_ref.pull_request_id
+            AND pull_request_message_ref.msg_id = message.msg_id
+            AND repo_groups.repo_group_id = repo.repo_group_id
+            AND pr_created_at::DATE >= :begin_date ::DATE
+            AND pr_closed_at::DATE <= :end_date ::DATE
+        GROUP BY pull_requests.pull_request_id, repo.repo_name, repo_groups.repo_group_id, repo_groups.rg_name
+        ) response_times
+        GROUP BY closed_year, merged_status, response_times.first_response_time, response_times.last_response_time, response_times.pr_created_at, response_times.pr_closed_at, response_times.repo_id, response_times.repo_name, response_times.repo_group_id, response_times.repo_group_name
         """)
 
     else:
@@ -980,14 +1021,16 @@ def pull_request_average_time_to_responses_and_close(self, repo_group_id, repo_i
         GROUP BY pull_requests.pull_request_id
         ) response_times
         GROUP BY closed_year, merged_status, response_times.first_response_time, response_times.last_response_time, response_times.pr_created_at, response_times.pr_closed_at
-        ORDER BY closed_year, merged_status
         """)
 
     pr_all = pd.read_sql(pr_all_SQL, self.database,
         params={'repo_id': repo_id, 'repo_group_id':repo_group_id,
                 'begin_date': begin_date, 'end_date': end_date})
 
-    avg_pr_time_to_responses_and_close  = pr_all.groupby(time_group_bys + ['merged_status']).mean().reset_index()[time_group_bys + ['merged_status', 'average_{}_to_first_response'.format(time_unit), 'average_{}_to_last_response'.format(time_unit), 'average_{}_to_close'.format(time_unit)]]
+    if not repo_id:
+         avg_pr_time_to_responses_and_close  = pr_all.groupby(time_group_bys + ['merged_status', 'repo_id', 'repo_name', 'repo_group_id', 'repo_group_name']).mean().reset_index()[['merged_status', 'repo_id', 'repo_name', 'repo_group_id', 'repo_group_name'] + time_group_bys + ['average_{}_to_first_response'.format(time_unit), 'average_{}_to_last_response'.format(time_unit), 'average_{}_to_close'.format(time_unit)]]
+    else:
+        avg_pr_time_to_responses_and_close  = pr_all.groupby(time_group_bys + ['merged_status']).mean().reset_index()[time_group_bys + ['merged_status', 'average_{}_to_first_response'.format(time_unit), 'average_{}_to_last_response'.format(time_unit), 'average_{}_to_close'.format(time_unit)]]
 
     return avg_pr_time_to_responses_and_close
 
