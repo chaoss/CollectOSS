@@ -659,7 +659,8 @@ def update_gh_rate_limit(self, response, bad_credentials=False, temporarily_disa
         try:
             reset_time = response.headers['X-RateLimit-Reset']
         except Exception as e:
-            logging.info("Could not get reset time from headers because of error: {}".format(error))
+            logging.info("Could not get reset time from headers because of error: {}".format(e))
+            logging.info('Headers: {}'.format(response.headers))
             reset_time = 3600
         time_diff = datetime.datetime.fromtimestamp(int(reset_time)) - datetime.datetime.now()
         logging.info("Rate limit exceeded, checking for other available keys to use.\n")
