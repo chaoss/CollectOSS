@@ -18,28 +18,26 @@ setup(
     version="0.1.0",
     url="https://github.com/chaoss/augur",
     license='MIT',
-
-    author="Augur Team",
+    author="Augurlabs",
     author_email="s@goggins.com",
-
     description="Augur Worker that collects GitHub data",
-    long_description=read("README.rst"),
-
     packages=find_packages(exclude=('tests',)),
-
-    install_requires=['flask', 'requests', 'psycopg2-binary', 'click'],
-
+    install_requires=[
+        'flask', 
+        'requests', 
+        'psycopg2-binary', 
+        'click'
+    ],
     entry_points={
         'console_scripts': [
             'metric_status_worker_start=metric_status_worker.runtime:main',
         ],
     },
-
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.7',
-    ],
+    ]
 )

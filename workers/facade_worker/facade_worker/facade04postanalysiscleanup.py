@@ -36,8 +36,6 @@ import os
 import getopt
 import xlsxwriter
 import configparser
-import logging
-logging.basicConfig(filename='worker.log', filemode='w', level=logging.INFO)
 
 def git_repo_cleanup(cfg):
 
@@ -45,8 +43,6 @@ def git_repo_cleanup(cfg):
 
 	cfg.update_status('Purging deleted repos')
 	cfg.log_activity('Info','Processing deletions')
-
-	cfg.repo_base_directory = cfg.get_setting('repo_directory')
 
 	query = "SELECT repo_id,repo_group_id,repo_path,repo_name FROM repo WHERE repo_status='Delete'"
 	cfg.cursor.execute(query)

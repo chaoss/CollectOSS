@@ -26,12 +26,12 @@ def send_task(worker_proxy):
     j = r.json()
 
     if 'status' not in j:
-        logging.info("Worker: {}'s heartbeat did not return a response, setting worker status as 'Disconnected'".format(worker_id))
+        logging.info("Worker: {}'s heartbeat did not return a response, setting worker status as 'Disconnected'\n".format(worker_id))
         worker_proxy['status'] = 'Disconnected'
         return
 
     if j['status'] != 'alive':
-        logging.info("Worker: {} is busy, setting its status as so.".format(worker_id))
+        logging.info("Worker: {} is busy, setting its status as so.\n".format(worker_id))
         return
 
     # Want to check user-created job requests first
@@ -43,16 +43,16 @@ def send_task(worker_proxy):
         new_task = maintain_queue.pop(0)
 
     else:
-        logging.info("Both queues are empty for worker {}".format(worker_id))
+        logging.info("Both queues are empty for worker {}\n".format(worker_id))
         worker_proxy['status'] = 'Idle'
         return     
 
-    logging.info("Worker {} is idle, preparing to send the {} task to {}".format(worker_id, new_task['display_name'], task_endpoint))
+    logging.info("Worker {} is idle, preparing to send the {} task to {}\n".format(worker_id, new_task['display_name'], task_endpoint))
     try:
         requests.post(task_endpoint, json=new_task)
         worker_proxy['status'] = 'Working'
     except:
-        logging.info("Sending Worker: {} a task did not return a response, setting worker status as 'Disconnected'".format(worker_id))
+        logging.info("Sending Worker: {} a task did not return a response, setting worker status as 'Disconnected'\n".format(worker_id))
         worker_proxy['status'] = 'Disconnected'
         # If the worker died, then restart it
         worker_start(worker_id.split('.')[len(worker_id.split('.')) - 2])
@@ -71,8 +71,9 @@ def create_broker_routes(server):
         for given_component in list(task['given'].keys()):
             given.append(given_component)
         model = task['models'][0]
-        if task['job_type'] != 'MAINTAIN':
-            logging.info("Broker recieved a new user task ... checking for compatible workers for given: " + str(given) + " and model(s): " + str(model) + "")
+        logging.info("Broker recieved a new user task ... checking for compatible workers for given: " + str(given) + " and model(s): " + str(model) + "\n")
+
+        logging.info("Broker's list of all workers: {}\n".format(server.broker._getvalue().keys()))
 
         worker_found = False
         compatible_workers = {}
@@ -82,35 +83,36 @@ def create_broker_routes(server):
             if type(server.broker[worker_id]._getvalue()) != dict:
                 continue
 
+            logging.info("Considering compatible worker: {}\n".format(worker_id))
+
             # Group workers by type (all gh workers grouped together etc)
             worker_type = worker_id.split('.')[len(worker_id.split('.'))-2]
             compatible_workers[worker_type] = compatible_workers[worker_type] if worker_type in compatible_workers else {'task_load': len(server.broker[worker_id]['user_queue']) + len(server.broker[worker_id]['maintain_queue']), 'worker_id': worker_id}
             
             # Make worker that is prioritized the one with the smallest sum of task queues
             if (len(server.broker[worker_id]['user_queue']) + len(server.broker[worker_id]['maintain_queue'])) < min([compatible_workers[w]['task_load'] for w in compatible_workers.keys() if worker_type == w]):
+                logging.info("Worker id: {} has the smallest task load encountered so far: {}\n".format(worker_id, len(server.broker[worker_id]['user_queue']) + len(server.broker[worker_id]['maintain_queue'])))
                 compatible_workers[worker_type]['task_load'] = len(server.broker[worker_id]['user_queue']) + len(server.broker[worker_id]['maintain_queue'])
                 compatible_workers[worker_type]['worker_id'] = worker_id
 
         for worker_type in compatible_workers.keys():
             worker_id = compatible_workers[worker_type]['worker_id']
             worker = server.broker[worker_id]
-            logging.info("Compatible worker: {} with smallest task load: {} found to work on task: {}".format(worker_id, len(server.broker[worker_id]['user_queue']) + len(server.broker[worker_id]['maintain_queue']), task))
-
-            # if task['job_type'] == "SELECTIVE":
+            logging.info("Final compatible worker chosen: {} with smallest task load: {} found to work on task: {}\n".format(worker_id, len(server.broker[worker_id]['user_queue']) + len(server.broker[worker_id]['maintain_queue']), task))
 
             if task['job_type'] == "UPDATE":
                 worker['user_queue'].append(task)
-                logging.info("Added task for model: {}. New length of worker {}'s user queue: {}".format(model, worker_id, str(len(server.broker[worker_id]['user_queue']))))
+                logging.info("Added task for model: {}. New length of worker {}'s user queue: {}\n".format(model, worker_id, str(len(server.broker[worker_id]['user_queue']))))
             elif task['job_type'] == "MAINTAIN":
                 worker['maintain_queue'].append(task)
-                logging.info("Added task for model: {}. New length of worker {}'s maintain queue: {}".format(model, worker_id, str(len(server.broker[worker_id]['maintain_queue']))))
+                logging.info("Added task for model: {}. New length of worker {}'s maintain queue: {}\n".format(model, worker_id, str(len(server.broker[worker_id]['maintain_queue']))))
 
             if worker['status'] == 'Idle':
                 send_task(worker)
             worker_found = True
         # Otherwise, let the frontend know that the request can't be served
         if not worker_found:
-            logging.info(f"Augur does not have knowledge of any workers that are capable of handing the request: " + str(task))
+            logging.info("Augur does not have knowledge of any workers that are capable of handing the request: {}\n".format(task))
 
         return Response(response=task,
                         status=200,
@@ -122,7 +124,7 @@ def create_broker_routes(server):
             and telling the broker to add this worker to the set it maintains
         """
         worker = request.json
-        logging.info("Recieved HELLO message from worker: " + worker['id'])
+        logging.info("Recieved HELLO message from worker: {}\n".format(worker['id']))
         if worker['id'] not in server.broker:
             server.broker[worker['id']] = server.manager.dict()
             server.broker[worker['id']]['id'] = worker['id']
@@ -137,7 +139,7 @@ def create_broker_routes(server):
             server.broker[worker['id']]['status'] = 'Idle'
             server.broker[worker['id']]['location'] = worker['location']
         else:
-            logging.info("Worker: {} has been reconnected.".format(worker['id']))
+            logging.info("Worker: {} has been reconnected.\n".format(worker['id']))
             models = server.broker[worker['id']]['models']
             givens = server.broker[worker['id']]['given']
             user_queue = server.broker[worker['id']]['user_queue']
@@ -155,7 +157,7 @@ def create_broker_routes(server):
     def sync_queue():
         task = request.json
         worker = task['worker_id']
-        logging.info("Message recieved that worker " + worker + " completed task: " + str(task))
+        logging.info("Message recieved that worker {} completed task: {}\n".format(worker,task))
         try:
             models = server.broker[worker]['models']
             givens = server.broker[worker]['given']
@@ -165,8 +167,8 @@ def create_broker_routes(server):
             if server.broker[worker]['status'] != 'Disconnected':
                 send_task(server.broker[worker])
         except Exception as e:
-            logging.info("Ran into error: {}".format(repr(e)))
-            logging.info("A past instance of the {} worker finished a previous leftover task.".format(worker))
+            logging.info("Ran into error: {}\n".format(repr(e)))
+            logging.info("A past instance of the {} worker finished a previous leftover task.\n".format(worker))
 
         return Response(response=task,
                         status=200,
@@ -188,7 +190,7 @@ def create_broker_routes(server):
     @server.app.route('/{}/workers/remove'.format(server.api_version), methods=['POST'])
     def remove_worker():
         worker = request.json
-        logging.info("Recieved a message to disconnect worker: {}".format(worker))
+        logging.info("Recieved a message to disconnect worker: {}\n".format(worker))
         server.broker[worker['id']]['status'] = 'Disconnected'
         return Response(response=worker,
                         status=200,
@@ -198,13 +200,13 @@ def create_broker_routes(server):
     def task_error():
         task = request.json
         worker_id = task['worker_id']
-        logging.info("Recieved a message that {} ran into an error on task: {}".format(worker_id, task))
+        logging.info("Recieved a message that {} ran into an error on task: {}\n".format(worker_id, task))
         if worker_id in server.broker:
             if server.broker[worker_id]['status'] != 'Disconnected':
-                logging.info("{} ran into error while completing task: {}".format(worker_id, task))
+                logging.info("{} ran into error while completing task: {}\n".format(worker_id, task))
                 send_task(server.broker[worker_id])
         else:
-            logging.info("A previous instance of {} ran into error while completing task: {}".format(worker_id, task))
+            logging.info("A previous instance of {} ran into error while completing task: {}\n".format(worker_id, task))
         return Response(response=request.json,
                         status=200,
                         mimetype="application/json")

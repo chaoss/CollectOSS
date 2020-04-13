@@ -1,19 +1,26 @@
+from os import walk, chdir, environ, chmod
+from sys import exit
+import stat
+from collections import OrderedDict
+from subprocess import call
 import csv
 import click
 import sqlalchemy as s
 import pandas as pd
 from sqlalchemy import exc
 
-from augur.runtime import pass_application
-
 @click.group('db', short_help='Database utilities')
 def cli():
     pass
 
-@cli.command('add_repos', short_help="Add repositories to Augur's database")
+@cli.command('add-repos')
 @click.argument('filename', type=click.Path(exists=True))
-@pass_application
-def add_repos(app, filename):
+@click.pass_context
+def add_repos(ctx, filename):
+    """
+    Add repositories to Augur's database
+    """
+    app = ctx.obj
 
     db = get_db_connection(app)
 
@@ -41,9 +48,13 @@ def add_repos(app, filename):
                 # Since there's no rows to fetch after a successful insert, this is how we know it worked.
                 # I know it's weird
 
-@cli.command('get_repo_groups', short_help="List all repo groups and their associated IDs")
-@pass_application
-def get_repo_groups(app):
+@cli.command('get-repo-groups')
+@click.pass_context
+def get_repo_groups(ctx):
+    """
+    List all repo groups and their associated IDs
+    """
+    app = ctx.obj
 
     db = get_db_connection(app)
 
@@ -52,10 +63,14 @@ def get_repo_groups(app):
 
     return df
 
-@cli.command('add_repo_groups', short_help="Create new repo groups in Augur's database")
+@cli.command('add-repo-groups')
 @click.argument('filename', type=click.Path(exists=True))
-@pass_application
-def add_repo_groups(app, filename):
+@click.pass_context
+def add_repo_groups(ctx, filename):
+    """
+    Create new repo groups in Augur's database
+    """
+    app = ctx.obj
 
     db = get_db_connection(app)
 
@@ -69,7 +84,7 @@ def add_repo_groups(app, filename):
     with open(filename) as create_repo_groups_file:
         data = csv.reader(create_repo_groups_file, delimiter=',')
         for row in data:
-            print(f"\nTrying repo group with name {row[1]} and ID {row[0]}...")
+            print(f"Trying repo group with name {row[1]} and ID {row[0]}...")
             try:
                 if int(row[0]) not in repo_group_IDs:
                     repo_group_IDs.append(int(row[0]))
@@ -77,22 +92,175 @@ def add_repo_groups(app, filename):
                 else:
                     print(f"Repo group with ID {row[1]} for repo group {row[1]} already exists, skipping...")
             except exc.ResourceClosedError as error:
-                print(f"Successfully inserted {row[1]}.")
+                print(f"Successfully inserted {row[1]}.\n")
                 # pd.read_sql() will throw an AttributeError when it can't sucessfully "fetch" any rows from the result.
                 # Since there's no rows to fetch after a successful insert, this is how we know it worked.
                 # I know it's weird, sue me (jk please don't)
 
+@cli.command('update-repo-directory')
+@click.argument('repo_directory')
+@click.pass_context
+def update_repo_directory(ctx, repo_directory):
+    """
+    Update Facade worker repo cloning directory
+    """
+    app = ctx.obj
+
+    db = get_db_connection(app)
+
+    updateRepoDirectorySQL = s.sql.text("""
+        UPDATE augur_data.settings SET VALUE = :repo_directory WHERE setting='repo_directory';
+    """)
+
+    try:
+        pd.read_sql(updateRepoDirectorySQL, db, params={'repo_directory': repo_directory})
+    except exc.ResourceClosedError as error:
+        print(f"Successfully updated the Facade worker repo directory.")
+        # pd.read_sql() will throw an AttributeError when it can't sucessfully "fetch" any rows from the result.
+        # Since there's no rows to fetch after a successful insert, this is how we know it worked.
+        # I know it's weird, sue me (jk please don't)
+
+# get_db_version is a helper function to print_db_version and upgrade_db_version
+def get_db_version(app):
+    db = get_db_connection(app)
+
+    db_version_sql = s.sql.text("""
+        SELECT * FROM augur_operations.augur_settings WHERE setting = 'augur_data_version'
+    """)
+
+    return int(db.execute(db_version_sql).fetchone()[2])
+
+@cli.command('print-db-version')
+@click.pass_context
+def print_db_version(ctx):
+    """
+    Get the version of the configured database
+    """
+    print(f"Augur DB version: {get_db_version(ctx.obj)}")
+
+@cli.command('upgrade-db-version')
+@click.pass_context
+def upgrade_db_version(ctx):
+    """
+    Upgrade the configured database to the latest version
+    """
+    current_db_version = get_db_version(ctx.obj)
+
+    update_scripts_filenames = []
+    for (_, _, filenames) in walk('schema/generate'):
+        update_scripts_filenames.extend([file for file in filenames if 'update' in file])
+        # files_temp.extend([file.split("-")[1][14:].split(".")[0] for file in filenames if 'update' in file])
+        break
+
+    target_version_script_map = {}
+    for script in update_scripts_filenames:
+        upgrades_to = int(script.split("-")[1][14:].split(".")[0])
+        target_version_script_map[upgrades_to] = str(script)
+
+    target_version_script_map = OrderedDict(sorted(target_version_script_map.items()))
+
+    most_recent_version = list(target_version_script_map.keys())[-1]
+    if current_db_version == most_recent_version:
+        print("Your database is already up to date. ")
+    elif current_db_version > most_recent_version:
+        print(f"Unrecognized version: {current_db_version}\nThe most recent version is {most_recent_version}. Please contact your system administrator to resolve this error.")
+
+    for target_version, script_location in target_version_script_map.items():
+        if target_version == current_db_version + 1:
+            print("Upgrading from", current_db_version, "to", target_version)
+            run_psql_command_in_database(ctx.obj, '-f', f"schema/generate/{script_location}")
+            current_db_version += 1
+
+@cli.command('create-schema')
+@click.pass_context
+def create_schema(ctx):
+    """
+    Create schema in the configured database
+    """
+    app = ctx.obj
+    check_pgpass_credentials(app.config)
+    run_psql_command_in_database(app, '-f', 'schema/create_schema.sql')
+
+@cli.command('check-pgpass', short_help="Check the ~/.pgpass file for Augur's database credentials")
+@click.pass_context
+def load_data(ctx):
+    app = ctx.obj
+    check_pgpass_credentials(app.config)
+
+@cli.command('init-database')
+@click.option('--default-db-name', default='postgres')
+@click.option('--default-user', default='postgres')
+@click.option('--default-password', default='postgres')
+@click.option('--target-db-name', default='augur')
+@click.option('--target-user', default='augur')
+@click.option('--target-password', default='augur')
+@click.option('--host', default='localhost')
+@click.option('--port', default='5432')
+@click.pass_context
+def init_database(ctx, default_db_name, default_user, default_password, target_db_name, target_user, target_password, host, port):
+    """
+    Create database with the given credentials using the given maintenance database 
+    """
+    app = ctx.obj
+    config = {
+        'Database': {
+            'name': default_db_name,
+            'user': default_user,
+            'password': default_password,
+            'host': host,
+            'port': port
+        }
+    }
+    check_pgpass_credentials(config)
+    run_db_creation_psql_command(host, port, default_user, default_db_name, f'CREATE DATABASE {target_db_name};')
+    run_db_creation_psql_command(host, port, default_user, default_db_name, f'CREATE USER {target_user} WITH ENCRYPTED PASSWORD \'{target_password}\';')
+    run_db_creation_psql_command(host, port, default_user, default_db_name, f'ALTER DATABASE {target_db_name} OWNER TO {target_user};')
+    run_db_creation_psql_command(host, port, default_user, default_db_name, f'GRANT ALL PRIVILEGES ON DATABASE {target_db_name} TO {target_user};')
+
+def run_db_creation_psql_command(host, port, user, name, command):
+    call(['psql', '-h', host, '-p', port, '-U', user, '-d', name, '-a', '-w', '-c', command])
+
+def run_psql_command_in_database(app, target_type, target):
+    if target_type not in ['-f', '-c']:
+        print("Invalid target type. Exiting...")
+        exit(1)
+
+    call(['psql', '-h', app.read_config('Database', 'host'),\
+      '-d', app.read_config('Database', 'name'),\
+      '-U', app.read_config('Database', 'user'),\
+      '-p', str(app.read_config('Database', 'port')),\
+      '-a', '-w', target_type, target
+    ])
+
+def check_pgpass_credentials(config):
+    pgpass_file_path = environ['HOME'] + '/.pgpass'
+    chmod(pgpass_file_path, stat.S_IWRITE | stat.S_IREAD)
+    with open(pgpass_file_path, 'a+') as pgpass_file:
+        end = pgpass_file.tell()
+        credentials_string = str(config['Database']['host']) \
+                          + ':' + str(config['Database']['port']) \
+                          + ':' + str(config['Database']['name']) \
+                          + ':' + str(config['Database']['user']) \
+                          + ':' + str(config['Database']['password'])
+        pgpass_file.seek(0)
+        if credentials_string.lower() not in [''.join(line.split()).lower() for line in pgpass_file.readlines()]:
+            print("Database credentials not found in $HOME/.pgpass. Adding credentials...")
+            pgpass_file.seek(end)
+            pgpass_file.write(credentials_string + '\n')
+
 def get_db_connection(app):
 
-    user = app.read_config('Database', 'user', 'AUGUR_DB_USER', 'augur')
-    password = app.read_config('Database', 'password', 'AUGUR_DB_PASS', 'password')
-    host = app.read_config('Database', 'host', 'AUGUR_DB_HOST', '127.0.0.1')
-    port = app.read_config('Database', 'port', 'AUGUR_DB_PORT', '5433')
-    dbname = app.read_config('Database', 'database', 'AUGUR_DB_NAME', 'augur')
-    schema = app.read_config('Database', 'schema', 'AUGUR_DB_SCHEMA', 'augur_data')
+    user = app.read_config('Database', 'user')
+    password = app.read_config('Database', 'password')
+    host = app.read_config('Database', 'host')
+    port = app.read_config('Database', 'port')
+    dbname = app.read_config('Database', 'name')
+    schema = app.read_config('Database', 'schema')
 
     DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(
             user, password, host, port, dbname
     )
 
     return s.create_engine(DB_STR, poolclass=s.pool.NullPool)
+
+

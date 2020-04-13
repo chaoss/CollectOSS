@@ -1,17 +1,27 @@
-# Augur
+# Config
 augur.config.json
+!default.config.json
+!frontend.config.json
+env.txt
+docker_env.txt
+pyenv.txt
+augur_export_env.sh
+.DS_Store
+
+
 node_modules/
 logs/
-# Byte-compiled / optimized / DLL files
 __pycache__/
 *$py.class
 *.pyc
 runtime/
 logs/
+cache/
 frontend/public/api_docs/
 *.err
 *.icloud
 frontend/src/store/modules/common/awsCreds.json
+.tox
 
 # C extensions
 *.so

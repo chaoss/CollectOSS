@@ -49,11 +49,10 @@ class Server(object):
         augur_app = self._augur
 
         # Initialize cache
-        expire = int(augur_app.read_config('Server', 'cache_expire', 'AUGUR_CACHE_EXPIRE', 3600))
+        expire = int(augur_app.read_config('Server', 'cache_expire'))
         self.cache = augur_app.cache.get_cache('server', expire=expire)
         self.cache.clear()
 
-        app.config['SECRET_KEY'] = augur_app.read_config('Server', 'secret_key', 'AUGUR_SECRET_KEY', os.urandom(32))
         app.config['WTF_CSRF_ENABLED'] = False
 
         self.show_metadata = False
@@ -102,7 +101,6 @@ class Server(object):
             """
             status = {
                 'status': 'OK',
-                'plugins': [p for p in self._augur._loaded_plugins]
             }
             return Response(response=json.dumps(status),
                             status=200,
@@ -397,9 +395,10 @@ class Server(object):
         self.updateMetricMetadata(function, endpoint, **kwargs)
 
     def addMetric(self, function, endpoint, cache=True, **kwargs):
-        """Simplifies adding routes that only accept owner/repo"""
-        endpoint = '/{}/<owner>/<repo>/{}'.format(self.api_version, endpoint)
-        self.app.route(endpoint)(self.flaskify(function, cache=cache))
+        """Simplifies adding routes that dont accept group/repo ids"""
+        endpoint = '/{}/{}'.format(self.api_version, endpoint)
+        self.app.route(endpoint)(self.flaskify(function, 'general_metric'))
+        kwargs['endpoint_type'] = 'general_metric'
         self.updateMetricMetadata(function, endpoint, **kwargs)
 
     def addTimeseries(self, function, endpoint):

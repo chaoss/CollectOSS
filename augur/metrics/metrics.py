@@ -17,12 +17,12 @@ class MetricDefinitions():
         self.app = app
         self.projects = None
 
-        self.user = self.app.read_config('Database', 'user', 'AUGUR_DB_USER', 'augur')
-        self.password = self.app.read_config('Database', 'password', 'AUGUR_DB_PASS', 'password')
-        self.host = self.app.read_config('Database', 'host', 'AUGUR_DB_HOST', '127.0.0.1')
-        self.port = self.app.read_config('Database', 'port', 'AUGUR_DB_PORT', '5433')
-        self.dbname = self.app.read_config('Database', 'database', 'AUGUR_DB_NAME', 'augur')
-        self.schema = self.app.read_config('Database', 'schema', 'AUGUR_DB_SCHEMA', 'augur_data')
+        self.user = self.app.read_config('Database', 'user')
+        self.password = self.app.read_config('Database', 'password')
+        self.host = self.app.read_config('Database', 'host')
+        self.port = self.app.read_config('Database', 'port')
+        self.dbname = self.app.read_config('Database', 'name')
+        self.schema = self.app.read_config('Database', 'schema')
 
         self.database_connection_string = 'postgresql://{}:{}@{}:{}/{}'.format(
             self.user, self.password, self.host, self.port, self.dbname

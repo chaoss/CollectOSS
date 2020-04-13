@@ -36,10 +36,9 @@ import os
 import getopt
 import xlsxwriter
 import configparser
-import logging
 import traceback 
-logging.basicConfig(filename='worker.log', filemode='w', level=logging.INFO)
 
+from workers.standard_methods import read_config
 
 def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 
@@ -200,18 +199,16 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 	removed = 0
 	whitespace = 0
 
-
-	json = cfg.read_config("Database", use_main_config=1)
-	db_user = json['user']
-	db_pass = json['password']
-	db_name = json['database']
-	db_host = json['host']
-	db_port = json['port']
-	db_user_people = json['user']
-	db_pass_people = json['password']
-	db_name_people = json['database']
-	db_host_people = json['host']
-	db_port_people = json['port']
+	db_user = read_config('Database', 'user', 'AUGUR_DB_USER', 'augur')
+	db_pass = read_config('Database', 'password', 'AUGUR_DB_PASSWORD', 'augur')
+	db_name = read_config('Database', 'name', 'AUGUR_DB_NAME', 'augur')
+	db_host = read_config('Database', 'host', 'AUGUR_DB_HOST', 'localhost')
+	db_port = read_config('Database', 'port', 'AUGUR_DB_PORT', 5432)
+	db_user_people = db_user
+	db_pass_people = db_pass
+	db_name_people = db_name
+	db_host_people = db_host
+	db_port_people = db_port
 
 	# Set up new threadsafe database connections if multithreading. Otherwise
 	# use the gloabl database connections so we don't incur a performance
