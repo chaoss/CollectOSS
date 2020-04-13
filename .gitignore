@@ -9,6 +9,7 @@ augur_export_env.sh
 
 
 node_modules/
+.idea/
 logs/
 __pycache__/
 *$py.class
