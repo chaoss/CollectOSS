@@ -558,7 +558,7 @@ def create_pull_request_routes(server):
     @api {get} /repos/:repo_id/pull-request-average-event-counts Pull Request average event counts(Repo)
     @apiName pull-request-average-event-counts
     @apiGroup Experimental
-    @apiDescription Average of several event counts with merged status and time frame
+    @apiDescription Average of event counts with merged status and time frame
     @apiParam {string} repo_id Repository ID.
     @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
     @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
@@ -591,8 +591,8 @@ def create_pull_request_routes(server):
     @api {get} /repo-groups/:repo_group_id/pull-request-average-event-counts Pull Request average event counts(Repo)
     @apiName pull-request-average-event-counts
     @apiGroup Experimental
-    @apiDescription Average of several event counts with merged status and time frame
-    @apiParam {string} repo_id Repository ID.
+    @apiDescription Average of event counts with merged status and time frame
+    @apiParam {string} repo_group_id Repository Group ID.
     @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
     @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
     @apiParam {string= day, week, month, year} [group_by= month] Group By specification. E.g. values: 'day', 'week', 'month', or 'year'
@@ -600,21 +600,25 @@ def create_pull_request_routes(server):
                     [
                         {
                             "merged_status": "Merged"
-                            "closed_year": 2017.0
-                            "closed_month": 5.0
-                            "average_assigned_count": 2.2641509434
-                            "average_review_requested_count": 4.4245283019
-                            "average_labeled_count": 1.3773584906
-                            "average_unlabeled_count": 0.6320754717
-                            "average_subscribed_count": 18.0094339623
-                            "average_mentioned_count": 18.0094339623
-                            "average_referenced_count": 7.3679245283
-                            "average_closed_count": 3.4339622642
-                            "average_head_ref_force_pushed_count": 6.7924528302
-                            "average_head_ref_deleted_count": 1.4811320755
-                            "average_milestoned_count": 0.2264150943
-                            "average_merged_count": 3.4056603774
-                            "average_comment_count": 3.4056603774
+                            "repo_id": 26214
+                            "repo_name": "RIOT"
+                            "repo_group_id": 25159
+                            "repo_group_name": "Competitors"
+                            "closed_year": 2013.0
+                            "closed_month": 6.0
+                            "average_assigned_count": 0.0
+                            "average_review_requested_count": 0.0
+                            "average_labeled_count": 0.0
+                            "average_unlabeled_count": 0.0
+                            "average_subscribed_count": 1.0
+                            "average_mentioned_count": 1.0
+                            "average_referenced_count": 2.25
+                            "average_closed_count": 1.5
+                            "average_head_ref_force_pushed_count": 0.0
+                            "average_head_ref_deleted_count": 0.75
+                            "average_milestoned_count": 0.0
+                            "average_merged_count": 1.5
+                            "average_comment_count": 1.5
                         }
                     ]
     """

@@ -754,14 +754,14 @@ def pull_request_average_commit_counts(self, repo_group_id, repo_id=None, group_
 
 @annotate(tag='pull-request-average-event-counts')
 def pull_request_average_event_counts(self, repo_group_id, repo_id=None, group_by='month', begin_date=None, end_date=None):
-    """ Average of several event counts with merged status and time frame
+    """ Average of event counts with merged status and time frame
 
     :param repo_group_id: The repository's repo_group_id
     :param repo_id: The repository's repo_id, defaults to None
     :param group_by: The time frame the data is grouped by, options are: 'day', 'week', 'month' or 'year', defaults to 'month'
     :param begin_date: Specifies the begin date, defaults to '1970-1-1 00:00:00'
     :param end_date: Specifies the end date, defaults to datetime.now()
-    :return: DataFrame of averages of event counts
+    :return: DataFrame of event counts avergages
     """
 
     if not begin_date:
@@ -780,7 +780,69 @@ def pull_request_average_event_counts(self, repo_group_id, repo_id=None, group_b
 
     if not repo_id:
         pr_all_SQL = s.sql.text("""
-            
+        SELECT 
+            repo_id,
+            repo_name,
+            repo_group_id,
+            repo_group_name,
+            date_part( 'year', pr_closed_at :: DATE ) AS closed_year,
+            date_part( 'month', pr_closed_at :: DATE ) AS closed_month,
+            date_part( 'week', pr_closed_at :: DATE ) AS closed_week,
+            date_part( 'day', pr_closed_at :: DATE ) AS closed_day, 
+            CASE WHEN pr_merged_at IS NULL THEN 'Rejected' ELSE 'Merged' END AS merged_status,
+            assigned_count AS average_assigned_count,
+            review_requested_count AS average_review_requested_count,
+            labeled_count AS average_labeled_count,
+            unlabeled_count AS average_unlabeled_count,
+            subscribed_count AS average_subscribed_count,
+            mentioned_count AS average_mentioned_count,
+            referenced_count AS average_referenced_count,
+            closed_count AS average_closed_count,
+            head_ref_force_pushed_count AS average_head_ref_force_pushed_count,
+            head_ref_deleted_count AS average_head_ref_deleted_count,
+            milestoned_count AS average_milestoned_count,
+            merged_count AS average_merged_count,
+            comment_count AS average_comment_count,
+            count(*) AS num_pull_requests
+        FROM (
+            SELECT 
+            pull_requests.repo_id,
+            repo_name,
+            repo_groups.repo_group_id,
+            rg_name AS repo_group_name,
+            pull_requests.pull_request_id,
+            pr_merged_at,
+            pr_created_at,
+            pr_closed_at,
+            count(*) FILTER (WHERE action = 'assigned') AS assigned_count,
+            count(*) FILTER (WHERE action = 'review_requested') AS review_requested_count,
+            count(*) FILTER (WHERE action = 'labeled') AS labeled_count,
+            count(*) FILTER (WHERE action = 'unlabeled') AS unlabeled_count,
+            count(*) FILTER (WHERE action = 'subscribed') AS subscribed_count,
+            count(*) FILTER (WHERE action = 'mentioned') AS mentioned_count,
+            count(*) FILTER (WHERE action = 'referenced') AS referenced_count,
+            count(*) FILTER (WHERE action = 'closed') AS closed_count,
+            count(*) FILTER (WHERE action = 'head_ref_force_pushed') AS head_ref_force_pushed_count,
+            count(*) FILTER (WHERE action = 'head_ref_deleted') AS head_ref_deleted_count,
+            count(*) FILTER (WHERE action = 'milestoned') AS milestoned_count,
+            count(*) FILTER (WHERE action = 'merged') AS merged_count,
+            COUNT(DISTINCT message.msg_timestamp) AS comment_count
+            FROM pull_request_events, pull_request_message_ref, message, repo_groups,
+            pull_requests JOIN repo ON pull_requests.repo_id = repo.repo_id
+            WHERE pull_requests.repo_id IN 
+                (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
+                AND repo.repo_id = pull_requests.repo_id
+                AND repo_groups.repo_group_id = repo.repo_group_id
+                AND pull_requests.pull_request_id = pull_request_events.pull_request_id
+                AND pull_requests.pull_request_id = pull_request_message_ref.pull_request_id
+                AND pull_request_message_ref.msg_id = message.msg_id
+                AND pr_created_at::DATE >= :begin_date ::DATE
+                AND pr_closed_at::DATE <=  :end_date ::DATE
+                GROUP BY pull_requests.pull_request_id, repo.repo_name, repo_groups.repo_group_id, repo_groups.rg_name
+                ) data
+           GROUP BY closed_year, closed_month, closed_week, closed_day, merged_status, data.assigned_count, data.review_requested_count, data.labeled_count, data.unlabeled_count, data.subscribed_count, data.mentioned_count, data.referenced_count, data.closed_count, 
+        data.head_ref_force_pushed_count, data.head_ref_deleted_count, data.milestoned_count, data.merged_count, data.comment_count, data.repo_id, data.repo_name, data.repo_group_id, data.repo_group_name
+        ORDER BY merged_status, closed_year, closed_week, closed_day
         """)
 
     else:
@@ -847,7 +909,10 @@ def pull_request_average_event_counts(self, repo_group_id, repo_id=None, group_b
     for name in count_names.copy(): 
         average_count_names.append('average_' + name)
 
-    pr_avg_event_counts = pr_all.groupby(['merged_status'] + time_group_bys).mean().reset_index()[['merged_status'] + time_group_bys + average_count_names]
+    if not repo_id:
+        pr_avg_event_counts = pr_all.groupby(['merged_status', 'repo_id', 'repo_name', 'repo_group_id', 'repo_group_name'] + time_group_bys).mean().reset_index()[['merged_status', 'repo_id', 'repo_name', 'repo_group_id', 'repo_group_name'] + time_group_bys + average_count_names]
+    else:
+        pr_avg_event_counts = pr_all.groupby(['merged_status'] + time_group_bys).mean().reset_index()[['merged_status'] + time_group_bys + average_count_names]
 
     return pr_avg_event_counts
 
