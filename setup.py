@@ -45,7 +45,9 @@ setup(
         "click",
         "psutil",
         "gunicorn==19.9.0",
-        "six>=1.14.0"
+        "six>=1.14.0",
+        "boto3",
+        "slack"
     ],
     extras_require={
         "dev": ["tox", "pytest", "ipdb", "sphinx","sphinx_rtd_theme"]
