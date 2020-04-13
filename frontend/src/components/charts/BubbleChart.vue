@@ -7,9 +7,7 @@
   </div>
 </template>
 
-
 <script>
-import { mapState } from 'vuex'
 import AugurStats from '@/AugurStats.ts'
 import VueVega from 'vue-vega'
 
@@ -61,7 +59,6 @@ let spec = {
           "field": "name",
           "type": "nominal"
         },
-        //"href": {"field": "url", "type": "nominal"},
         "size": {
           "field": "total",
           "type": "quantitative",
@@ -133,7 +130,6 @@ let spec = {
             "field": "name",
             "type": "nominal"
           },
-          // "href": {"field": "url", "type": "nominal"},
           "value": "grey"
         },
       }
@@ -159,25 +155,24 @@ export default {
       return this.$store.state.showBelowAverage
     },
     chart() {
-      // so that this will get re-rendered consistently
-      let removeBelowAverageContributors = !this.showBelowAverage
-      $(this.$el).find('.showme').addClass('invis')
-      $(this.$el).find('.bubblechart').addClass('loader')
+      let removeBelowAverageContributors = !this.showBelowAverage;
       let shared = {};
-      let processData = (data) => {
+      $(this.$el).find('.showme').addClass('invis');
+      $(this.$el).find('.bubblechart').addClass('loader');
+      let processData = () => {
         window.AugurRepos[this.repo][this.source]().then((data) => {
-          shared.baseData = data.map((e) => { e.repo = this.repo.toString(); return e })
+          shared.baseData = data.map((e) => { e.repo = this.repo.toString(); return e });
           if (removeBelowAverageContributors) {
             shared.baseData = AugurStats.aboveAverage(shared.baseData, 'total')
           }
           if (this.comparedTo) {
             return window.AugurRepos[this.comparedTo].contributors();
           } else {
-            return new Promise((resolve, reject) => { resolve() });
+            return new Promise((resolve) => { resolve() });
           }
         }).then((compareData) => {
           if (compareData) {
-            compareData = compareData.map((e) => { e.repo = this.comparedTo; return e })
+            compareData = compareData.map((e) => { e.repo = this.comparedTo; return e });
             if (removeBelowAverageContributors) {
               compareData = AugurStats.aboveAverage(compareData, 'total')
             }
@@ -185,28 +180,27 @@ export default {
           } else {
             this.values = shared.baseData;
           }
-          $(this.$el).find('.showme, .hidefirst').removeClass('invis')
+          $(this.$el).find('.showme, .hidefirst').removeClass('invis');
           $(this.$el).find('.bubblechart').removeClass('loader')
         })
-      }
+      };
       if (this.repo) {
-
         if (this.data){
           processData(this.data)
         } else {
           window.AugurRepos[this.repo][this.source]().then((data) => {
-            shared.baseData = data.map((e) => { e.repo = this.repo.toString(); return e })
+            shared.baseData = data.map((e) => { e.repo = this.repo.toString(); return e });
             if (removeBelowAverageContributors) {
               shared.baseData = AugurStats.aboveAverage(shared.baseData, 'total')
             }
             if (this.comparedTo) {
               return window.AugurRepos[this.comparedTo].contributors();
             } else {
-              return new Promise((resolve, reject) => { resolve() });
+              return new Promise((resolve) => { resolve() });
             }
           }).then((compareData) => {
             if (compareData) {
-              compareData = compareData.map((e) => { e.repo = this.comparedTo; return e })
+              compareData = compareData.map((e) => { e.repo = this.comparedTo; return e });
               if (removeBelowAverageContributors) {
                 compareData = AugurStats.aboveAverage(compareData, 'total')
               }
@@ -214,15 +208,12 @@ export default {
             } else {
               this.values = shared.baseData;
             }
-            $(this.$el).find('.showme, .hidefirst').removeClass('invis')
+            $(this.$el).find('.showme, .hidefirst').removeClass('invis');
             $(this.$el).find('.bubblechart').removeClass('loader')
           })
         }
-
-
       }
     }
   }
 }
-
 </script>
