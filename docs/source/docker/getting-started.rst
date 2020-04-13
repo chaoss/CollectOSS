@@ -24,7 +24,7 @@ Now that you've got your external database credentials (if you are using one) an
 
 First, you'll need to clone the repository. In your terminal, run:
 
-  .. code:: 
+.. code-block:: bash
 
     $ git clone https://github.com/chaoss/augur.git
     $ cd augur/

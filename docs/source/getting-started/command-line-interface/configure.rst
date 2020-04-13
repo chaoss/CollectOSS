@@ -30,7 +30,7 @@ Below is the list of available parameters, their defaults, and the corresponding
 
 Example usage\:
 
-.. code:: bash
+.. code-block:: bash
 
   # to generate an augur.config.json file with all the defaults
   $ augur configure generate

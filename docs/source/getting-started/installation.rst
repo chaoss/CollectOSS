@@ -43,7 +43,7 @@ Lines that start with a ``$`` denote a bash command.
 
 0. Clone the repository.
 
-.. code:: bash
+.. code-block:: bash
 
    $ git clone https://github.com/chaoss/augur.git
    $ cd augur/
@@ -52,7 +52,7 @@ Lines that start with a ``$`` denote a bash command.
    the correct ``python`` command for your installation of Python 3.6+ - on most systems, this is ``python3``,
    but yours may differ.
 
-.. code:: bash
+.. code-block:: bash
 
     # to create the environment
     $ python3 -m venv $HOME/.virtualenvs/augur_env
@@ -72,7 +72,7 @@ Lines that start with a ``$`` denote a bash command.
 - if needed, create the schema in your configured database
 - optionally, install Augur’s frontend and its dependencies 
 
-.. code:: bash
+.. code-block:: bash
 
    $ make install
 

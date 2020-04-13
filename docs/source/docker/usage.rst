@@ -10,10 +10,9 @@ Augur offers a special graphical interface for loading repository groups when us
 
 To use it, first start the two services (we recommend using `Docker Compose <docker-compose.html>`_ for this):
 
-.. code::
+.. code-block:: bash
 
     # this example uses the database image, but will work with an external one as well
-
     $ docker-compose -f docker-compose.yml -f database-compose.yml up
 
 Then, navigate to ``http://localhost:8080/augurface/`` in your browser - note the trailing slash! You can click through the Login button (it is just a placeholder), and then you will be able to use the UI to automatically import repository groups from GitHub organizations, or manually create and edit them. Deleting repos or repo groups is not currently supported, but would be a great contribution! ;)
@@ -30,7 +29,7 @@ Accessing the containers
 
 If you need to access a running container (perhaps to check the worker logs) or run a CLI command, you can use the following helpful command, replacing ``<service_name>`` with the appropriate value:
 
-.. code::
+.. code-block:: bash
 
     $ docker exec -it <service_name> /bin/bash
 
@@ -40,12 +39,12 @@ Viewing container logs
 
 By default, the only logs shown by the container are the logs of Augur's main data collection process. If you started your container(s) in the background, and want to view these logs again, run the following command in the root ``augur`` directory\:
 
-.. code::
+.. code-block:: bash
 
     # to quickly view the most recent logs
     $ docker-compose logs
 
-    # to follow the logs progress (like tail -f)
+    # to watch the logs in real time (like tail -f)
     $ docker-compose logs -f
 
 Conclusion

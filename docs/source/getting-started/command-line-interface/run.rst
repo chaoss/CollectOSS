@@ -11,9 +11,7 @@ The ``augur run`` command is for starting Augur's backend server. Example usages
 
 --skip-cleanup      Flag that disables the old process cleanup that runs before Augur starts. Useful for Python scripts where Augur needs to be run in the background: see the `test/api/runner.py` file for an example.
 
-To start the backend as normal\:
-
-.. code-block::
+To start the backend as normal::
 
   $ augur run
 
@@ -42,9 +40,7 @@ To start the backend as normal\:
   > ...
 
 
-To start the backend server without the housekeeper\:
-
-.. code-block::
+To start the backend server without the housekeeper::
 
   $ augur run --disable-housekeeper
 
@@ -61,9 +57,7 @@ To start the backend server without the housekeeper\:
   > [2020-04-08 13:04:00 -0500] [31406] [INFO] Booting worker with pid: 31406
   > ...
 
-To start the backend server and skip the process cleanup\:
-
-.. code-block::
+To start the backend server and skip the process cleanup::
 
   $ augur run --skip-cleanup
 

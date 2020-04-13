@@ -27,7 +27,7 @@ Building
 To see your changes and make sure everything rendered correctly, run ``make library-docs`` in the root 
 ``augur/`` directory, and then open ``docs/build/html/index.html`` in your web browser to view it. 
 
-.. code::
+.. code-block:: bash
 
     $ make library-docs
     $ open docs/build/html/index.html
@@ -35,7 +35,7 @@ To see your changes and make sure everything rendered correctly, run ``make libr
 
 After opening it once, just run ``make library-docs`` and refresh the page in your browser to see the changes:
 
-.. code::
+.. code-block:: bash
 
     # after opening the documentation
     $ make library-docs
@@ -51,10 +51,7 @@ built and deployed on a push to one of these branches, but please don't forget t
 API Documentation
 -----------------
 The API documenation is written inline using `apiDoc <https://apidocjs.com/>`_. Each public API route is 
-decorated with a documenation block of the following format:
-
-  .. code-block:: 
-    :linenos:
+decorated with a documenation block of the following format::
 
     """
     @api {method} /path/:param/endpoint-name Endpoint Name
