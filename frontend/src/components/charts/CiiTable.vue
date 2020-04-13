@@ -4,14 +4,17 @@
       <spinner v-if="!loaded"></spinner>
       <div v-if="loaded">
         <p v-if="values == undefined || values.length == 0">There is no CII Best Practices data for this repository</p>
-        <p v-for="value in values">
-          <img :src="'https://bestpractices.coreinfrastructure.org/projects/' + value.id + '/badge'" width = 40%>
-          <br><br>
-          The badge status of this repository is <strong>{{value.badge_level}}</strong>
-          <br> The CII ID is <strong>{{value.id}}</strong>
-          <br> More CII data for this project can be found at CII's <a :href="'https://bestpractices.coreinfrastructure.org/projects/' + value.id">best practices badging website.</a>
-        </p>
-        </p>
+        <div v-for="value in values">
+          <img :src="'https://bestpractices.coreinfrastructure.org/projects/' + value.id + '/badge'" alt="" width = 40%>
+          <br>
+          <br>
+          <span>The badge status of this repository is</span><strong>{{value.badge_level}}</strong>
+          <br>
+          <span>The CII ID is </span><strong>{{value.id}}</strong>
+          <br>
+          <span>More CII data for this project can be found at CII's </span>
+          <a :href="'https://bestpractices.coreinfrastructure.org/projects/' + value.id">best practices badging website.</a>
+        </div>
       </div>
     </d-card-body>
   </d-card>
@@ -30,7 +33,7 @@
       headers: Array,
       fields: Array,
     }
-  })
+  });
 
   @Component({
     components: {
@@ -52,30 +55,30 @@
   export default class CountBlock extends AppProps{
 
     // data props
-    loaded: boolean = false
-    values: any[] = []
+    loaded: boolean = false;
+    values: any[] = [];
 
     // compare getters
-    base!:any
-    comparedRepos!:any
+    base!:any;
+    comparedRepos!:any;
 
     // common actions
-    endpoint!:any
+    endpoint!:any;
 
     created () {
       if (this.data) {
-        this.loaded = true
+        this.loaded = true;
         this.values = this.data[this.source]
       }
 
       else {
         this.endpoint({endpoints:[this.source],repos:[this.base]}).then((tuples:any) => {
-          let ref = this.base.url || this.base.repo_name
-          let values:any = []
+          let ref = this.base.url || this.base.repo_name;
+          let values:any = [];
           Object.keys(tuples[ref]).forEach((endpoint) => {
             values = tuples[ref][endpoint]
-          })
-          this.values = values
+          });
+          this.values = values;
           this.loaded = true
         })
       }
