@@ -27,19 +27,22 @@ Creating a Database
 
 After you've created your PostgreSQL instance, you'll need to setup a database in which to install the schema, as well as set up a dedicated augur user. You can do this with the SQL commands below (be sure to change the password!).
 
-.. code:: 
+.. code-block:: postgresql 
     
     CREATE DATABASE augur;
     CREATE USER augur WITH ENCRYPTED PASSWORD 'password';
     GRANT ALL PRIVILEGES ON DATABASE augur TO augur;
 
-For example, if you were using ``psql`` to connect to an instance on your machine ``localhost`` under the default user ``postgres`` on the default PostgreSQL port ``5432``, you might run something like this:
+For example, if you were using ``psql`` to connect to an instance on your machine ``localhost`` under the default user ``postgres`` on the default PostgreSQL port ``5432``, you might run something like this to connect to the server:
 
-.. code::
+.. code-block:: bash
 
     $ psql -h localhost -U postgres -p 5432
-    # ...
-    # once you've connected to the server
+
+Then, once you've connected to your PostgreSQL instance\:
+
+.. code-block:: postgresql
+
     postgres=# CREATE DATABASE augur;
     postgres=# CREATE USER augur WITH ENCRYPTED PASSWORD 'password';
     postgres=# GRANT ALL PRIVILEGES ON DATABASE augur TO augur;

@@ -12,7 +12,7 @@ Building the images
 
 All ``Dockerfiles`` and other Docker-related files are located in ``util/docker/<service_name>``, where ``<service_name>`` is either ``backend``, ``frontend``, or ``database``. To build these images locally, use the following command, being sure to replace ``<tag_name>`` and ``<service_name>`` as appropriate.
 
-.. code::
+.. code-block:: bash
 
     # in the root augur/ directory
     $ docker build -t <tag_name> -f util/docker/<service name>/Dockerfile .
@@ -33,10 +33,9 @@ To start a container, use the command below. ``<container_name>`` can be whateve
 .. note::
     If you are running the backend service, you'll also need to add ``--env-file docker_env.txt`` to your command in order to make the container aware of your configuration file.
 
-.. code::
+.. code-block:: bash
 
     # in the root augur/ directory
-
     $ docker run -p <host_port>:<docker_port> --name <container_name> <tag_name>
 
 Running the test database
@@ -45,6 +44,6 @@ Running the test database
 One of the containers we provide is ``augurlabs/augur:test_data``, a container preloaded with the Augur schema and our testing environment. This is primarly for developers to easily reproduce the tests locally, but could also be used by those who just want to browse some sample data.
 We recommend using the following command to start it up:
 
-.. code::
+.. code-block:: bash
 
     $ docker run -p <host_port>:5432 --name augur_test augurlabs/augur:test_data

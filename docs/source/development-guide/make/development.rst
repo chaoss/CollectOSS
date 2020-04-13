@@ -14,9 +14,7 @@ These commands are used to control Augur's backend and frontend servers simultan
 ``make dev``
 -------------
 Starts the frontend and backend servers together in the background. The output of the backend are in ``logs/augur.log``, and the logs for the frontend are in ``logs/frontend.log``.
-The backend output should like something like this (note that your process IDs and hostname will be different):
-
-.. code::
+The backend output should like something like this (note that your process IDs and hostname will be different)::
 
      2020-03-22 12:39:28 kaiyote augur[19051] INFO Booting broker and its manager...
      2020-03-22 12:39:29 kaiyote augur[19051] INFO Booting housekeeper...
@@ -36,9 +34,7 @@ The backend output should like something like this (note that your process IDs a
      [2020-03-22 12:39:53 -0500] [19091] [INFO] Booting worker with pid: 19091
      [2020-03-22 12:39:53 -0500] [19092] [INFO] Booting worker with pid: 19092
 
-The frontend output should like something like this:
-
-.. code::
+The frontend output should like something like this::
     
        # a whole bunch of stuff about compiling
        ...
@@ -68,6 +64,6 @@ Stops both the frontend and the backend server.
 
 Example\:
 
-.. code::
+.. code-block:: bash
 
     $ make dev-stop
