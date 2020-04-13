@@ -1059,27 +1059,59 @@ def pull_request_merged_status_counts(self, repo_group_id, repo_id=None, begin_d
 
     if not repo_id:
         pr_all_sql = s.sql.text("""
-            
-        """)
+        SELECT 
+            repo_id,
+            repo_name,
+            repo_group_id,
+            repo_group_name,
+            pull_request_id AS pull_request_count,
+            CASE WHEN pr_merged_at IS NULL THEN 'Rejected' ELSE 'Merged' END AS merged_status,
+            date_part( 'year', pr_closed_at :: DATE ) AS closed_year,
+            date_part( 'month', pr_closed_at :: DATE ) AS closed_month,
+            date_part( 'week', pr_closed_at :: DATE ) AS closed_week,
+            date_part( 'day', pr_closed_at :: DATE ) AS closed_day
+        FROM (
+        SELECT
+            pull_requests.pull_request_id,
+            pull_requests.repo_id,
+            repo.repo_name,
+            repo_groups.repo_group_id,
+            rg_name AS repo_group_name,
+            pr_merged_at,
+            pr_closed_at
+        FROM repo_groups,
+        pull_requests JOIN repo ON pull_requests.repo_id = repo.repo_id
+        WHERE pull_requests.repo_id IN
+            (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
+            AND repo_groups.repo_group_id = repo.repo_group_id
+            AND pr_created_at::DATE >= :begin_date ::DATE
+            AND pr_closed_at::DATE <= :end_date ::DATE
+        GROUP BY pull_requests.pull_request_id, pull_requests.repo_id, repo.repo_name, repo_groups.repo_group_id, repo_groups.rg_name
+        ) data 
+        GROUP BY repo_id, repo_name, repo_group_id, repo_group_name, pull_request_id, pr_merged_at, pr_closed_at  
+    """)
     else:
         pr_all_sql = s.sql.text("""
-            SELECT 
-                pull_request_id as pull_request_count,
-                CASE WHEN pr_merged_at IS NULL THEN 'Rejected' ELSE 'Merged' end as merged_status,
-                date_part( 'year', pr_closed_at :: DATE ) AS closed_year,
-                date_part( 'month', pr_closed_at :: DATE ) AS closed_month,
-                date_part( 'week', pr_closed_at :: DATE ) AS closed_week,
-                date_part( 'day', pr_closed_at :: DATE ) AS closed_day
-            from pull_requests
-            where repo_id = :repo_id
-                AND pr_created_at::date >= :begin_date ::date
-                AND pr_closed_at::date <= :end_date ::date
+        SELECT 
+            pull_request_id as pull_request_count,
+            CASE WHEN pr_merged_at IS NULL THEN 'Rejected' ELSE 'Merged' end as merged_status,
+            date_part( 'year', pr_closed_at :: DATE ) AS closed_year,
+            date_part( 'month', pr_closed_at :: DATE ) AS closed_month,
+            date_part( 'week', pr_closed_at :: DATE ) AS closed_week,
+            date_part( 'day', pr_closed_at :: DATE ) AS closed_day
+        from pull_requests
+        where repo_id = :repo_id
+            AND pr_created_at::date >= :begin_date ::date
+            AND pr_closed_at::date <= :end_date ::date
         """)
 
     pr_all = pd.read_sql(pr_all_sql, self.database, params={'repo_group_id': repo_group_id, 
         'repo_id': repo_id, 'begin_date': begin_date, 'end_date': end_date})
 
-    pr_merged_counts = pr_all.groupby(['merged_status'] + time_group_bys).count().reset_index()[time_group_bys + ['merged_status', 'pull_request_count']]
+    if not repo_id:
+         pr_merged_counts = pr_all.groupby(['merged_status', 'repo_id', 'repo_name', 'repo_group_id', 'repo_group_name'] + time_group_bys).count().reset_index()[['merged_status', 'repo_id', 'repo_name', 'repo_group_id', 'repo_group_name'] + time_group_bys + ['pull_request_count']]
+    else:
+        pr_merged_counts = pr_all.groupby(['merged_status'] + time_group_bys).count().reset_index()[time_group_bys + ['merged_status', 'pull_request_count']]
     
     return pr_merged_counts
 
