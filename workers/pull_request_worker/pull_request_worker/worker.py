@@ -574,7 +574,7 @@ class GHPullRequestWorker:
             }
 
             if pr_meta_data['flag'] == 'need_update':
-                result = self.db.execute(self.issues_table.update().where(
+                result = self.db.execute(self.pull_request_meta_table.update().where(
                         self.pull_request_meta_table.c.pr_sha==pr_meta['pr_sha'] and
                         self.pull_request_meta_table.c.pr_head_or_base==pr_side 
                     ).values(pr_meta))

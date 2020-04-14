@@ -349,7 +349,7 @@ class InsightWorker:
                 insight_exists = ((insight_table_values['ri_date'] == ts) & \
                     (insight_table_values['ri_metric'] == split[0]) & (insight_table_values['ri_field'] == split[1])).any()
 
-                if insight_exists:
+                if not insight_exists:
 
                     # Insert record in records table and send record to slack bot
                     record = {
