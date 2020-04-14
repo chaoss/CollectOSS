@@ -9,7 +9,7 @@ echo
 
 cd docs
 
-apidoc -f "\.py" -i ../augur/ -o api/
+npx apidoc -f "\.py" -i ../augur/ -o api/
 
 rm -rf ../frontend/public/api_docs/*
 
