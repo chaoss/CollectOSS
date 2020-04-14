@@ -428,21 +428,47 @@ def update_tracking(metric, body):
 @annotate(tag='slack_login')
 def slack_login(metric, body):
     print("slack_login")
-    r = requests.get(url=f'https://slack.com/api/oauth.access?code={body["code"]}&client_id={os.environ["AUGGIE_CLIENT_ID"]}&client_secret={os.environ["AUGGIE_CLIENT_SECRET"]}')
+    r = requests.get(url=f'https://slack.com/api/oauth.access?code={body["code"]}&client_id={os.environ["AUGGIE_CLIENT_ID"]}&client_secret={os.environ["AUGGIE_CLIENT_SECRET"]}&redirect_uri=http://localhost:8080/#/login')
     data = r.json()
 
-    token = data["access_token"]
-    team_id = data["team_id"]
-    client = slack.WebClient(token=token)
+    if (data["ok"]):
+        token = data["access_token"]
+        team_id = data["team_id"]
+        client = slack.WebClient(token=token)
 
-    user_response = client.users.identity()
+        user_response = client.users.identity()
 
-    email = user_response["user"]["email"]
+        email = user_response["user"]["email"]
 
-    return json.dumps({
-        'team_id': team_id,
-        'email': email
-    })
+        profile_name = 'augur'
+        if os.environ.get('AUGUR_IS_PROD'):
+            profile_name = 'default'
+        client = boto3.Session(region_name='us-east-1',
+                            profile_name=profile_name).client('dynamodb')
+        response = client.get_item(
+            TableName="auggie-users",
+            Key={
+                "email": {"S": '{}:{}'.format(email, team_id)}
+            }
+        )
+        user = response['Item']
+
+        filteredUser = {
+            "interestedRepos": user["interestedRepos"],
+            "interestedGroups": user["interestedGroups"],
+            "host": user["host"]
+        }
+
+        return json.dumps({
+            'team_id': team_id,
+            'email': email,
+            'user': filteredUser
+        })
+    else:
+        return data
+    
+
+    
 
 def create_util_metrics(metrics):
     add_metrics(metrics, __name__)
