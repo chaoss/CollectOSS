@@ -1028,9 +1028,9 @@ def pull_request_average_time_to_responses_and_close(self, repo_group_id, repo_i
                 'begin_date': begin_date, 'end_date': end_date})
 
     if not repo_id:
-         avg_pr_time_to_responses_and_close  = pr_all.groupby(time_group_bys + ['merged_status', 'repo_id', 'repo_name', 'repo_group_id', 'repo_group_name']).mean().reset_index()[['merged_status', 'repo_id', 'repo_name', 'repo_group_id', 'repo_group_name'] + time_group_bys + ['average_{}_to_first_response'.format(time_unit), 'average_{}_to_last_response'.format(time_unit), 'average_{}_to_close'.format(time_unit)]]
+         avg_pr_time_to_responses_and_close  = pr_all.groupby(['merged_status', 'repo_id', 'repo_name', 'repo_group_id', 'repo_group_name'] + time_group_bys).mean().reset_index()[['merged_status', 'repo_id', 'repo_name', 'repo_group_id', 'repo_group_name'] + time_group_bys + ['average_{}_to_first_response'.format(time_unit), 'average_{}_to_last_response'.format(time_unit), 'average_{}_to_close'.format(time_unit)]]
     else:
-        avg_pr_time_to_responses_and_close  = pr_all.groupby(time_group_bys + ['merged_status']).mean().reset_index()[time_group_bys + ['merged_status', 'average_{}_to_first_response'.format(time_unit), 'average_{}_to_last_response'.format(time_unit), 'average_{}_to_close'.format(time_unit)]]
+        avg_pr_time_to_responses_and_close  = pr_all.groupby(['merged_status'] + time_group_bys).mean().reset_index()[time_group_bys + ['merged_status', 'average_{}_to_first_response'.format(time_unit), 'average_{}_to_last_response'.format(time_unit), 'average_{}_to_close'.format(time_unit)]]
 
     return avg_pr_time_to_responses_and_close
 

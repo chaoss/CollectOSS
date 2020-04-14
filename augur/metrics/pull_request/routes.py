@@ -443,6 +443,7 @@ def create_pull_request_routes(server):
     @apiParam {string} repo_group_id Repository Group ID.
     @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
     @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string= day, week, month, year} [group_by= month] Group By specification. E.g. values: 'day', 'week', 'month', or 'year'
     @apiParam {string= hours, days} [time_unit = hours] Unit of Time Specification.  E.g. values: 'hours', or 'days'
     @apiSuccessExample {json} Success-Response:
                     [
@@ -483,7 +484,7 @@ def create_pull_request_routes(server):
     server.addRepoMetric(metrics.pull_request_average_time_between_responses, 'pull-request-average-time-between-responses')
 
     """
-    @api {get} /repo-groups/:repo_group_id/pull-request-average-time-bewteen-responseses Pull Request average time between responses(Repo)
+    @api {get} /repo-groups/:repo_group_id/pull-request-average-time-bewteen-responses Pull Request average time between responses(Repo)
     @apiName pull-request-average-time-between-responses
     @apiGroup Experimental
     @apiDescription Avegage time between responeses with merged_status and the time frame
@@ -495,14 +496,14 @@ def create_pull_request_routes(server):
     @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "merged_status":"Merged"
-                            "repo_id":26214
-                            "repo_name":"RIOT"
-                            "repo_group_id":25159
-                            "repo_group_name":"Competitors"
-                            "closed_year":2013.0
-                            "closed_month":6.0
-                            "average_hours_between_responses":3.725462963
+                            "merged_status": "Merged"
+                            "repo_id": 26214
+                            "repo_name": "RIOT"
+                            "repo_group_id": 25159
+                            "repo_group_name": "Competitors"
+                            "closed_year": 2013.0
+                            "closed_month": 6.0
+                            "average_hours_between_responses": 3.725462963
                         }
                     ]
     """
@@ -633,7 +634,7 @@ def create_pull_request_routes(server):
     @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
     @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
     @apiParam {string= day, week, month, year} [group_by= month] Group By specification. E.g. values: 'day', 'week', 'month', or 'year'
-    @apiParam {string= hours, days} [time_unit = hours] Unit of Time Specification.  E.g. values: 'hours', or 'days'
+    @apiParam {string= hours, days} [time_unit = days] Unit of Time Specification.  E.g. values: 'hours', or 'days'
     @apiSuccessExample {json} Success-Response:
                     [
                         {
