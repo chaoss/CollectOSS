@@ -4,6 +4,8 @@ from sys import exit
 import stat
 from collections import OrderedDict
 from subprocess import call
+import random
+import string
 import csv
 import click
 import sqlalchemy as s
@@ -181,6 +183,74 @@ def create_schema(ctx):
     app = ctx.obj
     check_pgpass_credentials(app.config)
     run_psql_command_in_database(app, '-f', 'schema/create_schema.sql')
+
+
+def generate_key(length):
+    return ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(length))
+
+@cli.command('generate-api-key')
+@click.pass_context
+def generate_api_key(ctx):
+    app = ctx.obj
+    key = generate_key(32)
+    print(key)
+    return key
+
+@cli.command('set-api-key')
+@click.argument("api_key")
+@click.pass_context
+def set_api_key(ctx, api_key):
+    app = ctx.obj
+
+    print(api_key)
+
+    # we need to connect to augur_operations and not augur_data, so don't use
+    # get_db_connection
+    user = app.read_config('Database', 'user')
+    password = app.read_config('Database', 'password')
+    host = app.read_config('Database', 'host')
+    port = app.read_config('Database', 'port')
+    dbname = app.read_config('Database', 'name')
+
+    DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(
+            user, password, host, port, dbname
+    )
+
+    db = s.create_engine(DB_STR, poolclass=s.pool.NullPool)
+
+    update_api_key_sql = s.sql.text("""
+        UPDATE augur_operations.augur_settings SET VALUE = :api_key WHERE setting='augur_api_key';
+    """)
+
+    db.execute(update_api_key_sql, api_key=api_key)
+
+    print("Augur API key successfully updated.")
+
+@cli.command('get-api-key')
+@click.pass_context
+def get_api_key(ctx):
+    app = ctx.obj
+
+    # we need to connect to augur_operations and not augur_data, so don't use
+    # get_db_connection
+    user = app.read_config('Database', 'user')
+    password = app.read_config('Database', 'password')
+    host = app.read_config('Database', 'host')
+    port = app.read_config('Database', 'port')
+    dbname = app.read_config('Database', 'name')
+
+    DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(
+            user, password, host, port, dbname
+    )
+
+    db = s.create_engine(DB_STR, poolclass=s.pool.NullPool)
+
+    update_api_key_sql = s.sql.text("""
+        SELECT value FROM augur_operations.augur_settings WHERE setting='augur_api_key';
+    """)
+
+    print(db.execute(update_api_key_sql).fetchone()[0])
+
 
 @cli.command('check-pgpass', short_help="Check the ~/.pgpass file for Augur's database credentials")
 @click.pass_context
