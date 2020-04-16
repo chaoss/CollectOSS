@@ -72,7 +72,6 @@ else
   scripts/install/frontend.sh > logs/frontend-installation.log 2>&1
 fi
 
-
 echo "**********************************"
 echo "*** INSTALLATION COMPLETE ***"
 echo "https://oss-augur.readthedocs.io/en/master/"
