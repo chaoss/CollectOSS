@@ -275,7 +275,7 @@ def authenticate_request(app, request):
     except KeyError:
         return False
 
-    if given_api_key == retrieved_api_key:
+    if given_api_key == retrieved_api_key and given_api_key != "invalid_key":
         return True
     else:
         return False
