@@ -5,9 +5,10 @@
         <!-- import repos -->
         <aug-text-input
           inputName="organizationName"
-          text="Import repos from organization"
+          text="Import repos from org (this will take a while)"
           placeholder="organization name..."
           @valueUpdated="setOrgUsernameInput"
+          class="text-input"
         />
         <aug-button text="Import" @click="importReposFromOrganization()" />
         <aug-spinner size="2" v-if="isImporting" />
@@ -25,6 +26,7 @@
           text="Create new repo group"
           placeholder="repo group name..."
           @valueUpdated="setGroupNameInput"
+          class="text-input"
         />
         <aug-button text="Create" @click="createGroup()" />
         <aug-spinner size="2" v-if="isCreating" />
@@ -120,6 +122,10 @@ export default {
   background-color: var(--light-grey);
   padding: 1rem;
   box-shadow: 0 0 20px 0 var(--grey);
+}
+
+.text-input {
+  width: 350px;
 }
 
 button {

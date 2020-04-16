@@ -70,14 +70,14 @@ export default {
             }
           }
         });
-    }, 
+    },
     importGroup: (context, orgName) => {
       if (orgName === '') {
         window.alert("invalid org name");
         return;
       }
       let requestObject = {
-        org: orgName, 
+        org: orgName,
         augur_api_key: context.rootState.utilModule.crudKey
       };
       return fetch(`${context.rootState.utilModule.baseEndpointUrl}/import-org`, {
@@ -96,6 +96,7 @@ export default {
             return null;
           } else if (res.status === 401) {
             alert("Database key is missing. Please enter the key provided at database creation in the field on top-right corner of page.");
+            return null;
           } else {
             return res.json();
           }
@@ -121,7 +122,7 @@ export default {
     createGroup: (context, groupName) => {
       console.log(groupName);
       let requestObject = {
-        group: groupName, 
+        group: groupName,
         augur_api_key: context.rootState.utilModule.crudKey
       };
       return fetch(
@@ -139,6 +140,7 @@ export default {
             return res.json();
           } else if (res.status === 401) {
             alert("Database key is missing. Please enter the key provided at database creation in the field on top-right corner of page.");
+            return null;
           } else {
             window.alert("unable to create group");
             return null;
@@ -147,14 +149,19 @@ export default {
         .then(res => {
           if (res != null) {
             console.log(res);
+            if (res.errors == null) {
+              alert("Database key is missing. Please enter the key provided at database creation in the field on top-right corner of page.");
+              return null;
+            }
             if (res.errors.length > 0) {
               window.alert(res.errors[0]);
               return;
             }
             window.alert("successfully created group");
             let groupCreated = res["repo_groups_created"][0];
+            console.log(groupCreated);
             context.commit("addGroup", {
-              repo_group_id: groupCreated.group_id,
+              repo_group_id: String(groupCreated.repo_group_id),
               rg_name: groupCreated.rg_name
             });
           }

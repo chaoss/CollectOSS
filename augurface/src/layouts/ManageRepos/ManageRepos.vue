@@ -61,6 +61,10 @@ export default {
 </script>
 
 <style scoped>
+#ManageRepos {
+  padding-bottom: 2rem;
+}
+
 #manage-content {
   display: flex;
   flex-direction: column;

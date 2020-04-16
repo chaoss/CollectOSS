@@ -99,7 +99,7 @@ export default {
   top: 0.3rem;
   border-top: 1px solid var(--grey);
   padding-top: 1rem;
-  padding-bottom: 0.5rem;
+  padding-bottom: 2rem;
 }
 
 #RepoGroupContent > * {

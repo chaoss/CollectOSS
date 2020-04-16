@@ -3,7 +3,7 @@
     <img src="../../../assets/logo.png" alt />
     <div class="input-section">
       <!-- <aug-text-input text="Augur Host URL" placeholder="Augur Host URL (no trailing slash)..." ref="urlInput" /> -->
-      <aug-text-input text="CRUD Key" placeholder="Key provided at database creation..." ref="keyInput" />
+      <aug-text-input text="Database Key" placeholder="Key provided at database creation..." ref="keyInput" :password="true"/>
       <aug-button text="Apply" @click="apply"/>
     </div>
     <!-- <nav-bar :links="links"/> -->
@@ -38,6 +38,7 @@ export default {
       // console.log(this.$refs.urlInput.value);
       // this.setBaseEndpointUrl(this.$refs.urlInput.value);
       this.setCrudKey(this.$refs.keyInput.value);
+      alert("key updated");
       // this.refreshRepos();
     }, 
     ...mapMutations('utilModule', ['setBaseEndpointUrl', 'setCrudKey']), 
