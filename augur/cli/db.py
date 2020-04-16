@@ -147,7 +147,9 @@ def upgrade_db_version(ctx):
     """
     Upgrade the configured database to the latest version
     """
-    current_db_version = get_db_version(ctx.obj)
+    app = ctx.obj
+    check_pgpass_credentials(app.config)
+    current_db_version = get_db_version(app)
 
     update_scripts_filenames = []
     for (_, _, filenames) in walk('schema/generate'):
@@ -171,7 +173,7 @@ def upgrade_db_version(ctx):
     for target_version, script_location in target_version_script_map.items():
         if target_version == current_db_version + 1:
             print("Upgrading from", current_db_version, "to", target_version)
-            run_psql_command_in_database(ctx.obj, '-f', f"schema/generate/{script_location}")
+            run_psql_command_in_database(app, '-f', f"schema/generate/{script_location}")
             current_db_version += 1
 
 @cli.command('create-schema')
