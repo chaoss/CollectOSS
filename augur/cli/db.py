@@ -202,8 +202,6 @@ def generate_api_key(ctx):
 def set_api_key(ctx, api_key):
     app = ctx.obj
 
-    print(api_key)
-
     # we need to connect to augur_operations and not augur_data, so don't use
     # get_db_connection
     user = app.read_config('Database', 'user')

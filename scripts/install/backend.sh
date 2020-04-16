@@ -11,6 +11,5 @@ if [[ $target == *"prod"* ]]; then
     pip install .
 else
     pip install -e .[dev]
-    npm install apidoc;
 fi
 
