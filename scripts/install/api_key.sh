@@ -11,6 +11,3 @@ echo "If you do lose it, run 'augur db get-api-key' on the CLI."
 echo "Any old Augur API keys you may have will no longer work."
 echo "****************************************************************"
 echo
-
-augur db set-api-key $api_key
-echo

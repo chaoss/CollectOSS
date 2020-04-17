@@ -195,8 +195,8 @@ def generate_key(length):
 def generate_api_key(ctx):
     app = ctx.obj
     key = generate_key(32)
+    ctx.invoke(set_api_key, api_key=key)
     print(key)
-    return key
 
 @cli.command('set-api-key')
 @click.argument("api_key")
@@ -223,8 +223,6 @@ def set_api_key(ctx, api_key):
     """)
 
     db.execute(update_api_key_sql, api_key=api_key)
-
-    print("Augur API key successfully updated.")
 
 @cli.command('get-api-key')
 @click.pass_context
