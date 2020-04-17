@@ -36,6 +36,144 @@ export default {
     }
   },
   actions: {
+    addRepos: (context, requestBody) => {
+      return fetch(`${context.rootState.utilModule.baseEndpointUrl}/add-repos`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(requestBody)
+      })
+        .then(res => {
+          console.log(`STATUS: ${res.status}`);
+          if (res.status === 401) {
+            alert("Database key is missing. Please enter the key provided at database creation in the field on top-right corner of page.");
+          }
+          if (res.status === 200) {
+            return res.json();
+          } else {
+            return null;
+          }
+        })
+        .then(res => {
+          if (res) {
+            // update state
+            context.commit("addRepos", res.repos_inserted);
+
+            // check for failed adds
+            if (res.repos_not_inserted.invalid_inputs.length > 0) {
+              window.alert(
+                `${res.repos_inserted.length} repos successfully added\n${res.repos_not_inserted.invalid_inputs.length} repos failed\ncheck console for detail`
+              );
+              console.log("following repos failed to be inserted: ");
+              console.log(res.repos_not_inserted.invalid_inputs);
+            }
+          }
+        });
+    },
+    importGroup: (context, orgName) => {
+      if (orgName === '') {
+        window.alert("invalid org name");
+        return;
+      }
+      let requestObject = {
+        org: orgName,
+        augur_api_key: context.rootState.utilModule.crudKey
+      };
+      return fetch(`${context.rootState.utilModule.baseEndpointUrl}/import-org`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(requestObject)
+      })
+        .then(res => {
+          if (res.status === 500) {
+            console.log("Server error (possible invalid organization name)");
+            window.alert(
+              "Possible invalid organization name entered. Import failed."
+            );
+            return null;
+          } else if (res.status === 401) {
+            alert("Database key is missing. Please enter the key provided at database creation in the field on top-right corner of page.");
+            return null;
+          } else {
+            return res.json();
+          }
+        })
+        .then(res => {
+          if (res != null) {
+            if (res.group_errors.length > 0) {
+              window.alert(res.group_errors[0]);
+              return;
+            }
+            window.alert("successfully imported github organization");
+            context.commit(
+              "addRepos",
+              res.repo_records_created
+            );
+            context.commit("addGroup", {
+              repo_group_id: res.group_id,
+              rg_name: res.rg_name
+            });
+          }
+        });
+    },
+    createGroup: (context, groupName) => {
+      console.log(groupName);
+      let requestObject = {
+        group: groupName,
+        augur_api_key: context.rootState.utilModule.crudKey
+      };
+      return fetch(
+        `${context.rootState.utilModule.baseEndpointUrl}/create-repo-group`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(requestObject)
+        }
+      )
+        .then(res => {
+          if (res.status === 200) {
+            return res.json();
+          } else if (res.status === 401) {
+            alert("Database key is missing. Please enter the key provided at database creation in the field on top-right corner of page.");
+            return null;
+          } else {
+            window.alert("unable to create group");
+            return null;
+          }
+        })
+        .then(res => {
+          if (res != null) {
+            console.log(res);
+            if (res.errors == null) {
+              alert("Database key is missing. Please enter the key provided at database creation in the field on top-right corner of page.");
+              return null;
+            }
+            if (res.errors.length > 0) {
+              window.alert(res.errors[0]);
+              return;
+            }
+            window.alert("successfully created group");
+            let groupCreated = res["repo_groups_created"][0];
+            console.log(groupCreated);
+            context.commit("addGroup", {
+              repo_group_id: String(groupCreated.repo_group_id),
+              rg_name: groupCreated.rg_name
+            });
+          }
+        });
+    },
+    refreshRepos(context) {
+      console.log(context);
+      context.commit("setReposLoaded", false);
+      context.commit("setGroupsLoaded", false);
+      context.dispatch("retrieveRepoGroups", false);
+      context.dispatch("retrieveRepos", false);
+    },
     retrieveRepos(context, checkCache) {
       // setup
       let { rootState, commit } = context;
@@ -53,6 +191,7 @@ export default {
       // make request (if nothing is in sessionStorage)
       return fetch(`${rootState.utilModule.baseEndpointUrl}/repos`)
         .then(res => {
+          console.log(res.status);
           if (res.status !== 200) {
             console.log('request for loading repos failed...');
             console.dir(res);
@@ -64,7 +203,8 @@ export default {
         .then(res => {
           if (res != null) {
             // filter response and update state
-            let filteredResponse = res.map(repo => {
+            let filteredResponse = [];
+            filteredResponse = res.map(repo => {
               let filteredRepo = _.pick(repo, [
                 'repo_id',
                 'repo_name',
@@ -77,6 +217,7 @@ export default {
               filteredRepo.repo_id = String(filteredRepo.repo_id);
               return filteredRepo;
             })
+            console.log(filteredResponse);
             sessionStorage.setItem('__augursessionstorage__repos', JSON.stringify(filteredResponse));
             commit('setRepos', filteredResponse);
             commit('setReposLoaded', true);
@@ -139,6 +280,9 @@ export default {
     },
     getRepoGroups(state) {
       return state.repoGroups;
+    },
+    repoCountInGroup: (state) => (rg_id) => {
+      return state.repos.filter(repo => repo.repo_group_id === rg_id).length;
     }
   }
 }

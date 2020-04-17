@@ -15,11 +15,13 @@ To use it, first start the two services (we recommend using `Docker Compose <doc
     # this example uses the database image, but will work with an external one as well
     $ docker-compose -f docker-compose.yml -f database-compose.yml up
 
-Then, navigate to ``http://localhost:8080/augurface/`` in your browser - note the trailing slash! You can click through the Login button (it is just a placeholder), and then you will be able to use the UI to automatically import repository groups from GitHub organizations, or manually create and edit them. Deleting repos or repo groups is not currently supported, but would be a great contribution! ;)
+Then, navigate to ``http://localhost:8080/augurface/`` in your browser - **note the trailing slash!** Once you're on this page, you'll need to enter in your Augur API key in the box on the top right. On a default Docker installation, you can use ``docker_key``, but we recommend changing this as soon as possible if you are planning to use the instance long-term. Commands for working with the API keys can be found `here <../getting-started/command-line-interface/db.html>`_.
+
+Once you've entered your API key, you will be able to use the UI to automatically import GitHub organizations as a repo group, or manually create and edit repo groups yourself. Deleting repos or repo groups is not currently supported, but would be a great contribution!
 
 .. warning::
 
-    Because Augurface requires no authentication to edit the database, **do not publicly deploy any Docker instance outside your local network or intranet.** The Docker build is intended ONLY for short term data collection usage and local development and is NOT properly secured or production ready. We understand if this inconvenciences you, but the functionality is very new to Augur and still needs time to be production ready. **You have been warned.**
+    Because the UI only requires an API key to edit the database, **we recommend that you do not publicly deploy any Docker instance outside your local network or intranet.** The Docker build is intended ONLY for short term data collection usage and local development. We understand if this inconvenciences you, but the functionality is very new to Augur and still needs time to be production ready. **You have been warned.**
 
 If are not using the ``frontend`` service, you can use the `database CLI <../getting-started/command-line-interface/db.html>`_ from within the container to add repos. See below for how to start a shell within the container.
 

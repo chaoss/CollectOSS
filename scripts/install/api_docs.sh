@@ -1,11 +1,11 @@
 #!/bin/bash
-set -euo pipefail
+set -eo pipefail
 
-echo
-echo "**********************************"
 echo "Building API documentation..."
 echo "**********************************"
 echo
+
+npm install apidoc;
 
 cd docs
 

@@ -4,6 +4,8 @@ from sys import exit
 import stat
 from collections import OrderedDict
 from subprocess import call
+import random
+import string
 import csv
 import click
 import sqlalchemy as s
@@ -145,7 +147,9 @@ def upgrade_db_version(ctx):
     """
     Upgrade the configured database to the latest version
     """
-    current_db_version = get_db_version(ctx.obj)
+    app = ctx.obj
+    check_pgpass_credentials(app.config)
+    current_db_version = get_db_version(app)
 
     update_scripts_filenames = []
     for (_, _, filenames) in walk('schema/generate'):
@@ -169,7 +173,7 @@ def upgrade_db_version(ctx):
     for target_version, script_location in target_version_script_map.items():
         if target_version == current_db_version + 1:
             print("Upgrading from", current_db_version, "to", target_version)
-            run_psql_command_in_database(ctx.obj, '-f', f"schema/generate/{script_location}")
+            run_psql_command_in_database(app, '-f', f"schema/generate/{script_location}")
             current_db_version += 1
 
 @cli.command('create-schema')
@@ -181,6 +185,76 @@ def create_schema(ctx):
     app = ctx.obj
     check_pgpass_credentials(app.config)
     run_psql_command_in_database(app, '-f', 'schema/create_schema.sql')
+
+
+def generate_key(length):
+    return ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(length))
+
+@cli.command('generate-api-key')
+@click.pass_context
+def generate_api_key(ctx):
+    """
+    Generate and set a new Augur API key
+    """
+    app = ctx.obj
+    key = generate_key(32)
+    ctx.invoke(update_api_key, api_key=key)
+    print(key)
+
+@cli.command('update-api-key')
+@click.argument("api_key")
+@click.pass_context
+def update_api_key(ctx, api_key):
+    """
+    Update the API key in the database to the given key
+    """
+    app = ctx.obj
+
+    # we need to connect to augur_operations and not augur_data, so don't use
+    # get_db_connection
+    user = app.read_config('Database', 'user')
+    password = app.read_config('Database', 'password')
+    host = app.read_config('Database', 'host')
+    port = app.read_config('Database', 'port')
+    dbname = app.read_config('Database', 'name')
+
+    DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(
+            user, password, host, port, dbname
+    )
+
+    db = s.create_engine(DB_STR, poolclass=s.pool.NullPool)
+
+    update_api_key_sql = s.sql.text("""
+        UPDATE augur_operations.augur_settings SET VALUE = :api_key WHERE setting='augur_api_key';
+    """)
+
+    db.execute(update_api_key_sql, api_key=api_key)
+
+@cli.command('get-api-key')
+@click.pass_context
+def get_api_key(ctx):
+    app = ctx.obj
+
+    # we need to connect to augur_operations and not augur_data, so don't use
+    # get_db_connection
+    user = app.read_config('Database', 'user')
+    password = app.read_config('Database', 'password')
+    host = app.read_config('Database', 'host')
+    port = app.read_config('Database', 'port')
+    dbname = app.read_config('Database', 'name')
+
+    DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(
+            user, password, host, port, dbname
+    )
+
+    db = s.create_engine(DB_STR, poolclass=s.pool.NullPool)
+
+    update_api_key_sql = s.sql.text("""
+        SELECT value FROM augur_operations.augur_settings WHERE setting='augur_api_key';
+    """)
+
+    print(db.execute(update_api_key_sql).fetchone()[0])
+
 
 @cli.command('check-pgpass', short_help="Check the ~/.pgpass file for Augur's database credentials")
 @click.pass_context
