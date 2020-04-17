@@ -9,7 +9,7 @@ export default {
     port: configObject["Frontend"].port,
     baseEndpointUrl: `http://${configObject["Frontend"].host}:${configObject["Frontend"].port}/api/unstable`,
     // baseEndpointUrl: 'http://localhost:5000/api/unstable', 
-    crudKey: '', 
+    crudKey: sessionStorage.getItem("__augursessionstorage__crudkey") !== null ? sessionStorage.getItem("__augursessionstorage__crudkey") : '', 
     availableEndpoints: [
       'http://localhost:5000/api/unstable',
       'http://augur.osshealth.io/api/unstable'
@@ -24,6 +24,7 @@ export default {
     }, 
     setCrudKey(state, newKey) {
       Vue.set(state, "crudKey", newKey);
+      sessionStorage.setItem("__augursessionstorage__crudkey", newKey);
     }
   },
   actions: {

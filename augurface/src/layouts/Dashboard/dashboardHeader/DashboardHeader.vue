@@ -45,10 +45,12 @@ export default {
     ...mapActions('reposModule', ['refreshRepos'])
   }, 
   computed: {
-    ...mapGetters('utilModule', ['getBaseEndpointUrl'])
+    ...mapGetters('utilModule', ['getBaseEndpointUrl', 'getCrudKey'])
   }, 
   mounted() {
     // this.$refs.urlInput.value = this.getBaseEndpointUrl;
+    this.$refs.keyInput.value = this.getCrudKey
+    console.log(this.getCrudKey);
   }
 };
 </script>
