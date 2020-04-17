@@ -82,12 +82,16 @@ def create_manager_routes(server):
                     summary['repo_groups_created'].append({"repo_group_id": group_id, "rg_name": group})
             else:
                 summary['errors'].append("group already exists")
+
+            summary = json.dumps(summary)
             status_code = 200
         else:
             status_code = 401
+            summary = json.dumps({'error': "Augur API key is either missing or invalid"})
 
-        summary = json.dumps(summary)
-        return Response(response=summary, status=200, mimetype="application/json")
+        return Response(response=summary, 
+                        status=status_code, 
+                        mimetype="application/json")
 
     @server.app.route('/{}/import-org'.format(server.api_version), methods=['POST'])
     def add_repo_group():
