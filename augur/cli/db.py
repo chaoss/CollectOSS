@@ -193,15 +193,21 @@ def generate_key(length):
 @cli.command('generate-api-key')
 @click.pass_context
 def generate_api_key(ctx):
+    """
+    Generate and set a new Augur API key
+    """
     app = ctx.obj
     key = generate_key(32)
-    ctx.invoke(set_api_key, api_key=key)
+    ctx.invoke(update_api_key, api_key=key)
     print(key)
 
-@cli.command('set-api-key')
+@cli.command('update-api-key')
 @click.argument("api_key")
 @click.pass_context
-def set_api_key(ctx, api_key):
+def update_api_key(ctx, api_key):
+    """
+    Update the API key in the database to the given key
+    """
     app = ctx.obj
 
     # we need to connect to augur_operations and not augur_data, so don't use
