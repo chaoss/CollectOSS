@@ -39,7 +39,7 @@ textarea {
   max-width: 100%;
   max-height: 800px;
   min-width: 300px;
-  width: 400px;
+  width: 500px;
   height: 50px;
 }
 

@@ -1,11 +1,7 @@
 <template>
   <div id="AugMenuDropdown" @click.stop>
-    <img
-      src="https://img.icons8.com/material-rounded/24/000000/menu-2.png"
-      id="menu-button"
-      @click.stop="flipCollapse"
-      :class="{ open: !isCollapsed }"
-    />
+    <aug-icon-button iconClass="fas fa-ellipsis-v" @click="flipCollapse" :class="{ open: !isCollapsed }" :circular="true"/>
+
     <div class="dropdown" v-if="!isCollapsed" v-click-outside="collapse">
       <div
         class="menuOption"
@@ -19,6 +15,7 @@
 
 <script>
 import ClickOutside from "vue-click-outside";
+import AugIconButton from "./AugIconButton.vue";
 
 export default {
   name: "AugMenuDropdown",
@@ -38,6 +35,7 @@ export default {
   },
   methods: {
     flipCollapse() {
+      this.$emit('click');
       this.isCollapsed = !this.isCollapsed;
     },
     collapse() {
@@ -47,6 +45,9 @@ export default {
       this.$emit(optionKey);
     }
   },
+  components: {
+    AugIconButton
+  }, 
   directives: {
     ClickOutside
   }
@@ -57,18 +58,6 @@ export default {
 #AugMenuDropdown {
   position: relative;
   top: 2px;
-}
-
-img {
-  padding: 0.4rem;
-  width: 1.5rem;
-  height: 1.5rem;
-  border-radius: 1.65rem;
-  transition: background-color 0.2s ease;
-}
-
-img:hover {
-  background-color: var(--grey);
 }
 
 .dropdown {
@@ -97,19 +86,5 @@ img:hover {
 
 .open {
   background-color: var(--grey) !important;
-}
-
-.fade-enter-active {
-  transition: opacity 0.2s ease;
-}
-
-.fade-enter,
-.fade-leave-to {
-  opacity: 0;
-}
-
-.fade-enter-to,
-.fade-leave {
-  opacity: 1;
 }
 </style>

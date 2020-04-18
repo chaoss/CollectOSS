@@ -51,6 +51,14 @@ default_config = {
                     "given": [
                         "github_url"
                     ],
+                    "model": "pull_request_commits",
+                    "repo_group_id": 0
+                },
+                {
+                    "delay": 150000,
+                    "given": [
+                        "github_url"
+                    ],
                     "model": "repo_info",
                     "repo_group_id": 0
                 },
