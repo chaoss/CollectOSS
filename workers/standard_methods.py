@@ -170,6 +170,17 @@ def find_id_from_login(self, login):
     
     return find_id_from_login(self, login)
 
+def get_owner_repo(github_url):
+    split = github_url.split('/')
+
+    owner = split[-2]
+    repo = split[-1]
+
+    if '.git' in repo:
+        repo = repo[:-4]
+
+    return owner, repo
+
 def get_max_id(self, table, column, default=25150, operations_table=False):
     maxIdSQL = s.sql.text("""
         SELECT max({0}.{1}) AS {1}
