@@ -109,6 +109,14 @@ default_config = {
                     ],
                     "model": "value",
                     "repo_group_id": 0
+                },
+                {
+                "delay": 100000,
+                "given": [
+                    "github_url"
+                ],
+                "model": "pull_request_files",
+                "repo_group_id": 0
                 }
             ]
         },
