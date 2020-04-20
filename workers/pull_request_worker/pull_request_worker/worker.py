@@ -291,6 +291,7 @@ class GHPullRequestWorker:
                         logging.info("Error!: {}".format(data['errors']))
                         if data['errors'][0]['type'] == 'RATE_LIMITED':
                             update_gh_rate_limit(self, response)
+                            num_attempts -= 1
                         continue
                         
 
@@ -401,6 +402,7 @@ class GHPullRequestWorker:
 
         # Compare queried values against table values for dupes/updates
         pr_file_rows_df = pd.DataFrame(pr_file_rows)
+        pr_file_rows_df = pr_file_rows_df.dropna(subset=['pull_request_id'])
         pr_file_rows_df['need_update'] = 0
 
         dupe_columns = ['pull_request_id', 'pr_file_path']
@@ -428,20 +430,34 @@ class GHPullRequestWorker:
             f'{len(need_updates)} updates.\n')
 
         if len(pr_file_update_rows) > 0:
-            self.db.execute(
-                self.pull_request_files_table.update().where(
-                    self.pull_request_files_table.c.pull_request_id == bindparam('b_pull_request_id') and
-                    self.pull_request_files_table.c.pr_file_path == bindparam('b_pr_file_path')).values(
-                        pr_file_additions=bindparam('pr_file_additions'), 
-                        pr_file_deletions=bindparam('pr_file_deletions')),
-                pr_file_update_rows
-            )
+            success = False
+            while not success:
+                try:
+                    self.db.execute(
+                        self.pull_request_files_table.update().where(
+                            self.pull_request_files_table.c.pull_request_id == bindparam('b_pull_request_id') and
+                            self.pull_request_files_table.c.pr_file_path == bindparam('b_pr_file_path')).values(
+                                pr_file_additions=bindparam('pr_file_additions'), 
+                                pr_file_deletions=bindparam('pr_file_deletions')),
+                        pr_file_update_rows
+                    )
+                    success = True
+                except Exception as e:
+                    logging.info('error: {}'.format(e))
+                time.sleep(5)
 
         if len(pr_file_insert_rows) > 0:
-            self.db.execute(
-                self.pull_request_files_table.insert(),
-                pr_file_insert_rows
-            )
+            success = False
+            while not success:
+                try:
+                    self.db.execute(
+                        self.pull_request_files_table.insert(),
+                        pr_file_insert_rows
+                    )
+                    success = True
+                except Exception as e:
+                    logging.info('error: {}'.format(e))
+                time.sleep(5)
 
         register_task_completion(self, task_info, repo_id, 'pull_request_files')
 
