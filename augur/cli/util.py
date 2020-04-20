@@ -6,10 +6,12 @@ Miscellaneous Augur library commands for controlling the backend components
 import os
 import signal
 from subprocess import call, run
+
 import psutil
 import click
 import pandas as pd
 import sqlalchemy as s
+
 
 from augur.cli.configure import default_config
 from augur.cli.db import get_db_connection

@@ -19,86 +19,142 @@ def create_manager_routes(server):
             adds repos belonging to any user or group to an existing augur repo group
             'repos' are in the form org/repo, user/repo, or maybe even a full url 
         """
-        db_connection = get_db_engine(server._augur).connect()
-        group = request.json['group']
-        repo_manager = Repo_insertion_manager(group, db_connection)
-        group_id = repo_manager.get_org_id()
-        errors = {}
-        errors['invalid_inputs'] = []
-        errors['failed_records'] = []
-        success = []
-        repos = request.json['repos']
-        for repo in repos:
-            url = Git_string(repo)
-            url.clean_full_string()
-            try: #need to test because we require org/repo or full git url
-                url.is_repo()
-                repo_name = url.get_repo_name()
-                repo_parent = url.get_repo_organization()
-            except ValueError:
-                errors['invalid_inputs'].append(repo)
-            else:   
-                try:
-                    repo_id = repo_manager.insert_repo(group_id, repo_parent, repo_name)
-                except exc.SQLAlchemyError:
-                    errors['failed_records'].append(repo_name)
-                else: 
-                    success.append(get_inserted_repo(group_id, repo_id, repo_name, group, repo_manager.github_urlify(repo_parent, repo_name)))
+        if authenticate_request(server._augur, request):
+            db_connection = get_db_engine(server._augur).connect()
+            group = request.json['group']
+            repo_manager = Repo_insertion_manager(group, db_connection)
+            group_id = repo_manager.get_org_id()
+            errors = {}
+            errors['invalid_inputs'] = []
+            errors['failed_records'] = []
+            success = []
+            repos = request.json['repos']
+            for repo in repos:
+                url = Git_string(repo)
+                url.clean_full_string()
+                try: #need to test because we require org/repo or full git url
+                    url.is_repo()
+                    repo_name = url.get_repo_name()
+                    repo_parent = url.get_repo_organization()
+                except ValueError:
+                    errors['invalid_inputs'].append(repo)
+                else:   
+                    try:
+                        repo_id = repo_manager.insert_repo(group_id, repo_parent, repo_name)
+                    except exc.SQLAlchemyError:
+                        errors['failed_records'].append(repo_name)
+                    else: 
+                        success.append(get_inserted_repo(group_id, repo_id, repo_name, group, repo_manager.github_urlify(repo_parent, repo_name)))
 
-        summary = {'repos_inserted': success, 'repos_not_inserted': errors}
-        summary = json.dumps(summary)
+            status_code = 200
+            summary = {'repos_inserted': success, 'repos_not_inserted': errors}
+            summary = json.dumps(summary)
+        else:
+            status_code = 401
+            summary = json.dumps({'error': "Augur API key is either missing or invalid"})
+
         return Response(response=summary,
-                        status=200,
+                        status=status_code,
                         mimetype="application/json")
 
-    @server.app.route('/{}/add-repo-group'.format(server.api_version), methods=['POST'])
+    @server.app.route('/{}/create-repo-group'.format(server.api_version), methods=['POST'])
+    def create_repo_group():
+        if authenticate_request(server._augur, request):
+            conn = get_db_engine(server._augur)
+            group = request.json['group']
+            repo_manager = Repo_insertion_manager(group, conn)
+            summary = {}
+            summary['errors'] = []
+            summary['repo_groups_created'] = []
+
+            if group == '':
+                summary['errors'].append("invalid group name")
+                return Response(response=summary, status=200, mimetype="application/json")
+                
+            try:
+                group_id = repo_manager.get_org_id()
+            except TypeError:
+                try:
+                    group_id = repo_manager.insert_repo_group()
+                except TypeError:
+                    summary['errors'].append("couldn't create group")
+                else: 
+                    summary['repo_groups_created'].append({"repo_group_id": group_id, "rg_name": group})
+            else:
+                summary['errors'].append("group already exists")
+
+            summary = json.dumps(summary)
+            status_code = 200
+        else:
+            status_code = 401
+            summary = json.dumps({'error': "Augur API key is either missing or invalid"})
+
+        return Response(response=summary, 
+                        status=status_code, 
+                        mimetype="application/json")
+
+    @server.app.route('/{}/import-org'.format(server.api_version), methods=['POST'])
     def add_repo_group():
         """ creates a new augur repo group and adds to it the given organization or user's repos
             takes an organization or user name 
         """
-        conn = get_db_engine(server._augur)
-        group = request.json['group']
-        repo_manager = Repo_insertion_manager(group, conn)
-        summary = {}
-        summary['group_errors'] = []
-        summary['failed_repo_records'] = []
-        summary['repo_records_created'] = []
-        group_exists = False
-        try:
-            #look for group in augur db
-            group_id = repo_manager.get_org_id()
-        except TypeError:
-            #look for group on github
-            if repo_manager.group_exists_gh():
-                try:
-                    group_id = repo_manager.insert_repo_group()
-                except TypeError:
-                    summary['group_errors'].append("failed to create group")
-                else:
-                    group_exists = True
-            else:
-                summary['group_errors'].append("could not locate group in database or on github")
-        else:
-            group_exists = True
-
-        if group_exists:
-            summary['group_id'] = str(group_id)
-            summary['rg_name'] = group
+        if authenticate_request(server._augur, request):
+            conn = get_db_engine(server._augur)
+            group = request.json['org']
+            repo_manager = Repo_insertion_manager(group, conn)
+            summary = {}
+            summary['group_errors'] = []
+            summary['failed_repo_records'] = []
+            summary['repo_records_created'] = []
+            group_exists = False
             try:
-                repos = repo_manager.fetch_repos()
-                for repo in repos:
+                #look for group in augur db
+                group_id = repo_manager.get_org_id()
+            except TypeError:
+                #look for group on github
+                if repo_manager.group_exists_gh():
                     try:
-                        repo_id = repo_manager.insert_repo(group_id, group, repo)
-                    except exc.SQLAlchemyError:
-                        summary['failed_repo_records'].append(repo)
+                        group_id = repo_manager.insert_repo_group()
+                    except TypeError:
+                        summary['group_errors'].append("failed to create group")
                     else:
-                        summary['repo_records_created'].append(get_inserted_repo(group_id, repo_id, repo, group, repo_manager.github_urlify(group, repo)))
-            except requests.ConnectionError:
-                summary['group_errors'] = "failed to find the group's child repos"
+                        group_exists = True
+                else:
+                    summary['group_errors'].append("could not locate group in database or on github")
+            else:
+                group_exists = True
 
-        summary = json.dumps(summary)
+            if group_exists:
+                summary['group_id'] = str(group_id)
+                summary['rg_name'] = group
+                try:
+                    repos_gh = repo_manager.fetch_repos()
+                    repos_in_augur = repo_manager.get_existing_repos(group_id)
+                    repos_db_set = set()
+                    for name in repos_in_augur:
+                        #repo_git is more reliable than repo name, so we'll just grab everything after the last slash 
+                        name = (name['repo_git'].rsplit('/', 1)[1])
+                        repos_db_set.add(name)
+                    repos_to_insert = set(repos_gh) - repos_db_set
+
+                    for repo in repos_to_insert:
+                        try:
+                            repo_id = repo_manager.insert_repo(group_id, group, repo)
+                        except exc.SQLAlchemyError:
+                            summary['failed_repo_records'].append(repo)
+                        else:
+                            summary['repo_records_created'].append(get_inserted_repo(group_id, repo_id, repo, group, repo_manager.github_urlify(group, repo)))
+                except requests.ConnectionError:
+                    summary['group_errors'] = "failed to find the group's child repos"
+
+            status_code = 200
+            summary = json.dumps(summary)
+        else:
+            status_code = 401
+            summary = json.dumps({'error': "Augur API key is either missing or invalid"})
+
         return Response(response=summary,
-                        status=200,
+                        status=status_code,
                         mimetype="application/json")
     
     def get_inserted_repo(groupid, repoid, reponame, groupname, url):
@@ -114,6 +170,16 @@ class Repo_insertion_manager():
     def __init__(self, organization_name, database_connection):
         self.org = organization_name
         self.db = database_connection
+
+    def get_existing_repos(self, group_id):
+        """returns repos belonging to repogroup in augur db"""
+        select_repos_query = s.sql.text("""
+            SELECT repo_git from augur_data.repo
+            WHERE repo_group_id = :repo_group_id
+        """)
+        select_repos_query = select_repos_query.bindparams(repo_group_id = group_id)
+        result = self.db.execute(select_repos_query)
+        return result.fetchall()
 
     def group_exists_gh(self):
         url = url = "https://api.github.com/orgs/{}".format(self.org)
@@ -235,3 +301,35 @@ def get_db_engine(app):
     )
 
     return s.create_engine(DB_STR, poolclass=s.pool.NullPool)
+
+def authenticate_request(app, request):
+
+    # do I like doing it like this? not at all
+    # do I have the time to implement a better solution right now? not at all
+    user = app.read_config('Database', 'user')
+    password = app.read_config('Database', 'password')
+    host = app.read_config('Database', 'host')
+    port = app.read_config('Database', 'port')
+    dbname = app.read_config('Database', 'name')
+
+    DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(
+            user, password, host, port, dbname
+    )
+
+    operations_db = s.create_engine(DB_STR, poolclass=s.pool.NullPool)
+
+    update_api_key_sql = s.sql.text("""
+        SELECT value FROM augur_operations.augur_settings WHERE setting='augur_api_key';
+    """)
+
+    retrieved_api_key = operations_db.execute(update_api_key_sql).fetchone()[0]
+
+    try:
+        given_api_key = request.json['augur_api_key']
+    except KeyError:
+        return False
+
+    if given_api_key == retrieved_api_key and given_api_key != "invalid_key":
+        return True
+    else:
+        return False

@@ -32,6 +32,7 @@ export default {
 label {
   display: block;
   color: var(--dark-grey);
+  white-space: nowrap;
 }
 
 input {
