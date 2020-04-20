@@ -154,7 +154,7 @@ Example usage\:
   $ augur db print-db-version
 
   # successful output looks like:
-  > Augur DB version: 12
+  > 15
 
 
 ``upgrade-db-version``
