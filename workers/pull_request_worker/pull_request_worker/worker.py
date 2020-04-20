@@ -291,6 +291,7 @@ class GHPullRequestWorker:
                         logging.info("Error!: {}".format(data['errors']))
                         if data['errors'][0]['type'] == 'RATE_LIMITED':
                             update_gh_rate_limit(self, response)
+                            num_attempts -= 1
                         continue
                         
 
@@ -401,6 +402,7 @@ class GHPullRequestWorker:
 
         # Compare queried values against table values for dupes/updates
         pr_file_rows_df = pd.DataFrame(pr_file_rows)
+        pr_file_rows_df = pr_file_rows_df.dropna(subset=['pull_request_id'])
         pr_file_rows_df['need_update'] = 0
 
         dupe_columns = ['pull_request_id', 'pr_file_path']
