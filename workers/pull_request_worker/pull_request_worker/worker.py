@@ -428,20 +428,34 @@ class GHPullRequestWorker:
             f'{len(need_updates)} updates.\n')
 
         if len(pr_file_update_rows) > 0:
-            self.db.execute(
-                self.pull_request_files_table.update().where(
-                    self.pull_request_files_table.c.pull_request_id == bindparam('b_pull_request_id') and
-                    self.pull_request_files_table.c.pr_file_path == bindparam('b_pr_file_path')).values(
-                        pr_file_additions=bindparam('pr_file_additions'), 
-                        pr_file_deletions=bindparam('pr_file_deletions')),
-                pr_file_update_rows
-            )
+            success = False
+            while not success:
+                try:
+                    self.db.execute(
+                        self.pull_request_files_table.update().where(
+                            self.pull_request_files_table.c.pull_request_id == bindparam('b_pull_request_id') and
+                            self.pull_request_files_table.c.pr_file_path == bindparam('b_pr_file_path')).values(
+                                pr_file_additions=bindparam('pr_file_additions'), 
+                                pr_file_deletions=bindparam('pr_file_deletions')),
+                        pr_file_update_rows
+                    )
+                    success = True
+                except Exception as e:
+                    logging.info('error: {}'.format(e))
+                time.sleep(5)
 
         if len(pr_file_insert_rows) > 0:
-            self.db.execute(
-                self.pull_request_files_table.insert(),
-                pr_file_insert_rows
-            )
+            success = False
+            while not success:
+                try:
+                    self.db.execute(
+                        self.pull_request_files_table.insert(),
+                        pr_file_insert_rows
+                    )
+                    success = True
+                except Exception as e:
+                    logging.info('error: {}'.format(e))
+                time.sleep(5)
 
         register_task_completion(self, task_info, repo_id, 'pull_request_files')
 
