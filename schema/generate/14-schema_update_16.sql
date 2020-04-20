@@ -9,7 +9,7 @@ CREATE TABLE "augur_data"."pull_request_files" (
   "tool_version" varchar(254) COLLATE "pg_catalog"."default",
   "data_source" varchar(254) COLLATE "pg_catalog"."default",
   "data_collection_date" date,
-  "pr_file_id" int8 NOT NULL,
+  "pr_file_id" serial8 NOT NULL,
   "pr_file_additions" int8,
   "pr_file_deletions" int8,
   "pr_file_path" varchar(254) COLLATE "pg_catalog"."default"
