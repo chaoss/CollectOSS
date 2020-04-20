@@ -281,11 +281,15 @@ def get_api_key(ctx):
 
     db = s.create_engine(DB_STR, poolclass=s.pool.NullPool)
 
-    update_api_key_sql = s.sql.text("""
+    get_api_key_sql = s.sql.text("""
         SELECT value FROM augur_operations.augur_settings WHERE setting='augur_api_key';
     """)
 
-    print(db.execute(update_api_key_sql).fetchone()[0])
+    try:
+        print(db.execute(get_api_key_sql).fetchone()[0])
+    except TypeError:
+        print("No Augur API key found.")
+
 
 
 @cli.command('check-pgpass', short_help="Check the ~/.pgpass file for Augur's database credentials")
