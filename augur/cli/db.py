@@ -139,7 +139,7 @@ def print_db_version(ctx):
     """
     Get the version of the configured database
     """
-    print(f"Augur DB version: {get_db_version(ctx.obj)}")
+    print(get_db_version(ctx.obj))
 
 @cli.command('upgrade-db-version')
 @click.pass_context
@@ -175,6 +175,38 @@ def upgrade_db_version(ctx):
             print("Upgrading from", current_db_version, "to", target_version)
             run_psql_command_in_database(app, '-f', f"schema/generate/{script_location}")
             current_db_version += 1
+
+@cli.command('check-for-upgrade')
+@click.pass_context
+def check_for_upgrade(ctx):
+    """
+    Upgrade the configured database to the latest version
+    """
+    app = ctx.obj
+    check_pgpass_credentials(app.config)
+    current_db_version = get_db_version(app)
+
+    update_scripts_filenames = []
+    for (_, _, filenames) in walk('schema/generate'):
+        update_scripts_filenames.extend([file for file in filenames if 'update' in file])
+        # files_temp.extend([file.split("-")[1][14:].split(".")[0] for file in filenames if 'update' in file])
+        break
+
+    target_version_script_map = {}
+    for script in update_scripts_filenames:
+        upgrades_to = int(script.split("-")[1][14:].split(".")[0])
+        target_version_script_map[upgrades_to] = str(script)
+
+    target_version_script_map = OrderedDict(sorted(target_version_script_map.items()))
+
+    most_recent_version = list(target_version_script_map.keys())[-1]
+    if current_db_version == most_recent_version:
+        print("Database is already up to date.")
+    elif current_db_version < most_recent_version:
+        print(f"Current database version: v{current_db_version}\nPlease upgrade to the most recent version (v{most_recent_version}) with augur db upgrade-db-version.")
+    elif current_db_version > most_recent_version:
+        print(f"Unrecognized version: {current_db_version}\nThe most recent version is {most_recent_version}. Please contact your system administrator to resolve this error.")
+
 
 @cli.command('create-schema')
 @click.pass_context
@@ -249,11 +281,15 @@ def get_api_key(ctx):
 
     db = s.create_engine(DB_STR, poolclass=s.pool.NullPool)
 
-    update_api_key_sql = s.sql.text("""
+    get_api_key_sql = s.sql.text("""
         SELECT value FROM augur_operations.augur_settings WHERE setting='augur_api_key';
     """)
 
-    print(db.execute(update_api_key_sql).fetchone()[0])
+    try:
+        print(db.execute(get_api_key_sql).fetchone()[0])
+    except TypeError:
+        print("No Augur API key found.")
+
 
 
 @cli.command('check-pgpass', short_help="Check the ~/.pgpass file for Augur's database credentials")
