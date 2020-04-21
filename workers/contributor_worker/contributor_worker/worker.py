@@ -559,15 +559,18 @@ class ContributorWorker:
             #     }
             for id in dupe_ids:
 
-                alias_result = self.db.execute(self.contributors_aliases_table.update().where(
-                    self.contributors_aliases_table.c.cntrb_a_id==id['cntrb_id']).values(alias_update_col))
-                logging.info("Updated cntrb_a_id column for tuples in the contributors_aliases table with value: {} replaced with new cntrb id: {}".format(id['cntrb_id'], self.cntrb_id_inc))
+                try:
+                    alias_result = self.db.execute(self.contributors_aliases_table.update().where(
+                        self.contributors_aliases_table.c.cntrb_a_id==id['cntrb_id']).values(alias_update_col))
+                    logging.info("Updated cntrb_a_id column for tuples in the contributors_aliases table with value: {} replaced with new cntrb id: {}".format(id['cntrb_id'], self.cntrb_id_inc))
 
-                #temp
-                alias_email_result = self.db.execute(self.contributors_aliases_table.update().where(
-                    self.contributors_aliases_table.c.alias_email==commit_email).values(alias_update_col))
-                logging.info("Updated cntrb_a_id column for tuples in the contributors_aliases table with value: {} replaced with new cntrb id: {}".format(commit_email, self.cntrb_id_inc))
-                #tempend
+                    #temp
+                    alias_email_result = self.db.execute(self.contributors_aliases_table.update().where(
+                        self.contributors_aliases_table.c.alias_email==commit_email).values(alias_update_col))
+                    logging.info("Updated cntrb_a_id column for tuples in the contributors_aliases table with value: {} replaced with new cntrb id: {}".format(commit_email, self.cntrb_id_inc))
+                    #tempend
+                except Exception as e:
+                    logging.info(f'Alias re-map already done... error: {e}')
 
                 issue_events_result = self.db.execute(self.issue_events_table.update().where(
                     self.issue_events_table.c.cntrb_id==id['cntrb_id']).values(update_col))
