@@ -33,7 +33,7 @@ class InsightWorker:
         self.tool_version = '0.0.3' # See __init__.py
         self.data_source = 'Augur API'
         self.refresh = True
-        self.send_insights = False
+        self.send_insights = True
         self.finishing_task = False
         self.anomaly_days = self.config['anomaly_days']
         self.training_days = self.config['training_days']
