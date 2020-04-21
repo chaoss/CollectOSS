@@ -16,9 +16,14 @@ def assign_tuple_action(self, new_data, table_values, update_col_map, duplicate_
             continue
 
         obj['flag'] = 'none' # default of no action needed
+        existing_tuple = None
         for db_dupe_key in list(duplicate_col_map.keys()):
 
             if table_values.isin([obj[duplicate_col_map[db_dupe_key]]]).any().any():
+                if table_values[table_values[db_dupe_key].isin(
+                    [obj[duplicate_col_map[db_dupe_key]]])].to_dict('records'):
+                    existing_tuple = table_values[table_values[db_dupe_key].isin(
+                        [obj[duplicate_col_map[db_dupe_key]]])].to_dict('records')[0]
                 continue
 
             logging.info('Found a tuple that needs insertion based on dupe key: {}\n'.format(db_dupe_key))
@@ -30,9 +35,6 @@ def assign_tuple_action(self, new_data, table_values, update_col_map, duplicate_
             logging.info('Already determined that current tuple needs insertion, skipping checking updates. '
                 'Moving to next tuple.\n')
             continue
-
-        existing_tuple = table_values[table_values[db_dupe_key].isin(
-                [obj[duplicate_col_map[db_dupe_key]]])].to_dict('records')[0]
 
         # If we need to check the values of the existing tuple to determine if an update is needed
         for augur_col, value_check in value_update_col_map.items():
