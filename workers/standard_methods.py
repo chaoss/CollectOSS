@@ -38,7 +38,7 @@ def assign_tuple_action(self, new_data, table_values, update_col_map, duplicate_
 
         # If we need to check the values of the existing tuple to determine if an update is needed
         for augur_col, value_check in value_update_col_map.items():
-            not_nan_check = not (math.isnan(value_check) and math.isnan(existing_tuple[augur_col])) if value_check is not None else True
+            not_nan_check = not (pd.isna(value_check) and pd.isna(existing_tuple[augur_col])) if value_check is not None else True
             if existing_tuple[augur_col] != value_check and not_nan_check:
                 continue
             logging.info("Found a tuple that needs an update for column: {}\n".format(augur_col)) 
