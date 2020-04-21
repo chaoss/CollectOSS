@@ -2,7 +2,7 @@
 
 def create_insight_routes(server):
 
-    metrics = server._augur.metrics
+    metrics = server.augur_app.metrics
 
     """
     @api {get} /top-insights Top Insights

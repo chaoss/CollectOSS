@@ -6,12 +6,11 @@ Creates a WSGI server that serves the Augur REST API
 import json
 import os
 import base64
-from flask import Flask, request, Response, send_from_directory
+from flask import Flask, request, Response, redirect
 from flask_cors import CORS
-from flask_login import current_user
 import pandas as pd
 import augur
-from augur.util import annotate, metric_metadata, logger
+from augur.util import annotate, logger
 from augur.routes import create_routes
 
 AUGUR_API_VERSION = 'api/unstable'
@@ -45,12 +44,11 @@ class Server(object):
         app.url_map.strict_slashes = False
 
         # Create Augur application
-        self._augur = augur.Application()
-        augur_app = self._augur
+        self.augur_app = augur.Application()
 
         # Initialize cache
-        expire = int(augur_app.read_config('Server', 'cache_expire'))
-        self.cache = augur_app.cache.get_cache('server', expire=expire)
+        expire = int(self.augur_app.read_config('Server', 'cache_expire'))
+        self.cache = self.augur_app.cache.get_cache('server', expire=expire)
         self.cache.clear()
 
         app.config['WTF_CSRF_ENABLED'] = False
@@ -61,40 +59,23 @@ class Server(object):
         self.broker = broker
         self.housekeeper = housekeeper
 
-        self.worker_pids = []
-
         create_routes(self)
-        augur_app.metrics.create_routes(self)
+        self.augur_app.metrics.create_routes(self)
 
         #####################################
         ###          UTILITY              ###
         #####################################
 
         @app.route('/')
-        @app.errorhandler(404)
-        @app.errorhandler(405)
-        def index(err=None):
+        @app.route('/ping')
+        def index():
             """
             Redirects to health check route
             """
-            if AUGUR_API_VERSION in request.url:
-                return Response(response=json.dumps({'error': 'Not Found'}),
-                            status=404,
-                            mimetype="application/json")
-            else:
-
-                session_data = {}
-                if current_user and hasattr(current_user, 'username'):
-                    session_data = { 'username': current_user.username }
-                return Response(response=json.dumps(session_data),
-                            status=405,
-                            mimetype="application/json")#render_template('index.html', session_script=f'window.AUGUR_SESSION={json.dumps(session_data)}\n')
-
-        @app.route('/static/<path:path>')
-        def send_static(path):
-            return send_from_directory(frontend_folder, path)
+            return redirect(self.api_version)
 
         @app.route('/{}/'.format(self.api_version))
+        @app.route('/{}/status'.format(self.api_version))
         def status():
             """
             Health check route
@@ -105,184 +86,6 @@ class Server(object):
             return Response(response=json.dumps(status),
                             status=200,
                             mimetype="application/json")
-
-        """
-        @api {post} /batch Batch Requests
-        @apiName Batch
-        @apiGroup Batch
-        @apiDescription Returns results of batch requests
-        POST JSON of api requests
-        """
-        @app.route('/{}/batch'.format(self.api_version), methods=['GET', 'POST'])
-        def batch():
-            """
-            Execute multiple requests, submitted as a batch.
-            :statuscode 207: Multi status
-            """
-
-            """
-            to have on future batch request for each individual chart:
-            - timeseries/metric
-            - props that are in current card files (title)
-            - do any of these things act like the vuex states?
-            - what would singular card(dashboard) look like now?
-            """
-
-            self.show_metadata = False
-
-            if request.method == 'GET':
-                """this will return sensible defaults in the future"""
-                return app.make_response('{"status": "501", "response": "Defaults for batch requests not implemented. Please POST a JSON array of requests to this endpoint for now."}')
-
-            try:
-                requests = json.loads(request.data.decode('utf-8'))
-            except ValueError as e:
-                request.abort(400)
-
-            responses = []
-
-            for index, req in enumerate(requests):
-
-
-                method = req['method']
-                path = req['path']
-                body = req.get('body', None)
-
-                try:
-
-                    logger.debug('batch-internal-loop: %s %s' % (method, path))
-
-                    with app.app_context():
-                        with app.test_request_context(path,
-                                                      method=method,
-                                                      data=body):
-                            try:
-                                # Can modify flask.g here without affecting
-                                # flask.g of the root request for the batch
-
-                                # Pre process Request
-                                rv = app.preprocess_request()
-
-                                if rv is None:
-                                    # Main Dispatch
-                                    rv = app.dispatch_request()
-
-                            except Exception as e:
-                                rv = app.handle_user_exception(e)
-
-                            response = app.make_response(rv)
-
-                            # Post process Request
-                            response = app.process_response(response)
-
-                    # Response is a Flask response object.
-                    # _read_response(response) reads response.response
-                    # and returns a string. If your endpoints return JSON object,
-                    # this string would be the response as a JSON string.
-                    responses.append({
-                        "path": path,
-                        "status": response.status_code,
-                        "response": str(response.get_data(), 'utf8'),
-                    })
-
-                except Exception as e:
-
-                    responses.append({
-                        "path": path,
-                        "status": 500,
-                        "response": str(e)
-                    })
-
-
-            return Response(response=json.dumps(responses),
-                            status=207,
-                            mimetype="application/json")
-
-
-        """
-        @api {post} /batch Batch Request Metadata
-        @apiName BatchMetadata
-        @apiGroup Batch
-        @apiDescription Returns metadata of batch requests
-        POST JSON of API requests metadata
-        """
-        @app.route('/{}/batch/metadata'.format(self.api_version), methods=['GET', 'POST'])
-        def batch_metadata():
-            """
-            Returns endpoint metadata in batch format
-            """
-
-            self.show_metadata = True
-
-            if request.method == 'GET':
-                """this will return sensible defaults in the future"""
-                return app.make_response(json.dumps(metric_metadata))
-
-            try:
-                requests = json.loads(request.data.decode('utf-8'))
-            except ValueError as e:
-                request.abort(400)
-
-            responses = []
-
-            for index, req in enumerate(requests):
-
-                method = req['method']
-                path = req['path']
-                body = req.get('body', None)
-
-                try:
-
-                    augur.logger.info('batch endpoint: ' + path)
-
-                    with app.app_context():
-                        with app.test_request_context(path,
-                                                      method=method,
-                                                      data=body):
-                            try:
-                                # Can modify flask.g here without affecting
-                                # flask.g of the root request for the batch
-
-                                # Pre process Request
-                                rv = app.preprocess_request()
-
-                                if rv is None:
-                                    # Main Dispatch
-                                    rv = app.dispatch_request()
-
-                            except Exception as e:
-                                rv = app.handle_user_exception(e)
-
-                            response = app.make_response(rv)
-
-                            # Post process Request
-                            response = app.process_response(response)
-
-                    # Response is a Flask response object.
-                    # _read_response(response) reads response.response
-                    # and returns a string. If your endpoints return JSON object,
-                    # this string would be the response as a JSON string.
-
-                    responses.append({
-                        "path": path,
-                        "status": response.status_code,
-                        "response": str(response.get_data(), 'utf8'),
-                    })
-
-                except Exception as e:
-
-                    responses.append({
-                        "path": path,
-                        "status": 500,
-                        "response": str(e)
-                    })
-
-            self.show_metadata = False
-
-            return Response(response=json.dumps(responses),
-                            status=207,
-                            mimetype="application/json")
-
 
     def transform(self, func, args=None, kwargs=None, repo_url_base=None, orient='records',
         group_by=None, on=None, aggregate='sum', resample=None, date_col='date'):
@@ -420,11 +223,8 @@ class Server(object):
         #
         # Get the unbound function from the bound function's class so that we can modify metadata
         # across instances of that class.
-        real_func = getattr(self._augur.metrics, function.__name__)
+        real_func = getattr(self.augur_app.metrics, function.__name__)
         annotate(endpoint=endpoint, **kwargs)(real_func)
-
-    def admin(self):
-        return (current_user and current_user.administrator) or (request.args.get('admin_token') == self._augur.read_config('Server', 'admin_token', 'AUGUR_ADMIN_TOKEN', 'changeme'))
 
 
 def run():
@@ -432,10 +232,9 @@ def run():
     Runs server with configured hosts/ports
     """
     server = Server()
-    host = server._augur.read_config('Server', 'host', 'AUGUR_HOST', '0.0.0.0')
-    port = server._augur.read_config('Server', 'port', 'AUGUR_PORT', '5000')
+    host = server.augur_app.read_config('Server', 'host', 'AUGUR_HOST', '0.0.0.0')
+    port = server.augur_app.read_config('Server', 'port', 'AUGUR_PORT', '5000')
     Server().app.run(host=host, port=int(port), debug=True)
-
 
 wsgi_app = None
 def wsgi(environ, start_response):

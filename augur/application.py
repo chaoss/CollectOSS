@@ -11,12 +11,10 @@ import json
 import pkgutil
 from beaker.cache import CacheManager
 from beaker.util import parse_cache_config_options
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, scoped_session
+import sqlalchemy as s
 from augur.models.common import Base
 from augur import logger
 from augur.metrics import MetricDefinitions
-import augur.plugins
 
 from augur.cli.configure import default_config
 
@@ -79,6 +77,25 @@ class Application(object):
             os.makedirs(self.cache_config['cache.lock_dir'])
         cache_parsed = parse_cache_config_options(self.cache_config)
         self.cache = CacheManager(**cache_parsed)
+
+        user = self.read_config('Database', 'user')
+        host = self.read_config('Database', 'host')
+        port = self.read_config('Database', 'port')
+        dbname = self.read_config('Database', 'name')
+        schema = self.read_config('Database', 'schema')
+
+        database_connection_string = 'postgresql://{}:{}@{}:{}/{}'.format(
+            user, self.read_config('Database', 'password'), host, port, dbname
+        )
+
+        self.database = s.create_engine(database_connection_string, poolclass=s.pool.NullPool,
+            connect_args={'options': '-csearch_path={}'.format(schema)})
+
+        spdx_schema = 'spdx'
+        self.spdx_db = s.create_engine(database_connection_string, poolclass=s.pool.NullPool,
+            connect_args={'options': '-csearch_path={},{}'.format(spdx_schema, schema)})
+
+        logger.debug('Augur DB: Connecting to {} schema of {}:{}/{} as {}'.format(schema, host, port, dbname, user))
 
         self.metrics = MetricDefinitions(self)
 

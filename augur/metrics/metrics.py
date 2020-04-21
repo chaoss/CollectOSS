@@ -1,4 +1,3 @@
-import sqlalchemy as s
 from augur.util import logger
 
 from .commit import create_commit_metrics, create_commit_routes
@@ -14,28 +13,9 @@ from .util import create_util_metrics, create_util_routes
 
 class MetricDefinitions():
     def __init__(self, app):
-        self.app = app
         self.projects = None
-
-        self.user = self.app.read_config('Database', 'user')
-        self.password = self.app.read_config('Database', 'password')
-        self.host = self.app.read_config('Database', 'host')
-        self.port = self.app.read_config('Database', 'port')
-        self.dbname = self.app.read_config('Database', 'name')
-        self.schema = self.app.read_config('Database', 'schema')
-
-        self.database_connection_string = 'postgresql://{}:{}@{}:{}/{}'.format(
-            self.user, self.password, self.host, self.port, self.dbname
-        )
-
-        self.database = s.create_engine(self.database_connection_string, poolclass=s.pool.NullPool,
-            connect_args={'options': '-csearch_path={}'.format(self.schema)})
-
-        spdx_schema = 'spdx'
-        self.spdx_db = s.create_engine(self.database_connection_string, poolclass=s.pool.NullPool,
-            connect_args={'options': '-csearch_path={},{}'.format(spdx_schema, self.schema)})
-
-        logger.debug('Augur DB: Connecting to {} schema of {}:{}/{} as {}'.format(self.schema, self.host, self.port, self.dbname, self.user))
+        self.database = app.database
+        self.spdx_db = app.spdx_db
 
         # TODO: not hardcode this
         create_commit_metrics(self)

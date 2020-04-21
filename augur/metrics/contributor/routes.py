@@ -2,7 +2,7 @@
 
 def create_contributor_routes(server):
 
-    metrics = server._augur.metrics
+    metrics = server.augur_app.metrics
 
     """
     @api {get} /repo-groups/:repo_group_id/contributors Contributors (Repo Group)

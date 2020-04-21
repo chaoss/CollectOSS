@@ -2,7 +2,7 @@
 
 def create_commit_routes(server):
 
-    metrics = server._augur.metrics
+    metrics = server.augur_app.metrics
 
     """
     @api {get} /repo-groups/:repo_group_id/annual-commit-count-ranked-by-new-repo-in-repo-group Annual Commit Count Ranked by New Repo in Repo Group(Repo Group)
