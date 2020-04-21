@@ -48,7 +48,15 @@ setup(
         "six>=1.14.0"
     ],
     extras_require={
-        "dev": ["tox", "pytest", "ipdb", "sphinx","sphinx_rtd_theme"]
+        "dev": [
+            "tox",
+            "pytest",
+            "ipdb",
+            "sphinx",
+            "sphinx_rtd_theme",
+            "sphinxcontrib-openapi",
+            "sphinxcontrib-redoc"
+        ]
     },
     entry_points={
         "console_scripts": [
