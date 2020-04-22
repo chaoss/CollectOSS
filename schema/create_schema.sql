@@ -15,5 +15,4 @@
 \i schema/generate/11-schema_update_13.sql
 \i schema/generate/12-schema_update_14.sql
 \i schema/generate/13-schema_update_15.sql
-\i schema/generate/13-schema_update_15.sql
-\i schema/generate/15-schema_update_16.sql
+\i schema/generate/14-schema_update_16.sql
