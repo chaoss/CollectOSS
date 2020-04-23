@@ -75,23 +75,6 @@ Lines that start with a ``$`` denote a bash command.
 
    $ make install
 
-.. note::
-    At the end of the successful installation, you will get an Augur API Key, with this message: 
-  
-    Installing frontend dependencies...
-  
-    YOUR AUGUR API KEY
-
-    ``SOMEKEYWITHNUMBERSANDLETTERSOK?``
-
-    You will need this API key to access the endpoints for 
-
-    adding repos to the database. Make sure to save it somewhere! 
-  
-    If you do lose it, run 'augur db get-api-key' on the CLI.
-
-    Any old Augur API keys you may have will no longer work.
-
 If you think something went wrong, check the log files under ``logs/install/``. If you want to try again, you can use ``make clean`` to delete any build files before running ``make install`` again.
 
 .. note::
