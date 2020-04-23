@@ -58,6 +58,54 @@ def pull_requests_merge_contributor_new(self, repo_group_id, repo_id=None, perio
                                       'end_date': end_date})
     return results
 
+@annotate(tag='pull-requests-closed-no-merge')
+def pull_requests_closed_no_merge(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
+    """
+    Returns a timeseries of the which were closed but not merged
+
+    :param repo_id: The repository's id
+    :param repo_group_id: The repository's group id
+    :param period: To set the periodicity to 'day', 'week', 'month' or 'year', defaults to 'day'
+    :param begin_date: Specifies the begin date, defaults to '1970-1-1 00:00:00'
+    :param end_date: Specifies the end date, defaults to datetime.now()
+    :return: DataFrame of persons/period
+    """
+    if not begin_date:
+        begin_date = '1970-1-1 00:00:01'
+    if not end_date:
+        end_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+    if repo_id:
+        closedNoMerge = s.sql.text("""
+            SELECT DATE_TRUNC(:period, pull_requests.pr_closed_at) AS closed_date,
+            COUNT(pull_request_id) as pr_count
+            FROM pull_requests JOIN repo ON pull_requests.repo_id = repo.repo_id
+            WHERE pull_requests.repo_id = :repo_id
+            AND pull_requests.pr_closed_at is NOT NULL AND
+            pull_requests.pr_merged_at is NULL
+            GROUP BY closed_date, pull_request_id
+            ORDER BY closed_date
+        """)
+        results = pd.read_sql(closedNoMerge, self.database, params={'repo_id': repo_id, 'period': period,
+                                                                     'begin_date': begin_date,
+                                                                     'end_date': end_date})
+
+    else:
+        closedNoMerge = s.sql.text("""
+            SELECT DATE_TRUNC(:period, pull_requests.pr_closed_at) AS closed_date,
+            COUNT(pull_request_id) as pr_count
+            FROM pull_requests JOIN repo ON pull_requests.repo_id = repo.repo_id WHERE pull_requests.repo_id in (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
+            and pull_requests.pr_closed_at is NOT NULL and pull_requests.pr_merged_at is NULL
+            GROUP BY closed_date, pull_request_id
+            ORDER BY closed_date
+        """)
+
+        results = pd.read_sql(closedNoMerge, self.database,
+                              params={'repo_group_id': repo_group_id, 'period': period,
+                                      'begin_date': begin_date,
+                                      'end_date': end_date})
+    return results
+
 @annotate(tag='reviews')
 def reviews(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
     """ Returns a timeseris of new reviews or pull requests opened
@@ -378,6 +426,56 @@ def pull_request_acceptance_rate(self, repo_group_id, repo_id=None, begin_date=N
         results = pd.read_sql(prAccRateSQL, self.database, params={'repo_id': repo_id, 'group_by': group_by,
                                                         'begin_date': begin_date, 'end_date': end_date})
         return results
+
+@annotate(tag='pull-request-merged-status-counts')
+def pull_request_merged_status_counts(self, repo_group_id, repo_id=None, begin_date='1970-1-1 00:00:01', end_date=None, group_by='week'):
+    """
+    _____
+
+    :param repo_group_id: The repository's repo_group_id
+    :param repo_id: The repository's repo_id, defaults to None
+    :param begin_date: pull requests opened after this date
+    :____
+    :
+    :return: ____
+    """
+
+    if not end_date:
+        end_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+    unit_options = ['year', 'month', 'week', 'day']
+    time_group_bys = []
+    for time_unit in unit_options.copy():
+        if group_by not in unit_options:
+            continue
+        time_group_bys.append('closed_{}'.format(time_unit))
+        del unit_options[0]
+
+    if not repo_id:
+        pr_all_sql = s.sql.text("""
+            
+        """)
+    else:
+        pr_all_sql = s.sql.text("""
+            SELECT 
+                pull_request_id as pull_request_count,
+                CASE WHEN pr_merged_at IS NULL THEN 'Rejected' ELSE 'Merged' end as merged_status,
+                date_part( 'year', pr_closed_at :: DATE ) AS closed_year,
+                date_part( 'month', pr_closed_at :: DATE ) AS closed_month,
+                date_part( 'week', pr_closed_at :: DATE ) AS closed_week,
+                date_part( 'day', pr_closed_at :: DATE ) AS closed_day
+            from pull_requests
+            where repo_id = :repo_id
+                AND pr_created_at::date >= :begin_date ::date
+                AND pr_closed_at::date <= :end_date ::date
+        """)
+
+    pr_all = pd.read_sql(pr_all_sql, self.database, params={'repo_group_id': repo_group_id, 
+        'repo_id': repo_id, 'begin_date': begin_date, 'end_date': end_date})
+
+    pr_counts = pr_all.groupby(['merged_status'] + time_group_bys).count().reset_index()[time_group_bys + ['merged_status', 'pull_request_count']]
+    
+    return pr_counts
 
 def create_pull_request_metrics(metrics):
     add_metrics(metrics, __name__)

@@ -7,41 +7,48 @@ master | [![Build Status](https://travis-ci.org/chaoss/augur.svg?branch=master)]
 
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/2788/badge)](https://bestpractices.coreinfrastructure.org/projects/2788)
 
-## About Augur
+## What is Augur?
 
-Augur is focused on prototyping open source software metrics.
+Augur is a tool for collecting and measuring structured data
+about free (https://www.fsf.org/about/) and [open source](https://opensource.org/docs/osd) (FOSS) communities. 
 
-Functionally, Augur is a prototyped implementation of the Linux Foundation's [CHAOSS Project](http://chaoss.community) on [open source software metrics](https://github.com/chaoss/metrics). Technically, Augur is a [Flask web application](http://augur.osshealth.io), [Python library](https://oss-augur.readthedocs.io/en/dev/library-documentation/python.html) and [REST server](http://augur.osshealth.io/static/api_docs/) that presents metrics on open source software development project health and sustainability.
+We gather trace data for a group of repositories, normalize
+it into our data model, and provide a variety of metrics about said
+data. The structure of our data model enables us to synthesize data
+across various platforms to provide meaningful context for meaningful
+questions about the way these communities evolve.
+
+We are a [CHAOSS](https://chaoss.community>) project, and many of our
+metrics are implementations of the metrics defined by our awesome community. You
+can find more information about how to get involved
+(here)[https://chaoss.community/participate/].
+
+## Collecting Data
+
+One of Augur's core tenets is a desire to openly gather data that people can trust, and then provide useful and well-defined metrics that help give important context to the larger story being told by that data. We do this in a variety of ways, one of which is doing all our own data collection in house. We currently collect data from 4 main sources:
+
+1. Raw Git commit logs (commits, contributors)
+2. GitHub's API (issues, pull requests, contributors, repository metadata)
+3. The Linux Foundation's [Core Infrastructure Initiative](https://www.coreinfrastructure.org/) API (repository metadata)
+4. [Succinct Code Counter](https://github.com/boyter/scc), a blazingly fast Sloc, Cloc, and Code tool that also performs COCOMO calculations
+
+This data is collected by dedicated data collection workers controlled by Augur, each of which is responsible for some querying some subset of the aforementioned data sources. While we only have these 4 at the current moment, we are hard at work building workers for new data sources. If you have an idea for a new one, please tell us - we'd love your help!
+
 
 ## Getting Started
 
-**Please follow the 'Getting Started' guide in our [documentation](https://oss-augur.readthedocs.io/en/master/getting-started/getting-started-toc.html).**
+If you're interested in collecting data with our tool, the Augur team has worked hard to develop a detailed guide to getting started with our project, which can be found [here](https://oss-augur.readthedocs.io/en/master/getting-started/toc.html) alongside our main documentation.
 
-Note: we currently only support (most) UNIX systems. If you would like to use Augur but only have access to a non-Unix system, we recommend setting up an Ubuntu 18.04 VM if you can. 
-If this is not feasible for you, please reach out to us at [p9j0r6s0m4a0t8v5@augurlabs.slack.com](mailto:p9j0r6s0m4a0t8v5@augurlabs.slack.com) and we will try to help you come up with a solution. In the meantime, if you have Windows and feel so inclined check out issue [#403](https://github.com/chaoss/augur/issues/403) as a starting point until we can finalize a Windows installation.
+If you're looking to contribute to Augur's code, you can find installation instructions, development guides, architecture references (coming soon), best practices and more in our [developer documentation](https://oss-augur.readthedocs.io/en/master/development-guide/toc.html).
 
-## Data Collection
-
-Please [follow the instructions](https://oss-augur.readthedocs.io/en/master/getting-started/installation.html#data-collection) for collecting data about specific repositories of interest. We are also currently working on putting together an easily distributable sample database to enable people to get going faster.
-
-<!-- TODO: link to worker docs once they're done -->
-<!-- If you are collecting data of your own, you must [start up the workers](./docs/setup/augur-get-workers-going.md). -->
-
-If you have any issues, please feel free to request to email straight into our slack channel [p9j0r6s0m4a0t8v5@augurlabs.slack.com](mailto:p9j0r6s0m4a0t8v5@augurlabs.slack.com) for new developer support!!
 
 ## Contributing
-----------------
 
-To contribute to Augur, follow the guidelines found in our [CONTRIBUTING.md](CONTRIBUTING.md) and our [Code of Conduct](CODE_OF_CONDUCT.md). Augur is a welcoming development community that is open to anyone and everyone of every skill level!
-
-Check out our [documentation](https://oss-augur.readthedocs.io/en/documentation/) for information about our system.
-
-Please note we require all commits to be signed off with a [Developer Certificate of Origin](https://developercertificate.org/) in accordance with the [CHAOSS Project Charter section 8.2.1](https://chaoss.community/about/charter/#user-content-8-intellectual-property-policy). This can be easily done by using the `-s` flag when using `git commit`, e.g. `git commit -s -m "Update README.md"`. **Any pull request containing commits that are not signed off will not be eligible for merge until all commits are signed off.** 
+To contribute to Augur, please follow the guidelines found in our [CONTRIBUTING.md](CONTRIBUTING.md) and our [Code of Conduct](CODE_OF_CONDUCT.md). Augur is a welcoming community that is open to all, regardless if you're working on your 1000th contribution to open source or your 1st. We strongly believe that much of what makes open source so great is the incredible communitites it brings together, so we invite you to join ours!
 
 ## License, Copyright, and Funding
-----------------
 
-Copyright © 2019 University of Nebraska at Omaha, University of Missouri and CHAOSS Project at the Linux Foundation
+Copyright © 2020 University of Nebraska at Omaha, University of Missouri and CHAOSS Project at the Linux Foundation
 
 Augur is free software: you can redistribute it and/or modify it under the terms of the MIT License as published by the Open Source Initiative. See the [LICENSE](LICENSE) file for more details.
 

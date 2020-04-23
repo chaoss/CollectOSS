@@ -37,8 +37,6 @@ import getopt
 import xlsxwriter
 import configparser
 from facade_worker.facade02utilitymethods import update_repo_log, trim_commit, store_working_author, trim_author  
-import logging
-logging.basicConfig(filename='worker.log', filemode='w', level=logging.INFO)
 
 def git_repo_initialize(cfg, repo_group_id=None):
 
@@ -283,8 +281,6 @@ def git_repo_updates(cfg):
 
     cfg.update_status('Updating repos')
     cfg.log_activity('Info','Updating existing repos')
-
-    cfg.repo_base_directory = cfg.get_setting('repo_directory')
 
     query = ("SELECT repo_id,repo_group_id,repo_git,repo_name,repo_path FROM repo WHERE "
         "repo_status='Update'");

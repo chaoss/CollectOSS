@@ -38,7 +38,9 @@ import pymysql
 import psycopg2
 import json
 import logging
-logging.basicConfig(filename='worker.log', filemode='w', level=logging.INFO)
+
+from workers.standard_methods import read_config
+
 
 class Config:
 
@@ -47,13 +49,10 @@ class Config:
         self.cursor = None
         self.cursor_people = None
 
-        # Figure out how much we're going to log
-        self.log_level = None #self.get_setting('log_level')
-
         self.db = None
         self.db_people = None
 
-        worker_options = self.read_config("Workers", "facade_worker", use_main_config=1)
+        worker_options = read_config("Workers", "facade_worker", None, None)
         if 'repo_directory' in worker_options:
             self.repo_base_directory = worker_options['repo_directory']
         else:
@@ -64,6 +63,11 @@ class Config:
         self.tool_source = '\'FacadeAugur\''
         self.tool_version = '\'0.0.1\''
         self.data_source = '\'git_repository\''
+
+        # Figure out how much we're going to log
+        logging.basicConfig(filename='worker_{}.log'.format(worker_options['port']), filemode='w', level=logging.INFO)
+        self.log_level = None #self.get_setting('log_level')
+
 
     #### Database update functions ####
 
@@ -87,67 +91,6 @@ class Config:
         print("Legacy Facade Block for DB UPDATE. No longer used. ")
 
         print("No further database updates.\n")
-
-    def read_config(self, section, name=None, environment_variable=None, default=None, config_file='augur.config.json', no_config_file=0, use_main_config=0):
-        """
-        Read a variable in specified section of the config file, unless provided an environment variable
-
-        :param section: location of given variable
-        :param name: name of variable
-        """
-
-
-        __config_bad = False
-        if use_main_config == 0:
-            __config_file_path = os.path.abspath(os.getenv('AUGUR_CONFIG_FILE', config_file))
-        else:        
-            __config_file_path = os.path.abspath(os.path.dirname(os.path.dirname(os.getcwd())) + '/augur.config.json')
-
-        __config_location = os.path.dirname(__config_file_path)
-        __export_env = os.getenv('AUGUR_ENV_EXPORT', '0') == '1'
-        __default_config = { 'Database': {"host": "nekocase.augurlabs.io"} }
-
-        if os.getenv('AUGUR_ENV_ONLY', '0') != '1' and no_config_file == 0:
-            try:
-                __config_file = open(__config_file_path, 'r+')
-            except:
-                # logger.info('Couldn\'t open {}, attempting to create. If you have a augur.cfg, you can convert it to a json file using "make to-json"'.format(config_file))
-                if not os.path.exists(__config_location):
-                    os.makedirs(__config_location)
-                __config_file = open(__config_file_path, 'w+')
-                __config_bad = True
-
-
-            # Options to export the loaded configuration as environment variables for Docker
-           
-            if __export_env:
-                
-                export_filename = os.getenv('AUGUR_ENV_EXPORT_FILE', 'augur.cfg.sh')
-                __export_file = open(export_filename, 'w+')
-                # logger.info('Exporting {} to environment variable export statements in {}'.format(config_file, export_filename))
-                __export_file.write('#!/bin/bash\n')
-
-            # Load the config file and return [section][name]
-            try:
-                config_text = __config_file.read()
-                __config = json.loads(config_text)
-                if name is not None:
-                    try:
-                        return(__config[section][name])
-                    except:
-                        return default
-                else:
-                    return(__config[section])
-
-            except json.decoder.JSONDecodeError as e:
-                if not __config_bad:
-                    __using_config_file = False
-                    # logger.error('%s could not be parsed, using defaults. Fix that file, or delete it and run this again to regenerate it. Error: %s', __config_file_path, str(e))
-
-                __config = __default_config
-                return(__config[section][name])
-
-
 
     def migrate_database_config(self):
 
@@ -218,23 +161,19 @@ class Config:
             connect_timeout = 31536000,)
 
         cursor = db.cursor()#pymysql.cursors.DictCursor)
-        self.cursor = cursor
-        self.db = db
+
         if people and not multi_threaded_connection:
             self.cursor_people = cursor
             self.db_people = db
         elif not multi_threaded_connection:
-            #self.cursor = cursor
-            #self.db = db
-            self.cursor_people = cursor
-            self.db_people = db
+            self.cursor = cursor
+            self.db = db
 
         # Figure out how much we're going to log
         self.log_level = self.get_setting('log_level')
         #Not getting debug logging for some reason. 
         self.log_level = 'Debug'
         return db, cursor
-        
 
     def get_setting(self, setting):
 
@@ -269,19 +208,20 @@ class Config:
         try:
             self.cursor.execute(query, (level, status))
             self.db.commit()
-        except:
+        except Exception as e:
+            logging.info('Error encountered: {}\n'.format(e))
+
             # Set up the database
-            json = self.read_config("Database", use_main_config=1)#self.cfg.migrate_database_config("Credentials")
-            db_user = json['user']
-            db_pass = json['password']
-            db_name = json['database']
-            db_host = json['host']
-            db_port = json['port']
-            db_user_people = json['user']
-            db_pass_people = json['password']
-            db_name_people = json['database']
-            db_host_people = json['host']
-            db_port_people = json['port']
+            db_user = read_config('Database', 'user', 'AUGUR_DB_USER', 'augur')
+            db_pass = read_config('Database', 'password', 'AUGUR_DB_PASSWORD', 'augur')
+            db_name = read_config('Database', 'name', 'AUGUR_DB_NAME', 'augur')
+            db_host = read_config('Database', 'host', 'AUGUR_DB_HOST', 'localhost')
+            db_port = read_config('Database', 'port', 'AUGUR_DB_PORT', 5432)
+            db_user_people = db_user
+            db_pass_people = db_pass
+            db_name_people = db_name
+            db_host_people = db_host
+            db_port_people = db_port
             # Open a general-purpose connection
             db,cursor = self.database_connection(
                 db_host,
