@@ -47,5 +47,5 @@ Our members:
 - `Michael Woodruff <https://github.com/michaelwoodruffdev/>`_
 - `Max Balk <https://github.com/maxbalk/>`_
 - `Andrew Brain <https://github.com/ABrain7710>`_
-- `Carter Landis <https://carterlandis.com>`_
+- `Carter Landis <https://github.com/ccarterlandis>`_
 
