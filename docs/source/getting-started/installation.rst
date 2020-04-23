@@ -28,10 +28,10 @@ Frontend
 If you're interested in using our visualizations as well, you can optionally install the frontend dependencies.
 You will need:
 
--  `Vue.js <https://vuejs.org/>`__
--  `vue-cli <https://cli.vuejs.org/>`__
--  `node <https://nodejs.org/en/>`__
--  `npm <https://www.npmjs.com/>`__
+-  `npm <https://www.npmjs.com/>`__ On Ubuntu, for example, ``sudo apt-get install npm``
+-  `Vue.js <https://vuejs.org/>`__  ``npm install vue``
+-  `vue-cli <https://cli.vuejs.org/>`__  ``npm install vue-cli``
+-  `node <https://nodejs.org/en/>`__  ``npm install node`` 
 
 We use Vue.js as our frontend web framework, and ``npm`` as our package manager.
 
