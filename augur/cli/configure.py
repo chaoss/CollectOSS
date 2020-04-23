@@ -16,7 +16,6 @@ default_config = {
             "key": "key",
             "password": "augur",
             "port": 5432,
-            "schema": "augur_data",
             "user": "augur"
         },
         "Facade": {

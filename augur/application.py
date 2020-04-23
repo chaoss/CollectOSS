@@ -12,14 +12,14 @@ import pkgutil
 from beaker.cache import CacheManager
 from beaker.util import parse_cache_config_options
 import sqlalchemy as s
-from augur.models.common import Base
+import psycopg2
+
 from augur import logger
 from augur.metrics import MetricDefinitions
-
 from augur.cli.configure import default_config
 
 logging.basicConfig(level=logging.INFO)
-
+ 
 class Application(object):
     """Initalizes all classes from Augur using a config file or environment variables"""
 
@@ -78,6 +78,12 @@ class Application(object):
         cache_parsed = parse_cache_config_options(self.cache_config)
         self.cache = CacheManager(**cache_parsed)
 
+        self.database = self.__connect_to_database()
+        self.spdx_db = self.__connect_to_database(include_spdx=True)
+
+        self.metrics = MetricDefinitions(self)
+
+    def __connect_to_database(self, include_spdx=False):
         user = self.read_config('Database', 'user')
         host = self.read_config('Database', 'host')
         port = self.read_config('Database', 'port')
@@ -88,16 +94,21 @@ class Application(object):
             user, self.read_config('Database', 'password'), host, port, dbname
         )
 
-        self.database = s.create_engine(database_connection_string, poolclass=s.pool.NullPool,
-            connect_args={'options': '-csearch_path={}'.format(schema)})
+        csearch_path_options = 'augur'
+        if include_spdx == True:
+            csearch_path_options += ',spdx'
 
-        spdx_schema = 'spdx'
-        self.spdx_db = s.create_engine(database_connection_string, poolclass=s.pool.NullPool,
-            connect_args={'options': '-csearch_path={},{}'.format(spdx_schema, schema)})
+        engine = s.create_engine(database_connection_string, poolclass=s.pool.NullPool,
+            connect_args={'options': f'-csearch_path={csearch_path_options}'}, pool_pre_ping=True)
 
-        logger.debug('Augur DB: Connecting to {} schema of {}:{}/{} as {}'.format(schema, host, port, dbname, user))
-
-        self.metrics = MetricDefinitions(self)
+        try:
+            test_connection = engine.connect()
+            test_connection.close()
+            logger.debug('Connected to {} schema of {}:{}/{} as {}'.format(schema, host, port, dbname, user))
+            return engine
+        except s.exc.OperationalError as e:
+            logger.fatal(f"Unable to connect to the database. Terminating...")
+            exit()
 
     def read_config(self, section, name=None):
         """
