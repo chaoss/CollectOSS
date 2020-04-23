@@ -480,15 +480,15 @@ class ContributorWorker:
 
             # Prepare tuple for insertion to contributor table (build it off of the tuple queried)
             cntrb = tuple
-            try:
-                created_at = datetime.fromtimestamp(cntrb['cntrb_created_at']/1000)
-            except:
-                created_at = None
-            cntrb['cntrb_created_at'] = created_at
+
+            cntrb['cntrb_created_at'] = datetime.fromtimestamp(cntrb['cntrb_created_at']/1000) \
+                if cntrb['cntrb_created_at'] else None
             cntrb['cntrb_email'] = tuple['commit_email']
-            cntrb["tool_source"] = self.tool_source
-            cntrb["tool_version"] = self.tool_version
-            cntrb["data_source"] = self.data_source
+            cntrb['tool_source'] = self.tool_source
+            cntrb['tool_version'] = self.tool_version
+            cntrb['data_source'] = self.data_source
+            cntrb['cntrb_last_used'] = datetime.fromtimestamp(cntrb['cntrb_last_used']/1000) \
+                if cntrb['cntrb_last_used'] else None
             del cntrb['commit_name']
             del cntrb['commit_email']
             del cntrb['cntrb_id']
@@ -559,15 +559,18 @@ class ContributorWorker:
             #     }
             for id in dupe_ids:
 
-                alias_result = self.db.execute(self.contributors_aliases_table.update().where(
-                    self.contributors_aliases_table.c.cntrb_a_id==id['cntrb_id']).values(alias_update_col))
-                logging.info("Updated cntrb_a_id column for tuples in the contributors_aliases table with value: {} replaced with new cntrb id: {}".format(id['cntrb_id'], self.cntrb_id_inc))
+                try:
+                    alias_result = self.db.execute(self.contributors_aliases_table.update().where(
+                        self.contributors_aliases_table.c.cntrb_a_id==id['cntrb_id']).values(alias_update_col))
+                    logging.info("Updated cntrb_a_id column for tuples in the contributors_aliases table with value: {} replaced with new cntrb id: {}".format(id['cntrb_id'], self.cntrb_id_inc))
 
-                #temp
-                alias_email_result = self.db.execute(self.contributors_aliases_table.update().where(
-                    self.contributors_aliases_table.c.alias_email==commit_email).values(alias_update_col))
-                logging.info("Updated cntrb_a_id column for tuples in the contributors_aliases table with value: {} replaced with new cntrb id: {}".format(commit_email, self.cntrb_id_inc))
-                #tempend
+                    #temp
+                    alias_email_result = self.db.execute(self.contributors_aliases_table.update().where(
+                        self.contributors_aliases_table.c.alias_email==commit_email).values(alias_update_col))
+                    logging.info("Updated cntrb_a_id column for tuples in the contributors_aliases table with value: {} replaced with new cntrb id: {}".format(commit_email, self.cntrb_id_inc))
+                    #tempend
+                except Exception as e:
+                    logging.info(f'Alias re-map already done... error: {e}')
 
                 issue_events_result = self.db.execute(self.issue_events_table.update().where(
                     self.issue_events_table.c.cntrb_id==id['cntrb_id']).values(update_col))

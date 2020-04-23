@@ -398,7 +398,11 @@ class GHPullRequestWorker:
         table_values = pd.read_sql(table_values_sql, self.db, params={'repo_id': repo_id})
 
         # Compare queried values against table values for dupes/updates
-        table_columns = pr_file_rows[0].keys()
+        if len(pr_file_rows) > 0:
+            table_columns = pr_file_rows[0].keys()
+        else:
+            logging.info(f'No rows need insertion for repo {repo_id}\n')
+            register_task_completion(self, task_info, repo_id, 'pull_request_files')
 
         # Compare queried values against table values for dupes/updates
         pr_file_rows_df = pd.DataFrame(pr_file_rows)
