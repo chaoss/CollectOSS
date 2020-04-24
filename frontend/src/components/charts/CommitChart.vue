@@ -7,19 +7,17 @@
       <p> {{ chart }} </p>
       <!-- <p class="note">*point values with total lines changed outside the bounds of [50.000, 1.000.000] are rounded to the corresponding edge limit</p> -->
       <div class="form-item form-checkboxes tickradios">
-
-
           <div class="inputGroup ">
             <input id="circradio" name="comparebaseline" value="0" type="radio" v-model="tick">
-            <label id="front" for="circradio">Circle</label>
+            <label id="circradio_front" for="circradio">Circle</label>
           </div>
           <div class="inputGroup ">
-            <input id="tickradio"name="comparebaseline" value="1" type="radio" v-model="tick">
-            <label id="front" for="tickradio">Tick</label>
+            <input id="tickradio" name="comparebaseline" value="1" type="radio" v-model="tick">
+            <label id="tickradio_front" for="tickradio">Tick</label>
           </div>
           <div class="inputGroup ">
-            <input id="rectradio"name="comparebaseline" value="2" type="radio" v-model="tick">
-            <label id="front" for="rectradio">Rectangle</label>
+            <input id="rectradio" name="comparebaseline" value="2" type="radio" v-model="tick">
+            <label id="rectradio_front" for="rectradio">Rectangle</label>
           </div>
       </div>
     </div>
@@ -28,13 +26,10 @@
 
 
 <script>
-import { mapState } from 'vuex'
-import AugurStats from '@/AugurStats.ts'
-
 export default {
   props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'data'],
   data() {
-    let years = []
+    let years = [];
     for (let i = 9; i >= 0; i--) {
       years.push((new Date()).getFullYear() - i)
     }
@@ -70,43 +65,39 @@ export default {
       return this.$store.state.endDate
     },
     spec() {
-      console.log("test")
-      const vegaEmbed = window.vegaEmbed;
-
-      let type = null, bin = null, size = null, opacity = null;
+      let [type, bin, size, opacity] = Array(4).fill(null);
 
       if(this.tick == 0) {
-        type = "circle"
-        bin = false
+        type = "circle";
+        bin = false;
         size = {
                 "field": "Total lines changed",
                 "type": "quantitative",
                 "min": "15",
                 "scale": {"minSize": 30, "maxSize": 31}
-              }
+        };
         opacity = {}
       }
       if (this.tick == 1) {
-        type = "tick"
-            bin = false
-            size = {}
+        type = "tick";
+            bin = false;
+            size = {};
         opacity = {
                 "field": "Total lines changed",
                 "type": "quantitative",
                 "min": ".5"
-              }
+        }
       }
       if (this.tick == 2) {
-        type = "rect"
-            bin = {"maxbins": 40}
-            size = {}
+        type = "rect";
+            bin = {"maxbins": 40};
+            size = {};
         opacity = {
                 "field": "Total lines changed",
                 "type": "quantitative",
                 "min": ".5"
-              }
+        }
       }
-
 
       let config = {
         // "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
@@ -121,32 +112,15 @@ export default {
           "axis":{
                 "grid": false,
                 "title": null
-              },
+          },
               "legend": {
                // "offset": -505,
                 "titleFontSize": 10,
                 "titlePadding": 10
               },"scale": {"minSize": 100, "maxSize": 500}
         },
-        
-        "layer": [
-  //       {
-  //         "transform": [{"filter": {"selection": "tooltip"}}],
-  //         "mark": "text",
-  // "encoding": {
-  //   "y": {"field": "author_email", "type": "nominal"},
-  //   "x": {"field": "author_date", "type": "temporal", "bin": bin, "axis": {"format": "%b %Y", "title": " "}},
 
-  //   "tooltip": [{"field": "contributors", "type": "nominal"},{
-  //               "field": "Total lines changed",
-  //               "type": "quantitative",
-  //             },{
-  //               "field": "Net lines added",
-  //               "type": "quantitative",
-  //             }],
-    
-  // }
-  //       },
+        "layer": [
           {
             "transform": [
               {
@@ -171,7 +145,7 @@ export default {
               },
             ],
             "mark": type,
-            
+
             "encoding": {
 
               "x": {"field": "author_date", "type": "temporal", "bin": bin, "axis": {"format": "%b %Y", "title": " "}},
@@ -181,12 +155,12 @@ export default {
                 "type": "quantitative",
                 "scale": { "range": ["#FF0000", "#00FF00"]}
               },
-              
+
               "size": size,
               "opacity": opacity
 
             },
-            
+
           },
           {
             "mark": "rect",
@@ -230,7 +204,7 @@ export default {
               "x2": {"field": "Next month", "type": "temporal"},
               "y": {"field": "zero", "type": "quantitative", "axis": {"title": "", "labels": false},},
               "y2": {"field": "thousand", "type": "quantitative", "axis": {"title": "", "labels": false},},
-              
+
               "tooltip": [{"field": this.care[0], "type": "nominal"},
               {"field": this.care[1], "type": "nominal"},
               {"field": this.care[2], "type": "nominal"},
@@ -253,140 +227,126 @@ export default {
               }
             }
           },
-
         ]
-          
-        
-        
-      }
+      };
 
-      let repo = null
+      let repo = null;
       if (this.repo) {
         if (window.AugurRepos[this.repo]) {
           repo = window.AugurRepos[this.repo]
         } else {
-          let repo = window.AugurAPI.Repo({"gitURL": this.gitRepo})
+          let repo = window.AugurAPI.Repo({"gitURL": this.gitRepo});
           window.AugurRepos[repo.toString] = repo
         }
       } else {
-        repo =  window.AugurAPI.Repo({ gitURL: this.gitRepo })
+        repo =  window.AugurAPI.Repo({ gitURL: this.gitRepo });
         window.AugurRepos[repo.toString()] = repo
       }
 
-      let contributors = {}
-      let organizations = {}
+      let contributors = {};
+      let organizations = {};
 
       let addChanges = (dest, src) => {
         if (dest && src) {
           if (typeof dest !== 'object') {
-            dest['additions'] = 0
+            dest['additions'] = 0;
             dest['deletions'] = 0
           }
-          dest['additions'] += (src['additions'] || 0)
+          dest['additions'] += (src['additions'] || 0);
           dest['deletions'] += (src['deletions'] || 0)
         }
-      }
+      };
 
       let group = (obj, name, change, filter) => {
         if (filter(change)) {
-          let year = (new Date(change.author_date)).getFullYear()
-          let month = (new Date(change.author_date)).getMonth()
-          obj[change[name]] = obj[change[name]] || { additions: 0, deletions: 0 }
-          addChanges(obj[change[name]], change)
-          obj[change[name]][year] = obj[change[name]][year] || { additions: 0, deletions: 0 }
-          addChanges(obj[change[name]][year], change)
-          obj[change[name]][year + '-' + month] = obj[change[name]][year + '-' + month] || { additions: 0, deletions: 0 }
+          let year = (new Date(change.author_date)).getFullYear();
+          let month = (new Date(change.author_date)).getMonth();
+          obj[change[name]] = obj[change[name]] || { additions: 0, deletions: 0 };
+          addChanges(obj[change[name]], change);
+          obj[change[name]][year] = obj[change[name]][year] || { additions: 0, deletions: 0 };
+          addChanges(obj[change[name]][year], change);
+          obj[change[name]][year + '-' + month] = obj[change[name]][year + '-' + month] || { additions: 0, deletions: 0 };
           addChanges(obj[change[name]][year + '-' + month], change)
         }
-      }
+      };
 
       let flattenAndSort = (obj, keyName, sortField) => {
         return Object.keys(obj)
             .map((key) => {
-              let d = obj[key]
-              d[keyName] = key
+              let d = obj[key];
+              d[keyName] = key;
               return d
             })
             .sort((a, b) => {
               return b[sortField] - a[sortField]
             })
-      }
+      };
 
       let filterDates = (change) => {
         return (new Date(change.author_date)).getFullYear() > this.years[0]
-      }
+      };
 
       let processData = (data) => {
 
         data.forEach((change) => {
           change.author_date = new Date(change.author_date)
-        })
-
+        });
 
         data.forEach((change) => {
           if (isFinite(change.additions) && isFinite(change.deletions)) {
-            group(contributors, 'author_email', change, filterDates)
+            group(contributors, 'author_email', change, filterDates);
             if (change.author_affiliation !== 'Unknown') {
               group(organizations, 'affiliation', change, filterDates)
             }
           }
-        })
-        
-
-        //this.values = flattenAndSort(contributors, 'author_email', 'additions')
-        //this.organizations = flattenAndSort(organizations, 'name', 'additions')
-        this.contributors = flattenAndSort(contributors, 'author_email', 'additions')
-        var careabout = []
+        });
+        this.contributors = flattenAndSort(contributors, 'author_email', 'additions');
+        let careAbout = [];
         this.contributors.slice(0,10).forEach((obj) => {
-          careabout.push(obj["author_email"])
-        })
-
-
+          careAbout.push(obj["author_email"])
+        });
 
         let findObjectByKey = (array, key, value) => {
-            let ary = []
-            for (var i = 0; i < array.length; i++) {
+            let ary = [];
+
+            for (let i = 0; i < array.length; i++) {
                 if (array[i][key] == value) {
                     ary.push(array[i]);
                 }
             }
             return ary;
-        }
+        };
 
-        var ary = []
-        let template = {year: null, month: null, additions: 0, whitespace: 0, deletions: 0}
-        careabout.forEach((name) => {
+        let ary = [];
+        careAbout.forEach((name) => {
           findObjectByKey(data, "author_email", name).forEach((obj) => {
-            console.log(obj)
-
             let found = ary.some(function(el) {
               return el.year == obj.author_date.getFullYear() && el.month == obj.author_date.getMonth()
-            })
+            });
             if (!found){
               ary.push({year: obj.author_date.getFullYear(), month: obj.author_date.getMonth(), additions: 0, whitespace: 0, deletions: 0});
-              
             }
             else {
               let el = ary.find(function(el) {
                 return el.year == obj.author_date.getFullYear() && el.month == obj.author_date.getMonth()
-              })
+              });
               if (!Object.keys(el).includes(obj.author_email)) {
-                el[obj.author_email] = "additions: " + obj.additions
+                el[obj.author_email] = "additions: " + obj.additions;
                 if(!this.care.includes(obj.author_email)) {
                   this.care.push(obj.author_email)
                 }
               }
-              el.additions += obj.additions
-              el.deletions += obj.deletions
+              el.additions += obj.additions;
+              el.deletions += obj.deletions;
               el.whitespace += obj.whitespace
             }
             ary.push(obj)
           })
-        })
-      
+        });
+
         this.values = ary
 
-      }
+      };
 
       if (this.data) {
         processData(this.data)
@@ -396,15 +356,15 @@ export default {
         })
       }
 
-      $(this.$el).find('.showme, .hidefirst').removeClass('invis')
-      $(this.$el).find('.stackedbarchart').removeClass('loader')
+      $(this.$el).find('.showme, .hidefirst').removeClass('invis');
+      $(this.$el).find('.stackedbarchart').removeClass('loader');
 
       // Get the repos we need
-      let repos = []
+      let repos = [];
       if (this.repo) {
         repos.push(window.AugurRepos[this.repo])
       }
-      this.reloadImage(config)
+      this.reloadImage(config);
 
       return config
 
@@ -412,8 +372,8 @@ export default {
   },
   methods: {
     reloadImage (config) {
-      config.data = {"values": this.values}
-      var tooltipOptions = {
+      config.data = {"values": this.values};
+      let tooltipOptions = {
         theme: 'custom',
         offsetY: -110
       };

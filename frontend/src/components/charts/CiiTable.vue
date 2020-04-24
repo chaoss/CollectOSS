@@ -5,7 +5,7 @@
       <div v-if="loaded">
         <p v-if="values == undefined || values.length == 0">There is no CII Best Practices data for this repository</p>
         <div v-for="value in values">
-          <img :src="'https://bestpractices.coreinfrastructure.org/projects/' + value.id + '/badge'" alt="" width = 40%>
+          <img :src="'https://bestpractices.coreinfrastructure.org/projects/' + value.id + '/badge'" alt="badge-image" width = 40%>
           <br>
           <br>
           <span>The badge status of this repository is</span><strong>{{value.badge_level}}</strong>
