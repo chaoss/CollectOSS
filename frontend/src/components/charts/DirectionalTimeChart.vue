@@ -1,10 +1,10 @@
 <template>
-    <div ref="holder">
-        <div class="groupedbarchart">
-            <vega-lite :spec="spec" :data="values"></vega-lite>
-            <p> {{ chart }} </p>
-        </div>
+  <div ref="holder">
+    <div class="groupedbarchart">
+      <vega-lite :spec="spec" :data="values"></vega-lite>
+      <p> {{ chart }} </p>
     </div>
+  </div>
 </template>
 
 <script>

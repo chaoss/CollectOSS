@@ -1,20 +1,20 @@
 <template>
-    <div ref="holder">
-        <div class="textchart hidefirst invis">
-            <h3>{{ title }}</h3>
-            <table>
-                <tr>
-                    <th>Best:</th>
-                    <td>{{ (values[0]) ? values[0].best : undefined }}</td>
-                </tr>
-                <tr>
-                    <th>Worst</th>
-                    <td>{{ (values[0]) ? values[0].worst : undefined }}</td>
-                </tr>
-            </table>
-            <p> {{ chart }} </p>
-        </div>
+  <div ref="holder">
+    <div class="textchart hidefirst invis">
+      <h3>{{ title }}</h3>
+      <table>
+        <tr>
+          <th>Best:</th>
+          <td>{{ (values[0]) ? values[0].best : undefined }}</td>
+        </tr>
+        <tr>
+          <th>Worst</th>
+          <td>{{ (values[0]) ? values[0].worst : undefined }}</td>
+        </tr>
+      </table>
+      <p> {{ chart }} </p>
     </div>
+  </div>
 </template>
 
 <script>

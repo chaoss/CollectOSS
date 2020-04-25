@@ -1,27 +1,25 @@
 <template>
-    <div ref="holder">
-        <div class="tickchart ">
-            <h3>Lines of code added by the top 10 authors visualized</h3>
-            <div :id="source"></div>
-            <!-- <vega-lite :spec="spec" :data="values"></vega-lite> -->
-            <p> {{ chart }} </p>
-            <!-- <p class="note">*point values with total lines changed outside the bounds of [50.000, 1.000.000] are rounded to the corresponding edge limit</p> -->
-            <div class="form-item form-checkboxes tickradios">
-                <div class="inputGroup ">
-                    <input id="circradio" name="comparebaseline" value="0" type="radio" v-model="tick">
-                    <label id="circradio_front" for="circradio">Circle</label>
-                </div>
-                <div class="inputGroup ">
-                    <input id="tickradio" name="comparebaseline" value="1" type="radio" v-model="tick">
-                    <label id="tickradio_front" for="tickradio">Tick</label>
-                </div>
-                <div class="inputGroup ">
-                    <input id="rectradio" name="comparebaseline" value="2" type="radio" v-model="tick">
-                    <label id="rectradio_front" for="rectradio">Rectangle</label>
-                </div>
-            </div>
+  <div ref="holder">
+    <div class="tickchart ">
+      <h3>Lines of code added by the top 10 authors visualized</h3>
+      <div :id="source"></div>
+      <p> {{ chart }} </p>
+      <div class="form-item form-checkboxes tickradios">
+        <div class="inputGroup ">
+          <input id="circradio" name="comparebaseline" value="0" type="radio" v-model="tick">
+          <label id="circradio_front" for="circradio">Circle</label>
         </div>
+        <div class="inputGroup ">
+          <input id="tickradio" name="comparebaseline" value="1" type="radio" v-model="tick">
+          <label id="tickradio_front" for="tickradio">Tick</label>
+        </div>
+        <div class="inputGroup ">
+          <input id="rectradio" name="comparebaseline" value="2" type="radio" v-model="tick">
+          <label id="rectradio_front" for="rectradio">Rectangle</label>
+        </div>
+      </div>
     </div>
+  </div>
 </template>
 
 

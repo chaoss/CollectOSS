@@ -1,13 +1,13 @@
 <template>
-    <d-card>
-        <d-card-body :title="title" class="text-center">
-            <p v-if="values.length == 0 || values[0] === undefined">There is no SBOM download available for this
-                repository.</p>
-            <button v-if="values" @click="download" style="border-radius:6px;" :msg=values>
-                <strong>Download</strong>
-            </button>
-        </d-card-body>
-    </d-card>
+  <d-card>
+    <d-card-body :title="title" class="text-center">
+      <p v-if="values.length == 0 || values[0] === undefined">There is no SBOM download available for this
+        repository.</p>
+      <button v-if="values" @click="download" style="border-radius:6px;" :msg=values>
+        <strong>Download</strong>
+      </button>
+    </d-card-body>
+  </d-card>
 </template>
 
 <script lang="ts">
@@ -41,7 +41,7 @@
       return this.data[this.source]
     }
 
-    download(el: any) {
+    download() {
       let uriContent = URL.createObjectURL(new Blob([JSON.stringify(this.values[0]["sbom_scan"], null, 2)], {type: "text/json;charset=utf-8"}));
       let link = document.createElement("a");
       link.setAttribute("href", uriContent);

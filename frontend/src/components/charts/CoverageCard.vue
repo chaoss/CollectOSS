@@ -1,35 +1,35 @@
 <template>
-    <d-card>
-        <d-card-body :title="title" class="text-center">
-            <spinner v-if="!allLoaded"></spinner>
-            <div v-if="allLoaded">
-                <p v-if="values.length == 0 || values == undefined">There are no license coverage metrics available for
-                    this repository.</p>
-                <div v-else>
-                    <h4>{{ UsableValues[2] }}%</h4>
-                    <div class="coverageCardDiv1">
-                        <p> Total Files
-                            <br>
-                            <span>Files with Declared Licenses</span>
-                            <br>
-                            <span>Files without Licenses</span>
-                        </p>
-                    </div>
-                    <div class="coverageCardDiv2">
-                        <p>
-                            <strong>
-                                <span>{{ UsableValues[0] }}</span>
-                                <br>
-                                <span>{{ UsableValues[1] }}</span>
-                                <br>
-                                <span>{{ UsableValues[3] }}</span>
-                            </strong>
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </d-card-body>
-    </d-card>
+  <d-card>
+    <d-card-body :title="title" class="text-center">
+      <spinner v-if="!allLoaded"></spinner>
+      <div v-if="allLoaded">
+        <p v-if="values.length == 0 || values == undefined">There are no license coverage metrics available for
+          this repository.</p>
+        <div v-else>
+          <h4>{{ UsableValues[2] }}%</h4>
+          <div class="coverageCardDiv1">
+            <p> Total Files
+              <br>
+              <span>Files with Declared Licenses</span>
+              <br>
+              <span>Files without Licenses</span>
+            </p>
+          </div>
+          <div class="coverageCardDiv2">
+            <p>
+              <strong>
+                <span>{{ UsableValues[0] }}</span>
+                <br>
+                <span>{{ UsableValues[1] }}</span>
+                <br>
+                <span>{{ UsableValues[3] }}</span>
+              </strong>
+            </p>
+          </div>
+        </div>
+      </div>
+    </d-card-body>
+  </d-card>
 </template>
 
 <script lang="ts">

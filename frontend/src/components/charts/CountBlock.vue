@@ -1,10 +1,10 @@
 <template>
-    <d-card>
-        <d-card-body :title="title" class="text-center">
-            <spinner v-if="!loaded"></spinner>
-            <span v-if="loaded" class="countBlockSpan">{{ count }}</span>
-        </d-card-body>
-    </d-card>
+  <d-card>
+    <d-card-body :title="title" class="text-center">
+      <spinner v-if="!loaded"></spinner>
+      <span v-if="loaded" class="countBlockSpan">{{ count }}</span>
+    </d-card-body>
+  </d-card>
 </template>
 
 <script lang="ts">

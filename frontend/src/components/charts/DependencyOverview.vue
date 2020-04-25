@@ -1,20 +1,20 @@
 <template>
-    <div>
-        <div class="row">
-            <div class="col col-6">
-                <h3>Top Dependents</h3>
-                <div class="deps" ref="dependents">
-                    <span>Loading...</span>
-                </div>
-            </div>
-            <div class="col col-6">
-                <h3>Top Dependencies</h3>
-                <div class="deps" ref="dependencies">
-                    <span>Loading...</span>
-                </div>
-            </div>
+  <div>
+    <div class="row">
+      <div class="col col-6">
+        <h3>Top Dependents</h3>
+        <div class="deps" ref="dependents">
+          <span>Loading...</span>
         </div>
+      </div>
+      <div class="col col-6">
+        <h3>Top Dependencies</h3>
+        <div class="deps" ref="dependencies">
+          <span>Loading...</span>
+        </div>
+      </div>
     </div>
+  </div>
 </template>
 
 
