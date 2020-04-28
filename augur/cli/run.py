@@ -11,7 +11,7 @@ from gunicorn.six import iteritems
 from gunicorn.arbiter import Arbiter
 from augur.housekeeper.housekeeper import Housekeeper
 
-from augur.util import logger
+from augur import logger
 from augur.server import Server
 
 from augur.cli.util import kill_processes

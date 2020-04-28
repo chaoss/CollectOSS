@@ -60,7 +60,6 @@ class Server(object):
         self.housekeeper = housekeeper
 
         create_routes(self)
-        self.augur_app.metrics.create_routes(self)
 
         #####################################
         ###          UTILITY              ###

@@ -1,6 +1,6 @@
 from flask import Response
 
-def create_util_routes(server):
+def create_routes(server):
 
     metrics = server.augur_app.metrics
 

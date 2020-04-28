@@ -12,7 +12,7 @@ from flask import request, Response
 from augur.util import metric_metadata
 import json
 
-def create_batch_routes(server):
+def create_routes(server):
 
         @server.app.route('/{}/batch'.format(server.api_version), methods=['GET', 'POST'])
         def batch():

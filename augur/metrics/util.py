@@ -6,7 +6,7 @@ import datetime
 import base64
 import sqlalchemy as s
 import pandas as pd
-from augur.util import annotate, add_metrics
+from augur.util import annotate
 
 @annotate(tag='repo-groups')
 def repo_groups(self):
@@ -359,6 +359,3 @@ def aggregate_summary(self, repo_group_id, repo_id=None, begin_date=None, end_da
         results = pd.read_sql(summarySQL, self.database, params={'repo_id': repo_id,
                                                         'begin_date': begin_date, 'end_date': end_date})
         return results
-
-def create_util_metrics(metrics):
-    add_metrics(metrics, __name__)

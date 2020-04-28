@@ -5,7 +5,7 @@ Metrics that provides data about contributors & their associated activity
 import datetime
 import sqlalchemy as s
 import pandas as pd
-from augur.util import annotate, add_metrics
+from augur.util import annotate
 
 @annotate(tag='contributors')
 def contributors(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
@@ -454,7 +454,3 @@ def contributors_code_development(self, repo_group_id, repo_id=None, period='all
         results = pd.read_sql(contributorsSQL, self.database, params={'repo_group_id': repo_group_id, 'period': period,
                                                                 'begin_date': begin_date, 'end_date': end_date})
     return results
-
-def create_contributor_metrics(metrics):
-    add_metrics(metrics, __name__)
-

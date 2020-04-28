@@ -20,22 +20,6 @@ default_config = {
             "port": 5432,
             "user": "augur"
         },
-        "Facade": {
-            "check_updates": 1,
-            "clone_repos": 1,
-            "create_xlsx_summary_files": 1,
-            "delete_marked_repos": 0,
-            "fix_affiliations": 1,
-            "force_analysis": 1,
-            "force_invalidate_caches": 1,
-            "force_updates": 1,
-            "limited_run": 0,
-            "multithreaded": 0,
-            "nuke_stored_affiliations": 0,
-            "pull_repos": 1,
-            "rebuild_caches": 1,
-            "run_analysis": 1
-        },
         "Housekeeper": {
             "jobs": [
                 {
@@ -121,17 +105,6 @@ default_config = {
                 }
             ]
         },
-        "Server": {
-            "cache_expire": "3600",
-            "host": "0.0.0.0",
-            "port": "5000",
-            "workers": 4,
-            "timeout": 60
-        },
-        "Frontend": {
-            "host": "0.0.0.0",
-            "port": "5000"
-        },
         "Workers": {
             "facade_worker": {
                 "port": 50100,
@@ -185,6 +158,36 @@ default_config = {
                 "switch": 1,
                 "workers": 1
             }
+        },
+        "Facade": {
+            "check_updates": 1,
+            "clone_repos": 1,
+            "create_xlsx_summary_files": 1,
+            "delete_marked_repos": 0,
+            "fix_affiliations": 1,
+            "force_analysis": 1,
+            "force_invalidate_caches": 1,
+            "force_updates": 1,
+            "limited_run": 0,
+            "multithreaded": 0,
+            "nuke_stored_affiliations": 0,
+            "pull_repos": 1,
+            "rebuild_caches": 1,
+            "run_analysis": 1
+        },
+        "Server": {
+            "cache_expire": "3600",
+            "host": "0.0.0.0",
+            "port": "5000",
+            "workers": 4,
+            "timeout": 60
+        },
+        "Frontend": {
+            "host": "0.0.0.0",
+            "port": "5000"
+        },
+        "Development": {
+            "log_level": "INFO"
         }
     }
 
@@ -231,7 +234,7 @@ def generate(db_name, db_host, db_user, db_port, db_password, github_api_key, fa
                 logger.info('Predefined config successfully loaded')
 
         except Exception as e:
-            print(f"Error opening {rc_config_file}: {str(e)}")
+            logger.error(f"Error opening {rc_config_file}: {str(e)}")
 
     if db_name is not None:
         config['Database']['database'] = db_name # this is for backwards compatibility
@@ -253,6 +256,6 @@ def generate(db_name, db_host, db_user, db_port, db_password, github_api_key, fa
     try:
         with open(os.path.abspath('augur.config.json'), 'w') as f:
             json.dump(config, f, indent=4)
-            print('augur.config.json successfully created')
+            logger.info('augur.config.json successfully created')
     except Exception as e:
-        print("Error writing augur.config.json " + str(e))
+        logger.error("Error writing augur.config.json " + str(e))

@@ -1,4 +1,6 @@
 
-def create_platform_routes(server):
+def create_routes(server):
+
     metrics = server.augur_app.metrics
+
 

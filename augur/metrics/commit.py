@@ -5,7 +5,7 @@ Metrics that provide data about commits & their associated activity
 import datetime
 import sqlalchemy as s
 import pandas as pd
-from augur.util import annotate, add_metrics
+from augur.util import annotate
 
 @annotate(tag='committers')
 def committers(self, repo_group_id, repo_id=None, begin_date=None, end_date=None, period='month'):
@@ -225,7 +225,7 @@ def annual_commit_count_ranked_by_repo_in_repo_group(self, repo_group_id, repo_i
         if timeframe == 'all':
             cdRgTpRankedCommitsSQL = s.sql.text("""
                 SELECT repo.repo_id, repo_name as name, SUM(added - removed - whitespace) as net, patches
-                FROM dm_repo_annual, repo, repo_groups
+                FROM augur_data.dm_repo_annual, repo, repo_groups
                 WHERE repo.repo_group_id = :repo_group_id
                 AND repo.repo_group_id = repo_groups.repo_group_id
                 AND dm_repo_annual.repo_id = repo.repo_id
@@ -260,7 +260,6 @@ def annual_commit_count_ranked_by_repo_in_repo_group(self, repo_group_id, repo_i
                 order by net desc
                 LIMIT 10
             """)
-
 
     results = pd.read_sql(cdRgTpRankedCommitsSQL, self.database, params={ "repo_group_id": repo_group_id,
     "repo_id": repo_id})
@@ -367,7 +366,3 @@ def top_committers(self, repo_group_id, repo_id=None, year=None, threshold=0.5):
                             int(total_commits - cumsum)]
 
     return results
-
-
-def create_commit_metrics(metrics):
-    add_metrics(metrics, __name__)

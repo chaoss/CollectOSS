@@ -5,8 +5,9 @@ Handles global context, I/O, and configuration
 
 import os
 import time
-import logging
 import multiprocessing as mp
+import logging
+import coloredlogs
 import json
 import pkgutil
 from beaker.cache import CacheManager
@@ -15,11 +16,9 @@ import sqlalchemy as s
 import psycopg2
 
 from augur import logger
-from augur.metrics import MetricDefinitions
+from augur.metrics import Metrics
 from augur.cli.configure import default_config
 
-logging.basicConfig(level=logging.INFO)
- 
 class Application(object):
     """Initalizes all classes from Augur using a config file or environment variables"""
 
@@ -58,13 +57,13 @@ class Application(object):
                 with open(config_file_path, 'r+') as config_file_handle:
                     self.config = json.loads(config_file_handle.read())
             except json.decoder.JSONDecodeError as e:
-                logger.warn('%s could not be parsed, using defaults. Fix that file, or delete it and run this again to regenerate it. Error: %s', config_file_path, str(e))
+                logger.warning('%s could not be parsed, using defaults. Fix that file, or delete it and run this again to regenerate it. Error: %s', config_file_path, str(e))
         else:
-            logger.warn('%s could not be parsed, using defaults.')
+            logger.warning('%s could not be parsed, using defaults.')
 
         self.load_env_configuration()
 
-        # List of data sources that can do periodic updates
+        logger.setLevel(self.read_config("Development", "log_level"))
 
         self.cache_config = {
             'cache.type': 'file',
@@ -81,20 +80,19 @@ class Application(object):
         self.database = self.__connect_to_database()
         self.spdx_db = self.__connect_to_database(include_spdx=True)
 
-        self.metrics = MetricDefinitions(self)
+        self.metrics = Metrics(self)
 
     def __connect_to_database(self, include_spdx=False):
         user = self.read_config('Database', 'user')
         host = self.read_config('Database', 'host')
         port = self.read_config('Database', 'port')
         dbname = self.read_config('Database', 'name')
-        schema = self.read_config('Database', 'schema')
 
         database_connection_string = 'postgresql://{}:{}@{}:{}/{}'.format(
             user, self.read_config('Database', 'password'), host, port, dbname
         )
 
-        csearch_path_options = 'augur'
+        csearch_path_options = 'augur_data'
         if include_spdx == True:
             csearch_path_options += ',spdx'
 
@@ -104,7 +102,6 @@ class Application(object):
         try:
             test_connection = engine.connect()
             test_connection.close()
-            logger.debug('Connected to {} schema of {}:{}/{} as {}'.format(schema, host, port, dbname, user))
             return engine
         except s.exc.OperationalError as e:
             logger.fatal(f"Unable to connect to the database. Terminating...")
@@ -127,7 +124,7 @@ class Application(object):
         else:
             value = None
 
-        if os.getenv('AUGUR_DEBUG_LOG_ENV', '0') == '1':
+        if self.config['Development']['log_level'] == "DEBUG":
             logger.debug('{}:{} = {}'.format(section, name, value))
 
         return value
@@ -139,6 +136,7 @@ class Application(object):
         self.set_env_value(section='Database', name='port', environment_variable='AUGUR_DB_PORT')
         self.set_env_value(section='Database', name='user', environment_variable='AUGUR_DB_USER')
         self.set_env_value(section='Database', name='password', environment_variable='AUGUR_DB_PASSWORD')
+        self.set_env_value(section='Development', name='log_level', environment_variable='AUGUR_LOG_LEVEL')
 
     def set_env_value(self, section, name, environment_variable, sub_config=None):
         """
@@ -154,5 +152,5 @@ class Application(object):
         try:
             self.env_config[environment_variable] = os.getenv(environment_variable, sub_config[section][name])
         except KeyError as e:
-            print(environment_variable + " has no default value. Skipping...")
+            logger.warn(environment_variable + " has no default value. Skipping...")
 

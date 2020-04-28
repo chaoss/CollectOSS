@@ -1,7 +1,5 @@
-#SPDX-License-Identifier: MIT
-
-def create_commit_routes(server):
-
+def create_routes(server):
+    
     metrics = server.augur_app.metrics
 
     """

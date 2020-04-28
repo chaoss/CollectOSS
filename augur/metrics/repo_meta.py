@@ -5,7 +5,8 @@ General repo metrics like provides general overview data about repositories, inc
 import datetime
 import sqlalchemy as s
 import pandas as pd
-from augur.util import logger, annotate, add_metrics
+from augur import logger
+from augur.util import annotate
 import math
 
 @annotate(tag='code-changes')
@@ -906,6 +907,3 @@ def average_weekly_commits(self, repo_group_id=None, repo_id=None, calendar_year
     results = pd.read_sql(average_weekly_commits_sql, self.database, params={"repo_group_id": repo_group_id,
         "repo_id": repo_id, "calendar_year": calendar_year})
     return results
-
-def create_repo_meta_metrics(metrics):
-    add_metrics(metrics, __name__)

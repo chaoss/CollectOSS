@@ -5,7 +5,7 @@ Metrics that provide data about pull requests & their associated activity
 import datetime
 import sqlalchemy as s
 import pandas as pd
-from augur.util import annotate, add_metrics
+from augur.util import annotate
 
 @annotate(tag='pull-requests-merge-contributor-new')
 def pull_requests_merge_contributor_new(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
@@ -476,6 +476,3 @@ def pull_request_merged_status_counts(self, repo_group_id, repo_id=None, begin_d
     pr_counts = pr_all.groupby(['merged_status'] + time_group_bys).count().reset_index()[time_group_bys + ['merged_status', 'pull_request_count']]
     
     return pr_counts
-
-def create_pull_request_metrics(metrics):
-    add_metrics(metrics, __name__)

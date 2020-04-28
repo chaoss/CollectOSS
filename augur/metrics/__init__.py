@@ -1,1 +1,1 @@
-from .metrics import MetricDefinitions
+from .metrics import Metrics

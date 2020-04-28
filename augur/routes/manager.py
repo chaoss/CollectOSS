@@ -11,7 +11,7 @@ from sqlalchemy import exc
 from flask import request, Response
 import json
 
-def create_manager_routes(server):
+def create_routes(server):
 
     @server.app.route('/{}/add-repos'.format(server.api_version), methods=['POST'])
     def add_repos():

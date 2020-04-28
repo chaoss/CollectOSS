@@ -5,7 +5,7 @@ Metrics that provides data about issues & their associated activity
 import datetime
 import sqlalchemy as s
 import pandas as pd
-from augur.util import annotate, add_metrics
+from augur.util import annotate
 
 @annotate(tag='issues-first-time-opened')
 def issues_first_time_opened(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
@@ -1057,7 +1057,3 @@ def abandoned_issues(self, repo_group_id, repo_id=None, period='day', begin_date
     results = pd.read_sql(abandonedSQL, self.database, params={'repo_id': repo_id, 'repo_group_id': repo_group_id, 'period': period,
                                                                  'begin_date': begin_date, 'end_date': end_date})
     return results
-    
-
-def create_issue_metrics(metrics):
-    add_metrics(metrics, __name__)

@@ -4,7 +4,7 @@ Metrics that provide data about with insight detection and reporting
 
 import sqlalchemy as s
 import pandas as pd
-from augur.util import annotate, add_metrics
+from augur.util import annotate
 
 
 @annotate(tag='top-insights')
@@ -29,6 +29,3 @@ def top_insights(self, repo_group_id, num_repos=6):
     """)
     results = pd.read_sql(topInsightsSQL, self.database, params={'repo_group_id': repo_group_id, 'num_repos': num_repos})
     return results
-
-def create_insight_metrics(metrics):
-    add_metrics(metrics, __name__)

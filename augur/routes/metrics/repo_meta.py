@@ -1,6 +1,6 @@
 #SPDX-License-Identifier: MIT
 
-def create_repo_meta_routes(server):
+def create_routes(server):
 
     metrics = server.augur_app.metrics
 
