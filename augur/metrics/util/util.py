@@ -402,13 +402,16 @@ def update_tracking(metric, body):
         Key={
             "email": {"S": '{}:{}'.format(body["email"], body["teamID"])}
         },
-        UpdateExpression="SET interestedGroups = :valGroup, interestedRepos = :valRepo",
+        UpdateExpression="SET interestedGroups = :valGroup, interestedRepos = :valRepo, maxMessages = :valMax",
         ExpressionAttributeValues={
             ":valGroup": {
                 "L": body["groups"]
             },
             ":valRepo": {
                 "L": body["repos"]
+            },
+            ":valMax": {
+                "N": body["maxMessages"]
             }
         },
         ReturnValues="ALL_NEW"
