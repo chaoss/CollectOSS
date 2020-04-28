@@ -15,14 +15,6 @@ import beaker
 coloredlogs.install(level=os.getenv('AUGUR_LOG_LEVEL', 'INFO'))
 logger = logging.getLogger('augur')
 
-def getFileID(path):
-    """
-    Returns file ID of given object
-
-    :param path: path of given object
-    """
-    return os.path.splitext(os.path.basename(path))[0]
-
 __ROOT = os.path.abspath(os.path.dirname(__file__))
 def get_data_path(path):
     """
@@ -88,39 +80,4 @@ def add_metrics(metrics, module_name):
         if inspect.isfunction(obj) == True:
             if hasattr(obj, 'metadata') == True:
                 setattr(metrics, name, types.MethodType(obj, metrics))
-
-#
-# IPython
-#
-
-def init_shell_config():
-    from IPython.terminal.prompts import Prompts, Token
-    from traitlets.config.loader import Config
-    
-    class PYRCSSPrompt(Prompts):
-        def in_prompt_tokens(self, cli=None):
-           return [
-                (Token.Prompt, 'augur ['),
-                (Token.PromptNum, str(self.shell.execution_count)),
-                (Token.Prompt, ']: '),
-            ]
-        def out_prompt_tokens(self):
-           return [
-                (Token.OutPrompt, 'output ['),
-                (Token.OutPromptNum, str(self.shell.execution_count)),
-                (Token.OutPrompt, ']: '),
-            ]
-
-    try:
-        get_ipython
-    except NameError:
-        nested = 0
-        cfg = Config()
-        cfg.TerminalInteractiveShell.prompts_class=PYRCSSPrompt
-    else:
-        print("Running nested copies of the augur shell.")
-        cfg = Config()
-        nested = 1
-    return cfg
-
 

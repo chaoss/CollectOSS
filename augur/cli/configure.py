@@ -7,6 +7,8 @@ import os
 import click
 import json
 
+from augur import logger
+
 ENVVAR_PREFIX = "AUGUR_"
 
 default_config = {
@@ -226,7 +228,7 @@ def generate(db_name, db_host, db_user, db_port, db_password, github_api_key, fa
                         for index, key in enumerate(list(item[1].keys())):
                             config[item[0]][key] = list(item[1].values())[index]
 
-                print('Predefined config successfully loaded')
+                logger.info('Predefined config successfully loaded')
 
         except Exception as e:
             print(f"Error opening {rc_config_file}: {str(e)}")

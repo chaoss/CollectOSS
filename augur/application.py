@@ -156,11 +156,3 @@ class Application(object):
         except KeyError as e:
             print(environment_variable + " has no default value. Skipping...")
 
-    @property
-    def shell(self, banner1='-- Augur Shell --', **kwargs):
-        from IPython.terminal.embed import InteractiveShellEmbed
-        if not self.__shell_config:
-            from augur.util import init_shell_config
-            self.__shell_config = init_shell_config()
-        return InteractiveShellEmbed(config=self.__shell_config, banner1=banner1, **kwargs)
-
