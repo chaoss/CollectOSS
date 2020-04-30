@@ -77,42 +77,32 @@ dev: dev-stop dev-start
 #
 # Testing
 #
-.PHONY: test test-metrics test-metrics-api
+.PHONY: test test-data test-metrics test-metrics-api
+
+test-data:
+	@ docker run -p 5434:5432 --name augur_test_data augurlabs/augur:test_data@sha256:3c496445d7219b824315a37369fcddbe83b10773259560df5645162ce81dfb33
 
 test: test-metrics test-metrics-api
 
 test-metrics:
-	@ bash -c 'tox -e py-metrics 2>&1 | tee logs/metrics_test.log'
+	@ bash -c 'tox -e py-metrics 2>&1'
 
 test-metrics-api:
-	@ bash -c 'tox -e py-metrics_api 2>&1 | tee logs/metrics_api_test.log'
+	@ bash -c 'tox -e py-metrics_api 2>&1'
 
 test-python-versions:
-	@ bash -c 'tox -e ALL 2>&1 | tee logs/metrics_ALL.log'
+	@ bash -c 'tox -e ALL 2>&1'
 
 
 #
 # Documentation
 #
-.PHONY: library-docs library-docs-view 
-.PHONY:api-docs api-docs-view docs
-
-test-data:
-	@ docker run -p 5434:5432 --name augur_test_data augurlabs/augur:test_data@sha256:3c496445d7219b824315a37369fcddbe83b10773259560df5645162ce81dfb33
-
-library-docs:
+.PHONY: docs docs-view 
+docs:
 	@ bash -c 'cd docs/ && rm -rf build/ && make html;'
 
-library-docs-view: library-docs
+docs-view: library-docs
 	@ bash -c 'open docs/build/html/index.html'
-
-api-docs:
-	@ scripts/install/api_docs.sh
-
-api-docs-view: api-docs
-	@ bash -c "open frontend/public/api_docs/index.html"
-
-docs: api-docs library-docs
 
 
 #

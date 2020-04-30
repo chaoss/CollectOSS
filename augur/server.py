@@ -67,6 +67,8 @@ class Server(object):
 
         @app.route('/')
         @app.route('/ping')
+        @app.route('/status')
+        @app.route('/healthcheck')
         def index():
             """
             Redirects to health check route
@@ -128,7 +130,7 @@ class Server(object):
 
         return result
 
-    def flaskify(self, func, cache=True):
+    def flaskify(self, function, cache=True):
         """
         Simplifies API endpoints that just accept owner and repo,
         transforms them and spits them out
@@ -136,20 +138,21 @@ class Server(object):
         if cache:
             def generated_function(*args, **kwargs):
                 def heavy_lifting():
-                    return self.transform(func, args, kwargs, **request.args.to_dict())
+                    return self.transform(function, args, kwargs, **request.args.to_dict())
                 body = self.cache.get(key=str(request.url), createfunc=heavy_lifting)
                 return Response(response=body,
                                 status=200,
                                 mimetype="application/json")
-            generated_function.__name__ = func.__class__.__name__ + " _" + func.__name__
+            generated_function.__name__ = function.__name__
+            logger.info(generated_function.__name__)
             return generated_function
         else:
             def generated_function(*args, **kwargs):
                 kwargs.update(request.args.to_dict())
-                return Response(response=self.transform(func, args, kwargs, **request.args.to_dict()),
+                return Response(response=self.transform(function, args, kwargs, **request.args.to_dict()),
                                 status=200,
                                 mimetype="application/json")
-            generated_function.__name__ = func.__class__.__name__ + " _" + func.__name__
+            generated_function.__name__ = function.__name__
             return generated_function
 
     def routify(self, func, endpoint_type):
@@ -174,46 +177,36 @@ class Server(object):
         generated_function.__name__ = f"{endpoint_type}_" + func.__name__
         return generated_function
 
-    def addLicenseMetric(self, function, endpoint, **kwargs):
+    def add_license_metric(self, function, endpoint, **kwargs):
         endpoint = f'/{self.api_version}/<license_id>/<spdx_binary>/<repo_group_id>/<repo_id>/{endpoint}'
         self.app.route(endpoint)(self.routify(function, 'license_metric'))
         kwargs['endpoint_type'] = 'license_metric'
-        self.updateMetricMetadata(function, endpoint, **kwargs)
+        self.update_metric_metadata(function, endpoint, **kwargs)
 
-    def addRepoGroupMetric(self, function, endpoint, **kwargs):
+    def add_repo_group_metric(self, function, endpoint, **kwargs):
         """Simplifies adding routes that accept repo_group_id"""
         endpoint = f'/{self.api_version}/repo-groups/<repo_group_id>/{endpoint}'
         self.app.route(endpoint)(self.routify(function, 'repo_group'))
         kwargs['endpoint_type'] = 'repo_group'
-        self.updateMetricMetadata(function, endpoint, **kwargs)
+        self.update_metric_metadata(function, endpoint, **kwargs)
 
-    def addRepoMetric(self, function, metric_endpoint, **kwargs):
+    def add_repo_metric(self, function, metric_endpoint, **kwargs):
         """Simplifies adding routes that accept repo_group_id and repo_id"""
         endpoint = f'/{self.api_version}/repos/<repo_id>/{metric_endpoint}'
         deprecated_endpoint = f'/{self.api_version}/repo-groups/<repo_group_id>/repos/<repo_id>/{metric_endpoint}'
         self.app.route(endpoint)(self.routify(function, 'repo'))
         self.app.route(deprecated_endpoint)(self.routify(function, 'deprecated_repo'))
         kwargs['endpoint_type'] = 'repo'
-        self.updateMetricMetadata(function, endpoint, **kwargs)
+        self.update_metric_metadata(function, endpoint, **kwargs)
 
-    def addMetric(self, function, endpoint, cache=True, **kwargs):
+    def add_metric(self, function, endpoint, cache=True, **kwargs):
         """Simplifies adding routes that dont accept group/repo ids"""
         endpoint = '/{}/{}'.format(self.api_version, endpoint)
         self.app.route(endpoint)(self.flaskify(function, 'general_metric'))
         kwargs['endpoint_type'] = 'general_metric'
-        self.updateMetricMetadata(function, endpoint, **kwargs)
+        self.update_metric_metadata(function, endpoint, **kwargs)
 
-    def addTimeseries(self, function, endpoint):
-        """
-        Simplifies adding routes that accept owner/repo and return timeseries
-
-        :param app:       Flask app
-        :param function:  Function from a datasource to add
-        :param endpoint:  GET endpoint to generate
-        """
-        self.addMetric(function, 'timeseries/{}'.format(endpoint), metric_type='timeseries')
-
-    def updateMetricMetadata(self, function, endpoint=None, **kwargs):
+    def update_metric_metadata(self, function, endpoint=None, **kwargs):
         """
         Updates a given metric's metadata
         """
@@ -231,8 +224,8 @@ def run():
     Runs server with configured hosts/ports
     """
     server = Server()
-    host = server.augur_app.read_config('Server', 'host', 'AUGUR_HOST', '0.0.0.0')
-    port = server.augur_app.read_config('Server', 'port', 'AUGUR_PORT', '5000')
+    host = server.augur_app.read_config('Server', 'host')
+    port = server.augur_app.read_config('Server', 'port')
     Server().app.run(host=host, port=int(port), debug=True)
 
 wsgi_app = None

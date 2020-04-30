@@ -10,6 +10,7 @@ import sqlalchemy as s
 from sqlalchemy import exc
 from flask import request, Response
 from augur.util import metric_metadata
+from augur import logger
 import json
 
 def create_routes(server):
@@ -19,14 +20,6 @@ def create_routes(server):
             """
             Execute multiple requests, submitted as a batch.
             :statuscode 207: Multi status
-            """
-
-            """
-            to have on future batch request for each individual chart:
-            - timeseries/metric
-            - props that are in current card files (title)
-            - do any of these things act like the vuex states?
-            - what would singular card(dashboard) look like now?
             """
 
             server.show_metadata = False
@@ -88,7 +81,7 @@ def create_routes(server):
 
                 except Exception as e:
 
-                    responses.appnd({
+                    responses.append({
                         "path": path,
                         "status": 500,
                         "response": str(e)
@@ -131,7 +124,7 @@ def create_routes(server):
                 body = req.get('body', None)
 
                 try:
-                    augur.logger.info('batch endpoint: ' + path)
+                    logger.info('batch endpoint: ' + path)
                     with server.app.server.app.context():
                         with server.app.test_request_context(path,
                                                       method=method,
@@ -158,7 +151,7 @@ def create_routes(server):
                         "response": str(e)
                     })
 
-            self.show_metadata = False
+            server.show_metadata = False
 
             return Response(response=json.dumps(responses),
                             status=207,
