@@ -431,7 +431,9 @@ def update_tracking(metric, body):
 @annotate(tag='slack_login')
 def slack_login(metric, body):
     print("slack_login")
-    r = requests.get(url=f'https://slack.com/api/oauth.access?code={body["code"]}&client_id={os.environ["AUGGIE_CLIENT_ID"]}&client_secret={os.environ["AUGGIE_CLIENT_SECRET"]}&redirect_uri=http://localhost:8080/#/login')
+    # print(f'https://slack.com/api/oauth.access?code={body["code"]}&client_id={os.environ["AUGGIE_CLIENT_ID"]}&client_secret={os.environ["AUGGIE_CLIENT_SECRET"]}&redirect_uri=http://localhost:8080/#/login')
+    r = requests.get(
+        url=f'https://slack.com/api/oauth.v2.access?code={body["code"]}&client_id={os.environ["AUGGIE_CLIENT_ID"]}&client_secret={os.environ["AUGGIE_CLIENT_SECRET"]}&redirect_uri=http%3A%2F%2Flocalhost%3A8080%2Fauth')
     data = r.json()
 
     if (data["ok"]):
