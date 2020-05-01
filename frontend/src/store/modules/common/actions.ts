@@ -325,7 +325,7 @@ export default {
 
         // return result;
     },
-    async updateTracking (email: any, teamID: any, repos: any, groups: any, maxMessages: any) {
+    async updateTracking (email: any, teamID: any, repos: any, insightTypes: any, groups: any, maxMessages: any) {
         // AWS.config.loadFromPath('awsCreds.json');
 
         // let client = new AWS.DynamoDB.DocumentClient();
@@ -353,6 +353,7 @@ export default {
                 teamID,
                 groups,
                 repos,
+                insightTypes,
                 maxMessages
             }),
         })
