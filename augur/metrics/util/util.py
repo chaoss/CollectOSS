@@ -454,12 +454,15 @@ def slack_login(metric, body):
                 "email": {"S": '{}:{}'.format(email, team_id)}
             }
         )
+
         user = response['Item']
 
         filteredUser = {
             "interestedRepos": user["interestedRepos"],
             "interestedGroups": user["interestedGroups"],
-            "host": user["host"]
+            "host": user["host"],
+            "maxMessages": user["maxMessages"],
+            "interestedInsights": user["interestedInsights"]
         }
 
         return json.dumps({
