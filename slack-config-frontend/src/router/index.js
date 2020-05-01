@@ -2,10 +2,16 @@ import Vue from 'vue'
 import VueRouter from 'vue-router'
 import SlackLogin from "../components/SlackLogin.vue";
 import SlackConfig from "../components/SlackConfig.vue";
+import Auth from "../components/Auth.vue";
 
 Vue.use(VueRouter)
 
   const routes = [
+  {
+    path: '/', 
+    component: Auth, 
+    name: 'auth'
+  }, 
   {
     path: '/login',
     name: 'slack-login',

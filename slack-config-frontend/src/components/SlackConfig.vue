@@ -11,7 +11,7 @@
       </div>
     </div>
     <div class="slack-config-content">
-      <draggable-columns ref="repoColumns" />
+      <draggable-columns ref="repoColumns" :repos="repos"/>
       <tracking-options @save="save" />
     </div>
   </div>
@@ -59,7 +59,7 @@ export default {
       };
       console.log(requestObject);
     }
-  }
+  }, 
 };
 </script>
 

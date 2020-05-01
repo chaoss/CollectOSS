@@ -17,10 +17,10 @@
       >
         <repo
           v-for="repo in hostRepos"
-          :name="repo.repoName"
-          :group="repo.repoGroup"
-          :key="repo.repoName + repo.repoGroup"
-          v-show="hostSearchFilter(repo.repoName + repo.repoGroup)"
+          :name="repo.url"
+          :group="repo.rg_name"
+          :key="repo.repo_id"
+          v-show="hostSearchFilter(repo.url + repo.rg_name)"
           :deletable="false"
           :checkable="true"
         />
@@ -44,10 +44,10 @@
       >
         <repo
           v-for="repo in trackedRepos"
-          :name="repo.repoName"
-          :group="repo.repoGroup"
-          :key="repo.repoName + repo.repoGroup"
-          v-show="trackedSearchFilter(repo.repoName + repo.repoGroup)"
+          :name="repo.url"
+          :group="repo.rg_name"
+          :key="repo.repo_id"
+          v-show="trackedSearchFilter(repo.url + repo.rg_name)"
           :checkable="false"
           :deletable="true"
         />
@@ -70,6 +70,7 @@ export default {
     AugTextInput,
     AugButton
   },
+  props: ["repos"], 
   methods: {
     setHostSearch(newValue) {
       this.hostSearch = newValue;
@@ -82,7 +83,7 @@ export default {
         (repo, i, arr) =>
           arr.findIndex(r => {
             return (
-              r.repoName === repo.repoName && r.repoGroup === repo.repoGroup
+              r.repo_id === repo.repo_id
             );
           }) === i
       );
@@ -97,78 +98,36 @@ export default {
       this.trackedRepos = [];
     }
   },
+  mounted() {
+    fetch("http://localhost:5000/api/unstable/repos")
+    .then(res => {
+      if (res.status === 200) {
+        return res.json();
+      } else {
+        return null;
+      }
+    })
+    .then(res => {
+      if (res == null){
+        return;
+      } else {
+        console.log(res);
+        this.hostRepos = res.map(repo => {
+          return {
+            url: repo.url, 
+            rg_name: repo.rg_name, 
+            repo_id: repo.repo_id
+          }
+        });
+      }
+    });
+  }, 
   data() {
     return {
       hostSearch: "",
       trackedSearch: "",
-      hostRepos: [
-        {
-          repoName: "repo1",
-          repoGroup: "groupA"
-        },
-        {
-          repoName: "repo2",
-          repoGroup: "groupA"
-        },
-        {
-          repoName: "repo3",
-          repoGroup: "groupA"
-        },
-        {
-          repoName: "repo4",
-          repoGroup: "groupB"
-        },
-        {
-          repoName: "repo5",
-          repoGroup: "groupB"
-        },
-        {
-          repoName: "repo6",
-          repoGroup: "groupA"
-        },
-        {
-          repoName: "repo7",
-          repoGroup: "groupA"
-        },
-        {
-          repoName: "repo8",
-          repoGroup: "groupA"
-        },
-        {
-          repoName: "repo9",
-          repoGroup: "groupB"
-        },
-        {
-          repoName: "repo10",
-          repoGroup: "groupB"
-        },
-        {
-          repoName: "repo11",
-          repoGroup: "groupA"
-        },
-        {
-          repoName: "repo12",
-          repoGroup: "groupA"
-        },
-        {
-          repoName: "repo13",
-          repoGroup: "groupA"
-        },
-        {
-          repoName: "repo14",
-          repoGroup: "groupB"
-        },
-        {
-          repoName: "repo15",
-          repoGroup: "groupB"
-        }
-      ],
-      trackedRepos: [
-        {
-          repoName: "repo5",
-          repoGroup: "groupB"
-        }
-      ]
+      hostRepos: [],
+      trackedRepos: []
     };
   }
 };
