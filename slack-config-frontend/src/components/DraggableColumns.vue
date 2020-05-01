@@ -8,23 +8,22 @@
           @valueUpdated="setHostSearch"
           class="search-input"
         />
-        <aug-button text="Refresh" class="column-button" />
+        <aug-button text="Refresh" class="column-button" @click="refreshRepos" />
       </div>
-      <draggable
-        class="draggable-column"
-        :list="hostRepos"
-        :group="{ name: 'repos', pull: 'clone', put: false }"
-      >
-        <repo
-          v-for="repo in hostRepos"
-          :name="repo.url"
-          :group="repo.rg_name"
-          :key="repo.repo_id"
-          v-show="hostSearchFilter(repo.url + repo.rg_name)"
-          :deletable="false"
-          :checkable="true"
-        />
-      </draggable>
+      <div class="draggable-column">
+        <aug-spinner v-if="hostRepos.length === 0" style="margin-top: 3rem" />
+        <draggable :list="hostRepos" :group="{ name: 'repos', pull: 'clone', put: false }">
+          <repo
+            v-for="repo in hostRepos"
+            :name="repo.url"
+            :group="repo.rg_name"
+            :key="repo.repo_id"
+            v-show="hostSearchFilter(repo.url + repo.rg_name)"
+            :deletable="false"
+            :checkable="true"
+          />
+        </draggable>
+      </div>
     </div>
     <div class="column">
       <h3>Tracked Repos</h3>
@@ -61,6 +60,7 @@ import draggable from "vuedraggable";
 import Repo from "./Repo.vue";
 import AugTextInput from "./BaseComponents/AugTextInput.vue";
 import AugButton from "./BaseComponents/AugButton.vue";
+import AugSpinner from "./BaseComponents/AugSpinner.vue";
 
 export default {
   name: "DraggableColumns",
@@ -68,9 +68,10 @@ export default {
     draggable,
     Repo,
     AugTextInput,
-    AugButton
+    AugButton,
+    AugSpinner
   },
-  props: ["repos"], 
+  props: ["repos"],
   methods: {
     setHostSearch(newValue) {
       this.hostSearch = newValue;
@@ -82,9 +83,7 @@ export default {
       this.trackedRepos = this.trackedRepos.filter(
         (repo, i, arr) =>
           arr.findIndex(r => {
-            return (
-              r.repo_id === repo.repo_id
-            );
+            return r.repo_id === repo.repo_id;
           }) === i
       );
     },
@@ -96,32 +95,36 @@ export default {
     },
     clearTrackedRepos() {
       this.trackedRepos = [];
+    },
+    refreshRepos() {
+      this.hostRepos = [];
+      fetch("http://localhost:5000/api/unstable/repos")
+        .then(res => {
+          if (res.status === 200) {
+            return res.json();
+          } else {
+            return null;
+          }
+        })
+        .then(res => {
+          if (res == null) {
+            return;
+          } else {
+            console.log(res);
+            this.hostRepos = res.map(repo => {
+              return {
+                url: repo.url,
+                rg_name: repo.rg_name,
+                repo_id: repo.repo_id
+              };
+            });
+          }
+        });
     }
   },
   mounted() {
-    fetch("http://localhost:5000/api/unstable/repos")
-    .then(res => {
-      if (res.status === 200) {
-        return res.json();
-      } else {
-        return null;
-      }
-    })
-    .then(res => {
-      if (res == null){
-        return;
-      } else {
-        console.log(res);
-        this.hostRepos = res.map(repo => {
-          return {
-            url: repo.url, 
-            rg_name: repo.rg_name, 
-            repo_id: repo.repo_id
-          }
-        });
-      }
-    });
-  }, 
+    this.refreshRepos();
+  },
   data() {
     return {
       hostSearch: "",
