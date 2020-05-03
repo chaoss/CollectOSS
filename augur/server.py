@@ -177,33 +177,12 @@ class Server(object):
         generated_function.__name__ = f"{endpoint_type}_" + func.__name__
         return generated_function
 
-    def add_license_metric(self, function, endpoint, **kwargs):
-        endpoint = f'/{self.api_version}/<license_id>/<spdx_binary>/<repo_group_id>/<repo_id>/{endpoint}'
-        self.app.route(endpoint)(self.routify(function, 'license_metric'))
-        kwargs['endpoint_type'] = 'license_metric'
-        self.update_metric_metadata(function, endpoint, **kwargs)
-
-    def add_repo_group_metric(self, function, endpoint, **kwargs):
-        """Simplifies adding routes that accept repo_group_id"""
-        endpoint = f'/{self.api_version}/repo-groups/<repo_group_id>/{endpoint}'
-        self.app.route(endpoint)(self.routify(function, 'repo_group'))
-        kwargs['endpoint_type'] = 'repo_group'
-        self.update_metric_metadata(function, endpoint, **kwargs)
-
-    def add_repo_metric(self, function, metric_endpoint, **kwargs):
-        """Simplifies adding routes that accept repo_group_id and repo_id"""
-        endpoint = f'/{self.api_version}/repos/<repo_id>/{metric_endpoint}'
-        deprecated_endpoint = f'/{self.api_version}/repo-groups/<repo_group_id>/repos/<repo_id>/{metric_endpoint}'
-        self.app.route(endpoint)(self.routify(function, 'repo'))
-        self.app.route(deprecated_endpoint)(self.routify(function, 'deprecated_repo'))
-        kwargs['endpoint_type'] = 'repo'
-        self.update_metric_metadata(function, endpoint, **kwargs)
-
-    def add_metric(self, function, endpoint, cache=True, **kwargs):
-        """Simplifies adding routes that dont accept group/repo ids"""
-        endpoint = '/{}/{}'.format(self.api_version, endpoint)
-        self.app.route(endpoint)(self.flaskify(function, 'general_metric'))
-        kwargs['endpoint_type'] = 'general_metric'
+    def add_standard_metric(self, function, endpoint, **kwargs):
+        repo_endpoint = f'/{self.api_version}/repos/<repo_id>/{endpoint}'
+        repo_group_endpoint = f'/{self.api_version}/repo-groups/<repo_group_id>/{endpoint}'
+        self.app.route(repo_endpoint)(self.routify(function, 'repo'))
+        self.app.route(repo_group_endpoint)(self.routify(function, 'repo_group'))
+        kwargs['endpoint_type'] = 'standard'
         self.update_metric_metadata(function, endpoint, **kwargs)
 
     def update_metric_metadata(self, function, endpoint=None, **kwargs):

@@ -8,23 +8,8 @@ import sqlalchemy as s
 import pandas as pd
 from augur.util import annotate
 
-@annotate(tag='repo-groups')
-def repo_groups(self):
-    """
-    Returns number of lines changed per author per day
-
-    :param repo_url: the repository's URL
-    """
-    repoGroupsSQL = s.sql.text("""
-        SELECT *
-        FROM repo_groups
-        ORDER BY rg_name
-    """)
-    results = pd.read_sql(repoGroupsSQL, self.database)
-    return results
-
 @annotate(tag='downloaded-repos')
-def downloaded_repos(self):
+def get_all_repos(self):
     """
     Returns all repository names, URLs, and base64 URLs in the facade database
     """
@@ -63,40 +48,6 @@ def downloaded_repos(self):
         b64_urls.append(base64.b64encode((results.at[i, 'url']).encode()))
     results['base64_url'] = b64_urls
 
-    return results
-
-@annotate(tag='repos-in-repo-groups')
-def repos_in_repo_groups(self, repo_group_id):
-    """
-    Returns a list of all the repos in a repo_group
-
-    :param repo_group_id: The repository's repo_group_id
-    """
-    repos_in_repo_groups_SQL = s.sql.text("""
-        SELECT
-            repo.repo_id,
-            repo.repo_name,
-            repo.description,
-            repo.repo_git AS url,
-            repo.repo_status,
-            a.commits_all_time,
-            b.issues_all_time
-        FROM
-            repo
-            left outer join
-            (select repo_id, COUNT ( commits.cmt_id ) AS commits_all_time from commits group by repo_id ) a on
-            repo.repo_id = a.repo_id
-            left outer join
-            (select repo_id, count ( issues.issue_id) as issues_all_time from issues where issues.pull_request IS NULL group by repo_id) b
-            on
-            repo.repo_id = b.repo_id
-            JOIN repo_groups ON repo_groups.repo_group_id = repo.repo_group_id
-        WHERE
-            repo_groups.repo_group_id = :repo_group_id
-        ORDER BY repo.repo_git
-    """)
-
-    results = pd.read_sql(repos_in_repo_groups_SQL, self.database, params={'repo_group_id': repo_group_id})
     return results
 
 @annotate(tag='get-repo-by-git-name')

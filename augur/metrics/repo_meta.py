@@ -892,7 +892,11 @@ def lines_of_code_commit_counts_by_calendar_year_grouped(self, repo_url, calenda
     return results
 
 @annotate(tag='average-weekly-commits')
-def average_weekly_commits(self, repo_group_id=None, repo_id=None, calendar_year=2019):
+def average_weekly_commits(self, repo_group_id=None, repo_id=None, calendar_year=None):
+
+    if calendar_year == None:
+        calendar_year = datetime.datetime.now().strftime('%Y')
+
     extra_and = "AND repo.repo_group_id = :repo_group_id" if repo_group_id and not repo_id else "AND repo.repo_id = :repo_id" if repo_group_id and repo_id else ""
     average_weekly_commits_sql = s.sql.text("""
         SELECT repo.repo_id, repo.repo_name, year, sum(patches)/52 AS average_weekly_commits 

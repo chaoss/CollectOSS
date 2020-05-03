@@ -11,7 +11,7 @@ def test_common(endpoint="http://localhost:5000/api/unstable/repos"):
     assert response.status_code == 200
     assert len(data) >= 1
 
-def test_downloaded_repos(metrics):
+def test_get_all_repos(metrics):
     return test_common(endpoint='http://localhost:5000/api/unstable/repos')
 
 def test_repo_groups(metrics):
