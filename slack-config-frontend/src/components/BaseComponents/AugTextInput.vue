@@ -5,7 +5,7 @@
       :name="inputName"
       v-model="value"
       v-on:keydown="$emit('keydown', $event)"
-      :type="password ? 'password' : 'text'"
+      :type="password ? 'password' : number ? 'number' : 'text'"
       :placeholder="placeholder"
     />
   </div>
@@ -19,7 +19,7 @@ export default {
       value: ""
     };
   },
-  props: ["text", "inputName", "password", "placeholder"],
+  props: ["text", "inputName", "password", "placeholder", "number"],
   watch: {
     value(val) {
       this.$emit("valueUpdated", val);
