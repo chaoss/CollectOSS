@@ -4,30 +4,30 @@
       <h4>Track Insight Anomolies For:</h4>
       <div class="section-options">
         <div class="checkbox-w-label">
-          <aug-checkbox @flipCheck="setCommitCount"/>
+          <aug-checkbox @flipCheck="setCommitCount" ref="commitCountBox"/>
           <p>Commit Count</p>
         </div>
         <div class="checkbox-w-label">
-          <aug-checkbox @flipCheck="setLinesChanged"/>
+          <aug-checkbox @flipCheck="setLinesChanged" ref="linesChangedBox"/>
           <p>Lines Changed</p>
         </div>
         <div class="checkbox-w-label">
-          <aug-checkbox @flipCheck="setNewContributors"/>
+          <aug-checkbox @flipCheck="setNewContributors" ref="newContributorsBox"/>
           <p>New Contributors</p>
         </div>
         <div class="checkbox-w-label">
-          <aug-checkbox @flipCheck="setIssueCount"/>
+          <aug-checkbox @flipCheck="setIssueCount" ref="issueCountBox"/>
           <p>Issue Count</p>
         </div>
         <div class="checkbox-w-label">
-          <aug-checkbox @flipCheck="setPullRequestCount"/>
+          <aug-checkbox @flipCheck="setPullRequestCount" ref="pullRequestBox"/>
           <p>Pull Request Count</p>
         </div>
       </div>
     </div>
     <div class="section frequency-section">
       <p>Max Messages Per Day: </p>
-      <aug-text-input text="" placeholder="" class="frequency-text-input" @valueUpdated="setMaxMessages" :number="true"/>
+      <aug-text-input text="" placeholder="" class="frequency-text-input" @valueUpdated="setMaxMessages" :number="true" :initial="initialMaxMessages"/>
     </div>
     <aug-button text="Save" class="save-button" @click="$emit('save', trackingOptions)"/>
   </div>
@@ -39,7 +39,30 @@ import AugButton from "./BaseComponents/AugButton.vue";
 import AugTextInput from "./BaseComponents/AugTextInput.vue";
 
 export default {
-  name: "TrackingOptions",
+  name: "TrackingOptions", 
+  props: ["initialMaxMessages", "initialTrackedInsights"], 
+  mounted() {
+    if (this.$props.initialTrackedInsights.includes("code-changes")) {
+      this.trackingOptions.trackedInsights.commitCount = true;
+      this.$refs.commitCountBox.flipIsChecked();
+    }
+    if (this.$props.initialTrackedInsights.includes("code-changes-lines")) {
+      this.trackingOptions.trackedInsights.linesChanged = true;
+      this.$refs.linesChangedBox.flipIsChecked();
+    }
+    if (this.$props.initialTrackedInsights.includes("issues-new")) {
+      this.trackingOptions.trackedInsights.issueCount = true;
+      this.$refs.issueCountBox.flipIsChecked();
+    }
+    if (this.$props.initialTrackedInsights.includes("reviews")) {
+      this.trackingOptions.trackedInsights.pullRequestCount = true;
+      this.$refs.pullRequestBox.flipIsChecked();
+    }
+    if (this.$props.initialTrackedInsights.includes("contributors-new")) {
+      this.trackingOptions.trackedInsights.newContributors = true;
+      this.$refs.newContributorsBox.flipIsChecked();
+    }
+  }, 
   components: {
     AugCheckbox,
     AugButton, 
@@ -55,7 +78,7 @@ export default {
           issueCount: false, 
           pullRequestCount: false
         }, 
-        maxMessages: null
+        maxMessages: this.initialMaxMessages
       }
     }
   }, 

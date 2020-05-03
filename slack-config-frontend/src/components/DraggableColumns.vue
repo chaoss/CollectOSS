@@ -71,7 +71,7 @@ export default {
     AugButton,
     AugSpinner
   },
-  props: ["repos"],
+  props: ["initialTrackedRepos"],
   methods: {
     setHostSearch(newValue) {
       this.hostSearch = newValue;
@@ -117,6 +117,13 @@ export default {
                 rg_name: repo.rg_name,
                 repo_id: repo.repo_id
               };
+            });
+            // console.log(this);
+            this.hostRepos.forEach(repo => {
+              if (this.$props.initialTrackedRepos.includes(repo.url)) {
+                console.log('match');
+                this.trackedRepos.push(repo);
+              }
             });
           }
         });

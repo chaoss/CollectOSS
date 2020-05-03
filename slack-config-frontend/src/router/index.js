@@ -20,7 +20,8 @@ Vue.use(VueRouter)
   {
     path: '/configure',
     name: 'slack-config',
-    component: SlackConfig
+    component: SlackConfig, 
+    props: true
   }
 ]
 
