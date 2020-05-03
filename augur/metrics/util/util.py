@@ -437,17 +437,19 @@ def slack_login(metric, body):
     data = r.json()
 
     if (data["ok"]):
-        token = data["access_token"]
-        team_id = data["team_id"]
+        print(data)
+        token = data["authed_user"]["access_token"]
+        team_id = data["team"]["id"]
         client = slack.WebClient(token=token)
 
-        user_response = client.users.identity()
-
+        user_response = client.users_identity()
+        print(user_response)
         email = user_response["user"]["email"]
 
         profile_name = 'augur'
         if os.environ.get('AUGUR_IS_PROD'):
             profile_name = 'default'
+        print("Making Boto3 Session")
         client = boto3.Session(region_name='us-east-1',
                             profile_name=profile_name).client('dynamodb')
         response = client.get_item(
