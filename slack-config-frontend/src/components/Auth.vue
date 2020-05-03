@@ -1,5 +1,7 @@
 <template>
-  <div id="Auth">spinner</div>
+  <div id="Auth">
+    <p style="margin-top: 6rem">authenticating...</p>
+  </div>
 </template>
 
 <script>
@@ -16,6 +18,10 @@ export default {
     console.log(parts);
     console.log(parameters);
     let code = parameters["code"];
+    if (!code) {
+      this.$router.push("login");
+      return;
+    }
     let requestObject = {
       code
     };
