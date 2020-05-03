@@ -1,33 +1,33 @@
 <template>
   <div id="TrackingOptions">
     <div class="section">
-      <h4>Track Insights For:</h4>
+      <h4>Track Insight Anomolies For:</h4>
       <div class="section-options">
         <div class="checkbox-w-label">
           <aug-checkbox @flipCheck="setCommitCount"/>
           <p>Commit Count</p>
         </div>
         <div class="checkbox-w-label">
-          <aug-checkbox @flipCheck="setLinesAdded"/>
-          <p>Lines Added</p>
+          <aug-checkbox @flipCheck="setLinesChanged"/>
+          <p>Lines Changed</p>
         </div>
         <div class="checkbox-w-label">
           <aug-checkbox @flipCheck="setNewContributors"/>
           <p>New Contributors</p>
         </div>
         <div class="checkbox-w-label">
-          <aug-checkbox @flipCheck="setNewIssues"/>
-          <p>New Issues</p>
+          <aug-checkbox @flipCheck="setIssueCount"/>
+          <p>Issue Count</p>
         </div>
         <div class="checkbox-w-label">
-          <aug-checkbox @flipCheck="setPullRequests"/>
-          <p>Pull Requests</p>
+          <aug-checkbox @flipCheck="setPullRequestCount"/>
+          <p>Pull Request Count</p>
         </div>
       </div>
     </div>
     <div class="section frequency-section">
-      <p>Notifications Per Day: </p>
-      <aug-text-input text="" placeholder="..." class="frequency-text-input" @valueUpdated="setNotificationsPerDay"/>
+      <p>Max Messages Per Day: </p>
+      <aug-text-input text="" placeholder="" class="frequency-text-input" @valueUpdated="setMaxMessages" :number="true"/>
     </div>
     <aug-button text="Save" class="save-button" @click="$emit('save', trackingOptions)"/>
   </div>
@@ -50,12 +50,12 @@ export default {
       trackingOptions: {
         trackedInsights: {
           commitCount: false, 
-          linesAdded: false, 
+          linesChanged: false, 
           newContributors: false, 
-          newIssues: false, 
-          pullRequests: false
+          issueCount: false, 
+          pullRequestCount: false
         }, 
-        notificationsPerDay: null
+        maxMessages: null
       }
     }
   }, 
@@ -63,20 +63,20 @@ export default {
     setCommitCount(newValue) {
       this.trackingOptions.trackedInsights.commitCount = newValue;
     }, 
-    setLinesAdded(newValue) {
-      this.trackingOptions.trackedInsights.linesAdded = newValue;
+    setLinesChanged(newValue) {
+      this.trackingOptions.trackedInsights.linesChanged = newValue;
     }, 
     setNewContributors(newValue) {
       this.trackingOptions.trackedInsights.newContributors = newValue;
     }, 
-    setNewIssues(newValue) {
-      this.trackingOptions.trackedInsights.newIssues = newValue;
+    setIssueCount(newValue) {
+      this.trackingOptions.trackedInsights.issueCount = newValue;
     }, 
-    setPullRequests(newValue) {
-      this.trackingOptions.trackedInsights.pullRequests = newValue;
+    setPullRequestCount(newValue) {
+      this.trackingOptions.trackedInsights.pullRequestCount = newValue;
     }, 
-    setNotificationsPerDay(newValue) {
-      this.trackingOptions.notificationsPerDay = newValue;
+    setMaxMessages(newValue) {
+      this.trackingOptions.maxMessages = newValue;
     }
   }
 };
@@ -121,7 +121,7 @@ h4 {
 }
 
 .frequency-text-input {
-  width: 40px !important;
+  width: 70px !important;
   margin-left: 1rem;
 }
 
