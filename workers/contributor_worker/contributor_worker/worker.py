@@ -29,7 +29,7 @@ class ContributorWorker:
         self.db = None
         self.tool_source = 'Contributor Worker'
         self.tool_version = '0.0.1' # See __init__.py
-        self.data_source = 'Augur API'
+        self.data_source = 'Augur Commit Data'
         self.finishing_task = False
         
         self.specs = {
@@ -202,7 +202,7 @@ class ContributorWorker:
                 gh_following_url, gh_gists_url, gh_starred_url, gh_subscriptions_url, gh_organizations_url, 
                 gh_repos_url, gh_events_url, gh_received_events_url, gh_type, gh_site_admin, cntrb_last_used
             FROM commits, contributors
-            WHERE repo_id = {}
+            WHERE repo_id = :repo_id
             AND contributors.cntrb_full_name = cmt_author_name
                 UNION
             SELECT cmt_author_name AS commit_name, cntrb_id, cmt_author_raw_email AS commit_email, cntrb_email, 
@@ -213,7 +213,7 @@ class ContributorWorker:
                 gh_following_url, gh_gists_url, gh_starred_url, gh_subscriptions_url, gh_organizations_url, 
                 gh_repos_url, gh_events_url, gh_received_events_url, gh_type, gh_site_admin, cntrb_last_used
             FROM commits, contributors
-            WHERE repo_id = {}
+            WHERE repo_id = :repo_id
             AND contributors.cntrb_email = cmt_author_raw_email
                 UNION
             SELECT cmt_committer_name AS commit_name, cntrb_id, cmt_committer_raw_email AS commit_email, 
@@ -224,7 +224,7 @@ class ContributorWorker:
                 gh_following_url, gh_gists_url, gh_starred_url, gh_subscriptions_url, gh_organizations_url, 
                 gh_repos_url, gh_events_url, gh_received_events_url, gh_type, gh_site_admin, cntrb_last_used
             FROM commits, contributors
-            WHERE repo_id = {}
+            WHERE repo_id = :repo_id
             AND contributors.cntrb_full_name = cmt_committer_name
                 UNION
             SELECT cmt_committer_name AS commit_name, cntrb_id, cmt_committer_raw_email AS commit_email, 
@@ -235,12 +235,13 @@ class ContributorWorker:
                 gh_following_url, gh_gists_url, gh_starred_url, gh_subscriptions_url, gh_organizations_url, 
                 gh_repos_url, gh_events_url, gh_received_events_url, gh_type, gh_site_admin, cntrb_last_used
             FROM commits, contributors
-            WHERE repo_id = {}
+            WHERE repo_id = :repo_id
             AND contributors.cntrb_email = cmt_committer_raw_email
                 ORDER BY cntrb_id
-        """.format(repo_id,repo_id,repo_id,repo_id))
+        """)
 
-        commit_cntrbs = json.loads(pd.read_sql(userSQL, self.db, params={}).to_json(orient="records"))
+        commit_cntrbs = json.loads(pd.read_sql(userSQL, self.db, \
+            params={'repo_id': repo_id}).to_json(orient="records"))
         logging.info("We found {} distinct emails to search for in this repo (repo_id = {})".format(
             len(commit_cntrbs), repo_id))
 
@@ -409,6 +410,54 @@ class ContributorWorker:
                 logging.info("Updated existing tuple in the contributors table with github info after "
                     "a successful search query on a facade commit's author : {} {}\n".format(contributor, cntrb_gh_info))
 
+
+        # Dupe check
+        dupe_cntrb_sql = s.sql.text("""
+            SELECT contributors.*
+            FROM contributors inner join (
+                SELECT MIN(cntrb_id) as cntrb_id
+                FROM contributors 
+                GROUP BY cntrb_email HAVING COUNT(*) > 1
+                ORDER BY cntrb_email
+            ) a on contributors.cntrb_id = a.cntrb_id
+        """)
+
+        dupe_cntrbs = pd.read_sql(dupe_cntrb_sql, self.db, params={})
+
+        # Turn this column from nan to None
+        dupe_cntrbs['gh_user_id'] = dupe_cntrbs['gh_user_id'].where(pd.notnull(dupe_cntrbs['gh_user_id']), None)
+
+        for i, cntrb_existing in dupe_cntrbs.iterrows():
+            cntrb_new = cntrb_existing.copy()
+            del cntrb_new['cntrb_id']
+            del cntrb_new['data_collection_date']
+            cntrb_new = cntrb_new.to_dict()
+            
+            result = self.db.execute(contributors_table.insert().values(cntrb_new))
+            pk = int(result.inserted_primary_key[0])
+            
+            dupe_ids_sql = s.sql.text("""
+                SELECT cntrb_id 
+                FROM contributors
+                WHERE
+                    cntrb_id <> :pk
+                AND cntrb_email = :email
+            """)
+
+            dupe_ids = pd.read_sql(dupe_ids_sql, self.db, params={'pk': pk, \
+                'email': cntrb_new['cntrb_email']})['cntrb_id'].values.tolist()
+
+            self.map_new_id(self, dupe_ids, pk)
+
+            delete_dupe_ids_sql = s.sql.text("""
+                DELETE  
+                FROM contributors
+                WHERE cntrb_id <> {}
+                AND cntrb_email = '{}'
+            """.format(pk, cntrb_new['cntrb_email']))
+
+            self.db.execute(delete_dupe_ids_sql)
+
         # Register this task as completed
         register_task_completion(self, entry_info, repo_id, "contributors")
 
@@ -479,7 +528,7 @@ class ContributorWorker:
             """ Insert alias tuple into the contributor table """
 
             # Prepare tuple for insertion to contributor table (build it off of the tuple queried)
-            cntrb = tuple
+            cntrb = tuple.copy()
 
             cntrb['cntrb_created_at'] = datetime.fromtimestamp(cntrb['cntrb_created_at']/1000) \
                 if cntrb['cntrb_created_at'] else None
@@ -540,77 +589,9 @@ class ContributorWorker:
                     cntrb_id NOT IN (SELECT cntrb_id FROM contributors_aliases);
             """.format(commit_email))
 
-            dupe_ids = json.loads(pd.read_sql(dupeIdsSQL, self.db, params={}).to_json(orient="records"))
+            dupe_ids = pd.read_sql(dupeIdsSQL, self.db, params={})['cntrb_id'].values.tolist()
 
-            alias_update_col = {'cntrb_a_id': self.cntrb_id_inc}
-            update_col = {'cntrb_id': self.cntrb_id_inc}
-            reporter_col = {'reporter_id': self.cntrb_id_inc}
-            pr_assignee_col = {'contrib_id': self.cntrb_id_inc}
-            pr_repo_col = {'pr_cntrb_id': self.cntrb_id_inc}
-
-            # def delete_fk(table, column):
-
-            # tables_with_fk = {
-            #         'contributors_aliases_table': ['cntrb_a_id', alias_update_col], 
-            #         'issue_events_table':, 
-            #         'pull_request_events_table',
-            #         'issues_table',
-            #         'issues_table'
-            #     }
-            for id in dupe_ids:
-
-                try:
-                    alias_result = self.db.execute(self.contributors_aliases_table.update().where(
-                        self.contributors_aliases_table.c.cntrb_a_id==id['cntrb_id']).values(alias_update_col))
-                    logging.info("Updated cntrb_a_id column for tuples in the contributors_aliases table with value: {} replaced with new cntrb id: {}".format(id['cntrb_id'], self.cntrb_id_inc))
-
-                    #temp
-                    alias_email_result = self.db.execute(self.contributors_aliases_table.update().where(
-                        self.contributors_aliases_table.c.alias_email==commit_email).values(alias_update_col))
-                    logging.info("Updated cntrb_a_id column for tuples in the contributors_aliases table with value: {} replaced with new cntrb id: {}".format(commit_email, self.cntrb_id_inc))
-                    #tempend
-                except Exception as e:
-                    logging.info(f'Alias re-map already done... error: {e}')
-
-                issue_events_result = self.db.execute(self.issue_events_table.update().where(
-                    self.issue_events_table.c.cntrb_id==id['cntrb_id']).values(update_col))
-                logging.info("Updated cntrb_id column for tuples in the issue_events table with value: {} replaced with new cntrb id: {}".format(id['cntrb_id'], self.cntrb_id_inc))
-
-                pr_events_result = self.db.execute(self.pull_request_events_table.update().where(
-                    self.pull_request_events_table.c.cntrb_id==id['cntrb_id']).values(update_col))
-                logging.info("Updated cntrb_id column for tuples in the pull_request_events table with value: {} replaced with new cntrb id: {}".format(id['cntrb_id'], self.cntrb_id_inc))
-
-                issues_cntrb_result = self.db.execute(self.issues_table.update().where(
-                    self.issues_table.c.cntrb_id==id['cntrb_id']).values(update_col))
-                logging.info("Updated cntrb_id column for tuples in the issues table with value: {} replaced with new cntrb id: {}".format(id['cntrb_id'], self.cntrb_id_inc))
-
-                issues_reporter_result = self.db.execute(self.issues_table.update().where(
-                    self.issues_table.c.reporter_id==id['cntrb_id']).values(reporter_col))
-                logging.info("Updated reporter_id column in the issues table with value: {} replaced with new cntrb id: {}".format(id['cntrb_id'], self.cntrb_id_inc))
-
-                issue_assignee_result = self.db.execute(self.issue_assignees_table.update().where(
-                    self.issue_assignees_table.c.cntrb_id==id['cntrb_id']).values(update_col))
-                logging.info("Updated cntrb_id column for tuple in the issue_assignees table with value: {} replaced with new cntrb id: {}".format(id['cntrb_id'], self.cntrb_id_inc))
-
-                pr_assignee_result = self.db.execute(self.pull_request_assignees_table.update().where(
-                    self.pull_request_assignees_table.c.contrib_id==id['cntrb_id']).values(pr_assignee_col))
-                logging.info("Updated contrib_id column for tuple in the pull_request_assignees table with value: {} replaced with new cntrb id: {}".format(id['cntrb_id'], self.cntrb_id_inc))
-
-                message_result = self.db.execute(self.message_table.update().where(
-                    self.message_table.c.cntrb_id==id['cntrb_id']).values(update_col))
-                logging.info("Updated cntrb_id column for tuple in the message table with value: {} replaced with new cntrb id: {}".format(id['cntrb_id'], self.cntrb_id_inc))
-
-                pr_reviewers_result = self.db.execute(self.pull_request_reviewers_table.update().where(
-                    self.pull_request_reviewers_table.c.cntrb_id==id['cntrb_id']).values(update_col))
-                logging.info("Updated cntrb_id column for tuple in the pull_request_reviewers table with value: {} replaced with new cntrb id: {}".format(id['cntrb_id'], self.cntrb_id_inc))
-
-                pr_meta_result = self.db.execute(self.pull_request_meta_table.update().where(
-                    self.pull_request_meta_table.c.cntrb_id==id['cntrb_id']).values(update_col))
-                logging.info("Updated cntrb_id column for tuple in the pull_request_meta table with value: {} replaced with new cntrb id: {}".format(id['cntrb_id'], self.cntrb_id_inc))
-
-                pr_repo_result = self.db.execute(self.pull_request_repo_table.update().where(
-                    self.pull_request_repo_table.c.pr_cntrb_id==id['cntrb_id']).values(pr_repo_col))
-                logging.info("Updated cntrb_id column for tuple in the pull_request_repo table with value: {} replaced with new cntrb id: {}".format(id['cntrb_id'], self.cntrb_id_inc))
+            self.map_new_id(dupe_ids, self.cntrb_id_inc)
 
             deleteSQL = """
                 DELETE 
@@ -635,6 +616,29 @@ class ContributorWorker:
         
         else: #then there would be exactly 1 existing tuple, so that id is the one we want
             alias_id = existing_tuples[0]['cntrb_id']
+
+        logging.info('Checking canonicals match.\n')
+        alias_sql = s.sql.text("""
+            SELECT * 
+            FROM contributors
+            WHERE cntrb_id = :alias_id
+        """)
+        canonical_id_result = pd.read_sql(alias_sql, self.db, params={'alias_id': alias_id})
+
+        if canonical_id_result.iloc[0]['cntrb_canonical'] != tuple['cntrb_canonical']:
+            canonical_col = {
+                'cntrb_canonical': tuple['cntrb_canonical'],
+                'tool_source': self.tool_source,
+                'tool_version': self.tool_version,
+                'data_source': self.data_source
+            }
+
+            result = self.db.execute(self.contributors_table.update().where(
+                self.contributors_table.c.cntrb_canonical==canonical_id_result.iloc[0]['cntrb_canonical']
+                    ).values(canonical_col))
+            logging.info("Updated cntrb_canonical column for existing tuple in the contributors "
+                "table with email: {}\n".format(tuple['cntrb_email']))
+
 
         # Now check existing alias table tuple
         existing_tuples = retrieve_tuple(self, {'alias_email': commit_email}, ['contributors_aliases'])
@@ -665,4 +669,74 @@ class ContributorWorker:
         if len(existing_tuples) > 1:
             logging.info("THERE IS A CASE FOR A DUPLICATE CONTRIBUTOR in the alias "
                 "table AND NEED TO ADD DELETION LOGIC: {}\n".format(existing_tuples))
+
+    def map_new_id(self, dupe_ids, new_id):
+        alias_update_col = {'cntrb_a_id': new_id}
+        update_col = {'cntrb_id': new_id}
+        reporter_col = {'reporter_id': new_id}
+        pr_assignee_col = {'contrib_id': new_id}
+        pr_repo_col = {'pr_cntrb_id': new_id}
+
+        # def delete_fk(table, column):
+
+        # tables_with_fk = {
+        #         'contributors_aliases_table': ['cntrb_a_id', alias_update_col], 
+        #         'issue_events_table':, 
+        #         'pull_request_events_table',
+        #         'issues_table',
+        #         'issues_table'
+        #     }
+
+        try:
+            cntrb_alias_result = self.db.execute(self.contributors_aliases_table.update().where(
+                self.contributors_aliases_table.c.cntrb_id.in_(dupe_ids)).values(update_col))
+
+            alias_result = self.db.execute(self.contributors_aliases_table.update().where(
+                self.contributors_aliases_table.c.cntrb_a_id.in_(dupe_ids)).values(alias_update_col))
+            logging.info("Updated cntrb_a_id column for tuples in the contributors_aliases table with value: {} replaced with new cntrb id: {}".format(id['cntrb_id'], self.cntrb_id_inc))
+
+        except Exception as e:
+            logging.info(f'Alias re-map already done... error: {e}')
+
+        issue_events_result = self.db.execute(self.issue_events_table.update().where(
+            self.issue_events_table.c.cntrb_id.in_(dupe_ids)).values(update_col))
+        logging.info("Updated cntrb_id column for tuples in the issue_events table with value: {} replaced with new cntrb id: {}".format(id['cntrb_id'], self.cntrb_id_inc))
+
+        pr_events_result = self.db.execute(self.pull_request_events_table.update().where(
+            self.pull_request_events_table.c.cntrb_id.in_(dupe_ids)).values(update_col))
+        logging.info("Updated cntrb_id column for tuples in the pull_request_events table with value: {} replaced with new cntrb id: {}".format(id['cntrb_id'], self.cntrb_id_inc))
+
+        issues_cntrb_result = self.db.execute(self.issues_table.update().where(
+            self.issues_table.c.cntrb_id.in_(dupe_ids)).values(update_col))
+        logging.info("Updated cntrb_id column for tuples in the issues table with value: {} replaced with new cntrb id: {}".format(id['cntrb_id'], self.cntrb_id_inc))
+
+        issues_reporter_result = self.db.execute(self.issues_table.update().where(
+            self.issues_table.c.reporter_id.in_(dupe_ids)).values(reporter_col))
+        logging.info("Updated reporter_id column in the issues table with value: {} replaced with new cntrb id: {}".format(id['cntrb_id'], self.cntrb_id_inc))
+
+        issue_assignee_result = self.db.execute(self.issue_assignees_table.update().where(
+            self.issue_assignees_table.c.cntrb_id.in_(dupe_ids)).values(update_col))
+        logging.info("Updated cntrb_id column for tuple in the issue_assignees table with value: {} replaced with new cntrb id: {}".format(id['cntrb_id'], self.cntrb_id_inc))
+
+        pr_assignee_result = self.db.execute(self.pull_request_assignees_table.update().where(
+            self.pull_request_assignees_table.c.contrib_id.in_(dupe_ids)).values(pr_assignee_col))
+        logging.info("Updated contrib_id column for tuple in the pull_request_assignees table with value: {} replaced with new cntrb id: {}".format(id['cntrb_id'], self.cntrb_id_inc))
+
+        message_result = self.db.execute(self.message_table.update().where(
+            self.message_table.c.cntrb_id.in_(dupe_ids)).values(update_col))
+        logging.info("Updated cntrb_id column for tuple in the message table with value: {} replaced with new cntrb id: {}".format(id['cntrb_id'], self.cntrb_id_inc))
+
+        pr_reviewers_result = self.db.execute(self.pull_request_reviewers_table.update().where(
+            self.pull_request_reviewers_table.c.cntrb_id.in_(dupe_ids)).values(update_col))
+        logging.info("Updated cntrb_id column for tuple in the pull_request_reviewers table with value: {} replaced with new cntrb id: {}".format(id['cntrb_id'], self.cntrb_id_inc))
+
+        pr_meta_result = self.db.execute(self.pull_request_meta_table.update().where(
+            self.pull_request_meta_table.c.cntrb_id.in_(dupe_ids)).values(update_col))
+        logging.info("Updated cntrb_id column for tuple in the pull_request_meta table with value: {} replaced with new cntrb id: {}".format(id['cntrb_id'], self.cntrb_id_inc))
+
+        pr_repo_result = self.db.execute(self.pull_request_repo_table.update().where(
+            self.pull_request_repo_table.c.pr_cntrb_id.in_(dupe_ids)).values(pr_repo_col))
+        logging.info("Updated cntrb_id column for tuple in the pull_request_repo table with value: {} replaced with new cntrb id: {}".format(id['cntrb_id'], self.cntrb_id_inc))
+
+    def 
 
