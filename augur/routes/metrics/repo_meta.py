@@ -51,3 +51,5 @@ def create_routes(server):
     server.add_standard_metric(metrics.lines_of_code_commit_counts_by_calendar_year_grouped,'lines-of-code-commit-counts-by-calendar-year-grouped')
 
     server.add_standard_metric(metrics.average_weekly_commits, 'average-weekly-commits')
+
+    server.add_standard_metric(metrics.aggregate_summary, 'aggregate-summary')

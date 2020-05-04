@@ -17,7 +17,6 @@ import augur.metrics.util
 
 class Metrics():
     def __init__(self, app):
-        self.projects = None
         self.database = app.database
         self.spdx_db = app.spdx_db
 
