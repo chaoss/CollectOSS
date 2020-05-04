@@ -738,5 +738,3 @@ class ContributorWorker:
             self.pull_request_repo_table.c.pr_cntrb_id.in_(dupe_ids)).values(pr_repo_col))
         logging.info("Updated cntrb_id column for tuple in the pull_request_repo table with value: {} replaced with new cntrb id: {}".format(id['cntrb_id'], self.cntrb_id_inc))
 
-    def 
-
