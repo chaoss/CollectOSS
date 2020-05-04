@@ -433,7 +433,7 @@ class ContributorWorker:
             del cntrb_new['data_collection_date']
             cntrb_new = cntrb_new.to_dict()
             
-            result = self.db.execute(contributors_table.insert().values(cntrb_new))
+            result = self.db.execute(self.contributors_table.insert().values(cntrb_new))
             pk = int(result.inserted_primary_key[0])
             
             dupe_ids_sql = s.sql.text("""
