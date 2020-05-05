@@ -414,7 +414,7 @@ def update_tracking(metric, body):
                 "N": body["maxMessages"]
             },
             "valHost": {
-                "S": bod["host"]
+                "S": body["host"]
             },
             ":valInterestedInsights": {
                 "L": body["insightTypes"]
