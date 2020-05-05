@@ -14,6 +14,8 @@ The collection of the ``augur db`` commands is for interacting with the database
   * ``add-repos filename.csv``
   * ``get-repo-groups``
   * ``update-repo-directory REPO_DIRECTORY``
+  * ``generate-api-key``
+  * ``get-api-key``
   * ``print-db-version``
   * ``upgrade-db-version``
   * ``create-schema``
@@ -22,9 +24,7 @@ The collection of the ``augur db`` commands is for interacting with the database
 --------------------
 The ``add-repo-groups`` command is used to create new repo groups. When given a path to a correctly formatted ``.csv`` file, it will create each repo group specified in the file with the corresponding ID and name.
 
-The ``.csv`` file must have the following format:
-
-.. code-block::
+The ``.csv`` file must have the following format::
 
   <repo_group_id>,<repo_group_name>
   ...
@@ -35,16 +35,14 @@ Each pair of values should be on its own line (indicated by the ...), without qu
 
 Example usage\:
 
-.. code:: bash
+.. code-block:: bash
 
   # to add new repos to the database
   $ augur db add-repo-groups repo_groups.csv
 
   # contents of repo_groups.csv
-  20 Apache Camel
-  21 Apache DeltaSpike
-  22 Apache Qpid
-  23 Apache Tomcat
+  10,Repo Group 1
+  20,Repo Group 2
 
 
 ``get-repo-groups``
@@ -53,7 +51,7 @@ The ``get-repo-groups`` command will return the ID, name, and description of all
 
 Example usage\:
 
-.. code:: bash
+.. code-block:: bash
 
   # to add repos to the database
   $ augur db get-repo-groups
@@ -69,7 +67,7 @@ The ``add-repos`` command is used to load new repos. When given a path to a corr
 
 The ``.csv`` file must have the following format:
 
-.. code-block::
+.. code::
 
   <repo_group_id>,<git_repo_url> 
   ...
@@ -79,12 +77,18 @@ Each pair of values should be on its own line (indicated by the ...), without qu
 
 Example usage\:
 
-.. code:: bash
+.. code-block:: bash
 
   # contents of repos.csv
-  1 https://github.com/chaoss/augur.git
-  2 https://github.com/chaoss/wg-evolution.git
-  3 https://github.com/chaoss/metrics.git
+  10,https://github.com/chaoss/augur.git
+  10,https://github.com/chaoss/grimoirelab.git
+  20,https://github.com/chaoss/wg-evolution.git
+  20,https://github.com/chaoss/wg-risk.git
+  20,https://github.com/chaoss/wg-common.git
+  20,https://github.com/chaoss/wg-value.git
+  20,https://github.com/chaoss/wg-diversity-inclusion.git
+  20,https://github.com/chaoss/wg-app-ecosystem.git
+
 
   # to add repos to the database
   $ augur db add-repos repos.csv
@@ -99,7 +103,7 @@ The ``update-repo-directory`` command will update the Facade worker repo cloning
 
 Example usage\:
 
-.. code:: bash
+.. code-block:: bash
 
   # to update a repo in the database
   $ augur db update-repo-directory REPO_DIRECTORY  
@@ -108,6 +112,35 @@ Example usage\:
   > Successfully updated the Facade worker repo directory.
 
 
+``generate-api-key``
+-------------------------
+The ``generate-api-key`` command will generate a new Augur API key and update the database with the new key. Output is the generated key.
+
+Example usage\:
+
+.. code-block:: bash
+
+  # to generate a key
+  $ augur db generate-api-key
+
+  # successful output looks like (this will be an actual key):
+  > some_new_key_abc_123
+
+
+``get-api-key``
+-------------------------
+The ``get-api-key`` command will return the API key of the currently configured database. Output is the API key.
+
+Example usage\:
+
+.. code-block:: bash
+
+  # to retrieve the key
+  $ augur db get-api-key
+
+  # successful output looks like (this will be an actual key):
+  > some_existing_key_def_456
+
 
 ``print-db-version``
 -------------------------
@@ -115,13 +148,13 @@ The ``print-db-version`` command will give the user the current version of the c
 
 Example usage\:
 
-.. code:: bash
+.. code-block:: bash
 
   # to return the current database version
   $ augur db print-db-version
 
   # successful output looks like:
-  > Augur DB version: 12
+  > 15
 
 
 ``upgrade-db-version``
@@ -130,7 +163,7 @@ The ``upgrade-db-version`` command will upgrade the user's current database to t
 
 Example usage\:
 
-.. code:: bash
+.. code-block:: bash
 
   # to upgrade the user's database to the current version
   $ augur db upgrade-db-version
@@ -148,7 +181,7 @@ The ``create-schema`` command will attempt to create the Augur schema in the dat
 
 Example usage\:
 
-.. code:: bash
+.. code-block:: bash
 
   # to create the schema
   $ augur db create-schema

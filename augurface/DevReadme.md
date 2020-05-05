@@ -1,16 +1,36 @@
-# STYLE
-* Global styles (mainly CSS variables) are within public/index.html
-* Any other style should be scoped to a component or carefully managed in a parent component (for modularity)
+# AugurFace Documentation
+## Installation for development
+* navigate to the augur/augurface directory
+* run 'npm install' 
+* run 'npm run serve' to deploy the app locally
+---
+## Global Data
+* AugurFace is a Vue application, and uses Vuex for global data management.<br> Vuex has great documentation here: https://vuex.vuejs.org/
+<br>Vue also has useful documentation here: https://vuejs.org
+* You can find code related to vuex in augur/augurface/src/store.<br>Currently, the data stored in Vuex is kept minimal on purpose
 
-# COMPONENT ORGANIZATION
-* Components use the SFC (Single File Component) structure for readability and ease of debugging. This is a Vue 2.0 standard
-* The organization of components within the directory is done in an effort to mimic the tree of Vue components when rendering.
-* The main rule being that, when a component is almost guarenteed to only be nested within another component (and no other component), it should be in a directory within that components directory
-* Components that are in multiple components should be at the highest level component where that component could be found (e.g if there is a component that will be in multiple components, but only components nested in Dashboard.vue, then that component should be within the Dashboard directory)
+```
 
-# STATE MANAGEMENT
-* Vuex is used for global state data
-* If you are unfamiliar with Vuex, reading the following page would be helpful https://vuex.vuejs.org/guide/
-* Ideally, the global state should provide enough information to make any requests specific components will need but should leave a small footprint.
-* repogroup metadata (id, name, etc), repo metadata (id, name, etc), and user metadata (token, username, etc) are good things to store within the state
-* the store is split into three modules currently. reposModule, userModule and utilModule
+reposModule
+  --repoGroups (metadata about loaded repo groups)
+  --repos (metadata about loaded repos)
+
+utilModule
+  --baseEndpointUrl (url of server to make requests to)
+
+userModule (this module is empty for now, but will be used for SSO in the future)
+
+```
+
+* To access global data from a component, you can use 'this.$store.state.[module].[attribute]
+<br>e.g this.$store.state.reposModule.repos can be used within a component to access an array of the currently loaded groups
+
+* Understanding state, mutations, and actions, and getters are important before contributing to AugurFace
+
+---
+
+## Component Structure / Router
+* AugurFace uses VueRouter to manage routes with a single page application<br>Documentation on VueRouter can be found here: router.vuejs.org <br>Code related to the router can be found in augur/augurface/src/router/
+* Components that are used for page layouts (Login page, Dashboard bage, etc) can be found in augur/augurface/src/layouts/
+* Other components are in augur/augurface/src/components
+* Components that are very modular by nature (wrapped html elements, icon buttons, etc) are kept in the components/BaseComponents/ directory

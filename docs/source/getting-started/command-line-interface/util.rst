@@ -18,9 +18,7 @@ The ``augur util`` commands are for performing a variety of different miscellane
 ---------------
 Exports your GitHub key and database credentials to 2 files. The first is ``augur_export_env.sh`` which is an executable shell script that can be used initialize environment variables for each of your credentials. The second is ``docker_env.txt`` which specifies each credential in a key/value pair format that is used to configure the backend Docker containers.
 
-Example usage\:
-
-.. code-block::
+Example usage::
 
   # to export your environment
   $ augur util export-env
@@ -46,9 +44,7 @@ Example usage\:
 ---------
 Terminates all currently running backend Augur processes, including any workers. Will only work in a virtual environment.
 
-Example usage\:
-
-.. code-block::
+Example usage::
 
   # to stop the server and workers
   $ augur util kill
@@ -63,9 +59,7 @@ Example usage\:
 ---------
 Outputs the name and process ID (PID) of all currently running backend Augur processes, including any workers. Will only work in a virtual environment.
 
-Example usage\:
-
-.. code-block::
+Example usage::
 
   # to stop the server and workers
   $ augur util list
@@ -79,9 +73,7 @@ Example usage\:
 ---------------
 Refresh repo collection to force data collection. Mostly for debugging.
 
-Example usage\:
-
-.. code-block::
+Example usage::
 
   # to reset the repo collection status to "New"
   $ augur util repo-reset

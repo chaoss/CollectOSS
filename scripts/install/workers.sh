@@ -1,8 +1,6 @@
 #!/bin/bash
 set -eo pipefail
 
-echo
-echo "**********************************"
 echo "Installing workers and their dependencies..."
 echo "**********************************"
 echo

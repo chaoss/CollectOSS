@@ -39,8 +39,7 @@ env:
     AUGUR_DB_PASSWORD=augur
 
 before_install:
-  - docker pull augurlabs/augur:test_data
-  - docker run -d -p 5432:5432 --name augur_test_database augurlabs/augur:test_data
+  - docker run -d -p 5432:5432 --name augur_test_database augurlabs/augur:test_data@sha256:3c496445d7219b824315a37369fcddbe83b10773259560df5645162ce81dfb33
 
 install:
   - pip install .[dev]

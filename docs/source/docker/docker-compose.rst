@@ -12,9 +12,9 @@ The default ports for each service are\:
 Running the containers
 -----------------------
 
-To run Augur **without** the database container :
+To run Augur **without** the database container:
 
-.. code:: bash
+.. code-block:: bash
 
     docker-compose -f docker-compose.yml up
 
@@ -24,7 +24,7 @@ To run Augur **without** the database container :
 
 To run Augur **with** the database container:
 
-.. code:: bash
+.. code-block:: bash
 
     docker-compose -f docker-compose.yml -f database-compose.yml up
 

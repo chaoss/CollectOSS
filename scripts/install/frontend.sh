@@ -1,8 +1,6 @@
 #!/bin/bash
 set -euo pipefail
 
-echo
-echo "**********************************"
 echo "Installing frontend dependencies..."
 echo "**********************************"
 echo

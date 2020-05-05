@@ -16,9 +16,14 @@ def assign_tuple_action(self, new_data, table_values, update_col_map, duplicate_
             continue
 
         obj['flag'] = 'none' # default of no action needed
+        existing_tuple = None
         for db_dupe_key in list(duplicate_col_map.keys()):
 
             if table_values.isin([obj[duplicate_col_map[db_dupe_key]]]).any().any():
+                if table_values[table_values[db_dupe_key].isin(
+                    [obj[duplicate_col_map[db_dupe_key]]])].to_dict('records'):
+                    existing_tuple = table_values[table_values[db_dupe_key].isin(
+                        [obj[duplicate_col_map[db_dupe_key]]])].to_dict('records')[0]
                 continue
 
             logging.info('Found a tuple that needs insertion based on dupe key: {}\n'.format(db_dupe_key))
@@ -31,12 +36,9 @@ def assign_tuple_action(self, new_data, table_values, update_col_map, duplicate_
                 'Moving to next tuple.\n')
             continue
 
-        existing_tuple = table_values[table_values[db_dupe_key].isin(
-                [obj[duplicate_col_map[db_dupe_key]]])].to_dict('records')[0]
-
         # If we need to check the values of the existing tuple to determine if an update is needed
         for augur_col, value_check in value_update_col_map.items():
-            not_nan_check = not (math.isnan(value_check) and math.isnan(existing_tuple[augur_col])) if value_check is not None else True
+            not_nan_check = not (pd.isna(value_check) and pd.isna(existing_tuple[augur_col])) if value_check is not None else True
             if existing_tuple[augur_col] != value_check and not_nan_check:
                 continue
             logging.info("Found a tuple that needs an update for column: {}\n".format(augur_col)) 
@@ -169,6 +171,17 @@ def find_id_from_login(self, login):
     logging.info("Inserted contributor: " + contributor['login'] + "\n")
     
     return find_id_from_login(self, login)
+
+def get_owner_repo(github_url):
+    split = github_url.split('/')
+
+    owner = split[-2]
+    repo = split[-1]
+
+    if '.git' in repo:
+        repo = repo[:-4]
+
+    return owner, repo
 
 def get_max_id(self, table, column, default=25150, operations_table=False):
     maxIdSQL = s.sql.text("""
@@ -659,7 +672,8 @@ def update_gh_rate_limit(self, response, bad_credentials=False, temporarily_disa
         try:
             reset_time = response.headers['X-RateLimit-Reset']
         except Exception as e:
-            logging.info("Could not get reset time from headers because of error: {}".format(error))
+            logging.info("Could not get reset time from headers because of error: {}".format(e))
+            logging.info('Headers: {}'.format(response.headers))
             reset_time = 3600
         time_diff = datetime.datetime.fromtimestamp(int(reset_time)) - datetime.datetime.now()
         logging.info("Rate limit exceeded, checking for other available keys to use.\n")
