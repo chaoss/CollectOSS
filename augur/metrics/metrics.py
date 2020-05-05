@@ -13,14 +13,13 @@ import augur.metrics.message
 import augur.metrics.platform
 import augur.metrics.pull_request
 import augur.metrics.repo_meta
-import augur.metrics.util
 
 class Metrics():
     def __init__(self, app):
         self.database = app.database
         self.spdx_db = app.spdx_db
 
-        models = ["commit", "contributor", "experimental", "insight", "issue", "message", "platform", "pull_request", "repo_meta", "util"]
+        models = ["commit", "contributor", "experimental", "insight", "issue", "message", "platform", "pull_request", "repo_meta"]
 
         for model in models:
             add_metrics(self, f"augur.metrics.{model}")

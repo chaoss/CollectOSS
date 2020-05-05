@@ -180,8 +180,10 @@ class Server(object):
     def add_standard_metric(self, function, endpoint, **kwargs):
         repo_endpoint = f'/{self.api_version}/repos/<repo_id>/{endpoint}'
         repo_group_endpoint = f'/{self.api_version}/repo-groups/<repo_group_id>/{endpoint}'
+        deprecated_repo_endpoint = f'/{self.api_version}/repo-groups/<repo_group_id>/repos/<repo_id>/{endpoint}'
         self.app.route(repo_endpoint)(self.routify(function, 'repo'))
         self.app.route(repo_group_endpoint)(self.routify(function, 'repo_group'))
+        self.app.route(deprecated_repo_endpoint )(self.routify(function, 'deprecated_repo'))
         kwargs['endpoint_type'] = 'standard'
         self.update_metric_metadata(function, endpoint, **kwargs)
 
