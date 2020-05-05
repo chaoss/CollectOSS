@@ -2,17 +2,23 @@
   <div id="SlackConfig">
     <div class="heading-row">
       <div>
-        <img src="../assets/auggie.png" alt />
+        <img src="../assets/auggie.png" alt class="auggie-logo" />
         <h1>Auggie Configuration</h1>
       </div>
-      <!-- <div>
-          <aug-text-input text="" placeholder="Augur Host Url..." />
-          <aug-button text="Apply" />
-      </div> -->
+      <div>
+          <!-- <aug-text-input text="" placeholder="Augur Host Url..." />
+          <aug-button text="Apply" /> -->
+          <p>{{ teamName }}</p>
+          <img :src="teamImage" alt="" class="team-logo"/>
+      </div>
     </div>
     <div class="slack-config-content">
-      <draggable-columns ref="repoColumns" :repos="repos"/>
-      <tracking-options @save="save" />
+      <draggable-columns ref="repoColumns" :initialTrackedRepos="initialTrackedRepos" />
+      <tracking-options
+        @save="save"
+        :initialTrackedInsights="initialTrackedInsights"
+        :initialMaxMessages="initialMaxMessages"
+      />
     </div>
   </div>
 </template>
@@ -20,36 +26,36 @@
 <script>
 import DraggableColumns from "./DraggableColumns.vue";
 import TrackingOptions from "./TrackingOptions.vue";
-// import AugTextInput from "./BaseComponents/AugTextInput.vue";
-// import AugButton from "./BaseComponents/AugButton.vue";
 
 export default {
   name: "SlackConfig",
+  props: [
+    "initialMaxMessages",
+    "initialTrackedInsights",
+    "initialTrackedRepos",
+    "email",
+    "teamID",
+    "teamName",
+    "teamImage"
+  ],
   components: {
     DraggableColumns,
-    TrackingOptions, 
-    // AugTextInput, 
+    TrackingOptions
+    // AugTextInput,
     // AugButton
   },
-  data() {
-    return {
-      repos: [
-        {
-          repoName: "repo1",
-          repoGroup: "groupA"
-        },
-        {
-          repoName: "repo2",
-          repoGroup: "groupA"
-        }
-      ],
-      trackedRepos: [
-        {
-          repoName: "repo3",
-          repoGroup: "groupB"
-        }
-      ]
-    };
+  mounted() {
+    console.log(this.props);
+    if (
+      !this.$props.initialMaxMessages ||
+      !this.$props.initialTrackedInsights ||
+      !this.$props.email ||
+      !this.$props.teamID ||
+      !this.$props.teamName ||
+      !this.$props.teamImage
+    ) {
+      this.$router.push("login");
+    }
   },
   methods: {
     save(trackingOptions) {
@@ -61,10 +67,10 @@ export default {
         return;
       }
       let requestObject = {
-        tracked: [], 
-        maxMessages: maxMessages, 
+        tracked: [],
+        maxMessages: maxMessages,
         repos: []
-      }
+      };
       if (trackingOptions.trackedInsights.commitCount) {
         requestObject.tracked.push("code-changes");
       }
@@ -85,7 +91,7 @@ export default {
       });
       console.log(requestObject);
     }
-  }, 
+  }
 };
 </script>
 
@@ -107,26 +113,33 @@ export default {
   padding: 1rem;
 }
 
-.heading-row  img {
+.auggie-logo {
   width: 80px;
   box-shadow: 0 0 20px var(--grey);
   border-radius: 10px;
 }
 
-.heading-row  h1 {
+.heading-row h1 {
   margin: 0;
   font-size: 3rem;
   margin-left: 1.5rem;
 }
 
 .heading-row > div {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-right: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-right: 2rem;
 }
 
 .heading-row > div > * {
-    margin-right: 1rem;
+  margin-right: 1rem;
+}
+
+.team-logo {
+  width: 50px !important;
+  height: 50px;
+  border-radius: 10px !important;
+  border: 1px solid lightgrey;
 }
 </style>

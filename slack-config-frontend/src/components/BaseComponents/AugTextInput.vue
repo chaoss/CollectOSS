@@ -16,10 +16,10 @@ export default {
   name: "AugTextInput",
   data() {
     return {
-      value: ""
+      value: this.initial
     };
   },
-  props: ["text", "inputName", "password", "placeholder", "number"],
+  props: ["text", "inputName", "password", "placeholder", "number", "initial"],
   watch: {
     value(val) {
       this.$emit("valueUpdated", val);
