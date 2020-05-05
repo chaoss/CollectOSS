@@ -209,7 +209,6 @@ def create_util_routes(server):
     def slack_login():
         arg = [request.json]
         response = server.transform(metrics.slack_login, args=arg)
-        response.headers['Access-Control-Allow-Origin'] = '*'
         return Response(response=response, status=200, mimetype="application/json")
 
     server.addRepoGroupMetric(metrics.get_issues, 'get-issues')

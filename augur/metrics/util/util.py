@@ -431,7 +431,7 @@ def update_tracking(metric, body):
 @annotate(tag='slack_login')
 def slack_login(metric, body):
     print("slack_login")
-    # print(f'https://slack.com/api/oauth.access?code={body["code"]}&client_id={os.environ["AUGGIE_CLIENT_ID"]}&client_secret={os.environ["AUGGIE_CLIENT_SECRET"]}&redirect_uri=http://localhost:8080/#/login')
+
     r = requests.get(
         url=f'https://slack.com/api/oauth.v2.access?code={body["code"]}&client_id={os.environ["AUGGIE_CLIENT_ID"]}&client_secret={os.environ["AUGGIE_CLIENT_SECRET"]}&redirect_uri=http%3A%2F%2Flocalhost%3A8080')
     data = r.json()
@@ -459,21 +459,93 @@ def slack_login(metric, body):
             }
         )
 
-        user = response['Item']
+        if ('Item' in response):
+            user = response['Item']
+            print(user)
 
-        filteredUser = {
-            "interestedRepos": user["interestedRepos"],
-            "interestedGroups": user["interestedGroups"],
-            "host": user["host"],
-            "maxMessages": user["maxMessages"],
-            "interestedInsights": user["interestedInsights"]
-        }
+            filteredUser = {
+                "interestedRepos": user["interestedRepos"],
+                "interestedGroups": user["interestedGroups"],
+                "host": user["host"],
+                "maxMessages": user["maxMessages"],
+                "interestedInsights": user["interestedInsightTypes"]
+            }
 
-        return json.dumps({
-            'team_id': team_id,
-            'email': email,
-            'user': filteredUser
-        })
+            user_body = json.dumps({
+                'team_id': team_id,
+                'email': email,
+                'user': filteredUser
+            })
+
+            print(user_body)
+
+            return user_body
+        else:
+            client.put_item(
+                TableName="auggie-users",
+                Item={
+                    'botToken': {'S': 'null'},
+                    'currentMessages': {'N': "0"},
+                    'maxMessages': {'N': "0"},
+                    'email': {'S': '{}:{}'.format(email, team_id)},
+                    'host': {'S': 'null'},
+                    'interestedGroups': {'L': []},
+                    'interestedRepos': {'L': []},
+                    'interestedInsightTypes': {'L': []},
+                    'teamID': {'S': team_id},
+                    'thread': {'S': 'null'},
+                    'userID': {'S': user_response['user']['id']}
+                }
+            )
+
+            users_response = client.users_list()
+            for user in users_response["members"]:
+                if "api_app_id" in user["profile"] and user["profile"]["api_app_id"] == "ASQKB8JT0":
+                    im_response = client.conversations_open(
+                        users=user["id"]
+                    )
+                    print("Hopefully IM is opened")
+                    channel = im_response["channel"]["id"]
+
+                    message_response = client.chat_postMessage(
+                        channel=channel,
+                        text="what repos?",
+                        as_user="true")
+                    print(message_response)
+
+                    ts = message_response["ts"]
+                    client.chat_delete(
+                        channel=channel,
+                        ts=ts
+                    )
+
+            response = client.get_item(
+                TableName="auggie-users",
+                Key={
+                    "email": {"S": '{}:{}'.format(email, team_id)}
+                }
+            )
+
+            user = response['Item']
+            print(user)
+
+            filteredUser = {
+                "interestedRepos": user["interestedRepos"],
+                "interestedGroups": user["interestedGroups"],
+                "host": user["host"],
+                "maxMessages": user["maxMessages"],
+                "interestedInsights": user["interestedInsightTypes"]
+            }
+
+            user_body = json.dumps({
+                'team_id': team_id,
+                'email': email,
+                'user': filteredUser
+            })
+
+            print(user_body)
+
+            return user_body
     else:
         return data
     
