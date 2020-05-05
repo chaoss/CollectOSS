@@ -402,7 +402,7 @@ def update_tracking(metric, body):
         Key={
             "email": {"S": '{}:{}'.format(body["email"], body["teamID"])}
         },
-        UpdateExpression="SET interestedGroups = :valGroup, interestedRepos = :valRepo, maxMessages = :valMax, host = :valHost, interestedInsights = :valInterestedInsights",
+        UpdateExpression="SET interestedGroups = :valGroup, interestedRepos = :valRepo, maxMessages = :valMax, host = :valHost, interestedInsightTypes = :valInterestedInsights",
         ExpressionAttributeValues={
             ":valGroup": {
                 "L": body["groups"]
@@ -417,7 +417,7 @@ def update_tracking(metric, body):
                 "S": bod["host"]
             },
             ":valInterestedInsights": {
-                "L": body["interestedInsights"]
+                "L": body["insightTypes"]
             }
         },
         ReturnValues="ALL_NEW"
