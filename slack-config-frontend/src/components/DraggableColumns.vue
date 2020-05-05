@@ -8,10 +8,10 @@
           @valueUpdated="setHostSearch"
           class="search-input"
         />
-        <aug-button text="Refresh" class="column-button" @click="refreshRepos" />
+        <aug-button text="Refresh" class="column-button" @click="refreshRepos(augurHost)" />
       </div>
       <div class="draggable-column">
-        <aug-spinner v-if="hostRepos.length === 0" style="margin-top: 3rem" />
+        <aug-spinner v-if="isLoading" style="margin-top: 3rem" />
         <draggable :list="hostRepos" :group="{ name: 'repos', pull: 'clone', put: false }">
           <repo
             v-for="repo in hostRepos"
@@ -96,13 +96,18 @@ export default {
     clearTrackedRepos() {
       this.trackedRepos = [];
     },
-    refreshRepos() {
+    refreshRepos(host) {
+      this.augurHost = host;
+      console.log(host);
       this.hostRepos = [];
-      fetch("http://localhost:5000/api/unstable/repos")
+      this.trackedRepos = [];
+      this.isLoading = true;
+      fetch(host + "/repos")
         .then(res => {
           if (res.status === 200) {
             return res.json();
           } else {
+            this.isLoading = false;
             return null;
           }
         })
@@ -121,21 +126,24 @@ export default {
             // console.log(this);
             this.hostRepos.forEach(repo => {
               if (this.$props.initialTrackedRepos.includes(repo.url)) {
-                console.log('match');
+                console.log("match");
                 this.trackedRepos.push(repo);
               }
             });
+            this.isLoading = false;
           }
         });
     }
   },
   mounted() {
-    this.refreshRepos();
+    // this.refreshRepos();
   },
   data() {
     return {
       hostSearch: "",
       trackedSearch: "",
+      augurHost: "null", 
+      isLoading: false,
       hostRepos: [],
       trackedRepos: []
     };

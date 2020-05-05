@@ -6,14 +6,14 @@
         <h1>Auggie Configuration</h1>
       </div>
       <div>
-          <!-- <aug-text-input text="" placeholder="Augur Host Url..." />
-          <aug-button text="Apply" /> -->
-          <p>{{ teamName }}</p>
-          <img :src="teamImage" alt="" class="team-logo"/>
+          <aug-text-input text="" placeholder="Augur Host Url..." @valueUpdated="setHost" ref="hostInput"/>
+          <aug-button text="Apply" @click="refreshRepos()"/>
+          <!-- <p>{{ teamName }}</p>
+          <img :src="teamImage" alt="" class="team-logo"/> -->
       </div>
     </div>
     <div class="slack-config-content">
-      <draggable-columns ref="repoColumns" :initialTrackedRepos="initialTrackedRepos" />
+      <draggable-columns ref="repoColumns" :initialTrackedRepos="initialTrackedRepos.map(r => r.S)" />
       <tracking-options
         @save="save"
         :initialTrackedInsights="initialTrackedInsights"
@@ -26,6 +26,8 @@
 <script>
 import DraggableColumns from "./DraggableColumns.vue";
 import TrackingOptions from "./TrackingOptions.vue";
+import AugTextInput from "./BaseComponents/AugTextInput.vue";
+import AugButton from "./BaseComponents/AugButton.vue";
 
 export default {
   name: "SlackConfig",
@@ -35,14 +37,13 @@ export default {
     "initialTrackedRepos",
     "email",
     "teamID",
-    "teamName",
-    "teamImage"
+    "host"
   ],
   components: {
     DraggableColumns,
-    TrackingOptions
-    // AugTextInput,
-    // AugButton
+    TrackingOptions, 
+    AugTextInput,
+    AugButton
   },
   mounted() {
     console.log(this.props);
@@ -50,14 +51,31 @@ export default {
       !this.$props.initialMaxMessages ||
       !this.$props.initialTrackedInsights ||
       !this.$props.email ||
-      !this.$props.teamID ||
-      !this.$props.teamName ||
-      !this.$props.teamImage
+      !this.$props.teamID || 
+      !this.$props.host
     ) {
       this.$router.push("login");
     }
+    if (this.augurHost === "null") {
+      window.alert("It looks like this is your first time configuring Auggie, make sure to tell Auggie 'start tracking repositories' in your slack workspace and to specify your Augur url in the top right of this page.");
+    }
+    else {
+      this.$refs.hostInput.value = this.augurHost
+      this.$refs.repoColumns.refreshRepos(this.augurHost);
+    }
   },
+  data() {
+    return {
+      augurHost: this.host
+    }
+  }, 
   methods: {
+    refreshRepos() {
+      this.$refs.repoColumns.refreshRepos(this.augurHost)
+    }, 
+    setHost(newValue) {
+      this.augurHost = newValue;
+    }, 
     save(trackingOptions) {
       console.log(trackingOptions);
       let maxMessages = Number(trackingOptions.maxMessages);
@@ -67,29 +85,49 @@ export default {
         return;
       }
       let requestObject = {
-        tracked: [],
-        maxMessages: maxMessages,
-        repos: []
+        insightTypes: [],
+        maxMessages: String(maxMessages),
+        repos: [],
+        groups: [],  
+        host: this.augurHost, 
+        email: this.email, 
+        teamID: this.teamID
       };
       if (trackingOptions.trackedInsights.commitCount) {
-        requestObject.tracked.push("code-changes");
+        requestObject.insightTypes.push({"S": "code-changes"});
       }
       if (trackingOptions.trackedInsights.issueCount) {
-        requestObject.tracked.push("issues-new");
+        requestObject.insightTypes.push({"S": "issues-new"});
       }
       if (trackingOptions.trackedInsights.pullRequestCount) {
-        requestObject.tracked.push("reviews");
+        requestObject.insightTypes.push({"S": "reviews"});
       }
       if (trackingOptions.trackedInsights.newContributors) {
-        requestObject.tracked.push("contributors-new");
+        requestObject.insightTypes.push({"S": "contributors-new"});
       }
       if (trackingOptions.trackedInsights.linesChanged) {
-        requestObject.tracked.push("code-changes-lines");
+        requestObject.insightTypes.push({"S": "code-changes-lines"});
       }
       this.$refs.repoColumns.trackedRepos.forEach(repo => {
-        requestObject.repos.push(repo.repo_id);
+        requestObject.repos.push({ "S": repo.url });
       });
+
       console.log(requestObject);
+
+      fetch("http://localhost:5000/auggie/update_tracking", {
+        method: "POST", 
+        headers: {
+          "Content-Type": "application/json"
+        }, 
+        body: JSON.stringify(requestObject)
+      })
+      .then(res => {
+        if (res.status === 200) {
+          window.alert("settings saved");
+        } else {
+          window.alert("unable to save settings");
+        }
+      });
     }
   }
 };

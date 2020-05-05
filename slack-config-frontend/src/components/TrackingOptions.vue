@@ -42,23 +42,23 @@ export default {
   name: "TrackingOptions", 
   props: ["initialMaxMessages", "initialTrackedInsights"], 
   mounted() {
-    if (this.$props.initialTrackedInsights.includes("code-changes")) {
+    if (this.$props.initialTrackedInsights.map(i => i.S).includes("code-changes")) {
       this.trackingOptions.trackedInsights.commitCount = true;
       this.$refs.commitCountBox.flipIsChecked();
     }
-    if (this.$props.initialTrackedInsights.includes("code-changes-lines")) {
+    if (this.$props.initialTrackedInsights.map(i => i.S).includes("code-changes-lines")) {
       this.trackingOptions.trackedInsights.linesChanged = true;
       this.$refs.linesChangedBox.flipIsChecked();
     }
-    if (this.$props.initialTrackedInsights.includes("issues-new")) {
+    if (this.$props.initialTrackedInsights.map(i => i.S).includes("issues-new")) {
       this.trackingOptions.trackedInsights.issueCount = true;
       this.$refs.issueCountBox.flipIsChecked();
     }
-    if (this.$props.initialTrackedInsights.includes("reviews")) {
+    if (this.$props.initialTrackedInsights.map(i => i.S).includes("reviews")) {
       this.trackingOptions.trackedInsights.pullRequestCount = true;
       this.$refs.pullRequestBox.flipIsChecked();
     }
-    if (this.$props.initialTrackedInsights.includes("contributors-new")) {
+    if (this.$props.initialTrackedInsights.map(i => i.S).includes("contributors-new")) {
       this.trackingOptions.trackedInsights.newContributors = true;
       this.$refs.newContributorsBox.flipIsChecked();
     }
