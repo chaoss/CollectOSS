@@ -504,26 +504,26 @@ def slack_login(metric, body):
                 }
             )
 
-            users_response = webclient.users_list()
-            for user in users_response["members"]:
-                if "api_app_id" in user["profile"] and user["profile"]["api_app_id"] == "ASQKB8JT0":
-                    im_response = webclient.conversations_open(
-                        users=user["id"]
-                    )
-                    print("Hopefully IM is opened")
-                    channel = im_response["channel"]["id"]
+            # users_response = webclient.users_list()
+            # for user in users_response["members"]:
+            #     if "api_app_id" in user["profile"] and user["profile"]["api_app_id"] == "ASQKB8JT0":
+            #         im_response = webclient.conversations_open(
+            #             users=user["id"]
+            #         )
+            #         print("Hopefully IM is opened")
+            #         channel = im_response["channel"]["id"]
 
-                    message_response = webclient.chat_postMessage(
-                        channel=channel,
-                        text="what repos?",
-                        as_user="true")
-                    print(message_response)
+            #         message_response = webclient.chat_postMessage(
+            #             channel=channel,
+            #             text="what repos?",
+            #             as_user="true")
+            #         print(message_response)
 
-                    ts = message_response["ts"]
-                    webclient.chat_delete(
-                        channel=channel,
-                        ts=ts
-                    )
+            #         ts = message_response["ts"]
+            #         webclient.chat_delete(
+            #             channel=channel,
+            #             ts=ts
+            #         )
 
             response = client.get_item(
                 TableName="auggie-users",
