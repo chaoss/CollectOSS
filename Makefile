@@ -98,7 +98,7 @@ test-python-versions:
 .PHONY:api-docs api-docs-view docs
 
 test-data:
-	@ docker run -p 5434:5432 --name augur_test_data augurlabs/augur:test_data
+	@ docker run -p 5434:5432 --name augur_test_data augurlabs/augur:test_data@sha256:3c496445d7219b824315a37369fcddbe83b10773259560df5645162ce81dfb33
 
 library-docs:
 	@ bash -c 'cd docs/ && rm -rf build/ && make html;'

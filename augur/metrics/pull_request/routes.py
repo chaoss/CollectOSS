@@ -415,39 +415,310 @@ def create_pull_request_routes(server):
     server.addRepoGroupMetric(metrics.pull_requests_closed_no_merge, 'pull-requests-closed-no-merge')
 
     """
-    @api {get} /repos/:repo_id/pull-request-closed-no-merge Pull Request Closed but not merged(Repo)
-    @apiName pull-request-closed-no-merge
+    @api {get} /repos/:repo_id/pull-request-average-time-to-close Pull Request average time to close(Repo)
+    @apiName pull-request-average-time-to-close
     @apiGroup Experimental
-    @apiDescription ___
+    @apiDescription Average time to close pull requests with merged_status and the time frame
     @apiParam {string} repo_id Repository ID.
     @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
     @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
-    ___
+    @apiParam {string= day, week, month, year} [group_by= month] Group By specification. E.g. values: 'day', 'week', 'month', or 'year'
+    @apiParam {string= hours, days} [time_unit = hours] Unit of Time Specification.  E.g. values: 'hours', or 'days'
     @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "date": "2019-01-01T00:00:00.000Z",
-                            "pr_count": 3
+                            "closed_year":2017.0
+                            "closed_month":4.0
+                            "merged_status":"Merged"
+                            "average_hours_to_close":0.7305555556
+                        }
+                    ]
+    """
+    server.addRepoMetric(metrics.pull_request_average_time_to_close, 'pull-request-average-time-to-close')
+    """
+    @api {get} /repo-groups/:repo_group_id/pull-request-average-time-to-close Pull Request average time to close(Repo)
+    @apiName pull-request-average-time-to-close
+    @apiGroup Experimental
+    @apiDescription Average time to close pull requests with merged_status and the time frame
+    @apiParam {string} repo_group_id Repository Group ID.
+    @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string= day, week, month, year} [group_by= month] Group By specification. E.g. values: 'day', 'week', 'month', or 'year'
+    @apiParam {string= hours, days} [time_unit = hours] Unit of Time Specification.  E.g. values: 'hours', or 'days'
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "merged_status": "Merged"
+                            "repo_id": 26214
+                            "repo_name": "RIOT"
+                            "repo_group_id": 25159
+                            "repo_group_name": "Competitors"
+                            "closed_year": 2013.0
+                            "closed_month": 6.0
+                            "average_hours_to_close": 37.4352777778
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(metrics.pull_request_average_time_to_close, 'pull-request-average-time-to-close')
+
+    """
+    @api {get} /repos/:repo_id/pull-request-average-time-between-responses Pull Request average time between responses(Repo)
+    @apiName pull-request-average-time-between-responses
+    @apiGroup Experimental
+    @apiDescription Avegage time between responeses with merged_status and the time frame
+    @apiParam {string} repo_id Repository ID.
+    @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string= day, week, month, year} [group_by= month] Group By specification. E.g. values: 'day', 'week', 'month', or 'year'
+    @apiParam {string= minutes, hours} [time_unit = hours] Unit of Time Specification.  E.g. values: 'minutes', or 'hours'
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "closed_year": 2017.0
+                            "closed_month": 4.0
+                            "merged_status": "Merged"
+                            "average_hours_between_responses": 0.0256481482
+                        }
+                    ]
+    """
+    server.addRepoMetric(metrics.pull_request_average_time_between_responses, 'pull-request-average-time-between-responses')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/pull-request-average-time-bewteen-responses Pull Request average time between responses(Repo)
+    @apiName pull-request-average-time-between-responses
+    @apiGroup Experimental
+    @apiDescription Avegage time between responeses with merged_status and the time frame
+    @apiParam {string} repo_group_id Repository Group ID.
+    @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string= day, week, month, year} [group_by= month] Group By specification. E.g. values: 'day', 'week', 'month', or 'year'
+    @apiParam {string= minutes, hours} [time_unit = hours] Unit of Time Specification.  E.g. values: 'minutes', or 'hours'
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "merged_status": "Merged"
+                            "repo_id": 26214
+                            "repo_name": "RIOT"
+                            "repo_group_id": 25159
+                            "repo_group_name": "Competitors"
+                            "closed_year": 2013.0
+                            "closed_month": 6.0
+                            "average_hours_between_responses": 3.725462963
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(metrics.pull_request_average_time_between_responses, 'pull-request-average-time-between-responses')
+
+    """
+    @api {get} /repos/:repo_id/pull_request_average_commit_counts Pull Request average commit counts(Repo)
+    @apiName pull-request-average-commit-counts
+    @apiGroup Experimental
+    @apiDescription Average commits per pull request, with merged status and time frame
+    @apiParam {string} repo_id Repository ID.
+    @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string= day, week, month, year} [group_by= month] Group By specification. E.g. values: 'day', 'week', 'month', or 'year'
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "closed_year": 2017.0
+                            "closed_month": 4.0
+                            "merged_status": "Merged"
+                            "average_commits_per_pull_request": 6.3333333333
+                        }
+                    ]
+    """
+    server.addRepoMetric(metrics.pull_request_average_commit_counts, 'pull-request-average-commit-counts')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/pull-request-average-commit-counts Pull Request average commit counts(Repo)
+    @apiName pull-request-average-commit-counts
+    @apiGroup Experimental
+    @apiDescription Average commits per pull request, with merged status and time frame
+    @apiParam {string} repo_group_id Repository Group ID.
+    @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string= day, week, month, year} [group_by= month] Group By specification. E.g. values: 'day', 'week', 'month', or 'year'
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            merged_status": "Merged"
+                            "repo_id": 26214
+                            "repo_name": "RIOT"
+                            "repo_group_id": 25159
+                            "repo_group_name": "Competitors"
+                            "closed_year": 2013.0
+                            "closed_month": 2.0
+                            "average_commits_per_pull_request": 3.0
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(metrics.pull_request_average_commit_counts, 'pull-request-average-commit-counts')
+
+    """
+    @api {get} /repos/:repo_id/pull-request-average-event-counts Pull Request average event counts(Repo)
+    @apiName pull-request-average-event-counts
+    @apiGroup Experimental
+    @apiDescription Average of event counts with merged status and time frame
+    @apiParam {string} repo_id Repository ID.
+    @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string= day, week, month, year} [group_by= month] Group By specification. E.g. values: 'day', 'week', 'month', or 'year'
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "merged_status": "Merged"
+                            "closed_year": 2017.0
+                            "closed_month": 5.0
+                            "average_assigned_count": 2.2641509434
+                            "average_review_requested_count": 4.4245283019
+                            "average_labeled_count": 1.3773584906
+                            "average_unlabeled_count": 0.6320754717
+                            "average_subscribed_count": 18.0094339623
+                            "average_mentioned_count": 18.0094339623
+                            "average_referenced_count": 7.3679245283
+                            "average_closed_count": 3.4339622642
+                            "average_head_ref_force_pushed_count": 6.7924528302
+                            "average_head_ref_deleted_count": 1.4811320755
+                            "average_milestoned_count": 0.2264150943
+                            "average_merged_count": 3.4056603774
+                            "average_comment_count": 3.4056603774
+                        }
+                    ]
+    """
+    server.addRepoMetric(metrics.pull_request_average_event_counts, 'pull-request-average-event-counts')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/pull-request-average-event-counts Pull Request average event counts(Repo)
+    @apiName pull-request-average-event-counts
+    @apiGroup Experimental
+    @apiDescription Average of event counts with merged status and time frame
+    @apiParam {string} repo_group_id Repository Group ID.
+    @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string= day, week, month, year} [group_by= month] Group By specification. E.g. values: 'day', 'week', 'month', or 'year'
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "merged_status": "Merged"
+                            "repo_id": 26214
+                            "repo_name": "RIOT"
+                            "repo_group_id": 25159
+                            "repo_group_name": "Competitors"
+                            "closed_year": 2013.0
+                            "closed_month": 6.0
+                            "average_assigned_count": 0.0
+                            "average_review_requested_count": 0.0
+                            "average_labeled_count": 0.0
+                            "average_unlabeled_count": 0.0
+                            "average_subscribed_count": 1.0
+                            "average_mentioned_count": 1.0
+                            "average_referenced_count": 2.25
+                            "average_closed_count": 1.5
+                            "average_head_ref_force_pushed_count": 0.0
+                            "average_head_ref_deleted_count": 0.75
+                            "average_milestoned_count": 0.0
+                            "average_merged_count": 1.5
+                            "average_comment_count": 1.5
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(metrics.pull_request_average_event_counts, 'pull-request-average-event-counts')
+
+    """
+    @api {get} /repos/:repo_id/pull-request-average-time-to-responses-and-close Pull Request average time to responses and close(Repo)
+    @apiName pull-request-average-time-to-responses-and-close
+    @apiGroup Experimental
+    @apiDescription Average time to first reponse, last response, and time to close with merged status and time frame
+    @apiParam {string} repo_id Repository ID.
+    @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string= day, week, month, year} [group_by= month] Group By specification. E.g. values: 'day', 'week', 'month', or 'year'
+    @apiParam {string= hours, days} [time_unit = days] Unit of Time Specification.  E.g. values: 'hours', or 'days'
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "closed_year": 2017.0
+                            "closed_month": 3.0
+                            "merged_status": "Rejected"
+                            "average_days_to_first_response": 0.001505
+                            "average_days_to_last_response": 0.009606
+                            "average_days_to_close": 0.011377
+                        }
+                    ]
+    """
+    server.addRepoMetric(metrics.pull_request_average_time_to_responses_and_close, 'pull-request-average-time-to-responses-and-close')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/pull-request-time-average-to-responses-and-close Pull Request average time to responses and close(Repo)
+    @apiName pull-request-average-time-to-responses-and-close
+    @apiGroup Experimental
+    @apiDescription Average time to first reponse, last response, and time to close with merged status and time frame
+    @apiParam {string} repo_group_id Repository Group ID.
+    @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string= day, week, month, year} [group_by= month] Group By specification. E.g. values: 'day', 'week', 'month', or 'year'
+    @apiParam {string= hours, days} [time_unit = days] Unit of Time Specification.  E.g. values: 'hours', or 'days'
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "merged_status": "Merged"
+                            "repo_id": 26218
+                            "repo_name": "mbed-os"
+                            "repo_group_id": 25159
+                            "repo_group_name": "Competitors"
+                            "closed_year": 2013.0
+                            "closed_month": 4.0
+                            "average_days_to_first_response" :3.80191
+                            "average_days_to_last_response": 4.990035
+                            "average_days_to_close": 9.823125
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(metrics.pull_request_average_time_to_responses_and_close, 'pull-request-average-time-to-responses-and-close')
+    """
+    @api {get} /repos/:repo_id/pull-request-merged-status-counts Pull Request merged status counts(Repo)
+    @apiName pull-request-merged-status-counts
+    @apiGroup Experimental
+    @apiDescription Merged status counts with time frame
+    @apiParam {string} repo_id Repository ID.
+    @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string= day, week, month, year} [group_by= month] Group By specification. E.g. values: 'day', 'week', 'month', or 'year'
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "closed_year": 2017.0
+                            "closed_month": 5.0
+                            "merged_status": "Merged"
+                            "pull_request_count": 266
                         }
                     ]
     """
     server.addRepoMetric(metrics.pull_request_merged_status_counts, 'pull-request-merged-status-counts')
-
     """
-    @api {get} /repo-groups/:repo_group_id/pull-request-closed-no-merge Pull Request Closed but not merged(Repo)
-    @apiName pull-request-closed-no-merge
+    @api {get} /repo-groups/:repo_group_id/pull-request-merged-status-counts Pull Request merged status counts(Repo)
+    @apiName pull-request-merged-status-counts
     @apiGroup Experimental
-    @apiDescription Timeseries of pull request which were closed but not merged
+    @apiDescription Merged status counts with time frame
     @apiParam {string} repo_group_id Repository Group ID.
     @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
     @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string= day, week, month, year} [group_by= month] Group By specification. E.g. values: 'day', 'week', 'month', or 'year'
     @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "date": "2019-01-01T00:00:00.000Z",
-                            "pr_count": 3
+                            "merged_status": "Merged"
+                            "repo_id": 26214
+                            "repo_name": "RIOT"
+                            "repo_group_id": 25159
+                            "repo_group_name": "Competitors"
+                            "closed_year": 2013.0,
+                            "closed_month": 2.0
+                            "pull_request_count": 1
                         }
                     ]
     """
     server.addRepoGroupMetric(metrics.pull_request_merged_status_counts, 'pull-request-merged-status-counts')
+
 
