@@ -1,15 +1,15 @@
 #!/bin/bash
-set -euo pipefail
+set -eo pipefail
 
-echo
-echo "**********************************"
 echo "Building API documentation..."
 echo "**********************************"
 echo
 
+npm install apidoc;
+
 cd docs
 
-apidoc -f "\.py" -i ../augur/ -o api/
+npx apidoc -f "\.py" -i ../augur/ -o api/
 
 rm -rf ../frontend/public/api_docs/*
 

@@ -14,6 +14,8 @@ The collection of the ``augur db`` commands is for interacting with the database
   * ``add-repos filename.csv``
   * ``get-repo-groups``
   * ``update-repo-directory REPO_DIRECTORY``
+  * ``generate-api-key``
+  * ``get-api-key``
   * ``print-db-version``
   * ``upgrade-db-version``
   * ``create-schema``
@@ -110,6 +112,35 @@ Example usage\:
   > Successfully updated the Facade worker repo directory.
 
 
+``generate-api-key``
+-------------------------
+The ``generate-api-key`` command will generate a new Augur API key and update the database with the new key. Output is the generated key.
+
+Example usage\:
+
+.. code-block:: bash
+
+  # to generate a key
+  $ augur db generate-api-key
+
+  # successful output looks like (this will be an actual key):
+  > some_new_key_abc_123
+
+
+``get-api-key``
+-------------------------
+The ``get-api-key`` command will return the API key of the currently configured database. Output is the API key.
+
+Example usage\:
+
+.. code-block:: bash
+
+  # to retrieve the key
+  $ augur db get-api-key
+
+  # successful output looks like (this will be an actual key):
+  > some_existing_key_def_456
+
 
 ``print-db-version``
 -------------------------
@@ -123,7 +154,7 @@ Example usage\:
   $ augur db print-db-version
 
   # successful output looks like:
-  > Augur DB version: 12
+  > 15
 
 
 ``upgrade-db-version``

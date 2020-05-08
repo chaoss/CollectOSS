@@ -70,57 +70,59 @@ class Housekeeper:
             # Waiting for compatible worker
             while True:
                 if not compatible_worker_found:
-                    # logging.info(list(broker._getvalue().keys()))
                     for worker in list(broker._getvalue().keys()):
                         if job['model'] in broker[worker]['models'] and job['given'] in broker[worker]['given']:
                             compatible_worker_found = True
-                if compatible_worker_found:
-                    logging.info("Housekeeper recognized that the broker has a worker that " + 
-                        "can handle the {} model... beginning to distribute maintained tasks\n".format(job['model']))
-                    while True:
-                        logging.info('Housekeeper updating {} model with given {}...\n'.format(
-                            job['model'], job['given'][0]))
-                        
-                        if job['given'][0] == 'git_url' or job['given'][0] == 'github_url':
-                            for repo in job['repos']:
-                                if job['given'][0] == 'github_url' and 'github.com' not in repo['repo_git']:
-                                    continue
-                                given_key = 'git_url' if job['given'][0] == 'git_url' else 'github_url'
-                                task = {
-                                    "job_type": job['job_type'] if 'job_type' in job else 'MAINTAIN', 
-                                    "models": [job['model']], 
-                                    "display_name": "{} model for url: {}".format(job['model'], repo['repo_git']),
-                                    "given": {}
-                                }
-                                task['given'][given_key] = repo['repo_git']
-                                if "focused_task" in repo:
-                                    task["focused_task"] = repo['focused_task']
-                                try:
-                                    requests.post('http://{}:{}/api/unstable/task'.format(
-                                        broker_host,broker_port), json=task, timeout=10)
-                                except Exception as e:
-                                    logging.info("Error encountered: {}\n".format(e))
+                    time.sleep(3)
+                    continue
 
-                                time.sleep(15)
-                        elif job['given'][0] == 'repo_group':
+                logging.info("Housekeeper recognized that the broker has a worker that " + 
+                    "can handle the {} model... beginning to distribute maintained tasks\n".format(job['model']))
+                while True:
+                    logging.info('Housekeeper updating {} model with given {}...\n'.format(
+                        job['model'], job['given'][0]))
+                    
+                    if job['given'][0] == 'git_url' or job['given'][0] == 'github_url':
+                        for repo in job['repos']:
+                            if job['given'][0] == 'github_url' and 'github.com' not in repo['repo_git']:
+                                continue
+                            given_key = 'git_url' if job['given'][0] == 'git_url' else 'github_url'
                             task = {
-                                    "job_type": job['job_type'] if 'job_type' in job else 'MAINTAIN', 
-                                    "models": [job['model']], 
-                                    "display_name": "{} model for repo group id: {}".format(job['model'], repo_group_id),
-                                    "given": {
-                                        "repo_group": job['repos']
-                                    }
-                                }
+                                "job_type": job['job_type'] if 'job_type' in job else 'MAINTAIN', 
+                                "models": [job['model']], 
+                                "display_name": "{} model for url: {}".format(job['model'], repo['repo_git']),
+                                "given": {}
+                            }
+                            task['given'][given_key] = repo['repo_git']
+                            if "focused_task" in repo:
+                                task["focused_task"] = repo['focused_task']
                             try:
                                 requests.post('http://{}:{}/api/unstable/task'.format(
                                     broker_host,broker_port), json=task, timeout=10)
                             except Exception as e:
                                 logging.info("Error encountered: {}\n".format(e))
 
-                        logging.info("Housekeeper finished sending {} tasks to the broker for it to distribute to your worker(s)\n".format(len(job['repos'])))
-                        time.sleep(job['delay'])
-                    break
-                time.sleep(3)
+                            logging.info(task)
+
+                            time.sleep(15)
+
+                    elif job['given'][0] == 'repo_group':
+                        task = {
+                                "job_type": job['job_type'] if 'job_type' in job else 'MAINTAIN', 
+                                "models": [job['model']], 
+                                "display_name": "{} model for repo group id: {}".format(job['model'], repo_group_id),
+                                "given": {
+                                    "repo_group": job['repos']
+                                }
+                            }
+                        try:
+                            requests.post('http://{}:{}/api/unstable/task'.format(
+                                broker_host,broker_port), json=task, timeout=10)
+                        except Exception as e:
+                            logging.info("Error encountered: {}\n".format(e))
+
+                    logging.info("Housekeeper finished sending {} tasks to the broker for it to distribute to your worker(s)\n".format(len(job['repos'])))
+                    time.sleep(job['delay'])
                 
         except KeyboardInterrupt:
             os.kill(os.getpid(), 9)
@@ -257,11 +259,17 @@ class Housekeeper:
                         ORDER BY ratio_abs NULLS FIRST
                     """.format(where_condition)) if job['model'] == 'issues' and 'repo_group_id' in job else s.sql.text(""" 
                         SELECT repo_git, repo_id FROM repo {} ORDER BY repo_id ASC
-                    """.format(where_condition))
+                    """.format(where_condition)) if 'order' not in job else s.sql.text(""" 
+                        SELECT repo_git, repo.repo_id, count(*) as commit_count 
+                        FROM augur_data.repo left outer join augur_data.commits 
+                            on repo.repo_id = commits.repo_id 
+                        {}
+                        group by repo.repo_id ORDER BY commit_count {}
+                    """.format(where_condition, job['order']))
                 
                 reorganized_repos = pd.read_sql(repo_url_sql, self.db, params={})
                 if len(reorganized_repos) == 0:
-                    logging.info("Trying to send tasks for repo group, but the repo group does not contain any repos: {}".format(repoUrlSQL))
+                    logging.info("Trying to send tasks for repo group, but the repo group does not contain any repos: {}".format(repo_url_sql))
                     job['repos'] = []
                     continue
 

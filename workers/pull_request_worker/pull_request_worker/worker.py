@@ -7,6 +7,7 @@ import sqlalchemy as s
 from sqlalchemy import MetaData
 from sqlalchemy.ext.automap import automap_base
 from workers.standard_methods import *
+from sqlalchemy.sql.expression import bindparam
 
 class GHPullRequestWorker:
     """
@@ -41,8 +42,8 @@ class GHPullRequestWorker:
             "location": self.config['location'],
             "qualifications":  [
                 {
-                    "given": [["github_url"]],
-                    "models":["pull_requests", 'pull_request_commits']
+                    "given": [['github_url']],
+                    "models":['pull_requests', 'pull_request_commits', 'pull_request_files']
                 }
             ],
             "config": [self.config]
@@ -69,7 +70,8 @@ class GHPullRequestWorker:
         metadata.reflect(self.db, only=['contributors', 'pull_requests',
             'pull_request_assignees', 'pull_request_events', 'pull_request_labels',
             'pull_request_message_ref', 'pull_request_meta', 'pull_request_repo',
-            'pull_request_reviewers', 'pull_request_teams', 'message', 'pull_request_commits'])
+            'pull_request_reviewers', 'pull_request_teams', 'message', 'pull_request_commits',
+            'pull_request_files'])
 
         helper_metadata.reflect(self.helper_db, only=['worker_history', 'worker_job', 'worker_oauth'])
 
@@ -91,6 +93,7 @@ class GHPullRequestWorker:
         self.pull_request_teams_table = Base.classes.pull_request_teams.__table__
         self.message_table = Base.classes.message.__table__
         self.pull_request_commits_table = Base.classes.pull_request_commits.__table__
+        self.pull_request_files_table = Base.classes.pull_request_files.__table__
 
         self.history_table = HelperBase.classes.worker_history.__table__
         self.job_table = HelperBase.classes.worker_job.__table__
@@ -114,6 +117,15 @@ class GHPullRequestWorker:
 
         # Send broker hello message
         connect_to_broker(self)
+
+        # self.pull_requests_graphql({
+        #     'job_type': 'MAINTAIN', 
+        #     'models': ['pull_request_files'], 
+        #     'display_name': 'pull_request_files model for url: https://github.com/zephyrproject-rtos/actions_sandbox.git', 
+        #     'given': {
+        #         'github_url': 'https://github.com/zephyrproject-rtos/actions_sandbox.git'
+        #     }
+        # }, 25201)
 
     def update_config(self, config):
         """ Method to update config and set a default
@@ -200,11 +212,258 @@ class GHPullRequestWorker:
             try:
                 if message['models'][0] == 'pull_requests':
                     self.pull_requests_model(message, repo_id)
-                if message['models'][0] == 'pull_request_commits':
+                elif message['models'][0] == 'pull_request_commits':
                     self.pull_request_commits_model(message, repo_id)
+                elif message['models'][0] == 'pull_request_files':
+                    self.pull_requests_graphql(message, repo_id)
             except Exception as e:
                 register_task_failure(self, message, repo_id, e)
                 pass
+
+    def graphql_paginate(self, query, data_subjects, before_parameters=None):
+        """ Paginate a GitHub GraphQL query backwards
+
+        :param query: A string, holds the GraphQL query
+        :rtype: A Pandas DataFrame, contains all data contained in the pages
+        """
+
+        logging.info(f'Start paginate with params: \n{data_subjects} '
+            f'\n{before_parameters}')
+
+        def all_items(dictionary):
+            for key, value in dictionary.items():
+                if type(value) is dict:
+                    yield (key, value)
+                    yield from all_items(value)
+                else:
+                    yield (key, value)
+
+        if not before_parameters:
+            before_parameters = {}
+            for subject, _ in all_items(data_subjects):
+                before_parameters[subject] = ''
+
+        start_cursor = None
+        has_previous_page = True
+        base_url = 'https://api.github.com/graphql'
+        tuples = []
+
+        def find_root_of_subject(data, key_subject):
+            key_nest = None
+            for subject, nest in data.items():
+                if key_subject in nest: 
+                    key_nest = nest[key_subject]
+                    break
+                elif type(nest) == dict:
+                    return find_root_of_subject(nest, key_subject)
+            else:
+                raise KeyError
+            return key_nest
+            
+        for data_subject, nest in data_subjects.items():
+
+            logging.info(f'Beginning paginate process for field {data_subject} '
+                f'for query: {query}')
+
+            page_count = 0
+            while has_previous_page:
+
+                page_count += 1
+
+                num_attempts = 3
+                success = False
+
+                for attempt in range(num_attempts):
+                    logging.info(f'Attempt #{attempt + 1} for hitting GraphQL endpoint '
+                        f'page number {page_count}\n')
+
+                    response = requests.post(base_url, json={'query': query.format(
+                        **before_parameters)}, headers=self.headers)
+
+                    update_gh_rate_limit(self, response)
+
+                    try:
+                        data = response.json()
+                    except:
+                        data = json.loads(json.dumps(response.text))
+
+                    if 'errors' in data:
+                        logging.info("Error!: {}".format(data['errors']))
+                        if data['errors'][0]['type'] == 'RATE_LIMITED':
+                            update_gh_rate_limit(self, response)
+                            num_attempts -= 1
+                        continue
+                        
+
+                    if 'data' in data:
+                        success = True
+                        root = find_root_of_subject(data, data_subject)
+                        page_info = root['pageInfo']
+                        data = root['edges']
+                        break
+                    else:
+                        logging.info("Request returned a non-data dict: {}\n".format(data))
+                        if data['message'] == 'Not Found':
+                            logging.info("Github repo was not found or does not exist for endpoint: {}\n".format(base_url))
+                            break
+                        if data['message'] == 'You have triggered an abuse detection mechanism. Please wait a few minutes before you try again.':
+                            num_attempts -= 1
+                            update_gh_rate_limit(self, response, temporarily_disable=True)
+                        if data['message'] == 'Bad credentials':
+                            update_gh_rate_limit(self, response, bad_credentials=True)
+
+                if not success:
+                    logging.info('GraphQL query failed: {}'.format(query))
+                    continue
+
+                before_parameters.update({
+                    data_subject: ', before: \"{}\"'.format(page_info['startCursor'])
+                })
+                has_previous_page = page_info['hasPreviousPage']
+
+                tuples += data
+
+            logging.info(f'Paged through {page_count} pages and '
+                f'collected {len(tuples)} data points\n')
+
+            if not nest:
+                return tuples
+
+            return tuples + self.graphql_paginate(query, data_subjects[subject], 
+                before_parameters=before_parameters)
+
+
+    def pull_requests_graphql(self, task_info, repo_id):
+
+        owner, repo = get_owner_repo(task_info['given']['github_url'])
+
+        # query existing PRs and the respective url we will append the commits url to
+        pr_number_sql = s.sql.text("""
+            SELECT DISTINCT pr_src_number as pr_src_number, pull_requests.pull_request_id
+            FROM pull_requests--, pull_request_meta
+            WHERE repo_id = {}
+        """.format(repo_id))
+        pr_numbers = pd.read_sql(pr_number_sql, self.db, params={})
+
+        pr_file_rows = []
+
+        for index, pull_request in enumerate(pr_numbers.itertuples()): 
+
+            logging.info(f'Querying files for pull request #{index + 1} of {len(pr_numbers)}')
+        
+            query = """
+                {{ 
+                  repository(owner:"%s", name:"%s"){{
+                    pullRequest (number: %s) {{
+                """ % (owner, repo, pull_request.pr_src_number) + """
+                      files (last: 100{files}) {{
+                        pageInfo {{
+                          hasPreviousPage
+                          hasNextPage
+                          endCursor
+                          startCursor
+                        }}
+                        edges {{
+                          node {{
+                            additions
+                            deletions
+                            path
+                          }}
+                        }}
+                      }}
+                    }}
+                  }}
+                }}
+            """ 
+
+            pr_file_rows += [{
+                'pull_request_id': pull_request.pull_request_id,
+                'pr_file_additions': pr_file['node']['additions'] + 5,
+                'pr_file_deletions': pr_file['node']['deletions'],
+                'pr_file_path': pr_file['node']['path'],
+                'tool_source': self.tool_source,
+                'tool_version': self.tool_version,
+                'data_source': 'GitHub API',
+            } for pr_file in self.graphql_paginate(query, {'files': None})]
+
+
+        # Get current table values
+        table_values_sql = s.sql.text("""
+            SELECT pull_request_files.* 
+            FROM pull_request_files, pull_requests
+            WHERE pull_request_files.pull_request_id = pull_requests.pull_request_id
+            AND repo_id = :repo_id
+        """)
+        logging.info(f'Getting table values with the following PSQL query: \n{table_values_sql}\n')
+        table_values = pd.read_sql(table_values_sql, self.db, params={'repo_id': repo_id})
+
+        # Compare queried values against table values for dupes/updates
+        if len(pr_file_rows) > 0:
+            table_columns = pr_file_rows[0].keys()
+        else:
+            logging.info(f'No rows need insertion for repo {repo_id}\n')
+            register_task_completion(self, task_info, repo_id, 'pull_request_files')
+
+        # Compare queried values against table values for dupes/updates
+        pr_file_rows_df = pd.DataFrame(pr_file_rows)
+        pr_file_rows_df = pr_file_rows_df.dropna(subset=['pull_request_id'])
+        pr_file_rows_df['need_update'] = 0
+
+        dupe_columns = ['pull_request_id', 'pr_file_path']
+        update_columns = ['pr_file_additions', 'pr_file_deletions']
+
+        logging.info(f'{pr_file_rows_df}')
+        logging.info(f'{table_values}')
+        need_insertion = pr_file_rows_df.merge(table_values, suffixes=('','_table'),
+                            how='outer', indicator=True, on=dupe_columns).loc[
+                                lambda x : x['_merge']=='left_only'][table_columns]
+
+        need_updates = pr_file_rows_df.merge(table_values, on=dupe_columns, suffixes=('','_table'), 
+                        how='inner',indicator=False)[table_columns].merge(table_values, 
+                            on=update_columns, suffixes=('','_table'), how='outer',indicator=True
+                                ).loc[lambda x : x['_merge']=='left_only'][table_columns]
+
+
+        need_updates['b_pull_request_id'] = need_updates['pull_request_id'] 
+        need_updates['b_pr_file_path'] = need_updates['pr_file_path'] 
+
+        pr_file_insert_rows = need_insertion.to_dict('records')
+        pr_file_update_rows = need_updates.to_dict('records')
+
+        logging.info(f'Repo id {repo_id} needs {len(need_insertion)} insertions and '
+            f'{len(need_updates)} updates.\n')
+
+        if len(pr_file_update_rows) > 0:
+            success = False
+            while not success:
+                try:
+                    self.db.execute(
+                        self.pull_request_files_table.update().where(
+                            self.pull_request_files_table.c.pull_request_id == bindparam('b_pull_request_id') and
+                            self.pull_request_files_table.c.pr_file_path == bindparam('b_pr_file_path')).values(
+                                pr_file_additions=bindparam('pr_file_additions'), 
+                                pr_file_deletions=bindparam('pr_file_deletions')),
+                        pr_file_update_rows
+                    )
+                    success = True
+                except Exception as e:
+                    logging.info('error: {}'.format(e))
+                time.sleep(5)
+
+        if len(pr_file_insert_rows) > 0:
+            success = False
+            while not success:
+                try:
+                    self.db.execute(
+                        self.pull_request_files_table.insert(),
+                        pr_file_insert_rows
+                    )
+                    success = True
+                except Exception as e:
+                    logging.info('error: {}'.format(e))
+                time.sleep(5)
+
+        register_task_completion(self, task_info, repo_id, 'pull_request_files')
 
     def pull_request_commits_model(self, task_info, repo_id):
         """ Queries the commits related to each pull request already inserted in the db """
@@ -243,7 +502,6 @@ class GHPullRequestWorker:
                     result = self.db.execute(self.pull_request_commits_table.insert().values(pr_commit_row))
                     logging.info(f"Inserted Pull Request Commit: {result.inserted_primary_key}\n")
 
-        # helper method to sync completion to broker and db
         register_task_completion(self, task_info, repo_id, 'pull_request_commits')
 
     def pull_requests_model(self, entry_info, repo_id):
