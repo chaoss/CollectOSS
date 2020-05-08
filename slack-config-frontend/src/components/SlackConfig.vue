@@ -114,7 +114,7 @@ export default {
 
       console.log(requestObject);
 
-      fetch("http://localhost:5000/auggie/update_tracking", {
+      fetch("http://auggie.augurlabs.io/auggie/update_tracking", {
         method: "POST", 
         headers: {
           "Content-Type": "application/json"
