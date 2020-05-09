@@ -439,7 +439,7 @@ def slack_login(metric, body):
     print("slack_login")
 
     r = requests.get(
-        url=f'https://slack.com/api/oauth.v2.access?code={body["code"]}&client_id={os.environ["AUGGIE_CLIENT_ID"]}&client_secret={os.environ["AUGGIE_CLIENT_SECRET"]}&redirect_uri=http%3A%2F%2Flocalhost%3A8080')
+        url=f'https://slack.com/api/oauth.v2.access?code={body["code"]}&client_id={os.environ["AUGGIE_CLIENT_ID"]}&client_secret={os.environ["AUGGIE_CLIENT_SECRET"]}&redirect_uri=http%3A%2F%2Fauggie.augurlabs.io')
     data = r.json()
 
     if (data["ok"]):

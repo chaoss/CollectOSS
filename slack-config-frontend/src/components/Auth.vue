@@ -25,7 +25,7 @@ export default {
     let requestObject = {
       code
     };
-    fetch("http://auggie.augurlabs.io/auggie/slack_login", {
+    fetch("http://auggie.augurlabs.io:5446/auggie/slack_login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"

@@ -12,7 +12,7 @@
     <aug-button text="Submit" @click="submit" class="aug-button"/> -->
     <img src="../assets/auggie.png" alt="" class="logo">
     <h1>Auggie SlackBot Configuration</h1>
-    <a href="https://slack.com/oauth/v2/authorize?user_scope=identity.basic,identity.email,identity.team&client_id=370453254753.908657290918&redirect_uri=http%3A%2F%2Flocalhost%3A8080" target="_blank"><img src="https://api.slack.com/img/sign_in_with_slack.png" class="slack-button"/></a>
+    <a href="https://slack.com/oauth/v2/authorize?user_scope=identity.basic,identity.email,identity.team&client_id=370453254753.908657290918&redirect_uri=http%3A%2F%2Fauggie.augurlabs.io" target="_blank"><img src="https://api.slack.com/img/sign_in_with_slack.png" class="slack-button"/></a>
   </div>
 </template>
 

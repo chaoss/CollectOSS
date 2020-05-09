@@ -4,8 +4,21 @@
       <div>
         <img src="../assets/auggie.png" alt class="auggie-logo" />
         <h1>Auggie Configuration</h1>
+        <i class="far fa-question-circle fa-2x help" @click="showHelp()"></i>
       </div>
       <div>
+	<a target="_blank" 
+          href="https://slack.com/oauth/v2/authorize?client_id=370453254753.908657290918&scope=app_mentions:read,channels:read,chat:write,dnd:read,groups:read,im:history,im:read,im:write,reactions:read,reactions:write,team:read,users.profile:read,users:read,users:read.email,users:write&user_scope=im:read,im:write,team:read,users:read,users:read.email,chat:write"
+        >
+          <img
+            alt="Add to Slack"
+            height="40"
+            width="139"
+            src="https://platform.slack-edge.com/img/add_to_slack.png"
+            srcset="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x"
+            class="add-button"
+          />
+        </a>
           <aug-text-input text="" placeholder="Augur Host Url..." @valueUpdated="setHost" ref="hostInput"/>
           <aug-button text="Apply" @click="refreshRepos()"/>
           <!-- <p>{{ teamName }}</p>
@@ -57,7 +70,7 @@ export default {
       this.$router.push("login");
     }
     if (this.augurHost === "null") {
-      window.alert("It looks like this is your first time configuring Auggie, make sure to tell Auggie 'start tracking repositories' in your slack workspace and to specify your Augur url in the top right of this page.");
+      window.alert("It looks like this is your first time configuring Auggie, Please follow these steps to set everything up. 1) Click 'Add to Slack' on the top of the page. 2) tell Auggie in your Slack workspace to 'start tracking my repos'. 3) Specify the url to your instance of Augur in the text-box in the top right corner of this page.");
     }
     else {
       this.$refs.hostInput.value = this.augurHost
@@ -70,6 +83,11 @@ export default {
     }
   }, 
   methods: {
+    showHelp() {
+      window.alert(
+        "Please follow these steps to set Auggie up. 1) Click 'Add to Slack' on the top of the page. 2) tell Auggie in your Slack workspace to 'start tracking my repos'. 3) Specify the url to your instance of Augur in the text-box in the top right corner of this page."
+      );
+    },
     refreshRepos() {
       this.$refs.repoColumns.refreshRepos(this.augurHost)
     }, 
@@ -114,7 +132,7 @@ export default {
 
       console.log(requestObject);
 
-      fetch("http://auggie.augurlabs.io/auggie/update_tracking", {
+      fetch("http://auggie.augurlabs.io:5446/auggie/update_tracking", {
         method: "POST", 
         headers: {
           "Content-Type": "application/json"
@@ -179,5 +197,25 @@ export default {
   height: 50px;
   border-radius: 10px !important;
   border: 1px solid lightgrey;
+}
+
+.add-button {
+  border-radius: 5px;
+  transition: box-shadow .3s ease;
+}
+
+.add-button:hover {
+  box-shadow: 0 0 5px grey;
+}
+
+.help {
+  color: var(--light-blue);
+  transition: text-shadow 0.3s ease;
+  margin-left: 1rem;
+}
+
+.help:hover {
+  text-shadow: 0 0 5px grey;
+  cursor: pointer;
 }
 </style>
