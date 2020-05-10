@@ -166,8 +166,8 @@ export default {
               teamID: requestObject.teamID,
               email: requestObject.email,
               maxMessages: Number(trackingOptions.maxMessages),
-              trackedRepos: requestObject.trackedRepos,
-              trackedInsights: requestObject.trackedInsights,
+              trackedRepos: requestObject.repos,
+              trackedInsights: requestObject.insightTypes,
               host: requestObject.host
             })
           );
