@@ -29,7 +29,7 @@
       <p>Max Messages Per Day: </p>
       <aug-text-input text="" placeholder="" class="frequency-text-input" @valueUpdated="setMaxMessages" :number="true" :initial="initialMaxMessages"/>
     </div>
-    <aug-button text="Save" class="save-button" @click="$emit('save', trackingOptions)"/>
+    <aug-button text="Save Auggie Options" class="save-button" @click="$emit('save', trackingOptions)"/>
   </div>
 </template>
 

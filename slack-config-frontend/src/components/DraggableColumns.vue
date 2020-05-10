@@ -98,7 +98,6 @@ export default {
     },
     refreshRepos(host) {
       this.augurHost = host;
-      console.log(host);
       this.hostRepos = [];
       this.trackedRepos = [];
       this.isLoading = true;
@@ -115,7 +114,6 @@ export default {
           if (res == null) {
             return;
           } else {
-            console.log(res);
             this.hostRepos = res.map(repo => {
               return {
                 url: repo.url,
@@ -123,10 +121,8 @@ export default {
                 repo_id: repo.repo_id
               };
             });
-            // console.log(this);
             this.hostRepos.forEach(repo => {
               if (this.$props.initialTrackedRepos.includes(repo.url)) {
-                console.log("match");
                 this.trackedRepos.push(repo);
               }
             });
@@ -134,9 +130,6 @@ export default {
           }
         });
     }
-  },
-  mounted() {
-    // this.refreshRepos();
   },
   data() {
     return {

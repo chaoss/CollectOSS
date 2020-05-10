@@ -7,31 +7,47 @@
         <i class="far fa-question-circle fa-2x help" @click="showHelp()"></i>
       </div>
       <div>
-	<a target="_blank" 
-          href="https://slack.com/oauth/v2/authorize?client_id=370453254753.908657290918&scope=app_mentions:read,channels:read,chat:write,dnd:read,groups:read,im:history,im:read,im:write,reactions:read,reactions:write,team:read,users.profile:read,users:read,users:read.email,users:write&user_scope=im:read,im:write,team:read,users:read,users:read.email,chat:write"
-        >
-          <img
-            alt="Add to Slack"
-            height="40"
-            width="139"
-            src="https://platform.slack-edge.com/img/add_to_slack.png"
-            srcset="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x"
-            class="add-button"
-          />
-        </a>
-          <aug-text-input text="" placeholder="Augur Host Url..." @valueUpdated="setHost" ref="hostInput"/>
-          <aug-button text="Apply" @click="refreshRepos()"/>
-          <!-- <p>{{ teamName }}</p>
-          <img :src="teamImage" alt="" class="team-logo"/> -->
+        <aug-text-input
+          text
+          placeholder="Augur Host Url..."
+          @valueUpdated="setHost"
+          ref="hostInput"
+        />
+        <aug-button text="Apply" @click="refreshRepos()" />
+        <!-- <p>{{ teamName }}</p>
+        <img :src="teamImage" alt="" class="team-logo"/>-->
       </div>
     </div>
     <div class="slack-config-content">
-      <draggable-columns ref="repoColumns" :initialTrackedRepos="initialTrackedRepos.map(r => r.S)" />
+      <draggable-columns
+        ref="repoColumns"
+        :initialTrackedRepos="initialTrackedRepos.map(r => r.S)"
+      />
       <tracking-options
         @save="save"
         :initialTrackedInsights="initialTrackedInsights"
         :initialMaxMessages="initialMaxMessages"
       />
+    </div>
+    <div id="footer">
+      <aug-button text="Logout" @click="logout()" />
+      <div>
+        <a href="http://augurlabs.io" target="_blank">Augur Labs</a> |
+        <a href="https://github.com/augurlabs/auggie/issues" target="_blank">Report Issues</a>
+      </div>
+      <a
+        target="_blank"
+        href="https://slack.com/oauth/v2/authorize?client_id=370453254753.908657290918&scope=app_mentions:read,channels:read,chat:write,dnd:read,groups:read,im:history,im:read,im:write,reactions:read,reactions:write,team:read,users.profile:read,users:read,users:read.email,users:write&user_scope=im:read,im:write,team:read,users:read,users:read.email,chat:write"
+      >
+        <img
+          alt="Add to Slack"
+          height="40"
+          width="139"
+          src="https://platform.slack-edge.com/img/add_to_slack.png"
+          srcset="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x"
+          class="add-button"
+        />
+      </a>
     </div>
   </div>
 </template>
@@ -54,46 +70,50 @@ export default {
   ],
   components: {
     DraggableColumns,
-    TrackingOptions, 
+    TrackingOptions,
     AugTextInput,
     AugButton
   },
   mounted() {
-    console.log(this.props);
     if (
       !this.$props.initialMaxMessages ||
       !this.$props.initialTrackedInsights ||
       !this.$props.email ||
-      !this.$props.teamID || 
+      !this.$props.teamID ||
       !this.$props.host
     ) {
       this.$router.push("login");
     }
     if (this.augurHost === "null") {
-      window.alert("It looks like this is your first time configuring Auggie, Please follow these steps to set everything up. 1) Click 'Add to Slack' on the top of the page. 2) tell Auggie in your Slack workspace to 'start tracking my repos'. 3) Specify the url to your instance of Augur in the text-box in the top right corner of this page.");
-    }
-    else {
-      this.$refs.hostInput.value = this.augurHost
+      window.alert(
+        "It looks like this is your first time configuring Auggie, Please follow these steps to set everything up. \n\n1) Click 'Add to Slack' on the bottom right of this page. \n2) tell Auggie in your Slack workspace to 'start tracking my repos'. \n3) Specify the url to your instance of Augur in the text-box in the top right corner of this page."
+      );
+    } else {
+      this.$refs.hostInput.value = this.augurHost;
       this.$refs.repoColumns.refreshRepos(this.augurHost);
     }
   },
   data() {
     return {
       augurHost: this.host
-    }
-  }, 
+    };
+  },
   methods: {
     showHelp() {
       window.alert(
-        "Please follow these steps to set Auggie up. 1) Click 'Add to Slack' on the top of the page. 2) tell Auggie in your Slack workspace to 'start tracking my repos'. 3) Specify the url to your instance of Augur in the text-box in the top right corner of this page."
+        "Please follow these steps to set Auggie up. \n\n1) Click 'Add to Slack' on the bottom right of this page. \n2) tell Auggie in your Slack workspace to 'start tracking my repos'. \n3) Specify the url to your instance of Augur in the text-box in the top right corner of this page."
       );
     },
     refreshRepos() {
-      this.$refs.repoColumns.refreshRepos(this.augurHost)
-    }, 
+      this.$refs.repoColumns.refreshRepos(this.augurHost);
+    },
     setHost(newValue) {
       this.augurHost = newValue;
-    }, 
+    },
+    logout() {
+      localStorage.removeItem("__auggie__cache");
+      this.$router.push("login");
+    },
     save(trackingOptions) {
       console.log(trackingOptions);
       let maxMessages = Number(trackingOptions.maxMessages);
@@ -106,41 +126,51 @@ export default {
         insightTypes: [],
         maxMessages: String(maxMessages),
         repos: [],
-        groups: [],  
-        host: this.augurHost, 
-        email: this.email, 
+        groups: [],
+        host: this.augurHost,
+        email: this.email,
         teamID: this.teamID
       };
       if (trackingOptions.trackedInsights.commitCount) {
-        requestObject.insightTypes.push({"S": "code-changes"});
+        requestObject.insightTypes.push({ S: "code-changes" });
       }
       if (trackingOptions.trackedInsights.issueCount) {
-        requestObject.insightTypes.push({"S": "issues-new"});
+        requestObject.insightTypes.push({ S: "issues-new" });
       }
       if (trackingOptions.trackedInsights.pullRequestCount) {
-        requestObject.insightTypes.push({"S": "reviews"});
+        requestObject.insightTypes.push({ S: "reviews" });
       }
       if (trackingOptions.trackedInsights.newContributors) {
-        requestObject.insightTypes.push({"S": "contributors-new"});
+        requestObject.insightTypes.push({ S: "contributors-new" });
       }
       if (trackingOptions.trackedInsights.linesChanged) {
-        requestObject.insightTypes.push({"S": "code-changes-lines"});
+        requestObject.insightTypes.push({ S: "code-changes-lines" });
       }
       this.$refs.repoColumns.trackedRepos.forEach(repo => {
-        requestObject.repos.push({ "S": repo.url });
+        requestObject.repos.push({ S: repo.url });
       });
 
       console.log(requestObject);
 
       fetch("http://auggie.augurlabs.io:5446/auggie/update_tracking", {
-        method: "POST", 
+        method: "POST",
         headers: {
           "Content-Type": "application/json"
-        }, 
+        },
         body: JSON.stringify(requestObject)
-      })
-      .then(res => {
+      }).then(res => {
         if (res.status === 200) {
+          localStorage.setItem(
+            "__auggie__cache",
+            JSON.stringify({
+              teamID: requestObject.teamID,
+              email: requestObject.email,
+              maxMessages: Number(trackingOptions.maxMessages),
+              trackedRepos: requestObject.trackedRepos,
+              trackedInsights: requestObject.trackedInsights,
+              host: requestObject.host
+            })
+          );
           window.alert("settings saved");
         } else {
           window.alert("unable to save settings");
@@ -201,7 +231,7 @@ export default {
 
 .add-button {
   border-radius: 5px;
-  transition: box-shadow .3s ease;
+  transition: box-shadow 0.3s ease;
 }
 
 .add-button:hover {
@@ -217,5 +247,13 @@ export default {
 .help:hover {
   text-shadow: 0 0 5px grey;
   cursor: pointer;
+}
+
+#footer {
+  display: flex;
+  justify-content: space-between;
+  width: 95vw;
+  margin: auto;
+  margin-top: 1.5rem;
 }
 </style>
