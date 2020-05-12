@@ -281,3 +281,12 @@ def create_util_routes(server):
                     ]
     """
     server.addRepoMetric(metrics.aggregate_summary, 'aggregate-summary')
+
+    @server.app.route('/{}/api-port'.format(server.api_version))
+    def api_port():
+        drs = server.transform(metrics.api_port)
+        return Response(response=drs,
+                        status=200,
+                        mimetype="application/json")
+    server.updateMetricMetadata(function=metrics.api_port, endpoint='/{}/api-port'.format(server.api_version), metric_type='git')
+    

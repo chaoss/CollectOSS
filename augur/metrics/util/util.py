@@ -360,5 +360,9 @@ def aggregate_summary(self, repo_group_id, repo_id=None, begin_date=None, end_da
                                                         'begin_date': begin_date, 'end_date': end_date})
         return results
 
+@annotate(tag="api-port")
+def api_port(self):
+    return [{'port': self.app.read_config('Server', 'port')}]
+
 def create_util_metrics(metrics):
     add_metrics(metrics, __name__)
