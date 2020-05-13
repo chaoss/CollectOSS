@@ -114,18 +114,16 @@ class Application(object):
         :param section: location of given variable
         :param name: name of variable
         """
-        if section is not None:
-            value = self.config[section]
-            if name is not None:
-                try:
-                    value = self.config[section][name]
-                except KeyError as e:
-                    pass
+        if name is not None:
+            try:
+                value = self.config[section][name]
+            except KeyError as e:
+                value = default_config[section][name]
         else:
-            value = None
-
-        if self.config['Development']['log_level'] == "DEBUG":
-            logger.debug('{}:{} = {}'.format(section, name, value))
+            try:
+                value = self.config[section]
+            except KeyError as e:
+                value = default_config[section]
 
         return value
 
@@ -146,11 +144,8 @@ class Application(object):
         if sub_config is None:
             sub_config = self.config
 
-        if os.getenv(environment_variable) is not None:
-            if section is not None and name is not None:
-                sub_config[section][name] = os.getenv(environment_variable)
-        try:
-            self.env_config[environment_variable] = os.getenv(environment_variable, sub_config[section][name])
-        except KeyError as e:
-            logger.warn(environment_variable + " has no default value. Skipping...")
+        env_value = os.getenv(environment_variable)
 
+        if env_value is not None:
+            self.env_config[environment_variable] = env_value
+            sub_config[section][name] = env_value
