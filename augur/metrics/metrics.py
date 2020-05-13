@@ -1,28 +1,30 @@
+import os
+import glob
 import sys
 import inspect
 import types
-
+import importlib
 from augur import logger
-
-import augur.metrics.commit
-import augur.metrics.contributor
-import augur.metrics.experimental
-import augur.metrics.insight
-import augur.metrics.issue
-import augur.metrics.message
-import augur.metrics.platform
-import augur.metrics.pull_request
-import augur.metrics.repo_meta
 
 class Metrics():
     def __init__(self, app):
         self.database = app.database
         self.spdx_db = app.spdx_db
 
-        models = ["commit", "contributor", "experimental", "insight", "issue", "message", "platform", "pull_request", "repo_meta"]
+        models = [] #TODO: standardize this
+        for filename in glob.iglob("augur/metrics/**"):
+            file_id = get_file_id(filename)
+            if not file_id.startswith('__') and filename.endswith('.py') and file_id != "metrics":
+                models.append(file_id)
+
+        for model in models:
+            importlib.import_module(f"augur.metrics.{model}")
 
         for model in models:
             add_metrics(self, f"augur.metrics.{model}")
+
+def get_file_id(path):
+    return os.path.splitext(os.path.basename(path))[0]
 
 def add_metrics(metrics, module_name):
     # find all unbound endpoint functions objects 
@@ -33,3 +35,4 @@ def add_metrics(metrics, module_name):
         if inspect.isfunction(obj) == True:
             if hasattr(obj, 'metadata') == True:
                 setattr(metrics, name, types.MethodType(obj, metrics))
+

@@ -5,9 +5,9 @@ Metrics that provides data about issues & their associated activity
 import datetime
 import sqlalchemy as s
 import pandas as pd
-from augur.util import annotate
+from augur.util import register_metric
 
-@annotate(tag='issues-first-time-opened')
+@register_metric()
 def issues_first_time_opened(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
     """
     Returns a timeseries of the count of persons opening an issue for the first time.
@@ -78,7 +78,7 @@ def issues_first_time_opened(self, repo_group_id, repo_id=None, period='day', be
                                       'begin_date': begin_date, 'end_date': end_date})
     return results
 
-@annotate(tag='issues-first-time-closed')
+@register_metric()
 def issues_first_time_closed(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None, ):
     """
     Returns a timeseries of the count of persons closing an issue for the first time.
@@ -143,7 +143,7 @@ def issues_first_time_closed(self, repo_group_id, repo_id=None, period='day', be
 
     return results
 
-@annotate(tag='issues-new')
+@register_metric()
 def issues_new(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
     """Returns a timeseries of new issues opened.
 
@@ -199,7 +199,7 @@ def issues_new(self, repo_group_id, repo_id=None, period='day', begin_date=None,
                                                                'begin_date': begin_date, 'end_date': end_date})
         return results
 
-@annotate(tag='issues-active')
+@register_metric()
 def issues_active(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
     """Returns a timeseries of issues active.
 
@@ -256,7 +256,7 @@ def issues_active(self, repo_group_id, repo_id=None, period='day', begin_date=No
                                                                   'begin_date': begin_date, 'end_date':end_date})
         return results
 
-@annotate(tag='issues-closed')
+@register_metric()
 def issues_closed(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
     """Returns a timeseries of issues closed.
 
@@ -312,7 +312,7 @@ def issues_closed(self, repo_group_id, repo_id=None, period='day', begin_date=No
                                                                 'begin_date': begin_date, 'end_date': end_date})
         return results
 
-@annotate(tag='issue-duration')
+@register_metric()
 def issue_duration(self, repo_group_id, repo_id=None, begin_date=None, end_date=None):
     """Returns the duration of each issue.
 
@@ -376,7 +376,7 @@ def issue_duration(self, repo_group_id, repo_id=None, begin_date=None, end_date=
         results['duration'] = results['duration'].astype(str)
         return results
 
-@annotate(tag='issue-participants')
+@register_metric()
 def issue_participants(self, repo_group_id, repo_id=None, begin_date=None, end_date=None):
     """Returns number of participants per issue.
 
@@ -449,7 +449,7 @@ def issue_participants(self, repo_group_id, repo_id=None, begin_date=None, end_d
                                                                       'end_date': end_date})
         return result
 
-@annotate(tag='issue-backlog')
+@register_metric()
 def issue_backlog(self, repo_group_id, repo_id=None):
     """Returns number of issues currently open.
 
@@ -483,7 +483,7 @@ def issue_backlog(self, repo_group_id, repo_id=None):
         result = pd.read_sql(issue_backlog_SQL, self.database, params={'repo_id': repo_id})
         return result
 
-@annotate(tag='issue-throughput')
+@register_metric()
 def issue_throughput(self, repo_group_id, repo_id=None):
     """Returns the ratio of issues closed to total issues
 
@@ -527,7 +527,7 @@ def issue_throughput(self, repo_group_id, repo_id=None):
         result = pd.read_sql(issue_throughput_SQL, self.database, params={'repo_id': repo_id})
         return result
 
-@annotate(tag='issues-open-age')
+@register_metric()
 def issues_open_age(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
     """
     Retrun the age of open issues
@@ -579,7 +579,7 @@ def issues_open_age(self, repo_group_id, repo_id=None, period='day', begin_date=
 
     return results
 
-@annotate(tag='issues-closed-resolution-duration')
+@register_metric()
 def issues_closed_resolution_duration(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
     """
     Retrun Time duration of time for issues to be resolved
@@ -641,7 +641,7 @@ def issues_closed_resolution_duration(self, repo_group_id, repo_id=None, period=
 
     return results
 
-@annotate(tag='average-issue-resolution-time')
+@register_metric()
 def average_issue_resolution_time(self, repo_group_id, repo_id=None):
     """
     Returns the average issue resolution time
@@ -685,7 +685,7 @@ def average_issue_resolution_time(self, repo_group_id, repo_id=None):
                               params={'repo_id': repo_id})
         return results
 
-@annotate(tag='issues-maintainer-response-duration')
+@register_metric()
 def issues_maintainer_response_duration(self, repo_group_id, repo_id=None, begin_date=None, end_date=None):
 
     if not begin_date:
@@ -759,7 +759,7 @@ def issues_maintainer_response_duration(self, repo_group_id, repo_id=None, begin
 
     return results
 
-@annotate(tag='open-issues-count')
+@register_metric()
 def open_issues_count(self, repo_group_id, repo_id=None):
     """
     Returns number of lines changed per author per day
@@ -796,7 +796,7 @@ def open_issues_count(self, repo_group_id, repo_id=None):
         return results
 
 
-@annotate(tag='closed-issues-count')
+@register_metric()
 def closed_issues_count(self, repo_group_id, repo_id=None):
     """
     Returns number of lines changed per author per day
@@ -832,7 +832,7 @@ def closed_issues_count(self, repo_group_id, repo_id=None):
         results = pd.read_sql(closedIssueCountSQL, self.database, params={'repo_id': repo_id})
         return results
 
-@annotate(tag='issue-comments-mean')
+@register_metric()
 def issue_comments_mean(self, repo_group_id, repo_id=None, group_by='week'):
     group_by = group_by.lower()
 
@@ -948,7 +948,7 @@ def issue_comments_mean(self, repo_group_id, repo_id=None, group_by='week'):
                               params={'repo_id': repo_id})
         return results
 
-@annotate(tag='issue-comments-mean-std')
+@register_metric()
 def issue_comments_mean_std(self, repo_group_id, repo_id=None, group_by='week'):
     if not repo_id:
         issue_comments_mean_std_SQL = s.sql.text("""
@@ -1007,7 +1007,7 @@ def issue_comments_mean_std(self, repo_group_id, repo_id=None, group_by='week'):
                               params={'repo_id': repo_id, 'group_by': group_by})
         return results
 
-@annotate(tag='abandoned_issues')
+@register_metric()
 def abandoned_issues(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
     if not begin_date:
         begin_date = '1970-1-1 00:00:01'

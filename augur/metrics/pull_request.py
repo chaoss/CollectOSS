@@ -5,9 +5,9 @@ Metrics that provide data about pull requests & their associated activity
 import datetime
 import sqlalchemy as s
 import pandas as pd
-from augur.util import annotate
+from augur.util import register_metric
 
-@annotate(tag='pull-requests-merge-contributor-new')
+@register_metric()
 def pull_requests_merge_contributor_new(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
     """
     Returns a timeseries of the count of persons contributing with an accepted commit for the first time.
@@ -58,7 +58,7 @@ def pull_requests_merge_contributor_new(self, repo_group_id, repo_id=None, perio
                                       'end_date': end_date})
     return results
 
-@annotate(tag='pull-requests-closed-no-merge')
+@register_metric()
 def pull_requests_closed_no_merge(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
     """
     Returns a timeseries of the which were closed but not merged
@@ -106,7 +106,7 @@ def pull_requests_closed_no_merge(self, repo_group_id, repo_id=None, period='day
                                       'end_date': end_date})
     return results
 
-@annotate(tag='reviews')
+@register_metric()
 def reviews(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
     """ Returns a timeseris of new reviews or pull requests opened
 
@@ -164,7 +164,7 @@ def reviews(self, repo_group_id, repo_id=None, period='day', begin_date=None, en
                                       'begin_date': begin_date, 'end_date': end_date})
         return results
 
-@annotate(tag='reviews-accepted')
+@register_metric()
 def reviews_accepted(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
     """Returns a timeseries of number of reviews or pull requests accepted.
 
@@ -223,7 +223,7 @@ def reviews_accepted(self, repo_group_id, repo_id=None, period='day', begin_date
                                       'begin_date': begin_date, 'end_date': end_date})
         return results
 
-@annotate(tag='reviews-declined')
+@register_metric()
 def reviews_declined(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
     """ Returns a time series of reivews declined
 
@@ -282,7 +282,7 @@ def reviews_declined(self, repo_group_id, repo_id=None, period='day', begin_date
                                       'begin_date': begin_date, 'end_date': end_date})
         return results
 
-@annotate(tag='review-duration')
+@register_metric()
 def review_duration(self, repo_group_id, repo_id=None, begin_date=None, end_date=None):
     """ Returns the duration of each accepted review.
 
@@ -346,7 +346,7 @@ def review_duration(self, repo_group_id, repo_id=None, begin_date=None, end_date
         results['duration'] = results['duration'].astype(str)
         return results
 
-@annotate(tag='pull-request-acceptance-rate')
+@register_metric()
 def pull_request_acceptance_rate(self, repo_group_id, repo_id=None, begin_date=None, end_date=None, group_by='week'):
     """
     Timeseries of pull request acceptance rate (expressed as the ratio of pull requests merged on a date to the count of pull requests opened on a date)
@@ -427,7 +427,7 @@ def pull_request_acceptance_rate(self, repo_group_id, repo_id=None, begin_date=N
                                                         'begin_date': begin_date, 'end_date': end_date})
         return results
 
-@annotate(tag='pull-request-average-time-to-close')
+@register_metric()
 def pull_request_average_time_to_close(self, repo_group_id, repo_id=None, group_by='month', time_unit='hours', begin_date=None, end_date=None):
     """ Avegage time to close pull requests with merged_status and the time frame
 
@@ -536,7 +536,7 @@ def pull_request_average_time_to_close(self, repo_group_id, repo_id=None, group_
 
     return pr_avg_time_to_close
 
-@annotate(tag='pull-request-average-time-between-responses')
+@register_metric()
 def pull_request_average_time_between_responses(self, repo_group_id, repo_id=None, group_by='month', time_unit='hours', begin_date=None, end_date=None):
     """ Avegage time between responeses with merged_status and the time frame
 
@@ -547,6 +547,10 @@ def pull_request_average_time_between_responses(self, repo_group_id, repo_id=Non
     :param begin_date: Specifies the begin date, defaults to '1970-1-1 00:00:00'
     :param end_date: Specifies the end date, defaults to datetime.now()
     :return: DataFrame of average time beteen responses
+=======
+@register_metric()
+def pull_request_merged_status_counts(self, repo_group_id, repo_id=None, begin_date='1970-1-1 00:00:01', end_date=None, group_by='week'):
+>>>>>>> Stashed changes
     """
 
     if not begin_date:
@@ -643,7 +647,7 @@ def pull_request_average_time_between_responses(self, repo_group_id, repo_id=Non
 
     return pr_avg_time_between_responses
 
-@annotate(tag='pull-request-average-commit-counts')
+@register_metric()
 def pull_request_average_commit_counts(self, repo_group_id, repo_id=None, group_by='month', begin_date=None, end_date=None):
     """ Average commits per pull request, with merged status and time frame
 
@@ -752,7 +756,7 @@ def pull_request_average_commit_counts(self, repo_group_id, repo_id=None, group_
 
     return pr_avg_commit_counts
 
-@annotate(tag='pull-request-average-event-counts')
+@register_metric()
 def pull_request_average_event_counts(self, repo_group_id, repo_id=None, group_by='month', begin_date=None, end_date=None):
     """ Average of event counts with merged status and time frame
 
@@ -916,7 +920,7 @@ def pull_request_average_event_counts(self, repo_group_id, repo_id=None, group_b
 
     return pr_avg_event_counts
 
-@annotate(tag='pull-request-average-time-to-responses-and-close')
+@register_metric()
 def pull_request_average_time_to_responses_and_close(self, repo_group_id, repo_id=None, group_by='month', time_unit ='days', begin_date=None, end_date=None):
     """ Average of time to first reponse, last response, and time to close with merged status and time frame
 
@@ -1034,7 +1038,7 @@ def pull_request_average_time_to_responses_and_close(self, repo_group_id, repo_i
 
     return avg_pr_time_to_responses_and_close
 
-@annotate(tag='pull-request-merged-status-counts')
+@register_metric()
 def pull_request_merged_status_counts(self, repo_group_id, repo_id=None, begin_date='1970-1-1 00:00:01', end_date=None, group_by='month'):
     """ Merged status counts with time frames
     

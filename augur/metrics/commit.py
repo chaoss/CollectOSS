@@ -5,9 +5,9 @@ Metrics that provide data about commits & their associated activity
 import datetime
 import sqlalchemy as s
 import pandas as pd
-from augur.util import annotate
+from augur.util import register_metric
 
-@annotate(tag='committers')
+@register_metric()
 def committers(self, repo_group_id, repo_id=None, begin_date=None, end_date=None, period='month'):
     """
     :param repo_id: The repository's id
@@ -92,7 +92,7 @@ def committers(self, repo_group_id, repo_id=None, begin_date=None, end_date=None
 
     return results
 
-@annotate(tag='annual-commit-count-ranked-by-new-repo-in-repo-group')
+@register_metric()
 def annual_commit_count_ranked_by_new_repo_in_repo_group(self, repo_group_id, repo_id=None, begin_date=None, end_date=None, period='month'):
     """
     For each repository in a collection of repositories being managed, each REPO that first appears in the parameterized
@@ -167,7 +167,7 @@ def annual_commit_count_ranked_by_new_repo_in_repo_group(self, repo_group_id, re
         'repo_group_id': repo_group_id,'begin_date': begin_date, 'end_date': end_date})
     return results
 
-@annotate(tag='annual-commit-count-ranked-by-repo-in-repo-group')
+@register_metric()
 def annual_commit_count_ranked_by_repo_in_repo_group(self, repo_group_id, repo_id=None, timeframe=None):
     """
     For each repository in a collection of repositories being managed, each REPO's total commits during the current Month,
@@ -265,7 +265,7 @@ def annual_commit_count_ranked_by_repo_in_repo_group(self, repo_group_id, repo_i
     "repo_id": repo_id})
     return results
 
-@annotate(tag='top-committers')
+@register_metric()
 def top_committers(self, repo_group_id, repo_id=None, year=None, threshold=0.5):
     """
     Returns a list of contributors contributing N% of all commits.

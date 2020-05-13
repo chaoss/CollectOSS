@@ -10,7 +10,7 @@ from flask import Flask, request, Response, redirect
 from flask_cors import CORS
 import pandas as pd
 import augur
-from augur.util import annotate, logger
+from augur.util import logger
 from augur.routes import create_routes
 
 AUGUR_API_VERSION = 'api/unstable'
@@ -184,21 +184,6 @@ class Server(object):
         self.app.route(repo_endpoint)(self.routify(function, 'repo'))
         self.app.route(repo_group_endpoint)(self.routify(function, 'repo_group'))
         self.app.route(deprecated_repo_endpoint )(self.routify(function, 'deprecated_repo'))
-        kwargs['endpoint_type'] = 'standard'
-        self.update_metric_metadata(function, endpoint, **kwargs)
-
-    def update_metric_metadata(self, function, endpoint=None, **kwargs):
-        """
-        Updates a given metric's metadata
-        """
-
-        # God forgive me
-        #
-        # Get the unbound function from the bound function's class so that we can modify metadata
-        # across instances of that class.
-        real_func = getattr(self.augur_app.metrics, function.__name__)
-        annotate(endpoint=endpoint, **kwargs)(real_func)
-
 
 def run():
     """

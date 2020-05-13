@@ -101,7 +101,7 @@ test-python-versions:
 docs:
 	@ bash -c 'cd docs/ && rm -rf build/ && make html;'
 
-docs-view: library-docs
+docs-view: docs
 	@ bash -c 'open docs/build/html/index.html'
 
 

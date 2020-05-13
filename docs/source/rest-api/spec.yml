@@ -1577,7 +1577,7 @@ paths:
       description: 'Count of open issues. '
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/master/metrics/contributors-new.md
+        url: https://github.com/chaoss/wg-evolution/blob/master/metrics/Issues_New.md
       operationId: Open Issues Count (Repo Group)
       parameters:
       - description: Repository Group ID

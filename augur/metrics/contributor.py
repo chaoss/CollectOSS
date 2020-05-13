@@ -5,9 +5,9 @@ Metrics that provides data about contributors & their associated activity
 import datetime
 import sqlalchemy as s
 import pandas as pd
-from augur.util import annotate
+from augur.util import register_metric
 
-@annotate(tag='contributors')
+@register_metric()
 def contributors(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
     """
     Returns a timeseries of all the contributions to a project.
@@ -211,7 +211,7 @@ def contributors(self, repo_group_id, repo_id=None, period='day', begin_date=Non
                                                                 'begin_date': begin_date, 'end_date': end_date})
     return results
 
-@annotate(tag='contributors-new')
+@register_metric()
 def contributors_new(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
     """
     Returns a timeseries of new contributions to a project.
@@ -330,7 +330,7 @@ def contributors_new(self, repo_group_id, repo_id=None, period='day', begin_date
                                                                    'begin_date': begin_date, 'end_date': end_date})
     return results
     
-@annotate(tag='lines-changed-by-author')
+@register_metric()
 def lines_changed_by_author(self, repo_group_id, repo_id=None):
     """
     Returns number of lines changed per author per day
@@ -361,7 +361,7 @@ def lines_changed_by_author(self, repo_group_id, repo_id=None):
         results = pd.read_sql(linesChangedByAuthorSQL, self.database, params={"repo_group_id": repo_group_id})
         return results
 
-@annotate(tag='contributors-code-development')
+@register_metric()
 def contributors_code_development(self, repo_group_id, repo_id=None, period='all', begin_date=None, end_date=None):
     """
     Returns a timeseries of all the contributions to a project.

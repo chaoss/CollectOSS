@@ -40,30 +40,34 @@ def get_cache(namespace, cache_manager=None):
     return cache_manager.get_cache(namespace)
 
 metric_metadata = []
-def annotate(metadata=None, **kwargs):
+def register_metric(metadata=None, **kwargs):
     """
     Decorates a function as being a metric
     """
     if metadata is None:
         metadata = {}
-    def decorate(func):
-        if not hasattr(func, 'metadata'):
-            func.metadata = {}
-            metric_metadata.append(func.metadata)
+    def decorate(function):
+        if not hasattr(function, 'metadata'):
+            function.metadata = {}
+            metric_metadata.append(function.metadata)
 
-        func.metadata.update(metadata)
+        if not hasattr(function, 'is_metric'):
+            function.is_metric = True
+
+        function.metadata.update(metadata)
         if kwargs.get('endpoint_type', None):
             endpoint_type = kwargs.pop('endpoint_type')
             if endpoint_type == 'repo':
-                func.metadata['repo_endpoint'] = kwargs.get('endpoint')
+                function.metadata['repo_endpoint'] = kwargs.get('endpoint')
             else:
-                func.metadata['group_endpoint'] = kwargs.get('endpoint')
+                function.metadata['group_endpoint'] = kwargs.get('endpoint')
 
-        func.metadata.update(dict(kwargs))
+        function.metadata.update(dict(kwargs))
 
-        func.metadata['metric_name'] = re.sub('_', ' ', func.__name__).title()
-        func.metadata['source'] = re.sub(r'(.*\.)', '', func.__module__)
-        func.metadata['ID'] = "{}-{}".format(func.metadata['source'].lower(), func.metadata['tag'])
+        function.metadata['tag'] = re.sub('_', '-', function.__name__).lower()
+        function.metadata['metric_name'] = re.sub('_', ' ', function.__name__).title()
+        function.metadata['model'] = re.sub(r'(.*\.)', '', function.__module__)
+        function.metadata['ID'] = "{}-{}".format(function.metadata['model'].lower(), function.metadata['tag'])
 
-        return func
+        return function
     return decorate

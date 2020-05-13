@@ -2,8 +2,6 @@ import importlib
 import os
 import glob
 
-from os import walk
-
 from augur import logger
 
 def get_route_files():

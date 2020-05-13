@@ -4,10 +4,10 @@ Metrics that provide data about with insight detection and reporting
 
 import sqlalchemy as s
 import pandas as pd
-from augur.util import annotate
+from augur.util import register_metric
 
 
-@annotate(tag='top-insights')
+@register_metric()
 def top_insights(self, repo_group_id, num_repos=6):
     """
     Timeseries of pull request acceptance rate (expressed as the ratio of pull requests merged on a date to the count of pull requests opened on a date)

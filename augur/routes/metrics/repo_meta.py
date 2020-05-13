@@ -16,7 +16,6 @@ def create_routes(server):
         return Response(response=license_files,
                         status=200,
                         mimetype="application/json")
-    server.update_metric_metadata(function=metrics.license_files, endpoint=f"/{server.api_version}/<license_id>/<spdx_binary>/<repo_group_id>/<repo_id>/license-files", metric_type='license')
 
     server.add_standard_metric(metrics.sbom_download, 'sbom-download')
 

@@ -6,10 +6,10 @@ import datetime
 import sqlalchemy as s
 import pandas as pd
 from augur import logger
-from augur.util import annotate
+from augur.util import register_metric
 import math
 
-@annotate(tag='code-changes')
+@register_metric()
 def code_changes(self, repo_group_id, repo_id=None, period='week', begin_date=None, end_date=None):
     """
     Returns a timeseries of the count of commits.
@@ -71,7 +71,7 @@ def code_changes(self, repo_group_id, repo_id=None, period='week', begin_date=No
         results = results[(results['date'] >= begin_date) & (results['date'] <= end_date)]
         return results
 
-@annotate(tag='code-changes-lines')
+@register_metric()
 def code_changes_lines(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
     """Returns a timeseries of code changes added and removed.
 
@@ -129,7 +129,7 @@ def code_changes_lines(self, repo_group_id, repo_id=None, period='day', begin_da
 
 
 
-@annotate(tag='sub-projects')
+@register_metric()
 def sub_projects(self, repo_group_id, repo_id=None, begin_date=None, end_date=None):
     """
     Returns number of sub-projects
@@ -170,7 +170,7 @@ def sub_projects(self, repo_group_id, repo_id=None, begin_date=None, end_date=No
 
 
 
-@annotate(tag='sbom-download')
+@register_metric()
 def sbom_download(self, repo_group_id, repo_id=None):
     """REQUIRES SBOMS TO BE PRESENT IN THE DATABASE
 
@@ -188,7 +188,7 @@ def sbom_download(self, repo_group_id, repo_id=None):
     return pd.read_sql(dosocs_SQL, self.database, params=params)
     #return [json.dumps(license_information)]
 
-@annotate(tag='cii-best-practices-badge')
+@register_metric()
 def cii_best_practices_badge(self, repo_group_id, repo_id=None):
     """Returns the CII best practices badge level
 
@@ -218,7 +218,7 @@ def cii_best_practices_badge(self, repo_group_id, repo_id=None):
 
     return pd.DataFrame(result, index=[0])
 
-@annotate(tag='forks')
+@register_metric()
 def forks(self, repo_group_id, repo_id=None):
     """
     Returns a time series of the fork count
@@ -258,7 +258,7 @@ def forks(self, repo_group_id, repo_id=None):
         results = pd.read_sql(forks_SQL, self.database, params={'repo_id': repo_id})
         return results
 
-@annotate(tag='fork-count')
+@register_metric()
 def fork_count(self, repo_group_id, repo_id=None):
     """
     Returns the latest fork count
@@ -293,7 +293,7 @@ def fork_count(self, repo_group_id, repo_id=None):
         results = pd.read_sql(fork_count_SQL, self.database, params={'repo_id': repo_id})
         return results
 
-@annotate(tag='languages')
+@register_metric()
 def languages(self, repo_group_id, repo_id=None):
     """Returns the implementation languages
 
@@ -321,7 +321,7 @@ def languages(self, repo_group_id, repo_id=None):
         results = pd.read_sql(languages_SQL, self.database, params={'repo_id': repo_id})
         return results
 
-@annotate(tag='license-files')
+@register_metric()
 def license_files(self, license_id, spdx_binary, repo_group_id, repo_id=None,):
         """Returns the files related to a license
 
@@ -357,7 +357,7 @@ def license_files(self, license_id, spdx_binary, repo_group_id, repo_id=None,):
         results = pd.read_sql(license_data_SQL, self.spdx_db, params={'repo_id': repo_id, 'spdx_binary': spdx_binary, 'license_id': license_id})
         return results
 
-@annotate(tag='license-declared')
+@register_metric()
 def license_declared(self, repo_group_id, repo_id=None):
     """Returns the declared license
 
@@ -426,7 +426,7 @@ def license_declared(self, repo_group_id, repo_id=None):
     results = pd.read_sql(license_declared_SQL, self.spdx_db, params={'repo_id': repo_id})
     return results
 
-@annotate(tag='license-coverage')
+@register_metric()
 def license_coverage(self, repo_group_id, repo_id=None):
     """Returns the declared license
 
@@ -487,7 +487,7 @@ def license_coverage(self, repo_group_id, repo_id=None):
 
     return results
 
-@annotate(tag='license-count')
+@register_metric()
 def license_count(self, repo_group_id, repo_id=None):
     """Returns the declared license
 
@@ -549,7 +549,7 @@ def license_count(self, repo_group_id, repo_id=None):
     return results
 
 
-@annotate(tag='stars')
+@register_metric()
 def stars(self, repo_group_id, repo_id=None):
     """
     Returns a time series of the stars count
@@ -589,7 +589,7 @@ def stars(self, repo_group_id, repo_id=None):
         results = pd.read_sql(stars_SQL, self.database, params={'repo_id': repo_id})
         return results
 
-@annotate(tag='stars-count')
+@register_metric()
 def stars_count(self, repo_group_id, repo_id=None):
     """
     Returns the latest stars count
@@ -624,7 +624,7 @@ def stars_count(self, repo_group_id, repo_id=None):
         results = pd.read_sql(stars_count_SQL, self.database, params={'repo_id': repo_id})
         return results
 
-@annotate(tag='watchers')
+@register_metric()
 def watchers(self, repo_group_id, repo_id=None):
     """
     Returns a time series of the watchers count
@@ -664,7 +664,7 @@ def watchers(self, repo_group_id, repo_id=None):
         results = pd.read_sql(watchers_SQL, self.database, params={'repo_id': repo_id})
         return results
 
-@annotate(tag='watchers-count')
+@register_metric()
 def watchers_count(self, repo_group_id, repo_id=None):
     """
     Returns the latest watchers count
@@ -699,7 +699,7 @@ def watchers_count(self, repo_group_id, repo_id=None):
         results = pd.read_sql(watchers_count_SQL, self.database, params={'repo_id': repo_id})
         return results
 
-@annotate(tag='annual-lines-of-code-count-ranked-by-new-repo-in-repo-group')
+@register_metric()
 def annual_lines_of_code_count_ranked_by_new_repo_in_repo_group(self, repo_group_id, repo_id = None, calendar_year=None):
     """
     For each repository in a collection of repositories being managed, each REPO that first appears in the parameterized
@@ -743,7 +743,7 @@ calendar year (a new repo in that year), show all commits for that year (total f
     "repo_id": repo_id, "calendar_year": calendar_year})
     return results
 
-@annotate(tag='annual-lines-of-code-count-ranked-by-repo-in-repo-group')
+@register_metric()
 def annual_lines_of_code_count_ranked_by_repo_in_repo_group(self, repo_group_id, repo_id=None, timeframe=None):
     """
     For each repository in a collection of repositories being managed, each REPO's total commits during the current Month,
@@ -839,7 +839,7 @@ def annual_lines_of_code_count_ranked_by_repo_in_repo_group(self, repo_group_id,
         "repo_id": repo_id})
     return results
 
-@annotate(tag='lines-of-code-commit-counts-by-calendar-year-grouped')
+@register_metric()
 def lines_of_code_commit_counts_by_calendar_year_grouped(self, repo_url, calendar_year=None, interval=None):
     """
     For a single repository, all the commits and lines of code occuring for the specified year, grouped by the specified interval (week or month)
@@ -891,7 +891,7 @@ def lines_of_code_commit_counts_by_calendar_year_grouped(self, repo_url, calenda
     results = pd.read_sql(cdRepTpIntervalLocCommitsSQL, self.database, params={"repourl": '%{}%'.format(repo_url), 'calendar_year': calendar_year})
     return results
 
-@annotate(tag='average-weekly-commits')
+@register_metric()
 def average_weekly_commits(self, repo_group_id=None, repo_id=None, calendar_year=None):
 
     if calendar_year == None:
@@ -912,7 +912,7 @@ def average_weekly_commits(self, repo_group_id=None, repo_id=None, calendar_year
         "repo_id": repo_id, "calendar_year": calendar_year})
     return results
 
-@annotate(tag="aggregate-summary")
+@register_metric()
 def aggregate_summary(self, repo_group_id, repo_id=None, begin_date=None, end_date=None):
 
     if not begin_date:
