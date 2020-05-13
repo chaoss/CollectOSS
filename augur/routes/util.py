@@ -1,6 +1,7 @@
 import base64
 import sqlalchemy as s
 import pandas as pd
+import json
 from flask import Response
 
 def create_routes(server):
@@ -198,3 +199,10 @@ def create_routes(server):
         return Response(response=data,
                         status=200,
                         mimetype='application/json')
+
+    @server.app.route('/{}/api-port'.format(server.api_version))
+    def api_port():
+        response = {'port': server.augur_app.read_config('Server', 'port')}
+        return Response(response=json.dumps(response),
+                        status=200,
+                        mimetype="application/json")

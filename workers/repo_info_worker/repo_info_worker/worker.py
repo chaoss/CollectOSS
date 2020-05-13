@@ -262,9 +262,9 @@ class GHRepoInfoWorker:
             }
         """ % (owner, repo)
 
-        num_attempts = 3
+        num_attempts = 0
         success = False
-        for attempt in range(num_attempts):
+        while num_attempts < 3:
             logging.info("Hitting endpoint: {} ...\n".format(url))
             r = requests.post(url, json={'query': query}, headers=self.headers)
             update_gh_rate_limit(self, r)
@@ -276,8 +276,9 @@ class GHRepoInfoWorker:
 
             if 'errors' in j:
                 logging.info("Error!: {}".format(j['errors']))
-                register_task_failure(self, task, repo_id, j['errors'][0]['message'])
-                return
+                if j['errors']['message'] == 'API rate limit exceeded':
+                    update_gh_rate_limit(self, r)
+                    continue
 
             if 'data' in j:
                 success = True
@@ -289,10 +290,12 @@ class GHRepoInfoWorker:
                     logging.info("Github repo was not found or does not exist for endpoint: {}\n".format(url))
                     break
                 if j['message'] == 'You have triggered an abuse detection mechanism. Please wait a few minutes before you try again.':
-                    num_attempts -= 1
                     update_gh_rate_limit(self, r, temporarily_disable=True)
+                    continue
                 if j['message'] == 'Bad credentials':
                     update_gh_rate_limit(self, r, bad_credentials=True)
+                    continue
+            num_attempts += 1
         if not success:
             register_task_failure(self, task, repo_id, "Failed to hit endpoint: {}".format(url))
             return
