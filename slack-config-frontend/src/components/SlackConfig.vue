@@ -9,7 +9,7 @@
       <div>
         <aug-text-input
           text
-          placeholder="Augur Host Url..."
+          placeholder="Augur Host Url With Port (e.g localhost:5000)..."
           @valueUpdated="setHost"
           ref="hostInput"
           class="host-input"
