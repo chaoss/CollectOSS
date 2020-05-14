@@ -53,6 +53,7 @@
           v-show="trackedSearchFilter(repo.url + repo.rg_name)"
           :checkable="false"
           :deletable="true"
+          @delete="removeRepo"
         />
       </draggable>
     </div>
@@ -77,12 +78,14 @@ export default {
   },
   props: ["initialTrackedRepos"],
   methods: {
+    removeRepo(repoId) {
+      this.trackedRepos = this.trackedRepos.filter(r => r.repo_id !== repoId);
+    }, 
     bulkAdd() {
       if (this.$refs.repos) {
         this.$refs.repos.forEach(repo => {
           if (repo.isChecked) {
             let repoToAdd = this.hostRepos.find(r => r.repo_id === repo._props.id);
-            // console.log(repoToAdd);
             this.trackedRepos.push(repoToAdd);
             this.checkForDuplicate();
           }        
