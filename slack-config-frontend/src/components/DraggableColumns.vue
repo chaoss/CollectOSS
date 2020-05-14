@@ -18,13 +18,16 @@
             :name="repo.url"
             :group="repo.rg_name"
             :key="repo.repo_id"
+            :id="repo.repo_id"
             v-show="hostSearchFilter(repo.url + repo.rg_name)"
             :deletable="false"
             :checkable="true"
+            ref="repos"
           />
         </draggable>
       </div>
     </div>
+    <i class="far fa-arrow-alt-circle-right fa-3x bulk-add" @click="bulkAdd()"></i>
     <div class="column">
       <h3>Tracked Repos</h3>
       <div class="column-controls">
@@ -46,6 +49,7 @@
           :name="repo.url"
           :group="repo.rg_name"
           :key="repo.repo_id"
+          :id="repo.repo_id"
           v-show="trackedSearchFilter(repo.url + repo.rg_name)"
           :checkable="false"
           :deletable="true"
@@ -73,6 +77,18 @@ export default {
   },
   props: ["initialTrackedRepos"],
   methods: {
+    bulkAdd() {
+      if (this.$refs.repos) {
+        this.$refs.repos.forEach(repo => {
+          if (repo.isChecked) {
+            let repoToAdd = this.hostRepos.find(r => r.repo_id === repo._props.id);
+            // console.log(repoToAdd);
+            this.trackedRepos.push(repoToAdd);
+            this.checkForDuplicate();
+          }        
+        });
+      }
+    },
     setHostSearch(newValue) {
       this.hostSearch = newValue;
     },
@@ -135,7 +151,7 @@ export default {
     return {
       hostSearch: "",
       trackedSearch: "",
-      augurHost: "null", 
+      augurHost: "null",
       isLoading: false,
       hostRepos: [],
       trackedRepos: []
@@ -170,7 +186,6 @@ h3 {
 .column {
   padding: 1rem;
   width: 40%;
-  margin-left: 3%;
 }
 
 .draggable-column {
@@ -182,5 +197,16 @@ h3 {
 
 .search-input {
   width: 60%;
+}
+
+.bulk-add {
+  color: var(--light-blue);
+  align-self: center;
+  transition: text-shadow 0.3s ease;
+}
+
+.bulk-add:hover {
+  text-shadow: 0 0 2px grey;
+  cursor: pointer;
 }
 </style>

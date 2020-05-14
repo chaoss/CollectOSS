@@ -2,7 +2,7 @@
   <div id="Repo" @click="flipCheckbox">
     <p>{{ name }} ({{ group }})</p>
     <div class="righthand-options">
-      <aug-checkbox v-if="checkable" ref="checkbox"/>
+      <aug-checkbox v-if="checkable" ref="checkbox" @flipCheck="setIsChecked"/>
     </div>
   </div>
 </template>
@@ -16,11 +16,19 @@ export default {
   components: {
     AugCheckbox
   }, 
+  data() {
+    return {
+      isChecked: false
+    }
+  }, 
   methods: {
       flipCheckbox() {
           if (this.checkable) {
               this.$refs.checkbox.flipIsChecked();
           }
+      }, 
+      setIsChecked(newValue) {
+        this.isChecked = newValue;
       }
   }
 };
