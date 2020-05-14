@@ -12,6 +12,7 @@
           placeholder="Augur Host Url..."
           @valueUpdated="setHost"
           ref="hostInput"
+          class="host-input"
         />
         <aug-button text="Apply" @click="refreshRepos()" />
         <!-- <p>{{ teamName }}</p>
@@ -255,5 +256,9 @@ export default {
   width: 95vw;
   margin: auto;
   margin-top: 1.5rem;
+}
+
+.host-input {
+  width: 400px;
 }
 </style>

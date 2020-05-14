@@ -80,15 +80,17 @@ export default {
   methods: {
     removeRepo(repoId) {
       this.trackedRepos = this.trackedRepos.filter(r => r.repo_id !== repoId);
-    }, 
+    },
     bulkAdd() {
       if (this.$refs.repos) {
         this.$refs.repos.forEach(repo => {
           if (repo.isChecked) {
-            let repoToAdd = this.hostRepos.find(r => r.repo_id === repo._props.id);
+            let repoToAdd = this.hostRepos.find(
+              r => r.repo_id === repo._props.id
+            );
             this.trackedRepos.push(repoToAdd);
             this.checkForDuplicate();
-          }        
+          }
         });
       }
     },
@@ -116,10 +118,18 @@ export default {
       this.trackedRepos = [];
     },
     refreshRepos(host) {
-      this.augurHost = host;
       this.hostRepos = [];
       this.trackedRepos = [];
       this.isLoading = true;
+      this.augurHost = host;
+
+      if (!host.includes("http://")) {
+        host = "http://" + host;
+      }
+      if (!host.includes("/api/unstable")) {
+        host = host + "/api/unstable";
+      }
+      console.log(host);
       fetch(host + "/repos")
         .then(res => {
           if (res.status === 200) {

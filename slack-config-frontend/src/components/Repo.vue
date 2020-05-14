@@ -55,12 +55,13 @@ p {
 }
 
 .delete {
-  color: var(--red);
-  font-size: 1.5rem;
-  transition: text-shadow .3s ease;
+  color: var(--light-red);
+  font-size: 1.8rem;
+  transition: text-shadow .3s ease, color .3s ease;
 }
 
 .delete:hover {
+  color: var(--red);
   text-shadow: 0 0 3px grey;
   cursor: pointer;
 }
