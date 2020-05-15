@@ -55,9 +55,14 @@ extensions = ['sphinx.ext.autodoc',
 redoc = [
     {
         'name': 'Augur API',
-        'page': 'api',
+        'page': 'rest-api/api',
         'spec': 'rest-api/spec.yml',
         'embed': True,
+        'opts': {
+            "suppress-warnings": True,
+            "lazy-rendering": True,
+            'expand-responses': ["200"]
+        }
     }
 ]
 
