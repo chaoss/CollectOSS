@@ -45,10 +45,28 @@ setup(
         "click",
         "psutil",
         "gunicorn==19.9.0",
-        "six>=1.14.0"
+        "six>=1.14.0",
+        "sphinx",
+        "sphinx_rtd_theme",
+        "sphinxcontrib-openapi",
+        "sphinxcontrib-redoc"
     ],
     extras_require={
-        "dev": ["tox", "pytest", "ipdb", "sphinx","sphinx_rtd_theme"]
+        "dev": [
+            "tox",
+            "pytest",
+            "ipdb",
+            "sphinx",
+            "sphinx_rtd_theme",
+            "sphinxcontrib-openapi",
+            "sphinxcontrib-redoc"
+        ],
+        "docs": [
+            "sphinx",
+            "sphinx_rtd_theme",
+            "sphinxcontrib-openapi",
+            "sphinxcontrib-redoc"
+        ]
     },
     entry_points={
         "console_scripts": [

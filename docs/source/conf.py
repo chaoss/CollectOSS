@@ -47,7 +47,23 @@ extensions = ['sphinx.ext.autodoc',
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
     'sphinx.ext.githubpages',
-    'sphinx_rtd_theme'
+    'sphinx_rtd_theme',
+    'sphinxcontrib.openapi',
+    'sphinxcontrib.redoc'
+]
+
+redoc = [
+    {
+        'name': 'Augur API',
+        'page': 'rest-api/api',
+        'spec': 'rest-api/spec.yml',
+        'embed': True,
+        'opts': {
+            "suppress-warnings": True,
+            "lazy-rendering": True,
+            'expand-responses': ["200"]
+        }
+    }
 ]
 
 # Add any paths that contain templates here, relative to this directory.
