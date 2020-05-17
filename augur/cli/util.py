@@ -12,9 +12,8 @@ import click
 import pandas as pd
 import sqlalchemy as s
 
-
+from augur import logger
 from augur.cli.configure import default_config
-from augur.cli.db import get_db_connection
 
 @click.group('util', short_help='Miscellaneous utilities')
 def cli():
@@ -50,7 +49,8 @@ def kill_processes(ctx):
     if processes != []:
         for process in processes:
             if process.pid != os.getpid():
-                print(f"Killing {process.pid}: {' '.join(process.info['cmdline'][1:])}")
+                # logger.info(f"Killing {process.pid}: {' '.join(process.info['cmdline'][1:])}")
+                logger.info(f"Killing process {process.pid}")
                 try:
                     process.send_signal(signal.SIGTERM)
                 except psutil.NoSuchProcess as e:
@@ -63,7 +63,7 @@ def list_processes():
     """
     processes = get_augur_processes()
     for process in processes:
-        print(process.pid, " ".join(process.info['cmdline'][1:]))
+        logger.info(f"Found process {process.pid}")
 
 def get_augur_processes():
     processes = []
@@ -84,8 +84,7 @@ def repo_reset(ctx):
     Refresh repo collection to force data collection
     """
     app = ctx.obj
-    db = get_db_connection(app)
 
-    db.execute("UPDATE augur_data.repo SET repo_path = NULL, repo_name = NULL, repo_status = 'New'; TRUNCATE augur_data.commits CASCADE; ")
+    app.database.execute("UPDATE augur_data.repo SET repo_path = NULL, repo_name = NULL, repo_status = 'New'; TRUNCATE augur_data.commits CASCADE; ")
 
-    print("Repos successfully reset.")
+    logger.info("Repos successfully reset")

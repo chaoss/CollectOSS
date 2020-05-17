@@ -12,6 +12,7 @@ Otherwise, feel free to hop right into the docs!
    getting-started/toc
    docker/toc
    development-guide/toc
+   rest-api/api
 .. library-documentation/toc
 .. schema/toc
 .. deployment/toc

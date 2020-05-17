@@ -58,7 +58,7 @@ def send_task(worker_proxy):
         worker_start(worker_id.split('.')[len(worker_id.split('.')) - 2])
     
 
-def create_broker_routes(server):
+def create_routes(server):
 
     @server.app.route('/{}/task'.format(server.api_version), methods=['POST'])
     def task():

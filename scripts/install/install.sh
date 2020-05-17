@@ -54,10 +54,6 @@ else
 fi
 
 if [[ $target == *"dev"* ]]; then
-  echo "Generating API documentation..."
-  scripts/install/api_docs.sh > logs/install/api-docs.log 2>&1
-  echo "Done!"
-
   read -r -p "Would you like to install Augur's frontend dependencies? [Y/n] " response
   case "$response" in
       [yY][eE][sS]|[yY]) 

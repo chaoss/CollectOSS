@@ -11,7 +11,7 @@ from sqlalchemy import exc
 from flask import request, Response
 import json
 
-def create_manager_routes(server):
+def create_routes(server):
 
     @server.app.route('/{}/add-repos'.format(server.api_version), methods=['POST'])
     def add_repos():
@@ -19,10 +19,9 @@ def create_manager_routes(server):
             adds repos belonging to any user or group to an existing augur repo group
             'repos' are in the form org/repo, user/repo, or maybe even a full url 
         """
-        if authenticate_request(server._augur, request):
-            db_connection = get_db_engine(server._augur).connect()
+        if authenticate_request(server.augur_app, request):
             group = request.json['group']
-            repo_manager = Repo_insertion_manager(group, db_connection)
+            repo_manager = Repo_insertion_manager(group, server.augur_app.database)
             group_id = repo_manager.get_org_id()
             errors = {}
             errors['invalid_inputs'] = []
@@ -59,10 +58,9 @@ def create_manager_routes(server):
 
     @server.app.route('/{}/create-repo-group'.format(server.api_version), methods=['POST'])
     def create_repo_group():
-        if authenticate_request(server._augur, request):
-            conn = get_db_engine(server._augur)
+        if authenticate_request(server.augur_app, request):
             group = request.json['group']
-            repo_manager = Repo_insertion_manager(group, conn)
+            repo_manager = Repo_insertion_manager(group, server.augur_app.database)
             summary = {}
             summary['errors'] = []
             summary['repo_groups_created'] = []
@@ -98,10 +96,9 @@ def create_manager_routes(server):
         """ creates a new augur repo group and adds to it the given organization or user's repos
             takes an organization or user name 
         """
-        if authenticate_request(server._augur, request):
-            conn = get_db_engine(server._augur)
+        if authenticate_request(server.augur_app, request):
             group = request.json['org']
-            repo_manager = Repo_insertion_manager(group, conn)
+            repo_manager = Repo_insertion_manager(group, server.augur_app.database)
             summary = {}
             summary['group_errors'] = []
             summary['failed_repo_records'] = []
@@ -287,20 +284,6 @@ class Git_string():
     def get_repo_name(self):
         repo = self.name
         return repo[repo.find('/')+1:]
-
-def get_db_engine(app):
-
-    user = app.read_config('Database', 'user')
-    password = app.read_config('Database', 'password')
-    host = app.read_config('Database', 'host')
-    port = app.read_config('Database', 'port')
-    dbname = app.read_config('Database', 'name')
-
-    DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(
-            user, password, host, port, dbname
-    )
-
-    return s.create_engine(DB_STR, poolclass=s.pool.NullPool)
 
 def authenticate_request(app, request):
 
