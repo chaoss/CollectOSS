@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, request, Response
 import click, os, json, requests, logging
-from repo_info_worker.worker import GHRepoInfoWorker
+from repo_info_worker.worker import RepoInfoWorker
 from workers.standard_methods import read_config
 
 def create_server(app, gw):
@@ -71,24 +71,12 @@ def main(augur_url, host, port):
 
     config = { 
             "id": "com.augurlabs.core.repo_info_worker.{}".format(worker_port),
-            "broker_port": broker_port,
-            "broker_host": broker_host,
-            "location": "http://{}:{}".format(read_config('Server', 'host', 'AUGUR_HOST', 'localhost'),worker_port),
-            "host": database_host,
-            "key": read_config("Database", "key", "AUGUR_GITHUB_API_KEY", "key"),
-            "password": read_config('Database', 'password', 'AUGUR_DB_PASSWORD', 'password'),
-            "port": read_config('Database', 'port', 'AUGUR_DB_PORT', 'port'),
-            "user": read_config('Database', 'user', 'AUGUR_DB_USER', 'user'),
-            "database": read_config('Database', 'name', 'AUGUR_DB_NAME', 'database'),
-            "endpoint": "https://bestpractices.coreinfrastructure.org/projects.json",
-            "display_name": "",
-            "description": "",
-            "required": 1,
-            "type": "string"
+            'location': 'http://{}:{}'.format(read_config('Server', 'host', 'AUGUR_HOST', 'localhost'),worker_port),
+            'gh_api_key': read_config('Database', 'key', 'AUGUR_GITHUB_API_KEY', 'key')
         }
 
     #create instance of the worker
-    app.gh_repo_info_worker = GHRepoInfoWorker(config) # declares the worker that will be running on this server with specified config
+    app.gh_repo_info_worker = RepoInfoWorker(config) # declares the worker that will be running on this server with specified config
 
     create_server(app, None)
     logging.info("Starting Flask App with pid: " + str(os.getpid()) + "...")
