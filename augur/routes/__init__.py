@@ -16,11 +16,11 @@ def get_route_files():
         if not file_id.startswith('__') and filename.endswith('.py'):
             route_files.append(file_id)
 
-    for filename in glob.iglob("**/routes/metrics/*"):
+    for filename in glob.iglob("augur/routes/metrics/*"):
         file_id = get_file_id(filename)
         if not file_id.startswith('__') and filename.endswith('.py'):
             metric_route_files.append(file_id)
-            
+
     return route_files, metric_route_files
 
 route_files, metric_route_files = get_route_files()
