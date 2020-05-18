@@ -105,29 +105,29 @@ class RepoInfoWorker(Worker):
             self.update_gh_rate_limit(r)
 
             try:
-                j = r.json()
+                data = r.json()
             except:
-                j = json.loads(json.dumps(r.text))
+                data = json.loads(json.dumps(r.text))
 
-            if 'errors' in j:
-                logging.info("Error!: {}".format(j['errors']))
-                if j['errors']['message'] == 'API rate limit exceeded':
+            if 'errors' in data:
+                logging.info("Error!: {}".format(data['errors']))
+                if data['errors']['message'] == 'API rate limit exceeded':
                     self.update_gh_rate_limit(r)
                     continue
 
-            if 'data' in j:
+            if 'data' in data:
                 success = True
-                j = j['data']['repository']
+                data = data['data']['repository']
                 break
             else:
-                logging.info("Request returned a non-data dict: {}\n".format(j))
-                if j['message'] == 'Not Found':
+                logging.info("Request returned a non-data dict: {}\n".format(data))
+                if data['message'] == 'Not Found':
                     logging.info("Github repo was not found or does not exist for endpoint: {}\n".format(url))
                     break
-                if j['message'] == 'You have triggered an abuse detection mechanism. Please wait a few minutes before you try again.':
+                if data['message'] == 'You have triggered an abuse detection mechanism. Please wait a few minutes before you try again.':
                     self.update_gh_rate_limit(r, temporarily_disable=True)
                     continue
-                if j['message'] == 'Bad credentials':
+                if data['message'] == 'Bad credentials':
                     self.update_gh_rate_limit(r, bad_credentials=True)
                     continue
             num_attempts += 1
@@ -142,35 +142,35 @@ class RepoInfoWorker(Worker):
         logging.info(f'Inserting repo info for repo with id:{repo_id}, owner:{owner}, name:{repo}\n')
         rep_inf = {
             'repo_id': repo_id,
-            'last_updated': j['updatedAt'] if 'updatedAt' in j else None,
-            'issues_enabled': j['hasIssuesEnabled'] if 'hasIssuesEnabled' in j else None,
-            'open_issues': j['issues']['totalCount'] if j['issues'] else None,
+            'last_updated': data['updatedAt'] if 'updatedAt' in data else None,
+            'issues_enabled': data['hasIssuesEnabled'] if 'hasIssuesEnabled' in data else None,
+            'open_issues': data['issues']['totalCount'] if data['issues'] else None,
             'pull_requests_enabled': None,
-            'wiki_enabled': j['hasWikiEnabled'] if 'hasWikiEnabled' in j else None,
+            'wiki_enabled': data['hasWikiEnabled'] if 'hasWikiEnabled' in data else None,
             'pages_enabled': None,
-            'fork_count': j['forkCount'] if 'forkCount' in j else None,
-            'default_branch': j['defaultBranchRef']['name'] if j['defaultBranchRef'] else None,
-            'watchers_count': j['watchers']['totalCount'] if j['watchers'] else None,
+            'fork_count': data['forkCount'] if 'forkCount' in data else None,
+            'default_branch': data['defaultBranchRef']['name'] if data['defaultBranchRef'] else None,
+            'watchers_count': data['watchers']['totalCount'] if data['watchers'] else None,
             'UUID': None,
-            'license': j['licenseInfo']['name'] if j['licenseInfo'] else None,
-            'stars_count': j['stargazers']['totalCount'] if j['stargazers'] else None,
+            'license': data['licenseInfo']['name'] if data['licenseInfo'] else None,
+            'stars_count': data['stargazers']['totalCount'] if data['stargazers'] else None,
             'committers_count': committers_count,
             'issue_contributors_count': None,
             'changelog_file': None,
             'contributing_file': None,
-            'license_file': j['licenseInfo']['url'] if j['licenseInfo'] else None,
-            'code_of_conduct_file': j['codeOfConduct']['url'] if j['codeOfConduct'] else None,
+            'license_file': data['licenseInfo']['url'] if data['licenseInfo'] else None,
+            'code_of_conduct_file': data['codeOfConduct']['url'] if data['codeOfConduct'] else None,
             'security_issue_file': None,
             'security_audit_file': None,
             'status': None,
             'keywords': None,
-            'commit_count': j['ref']['target']['history']['totalCount'] if j['ref'] else None,
-            'issues_count': j['issue_count']['totalCount'] if j['issue_count'] else None,
-            'issues_closed': j['issues_closed']['totalCount'] if j['issues_closed'] else None,
-            'pull_request_count': j['pr_count']['totalCount'] if j['pr_count'] else None,
-            'pull_requests_open': j['pr_open']['totalCount'] if j['pr_open'] else None,
-            'pull_requests_closed': j['pr_closed']['totalCount'] if j['pr_closed'] else None,
-            'pull_requests_merged': j['pr_merged']['totalCount'] if j['pr_merged'] else None,
+            'commit_count': data['ref']['target']['history']['totalCount'] if data['ref'] else None,
+            'issues_count': data['issue_count']['totalCount'] if data['issue_count'] else None,
+            'issues_closed': data['issues_closed']['totalCount'] if data['issues_closed'] else None,
+            'pull_request_count': data['pr_count']['totalCount'] if data['pr_count'] else None,
+            'pull_requests_open': data['pr_open']['totalCount'] if data['pr_open'] else None,
+            'pull_requests_closed': data['pr_closed']['totalCount'] if data['pr_closed'] else None,
+            'pull_requests_merged': data['pr_merged']['totalCount'] if data['pr_merged'] else None,
             'tool_source': self.tool_source,
             'tool_version': self.tool_version,
             'data_source': self.data_source
