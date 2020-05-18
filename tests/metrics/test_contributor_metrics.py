@@ -3,12 +3,6 @@
 import pytest
 import pandas as pd
 
-@pytest.fixture(scope="module")
-def metrics():
-    import augur
-    augur_app = augur.Application()
-    return augur_app.metrics
-
 def test_contributors(metrics):
     # repo group
     assert metrics.contributors(20).iloc[0]['total'] > 0

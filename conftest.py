@@ -1,8 +1,6 @@
-#SPDX-License-Identifier: MIT
-
 import pytest
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def metrics():
     import augur
     augur_app = augur.Application()

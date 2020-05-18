@@ -1,10 +1,6 @@
 import requests
 import pytest
 
-@pytest.fixture(scope="session")
-def metrics():
-    pass
-
 def test_pull_requests_merge_contributor_new_by_group(metrics):
     response = requests.get('http://localhost:5000/api/unstable/repo-groups/10/pull-requests-merge-contributor-new')
     data = response.json()

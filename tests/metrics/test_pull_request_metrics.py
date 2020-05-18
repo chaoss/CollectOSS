@@ -3,12 +3,6 @@
 import pytest
 import pandas as pd
 
-@pytest.fixture(scope="module")
-def metrics():
-    import augur
-    augur_app = augur.Application()
-    return augur_app.metrics
-
 def test_pull_requests_merge_contributor_new(metrics):
     # repo id
     assert metrics.pull_requests_merge_contributor_new(10, repo_id=25430, period='year').isin(

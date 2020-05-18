@@ -8,27 +8,27 @@ jobs:
   include:
     - name: 3.6 Metrics
       python: 3.6
-      env: TOXENV=py36-metrics
+      env: TOXENV=py36-metric-functions
 
     - name: 3.6 Metrics API
       python: 3.6
-      env: TOXENV=py36-metrics_api
+      env: TOXENV=py36-metric-routes
 
     - name: 3.7 Metrics
       python: 3.7
-      env: TOXENV=py37-metrics
+      env: TOXENV=py37-metric-functions
 
     - name: 3.7 Metrics API
       python: 3.7
-      env: TOXENV=py37-metrics_api
+      env: TOXENV=py37-metric-routes
 
     - name: 3.8 Metrics
       python: 3.8
-      env: TOXENV=py38-metrics
+      env: TOXENV=py38-metric-functions
 
     - name: 3.8 Metrics API
       python: 3.8
-      env: TOXENV=py38-metrics_api
+      env: TOXENV=py38-metric-routes
 
 env:
   global:

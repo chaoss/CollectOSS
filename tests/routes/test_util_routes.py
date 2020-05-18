@@ -1,10 +1,6 @@
 import requests
 import pytest
 
-@pytest.fixture(scope="session")
-def metrics():
-    pass
-
 def test_common(endpoint="http://localhost:5000/api/unstable/repos"):
     response = requests.get(endpoint)
     data = response.json()

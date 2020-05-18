@@ -3,12 +3,6 @@
 import pytest
 import pandas as pd
 
-@pytest.fixture(scope="module")
-def metrics():
-    import augur
-    augur_app = augur.Application()
-    return augur_app.metrics
-
 def test_code_changes(metrics):
     #repo_id
     assert metrics.code_changes(10, 25430, period='year').isin([pd.Timestamp('2019-01-01T00:00:00+00:00'), 2]).any().any()
