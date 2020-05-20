@@ -137,6 +137,11 @@ class RepoInfoWorker(Worker):
 
         # Get committers count info that requires seperate endpoint
         committers_count = self.query_committers_count(owner, repo)
+        forked = self.is_forked(owner, repo)
+        archived = self.is_archived(owner, repo)
+        if archived is not False:
+            archived_date_collected = archived
+            archived = True
 
         # Put all data together in format of the table
         logging.info(f'Inserting repo info for repo with id:{repo_id}, owner:{owner}, name:{repo}\n')
@@ -173,7 +178,10 @@ class RepoInfoWorker(Worker):
             'pull_requests_merged': data['pr_merged']['totalCount'] if data['pr_merged'] else None,
             'tool_source': self.tool_source,
             'tool_version': self.tool_version,
-            'data_source': self.data_source
+            'data_source': self.data_source,
+            'forked_from': forked,
+            'repo_archived': archived,
+            'repo_archived_date_collected': archived_date_collected
         }
 
         result = self.db.execute(self.repo_info_table.insert().values(rep_inf))
@@ -205,3 +213,63 @@ class RepoInfoWorker(Worker):
 
         return committers
 
+    def is_forked(self, owner, repo): #/repos/:owner/:repo parent
+        logging.info('Querying parent info to verify if the repo is forked\n')
+        url = f'https://api.github.com/repos/{owner}/{repo}'
+
+        r = requests.get(url, headers=self.headers)
+        self.update_gh_rate_limit(r)
+
+        data = self.get_repo_data(self, url, r)
+
+        if 'fork' in data:
+            if 'parent' in data:
+                return data['parent']['full_name']
+            return 'Parent not available'
+
+        return False
+
+    def is_archived(self, owner, repo):
+        logging.info('Querying committers count\n')
+        url = f'https://api.github.com/repos/{owner}/{repo}'
+
+        r = requests.get(url, headers=self.headers)
+        self.update_gh_rate_limit(r)
+
+        data = self.get_repo_data(self, url, r)
+
+        if 'archived' in data:
+            if data['archived']:
+                if 'updated_at' in data:
+                    return data['updated_at']
+                return 'Date not available'
+            return False
+
+        return False
+
+    def get_repo_data(self, url, response):
+        success = False
+        try:
+            data = response.json()
+        except:
+            data = json.loads(json.dumps(response.text))
+
+        if 'errors' in data:
+            logging.info("Error!: {}".format(data['errors']))
+            if data['errors']['message'] == 'API rate limit exceeded':
+                self.update_gh_rate_limit(response)
+
+        if 'id' in data:
+            success = True
+        else:
+            logging.info("Request returned a non-data dict: {}\n".format(data))
+            if data['message'] == 'Not Found':
+                logging.info("Github repo was not found or does not exist for endpoint: {}\n".format(url))
+            if data['message'] == 'You have triggered an abuse detection mechanism. Please wait a few minutes before you try again.':
+                self.update_gh_rate_limit(r, temporarily_disable=True)
+            if data['message'] == 'Bad credentials':
+                self.update_gh_rate_limit(r, bad_credentials=True)
+        if not success:
+            self.register_task_failure(task, repo_id, "Failed to hit endpoint: {}".format(url))
+
+        return data
