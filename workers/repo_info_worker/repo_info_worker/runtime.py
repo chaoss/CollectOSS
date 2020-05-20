@@ -15,14 +15,13 @@ def main(augur_url, host, port):
     #load credentials
     broker_host = read_config("Server", "host", "AUGUR_HOST", "0.0.0.0")
     broker_port = read_config("Server", "port", "AUGUR_PORT", 5000)
-    database_host = read_config('Database', 'host', 'AUGUR_DB_HOST', 'host')
     worker_info = read_config('Workers', 'repo_info_worker', None, None)
 
     worker_port = worker_info['port'] if 'port' in worker_info else port
 
     while True:
         try:
-            r = requests.get("http://{}:{}/AUGWOP/heartbeat".format(host, worker_port)).json()
+            r = requests.get("http://{}:{}/AUGWOP/heartbeat".format(broker_port, worker_port)).json()
             if 'status' in r:
                 if r['status'] == 'alive':
                     worker_port += 1
