@@ -49,9 +49,7 @@ setup(
         "sphinx",
         "sphinx_rtd_theme",
         "sphinxcontrib-openapi",
-        "sphinxcontrib-redoc", 
-        "boto3",
-        "slack"
+        "sphinxcontrib-redoc"
     ],
     extras_require={
         "dev": [

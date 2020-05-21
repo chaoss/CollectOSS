@@ -18,7 +18,6 @@ import Tables from './views/Tables.vue';
 import Dashboard from './views/Dashboard.vue';
 import EditConfig from './views/EditConfig.vue';
 import Default from './layouts/Default.vue';
-import AuggieDefault from './layouts/AuggieDefault.vue';
 import MainSidebar from './components/layout/MainSidebar/MainSidebar.vue';
 import MainNavbar from './components/layout/MainNavbar/MainNavbar.vue';
 import RepoOverview from './views/RepoOverview.vue';
@@ -51,13 +50,14 @@ const routes = [
   },
   {
     path: '/slack-config',
-    component: AuggieDefault,
+    component: Default,
     children: [
       {
         path: '',
         name: 'slack_config',
         components: {
-          //MultiPane, MultiPaneResizer, //added this bc i'm not sure how vue works yet but this seems important??
+          sidebar: MainSidebar,
+          navbar: MainNavbar,
           content: SlackConfig,
         },
       },
