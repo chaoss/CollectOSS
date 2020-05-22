@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, request, Response
 import click, os, json, requests, logging
-from repo_info_worker.worker import RepoInfoWorker
+from template_worker.worker import TemplateWorker
 from workers.util import read_config, create_server
 
 @click.command()
@@ -32,19 +32,20 @@ def main(augur_url, host, port):
     logging.basicConfig(filename='worker_{}.log'.format(worker_port), filemode='w', level=logging.INFO)
 
     config = { 
-            "id": "com.augurlabs.core.repo_info_worker.{}".format(worker_port),
-            'location': 'http://{}:{}'.format(read_config('Server', 'host', 'AUGUR_HOST', 'localhost'),worker_port),
-            'gh_api_key': read_config('Database', 'key', 'AUGUR_GITHUB_API_KEY', 'key')
+            'id': 'com.augurlabs.core.template_worker.{}'.format(worker_port),
+            'location': 'http://{}:{}'.format(read_config('Server', 'host', 'AUGUR_HOST', 'localhost'),worker_port)
         }
 
     #create instance of the worker
-    app.gh_repo_info_worker = RepoInfoWorker(config) # declares the worker that will be running on this server with specified config
+    app.template_worker = TemplateWorker(config) # declares the worker that will be running on this server with specified config
 
     create_server(app, None)
     logging.info("Starting Flask App with pid: " + str(os.getpid()) + "...")
     app.run(debug=app.debug, host=host, port=worker_port)
-    if app.gh_repo_info_worker._child is not None:
-        app.gh_repo_info_worker._child.terminate()
+
+    if app.template_worker._child is not None:
+        app.template_worker._child.terminate()
+        
     try:
         requests.post('http://{}:{}/api/unstable/workers/remove'.format(server['host'],server['port']), json={"id": config['id']})
     except:
@@ -52,4 +53,6 @@ def main(augur_url, host, port):
 
     logging.info("Killing Flask App: " + str(os.getpid()))
     os.kill(os.getpid(), 9)
+
+
 
