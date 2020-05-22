@@ -15,36 +15,24 @@ from augur.routes import create_routes
 
 AUGUR_API_VERSION = 'api/unstable'
 
-class VueCompatibleFlask(Flask):
-  jinja_options = Flask.jinja_options.copy()
-  jinja_options.update(dict(
-    block_start_string='(%',
-    block_end_string='%)',
-    variable_start_string='%%',
-    variable_end_string='%%',
-    comment_start_string='(#',
-    comment_end_string='#)',
-  ))
-
-
 class Server(object):
     """
     Defines Augur's server's behavior
     """
-    def __init__(self, frontend_folder='../frontend/public', manager=None, broker=None, housekeeper=None):
+    def __init__(self, frontend_folder='../frontend/public', manager=None, broker=None, housekeeper=None, augur_app=None):
         """
         Initializes the server, creating both the Flask application and Augur application
         """
         # Create Flask application
 
-        self.app = VueCompatibleFlask(__name__, static_folder=frontend_folder, template_folder=frontend_folder)
+        self.app = Flask(__name__)
         self.api_version = AUGUR_API_VERSION
         app = self.app
         CORS(app)
         app.url_map.strict_slashes = False
 
         # Create Augur application
-        self.augur_app = augur.Application()
+        self.augur_app = augur_app
 
         # Initialize cache
         expire = int(self.augur_app.read_config('Server', 'cache_expire'))

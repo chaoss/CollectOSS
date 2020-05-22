@@ -19,57 +19,45 @@ from augur import logger
 from augur.metrics import Metrics
 from augur.cli.configure import default_config
 
-class Application(object):
+class Application():
     """Initalizes all classes from Augur using a config file or environment variables"""
 
     def __init__(self):
         """
         Reads config, creates DB session, and initializes cache
         """
-        self.config_file_name = 'augur.config.json'
-        self.__shell_config = None
-        self.__export_file = None
-        self.__env_file = None
-        self.config = default_config
+        self.default_config_file_name = 'augur.config.json'
+        self.default_config = default_config
+        self.config = None
         self.env_config = {}
         self.root_augur_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-        default_config_path = self.root_augur_dir + '/' + self.config_file_name
-        using_config_file = False
+        self._using_default_config = True
 
+        self.config_file_path = self._discover_config_file()
 
-        config_locations = [self.config_file_name, default_config_path, f"/opt/augur/{self.config_file_name}"]
-        if os.getenv('AUGUR_CONFIG_FILE') is not None:
-            config_file_path = os.getenv('AUGUR_CONFIG_FILE')
-            using_config_file = True
-        else:
-            for index, location in enumerate(config_locations):
-                try:
-                    f = open(location, "r+")
-                    config_file_path = os.path.abspath(location)
-                    using_config_file = True
-                    f.close()
-                    break
-                except FileNotFoundError:
-                    pass
+        if self.config_file_path:
+            self._load_config_from_file()
+            if self.config:
+                self._using_default_config = False
 
-        if using_config_file:
-            try:
-                with open(config_file_path, 'r+') as config_file_handle:
-                    self.config = json.loads(config_file_handle.read())
-            except json.decoder.JSONDecodeError as e:
-                logger.warning('%s could not be parsed, using defaults. Fix that file, or delete it and run this again to regenerate it. Error: %s', config_file_path, str(e))
-        else:
-            logger.warning('%s could not be parsed, using defaults.')
+        if self._using_default_config is True:
+            self.config = default_config
 
         self.load_env_configuration()
 
-        logger.setLevel(self.read_config("Development", "log_level"))
+        log_level = self.read_config("Development", "log_level")
+        if log_level == "quiet":
+            logger.disabled = True
+        else:
+            logger.setLevel(log_level)
+        self.logger = logger
 
         self.cache_config = {
             'cache.type': 'file',
             'cache.data_dir': 'runtime/cache/',
             'cache.lock_dir': 'runtime/cache/'
         }
+
         if not os.path.exists(self.cache_config['cache.data_dir']):
             os.makedirs(self.cache_config['cache.data_dir'])
         if not os.path.exists(self.cache_config['cache.lock_dir']):
@@ -77,12 +65,42 @@ class Application(object):
         cache_parsed = parse_cache_config_options(self.cache_config)
         self.cache = CacheManager(**cache_parsed)
 
-        self.database = self.__connect_to_database()
-        self.spdx_db = self.__connect_to_database(include_spdx=True)
+        self.database = self._connect_to_database()
+        self.spdx_db = self._connect_to_database(include_spdx=True)
 
         self.metrics = Metrics(self)
 
-    def __connect_to_database(self, include_spdx=False):
+    def _discover_config_file(self):
+        config_file_path = None
+        default_config_path = self.root_augur_dir + '/' + self.default_config_file_name
+
+        config_locations = [self.default_config_file_name, default_config_path
+         , f"/opt/augur/{self.default_config_file_name}"]
+        if os.getenv('AUGUR_CONFIG_FILE') is not None:
+            config_file_path = os.getenv('AUGUR_CONFIG_FILE', None)
+        else:
+            for location in config_locations:
+                try:
+                    f = open(location, "r+")
+                    config_file_path = os.path.abspath(location)
+                    f.close()
+                    break
+                except FileNotFoundError:
+                    pass
+        return config_file_path
+
+    def _load_config_from_file(self):
+        try:
+            with open(self.config_file_path, 'r+') as config_file_handle:
+                self.config = json.loads(config_file_handle.read())
+        except json.decoder.JSONDecodeError as e:
+            logger.warning('%s could not be parsed, using default config values. Error: %s', config_file_path, str(e))
+            raise(e)
+        except FileNotFoundError as e:
+            logger.warning('%s could not be opened, using default config values. Error: %s', config_file_path, str(e))
+            raise(e)
+
+    def _connect_to_database(self, include_spdx=False):
         user = self.read_config('Database', 'user')
         host = self.read_config('Database', 'host')
         port = self.read_config('Database', 'port')
@@ -105,7 +123,7 @@ class Application(object):
             return engine
         except s.exc.OperationalError as e:
             logger.fatal(f"Unable to connect to the database. Terminating...")
-            exit()
+            raise(e)
 
     def read_config(self, section, name=None):
         """
