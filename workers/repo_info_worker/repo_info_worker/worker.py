@@ -6,7 +6,7 @@ import pandas as pd
 import sqlalchemy as s
 from sqlalchemy import MetaData
 from sqlalchemy.ext.automap import automap_base
-from workers.worker_template import Worker
+from workers.worker_base import Worker
 
 class RepoInfoWorker(Worker):
     def __init__(self, config):
