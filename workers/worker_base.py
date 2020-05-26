@@ -17,6 +17,8 @@ class Worker():
         self._task = None # task currently being worked on (dict)
         self._child = None # process of currently running task (multiprocessing process)
         self._queue = Queue() # tasks stored here 1 at a time (in a mp queue so it can translate across multiple processes)
+        self.data_tables = data_tables
+        self.operations_tables = operations_tables
 
         # count of tuples inserted in the database (to store stats for each task in op tables)
         self.results_counter = 0 
@@ -56,7 +58,11 @@ class Worker():
             ],
             'config': self.config
         }
-        
+
+        # Send broker hello message
+        self.connect_to_broker()
+
+    def initialize_database_connections(self):
         DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(
             self.config['user_database'], self.config['password_database'], self.config['host_database'], self.config['port_database'], self.config['name_database']
         )
@@ -65,19 +71,19 @@ class Worker():
         logging.info("Making database connections... {}".format(DB_STR))
 
         db_schema = 'augur_data'
-        self.db = s.create_engine(DB_STR, poolclass = s.pool.NullPool,
+        self.db = s.create_engine(DB_STR,  poolclass=s.pool.NullPool,
             connect_args={'options': '-csearch_path={}'.format(db_schema)})
 
         helper_schema = 'augur_operations'
-        self.helper_db = s.create_engine(DB_STR, poolclass = s.pool.NullPool,
+        self.helper_db = s.create_engine(DB_STR, poolclass=s.pool.NullPool,
             connect_args={'options': '-csearch_path={}'.format(helper_schema)})
 
         metadata = MetaData()
         helper_metadata = MetaData()
 
         # Reflect only the tables we will use for each schema's metadata object
-        metadata.reflect(self.db, only=data_tables)
-        helper_metadata.reflect(self.helper_db, only=operations_tables)
+        metadata.reflect(self.db, only=self.data_tables)
+        helper_metadata.reflect(self.helper_db, only=self.operations_tables)
 
         Base = automap_base(metadata=metadata)
         HelperBase = automap_base(metadata=helper_metadata)
@@ -86,14 +92,14 @@ class Worker():
         HelperBase.prepare()
 
         # So we can access all our tables when inserting, updating, etc
-        for table in data_tables:
+        for table in self.data_tables:
             setattr(self, '{}_table'.format(table), Base.classes[table].__table__)
 
         try:
             logging.info(HelperBase.classes.keys())
         except:
             pass
-        for table in operations_tables:
+        for table in self.operations_tables:
             try:
                 setattr(self, '{}_table'.format(table), HelperBase.classes[table].__table__)
             except Exception as e:
@@ -105,9 +111,6 @@ class Worker():
         # Organize different api keys/oauths available
         if 'gh_api_key' in self.config:
             self.init_oauths()
-
-        # Send broker hello message
-        self.connect_to_broker()
 
     @property
     def task(self):
@@ -152,6 +155,7 @@ class Worker():
         """ Function to process each entry in the worker's task queue
         Determines what action to take based off the message type
         """
+        self.initialize_database_connections()
         while True:
             if not self._queue.empty():
                 message = self._queue.get() # Get the task off our MP queue
@@ -187,9 +191,13 @@ class Worker():
             #   and worker can move onto the next task without stopping
             try:
                 model_method(message, repo_id)
-            except Exception as e:
+            except Exception as e: # this could be a custom exception, might make things easier
                 self.register_task_failure(message, repo_id, e)
-                pass
+                break
+
+        logging.info("Closing database connections for current task")
+        self.db.dispose()
+        self.helper_db.dispose()
 
     def assign_tuple_action(self, new_data, table_values, update_col_map, duplicate_col_map, table_pkey, value_update_col_map={}):
         """ map objects => { *our db col* : *gh json key*} """
@@ -710,6 +718,7 @@ class Worker():
 
     def register_task_completion(self, task, repo_id, model):
         # Task to send back to broker
+        logging.info("TASK COMPLETED")
         task_completed = {
             'worker_id': self.config['id'],
             'job_type': "MAINTAIN",
