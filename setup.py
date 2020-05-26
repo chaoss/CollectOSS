@@ -44,7 +44,7 @@ setup(
         "psycopg2-binary",
         "click",
         "psutil",
-        "gunicorn==19.9.0",
+        "gunicorn",
         "six>=1.14.0"
     ],
     extras_require={
