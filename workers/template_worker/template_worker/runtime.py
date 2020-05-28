@@ -36,14 +36,14 @@ def main(augur_url, host, port):
         }
 
     #create instance of the worker
-    app.template_worker = TemplateWorker(config) # declares the worker that will be running on this server with specified config
+    app.worker = TemplateWorker(config) # declares the worker that will be running on this server with specified config
 
     create_server(app, None)
     logging.info("Starting Flask App with pid: " + str(os.getpid()) + "...")
     app.run(debug=app.debug, host=host, port=worker_port)
 
-    if app.template_worker._child is not None:
-        app.template_worker._child.terminate()
+    if app.worker._child is not None:
+        app.worker._child.terminate()
 
     try:
         requests.post('http://{}:{}/api/unstable/workers/remove'.format(server['host'],server['port']), json={"id": config['id']})
