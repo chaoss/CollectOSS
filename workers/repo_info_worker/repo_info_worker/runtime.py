@@ -1,7 +1,7 @@
 from flask import Flask, jsonify, request, Response
 import click, os, json, requests, logging
 from repo_info_worker.worker import RepoInfoWorker
-from workers.util import read_config, create_server
+from workers.util import read_config, create_server, WorkerGunicornApplication
 
 @click.command()
 @click.option('--augur-url', default='http://localhost:5000/', help='Augur URL')
@@ -10,39 +10,37 @@ from workers.util import read_config, create_server
 def main(augur_url, host, port):
     """ Declares singular worker and creates the server and flask app that it will be running on
     """
-    app = Flask(__name__)
-
-    #load credentials
-    broker_host = read_config("Server", "host", "AUGUR_HOST", "0.0.0.0")
-    broker_port = read_config("Server", "port", "AUGUR_PORT", 5000)
-    database_host = read_config('Database', 'host', 'AUGUR_DB_HOST', 'host')
+    worker_type = "repo_info_worker"
     worker_info = read_config('Workers', 'repo_info_worker', None, None)
-
     worker_port = worker_info['port'] if 'port' in worker_info else port
 
     while True:
         try:
-            r = requests.get("http://{}:{}/AUGWOP/heartbeat".format(host, worker_port)).json()
+            r = requests.get("http://{}:{}/AUGWOP/heartbeat".format(broker_port, worker_port)).json()
             if 'status' in r:
                 if r['status'] == 'alive':
                     worker_port += 1
         except:
             break
 
-    logging.basicConfig(filename='worker_{}.log'.format(worker_port), filemode='w', level=logging.INFO)
-
     config = { 
-            "id": "com.augurlabs.core.repo_info_worker.{}".format(worker_port),
-            'location': 'http://{}:{}'.format(read_config('Server', 'host', 'AUGUR_HOST', 'localhost'),worker_port),
+            "worker_type": worker_type,
+            "worker_port": worker_port,
+            "server_logfile": "{}_{}_server.log".format(worker_type, worker_port),
+            "collection_logfile": "{}_{}_collection.log".format(worker_type, worker_port),
+            "log_level": "INFO",
+            "verbose": False,
+            "id": "com.augurlabs.core.{}.{}".format(worker_port, worker_type),
+            'location': 'http://{}:{}'.format(read_config('Server', 'host', 'AUGUR_HOST', 'localhost'), worker_port),
             'gh_api_key': read_config('Database', 'key', 'AUGUR_GITHUB_API_KEY', 'key')
         }
 
-    #create instance of the worker
-    app.worker = RepoInfoWorker(config) # declares the worker that will be running on this server with specified config
+    app = Flask(f"{worker_type}.{worker_port}")
+    app.worker = RepoInfoWorker(config)
 
-    create_server(app, None)
-    logging.info("Starting Flask App with pid: " + str(os.getpid()) + "...")
-    app.run(debug=app.debug, host=host, port=worker_port)
+    create_server(app)
+    WorkerGunicornApplication(app, worker_port).run()
+    
     if app.worker._child is not None:
         app.worker._child.terminate()
     try:
@@ -50,6 +48,4 @@ def main(augur_url, host, port):
     except:
         pass
 
-    logging.info("Killing Flask App: " + str(os.getpid()))
     os.kill(os.getpid(), 9)
-

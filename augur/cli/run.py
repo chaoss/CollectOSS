@@ -7,7 +7,6 @@ from copy import deepcopy
 import os, time, atexit, subprocess, click, atexit
 import multiprocessing as mp
 import gunicorn.app.base
-from gunicorn.six import iteritems
 from gunicorn.arbiter import Arbiter
 from augur.housekeeper.housekeeper import Housekeeper
 
@@ -144,9 +143,9 @@ class AugurGunicornApp(gunicorn.app.base.BaseApplication):
         """
         Sets the values for configurations
         """
-        config = dict([(key, value) for key, value in iteritems(self.options)
-                       if key in self.cfg.settings and value is not None])
-        for key, value in iteritems(config):
+        config = {key: value for key, value in self.options.items()
+                  if key in self.cfg.settings and value is not None}
+        for key, value in config.items():
             self.cfg.set(key.lower(), value)
 
     def get_augur_app(self):

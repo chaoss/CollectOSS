@@ -1,5 +1,7 @@
 import os, json, requests, logging
 from flask import Flask, Response, jsonify, request
+from logging import Formatter, FileHandler
+import gunicorn.app.base
 
 def read_config(section, name=None, environment_variable=None, default=None, config_file_path='../../augur.config.json', no_config_file=0, use_main_config=0):
     """
@@ -47,7 +49,7 @@ def read_config(section, name=None, environment_variable=None, default=None, con
 
     return value
 
-def create_server(app, worker):
+def create_server(app):
     """ Consists of AUGWOP endpoints for the broker to communicate to this worker
     Can post a new task to be added to the workers queue
     Can retrieve current status of the worker
@@ -84,3 +86,27 @@ def create_server(app, worker):
         """ Retrieve worker's config
         """
         return app.worker.config
+
+class WorkerGunicornApplication(gunicorn.app.base.BaseApplication):
+
+    def __init__(self, app, worker_port):
+        self.options = {
+            'bind': '%s:%s' % (read_config('Server', 'host', 'AUGUR_HOST', 'localhost'), worker_port),
+            'workers': 1,
+            'errorlog': app.worker.config['server_logfile'],
+            'accesslog': app.worker.config['server_logfile'],
+            'loglevel': app.worker.config['log_level'],
+            'capture_output': True
+        }
+
+        self.application = app
+        super().__init__()
+
+    def load_config(self):
+        config = {key: value for key, value in self.options.items()
+                  if key in self.cfg.settings and value is not None}
+        for key, value in config.items():
+            self.cfg.set(key.lower(), value)
+
+    def load(self):
+        return self.application

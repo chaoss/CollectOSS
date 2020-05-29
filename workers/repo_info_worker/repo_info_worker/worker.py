@@ -31,7 +31,7 @@ class RepoInfoWorker(Worker):
 
         github_url = task['given']['github_url']
 
-        logging.info("Beginning filling the repo_info model for repo: " + github_url + "\n")
+        self.logger.info("Beginning filling the repo_info model for repo: " + github_url + "\n")
 
         owner, repo = self.get_owner_repo(github_url)
 
@@ -100,7 +100,7 @@ class RepoInfoWorker(Worker):
         num_attempts = 0
         success = False
         while num_attempts < 3:
-            logging.info("Hitting endpoint: {} ...\n".format(url))
+            self.logger.info("Hitting endpoint: {} ...\n".format(url))
             r = requests.post(url, json={'query': query}, headers=self.headers)
             self.update_gh_rate_limit(r)
 
@@ -110,7 +110,7 @@ class RepoInfoWorker(Worker):
                 data = json.loads(json.dumps(r.text))
 
             if 'errors' in data:
-                logging.info("Error!: {}".format(data['errors']))
+                self.logger.info("Error!: {}".format(data['errors']))
                 if data['errors']['message'] == 'API rate limit exceeded':
                     self.update_gh_rate_limit(r)
                     continue
@@ -120,9 +120,9 @@ class RepoInfoWorker(Worker):
                 data = data['data']['repository']
                 break
             else:
-                logging.info("Request returned a non-data dict: {}\n".format(data))
+                self.logger.info("Request returned a non-data dict: {}\n".format(data))
                 if data['message'] == 'Not Found':
-                    logging.info("Github repo was not found or does not exist for endpoint: {}\n".format(url))
+                    self.logger.info("Github repo was not found or does not exist for endpoint: {}\n".format(url))
                     break
                 if data['message'] == 'You have triggered an abuse detection mechanism. Please wait a few minutes before you try again.':
                     self.update_gh_rate_limit(r, temporarily_disable=True)
@@ -139,7 +139,7 @@ class RepoInfoWorker(Worker):
         committers_count = self.query_committers_count(owner, repo)
 
         # Put all data together in format of the table
-        logging.info(f'Inserting repo info for repo with id:{repo_id}, owner:{owner}, name:{repo}\n')
+        self.logger.info(f'Inserting repo info for repo with id:{repo_id}, owner:{owner}, name:{repo}\n')
         rep_inf = {
             'repo_id': repo_id,
             'last_updated': data['updatedAt'] if 'updatedAt' in data else None,
@@ -177,16 +177,16 @@ class RepoInfoWorker(Worker):
         }
 
         result = self.db.execute(self.repo_info_table.insert().values(rep_inf))
-        logging.info(f"Primary Key inserted into repo_info table: {result.inserted_primary_key}\n")
+        self.logger.info(f"Primary Key inserted into repo_info table: {result.inserted_primary_key}\n")
         self.results_counter += 1
 
-        logging.info(f"Inserted info for {owner}/{repo}\n")
+        self.logger.info(f"Inserted info for {owner}/{repo}\n")
 
         #Register this task as completed
         self.register_task_completion(task, repo_id, "repo_info")
 
     def query_committers_count(self, owner, repo):
-        logging.info('Querying committers count\n')
+        self.logger.info('Querying committers count\n')
         url = f'https://api.github.com/repos/{owner}/{repo}/contributors?per_page=100'
         committers = 0
 
