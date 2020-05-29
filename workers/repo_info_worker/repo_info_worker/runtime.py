@@ -12,11 +12,11 @@ def main(augur_url, host, port):
     """
     worker_type = "repo_info_worker"
     worker_info = read_config('Workers', 'repo_info_worker', None, None)
-
     worker_port = worker_info['port'] if 'port' in worker_info else port
+
     while True:
         try:
-            r = requests.get("http://{}:{}/AUGWOP/heartbeat".format(host, worker_port)).json()
+            r = requests.get("http://{}:{}/AUGWOP/heartbeat".format(broker_port, worker_port)).json()
             if 'status' in r:
                 if r['status'] == 'alive':
                     worker_port += 1
@@ -40,7 +40,6 @@ def main(augur_url, host, port):
 
     create_server(app)
     WorkerGunicornApplication(app, worker_port).run()
-
     if app.worker._child is not None:
         app.worker._child.terminate()
     try:
