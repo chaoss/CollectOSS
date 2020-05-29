@@ -49,7 +49,7 @@ def read_config(section, name=None, environment_variable=None, default=None, con
 
     return value
 
-def create_server(app):
+def create_server(app, worker=None):
     """ Consists of AUGWOP endpoints for the broker to communicate to this worker
     Can post a new task to be added to the workers queue
     Can retrieve current status of the worker

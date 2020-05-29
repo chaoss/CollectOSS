@@ -49,8 +49,6 @@ def initialize_components(augur_app, disable_housekeeper):
     manager = mp.Manager()
     broker = manager.dict()
 
-    atexit.register(exit, worker_processes, master, housekeeper, manager)
-
     if not disable_housekeeper:
         logger.info("Booting housekeeper...")
         jobs = deepcopy(augur_app.read_config('Housekeeper', 'jobs'))
@@ -77,6 +75,8 @@ def initialize_components(augur_app, disable_housekeeper):
                     worker_process = mp.Process(target=worker_start, kwargs={'worker_name': worker, 'instance_number': i, 'worker_port': controller[worker]['port']}, daemon=True)
                     worker_process.start()
                     worker_processes.append(worker_process)
+
+    atexit.register(exit, worker_processes, master, housekeeper, manager)
 
     host = augur_app.read_config('Server', 'host')
     port = augur_app.read_config('Server', 'port')
