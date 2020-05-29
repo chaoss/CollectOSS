@@ -77,21 +77,21 @@ dev: dev-stop dev-start
 #
 # Testing
 #
-.PHONY: test test-data test-metrics test-metrics-api
+.PHONY: test test-data test-application test-metric-routes test-python-versions
 
 test-data:
 	@ docker run -p 5434:5432 --name augur_test_data augurlabs/augur:test_data@sha256:3c496445d7219b824315a37369fcddbe83b10773259560df5645162ce81dfb33
 
-test: test-metrics test-metrics-api
+test: test-application test-metric-routes
 
-test-metrics:
-	@ bash -c 'tox -e py-metrics 2>&1'
+test-application:
+	@ bash -c 'tox -e py-application'
 
-test-metrics-api:
-	@ bash -c 'tox -e py-metrics_api 2>&1'
+test-metric-routes:
+	@ bash -c 'tox -e py-metric-routes'
 
 test-python-versions:
-	@ bash -c 'tox -e ALL 2>&1'
+	@ bash -c 'tox -e ALL'
 
 
 #

@@ -3,12 +3,6 @@
 import pytest
 import pandas as pd
 
-@pytest.fixture(scope="module")
-def metrics():
-    import augur
-    augur_app = augur.Application()
-    return augur_app.metrics
-
 def test_issues_new(metrics):
     #repo_id
     assert metrics.issues_new(10, 25430, period='year').iloc[0]['issues'] > 0

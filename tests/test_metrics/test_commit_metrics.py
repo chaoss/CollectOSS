@@ -2,12 +2,6 @@
 
 import pytest
 
-@pytest.fixture(scope="module")
-def metrics():
-    import augur
-    augur_app = augur.Application()
-    return augur_app.metrics
-
 def test_annual_commit_count_ranked_by_repo_in_repo_group(metrics):
     assert metrics.annual_commit_count_ranked_by_repo_in_repo_group(10).iloc[0].net > 0
     assert metrics.annual_commit_count_ranked_by_repo_in_repo_group(10, 25430).iloc[0].net > 0
