@@ -8,6 +8,14 @@ from sqlalchemy import MetaData
 from sqlalchemy.ext.automap import automap_base
 from workers.worker_base import Worker
 
+# NOTE: This worker primarily inserts rows into the REPO_INFO table, which serves the primary purposes of 
+# 1. Displaying discrete metadata like "number of forks" and how they change over time 
+# 2. Validating other workers, like those related to pull requests, issues, and commits. Our totals should be at or very near the totals in the repo_info table.
+
+# This table also updates teh REPO table in 2 cases: 
+# 1. Recognizing when a repository is a forked repository by updating the "forked_from" field and 
+# 2. Recognizing when a repository is archived, and recording the data we observed the change in status. 
+
 class RepoInfoWorker(Worker):
     def __init__(self, config):
         
@@ -137,6 +145,7 @@ class RepoInfoWorker(Worker):
 
         # Get committers count info that requires seperate endpoint
         committers_count = self.query_committers_count(owner, repo)
+        # Note that the addition of information about where a repository may be forked from, and whether a repository is archived, updates the `repo` table, not the `repo_info` table.
         forked = self.is_forked(owner, repo)
         archived = self.is_archived(owner, repo)
         if archived is not False:
