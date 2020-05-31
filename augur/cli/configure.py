@@ -19,8 +19,7 @@ default_config = {
             "password": "augur",
             "port": 5432,
             "user": "augur",
-            "gitlab_api_key": "gitlab_api_key"
-
+            "gitlab_api_key":"gitlab_api_key"
         },
         "Housekeeper": {
             "jobs": [
@@ -159,7 +158,12 @@ default_config = {
                 "port": 50900,
                 "switch": 1,
                 "workers": 1
-            }
+            },
+            "gitlab_issues_worker": {
+                "port": 51000,
+                "switch": 1,
+                "workers": 1
+            },
         },
         "Facade": {
             "check_updates": 1,
