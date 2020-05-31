@@ -18,7 +18,9 @@ default_config = {
             "key": "key",
             "password": "augur",
             "port": 5432,
-            "user": "augur"
+            "user": "augur",
+            "gitlab_api_key": "gitlab_api_key"
+
         },
         "Housekeeper": {
             "jobs": [
@@ -201,10 +203,11 @@ def cli():
 @click.option('--db_user', help="User for your data collection database", envvar=ENVVAR_PREFIX + 'DB_USER')
 @click.option('--db_port', help="Port for your data collection database", envvar=ENVVAR_PREFIX + 'DB_PORT')
 @click.option('--db_password', help="Password for your data collection database", envvar=ENVVAR_PREFIX + 'DB_PASSWORD')
+@click.option('--gitlab_api_key', help="GitLab API key for data collection from the GitLab API", envvar=ENVVAR_PREFIX + 'GITLAB_API_KEY')
 @click.option('--github_api_key', help="GitHub API key for data collection from the GitHub API", envvar=ENVVAR_PREFIX + 'GITHUB_API_KEY')
 @click.option('--facade_repo_directory', help="Directory on the database server where Facade should clone repos", envvar=ENVVAR_PREFIX + 'FACADE_REPO_DIRECTORY')
 @click.option('--rc-config-file', help="File containing existing config whose values will be used as the defaults", type=click.Path(exists=True))
-def generate(db_name, db_host, db_user, db_port, db_password, github_api_key, facade_repo_directory, rc_config_file):
+def generate(db_name, db_host, db_user, db_port, db_password, github_api_key, facade_repo_directory, rc_config_file, gitlab_api_key):
     """
     Generate an augur.config.json
     """
@@ -250,6 +253,8 @@ def generate(db_name, db_host, db_user, db_port, db_password, github_api_key, fa
         config['Database']['password'] = db_password
     if github_api_key is not None:
         config['Database']['key'] = github_api_key
+    if gitlab_api_key is not None:
+        config['Database']['gitlab_api_key'] = gitlab_api_key
     if facade_repo_directory is not None:
         config['Workers']['facade_worker']['repo_directory'] = facade_repo_directory
 
