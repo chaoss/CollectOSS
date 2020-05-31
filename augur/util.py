@@ -42,7 +42,7 @@ def get_cache(namespace, cache_manager=None):
 metric_metadata = []
 def register_metric(metadata=None, **kwargs):
     """
-    Decorates a function as being a metric
+    Register a function as being a metric
     """
     if metadata is None:
         metadata = {}
@@ -54,20 +54,19 @@ def register_metric(metadata=None, **kwargs):
         if not hasattr(function, 'is_metric'):
             function.is_metric = True
 
-        function.metadata.update(metadata)
-        if kwargs.get('endpoint_type', None):
-            endpoint_type = kwargs.pop('endpoint_type')
-            if endpoint_type == 'repo':
-                function.metadata['repo_endpoint'] = kwargs.get('endpoint')
-            else:
-                function.metadata['group_endpoint'] = kwargs.get('endpoint')
-
         function.metadata.update(dict(kwargs))
 
         function.metadata['tag'] = re.sub('_', '-', function.__name__).lower()
-        function.metadata['metric_name'] = re.sub('_', ' ', function.__name__).title()
+        function.metadata['endpoint'] = function.metadata['tag']
+        function.metadata['name'] = re.sub('_', ' ', function.__name__).title()
         function.metadata['model'] = re.sub(r'(.*\.)', '', function.__module__)
-        function.metadata['ID'] = "{}-{}".format(function.metadata['model'].lower(), function.metadata['tag'])
+
+        if kwargs.get('type', None):
+            function.metadata['type'] = kwargs.get('type')
+        else:
+            function.metadata['type'] = "standard"
+
+        function.metadata.update(metadata)
 
         return function
     return decorate
