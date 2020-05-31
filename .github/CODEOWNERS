@@ -1,19 +1,22 @@
-*.py @ccarterlandis @gabe-heim
+/augur/cli/ @ccarterlandis
+/augur/metrics/ @ccarterlandis
+/augur/housekeeper/ @gabe-heim
+/augur/server.py @ccarterlandis @gabe-heim
+/augur/application.py @ccarterlandis @gabe-heim
+/augur/routes/ @ccarterlandis @gabe-heim
 
-/augur/ @ccarterlandis @gabe-heim
+/frontend/ @gabe-heim
 
-/frontend/ @gabe-heim @michaelwoodruffdev
+/schema/ @sgoggins @ccarterlandis
 
-/schema @sgoggins
-
-/workers/ @ccarterlandis @gabe-heim @sgoggins
+/workers/ @ccarterlandis @gabe-heim
 
 /README.md @sgoggins @ccarterlandis
 /CONTRIBUTING.md @sgoggins @ccarterlandis
-/LICENSE @sgoggins
-/CODE_OF_CONDUCT.md @sgoggins
+/LICENSE @sgoggins @ccarterlandis
+/CODE_OF_CONDUCT.md @sgoggins @ccarterlandis
 
-/test/ @ccarterlandis
+/tests/ @ccarterlandis
 /util/docker @ccarterlandis
 /scripts/ @ccarterlandis
 /docs/ @ccarterlandis
