@@ -31,7 +31,7 @@ def main(augur_url, host, port):
     logging.basicConfig(filename='worker_{}.log'.format(worker_port), filemode='w', level=logging.INFO)
 
     config = { 
-            "id": "com.augurlabs.core.repo_info_worker.{}".format(worker_port),
+            'id': 'com.augurlabs.core.repo_info_worker.{}'.format(worker_port),
             'location': 'http://{}:{}'.format(read_config('Server', 'host', 'AUGUR_HOST', 'localhost'),worker_port),
             'gh_api_key': read_config('Database', 'key', 'AUGUR_GITHUB_API_KEY', 'key')
         }
