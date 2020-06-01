@@ -6,8 +6,9 @@ Augur library script for generating a config file
 import os
 import click
 import json
+import logging
 
-from augur import logger
+logger = logging.getLogger("augur")
 
 ENVVAR_PREFIX = "AUGUR_"
 
@@ -187,7 +188,9 @@ default_config = {
             "port": "5000"
         },
         "Development": {
-            "log_level": "INFO"
+            "log_level": "INFO",
+            "verbose": 0,
+            "quiet": 0
         }
     }
 

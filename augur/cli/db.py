@@ -1,5 +1,6 @@
 from os import walk, chdir, environ, chmod, path
 import os
+import logging
 from sys import exit
 import stat
 from collections import OrderedDict
@@ -12,7 +13,7 @@ import sqlalchemy as s
 import pandas as pd
 from sqlalchemy import exc
 
-from augur import logger
+logger = logging.getLogger("augur.cli")
 
 @click.group('db', short_help='Database utilities')
 def cli():

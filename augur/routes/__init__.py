@@ -5,8 +5,6 @@ import glob
 import sys
 import inspect
 
-from augur import logger
-
 def get_route_files():
     route_files = []
 

@@ -5,6 +5,7 @@ Miscellaneous Augur library commands for controlling the backend components
 
 import os
 import signal
+import logging
 from subprocess import call, run
 
 import psutil
@@ -12,8 +13,9 @@ import click
 import pandas as pd
 import sqlalchemy as s
 
-from augur import logger
 from augur.cli.configure import default_config
+
+logger = logging.getLogger("augur.cli")
 
 @click.group('util', short_help='Miscellaneous utilities')
 def cli():

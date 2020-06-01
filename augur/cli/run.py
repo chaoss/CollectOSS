@@ -4,18 +4,17 @@ Augur library commands for controlling the backend components
 """
 
 from copy import deepcopy
-import os, time, atexit, subprocess, click, atexit
+import os, time, atexit, subprocess, click, atexit, logging
 import multiprocessing as mp
 import gunicorn.app.base
 from gunicorn.arbiter import Arbiter
-from augur.housekeeper.housekeeper import Housekeeper
 
-from augur import logger
+from augur.housekeeper.housekeeper import Housekeeper
+from augur.logging import reset_logfiles
 from augur.server import Server
-from augur.runtime import pass_application
 from augur.cli.util import kill_processes
 
-import time
+logger = logging.getLogger("augur")
 
 @click.command("run")
 @click.option("--disable-housekeeper", is_flag=True, default=False, help="Turns off the housekeeper")
@@ -25,6 +24,7 @@ def cli(ctx, disable_housekeeper, skip_cleanup):
     """
     Start Augur's backend server
     """
+    reset_logfiles()
     if not skip_cleanup:
         logger.info("Cleaning up old Augur processes. Just a moment please...")
         ctx.invoke(kill_processes)
@@ -32,9 +32,11 @@ def cli(ctx, disable_housekeeper, skip_cleanup):
     else:
         logger.info("Skipping cleanup processes...")
 
-    logger.info('Initialzing...')
+    logger.info('Initializing...')
     master = initialize_components(ctx.obj, disable_housekeeper)
-    logger.info('Starting server...')
+    logger.info('Gunicorn server logs will be written to logs/gunicorn.log')
+    logger.info('Augur logs will be written to logs/augur.log')
+    logger.info('Starting Gunicorn server...')
     Arbiter(master).run()
 
 def initialize_components(augur_app, disable_housekeeper):
@@ -82,13 +84,16 @@ def initialize_components(augur_app, disable_housekeeper):
     port = augur_app.read_config('Server', 'port')
     workers = int(augur_app.read_config('Server', 'workers'))
     timeout = int(augur_app.read_config('Server', 'timeout'))
+
     options = {
         'bind': '%s:%s' % (host, port),
         'workers': workers,
-        'accesslog': '-',
-        'access_log_format': '%(h)s - %(t)s - %(r)s',
-        'timeout': timeout
+        'timeout': timeout,
+        'errorlog': "logs/gunicorn.log",
+        'accesslog': "logs/gunicorn.log",
+        'loglevel': augur_app.read_config("Development", "log_level"),
     }
+
     return AugurGunicornApp(options, manager=manager, broker=broker, housekeeper=housekeeper, augur_app=augur_app)
 
 def worker_start(worker_name=None, instance_number=0, worker_port=None):

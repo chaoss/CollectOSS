@@ -10,22 +10,24 @@ import types
 import json
 import os
 import base64
+import logging
 
 from flask import Flask, request, Response, redirect
 from flask_cors import CORS
 import pandas as pd
 
 import augur
-from augur.util import logger
 from augur.routes import create_routes
 
 AUGUR_API_VERSION = 'api/unstable'
+
+logger = logging.getLogger("augur")
 
 class Server(object):
     """
     Defines Augur's server's behavior
     """
-    def __init__(self, frontend_folder='../frontend/public', manager=None, broker=None, housekeeper=None, augur_app=None):
+    def __init__(self, manager=None, broker=None, housekeeper=None, augur_app=None):
         """
         Initializes the server, creating both the Flask application and Augur application
         """
@@ -39,6 +41,12 @@ class Server(object):
 
         # Create Augur application
         self.augur_app = augur_app
+
+        # import ipdb
+        # ipdb.set_trace()
+        #TODO: something is hooking into the logging again, likely the same problem
+        # the augur.log gets cleared, and I don't see anything after the gunicorn app starts up
+        # thanks gunicorn...
 
         # Initialize cache
         expire = int(self.augur_app.read_config('Server', 'cache_expire'))

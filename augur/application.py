@@ -4,20 +4,22 @@ Handles global context, I/O, and configuration
 """
 
 import os
-import time
-import multiprocessing as mp
+from pathlib import Path
 import logging
+from logging import FileHandler, Formatter
 import coloredlogs
 import json
-import pkgutil
 from beaker.cache import CacheManager
 from beaker.util import parse_cache_config_options
 import sqlalchemy as s
-import psycopg2
 
-from augur import logger
 from augur.metrics import Metrics
 from augur.cli.configure import default_config
+import augur.logging
+
+ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+
+logger = logging.getLogger("augur")
 
 class Application():
     """Initalizes all classes from Augur using a config file or environment variables"""
@@ -30,7 +32,7 @@ class Application():
         self.default_config = default_config
         self.config = None
         self.env_config = {}
-        self.root_augur_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+        self.root_augur_dir = ROOT_AUGUR_DIRECTORY
         self._using_default_config = True
 
         self.config_file_path = self._discover_config_file()
@@ -45,11 +47,7 @@ class Application():
 
         self.load_env_configuration()
 
-        log_level = self.read_config("Development", "log_level")
-        if log_level == "quiet":
-            logger.disabled = True
-        else:
-            logger.setLevel(log_level)
+        augur.logging.initialize_logging(ROOT_AUGUR_DIRECTORY, self.read_config("Development"), [job["model"] for job in self.read_config("Housekeeper", "jobs")])
         self.logger = logger
 
         self.cache_config = {
@@ -153,6 +151,8 @@ class Application():
         self.set_env_value(section='Database', name='user', environment_variable='AUGUR_DB_USER')
         self.set_env_value(section='Database', name='password', environment_variable='AUGUR_DB_PASSWORD')
         self.set_env_value(section='Development', name='log_level', environment_variable='AUGUR_LOG_LEVEL')
+        self.set_env_value(section='Development', name='verbose', environment_variable='AUGUR_LOG_VERBOSE')
+        self.set_env_value(section='Development', name='quiet', environment_variable='AUGUR_LOG_QUIET')
 
     def set_env_value(self, section, name, environment_variable, sub_config=None):
         """

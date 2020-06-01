@@ -4,7 +4,9 @@ import sys
 import inspect
 import types
 import importlib
-from augur import logger
+import logging
+
+logger = logging.getLogger("augur")
 
 class Metrics():
     def __init__(self, app):

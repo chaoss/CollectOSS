@@ -41,7 +41,7 @@ def test_connect_to_database(monkeypatch):
         raise(s.exc.OperationalError("fake", "error", "message"))
 
     monkeypatch.setattr(s.engine.Engine, "connect", mock_fail_connection)
-    monkeypatch.setenv("AUGUR_LOG_LEVEL", "quiet")
+    monkeypatch.setenv("AUGUR_LOG_QUIET", "1")
 
     with pytest.raises(s.exc.OperationalError):
         augur_app = augur.application.Application()
