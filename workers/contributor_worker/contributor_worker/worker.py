@@ -8,11 +8,12 @@ from sqlalchemy import MetaData, and_
 import statistics, logging, os, json, time
 import numpy as np
 import datetime
-from workers.standard_methods import * #init_oauths, get_table_values, get_max_id, register_task_completion, register_task_failure, connect_to_broker, update_gh_rate_limit, record_model_process, paginate
+from workers.standard_methods import *
+from workers.worker_base import Worker
 import warnings
 warnings.filterwarnings('ignore')
 
-class ContributorWorker:
+class ContributorWorker(Worker):
     """ Worker that detects anomalies on a select few of our metrics
     task: most recent task the broker added to the worker's queue
     child: current process of the queue being ran
@@ -20,167 +21,27 @@ class ContributorWorker:
     config: holds info like api keys, descriptions, and database connection strings
     """
     def __init__(self, config, task=None):
-        self.config = config
-        logging.basicConfig(filename='worker_{}.log'.format(self.config['id'].split('.')[len(self.config['id'].split('.')) - 1]), filemode='w', level=logging.INFO)
-        logging.info('Worker (PID: {}) initializing...\n'.format(str(os.getpid())))
-        self._task = task
-        self._child = None
-        self._queue = Queue()
-        self.db = None
+
+        given = [['git_url']]
+        models = ['contributors']
+
+        data_tables = ['contributors', 'contributors_aliases', 'contributor_affiliations',
+            'issue_events', 'pull_request_events', 'issues', 'message', 'issue_assignees',
+            'pull_request_assignees', 'pull_request_reviewers', 'pull_request_meta', 'pull_request_repo']
+        operations_tables = ['worker_history', 'worker_job']
+
+        # Run the general worker initialization
+        super().__init__(config, given, models, data_tables, operations_tables)
+
+        # These 3 are included in every tuple the worker inserts (data collection info)
         self.tool_source = 'Contributor Worker'
         self.tool_version = '0.0.1' # See __init__.py
         self.data_source = 'Augur Commit Data'
-        self.finishing_task = False
-        
-        self.specs = {
-            "id": self.config['id'],
-            "location": self.config['location'],
-            "qualifications":  [
-                {
-                    "given": [["git_url"]],
-                    "models":["contributors"]
-                }
-            ],
-            "config": [self.config]
-        }
 
-        self.results_counter = 0
+        # Get max ids so we know where we are in our insertion and to have the current id when inserting FK's
+        logging.info("Querying starting ids info...\n")
 
-        self.DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(
-            self.config['user'], self.config['password'], self.config['host'], self.config['port'], self.config['database']
-        )
-
-        dbschema = 'augur_data'
-        self.db = s.create_engine(self.DB_STR, poolclass=s.pool.NullPool,
-            connect_args={'options': '-csearch_path={}'.format(dbschema)})
-
-        helper_schema = 'augur_operations'
-        self.helper_db = s.create_engine(self.DB_STR, poolclass = s.pool.NullPool,
-            connect_args={'options': '-csearch_path={}'.format(helper_schema)})
-        
-        # produce our own MetaData object
-        metadata = MetaData()
-        helper_metadata = MetaData()
-
-        # we can reflect it ourselves from a database, using options
-        # such as 'only' to limit what tables we look at...
-        metadata.reflect(self.db, only=['contributors', 'contributors_aliases', 'contributor_affiliations',
-            'issue_events', 'pull_request_events', 'issues', 'message', 'issue_assignees',
-            'pull_request_assignees', 'pull_request_reviewers', 'pull_request_meta', 'pull_request_repo'])
-        helper_metadata.reflect(self.helper_db, only=['worker_history', 'worker_job'])
-
-        # we can then produce a set of mappings from this MetaData.
-        Base = automap_base(metadata=metadata)
-        HelperBase = automap_base(metadata=helper_metadata)
-
-        # calling prepare() just sets up mapped classes and relationships.
-        Base.prepare()
-        HelperBase.prepare()
-
-        # mapped classes are ready
-        self.contributors_table = Base.classes.contributors.__table__
-        self.contributors_aliases_table = Base.classes.contributors_aliases.__table__
-        self.contributor_affiliations_table = Base.classes.contributor_affiliations.__table__
-        self.issue_events_table = Base.classes.issue_events.__table__
-        self.pull_request_events_table = Base.classes.pull_request_events.__table__
-        self.issues_table = Base.classes.issues.__table__
-        self.message_table = Base.classes.message.__table__
-        self.issue_assignees_table = Base.classes.issue_assignees.__table__
-        self.pull_request_assignees_table = Base.classes.pull_request_assignees.__table__
-        self.pull_request_reviewers_table = Base.classes.pull_request_reviewers.__table__
-        self.pull_request_meta_table = Base.classes.pull_request_meta.__table__
-        self.pull_request_repo_table = Base.classes.pull_request_repo.__table__
-
-        self.history_table = HelperBase.classes.worker_history.__table__
-        self.job_table = HelperBase.classes.worker_job.__table__
-
-        self.cntrb_id_inc = get_max_id(self, 'contributors', 'cntrb_id')
-
-        # Increment so we are ready to insert the 'next one' of each of these most recent ids
-        self.history_id = get_max_id(self, 'worker_history', 'history_id', operations_table=True) + 1
-
-        # Organize different api keys/oauths available
-        init_oauths(self)
-
-        # Send broker hello message
-        connect_to_broker(self)
-
-    def update_config(self, config):
-        """ Method to update config and set a default
-        """
-        self.config = {
-            'database_connection_string': 'psql://{}:5432/augur'.format(self.config['broker_host']),
-            "display_name": "",
-            "description": "",
-            "required": 1,
-            "type": "string"
-        }
-        self.config.update(config)
-
-    @property
-    def task(self):
-        """ Property that is returned when the worker's current task is referenced
-        """
-        return self._task
-    
-    @task.setter
-    def task(self, value):
-        """ entry point for the broker to add a task to the queue
-        Adds this task to the queue, and calls method to process queue
-        """
-        if value['job_type'] == "UPDATE" or value['job_type'] == "MAINTAIN":
-            self._queue.put(value)
-        
-        self._task = value
-        self.run()
-
-    def cancel(self):
-        """ Delete/cancel current task
-        """
-        self._task = None
-
-    def run(self):
-        """ Kicks off the processing of the queue if it is not already being processed
-        Gets run whenever a new task is added
-        """
-        logging.info("Running...\n")
-        self._child = Process(target=self.collect, args=())
-        self._child.start()
-
-    def collect(self):
-        """ Function to process each entry in the worker's task queue
-        Determines what action to take based off the message type
-        """
-        while True:
-            if not self._queue.empty():
-                message = self._queue.get() # Get the task off our MP queue
-            else:
-                break
-            logging.info("Popped off message: {}\n".format(str(message)))
-
-            if message['job_type'] == 'STOP':
-                break
-
-            # If task is not a valid job type
-            if message['job_type'] != 'MAINTAIN' and message['job_type'] != 'UPDATE':
-                raise ValueError('{} is not a recognized task type'.format(message['job_type']))
-                pass
-
-            # Query repo_id corresponding to repo url of given task 
-            repoUrlSQL = s.sql.text("""
-                SELECT min(repo_id) as repo_id FROM repo WHERE repo_git = '{}'
-                """.format(message['given']['git_url']))
-            repo_id = int(pd.read_sql(repoUrlSQL, self.db, params={}).iloc[0]['repo_id'])
-
-            # Model method calls wrapped in try/except so that any unexpected error that occurs can be caught
-            #   and worker can move onto the next task without stopping
-            try:
-                # Call method corresponding to model sent in task
-                if message['models'][0] == 'contributors':
-                    self.contributors_model(message, repo_id)
-            except Exception as e:
-                register_task_failure(self, message, repo_id, e)
-                pass
+        self.cntrb_id_inc = self.get_max_id('contributors', 'cntrb_id')
 
     def contributors_model(self, entry_info, repo_id):
 
@@ -188,7 +49,7 @@ class ContributorWorker:
         self.insert_facade_contributors(entry_info, repo_id)
 
         # Get and insert all users github considers to be contributors for this repo
-        query_github_contributors(self, entry_info, repo_id)
+        self.query_github_contributors(entry_info, repo_id)
 
         logging.info("Searching users for commits from the facade worker for repo with entry info: {}\n".format(entry_info))
 
@@ -242,7 +103,7 @@ class ContributorWorker:
 
         commit_cntrbs = json.loads(pd.read_sql(userSQL, self.db, \
             params={'repo_id': repo_id}).to_json(orient="records"))
-        logging.info("We found {} distinct emails to search for in this repo (repo_id = {})".format(
+        logging.info("We found {} distinct emails to search for in this repo (repo_id = {})\n".format(
             len(commit_cntrbs), repo_id))
 
         # For every unique commit contributor info combination...
@@ -349,7 +210,7 @@ class ContributorWorker:
 
                 logging.info("Hitting endpoint: " + url + " ...\n")
                 r = requests.get(url=url, headers=self.headers)
-                update_gh_rate_limit(self, r)
+                self.update_gh_rate_limit(r)
                 results = r.json()
 
                 # If no matches or bad response, continue with other contributors
@@ -372,7 +233,7 @@ class ContributorWorker:
                 cntrb_url = ("https://api.github.com/users/" + match['login'])
                 logging.info("Hitting endpoint: " + cntrb_url + " ...\n")
                 r = requests.get(url=cntrb_url, headers=self.headers)
-                update_gh_rate_limit(self, r)
+                self.update_gh_rate_limit(r)
                 contributor = r.json()
 
                 # Fill in all github information
@@ -412,6 +273,7 @@ class ContributorWorker:
 
 
         # Dupe check
+        logging.info('Checking dupes.\n')
         dupe_cntrb_sql = s.sql.text("""
             SELECT contributors.*
             FROM contributors inner join (
@@ -424,10 +286,21 @@ class ContributorWorker:
 
         dupe_cntrbs = pd.read_sql(dupe_cntrb_sql, self.db, params={})
 
+        logging.info(f'There are {len(dupe_cntrbs)} duplicates.\n')
+
         # Turn this column from nan to None
-        dupe_cntrbs['gh_user_id'] = dupe_cntrbs['gh_user_id'].where(pd.notnull(dupe_cntrbs['gh_user_id']), None)
+        dupe_cntrbs['gh_user_id'] = dupe_cntrbs['gh_user_id'].where(
+            pd.notnull(dupe_cntrbs['gh_user_id']), None)
+        dupe_cntrbs['cntrb_created_at'] = dupe_cntrbs['cntrb_created_at'].where(
+            pd.notnull(dupe_cntrbs['cntrb_created_at']), None)
 
         for i, cntrb_existing in dupe_cntrbs.iterrows():
+
+            logging.info(f'Processing dupe: {cntrb_existing}.\n')
+            if i == 0:
+                logging.info('skipping first\n')
+                continue
+
             cntrb_new = cntrb_existing.copy()
             del cntrb_new['cntrb_id']
             del cntrb_new['data_collection_date']
@@ -447,19 +320,26 @@ class ContributorWorker:
             dupe_ids = pd.read_sql(dupe_ids_sql, self.db, params={'pk': pk, \
                 'email': cntrb_new['cntrb_email']})['cntrb_id'].values.tolist()
 
-            self.map_new_id(self, dupe_ids, pk)
+            self.map_new_id(dupe_ids, pk)
 
             delete_dupe_ids_sql = s.sql.text("""
                 DELETE  
                 FROM contributors
                 WHERE cntrb_id <> {}
-                AND cntrb_email = '{}'
+                AND cntrb_email = '{}';
             """.format(pk, cntrb_new['cntrb_email']))
 
-            self.db.execute(delete_dupe_ids_sql)
+            logging.info(f'Trying to delete dupes with sql: {delete_dupe_ids_sql}')
+
+            try:
+                result = self.db.execute(delete_dupe_ids_sql)
+            except Exception as e:
+                logging.info(f'Deleting dupes failed with error: {e}')
+
+            logging.info('Deleted duplicates.\n')
 
         # Register this task as completed
-        register_task_completion(self, entry_info, repo_id, "contributors")
+        self.register_task_completion(entry_info, repo_id, "contributors")
 
     def insert_facade_contributors(self, entry_info, repo_id):
         logging.info("Beginning process to insert contributors from facade commits for repo w entry info: {}\n".format(entry_info))
@@ -522,7 +402,7 @@ class ContributorWorker:
         cntrb_id = tuple['cntrb_id']
 
         # Check existing contributors table tuple
-        existing_tuples = retrieve_tuple(self, {'cntrb_email': tuple['commit_email']}, ['contributors'])
+        existing_tuples = self.retrieve_tuple({'cntrb_email': tuple['commit_email']}, ['contributors'])
 
         if len(existing_tuples) == 0:
             """ Insert alias tuple into the contributor table """
@@ -641,7 +521,7 @@ class ContributorWorker:
 
 
         # Now check existing alias table tuple
-        existing_tuples = retrieve_tuple(self, {'alias_email': commit_email}, ['contributors_aliases'])
+        existing_tuples = self.retrieve_tuple({'alias_email': commit_email}, ['contributors_aliases'])
         if len(existing_tuples) == 0:
             logging.info("Finding cntrb_id for canonical email: {}".format(cntrb_email))
             canonical_id_sql = s.sql.text("""
@@ -693,48 +573,49 @@ class ContributorWorker:
 
             alias_result = self.db.execute(self.contributors_aliases_table.update().where(
                 self.contributors_aliases_table.c.cntrb_a_id.in_(dupe_ids)).values(alias_update_col))
-            logging.info("Updated cntrb_a_id column for tuples in the contributors_aliases table with value: {} replaced with new cntrb id: {}".format(id['cntrb_id'], self.cntrb_id_inc))
+            logging.info("Updated cntrb_a_id column for tuples in the contributors_aliases table with value: {} replaced with new cntrb id: {}".format(new_id, self.cntrb_id_inc))
 
         except Exception as e:
             logging.info(f'Alias re-map already done... error: {e}')
 
         issue_events_result = self.db.execute(self.issue_events_table.update().where(
             self.issue_events_table.c.cntrb_id.in_(dupe_ids)).values(update_col))
-        logging.info("Updated cntrb_id column for tuples in the issue_events table with value: {} replaced with new cntrb id: {}".format(id['cntrb_id'], self.cntrb_id_inc))
+        logging.info("Updated cntrb_id column for tuples in the issue_events table with value: {} replaced with new cntrb id: {}".format(new_id, self.cntrb_id_inc))
 
         pr_events_result = self.db.execute(self.pull_request_events_table.update().where(
             self.pull_request_events_table.c.cntrb_id.in_(dupe_ids)).values(update_col))
-        logging.info("Updated cntrb_id column for tuples in the pull_request_events table with value: {} replaced with new cntrb id: {}".format(id['cntrb_id'], self.cntrb_id_inc))
+        logging.info("Updated cntrb_id column for tuples in the pull_request_events table with value: {} replaced with new cntrb id: {}".format(new_id, self.cntrb_id_inc))
 
         issues_cntrb_result = self.db.execute(self.issues_table.update().where(
             self.issues_table.c.cntrb_id.in_(dupe_ids)).values(update_col))
-        logging.info("Updated cntrb_id column for tuples in the issues table with value: {} replaced with new cntrb id: {}".format(id['cntrb_id'], self.cntrb_id_inc))
+        logging.info("Updated cntrb_id column for tuples in the issues table with value: {} replaced with new cntrb id: {}".format(new_id, self.cntrb_id_inc))
 
         issues_reporter_result = self.db.execute(self.issues_table.update().where(
             self.issues_table.c.reporter_id.in_(dupe_ids)).values(reporter_col))
-        logging.info("Updated reporter_id column in the issues table with value: {} replaced with new cntrb id: {}".format(id['cntrb_id'], self.cntrb_id_inc))
+        logging.info("Updated reporter_id column in the issues table with value: {} replaced with new cntrb id: {}".format(new_id, self.cntrb_id_inc))
 
         issue_assignee_result = self.db.execute(self.issue_assignees_table.update().where(
             self.issue_assignees_table.c.cntrb_id.in_(dupe_ids)).values(update_col))
-        logging.info("Updated cntrb_id column for tuple in the issue_assignees table with value: {} replaced with new cntrb id: {}".format(id['cntrb_id'], self.cntrb_id_inc))
+        logging.info("Updated cntrb_id column for tuple in the issue_assignees table with value: {} replaced with new cntrb id: {}".format(new_id, self.cntrb_id_inc))
 
         pr_assignee_result = self.db.execute(self.pull_request_assignees_table.update().where(
             self.pull_request_assignees_table.c.contrib_id.in_(dupe_ids)).values(pr_assignee_col))
-        logging.info("Updated contrib_id column for tuple in the pull_request_assignees table with value: {} replaced with new cntrb id: {}".format(id['cntrb_id'], self.cntrb_id_inc))
+        logging.info("Updated contrib_id column for tuple in the pull_request_assignees table with value: {} replaced with new cntrb id: {}".format(new_id, self.cntrb_id_inc))
 
         message_result = self.db.execute(self.message_table.update().where(
             self.message_table.c.cntrb_id.in_(dupe_ids)).values(update_col))
-        logging.info("Updated cntrb_id column for tuple in the message table with value: {} replaced with new cntrb id: {}".format(id['cntrb_id'], self.cntrb_id_inc))
+        logging.info("Updated cntrb_id column for tuple in the message table with value: {} replaced with new cntrb id: {}".format(new_id, self.cntrb_id_inc))
 
         pr_reviewers_result = self.db.execute(self.pull_request_reviewers_table.update().where(
             self.pull_request_reviewers_table.c.cntrb_id.in_(dupe_ids)).values(update_col))
-        logging.info("Updated cntrb_id column for tuple in the pull_request_reviewers table with value: {} replaced with new cntrb id: {}".format(id['cntrb_id'], self.cntrb_id_inc))
+        logging.info("Updated cntrb_id column for tuple in the pull_request_reviewers table with value: {} replaced with new cntrb id: {}".format(new_id, self.cntrb_id_inc))
 
         pr_meta_result = self.db.execute(self.pull_request_meta_table.update().where(
             self.pull_request_meta_table.c.cntrb_id.in_(dupe_ids)).values(update_col))
-        logging.info("Updated cntrb_id column for tuple in the pull_request_meta table with value: {} replaced with new cntrb id: {}".format(id['cntrb_id'], self.cntrb_id_inc))
+        logging.info("Updated cntrb_id column for tuple in the pull_request_meta table with value: {} replaced with new cntrb id: {}".format(new_id, self.cntrb_id_inc))
 
         pr_repo_result = self.db.execute(self.pull_request_repo_table.update().where(
             self.pull_request_repo_table.c.pr_cntrb_id.in_(dupe_ids)).values(pr_repo_col))
-        logging.info("Updated cntrb_id column for tuple in the pull_request_repo table with value: {} replaced with new cntrb id: {}".format(id['cntrb_id'], self.cntrb_id_inc))
+        logging.info("Updated cntrb_id column for tuple in the pull_request_repo table with value: {} replaced with new cntrb id: {}".format(new_id, self.cntrb_id_inc))
 
+        logging.info('Done mapping new id.\n')
