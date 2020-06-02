@@ -8,6 +8,8 @@ import sqlalchemy as s
 import pandas as pd
 from sqlalchemy import MetaData
 logging.basicConfig(filename='housekeeper.log')
+import warnings
+warnings.filterwarnings('ignore')
 
 class Housekeeper:
 

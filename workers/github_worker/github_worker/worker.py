@@ -2,203 +2,45 @@ from multiprocessing import Process, Queue
 from urllib.parse import urlparse
 import pandas as pd
 import sqlalchemy as s
-from sqlalchemy.ext.automap import automap_base
-from sqlalchemy import MetaData
 import requests, time, logging, json, os
 from datetime import datetime
-from sqlalchemy.ext.declarative import declarative_base
-from workers.standard_methods import *
+from workers.worker_base import Worker
 
-class GitHubWorker:
+class GitHubWorker(Worker):
     """ Worker that collects data from the Github API and stores it in our database
     task: most recent task the broker added to the worker's queue
     child: current process of the queue being ran
     queue: queue of tasks to be fulfilled
     config: holds info like api keys, descriptions, and database connection strings
     """
-    def __init__(self, config, task=None):
-        self.config = config
-        # Format the port the worker is running on to the name of the 
-        #   log file so we can tell multiple instances apart
-        logging.basicConfig(filename='worker_{}.log'.format(self.config['id'].split('.')[len(self.config['id'].split('.')) - 1]), filemode='w', level=logging.INFO)
-        logging.info('Worker (PID: {}) initializing...'.format(str(os.getpid())))
+    def __init__(self, config):
 
-        self._task = task # task currently being worked on (dict)
-        self._child = None # process of currently running task (multiprocessing process)
-        self._queue = Queue() # tasks stored here 1 at a time (in a mp queue so it can translate across multiple processes)
-        self.db = None # sql alchemy db session
+        given = [['github_url']]
+        models = ['issues']
+
+        data_tables = ['contributors', 'issues', 'issue_labels', 'message',
+            'issue_message_ref', 'issue_events','issue_assignees','contributors_aliases',
+            'pull_request_assignees', 'pull_request_events', 'pull_request_reviewers', 'pull_request_meta',
+            'pull_request_repo']
+        operations_tables = ['worker_history', 'worker_job']
+
+        # Run the general worker initialization
+        super().__init__(config, given, models, data_tables, operations_tables)
 
         # These 3 are included in every tuple the worker inserts (data collection info)
         self.tool_source = 'GitHub API Worker'
         self.tool_version = '0.0.3' # See __init__.py
         self.data_source = 'GitHub API'
 
-        self.results_counter = 0 # count of tuples inserted in the database (to store stats for each task in op tables)
         self.finishing_task = True # if we are finishing a previous task, pagination works differenty
-
-        self.specs = {
-            "id": self.config['id'], # what the broker knows this worker as
-            "location": self.config['location'], # host + port worker is running on (so broker can send tasks here)
-            "qualifications":  [
-                {
-                    "given": [["github_url"]], # type of repo this worker can be given as a task
-                    "models":["issues"] # models this worker can fill for a repo as a task
-                }
-            ],
-            "config": [self.config]
-        }
-
-        DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(
-            self.config['user'], self.config['password'], self.config['host'], self.config['port'], self.config['database']
-        )
-
-        # Create an sqlalchemy engine for both database schemas
-        logging.info("Making database connections... {}".format(DB_STR))
-        db_schema = 'augur_data'
-        self.db = s.create_engine(DB_STR, poolclass = s.pool.NullPool,
-            connect_args={'options': '-csearch_path={}'.format(db_schema)})
-
-        helper_schema = 'augur_operations'
-        self.helper_db = s.create_engine(DB_STR, poolclass = s.pool.NullPool,
-            connect_args={'options': '-csearch_path={}'.format(helper_schema)})
-
-        metadata = MetaData()
-        helper_metadata = MetaData()
-
-        # Reflect only the tables we will use for each schema's metadata object
-        metadata.reflect(self.db, only=['contributors', 'issues', 'issue_labels', 'message',
-            'issue_message_ref', 'issue_events','issue_assignees','contributors_aliases',
-            'pull_request_assignees', 'pull_request_events', 'pull_request_reviewers', 'pull_request_meta',
-            'pull_request_repo'])
-        helper_metadata.reflect(self.helper_db, only=['worker_history', 'worker_job', 'worker_oauth'])
-
-        Base = automap_base(metadata=metadata)
-        HelperBase = automap_base(metadata=helper_metadata)
-
-        Base.prepare()
-        HelperBase.prepare()
-
-        # So we can access all our tables when inserting, updating, etc
-        self.contributors_table = Base.classes.contributors.__table__
-        self.issues_table = Base.classes.issues.__table__
-        self.issue_labels_table = Base.classes.issue_labels.__table__
-        self.issue_events_table = Base.classes.issue_events.__table__
-        self.pull_request_events_table = Base.classes.pull_request_events.__table__
-        self.message_table = Base.classes.message.__table__
-        self.issues_message_ref_table = Base.classes.issue_message_ref.__table__
-        self.issue_assignees_table = Base.classes.issue_assignees.__table__
-        self.pull_request_assignees_table = Base.classes.pull_request_assignees.__table__
-        self.contributors_aliases_table = Base.classes.contributors_aliases.__table__
-        self.pull_request_reviewers_table = Base.classes.pull_request_reviewers.__table__
-        self.pull_request_meta_table = Base.classes.pull_request_meta.__table__
-        self.pull_request_repo_table = Base.classes.pull_request_repo.__table__
-
-        self.history_table = HelperBase.classes.worker_history.__table__
-        self.job_table = HelperBase.classes.worker_job.__table__
+        self.platform_id = 25150 # GitHub
 
         # Get max ids so we know where we are in our insertion and to have the current id when inserting FK's
         logging.info("Querying starting ids info...\n")
 
-        self.issue_id_inc = get_max_id(self, 'issues', 'issue_id')
+        self.issue_id_inc = self.get_max_id('issues', 'issue_id')
 
-        self.cntrb_id_inc = get_max_id(self, 'contributors', 'cntrb_id')
-
-        self.msg_id_inc = get_max_id(self, 'message', 'msg_id')
-
-        # Increment so we are ready to insert the 'next one' of each of these most recent ids
-        self.history_id = get_max_id(self, 'worker_history', 'history_id', operations_table=True) + 1
-
-        # Organize different api keys/oauths available
-        init_oauths(self)
-
-        # Send broker hello message
-        connect_to_broker(self)
-
-    def update_config(self, config):
-        """ Method to update config and set a default
-        """
-        self.config = {
-            'database_connection_string': 'psql://{}:5433/augur'.format(self.config['broker_host']),
-            "display_name": "",
-            "description": "",
-            "required": 1,
-            "type": "string"
-        }
-        self.config.update(config)
-
-    @property
-    def task(self):
-        """ Property that is returned when the worker's current task is referenced
-        """
-        return self._task
-    
-    @task.setter
-    def task(self, value):
-        """ entry point for the broker to add a task to the queue
-        Adds this task to the queue, and calls method to process queue
-        """
-        # If the task has one of our "valid" job types
-        if value['job_type'] == "UPDATE" or value['job_type'] == "MAINTAIN":
-            self._queue.put(value)
-
-        # Setting that causes paginating through ALL pages, not just unknown ones
-        # This setting is set by the housekeeper and is attached to the task before it gets sent here
-        if 'focused_task' in value:
-            if value['focused_task'] == 1:
-                logging.info("Focused task is ON\n")
-                self.finishing_task = True
-        
-        self._task = value
-        self.run()
-
-    def cancel(self):
-        """ Delete/cancel current task
-        """
-        self._task = None
-
-    def run(self):
-        """ Kicks off the processing of the queue if it is not already being processed
-        Gets run whenever a new task is added
-        """
-        logging.info("Running...\n")
-        # Spawn a subprocess to handle message reading and performing the tasks
-        self._child = Process(target=self.collect, args=())
-        self._child.start()
-            
-    def collect(self):
-        """ Function to process each entry in the worker's task queue
-        Determines what action to take based off the message type
-        """
-        while True:
-            if not self._queue.empty():
-                message = self._queue.get() # Get the task off our MP queue
-            else:
-                break
-            logging.info("Popped off message: {}\n".format(str(message)))
-
-            if message['job_type'] == 'STOP':
-                break
-
-            # If task is not a valid job type
-            if message['job_type'] != 'MAINTAIN' and message['job_type'] != 'UPDATE':
-                raise ValueError('{} is not a recognized task type'.format(message['job_type']))
-                pass
-
-            # Query repo_id corresponding to repo url of given task 
-            repoUrlSQL = s.sql.text("""
-                SELECT min(repo_id) as repo_id FROM repo WHERE repo_git = '{}'
-                """.format(message['given']['github_url']))
-            repo_id = int(pd.read_sql(repoUrlSQL, self.db, params={}).iloc[0]['repo_id'])
-
-            # Model method calls wrapped in try/except so that any unexpected error that occurs can be caught
-            #   and worker can move onto the next task without stopping
-            try:
-                # Call method corresponding to model sent in task
-                if message['models'][0] == 'issues':
-                    self.issues_model(message, repo_id)
-            except Exception as e:
-                register_task_failure(self, message, repo_id, e)
-                pass
+        self.msg_id_inc = self.get_max_id('message', 'msg_id')
 
     def issues_model(self, entry_info, repo_id):
         """ Data collection function
@@ -208,11 +50,10 @@ class GitHubWorker:
         github_url = entry_info['given']['github_url']
 
         logging.info("Beginning filling the issues model for repo: " + github_url + "\n")
-        record_model_process(self, repo_id, 'issues')
 
         # Contributors are part of this model, and finding all for the repo saves us 
         #   from having to add them as we discover committers in the issue process
-        query_github_contributors(self, entry_info, repo_id)
+        self.query_github_contributors(entry_info, repo_id)
 
         # Extract the owner/repo for the endpoint
         path = urlparse(github_url)
@@ -238,7 +79,7 @@ class GitHubWorker:
         duplicate_col_map = {'gh_issue_id': 'id'}
 
         #list to hold issues needing insertion
-        issues = paginate(self, issues_url, duplicate_col_map, update_col_map, table, table_pkey, 
+        issues = self.paginate(issues_url, duplicate_col_map, update_col_map, table, table_pkey, 
             'WHERE repo_id = {}'.format(repo_id))
 
         # Discover and remove duplicates before we start inserting
@@ -263,7 +104,7 @@ class GitHubWorker:
             # Begin on the actual issue...
             issue = {
                 "repo_id": issue_dict['repo_id'],
-                "reporter_id": find_id_from_login(self, issue_dict['user']['login']),
+                "reporter_id": self.find_id_from_login(issue_dict['user']['login']),
                 "pull_request": pr_id,
                 "pull_request_id": pr_id,
                 "created_at": issue_dict['created_at'],
@@ -322,7 +163,7 @@ class GitHubWorker:
                         continue
                     assignee = {
                         "issue_id": self.issue_id_inc,
-                        "cntrb_id": find_id_from_login(self, assignee_dict['login']),
+                        "cntrb_id": self.find_id_from_login(assignee_dict['login']),
                         "tool_source": self.tool_source,
                         "tool_version": self.tool_version,
                         "data_source": self.data_source,
@@ -375,7 +216,7 @@ class GitHubWorker:
             duplicate_col_map = {'msg_timestamp': 'created_at'}
 
             #list to hold contributors needing insertion or update
-            issue_comments = paginate(self, comments_url, duplicate_col_map, update_col_map, table, table_pkey, 
+            issue_comments = self.paginate(comments_url, duplicate_col_map, update_col_map, table, table_pkey, 
                 where_clause="WHERE msg_id IN (SELECT msg_id FROM issue_message_ref WHERE issue_id = {})".format(
                     self.issue_id_inc))
                 
@@ -383,11 +224,11 @@ class GitHubWorker:
 
             for comment in issue_comments:
                 try:
-                    commenter_cntrb_id = find_id_from_login(self, comment['user']['login'])
+                    commenter_cntrb_id = self.find_id_from_login(comment['user']['login'])
                 except:
                     commenter_cntrb_id = None
                 issue_comment = {
-                    "pltfrm_id": 25150,
+                    "pltfrm_id": self.platform_id,
                     "msg_text": comment['body'],
                     "msg_timestamp": comment['created_at'],
                     "cntrb_id": commenter_cntrb_id,
@@ -417,7 +258,7 @@ class GitHubWorker:
                     "issue_msg_ref_src_node_id": comment['node_id']
                 }
 
-                result = self.db.execute(self.issues_message_ref_table.insert().values(issue_message_ref))
+                result = self.db.execute(self.issue_message_ref_table.insert().values(issue_message_ref))
                 logging.info("Primary key inserted into the issue_message_ref table: {}".format(result.inserted_primary_key))
                 self.results_counter += 1                
         
@@ -434,7 +275,7 @@ class GitHubWorker:
             pseudo_key_gh = 'url'
             pseudo_key_augur = 'node_url'
             table = 'issue_events'
-            event_table_values = get_table_values(self, [pseudo_key_augur], [table], "WHERE issue_id = {}".format(self.issue_id_inc))
+            event_table_values = self.get_table_values([pseudo_key_augur], [table], "WHERE issue_id = {}".format(self.issue_id_inc))
             
             # Paginate backwards through all the events but get first page in order
             #   to determine if there are multiple pages and if the 1st page covers all
@@ -444,7 +285,7 @@ class GitHubWorker:
             while True:
                 logging.info("Hitting endpoint: " + events_url.format(i) + " ...\n")
                 r = requests.get(url=events_url.format(i), headers=self.headers)
-                update_gh_rate_limit(self, r)
+                self.update_gh_rate_limit(r)
 
                 # Find last page so we can decrement from there
                 if 'last' in r.links and not multiple_pages and not self.finishing_task:
@@ -488,7 +329,7 @@ class GitHubWorker:
                         continue
                     if not event['actor']:
                         continue
-                    cntrb_id = find_id_from_login(self, event['actor']['login'])
+                    cntrb_id = self.find_id_from_login(event['actor']['login'])
                     if cntrb_id is not None:
                         break
                         
@@ -496,7 +337,7 @@ class GitHubWorker:
                     cntrb_url = ("https://api.github.com/users/" + event['actor']['login'])
                     logging.info("Hitting endpoint: " + cntrb_url + " ...\n")
                     r = requests.get(url=cntrb_url, headers=self.headers)
-                    update_gh_rate_limit(self, r)
+                    self.update_gh_rate_limit(r)
                     contributor = r.json()
 
                     company = None
@@ -549,12 +390,9 @@ class GitHubWorker:
     
                     logging.info("Inserted contributor: " + contributor['login'] + "\n")
 
-                    # Increment our global track of the cntrb id for the possibility of it being used as a FK
-                    self.cntrb_id_inc = int(result.inserted_primary_key[0])
-
             for event in issue_events:
                 if event['actor'] is not None:
-                    event['cntrb_id'] = find_id_from_login(self, event['actor']['login'])
+                    event['cntrb_id'] = self.find_id_from_login(event['actor']['login'])
                     if event['cntrb_id'] is None:
                         logging.info("SOMETHING WRONG WITH FINDING ID FROM LOGIN")
                         continue
@@ -595,5 +433,5 @@ class GitHubWorker:
             self.issue_id_inc += 1
 
         #Register this task as completed
-        register_task_completion(self, entry_info, repo_id, "issues")
+        self.register_task_completion(entry_info, repo_id, "issues")
 

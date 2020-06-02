@@ -248,7 +248,7 @@ def init_oauths(self):
     #   self.oauths array will always be the key in use)
     self.headers = {'Authorization': 'token %s' % self.oauths[0]['access_token']}
 
-def paginate(self, url, duplicate_col_map, update_col_map, table, table_pkey, where_clause="", value_update_col_map={}):
+def paginate(self, url, duplicate_col_map, update_col_map, table, table_pkey, where_clause="", value_update_col_map={}, platform="github"):
     # Paginate backwards through all the tuples but get first page in order
     #   to determine if there are multiple pages and if the 1st page covers all
     update_keys = list(update_col_map.keys()) if update_col_map else []
@@ -266,7 +266,11 @@ def paginate(self, url, duplicate_col_map, update_col_map, table, table_pkey, wh
             logging.info("Hitting endpoint: " + url.format(i) + " ...\n")
             r = requests.get(url=url.format(i), headers=self.headers)
             update_gh_rate_limit(self, r)
-            logging.info("Analyzing page {} of {}\n".format(i, int(r.links['last']['url'][-6:].split('=')[1]) + 1 if 'last' in r.links else '*last page not known*'))
+            if platform == "github":
+                last_page = r.links['last']['url'][-6:].split('=')[1]
+            elif platform == "gitlab":
+                last_page =  r.links['last']['url'].split('&')[2].split("=")[1]
+            logging.info("Analyzing page {} of {}\n".format(i, int(last_page) + 1 if 'last' in r.links else '*last page not known*'))
 
             try:
                 j = r.json()
@@ -305,8 +309,11 @@ def paginate(self, url, duplicate_col_map, update_col_map, table, table_pkey, wh
 
         # Find last page so we can decrement from there
         if 'last' in r.links and not multiple_pages and not self.finishing_task:
-            param = r.links['last']['url'][-6:]
-            i = int(param.split('=')[1]) + 1
+            if platform == "github":
+                param = r.links['last']['url'][-6:]
+                i = int(param.split('=')[1]) + 1
+            elif platform == "gitlab":
+                i =  int(r.links['last']['url'].split('&')[2].split("=")[1])
             logging.info("Multiple pages of request, last page is " + str(i - 1) + "\n")
             multiple_pages = True
         elif not multiple_pages and not self.finishing_task:

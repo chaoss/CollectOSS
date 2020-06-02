@@ -16,139 +16,25 @@ import sqlalchemy as s
 from github import Github
 from sqlalchemy import MetaData
 from sqlalchemy.ext.automap import automap_base
+from workers.worker_base import Worker
 
-class CollectorTask:
-    """ Worker's perception of a task in its queue
-    Holds a message type (EXIT, TASK, etc) so the worker knows how to process the queue entry
-    and the github_url given that it will be collecting data for
-    """
-
-    def __init__(self, message_type='TASK', entry_info=None):
-        self.type = message_type
-        self.entry_info = entry_info
-
-
-class MetricStatusWorker:
+class MetricStatusWorker(Worker):
     def __init__(self, config, task=None):
-        self._task = task
-        self._child = None
-        self._queue = Queue()
-        self._maintain_queue = Queue()
-        self.config = config
-        logging.basicConfig(filename='worker_{}.log'.format(self.config['id'].split('.')[len(self.config['id'].split('.')) - 1]), filemode='w', level=logging.INFO)
-        logging.info('Worker (PID: {}) initializing...'.format(str(os.getpid())))
-        self.db = None
-        self.table = None
-        self.API_KEY = self.config['key']
+        given = [['git_url']]
+        models = ['chaoss_metric_status']
+
+        data_tables = ['chaoss_metric_status']
+        operations_tables = ['worker_history', 'worker_job']
+
+        # Run the general worker initialization
+        super().__init__(config, given, models, data_tables, operations_tables)
+
+        # These 3 are included in every tuple the worker inserts (data collection info)
         self.tool_source = 'Metric Status Worker'
         self.tool_version = '0.0.1'
         self.data_source = 'GitHub API'
-        self.results_counter = 0
-        self.working_on = None
 
-
-        # url = 'https://api.github.com'
-        # response = requests.get(url, headers=self.headers)
-        # self.rate_limit = int(response.headers['X-RateLimit-Remaining'])
-
-        specs = {
-            "id": self.config['id'],
-            "location": self.config['location'],
-            "qualifications":  [
-                {
-                    "given": [["git_url"]],
-                    "models":["chaoss_metric_status"]
-                }
-            ],
-            "config": [self.config]
-        }
-
-        self.DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(
-            self.config['user'], self.config['password'], self.config['host'], self.config['port'], self.config['database']
-        )
-
-        logging.info("Making database connections...")
-
-        dbschema = 'augur_data'
-        self.db = s.create_engine(self.DB_STR, poolclass=s.pool.NullPool,
-                                  connect_args={'options': '-csearch_path={}'.format(dbschema)})
-
-        metadata = MetaData()
-        helper_metadata = MetaData()
-
-        metadata.reflect(self.db, only=['chaoss_metric_status'])
-        # helper_metadata.reflect(self.helper_db)
-
-        Base = automap_base(metadata=metadata)
-
-        Base.prepare()
-
-        self.chaoss_metric_status_table = Base.classes['chaoss_metric_status'].__table__
-
-        try:
-            requests.post('http://{}:{}/api/unstable/workers'.format(
-                self.config['broker_host'],self.config['broker_port']), json=specs)
-        except requests.exceptions.ConnectionError:
-            logging.error('Cannot connect to the broker')
-            sys.exit('Cannot connect to the broker! Quitting...')
-
-    @property
-    def task(self):
-        """ Property that is returned when the worker's current task is referenced """
-        return self._task
-
-    @task.setter
-    def task(self, value):
-        try:
-            if value['job_type'] == 'UPDATE':
-                self._queue.put(CollectorTask('TASK', {}))
-            elif value['job_type'] == 'MAINTAIN':
-                self._maintain_queue.put(CollectorTask('TASK', {}))
-
-            if 'focused_task' in value:
-                if value['focused_task'] == 1:
-                    self.finishing_task = True
-        except Exception as e:
-            logging.error("Error: {},".format(str(e)))
-
-        self._task = CollectorTask(message_type='TASK', entry_info={})
-        self.run()
-
-    def cancel(self):
-        """ Delete/cancel current task """
-        self._task = None
-
-    def run(self):
-        logging.info("Running...")
-        if self._child is None:
-            self._child = Process(target=self.collect, args=())
-            self._child.start()
-            requests.post("http://{}:{}/api/unstable/add_pids".format(
-                self.config['broker_host'],self.config['broker_port']), json={'pids': [self._child.pid, os.getpid()]})
-
-    def collect(self):
-        while True:
-            if not self._queue.empty():
-                message = self._queue.get()
-                self.working_on = 'UPDATE'
-            elif not self._maintain_queue.empty():
-                message = self._maintain_queue.get()
-                logging.info("Popped off message: {}".format(str(message.entry_info)))
-                self.working_on = "MAINTAIN"
-            else:
-                break
-
-
-            if message.type == 'EXIT':
-                break
-            if message.type != 'TASK':
-                raise ValueError(
-                    f'{message.type} is not a recognized task type')
-
-            if message.type == 'TASK':
-                self.update_metrics(message.entry_info)
-
-    def update_metrics(self, entry_info):
+    def chaoss_metric_status_model(self, entry_info, repo_id):
         """ Data colletction function
         Query the github api for metric status
         """
@@ -186,49 +72,8 @@ class MetricStatusWorker:
             logging.info("Primary key inserted into the metrics table: " + str(result.inserted_primary_key))
             self.results_counter += 1
 
-        self.register_task_completion()
+        register_task_completion(self, entry_info, repo_id, 'chaoss_metric_status')
 
-
-    # def filter_duplicates(self, og_data):
-    #     need_insertion = []
-    #     colSQL = s.sql.text("""
-    #         SELECT * FROM chaoss_metric_status
-    #     """)
-    #     values = pd.read_sql(colSQL, self.db)
-    #     for obj in og_data:
-    #         location = values.loc[ (values['cm_name']==obj['cm_name'] ) & ( values['cm_working_group']==obj[
-    #             'cm_working_group']) & ()]
-    #         if not location.empty:
-    #             logging.info("value of tuple exists: " + str(obj['cm_name']))
-    #         else:
-    #             need_insertion.append(obj)
-    #
-    #     logging.info("While filtering duplicates, we reduced the data size from " + str(len(og_data)) +
-    #             " to " + str(len(need_insertion)) + "\n")
-    #
-    #     return need_insertion
-
-    def filter_duplicates(self, cols, tables, og_data):
-        need_insertion = []
-
-        table_str = tables[0]
-        del tables[0]
-        for table in tables:
-            table_str += ", " + table
-        for col in cols.keys():
-            colSQL = s.sql.text("""
-                SELECT {} FROM {}
-                """.format(col, table_str))
-            values = pd.read_sql(colSQL, self.db, params={})
-
-            for obj in og_data:
-                if values.isin([obj[cols[col]]]).any().any():
-                    logging.info("value of tuple exists: " + str(obj[cols[col]]) + "\n")
-                elif obj not in need_insertion:
-                    need_insertion.append(obj)
-        logging.info("While filtering duplicates, we reduced the data size from " + str(len(og_data)) +
-                     " to " + str(len(need_insertion)) + "\n")
-        return need_insertion
 
     def update_exist_metrics(self, metrics):
         need_update = []
@@ -240,21 +85,6 @@ class MetricStatusWorker:
 
             if result.rowcount:
                 logging.info("Update Metric {}-{}".format(metric['cm_group'], metric['cm_name']))
-
-    def register_task_completion(self):
-        task_completed = {
-            'worker_id': self.config['id'],
-            'job_type': self.working_on,
-        }
-
-        logging.info("Telling broker we completed task: " + str(task_completed) + "\n" +
-            "This task inserted: " + str(self.results_counter) + " tuples.\n\n")
-
-        requests.post('http://{}:{}/api/unstable/completed_task'.format(
-            self.config['broker_host'],self.config['broker_port']), json=task_completed)
-        self.results_counter = 0
-
-
 
 
 class FrontendStatusExtractor(object):
