@@ -88,9 +88,9 @@ def create_server(app, worker=None):
 
 class WorkerGunicornApplication(gunicorn.app.base.BaseApplication):
 
-    def __init__(self, app, worker_port):
+    def __init__(self, app):
         self.options = {
-            'bind': '%s:%s' % (read_config('Server', 'host', 'AUGUR_HOST', 'localhost'), worker_port),
+            'bind': '%s:%s' % (app.worker.config["host"], app.worker.config["port"]),
             'workers': 1,
             'errorlog': app.worker.config['server_logfile'],
             'accesslog': app.worker.config['server_logfile'],

@@ -17,7 +17,9 @@ from workers.worker_base import Worker
 # 2. Recognizing when a repository is archived, and recording the data we observed the change in status. 
 
 class RepoInfoWorker(Worker):
-    def __init__(self, config):
+    def __init__(self, config={}):
+
+        worker_type = "repo_info_worker"
         
         # Define what this worker can be given and know how to interpret
         given = [['github_url']]
@@ -28,7 +30,7 @@ class RepoInfoWorker(Worker):
         operations_tables = ['worker_history', 'worker_job']
 
         # Run the general worker initialization
-        super().__init__(config, given, models, data_tables, operations_tables)
+        super().__init__(worker_type, config, given, models, data_tables, operations_tables)
 
         # Define data collection info
         self.tool_source = 'Repo Info Worker'
@@ -151,6 +153,8 @@ class RepoInfoWorker(Worker):
         if archived is not False:
             archived_date_collected = archived
             archived = True
+        else:
+            archived_date_collected = None
 
         # Put all data together in format of the table
         self.logger.info(f'Inserting repo info for repo with id:{repo_id}, owner:{owner}, name:{repo}\n')
@@ -187,10 +191,10 @@ class RepoInfoWorker(Worker):
             'pull_requests_merged': data['pr_merged']['totalCount'] if data['pr_merged'] else None,
             'tool_source': self.tool_source,
             'tool_version': self.tool_version,
-            'data_source': self.data_source,
-            'forked_from': forked,
-            'repo_archived': archived,
-            'repo_archived_date_collected': archived_date_collected
+            'data_source': self.data_source
+            # 'forked_from': forked,
+            # 'repo_archived': archived,
+            # 'repo_archived_date_collected': archived_date_collected
         }
 
         result = self.db.execute(self.repo_info_table.insert().values(rep_inf))
@@ -229,7 +233,7 @@ class RepoInfoWorker(Worker):
         r = requests.get(url, headers=self.headers)
         self.update_gh_rate_limit(r)
 
-        data = self.get_repo_data(self, url, r)
+        data = self.get_repo_data(url, r)
 
         if 'fork' in data:
             if 'parent' in data:
@@ -245,7 +249,7 @@ class RepoInfoWorker(Worker):
         r = requests.get(url, headers=self.headers)
         self.update_gh_rate_limit(r)
 
-        data = self.get_repo_data(self, url, r)
+        data = self.get_repo_data(url, r)
 
         if 'archived' in data:
             if data['archived']:

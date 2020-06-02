@@ -7,22 +7,25 @@ import pandas as pd
 import os
 import sys, logging
 from urllib.parse import urlparse
-from workers.util import read_config
 from sqlalchemy import MetaData
 from sqlalchemy.ext.automap import automap_base
+from augur.config import AugurConfig
 
-verbose_formatter=Formatter(fmt='%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s')
-generic_formatter=Formatter(fmt='%(asctime)s [%(process)d] [%(levelname)s] %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+verbose_formatter = Formatter(fmt='%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s')
+generic_formatter = Formatter(fmt='%(asctime)s [%(process)d] [%(levelname)s] %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
 class Worker():
 
-    def __init__(self, config, given=[], models=[], data_tables=[], operations_tables=[]):
+    ROOT_AUGUR_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+
+    def __init__(self, worker_type, config={}, given=[], models=[], data_tables=[], operations_tables=[]):
 
         self._task = None # task currently being worked on (dict)
         self._child = None # process of currently running task (multiprocessing process)
         self._queue = Queue() # tasks stored here 1 at a time (in a mp queue so it can translate across multiple processes)
         self.data_tables = data_tables
         self.operations_tables = operations_tables
+        self._root_augur_dir = Worker.ROOT_AUGUR_DIR
 
         # count of tuples inserted in the database (to store stats for each task in op tables)
         self.results_counter = 0 
@@ -31,16 +34,44 @@ class Worker():
         self.finishing_task = False 
 
         # Update config with options that are general and not specific to any worker
-        self.config = config
+        self.augur_config = AugurConfig(self._root_augur_dir)
+
+        self.config = { 
+                "worker_type": worker_type,
+                "host": self.augur_config.get_value("Server", "host"),
+                "log_level": "INFO",
+                "verbose": False,
+                'gh_api_key': self.augur_config.get_value('Database', 'key')
+            }
+
+        worker_info = self.augur_config.get_value("Workers", self.config["worker_type"])
+        self.config.update(worker_info)
+
+        worker_port = self.config["port"]
+        while True:
+            try:
+                r = requests.get("http://{}:{}/AUGWOP/heartbeat".format(self.config["host"], worker_port)).json()
+                if 'status' in r:
+                    if r['status'] == 'alive':
+                        worker_port += 1
+            except:
+                break
+
         self.config.update({ 
-            'port_broker': read_config('Server', 'port', 'AUGUR_PORT', 5000),
-            'host_broker': read_config('Server', 'host', 'AUGUR_HOST', '0.0.0.0'),
-            'host_database': read_config('Database', 'host', 'AUGUR_DB_HOST', 'host'),
-            'port_database': read_config('Database', 'port', 'AUGUR_DB_PORT', 'port'),
-            'user_database': read_config('Database', 'user', 'AUGUR_DB_USER', 'user'),
-            'name_database': read_config('Database', 'name', 'AUGUR_DB_NAME', 'database'),
-            'password_database': read_config('Database', 'password', 'AUGUR_DB_PASSWORD', 'password')
+            "port": worker_port,
+            "id": "com.augurlabs.core.{}.{}".format(worker_type, worker_port),
+            "server_logfile": "{}_{}_server.log".format(worker_type, worker_port),
+            "collection_logfile": "{}_{}_collection.log".format(worker_type, worker_port),
+            'location': 'http://{}:{}'.format(self.config["host"], worker_port),
+            'port_broker': self.augur_config.get_value('Server', 'port'),
+            'host_broker': self.augur_config.get_value('Server', 'host'),
+            'host_database': self.augur_config.get_value('Database', 'host'),
+            'port_database': self.augur_config.get_value('Database', 'port'),
+            'user_database': self.augur_config.get_value('Database', 'user'),
+            'name_database': self.augur_config.get_value('Database', 'name'),
+            'password_database': self.augur_config.get_value('Database', 'password')
         })
+        self.config.update(config)
 
         # Clear log contents from previous runs
         open(self.config["server_logfile"], "w").close()
@@ -671,51 +702,6 @@ class Worker():
                 self.logger.info("Caught exception: {}".format(e))
                 self.logger.info("Cascading Contributor Anomalie from missing repo contributor data: {} ...\n".format(cntrb_url))
                 continue
-
-    def read_config(section, name=None, environment_variable=None, default=None, config_file_path='../../augur.config.json', no_config_file=0, use_main_config=0):
-        """
-        Read a variable in specified section of the config file, unless provided an environment variable
-
-        :param section: location of given variable
-        :param name: name of variable
-        """
-        config_file_path = os.getenv("AUGUR_CONFIG_FILE", config_file_path)
-        _config_file_name = 'augur.config.json'
-        _config_bad = False
-        _already_exported = {}
-        _runtime_location = 'runtime/'
-        _default_config = {}
-        _config_file = None
-
-        try:
-            _config_file = open(config_file_path, 'r+')
-        except:
-            print('Couldn\'t open {}'.format(_config_file_name))
-
-        # Load the config file
-        try:
-            config_text = _config_file.read()
-            _config = json.loads(config_text)
-        except json.decoder.JSONDecodeError as e:
-            if not _config_bad:
-                _using_config_file = False
-                print('{} could not be parsed, using defaults. Fix that file, or delete it and run this again to regenerate it. Error: {}'.format(config_file_path, str(e)))
-            _config = _default_config
-
-        value = None
-        if environment_variable is not None:
-            value = os.getenv(environment_variable)
-        if value is None:
-            try:
-                if name is not None:
-                    value = _config[section][name]
-                else:
-                    value = _config[section]
-            except Exception as e:
-                value = default
-                if not section in _config:
-                    _config[section] = {}
-        return value
 
     def record_model_process(self, repo_id, model):
 
