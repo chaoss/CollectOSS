@@ -14,7 +14,7 @@ from beaker.util import parse_cache_config_options
 import sqlalchemy as s
 
 from augur.metrics import Metrics
-from augur.cli.configure import default_config
+from augur.config import AugurConfig
 import augur.logging
 
 ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
@@ -28,26 +28,11 @@ class Application():
         """
         Reads config, creates DB session, and initializes cache
         """
-        self.default_config_file_name = 'augur.config.json'
-        self.default_config = default_config
-        self.config = None
-        self.env_config = {}
         self.root_augur_dir = ROOT_AUGUR_DIRECTORY
-        self._using_default_config = True
+        self.config = AugurConfig(self.root_augur_dir)
 
-        self.config_file_path = self._discover_config_file()
+        augur.logging.initialize_logging(ROOT_AUGUR_DIRECTORY, self.config.get_section("Development"), [job["model"] for job in self.config.get_value("Housekeeper", "jobs")])
 
-        if self.config_file_path:
-            self._load_config_from_file()
-            if self.config:
-                self._using_default_config = False
-
-        if self._using_default_config is True:
-            self.config = default_config
-
-        self.load_env_configuration()
-
-        augur.logging.initialize_logging(ROOT_AUGUR_DIRECTORY, self.read_config("Development"), [job["model"] for job in self.read_config("Housekeeper", "jobs")])
         self.logger = logger
 
         self.cache_config = {
@@ -68,44 +53,14 @@ class Application():
 
         self.metrics = Metrics(self)
 
-    def _discover_config_file(self):
-        config_file_path = None
-        default_config_path = self.root_augur_dir + '/' + self.default_config_file_name
-
-        config_locations = [self.default_config_file_name, default_config_path
-         , f"/opt/augur/{self.default_config_file_name}"]
-        if os.getenv('AUGUR_CONFIG_FILE') is not None:
-            config_file_path = os.getenv('AUGUR_CONFIG_FILE', None)
-        else:
-            for location in config_locations:
-                try:
-                    f = open(location, "r+")
-                    config_file_path = os.path.abspath(location)
-                    f.close()
-                    break
-                except FileNotFoundError:
-                    pass
-        return config_file_path
-
-    def _load_config_from_file(self):
-        try:
-            with open(self.config_file_path, 'r+') as config_file_handle:
-                self.config = json.loads(config_file_handle.read())
-        except json.decoder.JSONDecodeError as e:
-            logger.warning('%s could not be parsed, using default config values. Error: %s', config_file_path, str(e))
-            raise(e)
-        except FileNotFoundError as e:
-            logger.warning('%s could not be opened, using default config values. Error: %s', config_file_path, str(e))
-            raise(e)
-
     def _connect_to_database(self, include_spdx=False):
-        user = self.read_config('Database', 'user')
-        host = self.read_config('Database', 'host')
-        port = self.read_config('Database', 'port')
-        dbname = self.read_config('Database', 'name')
+        user = self.config.get_value('Database', 'user')
+        host = self.config.get_value('Database', 'host')
+        port = self.config.get_value('Database', 'port')
+        dbname = self.config.get_value('Database', 'name')
 
         database_connection_string = 'postgresql://{}:{}@{}:{}/{}'.format(
-            user, self.read_config('Database', 'password'), host, port, dbname
+            user, self.config.get_value('Database', 'password'), host, port, dbname
         )
 
         csearch_path_options = 'augur_data'
@@ -123,47 +78,3 @@ class Application():
             logger.fatal(f"Unable to connect to the database. Terminating...")
             raise(e)
 
-    def read_config(self, section, name=None):
-        """
-        Read a variable in specified section of the config file, unless provided an environment variable
-
-        :param section: location of given variable
-        :param name: name of variable
-        """
-        if name is not None:
-            try:
-                value = self.config[section][name]
-            except KeyError as e:
-                value = default_config[section][name]
-        else:
-            try:
-                value = self.config[section]
-            except KeyError as e:
-                value = default_config[section]
-
-        return value
-
-    def load_env_configuration(self):
-        self.set_env_value(section='Database', name='key', environment_variable='AUGUR_GITHUB_API_KEY')
-        self.set_env_value(section='Database', name='host', environment_variable='AUGUR_DB_HOST')
-        self.set_env_value(section='Database', name='name', environment_variable='AUGUR_DB_NAME')
-        self.set_env_value(section='Database', name='port', environment_variable='AUGUR_DB_PORT')
-        self.set_env_value(section='Database', name='user', environment_variable='AUGUR_DB_USER')
-        self.set_env_value(section='Database', name='password', environment_variable='AUGUR_DB_PASSWORD')
-        self.set_env_value(section='Development', name='log_level', environment_variable='AUGUR_LOG_LEVEL')
-        self.set_env_value(section='Development', name='verbose', environment_variable='AUGUR_LOG_VERBOSE')
-        self.set_env_value(section='Development', name='quiet', environment_variable='AUGUR_LOG_QUIET')
-
-    def set_env_value(self, section, name, environment_variable, sub_config=None):
-        """
-        Sets names and values of specified config section according to their environment variables.
-        """
-        # using sub_config lets us grab values from nested config blocks
-        if sub_config is None:
-            sub_config = self.config
-
-        env_value = os.getenv(environment_variable)
-
-        if env_value is not None:
-            self.env_config[environment_variable] = env_value
-            sub_config[section][name] = env_value

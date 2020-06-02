@@ -8,7 +8,7 @@ import click
 import json
 import logging
 
-logger = logging.getLogger("augur")
+logger = logging.getLogger("augur.cli")
 
 ENVVAR_PREFIX = "AUGUR_"
 

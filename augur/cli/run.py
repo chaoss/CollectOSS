@@ -53,21 +53,21 @@ def initialize_components(augur_app, disable_housekeeper):
 
     if not disable_housekeeper:
         logger.info("Booting housekeeper...")
-        jobs = deepcopy(augur_app.read_config('Housekeeper', 'jobs'))
+        jobs = deepcopy(augur_app.config.get_value('Housekeeper', 'jobs'))
         housekeeper = Housekeeper(
                 jobs,
                 broker,
-                broker_host=augur_app.read_config('Server', 'host'),
-                broker_port=augur_app.read_config('Server', 'port'),
-                user=augur_app.read_config('Database', 'user'),
-                password=augur_app.read_config('Database', 'password'),
-                host=augur_app.read_config('Database', 'host'),
-                port=augur_app.read_config('Database', 'port'),
-                dbname=augur_app.read_config('Database', 'name')
+                broker_host=augur_app.config.get_value('Server', 'host'),
+                broker_port=augur_app.config.get_value('Server', 'port'),
+                user=augur_app.config.get_value('Database', 'user'),
+                password=augur_app.config.get_value('Database', 'password'),
+                host=augur_app.config.get_value('Database', 'host'),
+                port=augur_app.config.get_value('Database', 'port'),
+                dbname=augur_app.config.get_value('Database', 'name')
             )
         logger.info("Housekeeper has finished booting.")
 
-        controller = augur_app.read_config('Workers')
+        controller = augur_app.config.get_section('Workers')
 
         for worker in controller.keys():
             if controller[worker]['switch']:
@@ -80,10 +80,10 @@ def initialize_components(augur_app, disable_housekeeper):
 
     atexit.register(exit, worker_processes, master, housekeeper, manager)
 
-    host = augur_app.read_config('Server', 'host')
-    port = augur_app.read_config('Server', 'port')
-    workers = int(augur_app.read_config('Server', 'workers'))
-    timeout = int(augur_app.read_config('Server', 'timeout'))
+    host = augur_app.config.get_value('Server', 'host')
+    port = augur_app.config.get_value('Server', 'port')
+    workers = int(augur_app.config.get_value('Server', 'workers'))
+    timeout = int(augur_app.config.get_value('Server', 'timeout'))
 
     options = {
         'bind': '%s:%s' % (host, port),
@@ -91,19 +91,15 @@ def initialize_components(augur_app, disable_housekeeper):
         'timeout': timeout,
         'errorlog': "logs/gunicorn.log",
         'accesslog': "logs/gunicorn.log",
-        'loglevel': augur_app.read_config("Development", "log_level"),
+        'loglevel': augur_app.config.get_value("Development", "log_level"),
     }
 
     return AugurGunicornApp(options, manager=manager, broker=broker, housekeeper=housekeeper, augur_app=augur_app)
 
 def worker_start(worker_name=None, instance_number=0, worker_port=None):
     try:
-        time.sleep(120 * instance_number)
+        time.sleep(30 * instance_number)
         destination = subprocess.DEVNULL
-        try:
-            destination = open("workers/{}/worker_{}.log".format(worker_name, worker_port), "a+")
-        except IOError as e:
-            logger.error("Error opening log file for auto-started worker {}: {}".format(worker_name, e))
         process = subprocess.Popen("cd workers/{} && {}_start".format(worker_name,worker_name), shell=True, stdout=destination, stderr=subprocess.STDOUT)
         logger.info("{} #{} booted.".format(worker_name,instance_number+1))
     except KeyboardInterrupt as e:

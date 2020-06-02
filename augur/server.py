@@ -42,14 +42,8 @@ class Server(object):
         # Create Augur application
         self.augur_app = augur_app
 
-        # import ipdb
-        # ipdb.set_trace()
-        #TODO: something is hooking into the logging again, likely the same problem
-        # the augur.log gets cleared, and I don't see anything after the gunicorn app starts up
-        # thanks gunicorn...
-
         # Initialize cache
-        expire = int(self.augur_app.read_config('Server', 'cache_expire'))
+        expire = int(self.augur_app.config.get_value('Server', 'cache_expire'))
         self.cache = self.augur_app.cache.get_cache('server', expire=expire)
         self.cache.clear()
 
@@ -192,8 +186,8 @@ def run():
     Runs server with configured hosts/ports
     """
     server = Server()
-    host = server.augur_app.read_config('Server', 'host')
-    port = server.augur_app.read_config('Server', 'port')
+    host = server.augur_app.config.get_value('Server', 'host')
+    port = server.augur_app.config.get_value('Server', 'port')
     Server().app.run(host=host, port=int(port), debug=True)
 
 wsgi_app = None
