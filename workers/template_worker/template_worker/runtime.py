@@ -15,7 +15,7 @@ def main(augur_url, host, port):
     #load credentials
     broker_host = read_config("Server", "host", "AUGUR_HOST", "0.0.0.0")
     broker_port = read_config("Server", "port", "AUGUR_PORT", 5000)
-    worker_info = read_config('Workers', 'repo_info_worker', None, None)
+    worker_info = read_config('Workers', 'template_worker', None, None)
 
     worker_port = worker_info['port'] if 'port' in worker_info else port
 
