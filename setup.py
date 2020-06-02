@@ -45,13 +45,7 @@ setup(
         "click",
         "psutil",
         "gunicorn==19.9.0",
-        "six>=1.14.0",
-        "sphinx",
-        "sphinx_rtd_theme",
-        "sphinxcontrib-openapi",
-        "sphinxcontrib-redoc", 
-        "boto3",
-        "slack"
+        "six>=1.14.0"
     ],
     extras_require={
         "dev": [
@@ -61,13 +55,8 @@ setup(
             "sphinx",
             "sphinx_rtd_theme",
             "sphinxcontrib-openapi",
-            "sphinxcontrib-redoc"
-        ],
-        "docs": [
-            "sphinx",
-            "sphinx_rtd_theme",
-            "sphinxcontrib-openapi",
-            "sphinxcontrib-redoc"
+            "sphinxcontrib-redoc",
+            "docutils==0.15"
         ]
     },
     entry_points={

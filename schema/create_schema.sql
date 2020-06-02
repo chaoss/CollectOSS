@@ -17,3 +17,4 @@
 \i schema/generate/13-schema_update_15.sql
 \i schema/generate/14-schema_update_16.sql
 \i schema/generate/15-schema_update_17.sql
+\i schema/generate/16-schema_update_18.sql

@@ -6,8 +6,6 @@ from flask import Response
 
 def create_routes(server):
 
-    metrics = server.augur_app.metrics
-
     @server.app.route('/{}/repo-groups'.format(server.api_version))
     def get_all_repo_groups(): #TODO: make this name automatic - wrapper?
         repoGroupsSQL = s.sql.text("""
