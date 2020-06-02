@@ -1,11 +1,8 @@
 import logging, os, sys, time, requests, json
 from datetime import datetime
 from multiprocessing import Process, Queue
-from urllib.parse import urlparse
 import pandas as pd
 import sqlalchemy as s
-from sqlalchemy import MetaData
-from sqlalchemy.ext.automap import automap_base
 from workers.worker_base import Worker
 
 # NOTE: This worker primarily inserts rows into the REPO_INFO table, which serves the primary purposes of 
@@ -119,7 +116,7 @@ class RepoInfoWorker(Worker):
 
             if 'errors' in data:
                 logging.info("Error!: {}".format(data['errors']))
-                if data['errors']['message'] == 'API rate limit exceeded':
+                if data['errors'][0]['message'] == 'API rate limit exceeded':
                     self.update_gh_rate_limit(r)
                     continue
 

@@ -156,7 +156,6 @@ def fill_empty_affiliations(cfg):
 
             cfg.log_activity('Debug','Found domain match for %s' % email)
 
-            # try:             
             for match in matches:
                 update = ("UPDATE commits "
                     "SET cmt_%s_affiliation = %%s "
@@ -164,7 +163,6 @@ def fill_empty_affiliations(cfg):
                     "AND cmt_%s_affiliation IS NULL "
                     "AND cmt_%s_date::date >= %%s::date" %
                     (attribution, attribution, attribution, attribution))
-                    #"AND cmt_%s_date >= TO_TIMESTAMP(%%s, 'YYYY-MM-DD')" %
 
                 cfg.log_activity('Info', 'attr: {} \nmatch:{}\nsql: {}'.format(attribution, match, update))
 
@@ -174,15 +172,6 @@ def fill_empty_affiliations(cfg):
                 except Exception as e: 
                     cfg.log_activity('Info', 'Error encountered: {}'.format(e))
                     cfg.log_activity('Info', 'Affiliation insertion failed for %s ' %  email)
-
-            # except Exception as e:
-            #     cfg.log_activity('Info', '1st Error encountered: {}'.format(e))
-            #     cfg.log_activity('Info', 'Attribution matching failed for %s ' %  email)
-            # except Exception as e:
-            #     logging.info('2nd Error encountered: {}'.format(e))
-            #     cfg.log_activity('Info', 'Attribution matching failed and exception logging failed')
-            # else:
-            #     cfg.log_activity('Info', 'Attribution matching failed and exception logging failed and the exception to the exception failed.')
 
     def discover_alias(email):
 

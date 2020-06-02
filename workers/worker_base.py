@@ -105,6 +105,8 @@ class Worker():
         # Organize different api keys/oauths available
         if 'gh_api_key' in self.config:
             self.init_oauths()
+        else:
+            self.oauths = [{'oauth_id': 0}]
 
         # Send broker hello message
         self.connect_to_broker()
