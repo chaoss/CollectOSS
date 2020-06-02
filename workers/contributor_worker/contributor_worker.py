@@ -8,10 +8,8 @@ from sqlalchemy import MetaData, and_
 import statistics, logging, os, json, time
 import numpy as np
 import datetime
-from workers.standard_methods import *
+
 from workers.worker_base import Worker
-import warnings
-warnings.filterwarnings('ignore')
 
 class ContributorWorker(Worker):
     """ Worker that detects anomalies on a select few of our metrics
@@ -20,7 +18,9 @@ class ContributorWorker(Worker):
     queue: queue of tasks to be fulfilled
     config: holds info like api keys, descriptions, and database connection strings
     """
-    def __init__(self, config, task=None):
+    def __init__(self, config={}):
+
+        worker_type = "contributor_worker"
 
         given = [['git_url']]
         models = ['contributors']
@@ -31,19 +31,19 @@ class ContributorWorker(Worker):
         operations_tables = ['worker_history', 'worker_job']
 
         # Run the general worker initialization
-        super().__init__(config, given, models, data_tables, operations_tables)
+        super().__init__(worker_type, config, given, models, data_tables, operations_tables)
 
         # These 3 are included in every tuple the worker inserts (data collection info)
         self.tool_source = 'Contributor Worker'
-        self.tool_version = '0.0.1' # See __init__.py
+        self.tool_version = '0.0.1'
         self.data_source = 'Augur Commit Data'
 
+    def contributors_model(self, entry_info, repo_id):
+
         # Get max ids so we know where we are in our insertion and to have the current id when inserting FK's
-        logging.info("Querying starting ids info...\n")
+        self.logger.info("Querying starting ids info...\n")
 
         self.cntrb_id_inc = self.get_max_id('contributors', 'cntrb_id')
-
-    def contributors_model(self, entry_info, repo_id):
 
         # Get and insert all users (emails) found by the facade worker
         self.insert_facade_contributors(entry_info, repo_id)
@@ -51,7 +51,7 @@ class ContributorWorker(Worker):
         # Get and insert all users github considers to be contributors for this repo
         self.query_github_contributors(entry_info, repo_id)
 
-        logging.info("Searching users for commits from the facade worker for repo with entry info: {}\n".format(entry_info))
+        self.logger.info("Searching users for commits from the facade worker for repo with entry info: {}\n".format(entry_info))
 
         # Get all distinct combinations of emails and names by querying the repo's commits
         userSQL = s.sql.text("""
@@ -103,7 +103,7 @@ class ContributorWorker(Worker):
 
         commit_cntrbs = json.loads(pd.read_sql(userSQL, self.db, \
             params={'repo_id': repo_id}).to_json(orient="records"))
-        logging.info("We found {} distinct emails to search for in this repo (repo_id = {})\n".format(
+        self.logger.info("We found {} distinct emails to search for in this repo (repo_id = {})\n".format(
             len(commit_cntrbs), repo_id))
 
         # For every unique commit contributor info combination...
@@ -144,7 +144,7 @@ class ContributorWorker(Worker):
                 result = self.db.execute(self.contributors_table.update().where(
                     self.contributors_table.c.cntrb_id==contributor['cntrb_id']).values(times_used_tuple))
                 self.results_counter += 1
-                logging.info("Updated cntrb_created_at and cntrb_last_used columns for existing "
+                self.logger.info("Updated cntrb_created_at and cntrb_last_used columns for existing "
                     "tuple in the contributors table with email: {}\n".format(contributor['commit_email']))
 
             # If cntrb_full_name column is not filled, go ahead and fill it bc we have that info
@@ -158,7 +158,7 @@ class ContributorWorker(Worker):
 
                 result = self.db.execute(self.contributors_table.update().where(
                     self.contributors_table.c.cntrb_id==contributor['cntrb_id']).values(name_col))
-                logging.info("Inserted cntrb_full_name column for existing tuple in the contributors "
+                self.logger.info("Inserted cntrb_full_name column for existing tuple in the contributors "
                     "table with email: {}\n".format(contributor['cntrb_email']))
 
             # If cntrb_canonical column is not filled, go ahead and fill it w main email bc 
@@ -173,7 +173,7 @@ class ContributorWorker(Worker):
 
                 result = self.db.execute(self.contributors_table.update().where(
                     self.contributors_table.c.cntrb_id==contributor['cntrb_id']).values(canonical_col))
-                logging.info("Inserted cntrb_canonical column for existing tuple in the contributors "
+                self.logger.info("Inserted cntrb_canonical column for existing tuple in the contributors "
                     "table with email: {}\n".format(contributor['cntrb_email']))
 
 
@@ -208,20 +208,20 @@ class ContributorWorker(Worker):
                         url = 'https://api.github.com/search/users?q={}+in:email'.format(
                             cmt_cntrb['email'])
 
-                logging.info("Hitting endpoint: " + url + " ...\n")
+                self.logger.info("Hitting endpoint: " + url + " ...\n")
                 r = requests.get(url=url, headers=self.headers)
                 self.update_gh_rate_limit(r)
                 results = r.json()
 
                 # If no matches or bad response, continue with other contributors
                 if 'total_count' not in results:
-                    logging.info("Search query returned an empty response, moving on...\n")
+                    self.logger.info("Search query returned an empty response, moving on...\n")
                     continue
                 if results['total_count'] == 0:
-                    logging.info("Search query did not return any results, moving on...\n")
+                    self.logger.info("Search query did not return any results, moving on...\n")
                     continue
 
-                logging.info("When searching for a contributor with info {}, we found the following users: {}\n".format(
+                self.logger.info("When searching for a contributor with info {}, we found the following users: {}\n".format(
                     cmt_cntrb, results))
 
                 # Grab first result and make sure it has the highest match score
@@ -231,7 +231,7 @@ class ContributorWorker(Worker):
                         match = item
 
                 cntrb_url = ("https://api.github.com/users/" + match['login'])
-                logging.info("Hitting endpoint: " + cntrb_url + " ...\n")
+                self.logger.info("Hitting endpoint: " + cntrb_url + " ...\n")
                 r = requests.get(url=cntrb_url, headers=self.headers)
                 self.update_gh_rate_limit(r)
                 contributor = r.json()
@@ -268,12 +268,12 @@ class ContributorWorker(Worker):
                 }
                 result = self.db.execute(self.contributors_table.update().where(
                     self.contributors_table.c.cntrb_id==self.cntrb_id_inc).values(cntrb_gh_info))
-                logging.info("Updated existing tuple in the contributors table with github info after "
+                self.logger.info("Updated existing tuple in the contributors table with github info after "
                     "a successful search query on a facade commit's author : {} {}\n".format(contributor, cntrb_gh_info))
 
 
         # Dupe check
-        logging.info('Checking dupes.\n')
+        self.logger.info('Checking dupes.\n')
         dupe_cntrb_sql = s.sql.text("""
             SELECT contributors.*
             FROM contributors inner join (
@@ -286,7 +286,7 @@ class ContributorWorker(Worker):
 
         dupe_cntrbs = pd.read_sql(dupe_cntrb_sql, self.db, params={})
 
-        logging.info(f'There are {len(dupe_cntrbs)} duplicates.\n')
+        self.logger.info(f'There are {len(dupe_cntrbs)} duplicates.\n')
 
         # Turn this column from nan to None
         dupe_cntrbs['gh_user_id'] = dupe_cntrbs['gh_user_id'].where(
@@ -296,9 +296,9 @@ class ContributorWorker(Worker):
 
         for i, cntrb_existing in dupe_cntrbs.iterrows():
 
-            logging.info(f'Processing dupe: {cntrb_existing}.\n')
+            self.logger.info(f'Processing dupe: {cntrb_existing}.\n')
             if i == 0:
-                logging.info('skipping first\n')
+                self.logger.info('skipping first\n')
                 continue
 
             cntrb_new = cntrb_existing.copy()
@@ -329,20 +329,20 @@ class ContributorWorker(Worker):
                 AND cntrb_email = '{}';
             """.format(pk, cntrb_new['cntrb_email']))
 
-            logging.info(f'Trying to delete dupes with sql: {delete_dupe_ids_sql}')
+            self.logger.info(f'Trying to delete dupes with sql: {delete_dupe_ids_sql}')
 
             try:
                 result = self.db.execute(delete_dupe_ids_sql)
             except Exception as e:
-                logging.info(f'Deleting dupes failed with error: {e}')
+                self.logger.info(f'Deleting dupes failed with error: {e}')
 
-            logging.info('Deleted duplicates.\n')
+            self.logger.info('Deleted duplicates.\n')
 
         # Register this task as completed
         self.register_task_completion(entry_info, repo_id, "contributors")
 
     def insert_facade_contributors(self, entry_info, repo_id):
-        logging.info("Beginning process to insert contributors from facade commits for repo w entry info: {}\n".format(entry_info))
+        self.logger.info("Beginning process to insert contributors from facade commits for repo w entry info: {}\n".format(entry_info))
 
         # Get all distinct combinations of emails and names by querying the repo's commits
         userSQL = s.sql.text("""
@@ -378,7 +378,7 @@ class ContributorWorker(Worker):
         """)
 
         commit_cntrbs = json.loads(pd.read_sql(userSQL, self.db, params={'repo_id': repo_id}).to_json(orient="records"))
-        logging.info("We found {} distinct contributors needing insertion (repo_id = {})".format(
+        self.logger.info("We found {} distinct contributors needing insertion (repo_id = {})".format(
             len(commit_cntrbs), repo_id))
 
         for cntrb in commit_cntrbs:
@@ -391,10 +391,10 @@ class ContributorWorker(Worker):
                     'cntrb_full_name': cntrb['name']
                 }
             result = self.db.execute(self.contributors_table.insert().values(cntrb_tuple))
-            logging.info("Primary key inserted into the contributors table: {}".format(result.inserted_primary_key))
+            self.logger.info("Primary key inserted into the contributors table: {}".format(result.inserted_primary_key))
             self.results_counter += 1
 
-            logging.info("Inserted contributor: {}\n".format(cntrb['email']))
+            self.logger.info("Inserted contributor: {}\n".format(cntrb['email']))
 
     def handle_alias(self, tuple):
         cntrb_email = tuple['cntrb_email'] # canonical
@@ -423,15 +423,15 @@ class ContributorWorker(Worker):
             del cntrb['cntrb_id']
             
             result = self.db.execute(self.contributors_table.insert().values(cntrb))
-            logging.info("Inserted alias into the contributors table with email: {}\n".format(cntrb['cntrb_email']))
+            self.logger.info("Inserted alias into the contributors table with email: {}\n".format(cntrb['cntrb_email']))
             self.results_counter += 1
             self.cntrb_id_inc = int(result.inserted_primary_key[0])
             alias_id = self.cntrb_id_inc
 
         elif len(existing_tuples) > 1:
             # fix all dupe references to dupe cntrb ids before we delete them 
-            logging.info("THERE IS A CASE FOR A DUPLICATE CONTRIBUTOR in the contributors table, we will delete all tuples with this cntrb_email and re-insert only 1\n")
-            logging.info("For cntrb_email: {}".format(tuple['commit_email']))
+            self.logger.info("THERE IS A CASE FOR A DUPLICATE CONTRIBUTOR in the contributors table, we will delete all tuples with this cntrb_email and re-insert only 1\n")
+            self.logger.info("For cntrb_email: {}".format(tuple['commit_email']))
             
             """ Insert alias tuple into the contributor table """
 
@@ -456,7 +456,7 @@ class ContributorWorker(Worker):
             del cntrb['cntrb_id']
             
             result = self.db.execute(self.contributors_table.insert().values(cntrb))
-            logging.info("Inserted alias into the contributors table with email: {}\n".format(cntrb['cntrb_email']))
+            self.logger.info("Inserted alias into the contributors table with email: {}\n".format(cntrb['cntrb_email']))
             self.results_counter += 1
             self.cntrb_id_inc = int(result.inserted_primary_key[0])
             alias_id = self.cntrb_id_inc
@@ -490,14 +490,14 @@ class ContributorWorker(Worker):
             try:
                 # Delete all dupes 
                 result = self.db.execute(deleteSQL)
-                logging.info("Deleted all non-canonical contributors with the email: {}\n".format(commit_email))
+                self.logger.info("Deleted all non-canonical contributors with the email: {}\n".format(commit_email))
             except Exception as e:
-                logging.info("When trying to delete a duplicate contributor, worker ran into error: {}".format(e))
+                self.logger.info("When trying to delete a duplicate contributor, worker ran into error: {}".format(e))
         
         else: #then there would be exactly 1 existing tuple, so that id is the one we want
             alias_id = existing_tuples[0]['cntrb_id']
 
-        logging.info('Checking canonicals match.\n')
+        self.logger.info('Checking canonicals match.\n')
         alias_sql = s.sql.text("""
             SELECT * 
             FROM contributors
@@ -516,14 +516,14 @@ class ContributorWorker(Worker):
             result = self.db.execute(self.contributors_table.update().where(
                 self.contributors_table.c.cntrb_canonical==canonical_id_result.iloc[0]['cntrb_canonical']
                     ).values(canonical_col))
-            logging.info("Updated cntrb_canonical column for existing tuple in the contributors "
+            self.logger.info("Updated cntrb_canonical column for existing tuple in the contributors "
                 "table with email: {}\n".format(tuple['cntrb_email']))
 
 
         # Now check existing alias table tuple
         existing_tuples = self.retrieve_tuple({'alias_email': commit_email}, ['contributors_aliases'])
         if len(existing_tuples) == 0:
-            logging.info("Finding cntrb_id for canonical email: {}".format(cntrb_email))
+            self.logger.info("Finding cntrb_id for canonical email: {}".format(cntrb_email))
             canonical_id_sql = s.sql.text("""
                 SELECT cntrb_id as canonical_id 
                 from contributors
@@ -532,7 +532,7 @@ class ContributorWorker(Worker):
             canonical_id_result = json.loads(pd.read_sql(canonical_id_sql, self.db, params={'email': cntrb_email}).to_json(
                 orient="records"))
             if len(canonical_id_result) > 1:
-                logging.info("MORE THAN ONE CANONICAL CONTRIBUTOR found for email: {}".format(cntrb_email))
+                self.logger.info("MORE THAN ONE CANONICAL CONTRIBUTOR found for email: {}".format(cntrb_email))
             alias_tuple = {
                 'cntrb_id': canonical_id_result[0]['canonical_id'],
                 'cntrb_a_id': alias_id,
@@ -545,9 +545,9 @@ class ContributorWorker(Worker):
             }
             result = self.db.execute(self.contributors_aliases_table.insert().values(alias_tuple))
             self.results_counter += 1
-            logging.info("Inserted alias with email: {}\n".format(commit_email))
+            self.logger.info("Inserted alias with email: {}\n".format(commit_email))
         if len(existing_tuples) > 1:
-            logging.info("THERE IS A CASE FOR A DUPLICATE CONTRIBUTOR in the alias "
+            self.logger.info("THERE IS A CASE FOR A DUPLICATE CONTRIBUTOR in the alias "
                 "table AND NEED TO ADD DELETION LOGIC: {}\n".format(existing_tuples))
 
     def map_new_id(self, dupe_ids, new_id):
@@ -573,49 +573,49 @@ class ContributorWorker(Worker):
 
             alias_result = self.db.execute(self.contributors_aliases_table.update().where(
                 self.contributors_aliases_table.c.cntrb_a_id.in_(dupe_ids)).values(alias_update_col))
-            logging.info("Updated cntrb_a_id column for tuples in the contributors_aliases table with value: {} replaced with new cntrb id: {}".format(new_id, self.cntrb_id_inc))
+            self.logger.info("Updated cntrb_a_id column for tuples in the contributors_aliases table with value: {} replaced with new cntrb id: {}".format(new_id, self.cntrb_id_inc))
 
         except Exception as e:
-            logging.info(f'Alias re-map already done... error: {e}')
+            self.logger.info(f'Alias re-map already done... error: {e}')
 
         issue_events_result = self.db.execute(self.issue_events_table.update().where(
             self.issue_events_table.c.cntrb_id.in_(dupe_ids)).values(update_col))
-        logging.info("Updated cntrb_id column for tuples in the issue_events table with value: {} replaced with new cntrb id: {}".format(new_id, self.cntrb_id_inc))
+        self.logger.info("Updated cntrb_id column for tuples in the issue_events table with value: {} replaced with new cntrb id: {}".format(new_id, self.cntrb_id_inc))
 
         pr_events_result = self.db.execute(self.pull_request_events_table.update().where(
             self.pull_request_events_table.c.cntrb_id.in_(dupe_ids)).values(update_col))
-        logging.info("Updated cntrb_id column for tuples in the pull_request_events table with value: {} replaced with new cntrb id: {}".format(new_id, self.cntrb_id_inc))
+        self.logger.info("Updated cntrb_id column for tuples in the pull_request_events table with value: {} replaced with new cntrb id: {}".format(new_id, self.cntrb_id_inc))
 
         issues_cntrb_result = self.db.execute(self.issues_table.update().where(
             self.issues_table.c.cntrb_id.in_(dupe_ids)).values(update_col))
-        logging.info("Updated cntrb_id column for tuples in the issues table with value: {} replaced with new cntrb id: {}".format(new_id, self.cntrb_id_inc))
+        self.logger.info("Updated cntrb_id column for tuples in the issues table with value: {} replaced with new cntrb id: {}".format(new_id, self.cntrb_id_inc))
 
         issues_reporter_result = self.db.execute(self.issues_table.update().where(
             self.issues_table.c.reporter_id.in_(dupe_ids)).values(reporter_col))
-        logging.info("Updated reporter_id column in the issues table with value: {} replaced with new cntrb id: {}".format(new_id, self.cntrb_id_inc))
+        self.logger.info("Updated reporter_id column in the issues table with value: {} replaced with new cntrb id: {}".format(new_id, self.cntrb_id_inc))
 
         issue_assignee_result = self.db.execute(self.issue_assignees_table.update().where(
             self.issue_assignees_table.c.cntrb_id.in_(dupe_ids)).values(update_col))
-        logging.info("Updated cntrb_id column for tuple in the issue_assignees table with value: {} replaced with new cntrb id: {}".format(new_id, self.cntrb_id_inc))
+        self.logger.info("Updated cntrb_id column for tuple in the issue_assignees table with value: {} replaced with new cntrb id: {}".format(new_id, self.cntrb_id_inc))
 
         pr_assignee_result = self.db.execute(self.pull_request_assignees_table.update().where(
             self.pull_request_assignees_table.c.contrib_id.in_(dupe_ids)).values(pr_assignee_col))
-        logging.info("Updated contrib_id column for tuple in the pull_request_assignees table with value: {} replaced with new cntrb id: {}".format(new_id, self.cntrb_id_inc))
+        self.logger.info("Updated contrib_id column for tuple in the pull_request_assignees table with value: {} replaced with new cntrb id: {}".format(new_id, self.cntrb_id_inc))
 
         message_result = self.db.execute(self.message_table.update().where(
             self.message_table.c.cntrb_id.in_(dupe_ids)).values(update_col))
-        logging.info("Updated cntrb_id column for tuple in the message table with value: {} replaced with new cntrb id: {}".format(new_id, self.cntrb_id_inc))
+        self.logger.info("Updated cntrb_id column for tuple in the message table with value: {} replaced with new cntrb id: {}".format(new_id, self.cntrb_id_inc))
 
         pr_reviewers_result = self.db.execute(self.pull_request_reviewers_table.update().where(
             self.pull_request_reviewers_table.c.cntrb_id.in_(dupe_ids)).values(update_col))
-        logging.info("Updated cntrb_id column for tuple in the pull_request_reviewers table with value: {} replaced with new cntrb id: {}".format(new_id, self.cntrb_id_inc))
+        self.logger.info("Updated cntrb_id column for tuple in the pull_request_reviewers table with value: {} replaced with new cntrb id: {}".format(new_id, self.cntrb_id_inc))
 
         pr_meta_result = self.db.execute(self.pull_request_meta_table.update().where(
             self.pull_request_meta_table.c.cntrb_id.in_(dupe_ids)).values(update_col))
-        logging.info("Updated cntrb_id column for tuple in the pull_request_meta table with value: {} replaced with new cntrb id: {}".format(new_id, self.cntrb_id_inc))
+        self.logger.info("Updated cntrb_id column for tuple in the pull_request_meta table with value: {} replaced with new cntrb id: {}".format(new_id, self.cntrb_id_inc))
 
         pr_repo_result = self.db.execute(self.pull_request_repo_table.update().where(
             self.pull_request_repo_table.c.pr_cntrb_id.in_(dupe_ids)).values(pr_repo_col))
-        logging.info("Updated cntrb_id column for tuple in the pull_request_repo table with value: {} replaced with new cntrb id: {}".format(new_id, self.cntrb_id_inc))
+        self.logger.info("Updated cntrb_id column for tuple in the pull_request_repo table with value: {} replaced with new cntrb id: {}".format(new_id, self.cntrb_id_inc))
 
-        logging.info('Done mapping new id.\n')
+        self.logger.info('Done mapping new id.\n')

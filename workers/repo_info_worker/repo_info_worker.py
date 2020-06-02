@@ -117,13 +117,8 @@ class RepoInfoWorker(Worker):
                 data = json.loads(json.dumps(r.text))
 
             if 'errors' in data:
-<<<<<<< HEAD:workers/repo_info_worker/repo_info_worker.py
                 self.logger.info("Error!: {}".format(data['errors']))
-                if data['errors']['message'] == 'API rate limit exceeded':
-=======
-                logging.info("Error!: {}".format(data['errors']))
                 if data['errors'][0]['message'] == 'API rate limit exceeded':
->>>>>>> dev:workers/repo_info_worker/repo_info_worker/worker.py
                     self.update_gh_rate_limit(r)
                     continue
 

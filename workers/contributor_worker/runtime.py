@@ -1,13 +1,13 @@
 from flask import Flask, jsonify, request, Response
 import click, os, json, requests, logging
-from repo_info_worker import RepoInfoWorker
+from contributor_worker import ContributorWorker
 from workers.util import create_server, WorkerGunicornApplication
 
 def main():
     """ Declares singular worker and creates the server and flask app that it will be running on
     """
     app = Flask(__name__)
-    app.worker = RepoInfoWorker()
+    app.worker = ContributorWorker()
 
     create_server(app)
     WorkerGunicornApplication(app).run()
