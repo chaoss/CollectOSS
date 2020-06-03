@@ -6,7 +6,6 @@ import json
 from urllib.parse import quote
 from multiprocessing import Process, Queue
 
-from value_worker import __data_source__, __tool_source__, __tool_version__
 import pandas as pd
 import sqlalchemy as s
 from sqlalchemy.ext.automap import automap_base
@@ -14,8 +13,10 @@ from sqlalchemy import MetaData
 from workers.worker_base import Worker
 
 class ValueWorker(Worker):
-    def __init__(self, config, task=None):
-        
+    def __init__(self, config={}):
+
+        worker_type = "value_worker"
+
         # Define what this worker can be given and know how to interpret
         given = [['git_url']]
         models = ['value']
@@ -24,14 +25,23 @@ class ValueWorker(Worker):
         data_tables = ['repo_labor']
         operations_tables = ['worker_history', 'worker_job']
 
+
         # Run the general worker initialization
-        super().__init__(config, given, models, data_tables, operations_tables)
+        super().__init__(worker_type, config, given, models, data_tables, operations_tables)
+
+        self.config.update({
+            'repo_directory': self.augur_config.get_value('Workers', 'facade_worker')['repo_directory']
+        })
+
+        self.tool_source = 'Value Worker'
+        self.tool_version = '0.1.0'
+        self.data_source = 'SCC'
 
     def value_model(self, entry_info, repo_id):
         """ Data collection and storage method
         """
-        logging.info(entry_info)
-        logging.info(repo_id)
+        self.logger.info(entry_info)
+        self.logger.info(repo_id)
 
         repo_path_sql = s.sql.text("""
             SELECT repo_id, CONCAT(repo_group_id || chr(47) || repo_path || repo_name) AS path
@@ -45,7 +55,7 @@ class ValueWorker(Worker):
         try:
             self.generate_value_data(repo_id, absolute_repo_path)
         except Exception as e:
-            logging.error(e)
+            self.logger.error(e)
 
         self.register_task_completion(entry_info, repo_id, "value")
 
@@ -55,8 +65,8 @@ class ValueWorker(Worker):
         :param repo_id: Repository ID
         :param path: Absolute path of the Repostiory
         """
-        logging.info('Running `scc`....')
-        logging.info(f'Repo ID: {repo_id}, Path: {path}')
+        self.logger.info('Running `scc`....')
+        self.logger.info(f'Repo ID: {repo_id}, Path: {path}')
 
         output = subprocess.check_output([self.config['scc_bin'], '-f', 'json', path])
         records = json.loads(output.decode('utf8'))
@@ -74,11 +84,11 @@ class ValueWorker(Worker):
                     'comment_lines': file['Comment'],
                     'blank_lines': file['Blank'],
                     'code_complexity': file['Complexity'],
-                    'tool_source': __tool_source__,
-                    'tool_version': __tool_version__,
-                    'data_source': __data_source__,
+                    'tool_source': self.tool_source,
+                    'tool_version': self.tool_version,
+                    'data_source': self.data_source,
                     'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
                 }
 
                 result = self.db.execute(self.repo_labor_table.insert().values(repo_labor))
-                logging.info(f"Added Repo Labor Data: {result.inserted_primary_key}")
+                self.logger.info(f"Added Repo Labor Data: {result.inserted_primary_key}")
