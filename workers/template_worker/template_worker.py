@@ -6,9 +6,10 @@ import sqlalchemy as s
 from workers.worker_base import Worker
 
 class TemplateWorker(Worker):
-    def __init__(self, config):
+    def __init__(self, config={}):
         
         # Define what this worker can be given and know how to interpret
+        worker_type = "template_worker"
 
         # given is usually either [['github_url']] or [['git_url']] (depending if your 
         #   worker is exclusive to repos that are on the GitHub platform)
@@ -28,7 +29,7 @@ class TemplateWorker(Worker):
         operations_tables = ['worker_history', 'worker_job']
 
         # Run the general worker initialization
-        super().__init__(config, given, models, data_tables, operations_tables)
+        super().__init__(worker_type, config, given, models, data_tables, operations_tables)
 
         # Define data collection info
         self.tool_source = 'Fake Template Worker'

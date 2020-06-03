@@ -28,7 +28,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'template_worker_start=template_worker.runtime:main',
+            'template_worker_start=workers.template_worker.runtime:main',
         ],
     },
     classifiers=[
