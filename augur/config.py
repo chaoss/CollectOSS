@@ -115,6 +115,8 @@ class AugurConfig():
     def get_raw_config(self):
         return self._config
 
+    def get_default_config(self):
+        return self._default_config
 
 class AugurConfigFileNotFoundException(Exception):
     def __init__(self, message, errors):

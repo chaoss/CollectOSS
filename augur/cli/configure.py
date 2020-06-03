@@ -122,6 +122,7 @@ default_config = {
                 "port": 50300,
                 "metrics": {"issues-new": "issues", "code-changes": "commit_count", "code-changes-lines": "added", 
                            "reviews": "pull_requests", "contributors-new": "new_contributors"},
+                "confidence_interval": 95,
                 "contamination": 0.041,
                 "switch": 0,
                 "workers": 1,

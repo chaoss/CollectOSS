@@ -45,6 +45,12 @@ class Worker():
                 'gh_api_key': self.augur_config.get_value('Database', 'key')
             }
 
+        try:
+            worker_defaults = self.augur_config.get_default_config()["Workers"][self.config["worker_type"]]
+            self.config.update(worker_defaults)
+        except KeyError as e:
+            logger.warn("Could not get default configuration for ", self.config["worker_typed"])
+
         worker_info = self.augur_config.get_value("Workers", self.config["worker_type"])
         self.config.update(worker_info)
 

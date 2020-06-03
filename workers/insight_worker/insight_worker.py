@@ -21,8 +21,10 @@ class InsightWorker(Worker):
     queue: queue of tasks to be fulfilled
     config: holds info like api keys, descriptions, and database connection strings
     """
-    def __init__(self, config, task=None):
-        
+    def __init__(self, config={}):
+
+        worker_type = "insight_worker"
+
         given = [['git_url']]
         models = ['insights']
 
@@ -30,7 +32,12 @@ class InsightWorker(Worker):
         operations_tables = ['worker_history', 'worker_job']
 
         # Run the general worker initialization
-        super().__init__(config, given, models, data_tables, operations_tables)
+        super().__init__(worker_type, config, given, models, data_tables, operations_tables)
+
+        self.config.update({ 
+            'api_host': self.augur_config.get_value('Server', 'host'),
+            'api_port': self.augur_config.get_value('Server', 'port')
+        })
 
         # These 3 are included in every tuple the worker inserts (data collection info)
         self.tool_source = 'Insight Worker'
