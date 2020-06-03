@@ -30,7 +30,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'metric_status_worker_start=metric_status_worker.runtime:main',
+            'metric_status_worker_start=workers.metric_status_worker.runtime:main',
         ],
     },
     classifiers=[

@@ -20,6 +20,9 @@ from workers.worker_base import Worker
 
 class MetricStatusWorker(Worker):
     def __init__(self, config, task=None):
+
+        worker_type = "metric_status_worker"
+
         given = [['git_url']]
         models = ['chaoss_metric_status']
 
@@ -27,7 +30,7 @@ class MetricStatusWorker(Worker):
         operations_tables = ['worker_history', 'worker_job']
 
         # Run the general worker initialization
-        super().__init__(config, given, models, data_tables, operations_tables)
+        super().__init__(worker_type, config, given, models, data_tables, operations_tables)
 
         # These 3 are included in every tuple the worker inserts (data collection info)
         self.tool_source = 'Metric Status Worker'
