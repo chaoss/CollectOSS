@@ -6,12 +6,14 @@ import pandas as pd
 import sqlalchemy as s
 from sqlalchemy import MetaData
 from sqlalchemy.ext.automap import automap_base
-from workers.worker_template import Worker
+from workers.worker_base import Worker
 
 #TODO - fully edit to match releases
 class ReleaseWorker(Worker):
-    def __init__(self, config):
-        
+    def __init__(self, config={}):
+
+        worker_type = "release_worker"
+
         # Define what this worker can be given and know how to interpret
         given = [['github_url']]
         models = ['releases']
@@ -21,18 +23,18 @@ class ReleaseWorker(Worker):
         operations_tables = ['worker_history', 'worker_job']
 
         # Run the general worker initialization
-        super().__init__(config, given, models, data_tables, operations_tables)
+        super().__init__(worker_type, config, given, models, data_tables, operations_tables)
 
         # Define data collection info
         self.tool_source = 'Release Worker'
         self.tool_version = '0.0.1'
         self.data_source = 'GitHub API'
 
-    def repo_info_model(self, task, repo_id):
+    def releases_model(self, task, repo_id):
 
         github_url = task['given']['github_url']
 
-        logging.info("Beginning filling the releases model for repo: " + github_url + "\n")
+        self.logger.info("Beginning filling the releases model for repo: " + github_url + "\n")
 
         owner, repo = self.get_owner_repo(github_url)
 
@@ -70,7 +72,7 @@ class ReleaseWorker(Worker):
         num_attempts = 0
         success = False
         while num_attempts < 3:
-            logging.info("Hitting endpoint: {} ...\n".format(url))
+            self.logger.info("Hitting endpoint: {} ...\n".format(url))
             r = requests.post(url, json={'query': query}, headers=self.headers)
             self.update_gh_rate_limit(r)
 
@@ -80,7 +82,7 @@ class ReleaseWorker(Worker):
                 data = json.loads(json.dumps(r.text))
 
             if 'errors' in data:
-                logging.info("Error!: {}".format(data['errors']))
+                self.logger.info("Error!: {}".format(data['errors']))
                 if data['errors']['message'] == 'API rate limit exceeded':
                     self.update_gh_rate_limit(r)
                     continue
@@ -90,9 +92,9 @@ class ReleaseWorker(Worker):
                 data = data['data']['repository']
                 break
             else:
-                logging.info("Request returned a non-data dict: {}\n".format(data))
+                self.logger.info("Request returned a non-data dict: {}\n".format(data))
                 if data['message'] == 'Not Found':
-                    logging.info("Github repo was not found or does not exist for endpoint: {}\n".format(url))
+                    self.logger.info("Github repo was not found or does not exist for endpoint: {}\n".format(url))
                     break
                 if data['message'] == 'You have triggered an abuse detection mechanism. Please wait a few minutes before you try again.':
                     self.update_gh_rate_limit(r, temporarily_disable=True)
@@ -112,15 +114,15 @@ class ReleaseWorker(Worker):
                         if 'node' in n:
                             release = n['node']
                             insert_release(self, repo_id, owner, release)
-                        logging.info("There's no release to insert. Current node is not available in releases: {}\n".format(n))
-                logging.info("There are no releases to insert for current repository: {}\n".format(data))
-            logging.info("Graphql response does not contain releases: {}\n".format(data))
-        logging.info("Graphql response does not contain repository: {}\n".format(data))
+                        self.logger.info("There's no release to insert. Current node is not available in releases: {}\n".format(n))
+                self.logger.info("There are no releases to insert for current repository: {}\n".format(data))
+            self.logger.info("Graphql response does not contain releases: {}\n".format(data))
+        self.logger.info("Graphql response does not contain repository: {}\n".format(data))
 
     def insert_release(self, repo_id, owner, release):
         author = release['author']['name']+'_'+release['author']['company']
         # Put all data together in format of the table
-        logging.info(f'Inserting release for repo with id:{repo_id}, owner:{owner}, release name:{release['name']}\n')
+        self.logger.info(f'Inserting release for repo with id:{repo_id}, owner:{owner}, release name:{release["name"]}\n')
         release_inf = {
             'release_id': release['id'],
             'repo_id': repo_id,
@@ -140,10 +142,10 @@ class ReleaseWorker(Worker):
         }
 
         result = self.db.execute(self.releases_table.insert().values(release_inf))
-        logging.info(f"Primary Key inserted into releases table: {result.inserted_primary_key}\n")
+        self.logger.info(f"Primary Key inserted into releases table: {result.inserted_primary_key}\n")
         self.results_counter += 1
 
-        logging.info(f"Inserted info for {owner}/{repo}/{release['name']}\n")
+        self.logger.info(f"Inserted info for {owner}/{repo}/{release['name']}\n")
 
         #Register this task as completed
         self.register_task_completion(task, release_id, "releases")

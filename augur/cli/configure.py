@@ -98,12 +98,20 @@ default_config = {
                     "repo_group_id": 0
                 },
                 {
-                "delay": 100000,
-                "given": [
-                    "github_url"
-                ],
-                "model": "pull_request_files",
-                "repo_group_id": 0
+                    "delay": 100000,
+                    "given": [
+                        "github_url"
+                    ],
+                    "model": "pull_request_files",
+                    "repo_group_id": 0
+                },
+                {
+                    "delay": 100000,
+                    "given": [
+                        "github_url"
+                    ],
+                    "model": "releases",
+                    "repo_group_id": 0
                 }
             ]
         },
@@ -166,6 +174,11 @@ default_config = {
                 "switch": 1,
                 "workers": 1
             },
+            "release_worker": {
+                "port": 51100,
+                "switch": 1,
+                "workers": 1
+            }
         },
         "Facade": {
             "check_updates": 1,
