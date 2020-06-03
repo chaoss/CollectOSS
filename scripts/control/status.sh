@@ -21,7 +21,7 @@ if [[ $monitor == "quick" ]]; then
         echo "*****************************"
 
         cd $WORKER
-        tail -n 20 *.log
+        tail -n 20 *_collection.log
         echo
         echo
         cd ../..
@@ -29,5 +29,5 @@ if [[ $monitor == "quick" ]]; then
       fi
   done
 else
-  less -F logs/augur.log workers/**/*.log
+  less -F logs/augur.log workers/**/*_collection.log
 fi
