@@ -48,7 +48,7 @@ from facade_worker.facade05repofetch import git_repo_initialize, check_for_repo_
 from facade_worker.facade06analyze import analysis
 from facade_worker.facade07rebuildcache import nuke_affiliations, fill_empty_affiliations, invalidate_caches, rebuild_unknown_affiliation_and_web_caches
 
-from workers.standard_methods import read_config
+from workers.util import read_config
 
 import logging
 
