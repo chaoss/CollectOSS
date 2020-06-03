@@ -6,14 +6,16 @@ import sqlalchemy as s
 from sqlalchemy.sql.expression import bindparam
 from workers.worker_base import Worker
 
-class GithubPullRequestWorker(Worker):
+class GitHubPullRequestWorker(Worker):
     """
     Worker that collects Pull Request related data from the Github API and stores it in our database.
 
     :param task: most recent task the broker added to the worker's queue
     :param config: holds info like api keys, descriptions, and database connection strings
     """
-    def __init__(self, config, task=None):
+    def __init__(self, config={}):
+
+        worker_type = "pull_request_worker"
 
         # Define what this worker can be given and know how to interpret
         given = [['github_url']]
@@ -28,28 +30,21 @@ class GithubPullRequestWorker(Worker):
         operations_tables = ['worker_history', 'worker_job']
 
         # Run the general worker initialization
-        super().__init__(config, given, models, data_tables, operations_tables)
+        super().__init__(worker_type, config, given, models, data_tables, operations_tables)
 
         # Define data collection info
         self.tool_source = 'GitHub Pull Request Worker'
         self.tool_version = '0.0.1' # See __init__.py
         self.data_source = 'GitHub API'
      
-        logging.info("Querying starting ids info...\n")
-
-        # Increment so we are ready to insert the 'next one' of each of these most recent ids
-        self.history_id = self.get_max_id('worker_history', 'history_id', operations_table=True) + 1
-        self.pr_id_inc = self.get_max_id('pull_requests', 'pull_request_id')
-        self.pr_meta_id_inc = self.get_max_id('pull_request_meta', 'pr_repo_meta_id')
-
-    def graphql_paginate(query, data_subjects, before_parameters=None):
+    def graphql_paginate(self, query, data_subjects, before_parameters=None):
         """ Paginate a GitHub GraphQL query backwards
 
         :param query: A string, holds the GraphQL query
         :rtype: A Pandas DataFrame, contains all data contained in the pages
         """
 
-        logging.info(f'Start paginate with params: \n{data_subjects} '
+        self.logger.info(f'Start paginate with params: \n{data_subjects} '
             f'\n{before_parameters}')
 
         def all_items(dictionary):
@@ -84,7 +79,7 @@ class GithubPullRequestWorker(Worker):
             
         for data_subject, nest in data_subjects.items():
 
-            logging.info(f'Beginning paginate process for field {data_subject} '
+            self.logger.info(f'Beginning paginate process for field {data_subject} '
                 f'for query: {query}')
 
             page_count = 0
@@ -96,7 +91,7 @@ class GithubPullRequestWorker(Worker):
                 success = False
 
                 for attempt in range(num_attempts):
-                    logging.info(f'Attempt #{attempt + 1} for hitting GraphQL endpoint '
+                    self.logger.info(f'Attempt #{attempt + 1} for hitting GraphQL endpoint '
                         f'page number {page_count}\n')
 
                     response = requests.post(base_url, json={'query': query.format(
@@ -110,7 +105,7 @@ class GithubPullRequestWorker(Worker):
                         data = json.loads(json.dumps(response.text))
 
                     if 'errors' in data:
-                        logging.info("Error!: {}".format(data['errors']))
+                        self.logger.info("Error!: {}".format(data['errors']))
                         if data['errors'][0]['type'] == 'RATE_LIMITED':
                             self.update_gh_rate_limit(response)
                             num_attempts -= 1
@@ -124,9 +119,9 @@ class GithubPullRequestWorker(Worker):
                         data = root['edges']
                         break
                     else:
-                        logging.info("Request returned a non-data dict: {}\n".format(data))
+                        self.logger.info("Request returned a non-data dict: {}\n".format(data))
                         if data['message'] == 'Not Found':
-                            logging.info("Github repo was not found or does not exist for endpoint: {}\n".format(base_url))
+                            self.logger.info("Github repo was not found or does not exist for endpoint: {}\n".format(base_url))
                             break
                         if data['message'] == 'You have triggered an abuse detection mechanism. Please wait a few minutes before you try again.':
                             num_attempts -= 1
@@ -135,7 +130,7 @@ class GithubPullRequestWorker(Worker):
                             self.update_gh_rate_limit(response, bad_credentials=True)
 
                 if not success:
-                    logging.info('GraphQL query failed: {}'.format(query))
+                    self.logger.info('GraphQL query failed: {}'.format(query))
                     continue
 
                 before_parameters.update({
@@ -145,7 +140,7 @@ class GithubPullRequestWorker(Worker):
 
                 tuples += data
 
-            logging.info(f'Paged through {page_count} pages and '
+            self.logger.info(f'Paged through {page_count} pages and '
                 f'collected {len(tuples)} data points\n')
 
             if not nest:
@@ -155,9 +150,9 @@ class GithubPullRequestWorker(Worker):
                 before_parameters=before_parameters)
 
 
-    def pull_requests_graphql(self, task_info, repo_id):
+    def pull_request_files_model(self, task_info, repo_id):
 
-        owner, repo = get_owner_repo(task_info['given']['github_url'])
+        owner, repo = self.get_owner_repo(task_info['given']['github_url'])
 
         # query existing PRs and the respective url we will append the commits url to
         pr_number_sql = s.sql.text("""
@@ -171,7 +166,7 @@ class GithubPullRequestWorker(Worker):
 
         for index, pull_request in enumerate(pr_numbers.itertuples()): 
 
-            logging.info(f'Querying files for pull request #{index + 1} of {len(pr_numbers)}')
+            self.logger.info(f'Querying files for pull request #{index + 1} of {len(pr_numbers)}')
         
             query = """
                 {{ 
@@ -216,14 +211,14 @@ class GithubPullRequestWorker(Worker):
             WHERE pull_request_files.pull_request_id = pull_requests.pull_request_id
             AND repo_id = :repo_id
         """)
-        logging.info(f'Getting table values with the following PSQL query: \n{table_values_sql}\n')
+        self.logger.info(f'Getting table values with the following PSQL query: \n{table_values_sql}\n')
         table_values = pd.read_sql(table_values_sql, self.db, params={'repo_id': repo_id})
 
         # Compare queried values against table values for dupes/updates
         if len(pr_file_rows) > 0:
             table_columns = pr_file_rows[0].keys()
         else:
-            logging.info(f'No rows need insertion for repo {repo_id}\n')
+            self.logger.info(f'No rows need insertion for repo {repo_id}\n')
             self.register_task_completion(task_info, repo_id, 'pull_request_files')
             return
 
@@ -250,7 +245,7 @@ class GithubPullRequestWorker(Worker):
         pr_file_insert_rows = need_insertion.to_dict('records')
         pr_file_update_rows = need_updates.to_dict('records')
 
-        logging.info(f'Repo id {repo_id} needs {len(need_insertion)} insertions and '
+        self.logger.info(f'Repo id {repo_id} needs {len(need_insertion)} insertions and '
             f'{len(need_updates)} updates.\n')
 
         if len(pr_file_update_rows) > 0:
@@ -267,7 +262,7 @@ class GithubPullRequestWorker(Worker):
                     )
                     success = True
                 except Exception as e:
-                    logging.info('error: {}'.format(e))
+                    self.logger.info('error: {}'.format(e))
                 time.sleep(5)
 
         if len(pr_file_insert_rows) > 0:
@@ -280,13 +275,21 @@ class GithubPullRequestWorker(Worker):
                     )
                     success = True
                 except Exception as e:
-                    logging.info('error: {}'.format(e))
+                    self.logger.info('error: {}'.format(e))
                 time.sleep(5)
 
         self.register_task_completion(task_info, repo_id, 'pull_request_files')
 
     def pull_request_commits_model(self, task_info, repo_id):
         """ Queries the commits related to each pull request already inserted in the db """
+
+        self.logger.info("Querying starting ids info...\n")
+
+        # Increment so we are ready to insert the 'next one' of each of these most recent ids
+        self.history_id = self.get_max_id('worker_history', 'history_id', operations_table=True) + 1
+        self.pr_id_inc = self.get_max_id('pull_requests', 'pull_request_id')
+        self.pr_meta_id_inc = self.get_max_id('pull_request_meta', 'pr_repo_meta_id')
+
 
         # query existing PRs and the respective url we will append the commits url to
         pr_url_sql = s.sql.text("""
@@ -320,7 +323,7 @@ class GithubPullRequestWorker(Worker):
                         'data_source': 'GitHub API',
                     }
                     result = self.db.execute(self.pull_request_commits_table.insert().values(pr_commit_row))
-                    logging.info(f"Inserted Pull Request Commit: {result.inserted_primary_key}\n")
+                    self.logger.info(f"Inserted Pull Request Commit: {result.inserted_primary_key}\n")
 
         self.register_task_completion(task_info, repo_id, 'pull_request_commits')
 
@@ -330,10 +333,18 @@ class GithubPullRequestWorker(Worker):
         :param entry_info: A dictionary consisiting of 'git_url' and 'repo_id'
         :type entry_info: dict
         """
+
+        self.logger.info("Querying starting ids info...\n")
+
+        # Increment so we are ready to insert the 'next one' of each of these most recent ids
+        self.history_id = self.get_max_id('worker_history', 'history_id', operations_table=True) + 1
+        self.pr_id_inc = self.get_max_id('pull_requests', 'pull_request_id')
+        self.pr_meta_id_inc = self.get_max_id('pull_request_meta', 'pr_repo_meta_id')
+
         github_url = entry_info['given']['github_url']
 
-        logging.info('Beginning collection of Pull Requests...\n')
-        logging.info(f'Repo ID: {repo_id}, Git URL: {github_url}\n')
+        self.logger.info('Beginning collection of Pull Requests...\n')
+        self.logger.info(f'Repo ID: {repo_id}, Git URL: {github_url}\n')
 
         owner, repo = self.get_owner_repo(github_url)
 
@@ -351,11 +362,10 @@ class GithubPullRequestWorker(Worker):
         #list to hold pull requests needing insertion
         prs = self.paginate(url, duplicate_col_map, update_col_map, table, table_pkey, 
             where_clause='WHERE repo_id = {}'.format(repo_id),
-            value_update_col_map={'pr_augur_contributor_id': float('nan')},
-            include_all=True)
+            value_update_col_map={'pr_augur_contributor_id': float('nan')})
 
         # Discover and remove duplicates before we start inserting
-        logging.info("Count of pull requests needing update or insertion: " + str(len(prs)) + "\n")
+        self.logger.info("Count of pull requests needing update or insertion: " + str(len(prs)) + "\n")
 
         for pr_dict in prs:
 
@@ -401,21 +411,21 @@ class GithubPullRequestWorker(Worker):
             }
 
             if pr_dict['flag'] == 'need_insertion':
-                logging.info(f'PR {pr_dict["id"]} needs to be inserted\n')
+                self.logger.info(f'PR {pr_dict["id"]} needs to be inserted\n')
 
                 result = self.db.execute(self.pull_requests_table.insert().values(pr))
-                logging.info(f"Added Pull Request: {result.inserted_primary_key}")
+                self.logger.info(f"Added Pull Request: {result.inserted_primary_key}")
                 self.pr_id_inc = int(result.inserted_primary_key[0])
 
             elif pr_dict['flag'] == 'need_update':
                 result = self.db.execute(self.pull_requests_table.update().where(
                     self.pull_requests_table.c.pr_src_id==pr_dict['id']).values(pr))
-                logging.info("Updated tuple in the pull_requests table with existing pr_src_id: {}".format(
+                self.logger.info("Updated tuple in the pull_requests table with existing pr_src_id: {}".format(
                     pr_dict['id']))
                 self.pr_id_inc = pr_dict['pkey']
 
             else:
-                logging.info("PR does not need to be inserted. Fetching its id from DB")
+                self.logger.info("PR does not need to be inserted. Fetching its id from DB")
                 pr_id_sql = s.sql.text("""
                     SELECT pull_request_id FROM pull_requests
                     WHERE pr_src_id={}
@@ -429,16 +439,16 @@ class GithubPullRequestWorker(Worker):
             self.query_reviewers(pr_dict['requested_reviewers'], self.pr_id_inc)
             self.query_pr_meta(pr_dict['head'], pr_dict['base'], self.pr_id_inc)
 
-            logging.info(f"Inserted PR data for {owner}/{repo}")
+            self.logger.info(f"Inserted PR data for {owner}/{repo}")
             self.results_counter += 1
 
         self.register_task_completion(entry_info, repo_id, 'pull_requests')
 
     def query_labels(self, labels, pr_id):
-        logging.info('Querying PR Labels\n')
+        self.logger.info('Querying PR Labels\n')
 
         if len(labels) == 0:
-            logging.info('No new labels to add\n')
+            self.logger.info('No new labels to add\n')
             return
 
         table = 'pull_request_labels'
@@ -454,7 +464,7 @@ class GithubPullRequestWorker(Worker):
         new_labels = self.assign_tuple_action(labels, pr_labels_table_values, update_col_map, duplicate_col_map, 
                 table_pkey)
 
-        logging.info(f'Found {len(new_labels)} labels\n')
+        self.logger.info(f'Found {len(new_labels)} labels\n')
 
         for label_dict in new_labels:
 
@@ -473,13 +483,13 @@ class GithubPullRequestWorker(Worker):
 
             if label_dict['flag'] == 'need_insertion':
                 result = self.db.execute(self.pull_request_labels_table.insert().values(label))
-                logging.info(f"Added PR Label: {result.inserted_primary_key}\n")
-                logging.info(f"Inserted PR Labels data for PR with id {pr_id}\n")
+                self.logger.info(f"Added PR Label: {result.inserted_primary_key}\n")
+                self.logger.info(f"Inserted PR Labels data for PR with id {pr_id}\n")
 
                 self.results_counter += 1
 
     def query_pr_events(self, owner, repo, gh_pr_no, pr_id):
-        logging.info('Querying PR Events\n')
+        self.logger.info('Querying PR Events\n')
 
         url = (f'https://api.github.com/repos/{owner}/{repo}/issues/{gh_pr_no}' +
             '/events?per_page=100&page={}')
@@ -495,7 +505,7 @@ class GithubPullRequestWorker(Worker):
         #list to hold contributors needing insertion or update
         pr_events = self.paginate(url, duplicate_col_map, update_col_map, table, table_pkey)
         
-        logging.info("Count of pull request events needing insertion: " + str(len(pr_events)) + "\n")
+        self.logger.info("Count of pull request events needing insertion: " + str(len(pr_events)) + "\n")
 
         for pr_event_dict in pr_events:
 
@@ -519,17 +529,17 @@ class GithubPullRequestWorker(Worker):
             }
 
             result = self.db.execute(self.pull_request_events_table.insert().values(pr_event))
-            logging.info(f"Added PR Event: {result.inserted_primary_key}\n")
+            self.logger.info(f"Added PR Event: {result.inserted_primary_key}\n")
 
             self.results_counter += 1
 
-        logging.info(f"Inserted PR Events data for PR with id {pr_id}\n")
+        self.logger.info(f"Inserted PR Events data for PR with id {pr_id}\n")
 
     def query_reviewers(self, reviewers, pr_id):
-        logging.info('Querying Reviewers')
+        self.logger.info('Querying Reviewers')
 
         if reviewers is None or len(reviewers) == 0:
-            logging.info('No reviewers to add')
+            self.logger.info('No reviewers to add')
             return
 
         table = 'pull_request_reviewers'
@@ -562,17 +572,17 @@ class GithubPullRequestWorker(Worker):
 
             if reviewers_dict['flag'] == 'need_insertion':
                 result = self.db.execute(self.pull_request_reviewers_table.insert().values(reviewer))
-                logging.info(f"Added PR Reviewer {result.inserted_primary_key}")
+                self.logger.info(f"Added PR Reviewer {result.inserted_primary_key}")
 
                 self.results_counter += 1
 
-        logging.info(f"Finished inserting PR Reviewer data for PR with id {pr_id}")
+        self.logger.info(f"Finished inserting PR Reviewer data for PR with id {pr_id}")
 
     def query_assignee(self, assignees, pr_id):
-        logging.info('Querying Assignees')
+        self.logger.info('Querying Assignees')
 
         if assignees is None or len(assignees) == 0:
-            logging.info('No assignees to add')
+            self.logger.info('No assignees to add')
             return
 
         table = 'pull_request_assignees'
@@ -605,14 +615,14 @@ class GithubPullRequestWorker(Worker):
 
             if assignee_dict['flag'] == 'need_insertion':
                 result = self.db.execute(self.pull_request_assignees_table.insert().values(assignee))
-                logging.info(f'Added PR Assignee {result.inserted_primary_key}')
+                self.logger.info(f'Added PR Assignee {result.inserted_primary_key}')
 
                 self.results_counter += 1
 
-        logging.info(f'Finished inserting PR Assignee data for PR with id {pr_id}')
+        self.logger.info(f'Finished inserting PR Assignee data for PR with id {pr_id}')
 
     def query_pr_meta(self, head, base, pr_id):
-        logging.info('Querying PR Meta')
+        self.logger.info('Querying PR Meta')
 
         table = 'pull_request_meta'
         duplicate_col_map = {'pr_sha': 'sha'}
@@ -652,13 +662,12 @@ class GithubPullRequestWorker(Worker):
                         self.pull_request_meta_table.c.pr_sha==pr_meta['pr_sha'] and
                         self.pull_request_meta_table.c.pr_head_or_base==pr_side 
                     ).values(pr_meta))
-                logging.info("Updated tuple in the issues table with existing gh_issue_id: {}".format(
-                    issue_dict['id']))
+                # self.logger.info("Updated tuple in the issues table with existing gh_issue_id: {}".format(issue_dict['id']))
                 self.pr_meta_id_inc = pr_meta_data['pkey']
             elif pr_meta_data['flag'] == 'need_insertion':
 
                 result = self.db.execute(self.pull_request_meta_table.insert().values(pr_meta))
-                logging.info(f'Added PR Head {result.inserted_primary_key}')
+                self.logger.info(f'Added PR Head {result.inserted_primary_key}')
 
                 self.pr_meta_id_inc = int(result.inserted_primary_key[0])
                 self.results_counter += 1
@@ -673,12 +682,12 @@ class GithubPullRequestWorker(Worker):
             if pr_meta_data['repo']:
                 self.query_pr_repo(pr_meta_data['repo'], pr_side, self.pr_meta_id_inc)
             else:
-                logging.info('No new PR Head data to add')
+                self.logger.info('No new PR Head data to add')
 
-        logging.info(f'Finished inserting PR Head & Base data for PR with id {pr_id}')
+        self.logger.info(f'Finished inserting PR Head & Base data for PR with id {pr_id}')
 
     def query_pr_comments(self, owner, repo, gh_pr_no, pr_id):
-        logging.info('Querying PR Comments')
+        self.logger.info('Querying PR Comments')
 
         url = (f'https://api.github.com/repos/{owner}/{repo}/issues/{gh_pr_no}' +
             '/comments?per_page=100&page={}')
@@ -694,7 +703,7 @@ class GithubPullRequestWorker(Worker):
         #list to hold contributors needing insertion or update
         pr_messages = self.paginate(url, duplicate_col_map, update_col_map, table, table_pkey)
         
-        logging.info("Count of pull request comments needing insertion: " + str(len(pr_messages)) + "\n")
+        self.logger.info("Count of pull request comments needing insertion: " + str(len(pr_messages)) + "\n")
 
         for pr_msg_dict in pr_messages:
 
@@ -717,7 +726,7 @@ class GithubPullRequestWorker(Worker):
             }
 
             result = self.db.execute(self.message_table.insert().values(msg))
-            logging.info(f'Added PR Comment {result.inserted_primary_key}')
+            self.logger.info(f'Added PR Comment {result.inserted_primary_key}')
 
             pr_msg_ref = {
                 'pull_request_id': pr_id,
@@ -732,14 +741,14 @@ class GithubPullRequestWorker(Worker):
             result = self.db.execute(
                 self.pull_request_message_ref_table.insert().values(pr_msg_ref)
             )
-            logging.info(f'Added PR Message Ref {result.inserted_primary_key}')
+            self.logger.info(f'Added PR Message Ref {result.inserted_primary_key}')
 
             self.results_counter += 1
 
-        logging.info(f'Finished adding PR Message data for PR with id {pr_id}')
+        self.logger.info(f'Finished adding PR Message data for PR with id {pr_id}')
 
     def query_pr_repo(self, pr_repo, pr_repo_type, pr_meta_id):
-        logging.info(f'Querying PR {pr_repo_type} repo')
+        self.logger.info(f'Querying PR {pr_repo_type} repo')
 
         table = 'pull_request_repo'
         duplicate_col_map = {'pr_src_repo_id': 'id'}
@@ -776,8 +785,8 @@ class GithubPullRequestWorker(Worker):
 
         if new_pr_repo['flag'] == 'need_insertion':
             result = self.db.execute(self.pull_request_repo_table.insert().values(pr_repo))
-            logging.info(f'Added PR {pr_repo_type} repo {result.inserted_primary_key}')
+            self.logger.info(f'Added PR {pr_repo_type} repo {result.inserted_primary_key}')
 
             self.results_counter += 1
 
-            logging.info(f'Finished adding PR {pr_repo_type} Repo data for PR with id {self.pr_id_inc}')
+            self.logger.info(f'Finished adding PR {pr_repo_type} Repo data for PR with id {self.pr_id_inc}')
