@@ -12,18 +12,23 @@ LOG_LEVEL = "INFO"
 VERBOSE = False
 QUIET = False
 
-housekeeper_log_file_handler = FileHandler("logs/housekeeper/housekeeper.log", mode="a")
+ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+
+Path(ROOT_AUGUR_DIRECTORY + "/logs/").mkdir(exist_ok=True)
+Path(ROOT_AUGUR_DIRECTORY + "/logs/housekeeper/").mkdir(exist_ok=True)
+
+housekeeper_log_file_handler = FileHandler(ROOT_AUGUR_DIRECTORY + "/logs/housekeeper/housekeeper.log", mode="a")
 housekeeper_log_file_handler.setFormatter(FORMATTER)
 
 console_handler = StreamHandler()
 console_handler.setLevel(LOG_LEVEL)
 console_handler.setFormatter(FORMATTER)
 
-log_file_handler = FileHandler("logs/augur.log", mode="a")
+log_file_handler = FileHandler(ROOT_AUGUR_DIRECTORY + "/logs/augur.log", mode="a")
 log_file_handler.setLevel(LOG_LEVEL)
 log_file_handler.setFormatter(FORMATTER)
 
-def initialize_logging(root_augur_directory, logging_config, jobs):
+def initialize_logging(logging_config, jobs):
     LOG_LEVEL = logging_config["log_level"]
     VERBOSE = True if logging_config["verbose"] else False
     QUIET = True if logging_config["quiet"] else False
@@ -32,9 +37,6 @@ def initialize_logging(root_augur_directory, logging_config, jobs):
         FORMATTER = verbose_formatter
     else:
         FORMATTER = generic_formatter
-
-    Path(root_augur_directory + "/logs/").mkdir(exist_ok=True)
-    Path(root_augur_directory + "/logs/housekeeper/").mkdir(exist_ok=True)
 
     housekeeper_log_file_handler.setFormatter(FORMATTER)
 

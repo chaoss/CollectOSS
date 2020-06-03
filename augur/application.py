@@ -15,9 +15,7 @@ import sqlalchemy as s
 
 from augur.metrics import Metrics
 from augur.config import AugurConfig
-import augur.logging
-
-ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+from augur.logging import ROOT_AUGUR_DIRECTORY, initialize_logging
 
 logger = logging.getLogger("augur")
 
@@ -31,7 +29,7 @@ class Application():
         self.root_augur_dir = ROOT_AUGUR_DIRECTORY
         self.config = AugurConfig(self.root_augur_dir)
 
-        augur.logging.initialize_logging(ROOT_AUGUR_DIRECTORY, self.config.get_section("Development"), [job["model"] for job in self.config.get_value("Housekeeper", "jobs")])
+        initialize_logging(self.config.get_section("Development"), [job["model"] for job in self.config.get_value("Housekeeper", "jobs")])
 
         self.logger = logger
 

@@ -1,7 +1,7 @@
 import pytest
 import re
 
-import augur
+from augur.application import Application
 from augur.cli.run import initialize_components
 
 default_repo_id = "25430"
@@ -18,7 +18,7 @@ def create_full_routes(routes):
 
 @pytest.fixture(scope="session")
 def augur_app():
-    augur_app = augur.Application()
+    augur_app = Application()
     return augur_app
 
 @pytest.fixture(scope="session")
