@@ -27,7 +27,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'repo_info_worker_start=runtime:main',
+            'repo_info_worker_start=workers.repo_info_worker.runtime:main',
         ],
     },
     classifiers=[

@@ -13,7 +13,9 @@ class GitHubWorker(Worker):
     queue: queue of tasks to be fulfilled
     config: holds info like api keys, descriptions, and database connection strings
     """
-    def __init__(self, config):
+    def __init__(self, config={}):
+
+        worker_type = "github_worker"
 
         given = [['github_url']]
         models = ['issues']
@@ -24,9 +26,6 @@ class GitHubWorker(Worker):
             'pull_request_repo']
         operations_tables = ['worker_history', 'worker_job']
 
-        # Run the general worker initialization
-        super().__init__(config, given, models, data_tables, operations_tables)
-
         # These 3 are included in every tuple the worker inserts (data collection info)
         self.tool_source = 'GitHub API Worker'
         self.tool_version = '0.0.3' # See __init__.py
@@ -35,21 +34,25 @@ class GitHubWorker(Worker):
         self.finishing_task = True # if we are finishing a previous task, pagination works differenty
         self.platform_id = 25150 # GitHub
 
-        # Get max ids so we know where we are in our insertion and to have the current id when inserting FK's
-        logging.info("Querying starting ids info...\n")
+        # Run the general worker initialization
+        super().__init__(worker_type, config, given, models, data_tables, operations_tables)
 
-        self.issue_id_inc = self.get_max_id('issues', 'issue_id')
-
-        self.msg_id_inc = self.get_max_id('message', 'msg_id')
 
     def issues_model(self, entry_info, repo_id):
         """ Data collection function
         Query the GitHub API for issues
         """
+        
+        # Get max ids so we know where we are in our insertion and to have the current id when inserting FK's
+        self.logger.info("Querying starting ids info...\n")
+
+        self.issue_id_inc = self.get_max_id('issues', 'issue_id')
+
+        self.msg_id_inc = self.get_max_id('message', 'msg_id')
 
         github_url = entry_info['given']['github_url']
 
-        logging.info("Beginning filling the issues model for repo: " + github_url + "\n")
+        self.logger.info("Beginning filling the issues model for repo: " + github_url + "\n")
 
         # Contributors are part of this model, and finding all for the repo saves us 
         #   from having to add them as we discover committers in the issue process
@@ -83,10 +86,10 @@ class GitHubWorker(Worker):
             'WHERE repo_id = {}'.format(repo_id))
 
         # Discover and remove duplicates before we start inserting
-        logging.info("Count of issues needing update or insertion: " + str(len(issues)) + "\n")
+        self.logger.info("Count of issues needing update or insertion: " + str(len(issues)) + "\n")
 
         for issue_dict in issues:
-            logging.info("Begin analyzing the issue with title: " + issue_dict['title'] + "\n")
+            self.logger.info("Begin analyzing the issue with title: " + issue_dict['title'] + "\n")
             
             # Add the FK repo_id to the dict being inserted
             issue_dict['repo_id'] = repo_id
@@ -95,11 +98,11 @@ class GitHubWorker(Worker):
             #   still unsure about this key value pair/what it means
             pr_id = None
             if "pull_request" in issue_dict:
-                logging.info("Issue is a PR\n")
+                self.logger.info("Issue is a PR\n")
                 # Right now we are just storing our issue id as the PR id if it is one
                 pr_id = self.issue_id_inc
             else:
-                logging.info("Issue is not a PR\n")
+                self.logger.info("Issue is not a PR\n")
 
             # Begin on the actual issue...
             issue = {
@@ -133,20 +136,20 @@ class GitHubWorker(Worker):
             if issue_dict['flag'] == 'need_update':
                 result = self.db.execute(self.issues_table.update().where(
                     self.issues_table.c.gh_issue_id==issue_dict['id']).values(issue))
-                logging.info("Updated tuple in the issues table with existing gh_issue_id: {}".format(
+                self.logger.info("Updated tuple in the issues table with existing gh_issue_id: {}".format(
                     issue_dict['id']))
                 self.issue_id_inc = issue_dict['pkey']
             elif issue_dict['flag'] == 'need_insertion':
                 try:
                     result = self.db.execute(self.issues_table.insert().values(issue))
-                    logging.info("Primary key inserted into the issues table: " + str(result.inserted_primary_key))
+                    self.logger.info("Primary key inserted into the issues table: " + str(result.inserted_primary_key))
                     self.results_counter += 1
                     self.issue_id_inc = int(result.inserted_primary_key[0])
-                    logging.info("Inserted issue with our issue_id being: {}".format(self.issue_id_inc) + 
+                    self.logger.info("Inserted issue with our issue_id being: {}".format(self.issue_id_inc) + 
                         " and title of: {} and gh_issue_num of: {}\n".format(issue_dict['title'],issue_dict['number']))
                 except Exception as e:
-                    logging.info("When inserting an issue, ran into the following error: {}\n".format(e))
-                    logging.info(issue)
+                    self.logger.info("When inserting an issue, ran into the following error: {}\n".format(e))
+                    self.logger.info(issue)
                     continue
 
             # Check if the assignee key's value is already recorded in the assignees key's value
@@ -157,7 +160,7 @@ class GitHubWorker(Worker):
 
             # Handles case if there are no assignees
             if collected_assignees[0] is not None:
-                logging.info("Count of assignees to insert for this issue: " + str(len(collected_assignees)) + "\n")
+                self.logger.info("Count of assignees to insert for this issue: " + str(len(collected_assignees)) + "\n")
                 for assignee_dict in collected_assignees:
                     if type(assignee_dict) != dict:
                         continue
@@ -172,13 +175,13 @@ class GitHubWorker(Worker):
                     }
                     # Commit insertion to the assignee table
                     result = self.db.execute(self.issue_assignees_table.insert().values(assignee))
-                    logging.info("Primary key inserted to the issues_assignees table: " + str(result.inserted_primary_key))
+                    self.logger.info("Primary key inserted to the issues_assignees table: " + str(result.inserted_primary_key))
                     self.results_counter += 1
 
-                    logging.info("Inserted assignee for issue id: " + str(self.issue_id_inc) + 
+                    self.logger.info("Inserted assignee for issue id: " + str(self.issue_id_inc) + 
                         " with login/cntrb_id: " + assignee_dict['login'] + " " + str(assignee['cntrb_id']) + "\n")
             else:
-                logging.info("Issue does not have any assignees\n")
+                self.logger.info("Issue does not have any assignees\n")
 
             # Insert the issue labels to the issue_labels table
             for label_dict in issue_dict['labels']:
@@ -198,10 +201,10 @@ class GitHubWorker(Worker):
                 }
 
                 result = self.db.execute(self.issue_labels_table.insert().values(label))
-                logging.info("Primary key inserted into the issue_labels table: " + str(result.inserted_primary_key))
+                self.logger.info("Primary key inserted into the issue_labels table: " + str(result.inserted_primary_key))
                 self.results_counter += 1
 
-                logging.info("Inserted issue label with text: " + label_dict['name'] + "\n")
+                self.logger.info("Inserted issue label with text: " + label_dict['name'] + "\n")
 
 
             #### Messages/comments and events insertion 
@@ -220,7 +223,7 @@ class GitHubWorker(Worker):
                 where_clause="WHERE msg_id IN (SELECT msg_id FROM issue_message_ref WHERE issue_id = {})".format(
                     self.issue_id_inc))
                 
-            logging.info("Number of comments needing insertion: {}\n".format(len(issue_comments)))
+            self.logger.info("Number of comments needing insertion: {}\n".format(len(issue_comments)))
 
             for comment in issue_comments:
                 try:
@@ -238,13 +241,13 @@ class GitHubWorker(Worker):
                 }
                 try:
                     result = self.db.execute(self.message_table.insert().values(issue_comment))
-                    logging.info("Primary key inserted into the message table: {}".format(result.inserted_primary_key))
+                    self.logger.info("Primary key inserted into the message table: {}".format(result.inserted_primary_key))
                     self.results_counter += 1
                     self.msg_id_inc = int(result.inserted_primary_key[0])
 
-                    logging.info("Inserted issue comment with id: {}\n".format(self.msg_id_inc))
+                    self.logger.info("Inserted issue comment with id: {}\n".format(self.msg_id_inc))
                 except Exception as e:
-                    logging.info("Worker ran into error when inserting a message, likely had invalid characters. error: {}".format(e))
+                    self.logger.info("Worker ran into error when inserting a message, likely had invalid characters. error: {}".format(e))
 
                 ### ISSUE MESSAGE REF TABLE ###
 
@@ -259,7 +262,7 @@ class GitHubWorker(Worker):
                 }
 
                 result = self.db.execute(self.issue_message_ref_table.insert().values(issue_message_ref))
-                logging.info("Primary key inserted into the issue_message_ref table: {}".format(result.inserted_primary_key))
+                self.logger.info("Primary key inserted into the issue_message_ref table: {}".format(result.inserted_primary_key))
                 self.results_counter += 1                
         
             # Base of the url for event endpoints
@@ -283,7 +286,7 @@ class GitHubWorker(Worker):
             multiple_pages = False
 
             while True:
-                logging.info("Hitting endpoint: " + events_url.format(i) + " ...\n")
+                self.logger.info("Hitting endpoint: " + events_url.format(i) + " ...\n")
                 r = requests.get(url=events_url.format(i), headers=self.headers)
                 self.update_gh_rate_limit(r)
 
@@ -291,21 +294,21 @@ class GitHubWorker(Worker):
                 if 'last' in r.links and not multiple_pages and not self.finishing_task:
                     param = r.links['last']['url'][-6:]
                     i = int(param.split('=')[1]) + 1
-                    logging.info("Multiple pages of request, last page is " + str(i - 1) + "\n")
+                    self.logger.info("Multiple pages of request, last page is " + str(i - 1) + "\n")
                     multiple_pages = True
                 elif not multiple_pages and not self.finishing_task:
-                    logging.info("Only 1 page of request\n")
+                    self.logger.info("Only 1 page of request\n")
                 elif self.finishing_task:
-                    logging.info("Finishing a previous task, paginating forwards ... "
+                    self.logger.info("Finishing a previous task, paginating forwards ... "
                         "excess rate limit requests will be made\n")
 
                 j = r.json()
 
                 # Checking contents of requests with what we already have in the db
-                new_events = check_duplicates(j, event_table_values, pseudo_key_gh)
+                new_events = self.check_duplicates(j, event_table_values, pseudo_key_gh)
                 if len(new_events) == 0 and multiple_pages and 'last' in r.links:
                     if i - 1 != int(r.links['last']['url'][-6:].split('=')[1]):
-                        logging.info("No more pages with unknown events, breaking from pagination.\n")
+                        self.logger.info("No more pages with unknown events, breaking from pagination.\n")
                         break
                 elif len(new_events) != 0:
                     to_add = [obj for obj in new_events if obj not in issue_events]
@@ -315,17 +318,17 @@ class GitHubWorker(Worker):
 
                 # Since we already wouldve checked the first page... break
                 if (i == 1 and multiple_pages and not self.finishing_task) or i < 1 or len(j) == 0:
-                    logging.info("No more pages to check, breaking from pagination.\n")
+                    self.logger.info("No more pages to check, breaking from pagination.\n")
                     break
 
-            logging.info("Number of events needing insertion: " + str(len(issue_events)) + "\n")
+            self.logger.info("Number of events needing insertion: " + str(len(issue_events)) + "\n")
 
             # If the issue is closed, then we search for the closing event and store the user's id
             cntrb_id = None
             if 'closed_at' in issue_dict:
                 for event in issue_events:
                     if str(event['event']) != "closed":
-                        logging.info("not closed, continuing")
+                        self.logger.info("not closed, continuing")
                         continue
                     if not event['actor']:
                         continue
@@ -335,7 +338,7 @@ class GitHubWorker(Worker):
                         
                     # Need to hit this single contributor endpoint to get extra created at data...
                     cntrb_url = ("https://api.github.com/users/" + event['actor']['login'])
-                    logging.info("Hitting endpoint: " + cntrb_url + " ...\n")
+                    self.logger.info("Hitting endpoint: " + cntrb_url + " ...\n")
                     r = requests.get(url=cntrb_url, headers=self.headers)
                     self.update_gh_rate_limit(r)
                     contributor = r.json()
@@ -384,17 +387,17 @@ class GitHubWorker(Worker):
 
                     # Commit insertion to table
                     result = self.db.execute(self.contributors_table.insert().values(cntrb))
-                    logging.info("Primary key inserted into the contributors table: {}".format(
+                    self.logger.info("Primary key inserted into the contributors table: {}".format(
                         result.inserted_primary_key))
                     self.results_counter += 1
     
-                    logging.info("Inserted contributor: " + contributor['login'] + "\n")
+                    self.logger.info("Inserted contributor: " + contributor['login'] + "\n")
 
             for event in issue_events:
                 if event['actor'] is not None:
                     event['cntrb_id'] = self.find_id_from_login(event['actor']['login'])
                     if event['cntrb_id'] is None:
-                        logging.info("SOMETHING WRONG WITH FINDING ID FROM LOGIN")
+                        self.logger.info("SOMETHING WRONG WITH FINDING ID FROM LOGIN")
                         continue
                         # event['cntrb_id'] = None
                 else:
@@ -416,10 +419,10 @@ class GitHubWorker(Worker):
                 }
 
                 result = self.db.execute(self.issue_events_table.insert().values(issue_event))
-                logging.info("Primary key inserted into the issue_events table: " + str(result.inserted_primary_key))
+                self.logger.info("Primary key inserted into the issue_events table: " + str(result.inserted_primary_key))
                 self.results_counter += 1
 
-                logging.info("Inserted issue event: " + event['event'] + " for issue id: {}\n".format(self.issue_id_inc))
+                self.logger.info("Inserted issue event: " + event['event'] + " for issue id: {}\n".format(self.issue_id_inc))
 
             if cntrb_id is not None:
                 update_closing_cntrb = {
@@ -427,7 +430,7 @@ class GitHubWorker(Worker):
                 }
                 result = self.db.execute(self.issues_table.update().where(
                     self.issues_table.c.gh_issue_id==issue_dict['id']).values(issue))
-                logging.info("Updated tuple in the issues table with contributor that closed it, issue_id: {}\n".format(
+                self.logger.info("Updated tuple in the issues table with contributor that closed it, issue_id: {}\n".format(
                     issue_dict['id']))
             
             self.issue_id_inc += 1

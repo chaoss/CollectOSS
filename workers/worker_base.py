@@ -20,6 +20,7 @@ class Worker():
 
     def __init__(self, worker_type, config={}, given=[], models=[], data_tables=[], operations_tables=[]):
 
+        self.worker_type = worker_type
         self._task = None # task currently being worked on (dict)
         self._child = None # process of currently running task (multiprocessing process)
         self._queue = Queue() # tasks stored here 1 at a time (in a mp queue so it can translate across multiple processes)
@@ -37,7 +38,7 @@ class Worker():
         self.augur_config = AugurConfig(self._root_augur_dir)
 
         self.config = { 
-                "worker_type": worker_type,
+                "worker_type": self.worker_type,
                 "host": self.augur_config.get_value("Server", "host"),
                 "log_level": "INFO",
                 "verbose": False,
@@ -59,9 +60,9 @@ class Worker():
 
         self.config.update({ 
             "port": worker_port,
-            "id": "com.augurlabs.core.{}.{}".format(worker_type, worker_port),
-            "server_logfile": "{}_{}_server.log".format(worker_type, worker_port),
-            "collection_logfile": "{}_{}_collection.log".format(worker_type, worker_port),
+            "id": "com.augurlabs.core.{}.{}".format(self.worker_type, worker_port),
+            "server_logfile": "{}_{}_server.log".format(self.worker_type, worker_port),
+            "collection_logfile": "{}_{}_collection.log".format(self.worker_type, worker_port),
             'location': 'http://{}:{}'.format(self.config["host"], worker_port),
             'port_broker': self.augur_config.get_value('Server', 'port'),
             'host_broker': self.augur_config.get_value('Server', 'host'),
@@ -121,7 +122,7 @@ class Worker():
         )
 
         # Create an sqlalchemy engine for both database schemas
-        self.logger.info("Making database connections... {}".format(DB_STR))
+        self.logger.info("Making database connections")
 
         db_schema = 'augur_data'
         self.db = s.create_engine(DB_STR,  poolclass=s.pool.NullPool,
@@ -313,7 +314,7 @@ class Worker():
             "was reduced to {} tuples, and {} tuple updates are needed.\n".format(need_insertion_count, need_update_count))
         return new_data
 
-    def check_duplicates(new_data, table_values, key):
+    def check_duplicates(self, new_data, table_values, key):
         need_insertion = []
         for obj in new_data:
             if type(obj) == dict:
