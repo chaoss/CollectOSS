@@ -12,10 +12,11 @@ Backend
 Required dependencies:
 
 -  `GitHub Access Token <https://github.com/settings/tokens>`__ (``repo`` and all ``read`` scopes except ``enterprise``)
+-  `GitLab Access Token <https://gitlab.com/profile/personal_access_tokens>`__ 
 -  `Python 3.6 or later <https://www.python.org/downloads/>`__
 
-Our REST API & data collection workers are written in Python 3.6, and a GitHub access key is **required** for data collection.
-We query the GitHub API to collect data about issues, pull requests, contributors, and other information about a repository.
+Our REST API & data collection workers are written in Python 3.6. GitLab and a GitHub access keys are **required** for data collection.
+We query the GitHub & GitLab API to collect data about issues, pull requests, contributors, and other information about a repository.
 
 Optional dependencies:
 
