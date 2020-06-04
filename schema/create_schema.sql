@@ -18,3 +18,4 @@
 \i schema/generate/14-schema_update_16.sql
 \i schema/generate/15-schema_update_17.sql
 \i schema/generate/16-schema_update_18.sql
+\i schema/generate/17-schema_update_19.sql
