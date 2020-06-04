@@ -81,7 +81,7 @@ def generate(ctx, db_name, db_host, db_user, db_port, db_password, github_api_ke
         config['Workers']['facade_worker']['repo_directory'] = facade_repo_directory
 
     try:
-        with open(os.path.abspath(ROOT_AUGUR_DIRECTORY + 'augur.config.json'), 'w') as f:
+        with open(os.path.abspath(ROOT_AUGUR_DIRECTORY + '/augur.config.json'), 'w') as f:
             json.dump(config, f, indent=4)
             logger.info('augur.config.json successfully created')
     except Exception as e:
