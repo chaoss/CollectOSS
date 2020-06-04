@@ -225,9 +225,9 @@ def get_api_key(augur_app):
         logger.warn("No Augur API key found.")
 
 @cli.command('check-pgpass', short_help="Check the ~/.pgpass file for Augur's database credentials")
-@pass_application
-def check_pgpass(augur_app):
-    check_pgpass_credentials(augur_app.config.get_raw_config())
+@pass_config
+def check_pgpass(config):
+    check_pgpass_credentials(config.get_raw_config())
 
 @cli.command('init-database')
 @click.option('--default-db-name', default='postgres')
