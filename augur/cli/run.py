@@ -20,8 +20,8 @@ logger = logging.getLogger("augur")
 @click.command("run")
 @click.option("--disable-housekeeper", is_flag=True, default=False, help="Turns off the housekeeper")
 @click.option("--skip-cleanup", is_flag=True, default=False, help="Disables the old process cleanup that runs before Augur starts")
-@click.pass_context
 @pass_application
+@click.pass_context
 def cli(ctx, augur_app, disable_housekeeper, skip_cleanup):
     """
     Start Augur's backend server
