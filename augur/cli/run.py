@@ -26,8 +26,6 @@ def cli(ctx, augur_app, disable_housekeeper, skip_cleanup):
     """
     Start Augur's backend server
     """
-    import ipdb
-    ipdb.set_trace()
     reset_logfiles()
     if not skip_cleanup:
         logger.info("Cleaning up old Augur processes. Just a moment please...")
