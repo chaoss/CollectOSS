@@ -1,18 +1,15 @@
 """ Helper methods constant across all workers """
 import requests, datetime, time, traceback, json, os, sys, math, logging
-from logging import FileHandler, Formatter
+from logging import FileHandler, Formatter, StreamHandler
 from multiprocessing import Process, Queue
 import sqlalchemy as s
 import pandas as pd
-import os
-import sys, logging
+from pathlib import Path
 from urllib.parse import urlparse
 from sqlalchemy import MetaData
 from sqlalchemy.ext.automap import automap_base
 from augur.config import AugurConfig
-
-verbose_formatter = Formatter(fmt='%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s')
-generic_formatter = Formatter(fmt='%(asctime)s [%(process)d] [%(levelname)s] %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+from augur.logging import verbose_formatter, generic_formatter
 
 class Worker():
 
@@ -40,10 +37,9 @@ class Worker():
         self.config = { 
                 "worker_type": self.worker_type,
                 "host": self.augur_config.get_value("Server", "host"),
-                "log_level": "INFO",
-                "verbose": False,
                 'gh_api_key': self.augur_config.get_value('Database', 'key')
             }
+        self.config.update(self.augur_config.get_section("Development"))
 
         try:
             worker_defaults = self.augur_config.get_default_config()["Workers"][self.config["worker_type"]]
@@ -64,11 +60,16 @@ class Worker():
             except:
                 break
 
+        logfile_dir = f"{self._root_augur_dir}/logs/workers/{self.worker_type}/"
+        server_logfile = logfile_dir + "{}_{}_server.log".format(self.worker_type, worker_port)
+        collection_logfile = logfile_dir + "{}_{}_collection.log".format(self.worker_type, worker_port)
         self.config.update({ 
             "port": worker_port,
             "id": "com.augurlabs.core.{}.{}".format(self.worker_type, worker_port),
-            "server_logfile": "{}_{}_server.log".format(self.worker_type, worker_port),
-            "collection_logfile": "{}_{}_collection.log".format(self.worker_type, worker_port),
+            "logfile_dir": logfile_dir,
+            "server_logfile": server_logfile,
+            "collection_logfile": collection_logfile,
+            "capture_output": True,
             'location': 'http://{}:{}'.format(self.config["host"], worker_port),
             'port_broker': self.augur_config.get_value('Server', 'port'),
             'host_broker': self.augur_config.get_value('Server', 'host'),
@@ -80,12 +81,12 @@ class Worker():
         })
         self.config.update(config)
 
+        # Initialize logging in the main process
+        self.initialize_logging()
+
         # Clear log contents from previous runs
         open(self.config["server_logfile"], "w").close()
         open(self.config["collection_logfile"], "w").close()
-
-        # Initialize logging in the main process
-        self.initialize_logging()
 
         # Get configured collection logger
         self.logger = logging.getLogger(self.config["id"])
@@ -109,9 +110,12 @@ class Worker():
         self.connect_to_broker()
 
     def initialize_logging(self):
+        self.config["log_level"] = self.config["log_level"].upper()
         formatter = generic_formatter
         if self.config["verbose"] is True:
             formatter = verbose_formatter
+
+        Path(self.config["logfile_dir"]).mkdir(exist_ok=True)
 
         collection_file_handler = FileHandler(filename=self.config["collection_logfile"], mode="a")
         collection_file_handler.setFormatter(formatter)
@@ -121,6 +125,17 @@ class Worker():
         collection_file_logger.handlers = []
         collection_file_logger.addHandler(collection_file_handler)
         collection_file_logger.setLevel(self.config["log_level"])
+
+        if self.config["debug"]:
+            console_handler = StreamHandler()
+            self.config["log_level"] = "DEBUG"
+            console_handler.setLevel(self.config["log_level"])
+            console_handler.setFormatter(formatter)
+            collection_file_logger.addHandler(console_handler)
+
+        if self.config["quiet"]:
+            collection_file_logger.disabled = True
+            self.config["capture_output"] = False
 
     def initialize_database_connections(self):
         DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(

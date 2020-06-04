@@ -82,21 +82,7 @@ def initialize_components(augur_app, disable_housekeeper):
 
     atexit.register(exit, worker_processes, master, housekeeper, manager)
 
-    host = augur_app.config.get_value('Server', 'host')
-    port = augur_app.config.get_value('Server', 'port')
-    workers = int(augur_app.config.get_value('Server', 'workers'))
-    timeout = int(augur_app.config.get_value('Server', 'timeout'))
-
-    options = {
-        'bind': '%s:%s' % (host, port),
-        'workers': workers,
-        'timeout': timeout,
-        'errorlog': "logs/gunicorn.log",
-        'accesslog': "logs/gunicorn.log",
-        'loglevel': augur_app.config.get_value("Development", "log_level"),
-    }
-
-    return AugurGunicornApp(options, manager=manager, broker=broker, housekeeper=housekeeper, augur_app=augur_app)
+    return AugurGunicornApp(augur_app.gunicorn_options, manager=manager, broker=broker, housekeeper=housekeeper, augur_app=augur_app)
 
 def worker_start(worker_name=None, instance_number=0, worker_port=None):
     try:

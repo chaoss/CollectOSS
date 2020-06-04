@@ -6,7 +6,7 @@ import types
 import importlib
 import logging
 
-logger = logging.getLogger("augur")
+logger = logging.getLogger(__name__)
 
 class Metrics():
     def __init__(self, app):

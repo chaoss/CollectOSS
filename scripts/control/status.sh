@@ -3,31 +3,20 @@
 monitor=${1-quick}
 
 if [[ $monitor == "quick" ]]; then
-  if [[ -d logs/augur.log ]]; then
-    echo "augur logs"
-    echo "*****************************"
-    tail -n 20 logs/augur.log
-  fi
 
-  for WORKER in $(ls -d workers/*/)
+  echo "augur logs"
+  echo "*****************************"
+  tail -n 20 logs/augur.log
+
+  for directory in `find logs/workers/ -type d`
   do
-      if [[ $WORKER == *"_worker"* ]]; then
-
-        # make it pretty for formatting
-        FORMATTED_WORKER=${WORKER/#workers\//}
-        FORMATTED_WORKER=${FORMATTED_WORKER/%\//}
-
-        echo "$FORMATTED_WORKER"
-        echo "*****************************"
-
-        cd $WORKER
-        tail -n 20 *_collection.log
-        echo
-        echo
-        cd ../..
-
-      fi
+    echo
+    echo $directory
+    echo "*****************************"
+    tail -n 20 $D/*_collection.log
+    echo
   done
+
 else
-  less -F logs/augur.log workers/**/*_collection.log
+  less -F logs/augur.log logs/workers/**/*_collection.log
 fi

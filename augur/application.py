@@ -16,9 +16,9 @@ import psycopg2
 
 from augur.metrics import Metrics
 from augur.config import AugurConfig
-from augur.logging import ROOT_AUGUR_DIRECTORY, initialize_logging
+from augur.logging import ROOT_AUGUR_DIRECTORY, initialize_logging, set_gunicorn_log_options
 
-logger = logging.getLogger("augur")
+logger = logging.getLogger(__name__)
 
 class Application():
     """Initalizes all classes from Augur using a config file or environment variables"""
@@ -30,7 +30,14 @@ class Application():
         self.root_augur_dir = ROOT_AUGUR_DIRECTORY
         self.config = AugurConfig(self.root_augur_dir)
 
-        initialize_logging(self.config.get_section("Development"), [job["model"] for job in self.config.get_value("Housekeeper", "jobs")])
+        self.gunicorn_options = {
+            'bind': '%s:%s' % (self.config.get_value("Server", "host"), self.config.get_value("Server", "port")),
+            'workers': int(self.config.get_value('Server', 'workers')),
+            'timeout': int(self.config.get_value('Server', 'timeout'))
+        }
+
+        initialize_logging(self.config.get_section("Development"))
+        self.gunicorn_options.update(set_gunicorn_log_options())
 
         self.logger = logger
 

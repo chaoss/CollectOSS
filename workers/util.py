@@ -95,7 +95,7 @@ class WorkerGunicornApplication(gunicorn.app.base.BaseApplication):
             'errorlog': app.worker.config['server_logfile'],
             'accesslog': app.worker.config['server_logfile'],
             'loglevel': app.worker.config['log_level'],
-            'capture_output': True
+            'capture_output': app.worker.config['capture_output']
         }
 
         self.application = app

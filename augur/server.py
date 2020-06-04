@@ -21,7 +21,7 @@ from augur.routes import create_routes
 
 AUGUR_API_VERSION = 'api/unstable'
 
-logger = logging.getLogger("augur")
+logger = logging.getLogger(__name__)
 
 class Server(object):
     """

@@ -202,10 +202,10 @@ default_config = {
         "Development": {
             "log_level": "INFO",
             "verbose": 0,
-            "quiet": 0
+            "quiet": 0,
+            "debug": 0
         }
     }
-
 
 logger = logging.getLogger(__name__)
 
@@ -316,7 +316,6 @@ class AugurConfig():
             logger.debug(f"{section}:{name} set to {env_value} from envvar: {environment_variable}")
         else:
             self._env_config[environment_variable] = self.get_value(section, name)
-
 
     def get_raw_config(self):
         return self._config

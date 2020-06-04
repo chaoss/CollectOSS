@@ -8,6 +8,8 @@ import sqlalchemy as s
 import pandas as pd
 from sqlalchemy import MetaData
 from augur.logging import create_job_logger
+import warnings
+warnings.filterwarnings('ignore')
 
 logger = logging.getLogger("augur")
 
