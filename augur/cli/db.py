@@ -13,6 +13,8 @@ import sqlalchemy as s
 import pandas as pd
 from sqlalchemy import exc
 
+from augur.cli import pass_config, pass_application
+
 logger = logging.getLogger("augur.cli")
 
 @click.group('db', short_help='Database utilities')
@@ -21,13 +23,11 @@ def cli():
 
 @cli.command('add-repos')
 @click.argument('filename', type=click.Path(exists=True))
-@click.pass_context
-def add_repos(ctx, filename):
+@pass_application
+def add_repos(augur_app, filename):
     """
     Add repositories to Augur's database
     """
-    augur_app = ctx.obj
-
     df = augur_app.database.execute(s.sql.text("SELECT repo_group_id FROM augur_data.repo_groups"))
     repo_group_IDs = [group[0] for group in df.fetchall()]
 
@@ -47,13 +47,11 @@ def add_repos(ctx, filename):
                 logger.warn(f"Invalid repo group id specified for {row[1]}, skipping.")
 
 @cli.command('get-repo-groups')
-@click.pass_context
-def get_repo_groups(ctx):
+@pass_application
+def get_repo_groups(augur_app):
     """
     List all repo groups and their associated IDs
     """
-    augur_app = ctx.obj
-
     df = pd.read_sql(s.sql.text("SELECT repo_group_id, rg_name, rg_description FROM augur_data.repo_groups"), augur_app.database)
     print(df)
 
@@ -61,13 +59,11 @@ def get_repo_groups(ctx):
 
 @cli.command('add-repo-groups')
 @click.argument('filename', type=click.Path(exists=True))
-@click.pass_context
-def add_repo_groups(ctx, filename):
+@pass_application
+def add_repo_groups(augur_app, filename):
     """
     Create new repo groups in Augur's database
     """
-    augur_app = ctx.obj
-
     df = pd.read_sql(s.sql.text("SELECT repo_group_id FROM augur_data.repo_groups"), augur_app.database)
     repo_group_IDs = df['repo_group_id'].values.tolist()
 
@@ -87,13 +83,11 @@ def add_repo_groups(ctx, filename):
 
 @cli.command('update-repo-directory')
 @click.argument('repo_directory')
-@click.pass_context
-def update_repo_directory(ctx, repo_directory):
+@pass_application
+def update_repo_directory(augur_app, repo_directory):
     """
     Update Facade worker repo cloning directory
     """
-    augur_app = ctx.obj
-
     updateRepoDirectorySQL = s.sql.text("""
         UPDATE augur_data.settings SET VALUE = :repo_directory WHERE setting='repo_directory';
     """)
@@ -110,20 +104,19 @@ def get_db_version(augur_app):
     return int(augur_app.database.execute(db_version_sql).fetchone()[2])
 
 @cli.command('print-db-version')
-@click.pass_context
-def print_db_version(ctx):
+@pass_application
+def print_db_version(augur_app):
     """
     Get the version of the configured database
     """
-    print(get_db_version(ctx.obj))
+    print(get_db_version(augur_app))
 
 @cli.command('upgrade-db-version')
-@click.pass_context
-def upgrade_db_version(ctx):
+@pass_application
+def upgrade_db_version(augur_app):
     """
     Upgrade the configured database to the latest version
     """
-    augur_app = ctx.obj
     check_pgpass_credentials(augur_app.config.get_raw_config())
     current_db_version = get_db_version(augur_app)
 
@@ -153,12 +146,11 @@ def upgrade_db_version(ctx):
             current_db_version += 1
 
 @cli.command('check-for-upgrade')
-@click.pass_context
-def check_for_upgrade(ctx):
+@pass_application
+def check_for_upgrade(augur_app):
     """
     Upgrade the configured database to the latest version
     """
-    augur_app = ctx.obj
     check_pgpass_credentials(augur_app.config.get_raw_config())
     current_db_version = get_db_version(augur_app)
 
@@ -185,12 +177,11 @@ def check_for_upgrade(ctx):
 
 
 @cli.command('create-schema')
-@click.pass_context
-def create_schema(ctx):
+@pass_application
+def create_schema(augur_app):
     """
     Create schema in the configured database
     """
-    augur_app = ctx.obj
     check_pgpass_credentials(augur_app.config.get_raw_config())
     run_psql_command_in_database(augur_app, '-f', 'schema/create_schema.sql')
 
@@ -198,6 +189,7 @@ def generate_key(length):
     return ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(length))
 
 @cli.command('generate-api-key')
+@click.pass_context
 def generate_api_key(ctx):
     """
     Generate and set a new Augur API key
@@ -208,13 +200,11 @@ def generate_api_key(ctx):
 
 @cli.command('update-api-key')
 @click.argument("api_key")
-@click.pass_context
-def update_api_key(ctx, api_key):
+@pass_application
+def update_api_key(augur_app, api_key):
     """
     Update the API key in the database to the given key
     """
-    augur_app = ctx.obj
-
     update_api_key_sql = s.sql.text("""
         UPDATE augur_operations.augur_settings SET VALUE = :api_key WHERE setting='augur_api_key';
     """)
@@ -223,10 +213,8 @@ def update_api_key(ctx, api_key):
     logger.info(f"Update Augur API key to: {api_key}")
 
 @cli.command('get-api-key')
-@click.pass_context
-def get_api_key(ctx):
-    augur_app = ctx.obj
-
+@pass_application
+def get_api_key(augur_app):
     get_api_key_sql = s.sql.text("""
         SELECT value FROM augur_operations.augur_settings WHERE setting='augur_api_key';
     """)
@@ -237,9 +225,8 @@ def get_api_key(ctx):
         logger.warn("No Augur API key found.")
 
 @cli.command('check-pgpass', short_help="Check the ~/.pgpass file for Augur's database credentials")
-@click.pass_context
-def check_pgpass(ctx):
-    augur_app = ctx.obj
+@pass_application
+def check_pgpass(augur_app):
     check_pgpass_credentials(augur_app.config.get_raw_config())
 
 @cli.command('init-database')
@@ -251,12 +238,10 @@ def check_pgpass(ctx):
 @click.option('--target-password', default='augur')
 @click.option('--host', default='localhost')
 @click.option('--port', default='5432')
-@click.pass_context
-def init_database(ctx, default_db_name, default_user, default_password, target_db_name, target_user, target_password, host, port):
+def init_database(default_db_name, default_user, default_password, target_db_name, target_user, target_password, host, port):
     """
     Create database with the given credentials using the given maintenance database 
     """
-    augur_app = ctx.obj
     config = {
         'Database': {
             'name': default_db_name,

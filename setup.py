@@ -61,7 +61,7 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "augur=augur.runtime:run"
+            "augur=augur.cli._multicommand:run"
         ],
     }
 )

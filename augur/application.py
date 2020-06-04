@@ -12,6 +12,7 @@ import json
 from beaker.cache import CacheManager
 from beaker.util import parse_cache_config_options
 import sqlalchemy as s
+import psycopg2
 
 from augur.metrics import Metrics
 from augur.config import AugurConfig
@@ -22,7 +23,7 @@ logger = logging.getLogger("augur")
 class Application():
     """Initalizes all classes from Augur using a config file or environment variables"""
 
-    def __init__(self):
+    def __init__(self, offline_mode=False):
         """
         Reads config, creates DB session, and initializes cache
         """
@@ -46,10 +47,10 @@ class Application():
         cache_parsed = parse_cache_config_options(self.cache_config)
         self.cache = CacheManager(**cache_parsed)
 
-        self.database = self._connect_to_database()
-        self.spdx_db = self._connect_to_database(include_spdx=True)
-
-        self.metrics = Metrics(self)
+        if offline_mode is False:
+            self.database = self._connect_to_database()
+            self.spdx_db = self._connect_to_database(include_spdx=True)
+            self.metrics = Metrics(self)
 
     def _connect_to_database(self, include_spdx=False):
         user = self.config.get_value('Database', 'user')

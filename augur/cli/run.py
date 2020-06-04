@@ -13,6 +13,7 @@ from augur.housekeeper.housekeeper import Housekeeper
 from augur.logging import reset_logfiles
 from augur.server import Server
 from augur.cli.util import kill_processes
+from augur.cli import pass_config, pass_application
 
 logger = logging.getLogger("augur")
 
@@ -20,10 +21,13 @@ logger = logging.getLogger("augur")
 @click.option("--disable-housekeeper", is_flag=True, default=False, help="Turns off the housekeeper")
 @click.option("--skip-cleanup", is_flag=True, default=False, help="Disables the old process cleanup that runs before Augur starts")
 @click.pass_context
-def cli(ctx, disable_housekeeper, skip_cleanup):
+@pass_application
+def cli(ctx, augur_app, disable_housekeeper, skip_cleanup):
     """
     Start Augur's backend server
     """
+    import ipdb
+    ipdb.set_trace()
     reset_logfiles()
     if not skip_cleanup:
         logger.info("Cleaning up old Augur processes. Just a moment please...")
@@ -33,7 +37,7 @@ def cli(ctx, disable_housekeeper, skip_cleanup):
         logger.info("Skipping cleanup processes...")
 
     logger.info('Initializing...')
-    master = initialize_components(ctx.obj, disable_housekeeper)
+    master = initialize_components(augur_app, disable_housekeeper)
     logger.info('Gunicorn server logs will be written to logs/gunicorn.log')
     logger.info('Augur logs will be written to logs/augur.log')
     logger.info('Starting Gunicorn server...')
