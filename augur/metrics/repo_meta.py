@@ -321,7 +321,7 @@ def languages(self, repo_group_id, repo_id=None):
         results = pd.read_sql(languages_SQL, self.database, params={'repo_id': repo_id})
         return results
 
-@register_metric()
+@register_metric(type="license")
 def license_files(self, license_id, spdx_binary, repo_group_id, repo_id=None,):
         """Returns the files related to a license
 
