@@ -37,7 +37,8 @@ class Worker():
         self.config = { 
                 "worker_type": self.worker_type,
                 "host": self.augur_config.get_value("Server", "host"),
-                'gh_api_key': self.augur_config.get_value('Database', 'key')
+                'gh_api_key': self.augur_config.get_value('Database', 'key'),
+                'offline_mode': False
             }
         self.config.update(self.augur_config.get_section("Development"))
 
@@ -107,7 +108,11 @@ class Worker():
         }
 
         # Send broker hello message
-        self.connect_to_broker()
+        if self.config["offline_mode"] is False:
+            self.connect_to_broker()
+
+    def __repr__(self):
+        return f"{self.config['id']}"
 
     def initialize_logging(self):
         self.config["log_level"] = self.config["log_level"].upper()
@@ -787,12 +792,14 @@ class Worker():
             self.worker_job_table.c.job_model==model).values(updated_job))
         self.logger.info("Updated job process for model: " + model + "\n")
 
-        # Notify broker of completion
-        self.logger.info("Telling broker we completed task: " + str(task_completed) + "\n\n" + 
-            "This task inserted: " + str(self.results_counter) + " tuples.\n")
+        if self.config["offline_mode"] is False:
+            
+            # Notify broker of completion
+            self.logger.info("Telling broker we completed task: " + str(task_completed) + "\n\n" + 
+                "This task inserted: " + str(self.results_counter) + " tuples.\n")
 
-        requests.post('http://{}:{}/api/unstable/completed_task'.format(
-            self.config['host_broker'],self.config['port_broker']), json=task_completed)
+            requests.post('http://{}:{}/api/unstable/completed_task'.format(
+                self.config['host_broker'],self.config['port_broker']), json=task_completed)
 
         # Reset results counter for next task
         self.results_counter = 0

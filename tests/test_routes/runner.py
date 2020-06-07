@@ -3,12 +3,10 @@ import subprocess
 import os
 import pytest
 import sys
-import requests
 
 FNULL = open(os.devnull, "w")
 
 start = subprocess.Popen(["augur", "run", "--disable-housekeeper", "--skip-cleanup"], stdout=FNULL, stderr=subprocess.STDOUT)
-# start = subprocess.Popen(["augur", "run", "--disable-housekeeper", "--skip-cleanup"])
 print("Waiting for the server to start...")
 time.sleep(5)
 

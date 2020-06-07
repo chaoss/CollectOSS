@@ -6,27 +6,27 @@ services:
 
 jobs:
   include:
-    - name: Py3.6 Application Unit Tests
+    - name: Python v3.6 Unit Tests
       python: 3.6
-      env: TOXENV=py36-application
+      env: TOXENV=py36-workers,py36-application
 
-    - name: Py3.6 Metrics Routes Tests
+    - name: Python v3.6 API Tests
       python: 3.6
       env: TOXENV=py36-metric-routes
 
-    - name: Py3.7 Application Unit Tests
+    - name: Python v3.7 Unit Tests
       python: 3.7
-      env: TOXENV=py37-application
+      env: TOXENV=py37-workers,py36-application
 
-    - name: Py3.7 Metrics Routes Tests
+    - name: Python v3.7 API Tests
       python: 3.7
       env: TOXENV=py37-metric-routes
 
-    - name: Py3.8 Application Unit Tests
+    - name: Python v3.8 Unit Tests
       python: 3.8
-      env: TOXENV=py38-application
+      env: TOXENV=py38-workers,py36-application
 
-    - name: Py3.8 Metrics Routes Tests
+    - name: Python v3.8 API Tests
       python: 3.8
       env: TOXENV=py38-metric-routes
 
