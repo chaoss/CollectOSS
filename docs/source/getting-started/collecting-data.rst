@@ -25,6 +25,7 @@ Here are the workers that ship ready to work with Augur by default:
 - ``github_worker`` (collects issue and contributor data from the GitHub API)
 - ``pull_request_worker`` (collects pull request data from the GitHub API)
 - ``repo_info_worker`` (collects repository statistics from the GitHub API)
+- ``release_worker`` (collects release data from the GitHub API)
 - ``linux_badge_worker`` (collects `CII <https://bestpractices.coreinfrastructure.org/en>`_ data from the CII API)
 - ``insight_worker`` (queries Augur's metrics API to find interesting anomalies in the collected data)
 
