@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, request, Response
 import click, os, json, requests, logging
-from facade_worker.worker import FacadeWorker
+from facade_worker.facade00mainprogram import FacadeWorker
 from workers.util import read_config, create_server
 
 @click.command()
@@ -41,7 +41,7 @@ def main(augur_url, host, port):
         }
 
     #create instance of the worker
-    app.worker = ContributorWorker(config) # declares the worker that will be running on this server with specified config
+    app.worker = FacadeWorker(config) # declares the worker that will be running on this server with specified config
     create_server(app, None)
     logging.info("Starting Flask App with pid: " + str(os.getpid()) + "...")
 
