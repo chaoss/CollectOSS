@@ -226,7 +226,7 @@ class RepoInfoWorker(Worker):
         r = requests.get(url, headers=self.headers)
         self.update_gh_rate_limit(r)
 
-        data = self.get_repo_data(self, url, r)
+        data = self.get_repo_data(url, r)
 
         if 'fork' in data:
             if 'parent' in data:
@@ -242,7 +242,7 @@ class RepoInfoWorker(Worker):
         r = requests.get(url, headers=self.headers)
         self.update_gh_rate_limit(r)
 
-        data = self.get_repo_data(self, url, r)
+        data = self.get_repo_data(url, r)
 
         if 'archived' in data:
             if data['archived']:
