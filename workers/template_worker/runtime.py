@@ -1,10 +1,11 @@
 from flask import Flask, jsonify, request, Response
 import click, os, json, requests, logging
-from template_worker import TemplateWorker
+from workers.template_worker.template_worker import TemplateWorker
 from workers.util import create_server, WorkerGunicornApplication
 
 def main():
-    """ Declares singular worker and creates the server and flask app that it will be running on
+    """
+    Creates the Flask app and data collection worker, then starts the Gunicorn server
     """
     app = Flask(__name__)
     app.worker = TemplateWorker()

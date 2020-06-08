@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, request, Response
 import click, os, json, requests, logging
-from contributor_worker import ContributorWorker
+from workers.contributor_worker.contributor_worker import ContributorWorker
 from workers.util import create_server, WorkerGunicornApplication
 
 def main():

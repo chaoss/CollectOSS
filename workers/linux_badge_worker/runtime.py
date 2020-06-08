@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, request, Response
 import click, os, json, requests, logging
-from linux_badge_worker import LinuxBadgeWorker
+from workers.linux_badge_worker.linux_badge_worker import LinuxBadgeWorker
 from workers.util import create_server, WorkerGunicornApplication
 
 def main():

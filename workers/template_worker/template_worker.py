@@ -8,11 +8,14 @@ from workers.worker_base import Worker
 class TemplateWorker(Worker):
     def __init__(self, config={}):
         
-        # Define what this worker can be given and know how to interpret
+        # Define the worker's type, which will be used for self identification.
+        #   Should be unique among all workers and is the same key used to define 
+        #   this worker's settings in the configuration file.
         worker_type = "template_worker"
 
+        # Define what this worker can be given and know how to interpret
         # given is usually either [['github_url']] or [['git_url']] (depending if your 
-        #   worker is exclusive to repos that are on the GitHub platform)
+        # worker is exclusive to repos that are on the GitHub platform)
         given = [[]]
 
         # The name the housekeeper/broker use to distinguish the data model this worker can fill
@@ -30,6 +33,13 @@ class TemplateWorker(Worker):
 
         # Run the general worker initialization
         super().__init__(worker_type, config, given, models, data_tables, operations_tables)
+
+        # Do any additional configuration after the general initialization has been run
+        self.config.update(config)
+
+        # If you need to do some preliminary interactions with the database, these MUST go
+        # in the model method. The database connection is instantiated only inside of each 
+        # data collection process
 
         # Define data collection info
         self.tool_source = 'Fake Template Worker'
@@ -55,7 +65,10 @@ class TemplateWorker(Worker):
                 }
             :param repo_id: the collect() method queries the repo_id given the git/github url
             and passes it along to make things easier. An int such as: 27869
+
         """
+
+        # Any initial database instructions, like finding the last tuple inserted or generate the next ID value
 
         # Collection and insertion of data happens here
 

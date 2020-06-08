@@ -27,15 +27,15 @@ do
         echo "**********************************"
         echo
 
-        # cd $WORKER
-        # rm -rf build/*;
-        # rm -rf dist/*;
-        # if [[ $target == *"prod"* ]]; then
-        #     pip install .
-        # else
-        #     pip install -e .
-        # fi
-        # cd ../..
+        cd $WORKER
+        rm -rf build/*;
+        rm -rf dist/*;
+        if [[ $target == *"prod"* ]]; then
+            pip install .
+        else
+            pip install -e .
+        fi
+        cd ../..
       fi
 
     fi

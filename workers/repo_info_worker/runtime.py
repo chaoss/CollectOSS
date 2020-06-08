@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, request, Response
 import click, os, json, requests, logging
-from repo_info_worker import RepoInfoWorker
+from workers.repo_info_worker.repo_info_worker import RepoInfoWorker
 from workers.util import create_server, WorkerGunicornApplication
 
 def main():
