@@ -164,6 +164,11 @@ default_config = {
                 "switch": 1,
                 "workers": 1
             },
+            "gitlab_merge_request_worker": {
+                "port": 51100,
+                "switch": 1,
+                "workers": 1
+            }
         },
         "Facade": {
             "check_updates": 1,

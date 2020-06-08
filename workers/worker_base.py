@@ -12,7 +12,7 @@ from sqlalchemy.ext.automap import automap_base
 
 class Worker():
 
-    def __init__(self, config={}, given=[], models=[], data_tables=[], operations_tables=[]):
+    def __init__(self, config={}, given=[], models=[], data_tables=[], operations_tables=[], platform='github'):
 
         self._task = None # task currently being worked on (dict)
         self._child = None # process of currently running task (multiprocessing process)
@@ -103,8 +103,8 @@ class Worker():
         self.history_id = self.get_max_id('worker_history', 'history_id', operations_table=True) + 1
 
         # Organize different api keys/oauths available
-        if 'gh_api_key' in self.config:
-            self.init_oauths()
+        if 'gh_api_key' in self.config or 'gitlab_api_key' in self.config:
+            self.init_oauths(platform)
         else:
             self.oauths = [{'oauth_id': 0}]
 
@@ -403,26 +403,42 @@ class Worker():
         values = pd.read_sql(tableValuesSQL, self.db, params={})
         return values
 
-    def init_oauths(self):
+    def init_oauths(self, platform):
         self.oauths = []
         self.headers = None
 
-        # Endpoint to hit solely to retrieve rate limit information from headers of the response
-        url = "https://api.github.com/users/gabe-heim"
-
         # Make a list of api key in the config combined w keys stored in the database
-        oauthSQL = s.sql.text("""
-            SELECT * FROM worker_oauth WHERE access_token <> '{}'
-        """.format(self.config['gh_api_key']))
-        for oauth in [{'oauth_id': 0, 'access_token': self.config['gh_api_key']}] + json.loads(pd.read_sql(oauthSQL, self.helper_db, params={}).to_json(orient="records")):
-            self.headers = {'Authorization': 'token %s' % oauth['access_token']}
+        # Select endpoint to hit solely to retrieve rate limit information from headers of the response
+        # Adjust header keys needed to fetch rate limit information from the API responses
+        if platform == "github":
+            url = "https://api.github.com/users/gabe-heim"
+            oauthSQL = s.sql.text("""
+                SELECT * FROM worker_oauth WHERE access_token <> '{}' and platform = 'github'
+                """.format(self.config['gh_api_key']))
+            key_name = "gh_api_key"
+            rate_limit_header_key = "X-RateLimit-Remaining"
+            rate_limit_reset_header_key = "X-RateLimit-Reset"
+        elif platform == "gitlab":
+            url = "https://gitlab.com/api/v4/version"
+            oauthSQL = s.sql.text("""
+                SELECT * FROM worker_oauth WHERE access_token <> '{}' and platform = 'gitlab'
+                """.format(self.config['gitlab_api_key']))
+            key_name = "gitlab_api_key"
+            rate_limit_header_key = "ratelimit-remaining"
+            rate_limit_reset_header_key = "ratelimit-reset"
+
+        for oauth in [{'oauth_id': 0, 'access_token': self.config[key_name]}] + json.loads(pd.read_sql(oauthSQL, self.helper_db, params={}).to_json(orient="records")):
+            if platform == "github":
+                self.headers = {'Authorization': 'token %s' % oauth['access_token']}
+            elif platform == "gitlab":
+                self.headers = {'Authorization': 'Bearer %s' % oauth['access_token']}
             logging.info("Getting rate limit info for oauth: {}\n".format(oauth))
             response = requests.get(url=url, headers=self.headers)
             self.oauths.append({
                     'oauth_id': oauth['oauth_id'],
                     'access_token': oauth['access_token'],
-                    'rate_limit': int(response.headers['X-RateLimit-Remaining']),
-                    'seconds_to_reset': (datetime.datetime.fromtimestamp(int(response.headers['X-RateLimit-Reset'])) - datetime.datetime.now()).total_seconds()
+                    'rate_limit': int(response.headers[rate_limit_header_key]),
+                    'seconds_to_reset': (datetime.datetime.fromtimestamp(int(response.headers[rate_limit_reset_header_key])) - datetime.datetime.now()).total_seconds()
                 })
             logging.info("Found OAuth available for use: {}\n\n".format(self.oauths[-1]))
 
@@ -431,7 +447,10 @@ class Worker():
 
         # First key to be used will be the one specified in the config (first element in 
         #   self.oauths array will always be the key in use)
-        self.headers = {'Authorization': 'token %s' % self.oauths[0]['access_token']}
+        if platform == "github":
+            self.headers = {'Authorization': 'token %s' % self.oauths[0]['access_token']}
+        elif platform == "gitlab":
+            self.headers = {'Authorization': 'Bearer %s' % self.oauths[0]['access_token']}
 
     def paginate(self, url, duplicate_col_map, update_col_map, table, table_pkey, where_clause="", value_update_col_map={}):
         # Paginate backwards through all the tuples but get first page in order
@@ -857,7 +876,7 @@ class Worker():
             try:
                 reset_time = response.headers['X-RateLimit-Reset']
             except Exception as e:
-                logging.info("Could not get reset time from headers because of error: {}".format(error))
+                logging.info("Could not get reset time from headers because of error: {}".format(e))
                 reset_time = 3600
             time_diff = datetime.datetime.fromtimestamp(int(reset_time)) - datetime.datetime.now()
             logging.info("Rate limit exceeded, checking for other available keys to use.\n")
