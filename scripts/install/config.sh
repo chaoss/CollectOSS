@@ -13,6 +13,14 @@ function get_api_key_and_repo_path() {
   read -p "GitHub API Key: " github_api_key
   echo
 
+  echo
+  echo "Please provide a valid GitLab API key."
+  echo "For more information on how to create the key, visit:"
+  echo "https://oss-augur.readthedocs.io/en/dev/getting-started/installation.html#backend"
+  echo "** This is required for Augur to gather data ***"
+  read -p "GitLab API Key: " gitlab_api_key
+  echo
+
   echo "The Facade data collection worker will clone repositories to this machine to run its analysis."
   echo "Would you like to clone to an existing directory, or create a new one?"
 
@@ -83,7 +91,7 @@ function save_credentials() {
   echo "**********************************"
   echo
 
-  augur configure generate --db_name $db_name --db_host $host --db_port $port --db_user $db_user --db_password $password --github_api_key $github_api_key --facade_repo_directory $facade_repo_directory
+  augur configure generate --db_name $db_name --db_host $host --db_port $port --db_user $db_user --db_password $password --github_api_key $github_api_key --gitlab_api_key $gitlab_api_key --facade_repo_directory $facade_repo_directory
   augur db check-pgpass
 
 }
