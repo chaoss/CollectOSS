@@ -36,10 +36,10 @@ gunicorn_log_file_handler = FileHandler(AUGUR_LOG_DIR + "gunicorn.log", mode="a"
 gunicorn_log_file_handler.setLevel(LOG_LEVEL)
 gunicorn_log_file_handler.setFormatter(FORMATTER)
 
-def initialize_logging(logging_config):
-    LOG_LEVEL = logging_config["log_level"]
-    VERBOSE = True if logging_config["verbose"] else False
-    QUIET = True if logging_config["quiet"] else False
+def initialize_logging(augur_config):
+    LOG_LEVEL = augur_config.get_value("Development", "log_level")
+    VERBOSE = augur_config.get_value("Development", "verbose")
+    QUIET = augur_config.get_value("Development", "quiet")
 
     if VERBOSE is True:
         FORMATTER = verbose_formatter

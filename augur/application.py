@@ -36,7 +36,7 @@ class Application():
             'timeout': int(self.config.get_value('Server', 'timeout'))
         }
 
-        initialize_logging(self.config.get_section("Development"))
+        initialize_logging(self.config)
         self.gunicorn_options.update(set_gunicorn_log_options())
 
         self.logger = logger
