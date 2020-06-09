@@ -737,10 +737,12 @@ class Worker():
             'repo_id': repo_id,
             'job_model': model
         }
-        key = 'github_url' if 'github_url' in task['given'] else 'git_url' if 'git_url' in task['given'] else "INVALID_GIVEN"
-        task_completed[key] = task['given']['github_url'] if 'github_url' in task['given'] else task['given']['git_url'] if 'git_url' in task['given'] else "INVALID_GIVEN"
+        key = 'github_url' if 'github_url' in task['given'] else 'git_url' if 'git_url' in task['given'] else \
+            'gitlab_url' if 'gitlab_url' in task['given'] else 'INVALID_GIVEN'
+        task_completed[key] = task['given']['github_url'] if 'github_url' in task['given'] else task['given']['git_url'] \
+            if 'git_url' in task['given'] else task['given']['gitlab_url'] if 'gitlab_url' in task['given'] else 'INVALID_GIVEN'
         if key == 'INVALID_GIVEN':
-            self.register_task_failure(task, repo_id, "INVALID_GIVEN: not github nor git url")
+            self.register_task_failure(task, repo_id, "INVALID_GIVEN: Not a github/gitlab/git url.")
             return
 
         # Add to history table
@@ -788,7 +790,8 @@ class Worker():
 
         logging.info(f'This task inserted {self.results_counter} tuples before failure.\n')
         logging.info("Notifying broker and logging task failure in database...\n")
-        key = 'github_url' if 'github_url' in task['given'] else 'git_url' if 'git_url' in task['given'] else "INVALID_GIVEN"
+        key = 'github_url' if 'github_url' in task['given'] else 'git_url' if 'git_url' in task['given'] else \
+            'gitlab_url' if 'gitlab_url' in task['given'] else 'INVALID_GIVEN'
         url = task['given'][key]
 
         """ Query all repos with repo url of given task """
