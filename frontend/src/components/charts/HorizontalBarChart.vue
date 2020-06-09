@@ -44,9 +44,14 @@
       };
     },
     mounted() {
-      let [win, doc, docElem, body] = [window, document, doc.documentElement, doc.getElementsByTagName("body")[0]];
-      this.x = win.innerWidth || docElem.clientWidth || body.clientWidth;
-      this.y = win.innerHeight || docElem.clientHeight || body.clientHeight;
+      var win = window,
+      doc = document,
+      docElem = doc.documentElement,
+      body = doc.getElementsByTagName('body')[0],
+      x = win.innerWidth || docElem.clientWidth || body.clientWidth,
+      y = win.innerHeight|| docElem.clientHeight|| body.clientHeight;
+      this.x = x
+      this.y = y
       this.spec;
     },
     computed: {

@@ -811,16 +811,19 @@
       }
     },
     mounted() {
-      let [win, doc, docElem, body] = [window, document, doc.documentElement, doc.getElementsByTagName("body")[0]];
+      var win = window,
+      doc = document,
+      docElem = doc.documentElement,
+      body = doc.getElementsByTagName("body")[0];
+      this.x = win.innerWidth || docElem.clientWidth || body.clientWidth;
+      this.y = win.innerHeight || docElem.clientHeight || body.clientHeight;
+
       // Get the repos we need
       let repos = [];
       let apiRepos = [];
       let promises = [];
 
       let compares = null;
-
-      this.x = win.innerWidth || docElem.clientWidth || body.clientWidth;
-      this.y = win.innerHeight || docElem.clientHeight || body.clientHeight;
 
       if (this.base) {
         apiRepos.push(this.base);
