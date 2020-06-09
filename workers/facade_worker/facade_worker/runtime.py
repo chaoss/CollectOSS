@@ -13,7 +13,7 @@ def main(augur_url, host, port):
     app = Flask(__name__)
 
     #load credentials
-    worker_info = read_config('Workers', 'github_worker', None, None)
+    worker_info = read_config('Workers', 'facade_worker', None, None)
     worker_port = worker_info['port'] if 'port' in worker_info else port
 
     while True: # for multiple instances of workers

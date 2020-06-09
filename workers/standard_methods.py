@@ -333,7 +333,7 @@ def paginate(self, url, duplicate_col_map, update_col_map, table, table_pkey, wh
             i = i + 1 if self.finishing_task else i - 1
             continue
         try:
-            to_add = [obj for obj in j if obj not in tuples and obj['flag'] != 'none']
+            to_add = [obj for obj in j if obj not in tuples and (obj['flag'] != 'none' or include_all)]
         except Exception as e:
             logging.info("Failure accessing data of page: {}. Moving to next page.\n".format(e))
             i = i + 1 if self.finishing_task else i - 1
