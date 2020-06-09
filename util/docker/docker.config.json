@@ -23,6 +23,9 @@
             },
             "repo_info_worker": {
                 "switch": 1
+            },
+            "release_worker": {
+                "switch": 1
             }
         }
 }

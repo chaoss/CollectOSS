@@ -26,20 +26,8 @@
 # repos. It also rebuilds analysis data, checks any changed affiliations and
 # aliases, and caches data for display.
 
-import pymysql
-import sys
-import platform
-import imp
-import time
-import datetime
-import html.parser
-import subprocess
-import os
-import getopt
-import xlsxwriter
-import configparser
+import pymysql, sys, platform, imp, time, datetime, html.parser, subprocess, os, getopt, xlsxwriter, configparser
 from multiprocessing import Process, Queue
-
 from facade_worker.facade01config import Config#increment_db, update_db, migrate_database_config, database_connection, get_setting, update_status, log_activity          
 from facade_worker.facade02utilitymethods import update_repo_log, trim_commit, store_working_author, trim_author   
 from facade_worker.facade03analyzecommit import analyze_commit
@@ -47,38 +35,15 @@ from facade_worker.facade04postanalysiscleanup import git_repo_cleanup
 from facade_worker.facade05repofetch import git_repo_initialize, check_for_repo_updates, force_repo_updates, force_repo_analysis, git_repo_updates
 from facade_worker.facade06analyze import analysis
 from facade_worker.facade07rebuildcache import nuke_affiliations, fill_empty_affiliations, invalidate_caches, rebuild_unknown_affiliation_and_web_caches
-
 from workers.standard_methods import read_config
-
 import logging
-
-# if platform.python_implementation() == 'PyPy':
-#   import pymysql
-# else:
-#   import MySQLdb
-# ## End Imports
+from workers.worker_base import Worker
 
 html = html.parser.HTMLParser()
 
-class CollectorTask:
-    """ Worker's perception of a task in its queue
-    Holds a message type (EXIT, TASK, etc) so the worker knows how to process the queue entry
-    and the github_url given that it will be collecting data for
-    """
-    def __init__(self, message_type='TASK', entry_info=None):
-        self.type = message_type
-        self.entry_info = entry_info
-
-class FacadeWorker:
+class FacadeWorker(Worker):
     def __init__(self, config, task=None):
-        self.config = config
-        logging.basicConfig(filename='worker_{}.log'.format(self.config['id'].split('.')[len(self.config['id'].split('.')) - 1]), filemode='w', level=logging.INFO)
-        logging.info('Worker (PID: {}) initializing...'.format(os.getpid()))
 
-        self._task = task
-        self._child = None
-        self._queue = Queue()
-        self._maintain_queue = Queue()
         self.cfg = Config()
         
         ### The real program starts here ###
@@ -118,124 +83,23 @@ class FacadeWorker:
             # Catch databases which existed before database versioning
             current_db = -1
 
-        #WHAT IS THE UPSTREAM_DB???
-        # if current_db < upstream_db:
+        # Define what this worker can be given and know how to interpret
+        given = [['repo_group']]
+        models = ['commits']
 
-        #   print(("Current database version: %s\nUpstream database version %s\n" %
-        #       (current_db, upstream_db)))
+        # Define the tables needed to insert, update, or delete on
+        data_tables = []
+        operations_tables = ['worker_history', 'worker_job']
 
-        #   self.cfg.update_db(current_db);
+        # Run the general worker initialization
+        super().__init__(config, given, models, data_tables, operations_tables)
 
-        self.commit_model()
+        # Define data collection info
+        self.tool_source = 'Facade Worker'
+        self.tool_version = '0.0.1'
+        self.data_source = 'Git Log'
 
-    @property
-    def task(self):
-        """ Property that is returned when the worker's current task is referenced
-        """
-        return self._task
-    
-    @task.setter
-    def task(self, value):
-        """ entry point for the broker to add a task to the queue
-        Adds this task to the queue, and calls method to process queue
-        """
-        rg_id = value['given']['repo_group_id']
-
-        """ Query all repos """
-        # repoUrlSQL = s.sql.text("""
-        #     SELECT repo_id,repo_group_id,repo_git FROM repo WHERE repo_group_id = '{}'
-        #     """.format(rg_id))
-        # rs = pd.read_sql(repoUrlSQL, self.db, params={})
-        try:
-            if value['job_type'] == "UPDATE":
-                self._queue.put(CollectorTask(message_type='TASK', entry_info=value))
-            elif value['job_type'] == "MAINTAIN":
-                self._maintain_queue.put(CollectorTask(message_type='TASK', entry_info=value))
-
-        except Exception as e:
-            logging.info("error: {}".format(e))
-        
-        self._task = CollectorTask(message_type='TASK', entry_info={"task": value, "repo_id": repo_id})
-        self.run()
-
-    def cancel(self):
-        """ Delete/cancel current task
-        """
-        self._task = None
-
-    def run(self):
-        """ Kicks off the processing of the queue if it is not already being processed
-        Gets run whenever a new task is added
-        """
-        logging.info("Running...")
-        if self._child is None:
-            self._child = Process(target=self.collect, args=())
-            self._child.start()
-            
-    def collect(self):
-        """ Function to process each entry in the worker's task queue
-        Determines what action to take based off the message type
-        """
-        while True:
-            time.sleep(0.5)
-            if not self._queue.empty():
-                message = self._queue.get()
-                logging.info("Popped off message: {}".format(message.entry_info))
-                self.working_on = "UPDATE"
-            else:
-                if not self._maintain_queue.empty():
-                    message = self._maintain_queue.get()
-                    logging.info("Popped off message: {}".format(message.entry_info))
-                    self.working_on = "MAINTAIN"
-                else:
-                    break
-
-            if message.type == 'EXIT':
-                break
-
-            if message.type != 'TASK':
-                raise ValueError(f'{message.type} is not a recognized task type')
-
-            if message.type == 'TASK':
-                try:
-                    git_url = message.entry_info['task']['given']['git_url']
-                    self.query_issues({'git_url': git_url, 'repo_id': message.entry_info['repo_id']})
-                except Exception as e:
-                    logging.info("Worker ran into an error for task: {}\n".format(message.entry_info['task']))
-                    logging.info("Error encountered: " + repr(e) + "\n")
-                    logging.info("Notifying broker and logging task failure in database...\n")
-                    message.entry_info['task']['worker_id'] = self.config['id']
-                    requests.post("http://{}:{}/api/unstable/task_error".format(
-                        self.config['broker_host'],self.config['broker_port']), json=message.entry_info['task'])
-                    # Add to history table
-                    task_history = {
-                        "repo_id": message.entry_info['repo_id'],
-                        "worker": self.config['id'],
-                        "job_model": message.entry_info['task']['models'][0],
-                        "oauth_id": self.config['zombie_id'],
-                        "timestamp": datetime.datetime.now(),
-                        "status": "Error",
-                        "total_results": self.results_counter
-                    }
-                    self.helper_db.execute(self.history_table.update().where(self.history_table.c.history_id==self.history_id).values(task_history))
-
-                    logging.info("Recorded job error for: " + str(message.entry_info['task']) + "\n")
-
-                    # Update job process table
-                    updated_job = {
-                        "since_id_str": message.entry_info['repo_id'],
-                        "last_count": self.results_counter,
-                        "last_run": datetime.datetime.now(),
-                        "analysis_state": 0
-                    }
-                    self.helper_db.execute(self.job_table.update().where(self.job_table.c.job_model==message.entry_info['task']['models'][0]).values(updated_job))
-                    logging.info("Updated job process for model: " + message.entry_info['task']['models'][0] + "\n")
-
-                    # Reset results counter for next task
-                    self.results_counter = 0
-                    pass
-
-    def commit_model(self):
+    def commits_model(self):
 
         # Figure out what we need to do
         limited_run = read_config("Facade", name="limited_run", default=0)
