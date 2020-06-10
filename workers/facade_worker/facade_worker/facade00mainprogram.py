@@ -56,29 +56,25 @@ class FacadeWorker(Worker):
         # Run the general worker initialization
         super().__init__(worker_type, config, given, models, data_tables, operations_tables)
 
+        # Facade-specific config
+        self.cfg = Config()
+
         # Define data collection info
         self.tool_source = 'Facade Worker'
         self.tool_version = '0.0.1'
         self.data_source = 'Git Log'
 
-    def create_facade_cursors(self):
+    def initialize_database_connections(self):
 
-        self.cfg = Config()
-        
         # Set up the database
-        db_user = self.config['user']
-        db_pass = self.config['password']
-        db_name = self.config['database']
-        db_host = self.config['host']
-        db_port = self.config['port']
-        db_user_people = self.config['user']
-        db_pass_people = self.config['password']
-        db_name_people = self.config['database']
-        db_host_people = self.config['host']
-        db_port_people = self.config['port']
+        db_user = self.config['user_database']
+        db_pass = self.config['password_database']
+        db_name = self.config['name_database']
+        db_host = self.config['host_database']
+        db_port = self.config['port_database']
 
         # Open a general-purpose connection
-        db,cursor = self.cfg.database_connection(
+        self.db, self.cursor = self.cfg.database_connection(
             db_host,
             db_user,
             db_pass,
@@ -86,25 +82,50 @@ class FacadeWorker(Worker):
             db_port,    False, False)
 
         # Open a connection for the people database
-        db_people,cursor_people = self.cfg.database_connection(
-            db_host_people,
-            db_user_people,
-            db_pass_people,
-            db_name_people,
-            db_port_people, True, False)
+        self.db_people,self.cursor_people = self.cfg.database_connection(
+            db_host,
+            db_user,
+            db_pass,
+            db_name,
+            db_port, True, False)
 
         # Check if the database is current and update it if necessary
         try:
-            current_db = int(self.cfg.get_setting('database_version'))
+            self.current_db = int(self.cfg.get_setting('database_version'))
         except:
             # Catch databases which existed before database versioning
-            current_db = -1
+            self.current_db = -1
 
+    def collect(self):
+        """ Function to process each entry in the worker's task queue
+        Determines what action to take based off the message type
+        """
+        self.initialize_logging() # need to initialize logging again in child process cause multiprocessing
+        self.logger.info("Starting data collection process\n")
+        self.initialize_database_connections() 
+        while True:
+            if not self._queue.empty():
+                message = self._queue.get() # Get the task off our MP queue
+            else:
+                break
+            self.logger.info("Popped off message: {}\n".format(str(message)))
 
+            if message['job_type'] == 'STOP':
+                break
 
-    def commits_model(self):
+            # If task is not a valid job type
+            if message['job_type'] != 'MAINTAIN' and message['job_type'] != 'UPDATE':
+                raise ValueError('{} is not a recognized task type'.format(message['job_type']))
+                pass
 
-        # self.create_facade_cursors()
+            try:
+                self.commits_model(message)
+            except Exception as e:
+                self.logger.error(e)
+                raise(e)
+                break
+
+    def commits_model(self, message):
         # Figure out what we need to do
         limited_run = self.augur_config.get_value("Facade", "limited_run")
         delete_marked_repos = self.augur_config.get_value("Facade", "delete_marked_repos")
@@ -225,7 +246,7 @@ class FacadeWorker(Worker):
             self.cfg.log_activity('Error','No base directory. It is unsafe to continue.')
             self.cfg.update_status('Failed: No base directory')
             sys.exit(1)
-            
+
         # Begin working
 
         start_time = time.time()

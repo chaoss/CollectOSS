@@ -6,20 +6,27 @@ from workers.util import create_server, WorkerGunicornApplication
 def main():
     """ Declares singular worker and creates the server and flask app that it will be running on
     """
-    app = Flask(__name__)
-    app.worker = FacadeWorker()
 
-    create_server(app)
-    WorkerGunicornApplication(app).run()
+    config = {"offline_mode": True}
+    fw = FacadeWorker(config=config)
+    fw.task = {'job_type': 'MAINTAIN', 'models': ['commits'], 'display_name': 'commits model for repo group id: 0', 'given': {'repo_group': [{'repo_git': 'https://github.com/chaoss/augur.git', 'repo_id': 1, 'focused_task': 1}, {'repo_git': 'https://github.com/chaoss/augur.git', 'repo_id': 25430}, {'repo_git': 'https://github.com/chaoss/grimoirelab.git', 'repo_id': 25431}, {'repo_git': 'https://github.com/chaoss/wg-evolution.git', 'repo_id': 25432}, {'repo_git': 'https://github.com/chaoss/wg-risk.git', 'repo_id': 25433}, {'repo_git': 'https://github.com/chaoss/wg-common.git', 'repo_id': 25434}, {'repo_git': 'https://github.com/chaoss/wg-value.git', 'repo_id': 25435}, {'repo_git': 'https://github.com/chaoss/wg-diversity-inclusion.git', 'repo_id': 25436}, {'repo_git': 'https://github.com/chaoss/wg-app-ecosystem.git', 'repo_id': 25437}]}}
+    from time import sleep
+    sleep(1)
 
-    if app.worker._child is not None:
-        app.worker._child.terminate()
-    try:
-        requests.post('http://{}:{}/api/unstable/workers/remove'.format(broker_host, broker_port), json={"id": config['id']})
-    except:
-        pass
+    # app = Flask(__name__)
+    # app.worker = FacadeWorker()
 
-    os.kill(os.getpid(), 9)
+    # create_server(app)
+    # WorkerGunicornApplication(app).run()
+
+    # if app.worker._child is not None:
+    #     app.worker._child.terminate()
+    # try:
+    #     requests.post('http://{}:{}/api/unstable/workers/remove'.format(broker_host, broker_port), json={"id": config['id']})
+    # except:
+    #     pass
+
+    # os.kill(os.getpid(), 9)
 
 
     # config = { 
