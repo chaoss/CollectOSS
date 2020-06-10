@@ -126,20 +126,22 @@ class Worker():
         collection_file_handler.setFormatter(formatter)
         collection_file_handler.setLevel(self.config["log_level"])
 
-        collection_file_logger = logging.getLogger(self.config["id"])
-        collection_file_logger.handlers = []
-        collection_file_logger.addHandler(collection_file_handler)
-        collection_file_logger.setLevel(self.config["log_level"])
+        self.logger = logging.getLogger(self.config["id"])
+        self.logger.handlers = []
+        self.logger.addHandler(collection_file_handler)
+        self.logger.setLevel(self.config["log_level"])
 
         if self.config["debug"]:
             console_handler = StreamHandler()
             self.config["log_level"] = "DEBUG"
             console_handler.setLevel(self.config["log_level"])
             console_handler.setFormatter(formatter)
-            collection_file_logger.addHandler(console_handler)
+            self.logger.handlers = []
+            self.logger.addHandler(console_handler)
+            self.config["capture_output"] = False
 
         if self.config["quiet"]:
-            collection_file_logger.disabled = True
+            self.logger.disabled = True
             self.config["capture_output"] = False
 
     def initialize_database_connections(self):

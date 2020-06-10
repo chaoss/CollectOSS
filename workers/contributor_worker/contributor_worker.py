@@ -288,13 +288,13 @@ class ContributorWorker(Worker):
 
         self.logger.info(f'There are {len(dupe_cntrbs)} duplicates.\n')
 
-        # Turn these columns from nan to None
+        # Turn these columns from nan/nat to None
         dupe_cntrbs['gh_user_id'] = dupe_cntrbs['gh_user_id'].where(
             pd.notnull(dupe_cntrbs['gh_user_id']), None)
         dupe_cntrbs['cntrb_created_at'] = dupe_cntrbs['cntrb_created_at'].where(
             pd.notnull(dupe_cntrbs['cntrb_created_at']), None)
-        dupe_cntrbs['cntrb_last_used'] = dupe_cntrbs['cntrb_last_used'].where(
-            pd.notnull(dupe_cntrbs['cntrb_last_used']), None)
+        dupe_cntrbs['cntrb_last_used'] = dupe_cntrbs['cntrb_last_used'].astype(
+            object).where(dupe_cntrbs['cntrb_last_used'].notnull(), None)
 
         for i, cntrb_existing in dupe_cntrbs.iterrows():
 
