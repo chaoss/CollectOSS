@@ -45,7 +45,7 @@ def tail(lines):
         for (_, _, filenames) in walk(specific_worker_log_dir):
             files.extend(filenames)
 
-            for file in filenames:
+            for file in [file for file in filenames if "collection" in file]:
                 result = tail(open(specific_worker_log_dir + "/" + file), lines)
                 print("********** Logfile: " + file)
                 for log in result:
