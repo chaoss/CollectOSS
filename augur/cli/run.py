@@ -36,9 +36,7 @@ def cli(ctx, augur_app, disable_housekeeper, skip_cleanup):
 
     logger.info('Initializing...')
     master = initialize_components(augur_app, disable_housekeeper)
-    logger.info('Gunicorn server logs will be written to logs/gunicorn.log')
-    logger.info('Augur logs will be written to logs/augur.log')
-    logger.info('Starting Gunicorn server...')
+    logger.info('Starting Gunicorn server in the background...')
     Arbiter(master).run()
 
 def initialize_components(augur_app, disable_housekeeper):
@@ -47,13 +45,13 @@ def initialize_components(augur_app, disable_housekeeper):
     broker = None
     housekeeper = None
     worker_processes = []
-
     mp.set_start_method('forkserver', force=True)
-    logger.info("Booting broker and its manager...")
-    manager = mp.Manager()
-    broker = manager.dict()
 
     if not disable_housekeeper:
+        logger.info("Booting broker and its manager...")
+        manager = mp.Manager()
+        broker = manager.dict()
+
         logger.info("Booting housekeeper...")
         jobs = deepcopy(augur_app.config.get_value('Housekeeper', 'jobs'))
         housekeeper = Housekeeper(
@@ -73,7 +71,7 @@ def initialize_components(augur_app, disable_housekeeper):
 
         for worker in controller.keys():
             if controller[worker]['switch']:
-                logger.info("Your config has the option set to automatically boot {} instances of the {}".format(controller[worker]['workers'], worker))
+                logger.debug("Your config has the option set to automatically boot {} instances of the {}".format(controller[worker]['workers'], worker))
                 for i in range(controller[worker]['workers']):
                     logger.info("Booting {} #{}".format(worker, i + 1))
                     worker_process = mp.Process(target=worker_start, kwargs={'worker_name': worker, 'instance_number': i, 'worker_port': controller[worker]['port']}, daemon=True)

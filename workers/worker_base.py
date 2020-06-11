@@ -138,6 +138,7 @@ class Worker():
             console_handler.setFormatter(formatter)
             self.logger.handlers = []
             self.logger.addHandler(console_handler)
+            self.logger.addHandler(collection_file_handler)
             self.config["capture_output"] = False
 
         if self.config["quiet"]:
