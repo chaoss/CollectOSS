@@ -41,7 +41,8 @@ def export_env(config):
     env_file.close()
 
 @cli.command('kill')
-def kill_processes():
+@pass_config
+def kill_processes(config):
     """
     Terminates all currently running backend Augur processes, including any workers. Will only work in a virtual environment.    
     """
@@ -57,7 +58,8 @@ def kill_processes():
                     pass
 
 @cli.command('list',)
-def list_processes():
+@pass_config
+def list_processes(config):
     """
     Outputs the name and process ID (PID) of all currently running backend Augur processes, including any workers. Will only work in a virtual environment.    
     """
