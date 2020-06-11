@@ -26,6 +26,4 @@ def repo_info_worker():
     return repo_info_worker
 
 def test_repo_info_worker(repo_info_worker, test_task):
-    repo_info_worker.task = test_task
-    sleep(1)
     assert repo_info_worker is not None

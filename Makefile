@@ -80,9 +80,9 @@ dev: dev-stop dev-start
 .PHONY: test test-data test-application test-metric-routes test-python-versions
 
 test-data:
-	@ docker run -p 5434:5432 --name augur_test_data augurlabs/augur:test_data@sha256:3c496445d7219b824315a37369fcddbe83b10773259560df5645162ce81dfb33
+	@ docker run -p 5434:5432 --name augur_test_data augurlabs/augur:test_data@sha256:fd2d9a178a9fee7cd548bd40a16e08d4611be22892491e817aafd53502f74cd0
 
-test: test-application test-workers test-metric-routes
+test: test-application test-metric-routes test-workers
 
 test-application:
 	@ bash -c 'tox -e py-application'
