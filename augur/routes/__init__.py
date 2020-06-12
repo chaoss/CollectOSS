@@ -5,19 +5,17 @@ import glob
 import sys
 import inspect
 
-from augur import logger
-
 def get_route_files():
     route_files = []
 
     def get_file_id(path):
         return os.path.splitext(os.path.basename(path))[0]
 
-    for filename in glob.iglob("**/routes/*"):
+    for filename in glob.iglob("augur/routes/*"):
         file_id = get_file_id(filename)
         if not file_id.startswith('__') and filename.endswith('.py'):
             route_files.append(file_id)
-            
+
     return route_files
 
 route_files = get_route_files()

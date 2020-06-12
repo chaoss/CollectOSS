@@ -1,15 +1,17 @@
 """
 Keeps data up to date
 """
-import logging, os, time, requests
+import logging, os, time, requests, logging
 from multiprocessing import Process
 from sqlalchemy.ext.automap import automap_base
 import sqlalchemy as s
 import pandas as pd
 from sqlalchemy import MetaData
-logging.basicConfig(filename='housekeeper.log')
+from augur.logging import create_job_logger
 import warnings
 warnings.filterwarnings('ignore')
+
+logger = logging.getLogger("augur")
 
 class Housekeeper:
 
@@ -22,12 +24,12 @@ class Housekeeper:
             user, password, host, port, dbname
         )
 
-        dbschema='augur_data'
+        dbschema = 'augur_data'
         self.db = s.create_engine(DB_STR, poolclass=s.pool.NullPool,
             connect_args={'options': '-csearch_path={}'.format(dbschema)})
 
         helper_schema = 'augur_operations'
-        self.helper_db = s.create_engine(DB_STR, poolclass = s.pool.NullPool,
+        self.helper_db = s.create_engine(DB_STR, poolclass=s.pool.NullPool,
             connect_args={'options': '-csearch_path={}'.format(helper_schema)})
 
         helper_metadata = MetaData()
@@ -59,13 +61,13 @@ class Housekeeper:
         :param delay: time needed to update
         :param shared: shared object that is to also be updated
         """
-        
+        logger = create_job_logger(job["model"])
         if 'repo_group_id' in job:
             repo_group_id = job['repo_group_id']
-            logging.info('Housekeeper spawned {} model updater process for repo group id {} with PID {}\n'.format(job['model'], repo_group_id, os.getpid()))
+            logger.info('Housekeeper spawned {} model updater process for repo group id {} with PID {}\n'.format(job['model'], repo_group_id, os.getpid()))
         else:
             repo_group_id = None
-            logging.info('Housekeeper spawned {} model updater process for repo ids {} with PID {}\n'.format(job['model'], job['repo_ids'], os.getpid()))
+            logger.info('Housekeeper spawned {} model updater process for repo ids {} with PID {}\n'.format(job['model'], job['repo_ids'], os.getpid()))
 
         try:
             compatible_worker_found = False
@@ -78,10 +80,10 @@ class Housekeeper:
                     time.sleep(3)
                     continue
 
-                logging.info("Housekeeper recognized that the broker has a worker that " + 
+                logger.info("Housekeeper recognized that the broker has a worker that " + 
                     "can handle the {} model... beginning to distribute maintained tasks\n".format(job['model']))
                 while True:
-                    logging.info('Housekeeper updating {} model with given {}...\n'.format(
+                    logger.info('Housekeeper updating {} model with given {}...\n'.format(
                         job['model'], job['given'][0]))
                     
                     if job['given'][0] == 'git_url' or job['given'][0] == 'github_url':
@@ -102,9 +104,9 @@ class Housekeeper:
                                 requests.post('http://{}:{}/api/unstable/task'.format(
                                     broker_host,broker_port), json=task, timeout=10)
                             except Exception as e:
-                                logging.info("Error encountered: {}\n".format(e))
+                                logger.info("Error encountered: {}\n".format(e))
 
-                            logging.info(task)
+                            logger.info(task)
 
                             time.sleep(15)
 
@@ -121,9 +123,9 @@ class Housekeeper:
                             requests.post('http://{}:{}/api/unstable/task'.format(
                                 broker_host,broker_port), json=task, timeout=10)
                         except Exception as e:
-                            logging.info("Error encountered: {}\n".format(e))
+                            logger.info("Error encountered: {}\n".format(e))
 
-                    logging.info("Housekeeper finished sending {} tasks to the broker for it to distribute to your worker(s)\n".format(len(job['repos'])))
+                    logger.info("Housekeeper finished sending {} tasks to the broker for it to distribute to your worker(s)\n".format(len(job['repos'])))
                     time.sleep(job['delay'])
                 
         except KeyboardInterrupt:
@@ -136,7 +138,7 @@ class Housekeeper:
         """
         Starts update processes
         """
-        logging.info("Starting update processes...")
+        logger.info("Starting update processes...")
         if jobs is None:
             jobs = self.__updatable
         for job in jobs:
@@ -156,7 +158,7 @@ class Housekeeper:
         Schedules updates
         """
         # don't use this, 
-        logging.debug('Scheduling updates...')
+        logger.debug('Scheduling updates...')
         self.__updater()
 
     def join_updates(self):
@@ -271,7 +273,7 @@ class Housekeeper:
                 
                 reorganized_repos = pd.read_sql(repo_url_sql, self.db, params={})
                 if len(reorganized_repos) == 0:
-                    logging.info("Trying to send tasks for repo group, but the repo group does not contain any repos: {}".format(repo_url_sql))
+                    logger.info("Trying to send tasks for repo group, but the repo group does not contain any repos: {}".format(repo_url_sql))
                     job['repos'] = []
                     continue
 
@@ -292,7 +294,7 @@ class Housekeeper:
                             'oauth_id': 0
                         }
                         result = self.helper_db.execute(self.job_table.insert().values(job_tuple))
-                        logging.info("No job tuple for {} model was found, so one was inserted into the job table: {}".format(job['model'], job_tuple))
+                        logger.info("No job tuple for {} model was found, so one was inserted into the job table: {}".format(job['model'], job_tuple))
 
                     # If a last id is not recorded, start from beginning of repos 
                     #   (first id is not necessarily 0)

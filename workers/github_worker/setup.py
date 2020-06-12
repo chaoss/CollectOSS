@@ -28,7 +28,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'github_worker_start=github_worker.runtime:main',
+            'github_worker_start=workers.github_worker.runtime:main',
         ],
     },
     classifiers=[

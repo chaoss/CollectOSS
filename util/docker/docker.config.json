@@ -7,6 +7,7 @@
     },
     "Workers": {
             "facade_worker": {
+                "repo_directory": "/augur/repos/",
                 "switch": 1
             },
             "github_worker": {

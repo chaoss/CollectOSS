@@ -30,7 +30,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'facade_worker_start=facade_worker.runtime:main',
+            'facade_worker_start=workers.facade_worker.facade_worker.runtime:main',
         ],
     },
     classifiers=[

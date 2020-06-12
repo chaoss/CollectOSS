@@ -26,7 +26,7 @@
 # repos. It also rebuilds analysis data, checks any changed affiliations and
 # aliases, and caches data for display.
 
-import pymysql, sys, platform, imp, time, datetime, html.parser, subprocess, os, getopt, xlsxwriter, configparser
+import pymysql, sys, platform, imp, time, datetime, html.parser, subprocess, os, getopt, xlsxwriter, configparser, logging
 from multiprocessing import Process, Queue
 from facade_worker.facade01config import Config#increment_db, update_db, migrate_database_config, database_connection, get_setting, update_status, log_activity          
 from facade_worker.facade02utilitymethods import update_repo_log, trim_commit, store_working_author, trim_author   
@@ -35,53 +35,15 @@ from facade_worker.facade04postanalysiscleanup import git_repo_cleanup
 from facade_worker.facade05repofetch import git_repo_initialize, check_for_repo_updates, force_repo_updates, force_repo_analysis, git_repo_updates
 from facade_worker.facade06analyze import analysis
 from facade_worker.facade07rebuildcache import nuke_affiliations, fill_empty_affiliations, invalidate_caches, rebuild_unknown_affiliation_and_web_caches
-from workers.standard_methods import read_config
-import logging
+
+from workers.util import read_config
 from workers.worker_base import Worker
 
 html = html.parser.HTMLParser()
 
 class FacadeWorker(Worker):
-    def __init__(self, config, task=None):
-
-        self.cfg = Config()
-        
-        ### The real program starts here ###
-
-        # Set up the database
-        db_user = self.config['user']
-        db_pass = self.config['password']
-        db_name = self.config['database']
-        db_host = self.config['host']
-        db_port = self.config['port']
-        db_user_people = self.config['user']
-        db_pass_people = self.config['password']
-        db_name_people = self.config['database']
-        db_host_people = self.config['host']
-        db_port_people = self.config['port']
-
-        # Open a general-purpose connection
-        db,cursor = self.cfg.database_connection(
-            db_host,
-            db_user,
-            db_pass,
-            db_name, 
-            db_port,    False, False)
-
-        # Open a connection for the people database
-        db_people,cursor_people = self.cfg.database_connection(
-            db_host_people,
-            db_user_people,
-            db_pass_people,
-            db_name_people,
-            db_port_people, True, False)
-
-        # Check if the database is current and update it if necessary
-        try:
-            current_db = int(self.cfg.get_setting('database_version'))
-        except:
-            # Catch databases which existed before database versioning
-            current_db = -1
+    def __init__(self, config={}, task=None):
+        worker_type = "facade_worker"
 
         # Define what this worker can be given and know how to interpret
         given = [['repo_group']]
@@ -92,33 +54,96 @@ class FacadeWorker(Worker):
         operations_tables = ['worker_history', 'worker_job']
 
         # Run the general worker initialization
-        super().__init__(config, given, models, data_tables, operations_tables)
+        super().__init__(worker_type, config, given, models, data_tables, operations_tables)
+
+        # Facade-specific config
+        self.cfg = Config()
 
         # Define data collection info
         self.tool_source = 'Facade Worker'
         self.tool_version = '0.0.1'
         self.data_source = 'Git Log'
 
-    def commits_model(self):
+    def initialize_database_connections(self):
 
+        # Set up the database
+        db_user = self.config['user_database']
+        db_pass = self.config['password_database']
+        db_name = self.config['name_database']
+        db_host = self.config['host_database']
+        db_port = self.config['port_database']
+
+        # Open a general-purpose connection
+        self.db, self.cursor = self.cfg.database_connection(
+            db_host,
+            db_user,
+            db_pass,
+            db_name, 
+            db_port,    False, False)
+
+        # Open a connection for the people database
+        self.db_people,self.cursor_people = self.cfg.database_connection(
+            db_host,
+            db_user,
+            db_pass,
+            db_name,
+            db_port, True, False)
+
+        # Check if the database is current and update it if necessary
+        try:
+            self.current_db = int(self.cfg.get_setting('database_version'))
+        except:
+            # Catch databases which existed before database versioning
+            self.current_db = -1
+
+    def collect(self):
+        """ Function to process each entry in the worker's task queue
+        Determines what action to take based off the message type
+        """
+        self.initialize_logging() # need to initialize logging again in child process cause multiprocessing
+        self.logger.info("Starting data collection process\n")
+        self.initialize_database_connections() 
+        while True:
+            if not self._queue.empty():
+                message = self._queue.get() # Get the task off our MP queue
+            else:
+                break
+            self.logger.info("Popped off message: {}\n".format(str(message)))
+
+            if message['job_type'] == 'STOP':
+                break
+
+            # If task is not a valid job type
+            if message['job_type'] != 'MAINTAIN' and message['job_type'] != 'UPDATE':
+                raise ValueError('{} is not a recognized task type'.format(message['job_type']))
+                pass
+
+            try:
+                self.commits_model(message)
+            except Exception as e:
+                self.logger.error(e)
+                raise(e)
+                break
+
+    def commits_model(self, message):
         # Figure out what we need to do
-        limited_run = read_config("Facade", name="limited_run", default=0)
-        delete_marked_repos = read_config("Facade", name="delete_marked_repos", default=0)
-        pull_repos = read_config("Facade", name="pull_repos", default=0)
-        clone_repos = read_config("Facade", name="clone_repos", default=1)
-        check_updates = read_config("Facade", name="check_updates", default=0)
-        force_updates = read_config("Facade", name="force_updates", default=0)
-        run_analysis = read_config("Facade", name="run_analysis", default=0)
-        force_analysis = read_config("Facade", name="force_analysis", default=0)
-        nuke_stored_affiliations = read_config("Facade", name="nuke_stored_affiliations", default=0)
-        fix_affiliations = read_config("Facade", name="fix_affiliations", default=1)
-        force_invalidate_caches = read_config("Facade", name="force_invalidate_caches", default=0)
-        rebuild_caches = read_config("Facade", name="rebuild_caches", default=1) #if abs((datetime.datetime.strptime(self.cfg.get_setting('aliases_processed')[:-3], 
+        limited_run = self.augur_config.get_value("Facade", "limited_run")
+        delete_marked_repos = self.augur_config.get_value("Facade", "delete_marked_repos")
+        pull_repos = self.augur_config.get_value("Facade", "pull_repos")
+        clone_repos = self.augur_config.get_value("Facade", "clone_repos")
+        check_updates = self.augur_config.get_value("Facade", "check_updates")
+        force_updates = self.augur_config.get_value("Facade", "force_updates")
+        run_analysis = self.augur_config.get_value("Facade", "run_analysis")
+        force_analysis = self.augur_config.get_value("Facade", "force_analysis")
+        nuke_stored_affiliations = self.augur_config.get_value("Facade", "nuke_stored_affiliations")
+        fix_affiliations = self.augur_config.get_value("Facade", "fix_affiliations")
+        force_invalidate_caches = self.augur_config.get_value("Facade", "force_invalidate_caches")
+        rebuild_caches = self.augur_config.get_value("Facade", "rebuild_caches") #if abs((datetime.datetime.strptime(self.cfg.get_setting('aliases_processed')[:-3], 
             # '%Y-%m-%d %I:%M:%S.%f') - datetime.datetime.now()).total_seconds()) // 3600 > int(self.cfg.get_setting(
             #   'update_frequency')) else 0
-        force_invalidate_caches = read_config("Facade", name="force_invalidate_caches", default=0)
-        create_xlsx_summary_files = read_config("Facade", name="create_xlsx_summary_files", default=0)
-        multithreaded = read_config("Facade", name="multithreaded", default=1)
+        force_invalidate_caches = self.augur_config.get_value("Facade", "force_invalidate_caches")
+        create_xlsx_summary_files = self.augur_config.get_value("Facade", "create_xlsx_summary_files")
+        multithreaded = self.augur_config.get_value("Facade", "multithreaded")
 
         opts,args = getopt.getopt(sys.argv[1:],'hdpcuUaAmnfIrx')
         for opt in opts:
@@ -219,9 +244,9 @@ class FacadeWorker(Worker):
 
         if len(repo_base_directory) == 0:
             self.cfg.log_activity('Error','No base directory. It is unsafe to continue.')
-            update_status('Failed: No base directory')
+            self.cfg.update_status('Failed: No base directory')
             sys.exit(1)
-            
+
         # Begin working
 
         start_time = time.time()

@@ -5,6 +5,7 @@ Miscellaneous Augur library commands for controlling the backend components
 
 import os
 import signal
+import logging
 from subprocess import call, run
 
 import psutil
@@ -12,27 +13,27 @@ import click
 import pandas as pd
 import sqlalchemy as s
 
-from augur import logger
-from augur.cli.configure import default_config
+from augur.cli import pass_config, pass_application
+
+logger = logging.getLogger("augur.cli")
 
 @click.group('util', short_help='Miscellaneous utilities')
 def cli():
     pass
 
 @cli.command('export-env')
-@click.pass_context
-def export_env(ctx):
+@pass_config
+def export_env(config):
     """
     Exports your GitHub key and database credentials
     """
-    app = ctx.obj
 
     export_file = open(os.getenv('AUGUR_EXPORT_FILE', 'augur_export_env.sh'), 'w+')
     export_file.write('#!/bin/bash')
     export_file.write('\n')
     env_file = open(os.getenv('AUGUR_ENV_FILE', 'docker_env.txt'), 'w+')
 
-    for env_var in app.env_config.items():
+    for env_var in config.get_env_config().items():
         export_file.write('export ' + env_var[0] + '="' + str(env_var[1]) + '"\n')
         env_file.write(env_var[0] + '=' + str(env_var[1]) + '\n')
 
@@ -40,8 +41,8 @@ def export_env(ctx):
     env_file.close()
 
 @cli.command('kill')
-@click.pass_context
-def kill_processes(ctx):
+@pass_config
+def kill_processes(config):
     """
     Terminates all currently running backend Augur processes, including any workers. Will only work in a virtual environment.    
     """
@@ -57,7 +58,8 @@ def kill_processes(ctx):
                     pass
 
 @cli.command('list',)
-def list_processes():
+@pass_config
+def list_processes(config):
     """
     Outputs the name and process ID (PID) of all currently running backend Augur processes, including any workers. Will only work in a virtual environment.    
     """
@@ -78,13 +80,11 @@ def get_augur_processes():
     return processes
 
 @cli.command('repo-reset')
-@click.pass_context
-def repo_reset(ctx):
+@pass_application
+def repo_reset(augur_app):
     """
     Refresh repo collection to force data collection
     """
-    app = ctx.obj
-
-    app.database.execute("UPDATE augur_data.repo SET repo_path = NULL, repo_name = NULL, repo_status = 'New'; TRUNCATE augur_data.commits CASCADE; ")
+    augur_app.database.execute("UPDATE augur_data.repo SET repo_path = NULL, repo_name = NULL, repo_status = 'New'; TRUNCATE augur_data.commits CASCADE; ")
 
     logger.info("Repos successfully reset")

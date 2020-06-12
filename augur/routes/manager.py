@@ -285,15 +285,15 @@ class Git_string():
         repo = self.name
         return repo[repo.find('/')+1:]
 
-def authenticate_request(app, request):
+def authenticate_request(augur_app, request):
 
     # do I like doing it like this? not at all
     # do I have the time to implement a better solution right now? not at all
-    user = app.read_config('Database', 'user')
-    password = app.read_config('Database', 'password')
-    host = app.read_config('Database', 'host')
-    port = app.read_config('Database', 'port')
-    dbname = app.read_config('Database', 'name')
+    user = augur_app.config.get_value('Database', 'user')
+    password = augur_app.config.get_value('Database', 'password')
+    host = augur_app.config.get_value('Database', 'host')
+    port = augur_app.config.get_value('Database', 'port')
+    dbname = augur_app.config.get_value('Database', 'name')
 
     DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(
             user, password, host, port, dbname
