@@ -39,8 +39,7 @@ import psycopg2
 import json
 import logging
 
-from workers.standard_methods import read_config
-
+from workers.util import read_config
 
 class Config:
 
