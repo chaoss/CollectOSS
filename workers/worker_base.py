@@ -9,6 +9,7 @@ from urllib.parse import urlparse
 from workers.util import read_config
 from sqlalchemy import MetaData
 from sqlalchemy.ext.automap import automap_base
+import urllib
 
 class Worker():
 
@@ -452,7 +453,8 @@ class Worker():
         elif platform == "gitlab":
             self.headers = {'Authorization': 'Bearer %s' % self.oauths[0]['access_token']}
 
-    def paginate(self, url, duplicate_col_map, update_col_map, table, table_pkey, where_clause="", value_update_col_map={}):
+    def paginate(self, url, duplicate_col_map, update_col_map, table, table_pkey, where_clause="", value_update_col_map={},
+                 platform="github"):
         # Paginate backwards through all the tuples but get first page in order
         #   to determine if there are multiple pages and if the 1st page covers all
         update_keys = list(update_col_map.keys()) if update_col_map else []
@@ -470,7 +472,12 @@ class Worker():
                 logging.info("Hitting endpoint: " + url.format(i) + " ...\n")
                 r = requests.get(url=url.format(i), headers=self.headers)
                 self.update_gh_rate_limit(r)
-                logging.info("Analyzing page {} of {}\n".format(i, int(r.links['last']['url'][-6:].split('=')[1]) + 1 if 'last' in r.links else '*last page not known*'))
+                if platform == "github":
+                    last_page = r.links['last']['url'][-6:].split('=')[1]
+                elif platform == "gitlab":
+                    last_page = r.links['last']['url'].split('&')[2].split("=")[1]
+                logging.info("Analyzing page {} of {}\n".format(i, int(
+                    last_page) if 'last' in r.links else '*last page not known*'))
 
                 try:
                     j = r.json()
@@ -509,20 +516,23 @@ class Worker():
 
             # Find last page so we can decrement from there
             if 'last' in r.links and not multiple_pages and not self.finishing_task:
-                param = r.links['last']['url'][-6:]
-                i = int(param.split('=')[1]) + 1
+                if platform == "github":
+                    param = r.links['last']['url'][-6:]
+                    i = int(param.split('=')[1]) + 1
+                elif platform == "gitlab":
+                    i = int(r.links['last']['url'].split('&')[2].split("=")[1]) + 1
                 logging.info("Multiple pages of request, last page is " + str(i - 1) + "\n")
                 multiple_pages = True
             elif not multiple_pages and not self.finishing_task:
                 logging.info("Only 1 page of request\n")
             elif self.finishing_task:
                 logging.info("Finishing a previous task, paginating forwards ..."
-                    " excess rate limit requests will be made\n")
-            
+                             " excess rate limit requests will be made\n")
+
             if len(j) == 0:
                 logging.info("Response was empty, breaking from pagination.\n")
                 break
-                
+
             # Checking contents of requests with what we already have in the db
             j = self.assign_tuple_action(j, table_values, update_col_map, duplicate_col_map, table_pkey, value_update_col_map)
             if not j:
@@ -530,16 +540,20 @@ class Worker():
                 i = i + 1 if self.finishing_task else i - 1
                 continue
             try:
-                to_add = [obj for obj in j if obj not in tuples and obj['flag'] != 'none']
+                to_add = [obj for obj in j if obj not in tuples and (obj['flag'] != 'none')]
             except Exception as e:
                 logging.info("Failure accessing data of page: {}. Moving to next page.\n".format(e))
                 i = i + 1 if self.finishing_task else i - 1
                 continue
             if len(to_add) == 0 and multiple_pages and 'last' in r.links:
                 logging.info("{}".format(r.links['last']))
-                if i - 1 != int(r.links['last']['url'][-6:].split('=')[1]):
+                if platform == 'github' and i - 1 != int(r.links['last']['url'][-6:].split('=')[1]):
                     logging.info("No more pages with unknown tuples, breaking from pagination.\n")
                     break
+                elif platform == 'gitlab' and i - 1 != int(r.links['last']['url'].split('&')[2].split('=')[1]):
+                    logging.info("No more pages with unknown tuples, braking from pagination. ]n")
+                    break
+
             tuples += to_add
 
             i = i + 1 if self.finishing_task else i - 1
@@ -653,6 +667,103 @@ class Worker():
                     self.results_counter += 1
 
                     logging.info("Inserted contributor: " + contributor['login'] + "\n")
+
+                    # Increment our global track of the cntrb id for the possibility of it being used as a FK
+                    self.cntrb_id_inc = int(result.inserted_primary_key[0])
+
+            except Exception as e:
+                logging.info("Caught exception: {}".format(e))
+                logging.info("Cascading Contributor Anomalie from missing repo contributor data: {} ...\n".format(cntrb_url))
+                continue
+
+    def query_gitlab_contribtutors(self, entry_info, repo_id):
+
+        gitlab_url = entry_info['given']['gitlab_url'] if 'gitlab_url' in entry_info['given'] else entry_info['given']['git_url']
+
+        logging.info("Querying contributors with given entry info: " + str(entry_info) + "\n")
+
+        path = urlparse(gitlab_url)
+        split = path[2].split('/')
+
+        owner = split[1]
+        name = split[2]
+
+        # Handles git url case by removing the extension
+        if ".git" in name:
+            name = name[:-4]
+
+        url_encoded_format = urllib.parse.quote(owner + '/' + name, safe='')
+
+        table = 'contributors'
+        table_pkey = 'cntrb_id'
+        update_col_map = {'cntrb_email': 'email'}
+        duplicate_col_map = {'cntrb_email': 'email'}
+
+        # list to hold contributors needing insertion or update
+        contributors = self.paginate("https://gitlab.com/api/v4/projects/" + url_encoded_format + "/repository/contributors?page={}", duplicate_col_map, update_col_map, table, table_pkey, platform='gitlab')
+        logging.info(contributors)
+
+        for repo_contributor in contributors:
+            try:
+                cntrb_compressed_url = ("https://gitlab.com/api/v4/users?search=" + repo_contributor['email'])
+                logging.info("Hitting endpoint: " + cntrb_compressed_url + " ...\n")
+                r = requests.get(url=cntrb_compressed_url, headers=self.headers)
+                contributor_compressed = r.json()
+
+                email = repo_contributor['email']
+                if len(contributor_compressed) == 0 or "id" not in contributor_compressed[0]:
+                    continue
+
+                logging.info("Fetching for user: " + str(contributor_compressed[0]["id"]))
+
+                cntrb_url = ("https://gitlab.com/api/v4/users/" + str(contributor_compressed[0]["id"]))
+                logging.info("Hitting end point to get complete contributor info now: " + cntrb_url + "...\n")
+                r = requests.get(url=cntrb_url, headers=self.headers)
+                contributor = r.json()
+
+                cntrb = {
+                    "cntrb_login": contributor.get('username', None),
+                    "cntrb_created_at": contributor.get('created_at', None),
+                    "cntrb_email": email,
+                    "cntrb_company": contributor.get('organization', None),
+                    "cntrb_location": contributor.get('location', None),
+                    # "cntrb_type": , dont have a use for this as of now ... let it default to null
+                    "cntrb_canonical": contributor.get('public_email', None),
+                    "gh_user_id": contributor.get('id', None),
+                    "gh_login": contributor.get('username', None),
+                    "gh_url": contributor.get('web_url', None),
+                    "gh_html_url": contributor.get('web_url', None),
+                    "gh_node_id": None,
+                    "gh_avatar_url": contributor.get('avatar_url', None),
+                    "gh_gravatar_id": None,
+                    "gh_followers_url": None,
+                    "gh_following_url": None,
+                    "gh_gists_url": None,
+                    "gh_starred_url": None,
+                    "gh_subscriptions_url": None,
+                    "gh_organizations_url": None,
+                    "gh_repos_url": None,
+                    "gh_events_url": None,
+                    "gh_received_events_url": None,
+                    "gh_type": None,
+                    "gh_site_admin": None,
+                    "tool_source": self.tool_source,
+                    "tool_version": self.tool_version,
+                    "data_source": self.data_source
+                }
+
+                # Commit insertion to table
+                if repo_contributor['flag'] == 'need_update':
+                    result = self.db.execute(self.contributors_table.update().where(
+                        self.worker_history_table.c.cntrb_email == email).values(cntrb))
+                    logging.info("Updated tuple in the contributors table with existing email: {}".format(email))
+                    self.cntrb_id_inc = repo_contributor['pkey']
+                elif repo_contributor['flag'] == 'need_insertion':
+                    result = self.db.execute(self.contributors_table.insert().values(cntrb))
+                    logging.info("Primary key inserted into the contributors table: {}".format(result.inserted_primary_key))
+                    self.results_counter += 1
+
+                    logging.info("Inserted contributor: " + contributor['username'] + "\n")
 
                     # Increment our global track of the cntrb id for the possibility of it being used as a FK
                     self.cntrb_id_inc = int(result.inserted_primary_key[0])
