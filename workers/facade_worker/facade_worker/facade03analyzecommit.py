@@ -38,7 +38,7 @@ import xlsxwriter
 import configparser
 import traceback 
 
-from workers.standard_methods import read_config
+from workers.util import read_config
 
 def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 

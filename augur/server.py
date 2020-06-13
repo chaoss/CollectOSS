@@ -10,50 +10,40 @@ import types
 import json
 import os
 import base64
+import logging
 
 from flask import Flask, request, Response, redirect
 from flask_cors import CORS
 import pandas as pd
 
 import augur
-from augur.util import logger
 from augur.routes import create_routes
 
 AUGUR_API_VERSION = 'api/unstable'
 
-class VueCompatibleFlask(Flask):
-  jinja_options = Flask.jinja_options.copy()
-  jinja_options.update(dict(
-    block_start_string='(%',
-    block_end_string='%)',
-    variable_start_string='%%',
-    variable_end_string='%%',
-    comment_start_string='(#',
-    comment_end_string='#)',
-  ))
-
+logger = logging.getLogger(__name__)
 
 class Server(object):
     """
     Defines Augur's server's behavior
     """
-    def __init__(self, frontend_folder='../frontend/public', manager=None, broker=None, housekeeper=None):
+    def __init__(self, manager=None, broker=None, housekeeper=None, augur_app=None):
         """
         Initializes the server, creating both the Flask application and Augur application
         """
         # Create Flask application
 
-        self.app = VueCompatibleFlask(__name__, static_folder=frontend_folder, template_folder=frontend_folder)
+        self.app = Flask(__name__)
         self.api_version = AUGUR_API_VERSION
         app = self.app
         CORS(app)
         app.url_map.strict_slashes = False
 
         # Create Augur application
-        self.augur_app = augur.Application()
+        self.augur_app = augur_app
 
         # Initialize cache
-        expire = int(self.augur_app.read_config('Server', 'cache_expire'))
+        expire = int(self.augur_app.config.get_value('Server', 'cache_expire'))
         self.cache = self.augur_app.cache.get_cache('server', expire=expire)
         self.cache.clear()
 
@@ -196,8 +186,8 @@ def run():
     Runs server with configured hosts/ports
     """
     server = Server()
-    host = server.augur_app.read_config('Server', 'host')
-    port = server.augur_app.read_config('Server', 'port')
+    host = server.augur_app.config.get_value('Server', 'host')
+    port = server.augur_app.config.get_value('Server', 'port')
     Server().app.run(host=host, port=int(port), debug=True)
 
 wsgi_app = None

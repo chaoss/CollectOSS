@@ -31,7 +31,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'insight_worker_start=insight_worker.runtime:main',
+            'insight_worker_start=workers.insight_worker.runtime:main',
         ],
     },
     classifiers=[

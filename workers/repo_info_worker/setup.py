@@ -19,16 +19,15 @@ setup(
     author="Augurlabs",
     author_email="s@goggins.com",
     description="Augur Worker that collects general data about a repo on GitHub",
-    packages=find_packages(exclude=('tests',)),
+    packages=find_packages(),
     install_requires=[
         'flask',
         'requests',
-        'psycopg2-binary',
-        'click'
+        'psycopg2-binary'
     ],
     entry_points={
         'console_scripts': [
-            'repo_info_worker_start=repo_info_worker.runtime:main',
+            'repo_info_worker_start=workers.repo_info_worker.runtime:main',
         ],
     },
     classifiers=[
