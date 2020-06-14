@@ -9,7 +9,7 @@ from workers.worker_base import Worker
 # 1. Displaying discrete metadata like "number of forks" and how they change over time 
 # 2. Validating other workers, like those related to pull requests, issues, and commits. Our totals should be at or very near the totals in the repo_info table.
 
-# This table also updates teh REPO table in 2 cases: 
+# This table also updates the REPO table in 2 cases: 
 # 1. Recognizing when a repository is a forked repository by updating the "forked_from" field and 
 # 2. Recognizing when a repository is archived, and recording the data we observed the change in status. 
 
@@ -266,7 +266,7 @@ class RepoInfoWorker(Worker):
 
         if 'errors' in data:
             logging.info("Error!: {}".format(data['errors']))
-            if data['errors']['message'] == 'API rate limit exceeded':
+            if data['errors'][0]['message'] == 'API rate limit exceeded':
                 self.update_gh_rate_limit(response)
 
         if 'id' in data:

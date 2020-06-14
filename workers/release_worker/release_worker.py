@@ -83,7 +83,7 @@ class ReleaseWorker(Worker):
 
             if 'errors' in data:
                 self.logger.info("Error!: {}".format(data['errors']))
-                if data['errors']['message'] == 'API rate limit exceeded':
+                if data['errors'][0]['message'] == 'API rate limit exceeded':
                     self.update_gh_rate_limit(r)
                     continue
 
