@@ -57,7 +57,7 @@ class FacadeWorker(Worker):
         super().__init__(worker_type, config, given, models, data_tables, operations_tables)
 
         # Facade-specific config
-        self.cfg = Config()
+        self.cfg = Config(self.logger)
 
         # Define data collection info
         self.tool_source = 'Facade Worker'
