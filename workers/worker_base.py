@@ -35,35 +35,36 @@ class Worker():
         self.augur_config = AugurConfig(self._root_augur_dir)
 
         self.config = { 
-                "worker_type": self.worker_type,
-                "host": self.augur_config.get_value("Server", "host"),
+                'worker_type': self.worker_type,
+                'host': self.augur_config.get_value("Server", "host"),
                 'gh_api_key': self.augur_config.get_value('Database', 'key'),
                 'offline_mode': False
             }
         self.config.update(self.augur_config.get_section("Development"))
 
         try:
-            worker_defaults = self.augur_config.get_default_config()["Workers"][self.config["worker_type"]]
+            worker_defaults = self.augur_config.get_default_config()['Workers'][self.config['worker_type']]
             self.config.update(worker_defaults)
         except KeyError as e:
-            logging.warn("Could not get default configuration for {}", self.config["worker_type"])
+            logging.warn('Could not get default configuration for {}', self.config['worker_type'])
 
-        worker_info = self.augur_config.get_value("Workers", self.config["worker_type"])
+        worker_info = self.augur_config.get_value('Workers', self.config['worker_type'])
         self.config.update(worker_info)
 
-        worker_port = self.config["port"]
+        worker_port = self.config['port']
         while True:
             try:
-                r = requests.get("http://{}:{}/AUGWOP/heartbeat".format(self.config["host"], worker_port)).json()
+                r = requests.get('http://{}:{}/AUGWOP/heartbeat'.format(
+                    self.config['host'], worker_port)).json()
                 if 'status' in r:
                     if r['status'] == 'alive':
                         worker_port += 1
             except:
                 break
 
-        logfile_dir = f"{self._root_augur_dir}/logs/workers/{self.worker_type}/"
-        server_logfile = logfile_dir + "{}_{}_server.log".format(self.worker_type, worker_port)
-        collection_logfile = logfile_dir + "{}_{}_collection.log".format(self.worker_type, worker_port)
+        logfile_dir = f'{self._root_augur_dir}/logs/workers/{self.worker_type}/'
+        server_logfile = logfile_dir + '{}_{}_server.log'.format(self.worker_type, worker_port)
+        collection_logfile = logfile_dir + '{}_{}_collection.log'.format(self.worker_type, worker_port)
         self.config.update({ 
             "port": worker_port,
             "id": "com.augurlabs.core.{}.{}".format(self.worker_type, worker_port),
@@ -110,6 +111,15 @@ class Worker():
         # Send broker hello message
         if self.config["offline_mode"] is False:
             self.connect_to_broker()
+
+        try:
+            self.tool_source
+            self.tool_version
+            self.data_source
+        except:
+            self.tool_source = 'Augur Worker Testing'
+            self.tool_version = '0.0.0'
+            self.data_source = 'Augur Worker Testing'
 
     def __repr__(self):
         return f"{self.config['id']}"
@@ -281,12 +291,41 @@ class Worker():
                 self.register_task_failure(message, repo_id, e)
                 break
 
-        self.logger.info("Closing database connections for current task\n")
+        self.logger.info('Closing database connections\n')
         self.db.dispose()
         self.helper_db.dispose()
 
     def assign_tuple_action(self, new_data, table_values, update_col_map, duplicate_col_map, table_pkey, value_update_col_map={}):
-        """ map objects => { *our db col* : *gh json key*} """
+        """ Include an extra key-value pair on each element of new_data that represents
+            the action that should be taken with this element (i.e. 'need_insertion')
+
+        :param new_data: List of dictionaries, data to be assigned an action to
+        :param table_values: Pandas DataFrame, existing data in the database to check
+            what action should be taken on the new_data depending on the presence of
+            each element in this DataFrame
+        :param update_col_map: Dictionary, maps the column names of the source data
+            to the field names in our database for columns that should be checked for
+            updates (if source data value != value in existing database row, then an
+            update is needed). Key is source data column name, value is database field name.
+            Example: {'id': 'gh_issue_id'}
+        :param duplicate_col_map: Dictionary, maps the column names of the source data
+            to the field names in our database for columns that should be checked for
+            duplicates (if source data value == value in existing database row, then this
+            element is a duplicate and would not need an insertion). Key is source data 
+            column name, value is database field name. Example: {'id': 'gh_issue_id'}
+        :param table_pkey: String, the field name of the primary key of the table in 
+            the database that we are checking the table_values for.
+        :param value_update_col_map: Dictionary, sometimes we add a new field to a table,
+            and we want to trigger an update of that row in the database even if all of the
+            data values are the same and would not need an update ordinarily. Checking for
+            a specific existing value in the database field allows us to do this. The key is the
+            name of the field in the database we are checking for a specific value to trigger
+            an update, the value is the value we are checking for equality to trigger an update.
+            Example: {'cntrb_id': None}
+        :return: List of dictionaries, contains all the same elements of new_data, except
+            each element now has an extra key-value pair with the key being 'flag', and
+            the value being 'need_insertion', 'need_update', or 'none'
+        """
         need_insertion_count = 0
         need_update_count = 0
         for i, obj in enumerate(new_data):
@@ -344,14 +383,22 @@ class Worker():
         return new_data
 
     def check_duplicates(self, new_data, table_values, key):
+        """ Filters what items of the new_data json are not present in the table_values df 
+            
+        :param new_data: List of dictionaries, new data to filter duplicates out of
+        :param table_values: Pandas DataFrame, existing data to check what data is already
+            present in the database
+        :param key: String, key of each dict in new_data whose value we are checking 
+            duplicates with
+        :return: List of dictionaries, contains elements of new_data that are not already
+            present in the database
+        """
         need_insertion = []
         for obj in new_data:
-            if type(obj) == dict:
-                if not table_values.isin([obj[key]]).any().any():
-                    need_insertion.append(obj)
-                # else:
-                    # self.logger.info("Tuple with github's {} key value already".format(key) +
-                    #     "exists in our db: {}\n".format(str(obj[key])))
+            if type(obj) != dict:
+                continue
+            if not table_values.isin([obj[key]]).any().any():
+                need_insertion.append(obj)
         self.logger.info("Page recieved has {} tuples, while filtering duplicates this ".format(str(len(new_data))) +
             "was reduced to {} tuples.\n".format(str(len(need_insertion))))
         return need_insertion
@@ -373,30 +420,26 @@ class Worker():
         if not connected:
             sys.exit('Could not connect to the broker after 5 attempts! Quitting...\n')
 
-    def dump_queue(queue):
-        """
-        Empties all pending items in a queue and returns them in a list.
-        """
-        result = []
-        queue.put("STOP")
-        for i in iter(queue.get, 'STOP'):
-            result.append(i)
-        # time.sleep(.1)
-        return result
-
     def find_id_from_login(self, login):
+        """ Retrieves our contributor table primary key value for the contributor with
+            the given GitHub login credentials, if this contributor is not there, then 
+            they get inserted.
+
+        :param login: String, the GitHub login username to find the primary key id for
+        :return: Integer, the id of the row with the matching GitHub login
+        """
         idSQL = s.sql.text("""
             SELECT cntrb_id FROM contributors WHERE cntrb_login = '{}'
-            """.format(login))
+        """.format(login))
         rs = pd.read_sql(idSQL, self.db, params={})
         data_list = [list(row) for row in rs.itertuples(index=False)]
         try:
             return data_list[0][0]
         except:
-            self.logger.info("contributor needs to be added...")
+            self.logger.info('contributor needs to be added...')
 
-        cntrb_url = ("https://api.github.com/users/" + login)
-        self.logger.info("Hitting endpoint: {} ...\n".format(cntrb_url))
+        cntrb_url = ('https://api.github.com/users/' + login)
+        self.logger.info('Hitting endpoint: {} ...\n'.format(cntrb_url))
         r = requests.get(url=cntrb_url, headers=self.headers)
         self.update_gh_rate_limit(r)
         contributor = r.json()
@@ -412,33 +455,33 @@ class Worker():
             email = contributor['email']
 
         cntrb = {
-            "cntrb_login": contributor['login'] if 'login' in contributor else None,
-            "cntrb_email": email,
-            "cntrb_company": company,
-            "cntrb_location": location,
-            "cntrb_created_at": contributor['created_at'] if 'created_at' in contributor else None,                
-            "cntrb_canonical": None,
-            "gh_user_id": contributor['id'],
-            "gh_login": contributor['login'],
-            "gh_url": contributor['url'],
-            "gh_html_url": contributor['html_url'],
-            "gh_node_id": contributor['node_id'],
-            "gh_avatar_url": contributor['avatar_url'],
-            "gh_gravatar_id": contributor['gravatar_id'],
-            "gh_followers_url": contributor['followers_url'],
-            "gh_following_url": contributor['following_url'],
-            "gh_gists_url": contributor['gists_url'],
-            "gh_starred_url": contributor['starred_url'],
-            "gh_subscriptions_url": contributor['subscriptions_url'],
-            "gh_organizations_url": contributor['organizations_url'],
-            "gh_repos_url": contributor['repos_url'],
-            "gh_events_url": contributor['events_url'],
-            "gh_received_events_url": contributor['received_events_url'],
-            "gh_type": contributor['type'],
-            "gh_site_admin": contributor['site_admin'],
-            "tool_source": self.tool_source,
-            "tool_version": self.tool_version,
-            "data_source": self.data_source
+            'cntrb_login': contributor['login'] if 'login' in contributor else None,
+            'cntrb_email': email,
+            'cntrb_company': company,
+            'cntrb_location': location,
+            'cntrb_created_at': contributor['created_at'] if 'created_at' in contributor else None,                
+            'cntrb_canonical': None,
+            'gh_user_id': contributor['id'],
+            'gh_login': contributor['login'],
+            'gh_url': contributor['url'],
+            'gh_html_url': contributor['html_url'],
+            'gh_node_id': contributor['node_id'],
+            'gh_avatar_url': contributor['avatar_url'],
+            'gh_gravatar_id': contributor['gravatar_id'],
+            'gh_followers_url': contributor['followers_url'],
+            'gh_following_url': contributor['following_url'],
+            'gh_gists_url': contributor['gists_url'],
+            'gh_starred_url': contributor['starred_url'],
+            'gh_subscriptions_url': contributor['subscriptions_url'],
+            'gh_organizations_url': contributor['organizations_url'],
+            'gh_repos_url': contributor['repos_url'],
+            'gh_events_url': contributor['events_url'],
+            'gh_received_events_url': contributor['received_events_url'],
+            'gh_type': contributor['type'],
+            'gh_site_admin': contributor['site_admin'],
+            'tool_source': self.tool_source,
+            'tool_version': self.tool_version,
+            'data_source': self.data_source
         }
         result = self.db.execute(self.contributors_table.insert().values(cntrb))
         self.logger.info("Primary key inserted into the contributors table: " + str(result.inserted_primary_key))
@@ -449,8 +492,13 @@ class Worker():
         
         return self.find_id_from_login(login)
 
-    def get_owner_repo(self, github_url):
-        split = github_url.split('/')
+    def get_owner_repo(self, git_url):
+        """ Gets the owner and repository names of a repository from a git url 
+        
+        :param git_url: String, the git url of a repository
+        :return: Tuple, includes the owner and repository names in that order
+        """
+        split = git_url.split('/')
 
         owner = split[-2]
         repo = split[-1]
@@ -461,6 +509,19 @@ class Worker():
         return owner, repo
 
     def get_max_id(self, table, column, default=25150, operations_table=False):
+        """ Gets the max value (usually used for id/pk's) of any Integer column 
+            of any table
+
+        :param table: String, the table that consists of the column you want to 
+            query a max value for
+        :param column: String, the column that you want to query the max value for
+        :param default: Integer, if there are no values in the 
+            specified column, the value of this parameter will be returned
+        :param operations_table: Boolean, if True, this signifies that the table/column
+            that is wanted to be queried is in the augur_operations schema rather than
+            the augur_data schema. Default False
+        :return: Integer, the max value of the specified column/table
+        """
         maxIdSQL = s.sql.text("""
             SELECT max({0}.{1}) AS {1}
             FROM {0}
@@ -472,11 +533,21 @@ class Worker():
             self.logger.info("Found max id for {} column in the {} table: {}\n".format(column, table, max_id))
         else:
             max_id = default
-            self.logger.info("Could not find max id for {} column in the {} table... using default set to: \
-                {}\n".format(column, table, max_id))
+            self.logger.info('Could not find max id for {} column in the {} table... ' +
+                'using default set to: {}\n'.format(column, table, max_id))
         return max_id
 
     def get_table_values(self, cols, tables, where_clause=""):
+        """ Can query all values of any column(s) from any table(s) 
+            with an optional where clause
+
+        :param cols: List of Strings, column(s) that user wants to query
+        :param tables: List of Strings, table(s) that user wants to query
+        :param where_clause: String, optional where clause to filter the values
+            queried
+        :return: Pandas DataFrame, contains all values queried in the columns, tables, and 
+            optional where clause provided
+        """
         table_str = tables[0]
         del tables[0]
 
@@ -488,25 +559,31 @@ class Worker():
         for col in cols:
             col_str += ", " + col
 
-        tableValuesSQL = s.sql.text("""
+        table_values_sql = s.sql.text("""
             SELECT {} FROM {} {}
         """.format(col_str, table_str, where_clause))
-        self.logger.info("Getting table values with the following PSQL query: \n{}\n".format(tableValuesSQL))
-        values = pd.read_sql(tableValuesSQL, self.db, params={})
+        self.logger.info('Getting table values with the following PSQL query: \n{}\n'.format(
+            table_values_sql))
+        values = pd.read_sql(table_values_sql, self.db, params={})
         return values
 
     def init_oauths(self):
+        """ Initialization required to have all GitHub tokens within access to GitHub workers
+        """
         self.oauths = []
         self.headers = None
 
         # Endpoint to hit solely to retrieve rate limit information from headers of the response
-        url = "https://api.github.com/users/gabe-heim"
+        url = 'https://api.github.com/users/gabe-heim'
 
         # Make a list of api key in the config combined w keys stored in the database
         oauthSQL = s.sql.text("""
             SELECT * FROM worker_oauth WHERE access_token <> '{}'
         """.format(self.config['gh_api_key']))
-        for oauth in [{'oauth_id': 0, 'access_token': self.config['gh_api_key']}] + json.loads(pd.read_sql(oauthSQL, self.helper_db, params={}).to_json(orient="records")):
+
+        oauths = [{'oauth_id': 0, 'access_token': self.config['gh_api_key']}] + \
+            json.loads(pd.read_sql(oauthSQL, self.helper_db, params={}).to_json(orient="records"))
+        for oauth in oauths:
             self.headers = {'Authorization': 'token %s' % oauth['access_token']}
             self.logger.info("Getting rate limit info for oauth: {}\n".format(oauth))
             response = requests.get(url=url, headers=self.headers)
@@ -526,8 +603,41 @@ class Worker():
         self.headers = {'Authorization': 'token %s' % self.oauths[0]['access_token']}
 
     def paginate(self, url, duplicate_col_map, update_col_map, table, table_pkey, where_clause="", value_update_col_map={}):
-        # Paginate backwards through all the tuples but get first page in order
-        #   to determine if there are multiple pages and if the 1st page covers all
+        """ Paginate either backwards or forwards (depending on the value of the worker's 
+            finishing_task attribute) through all the GitHub or GitLab api endpoint pages.
+
+        :param url: String, the url of the API endpoint we are paginating through, expects
+            a curly brace string formatter within the string to format the Integer 
+            representing the page number that is wanted to be returned
+        :param duplicate_col_map: Dictionary, maps the column names of the source data
+            to the field names in our database for columns that should be checked for
+            duplicates (if source data value == value in existing database row, then this
+            element is a duplicate and would not need an insertion). Key is source data 
+            column name, value is database field name. Example: {'id': 'gh_issue_id'}
+        :param update_col_map: Dictionary, maps the column names of the source data
+            to the field names in our database for columns that should be checked for
+            updates (if source data value != value in existing database row, then an
+            update is needed). Key is source data column name, value is database field name.
+            Example: {'id': 'gh_issue_id'}
+        :param table: String, the name of the table that holds the values to check for 
+            duplicates/updates against
+        :param table_pkey: String, the field name of the primary key of the table in 
+            the database that we are getting the values for to cross-reference to check
+            for duplicates.
+        :param where_clause: String, optional where clause to filter the values
+            that are queried when preparing the values that will be cross-referenced
+            for duplicates/updates
+        :param value_update_col_map: Dictionary, sometimes we add a new field to a table,
+            and we want to trigger an update of that row in the database even if all of the
+            data values are the same and would not need an update ordinarily. Checking for
+            a specific existing value in the database field allows us to do this. The key is the
+            name of the field in the database we are checking for a specific value to trigger
+            an update, the value is the value we are checking for equality to trigger an update.
+            Example: {'cntrb_id': None}
+        :return: List of dictionaries, all data points from the pages of the specified API endpoint
+            each with a 'flag' key-value pair representing the required action to take with that 
+            data point (i.e. 'need_insertion', 'need_update', 'none')
+        """
         update_keys = list(update_col_map.keys()) if update_col_map else []
         update_keys += list(value_update_col_map.keys()) if value_update_col_map else []
         cols_query = list(duplicate_col_map.keys()) + update_keys + [table_pkey]
@@ -540,7 +650,7 @@ class Worker():
             num_attempts = 0
             success = False
             while num_attempts < 3:
-                self.logger.info("Hitting endpoint: " + url.format(i) + " ...\n")
+                self.logger.info(f'Hitting endpoint: {url.format(i)}...\n')
                 r = requests.get(url=url.format(i), headers=self.headers)
                 self.update_gh_rate_limit(r)
                 self.logger.info("Analyzing page {} of {}\n".format(i, int(r.links['last']['url'][-6:].split('=')[1]) + 1 if 'last' in r.links else '*last page not known*'))
@@ -564,11 +674,11 @@ class Worker():
                     if j['message'] == 'Bad credentials':
                         self.update_gh_rate_limit(r, bad_credentials=True)
                 elif type(j) == str:
-                    self.logger.info("J was string: {}\n".format(j))
+                    self.logger.info(f'J was string: {j}\n')
                     if '<!DOCTYPE html>' in j:
-                        self.logger.info("HTML was returned, trying again...\n")
+                        self.logger.info('HTML was returned, trying again...\n')
                     elif len(j) == 0:
-                        self.logger.info("Empty string, trying again...\n")
+                        self.logger.info('Empty string, trying again...\n')
                     else:
                         try:
                             j = json.loads(j)
@@ -629,24 +739,16 @@ class Worker():
         """ Data collection function
         Query the GitHub API for contributors
         """
-        self.logger.info("Querying contributors with given entry info: " + str(entry_info) + "\n")
+        self.logger.info(f'Querying contributors with given entry info: {entry_info}\n')
 
         github_url = entry_info['given']['github_url'] if 'github_url' in entry_info['given'] else entry_info['given']['git_url']
 
         # Extract owner/repo from the url for the endpoint
-        path = urlparse(github_url)
-        split = path[2].split('/')
-
-        owner = split[1]
-        name = split[2]
-
-        # Handles git url case by removing the extension
-        if ".git" in name:
-            name = name[:-4]
+        owner, name = self.get_owner_repo(github_url)
 
         # Set the base of the url and place to hold contributors to insert
-        contributors_url = ("https://api.github.com/repos/" + owner + "/" + 
-            name + "/contributors?per_page=100&page={}")
+        contributors_url = (f'https://api.github.com/repos/{owner}/{name}/' + 
+            'contributors?per_page=100&page={}')
 
         # Get contributors that we already have stored
         #   Set our duplicate and update column map keys (something other than PK) to 
