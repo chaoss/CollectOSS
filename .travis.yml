@@ -6,29 +6,29 @@ services:
 
 jobs:
   include:
-    - name: 3.6 Metrics
+    - name: Python v3.6 Unit Tests
       python: 3.6
-      env: TOXENV=py36-metrics
+      env: TOXENV=py36-workers,py36-application
 
-    - name: 3.6 Metrics API
+    - name: Python v3.6 API Tests
       python: 3.6
-      env: TOXENV=py36-metrics_api
+      env: TOXENV=py36-metric-routes
 
-    - name: 3.7 Metrics
+    - name: Python v3.7 Unit Tests
       python: 3.7
-      env: TOXENV=py37-metrics
+      env: TOXENV=py37-workers,py36-application
 
-    - name: 3.7 Metrics API
+    - name: Python v3.7 API Tests
       python: 3.7
-      env: TOXENV=py37-metrics_api
+      env: TOXENV=py37-metric-routes
 
-    - name: 3.8 Metrics
+    - name: Python v3.8 Unit Tests
       python: 3.8
-      env: TOXENV=py38-metrics
+      env: TOXENV=py38-workers,py36-application
 
-    - name: 3.8 Metrics API
+    - name: Python v3.8 API Tests
       python: 3.8
-      env: TOXENV=py38-metrics_api
+      env: TOXENV=py38-metric-routes
 
 env:
   global:
@@ -39,8 +39,7 @@ env:
     AUGUR_DB_PASSWORD=augur
 
 before_install:
-  - docker run -d -p 5432:5432 --name augur_test_database augurlabs/augur:test_data@sha256:3c496445d7219b824315a37369fcddbe83b10773259560df5645162ce81dfb33
-
+  - docker run -d -p 5432:5432 --name augur_test_database augurlabs/augur:test_data@sha256:fd2d9a178a9fee7cd548bd40a16e08d4611be22892491e817aafd53502f74cd0
 install:
   - pip install .[dev]
   - augur configure generate

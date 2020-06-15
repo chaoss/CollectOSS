@@ -200,7 +200,7 @@ def create_routes(server):
 
     @server.app.route('/{}/api-port'.format(server.api_version))
     def api_port():
-        response = {'port': server.augur_app.read_config('Server', 'port')}
+        response = {'port': server.augur_app.config.get_value('Server', 'port')}
         return Response(response=json.dumps(response),
                         status=200,
                         mimetype="application/json")

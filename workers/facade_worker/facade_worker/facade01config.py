@@ -39,15 +39,15 @@ import psycopg2
 import json
 import logging
 
-from workers.standard_methods import read_config
-
+from workers.util import read_config
 
 class Config:
 
-    def __init__(self):
+    def __init__(self, logger=None):
         self.upstream_db = 7
         self.cursor = None
         self.cursor_people = None
+        self.logger = logger
 
         self.db = None
         self.db_people = None
@@ -199,7 +199,7 @@ class Config:
     # "Debug", then just print it and don't save it in the database.
 
         log_options = ('Error','Quiet','Info','Verbose','Debug')
-        logging.info("* %s\n" % status)
+        self.logger.info("* %s\n" % status)
         if self.log_level == 'Debug' and level == 'Debug':
             return
 
@@ -209,7 +209,7 @@ class Config:
             self.cursor.execute(query, (level, status))
             self.db.commit()
         except Exception as e:
-            logging.info('Error encountered: {}\n'.format(e))
+            self.logger.info('Error encountered: {}\n'.format(e))
 
             # Set up the database
             db_user = read_config('Database', 'user', 'AUGUR_DB_USER', 'augur')

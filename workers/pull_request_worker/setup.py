@@ -28,7 +28,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'pull_request_worker_start=pull_request_worker.runtime:main',
+            'pull_request_worker_start=workers.pull_request_worker.runtime:main',
         ],
     },
     classifiers=[

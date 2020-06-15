@@ -19,16 +19,15 @@ setup(
     author="Augur Team",
     author_email="gabe@gabehe.im",
     description="Template worker to be used as an example",
-    packages=find_packages(exclude=('tests',)),
+    packages=find_packages(),
     install_requires=[
         'flask',
         'requests',
-        'psycopg2-binary',
-        'click'
+        'psycopg2-binary'
     ],
     entry_points={
         'console_scripts': [
-            'template_worker_start=template_worker.runtime:main',
+            'template_worker_start=workers.template_worker.runtime:main',
         ],
     },
     classifiers=[

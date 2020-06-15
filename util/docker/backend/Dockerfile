@@ -9,7 +9,6 @@ LABEL version="0.1.0"
 WORKDIR /augur
 
 COPY ./README.md .
-COPY ./requirements.txt .
 COPY ./augur/ augur/
 COPY ./metadata.py .
 COPY ./setup.py .
@@ -22,4 +21,4 @@ RUN ./scripts/install/workers.sh prod
 COPY ./util/docker/docker.config.json .
 RUN augur configure generate --rc-config-file docker.config.json; mkdir repos/;
 
-CMD augur db update-repo-directory /augur/repos/; augur db update-api-key docker_key; augur run
+CMD augur db update-api-key docker_key; augur run

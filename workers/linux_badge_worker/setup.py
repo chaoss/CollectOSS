@@ -28,7 +28,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'linux_badge_worker_start=linux_badge_worker.runtime:main',
+            'linux_badge_worker_start=workers.linux_badge_worker.runtime:main',
         ],
     },
     classifiers=[

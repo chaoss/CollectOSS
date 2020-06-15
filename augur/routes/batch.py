@@ -10,8 +10,9 @@ import sqlalchemy as s
 from sqlalchemy import exc
 from flask import request, Response
 from augur.util import metric_metadata
-from augur import logger
 import json
+
+logger = logging.getLogger("augur")
 
 def create_routes(server):
 

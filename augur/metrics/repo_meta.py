@@ -5,9 +5,12 @@ General repo metrics like provides general overview data about repositories, inc
 import datetime
 import sqlalchemy as s
 import pandas as pd
-from augur import logger
-from augur.util import register_metric
 import math
+import logging
+
+from augur.util import register_metric
+
+logger = logging.getLogger("augur")
 
 @register_metric()
 def code_changes(self, repo_group_id, repo_id=None, period='week', begin_date=None, end_date=None):
