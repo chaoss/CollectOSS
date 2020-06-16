@@ -24,14 +24,13 @@ logger = logging.getLogger(__name__)
 class Application():
     """Initalizes all classes from Augur using a config file or environment variables"""
 
-    def __init__(self, offline_mode=False):
+    def __init__(self, given_config={}, disable_logs=False, offline_mode=False):
         """
         Reads config, creates DB session, and initializes cache
         """
-        logger.info("logging init")
-        self.logging = AugurLogging()
+        self.logging = AugurLogging(disable_logs=disable_logs)
         self.root_augur_dir = ROOT_AUGUR_DIRECTORY
-        self.config = AugurConfig(self.root_augur_dir)
+        self.config = AugurConfig(self.root_augur_dir, given_config)
 
         # we need these for later
         self.housekeeper = None
@@ -93,7 +92,7 @@ class Application():
             spdx_engine.connect().close()
             return engine, helper_engine, spdx_engine
         except s.exc.OperationalError as e:
-            logger.fatal(f"Unable to connect to the database. Terminating...")
+            logger.error("Unable to connect to the database. Terminating...")
             raise(e)
 
     def shutdown(self):
