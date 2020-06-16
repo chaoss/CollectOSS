@@ -16,5 +16,5 @@ rm -rf logs/
 echo "Removing build files..."
 find . -name build/ -delete
 find . -name dist/ -delete
-find . -name .tox/ -delete
+rm -rf .tox/
 echo "Done cleaning!"

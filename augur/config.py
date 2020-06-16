@@ -5,7 +5,7 @@ import logging
 ENVVAR_PREFIX = "AUGUR_"
 
 default_config = {
-        "Version": 1,
+        "version": 1,
         "Database": {
             "name": "augur",
             "host": "localhost",
