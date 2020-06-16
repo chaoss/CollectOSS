@@ -120,6 +120,8 @@ class Worker():
 
     def initialize_logging(self):
         self.config["log_level"] = self.config["log_level"].upper()
+        if self.config["debug"]:
+            self.config["log_level"] = "DEBUG"
 
         if self.config["verbose"]:
             format_string = AugurLogging.verbose_format_string
@@ -166,7 +168,7 @@ class Worker():
             logger.addHandler(console_handler)
 
         if self.config["quiet"]:
-            self.logger.disabled = True
+            logger.disabled = True
 
         self.logger = logger
 

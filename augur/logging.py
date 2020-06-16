@@ -20,7 +20,7 @@ class AugurLogging():
     verbose_format_string = "%(asctime)s [%(process)d] %(name)s.%(funcName)s() [%(levelname)s] %(message)s"
 
     @staticmethod
-    def get_log_directories(augur_config):
+    def get_log_directories(augur_config, reset_logfiles=True):
         LOGS_DIRECTORY = augur_config.get_value("Logging", "logs_directory")
 
         if LOGS_DIRECTORY[0] != "/":
@@ -31,20 +31,20 @@ class AugurLogging():
 
         WORKER_LOGS_DIRECTORY = LOGS_DIRECTORY + "/workers/"
 
+        if reset_logfiles is True:
+            try:
+                shutil.rmtree(LOGS_DIRECTORY)
+            except FileNotFoundError as e:
+                pass
+
+        Path(LOGS_DIRECTORY).mkdir(exist_ok=True)
+        Path(WORKER_LOGS_DIRECTORY).mkdir(exist_ok=True)
+
         return LOGS_DIRECTORY, WORKER_LOGS_DIRECTORY
 
     def __init__(self, augur_config, reset_logfiles=True):
         self.stop_event = None
-        self.LOGS_DIRECTORY, self.WORKER_LOGS_DIRECTORY = AugurLogging.get_log_directories(augur_config)
-
-        if reset_logfiles is True:
-            try:
-                shutil.rmtree(self.LOGS_DIRECTORY)
-            except FileNotFoundError as e:
-                pass
-
-        Path(self.LOGS_DIRECTORY).mkdir(exist_ok=True)
-        Path(self.WORKER_LOGS_DIRECTORY).mkdir(exist_ok=True)
+        self.LOGS_DIRECTORY, self.WORKER_LOGS_DIRECTORY = AugurLogging.get_log_directories(augur_config, reset_logfiles)
 
         self.LOG_LEVEL = augur_config.get_value("Logging", "log_level")
         self.QUIET = augur_config.get_value("Logging", "quiet")
@@ -149,7 +149,7 @@ class AugurLogging():
             coloredlogs.install(logger=logging.getLogger(logger_name), level=self.LOG_LEVEL, fmt=self.format_string)
 
         if self.QUIET:
-            for logger in ["augur", "augur.housekeeper", "augur.server", "augur.cli"]:
+            for logger in ["augur", "augur.housekeeper", "augur.server", "augur.cli", "root"]:
                 lg = logging.getLogger(logger)
                 lg.disabled = True
 

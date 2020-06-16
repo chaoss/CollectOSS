@@ -146,5 +146,8 @@ class AugurGunicornApp(gunicorn.app.base.BaseApplication):
         Returns the loaded server
         """
         if self.server is None:
-            self.server = Server(manager=self.manager, broker=self.broker, housekeeper=self.housekeeper, augur_app=self.augur_app)
+            try:
+                self.server = Server(augur_app=self.augur_app)
+            except Exception as e:
+                logger.error(f"An error occured when Gunicorn tried to load the server: {e}")
         return self.server.app

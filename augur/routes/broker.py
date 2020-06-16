@@ -11,6 +11,7 @@ from flask import request, Response
 
 logger = logging.getLogger(__name__)
 
+# TODO: not this...
 def worker_start(worker_name=None):
     process = subprocess.Popen("cd workers/{} && {}_start".format(worker_name,worker_name), shell=True)
 
@@ -28,7 +29,7 @@ def send_task(worker_proxy):
     j = r.json()
 
     if 'status' not in j:
-        logger.info("Worker: {}'s heartbeat did not return a response, setting worker status as 'Disconnected'\n".format(worker_id))
+        logger.error("Worker: {}'s heartbeat did not return a response, setting worker status as 'Disconnected'\n".format(worker_id))
         worker_proxy['status'] = 'Disconnected'
         return
 
@@ -45,7 +46,7 @@ def send_task(worker_proxy):
         new_task = maintain_queue.pop(0)
 
     else:
-        logger.info("Both queues are empty for worker {}\n".format(worker_id))
+        logger.debug("Both queues are empty for worker {}\n".format(worker_id))
         worker_proxy['status'] = 'Idle'
         return     
 
@@ -54,7 +55,7 @@ def send_task(worker_proxy):
         requests.post(task_endpoint, json=new_task)
         worker_proxy['status'] = 'Working'
     except:
-        logger.info("Sending Worker: {} a task did not return a response, setting worker status as 'Disconnected'\n".format(worker_id))
+        logger.error("Sending Worker: {} a task did not return a response, setting worker status as 'Disconnected'\n".format(worker_id))
         worker_proxy['status'] = 'Disconnected'
         # If the worker died, then restart it
         worker_start(worker_id.split('.')[len(worker_id.split('.')) - 2])
@@ -75,7 +76,7 @@ def create_routes(server):
         model = task['models'][0]
         logger.info("Broker recieved a new user task ... checking for compatible workers for given: " + str(given) + " and model(s): " + str(model) + "\n")
 
-        logger.info("Broker's list of all workers: {}\n".format(server.broker._getvalue().keys()))
+        logger.debug("Broker's list of all workers: {}\n".format(server.broker._getvalue().keys()))
 
         worker_found = False
         compatible_workers = {}
@@ -114,7 +115,7 @@ def create_routes(server):
             worker_found = True
         # Otherwise, let the frontend know that the request can't be served
         if not worker_found:
-            logger.info("Augur does not have knowledge of any workers that are capable of handing the request: {}\n".format(task))
+            logger.warning("Augur does not have knowledge of any workers that are capable of handing the request: {}\n".format(task))
 
         return Response(response=task,
                         status=200,
@@ -169,8 +170,8 @@ def create_routes(server):
             if server.broker[worker]['status'] != 'Disconnected':
                 send_task(server.broker[worker])
         except Exception as e:
-            logger.info("Ran into error: {}\n".format(repr(e)))
-            logger.info("A past instance of the {} worker finished a previous leftover task.\n".format(worker))
+            logger.error("Ran into error: {}\n".format(repr(e)))
+            logger.error("A past instance of the {} worker finished a previous leftover task.\n".format(worker))
 
         return Response(response=task,
                         status=200,
@@ -202,13 +203,13 @@ def create_routes(server):
     def task_error():
         task = request.json
         worker_id = task['worker_id']
-        logger.info("Recieved a message that {} ran into an error on task: {}\n".format(worker_id, task))
+        logger.error("Recieved a message that {} ran into an error on task: {}\n".format(worker_id, task))
         if worker_id in server.broker:
             if server.broker[worker_id]['status'] != 'Disconnected':
-                logger.info("{} ran into error while completing task: {}\n".format(worker_id, task))
+                logger.error("{} ran into error while completing task: {}\n".format(worker_id, task))
                 send_task(server.broker[worker_id])
         else:
-            logger.info("A previous instance of {} ran into error while completing task: {}\n".format(worker_id, task))
+            logger.error("A previous instance of {} ran into error while completing task: {}\n".format(worker_id, task))
         return Response(response=request.json,
                         status=200,
                         mimetype="application/json")

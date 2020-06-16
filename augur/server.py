@@ -27,7 +27,7 @@ class Server(object):
     """
     Defines Augur's server's behavior
     """
-    def __init__(self, manager=None, broker=None, housekeeper=None, augur_app=None):
+    def __init__(self, augur_app=None):
         """
         Initializes the server, creating both the Flask application and Augur application
         """
@@ -41,6 +41,9 @@ class Server(object):
         app.url_map.strict_slashes = False
 
         self.augur_app = augur_app
+        self.manager = augur_app.manager
+        self.broker = augur_app.broker
+        self.housekeeper = augur_app.housekeeper
 
         # Initialize cache
         expire = int(self.augur_app.config.get_value('Server', 'cache_expire'))
@@ -50,10 +53,6 @@ class Server(object):
         app.config['WTF_CSRF_ENABLED'] = False
 
         self.show_metadata = False
-
-        self.manager = manager
-        self.broker = broker
-        self.housekeeper = housekeeper
 
         logger.debug("Creating API routes...")
         create_routes(self)

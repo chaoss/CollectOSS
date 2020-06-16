@@ -119,7 +119,7 @@ class Housekeeper:
                             except Exception as e:
                                 logger.error("Error encountered: {}\n".format(e))
 
-                            logger.info(task)
+                            logger.debug(task)
 
                             time.sleep(15)
 
@@ -272,7 +272,7 @@ class Housekeeper:
                 
                 reorganized_repos = pd.read_sql(repo_url_sql, self.db, params={})
                 if len(reorganized_repos) == 0:
-                    logger.info("Trying to send tasks for repo group, but the repo group does not contain any repos: {}".format(repo_url_sql))
+                    logger.warning("Trying to send tasks for repo group, but the repo group does not contain any repos: {}".format(repo_url_sql))
                     job['repos'] = []
                     continue
 
@@ -293,7 +293,7 @@ class Housekeeper:
                             'oauth_id': 0
                         }
                         result = self.helper_db.execute(self.job_table.insert().values(job_tuple))
-                        logger.info("No job tuple for {} model was found, so one was inserted into the job table: {}".format(job['model'], job_tuple))
+                        logger.debug("No job tuple for {} model was found, so one was inserted into the job table: {}".format(job['model'], job_tuple))
 
                     # If a last id is not recorded, start from beginning of repos 
                     #   (first id is not necessarily 0)
