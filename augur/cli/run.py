@@ -57,7 +57,6 @@ def initialize_components(augur_app, disable_housekeeper):
 
         for worker in controller.keys():
             if controller[worker]['switch']:
-                logger.debug("Your config has the option set to automatically boot {} instances of the {}".format(controller[worker]['workers'], worker))
                 for i in range(controller[worker]['workers']):
                     logger.info("Booting {} #{}".format(worker, i + 1))
                     worker_process = mp.Process(target=worker_start, kwargs={'worker_name': worker, 'instance_number': i, 'worker_port': controller[worker]['port']}, daemon=True)

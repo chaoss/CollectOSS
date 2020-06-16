@@ -56,13 +56,12 @@ class Application():
 
         if offline_mode is False:
             logger.debug("Running in online mode")
-            logger.debug("Testing database connections")
             self.database, self.operations_database, self.spdx_database = self._connect_to_database()
 
-            logger.debug("Loading metrics")
             self.metrics = Metrics(self)
 
     def _connect_to_database(self):
+        logger.debug("Testing database connections")
         user = self.config.get_value('Database', 'user')
         host = self.config.get_value('Database', 'host')
         port = self.config.get_value('Database', 'port')

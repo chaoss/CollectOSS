@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 
 class Metrics():
     def __init__(self, app):
+        logger.debug("Loading metrics")
         self.database = app.database
         self.spdx_db = app.spdx_database
 
@@ -20,7 +21,6 @@ class Metrics():
                 self.models.append(file_id)
 
         for model in self.models:
-            logger.debug(f"Adding {model} metrics")
             importlib.import_module(f"augur.metrics.{model}")
             add_metrics(self, f"augur.metrics.{model}")
 

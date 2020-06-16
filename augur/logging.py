@@ -17,11 +17,11 @@ logger = logging.getLogger(__name__)
 
 class AugurLogging():
 
-    simple_format_string = "[PID: %(process)d] %(name)s [%(levelname)s] %(message)s"
-    verbose_format_string = "%(asctime)s [PID: %(process)d] %(name)s.%(funcName)s() [%(levelname)s] %(message)s"
+    simple_format_string = "[%(process)d] %(name)s [%(levelname)s] %(message)s"
+    verbose_format_string = "%(asctime)s,%(msecs)dms [PID: %(process)d] %(name)s [%(levelname)s] %(message)s"
     cli_format_string = "CLI: [%(module)s.%(funcName)s] [%(levelname)s] %(message)s"
     config_format_string = "[%(levelname)s] %(message)s"
-    error_format_string = "%(asctime)s [%(process)d] %(name)s.%(funcName)s() [%(levelname)s] %(message)s"
+    error_format_string = "%(asctime)s [PID: %(process)d] %(name)s [%(funcName)s() in %(filename)s:L%(lineno)d] %(levelname)s: %(message)s"
 
     @staticmethod
     def get_log_directories(augur_config, reset_logfiles=True):
@@ -33,8 +33,6 @@ class AugurLogging():
         if LOGS_DIRECTORY[-1] != "/":
             LOGS_DIRECTORY += "/"
 
-        WORKER_LOGS_DIRECTORY = LOGS_DIRECTORY + "/workers/"
-
         if reset_logfiles is True:
             try:
                 shutil.rmtree(LOGS_DIRECTORY)
@@ -42,9 +40,8 @@ class AugurLogging():
                 pass
 
         Path(LOGS_DIRECTORY).mkdir(exist_ok=True)
-        Path(WORKER_LOGS_DIRECTORY).mkdir(exist_ok=True)
 
-        return LOGS_DIRECTORY, WORKER_LOGS_DIRECTORY
+        return LOGS_DIRECTORY
 
     def __init__(self, reset_logfiles=True):
         self.stop_event = None
@@ -111,7 +108,7 @@ class AugurLogging():
         coloredlogs.install(level=logging.INFO, logger=cli_logger, fmt=AugurLogging.cli_format_string)
 
     def _set_config(self, augur_config):
-        self.LOGS_DIRECTORY, self.WORKER_LOGS_DIRECTORY = AugurLogging.get_log_directories(augur_config, self._reset_logfiles)
+        self.LOGS_DIRECTORY = AugurLogging.get_log_directories(augur_config, self._reset_logfiles)
         self.LOG_LEVEL = augur_config.get_value("Logging", "log_level")
         self.QUIET = augur_config.get_value("Logging", "quiet")
         self.DEBUG = augur_config.get_value("Logging", "debug")

@@ -72,12 +72,6 @@ class Housekeeper:
         logger = logging.getLogger(f"augur.jobs.{job['model']}")
         coloredlogs.install(level=logging_config[1]["log_level"], logger=logger, fmt=logging_config[1]["format_string"])
 
-        logger.debug("debug")
-        logger.info("info")
-        logger.warning("warning")
-        logger.error("error")
-        logger.fatal("fatal")
-
         if logging_config[1]["quiet"]:
             logger.disabled
 

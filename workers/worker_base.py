@@ -129,9 +129,10 @@ class Worker():
             format_string = AugurLogging.simple_format_string
 
         formatter = Formatter(fmt=format_string)
+        error_formatter = Formatter(fmt=AugurLogging.error_format_string)
 
-        _, worker_dir = AugurLogging.get_log_directories(self.augur_config)
-
+        worker_dir = AugurLogging.get_log_directories(self.augur_config, reset_logfiles=False) + "/workers/"
+        Path(worker_dir).mkdir(exist_ok=True)
         logfile_dir = worker_dir + f"/{self.worker_type}/"
         Path(logfile_dir).mkdir(exist_ok=True)
 
@@ -150,7 +151,7 @@ class Worker():
         collection_file_handler.setLevel(self.config["log_level"])
 
         collection_errorfile_handler = FileHandler(filename=self.config["collection_errorfile"], mode="a")
-        collection_errorfile_handler.setFormatter(formatter)
+        collection_errorfile_handler.setFormatter(error_formatter)
         collection_errorfile_handler.setLevel(logging.WARNING)
 
         logger = logging.getLogger(self.config["id"])
