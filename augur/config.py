@@ -199,7 +199,8 @@ default_config = {
             "host": "0.0.0.0",
             "port": "5000"
         },
-        "Development": {
+        "Logging": {
+            "logs_directory": "logs/",
             "log_level": "INFO",
             "verbose": 0,
             "quiet": 0,
@@ -296,9 +297,6 @@ class AugurConfig():
         self.set_env_value(section='Database', name='port', environment_variable='AUGUR_DB_PORT')
         self.set_env_value(section='Database', name='user', environment_variable='AUGUR_DB_USER')
         self.set_env_value(section='Database', name='password', environment_variable='AUGUR_DB_PASSWORD')
-        self.set_env_value(section='Development', name='log_level', environment_variable='AUGUR_LOG_LEVEL')
-        self.set_env_value(section='Development', name='verbose', environment_variable='AUGUR_LOG_VERBOSE')
-        self.set_env_value(section='Development', name='quiet', environment_variable='AUGUR_LOG_QUIET')
 
     def set_env_value(self, section, name, environment_variable, sub_config=None):
         """

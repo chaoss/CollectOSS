@@ -4,13 +4,12 @@ Augur library commands for controlling the backend components
 """
 
 from copy import deepcopy
-import os, time, atexit, subprocess, click, atexit, logging
+import os, time, atexit, subprocess, click, atexit, logging, sys
 import multiprocessing as mp
 import gunicorn.app.base
 from gunicorn.arbiter import Arbiter
 
-from augur.housekeeper.housekeeper import Housekeeper
-from augur.logging import reset_logfiles
+from augur.housekeeper import Housekeeper
 from augur.server import Server
 from augur.cli.util import kill_processes
 from augur.cli import pass_config, pass_application
@@ -26,20 +25,20 @@ def cli(ctx, augur_app, disable_housekeeper, skip_cleanup):
     """
     Start Augur's backend server
     """
-    reset_logfiles()
     if not skip_cleanup:
-        logger.info("Cleaning up old Augur processes. Just a moment please...")
+        logger.info("Cleaning up old Augur processes...")
         ctx.invoke(kill_processes)
         time.sleep(2)
     else:
-        logger.info("Skipping cleanup processes...")
+        logger.info("Skipping cleanup...")
 
-    logger.info('Initializing...')
     master = initialize_components(augur_app, disable_housekeeper)
     logger.info('Starting Gunicorn server in the background...')
+    logger.info('Housekeeper update process logs will now take over.')
     Arbiter(master).run()
 
 def initialize_components(augur_app, disable_housekeeper):
+    logger.info('Initializing...')
     master = None
     manager = None
     broker = None
@@ -53,19 +52,7 @@ def initialize_components(augur_app, disable_housekeeper):
         broker = manager.dict()
 
         logger.info("Booting housekeeper...")
-        jobs = deepcopy(augur_app.config.get_value('Housekeeper', 'jobs'))
-        housekeeper = Housekeeper(
-                jobs,
-                broker,
-                broker_host=augur_app.config.get_value('Server', 'host'),
-                broker_port=augur_app.config.get_value('Server', 'port'),
-                user=augur_app.config.get_value('Database', 'user'),
-                password=augur_app.config.get_value('Database', 'password'),
-                host=augur_app.config.get_value('Database', 'host'),
-                port=augur_app.config.get_value('Database', 'port'),
-                dbname=augur_app.config.get_value('Database', 'name')
-            )
-        logger.info("Housekeeper has finished booting.")
+        housekeeper = Housekeeper(broker=broker, augur_app=augur_app)
 
         controller = augur_app.config.get_section('Workers')
 
@@ -75,12 +62,17 @@ def initialize_components(augur_app, disable_housekeeper):
                 for i in range(controller[worker]['workers']):
                     logger.info("Booting {} #{}".format(worker, i + 1))
                     worker_process = mp.Process(target=worker_start, kwargs={'worker_name': worker, 'instance_number': i, 'worker_port': controller[worker]['port']}, daemon=True)
-                    worker_process.start()
                     worker_processes.append(worker_process)
+                    worker_process.start()
 
-    atexit.register(exit, worker_processes, master, housekeeper, manager)
+    augur_app.manager = manager
+    augur_app.broker = broker
+    augur_app.housekeeper = housekeeper
 
-    return AugurGunicornApp(augur_app.gunicorn_options, manager=manager, broker=broker, housekeeper=housekeeper, augur_app=augur_app)
+    # TODO: don't use gunicorn and multiprocessing in the same process...?
+    atexit._clear()
+    atexit.register(exit, augur_app, worker_processes, master)
+    return AugurGunicornApp(augur_app.gunicorn_options, augur_app=augur_app)
 
 def worker_start(worker_name=None, instance_number=0, worker_port=None):
     try:
@@ -91,38 +83,45 @@ def worker_start(worker_name=None, instance_number=0, worker_port=None):
     except KeyboardInterrupt as e:
         pass
 
-def exit(worker_processes, master, housekeeper, manager):
+def exit(augur_app, worker_processes, master):
+
+    logger.info("Beginning shutdown process")
+    if augur_app.logging.stop_event is not None:
+        augur_app.logging.stop_event.set()
+
     if worker_processes:
         for process in worker_processes:
-            logger.info("Shutting down worker process with pid: {}...".format(process.pid))
+            logger.debug("Shutting down worker process with pid: {}...".format(process.pid))
             process.terminate()
 
     if master is not None:
-        logger.info("Shutting down Gunicorn server...")
+        logger.debug("Shutting down Gunicorn server...")
         master.halt()
+        master = None
 
-    if housekeeper is not None:
-        logger.info("Shutting down housekeeper updates...")
-        housekeeper.shutdown_updates()
+    if augur_app.housekeeper is not None:
+        logger.debug("Shutting down housekeeper updates...")
+        augur_app.housekeeper.shutdown_updates()
+        augur_app.housekeeper = None
 
-    if manager is not None:
-        logger.info("Shutting down manager...")
-        manager.shutdown()
-    
-    logger.info("Killing main augur process with PID: {}".format(os.getpid()))
-    os._exit(0)
+    if augur_app.manager is not None:
+        logger.debug("Shutting down manager...")
+        augur_app.manager.shutdown()
+        augur_app.manager = None
+
+    logger.info("Stopping main Augur process with PID: {}".format(os.getpid()))
 
 class AugurGunicornApp(gunicorn.app.base.BaseApplication):
     """
     Loads configurations, initializes Gunicorn, loads server
     """
 
-    def __init__(self, options=None, manager=None, broker=None, housekeeper=None, augur_app=None):
-        self.options = options or {}
-        self.manager = manager
-        self.broker = broker
-        self.housekeeper = housekeeper
+    def __init__(self, options={}, augur_app=None):
+        self.options = options
         self.augur_app = augur_app
+        self.manager = self.augur_app.manager
+        self.broker = self.augur_app.broker
+        self.housekeeper = self.augur_app.housekeeper
         self.server = None
         super(AugurGunicornApp, self).__init__()
 

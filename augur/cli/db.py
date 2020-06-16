@@ -15,7 +15,7 @@ from sqlalchemy import exc
 
 from augur.cli import pass_config, pass_application
 
-logger = logging.getLogger("augur.cli")
+logger = logging.getLogger(__name__)
 
 @click.group('db', short_help='Database utilities')
 def cli():

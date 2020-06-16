@@ -12,7 +12,7 @@ from augur.config import default_config, ENVVAR_PREFIX
 from augur.cli import pass_config
 from augur.logging import ROOT_AUGUR_DIRECTORY
 
-logger = logging.getLogger("augur.cli")
+logger = logging.getLogger(__name__)
 
 @click.group('configure', short_help='Generate an augur.config.json')
 def cli():
