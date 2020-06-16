@@ -33,6 +33,10 @@ class Application():
         self.root_augur_dir = ROOT_AUGUR_DIRECTORY
         self.config = AugurConfig(self.root_augur_dir)
 
+        # we need these for later
+        self.housekeeper = None
+        self.manager = None
+
         self.gunicorn_options = {
             'bind': '%s:%s' % (self.config.get_value("Server", "host"), self.config.get_value("Server", "port")),
             'workers': int(self.config.get_value('Server', 'workers')),
@@ -91,4 +95,19 @@ class Application():
         except s.exc.OperationalError as e:
             logger.fatal(f"Unable to connect to the database. Terminating...")
             raise(e)
+
+    def shutdown(self):
+        if self.logging.stop_event is not None:
+            logger.debug("Stopping housekeeper logging listener...")
+            self.logging.stop_event.set()
+
+        if self.housekeeper is not None:
+            logger.debug("Shutting down housekeeper updates...")
+            self.housekeeper.shutdown_updates()
+            self.housekeeper = None
+
+        if self.manager is not None:
+            logger.debug("Shutting down manager...")
+            self.manager.shutdown()
+            self.manager = None
 
