@@ -53,13 +53,12 @@ class Housekeeper:
         """
         Starts update processes
         """
-        self.augur_logging.init_housekeeper_logging()
-        self.job_logging_config = self.augur_logging.get_housekeeper_job_config()
+        self.augur_logging.initialize_housekeeper_logging_listener()
         logger.info("Starting update processes...")
         if self.jobs is None:
             self.jobs = self.__updatable
         for job in self.jobs:
-            process = Process(target=self.updater_process, name=job["model"], args=(self.broker_host, self.broker_port, self.broker, job, (self.job_logging_config, self.augur_logging._get_settings())))
+            process = Process(target=self.updater_process, name=job["model"], args=(self.broker_host, self.broker_port, self.broker, job, (self.augur_logging.housekeeper_job_config, self.augur_logging.get_config())))
             self.__processes.append(process)
             process.start()
 
@@ -70,8 +69,15 @@ class Housekeeper:
 
         """
         logging.config.dictConfig(logging_config[0])
-        logger = logging.getLogger(f"augur.housekeeper.{job['model']}")
+        logger = logging.getLogger(f"augur.jobs.{job['model']}")
         coloredlogs.install(level=logging_config[1]["log_level"], logger=logger, fmt=logging_config[1]["format_string"])
+
+        logger.debug("debug")
+        logger.info("info")
+        logger.warning("warning")
+        logger.error("error")
+        logger.fatal("fatal")
+
         if logging_config[1]["quiet"]:
             logger.disabled
 

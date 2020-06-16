@@ -12,22 +12,21 @@ from gunicorn.arbiter import Arbiter
 from augur.housekeeper import Housekeeper
 from augur.server import Server
 from augur.cli.util import kill_processes
-from augur.cli import pass_config, pass_application
+from augur.application import Application
 
 logger = logging.getLogger("augur")
 
 @click.command("run")
 @click.option("--disable-housekeeper", is_flag=True, default=False, help="Turns off the housekeeper")
 @click.option("--skip-cleanup", is_flag=True, default=False, help="Disables the old process cleanup that runs before Augur starts")
-@pass_application
-@click.pass_context
-def cli(ctx, augur_app, disable_housekeeper, skip_cleanup):
+def cli(disable_housekeeper, skip_cleanup):
     """
     Start Augur's backend server
     """
+    augur_app = Application()
     if not skip_cleanup:
         logger.info("Cleaning up old Augur processes...")
-        ctx.invoke(kill_processes)
+        kill_processes()
         time.sleep(2)
     else:
         logger.info("Skipping cleanup...")

@@ -5,6 +5,7 @@ import logging
 ENVVAR_PREFIX = "AUGUR_"
 
 default_config = {
+        "Version": 1,
         "Database": {
             "name": "augur",
             "host": "localhost",
@@ -218,6 +219,7 @@ class AugurConfig():
         self._default_config = default_config
         self._env_config = {}
         self.load_config()
+        self.version = self.get_version()
 
     def get_section(self, section_name):
         try:
@@ -232,6 +234,13 @@ class AugurConfig():
                     raise(e)
             else:
                 logger.debug(f"Already using default config, skipping check for {section_name}")
+
+    def get_version(self):
+        try:
+            return self._config["version"]
+        except KeyError as e:
+            logger.warning("No config version found. Setting version to 0.")
+            return 0
 
     def get_value(self, section_name, value):
         try:
@@ -301,7 +310,7 @@ class AugurConfig():
         self.set_env_value(section='Logging', name='quiet', environment_variable='AUGUR_LOG_QUIET')
         self.set_env_value(section='Logging', name='debug', environment_variable='AUGUR_LOG_DEBUG')
         self.set_env_value(section='Logging', name='verbose', environment_variable='AUGUR_LOG_VERBOSE')
-
+        self.set_env_value(section='Logging', name='verbose', environment_variable='AUGUR_LOG_VERBOSE')
 
     def set_env_value(self, section, name, environment_variable, sub_config=None):
         """

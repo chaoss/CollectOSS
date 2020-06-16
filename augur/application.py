@@ -28,6 +28,8 @@ class Application():
         """
         Reads config, creates DB session, and initializes cache
         """
+        logger.info("logging init")
+        self.logging = AugurLogging()
         self.root_augur_dir = ROOT_AUGUR_DIRECTORY
         self.config = AugurConfig(self.root_augur_dir)
 
@@ -36,9 +38,8 @@ class Application():
             'workers': int(self.config.get_value('Server', 'workers')),
             'timeout': int(self.config.get_value('Server', 'timeout'))
         }
-
-        self.logging = AugurLogging(self.config)
-        self.gunicorn_options.update(self.logging.set_gunicorn_log_options())
+        self.logging.configure_logging(self.config)
+        self.gunicorn_options.update(self.logging.gunicorn_logging_options)
 
         self.cache_config = {
             'cache.type': 'file',
