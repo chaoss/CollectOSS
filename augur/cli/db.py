@@ -15,7 +15,7 @@ from sqlalchemy import exc
 
 from augur.cli import pass_config, pass_application
 
-logger = logging.getLogger("augur.cli")
+logger = logging.getLogger(__name__)
 
 @click.group('db', short_help='Database utilities')
 def cli():
@@ -44,7 +44,7 @@ def add_repos(augur_app, filename):
             if int(row[0]) in repo_group_IDs:
                 result = augur_app.database.execute(insertSQL, repo_group_id=int(row[0]), repo_git=row[1])
             else:
-                logger.warn(f"Invalid repo group id specified for {row[1]}, skipping.")
+                logger.warning(f"Invalid repo group id specified for {row[1]}, skipping.")
 
 @cli.command('get-repo-groups')
 @pass_application
@@ -137,7 +137,7 @@ def upgrade_db_version(augur_app):
     if current_db_version == most_recent_version:
         logger.info("Your database is already up to date. ")
     elif current_db_version > most_recent_version:
-        logger.info(f"Unrecognized version: {current_db_version}\nThe most recent version is {most_recent_version}. Please contact your system administrator to resolve this error.")
+        logger.error(f"Unrecognized version: {current_db_version}\nThe most recent version is {most_recent_version}. Please contact your system administrator to resolve this error.")
 
     for target_version, script_location in target_version_script_map.items():
         if target_version == current_db_version + 1:
@@ -173,7 +173,7 @@ def check_for_upgrade(augur_app):
     elif current_db_version < most_recent_version:
         logger.info(f"Current database version: v{current_db_version}\nPlease upgrade to the most recent version (v{most_recent_version}) with augur db upgrade-db-version.")
     elif current_db_version > most_recent_version:
-        logger.warn(f"Unrecognized version: {current_db_version}\nThe most recent version is {most_recent_version}. Please contact your system administrator to resolve this error.")
+        logger.error(f"Unrecognized version: {current_db_version}\nThe most recent version is {most_recent_version}. Please contact your system administrator to resolve this error.")
 
 
 @cli.command('create-schema')
@@ -210,7 +210,7 @@ def update_api_key(augur_app, api_key):
     """)
 
     augur_app.database.execute(update_api_key_sql, api_key=api_key)
-    logger.info(f"Update Augur API key to: {api_key}")
+    logger.info(f"Updated Augur API key to: {api_key}")
 
 @cli.command('get-api-key')
 @pass_application
@@ -222,7 +222,7 @@ def get_api_key(augur_app):
     try:
         print(augur_app.database.execute(get_api_key_sql).fetchone()[0])
     except TypeError:
-        logger.warn("No Augur API key found.")
+        logger.error("No Augur API key found.")
 
 @cli.command('check-pgpass', short_help="Check the ~/.pgpass file for Augur's database credentials")
 @pass_config
@@ -262,7 +262,7 @@ def run_db_creation_psql_command(host, port, user, name, command):
 
 def run_psql_command_in_database(augur_app, target_type, target):
     if target_type not in ['-f', '-c']:
-        logger.fatal("Invalid target type. Exiting...")
+        logger.error("Invalid target type. Exiting...")
         exit(1)
 
     call(['psql', '-h', augur_app.config.get_value('Database', 'host'),\
@@ -276,14 +276,14 @@ def check_pgpass_credentials(config):
     pgpass_file_path = environ['HOME'] + '/.pgpass'
 
     if not path.isfile(pgpass_file_path):
-        logger.debug("~/.pgpass does not exist, creating.")
+        logger.info("~/.pgpass does not exist, creating.")
         open(pgpass_file_path, 'w+')
         chmod(pgpass_file_path, stat.S_IWRITE | stat.S_IREAD)
 
     pgpass_file_mask = oct(os.stat(pgpass_file_path).st_mode & 0o777)
 
     if pgpass_file_mask != '0o600':
-        logger.debug("Updating ~/.pgpass file permissions.")
+        logger.info("Updating ~/.pgpass file permissions.")
         chmod(pgpass_file_path, stat.S_IWRITE | stat.S_IREAD)
 
     with open(pgpass_file_path, 'a+') as pgpass_file:

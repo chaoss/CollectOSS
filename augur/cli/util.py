@@ -15,7 +15,7 @@ import sqlalchemy as s
 
 from augur.cli import pass_config, pass_application
 
-logger = logging.getLogger("augur.cli")
+logger = logging.getLogger(__name__)
 
 @click.group('util', short_help='Miscellaneous utilities')
 def cli():
@@ -41,11 +41,23 @@ def export_env(config):
     env_file.close()
 
 @cli.command('kill')
-@pass_config
-def kill_processes(config):
+def cli_kill_processes():
     """
     Terminates all currently running backend Augur processes, including any workers. Will only work in a virtual environment.    
     """
+    processes = get_augur_processes()
+    if processes != []:
+        for process in processes:
+            if process.pid != os.getpid():
+                # logger.info(f"Killing {process.pid}: {' '.join(process.info['cmdline'][1:])}")
+                logger.info(f"Killing process {process.pid}")
+                try:
+                    process.send_signal(signal.SIGTERM)
+                except psutil.NoSuchProcess as e:
+                    pass
+
+def kill_processes():
+    logger = logging.getLogger("augur")
     processes = get_augur_processes()
     if processes != []:
         for process in processes:

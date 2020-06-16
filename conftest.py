@@ -27,6 +27,5 @@ def metrics(augur_app):
 
 @pytest.fixture(scope="session")
 def client(augur_app):
-    augur_app.logger.disabled = True
     flask_client = initialize_components(augur_app, disable_housekeeper=True).load()
     return flask_client.test_client()

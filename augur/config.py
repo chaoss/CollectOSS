@@ -5,6 +5,7 @@ import logging
 ENVVAR_PREFIX = "AUGUR_"
 
 default_config = {
+        "version": 1,
         "Database": {
             "name": "augur",
             "host": "localhost",
@@ -199,7 +200,8 @@ default_config = {
             "host": "0.0.0.0",
             "port": "5000"
         },
-        "Development": {
+        "Logging": {
+            "logs_directory": "logs/",
             "log_level": "INFO",
             "verbose": 0,
             "quiet": 0,
@@ -217,6 +219,7 @@ class AugurConfig():
         self._default_config = default_config
         self._env_config = {}
         self.load_config()
+        self.version = self.get_version()
 
     def get_section(self, section_name):
         try:
@@ -231,6 +234,13 @@ class AugurConfig():
                     raise(e)
             else:
                 logger.debug(f"Already using default config, skipping check for {section_name}")
+
+    def get_version(self):
+        try:
+            return self._config["version"]
+        except KeyError as e:
+            logger.warning("No config version found. Setting version to 0.")
+            return 0
 
     def get_value(self, section_name, value):
         try:
@@ -296,9 +306,11 @@ class AugurConfig():
         self.set_env_value(section='Database', name='port', environment_variable='AUGUR_DB_PORT')
         self.set_env_value(section='Database', name='user', environment_variable='AUGUR_DB_USER')
         self.set_env_value(section='Database', name='password', environment_variable='AUGUR_DB_PASSWORD')
-        self.set_env_value(section='Development', name='log_level', environment_variable='AUGUR_LOG_LEVEL')
-        self.set_env_value(section='Development', name='verbose', environment_variable='AUGUR_LOG_VERBOSE')
-        self.set_env_value(section='Development', name='quiet', environment_variable='AUGUR_LOG_QUIET')
+        self.set_env_value(section='Logging', name='log_level', environment_variable='AUGUR_LOG_LEVEL')
+        self.set_env_value(section='Logging', name='quiet', environment_variable='AUGUR_LOG_QUIET')
+        self.set_env_value(section='Logging', name='debug', environment_variable='AUGUR_LOG_DEBUG')
+        self.set_env_value(section='Logging', name='verbose', environment_variable='AUGUR_LOG_VERBOSE')
+        self.set_env_value(section='Logging', name='verbose', environment_variable='AUGUR_LOG_VERBOSE')
 
     def set_env_value(self, section, name, environment_variable, sub_config=None):
         """

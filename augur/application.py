@@ -14,9 +14,10 @@ from beaker.util import parse_cache_config_options
 import sqlalchemy as s
 import psycopg2
 
+from augur import ROOT_AUGUR_DIRECTORY
 from augur.metrics import Metrics
 from augur.config import AugurConfig
-from augur.logging import ROOT_AUGUR_DIRECTORY, initialize_logging, set_gunicorn_log_options
+from augur.logging import AugurLogging
 
 logger = logging.getLogger(__name__)
 
@@ -27,19 +28,22 @@ class Application():
         """
         Reads config, creates DB session, and initializes cache
         """
+        logger.info("logging init")
+        self.logging = AugurLogging()
         self.root_augur_dir = ROOT_AUGUR_DIRECTORY
         self.config = AugurConfig(self.root_augur_dir)
+
+        # we need these for later
+        self.housekeeper = None
+        self.manager = None
 
         self.gunicorn_options = {
             'bind': '%s:%s' % (self.config.get_value("Server", "host"), self.config.get_value("Server", "port")),
             'workers': int(self.config.get_value('Server', 'workers')),
             'timeout': int(self.config.get_value('Server', 'timeout'))
         }
-
-        initialize_logging(self.config)
-        self.gunicorn_options.update(set_gunicorn_log_options())
-
-        self.logger = logger
+        self.logging.configure_logging(self.config)
+        self.gunicorn_options.update(self.logging.gunicorn_logging_options)
 
         self.cache_config = {
             'cache.type': 'file',
@@ -55,11 +59,13 @@ class Application():
         self.cache = CacheManager(**cache_parsed)
 
         if offline_mode is False:
-            self.database = self._connect_to_database()
-            self.spdx_db = self._connect_to_database(include_spdx=True)
+            logger.debug("Running in online mode")
+            self.database, self.operations_database, self.spdx_database = self._connect_to_database()
+
             self.metrics = Metrics(self)
 
-    def _connect_to_database(self, include_spdx=False):
+    def _connect_to_database(self):
+        logger.debug("Testing database connections")
         user = self.config.get_value('Database', 'user')
         host = self.config.get_value('Database', 'host')
         port = self.config.get_value('Database', 'port')
@@ -70,17 +76,38 @@ class Application():
         )
 
         csearch_path_options = 'augur_data'
-        if include_spdx == True:
-            csearch_path_options += ',spdx'
 
         engine = s.create_engine(database_connection_string, poolclass=s.pool.NullPool,
             connect_args={'options': f'-csearch_path={csearch_path_options}'}, pool_pre_ping=True)
 
+        csearch_path_options += ',spdx'
+        spdx_engine = s.create_engine(database_connection_string, poolclass=s.pool.NullPool,
+            connect_args={'options': f'-csearch_path={csearch_path_options}'}, pool_pre_ping=True)
+
+        helper_engine = s.create_engine(database_connection_string, poolclass=s.pool.NullPool,
+            connect_args={'options': f'-csearch_path=augur_operations'}, pool_pre_ping=True)
+
         try:
-            test_connection = engine.connect()
-            test_connection.close()
-            return engine
+            engine.connect().close()
+            helper_engine.connect().close()
+            spdx_engine.connect().close()
+            return engine, helper_engine, spdx_engine
         except s.exc.OperationalError as e:
             logger.fatal(f"Unable to connect to the database. Terminating...")
             raise(e)
+
+    def shutdown(self):
+        if self.logging.stop_event is not None:
+            logger.debug("Stopping housekeeper logging listener...")
+            self.logging.stop_event.set()
+
+        if self.housekeeper is not None:
+            logger.debug("Shutting down housekeeper updates...")
+            self.housekeeper.shutdown_updates()
+            self.housekeeper = None
+
+        if self.manager is not None:
+            logger.debug("Shutting down manager...")
+            self.manager.shutdown()
+            self.manager = None
 
