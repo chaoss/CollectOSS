@@ -18,7 +18,7 @@ def create_full_routes(routes):
 
 @pytest.fixture(scope="session")
 def augur_app():
-    augur_app = Application()
+    augur_app = Application(disable_logs=True)
     return augur_app
 
 @pytest.fixture(scope="session")

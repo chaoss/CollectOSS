@@ -43,7 +43,7 @@ class AugurLogging():
 
         return LOGS_DIRECTORY
 
-    def __init__(self, reset_logfiles=True):
+    def __init__(self, disable_logs=False, reset_logfiles=True):
         self.stop_event = None
         self.LOGS_DIRECTORY = None
         self.WORKER_LOGS_DIRECTORY = None
@@ -82,7 +82,7 @@ class AugurLogging():
 
         self._configure_cli_logger()
 
-        level = logging.WARNING
+        level = logging.INFO
         config_handler = StreamHandler()
         config_handler.setFormatter(Formatter(fmt=AugurLogging.config_format_string))
         config_handler.setLevel(level)
@@ -94,6 +94,15 @@ class AugurLogging():
         config_initialization_logger.propagate = False
 
         coloredlogs.install(level=level, logger=config_initialization_logger, fmt=AugurLogging.config_format_string)
+
+        if disable_logs:
+            self._disable_all_logging()
+
+
+    def _disable_all_logging(self):
+        for logger in ["augur", "augur.application", "augur.housekeeper", "augur.config", "augur.cli", "root"]:
+            lg = logging.getLogger(logger)
+            lg.disabled = True
 
     def _configure_cli_logger(self):
         cli_handler = StreamHandler()
@@ -110,15 +119,13 @@ class AugurLogging():
     def _set_config(self, augur_config):
         self.LOGS_DIRECTORY = AugurLogging.get_log_directories(augur_config, self._reset_logfiles)
         self.LOG_LEVEL = augur_config.get_value("Logging", "log_level")
-        self.QUIET = augur_config.get_value("Logging", "quiet")
-        self.DEBUG = augur_config.get_value("Logging", "debug")
-        self.VERBOSE = augur_config.get_value("Logging", "verbose")
+        self.QUIET = int(augur_config.get_value("Logging", "quiet"))
+        self.DEBUG = int(augur_config.get_value("Logging", "debug"))
+        self.VERBOSE = int(augur_config.get_value("Logging", "verbose"))
         # self.JOB_NAMES = [job["model"] for job in deepcopy(augur_config.get_value("Housekeeper", "jobs"))]
 
         if self.QUIET:
-            for logger in ["augur", "augur.housekeeper", "augur.server", "augur.cli", "root"]:
-                lg = logging.getLogger(logger)
-                lg.disabled = True
+            self._disable_all_logging()
 
         if self.DEBUG:
             self.LOG_LEVEL = "DEBUG"
