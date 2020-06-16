@@ -681,7 +681,7 @@ class Worker():
         self.headers = {'Authorization': 'token %s' % self.oauths[0]['access_token']}
         self.logger.info("OAuth initialized")
 
-    def paginate(self, url, duplicate_col_map, update_col_map, table, table_pkey, where_clause="", value_update_col_map={}):
+    def paginate(self, url, duplicate_col_map, update_col_map, table, table_pkey, where_clause="", value_update_col_map={}, platform="github"):
         """ Paginate either backwards or forwards (depending on the value of the worker's 
             finishing_task attribute) through all the GitHub or GitLab api endpoint pages.
 
