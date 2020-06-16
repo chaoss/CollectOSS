@@ -1,6 +1,11 @@
 #!/bin/bash
 
-rm -rf frontend/public .pytest_cache logs *.out env.txt pyenv.txt
-rm -rf workers/**/*.log workers/**/*.err workers/**/*.out
+echo "Removing Python caches..."
+find . -name \*.__pycache__ -delete
+find . -name \*.pytest_cache -delete
 find . -name \*.pyc -delete
+
+echo "Cleaning log files..."
+find . -name \*.out -delete
+find . -name \*.log -delete
 find . -type f -name "*.lock" -delete

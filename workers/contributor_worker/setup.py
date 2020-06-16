@@ -31,7 +31,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'contributor_worker_start=contributor_worker.runtime:main',
+            'contributor_worker_start=workers.contributor_worker.runtime:main',
         ],
     },
     classifiers=[
