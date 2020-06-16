@@ -14,7 +14,7 @@ def directory(logs_dir):
     """
     Print the location of Augur's logs directory
     """
-    print(logs_dir[0])
+    print(logs_dir)
 
 @cli.command("tail")
 @click.argument("lines", default=20)
@@ -23,8 +23,8 @@ def tail(logs_dir, lines):
     """
     Output the last n lines of the main Augur and worker logfiles
     """
-    root_log_dir = logs_dir[0]
-    worker_log_dir = logs_dir[1]
+    root_log_dir = logs_dir
+    worker_log_dir = logs_dir + "/workers/"
     if lines is None:
         lines = 20
 
