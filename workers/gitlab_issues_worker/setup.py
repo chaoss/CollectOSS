@@ -28,7 +28,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'gitlab_issues_worker_start=gitlab_issues_worker.runtime:main',
+            'gitlab_issues_worker_start=workers.gitlab_issues_worker.runtime:main',
         ],
     },
     classifiers=[

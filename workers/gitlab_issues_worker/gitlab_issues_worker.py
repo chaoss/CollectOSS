@@ -4,10 +4,9 @@ from multiprocessing import Process, Queue
 import pandas as pd
 import sqlalchemy as s
 from workers.worker_base import Worker
-from workers.standard_methods import paginate, query_gitlab_contributors
 
 
-class GitLabIssueWorker(Worker):
+class GitLabIssuesWorker(Worker):
     def __init__(self, config={}):
         
         # Define what this worker can be given and know how to interpret
@@ -36,16 +35,20 @@ class GitLabIssueWorker(Worker):
         # Run the general worker initialization
         super().__init__(worker_type, config, given, models, data_tables, operations_tables)
 
-        # Request headers
-        self.headers = {"PRIVATE-TOKEN" : self.config['key']}
+        # Request headers updation
+
+        gitlab_api_key = self.augur_config.get_value("Database", "gitlab_api_key")
+        self.config.update({
+                           "gitlab_api_key": gitlab_api_key
+                           })
+        self.headers = {"PRIVATE-TOKEN" : self.config['gitlab_api_key']}
+
 
         # Define data collection info
         self.tool_source = 'Gitlab API Worker'
         self.tool_version = '0.0.0'
         self.data_source = 'GitLab API'
-        self.issue_id_inc = self.get_max_id('issues', 'issue_id')
 
-        self.msg_id_inc = self.get_max_id('message', 'msg_id')
 
     def gitlab_issues_model(self, task, repo_id):
         """ This is just an example of a data collection method. All data collection 
@@ -71,6 +74,8 @@ class GitLabIssueWorker(Worker):
         # Collection and insertion of data happens here
 
         # Collecting issue info from Gitlab API
+        self.issue_id_inc = self.get_max_id('issues', 'issue_id')
+        self.msg_id_inc = self.get_max_id('message', 'msg_id')
         self.logger.info('Beginning the process of GitLab Issue Collection...'.format(str(os.getpid())))
         gitlab_base = 'https://gitlab.com/api/v4'
         intermediate_url = '{}/projects/{}/issues?per_page=100&state=opened&'.format(gitlab_base, 18754962)

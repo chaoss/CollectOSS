@@ -84,7 +84,7 @@ class GitHubWorker(Worker):
         #list to hold issues needing insertion
         issues = self.paginate(issues_url, duplicate_col_map, update_col_map, table, table_pkey, 
             'WHERE repo_id = {}'.format(repo_id))
-        logging.info(issues)
+        self.logger.info(issues)
         # Discover and remove duplicates before we start inserting
         self.logger.info("Count of issues needing update or insertion: " + str(len(issues)) + "\n")
 

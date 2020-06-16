@@ -1,13 +1,13 @@
 from flask import Flask, jsonify, request, Response
 import click, os, json, requests, logging
-from gitlab_issues_worker.worker import GitLabIssueWorker
+from workers.gitlab_issues_worker.gitlab_issues_worker import GitLabIssuesWorker
 from workers.util import WorkerGunicornApplication, create_server
 
 def main():
     """ Declares singular worker and creates the server and flask app that it will be running on
     """
     app = Flask(__name__)
-    app.worker = GitLabIssueWorker()
+    app.worker = GitLabIssuesWorker()
 
     create_server(app)
     WorkerGunicornApplication(app).run()
