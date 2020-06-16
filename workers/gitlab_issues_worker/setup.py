@@ -12,7 +12,7 @@ def read(filename):
         return re.sub(text_type(r':[a-z]+:`~?(.*?)`'), text_type(r'``\1``'), fd.read())
 
 setup(
-    name="gitlab_worker",
+    name="gitlab_issues_worker",
     version="0.0.0",
     url="https://github.com/chaoss/augur",
     license='MIT',

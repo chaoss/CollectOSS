@@ -8,12 +8,13 @@ from workers.standard_methods import paginate, query_gitlab_contributors
 
 
 class GitLabIssueWorker(Worker):
-    def __init__(self, config):
+    def __init__(self, config={}):
         
         # Define what this worker can be given and know how to interpret
 
         # given is usually either [['github_url']] or [['git_url']] (depending if your 
         #   worker is exclusive to repos that are on the GitHub platform)
+        worker_type = "gitlab_issues_worker"
         given = [['git_url']]
 
         # The name the housekeeper/broker use to distinguish the data model this worker can fill
@@ -33,10 +34,9 @@ class GitLabIssueWorker(Worker):
         operations_tables = ['worker_history', 'worker_job']
 
         # Run the general worker initialization
-        super().__init__(config, given, models, data_tables, operations_tables)
+        super().__init__(worker_type, config, given, models, data_tables, operations_tables)
 
         # Request headers
-        self.config = config
         self.headers = {"PRIVATE-TOKEN" : self.config['key']}
 
         # Define data collection info
@@ -71,7 +71,7 @@ class GitLabIssueWorker(Worker):
         # Collection and insertion of data happens here
 
         # Collecting issue info from Gitlab API
-        logging.info('Beginning the process of GitLab Issue Collection...'.format(str(os.getpid())))
+        self.logger.info('Beginning the process of GitLab Issue Collection...'.format(str(os.getpid())))
         gitlab_base = 'https://gitlab.com/api/v4'
         intermediate_url = '{}/projects/{}/issues?per_page=100&state=opened&'.format(gitlab_base, 18754962)
         gitlab_issues_url = intermediate_url + "page={}"
@@ -89,17 +89,17 @@ class GitLabIssueWorker(Worker):
         issues = self.paginate(gitlab_issues_url, duplicate_col_map, update_col_map, table, table_pkey, 
             'WHERE repo_id = {}'.format(repo_id), platform="gitlab")
         
-        logging.info(issues)
-        logging.info("Count of issues needing update or insertion: " + str(len(issues)) + "\n")
+        self.logger.info(issues)
+        self.logger.info("Count of issues needing update or insertion: " + str(len(issues)) + "\n")
         for issue_dict in issues:
-            logging.info("Begin analyzing the issue with title: " + issue_dict['title'] + "\n")
+            self.logger.info("Begin analyzing the issue with title: " + issue_dict['title'] + "\n")
             pr_id = None
             if "pull_request" in issue_dict:
-                logging.info("This is an MR\n")
+                self.logger.info("This is an MR\n")
                 # Right now we are just storing our issue id as the MR id if it is one
                 pr_id = self.issue_id_inc
             else:
-                logging.info("Issue is not an MR\n")
+                self.logger.info("Issue is not an MR\n")
 
             # Insert data into models
             issue = {
@@ -130,24 +130,24 @@ class GitLabIssueWorker(Worker):
             }
         # Commit insertion to the issues table
             if issue_dict['flag'] == 'need_update':
-                logging.info("UPDATE FLAG")
+                self.logger.info("UPDATE FLAG")
                 result = self.db.execute(self.issues_table.update().where(
                     self.issues_table.c.gh_issue_id==issue_dict['id']).values(issue))
-                logging.info("Updated tuple in the issues table with existing gh_issue_id: {}".format(
+                self.logger.info("Updated tuple in the issues table with existing gh_issue_id: {}".format(
                     issue_dict['id']))
                 self.issue_id_inc = issue_dict['pkey']
             elif issue_dict['flag'] == 'need_insertion':
-                logging.info("INSERT FLAG")
+                self.logger.info("INSERT FLAG")
                 try:
                     result = self.db.execute(self.issues_table.insert().values(issue))
-                    logging.info("Primary key inserted into the issues table: " + str(result.inserted_primary_key))
+                    self.logger.info("Primary key inserted into the issues table: " + str(result.inserted_primary_key))
                     self.results_counter += 1
                     self.issue_id_inc = int(result.inserted_primary_key[0])
-                    logging.info("Inserted issue with our issue_id being: {}".format(self.issue_id_inc) + 
+                    self.logger.info("Inserted issue with our issue_id being: {}".format(self.issue_id_inc) + 
                         " and title of: {} and gh_issue_num of: {}\n".format(issue_dict['title'], issue_dict['iid']))
                 except Exception as e:
-                    logging.info("When inserting an issue, ran into the following error: {}\n".format(e))
-                    logging.info(issue)
+                    self.logger.info("When inserting an issue, ran into the following error: {}\n".format(e))
+                    self.logger.info(issue)
                 # continue
         # Register this task as completed.
         #   This is a method of the worker class that is required to be called upon completion
