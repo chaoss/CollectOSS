@@ -43,7 +43,7 @@ from workers.util import read_config
 
 class Config:
 
-    def __init__(self, logger=None):
+    def __init__(self, logger):
         self.upstream_db = 7
         self.cursor = None
         self.cursor_people = None
