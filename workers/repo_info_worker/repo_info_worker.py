@@ -139,7 +139,7 @@ class RepoInfoWorker(Worker):
                     continue
             num_attempts += 1
         if not success:
-            self.register_task_failure(task, repo_id, "Failed to hit endpoint: {}".format(url))
+            self.register_task_failure(self.task, repo_id, "Failed to hit endpoint: {}".format(url))
             return
 
         # Get committers count info that requires seperate endpoint
@@ -200,8 +200,8 @@ class RepoInfoWorker(Worker):
 
         self.logger.info(f"Inserted info for {owner}/{repo}\n")
 
-        #Register this task as completed
-        self.register_task_completion(task, repo_id, "repo_info")
+        # Register this task as completed
+        self.register_task_completion(self.task, repo_id, "repo_info")
 
     def query_committers_count(self, owner, repo):
         self.logger.info('Querying committers count\n')
@@ -280,6 +280,6 @@ class RepoInfoWorker(Worker):
             if data['message'] == 'Bad credentials':
                 self.update_gh_rate_limit(r, bad_credentials=True)
         if not success:
-            self.register_task_failure(task, repo_id, "Failed to hit endpoint: {}".format(url))
+            self.register_task_failure(self.task, repo_id, "Failed to hit endpoint: {}".format(url))
 
         return data
