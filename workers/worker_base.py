@@ -9,7 +9,7 @@ from urllib.parse import urlparse
 from sqlalchemy import MetaData
 from sqlalchemy.ext.automap import automap_base
 from augur.config import AugurConfig
-from augur.logging import verbose_formatter, generic_formatter
+from augur.logging import AugurLogging
 
 class Worker():
 
@@ -40,13 +40,13 @@ class Worker():
                 'gh_api_key': self.augur_config.get_value('Database', 'key'),
                 'offline_mode': False
             }
-        self.config.update(self.augur_config.get_section("Development"))
+        self.config.update(self.augur_config.get_section("Logging"))
 
         try:
             worker_defaults = self.augur_config.get_default_config()['Workers'][self.config['worker_type']]
             self.config.update(worker_defaults)
         except KeyError as e:
-            logging.warn('Could not get default configuration for {}', self.config['worker_type'])
+            logging.warn('Could not get default configuration for {}'.format(self.config['worker_type']))
 
         worker_info = self.augur_config.get_value('Workers', self.config['worker_type'])
         self.config.update(worker_info)
@@ -62,16 +62,10 @@ class Worker():
             except:
                 break
 
-        logfile_dir = f'{self._root_augur_dir}/logs/workers/{self.worker_type}/'
-        server_logfile = logfile_dir + '{}_{}_server.log'.format(self.worker_type, worker_port)
-        collection_logfile = logfile_dir + '{}_{}_collection.log'.format(self.worker_type, worker_port)
         self.config.update({ 
             "port": worker_port,
-            "id": "com.augurlabs.core.{}.{}".format(self.worker_type, worker_port),
-            "logfile_dir": logfile_dir,
-            "server_logfile": server_logfile,
-            "collection_logfile": collection_logfile,
-            "capture_output": True,
+            "id": "workers.{}.{}".format(self.worker_type, worker_port),
+            "capture_output": False,
             'location': 'http://{}:{}'.format(self.config["host"], worker_port),
             'port_broker': self.augur_config.get_value('Server', 'port'),
             'host_broker': self.augur_config.get_value('Server', 'host'),
@@ -126,34 +120,58 @@ class Worker():
 
     def initialize_logging(self):
         self.config["log_level"] = self.config["log_level"].upper()
-        formatter = generic_formatter
-        if self.config["verbose"] is True:
-            formatter = verbose_formatter
+        if self.config["debug"]:
+            self.config["log_level"] = "DEBUG"
 
-        Path(self.config["logfile_dir"]).mkdir(exist_ok=True)
+        if self.config["verbose"]:
+            format_string = AugurLogging.verbose_format_string
+        else:
+            format_string = AugurLogging.simple_format_string
+
+        formatter = Formatter(fmt=format_string)
+        error_formatter = Formatter(fmt=AugurLogging.error_format_string)
+
+        worker_dir = AugurLogging.get_log_directories(self.augur_config, reset_logfiles=False) + "/workers/"
+        Path(worker_dir).mkdir(exist_ok=True)
+        logfile_dir = worker_dir + f"/{self.worker_type}/"
+        Path(logfile_dir).mkdir(exist_ok=True)
+
+        server_logfile = logfile_dir + '{}_{}_server.log'.format(self.worker_type, self.config["port"])
+        collection_logfile = logfile_dir + '{}_{}_collection.log'.format(self.worker_type, self.config["port"])
+        collection_errorfile = logfile_dir + '{}_{}_collection.err'.format(self.worker_type, self.config["port"])
+        self.config.update({
+            "logfile_dir": logfile_dir,
+            "server_logfile": server_logfile,
+            "collection_logfile": collection_logfile,
+            "collection_errorfile": collection_errorfile
+        })
 
         collection_file_handler = FileHandler(filename=self.config["collection_logfile"], mode="a")
         collection_file_handler.setFormatter(formatter)
         collection_file_handler.setLevel(self.config["log_level"])
 
-        self.logger = logging.getLogger(self.config["id"])
-        self.logger.handlers = []
-        self.logger.addHandler(collection_file_handler)
-        self.logger.setLevel(self.config["log_level"])
+        collection_errorfile_handler = FileHandler(filename=self.config["collection_errorfile"], mode="a")
+        collection_errorfile_handler.setFormatter(error_formatter)
+        collection_errorfile_handler.setLevel(logging.WARNING)
+
+        logger = logging.getLogger(self.config["id"])
+        logger.handlers = []
+        logger.addHandler(collection_file_handler)
+        logger.addHandler(collection_errorfile_handler)
+        logger.setLevel(self.config["log_level"])
+        logger.propagate = False
 
         if self.config["debug"]:
-            console_handler = StreamHandler()
             self.config["log_level"] = "DEBUG"
-            console_handler.setLevel(self.config["log_level"])
+            console_handler = StreamHandler()
             console_handler.setFormatter(formatter)
-            self.logger.handlers = []
-            self.logger.addHandler(console_handler)
-            self.logger.addHandler(collection_file_handler)
-            self.config["capture_output"] = False
+            console_handler.setLevel(self.config["log_level"])
+            logger.addHandler(console_handler)
 
         if self.config["quiet"]:
-            self.logger.disabled = True
-            self.config["capture_output"] = False
+            logger.disabled = True
+
+        self.logger = logger
 
     def initialize_database_connections(self):
         DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(
@@ -196,7 +214,7 @@ class Worker():
             try:
                 setattr(self, '{}_table'.format(table), HelperBase.classes[table].__table__)
             except Exception as e:
-                self.logger.info("Error setting attribute for table: {} : {}".format(table, e))
+                self.logger.error("Error setting attribute for table: {} : {}".format(table, e))
 
         # Increment so we are ready to insert the 'next one' of each of these most recent ids
         self.history_id = self.get_max_id('worker_history', 'history_id', operations_table=True) + 1
@@ -226,7 +244,7 @@ class Worker():
         # This setting is set by the housekeeper and is attached to the task before it gets sent here
         if 'focused_task' in value:
             if value['focused_task'] == 1:
-                self.logger.info("Focused task is ON\n")
+                self.logger.debug("Focused task is ON\n")
                 self.finishing_task = True
         
         self._task = value
@@ -278,7 +296,7 @@ class Worker():
                 model_method = getattr(self, '{}_model'.format(message['models'][0]))
                 self.record_model_process(repo_id, 'repo_info')
             except Exception as e:
-                self.logger.info('Error: {}.\nNo defined method for model: {}, '.format(e, message['models'][0]) +
+                self.logger.error('Error: {}.\nNo defined method for model: {}, '.format(e, message['models'][0]) +
                     'must have name of {}_model'.format(message['models'][0]))
                 self.register_task_failure(message, repo_id, e)
                 break
@@ -291,9 +309,10 @@ class Worker():
                 self.register_task_failure(message, repo_id, e)
                 break
 
-        self.logger.info('Closing database connections\n')
+        self.logger.debug('Closing database connections\n')
         self.db.dispose()
         self.helper_db.dispose()
+        self.logger.info("Collection process finished")
 
     def assign_tuple_action(self, new_data, table_values, update_col_map, duplicate_col_map, table_pkey, value_update_col_map={}):
         """ Include an extra key-value pair on each element of new_data that represents
@@ -540,7 +559,7 @@ class Worker():
             self.logger.info("Found max id for {} column in the {} table: {}\n".format(column, table, max_id))
         else:
             max_id = default
-            self.logger.info('Could not find max id for {} column in the {} table... ' +
+            self.logger.warning('Could not find max id for {} column in the {} table... ' +
                 'using default set to: {}\n'.format(column, table, max_id))
         return max_id
 
@@ -592,7 +611,7 @@ class Worker():
             json.loads(pd.read_sql(oauthSQL, self.helper_db, params={}).to_json(orient="records"))
         for oauth in oauths:
             self.headers = {'Authorization': 'token %s' % oauth['access_token']}
-            self.logger.info("Getting rate limit info for oauth: {}\n".format(oauth))
+            self.logger.debug("Getting rate limit info for oauth: {}\n".format(oauth))
             response = requests.get(url=url, headers=self.headers)
             self.oauths.append({
                     'oauth_id': oauth['oauth_id'],
@@ -600,7 +619,7 @@ class Worker():
                     'rate_limit': int(response.headers['X-RateLimit-Remaining']),
                     'seconds_to_reset': (datetime.datetime.fromtimestamp(int(response.headers['X-RateLimit-Reset'])) - datetime.datetime.now()).total_seconds()
                 })
-            self.logger.info("Found OAuth available for use: {}\n\n".format(self.oauths[-1]))
+            self.logger.debug("Found OAuth available for use: {}\n\n".format(self.oauths[-1]))
 
         if len(self.oauths) == 0:
             self.logger.info("No API keys detected, please include one in your config or in the worker_oauths table in the augur_operations schema of your database\n")
@@ -608,6 +627,7 @@ class Worker():
         # First key to be used will be the one specified in the config (first element in 
         #   self.oauths array will always be the key in use)
         self.headers = {'Authorization': 'token %s' % self.oauths[0]['access_token']}
+        self.logger.info("OAuth initialized")
 
     def paginate(self, url, duplicate_col_map, update_col_map, table, table_pkey, where_clause="", value_update_col_map={}):
         """ Paginate either backwards or forwards (depending on the value of the worker's 
@@ -673,7 +693,7 @@ class Worker():
                 elif type(j) == dict:
                     self.logger.info("Request returned a dict: {}\n".format(j))
                     if j['message'] == 'Not Found':
-                        self.logger.info("Github repo was not found or does not exist for endpoint: {}\n".format(url))
+                        self.logger.warning("Github repo was not found or does not exist for endpoint: {}\n".format(url))
                         break
                     if j['message'] == 'You have triggered an abuse detection mechanism. Please wait a few minutes before you try again.':
                         num_attempts -= 1
@@ -685,7 +705,7 @@ class Worker():
                     if '<!DOCTYPE html>' in j:
                         self.logger.info('HTML was returned, trying again...\n')
                     elif len(j) == 0:
-                        self.logger.info('Empty string, trying again...\n')
+                        self.logger.warning('Empty string, trying again...\n')
                     else:
                         try:
                             j = json.loads(j)
@@ -716,13 +736,13 @@ class Worker():
             # Checking contents of requests with what we already have in the db
             j = self.assign_tuple_action(j, table_values, update_col_map, duplicate_col_map, table_pkey, value_update_col_map)
             if not j:
-                self.logger.info("Assigning tuple action failed, moving to next page.\n")
+                self.logger.error("Assigning tuple action failed, moving to next page.\n")
                 i = i + 1 if self.finishing_task else i - 1
                 continue
             try:
                 to_add = [obj for obj in j if obj not in tuples and obj['flag'] != 'none']
             except Exception as e:
-                self.logger.info("Failure accessing data of page: {}. Moving to next page.\n".format(e))
+                self.logger.error("Failure accessing data of page: {}. Moving to next page.\n".format(e))
                 i = i + 1 if self.finishing_task else i - 1
                 continue
             if len(to_add) == 0 and multiple_pages and 'last' in r.links:
@@ -840,8 +860,8 @@ class Worker():
                     self.cntrb_id_inc = int(result.inserted_primary_key[0])
 
             except Exception as e:
-                self.logger.info("Caught exception: {}".format(e))
-                self.logger.info("Cascading Contributor Anomalie from missing repo contributor data: {} ...\n".format(cntrb_url))
+                self.logger.error("Caught exception: {}".format(e))
+                self.logger.error("Cascading Contributor Anomalie from missing repo contributor data: {} ...\n".format(cntrb_url))
                 continue
 
     def record_model_process(self, repo_id, model):
@@ -918,13 +938,13 @@ class Worker():
 
     def register_task_failure(self, task, repo_id, e):
 
-        self.logger.info("Worker ran into an error for task: {}\n".format(task))
-        self.logger.info("Printing traceback...\n")
+        self.logger.error("Worker ran into an error for task: {}\n".format(task))
+        self.logger.error("Printing traceback...\n")
         tb = traceback.format_exc()
-        self.logger.info(tb)
+        self.logger.error(tb)
 
-        self.logger.info(f'This task inserted {self.results_counter} tuples before failure.\n')
-        self.logger.info("Notifying broker and logging task failure in database...\n")
+        self.logger.error(f'This task inserted {self.results_counter} tuples before failure.\n')
+        self.logger.error("Notifying broker and logging task failure in database...\n")
         key = 'github_url' if 'github_url' in task['given'] else 'git_url' if 'git_url' in task['given'] else "INVALID_GIVEN"
         url = task['given'][key]
 
@@ -940,8 +960,10 @@ class Worker():
                 self.config['host_broker'],self.config['port_broker']), json=task)
         except requests.exceptions.ConnectionError:
             self.logger.error('Could not send task failure message to the broker\n')
+            self.logger.error(e)
         except Exception:
-            logging.exception('An error occured while informing broker about task failure\n')
+            self.logger.error('An error occured while informing broker about task failure\n')
+            self.logger.error(e)
 
         # Add to history table
         task_history = {
@@ -955,7 +977,7 @@ class Worker():
         }
         self.helper_db.execute(self.worker_history_table.update().where(self.worker_history_table.c.history_id==self.history_id).values(task_history))
 
-        self.logger.info("Recorded job error in the history table for: " + str(task) + "\n")
+        self.logger.error("Recorded job error in the history table for: " + str(task) + "\n")
 
         # Update job process table
         updated_job = {
@@ -994,11 +1016,11 @@ class Worker():
         # Try to get rate limit from request headers, sometimes it does not work (GH's issue)
         #   In that case we just decrement from last recieved header count
         if bad_credentials and len(self.oauths) > 1:
-            self.logger.info("Removing oauth with bad credentials from consideration: {}".format(self.oauths[0]))
+            self.logger.warning("Removing oauth with bad credentials from consideration: {}".format(self.oauths[0]))
             del self.oauths[0]
 
         if temporarily_disable:
-            self.logger.info("Github thinks we are abusing their api. Preventing use of this key until it resets...\n")
+            self.logger.debug("Github thinks we are abusing their api. Preventing use of this key until it resets...\n")
             self.oauths[0]['rate_limit'] = 0
         else:
             try:
@@ -1013,7 +1035,7 @@ class Worker():
             try:
                 reset_time = response.headers['X-RateLimit-Reset']
             except Exception as e:
-                self.logger.info("Could not get reset time from headers because of error: {}".format(error))
+                self.logger.error("Could not get reset time from headers because of error: {}".format(e))
                 reset_time = 3600
             time_diff = datetime.datetime.fromtimestamp(int(reset_time)) - datetime.datetime.now()
             self.logger.info("Rate limit exceeded, checking for other available keys to use.\n")

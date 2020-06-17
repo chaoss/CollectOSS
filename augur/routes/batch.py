@@ -12,7 +12,7 @@ from flask import request, Response
 from augur.util import metric_metadata
 import json
 
-logger = logging.getLogger("augur")
+logger = logging.getLogger(__name__)
 
 def create_routes(server):
 

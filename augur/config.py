@@ -5,6 +5,7 @@ import logging
 ENVVAR_PREFIX = "AUGUR_"
 
 default_config = {
+        "version": 1,
         "Database": {
             "name": "augur",
             "host": "localhost",
@@ -199,7 +200,8 @@ default_config = {
             "host": "0.0.0.0",
             "port": "5000"
         },
-        "Development": {
+        "Logging": {
+            "logs_directory": "logs/",
             "log_level": "INFO",
             "verbose": 0,
             "quiet": 0,
@@ -211,12 +213,14 @@ logger = logging.getLogger(__name__)
 
 class AugurConfig():
     """docstring for AugurConfig"""
-    def __init__(self, root_augur_dir):
+    def __init__(self, root_augur_dir, given_config={}):
         self._default_config_file_name = 'augur.config.json'
         self._root_augur_dir = root_augur_dir
         self._default_config = default_config
         self._env_config = {}
         self.load_config()
+        self.version = self.get_version()
+        self._config.update(given_config)
 
     def get_section(self, section_name):
         try:
@@ -231,6 +235,13 @@ class AugurConfig():
                     raise(e)
             else:
                 logger.debug(f"Already using default config, skipping check for {section_name}")
+
+    def get_version(self):
+        try:
+            return self._config["version"]
+        except KeyError as e:
+            logger.warning("No config version found. Setting version to 0.")
+            return 0
 
     def get_value(self, section_name, value):
         try:
@@ -250,11 +261,13 @@ class AugurConfig():
         self._config = None
         self.using_default_config = False
 
+        logger.info("Attempting to load config file")
         try:
             config_file_path = self.discover_config_file()
             try:
                 with open(config_file_path, 'r+') as config_file_handle:
                     self._config = json.loads(config_file_handle.read())
+                    logger.info("Config file loaded successfully")
             except json.decoder.JSONDecodeError as e:
                 logger.warning("Unable to parse config. Using default configuration")
                 self.using_default_config = True
@@ -282,7 +295,6 @@ class AugurConfig():
                     f.close()
                     break
                 except FileNotFoundError:
-                    logger.debug(f"No config file found at {config_file_path}")
                     pass
         if config_file_path:
             return config_file_path
@@ -296,9 +308,10 @@ class AugurConfig():
         self.set_env_value(section='Database', name='port', environment_variable='AUGUR_DB_PORT')
         self.set_env_value(section='Database', name='user', environment_variable='AUGUR_DB_USER')
         self.set_env_value(section='Database', name='password', environment_variable='AUGUR_DB_PASSWORD')
-        self.set_env_value(section='Development', name='log_level', environment_variable='AUGUR_LOG_LEVEL')
-        self.set_env_value(section='Development', name='verbose', environment_variable='AUGUR_LOG_VERBOSE')
-        self.set_env_value(section='Development', name='quiet', environment_variable='AUGUR_LOG_QUIET')
+        self.set_env_value(section='Logging', name='log_level', environment_variable='AUGUR_LOG_LEVEL')
+        self.set_env_value(section='Logging', name='quiet', environment_variable='AUGUR_LOG_QUIET')
+        self.set_env_value(section='Logging', name='debug', environment_variable='AUGUR_LOG_DEBUG')
+        self.set_env_value(section='Logging', name='verbose', environment_variable='AUGUR_LOG_VERBOSE')
 
     def set_env_value(self, section, name, environment_variable, sub_config=None):
         """
@@ -313,7 +326,7 @@ class AugurConfig():
         if env_value is not None:
             self._env_config[environment_variable] = env_value
             sub_config[section][name] = env_value
-            logger.debug(f"{section}:{name} set to {env_value} from envvar: {environment_variable}")
+            # logger.info(f"{section}:[\"{name}\"] set to {env_value} by: {environment_variable}")
         else:
             self._env_config[environment_variable] = self.get_value(section, name)
 

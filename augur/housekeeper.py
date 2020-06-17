@@ -1,73 +1,85 @@
 """
 Keeps data up to date
 """
-import logging, os, time, requests, logging
-from multiprocessing import Process
+import coloredlogs
+from copy import deepcopy
+import logging, os, time, requests
+import logging.config
+from multiprocessing import Process, get_start_method
 from sqlalchemy.ext.automap import automap_base
 import sqlalchemy as s
 import pandas as pd
 from sqlalchemy import MetaData
-from augur.logging import create_job_logger
+
+from augur.logging import AugurLogging
+
 import warnings
 warnings.filterwarnings('ignore')
 
-logger = logging.getLogger("augur")
+logger = logging.getLogger(__name__)
 
 class Housekeeper:
 
-    def __init__(self, jobs, broker, broker_host, broker_port, user, password, host, port, dbname):
+    def __init__(self, broker, augur_app):
+        logger.info("Booting housekeeper")
 
-        self.broker_host = broker_host
-        self.broker_port = broker_port
+        self._processes = []
+        self.augur_logging = augur_app.logging
+        self.jobs = deepcopy(augur_app.config.get_value("Housekeeper", "jobs"))
+        self.broker_host = augur_app.config.get_value("Server", "host")
+        self.broker_port = augur_app.config.get_value("Server", "port")
         self.broker = broker
-        DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(
-            user, password, host, port, dbname
-        )
 
-        dbschema = 'augur_data'
-        self.db = s.create_engine(DB_STR, poolclass=s.pool.NullPool,
-            connect_args={'options': '-csearch_path={}'.format(dbschema)})
-
-        helper_schema = 'augur_operations'
-        self.helper_db = s.create_engine(DB_STR, poolclass=s.pool.NullPool,
-            connect_args={'options': '-csearch_path={}'.format(helper_schema)})
+        self.db = augur_app.database
+        self.helper_db = augur_app.operations_database
 
         helper_metadata = MetaData()
         helper_metadata.reflect(self.helper_db, only=['worker_job'])
         HelperBase = automap_base(metadata=helper_metadata)
         HelperBase.prepare()
-
         self.job_table = HelperBase.classes.worker_job.__table__
 
         repoUrlSQL = s.sql.text("""
             SELECT repo_git FROM repo
         """)
-
         rs = pd.read_sql(repoUrlSQL, self.db, params={})
-
         all_repos = rs['repo_git'].values.tolist()
 
         # List of tasks that need periodic updates
-        self.__updatable = self.prep_jobs(jobs)
+        self.schedule_updates()
 
-        self.__processes = []
-        self.__updater()
+    def schedule_updates(self):
+        """
+        Starts update processes
+        """
+        self.prep_jobs()
+        self.augur_logging.initialize_housekeeper_logging_listener()
+        logger.info("Scheduling update processes")
+        for job in self.jobs:
+            process = Process(target=self.updater_process, name=job["model"], args=(self.broker_host, self.broker_port, self.broker, job, (self.augur_logging.housekeeper_job_config, self.augur_logging.get_config())))
+            self._processes.append(process)
+            process.start()
+
 
     @staticmethod
-    def updater_process(broker_host, broker_port, broker, job):
+    def updater_process(broker_host, broker_port, broker, job, logging_config):
         """
         Controls a given plugin's update process
-        :param name: name of object to be updated 
-        :param delay: time needed to update
-        :param shared: shared object that is to also be updated
+
         """
-        logger = create_job_logger(job["model"])
+        logging.config.dictConfig(logging_config[0])
+        logger = logging.getLogger(f"augur.jobs.{job['model']}")
+        coloredlogs.install(level=logging_config[1]["log_level"], logger=logger, fmt=logging_config[1]["format_string"])
+
+        if logging_config[1]["quiet"]:
+            logger.disabled
+
         if 'repo_group_id' in job:
             repo_group_id = job['repo_group_id']
-            logger.info('Housekeeper spawned {} model updater process for repo group id {} with PID {}\n'.format(job['model'], repo_group_id, os.getpid()))
+            logger.info('Housekeeper spawned {} model updater process for repo group id {}'.format(job['model'], repo_group_id))
         else:
             repo_group_id = None
-            logger.info('Housekeeper spawned {} model updater process for repo ids {} with PID {}\n'.format(job['model'], job['repo_ids'], os.getpid()))
+            logger.info('Housekeeper spawned {} model updater process for repo ids {}'.format(job['model'], job['repo_ids']))
 
         try:
             compatible_worker_found = False
@@ -81,9 +93,9 @@ class Housekeeper:
                     continue
 
                 logger.info("Housekeeper recognized that the broker has a worker that " + 
-                    "can handle the {} model... beginning to distribute maintained tasks\n".format(job['model']))
+                    "can handle the {} model... beginning to distribute maintained tasks".format(job['model']))
                 while True:
-                    logger.info('Housekeeper updating {} model with given {}...\n'.format(
+                    logger.info('Housekeeper updating {} model with given {}...'.format(
                         job['model'], job['given'][0]))
                     
                     if job['given'][0] == 'git_url' or job['given'][0] == 'github_url':
@@ -104,9 +116,9 @@ class Housekeeper:
                                 requests.post('http://{}:{}/api/unstable/task'.format(
                                     broker_host,broker_port), json=task, timeout=10)
                             except Exception as e:
-                                logger.info("Error encountered: {}\n".format(e))
+                                logger.error("Error encountered: {}".format(e))
 
-                            logger.info(task)
+                            logger.debug(task)
 
                             time.sleep(15)
 
@@ -123,61 +135,33 @@ class Housekeeper:
                             requests.post('http://{}:{}/api/unstable/task'.format(
                                 broker_host,broker_port), json=task, timeout=10)
                         except Exception as e:
-                            logger.info("Error encountered: {}\n".format(e))
+                            logger.error("Error encountered: {}".format(e))
 
-                    logger.info("Housekeeper finished sending {} tasks to the broker for it to distribute to your worker(s)\n".format(len(job['repos'])))
+                    logger.info("Housekeeper finished sending {} tasks to the broker for it to distribute to your worker(s)".format(len(job['repos'])))
                     time.sleep(job['delay'])
-                
-        except KeyboardInterrupt:
-            os.kill(os.getpid(), 9)
-            os._exit(0)
-        except:
-            raise
 
-    def __updater(self, jobs=None):
-        """
-        Starts update processes
-        """
-        logger.info("Starting update processes...")
-        if jobs is None:
-            jobs = self.__updatable
-        for job in jobs:
-            up = Process(target=self.updater_process, args=(self.broker_host, self.broker_port, self.broker, job), daemon=True)
-            up.start()
-            self.__processes.append(up)
-
-    def update_all(self):
-        """
-        Updates all plugins
-        """
-        for updatable in self.__updatable:
-            updatable['update']()
-
-    def schedule_updates(self):
-        """
-        Schedules updates
-        """
-        # don't use this, 
-        logger.debug('Scheduling updates...')
-        self.__updater()
+        except KeyboardInterrupt as e:
+            pass
 
     def join_updates(self):
         """
         Join to the update processes
         """
-        for process in self.__processes:
+        for process in self._processes:
+            logger.debug(f"Joining {process.name} update process")
             process.join()
 
     def shutdown_updates(self):
         """
         Ends all running update processes
         """
-        for process in self.__processes:
+        for process in self._processes:
+            # logger.debug(f"Terminating {process.name} update process")
             process.terminate()
 
-    def prep_jobs(self, jobs):
-
-        for job in jobs:
+    def prep_jobs(self):
+        logger.info("Preparing housekeeper jobs")
+        for job in self.jobs:
             if 'repo_group_id' in job or 'repo_ids' in job:
                 # If RG id is 0 then it just means to query all repos
                 where_and = 'AND' if job['model'] == 'issues' and 'repo_group_id' in job else 'WHERE'
@@ -273,7 +257,7 @@ class Housekeeper:
                 
                 reorganized_repos = pd.read_sql(repo_url_sql, self.db, params={})
                 if len(reorganized_repos) == 0:
-                    logger.info("Trying to send tasks for repo group, but the repo group does not contain any repos: {}".format(repo_url_sql))
+                    logger.warning("Trying to send tasks for repo group, but the repo group does not contain any repos: {}".format(repo_url_sql))
                     job['repos'] = []
                     continue
 
@@ -294,7 +278,7 @@ class Housekeeper:
                             'oauth_id': 0
                         }
                         result = self.helper_db.execute(self.job_table.insert().values(job_tuple))
-                        logger.info("No job tuple for {} model was found, so one was inserted into the job table: {}".format(job['model'], job_tuple))
+                        logger.debug("No job tuple for {} model was found, so one was inserted into the job table: {}".format(job['model'], job_tuple))
 
                     # If a last id is not recorded, start from beginning of repos 
                     #   (first id is not necessarily 0)
@@ -350,6 +334,4 @@ class Housekeeper:
 
                 job['repos'] = rs
             # time.sleep(120)
-
-        return jobs
 
