@@ -349,8 +349,14 @@ class Worker():
                     'Moving to next tuple.\n')
                 continue
 
-            existing_tuple = table_values[table_values[db_dupe_key].isin(
+            try:
+                existing_tuple = table_values[table_values[db_dupe_key].isin(
                     [obj[duplicate_col_map[db_dupe_key]]])].to_dict('records')[0]
+            except Exception as e:
+                self.logger.info('Special case assign_tuple_action error')
+                self.logger.info(f'Error: {e}')
+                self.logger.info(f'Related vars: {table_values}, ' +
+                    f'{table_values[db_dupe_key].isin([obj[duplicate_col_map[db_dupe_key]]])}')
 
             # If we need to check the values of the existing tuple to determine if an update is needed
             for augur_col, value_check in value_update_col_map.items():
@@ -383,7 +389,8 @@ class Worker():
         return new_data
 
     def check_duplicates(self, new_data, table_values, key):
-        """ Filters what items of the new_data json are not present in the table_values df 
+        """ Filters what items of the new_data json (list of dictionaries) that are not 
+        present in the table_values df 
             
         :param new_data: List of dictionaries, new data to filter duplicates out of
         :param table_values: Pandas DataFrame, existing data to check what data is already
@@ -426,7 +433,7 @@ class Worker():
             they get inserted.
 
         :param login: String, the GitHub login username to find the primary key id for
-        :return: Integer, the id of the row with the matching GitHub login
+        :return: Integer, the id of the row in our database with the matching GitHub login
         """
         idSQL = s.sql.text("""
             SELECT cntrb_id FROM contributors WHERE cntrb_login = '{}'
