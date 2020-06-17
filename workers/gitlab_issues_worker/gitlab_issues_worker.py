@@ -154,6 +154,37 @@ class GitLabIssuesWorker(Worker):
                     self.logger.info("When inserting an issue, ran into the following error: {}\n".format(e))
                     self.logger.info(issue)
                 # continue
+        
+        # issue_assigness
+            self.logger.info("assignees", issue_dict['assignees'])
+            collected_assignees = issue_dict['assignees']
+            if issue_dict['assignee'] not in collected_assignees:
+                collected_assignees.append(issue_dict['assignee'])
+            if collected_assignees[0] is not None:
+                self.logger.info("Count of assignees to insert for this issue: " + str(len(collected_assignees)) + "\n")
+                for assignee_dict in collected_assignees:
+                    if type(assignee_dict) != dict:
+                        continue
+                    assignee = {
+                        "issue_id": self.issue_id_inc,
+                        "cntrb_id": self.find_id_from_login(assignee_dict['username'], platform='gitlab'),
+                        "tool_source": self.tool_source,
+                        "tool_version": self.tool_version,
+                        "data_source": self.data_source,
+                        "issue_assignee_src_id": assignee_dict['id'],
+                        "issue_assignee_src_node": None
+                    }
+                    self.logger.info("assignee info", assignee)
+                    # Commit insertion to the assignee table
+                    result = self.db.execute(self.issue_assignees_table.insert().values(assignee))
+                    self.logger.info("Primary key inserted to the issues_assignees table: " + str(result.inserted_primary_key))
+                    self.results_counter += 1
+
+                    self.logger.info("Inserted assignee for issue id: " + str(self.issue_id_inc) + 
+                        " with login/cntrb_id: " + assignee_dict['username'] + " " + str(assignee['cntrb_id']) + "\n")
+            else:
+                self.logger.info("Issue does not have any assignees\n")
+
         # Register this task as completed.
         #   This is a method of the worker class that is required to be called upon completion
         #   of any data collection model, this lets the broker know that this worker is ready
