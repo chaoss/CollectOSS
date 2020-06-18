@@ -15,7 +15,7 @@ class GitHubWorker(Worker):
     """
     def __init__(self, config={}):
 
-        worker_type = "github_worker"
+        worker_type = 'github_worker'
 
         given = [['github_url']]
         models = ['issues']
@@ -84,7 +84,7 @@ class GitHubWorker(Worker):
         #list to hold issues needing insertion
         issues = self.paginate(issues_url, duplicate_col_map, update_col_map, table, table_pkey, 
             'WHERE repo_id = {}'.format(repo_id))
-
+        self.logger.info(issues)
         # Discover and remove duplicates before we start inserting
         self.logger.info("Count of issues needing update or insertion: " + str(len(issues)) + "\n")
 
@@ -97,7 +97,7 @@ class GitHubWorker(Worker):
             # Figure out if this issue is a PR
             #   still unsure about this key value pair/what it means
             pr_id = None
-            if "pull_request" in issue_dict:
+            if 'pull_request' in issue_dict:
                 self.logger.info("Issue is a PR\n")
                 # Right now we are just storing our issue id as the PR id if it is one
                 pr_id = self.issue_id_inc

@@ -13,6 +13,8 @@ from augur.cli import initialize_logging
 from augur.logging import ROOT_AUGUR_DIRECTORY
 
 logger = logging.getLogger(__name__)
+ENVVAR_PREFIX = "AUGUR_"
+
 
 @click.group('configure', short_help='Generate an augur.config.json')
 def cli():
