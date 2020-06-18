@@ -34,7 +34,11 @@ def cli(disable_housekeeper, skip_cleanup):
 
     master = initialize_components(augur_app, disable_housekeeper)
     logger.info('Starting Gunicorn server in the background...')
-    logger.info('Housekeeper update process logs will now take over.')
+    if not disable_housekeeper:
+        logger.info('Housekeeper update process logs will now take over.')
+    else:
+        logger.info("Gunicorn server logs will be written to gunicorn.log")
+        logger.info("Augur is still running...don't close this process!")
     Arbiter(master).run()
 
 def initialize_components(augur_app, disable_housekeeper):
@@ -60,7 +64,7 @@ def initialize_components(augur_app, disable_housekeeper):
             if controller[worker]['switch']:
                 for i in range(controller[worker]['workers']):
                     logger.info("Booting {} #{}".format(worker, i + 1))
-                    worker_process = mp.Process(target=worker_start, kwargs={'worker_name': worker, 'instance_number': i, 'worker_port': controller[worker]['port']}, daemon=True)
+                    worker_process = mp.Process(target=worker_start, name=f"{worker}_{i}", kwargs={'worker_name': worker, 'instance_number': i, 'worker_port': controller[worker]['port']}, daemon=True)
                     worker_processes.append(worker_process)
                     worker_process.start()
 
@@ -97,6 +101,7 @@ def exit(augur_app, worker_processes, master):
             master = None
 
         logger.info("Shutdown complete")
+        sys.exit(0)
 
 class AugurGunicornApp(gunicorn.app.base.BaseApplication):
     """
