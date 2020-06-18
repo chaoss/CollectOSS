@@ -28,7 +28,7 @@ class GitHubWorker(Worker):
 
         # These 3 are included in every tuple the worker inserts (data collection info)
         self.tool_source = 'GitHub API Worker'
-        self.tool_version = '0.0.3' # See __init__.py
+        self.tool_version = '1.0.0'
         self.data_source = 'GitHub API'
 
         self.finishing_task = True # if we are finishing a previous task, pagination works differenty

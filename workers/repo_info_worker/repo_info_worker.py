@@ -31,7 +31,7 @@ class RepoInfoWorker(Worker):
 
         # Define data collection info
         self.tool_source = 'Repo Info Worker'
-        self.tool_version = '0.0.1'
+        self.tool_version = '1.0.0'
         self.data_source = 'GitHub API'
 
     def repo_info_model(self, task, repo_id):
