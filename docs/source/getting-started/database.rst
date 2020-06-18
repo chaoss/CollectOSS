@@ -1,4 +1,4 @@
-Database Setup
+Database setup
 ===============
 
 One of the reasons that Augur is so powerful is because of its `unified data model <../schema/data-model.html>`_.

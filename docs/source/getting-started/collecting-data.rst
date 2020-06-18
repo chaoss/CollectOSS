@@ -1,4 +1,4 @@
-Collecting Data
+Collecting data
 ===============
 
 Now that you've installed Augur's application server, it's time to configure your data collection workers.

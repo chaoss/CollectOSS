@@ -1,5 +1,5 @@
-Documentation
-==============
+Writing documentation
+======================
 
 Currently, we maintain a set of library and usage documentation (which is what you are reading!) that
 we update with each release. The following sections briefly outline how to contribute to our documentation.
