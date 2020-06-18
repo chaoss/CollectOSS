@@ -261,13 +261,13 @@ class AugurConfig():
         self._config = None
         self.using_default_config = False
 
-        logger.info("Attempting to load config file")
+        logger.debug("Attempting to load config file")
         try:
             config_file_path = self.discover_config_file()
             try:
                 with open(config_file_path, 'r+') as config_file_handle:
                     self._config = json.loads(config_file_handle.read())
-                    logger.info("Config file loaded successfully")
+                    logger.debug("Config file loaded successfully")
             except json.decoder.JSONDecodeError as e:
                 logger.warning("Unable to parse config. Using default configuration")
                 self.using_default_config = True

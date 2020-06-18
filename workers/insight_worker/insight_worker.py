@@ -41,7 +41,7 @@ class InsightWorker(Worker):
 
         # These 3 are included in every tuple the worker inserts (data collection info)
         self.tool_source = 'Insight Worker'
-        self.tool_version = '0.0.3' # See __init__.py
+        self.tool_version = '1.0.0'
         self.data_source = 'Augur API'
 
         self.refresh = True

@@ -2,9 +2,9 @@
 Command Line Interface
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-Augur provides a command line interface (CLI) for interacting with the system. It's broken up into 4 categories: ``db``, ``run``, ``util``, and ``configure``.
+Augur provides a command line interface (CLI) for interacting with your Augur installation. It's broken up into a few categories: ``db``, ``run``, ``util``, ``configure``, and ``logging``.
 
-Each command is invoked by first specifying the category, then the command name, and then the parameters/options; e.g. the ``list`` command under ``augur util`` would be invoked as ``augur util list --option1 ...``. ``run`` only has a single command, so it is invoked as ``augur run``.
+Each command is invoked by first specifying the category, then the command name, and then the parameters/options; e.g. the ``list`` command under ``augur util`` would be invoked as ``augur util list --option1 ...``. The only exception is ``run``; it only has a single command, so it is invoked as ``augur run``.
 
 .. note::
 
@@ -17,3 +17,4 @@ Each command is invoked by first specifying the category, then the command name,
    run
    util
    configure
+   logging

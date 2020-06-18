@@ -21,7 +21,7 @@ class AugurLogging():
     verbose_format_string = "%(asctime)s,%(msecs)dms [PID: %(process)d] %(name)s [%(levelname)s] %(message)s"
     cli_format_string = "CLI: [%(module)s.%(funcName)s] [%(levelname)s] %(message)s"
     config_format_string = "[%(levelname)s] %(message)s"
-    error_format_string = "%(asctime)s [PID: %(process)d] %(name)s [%(funcName)s() in %(filename)s:L%(lineno)d] %(levelname)s: %(message)s"
+    error_format_string = "%(asctime)s [PID: %(process)d] %(name)s [%(funcName)s() in %(filename)s:L%(lineno)d] [%(levelname)s]: %(message)s"
 
     @staticmethod
     def get_log_directories(augur_config, reset_logfiles=True):
@@ -243,7 +243,7 @@ class AugurLogging():
             }
 
             stop_event = Event()
-            self.lp = Process(target=logging_listener_process, name='listener',
+            self.lp = Process(target=logging_listener_process, name='housekeeper_logging_listener',
                  args=(queue, stop_event, self.logfile_config))
             self.lp.start()
             sleep(2) # just to let it fully start up

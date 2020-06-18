@@ -26,3 +26,9 @@ def pass_logs_dir(f):
         ctx.obj = AugurLogging.get_log_directories(config, reset_logfiles=False)
         return ctx.invoke(f, ctx.obj, *args, **kwargs)
     return update_wrapper(new_func, f)
+
+def initialize_logging(f):
+    def new_func(*args, **kwargs):
+        AugurLogging(reset_logfiles=False)
+        return f(*args, **kwargs)
+    return update_wrapper(new_func, f)

@@ -27,7 +27,7 @@ class ReleaseWorker(Worker):
 
         # Define data collection info
         self.tool_source = 'Release Worker'
-        self.tool_version = '0.0.1'
+        self.tool_version = '1.0.0'
         self.data_source = 'GitHub API'
 
     def releases_model(self, task, repo_id):

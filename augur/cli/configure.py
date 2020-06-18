@@ -9,7 +9,7 @@ import json
 import logging
 
 from augur.config import default_config, ENVVAR_PREFIX
-from augur.cli import pass_config
+from augur.cli import initialize_logging
 from augur.logging import ROOT_AUGUR_DIRECTORY
 
 logger = logging.getLogger(__name__)
@@ -30,8 +30,8 @@ def cli():
 @click.option('--facade_repo_directory', help="Directory on the database server where Facade should clone repos", envvar=ENVVAR_PREFIX + 'FACADE_REPO_DIRECTORY')
 @click.option('--rc-config-file', help="File containing existing config whose values will be used as the defaults", type=click.Path(exists=True))
 @click.option('--gitlab_api_key', help="GitLab API key for data collection from the GitLab API", envvar=ENVVAR_PREFIX + 'GITLAB_API_KEY')
-@pass_config
-def generate(augur_config, db_name, db_host, db_user, db_port, db_password, github_api_key, facade_repo_directory, rc_config_file, gitlab_api_key):
+@initialize_logging
+def generate(db_name, db_host, db_user, db_port, db_password, github_api_key, facade_repo_directory, rc_config_file, gitlab_api_key):
     """
     Generate an augur.config.json
     """
