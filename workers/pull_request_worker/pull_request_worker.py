@@ -34,7 +34,7 @@ class GitHubPullRequestWorker(Worker):
 
         # Define data collection info
         self.tool_source = 'GitHub Pull Request Worker'
-        self.tool_version = '0.0.1' # See __init__.py
+        self.tool_version = '1.0.0'
         self.data_source = 'GitHub API'
      
     def graphql_paginate(self, query, data_subjects, before_parameters=None):

@@ -446,8 +446,20 @@ class Worker():
         if not connected:
             sys.exit('Could not connect to the broker after 5 attempts! Quitting...\n')
 
-    def find_id_from_login(self, login):
-        """ Retrieves our contributor table primary key value for the contributor with
+    def dump_queue(queue):
+        """
+        Empties all pending items in a queue and returns them in a list.
+        """
+        result = []
+        queue.put("STOP")
+        for i in iter(queue.get, 'STOP'):
+            result.append(i)
+        # time.sleep(.1)
+        return result
+
+    def find_id_from_login(self, login, platform='github'):
+        """ 
+        Retrieves our contributor table primary key value for the contributor with
             the given GitHub login credentials, if this contributor is not there, then 
             they get inserted.
 
@@ -455,8 +467,12 @@ class Worker():
         :return: Integer, the id of the row in our database with the matching GitHub login
         """
         idSQL = s.sql.text("""
-            SELECT cntrb_id FROM contributors WHERE cntrb_login = '{}'
-        """.format(login))
+            SELECT cntrb_id FROM contributors WHERE cntrb_login = '{}' \
+            AND LOWER(data_source) = '{} api'
+            """.format(login, platform))
+        
+        self.logger.info(idSQL)
+        
         rs = pd.read_sql(idSQL, self.db, params={})
         data_list = [list(row) for row in rs.itertuples(index=False)]
         try:
@@ -464,12 +480,16 @@ class Worker():
         except:
             self.logger.info('contributor needs to be added...')
 
-        cntrb_url = ('https://api.github.com/users/' + login)
-        self.logger.info('Hitting endpoint: {} ...\n'.format(cntrb_url))
+        if platform == 'github':
+            cntrb_url = ("https://api.github.com/users/" + login)
+        elif platform == 'gitlab':
+            cntrb_url = ("https://gitlab.com/api/v4/users?username=" + login )
+        self.logger.info("Hitting endpoint: {} ...\n".format(cntrb_url))
         r = requests.get(url=cntrb_url, headers=self.headers)
-        self.update_gh_rate_limit(r)
+        self.update_rate_limit(r)
         contributor = r.json()
 
+        
         company = None
         location = None
         email = None
@@ -480,43 +500,75 @@ class Worker():
         if 'email' in contributor:
             email = contributor['email']
 
-        cntrb = {
-            'cntrb_login': contributor['login'] if 'login' in contributor else None,
-            'cntrb_email': email,
-            'cntrb_company': company,
-            'cntrb_location': location,
-            'cntrb_created_at': contributor['created_at'] if 'created_at' in contributor else None,                
-            'cntrb_canonical': None,
-            'gh_user_id': contributor['id'],
-            'gh_login': contributor['login'],
-            'gh_url': contributor['url'],
-            'gh_html_url': contributor['html_url'],
-            'gh_node_id': contributor['node_id'],
-            'gh_avatar_url': contributor['avatar_url'],
-            'gh_gravatar_id': contributor['gravatar_id'],
-            'gh_followers_url': contributor['followers_url'],
-            'gh_following_url': contributor['following_url'],
-            'gh_gists_url': contributor['gists_url'],
-            'gh_starred_url': contributor['starred_url'],
-            'gh_subscriptions_url': contributor['subscriptions_url'],
-            'gh_organizations_url': contributor['organizations_url'],
-            'gh_repos_url': contributor['repos_url'],
-            'gh_events_url': contributor['events_url'],
-            'gh_received_events_url': contributor['received_events_url'],
-            'gh_type': contributor['type'],
-            'gh_site_admin': contributor['site_admin'],
-            'tool_source': self.tool_source,
-            'tool_version': self.tool_version,
-            'data_source': self.data_source
-        }
+        if platform == 'github':
+            cntrb = {
+                "cntrb_login": contributor['login'] if 'login' in contributor else None,
+                "cntrb_email": email,
+                "cntrb_company": company,
+                "cntrb_location": location,
+                "cntrb_created_at": contributor['created_at'] if 'created_at' in contributor else None,                
+                "cntrb_canonical": None,
+                "gh_user_id": contributor['id'],
+                "gh_login": contributor['login'],
+                "gh_url": contributor['url'],
+                "gh_html_url": contributor['html_url'],
+                "gh_node_id": contributor['node_id'],
+                "gh_avatar_url": contributor['avatar_url'],
+                "gh_gravatar_id": contributor['gravatar_id'],
+                "gh_followers_url": contributor['followers_url'],
+                "gh_following_url": contributor['following_url'],
+                "gh_gists_url": contributor['gists_url'],
+                "gh_starred_url": contributor['starred_url'],
+                "gh_subscriptions_url": contributor['subscriptions_url'],
+                "gh_organizations_url": contributor['organizations_url'],
+                "gh_repos_url": contributor['repos_url'],
+                "gh_events_url": contributor['events_url'],
+                "gh_received_events_url": contributor['received_events_url'],
+                "gh_type": contributor['type'],
+                "gh_site_admin": contributor['site_admin'],
+                "tool_source": self.tool_source,
+                "tool_version": self.tool_version,
+                "data_source": self.data_source
+            }
+        
+        elif platform == 'gitlab':
+            cntrb =  {
+                "cntrb_login": contributor[0]['username'] if 'username' in contributor[0] else None,
+                "cntrb_email": email,
+                "cntrb_company": company,
+                "cntrb_location": location,
+                "cntrb_created_at": contributor[0]['created_at'] if 'created_at' in contributor[0] else None,                
+                "cntrb_canonical": None,
+                "gh_user_id": contributor[0]['id'],
+                "gh_login": contributor[0]['username'],
+                "gh_url": contributor[0]['web_url'],
+                "gh_html_url": None,
+                "gh_node_id": None,
+                "gh_avatar_url": contributor[0]['avatar_url'],
+                "gh_gravatar_id": None,
+                "gh_followers_url": None,
+                "gh_following_url": None,
+                "gh_gists_url": None,
+                "gh_starred_url": None,
+                "gh_subscriptions_url": None,
+                "gh_organizations_url": None,
+                "gh_repos_url": None,
+                "gh_events_url": None,
+                "gh_received_events_url": None,
+                "gh_type": None,
+                "gh_site_admin": None,
+                "tool_source": self.tool_source,
+                "tool_version": self.tool_version,
+                "data_source": self.data_source
+            }
         result = self.db.execute(self.contributors_table.insert().values(cntrb))
         self.logger.info("Primary key inserted into the contributors table: " + str(result.inserted_primary_key))
         self.results_counter += 1
         self.cntrb_id_inc = int(result.inserted_primary_key[0])
 
-        self.logger.info("Inserted contributor: " + contributor['login'] + "\n")
+        self.logger.info("Inserted contributor: " + contributor[0]['username'] + "\n")
         
-        return self.find_id_from_login(login)
+        return self.find_id_from_login(login, platform)
 
     def get_owner_repo(self, git_url):
         """ Gets the owner and repository names of a repository from a git url 
@@ -629,7 +681,7 @@ class Worker():
         self.headers = {'Authorization': 'token %s' % self.oauths[0]['access_token']}
         self.logger.info("OAuth initialized")
 
-    def paginate(self, url, duplicate_col_map, update_col_map, table, table_pkey, where_clause="", value_update_col_map={}):
+    def paginate(self, url, duplicate_col_map, update_col_map, table, table_pkey, where_clause="", value_update_col_map={}, platform="github"):
         """ Paginate either backwards or forwards (depending on the value of the worker's 
             finishing_task attribute) through all the GitHub or GitLab api endpoint pages.
 
@@ -679,8 +731,15 @@ class Worker():
             while num_attempts < 3:
                 self.logger.info(f'Hitting endpoint: {url.format(i)}...\n')
                 r = requests.get(url=url.format(i), headers=self.headers)
-                self.update_gh_rate_limit(r)
-                self.logger.info("Analyzing page {} of {}\n".format(i, int(r.links['last']['url'][-6:].split('=')[1]) + 1 if 'last' in r.links else '*last page not known*'))
+                self.update_rate_limit(r, platform=platform)
+                if 'last' not in r.links:
+                    last_page = None
+                else:
+                    if platform == "github":
+                        last_page = r.links['last']['url'][-6:].split('=')[1]
+                    elif platform == "gitlab":
+                        last_page =  r.links['last']['url'].split('&')[2].split("=")[1]
+                    self.logger.info("Analyzing page {} of {}\n".format(i, int(last_page) + 1 if last_page is not None else '*last page not known*'))
 
                 try:
                     j = r.json()
@@ -697,9 +756,11 @@ class Worker():
                         break
                     if j['message'] == 'You have triggered an abuse detection mechanism. Please wait a few minutes before you try again.':
                         num_attempts -= 1
-                        self.update_gh_rate_limit(r, temporarily_disable=True)
+                        self.logger.info("rate limit update code goes here")
+                        self.update_rate_limit(r, temporarily_disable=True,platform=platform)
                     if j['message'] == 'Bad credentials':
-                        self.update_gh_rate_limit(r, bad_credentials=True)
+                        self.logger.info("rate limit update code goes here")
+                        self.update_rate_limit(r, bad_credentials=True, platform=platform)
                 elif type(j) == str:
                     self.logger.info(f'J was string: {j}\n')
                     if '<!DOCTYPE html>' in j:
@@ -719,8 +780,11 @@ class Worker():
 
             # Find last page so we can decrement from there
             if 'last' in r.links and not multiple_pages and not self.finishing_task:
-                param = r.links['last']['url'][-6:]
-                i = int(param.split('=')[1]) + 1
+                if platform == "github":
+                    param = r.links['last']['url'][-6:]
+                    i = int(param.split('=')[1]) + 1
+                elif platform == "gitlab":
+                    i =  int(r.links['last']['url'].split('&')[2].split("=")[1])
                 self.logger.info("Multiple pages of request, last page is " + str(i - 1) + "\n")
                 multiple_pages = True
             elif not multiple_pages and not self.finishing_task:
@@ -747,7 +811,11 @@ class Worker():
                 continue
             if len(to_add) == 0 and multiple_pages and 'last' in r.links:
                 self.logger.info("{}".format(r.links['last']))
-                if i - 1 != int(r.links['last']['url'][-6:].split('=')[1]):
+                if platform == "github":
+                    page_number = int(r.links['last']['url'][-6:].split('=')[1])
+                elif platform == "gitlab":
+                    page_number = int(r.links['last']['url'].split('&')[2].split("=")[1])
+                if i - 1 != page_number:
                     self.logger.info("No more pages with unknown tuples, breaking from pagination.\n")
                     break
             tuples += to_add
@@ -1010,7 +1078,69 @@ class Worker():
             SELECT * FROM {} WHERE {}
             """.format(table_str, where_str))
         values = json.loads(pd.read_sql(retrieveTupleSQL, self.db, params={}).to_json(orient="records"))
-        return values  
+        return values
+
+    def update_gitlab_rate_limit(self, response, bad_credentials=False, temporarily_disable=False):
+        # Try to get rate limit from request headers, sometimes it does not work (GH's issue)
+        #   In that case we just decrement from last recieved header count
+        if bad_credentials and len(self.oauths) > 1:
+            self.logger.info("Removing oauth with bad credentials from consideration: {}".format(self.oauths[0]))
+            del self.oauths[0]
+
+        if temporarily_disable:
+            self.logger.info("Gitlab rate limit reached. Temp. disabling...\n")
+            self.oauths[0]['rate_limit'] = 0
+        else:
+            try:
+                self.oauths[0]['rate_limit'] = int(response.headers['RateLimit-Remaining'])
+                self.logger.info("Recieved rate limit from headers\n")
+            except:
+                self.oauths[0]['rate_limit'] -= 1
+                self.logger.info("Headers did not work, had to decrement\n")
+        self.logger.info("Updated rate limit, you have: " + 
+            str(self.oauths[0]['rate_limit']) + " requests remaining.\n")
+        if self.oauths[0]['rate_limit'] <= 0:
+            try:
+                reset_time = response.headers['RateLimit-Reset']
+            except Exception as e:
+                self.logger.info("Could not get reset time from headers because of error: {}".format(error))
+                reset_time = 3600
+            time_diff = datetime.datetime.fromtimestamp(int(reset_time)) - datetime.datetime.now()
+            self.logger.info("Rate limit exceeded, checking for other available keys to use.\n")
+
+            # We will be finding oauth with the highest rate limit left out of our list of oauths
+            new_oauth = self.oauths[0]
+            # Endpoint to hit solely to retrieve rate limit information from headers of the response
+            url = "https://gitlab.com/api/v4/version"
+
+            other_oauths = self.oauths[0:] if len(self.oauths) > 1 else []
+            for oauth in other_oauths:
+                self.logger.info("Inspecting rate limit info for oauth: {}\n".format(oauth))
+                self.headers = {"PRIVATE-TOKEN" : oauth['access_token']}
+                response = requests.get(url=url, headers=self.headers)
+                oauth['rate_limit'] = int(response.headers['RateLimit-Remaining'])
+                oauth['seconds_to_reset'] = (datetime.datetime.fromtimestamp(int(response.headers['RateLimit-Reset'])) - datetime.datetime.now()).total_seconds()
+
+                # Update oauth to switch to if a higher limit is found
+                if oauth['rate_limit'] > new_oauth['rate_limit']:
+                    self.logger.info("Higher rate limit found in oauth: {}\n".format(oauth))
+                    new_oauth = oauth
+                elif oauth['rate_limit'] == new_oauth['rate_limit'] and oauth['seconds_to_reset'] < new_oauth['seconds_to_reset']:
+                    self.logger.info("Lower wait time found in oauth with same rate limit: {}\n".format(oauth))
+                    new_oauth = oauth
+
+            if new_oauth['rate_limit'] <= 0 and new_oauth['seconds_to_reset'] > 0:
+                self.logger.info("No oauths with >0 rate limit were found, waiting for oauth with smallest wait time: {}\n".format(new_oauth))
+                time.sleep(new_oauth['seconds_to_reset'])
+
+            # Make new oauth the 0th element in self.oauths so we know which one is in use
+            index = self.oauths.index(new_oauth)
+            self.oauths[0], self.oauths[index] = self.oauths[index], self.oauths[0]
+            self.logger.info("Using oauth: {}\n".format(self.oauths[0]))
+
+            # Change headers to be using the new oauth's key
+            self.headers = {"PRIVATE-TOKEN" : self.oauths[0]['access_token']}
+
 
     def update_gh_rate_limit(self, response, bad_credentials=False, temporarily_disable=False):
         # Try to get rate limit from request headers, sometimes it does not work (GH's issue)
@@ -1072,3 +1202,11 @@ class Worker():
 
             # Change headers to be using the new oauth's key
             self.headers = {'Authorization': 'token %s' % self.oauths[0]['access_token']}
+
+    def update_rate_limit(self, response, bad_credentials=False, temporarily_disable=False, platform="gitlab"):
+        if platform == 'gitlab':
+            return self.update_gitlab_rate_limit(response, bad_credentials=bad_credentials, 
+                                        temporarily_disable=temporarily_disable)
+        elif platform == 'github':
+            return self.update_gh_rate_limit(response, bad_credentials=bad_credentials, 
+                                        temporarily_disable=temporarily_disable)

@@ -35,12 +35,13 @@ Example usage\:
   # to generate an augur.config.json file with all the defaults
   $ augur configure generate
 
-  # to generate an augur.config.json given all credentials
+  # to generate an augur.config.json given all credentials as literals
   $ augur configure generate --db_name "db_name" --db_host "host" --db_port "port" --db_user "db_user" --db_password "password" --github_api_key "github_api_key" --facade_repo_directory "facade_repo_directory"
 
-  # to generate an augur.config.json give all environment variables
+  # to generate an augur.config.json given all credentials alsod environment variables
   $ augur configure generate --db_name $AUGUR_DB_NAME --db_host $AUGUR_DB_HOST --db_port $AUGUR_DB_PORT --db_user $AUGUR_DB_DB_USER --db_password $AUGUR_DB_PASSWORD --github_api_key $AUGUR_GITHUB_API_KEY --facade_repo_directory $AUGUR_FACADE_REPO_DIRECTORY
 
   # successful output looks like:
-  > augur.config.json successfully created
+  > CLI: [configure.generate] [INFO] augur.config.json successfully created
+
 
