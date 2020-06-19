@@ -5,7 +5,7 @@ from multiprocessing import Process, Queue
 import sqlalchemy as s
 import pandas as pd
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import urlparse, quote
 from sqlalchemy import MetaData
 from sqlalchemy.ext.automap import automap_base
 from augur.config import AugurConfig
@@ -15,7 +15,7 @@ class Worker():
 
     ROOT_AUGUR_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
-    def __init__(self, worker_type, config={}, given=[], models=[], data_tables=[], operations_tables=[]):
+    def __init__(self, worker_type, config={}, given=[], models=[], data_tables=[], operations_tables=[], platform="github"):
 
         self.worker_type = worker_type
         self._task = None # task currently being worked on (dict)
@@ -24,13 +24,13 @@ class Worker():
         self.data_tables = data_tables
         self.operations_tables = operations_tables
         self._root_augur_dir = Worker.ROOT_AUGUR_DIR
+        self.platform = platform
 
         # count of tuples inserted in the database (to store stats for each task in op tables)
         self.results_counter = 0 
 
-        # if we are finishing a previous task, certain operations work differenty
+        # if we are finishing a previous task, certain operations work differently
         self.finishing_task = False 
-
         # Update config with options that are general and not specific to any worker
         self.augur_config = AugurConfig(self._root_augur_dir)
 
@@ -220,8 +220,8 @@ class Worker():
         self.history_id = self.get_max_id('worker_history', 'history_id', operations_table=True) + 1
 
         # Organize different api keys/oauths available
-        if 'gh_api_key' in self.config:
-            self.init_oauths()
+        if 'gh_api_key' in self.config or 'gitlab_api_key' in self.config:
+            self.init_oauths(self.platform)
         else:
             self.oauths = [{'oauth_id': 0}]
 
@@ -269,7 +269,7 @@ class Worker():
         """
         self.initialize_logging() # need to initialize logging again in child process cause multiprocessing
         self.logger.info("Starting data collection process\n")
-        self.initialize_database_connections() 
+        self.initialize_database_connections()
         while True:
             if not self._queue.empty():
                 message = self._queue.get() # Get the task off our MP queue
@@ -290,7 +290,7 @@ class Worker():
                 SELECT min(repo_id) as repo_id FROM repo WHERE repo_git = '{}'
                 """.format(message['given'][self.given[0][0]]))
             repo_id = int(pd.read_sql(repoUrlSQL, self.db, params={}).iloc[0]['repo_id'])
-
+            self.logger.info("repo_id for which data collection is being initiated: {}".format(str(repo_id)))
             # Call method corresponding to model sent in task
             try:
                 model_method = getattr(self, '{}_model'.format(message['models'][0]))
@@ -304,6 +304,7 @@ class Worker():
             # Model method calls wrapped in try/except so that any unexpected error that occurs can be caught
             #   and worker can move onto the next task without stopping
             try:
+                self.logger.info("Calling model method {}_models".format(message['models'][0]))
                 model_method(message, repo_id)
             except Exception as e: # this could be a custom exception, might make things easier
                 self.register_task_failure(message, repo_id, e)
@@ -645,31 +646,42 @@ class Worker():
         values = pd.read_sql(table_values_sql, self.db, params={})
         return values
 
-    def init_oauths(self):
-        """ Initialization required to have all GitHub tokens within access to GitHub workers
-        """
+    def init_oauths(self, platform="github"):
         self.oauths = []
         self.headers = None
 
-        # Endpoint to hit solely to retrieve rate limit information from headers of the response
-        url = 'https://api.github.com/users/gabe-heim'
-
         # Make a list of api key in the config combined w keys stored in the database
-        oauthSQL = s.sql.text("""
-            SELECT * FROM worker_oauth WHERE access_token <> '{}'
-        """.format(self.config['gh_api_key']))
+        # Select endpoint to hit solely to retrieve rate limit information from headers of the response
+        # Adjust header keys needed to fetch rate limit information from the API responses
+        if platform == "github":
+            url = "https://api.github.com/users/gabe-heim"
+            oauthSQL = s.sql.text("""
+                SELECT * FROM worker_oauth WHERE access_token <> '{}' and platform = 'github'
+                """.format(self.config['gh_api_key']))
+            key_name = "gh_api_key"
+            rate_limit_header_key = "X-RateLimit-Remaining"
+            rate_limit_reset_header_key = "X-RateLimit-Reset"
+        elif platform == "gitlab":
+            url = "https://gitlab.com/api/v4/version"
+            oauthSQL = s.sql.text("""
+                SELECT * FROM worker_oauth WHERE access_token <> '{}' and platform = 'gitlab'
+                """.format(self.config['gitlab_api_key']))
+            key_name = "gitlab_api_key"
+            rate_limit_header_key = "ratelimit-remaining"
+            rate_limit_reset_header_key = "ratelimit-reset"
 
-        oauths = [{'oauth_id': 0, 'access_token': self.config['gh_api_key']}] + \
-            json.loads(pd.read_sql(oauthSQL, self.helper_db, params={}).to_json(orient="records"))
-        for oauth in oauths:
-            self.headers = {'Authorization': 'token %s' % oauth['access_token']}
-            self.logger.debug("Getting rate limit info for oauth: {}\n".format(oauth))
+        for oauth in [{'oauth_id': 0, 'access_token': self.config[key_name]}] + json.loads(pd.read_sql(oauthSQL, self.helper_db, params={}).to_json(orient="records")):
+            if platform == "github":
+                self.headers = {'Authorization': 'token %s' % oauth['access_token']}
+            elif platform == "gitlab":
+                self.headers = {'Authorization': 'Bearer %s' % oauth['access_token']}
+            self.logger.info("Getting rate limit info for oauth: {}\n".format(oauth))
             response = requests.get(url=url, headers=self.headers)
             self.oauths.append({
                     'oauth_id': oauth['oauth_id'],
                     'access_token': oauth['access_token'],
-                    'rate_limit': int(response.headers['X-RateLimit-Remaining']),
-                    'seconds_to_reset': (datetime.datetime.fromtimestamp(int(response.headers['X-RateLimit-Reset'])) - datetime.datetime.now()).total_seconds()
+                    'rate_limit': int(response.headers[rate_limit_header_key]),
+                    'seconds_to_reset': (datetime.datetime.fromtimestamp(int(response.headers[rate_limit_reset_header_key])) - datetime.datetime.now()).total_seconds()
                 })
             self.logger.debug("Found OAuth available for use: {}\n\n".format(self.oauths[-1]))
 
@@ -678,6 +690,11 @@ class Worker():
 
         # First key to be used will be the one specified in the config (first element in 
         #   self.oauths array will always be the key in use)
+        if platform == "github":
+            self.headers = {'Authorization': 'token %s' % self.oauths[0]['access_token']}
+        elif platform == "gitlab":
+            self.headers = {'Authorization': 'Bearer %s' % self.oauths[0]['access_token']}
+
         self.headers = {'Authorization': 'token %s' % self.oauths[0]['access_token']}
         self.logger.info("OAuth initialized")
 
@@ -717,6 +734,7 @@ class Worker():
             each with a 'flag' key-value pair representing the required action to take with that 
             data point (i.e. 'need_insertion', 'need_update', 'none')
         """
+
         update_keys = list(update_col_map.keys()) if update_col_map else []
         update_keys += list(value_update_col_map.keys()) if value_update_col_map else []
         cols_query = list(duplicate_col_map.keys()) + update_keys + [table_pkey]
@@ -731,6 +749,7 @@ class Worker():
             while num_attempts < 3:
                 self.logger.info(f'Hitting endpoint: {url.format(i)}...\n')
                 r = requests.get(url=url.format(i), headers=self.headers)
+
                 self.update_rate_limit(r, platform=platform)
                 if 'last' not in r.links:
                     last_page = None
@@ -784,7 +803,7 @@ class Worker():
                     param = r.links['last']['url'][-6:]
                     i = int(param.split('=')[1]) + 1
                 elif platform == "gitlab":
-                    i =  int(r.links['last']['url'].split('&')[2].split("=")[1])
+                    i = int(r.links['last']['url'].split('&')[2].split("=")[1]) + 1
                 self.logger.info("Multiple pages of request, last page is " + str(i - 1) + "\n")
                 multiple_pages = True
             elif not multiple_pages and not self.finishing_task:
@@ -792,11 +811,11 @@ class Worker():
             elif self.finishing_task:
                 self.logger.info("Finishing a previous task, paginating forwards ..."
                     " excess rate limit requests will be made\n")
-            
+
             if len(j) == 0:
                 self.logger.info("Response was empty, breaking from pagination.\n")
                 break
-                
+
             # Checking contents of requests with what we already have in the db
             j = self.assign_tuple_action(j, table_values, update_col_map, duplicate_col_map, table_pkey, value_update_col_map)
             if not j:
@@ -804,7 +823,7 @@ class Worker():
                 i = i + 1 if self.finishing_task else i - 1
                 continue
             try:
-                to_add = [obj for obj in j if obj not in tuples and obj['flag'] != 'none']
+                to_add = [obj for obj in j if obj not in tuples and (obj['flag'] != 'none')]
             except Exception as e:
                 self.logger.error("Failure accessing data of page: {}. Moving to next page.\n".format(e))
                 i = i + 1 if self.finishing_task else i - 1
@@ -818,6 +837,7 @@ class Worker():
                 if i - 1 != page_number:
                     self.logger.info("No more pages with unknown tuples, breaking from pagination.\n")
                     break
+
             tuples += to_add
 
             i = i + 1 if self.finishing_task else i - 1
@@ -932,6 +952,102 @@ class Worker():
                 self.logger.error("Cascading Contributor Anomalie from missing repo contributor data: {} ...\n".format(cntrb_url))
                 continue
 
+    def query_gitlab_contribtutors(self, entry_info, repo_id):
+
+        gitlab_url = entry_info['given']['gitlab_url'] if 'gitlab_url' in entry_info['given'] else entry_info['given']['git_url']
+
+        self.logger.info("Querying contributors with given entry info: " + str(entry_info) + "\n")
+
+        path = urlparse(gitlab_url)
+        split = path[2].split('/')
+
+        owner = split[1]
+        name = split[2]
+
+        # Handles git url case by removing the extension
+        if ".git" in name:
+            name = name[:-4]
+
+        url_encoded_format = quote(owner + '/' + name, safe='')
+
+        table = 'contributors'
+        table_pkey = 'cntrb_id'
+        update_col_map = {'cntrb_email': 'email'}
+        duplicate_col_map = {'cntrb_login': 'email'}
+
+        # list to hold contributors needing insertion or update
+        contributors = self.paginate("https://gitlab.com/api/v4/projects/" + url_encoded_format + "/repository/contributors?per_page=100&page={}", duplicate_col_map, update_col_map, table, table_pkey, platform='gitlab')
+
+        for repo_contributor in contributors:
+            try:
+                cntrb_compressed_url = ("https://gitlab.com/api/v4/users?search=" + repo_contributor['email'])
+                self.logger.info("Hitting endpoint: " + cntrb_compressed_url + " ...\n")
+                r = requests.get(url=cntrb_compressed_url, headers=self.headers)
+                contributor_compressed = r.json()
+
+                email = repo_contributor['email']
+                if len(contributor_compressed) == 0 or "id" not in contributor_compressed[0]:
+                    continue
+
+                self.logger.info("Fetching for user: " + str(contributor_compressed[0]["id"]))
+
+                cntrb_url = ("https://gitlab.com/api/v4/users/" + str(contributor_compressed[0]["id"]))
+                self.logger.info("Hitting end point to get complete contributor info now: " + cntrb_url + "...\n")
+                r = requests.get(url=cntrb_url, headers=self.headers)
+                contributor = r.json()
+
+                cntrb = {
+                    "cntrb_login": contributor.get('username', None),
+                    "cntrb_created_at": contributor.get('created_at', None),
+                    "cntrb_email": email,
+                    "cntrb_company": contributor.get('organization', None),
+                    "cntrb_location": contributor.get('location', None),
+                    # "cntrb_type": , dont have a use for this as of now ... let it default to null
+                    "cntrb_canonical": contributor.get('public_email', None),
+                    "gh_user_id": contributor.get('id', None),
+                    "gh_login": contributor.get('username', None),
+                    "gh_url": contributor.get('web_url', None),
+                    "gh_html_url": contributor.get('web_url', None),
+                    "gh_node_id": None,
+                    "gh_avatar_url": contributor.get('avatar_url', None),
+                    "gh_gravatar_id": None,
+                    "gh_followers_url": None,
+                    "gh_following_url": None,
+                    "gh_gists_url": None,
+                    "gh_starred_url": None,
+                    "gh_subscriptions_url": None,
+                    "gh_organizations_url": None,
+                    "gh_repos_url": None,
+                    "gh_events_url": None,
+                    "gh_received_events_url": None,
+                    "gh_type": None,
+                    "gh_site_admin": None,
+                    "tool_source": self.tool_source,
+                    "tool_version": self.tool_version,
+                    "data_source": self.data_source
+                }
+
+                # Commit insertion to table
+                if repo_contributor['flag'] == 'need_update':
+                    result = self.db.execute(self.contributors_table.update().where(
+                        self.worker_history_table.c.cntrb_email == email).values(cntrb))
+                    self.logger.info("Updated tuple in the contributors table with existing email: {}".format(email))
+                    self.cntrb_id_inc = repo_contributor['pkey']
+                elif repo_contributor['flag'] == 'need_insertion':
+                    result = self.db.execute(self.contributors_table.insert().values(cntrb))
+                    self.logger.info("Primary key inserted into the contributors table: {}".format(result.inserted_primary_key))
+                    self.results_counter += 1
+
+                    self.logger.info("Inserted contributor: " + contributor['username'] + "\n")
+
+                    # Increment our global track of the cntrb id for the possibility of it being used as a FK
+                    self.cntrb_id_inc = int(result.inserted_primary_key[0])
+
+            except Exception as e:
+                self.logger.info("Caught exception: {}".format(e))
+                self.logger.info("Cascading Contributor Anomalie from missing repo contributor data: {} ...\n".format(cntrb_url))
+                continue
+
     def record_model_process(self, repo_id, model):
 
         task_history = {
@@ -960,10 +1076,12 @@ class Worker():
             'repo_id': repo_id,
             'job_model': model
         }
-        key = 'github_url' if 'github_url' in task['given'] else 'git_url' if 'git_url' in task['given'] else "INVALID_GIVEN"
-        task_completed[key] = task['given']['github_url'] if 'github_url' in task['given'] else task['given']['git_url'] if 'git_url' in task['given'] else "INVALID_GIVEN"
+        key = 'github_url' if 'github_url' in task['given'] else 'git_url' if 'git_url' in task['given'] else \
+            'gitlab_url' if 'gitlab_url' in task['given'] else 'INVALID_GIVEN'
+        task_completed[key] = task['given']['github_url'] if 'github_url' in task['given'] else task['given']['git_url'] \
+            if 'git_url' in task['given'] else task['given']['gitlab_url'] if 'gitlab_url' in task['given'] else 'INVALID_GIVEN'
         if key == 'INVALID_GIVEN':
-            self.register_task_failure(task, repo_id, "INVALID_GIVEN: not github nor git url")
+            self.register_task_failure(task, repo_id, "INVALID_GIVEN: Not a github/gitlab/git url.")
             return
 
         # Add to history table
@@ -1011,9 +1129,10 @@ class Worker():
         tb = traceback.format_exc()
         self.logger.error(tb)
 
-        self.logger.error(f'This task inserted {self.results_counter} tuples before failure.\n')
-        self.logger.error("Notifying broker and logging task failure in database...\n")
-        key = 'github_url' if 'github_url' in task['given'] else 'git_url' if 'git_url' in task['given'] else "INVALID_GIVEN"
+        self.logger.info(f'This task inserted {self.results_counter} tuples before failure.\n')
+        self.logger.info("Notifying broker and logging task failure in database...\n")
+        key = 'github_url' if 'github_url' in task['given'] else 'git_url' if 'git_url' in task['given'] else \
+            'gitlab_url' if 'gitlab_url' in task['given'] else 'INVALID_GIVEN'
         url = task['given'][key]
 
         """ Query all repos with repo url of given task """
@@ -1103,7 +1222,7 @@ class Worker():
             try:
                 reset_time = response.headers['RateLimit-Reset']
             except Exception as e:
-                self.logger.info("Could not get reset time from headers because of error: {}".format(error))
+                self.logger.info("Could not get reset time from headers because of error: {}".format(e))
                 reset_time = 3600
             time_diff = datetime.datetime.fromtimestamp(int(reset_time)) - datetime.datetime.now()
             self.logger.info("Rate limit exceeded, checking for other available keys to use.\n")
