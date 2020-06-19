@@ -34,7 +34,7 @@ class ValueWorker(Worker):
         })
 
         self.tool_source = 'Value Worker'
-        self.tool_version = '0.1.0'
+        self.tool_version = '1.0.0'
         self.data_source = 'SCC'
 
     def value_model(self, entry_info, repo_id):

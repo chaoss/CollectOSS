@@ -27,7 +27,7 @@ class ReleaseWorker(Worker):
 
         # Define data collection info
         self.tool_source = 'Release Worker'
-        self.tool_version = '0.0.1'
+        self.tool_version = '1.0.0'
         self.data_source = 'GitHub API'
 
     def releases_model(self, task, repo_id):
@@ -83,7 +83,7 @@ class ReleaseWorker(Worker):
 
             if 'errors' in data:
                 self.logger.info("Error!: {}".format(data['errors']))
-                if data['errors']['message'] == 'API rate limit exceeded':
+                if data['errors'][0]['message'] == 'API rate limit exceeded':
                     self.update_gh_rate_limit(r)
                     continue
 

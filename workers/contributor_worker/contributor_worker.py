@@ -35,7 +35,7 @@ class ContributorWorker(Worker):
 
         # These 3 are included in every tuple the worker inserts (data collection info)
         self.tool_source = 'Contributor Worker'
-        self.tool_version = '0.0.1'
+        self.tool_version = '1.0.0'
         self.data_source = 'Augur Commit Data'
 
     def contributors_model(self, entry_info, repo_id):
@@ -291,8 +291,8 @@ class ContributorWorker(Worker):
         # Turn these columns from nan/nat to None
         dupe_cntrbs['gh_user_id'] = dupe_cntrbs['gh_user_id'].where(
             pd.notnull(dupe_cntrbs['gh_user_id']), None)
-        dupe_cntrbs['cntrb_created_at'] = dupe_cntrbs['cntrb_created_at'].where(
-            pd.notnull(dupe_cntrbs['cntrb_created_at']), None)
+        dupe_cntrbs['cntrb_last_used'] = dupe_cntrbs['cntrb_last_used'].astype(
+            object).where(dupe_cntrbs['cntrb_last_used'].notnull(), None)
         dupe_cntrbs['cntrb_last_used'] = dupe_cntrbs['cntrb_last_used'].astype(
             object).where(dupe_cntrbs['cntrb_last_used'].notnull(), None)
 

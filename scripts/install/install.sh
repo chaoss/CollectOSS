@@ -1,10 +1,7 @@
 #!/bin/bash
 set -eo pipefail
 
-# check for python, pip, and a virtual environment being active
-# if the script exit value != 0 indicating some failure, then stop
 scripts/install/checks.sh
-
 if [[ $? -ne 0 ]]; then
   exit 1
 fi
@@ -12,7 +9,6 @@ fi
 if [[ ! -d logs ]]; then
     mkdir logs
 fi
-
 if [[ ! -d logs/install ]]; then
     mkdir logs/install
 fi
@@ -53,20 +49,7 @@ else
   esac
 fi
 
-if [[ $target == *"dev"* ]]; then
-  read -r -p "Would you like to install Augur's frontend dependencies? [Y/n] " response
-  case "$response" in
-      [yY][eE][sS]|[yY]) 
-        scripts/install/frontend.sh > logs/install/frontend.log 2>&1
-        ;;
-      *)
-        echo "Skipping frontend dependencies..."
-        ;;
-  esac
-else
-  echo "Installing frontend dependencies..."
-  scripts/install/frontend.sh > logs/frontend-installation.log 2>&1
-fi
+scripts/install/frontend.sh
 
 existing_api_key=$(augur db get-api-key)
 
@@ -83,7 +66,6 @@ if [[ $existing_api_key != *"invalid_key"* ]]; then
 else
   scripts/install/api_key.sh
 fi
-
 
 echo "**********************************"
 echo "*** INSTALLATION COMPLETE ***"

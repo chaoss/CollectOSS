@@ -16,12 +16,20 @@ The ``augur util`` commands are for performing a variety of different miscellane
 
 ``export-env``
 ---------------
-Exports your GitHub key and database credentials to 2 files. The first is ``augur_export_env.sh`` which is an executable shell script that can be used initialize environment variables for each of your credentials. The second is ``docker_env.txt`` which specifies each credential in a key/value pair format that is used to configure the backend Docker containers.
+Exports your GitHub key and database credentials to 2 files. The first is ``augur_export_env.sh`` which is an executable shell script that can be used initialize environment variables for some of your credentials. The second is ``docker_env.txt`` which specifies each credential in a key/value pair format that is used to configure the backend Docker containers.
 
 Example usage::
 
   # to export your environment
   $ augur util export-env
+
+  # successful output looks like:
+  > CLI: [util.export_env] [INFO] Exporting AUGUR_GITHUB_API_KEY
+  > CLI: [util.export_env] [INFO] Exporting AUGUR_DB_HOST
+  > CLI: [util.export_env] [INFO] Exporting AUGUR_DB_NAME
+  > CLI: [util.export_env] [INFO] Exporting AUGUR_DB_PORT
+  > CLI: [util.export_env] [INFO] Exporting AUGUR_DB_USER
+  > CLI: [util.export_env] [INFO] Exporting AUGUR_DB_PASSWORD
 
   # contents of augur_export_env.sh
   #!/bin/bash
@@ -50,14 +58,32 @@ Example usage::
   $ augur util kill
 
   # successful output looks like:
-  > Killing 70595: /usr/local/bin/augur run
-  > Killing 70596: /usr/local/bin/github_worker_start
-  > ...
-
+  > CLI: [util.cli_kill_processes] [INFO] Killing process 33607
+  > CLI: [util.cli_kill_processes] [INFO] Killing process 33775
+  > CLI: [util.cli_kill_processes] [INFO] Killing process 33776
+  > CLI: [util.cli_kill_processes] [INFO] Killing process 33777
+  > CLI: [util.cli_kill_processes] [INFO] Killing process 33778
+  > CLI: [util.cli_kill_processes] [INFO] Killing process 33780
+  > CLI: [util.cli_kill_processes] [INFO] Killing process 33781
+  > CLI: [util.cli_kill_processes] [INFO] Killing process 33782
+  > CLI: [util.cli_kill_processes] [INFO] Killing process 33783
+  > CLI: [util.cli_kill_processes] [INFO] Killing process 33784
+  > CLI: [util.cli_kill_processes] [INFO] Killing process 33785
+  > CLI: [util.cli_kill_processes] [INFO] Killing process 33786
+  > CLI: [util.cli_kill_processes] [INFO] Killing process 33787
+  > CLI: [util.cli_kill_processes] [INFO] Killing process 33788
+  > CLI: [util.cli_kill_processes] [INFO] Killing process 33789
+  > CLI: [util.cli_kill_processes] [INFO] Killing process 33790
+  > CLI: [util.cli_kill_processes] [INFO] Killing process 33792
+  > CLI: [util.cli_kill_processes] [INFO] Killing process 33793
+  > CLI: [util.cli_kill_processes] [INFO] Killing process 33794
+  > CLI: [util.cli_kill_processes] [INFO] Killing process 33795
+  > CLI: [util.cli_kill_processes] [INFO] Killing process 33798
+  > CLI: [util.cli_kill_processes] [INFO] Killing process 33962
 
 ``list``
 ---------
-Outputs the name and process ID (PID) of all currently running backend Augur processes, including any workers. Will only work in a virtual environment.
+Outputs the process ID (PID) of all currently running backend Augur processes, including any workers. Will only work in a virtual environment.
 
 Example usage::
 
@@ -65,9 +91,28 @@ Example usage::
   $ augur util list
 
   # successful output looks like:
-  > 70595 /usr/local/bin/augur run
-  > 70596 /usr/local/bin/github_worker_start
-  > ...
+  > CLI: [util.list_processes] [INFO] Found process 33607
+  > CLI: [util.list_processes] [INFO] Found process 33775
+  > CLI: [util.list_processes] [INFO] Found process 33776
+  > CLI: [util.list_processes] [INFO] Found process 33777
+  > CLI: [util.list_processes] [INFO] Found process 33778
+  > CLI: [util.list_processes] [INFO] Found process 33780
+  > CLI: [util.list_processes] [INFO] Found process 33781
+  > CLI: [util.list_processes] [INFO] Found process 33782
+  > CLI: [util.list_processes] [INFO] Found process 33783
+  > CLI: [util.list_processes] [INFO] Found process 33784
+  > CLI: [util.list_processes] [INFO] Found process 33785
+  > CLI: [util.list_processes] [INFO] Found process 33786
+  > CLI: [util.list_processes] [INFO] Found process 33787
+  > CLI: [util.list_processes] [INFO] Found process 33788
+  > CLI: [util.list_processes] [INFO] Found process 33789
+  > CLI: [util.list_processes] [INFO] Found process 33790
+  > CLI: [util.list_processes] [INFO] Found process 33792
+  > CLI: [util.list_processes] [INFO] Found process 33793
+  > CLI: [util.list_processes] [INFO] Found process 33794
+  > CLI: [util.list_processes] [INFO] Found process 33795
+  > CLI: [util.list_processes] [INFO] Found process 33798
+  > CLI: [util.list_processes] [INFO] Found process 33962
 
 ``repo-reset``
 ---------------
@@ -79,7 +124,7 @@ Example usage::
   $ augur util repo-reset
 
   # successful output looks like:
-  > Repos successfully reset.
+  > CLI: [util.repo_reset] [INFO] Repos successfully reset
 
 
 

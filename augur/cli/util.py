@@ -13,9 +13,9 @@ import click
 import pandas as pd
 import sqlalchemy as s
 
-from augur.cli import pass_config, pass_application
+from augur.cli import initialize_logging, pass_config, pass_application
 
-logger = logging.getLogger("augur.cli")
+logger = logging.getLogger(__name__)
 
 @click.group('util', short_help='Miscellaneous utilities')
 def cli():
@@ -34,15 +34,17 @@ def export_env(config):
     env_file = open(os.getenv('AUGUR_ENV_FILE', 'docker_env.txt'), 'w+')
 
     for env_var in config.get_env_config().items():
-        export_file.write('export ' + env_var[0] + '="' + str(env_var[1]) + '"\n')
-        env_file.write(env_var[0] + '=' + str(env_var[1]) + '\n')
+        if "LOG" not in env_var[0]:
+            logger.info(f"Exporting {env_var[0]}")
+            export_file.write('export ' + env_var[0] + '="' + str(env_var[1]) + '"\n')
+            env_file.write(env_var[0] + '=' + str(env_var[1]) + '\n')
 
     export_file.close()
     env_file.close()
 
 @cli.command('kill')
-@pass_config
-def kill_processes(config):
+@initialize_logging
+def cli_kill_processes():
     """
     Terminates all currently running backend Augur processes, including any workers. Will only work in a virtual environment.    
     """
@@ -50,16 +52,27 @@ def kill_processes(config):
     if processes != []:
         for process in processes:
             if process.pid != os.getpid():
-                # logger.info(f"Killing {process.pid}: {' '.join(process.info['cmdline'][1:])}")
                 logger.info(f"Killing process {process.pid}")
                 try:
                     process.send_signal(signal.SIGTERM)
                 except psutil.NoSuchProcess as e:
                     pass
 
+def kill_processes():
+    logger = logging.getLogger("augur")
+    processes = get_augur_processes()
+    if processes != []:
+        for process in processes:
+            if process.pid != os.getpid():
+                logger.info(f"Killing process {process.pid}")
+                try:
+                    process.send_signal(signal.SIGTERM)
+                except psutil.NoSuchProcess as e:
+                    logger.warning(e)
+
 @cli.command('list',)
-@pass_config
-def list_processes(config):
+@initialize_logging
+def list_processes():
     """
     Outputs the name and process ID (PID) of all currently running backend Augur processes, including any workers. Will only work in a virtual environment.    
     """
