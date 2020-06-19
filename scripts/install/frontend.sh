@@ -1,16 +1,6 @@
 #!/bin/bash
 set -euo pipefail
 
-read -r -p "Would you like to install Augur's frontend dependencies? [Y/n] " response
-case "$response" in
-  [yY][eE][sS]|[yY]) 
-    install_deps > logs/install/frontend.log 2>&1
-    ;;
-  *)
-    echo "Skipping frontend dependencies..."
-    ;;
-esac
-
 function install_deps() {
 
     if [[ $(command -V npm) ]]; then
@@ -30,3 +20,14 @@ function install_deps() {
     exit 1
     fi
 }
+
+read -r -p "Would you like to install Augur's frontend dependencies? [Y/n] " response
+case "$response" in
+  [yY][eE][sS]|[yY]) 
+    install_deps > logs/install/frontend.log 2>&1
+    ;;
+  *)
+    echo "Skipping frontend dependencies..."
+    ;;
+esac
+
