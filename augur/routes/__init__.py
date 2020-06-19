@@ -1,9 +1,12 @@
 
+import logging
 import importlib
 import os
 import glob
 import sys
 import inspect
+
+logger = logging.getLogger(__name__)
 
 def get_route_files():
     route_files = []

@@ -5,6 +5,13 @@
     "Server": {
         "host": "0.0.0.0"
     },
+    "Logging": {
+        "logs_directory": "/augur/logs/",
+        "log_level": "INFO",
+        "verbose": 0,
+        "quiet": 0,
+        "debug": 1
+    },
     "Workers": {
             "facade_worker": {
                 "repo_directory": "/augur/repos/",

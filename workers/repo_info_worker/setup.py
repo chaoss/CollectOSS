@@ -13,7 +13,7 @@ def read(filename):
 
 setup(
     name="repo_info_worker",
-    version="0.1.0",
+    version="1.0.0",
     url="https://github.com/chaoss/augur",
     license='MIT',
     author="Augurlabs",

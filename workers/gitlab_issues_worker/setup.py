@@ -12,23 +12,23 @@ def read(filename):
         return re.sub(text_type(r':[a-z]+:`~?(.*?)`'), text_type(r'``\1``'), fd.read())
 
 setup(
-    name="release_worker",
-    version="1.0.0",
+    name="gitlab_issues_worker",
+    version="0.0.0",
     url="https://github.com/chaoss/augur",
     license='MIT',
-    author="Augurlabs",
-    author_email="s@goggins.com",
-    description="Augur Worker that collects data about GitHub releases",
+    author="Augur Team",
+    author_email="",
+    description="Gitlab Worker",
     packages=find_packages(exclude=('tests',)),
     install_requires=[
-        'flask', 
-        'requests', 
-        'psycopg2-binary', 
+        'flask',
+        'requests',
+        'psycopg2-binary',
         'click'
     ],
     entry_points={
         'console_scripts': [
-            'release_worker_start=workers.release_worker.runtime:main',
+            'gitlab_issues_worker_start=workers.gitlab_issues_worker.runtime:main',
         ],
     },
     classifiers=[
