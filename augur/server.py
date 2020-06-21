@@ -3,51 +3,50 @@
 Creates a WSGI server that serves the Augur REST API
 """
 
+import glob
+import sys
+import inspect
+import types
 import json
 import os
 import base64
+import logging
+
 from flask import Flask, request, Response, redirect
 from flask_cors import CORS
 import pandas as pd
+
 import augur
-from augur.util import logger
 from augur.routes import create_routes
 
 AUGUR_API_VERSION = 'api/unstable'
 
-class VueCompatibleFlask(Flask):
-  jinja_options = Flask.jinja_options.copy()
-  jinja_options.update(dict(
-    block_start_string='(%',
-    block_end_string='%)',
-    variable_start_string='%%',
-    variable_end_string='%%',
-    comment_start_string='(#',
-    comment_end_string='#)',
-  ))
-
+logger = logging.getLogger(__name__)
 
 class Server(object):
     """
     Defines Augur's server's behavior
     """
-    def __init__(self, frontend_folder='../frontend/public', manager=None, broker=None, housekeeper=None):
+    def __init__(self, augur_app=None):
         """
         Initializes the server, creating both the Flask application and Augur application
         """
         # Create Flask application
 
-        self.app = VueCompatibleFlask(__name__, static_folder=frontend_folder, template_folder=frontend_folder)
+        self.app = Flask(__name__)
+        logger.debug("Created Flask app")
         self.api_version = AUGUR_API_VERSION
         app = self.app
         CORS(app)
         app.url_map.strict_slashes = False
 
-        # Create Augur application
-        self.augur_app = augur.Application()
+        self.augur_app = augur_app
+        self.manager = augur_app.manager
+        self.broker = augur_app.broker
+        self.housekeeper = augur_app.housekeeper
 
         # Initialize cache
-        expire = int(self.augur_app.read_config('Server', 'cache_expire'))
+        expire = int(self.augur_app.config.get_value('Server', 'cache_expire'))
         self.cache = self.augur_app.cache.get_cache('server', expire=expire)
         self.cache.clear()
 
@@ -55,10 +54,7 @@ class Server(object):
 
         self.show_metadata = False
 
-        self.manager = manager
-        self.broker = broker
-        self.housekeeper = housekeeper
-
+        logger.debug("Creating API routes...")
         create_routes(self)
 
         #####################################
@@ -184,40 +180,3 @@ class Server(object):
         self.app.route(repo_endpoint)(self.routify(function, 'repo'))
         self.app.route(repo_group_endpoint)(self.routify(function, 'repo_group'))
         self.app.route(deprecated_repo_endpoint )(self.routify(function, 'deprecated_repo'))
-
-def run():
-    """
-    Runs server with configured hosts/ports
-    """
-    server = Server()
-    host = server.augur_app.read_config('Server', 'host')
-    port = server.augur_app.read_config('Server', 'port')
-    Server().app.run(host=host, port=int(port), debug=True)
-
-wsgi_app = None
-def wsgi(environ, start_response):
-    """
-    Creates WSGI app
-    """
-    global wsgi_app
-    if (wsgi_app is None):
-        app_instance = Server()
-        wsgi_app = app_instance.app
-    # Stuff to make proxypass work
-    script_name = environ.get('HTTP_X_SCRIPT_NAME', '')
-    if script_name:
-        environ['SCRIPT_NAME'] = script_name
-        path_info = environ['PATH_INFO']
-        if path_info.startswith(script_name):
-            environ['PATH_INFO'] = path_info[len(script_name):]
-
-    scheme = environ.get('HTTP_X_SCHEME', '')
-    if scheme:
-        environ['wsgi.url_scheme'] = scheme
-    server = environ.get('HTTP_X_FORWARDED_SERVER', '')
-    if server:
-        environ['HTTP_HOST'] = server
-    return wsgi_app(environ, start_response)
-
-if __name__ == "__main__":
-    run()

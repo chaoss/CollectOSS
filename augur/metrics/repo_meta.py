@@ -5,9 +5,12 @@ General repo metrics like provides general overview data about repositories, inc
 import datetime
 import sqlalchemy as s
 import pandas as pd
-from augur import logger
-from augur.util import register_metric
 import math
+import logging
+
+from augur.util import register_metric
+
+logger = logging.getLogger("augur")
 
 @register_metric()
 def code_changes(self, repo_group_id, repo_id=None, period='week', begin_date=None, end_date=None):
@@ -321,7 +324,7 @@ def languages(self, repo_group_id, repo_id=None):
         results = pd.read_sql(languages_SQL, self.database, params={'repo_id': repo_id})
         return results
 
-@register_metric()
+@register_metric(type="license")
 def license_files(self, license_id, spdx_binary, repo_group_id, repo_id=None,):
         """Returns the files related to a license
 

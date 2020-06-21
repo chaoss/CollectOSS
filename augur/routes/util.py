@@ -6,8 +6,6 @@ from flask import Response
 
 def create_routes(server):
 
-    metrics = server.augur_app.metrics
-
     @server.app.route('/{}/repo-groups'.format(server.api_version))
     def get_all_repo_groups(): #TODO: make this name automatic - wrapper?
         repoGroupsSQL = s.sql.text("""
@@ -202,7 +200,7 @@ def create_routes(server):
 
     @server.app.route('/{}/api-port'.format(server.api_version))
     def api_port():
-        response = {'port': server.augur_app.read_config('Server', 'port')}
+        response = {'port': server.augur_app.config.get_value('Server', 'port')}
         return Response(response=json.dumps(response),
                         status=200,
                         mimetype="application/json")

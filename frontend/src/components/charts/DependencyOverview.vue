@@ -4,25 +4,21 @@
       <div class="col col-6">
         <h3>Top Dependents</h3>
         <div class="deps" ref="dependents">
-          Loading...
+          <span>Loading...</span>
         </div>
       </div>
       <div class="col col-6">
         <h3>Top Dependencies</h3>
         <div class="deps" ref="dependencies">
-          Loading...
+          <span>Loading...</span>
         </div>
       </div>
-    </div> 
-  </div> 
+    </div>
+  </div>
 </template>
 
 
 <script>
-
-  import AugurStats from '../../AugurStats'
-  import * as d3 from 'd3'
-
   export default {
     props: [],
     computed: {
@@ -32,26 +28,26 @@
       dependencies() {
         if (this.repo) {
 
-          this.$refs['dependents'].innerHTML = 'Loading...'
+          this.$refs['dependents'].innerHTML = 'Loading...';
           window.AugurRepos[this.repo].dependents().then((dependents) => {
             if (!dependents || !dependents.length) {
               this.$refs['dependents'].innerHTML = 'No dependents found.'
-            } 
-            this.$refs['dependents'].innerHTML = ''
-            for (var i = 0; i < dependents.length && i < 10; i++) {
+            }
+            this.$refs['dependents'].innerHTML = '';
+            for (let i = 0; i < dependents.length && i < 10; i++) {
               this.$refs['dependents'].innerHTML += dependents[i].name + '<br>'
             }
           }, () => {
             this.$refs['dependents'].innerHTML = 'No data.'
-          })
+          });
 
-          this.$refs['dependencies'].innerHTML = ''
+          this.$refs['dependencies'].innerHTML = '';
           window.AugurRepos[this.repo].dependencies().then((dependencies) => {
             if (!dependencies || !dependencies.length) {
               this.$refs['dependencies'].innerHTML = 'No dependencies found.'
-            } 
-            this.$refs['dependencies'].innerHTML = ''
-            for (var i = 0; i < dependencies.dependencies.length && i < 10; i++) {
+            }
+            this.$refs['dependencies'].innerHTML = '';
+            for (let i = 0; i < dependencies.dependencies.length && i < 10; i++) {
               this.$refs['dependencies'].innerHTML += dependencies.dependencies[i].name + '<br>'
             }
           }, () => {
@@ -62,5 +58,4 @@
       }
     }
   };
-
 </script>
