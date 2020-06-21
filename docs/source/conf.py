@@ -25,7 +25,6 @@ here = os.path.abspath(os.path.dirname(__file__))
 
 exec(open(os.path.join(here, "../../metadata.py")).read())
 
-
 sys.path.insert(0, os.path.abspath('../../../augur'))
 
 # -- General configuration ------------------------------------------------
@@ -81,8 +80,6 @@ master_doc = 'index'
 project = __name__
 copyright = __copyright__
 author = 'Carter Landis'
-
-
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

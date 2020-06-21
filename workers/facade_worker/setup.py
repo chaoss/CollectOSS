@@ -13,7 +13,7 @@ def read(filename):
 
 setup(
     name="facade_worker",
-    version="0.1",
+    version="1.0.0",
     url="https://github.com/chaoss/augur",
     license='MIT',
     author="Augurlabs",
@@ -30,7 +30,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'facade_worker_start=facade_worker.runtime:main',
+            'facade_worker_start=workers.facade_worker.facade_worker.runtime:main',
         ],
     },
     classifiers=[

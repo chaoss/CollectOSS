@@ -15,6 +15,7 @@ If you have questions or would like to help please open an issue on GitHub_.
 
    installation
    make/toc
+   logging
    documentation
 
 .. configuration-file-reference

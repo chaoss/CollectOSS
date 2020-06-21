@@ -1,31 +1,26 @@
-Database Setup
+Database setup
 ===============
 
-One of the reasons that Augur is so powerful is because of our `unified data model <../schema/data-model.html>`_.
-In order to ensure this data model remains performant even with large amounts of data, we use PostgreSQL as
-our database engine. 
-
-.. note::
-
-    If you've already configured an Augur database, you can continue to the `installation instructions <installation.html>`_.
-
+One of the reasons that Augur is so powerful is because of its `unified data model <../schema/data-model.html>`_.
+In order to ensure this data model remains performant with large amounts of data, we use PostgreSQL as our database engine. 
+We'll need to set up a PostgreSQL instance and create a database, after which Augur can take care of the rest.
+Make sure to save off the credentials you use when you create the database, you'll need them again to configure Augur.
 
 PostgreSQL Installation
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-Before you can install our schema, you will need to make sure you have write access to a PostgreSQL 10 or later database. If you're looking for the fastest possible way to get Augur started or you're setting up for local development, you can use our `database container <../docker/docker.html>`_. If you're looking to collect data long term, we suggest following the rest of this tutorial and setting up a persistent PostgreSQL installation.
+Before you can install our schema, you will need to make sure you have write access to a PostgreSQL 10 or later database. If you're looking for the fastest possible way to get Augur started, we recommend use our `database container <../docker/docker.html>`_. If you're looking to collect data long term, we recommend following the rest of this tutorial and setting up a persistent PostgreSQL installation.
 
 .. warning::
 
     If you want to collect data over the long term, we strongly advise against `using a Docker container for your database <https://vsupalov.com/database-in-docker/>`_.
 
-
-If you're a newcomer to to PostgreSQL, follow their excellent instructions `here <https://www.postgresql.org/docs/12/tutorial-install.html>`_ to set it up for your machine of choice. We recommend using ``Postgres.app`` if you're on macOS, but if you're running a Linux distribution or are looking for an alternative to ``Postgres.app`` then pgAdmin is a great open source tool, albeit one with a somewhat cumbersome UI.
+If you're a newcomer to to PostgreSQL, you can follow their excellent instructions `here <https://www.postgresql.org/docs/12/tutorial-install.html>`_ to set it up for your machine of choice. We recommend using ``Postgres.app`` if you're on macOS, but if you're running UNIX or are looking for an alternative to ``Postgres.app`` then pgAdmin is a great open source alternative.
 
 Creating a Database
 ~~~~~~~~~~~~~~~~~~~~~
 
-After you've created your PostgreSQL instance, you'll need to setup a database in which to install the schema, as well as set up a dedicated augur user. You can do this with the SQL commands below (be sure to change the password!).
+After you've setup your PostgreSQL instance, you'll need to create a database and user with the correct permissions. You can do this with the SQL commands below, but be sure to change the password!
 
 .. code-block:: postgresql 
     
