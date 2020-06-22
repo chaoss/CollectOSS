@@ -1,38 +1,36 @@
 Installation
 =============
 
-This section of the documentation details how to build Augur and its data workers from source. We currently officially support installation of Augur from source on macOS, Ubuntu, and Fedora (but most UNIX-like systems will probably work with a few tweaks). If you don't have a required dependency, please follow the provided links to install and
-configure each piece of software.
+This section of the documentation details how to install Augur's Python library from source. If you don't have a required dependency, please follow the provided links to install and configure it.
 
 Dependencies
 ~~~~~~~~~~~~~
 
 Backend
 ---------
-Required dependencies:
+Required:
 
 -  `GitHub Access Token <https://github.com/settings/tokens>`__ (``repo`` and all ``read`` scopes except ``enterprise``)
 -  `GitLab Access Token <https://gitlab.com/profile/personal_access_tokens>`__ 
 -  `Python 3.6 or later <https://www.python.org/downloads/>`__
 
-Our REST API & data collection workers are written in Python 3.6. GitLab and a GitHub access keys are **required** for data collection.
-We query the GitHub & GitLab API to collect data about issues, pull requests, contributors, and other information about a repository.
+Our REST API & data collection workers are written in Python 3.6. We query the GitHub & GitLab API to collect data about issues, pull requests, contributors, and other information about a repository, so GitLab and GitHub access tokens are **required** for data collection.
 
-Optional dependencies:
+Optional:
 
--  `Go 1.12 or higher installation <https://https://golang.org/doc/install>`__ 
+-  `Go 1.12 or later <https://https://golang.org/doc/install>`__ 
 
 The ``value_worker`` uses a Go package called `scc <https://github.com/boyter/scc>`_ to run COCOMO calculations.
+Once you've installed Go, follow the appropriate steps for your system to install the ``scc`` package.
 
 Frontend
 ---------
-If you're interested in using our visualizations as well, you can optionally install the frontend dependencies.
-You will need:
+If you're interested in using our visualizations, you can optionally install the frontend dependencies:
 
--  `npm <https://www.npmjs.com/>`__ On Ubuntu, for example, ``sudo apt-get install npm``
--  `Vue.js <https://vuejs.org/>`__  ``npm install vue``
--  `vue-cli <https://cli.vuejs.org/>`__  ``npm install vue-cli``
--  `node <https://nodejs.org/en/>`__  ``npm install node`` 
+-  `node <https://nodejs.org/en/>`__
+-  `npm <https://www.npmjs.com/>`__
+-  `Vue.js <https://vuejs.org/>`__  ``
+-  `vue-cli <https://cli.vuejs.org/>`__
 
 We use Vue.js as our frontend web framework, and ``npm`` as our package manager.
 
@@ -40,17 +38,21 @@ We use Vue.js as our frontend web framework, and ``npm`` as our package manager.
 Installing Augur
 =================
 
-Lines that start with a ``$`` denote a bash command.
+Now you're ready to build! The steps below outline how to create a virtual environment (**required**) and start the installation process,
+after which you'll move on to the next section to configure the workers.
 
-0. Clone the repository.
+.. note::
+  Lines that start with a ``$`` denote a command to be run in an interactive terminal.
+
+0. Clone the repository and change to the newly created directory.
 
 .. code-block:: bash
 
    $ git clone https://github.com/chaoss/augur.git
    $ cd augur/
 
-1. Create a virtual environment in your home environment. Be sure to use
-   the correct ``python`` command for your installation of Python 3.6+ - on most systems, this is ``python3``, but yours may differ.
+1. Create a virtual environment in a directory of your choosing. Be sure to use the correct ``python`` command for 
+your installation of Python 3: on most systems, this is ``python3``, but yours may differ (you can use ``python -V`` or ``python3 -V`` to check).
 
 .. code-block:: bash
 
@@ -62,11 +64,13 @@ Lines that start with a ``$`` denote a bash command.
 
 2. Run the install script. This script will:
 
-- install Augur’s metrics API & data collection controllers
+- install Augur’s Python library and application server
 - install Augur's data collection workers
-- generate a configuration file using your database credentials
-- if needed, install the schema in configured the database
-- optionally, install Augur’s frontend and its dependencies 
+- prompt you for configuration settings, including your database credentials
+- generate a configuration file using your provided settings
+- install Augur's schema in the configured database
+- optionally, install Augur’s frontend and its dependencies
+- generate and output an Augur API key
 
 .. note::
 

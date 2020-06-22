@@ -1,16 +1,6 @@
 #!/bin/bash
 set -euo pipefail
 
-read -r -p "Would you like to install Augur's frontend dependencies? [Y/n] " response
-case "$response" in
-  [yY][eE][sS]|[yY]) 
-    install_deps > logs/install/frontend.log 2>&1
-    ;;
-  *)
-    echo "Skipping frontend dependencies..."
-    ;;
-esac
-
 function install_deps() {
 
     if [[ $(command -V npm) ]]; then
@@ -18,9 +8,8 @@ function install_deps() {
     echo "Installing frontend dependencies..."
     echo "**********************************"
     echo
+    npm install;
     npm install brunch canvas vega @vue/cli;
-    npm install; 
-    npm run build;
     cd ../;
     echo "Done!"
     else
@@ -30,3 +19,16 @@ function install_deps() {
     exit 1
     fi
 }
+
+read -r -p "Would you like to install Augur's frontend dependencies? [Y/n] " response
+case "$response" in
+  [yY][eE][sS]|[yY]) 
+    echo "Installing..."
+    install_deps > logs/install/frontend.log 2>&1
+    echo "Done!"
+    ;;
+  *)
+    echo "Skipping frontend dependencies..."
+    ;;
+esac
+

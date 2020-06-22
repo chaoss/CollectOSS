@@ -14,7 +14,7 @@ find . -type f -name "*.lock" -delete
 rm -rf logs/
 
 echo "Removing build files..."
-find . -name build/ -delete
-find . -name dist/ -delete
+find . -wholename build/ -delete
+find . -wholename dist/ -delete
 rm -rf .tox/
 echo "Done cleaning!"

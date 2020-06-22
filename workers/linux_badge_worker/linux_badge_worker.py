@@ -31,7 +31,7 @@ class LinuxBadgeWorker(Worker):
 
         self.config.update({"endpoint": "https://bestpractices.coreinfrastructure.org/projects.json?pq="})
         self.tool_source = 'Linux Badge Worker'
-        self.tool_version = '0.1.0'
+        self.tool_version = '1.0.0'
         self.data_source = 'CII Badging API'
 
 
