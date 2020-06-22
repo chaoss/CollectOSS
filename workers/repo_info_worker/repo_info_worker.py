@@ -202,7 +202,8 @@ class RepoInfoWorker(Worker):
             'repo_archived': archived,
             'repo_archived_date_collected': archived_date_collected
         }
-        result = self.db.execute(self.repo_table.update().where(repo_table.c.repo_id==repo_id).values(rep_additional_data))
+        result = self.db.execute(self.repo_table.update().where(
+            self.repo_table.c.repo_id==repo_id).values(rep_additional_data))
         self.logger.info(f"Primary Key inserted into repo table: {result.inserted_primary_key}\n")
 
         self.logger.info(f"Inserted info for {owner}/{repo}\n")
