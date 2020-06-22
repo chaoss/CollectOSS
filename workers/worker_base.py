@@ -567,7 +567,7 @@ class Worker():
         self.results_counter += 1
         self.cntrb_id_inc = int(result.inserted_primary_key[0])
 
-        self.logger.info("Inserted contributor: " + contributor[0]['username'] + "\n")
+        self.logger.info("Inserted contributor: " + cntrb['cntrb_login'] + "\n")
         
         return self.find_id_from_login(login, platform)
 
@@ -1298,9 +1298,21 @@ class Worker():
             for oauth in other_oauths:
                 self.logger.info("Inspecting rate limit info for oauth: {}\n".format(oauth))
                 self.headers = {'Authorization': 'token %s' % oauth['access_token']}
-                response = requests.get(url=url, headers=self.headers)
-                oauth['rate_limit'] = int(response.headers['X-RateLimit-Remaining'])
-                oauth['seconds_to_reset'] = (datetime.datetime.fromtimestamp(int(response.headers['X-RateLimit-Reset'])) - datetime.datetime.now()).total_seconds()
+
+                attempts = 3
+                success = False
+                while attempts > 0 and not success:
+                    response = requests.get(url=url, headers=self.headers)
+                    try:
+                        oauth['rate_limit'] = int(response.headers['X-RateLimit-Remaining'])
+                        oauth['seconds_to_reset'] = (datetime.datetime.fromtimestamp(int(response.headers['X-RateLimit-Reset'])) - datetime.datetime.now()).total_seconds()
+                        success = True
+                    except Exception as e:
+                        self.logger.info(f'oath method ran into error getting info from headers: {e}\n')
+                        self.logger.info(f'{self.headers}\n{url}\n')
+                    attempts -= 1
+                if not success:
+                    continue
 
                 # Update oauth to switch to if a higher limit is found
                 if oauth['rate_limit'] > new_oauth['rate_limit']:
