@@ -579,7 +579,7 @@ class Worker():
         owner = split[-2]
         repo = split[-1]
 
-        if '.git' in repo:
+        if '.git' == repo[-4:]:
             repo = repo[:-4]
 
         return owner, repo
