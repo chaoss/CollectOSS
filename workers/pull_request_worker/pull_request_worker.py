@@ -714,7 +714,8 @@ class GitHubPullRequestWorker(Worker):
 
             msg = {
                 'rgls_id': None,
-                'msg_text': pr_msg_dict['body'],
+                'msg_text': pr_msg_dict['body'].replace("0x00", "____") if \
+                    'body' in pr_msg_dict else None,
                 'msg_timestamp': pr_msg_dict['created_at'],
                 'msg_sender_email': None,
                 'msg_header': None,
