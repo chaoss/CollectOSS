@@ -23,7 +23,7 @@ class RepoInfoWorker(Worker):
         models = ['repo_info']
 
         # Define the tables needed to insert, update, or delete on
-        data_tables = ['repo_info']
+        data_tables = ['repo_info', 'repo']
         operations_tables = ['worker_history', 'worker_job']
 
         # Run the general worker initialization
@@ -31,7 +31,7 @@ class RepoInfoWorker(Worker):
 
         # Define data collection info
         self.tool_source = 'Repo Info Worker'
-        self.tool_version = '0.0.1'
+        self.tool_version = '1.0.0'
         self.data_source = 'GitHub API'
 
     def repo_info_model(self, task, repo_id):
@@ -106,6 +106,7 @@ class RepoInfoWorker(Worker):
         # Hit the graphql endpoint and retry 3 times in case of failure
         num_attempts = 0
         success = False
+        data = None
         while num_attempts < 3:
             self.logger.info("Hitting endpoint: {} ...\n".format(url))
             r = requests.post(url, json={'query': query}, headers=self.headers)
@@ -139,19 +140,19 @@ class RepoInfoWorker(Worker):
                     continue
             num_attempts += 1
         if not success:
-            self.register_task_failure(task, repo_id, "Failed to hit endpoint: {}".format(url))
+            self.register_task_failure(self.task, repo_id, "Failed to hit endpoint: {}".format(url))
+            return
+
+        # Just checking that the data is accessible (would not be if repo no longer exists)
+        try:
+            data['updatedAt']
+        except Exception as e:
+            self.logger.error('Cannot access repo_info data: {}\nError: {}'.format(data, e))
+            self.register_task_failure(self.task, repo_id, "Failed to hit endpoint: {}".format(url))
             return
 
         # Get committers count info that requires seperate endpoint
         committers_count = self.query_committers_count(owner, repo)
-        # Note that the addition of information about where a repository may be forked from, and whether a repository is archived, updates the `repo` table, not the `repo_info` table.
-        forked = self.is_forked(owner, repo)
-        archived = self.is_archived(owner, repo)
-        if archived is not False:
-            archived_date_collected = archived
-            archived = True
-        else:
-            archived_date_collected = None
 
         # Put all data together in format of the table
         self.logger.info(f'Inserting repo info for repo with id:{repo_id}, owner:{owner}, name:{repo}\n')
@@ -189,19 +190,34 @@ class RepoInfoWorker(Worker):
             'tool_source': self.tool_source,
             'tool_version': self.tool_version,
             'data_source': self.data_source
-            # 'forked_from': forked,
-            # 'repo_archived': archived,
-            # 'repo_archived_date_collected': archived_date_collected
         }
 
         result = self.db.execute(self.repo_info_table.insert().values(rep_inf))
         self.logger.info(f"Primary Key inserted into repo_info table: {result.inserted_primary_key}\n")
         self.results_counter += 1
 
+        # Note that the addition of information about where a repository may be forked from, and whether a repository is archived, updates the `repo` table, not the `repo_info` table.
+        forked = self.is_forked(owner, repo)
+        archived = self.is_archived(owner, repo)
+        archived_date_collected = None
+        if archived is not False:
+            archived_date_collected = archived
+            archived = 1
+        else:
+            archived = 0
+
+        rep_additional_data = {
+            'forked_from': forked,
+            'repo_archived': archived,
+            'repo_archived_date_collected': archived_date_collected
+        }
+        result = self.db.execute(self.repo_table.update().where(
+            self.repo_table.c.repo_id==repo_id).values(rep_additional_data))
+
         self.logger.info(f"Inserted info for {owner}/{repo}\n")
 
-        #Register this task as completed
-        self.register_task_completion(task, repo_id, "repo_info")
+        # Register this task as completed
+        self.register_task_completion(self.task, repo_id, "repo_info")
 
     def query_committers_count(self, owner, repo):
         self.logger.info('Querying committers count\n')
@@ -219,12 +235,12 @@ class RepoInfoWorker(Worker):
                 else:
                     url = r.links['next']['url']
         except Exception:
-            logging.exception('An error occured while querying contributor count\n')
+            self.logger.exception('An error occured while querying contributor count\n')
 
         return committers
 
     def is_forked(self, owner, repo): #/repos/:owner/:repo parent
-        logging.info('Querying parent info to verify if the repo is forked\n')
+        self.logger.info('Querying parent info to verify if the repo is forked\n')
         url = f'https://api.github.com/repos/{owner}/{repo}'
 
         r = requests.get(url, headers=self.headers)
@@ -240,7 +256,7 @@ class RepoInfoWorker(Worker):
         return False
 
     def is_archived(self, owner, repo):
-        logging.info('Querying committers count\n')
+        self.logger.info('Querying committers count\n')
         url = f'https://api.github.com/repos/{owner}/{repo}'
 
         r = requests.get(url, headers=self.headers)
@@ -265,21 +281,21 @@ class RepoInfoWorker(Worker):
             data = json.loads(json.dumps(response.text))
 
         if 'errors' in data:
-            logging.info("Error!: {}".format(data['errors']))
+            self.logger.info("Error!: {}".format(data['errors']))
             if data['errors'][0]['message'] == 'API rate limit exceeded':
                 self.update_gh_rate_limit(response)
 
         if 'id' in data:
             success = True
         else:
-            logging.info("Request returned a non-data dict: {}\n".format(data))
+            self.logger.info("Request returned a non-data dict: {}\n".format(data))
             if data['message'] == 'Not Found':
-                logging.info("Github repo was not found or does not exist for endpoint: {}\n".format(url))
+                self.logger.info("Github repo was not found or does not exist for endpoint: {}\n".format(url))
             if data['message'] == 'You have triggered an abuse detection mechanism. Please wait a few minutes before you try again.':
                 self.update_gh_rate_limit(r, temporarily_disable=True)
             if data['message'] == 'Bad credentials':
                 self.update_gh_rate_limit(r, bad_credentials=True)
         if not success:
-            self.register_task_failure(task, repo_id, "Failed to hit endpoint: {}".format(url))
+            self.register_task_failure(self.task, repo_id, "Failed to hit endpoint: {}".format(url))
 
         return data

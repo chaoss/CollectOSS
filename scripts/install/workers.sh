@@ -33,7 +33,7 @@ do
         if [[ $target == *"prod"* ]]; then
             pip install .
         else
-            pip install -e .
+            pip install -e .[dev]
         fi
         cd ../..
       fi

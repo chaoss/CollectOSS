@@ -5,20 +5,7 @@ Database Commands
 ``augur db``
 =============
 
-The collection of the ``augur db`` commands is for interacting with the database. Below is the list of all the database commands including an example parameter if one is needed.
-
-.. hlist::
-  :columns: 1
-
-  * ``add-repo-groups filename.csv``
-  * ``add-repos filename.csv``
-  * ``get-repo-groups``
-  * ``update-repo-directory REPO_DIRECTORY``
-  * ``generate-api-key``
-  * ``get-api-key``
-  * ``print-db-version``
-  * ``upgrade-db-version``
-  * ``create-schema``
+The collection of ``augur db`` commands is for interacting with the database.
 
 ``add-repo-groups``
 --------------------
@@ -44,6 +31,10 @@ Example usage\:
   10,Repo Group 1
   20,Repo Group 2
 
+  # successful output looks like:
+  > CLI: [db.add_repo_groups] [INFO] Inserting repo group with name Repo Group 1 and ID 10...
+  > CLI: [db.add_repo_groups] [INFO] Inserting repo group with name Repo Group 2 and ID 20...
+
 
 ``get-repo-groups``
 --------------------
@@ -53,12 +44,15 @@ Example usage\:
 
 .. code-block:: bash
 
-  # to add repos to the database
+  # to retrive the repo groups
   $ augur db get-repo-groups
 
   # successful output looks like:
-  > repo_group_id  rg_name    rg_description
-    1              Default    Default repo group
+  >    repo_group_id             rg_name                                     rg_description
+  > 0              1  Default Repo Group  The default repo group created by the schema g...
+  > 1             10        Repo Group 1
+  > 2             20        Repo Group 2
+
 
 
 ``add-repos``
@@ -75,6 +69,10 @@ The ``.csv`` file must have the following format:
 where ``<repo_group_id>`` is an **existing** repository group ID, and ``<git_repo_url>`` is the url to the repository's Git repository, e.g. ``https://github.com/chaoss/augur.git``. 
 Each pair of values should be on its own line (indicated by the ...), without quotes, and there should be no column headers.
 
+.. note::
+
+  If you don't know what ``repo_group_id`` to use, run the ``augur db get-repo-groups`` command to view the repo groups that are currently in your DB; unless you've deleted it, there should be a default one that you can use.
+
 Example usage\:
 
 .. code-block:: bash
@@ -89,27 +87,18 @@ Example usage\:
   20,https://github.com/chaoss/wg-diversity-inclusion.git
   20,https://github.com/chaoss/wg-app-ecosystem.git
 
-
   # to add repos to the database
   $ augur db add-repos repos.csv
 
-.. note::
-
-  If you don't know what ``repo_group_id`` to use, run the ``augur db get-repo-groups`` command to view the repo groups that are currently in your DB; unless you've deleted it, there should be a default one that you can use.
-
-``update-repo-directory``
--------------------------
-The ``update-repo-directory`` command will update the Facade worker repo cloning directory. When given an existing repo directory, it will modify existing records in the database and continue to update until there are no more rows to be inserted. 
-
-Example usage\:
-
-.. code-block:: bash
-
-  # to update a repo in the database
-  $ augur db update-repo-directory REPO_DIRECTORY  
-
-  # successful output looks like:
-  > Successfully updated the Facade worker repo directory.
+  # successful output looks like
+  > CLI: [db.add_repos] [INFO] Inserting repo with Git URL `https://github.com/chaoss/augur.git` into repo group 10
+  > CLI: [db.add_repos] [INFO] Inserting repo with Git URL `https://github.com/chaoss/grimoirelab.git` into repo group 10
+  > CLI: [db.add_repos] [INFO] Inserting repo with Git URL `https://github.com/chaoss/wg-evolution.git` into repo group 20
+  > CLI: [db.add_repos] [INFO] Inserting repo with Git URL `https://github.com/chaoss/wg-risk.git` into repo group 20
+  > CLI: [db.add_repos] [INFO] Inserting repo with Git URL `https://github.com/chaoss/wg-common.git` into repo group 20
+  > CLI: [db.add_repos] [INFO] Inserting repo with Git URL `https://github.com/chaoss/wg-value.git` into repo group 20
+  > CLI: [db.add_repos] [INFO] Inserting repo with Git URL `https://github.com/chaoss/wg-diversity-inclusion.git` into repo group 20
+  > CLI: [db.add_repos] [INFO] Inserting repo with Git URL `https://github.com/chaoss/wg-app-ecosystem.git` into repo group 20
 
 
 ``generate-api-key``
@@ -124,7 +113,8 @@ Example usage\:
   $ augur db generate-api-key
 
   # successful output looks like (this will be an actual key):
-  > some_new_key_abc_123
+  > CLI: [db.update_api_key] [INFO] Updated Augur API key to: new_key_abc_123
+  > new_key_abc_123
 
 
 ``get-api-key``
@@ -139,7 +129,7 @@ Example usage\:
   $ augur db get-api-key
 
   # successful output looks like (this will be an actual key):
-  > some_existing_key_def_456
+  > existing_key_def_456
 
 
 ``print-db-version``
@@ -154,7 +144,7 @@ Example usage\:
   $ augur db print-db-version
 
   # successful output looks like:
-  > 15
+  > 1
 
 
 ``upgrade-db-version``
@@ -168,11 +158,27 @@ Example usage\:
   # to upgrade the user's database to the current version
   $ augur db upgrade-db-version
 
-  # successful output looks like this your DB is up to date
-  > Your database is already up to date. 
+  # successful output if your DB is already up to date
+  > CLI: [db.check_pgpass_credentials] [INFO] Credentials found in $HOME/.pgpass
+  > CLI: [db.upgrade_db_version] [INFO] Your database is already up to date.
 
-  # successful output looks like this if your DB needs to be upgraded
-  > Upgrading from 11 to 12. 
+  # successful output if your DB needs to be upgraded
+  > [INFO] Attempting to load config file
+  > [INFO] Config file loaded successfully
+  > CLI: [db.check_pgpass_credentials] [INFO] Credentials found in $HOME/.pgpass
+  > CLI: [db.upgrade_db_version] [INFO] Upgrading from 16 to 17
+  > ALTER TABLE "augur_data"."repo"
+  >   ALTER COLUMN "forked_from" TYPE varchar USING "forked_from"::varchar;
+  > ALTER TABLE
+  > ALTER TABLE "augur_data"."repo"
+  >   ADD COLUMN "repo_archived" int4,
+  >   ADD COLUMN "repo_archived_date_collected" timestamptz(0),
+  >   ALTER COLUMN "forked_from" TYPE varchar USING "forked_from"::varchar;
+  > ALTER TABLE
+  > update "augur_operations"."augur_settings" set value = 17 where setting = 'augur_data_version';
+  > UPDATE 1
+  > CLI: [db.upgrade_db_version] [INFO] Upgrading from 17 to 18
+  > etc...
 
 
 ``create-schema``
@@ -187,4 +193,4 @@ Example usage\:
   $ augur db create-schema
 
 .. note::
-  If this runs sucessfully, you should see a bunch of schema creation commands fly by pretty fast. If everything worked you should see: ``update "augur_operations"."augur_settings" set value = 14 where setting = 'augur_data_version';`` at the end.
+  If this runs sucessfully, you should see a bunch of schema creation commands fly by pretty fast. If everything worked you should see: ``update "augur_operations"."augur_settings" set value = xx where setting = 'augur_data_version';`` at the end.
