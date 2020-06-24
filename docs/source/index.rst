@@ -14,7 +14,7 @@ Otherwise, feel free to hop right into the docs!
    development-guide/toc
    rest-api/api
    deployment/toc
-.. library-documentation/toc
+   library-documentation/toc
 .. schema/toc
    
 
