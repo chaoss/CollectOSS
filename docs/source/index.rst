@@ -13,9 +13,10 @@ Otherwise, feel free to hop right into the docs!
    docker/toc
    development-guide/toc
    rest-api/api
+   deployment/toc
 .. library-documentation/toc
 .. schema/toc
-.. deployment/toc
+   
 
 
 What is Augur?
