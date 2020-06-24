@@ -140,7 +140,7 @@ class RepoInfoWorker(Worker):
                     continue
             num_attempts += 1
         if not success:
-            self.register_task_failure(self.task, repo_id, data, "Failed to hit endpoint: {}".format(url))
+            self.register_task_failure(self.task, repo_id, "Failed to hit endpoint: {}".format(url))
             return
 
         # Just checking that the data is accessible (would not be if repo no longer exists)
@@ -148,7 +148,7 @@ class RepoInfoWorker(Worker):
             data['updatedAt']
         except Exception as e:
             self.logger.error('Cannot access repo_info data: {}\nError: {}'.format(data, e))
-            self.register_task_failure(self.task, repo_id, data, "Failed to hit endpoint: {}".format(url))
+            self.register_task_failure(self.task, repo_id, "Failed to hit endpoint: {}".format(url))
             return
 
         # Get committers count info that requires seperate endpoint
