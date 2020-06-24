@@ -238,7 +238,6 @@ class GitHubPullRequestWorker(Worker):
                             on=update_columns, suffixes=('','_table'), how='outer',indicator=True
                                 ).loc[lambda x : x['_merge']=='left_only'][table_columns]
 
-
         need_updates['b_pull_request_id'] = need_updates['pull_request_id'] 
         need_updates['b_pr_file_path'] = need_updates['pr_file_path'] 
 

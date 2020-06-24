@@ -375,6 +375,12 @@ class Worker():
                     'Moving to next tuple.\n')
                 continue
 
+            if not existing_tuple:
+                self.logger.info('An existing tuple was not found for this data ' +
+                    'point and we have reached the check-updates portion of assigning ' +
+                    'tuple action, so we will now move to next data point\n')
+                continue
+
             # If we need to check the values of the existing tuple to determine if an update is needed
             for augur_col, value_check in value_update_col_map.items():
                 not_nan_check = not (math.isnan(value_check) and math.isnan(existing_tuple[augur_col])) if value_check is not None else True
