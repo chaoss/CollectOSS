@@ -18,7 +18,7 @@ Our REST API & data collection workers are written in Python 3.6. We query the G
 
 Optional:
 
--  `Go 1.12 or later <https://https://golang.org/doc/install>`__ 
+-  `Go 1.12 or later <https://golang.org/doc/install>`__ 
 
 The ``value_worker`` uses a Go package called `scc <https://github.com/boyter/scc>`_ to run COCOMO calculations.
 Once you've installed Go, follow the appropriate steps for your system to install the ``scc`` package.
