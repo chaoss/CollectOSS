@@ -354,9 +354,15 @@ class Worker():
                 continue
 
             obj['flag'] = 'none' # default of no action needed
+            existing_tuple = None
             for db_dupe_key in list(duplicate_col_map.keys()):
 
                 if table_values.isin([obj[duplicate_col_map[db_dupe_key]]]).any().any():
+                    if table_values[table_values[db_dupe_key].isin(
+                        [obj[duplicate_col_map[db_dupe_key]]])].to_dict('records'):
+
+                        existing_tuple = table_values[table_values[db_dupe_key].isin(
+                            [obj[duplicate_col_map[db_dupe_key]]])].to_dict('records')[0]
                     continue
 
                 self.logger.info('Found a tuple that needs insertion based on dupe key: {}\n'.format(db_dupe_key))
@@ -369,14 +375,11 @@ class Worker():
                     'Moving to next tuple.\n')
                 continue
 
-            try:
-                existing_tuple = table_values[table_values[db_dupe_key].isin(
-                    [obj[duplicate_col_map[db_dupe_key]]])].to_dict('records')[0]
-            except Exception as e:
-                self.logger.info('Special case assign_tuple_action error')
-                self.logger.info(f'Error: {e}')
-                self.logger.info(f'Related vars: {table_values}, ' +
-                    f'{table_values[db_dupe_key].isin([obj[duplicate_col_map[db_dupe_key]]])}')
+            if not existing_tuple:
+                self.logger.info('An existing tuple was not found for this data ' +
+                    'point and we have reached the check-updates portion of assigning ' +
+                    'tuple action, so we will now move to next data point\n')
+                continue
 
             # If we need to check the values of the existing tuple to determine if an update is needed
             for augur_col, value_check in value_update_col_map.items():
@@ -567,7 +570,7 @@ class Worker():
         self.results_counter += 1
         self.cntrb_id_inc = int(result.inserted_primary_key[0])
 
-        self.logger.info("Inserted contributor: " + contributor[0]['username'] + "\n")
+        self.logger.info("Inserted contributor: " + cntrb['cntrb_login'] + "\n")
         
         return self.find_id_from_login(login, platform)
 
@@ -582,7 +585,7 @@ class Worker():
         owner = split[-2]
         repo = split[-1]
 
-        if '.git' in repo:
+        if '.git' == repo[-4:]:
             repo = repo[:-4]
 
         return owner, repo
@@ -1298,9 +1301,21 @@ class Worker():
             for oauth in other_oauths:
                 self.logger.info("Inspecting rate limit info for oauth: {}\n".format(oauth))
                 self.headers = {'Authorization': 'token %s' % oauth['access_token']}
-                response = requests.get(url=url, headers=self.headers)
-                oauth['rate_limit'] = int(response.headers['X-RateLimit-Remaining'])
-                oauth['seconds_to_reset'] = (datetime.datetime.fromtimestamp(int(response.headers['X-RateLimit-Reset'])) - datetime.datetime.now()).total_seconds()
+
+                attempts = 3
+                success = False
+                while attempts > 0 and not success:
+                    response = requests.get(url=url, headers=self.headers)
+                    try:
+                        oauth['rate_limit'] = int(response.headers['X-RateLimit-Remaining'])
+                        oauth['seconds_to_reset'] = (datetime.datetime.fromtimestamp(int(response.headers['X-RateLimit-Reset'])) - datetime.datetime.now()).total_seconds()
+                        success = True
+                    except Exception as e:
+                        self.logger.info(f'oath method ran into error getting info from headers: {e}\n')
+                        self.logger.info(f'{self.headers}\n{url}\n')
+                    attempts -= 1
+                if not success:
+                    continue
 
                 # Update oauth to switch to if a higher limit is found
                 if oauth['rate_limit'] > new_oauth['rate_limit']:

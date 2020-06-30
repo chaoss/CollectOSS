@@ -238,7 +238,6 @@ class GitHubPullRequestWorker(Worker):
                             on=update_columns, suffixes=('','_table'), how='outer',indicator=True
                                 ).loc[lambda x : x['_merge']=='left_only'][table_columns]
 
-
         need_updates['b_pull_request_id'] = need_updates['pull_request_id'] 
         need_updates['b_pr_file_path'] = need_updates['pr_file_path'] 
 
@@ -714,7 +713,8 @@ class GitHubPullRequestWorker(Worker):
 
             msg = {
                 'rgls_id': None,
-                'msg_text': pr_msg_dict['body'],
+                'msg_text': pr_msg_dict['body'].replace("0x00", "____") if \
+                    'body' in pr_msg_dict else None,
                 'msg_timestamp': pr_msg_dict['created_at'],
                 'msg_sender_email': None,
                 'msg_header': None,
