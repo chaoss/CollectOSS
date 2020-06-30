@@ -58,6 +58,8 @@ fi
 if [[ ! -d logs ]]; then
     mkdir logs
     mkdir logs/install
-elif [[ ! -d logs/install ]]; then
+fi
+
+if [[ ! -d logs/install ]]; then
     mkdir logs/install
 fi
