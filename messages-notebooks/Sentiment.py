@@ -346,7 +346,7 @@ class SentiCR:
     def get_classifier(self):
         algo = self.algo
         if algo == "GBT":
-            return GradientBoostingClassifier()
+            return GradientBoostingClassifier(learning_rate=0.01, n_estimators=1000,)
         elif algo == "XGB":
             return XGBClassifier(num_class=3)
         return 0
@@ -366,9 +366,9 @@ class SentiCR:
         self.vectorizer = TfidfVectorizer(tokenizer=tokenize_and_stem, sublinear_tf=True, max_df=0.5,
                                           stop_words=mystop_words, min_df=3)
         # Saving vectors as .pkl file
-        joblib.dump(self.vectorizer, 'tfidf_vectorizer.pkl')
         X_train = self.vectorizer.fit_transform(training_comments).toarray()
         Y_train = np.array(training_ratings)
+        joblib.dump(self.vectorizer, 'tfidf_vectorizer.pkl')
         print('Tfidf done')
 
         # Apply SMOTE to improve ratio of the minority class if needed
@@ -396,8 +396,17 @@ class SentiCR:
             oracle_data.append(comments)
         return oracle_data
 
-    def get_sentiment_polarity(self, text):
+    def get_sentiment_polarity(self, text, labels=False):
         comment = preprocess_text(text)
         feature_vector = self.vectorizer.transform([comment]).toarray()
         sentiment_class = self.model.predict(feature_vector)
-        return sentiment_class
+        score = np.amax(self.model.predict_proba(feature_vector))
+        # print(sentiment_class, sentiment_score)
+        if not isinstance(sentiment_class, float):
+            sentiment_score = score*sentiment_class[0]
+            sentiment_class = sentiment_class[0]
+        else:
+            sentiment_score = score*sentiment_class
+        if labels:
+            return (sentiment_class, sentiment_score)
+        return sentiment_score
