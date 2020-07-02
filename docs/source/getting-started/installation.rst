@@ -3,6 +3,18 @@ Installation
 
 This section of the documentation details how to install Augur's Python library from source. If you don't have a required dependency, please follow the provided links to install and configure it.
 
+macOS Errata
+~~~~~~~~~~~~~
+If you're running Augur on macOS, we strongly suggest adding the following line to your shell's initialization script::
+
+  export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
+
+macOS takes "helpful" measures to prevent Python subprocesses (which Augur uses) from forking cleanly, and setting this environment variable disables these safety measures to restore normal Python functionality.
+
+.. warning::
+  If you skip this step, you'll likely see all housekeeer jobs randomly exiting for no reason, and the Gunicorn server will not behave nicely either. Don't say we didn't warn you!
+
+
 Dependencies
 ~~~~~~~~~~~~~
 
@@ -18,7 +30,7 @@ Our REST API & data collection workers are written in Python 3.6. We query the G
 
 Optional:
 
--  `Go 1.12 or later <https://https://golang.org/doc/install>`__ 
+-  `Go 1.12 or later <https://golang.org/doc/install>`__ 
 
 The ``value_worker`` uses a Go package called `scc <https://github.com/boyter/scc>`_ to run COCOMO calculations.
 Once you've installed Go, follow the appropriate steps for your system to install the ``scc`` package.
