@@ -60,9 +60,13 @@ class FacadeWorker(Worker):
         self.cfg = Config(self.logger)
 
         # Define data collection info
-        self.tool_source = 'Facade Worker'
-        self.tool_version = '1.0.0'
-        self.data_source = 'Git Log'
+        # self.tool_source = 'Facade Worker'
+        # self.tool_version = '1.0.0'
+        # self.data_source = 'Git Log'
+
+        self.tool_source = '\'Facade Worker\''
+        self.tool_version = '\'1.0.1\''
+        self.data_source = '\'Git Log\''
 
     def initialize_database_connections(self):
 
