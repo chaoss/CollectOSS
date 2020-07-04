@@ -493,6 +493,18 @@ class Worker():
         self.update_rate_limit(r)
         contributor = r.json()
 
+        
+        company = None
+        location = None
+        email = None
+        if 'company' in contributor:
+            company = contributor['company']
+        if 'location' in contributor:
+            location = contributor['location']
+        if 'email' in contributor:
+            email = contributor['email']
+            
+
         if platform == 'github':
             cntrb = {
                 "cntrb_login": contributor['login'] if 'login' in contributor else None,
