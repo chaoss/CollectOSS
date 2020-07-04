@@ -24,7 +24,7 @@ CREATE INDEX "login" ON "augur_data"."contributors" USING btree (
   "cntrb_login" COLLATE "pg_catalog"."default" "pg_catalog"."text_ops" ASC NULLS LAST
 );
 
-
+ALTER TABLE "augur_data"."repo_info" ALTER COLUMN "data_collection_date" SET DEFAULT CURRENT_TIMESTAMP;
 
 
 update "augur_operations"."augur_settings" set value = 20 where setting = 'augur_data_version'; 
