@@ -24,6 +24,11 @@ read -r -p "Would you like to install Augur's frontend dependencies? [Y/n] " res
 case "$response" in
   [yY][eE][sS]|[yY]) 
     echo "Installing..."
+
+    if [[ ! -d logs/install ]]; then
+    mkdir logs/install
+    fi
+
     install_deps > logs/install/frontend.log 2>&1
     echo "Done!"
     ;;
