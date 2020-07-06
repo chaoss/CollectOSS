@@ -66,6 +66,7 @@ class GitHubPullRequestWorker(Worker):
         tuples = []
 
         def find_root_of_subject(data, key_subject):
+            self.logger.info(f'Finding {key_subject} root of {data}')
             key_nest = None
             for subject, nest in data.items():
                 if key_subject in nest: 
