@@ -20,7 +20,7 @@ CREATE INDEX "cmt_commiter_contrib_worker" ON "augur_data"."commits" USING brin 
   "cmt_committer_date" COLLATE "pg_catalog"."default" "pg_catalog"."text_minmax_ops"
 );
 
-CREATE INDEX "login" ON "augur_data"."contributors" USING btree (
+CREATE INDEX "cntrb_login_platform_index" ON "augur_data"."contributors" USING btree (
   "cntrb_login" COLLATE "pg_catalog"."default" "pg_catalog"."text_ops" ASC NULLS LAST
 );
 
