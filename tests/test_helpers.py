@@ -1,4 +1,5 @@
 import pytest
+import os
 import pandas as pd
 from queue import Queue
 from workers.util import read_config
@@ -13,7 +14,9 @@ def test_dump_queues():
     assert queue_to_list == ["x@x.com", "y@y.com", "z@z.com"]
 
 def test_read_config_no_exception():
-    db_name = read_config('Database', 'user', 'AUGUR_DB_USER', 'augur', config_file_path="augur.config.json")
+    base_dir = os.path.dirname(os.path.dirname(__file__))
+    print(base_dir)
+    db_name = read_config('Database', 'user', 'AUGUR_DB_USER', 'augur', config_file_path=base_dir+"/augur.config.json")
     assert db_name == "augur"
 
 def test_read_config_exception():
