@@ -8,7 +8,7 @@
       <div class="row" style="margin-top: 4px;">
         <ul class="nav" style="margin: 0px auto 0px auto;">
           <li v-for="(item, idx) in menuItems" :key="idx" class="nav-item">
-            <d-link class="nav-link" :to="item.to">{{ item.title }}</d-link>
+            <d-link class="nav-link" :href="item.to">{{ item.title }}</d-link>
           </li>
         </ul>
         <!-- <span class="copyright ml-auto my-auto mr-2">{{ copyright }}</span> -->
