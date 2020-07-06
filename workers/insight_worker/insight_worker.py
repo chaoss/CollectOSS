@@ -12,6 +12,24 @@ import datetime
 from sklearn.ensemble import IsolationForest
 from workers.worker_base import Worker
 import warnings
+import logging
+
+
+
+import random
+from functools import reduce
+from keras.models import load_model
+from keras.models import Sequential
+from keras.layers import LSTM,Bidirectional,Activation
+from keras import optimizers
+from keras.layers import Dense,Dropout
+from sklearn.ensemble import IsolationForest
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.cluster import AgglomerativeClustering,KMeans
+from statsmodels.tsa.seasonal import STL
+
+
+
 warnings.filterwarnings('ignore')
 
 class InsightWorker(Worker):
@@ -52,10 +70,10 @@ class InsightWorker(Worker):
         self.confidence = self.config['confidence_interval'] / 100
         self.metrics = self.config['metrics']
         
-    def insights_model(self, entry_info, repo_id):
+    def previous_version_model(self, entry_info, repo_id):
 
-        logging.info("Discovering insights for task with entry info: {}\n".format(entry_info))
-
+        self.logger.info("Discovering insights for task with entry info: {}\n".format(entry_info))
+        
         """ Collect data """
         base_url = 'http://{}:{}/api/unstable/repo-groups/9999/repos/{}/'.format(
             self.config['api_host'], self.config['api_port'], repo_id)
@@ -292,7 +310,365 @@ class InsightWorker(Worker):
                     break
 
         self.register_task_completion(entry_info, repo_id, "insights")
+
+    def insights_model(self, entry_info, repo_id):
+
+        def preprocess_data(data,tr_days,lback_days,n_features,n_predays):
+    
+            
+            train_data = data.values
+
+            features_set = []
+            labels = []
+            for i in range(lback_days, tr_days+1):
+                features_set.append(train_data[i-lback_days:i,0])
+                labels.append(train_data[i:i+n_predays, 0])
+
+            features_set = np.array(features_set)
+            labels = np.array(labels)
+
+            features_set = np.reshape(features_set, (features_set.shape[0], features_set.shape[1], n_features))
+
+            
+            return features_set,labels
+
+
+        def model_lstm(features_set,n_predays,n_features):
+            model = Sequential()
+            model.add(Bidirectional(LSTM(90, activation='linear',return_sequences=True, input_shape=(features_set.shape[1], n_features))))
+            model.add(Dropout(0.2))
+            model.add(Bidirectional(LSTM(90, activation='linear',return_sequences=True)))
+            model.add(Dropout(0.2))
+            model.add(Bidirectional(LSTM(90, activation='linear')))
+            model.add(Dense(1))
+            model.add(Activation('linear'))
+            model.compile(optimizer='adam', loss='mae')
+            return model
         
+
+        def cluster_model(self,entry_info,repo_id,df):
+        
+            data = pd.read_csv("../../time_series_notebook/{}.csv".format(df.columns[1]))
+            data.index = data.iloc[:,0]
+            data.drop(['repo_id'],axis=1,inplace=True)
+
+            scaler = MinMaxScaler()
+            data_scaled = pd.DataFrame(scaler.fit_transform(data))
+            data_scaled.index = data.index
+
+            
+            cluster= KMeans(n_clusters=3, random_state=0).fit(data_scaled)
+            x = cluster.labels_
+            unique, counts = np.unique(x, return_counts=True)
+            
+            df_frame = pd.DataFrame(data.sum(axis=1))
+            df_frame['cluster'] = x
+            df_frame.columns = ['metric','cluster']
+            
+            clusters_means={}
+            for k in unique:
+                filt = df_frame['cluster'] == k
+                df_frame[filt]['metric'].mean()
+                
+                clusters_means[k] = df_frame[filt]['metric'].mean()
+                
+            clusters_means = {ke: v for ke, v in sorted(clusters_means.items(), key=lambda item: item[1])}
+            xp = [t for t in clusters_means.keys()]
+            df_scaled = scaler.transform(pd.DataFrame(df.iloc[-365:,1]).T)
+            
+            pred = cluster.predict(df_scaled)
+            
+            
+            self.logger.info("Clustering of field {} for repo_id {} is completed and it belongs to cluster {}".format(df.columns[1],repo_id,pred))
+            
+            if pred == xp[0]:
+                #return 'less_active'
+                return stl_less_active(self,entry_info,repo_id,df)
+            elif pred == xp[1]:
+                #return 'moderate_active'
+                return lstm_moderate_active(self,entry_info,repo_id,df)
+            else:
+                #return 'highly_active'
+                return lstm_highly_active(self,entry_info,repo_id,df)
+
+
+
+
+
+        def stl_less_active(self,entry_info,repo_id,df_less_active):
+            
+            stl = STL(df_less_active.iloc[:,1], seasonal=5,trend=47,period=45,robust=True)
+            res = stl.fit()
+            
+            std_resid = np.std(res.resid)
+            mean_resid = np.mean(res.resid)
+            
+            #residual outside its 3rd Standard deviation will be considered as outliers
+
+            filt = (res.resid > 3 * std_resid) | (res.resid < -3 * std_resid) 
+            
+            df_less_active['date'] = pd.to_datetime(df_less_active['date'])
+
+            df_less_active = df_less_active.iloc[:,:]
+            df_less_active['score'] = std_resid
+            df_less_active['anomaly_class'] = 0
+            df_less_active.loc[filt,['anomaly_class']] = 1
+
+            begin_detection_date = datetime.datetime.now() - datetime.timedelta(days=self.anomaly_days)
+            detection_tuples = df_less_active.date > begin_detection_date
+            anomaly_df = df_less_active[filt].loc[detection_tuples ]
+            
+            
+            if(len(anomaly_df)!=0):
+                
+            
+                insert_data(self,entry_info,repo_id,anomaly_df,'stl_less_acctive')
+            else:
+                
+                self.logger.info("No outliers found using stl_less_active model")
+                
+        
+
+
+        def lstm_moderate_active(self,entry_info,repo_id,df_moderate_active):
+            
+            
+            scaler = MinMaxScaler(feature_range=(0,1))
+
+            data = pd.DataFrame(df_moderate_active.iloc[:,1])
+            data = pd.DataFrame(scaler.fit_transform(data.values))
+
+
+            #tr_days : number of training days
+            #lback_days : number of days to lookback for next prediction
+            #n_features : number of features of columns in dataframe for training
+            #n_predays : next number of days to predict
+
+            
+            lback_days = 14
+            tr_days = self.training_days -lback_days
+            n_features = 1
+            n_predays = 1
+
+            features_set,labels = preprocess_data(data,tr_days,lback_days,n_features,n_predays)
+            model = model_lstm(features_set,n_predays,n_features)
+
+            history = model.fit(features_set, labels, epochs = 50, batch_size = 10,validation_split=0.1,verbose=0).history
+            
+            
+            test_inputs = data[ :len(df_moderate_active.iloc[:,1])].values
+            test_inputs = test_inputs.reshape(-1,n_features)
+            test_features = []
+            for i in range(lback_days, len(df_moderate_active.iloc[:,1])):
+                test_features.append(test_inputs[i-lback_days:i, 0])
+
+            test_features = np.array(test_features)
+            test_features = np.reshape(test_features, (test_features.shape[0], test_features.shape[1], n_features))
+            predictions = model.predict(test_features)
+            predictions = scaler.inverse_transform(predictions)
+            
+            
+            #Finding anomalies
+            test_data = df_moderate_active.iloc[lback_days:,1]
+            error = np.array(test_data[:]- predictions[:,0])
+            median_error = scipy.stats.median_abs_deviation(error)
+            mean_error = np.mean(error)
+            
+            filt = ( error > 2.5*median_error) | ( error < - 2.5*median_error) 
+            df_moderate_active['date'] = pd.to_datetime(df_moderate_active['date'])
+            
+            ### Inserting anomaly in database
+            df_moderate_active = df_moderate_active.iloc[lback_days:,:]
+            df_moderate_active['score'] = error
+            df_moderate_active['anomaly_class'] = 0
+            df_moderate_active.loc[filt,['anomaly_class']] = 1
+
+            begin_detection_date = datetime.datetime.now() - datetime.timedelta(days=self.anomaly_days)
+            detection_tuples = df_moderate_active.date > begin_detection_date
+            anomaly_df = df_moderate_active[filt].loc[detection_tuples ]
+            
+            
+            if(len(anomaly_df)!=0):
+                
+                insert_data(self,entry_info,repo_id,anomaly_df,'lstm_moderate_acctive')
+                
+            else:
+                #self.register_task_completion(entry_info, repo_id, "insights") 
+                self.logger.info("No outliers found using lstm_moderate_active model")
+              
+            
+
+        def lstm_highly_active(self,entry_info,repo_id,df_highly_active):
+            
+            scaler = MinMaxScaler(feature_range=(0,1))
+
+            data = pd.DataFrame(df_highly_active.iloc[:,1])
+            data = pd.DataFrame(scaler.fit_transform(data.values))
+
+            
+            lback_days = 30
+            tr_days = self.training_days - lback_days
+            n_features = 1
+            n_predays = 1
+
+            features_set,labels = preprocess_data(data,tr_days,lback_days,n_features,n_predays)
+            model = model_lstm(features_set,n_predays,n_features)
+
+            history = model.fit(features_set, labels, epochs = 50, batch_size = 30,validation_split=0.1,verbose=0).history
+            
+            
+            
+            test_inputs = data[ :len(df_highly_active.iloc[:,1])].values
+            test_inputs = test_inputs.reshape(-1,n_features)
+            test_features = []
+            for i in range(lback_days, len(df_highly_active.iloc[:,1])):
+                test_features.append(test_inputs[i-lback_days:i, 0])
+
+            test_features = np.array(test_features)
+            test_features = np.reshape(test_features, (test_features.shape[0], test_features.shape[1], n_features))
+            predictions = model.predict(test_features)
+            predictions = scaler.inverse_transform(predictions)
+            
+            
+            #Finding anomalies
+            test_data = df_highly_active.iloc[lback_days:,1]
+            error = np.array(test_data[:]- predictions[:,0])
+            median_error = scipy.stats.median_abs_deviation(error)
+            mean_error = np.mean(error)
+            
+            filt = ( error > 2*median_error) | ( error < - 2*median_error) 
+            
+            df_highly_active['date'] = pd.to_datetime(df_highly_active['date'])
+
+            df_highly_active = df_highly_active.iloc[lback_days:,:]
+            df_highly_active['score'] = error
+            df_highly_active['anomaly_class'] = 0
+            df_highly_active.loc[filt,['anomaly_class']] = 1
+
+            begin_detection_date = datetime.datetime.now() - datetime.timedelta(days=90)
+            detection_tuples = df_highly_active.date > begin_detection_date
+            anomaly_df = df_highly_active[filt].loc[detection_tuples]
+
+            if(len(anomaly_df)!=0):
+                
+                insert_data(self,entry_info,repo_id,anomaly_df,'lstm_highly_acctive')
+                
+            else:
+                
+                self.logger.info("No outliers found using lstm_highly_active model")
+    
+        
+        def time_series_LSTM_model(self,entry_info,repo_id,df):
+
+            for i in range(1,df.columns.shape[0]):
+                
+                cluster_model(self,entry_info,repo_id,df.iloc[:,[0,i]])
+
+        def time_series_metrics(self,entry_info,repo_id):
+
+            #It collects data from augur database using api and then it processes data fieldwise
+
+            training_days = self.training_days
+            
+            base_url = 'http://{}:{}/api/unstable/repo-groups/9999/repos/{}/'.format(
+            self.config['api_host'], self.config['api_port'], repo_id)
+        
+            begin_date = datetime.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - datetime.timedelta(days=training_days)
+            index = pd.date_range(begin_date, periods=training_days, freq='D')
+            df = pd.DataFrame(index)
+            df.columns = ['date']
+            df['date'] = df['date'].astype(str)
+
+            for endpoint in time_series:
+                
+                
+                url = base_url + endpoint
+                logging.info("Hitting endpoint: " + url + "\n")
+                try:
+                    data = requests.get(url=url).json()
+                    
+                except:
+                    data = json.loads(json.dumps(requests.get(url=url).text))
+
+                if len(data) == 0:
+                    logging.info("Endpoint with url: {} returned an empty response. Moving on to next endpoint.\n".format(url))
+                    continue
+                            
+                if 'date' not in data[0]:
+                    logging.info("Endpoint {} is not a timeseries, moving to next endpoint.\n".format(endpoint))
+                    continue
+                        
+                metric_df = pd.DataFrame.from_records(data)
+                metric_df['date'] = pd.to_datetime(metric_df['date']).dt.date
+                metric_df['date'] = metric_df['date'].astype(str)
+                extra=['repo','rg']
+                for column in metric_df.columns:
+                    if any(x in column for x in extra):
+                        metric_df.drop(column,axis=1,inplace=True)
+                        
+                df = pd.DataFrame(pd.merge(df,metric_df.loc[:,metric_df.columns],how = 'left',on = 'date'))
+                metric_df.drop('date',axis=1,inplace=True)
+                df.rename(columns={i :"{} _ {}".format(endpoint, i) for i in metric_df.columns }, inplace=True)
+
+            df = df.fillna(0)
+            
+            self.logger.info("Collection and preprocessing of data of repo_id_{} Completed".format(repo_id))
+            time_series_LSTM_model(self,entry_info,repo_id,df)
+
+
+        def insert_data(self,entry_info,repo_id,anomaly_df,model):
+
+            # It inserts new outliers into the repo_insights table.
+    
+            self.logger.info("inserting data")
+            metric = anomaly_df.columns[1]
+            split = metric.split(" _ ")
+            insight_table_values = self.get_table_values(['*'], ['repo_insights_records'], where_clause="WHERE repo_id = {}".format(repo_id))
+
+            for tuple in anomaly_df.itertuples():
+                try:
+                    date64 = tuple.date
+                    ts = (date64 - np.datetime64('1970-01-01T00:00:00Z')) / np.timedelta64(1, 's')
+                    ts = datetime.datetime.utcfromtimestamp(ts)
+                    
+                    insight_exists = ((insight_table_values['ri_date'] == ts) & \
+                    (insight_table_values['ri_metric'] == split[0]) & (insight_table_values['ri_field'] == split[1])).any()
+
+                    if not insight_exists:
+                        data_point = {
+                                'repo_id': repo_id,
+                                'ri_metric': split[0],
+                                'ri_field': split[1],
+                                'ri_value': tuple[2],
+                                'ri_date': ts,
+                                'ri_fresh': 1,     # if its not fresh then it must be present in database 
+                                'ri_score': tuple.score,
+                                'ri_detection_method': '{}'.format(model),
+                                "tool_source": self.tool_source,
+                                "tool_version": self.tool_version,
+                                "data_source": self.data_source
+                            }
+                    result = self.db.execute(self.repo_insights_table.insert().values(data_point))
+                    self.logger.info("Primary key inserted into the repo_insights table: {}\n".format(
+                        result.inserted_primary_key))
+
+                    self.logger.info("Inserted data point for metric: {}, date: {}, value: {}\n".format(metric, ts, tuple[2]))
+                except Exception as e:
+                    self.logger.info("error occurred while storing datapoint: {}\n".format(repr(e)))
+                    break  
+                    
+                    
+            
+        time_series = ['code-changes-lines','issues-new','reviews']
+
+        time_series_metrics(self,entry_info,repo_id)
+        
+
+        self.register_task_completion(entry_info, repo_id, "insights") 
+
+
+
+    
     def confidence_interval_insights(self, entry_info):
         """ Anomaly detection method based on confidence intervals
         """

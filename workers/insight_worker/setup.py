@@ -27,7 +27,10 @@ setup(
         'psycopg2-binary', 
         'click', 
         'scipy',
-        'sklearn'
+        'sklearn',
+        'keras',
+        'tensorflow'
+
     ],
     entry_points={
         'console_scripts': [
