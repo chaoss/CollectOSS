@@ -106,6 +106,7 @@ class RepoInfoWorker(Worker):
         # Hit the graphql endpoint and retry 3 times in case of failure
         num_attempts = 0
         success = False
+        data = None
         while num_attempts < 3:
             self.logger.info("Hitting endpoint: {} ...\n".format(url))
             r = requests.post(url, json={'query': query}, headers=self.headers)
@@ -139,7 +140,16 @@ class RepoInfoWorker(Worker):
                     continue
             num_attempts += 1
         if not success:
-            self.register_task_failure(self.task, repo_id, "Failed to hit endpoint: {}".format(url))
+            self.logger.error('Cannot hit endpoint after 3 attempts. \"Completing\" task.\n')
+            self.register_task_completion(self.task, repo_id, 'repo_info')
+            return
+
+        # Just checking that the data is accessible (would not be if repo no longer exists)
+        try:
+            data['updatedAt']
+        except Exception as e:
+            self.logger.error('Cannot access repo_info data: {}\nError: {}. \"Completing\" task.'.format(data, e))
+            self.register_task_completion(self.task, repo_id, 'repo_info')
             return
 
         # Get committers count info that requires seperate endpoint
@@ -202,8 +212,8 @@ class RepoInfoWorker(Worker):
             'repo_archived': archived,
             'repo_archived_date_collected': archived_date_collected
         }
-        result = self.db.execute(self.repo_table.update().where(repo_table.c.repo_id==repo_id).values(rep_additional_data))
-        self.logger.info(f"Primary Key inserted into repo table: {result.inserted_primary_key}\n")
+        result = self.db.execute(self.repo_table.update().where(
+            self.repo_table.c.repo_id==repo_id).values(rep_additional_data))
 
         self.logger.info(f"Inserted info for {owner}/{repo}\n")
 

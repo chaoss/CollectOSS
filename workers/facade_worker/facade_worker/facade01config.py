@@ -61,9 +61,13 @@ class Config:
                 "to the directory in which you want to clone repos. Exiting...")
             sys.exit(1)
 
-        self.tool_source = 'Facade Worker'
-        self.tool_version = '1.0.0'
-        self.data_source = 'Git Log'
+        # self.tool_source = 'Facade Worker'
+        # self.tool_version = '1.0.0'
+        # self.data_source = 'Git Log'
+
+        self.tool_source = '\'Facade Worker\''
+        self.tool_version = '\'1.0.1\''
+        self.data_source = '\'Git Log\''
 
         # Figure out how much we're going to log
         logging.basicConfig(filename='worker_{}.log'.format(worker_options['port']), filemode='w', level=logging.INFO)

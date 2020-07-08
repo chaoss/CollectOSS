@@ -16,6 +16,57 @@ def directory(logs_dir):
     """
     print(logs_dir)
 
+@cli.command("errors")
+@click.argument("worker", default="all")
+@pass_logs_dir
+def errors(logs_dir, worker):
+    """
+    Output error messages of the main Augur and all worker logfiles or a specific worker logfile
+    """
+    root_log_dir = logs_dir
+    worker_log_dir = logs_dir + "/workers/"
+    if worker is None:
+        worker = "all"
+
+    if worker == "all":
+        files = []
+        directories = []
+        for (_, _, filenames) in walk(root_log_dir):
+            for file in filenames:
+                if file.endswith(".err"):
+                    print_log(file, root_log_dir)
+            break
+
+        files = []
+        directories = []
+        for (dirpath, dirnames, filenames) in walk(worker_log_dir):
+            directories.extend(dirnames)
+            break
+
+        for directory in directories:
+            specific_worker_log_dir = worker_log_dir + directory
+            for (_, _, filenames) in walk(specific_worker_log_dir):
+                files.extend(filenames)
+                for file in [file for file in filenames if "collection" in file and file.endswith(".err")]:
+                    print_log(file, specific_worker_log_dir)
+                break
+    else:
+        files = []
+        specific_worker_log_dir = worker_log_dir + "/" + worker + "/"
+        for (_, _, filenames) in walk(specific_worker_log_dir):
+            files.extend(filenames)
+            for file in [file for file in filenames if "collection" in file and file.endswith(".err")]:
+                print_log(file, specific_worker_log_dir)
+            break
+
+def print_log(file, log_dir):
+    f = open(log_dir + "/" + file)
+    result = f.readlines()
+    print("********** Logfile: " + file)
+    for log in result:
+        print(log.strip())
+    print()
+
 @cli.command("tail")
 @click.argument("lines", default=20)
 @pass_logs_dir
