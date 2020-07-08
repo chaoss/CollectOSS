@@ -1,11 +1,15 @@
 import pytest
 import os
+import json
 import pandas as pd
+import tempfile
 from queue import Queue
 from workers.util import read_config
 from workers.worker_base import Worker
 from augur.config import AugurConfig, default_config
 from augur import ROOT_AUGUR_DIRECTORY
+
+temp_dir = tempfile.gettempdir()
 
 def test_dump_queues():
     sample_queue = Queue()
@@ -28,16 +32,24 @@ def test_read_config_exception():
 def test_config_get_section_no_exception():
     test_config = default_config
     test_config['Database']['user'] = "test_user"
-    config_object = AugurConfig(ROOT_AUGUR_DIRECTORY, test_config)
+    config_object = AugurConfig(temp_dir, test_config)
     assert type(config_object.get_section("Database")) == dict
 
 def test_config_get_section_exception():
     test_config = default_config
     test_config['Database']['user'] = "test_user"
-    config_object = AugurConfig(ROOT_AUGUR_DIRECTORY, test_config)
+    config_object = AugurConfig(temp_dir, test_config)
     with pytest.raises(KeyError):
         config_object.get_section("absent_section")
 
+def test_discover_config_file_env_exception():
+    original_env_value = os.environ.get('AUGUR_CONFIG_FILE')
+    os.environ['AUGUR_CONFIG_FILE'] = os.path.join(temp_dir, "augur.config.json")
+    test_config = default_config
+    config_object = AugurConfig(temp_dir, test_config)
+    assert config_object.discover_config_file() == os.path.join(temp_dir, "augur.config.json")
+    if original_env_value is not None:
+        os.environ['AUGUR_CONFIG_FILE'] = original_env_value
 
 
 
