@@ -411,6 +411,7 @@ class Worker():
             "was reduced to {} tuples, and {} tuple updates are needed.\n".format(need_insertion_count, need_update_count))
         return new_data
 
+    @staticmethod
     def check_duplicates(self, new_data, table_values, key):
         """ Filters what items of the new_data json (list of dictionaries) that are not 
         present in the table_values df 
@@ -450,6 +451,7 @@ class Worker():
         if not connected:
             sys.exit('Could not connect to the broker after 5 attempts! Quitting...\n')
 
+    @staticmethod
     def dump_queue(queue):
         """
         Empties all pending items in a queue and returns them in a list.
