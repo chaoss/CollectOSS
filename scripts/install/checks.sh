@@ -55,3 +55,11 @@ if [[ ! $(command -v pip) ]]; then
   fi
 fi
 
+if [[ ! -d logs ]]; then
+    mkdir logs
+    mkdir logs/install
+fi
+
+if [[ ! -d logs/install ]]; then
+    mkdir logs/install
+fi

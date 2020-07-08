@@ -13,7 +13,7 @@ def read(filename):
 
 setup(
     name="github_worker",
-    version="0.1.0",
+    version="1.0.0",
     url="https://github.com/chaoss/augur",
     license='MIT',
     author="Augurlabs",
@@ -28,7 +28,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'github_worker_start=github_worker.runtime:main',
+            'github_worker_start=workers.github_worker.runtime:main',
         ],
     },
     classifiers=[

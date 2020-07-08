@@ -3,7 +3,7 @@
     <d-row>
       <!-- Main Sidebar -->
       <!-- <d-col :class="['main-sidebar', 'col-12', 'col-md-3', 'col-lg-2', 'px-0', sidebarVisible ? 'open' : '']"> -->
-        <router-view name="sidebar"></router-view>
+      <router-view name="sidebar"></router-view>
       <!-- </d-col>   -->
        <!--<main-sidebar :items="sidebarItems" />-->
 
@@ -15,9 +15,11 @@
         <!-- Content -->
         <router-view name="content"></router-view> <!--<slot />-->
 
-        <!-- Main Footer -->
-        <!--<main-footer />-->
+        <main-footer></main-footer>
+
       </d-col>
+
+
 
     </d-row>
   </d-container>
@@ -29,14 +31,14 @@
 // // Main layout components
 // import MainNavbar from '@/components/layout/MainNavbar/MainNavbar.vue';
 // import MainSidebar from '@/components/layout/MainSidebar/MainSidebar.vue';
-// import MainFooter from '@/components/layout/MainFooter/MainFooter.vue';
+import MainFooter from '@/components/layout/MainFooter/MainFooter.vue';
 
 export default {
   name: 'analytics',
   components: {
     // MainNavbar,
     // MainSidebar,
-    // MainFooter,
+    MainFooter,
   },
   data() {
     return {

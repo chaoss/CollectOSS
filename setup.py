@@ -44,15 +44,24 @@ setup(
         "psycopg2-binary",
         "click",
         "psutil",
-        "gunicorn==19.9.0",
+        "gunicorn",
         "six>=1.14.0"
     ],
     extras_require={
-        "dev": ["tox", "pytest", "ipdb", "sphinx","sphinx_rtd_theme"]
+        "dev": [
+            "tox",
+            "pytest",
+            "ipdb",
+            "sphinx",
+            "sphinx_rtd_theme",
+            "sphinxcontrib-openapi",
+            "sphinxcontrib-redoc",
+            "docutils==0.15"
+        ]
     },
     entry_points={
         "console_scripts": [
-            "augur=augur.runtime:run"
+            "augur=augur.cli._multicommand:run"
         ],
     }
 )

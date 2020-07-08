@@ -1,6 +1,20 @@
 #!/bin/bash
 
-rm -rf frontend/public .pytest_cache logs *.out env.txt pyenv.txt
-rm -rf workers/**/*.log workers/**/*.err workers/**/*.out
+echo "Cleaning up!"
+echo "Removing Python caches..."
+find . -name \*.__pycache__ -delete
+find . -name \*.pytest_cache -delete
 find . -name \*.pyc -delete
+
+echo "Cleaning output files..."
+find . -name \*.out -delete
+find . -name \*.log -delete
+find . -name \*.err -delete
 find . -type f -name "*.lock" -delete
+rm -rf logs/
+
+echo "Removing build files..."
+find . -wholename build/ -delete
+find . -wholename dist/ -delete
+rm -rf .tox/
+echo "Done cleaning!"

@@ -4,24 +4,13 @@ Provides shared functions that do not fit in a class of their own
 """
 import os
 import re
-import logging
 import inspect
 import types
 import sys
-import coloredlogs
 import beaker
+import logging
 
-# Logging
-coloredlogs.install(level=os.getenv('AUGUR_LOG_LEVEL', 'INFO'))
-logger = logging.getLogger('augur')
-
-def getFileID(path):
-    """
-    Returns file ID of given object
-
-    :param path: path of given object
-    """
-    return os.path.splitext(os.path.basename(path))[0]
+logger = logging.getLogger(__name__)
 
 __ROOT = os.path.abspath(os.path.dirname(__file__))
 def get_data_path(path):
@@ -52,75 +41,33 @@ def get_cache(namespace, cache_manager=None):
     return cache_manager.get_cache(namespace)
 
 metric_metadata = []
-def annotate(metadata=None, **kwargs):
+def register_metric(metadata=None, **kwargs):
     """
-    Decorates a function as being a metric
+    Register a function as being a metric
     """
     if metadata is None:
         metadata = {}
-    def decorate(func):
-        if not hasattr(func, 'metadata'):
-            func.metadata = {}
-            metric_metadata.append(func.metadata)
+    def decorate(function):
+        if not hasattr(function, 'metadata'):
+            function.metadata = {}
+            metric_metadata.append(function.metadata)
 
-        func.metadata.update(metadata)
-        if kwargs.get('endpoint_type', None):
-            endpoint_type = kwargs.pop('endpoint_type')
-            if endpoint_type == 'repo':
-                func.metadata['repo_endpoint'] = kwargs.get('endpoint')
-            else:
-                func.metadata['group_endpoint'] = kwargs.get('endpoint')
+        if not hasattr(function, 'is_metric'):
+            function.is_metric = True
 
-        func.metadata.update(dict(kwargs))
+        function.metadata.update(dict(kwargs))
 
-        func.metadata['metric_name'] = re.sub('_', ' ', func.__name__).title()
-        func.metadata['source'] = re.sub(r'(.*\.)', '', func.__module__)
-        func.metadata['ID'] = "{}-{}".format(func.metadata['source'].lower(), func.metadata['tag'])
+        function.metadata['tag'] = re.sub('_', '-', function.__name__).lower()
+        function.metadata['endpoint'] = function.metadata['tag']
+        function.metadata['name'] = re.sub('_', ' ', function.__name__).title()
+        function.metadata['model'] = re.sub(r'(.*\.)', '', function.__module__)
 
-        return func
+        if kwargs.get('type', None):
+            function.metadata['type'] = kwargs.get('type')
+        else:
+            function.metadata['type'] = "standard"
+
+        function.metadata.update(metadata)
+
+        return function
     return decorate
-
-def add_metrics(metrics, module_name):
-    # find all unbound endpoint functions objects (ones that have metadata) defined the given module_name 
-    # and bind them to the metrics class
-    # Derek are you proud of me
-    for name, obj in inspect.getmembers(sys.modules[module_name]):
-        if inspect.isfunction(obj) == True:
-            if hasattr(obj, 'metadata') == True:
-                setattr(metrics, name, types.MethodType(obj, metrics))
-
-#
-# IPython
-#
-
-def init_shell_config():
-    from IPython.terminal.prompts import Prompts, Token
-    from traitlets.config.loader import Config
-    
-    class PYRCSSPrompt(Prompts):
-        def in_prompt_tokens(self, cli=None):
-           return [
-                (Token.Prompt, 'augur ['),
-                (Token.PromptNum, str(self.shell.execution_count)),
-                (Token.Prompt, ']: '),
-            ]
-        def out_prompt_tokens(self):
-           return [
-                (Token.OutPrompt, 'output ['),
-                (Token.OutPromptNum, str(self.shell.execution_count)),
-                (Token.OutPrompt, ']: '),
-            ]
-
-    try:
-        get_ipython
-    except NameError:
-        nested = 0
-        cfg = Config()
-        cfg.TerminalInteractiveShell.prompts_class=PYRCSSPrompt
-    else:
-        print("Running nested copies of the augur shell.")
-        cfg = Config()
-        nested = 1
-    return cfg
-
-

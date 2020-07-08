@@ -12,9 +12,11 @@ Otherwise, feel free to hop right into the docs!
    getting-started/toc
    docker/toc
    development-guide/toc
-.. library-documentation/toc
+   rest-api/api
+   deployment/toc
+   library-documentation/toc
 .. schema/toc
-.. deployment/toc
+   
 
 
 What is Augur?
