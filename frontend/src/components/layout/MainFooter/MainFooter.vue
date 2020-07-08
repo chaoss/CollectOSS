@@ -28,7 +28,7 @@ const defaultMenuItems = [{
   title: 'Augur Documentation',
   to: 'https://oss-augur.readthedocs.io',
 }, {
-  title: 'Submit Augur Issue',
+  title: 'Submit an Issue',
   to: 'https://github.com/chaoss/augur/issues/new/choose',
 }];
 export default {
