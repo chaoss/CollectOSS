@@ -146,6 +146,8 @@ def analysis(cfg, multithreaded):
         cfg.log_activity('Debug','Commits missing from repo %s: %s' %
             (repo[0],len(missing_commits)))
 
+## TODO: Verify if the multithreaded approach here is optimal for postgresql
+
         if multithreaded:
 
             from multiprocessing import Pool
