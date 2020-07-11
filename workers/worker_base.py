@@ -354,9 +354,15 @@ class Worker():
                 continue
 
             obj['flag'] = 'none' # default of no action needed
+            existing_tuple = None
             for db_dupe_key in list(duplicate_col_map.keys()):
 
                 if table_values.isin([obj[duplicate_col_map[db_dupe_key]]]).any().any():
+                    if table_values[table_values[db_dupe_key].isin(
+                        [obj[duplicate_col_map[db_dupe_key]]])].to_dict('records'):
+
+                        existing_tuple = table_values[table_values[db_dupe_key].isin(
+                            [obj[duplicate_col_map[db_dupe_key]]])].to_dict('records')[0]
                     continue
 
                 self.logger.info('Found a tuple that needs insertion based on dupe key: {}\n'.format(db_dupe_key))
@@ -369,14 +375,11 @@ class Worker():
                     'Moving to next tuple.\n')
                 continue
 
-            try:
-                existing_tuple = table_values[table_values[db_dupe_key].isin(
-                    [obj[duplicate_col_map[db_dupe_key]]])].to_dict('records')[0]
-            except Exception as e:
-                self.logger.info('Special case assign_tuple_action error')
-                self.logger.info(f'Error: {e}')
-                self.logger.info(f'Related vars: {table_values}, ' +
-                    f'{table_values[db_dupe_key].isin([obj[duplicate_col_map[db_dupe_key]]])}')
+            if not existing_tuple:
+                self.logger.info('An existing tuple was not found for this data ' +
+                    'point and we have reached the check-updates portion of assigning ' +
+                    'tuple action, so we will now move to next data point\n')
+                continue
 
             # If we need to check the values of the existing tuple to determine if an update is needed
             for augur_col, value_check in value_update_col_map.items():
@@ -408,6 +411,7 @@ class Worker():
             "was reduced to {} tuples, and {} tuple updates are needed.\n".format(need_insertion_count, need_update_count))
         return new_data
 
+    @staticmethod
     def check_duplicates(self, new_data, table_values, key):
         """ Filters what items of the new_data json (list of dictionaries) that are not 
         present in the table_values df 
@@ -447,6 +451,7 @@ class Worker():
         if not connected:
             sys.exit('Could not connect to the broker after 5 attempts! Quitting...\n')
 
+    @staticmethod
     def dump_queue(queue):
         """
         Empties all pending items in a queue and returns them in a list.
@@ -500,33 +505,34 @@ class Worker():
             location = contributor['location']
         if 'email' in contributor:
             email = contributor['email']
+            
 
         if platform == 'github':
             cntrb = {
                 "cntrb_login": contributor['login'] if 'login' in contributor else None,
-                "cntrb_email": email,
-                "cntrb_company": company,
-                "cntrb_location": location,
+                "cntrb_email": contributor['email'] if 'email' in contributor else None,
+                "cntrb_company": contributor['company'] if 'company' in contributor else None,
+                "cntrb_location": contributor['location'] if 'location' in contributor else None,
                 "cntrb_created_at": contributor['created_at'] if 'created_at' in contributor else None,                
                 "cntrb_canonical": None,
-                "gh_user_id": contributor['id'],
-                "gh_login": contributor['login'],
-                "gh_url": contributor['url'],
-                "gh_html_url": contributor['html_url'],
-                "gh_node_id": contributor['node_id'],
-                "gh_avatar_url": contributor['avatar_url'],
-                "gh_gravatar_id": contributor['gravatar_id'],
-                "gh_followers_url": contributor['followers_url'],
-                "gh_following_url": contributor['following_url'],
-                "gh_gists_url": contributor['gists_url'],
-                "gh_starred_url": contributor['starred_url'],
-                "gh_subscriptions_url": contributor['subscriptions_url'],
-                "gh_organizations_url": contributor['organizations_url'],
-                "gh_repos_url": contributor['repos_url'],
-                "gh_events_url": contributor['events_url'],
-                "gh_received_events_url": contributor['received_events_url'],
-                "gh_type": contributor['type'],
-                "gh_site_admin": contributor['site_admin'],
+                "gh_user_id": contributor['id'] if 'id' in contributor else None,
+                "gh_login": contributor['login'] if 'login' in contributor else None,
+                "gh_url": contributor['url'] if 'url' in contributor else None,
+                "gh_html_url": contributor['html_url'] if 'html_url' in contributor else None,
+                "gh_node_id": contributor['node_id'] if 'node_id' in contributor else None,
+                "gh_avatar_url": contributor['avatar_url'] if 'avatar_url' in contributor else None,
+                "gh_gravatar_id": contributor['gravatar_id'] if 'gravatar_id' in contributor else None,
+                "gh_followers_url": contributor['followers_url'] if 'followers_url' in contributor else None,
+                "gh_following_url": contributor['following_url'] if 'following_url' in contributor else None,
+                "gh_gists_url": contributor['gists_url'] if 'gists_url' in contributor else None,
+                "gh_starred_url": contributor['starred_url'] if 'starred_url' in contributor else None,
+                "gh_subscriptions_url": contributor['subscriptions_url'] if 'subscriptions_url' in contributor else None,
+                "gh_organizations_url": contributor['organizations_url'] if 'organizations_url' in contributor else None,
+                "gh_repos_url": contributor['repos_url'] if 'repos_url' in contributor else None,
+                "gh_events_url": contributor['events_url'] if 'events_url' in contributor else None,
+                "gh_received_events_url": contributor['received_events_url'] if 'received_events_url' in contributor else None,
+                "gh_type": contributor['type'] if 'type' in contributor else None,
+                "gh_site_admin": contributor['site_admin'] if 'site_admin' in contributor else None,
                 "tool_source": self.tool_source,
                 "tool_version": self.tool_version,
                 "data_source": self.data_source
@@ -567,7 +573,7 @@ class Worker():
         self.results_counter += 1
         self.cntrb_id_inc = int(result.inserted_primary_key[0])
 
-        self.logger.info("Inserted contributor: " + contributor[0]['username'] + "\n")
+        self.logger.info("Inserted contributor: " + cntrb['cntrb_login'] + "\n")
         
         return self.find_id_from_login(login, platform)
 
@@ -582,7 +588,7 @@ class Worker():
         owner = split[-2]
         repo = split[-1]
 
-        if '.git' in repo:
+        if '.git' == repo[-4:]:
             repo = repo[:-4]
 
         return owner, repo
@@ -1298,9 +1304,21 @@ class Worker():
             for oauth in other_oauths:
                 self.logger.info("Inspecting rate limit info for oauth: {}\n".format(oauth))
                 self.headers = {'Authorization': 'token %s' % oauth['access_token']}
-                response = requests.get(url=url, headers=self.headers)
-                oauth['rate_limit'] = int(response.headers['X-RateLimit-Remaining'])
-                oauth['seconds_to_reset'] = (datetime.datetime.fromtimestamp(int(response.headers['X-RateLimit-Reset'])) - datetime.datetime.now()).total_seconds()
+
+                attempts = 3
+                success = False
+                while attempts > 0 and not success:
+                    response = requests.get(url=url, headers=self.headers)
+                    try:
+                        oauth['rate_limit'] = int(response.headers['X-RateLimit-Remaining'])
+                        oauth['seconds_to_reset'] = (datetime.datetime.fromtimestamp(int(response.headers['X-RateLimit-Reset'])) - datetime.datetime.now()).total_seconds()
+                        success = True
+                    except Exception as e:
+                        self.logger.info(f'oath method ran into error getting info from headers: {e}\n')
+                        self.logger.info(f'{self.headers}\n{url}\n')
+                    attempts -= 1
+                if not success:
+                    continue
 
                 # Update oauth to switch to if a higher limit is found
                 if oauth['rate_limit'] > new_oauth['rate_limit']:

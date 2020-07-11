@@ -13,4 +13,4 @@ These versions of Augur are currently supported with security updates.
 
 ## Reporting a Vulnerability
 
-Please report vulnterabilities using GitHub Issues  
+Please report vulnerabilities using GitHub Issues  

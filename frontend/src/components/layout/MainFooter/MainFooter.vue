@@ -1,13 +1,17 @@
 <template>
-  <footer class="main-footer d-flex p-2 px-3 bg-white border-top">
+  <footer class="main-footer d-flex p-2 px-3 bg-white border-top" style="position: fixed; left: 0;
+  bottom: 0;
+  width: 100%;
+  text-align: center;
+  z-index: 1001;">
     <div :class="[contained ? 'container' : 'container-fluid']">
-      <div class="row">
-        <ul class="nav">
+      <div class="row" style="margin-top: 4px;">
+        <ul class="nav" style="margin: 0px auto 0px auto;">
           <li v-for="(item, idx) in menuItems" :key="idx" class="nav-item">
-            <d-link class="nav-link" :to="item.to">{{ item.title }}</d-link>
+            <d-link class="nav-link" :href="item.to">{{ item.title }}</d-link>
           </li>
         </ul>
-        <span class="copyright ml-auto my-auto mr-2">{{ copyright }}</span>
+        <!-- <span class="copyright ml-auto my-auto mr-2">{{ copyright }}</span> -->
       </div>
     </div>
   </footer>
@@ -15,20 +19,17 @@
 
 <script>
 const defaultMenuItems = [{
-  title: 'Home',
-  to: '#',
+  title: 'Augur',
+  to: 'http://augurlabs.io',
 }, {
-  title: 'Services',
-  to: '#',
+  title: 'CHAOSS',
+  to: 'https://chaoss.community',
 }, {
-  title: 'About',
-  to: '#',
+  title: 'Augur Documentation',
+  to: 'https://oss-augur.readthedocs.io',
 }, {
-  title: 'Products',
-  to: '#',
-}, {
-  title: 'Blog',
-  to: '#',
+  title: 'Submit an Issue',
+  to: 'https://github.com/chaoss/augur/issues/new/choose',
 }];
 export default {
   name: 'main-footer',
@@ -54,7 +55,7 @@ export default {
        */
     contained: {
       type: Boolean,
-      default: false,
+      default: true,
     },
   },
 };

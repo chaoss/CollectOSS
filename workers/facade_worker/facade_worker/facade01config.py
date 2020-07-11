@@ -61,9 +61,13 @@ class Config:
                 "to the directory in which you want to clone repos. Exiting...")
             sys.exit(1)
 
-        self.tool_source = 'Facade Worker'
-        self.tool_version = '1.0.0'
-        self.data_source = 'Git Log'
+        # self.tool_source = 'Facade Worker'
+        # self.tool_version = '1.0.0'
+        # self.data_source = 'Git Log'
+
+        self.tool_source = '\'Facade Worker\''
+        self.tool_version = '\'1.0.1\''
+        self.data_source = '\'Git Log\''
 
         # Figure out how much we're going to log
         logging.basicConfig(filename='worker_{}.log'.format(worker_options['port']), filemode='w', level=logging.INFO)
@@ -148,6 +152,8 @@ class Config:
     # connection that should provide maximum performance depending upon the
     # interpreter in use.
 
+    ##TODO: Postgres connections as we make them ARE threadsafe. We *could* refactor this accordingly: https://www.psycopg.org/docs/connection.html #noturgent
+
 
         # if platform.python_implementation() == 'PyPy':
         db_schema = 'augur_data'
@@ -162,6 +168,8 @@ class Config:
             connect_timeout = 31536000,)
 
         cursor = db.cursor()#pymysql.cursors.DictCursor)
+
+## TODO: Does this need a block for if the database connection IS multithreaded? I think so, @gabe-heim 
 
         if people and not multi_threaded_connection:
             self.cursor_people = cursor
