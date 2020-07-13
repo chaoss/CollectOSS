@@ -169,13 +169,15 @@ class GitlabMergeRequestWorker(Worker):
         head = {'sha': mr_dict['diff_refs']['head_sha'],
                 'ref': mr_dict['target_branch'],
                 'label': str(mr_dict['target_project_id']) + ':' + mr_dict['target_branch'],
-                'author': mr_dict['author']['username']
+                'author': mr_dict['author']['username'],
+                'repo': str(mr_dict['target_project_id'])
                 }
 
         base = {'sha': mr_dict['diff_refs']['base_sha'],
                 'ref': mr_dict['source_branch'],
                 'label': str(mr_dict['source_project_id']) + ':' + mr_dict['source_branch'],
-                'author': mr_dict['author']['username']
+                'author': mr_dict['author']['username'],
+                'repo': str(mr_dict['source_project_id'])
                 }
 
         table = 'pull_request_meta'
@@ -232,13 +234,27 @@ class GitlabMergeRequestWorker(Worker):
                 self.pr_meta_id_inc = int(pd.read_sql(pr_meta_id_sql, self.db).iloc[0]['pr_repo_meta_id'])
 
             if pr_meta_data['repo']:
-                self.query_pr_repo(pr_meta_data['repo'], pr_side, self.pr_meta_id_inc)
+                self.query_mr_repo(pr_meta_data['repo'], pr_side, self.pr_meta_id_inc)
             else:
                 self.logger.info('No new PR Head data to add')
 
         self.logger.info(f'Finished inserting PR Head & Base data for PR with id {pr_id}')
 
-    def query_pr_repo(self, pr_repo, pr_repo_type, pr_meta_id):
+    def get_project_details(self, proj_id):
+
+        self.logger.info("Fetch gitlab project details")
+        r = requests.get(url="https://gitlab.com/api/v4/projects/" + proj_id, headers=self.headers)
+
+        return r.json()
+
+    def get_user_login_from_id(self, user_id):
+
+        self.logger.info("Getting user login.")
+        r = requests.get(url="https://gitlab.com/api/v4/users/" + user_id, headers=self.headers)
+
+        return r.json()['username']
+
+    def query_mr_repo(self, pr_repo_id, pr_repo_type, pr_meta_id):
         self.logger.info(f'Querying PR {pr_repo_type} repo')
 
         table = 'pull_request_repo'
@@ -251,11 +267,13 @@ class GitlabMergeRequestWorker(Worker):
 
         pr_repo_table_values = self.get_table_values(cols_query, [table])
 
+        pr_repo = self.get_project_details(pr_repo_id)
+        self.logger.info(pr_repo)
         new_pr_repo = self.assign_tuple_action([pr_repo], pr_repo_table_values, update_col_map, duplicate_col_map,
                 table_pkey)[0]
 
-        if new_pr_repo['owner'] and 'login' in new_pr_repo['owner']:
-            cntrb_id = self.find_id_from_login(new_pr_repo['owner']['login'])
+        if 'owner' in new_pr_repo and 'id' in new_pr_repo['owner']:
+            cntrb_id = self.find_id_from_login(self.get_user_login_from_id(new_pr_repo['owner']['id']))
         else:
             cntrb_id = 1
 
@@ -266,8 +284,8 @@ class GitlabMergeRequestWorker(Worker):
             # 'pr_src_node_id': new_pr_repo[0]['node_id'],
             'pr_src_node_id': None,
             'pr_repo_name': new_pr_repo['name'],
-            'pr_repo_full_name': new_pr_repo['full_name'],
-            'pr_repo_private_bool': new_pr_repo['private'],
+            'pr_repo_full_name': new_pr_repo['name_with_namespace'],
+            'pr_repo_private_bool': True if new_pr_repo['visibility'] == 'private' else False,
             'pr_cntrb_id': cntrb_id,
             'tool_source': self.tool_source,
             'tool_version': self.tool_version,
