@@ -145,9 +145,9 @@ class GitlabMergeRequestWorker(Worker):
             self.query_labels(pr_dict['labels'], self.pr_id_inc, url_encoded_format_project_address)
             self.query_mr_comments(self.pr_id_inc, pr_dict['iid'], url_encoded_format_project_address)
             self.query_mr_meta(self.pr_id_inc, pr_dict['iid'], url_encoded_format_project_address)
-            '''
-            self.query_reviewers(pr_dict['requested_reviewers'], self.pr_id_inc)
-            '''
+            self.query_assignees(self.pr_id_inc, pr_dict['assignees'])
+            self.query_reviewers(pr_dict['iid'], url_encoded_format_project_address, self.pr_id_inc)
+
             self.logger.info(f"Inserted PR data for {owner}/{repo}")
             self.results_counter += 1
         self.query_mr_events(url_encoded_format_project_address)
@@ -235,10 +235,10 @@ class GitlabMergeRequestWorker(Worker):
 
                 self.pr_meta_id_inc = int(pd.read_sql(pr_meta_id_sql, self.db).iloc[0]['pr_repo_meta_id'])
 
-            if pr_meta_data['repo']:
-                self.query_mr_repo(pr_meta_data['repo'], pr_side, self.pr_meta_id_inc)
-            else:
-                self.logger.info('No new PR Head data to add')
+            # if pr_meta_data['repo']:
+            #     self.query_mr_repo(pr_meta_data['repo'], pr_side, self.pr_meta_id_inc)
+            # else:
+            #     self.logger.info('No new PR Head data to add')
 
         self.logger.info(f'Finished inserting PR Head & Base data for PR with id {pr_id}')
 
@@ -275,7 +275,7 @@ class GitlabMergeRequestWorker(Worker):
                                                table_pkey)[0]
 
         if 'owner' in new_pr_repo and 'id' in new_pr_repo['owner']:
-            cntrb_id = self.find_id_from_login(self.get_user_login_from_id(new_pr_repo['owner']['id']))
+            cntrb_id = self.find_id_from_login(self.get_user_login_from_id(new_pr_repo['owner']['id']), platform='gitlab')
         else:
             cntrb_id = 1
 
@@ -395,7 +395,7 @@ class GitlabMergeRequestWorker(Worker):
 
         for pr_event_dict in pr_events:
             if pr_event_dict['author']:
-                cntrb_id = self.find_id_from_login(pr_event_dict['author']['username'], 'gitlab')
+                cntrb_id = self.find_id_from_login(pr_event_dict['author']['username'], platform='gitlab')
             else:
                 cntrb_id = 1
 
@@ -523,3 +523,145 @@ class GitlabMergeRequestWorker(Worker):
                     self.logger.info(f"Inserted Pull Request Commit: {result.inserted_primary_key}\n")
 
         self.register_task_completion(task_info, repo_id, 'pull_request_commits')
+
+    def merge_request_files_model(self, task, repo_id):
+
+        pr_number_sql = s.sql.text("""
+                    SELECT DISTINCT pr_src_number as pr_src_number, pull_requests.pull_request_id
+                    FROM pull_requests--, pull_request_meta
+                    WHERE repo_id = {}
+                """.format(repo_id))
+        pr_numbers = pd.read_sql(pr_number_sql, self.db, params={})
+
+        gitlab_url = task['given']['gitlab_url']
+
+        self.logger.info('Beginning collection of Merge Request Commits...\n')
+        self.logger.info(f'Git URL: {gitlab_url}\n')
+
+        owner, repo = self.get_owner_repo(gitlab_url)
+        url_encoded_format_project_address = quote(owner + '/' + repo, safe='')
+
+        pr_url_sql = s.sql.text("""
+                    SELECT DISTINCT pr_url, pull_requests.pull_request_id
+                    FROM pull_requests--, pull_request_meta
+                    WHERE repo_id = {}
+                """.format(repo_id))
+        urls = pd.read_sql(pr_url_sql, self.db, params={})
+
+        for pull_request in urls.itertuples():  # for each url of PRs we have inserted
+            mr_iid = pull_request.pr_url.split('/')[-1]
+            changes_url = 'https://gitlab.com/api/v4/projects/' + url_encoded_format_project_address + '/merge_requests/' + mr_iid + '/changes'
+            table = 'pull_request_file'
+            table_pkey = 'pr_file_id'
+            duplicate_col_map = {'pr_cmt_sha': 'id'}
+            update_col_map = {}
+
+            # Use helper paginate function to iterate the commits url and check for dupes
+            pr_commits = self.paginate(commits_url, duplicate_col_map, update_col_map, table, table_pkey,
+                                       where_clause="where pull_request_id = {}".format(pull_request.pull_request_id))
+
+            for pr_commit in pr_commits:  # post-pagination, iterate results
+                if pr_commit['flag'] == 'need_insertion':  # if non-dupe
+                    pr_commit_row = {
+                        'pull_request_id': pull_request.pull_request_id,
+                        'pr_cmt_sha': pr_commit['id'],
+                        'pr_cmt_node_id': None,
+                        'pr_cmt_message': pr_commit['message'],
+                        # 'pr_cmt_comments_url': pr_commit['comments_url'],
+                        'tool_source': self.tool_source,
+                        'tool_version': self.tool_version,
+                        'data_source': 'GitHub API',
+                    }
+                    result = self.db.execute(self.pull_request_commits_table.insert().values(pr_commit_row))
+                    self.logger.info(f"Inserted Pull Request Commit: {result.inserted_primary_key}\n")
+
+        self.register_task_completion(task_info, repo_id, 'pull_request_commits')
+
+    def query_assignees(self, pr_id, assignees):
+
+        self.logger.info('Querying Assignees')
+
+        if assignees is None or len(assignees) == 0:
+            self.logger.info('No assignees to add')
+            return
+
+        table = 'pull_request_assignees'
+        duplicate_col_map = {'pr_assignee_map_id': 'id'}
+        update_col_map = {}
+        table_pkey = 'pr_assignee_map_id'
+
+        update_keys = list(update_col_map.keys()) if update_col_map else []
+        cols_query = list(duplicate_col_map.keys()) + update_keys + [table_pkey]
+
+        assignee_table_values = self.get_table_values(cols_query, [table])
+
+        assignees = self.assign_tuple_action(assignees, assignee_table_values, update_col_map, duplicate_col_map,
+                                             table_pkey)
+
+        for assignee_dict in assignees:
+
+            if 'username' in assignee_dict:
+                cntrb_id = self.find_id_from_login(assignee_dict['username'], platform='gitlab')
+            else:
+                cntrb_id = 1
+
+            assignee = {
+                'pull_request_id': pr_id,
+                'contrib_id': cntrb_id,
+                'tool_source': self.tool_source,
+                'tool_version': self.tool_version,
+                'data_source': self.data_source
+            }
+
+            if assignee_dict['flag'] == 'need_insertion':
+                result = self.db.execute(self.pull_request_assignees_table.insert().values(assignee))
+                self.logger.info(f'Added PR Assignee {result.inserted_primary_key}')
+
+                self.results_counter += 1
+
+        self.logger.info(f'Finished inserting PR Assignee data for PR with id {pr_id}')
+
+    def query_reviewers(self, pr_iid, proj_name, pr_id):
+        self.logger.info('Querying Reviewers')
+
+        r = requests.get(url="https://gitlab.com/api/v4/projects/" + proj_name + "/merge_requests/" + pr_iid + "/approvals", headers=self.headers)
+        reviewers = r.json()['suggested_approvers']
+        if reviewers is None or len(reviewers) == 0:
+            self.logger.info('No reviewers to add')
+            return
+
+        table = 'pull_request_reviewers'
+        duplicate_col_map = {'pr_reviewer_map_id': 'id'}
+        update_col_map = {}
+        table_pkey = 'pr_reviewer_map_id'
+
+        update_keys = list(update_col_map.keys()) if update_col_map else []
+        cols_query = list(duplicate_col_map.keys()) + update_keys + [table_pkey]
+
+        reviewers_table_values = self.get_table_values(cols_query, [table])
+
+        new_reviewers = self.assign_tuple_action(reviewers, reviewers_table_values, update_col_map, duplicate_col_map,
+                table_pkey)
+
+        for reviewers_dict in new_reviewers:
+
+            if 'username' in reviewers_dict:
+                cntrb_id = self.find_id_from_login(reviewers_dict['username'])
+            else:
+                cntrb_id = 1
+
+            reviewer = {
+                'pull_request_id': pr_id,
+                'cntrb_id': cntrb_id,
+                'tool_source': self.tool_source,
+                'tool_version': self.tool_version,
+                'data_source': self.data_source
+            }
+
+            if reviewers_dict['flag'] == 'need_insertion':
+                result = self.db.execute(self.pull_request_reviewers_table.insert().values(reviewer))
+                self.logger.info(f"Added PR Reviewer {result.inserted_primary_key}")
+
+                self.results_counter += 1
+
+        self.logger.info(f"Finished inserting PR Reviewer data for PR with id {pr_id}")
