@@ -18,7 +18,7 @@ class GitlabMergeRequestWorker(Worker):
         # The name the housekeeper/broker use to distinguish the data model this worker can fill
         #   You will also need to name the method that does the collection for this model
         #   in the format *model name*_model() such as fake_data_model() for example
-        models = ['merge_requests', 'pull_request_commits', 'pull_request_files']
+        models = ['merge_requests', 'merge_request_commits', 'merge_request_files']
 
         # Define the tables needed to insert, update, or delete on
         #   The Worker class will set each table you define here as an attribute
@@ -34,7 +34,8 @@ class GitlabMergeRequestWorker(Worker):
 
         # Run the general worker initialization
         self.worker_type = 'gitlab_merge_request_worker'
-        super().__init__(worker_type=self.worker_type, config=config, given=given, models=models, data_tables=data_tables,
+        super().__init__(worker_type=self.worker_type, config=config, given=given, models=models,
+                         data_tables=data_tables,
                          operations_tables=operations_tables, platform='gitlab')
 
         # Define data collection info
@@ -90,7 +91,8 @@ class GitlabMergeRequestWorker(Worker):
                 'pr_src_state': pr_dict['state'],
                 'pr_src_locked': pr_dict['discussion_locked'],
                 'pr_src_title': pr_dict['title'],
-                'pr_augur_contributor_id': self.find_id_from_login(login=pr_dict['author']['username'], platform='gitlab'),
+                'pr_augur_contributor_id': self.find_id_from_login(login=pr_dict['author']['username'],
+                                                                   platform='gitlab'),
                 'pr_body': pr_dict['description'],
                 'pr_created_at': pr_dict['created_at'],
                 'pr_updated_at': pr_dict['updated_at'],
@@ -214,9 +216,9 @@ class GitlabMergeRequestWorker(Worker):
 
             if pr_meta_data['flag'] == 'need_update':
                 result = self.db.execute(self.pull_request_meta_table.update().where(
-                        self.pull_request_meta_table.c.pr_sha==pr_meta['pr_sha'] and
-                        self.pull_request_meta_table.c.pr_head_or_base==pr_side
-                    ).values(pr_meta))
+                    self.pull_request_meta_table.c.pr_sha == pr_meta['pr_sha'] and
+                    self.pull_request_meta_table.c.pr_head_or_base == pr_side
+                ).values(pr_meta))
                 self.pr_meta_id_inc = pr_meta_data['pkey']
             elif pr_meta_data['flag'] == 'need_insertion':
 
@@ -270,7 +272,7 @@ class GitlabMergeRequestWorker(Worker):
         pr_repo = self.get_project_details(pr_repo_id)
         self.logger.info(pr_repo)
         new_pr_repo = self.assign_tuple_action([pr_repo], pr_repo_table_values, update_col_map, duplicate_col_map,
-                table_pkey)[0]
+                                               table_pkey)[0]
 
         if 'owner' in new_pr_repo and 'id' in new_pr_repo['owner']:
             cntrb_id = self.find_id_from_login(self.get_user_login_from_id(new_pr_repo['owner']['id']))
@@ -304,8 +306,9 @@ class GitlabMergeRequestWorker(Worker):
 
         self.logger.info('Querying PR Comments\n')
 
-        url = (f'https://gitlab.com/api/v4/projects/{url_encoded_project_address}/merge_requests/{pr_src_iid}/notes?per_page=100' +
-               '&page={}&sort=asc')
+        url = (
+                    f'https://gitlab.com/api/v4/projects/{url_encoded_project_address}/merge_requests/{pr_src_iid}/notes?per_page=100' +
+                    '&page={}&sort=asc')
 
         # Get merge request comments that we already have stored
         #   Set our duplicate and update column map keys (something other than PK) to
@@ -388,7 +391,7 @@ class GitlabMergeRequestWorker(Worker):
         duplicate_col_map = {'issue_event_src_id': 'target_id'}
 
         pr_events = self.paginate(url, duplicate_col_map, update_col_map, table, table_pkey,
-                            platform='gitlab')
+                                  platform='gitlab')
 
         for pr_event_dict in pr_events:
             if pr_event_dict['author']:
@@ -465,3 +468,58 @@ class GitlabMergeRequestWorker(Worker):
                 self.logger.info(f"Inserted PR Labels data for PR with id {pr_id}\n")
 
                 self.results_counter += 1
+
+    def merge_request_commits_model(self, task_info, repo_id):
+        """ Queries the commits related to each pull request already inserted in the db """
+
+        self.logger.info("Querying starting ids info...\n")
+
+        # Increment so we are ready to insert the 'next one' of each of these most recent ids
+        self.history_id = self.get_max_id('worker_history', 'history_id', operations_table=True) + 1
+        self.pr_id_inc = self.get_max_id('pull_requests', 'pull_request_id')
+        self.pr_meta_id_inc = self.get_max_id('pull_request_meta', 'pr_repo_meta_id')
+
+        gitlab_url = task_info['given']['gitlab_url']
+
+        self.logger.info('Beginning collection of Merge Request Commits...\n')
+        self.logger.info(f'Git URL: {gitlab_url}\n')
+
+        owner, repo = self.get_owner_repo(gitlab_url)
+        url_encoded_format_project_address = quote(owner + '/' + repo, safe='')
+
+        # query existing PRs and the respective url we will append the commits url to
+        pr_url_sql = s.sql.text("""
+            SELECT DISTINCT pr_url, pull_requests.pull_request_id
+            FROM pull_requests--, pull_request_meta
+            WHERE repo_id = {}
+        """.format(repo_id))
+        urls = pd.read_sql(pr_url_sql, self.db, params={})
+
+        for pull_request in urls.itertuples():  # for each url of PRs we have inserted
+            mr_iid = pull_request.pr_url.split('/')[-1]
+            commits_url = 'https://gitlab.com/api/v4/projects/' + url_encoded_format_project_address + '/merge_requests/' + mr_iid + '/commits?per_page=100&pages={}'
+            table = 'pull_request_commits'
+            table_pkey = 'pr_cmt_id'
+            duplicate_col_map = {'pr_cmt_sha': 'id'}
+            update_col_map = {}
+
+            # Use helper paginate function to iterate the commits url and check for dupes
+            pr_commits = self.paginate(commits_url, duplicate_col_map, update_col_map, table, table_pkey,
+                                       where_clause="where pull_request_id = {}".format(pull_request.pull_request_id))
+
+            for pr_commit in pr_commits:  # post-pagination, iterate results
+                if pr_commit['flag'] == 'need_insertion':  # if non-dupe
+                    pr_commit_row = {
+                        'pull_request_id': pull_request.pull_request_id,
+                        'pr_cmt_sha': pr_commit['id'],
+                        'pr_cmt_node_id': None,
+                        'pr_cmt_message': pr_commit['message'],
+                        # 'pr_cmt_comments_url': pr_commit['comments_url'],
+                        'tool_source': self.tool_source,
+                        'tool_version': self.tool_version,
+                        'data_source': 'GitHub API',
+                    }
+                    result = self.db.execute(self.pull_request_commits_table.insert().values(pr_commit_row))
+                    self.logger.info(f"Inserted Pull Request Commit: {result.inserted_primary_key}\n")
+
+        self.register_task_completion(task_info, repo_id, 'pull_request_commits')
