@@ -1,5 +1,6 @@
 from sklearn.model_selection import KFold
 from sklearn.externals import joblib
+from sklearn.utils import compute_sample_weight
 
 import random
 import csv
@@ -7,6 +8,7 @@ import re
 import sys
 import string
 import os
+import emoji
 
 import nltk
 from xlrd import open_workbook
@@ -16,6 +18,7 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.ensemble import GradientBoostingClassifier
 from xgboost import XGBClassifier
+from lightgbm import LGBMClassifier
 
 from nltk.stem.snowball import SnowballStemmer
 from nltk.tokenize import word_tokenize
@@ -159,6 +162,7 @@ def replace_all(text, dic):
     else:
         for i, j in dic.items():
             text = text.replace(i, j)
+    return text
 
 
 stemmer = SnowballStemmer("english")
@@ -199,7 +203,15 @@ mystop_words = [
 ]
 
 emodict = []
-contractions_dict = []
+
+# Read in the words with sentiment from the dictionary
+with open("EmoticonLookupTable.txt","r") as emotable:
+    emoticon_reader=csv.reader(emotable,delimiter='\t')
+
+    #Hash words from dictionary with their values
+    emodict={rows[0]:rows[1] for rows in emoticon_reader}
+    emotable.close()
+
 
 grammar = r"""
 NegP: {<VERB>?<ADV>+<VERB|ADJ>?<PRT|ADV><VERB>}
@@ -305,9 +317,11 @@ def handle_negation(comments):
 def preprocess_text(s):
     text = expand_contractions(s)
     text = remove_tags(text)
+    text = emoji.demojize(text)
     text = text.encode('ascii', 'ignore').decode('utf-8', 'ignore')
     text = re.sub('\n', ' ', text)
     text = re.sub('\r', ' ', text)
+    text = replace_all(text, emodict)
     text = re.sub('[()){}]', ' ', text)
     text = re.sub('\<[^<>]*\>', '', text)
     text = re.sub('\`[^``]*\`', '', text)
@@ -315,6 +329,7 @@ def preprocess_text(s):
     text = remove_url(text)
     text = joint_words(text)
     text = handle_negation(text)
+    # print(text)
     return text
 
 
@@ -343,14 +358,6 @@ class SentiCR:
             print('Using custom train set')
             self.model = self.create_model_from_training_data()
 
-    def get_classifier(self):
-        algo = self.algo
-        if algo == "GBT":
-            return GradientBoostingClassifier(learning_rate=0.01, n_estimators=1000,)
-        elif algo == "XGB":
-            return XGBClassifier(num_class=3)
-        return 0
-
     def create_model_from_training_data(self):
         training_comments = []
         training_ratings = []
@@ -375,8 +382,14 @@ class SentiCR:
         '''smote_model = SVMSMOTE(sampling_strategy={-1:0.3,0:0.4,1:0.3}, random_state=None, k_neighbors=15, m_neighbors=15, out_step=.0001, svm_estimator=None, n_jobs=1)
         X_resampled, Y_resampled=smote_model.fit_sample(X_train, Y_train)'''
 
-        model = self.get_classifier()
-        model.fit(X_train, Y_train)
+        if self.algo == "GBT":
+            model = GradientBoostingClassifier()
+            model.fit(X_train, Y_train)
+        elif self.algo == "XGB":
+            sample_weight = compute_sample_weight({-1:0.4,0:0.3,1:0.3}, Y_train)
+            model = XGBClassifier()
+            model.fit(X_train, Y_train, sample_weight=sample_weight)
+       
         print('Training done')
 
         # Saving model as .pkl file
