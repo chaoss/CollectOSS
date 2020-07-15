@@ -7,15 +7,16 @@ from sqlalchemy.ext.automap import automap_base
 from sqlalchemy import MetaData, and_
 import statistics, logging, os, json, time
 import numpy as np
-import scipy.stats
 import datetime
 from sklearn.ensemble import IsolationForest
 from workers.worker_base import Worker
 import warnings
 import logging
 
-
-
+import scipy
+from scipy import stats
+import pickle
+from joblib import dump, load
 import random
 from functools import reduce
 from keras.models import load_model
@@ -24,7 +25,7 @@ from keras.layers import LSTM,Bidirectional,Activation
 from keras import optimizers
 from keras.layers import Dense,Dropout
 from sklearn.ensemble import IsolationForest
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import MinMaxScaler,StandardScaler
 from sklearn.cluster import AgglomerativeClustering,KMeans
 from statsmodels.tsa.seasonal import STL
 
@@ -347,7 +348,7 @@ class InsightWorker(Worker):
         
 
         def cluster_model(self,entry_info,repo_id,df):
-        
+            #currenly not in use
             data = pd.read_csv("../../time_series_notebook/{}.csv".format(df.columns[1]))
             data.index = data.iloc[:,0]
             data.drop(['repo_id'],axis=1,inplace=True)
@@ -433,7 +434,7 @@ class InsightWorker(Worker):
         def lstm_moderate_active(self,entry_info,repo_id,df_moderate_active):
             
             
-            scaler = MinMaxScaler(feature_range=(0,1))
+            scaler = StandardScaler()
 
             data = pd.DataFrame(df_moderate_active.iloc[:,1])
             data = pd.DataFrame(scaler.fit_transform(data.values))
@@ -471,36 +472,47 @@ class InsightWorker(Worker):
             #Finding anomalies
             test_data = df_moderate_active.iloc[lback_days:,1]
             error = np.array(test_data[:]- predictions[:,0])
-            median_error = scipy.stats.median_abs_deviation(error)
-            mean_error = np.mean(error)
             
-            filt = ( error > 2.5*median_error) | ( error < - 2.5*median_error) 
-            df_moderate_active['date'] = pd.to_datetime(df_moderate_active['date'])
+            df_moderate_active['score'] = 0
+            df_moderate_active.iloc[:14,2] = df_moderate_active.iloc[:14,1] - np.mean(df_moderate_active.iloc[:14,1])
+            df_moderate_active.iloc[14:,2] = error
             
-            ### Inserting anomaly in database
-            df_moderate_active = df_moderate_active.iloc[lback_days:,:]
-            df_moderate_active['score'] = error
             df_moderate_active['anomaly_class'] = 0
-            df_moderate_active.loc[filt,['anomaly_class']] = 1
+            filt = df_moderate_active.iloc[:14,2]>2*np.mean(df_moderate_active.iloc[:14,2])
+            df_moderate_active.iloc[:14,:].loc[filt,'anomaly_class']=1
+            
+            
+            
+            for i in range(14,len(error)):
+                filt = df_moderate_active.iloc[i-14:i,3]==0
+                std_error = np.std(abs(error[i-14:i][filt]))
+                mean = np.mean(abs(error[i-14:i][filt]))
 
+                if ((error[i]>3*std_error + mean) | (error[i]<-3*std_error - mean)):
+                    df_moderate_active.iloc[i,3]=1
+
+
+            filt = df_moderate_active['anomaly_class']==1
             begin_detection_date = datetime.datetime.now() - datetime.timedelta(days=self.anomaly_days)
+            df_moderate_active['date'] = pd.to_datetime(df_moderate_active['date'])
             detection_tuples = df_moderate_active.date > begin_detection_date
             anomaly_df = df_moderate_active[filt].loc[detection_tuples ]
             
             
             if(len(anomaly_df)!=0):
-                
+
+                self.logger.info("Outliers found using lstm_moderate_active model")
                 insert_data(self,entry_info,repo_id,anomaly_df,'lstm_moderate_acctive')
                 
             else:
-                #self.register_task_completion(entry_info, repo_id, "insights") 
+                
                 self.logger.info("No outliers found using lstm_moderate_active model")
               
             
 
         def lstm_highly_active(self,entry_info,repo_id,df_highly_active):
             
-            scaler = MinMaxScaler(feature_range=(0,1))
+            scaler = StandardScaler()
 
             data = pd.DataFrame(df_highly_active.iloc[:,1])
             data = pd.DataFrame(scaler.fit_transform(data.values))
@@ -533,24 +545,35 @@ class InsightWorker(Worker):
             #Finding anomalies
             test_data = df_highly_active.iloc[lback_days:,1]
             error = np.array(test_data[:]- predictions[:,0])
-            median_error = scipy.stats.median_abs_deviation(error)
-            mean_error = np.mean(error)
             
-            filt = ( error > 2*median_error) | ( error < - 2*median_error) 
+            df_highly_active['score'] = 0
+            df_highly_active.iloc[:30,2] = df_highly_active.iloc[:30,1] - np.mean(df_highly_active.iloc[:30,1])
+            df_highly_active.iloc[30:,2] = error
             
-            df_highly_active['date'] = pd.to_datetime(df_highly_active['date'])
-
-            df_highly_active = df_highly_active.iloc[lback_days:,:]
-            df_highly_active['score'] = error
             df_highly_active['anomaly_class'] = 0
-            df_highly_active.loc[filt,['anomaly_class']] = 1
+            filt = df_highly_active.iloc[:30,2]>2*np.mean(df_highly_active.iloc[:30,2])
+            df_highly_active.iloc[:30,:].loc[filt,'anomaly_class']=1
+            
+            
+            
+            for i in range(30,len(error)):
+                filt = df_highly_active.iloc[i-30:i,3]==0
+                std_error = np.std(error[i-30:i][filt])
+                mean = np.mean(error[i-30:i][filt])
 
-            begin_detection_date = datetime.datetime.now() - datetime.timedelta(days=90)
+                if ((error[i]>3*std_error + mean) | (error[i]<-3*std_error - mean)):
+                    df_highly_active.iloc[i,3]=1
+
+
+            filt = df_highly_active['anomaly_class']==1
+            begin_detection_date = datetime.datetime.now() - datetime.timedelta(days=self.anomaly_days)
+            df_highly_active['date'] = pd.to_datetime(df_highly_active['date'])
             detection_tuples = df_highly_active.date > begin_detection_date
             anomaly_df = df_highly_active[filt].loc[detection_tuples]
 
             if(len(anomaly_df)!=0):
                 
+                self.logger.info("Outliers found using lstm_highly_active model")
                 insert_data(self,entry_info,repo_id,anomaly_df,'lstm_highly_acctive')
                 
             else:
@@ -558,11 +581,109 @@ class InsightWorker(Worker):
                 self.logger.info("No outliers found using lstm_highly_active model")
     
         
-        def time_series_LSTM_model(self,entry_info,repo_id,df):
+        def time_series_ML_model(self,entry_info,repo_id,df):
 
-            for i in range(1,df.columns.shape[0]):
+            
+
+            query_text = """
+            SELECT
+            r.repo_id,
+            issue_count,
+            pull_request_count,
+            issue_comment_count,
+            pull_request_comment_count
+            FROM
+            augur_data.repo r left outer join 
+            ( SELECT repo_id, COUNT ( * ) AS issue_count FROM augur_data.issues GROUP BY repo_id ) i on r.repo_id = i.repo_id
+            FULL OUTER JOIN ( SELECT repo_id, COUNT ( * ) AS pull_request_count FROM augur_data.pull_requests GROUP BY repo_id ) pr ON i.repo_id = pr.repo_id
+            FULL OUTER JOIN (
+            SELECT
+                repo_id,
+                COUNT ( * ) AS pull_request_comment_count 
+            FROM
+                augur_data.message
+                M LEFT OUTER JOIN augur_data.pull_request_message_ref mr ON M.msg_id = mr.msg_id
+                LEFT OUTER JOIN augur_data.pull_requests pr ON mr.pull_request_id = pr.pull_request_id 
+            GROUP BY
+                repo_id 
+            ) prc ON i.repo_id = prc.repo_id
+            FULL OUTER JOIN (
+            SELECT
+                repo_id,
+                COUNT ( * ) AS issue_comment_count 
+            FROM
+                augur_data.message
+                M LEFT OUTER JOIN augur_data.issue_message_ref mr ON M.msg_id = mr.msg_id
+                LEFT OUTER JOIN augur_data.issues i ON mr.issue_id = i.issue_id 
+            WHERE
+                pull_request IS NULL 
+            GROUP BY
+            repo_id 
+            ) ic ON i.repo_id = ic.repo_id
+                """
+
+
+
+            if not os.path.isfile('./kmeans_cluster.joblib'):
                 
-                cluster_model(self,entry_info,repo_id,df.iloc[:,[0,i]])
+                SQL_query_text = s.sql.text(query_text)
+                df_cluster = pd.read_sql(SQL_query_text, self.db)
+                
+                df_cluster = df_cluster.fillna(0)
+                df_cluster.index = df_cluster.iloc[:,0]
+                if(len(df_cluster)>3053):
+                    df_cluster = df_cluster.iloc[:3053,:]
+                df_cluster.drop(['repo_id'],axis=1,inplace=True)
+                
+                kmeans = KMeans(n_clusters=3, random_state=0).fit(df_cluster)
+                
+                dump(kmeans, 'kmeans_cluster.joblib') 
+                
+    
+    
+    
+    
+            clf = load('kmeans_cluster.joblib')
+            query_text_repo = query_text + "WHERE r.repo_id={}".format(repo_id)
+            SQL_query_text = s.sql.text(query_text_repo)
+
+            df_repo = pd.read_sql(SQL_query_text, self.db)
+            df_repo = df_repo.fillna(0)
+            df_repo.index = df_repo.iloc[:,0]
+            df_repo.drop(['repo_id'],axis=1,inplace=True)
+
+            pred = clf.predict(df_repo)
+
+            # 0:less active
+            # 1:highly active
+            # 2:moderate active
+
+
+
+            if pred[0] == 0:
+                
+                
+                for i in range(1,df.columns.shape[0]):
+                
+                    
+                    stl_less_active(self,entry_info,repo_id,df.iloc[:,[0,i]])
+                    
+            elif pred[0] == 2:
+                
+
+                for i in range(1,df.columns.shape[0]):
+                    
+                    self.logger.info("Collection and preprocessing of data of {} field in cluster_2 Completed".format(df.columns[i]))
+                    lstm_moderate_active(self,entry_info,repo_id,pd.DataFrame(df.iloc[:,[0,i]]))
+            else:
+                
+        
+                for i in range(1,df.columns.shape[0]):
+
+                    self.logger.info("Collection and preprocessing of data of {} field in cluster_1 Completed".format(df.columns[i]))
+                    lstm_highly_active(self,entry_info,repo_id,pd.DataFrame(df.iloc[:,[0,i]]))
+
+
 
         def time_series_metrics(self,entry_info,repo_id):
 
@@ -613,7 +734,7 @@ class InsightWorker(Worker):
             df = df.fillna(0)
             
             self.logger.info("Collection and preprocessing of data of repo_id_{} Completed".format(repo_id))
-            time_series_LSTM_model(self,entry_info,repo_id,df)
+            time_series_ML_model(self,entry_info,repo_id,df)
 
 
         def insert_data(self,entry_info,repo_id,anomaly_df,model):
