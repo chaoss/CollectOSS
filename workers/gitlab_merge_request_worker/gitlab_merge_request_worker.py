@@ -526,16 +526,9 @@ class GitlabMergeRequestWorker(Worker):
 
     def merge_request_files_model(self, task, repo_id):
 
-        pr_number_sql = s.sql.text("""
-                    SELECT DISTINCT pr_src_number as pr_src_number, pull_requests.pull_request_id
-                    FROM pull_requests--, pull_request_meta
-                    WHERE repo_id = {}
-                """.format(repo_id))
-        pr_numbers = pd.read_sql(pr_number_sql, self.db, params={})
-
         gitlab_url = task['given']['gitlab_url']
 
-        self.logger.info('Beginning collection of Merge Request Commits...\n')
+        self.logger.info('Beginning collection of Merge Request File Changes...\n')
         self.logger.info(f'Git URL: {gitlab_url}\n')
 
         owner, repo = self.get_owner_repo(gitlab_url)
@@ -551,31 +544,53 @@ class GitlabMergeRequestWorker(Worker):
         for pull_request in urls.itertuples():  # for each url of PRs we have inserted
             mr_iid = pull_request.pr_url.split('/')[-1]
             changes_url = 'https://gitlab.com/api/v4/projects/' + url_encoded_format_project_address + '/merge_requests/' + mr_iid + '/changes'
-            table = 'pull_request_file'
+            table = 'pull_request_files'
             table_pkey = 'pr_file_id'
-            duplicate_col_map = {'pr_cmt_sha': 'id'}
-            update_col_map = {}
+            duplicate_col_map = {'pull_request_id': 'id', 'pr_file_path': 'old_path'}
+            update_col_map = {'pr_file_additions': 'additions', 'pr_file_deletions': 'deletions'}
+            update_keys = list(update_col_map.keys()) if update_col_map else []
+            cols_query = list(duplicate_col_map.keys()) + update_keys + [table_pkey]
 
-            # Use helper paginate function to iterate the commits url and check for dupes
-            pr_commits = self.paginate(commits_url, duplicate_col_map, update_col_map, table, table_pkey,
-                                       where_clause="where pull_request_id = {}".format(pull_request.pull_request_id))
+            table_values = self.get_table_values(cols_query, [table])
+            r = requests.get(url=changes_url, headers=self.headers)
+            mr_data = r.json()
+            changes = mr_data['changes']
 
-            for pr_commit in pr_commits:  # post-pagination, iterate results
-                if pr_commit['flag'] == 'need_insertion':  # if non-dupe
-                    pr_commit_row = {
-                        'pull_request_id': pull_request.pull_request_id,
-                        'pr_cmt_sha': pr_commit['id'],
-                        'pr_cmt_node_id': None,
-                        'pr_cmt_message': pr_commit['message'],
-                        # 'pr_cmt_comments_url': pr_commit['comments_url'],
-                        'tool_source': self.tool_source,
-                        'tool_version': self.tool_version,
-                        'data_source': 'GitHub API',
-                    }
-                    result = self.db.execute(self.pull_request_commits_table.insert().values(pr_commit_row))
-                    self.logger.info(f"Inserted Pull Request Commit: {result.inserted_primary_key}\n")
+            for file_changes in changes:
+                try:
+                    deletes = int(file_changes['diff'].split('@@')[1].strip().split(' ')[0].split(',')[1])
+                    adds = int(file_changes['diff'].split('@@')[1].strip().split(' ')[1].split(',')[1])
+                except:
+                    deletes = 0
+                    adds = 0
 
-        self.register_task_completion(task_info, repo_id, 'pull_request_commits')
+                change_dict = {
+                    'id': pull_request.pull_request_id,
+                    'old_path': file_changes['old_path'],
+                    'additions': str(adds),
+                    'deletions': str(deletes)
+                }
+
+                self.logger.info(change_dict)
+                pr_file_changes = self.assign_tuple_action([change_dict], table_values, update_col_map, duplicate_col_map,
+                                                   table_pkey)[0]
+
+                pr_file_changes_dict = {
+                    'pull_request_id': change_dict['id'],
+                    'pr_file_additions': change_dict['additions'],
+                    'pr_file_deletions': change_dict['deletions'],
+                    'pr_file_path': change_dict['old_path'],
+                    'tool_source': self.tool_source,
+                    'tool_version': self.tool_version,
+                    'data_source': self.data_source,
+                }
+
+                file_name = pr_file_changes_dict['pr_file_path']
+                if pr_file_changes['flag'] == 'need_insertion':
+                    result = self.db.execute(self.pull_request_files_table.insert().values(pr_file_changes_dict))
+                    self.logger.info(f'Added files change in {file_name} for MR iid {mr_iid} with pkey {result.inserted_primary_key}')
+
+                    self.results_counter += 1
 
     def query_assignees(self, pr_id, assignees):
 
