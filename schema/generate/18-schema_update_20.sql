@@ -1,4 +1,4 @@
-DROP INDEX "augur_data"."cntrb_id";
+DROP INDEX if exists "augur_data"."cntrb_id";
 
 CREATE INDEX "cnt-fullname" ON "augur_data"."contributors" USING hash (
   "cntrb_full_name" COLLATE "pg_catalog"."default" "pg_catalog"."text_ops"
