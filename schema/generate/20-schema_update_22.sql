@@ -9,6 +9,6 @@ CREATE TABLE augur_data.repo_cluster_messages
 	"data_source" varchar,
 	"data_collection_date" timestamp(0) DEFAULT CURRENT_TIMESTAMP,
 	PRIMARY KEY ("msg_cluster_id") 
-)
+);
 
 update "augur_operations"."augur_settings" set value = 22 where setting = 'augur_data_version'; 
