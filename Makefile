@@ -63,7 +63,7 @@ rebuild-dev:
 #
 .PHONY: dev-start dev-stop dev monitor-frontend monitor-backend monitor frontend backend-stop backend-start backend-restart backend clean rebuild
 
-dev-start: dev-stop
+dev-start: 
 	@ scripts/control/start_augur.sh
 	@ scripts/control/start_frontend.sh
 
