@@ -992,7 +992,8 @@ class Worker():
                 contributor_compressed = r.json()
 
                 email = repo_contributor['email']
-                if len(contributor_compressed) == 0 or "id" not in contributor_compressed[0]:
+                self.logger.info(contributor_compressed)
+                if len(contributor_compressed) == 0 or type(contributor_compressed) is dict or "id" not in contributor_compressed[0]:
                     continue
 
                 self.logger.info("Fetching for user: " + str(contributor_compressed[0]["id"]))
