@@ -13,17 +13,23 @@ def read(filename):
 
 setup(
     name="clustering_worker",
-    version="0.0.0",
+    version="0.0.1",
     url="https://github.com/chaoss/augur",
     license='MIT',
-    author="Augur Team",
-    author_email="gabe@gabehe.im",
-    description="Template worker to be used as an example",
+    author="Sarit Adhikari",
+    author_email="sarit.adhikari@gmail.com",
+    description="worker to cluster repository based on messages on issues and pull requests ",
     packages=find_packages(),
     install_requires=[
         'flask',
         'requests',
-        'psycopg2-binary'
+        'psycopg2-binary',
+        'sklearn',
+        'numpy',
+        'nltk',
+        'seaborn',
+        'pandas',
+        'matplotlib'
     ],
     entry_points={
         'console_scripts': [

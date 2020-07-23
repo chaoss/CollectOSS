@@ -8,7 +8,6 @@ def main():
     """
     Creates the Flask app and data collection worker, then starts the Gunicorn server
     """
-    print("runtime of clustering worker")
     app = Flask(__name__)
     app.worker = ClusteringWorker()
 
