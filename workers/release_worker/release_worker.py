@@ -52,6 +52,16 @@ class ReleaseWorker(Worker):
             'data_source': self.data_source
         }
 
+        result = self.db.execute(self.releases_table.insert().values(release_inf))
+        self.logger.info(f"Primary Key inserted into releases table: {result.inserted_primary_key}\n")
+        self.results_counter += 1
+
+        self.logger.info(f"Inserted info for {owner}/{repo}/{release['name']}\n")
+
+        #Register this task as completed
+        self.register_task_completion(task, release_id, "releases")
+        return
+
     def releases_model(self, task, repo_id):
 
         github_url = task['given']['github_url']
@@ -132,9 +142,8 @@ class ReleaseWorker(Worker):
         self.logger.info("repository value is: {}\n".format(data))
 
         if 'releases' in data:
-            #if 'releases' in data['id']:
-            if 'edges' in data['releases']:#['releases']:
-                for n in data['releases']['edges']:#['releases']['edges']:
+            if 'edges' in data['releases']:
+                for n in data['releases']['edges']:
                     if 'node' in n:
                         release = n['node']
                         insert_release(self, repo_id, owner, release)
@@ -142,19 +151,7 @@ class ReleaseWorker(Worker):
                         self.logger.info("There's no release to insert. Current node is not available in releases: {}\n".format(n))
             else:
                 self.logger.info("There are no releases to insert for current repository: {}\n".format(data))
-            #else:
-            #    self.logger.info("Graphql response does not contain releases: {}\n".format(data))
         else:
             self.logger.info("Graphql response does not contain repository: {}\n".format(data))
-
-        result = self.db.execute(self.releases_table.insert().values(release_inf))
-        self.logger.info(f"Primary Key inserted into releases table: {result.inserted_primary_key}\n")
-        self.results_counter += 1
-
-        self.logger.info(f"Inserted info for {owner}/{repo}/{release['name']}\n")
-
-        #Register this task as completed
-        self.register_task_completion(task, release_id, "releases")
-        return
 
 
