@@ -20,3 +20,6 @@
 \i schema/generate/16-schema_update_18.sql
 \i schema/generate/17-schema_update_19.sql
 \i schema/generate/18-schema_update_20.sql
+\i schema/generate/19-schema_update_21.sql
+\i schema/generate/20-schema_update_22.sql
+
