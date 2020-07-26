@@ -114,10 +114,14 @@ class ReleaseWorker(Worker):
                         if 'node' in n:
                             release = n['node']
                             insert_release(self, repo_id, owner, release)
-                        self.logger.info("There's no release to insert. Current node is not available in releases: {}\n".format(n))
-                self.logger.info("There are no releases to insert for current repository: {}\n".format(data))
-            self.logger.info("Graphql response does not contain releases: {}\n".format(data))
-        self.logger.info("Graphql response does not contain repository: {}\n".format(data))
+                        else:
+                            self.logger.info("There's no release to insert. Current node is not available in releases: {}\n".format(n))
+                else:
+                    self.logger.info("There are no releases to insert for current repository: {}\n".format(data))
+            else:
+                self.logger.info("Graphql response does not contain releases: {}\n".format(data))
+        else:
+            self.logger.info("Graphql response does not contain repository: {}\n".format(data))
 
     def insert_release(self, repo_id, owner, release):
         author = release['author']['name']+'_'+release['author']['company']
