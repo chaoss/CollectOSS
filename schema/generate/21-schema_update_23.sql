@@ -17,4 +17,8 @@ CREATE INDEX CONCURRENTLY if not exists "contributor_worker_email_finder" ON "au
   "cntrb_email"
 );
 
+update "augur_operations"."augur_settings" set value = 23 where setting = 'augur_data_version'; 
+
+
 -- 
+

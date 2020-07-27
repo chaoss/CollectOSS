@@ -107,6 +107,8 @@ class ReleaseWorker(Worker):
             self.register_task_failure(task, repo_id, "Failed to hit endpoint: {}".format(url))
             return
 
+        self.logger.info("repository value is: {}\n".format(data))
+
         if 'repository' in data:
             if 'releases' in data['repository']:
                 if 'edges' in data['repository']['releases']:
