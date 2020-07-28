@@ -6,7 +6,7 @@ MAXVALUE 9223372036854775807
 START 1
 CACHE 1;
 
-CREATE SEQUENCE "augur_data"."message_sentiment_summary_msg_summary_id_seq" 
+CREATE SEQUENCE if not exists "augur_data"."message_sentiment_summary_msg_summary_id_seq" 
 INCREMENT 1
 MINVALUE  1
 MAXVALUE 9223372036854775807
