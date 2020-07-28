@@ -1,5 +1,5 @@
---22-schema_update_24.sql
-CREATE SEQUENCE "augur_data"."message_sentiment_msg_analysis_id_seq" 
+-- 22-schema_update_24.sql
+CREATE SEQUENCE if not exists "augur_data"."message_sentiment_msg_analysis_id_seq" 
 INCREMENT 1
 MINVALUE  1
 MAXVALUE 9223372036854775807
@@ -13,7 +13,7 @@ MAXVALUE 9223372036854775807
 START 1
 CACHE 1;
 
-CREATE TABLE "augur_data"."message_sentiment" (
+CREATE TABLE if not exists "augur_data"."message_sentiment" (
   "msg_analysis_id" int8 NOT NULL DEFAULT nextval('"augur_data".message_sentiment_msg_analysis_id_seq'::regclass),
   "msg_id" int8,
   "worker_run_id" int8,
@@ -41,7 +41,7 @@ COMMENT ON COLUMN "augur_data"."message_sentiment"."novelty_flag" IS 'This is an
 
 COMMENT ON COLUMN "augur_data"."message_sentiment"."feedback_flag" IS 'This exists to provide the user with an opportunity provide feedback on the resulting the sentiment scores. ';
 
-CREATE TABLE "augur_data"."message_sentiment_summary" (
+CREATE TABLE if not exists "augur_data"."message_sentiment_summary" (
   "msg_summary_id" int8 NOT NULL DEFAULT nextval('"augur_data".message_sentiment_summary_msg_summary_id_seq'::regclass),
   "repo_id" int8,
   "worker_run_id" int8,
@@ -83,21 +83,21 @@ ALTER SEQUENCE "augur_data"."message_sentiment_summary_msg_summary_id_seq" OWNER
 
 --
 
-CREATE SEQUENCE "augur_data"."repo_topic_repo_topic_id_seq" 
+CREATE SEQUENCE if not exists "augur_data"."repo_topic_repo_topic_id_seq" 
 INCREMENT 1
 MINVALUE  1
 MAXVALUE 9223372036854775807
 START 1
 CACHE 1;
 
-CREATE SEQUENCE "augur_data"."topic_words_topic_words_id_seq" 
+CREATE SEQUENCE if not exists "augur_data"."topic_words_topic_words_id_seq" 
 INCREMENT 1
 MINVALUE  1
 MAXVALUE 9223372036854775807
 START 1
 CACHE 1;
 
-CREATE TABLE "augur_data"."repo_topic" (
+CREATE TABLE if not exists "augur_data"."repo_topic" (
   "repo_topic_id" int8 NOT NULL DEFAULT nextval('"augur_data".repo_topic_repo_topic_id_seq'::regclass),
   "repo_id" int4,
   "topic_id" int4,
@@ -110,7 +110,7 @@ CREATE TABLE "augur_data"."repo_topic" (
 )
 ;
 
-CREATE TABLE "augur_data"."topic_words" (
+CREATE TABLE if not exists "augur_data"."topic_words" (
   "topic_words_id" int8 NOT NULL DEFAULT nextval('"augur_data".topic_words_topic_words_id_seq'::regclass),
   "topic_id" int4,
   "word" varchar COLLATE "pg_catalog"."default",
@@ -133,29 +133,25 @@ SELECT setval('"augur_data"."topic_words_topic_words_id_seq"', 25, true);
 ALTER SEQUENCE "augur_data"."topic_words_topic_words_id_seq"
 OWNED BY "augur_data"."topic_words"."topic_words_id";
 
-CREATE INDEX "cntrb_id" ON "augur_data"."contributors" USING hash (
-  "cntrb_email" COLLATE "pg_catalog"."default" "pg_catalog"."text_ops"
-);
-
 
 ---
 --- Message Sentiment and Novelty
 ---
-CREATE SEQUENCE "augur_data"."message_sentiment_msg_analysis_id_seq" 
+CREATE SEQUENCE if not exists "augur_data"."message_sentiment_msg_analysis_id_seq" 
 INCREMENT 1
 MINVALUE  1
 MAXVALUE 9223372036854775807
 START 1
 CACHE 1;
 
-CREATE SEQUENCE "augur_data"."message_sentiment_summary_msg_summary_id_seq" 
+CREATE SEQUENCE if not exists "augur_data"."message_sentiment_summary_msg_summary_id_seq" 
 INCREMENT 1
 MINVALUE  1
 MAXVALUE 9223372036854775807
 START 1
 CACHE 1;
 
-CREATE TABLE "augur_data"."message_sentiment" (
+CREATE TABLE if not exists "augur_data"."message_sentiment" (
   "msg_analysis_id" int8 NOT NULL DEFAULT nextval('"augur_data".message_sentiment_msg_analysis_id_seq'::regclass),
   "msg_id" int8,
   "worker_run_id" int8,
@@ -181,7 +177,7 @@ COMMENT ON COLUMN "augur_data"."message_sentiment"."novelty_flag" IS 'This is an
 
 COMMENT ON COLUMN "augur_data"."message_sentiment"."feedback_flag" IS 'This exists to provide the user with an opportunity provide feedback on the resulting the sentiment scores. ';
 
-CREATE TABLE "augur_data"."message_sentiment_summary" (
+CREATE TABLE  if not exists "augur_data"."message_sentiment_summary" (
   "msg_summary_id" int8 NOT NULL DEFAULT nextval('"augur_data".message_sentiment_summary_msg_summary_id_seq'::regclass),
   "repo_id" int8,
   "worker_run_id" int8,
@@ -215,30 +211,25 @@ SELECT setval('"augur_data"."message_sentiment_summary_msg_summary_id_seq"', 206
 ALTER SEQUENCE "augur_data"."message_sentiment_summary_msg_summary_id_seq"
 OWNED BY "augur_data"."message_sentiment_summary"."msg_summary_id";
 
-CREATE INDEX "cntrb_id" ON "augur_data"."contributors" USING hash (
-  "cntrb_email" COLLATE "pg_catalog"."default" "pg_catalog"."text_ops"
-);
-
-
 --
 --- LSTM Models
 --
 
-CREATE SEQUENCE "augur_data"."lstm_anomaly_models_model_id_seq" 
+CREATE SEQUENCE if not exists "augur_data"."lstm_anomaly_models_model_id_seq" 
 INCREMENT 1
 MINVALUE  1
 MAXVALUE 9223372036854775807
 START 1
 CACHE 1;
 
-CREATE SEQUENCE "augur_data"."lstm_anomaly_results_result_id_seq" 
+CREATE SEQUENCE if not exists "augur_data"."lstm_anomaly_results_result_id_seq" 
 INCREMENT 1
 MINVALUE  1
 MAXVALUE 9223372036854775807
 START 1
 CACHE 1;
 
-CREATE TABLE "augur_data"."lstm_anomaly_models" (
+CREATE TABLE if not exists "augur_data"."lstm_anomaly_models" (
   "model_id" int8 NOT NULL DEFAULT nextval('"augur_data".lstm_anomaly_models_model_id_seq'::regclass),
   "model_name" varchar COLLATE "pg_catalog"."default",
   "model_description" varchar COLLATE "pg_catalog"."default",
@@ -256,7 +247,7 @@ CREATE TABLE "augur_data"."lstm_anomaly_models" (
 
 ALTER TABLE "augur_data"."lstm_anomaly_models" OWNER TO "augur";
 
-CREATE TABLE "augur_data"."lstm_anomaly_results" (
+CREATE TABLE if not exists "augur_data"."lstm_anomaly_results" (
   "result_id" int8 NOT NULL DEFAULT nextval('"augur_data".lstm_anomaly_results_result_id_seq'::regclass),
   "repo_id" int8,
   "repo_category" varchar COLLATE "pg_catalog"."default",
