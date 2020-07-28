@@ -470,12 +470,11 @@ class InsightWorker(Worker):
             training_days = self.training_days
             batch_size = lback_days
             model_table_values = self.get_table_values(['*'], ['lstm_anomaly_models'], where_clause="WHERE model_name = '{}'".format(model_name))
-            self.logger.info(model_table_values)
             model_exists =  ((model_table_values['model_name'] == '{}'.format(model_name)) & \
                 (model_table_values['model_description'] == '{}'.format(model_description)) & \
                 (model_table_values['look_back_days'] == lback_days) & (model_table_values['batch_size'] == lback_days)).any()
                             
-            self.logger.info(model_exists)
+            
             if not model_exists:
                 self.logger.info("entered if")
                 data_point = {
@@ -549,12 +548,12 @@ class InsightWorker(Worker):
             # If anomaly deiscovered in between the anomaly_days values then nsert it into the database
             if(len(anomaly_df)!=0):
 
-                self.logger.info("Outliers found using lstm_moderate_active model")
-                insert_data(self,entry_info,repo_id,anomaly_df,'lstm_moderate_acctive')
+                self.logger.info("Outliers found using lstm_keras model")
+                insert_data(self,entry_info,repo_id,anomaly_df,'lstm_keras')
                 
             else:
                 
-                self.logger.info("No outliers found using lstm_moderate_active model")
+                self.logger.info("No outliers found using lstm_keras model")
               
 
 
@@ -598,7 +597,7 @@ class InsightWorker(Worker):
 
                 insight_exists = ((insight_table_values['ri_date'] == ts) & \
                     (insight_table_values['ri_metric'] == split[0]) & (insight_table_values['ri_field'] == split[1])).any()
-                self.logger.info(insight_exists)
+                
                 if not insight_exists:
 
                     # Insert record in records table and send record to slack bot
