@@ -240,7 +240,7 @@ class SentiCR:
 
         sample_weights = compute_sample_weight({-1:0.4,0:0.3,1:0.3}, Y_train)
         model = XGBClassifier()
-        model.fit(X_train, Y_train, sample_weight=sample_weights)        
+        model.fit(X_train, Y_train, sample_weight=sample_weights)      
             
         self.logger.info('Model Training done\n')
 

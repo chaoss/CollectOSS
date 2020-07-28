@@ -17,8 +17,8 @@ setup(
     url="https://github.com/chaoss/augur",
     license='MIT',
     author="Augur Team",
-    author_email="",
-    description="Message Insights",
+    author_email="akshblr555@gmail.com",
+    description="Message Insights worker that detects novel messages & analyzes sentiment from issue, PR messages",
     packages=find_packages(),
     install_requires=[
         'flask',
@@ -32,7 +32,8 @@ setup(
         'scipy',
         'emoji',
         'keras',
-        'h5py'
+        'h5py',
+        'scikit-image'
     ],
     entry_points={
         'console_scripts': [
