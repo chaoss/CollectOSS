@@ -1,4 +1,4 @@
-#22-schema_update_24.sql
+--22-schema_update_24.sql
 CREATE SEQUENCE "augur_data"."message_sentiment_msg_analysis_id_seq" 
 INCREMENT 1
 MINVALUE  1
