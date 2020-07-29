@@ -22,14 +22,14 @@ setup(
     packages=find_packages(exclude=('tests',)),
     install_requires=[
         'flask', 
-        'numpy', 
+        'numpy==1.18.5', 
         'requests', 
         'psycopg2-binary', 
         'click', 
         'scipy',
         'sklearn',
-        'keras',
-        'tensorflow'
+        'keras==2.4.3',
+        'tensorflow==2.2.0'
 
     ],
     entry_points={

@@ -38,6 +38,7 @@ setup(
         "flask_login",
         "flask",
         "pandas",
+        "numpy==1.18.5",
         "requests",
         "flask_cors",
         "flask_wtf",
@@ -46,8 +47,8 @@ setup(
         "psutil",
         "gunicorn",
         "six>=1.14.0",
-        "tensorflow",
-        "keras"
+        "tensorflow==2.2.0",
+        "keras==2.4.3"
     ],
     extras_require={
         "dev": [
