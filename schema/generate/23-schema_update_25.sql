@@ -45,4 +45,4 @@ COMMENT ON COLUMN "augur_data"."message_analysis_summary"."period" IS 'The whole
 ALTER TABLE "augur_data"."message_analysis_summary" OWNER TO "augur";
 
 
-update "augur_operations"."augur_settings" set value = 21 where setting = 'augur_data_version'; 
+update "augur_operations"."augur_settings" set value = 23 where setting = 'augur_data_version'; 
