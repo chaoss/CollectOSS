@@ -146,7 +146,7 @@ class ReleaseWorker(Worker):
                 for n in data['releases']['edges']:
                     if 'node' in n:
                         release = n['node']
-                        insert_release(self, repo_id, owner, release)
+                        self.insert_release(self, repo_id, owner, release)
                     else:
                         self.logger.info("There's no release to insert. Current node is not available in releases: {}\n".format(n))
             else:
