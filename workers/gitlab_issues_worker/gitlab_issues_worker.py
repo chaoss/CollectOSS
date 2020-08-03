@@ -78,7 +78,7 @@ class GitLabIssuesWorker(Worker):
         self.msg_id_inc = self.get_max_id('message', 'msg_id')
         self.logger.info('Beginning the process of GitLab Issue Collection...'.format(str(os.getpid())))
         gitlab_base = 'https://gitlab.com/api/v4'
-        intermediate_url = '{}/projects/{}/issues?per_page=100&state=opened&'.format(gitlab_base, 18754962)
+        intermediate_url = '{}/projects/{}/issues?per_page=500&state=opened&'.format(gitlab_base, )
         gitlab_issues_url = intermediate_url + "page={}"
         
 
@@ -155,7 +155,7 @@ class GitLabIssuesWorker(Worker):
                     self.logger.info(issue)
                 # continue
         
-        # issue_assigness
+        # issue_assignees
             self.logger.info("assignees", issue_dict['assignees'])
             collected_assignees = issue_dict['assignees']
             if issue_dict['assignee'] not in collected_assignees:
@@ -174,14 +174,15 @@ class GitLabIssuesWorker(Worker):
                         "issue_assignee_src_id": assignee_dict['id'],
                         "issue_assignee_src_node": None
                     }
-                    self.logger.info("assignee info", assignee)
-                    # Commit insertion to the assignee table
-                    result = self.db.execute(self.issue_assignees_table.insert().values(assignee))
-                    self.logger.info("Primary key inserted to the issues_assignees table: " + str(result.inserted_primary_key))
-                    self.results_counter += 1
-
-                    self.logger.info("Inserted assignee for issue id: " + str(self.issue_id_inc) + 
-                        " with login/cntrb_id: " + assignee_dict['username'] + " " + str(assignee['cntrb_id']) + "\n")
+                    try:
+                        self.logger.info("assignee info", assignee)
+                        # Commit insertion to the assignee table
+                        result = self.db.execute(self.issue_assignees_table.insert().values(assignee))
+                        self.logger.info("Primary key inserted to the issues_assignees table: " + str(result.inserted_primary_key))
+                        self.results_counter += 1
+                    except:
+                        self.logger.info("Inserted assignee for issue id: " + str(self.issue_id_inc) + 
+                            " with login/cntrb_id: " + assignee_dict['username'] + " " + str(assignee['cntrb_id']) + "\n")
             else:
                 self.logger.info("Issue does not have any assignees\n")
 
