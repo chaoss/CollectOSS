@@ -437,21 +437,26 @@ class InsightWorker(Worker):
             filt = df.iloc[:lback_days,2]>2*np.mean(df.iloc[:lback_days,2])
             df.iloc[:lback_days,:].loc[filt,'anomaly_class']=1
             
-            
-            # Classifying local outliers with value 1 using std and mean
-            for i in range(lback_days,len(error)):
-                filt = df.iloc[i-lback_days:i,3]==0
-                std_error = np.std(abs(error[i-lback_days:i][filt]))
-                mean = np.mean(abs(error[i-lback_days:i][filt]))
-
-                if ((error[i]>3*std_error + mean) | (error[i]<-3*std_error - mean)):
-                    df.iloc[i,3]=1
-
             # Classifying global outliers with value 2
             mean = np.mean(abs(df.iloc[:,2]))
             std_error = np.std(abs(df.iloc[:,2]))
             filt = (df.iloc[:,2]>3*std_error + mean) | (df.iloc[:,2]<-3*std_error - mean)
             df.iloc[:,3][filt] = 2
+
+
+            # Classifying local outliers with value 1 using std and mean
+            for i in range(lback_days,len(error)):
+
+                filt = df.iloc[i-lback_days:i,3]!=2
+                std_error = np.std(abs(error[i-lback_days:i][filt]))
+                mean = np.mean(abs(error[i-lback_days:i][filt]))
+                threshold = mean + (3*(std_error)*(1-self.contamination))
+
+                if ((error[i]>threshold) | (error[i]<-threshold)):
+                    if(df.iloc[i,3]!=2):
+                        df.iloc[i,3]=1
+
+            
 
             # Defining anomaly dataframe for insetion into repo_insights,repo_insights_records table
             filt = df['anomaly_class']!=0
@@ -661,7 +666,7 @@ class InsightWorker(Worker):
                     
         def time_series_metrics(self,entry_info,repo_id):
 
-            """ Collects data of different metrics using API enpoints 
+            """ Collects data of different metrics using API endpoints 
                 Preproceess data and creates a dataframe with date and each and every fields as columns
             """
 
@@ -698,7 +703,7 @@ class InsightWorker(Worker):
                 metric_df = pd.DataFrame.from_records(data)
                 metric_df['date'] = pd.to_datetime(metric_df['date']).dt.date
                 metric_df['date'] = metric_df['date'].astype(str)
-                extra=['repo','rg']
+                extra=['repo','rg','week','day','year']
                 for column in metric_df.columns:
                     if any(x in column for x in extra):
                         metric_df.drop(column,axis=1,inplace=True)
@@ -876,8 +881,9 @@ class InsightWorker(Worker):
 
 
         # Initial calling of time_series_metrics to run the whole process of outlier detection
-        time_series = ['code-changes-lines','issues-new','reviews']
+        time_series = list(self.metrics)
         time_series_metrics(self,entry_info,repo_id)
+
 
         # Register task completeion when outlier detection method carried out successfully
         self.register_task_completion(entry_info, repo_id, "insights") 

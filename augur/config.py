@@ -122,14 +122,14 @@ default_config = {
             },
             "insight_worker": {
                 "port": 50300,
-                "metrics": {"issues-new": "issues", "code-changes": "commit_count", "code-changes-lines": "added", 
-                           "reviews": "pull_requests", "contributors-new": "new_contributors"},
+                "metrics": ["issues-new", "code-changes", "code-changes-lines", 
+                           "reviews", "contributors-new"],
                 "confidence_interval": 95,
-                "contamination": 0.041,
+                "contamination": 0.15,
                 "switch": 0,
                 "workers": 1,
                 "training_days": 365,
-                "anomaly_days": 2
+                "anomaly_days": 14
             },
             "linux_badge_worker": {
                 "port": 50400,
