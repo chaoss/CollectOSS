@@ -387,7 +387,7 @@ class MessageInsightsWorker(Worker):
 
             repo = pd.read_sql(repoSQL, self.db, params={}).iloc[0]
             to_send = {
-                    'insight': True,
+                    'message_insight': True,
                     'repo_git': repo['repo_git'],
                     'insight_begin_date': self.begin_date.strftime("%Y-%m-%d %H:%M:%S"), # date from when insights are calculated
                     'sentiment': insights[0], # sentiment insight dict

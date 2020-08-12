@@ -1,5 +1,6 @@
 import logging
 import multiprocessing
+import os
 from datetime import date
 
 import numpy as np
@@ -14,6 +15,8 @@ from sklearn import utils as skl_utils
 from workers.message_insights_worker.preprocess_text import \
     normalize_corpus as normalize_corpus
 
+dir_path = os.path.dirname(os.path.realpath(__file__))
+train_path = os.path.join(dir_path, 'train_data')
 
 ''' Doc2Vec model training
 
@@ -108,7 +111,7 @@ def novelty_analysis(df_message, r_id, models_dir, full_train, logger=logging):
     logger.info('Normalized text corpus')
 
     # Load pretrained Doc2Vec model
-    d2v_model = Doc2Vec.load("train_data/doc2vec.model")
+    d2v_model = Doc2Vec.load(os.path.join(train_path,"doc2vec.model"))
     doc2vec_vectors = np.array([d2v_model.infer_vector(str(row['cleaned_msg_text']).split())for index, row in df_message.iterrows()])
     logger.info('Doc2Vec vectorization done')
 

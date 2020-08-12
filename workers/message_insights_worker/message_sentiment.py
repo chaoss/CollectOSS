@@ -28,6 +28,9 @@ warnings.filterwarnings('ignore')
 
 CONTRACTION_MAP = contraction_map
 
+dir_path = os.path.dirname(os.path.realpath(__file__))
+train_path = os.path.join(dir_path, 'train_data')
+
 def replace_all(text, dic):
     if(sys.version_info[0] < 3):
         for i, j in dic.iteritems():
@@ -74,7 +77,7 @@ mystop_words = [
 emodict = []
 
 # Read in the words with sentiment from the dictionary
-with open("train_data/EmoticonLookupTable.txt","r") as emotable:
+with open(os.path.join(train_path,"EmoticonLookupTable.txt"),"r") as emotable:
     emoticon_reader=csv.reader(emotable,delimiter='\t')
 
     #Hash words from dictionary with their values
@@ -251,7 +254,7 @@ class SentiCR:
         return model
 
     def read_data_from_oracle(self):
-        workbook = open_workbook('train_data/custom_dataset.xlsx')
+        workbook = open_workbook(os.path.join(train_path,"custom_dataset.xlsx"))
         sheet = workbook.sheet_by_index(0)
         oracle_data = []
         self.logger.info(f"Reading training data from 'train_data/custom_dataset.xlsx'...")
