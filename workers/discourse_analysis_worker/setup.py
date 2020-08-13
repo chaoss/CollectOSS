@@ -17,14 +17,20 @@ setup(
     url="https://github.com/chaoss/augur",
     license='MIT',
     author="Augur Team",
-    author_email="gabe@gabehe.im",
-    description="Template worker to be used as an example",
+    author_email="",
+    description="Worker to classify messages into discourse acts",
     packages=find_packages(),
     install_requires=[
         'flask',
         'requests',
         'psycopg2-binary',
-        'click'
+        'click',
+        'pandas',
+        'sklearn',
+        'sklearn-crfsuite',
+        'nltk',
+        'textblob',
+        'scipy'
     ],
     entry_points={
         'console_scripts': [
