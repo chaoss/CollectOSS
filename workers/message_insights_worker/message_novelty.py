@@ -12,11 +12,11 @@ from scipy.spatial.distance import cosine
 from skimage.filters import threshold_otsu
 from sklearn import utils as skl_utils
 
+from augur import ROOT_AUGUR_DIRECTORY
 from workers.message_insights_worker.preprocess_text import \
     normalize_corpus as normalize_corpus
 
-dir_path = os.path.dirname(os.path.realpath(__file__))
-train_path = os.path.join(dir_path, 'train_data')
+train_path = os.path.join(ROOT_AUGUR_DIRECTORY, "workers", "message_insights_worker", "train_data")
 
 ''' Doc2Vec model training
 

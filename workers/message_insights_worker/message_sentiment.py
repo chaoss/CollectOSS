@@ -9,17 +9,18 @@ import warnings
 from statistics import mean
 
 import emoji
+import joblib
 import nltk
 import numpy as np
 from bs4 import BeautifulSoup
 from nltk.stem.snowball import SnowballStemmer
 from nltk.tokenize import word_tokenize
-from sklearn.externals import joblib
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.utils import compute_sample_weight
 from xgboost import XGBClassifier
 from xlrd import open_workbook
 
+from augur import ROOT_AUGUR_DIRECTORY
 from workers.message_insights_worker.preprocess_text import \
     CONTRACTION_MAP as contraction_map
 
@@ -28,8 +29,7 @@ warnings.filterwarnings('ignore')
 
 CONTRACTION_MAP = contraction_map
 
-dir_path = os.path.dirname(os.path.realpath(__file__))
-train_path = os.path.join(dir_path, 'train_data')
+train_path = os.path.join(ROOT_AUGUR_DIRECTORY, "workers", "message_insights_worker", "train_data")
 
 def replace_all(text, dic):
     if(sys.version_info[0] < 3):
@@ -211,6 +211,7 @@ class SentiCR:
                 self.logger.info('Using existing Trained Model')
                 self.model = joblib.load(f'{self.models_dir}/{self.algo}_senti.pkl')
                 self.vectorizer = joblib.load(f'{self.models_dir}/tfidf_vectorizer.pkl')
+                self.logger.info('Loaded Trained Models')
             else:
                 self.logger.info('Using default train set')
                 self.training_data = self.read_data_from_oracle()
@@ -269,6 +270,7 @@ class SentiCR:
         feature_vector = self.vectorizer.transform([comment]).toarray()
         sentiment_class = self.model.predict(feature_vector)
         score = np.amax(self.model.predict_proba(feature_vector))
+        # self.logger.info(score)
         if not isinstance(sentiment_class, float):
             sentiment_score = score*sentiment_class[0]
             sentiment_class = sentiment_class[0]
@@ -284,6 +286,7 @@ def get_senti_score(df, col, models_dir, label=False, logger=logging):
     i = 0
     labels = []
     scores = []
+    logger.info('Calculating sentiment scores...')
     while (i < df.shape[0]):
         if label:
             x, y = sentiment_analyzer.get_sentiment_polarity(df.iloc[i][col], label)
