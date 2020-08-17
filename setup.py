@@ -37,7 +37,7 @@ setup(
         "sqlalchemy",
         "flask_login",
         "flask",
-        "pandas",
+        "pandas==1.0.5",
         "requests",
         "flask_cors",
         "flask_wtf",
