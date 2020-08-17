@@ -79,8 +79,8 @@ class PullRequestAnalysisWorker(Worker):
 
         self.logger.info(f'PR Dataframe dim: {df_pr.shape}\n')
         
-        ## DEBUG:
-        df_pr.to_csv(f'PRA.csv',index=False)
+        # DEBUG:
+        # df_pr.to_csv(f'PRA.csv',index=False)
 
         if df_pr.empty:
             self.logger.warning('No new open PRs in tables to analyze!\n')
@@ -202,7 +202,7 @@ class PullRequestAnalysisWorker(Worker):
         self.logger.info(f'Analysis done!')
 
         # DEBUG:
-        df.to_csv(f'PRA_{repo_id}.csv',index=False)
+        # df.to_csv(f'PRA_{repo_id}.csv',index=False)
 
         '''
         # Insertion of merge probability to pull_request_analysis table
