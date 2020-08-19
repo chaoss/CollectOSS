@@ -261,10 +261,12 @@ class Repo_insertion_manager():
 
     def fetch_repos(self):
         """uses the github api to return repos belonging to the given organization"""
+        gh_api_key = self.augur_config.get_value('Database', 'key')
+        self.headers = {'Authorization': 'token %s' % gh_api_key} 
         repos = []
         page = 1
         url = self.paginate(page)
-        res = requests.get(url).json()
+        res = requests.get(url, headers=self.headers).json()
         while res:
             for repo in res:
                 repos.append(repo['name'])
