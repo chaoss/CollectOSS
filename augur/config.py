@@ -113,6 +113,14 @@ default_config = {
                     ],
                     "model": "message_analysis",
                     "repo_group_id": 0
+                },
+                {
+                    "delay": 100000,
+                    "given": [
+                        "github_url"
+                    ],
+                    "model": "pull_request_analysis",
+                    "repo_group_id": 0
                 }
             ]
         },
@@ -191,6 +199,12 @@ default_config = {
                 "workers": 1,
                 "insight_days": 30,
                 "models_dir": "message_models"
+            },
+            "pull_request_analysis_worker": {
+                "port": 51400,
+                "switch": 1,
+                "workers": 1,
+                "insight_days": 30
             }
         },
         "Facade": {
