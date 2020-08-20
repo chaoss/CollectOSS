@@ -13,12 +13,12 @@ import sqlalchemy as s
 from skimage.filters import threshold_otsu
 from sklearn.ensemble import IsolationForest
 
+from augur import ROOT_AUGUR_DIRECTORY
 from workers.message_insights_worker.message_novelty import novelty_analysis
 from workers.message_insights_worker.message_sentiment import get_senti_score
 from workers.worker_base import Worker
 
 warnings.filterwarnings('ignore')
-
 
 class MessageInsightsWorker(Worker):
     def __init__(self, config={}):
@@ -48,10 +48,12 @@ class MessageInsightsWorker(Worker):
         # Define data collection info
         self.tool_source = 'Message Insights Worker'
         self.tool_version = '0.0.0'
-        self.data_source = ''
+        self.data_source = 'Non-existent API'
 
         self.insight_days = self.config['insight_days']
-        self.models_dir = self.config['models_dir']
+        
+        # Abs paths
+        self.models_dir = os.path.join(ROOT_AUGUR_DIRECTORY, "workers", "message_insights_worker", self.config['models_dir'])
         self.full_train = False
 
         # To identify which run of worker inserted the data
@@ -108,6 +110,9 @@ class MessageInsightsWorker(Worker):
             df_past['msg_timestamp'] = pd.to_datetime(df_past['msg_timestamp'])
             df_past = df_past.sort_values(by='msg_timestamp')
             self.begin_date = df_past['msg_timestamp'].iloc[-1]
+
+            # Assign new run_id for every run
+            self.run_id = self.get_max_id('message_analysis', 'run_id')
             
             self.logger.info(f'Last analyzed msg_id of repo {repo_id} is {df_past["msg_id"].iloc[-1]}')
             self.logger.info(f'Fetching recent messages from {self.begin_date} of repo {repo_id}...\n')
@@ -387,7 +392,7 @@ class MessageInsightsWorker(Worker):
 
             repo = pd.read_sql(repoSQL, self.db, params={}).iloc[0]
             to_send = {
-                    'insight': True,
+                    'message_insight': True,
                     'repo_git': repo['repo_git'],
                     'insight_begin_date': self.begin_date.strftime("%Y-%m-%d %H:%M:%S"), # date from when insights are calculated
                     'sentiment': insights[0], # sentiment insight dict

@@ -33,7 +33,9 @@ setup(
         'emoji',
         'keras',
         'h5py',
-        'scikit-image'
+        'scikit-image',
+        'joblib',
+        'xgboost==0.90'
     ],
     entry_points={
         'console_scripts': [
