@@ -30,6 +30,38 @@ class ReleaseWorker(Worker):
         self.tool_version = '1.0.0'
         self.data_source = 'GitHub API'
 
+    def insert_release(self, repo_id, owner, release):
+        author = release['author']['name']+'_'+release['author']['company']
+        # Put all data together in format of the table
+        self.logger.info(f'Inserting release for repo with id:{repo_id}, owner:{owner}, release name:{release["name"]}\n')
+        release_inf = {
+            'release_id': release['id'],
+            'repo_id': repo_id,
+            'release_name': release['name'],
+            'release_description': release['description'],
+            'release_author': release['author'],
+            'release_created_at': release['createdAt'],
+            'release_published_at': release['publishedAt'],
+            'release_updated_at': release['updatedAt'],
+            'release_is_draft': release['isDraft'],
+            'release_is_prerelease': release['isPrerelease'],
+            'release_tag_name': release['tagName'],
+            'release_url': release['url'],
+            'tool_source': self.tool_source,
+            'tool_version': self.tool_version,
+            'data_source': self.data_source
+        }
+
+        result = self.db.execute(self.releases_table.insert().values(release_inf))
+        self.logger.info(f"Primary Key inserted into releases table: {result.inserted_primary_key}\n")
+        self.results_counter += 1
+
+        self.logger.info(f"Inserted info for {owner}/{repo}/{release['name']}\n")
+
+        #Register this task as completed
+        self.register_task_completion(task, release_id, "releases")
+        return
+
     def releases_model(self, task, repo_id):
 
         github_url = task['given']['github_url']
@@ -107,48 +139,19 @@ class ReleaseWorker(Worker):
             self.register_task_failure(task, repo_id, "Failed to hit endpoint: {}".format(url))
             return
 
-        if 'repository' in data:
-            if 'releases' in data['repository']:
-                if 'edges' in data['repository']['releases']:
-                    for n in data['repository']['releases']['edges']:
-                        if 'node' in n:
-                            release = n['node']
-                            insert_release(self, repo_id, owner, release)
+        self.logger.info("repository value is: {}\n".format(data))
+
+        if 'releases' in data:
+            if 'edges' in data['releases']:
+                for n in data['releases']['edges']:
+                    if 'node' in n:
+                        release = n['node']
+                        self.insert_release(self, repo_id, owner, release)
+                    else:
                         self.logger.info("There's no release to insert. Current node is not available in releases: {}\n".format(n))
+            else:
                 self.logger.info("There are no releases to insert for current repository: {}\n".format(data))
-            self.logger.info("Graphql response does not contain releases: {}\n".format(data))
-        self.logger.info("Graphql response does not contain repository: {}\n".format(data))
-
-    def insert_release(self, repo_id, owner, release):
-        author = release['author']['name']+'_'+release['author']['company']
-        # Put all data together in format of the table
-        self.logger.info(f'Inserting release for repo with id:{repo_id}, owner:{owner}, release name:{release["name"]}\n')
-        release_inf = {
-            'release_id': release['id'],
-            'repo_id': repo_id,
-            'release_name': release['name'],
-            'release_description': release['description'],
-            'release_author': release['author'],
-            'release_created_at': release['createdAt'],
-            'release_published_at': release['publishedAt'],
-            'release_updated_at': release['updatedAt'],
-            'release_is_draft': release['isDraft'],
-            'release_is_prerelease': release['isPrerelease'],
-            'release_tag_name': release['tagName'],
-            'release_url': release['url'],
-            'tool_source': self.tool_source,
-            'tool_version': self.tool_version,
-            'data_source': self.data_source
-        }
-
-        result = self.db.execute(self.releases_table.insert().values(release_inf))
-        self.logger.info(f"Primary Key inserted into releases table: {result.inserted_primary_key}\n")
-        self.results_counter += 1
-
-        self.logger.info(f"Inserted info for {owner}/{repo}/{release['name']}\n")
-
-        #Register this task as completed
-        self.register_task_completion(task, release_id, "releases")
-        return
+        else:
+            self.logger.info("Graphql response does not contain repository: {}\n".format(data))
 
 

@@ -37,7 +37,8 @@ setup(
         "sqlalchemy",
         "flask_login",
         "flask",
-        "pandas",
+        "pandas==1.0.5",
+        "numpy==1.18.5",
         "requests",
         "flask_cors",
         "flask_wtf",
@@ -45,7 +46,9 @@ setup(
         "click",
         "psutil",
         "gunicorn",
-        "six>=1.14.0"
+        "six>=1.14.0",
+        "tensorflow",
+        "keras"
     ],
     extras_require={
         "dev": [

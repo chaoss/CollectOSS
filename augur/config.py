@@ -21,7 +21,7 @@ default_config = {
                     "all_focused": 1,
                     "delay": 150000,
                     "given": [
-                        "github_url"
+                        "git_url"
                     ],
                     "model": "issues",
                     "repo_group_id": 0
@@ -105,6 +105,22 @@ default_config = {
                     ],
                     "model": "releases",
                     "repo_group_id": 0
+                },
+                {
+                    "delay": 100000,
+                    "given": [
+                        "github_url"
+                    ],
+                    "model": "message_analysis",
+                    "repo_group_id": 0
+                },
+                {
+                    "delay": 100000,
+                    "given": [
+                        "github_url"
+                    ],
+                    "model": "pull_request_analysis",
+                    "repo_group_id": 0
                 }
             ]
         },
@@ -176,6 +192,19 @@ default_config = {
                 "port": 51200,
                 "switch": 1,
                 "workers": 1
+            },
+            "message_insights_worker": {
+                "port": 51300,
+                "switch": 1,
+                "workers": 1,
+                "insight_days": 30,
+                "models_dir": "message_models"
+            },
+            "pull_request_analysis_worker": {
+                "port": 51400,
+                "switch": 1,
+                "workers": 1,
+                "insight_days": 30
             }
         },
         "Facade": {
