@@ -10,6 +10,9 @@ import sqlalchemy as s
 from sqlalchemy import exc
 from flask import request, Response
 import json
+from augur.config import AugurConfig
+import os 
+
 
 def create_routes(server):
 
@@ -164,9 +167,17 @@ def create_routes(server):
         return inserted_repo
 
 class Repo_insertion_manager():
+    ROOT_AUGUR_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+
     def __init__(self, organization_name, database_connection):
         self.org = organization_name
         self.db = database_connection
+        ## added for keys
+        self._root_augur_dir = Repo_insertion_manager.ROOT_AUGUR_DIR
+        self.augur_config = AugurConfig(self._root_augur_dir)
+
+        ##########
+
 
     def get_existing_repos(self, group_id):
         """returns repos belonging to repogroup in augur db"""
@@ -178,12 +189,33 @@ class Repo_insertion_manager():
         result = self.db.execute(select_repos_query)
         return result.fetchall()
 
+## This doesn't permit importing of an individual's repo, as they don't show up under "orgs"
+#    def group_exists_gh(self):
+#        url = url = "https://api.github.com/orgs/{}".format(self.org)
+#        res = requests.get(url).json()
+#        try:
+#            if res['message'] == "Not Found":
+#                return False
+#        except KeyError:
+#            return True
+
+## Revised Version of Method
     def group_exists_gh(self):
         url = url = "https://api.github.com/orgs/{}".format(self.org)
-        res = requests.get(url).json()
+        ## attempting to add key due to rate limiting
+        gh_api_key = self.augur_config.get_value('Database', 'key')
+        self.headers = {'Authorization': 'token %s' % gh_api_key}
+        #r = requests.get(url=cntrb_url, headers=self.headers)
+####### Original request code
+#        res = requests.get(url).json()
+########
+        res = requests.get(url=url, headers=self.headers).json()
         try:
             if res['message'] == "Not Found":
-                return False
+                url = url = "https://api.github.com/users/{}".format(self.org) 
+                res = requests.get(url=url, headers=self.headers).json()
+                if res['message'] == "Not Found":
+                    return False
         except KeyError:
             return True
 
@@ -229,10 +261,12 @@ class Repo_insertion_manager():
 
     def fetch_repos(self):
         """uses the github api to return repos belonging to the given organization"""
+        gh_api_key = self.augur_config.get_value('Database', 'key')
+        self.headers = {'Authorization': 'token %s' % gh_api_key} 
         repos = []
         page = 1
         url = self.paginate(page)
-        res = requests.get(url).json()
+        res = requests.get(url, headers=self.headers).json()
         while res:
             for repo in res:
                 repos.append(repo['name'])
@@ -240,11 +274,33 @@ class Repo_insertion_manager():
             res = requests.get(self.paginate(page)).json()
         return repos
 
+## Modified pagination to account for github orgs that look like orgs but are actually users. 
     def paginate(self, page):
+### Modified here to incorporate the use of a GitHub API Key
+        gh_api_key = self.augur_config.get_value('Database', 'key')
+        self.headers = {'Authorization': 'token %s' % gh_api_key}    
         url = "https://api.github.com/orgs/{}/repos?per_page=100&page={}"
+        res = requests.get(url, headers=self.headers).json()
+        if res['message'] == "Not Found":
+            url = "https://api.github.com/users/{}/repos?per_page=100&page={}" 
+            res = requests.get(url=url, headers=self.headers).json()
         return url.format(self.org, str(page))
 
-        
+
+        #r = requests.get(url=cntrb_url, headers=self.headers)
+####### Original request code
+#        res = requests.get(url).json()
+########
+        res = requests.get(url=url, headers=self.headers).json()
+
+
+
+#        url = "https://api.github.com/orgs/{}/repos?per_page=100&page={}"
+#        res = requests.get(url).json()
+#        if res['message'] == "Not Found":
+#            url = "https://api.github.com/users/{}/repos?per_page=100&page={}" 
+#            res = requests.get(url).json()
+#        return url.format(self.org, str(page))
 
 class Git_string():
     """ represents possible repo, org or username arguments """

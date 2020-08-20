@@ -1,4 +1,4 @@
-CREATE INDEX if not exists CONCURRENTLY "contributor_delete_finder" ON "augur_data"."contributors" USING brin (
+CREATE INDEX CONCURRENTLY if not exists "contributor_delete_finder" ON "augur_data"."contributors" USING brin (
   "cntrb_id",
   "cntrb_email"
 );
@@ -17,4 +17,8 @@ CREATE INDEX CONCURRENTLY if not exists "contributor_worker_email_finder" ON "au
   "cntrb_email"
 );
 
+update "augur_operations"."augur_settings" set value = 23 where setting = 'augur_data_version'; 
+
+
 -- 
+
