@@ -125,7 +125,7 @@ default_config = {
                 "metrics": ["issues-new", "code-changes", "code-changes-lines", 
                            "reviews", "contributors-new"],
                 "confidence_interval": 95,
-                "contamination": 0.15,
+                "contamination": 0.1,
                 "switch": 0,
                 "workers": 1,
                 "training_days": 365,

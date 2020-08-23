@@ -26,7 +26,7 @@ We recommend leaving the defaults in place for the insight worker unless you int
 
 - ``anomaly_days``, which specifies the date range in which the ``insight_worker`` should look for anomalies. Defaults to ``14``, meaning that the worker will detect anomalies that have only occured within the past fourteen days, starting at the current date.
 
-- ``contamination``, which is the "sensitivity" parameter for detecting anomalies. Acts as an estimated percentage of the training_days that are expected to be anomalous. The default is ``0.15`` for the default training days of 365: 15% of 365 days means that about 54 data points of the 365 days are expected to be anomalous.
+- ``contamination``, which is the "sensitivity" parameter for detecting anomalies. Acts as an estimated percentage of the training_days that are expected to be anomalous. The default is ``0.1`` for the default training days of 365: 10% of 365 days means that about 36 data points of the 365 days are expected to be anomalous.
 
 - ``metrics``, which specifies which metrics the ``insight_worker`` should run the anomaly detection algorithm on. This is structured like so::
 

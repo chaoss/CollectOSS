@@ -334,7 +334,7 @@ class InsightWorker(Worker):
                 else: 
                     # parameters defined in a way such that window size varies between 3-36 for better results
                     param = int(self.training_days/36)
-                    non_zero_day = self.training_days- np.sum(df.iloc[:,4]==0)
+                    non_zero_day = self.training_days- np.sum(df.iloc[:,i]==0)
                     window_size = int( (non_zero_day/param) - 3*(np.std(ddt)/np.mean(ddt)) )
                         
 
@@ -434,7 +434,7 @@ class InsightWorker(Worker):
             
             # Classifying outliers
             df['anomaly_class'] = 0
-            filt = df.iloc[:lback_days,2]>2*np.mean(df.iloc[:lback_days,2])
+            filt = df.iloc[:lback_days,2]>2*np.mean(abs(df.iloc[:lback_days,2]))
             df.iloc[:lback_days,:].loc[filt,'anomaly_class']=1
             
             # Classifying global outliers with value 2
@@ -448,11 +448,11 @@ class InsightWorker(Worker):
             for i in range(lback_days,len(error)):
 
                 filt = df.iloc[i-lback_days:i,3]!=2
-                std_error = np.std(abs(error[i-lback_days:i][filt]))
-                mean = np.mean(abs(error[i-lback_days:i][filt]))
-                threshold = mean + (3*(std_error)*(1-self.contamination))
+                std_error = np.std(abs(df.iloc[i-lback_days:i,2][filt]))
+                mean = np.mean(abs(df.iloc[i-lback_days:i,2][filt]))
+                threshold = mean + (3*(std_error)*(1 - 2*(self.contamination)))
 
-                if ((error[i]>threshold) | (error[i]<-threshold)):
+                if ((df.iloc[i,2] > threshold) | (df.iloc[i,2] < - threshold)):
                     if(df.iloc[i,3]!=2):
                         df.iloc[i,3]=1
 
@@ -511,7 +511,7 @@ class InsightWorker(Worker):
             pri_key = pd.read_sql(query_text,self.db)#params={model_name = model_name , model_description = model_description,lback_days = lback_days,batch_size = batch_size}).iloc[0]  
             model_id = int(pri_key['model_id'].values)
             
-
+            
             # defining prediction column into the dataframe 
             df['predictions'] = df.iloc[:,1] - df.iloc[:,2]
             metric = df.columns[1]
