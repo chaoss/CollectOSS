@@ -10,6 +10,13 @@ from workers.worker_base import Worker
 
 #TODO - fully edit to match releases
 class ReleaseWorker(Worker):
+    """
+    Worker that collects Repository Releases data from the Github API
+    and stores it in our database.
+
+    :param task: most recent task the broker added to the worker's queue
+    :param config: holds info like api keys, descriptions, and database connection strings
+    """
     def __init__(self, config={}):
 
         worker_type = "release_worker"
@@ -30,8 +37,21 @@ class ReleaseWorker(Worker):
         self.tool_version = '1.0.0'
         self.data_source = 'GitHub API'
 
-    def insert_release(self, repo_id, owner, release):
-        author = release['author']['name']+'_'+release['author']['company']
+    def insert_release(self, task, repo_id, owner, release):
+
+        # Get current table values
+        release_id_data_sql = s.sql.text("""
+            SELECT releases.release_id
+            FROM releases
+            WHERE repo_id = :repo_id
+        """)
+        self.logger.info(f'Getting release table values with the following PSQL query: \n{release_id_data_sql}\n')
+        release_id_data = pd.read_sql(release_id_data_sql, self.db, params={'repo_id': repo_id})
+        release_id_data = release_id_data.apply(lambda x: x.str.strip())
+
+        name = "" if release['author']['name'] is None else release['author']['name']
+        company = "" if release['author']['company'] is None else release['author']['company']
+        author = name+'_'+company
         # Put all data together in format of the table
         self.logger.info(f'Inserting release for repo with id:{repo_id}, owner:{owner}, release name:{release["name"]}\n')
         release_inf = {
@@ -39,7 +59,7 @@ class ReleaseWorker(Worker):
             'repo_id': repo_id,
             'release_name': release['name'],
             'release_description': release['description'],
-            'release_author': release['author'],
+            'release_author': author,
             'release_created_at': release['createdAt'],
             'release_published_at': release['publishedAt'],
             'release_updated_at': release['updatedAt'],
@@ -52,14 +72,20 @@ class ReleaseWorker(Worker):
             'data_source': self.data_source
         }
 
-        result = self.db.execute(self.releases_table.insert().values(release_inf))
-        self.logger.info(f"Primary Key inserted into releases table: {result.inserted_primary_key}\n")
+        if release_id_data.size > 0 and release['id'] in release_id_data.values:
+            result = self.db.execute(self.releases_table.update().where(
+                self.releases_table.c.release_id==release['id']).values(release_inf))
+            self.logger.info(f"Release {release['id']} updated into releases table\n")
+        else:
+            result = self.db.execute(self.releases_table.insert().values(release_inf))
+            self.logger.info(f"Release {release['id']} inserted into releases table\n")
+            self.logger.info(f"Primary Key inserted into releases table: {result.inserted_primary_key}\n")
         self.results_counter += 1
 
-        self.logger.info(f"Inserted info for {owner}/{repo}/{release['name']}\n")
+        self.logger.info(f"Inserted info for {owner}/{repo_id}/{release['name']}\n")
 
         #Register this task as completed
-        self.register_task_completion(task, release_id, "releases")
+        self.register_task_completion(task, repo_id, "releases")
         return
 
     def releases_model(self, task, repo_id):
@@ -146,7 +172,7 @@ class ReleaseWorker(Worker):
                 for n in data['releases']['edges']:
                     if 'node' in n:
                         release = n['node']
-                        self.insert_release(self, repo_id, owner, release)
+                        self.insert_release(task, repo_id, owner, release)
                     else:
                         self.logger.info("There's no release to insert. Current node is not available in releases: {}\n".format(n))
             else:
