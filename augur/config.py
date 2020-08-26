@@ -121,7 +121,17 @@ default_config = {
                     ],
                     "model": "pull_request_analysis",
                     "repo_group_id": 0
-                }
+                },
+                
+	        {
+	    	"delay": 10000,
+		"given":[
+		    "git_url"
+		],
+		"model" : "discourse_analysis",
+		"repo_group_id" : 0
+	    
+	        }
             ]
         },
         "Workers": {
@@ -205,7 +215,13 @@ default_config = {
                 "switch": 1,
                 "workers": 1,
                 "insight_days": 30
-            }
+            },
+            "discourse_analysis_worker":{
+	    "port" : 51500,
+	    "switch": 0,
+	    "workers": 1
+	
+	}
         },
         "Facade": {
             "check_updates": 1,
