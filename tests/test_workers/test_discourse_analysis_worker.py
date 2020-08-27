@@ -1,6 +1,6 @@
 import pytest
 from time import sleep
-from workers.discourse_analysis_worker.discourse_analysis_worker import DiscourseAnalysisWorker
+#from workers.discourse_analysis_worker.discourse_analysis_worker import DiscourseAnalysisWorker
 from augur import ROOT_AUGUR_DIRECTORY
 import os
 from workers.util import read_config

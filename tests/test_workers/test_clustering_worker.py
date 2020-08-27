@@ -1,6 +1,6 @@
 import pytest
 from time import sleep
-from workers.clustering_worker.clustering_worker import ClusteringWorker
+#from workers.clustering_worker.clustering_worker import ClusteringWorker
 from augur import ROOT_AUGUR_DIRECTORY
 import os
 from workers.util import read_config
