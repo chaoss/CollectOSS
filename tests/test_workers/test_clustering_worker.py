@@ -18,6 +18,7 @@ def test_task():
         "focused_task": 1
     }
 
+'''
 @pytest.fixture
 def clustering_worker():
     config = {
@@ -27,15 +28,16 @@ def clustering_worker():
 
     clustering_worker = ClusteringWorker(config=config)
     return clustering_worker
-
+'''
 @pytest.fixture
 def worker_files():
     return set(os.listdir(os.path.join(ROOT_AUGUR_DIRECTORY,"workers","clustering_worker")))    
 
+'''
 def test_clustering_worker(clustering_worker, test_task):
     assert clustering_worker is not None
 
-
+'''
 
 def test_configuration(worker_files):
     augur_config = AugurConfig(ROOT_AUGUR_DIRECTORY)
