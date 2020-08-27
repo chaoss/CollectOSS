@@ -41,7 +41,8 @@ env:
 before_install:
   - docker run -d -p 5432:5432 --name augur_test_database augurlabs/augur:test_data@sha256:fd2d9a178a9fee7cd548bd40a16e08d4611be22892491e817aafd53502f74cd0
 install:
-  - pip install .[dev]
+  - ./scripts/install/backend.sh
+  - ./scripts/install/workers.sh
   - augur configure generate
 
 script:
