@@ -20,6 +20,7 @@ There are a few workers that ship ready to collect out of the box:
 - ``release_worker`` (collects release data from the GitHub API)
 - ``linux_badge_worker`` (collects `CII badging <https://bestpractices.coreinfrastructure.org/en>`_ data from the CII API)
 - ``insight_worker`` (queries Augur's metrics API to find interesting anomalies in the collected data)
+- ``message_insights_worker`` (analyzes text messages/comments to provide novelty & sentiment insights)
 
 All worker configuration options are found in the ``Workers`` block of the ``augur.config.json`` file (which you generated at the end of the previous section) with each worker having its own subsection with same title as the the worker's name.
 
