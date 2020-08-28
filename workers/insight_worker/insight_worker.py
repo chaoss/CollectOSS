@@ -8,11 +8,13 @@ from sqlalchemy import MetaData, and_
 import statistics, logging, os, json, time
 import numpy as np
 import datetime
+import sklearn
 from sklearn.ensemble import IsolationForest
 from workers.worker_base import Worker
 import warnings
 import logging
 
+import tensorflow
 import scipy
 from scipy import stats
 import pickle
