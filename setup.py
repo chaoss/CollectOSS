@@ -47,8 +47,9 @@ setup(
         "psutil",
         "gunicorn",
         "six>=1.14.0",
-        "tensorflow",
-        "keras"
+        "tensorflow==2.3.0",
+        "keras",
+        "sklearn"
     ],
     extras_require={
         "dev": [

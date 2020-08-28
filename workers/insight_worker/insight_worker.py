@@ -8,9 +8,9 @@ from sqlalchemy import MetaData, and_
 import statistics, logging, os, json, time
 import numpy as np
 import datetime
+from workers.worker_base import Worker
 import sklearn
 from sklearn.ensemble import IsolationForest
-from workers.worker_base import Worker
 import warnings
 import logging
 
