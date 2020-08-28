@@ -47,7 +47,7 @@ setup(
         "psutil",
         "gunicorn",
         "six>=1.14.0",
-        "tensorflow==2.3.0",
+        "tensorflow",
         "keras",
         "sklearn"
     ],
