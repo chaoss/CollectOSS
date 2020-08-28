@@ -1,7 +1,7 @@
 -- DROP TABLE "augur_data"."message_analysis";
 -- DROP TABLE "augur_data"."message_analysis_summary";
 
-CREATE TABLE "augur_data"."message_analysis" (
+CREATE TABLE if not exists "augur_data"."message_analysis" (
 "msg_analysis_id" serial8 NOT NULL,
 "msg_id" int8,
 "worker_run_id" int8,
@@ -23,7 +23,7 @@ COMMENT ON COLUMN "augur_data"."message_analysis"."novelty_flag" IS 'This is an 
 COMMENT ON COLUMN "augur_data"."message_analysis"."feedback_flag" IS 'This exists to provide the user with an opportunity provide feedback on the resulting the sentiment scores. ';
 ALTER TABLE "augur_data"."message_analysis" OWNER TO "augur";
 
-CREATE TABLE "augur_data"."message_analysis_summary" (
+CREATE TABLE if not exists "augur_data"."message_analysis_summary" (
 "msg_summary_id" serial8 NOT NULL,
 "repo_id" int8,
 "worker_run_id" int8,
@@ -45,4 +45,4 @@ COMMENT ON COLUMN "augur_data"."message_analysis_summary"."period" IS 'The whole
 ALTER TABLE "augur_data"."message_analysis_summary" OWNER TO "augur";
 
 
-update "augur_operations"."augur_settings" set value = 21 where setting = 'augur_data_version'; 
+update "augur_operations"."augur_settings" set value = 25 where setting = 'augur_data_version'; 
