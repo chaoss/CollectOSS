@@ -29,7 +29,7 @@ setup(
         'scipy',
         'sklearn',
         'keras==2.3.1',
-        'tensorflow==2.0.0'
+        'tensorflow'
 
     ],
     entry_points={
