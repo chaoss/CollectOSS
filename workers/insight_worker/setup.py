@@ -28,8 +28,8 @@ setup(
         'click', 
         'scipy',
         'sklearn',
-        'keras',
-        'tensorflow'
+        'keras==2.3.1',
+        'tensorflow==2.0.0'
 
     ],
     entry_points={

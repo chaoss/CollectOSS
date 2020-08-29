@@ -14,7 +14,7 @@ from sklearn.ensemble import IsolationForest
 import warnings
 import logging
 
-import tensorflow
+import tensorflow as tf
 import scipy
 from scipy import stats
 import pickle
