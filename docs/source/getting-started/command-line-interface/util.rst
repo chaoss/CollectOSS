@@ -48,14 +48,14 @@ Example usage::
   AUGUR_DB_USER="your_db_user"
   AUGUR_DB_PASSWORD="your_db_password"
 
-``kill``
+``stop``
 ---------
-Terminates all currently running backend Augur processes, including any workers. Will only work in a virtual environment.
+Gracefully terminates all currently running backend Augur processes, including any workers. Will only work in a virtual environment.
 
 Example usage::
 
   # to stop the server and workers
-  $ augur util kill
+  $ augur util stop
 
   # successful output looks like:
   > CLI: [util.cli_stop_processes] [INFO] Killing process 33607
@@ -80,6 +80,23 @@ Example usage::
   > CLI: [util.cli_stop_processes] [INFO] Killing process 33795
   > CLI: [util.cli_stop_processes] [INFO] Killing process 33798
   > CLI: [util.cli_stop_processes] [INFO] Killing process 33962
+
+``kill``
+---------
+Forcefully terminates all currently running backend Augur processes, including any workers, by using ``SIGKILL``. Will only work in a virtual environment.
+
+Example usage::
+
+  # to stop the server and workers
+  $ augur util kill
+
+  # successful output looks like:
+  > CLI: [util.kill_processes] [INFO] Killing process 87340
+  > CLI: [util.kill_processes] [INFO] Killing process 87573
+  > CLI: [util.kill_processes] [INFO] Killing process 87574
+  > CLI: [util.kill_processes] [INFO] Killing process 87575
+  > CLI: [util.kill_processes] [INFO] Killing process 87576
+
 
 ``list``
 ---------
