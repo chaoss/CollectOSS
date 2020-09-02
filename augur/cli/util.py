@@ -7,7 +7,6 @@ import os
 import signal
 import logging
 from subprocess import call, run
-import time
 
 import psutil
 import click
@@ -53,28 +52,9 @@ def cli_kill_processes():
     if processes != []:
         for process in processes:
             if process.pid != os.getpid():
-                logger.info(f"Terminating process {process.pid}")
-                try:
-                    process.send_signal(signal.SIGTERM)
-                    logger.info(f"sending SIGTERM Signal to {process.pid}")
-                except psutil.NoSuchProcess as e:
-                    pass
-
-            logger.info(f"Waiting to check if processes terminated.")
-
-    time.sleep(15)
-    logger.info(f"Checking on process termination.")
-
-    processes = get_augur_processes()
-
-    if processes != []:
-        for process in processes:
-
-            if process.pid != os.getpid():
                 logger.info(f"Killing process {process.pid}")
                 try:
-                    process.send_signal(signal.SIGKILL)
-                    logger.info(f"sending SIGKILL Signal to {process.pid}")
+                    process.send_signal(signal.SIGTERM)
                 except psutil.NoSuchProcess as e:
                     pass
 
@@ -84,29 +64,11 @@ def kill_processes():
     if processes != []:
         for process in processes:
             if process.pid != os.getpid():
-                logger.info(f"Terminating process {process.pid}")
+                logger.info(f"Killing process {process.pid}")
                 try:
                     process.send_signal(signal.SIGTERM)
-                    logger.info(f"sending SIGTERM Signal to {process.pid}")
                 except psutil.NoSuchProcess as e:
                     logger.warning(e)
-            logger.info(f"Waiting to check if processes terminated.")
-
-    time.sleep(15)
-    logger.info(f"Checking on process termination.")
-
-    processes = get_augur_processes()
-
-    if processes != []:
-        for process in processes:
-            if process.pid != os.getpid():
-                logger.info(f"Killing process {process.pid}")
-                logger.info(f"Killing process {process.pid}")
-                try:
-                    process.send_signal(signal.SIGKILL)
-                    logger.info(f"sending SIGKILL Signal to {process.pid}")
-                except psutil.NoSuchProcess as e:
-                    pass
 
 @cli.command('list',)
 @initialize_logging
