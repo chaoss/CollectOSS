@@ -28,7 +28,7 @@ setup(
         'click', 
         'scipy',
         'sklearn',
-        'keras',
+        'keras==2.3.1',
         'tensorflow'
 
     ],

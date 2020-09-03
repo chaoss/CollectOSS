@@ -8,11 +8,13 @@ from sqlalchemy import MetaData, and_
 import statistics, logging, os, json, time
 import numpy as np
 import datetime
-from sklearn.ensemble import IsolationForest
 from workers.worker_base import Worker
+import sklearn
+from sklearn.ensemble import IsolationForest
 import warnings
 import logging
 
+import tensorflow as tf
 import scipy
 from scipy import stats
 import pickle
@@ -27,7 +29,7 @@ from keras.layers import Dense,Dropout
 from sklearn.ensemble import IsolationForest
 from sklearn.preprocessing import MinMaxScaler,StandardScaler
 from sklearn.cluster import AgglomerativeClustering,KMeans
-from statsmodels.tsa.seasonal import STL
+
 
 
 
@@ -334,7 +336,7 @@ class InsightWorker(Worker):
                 else: 
                     # parameters defined in a way such that window size varies between 3-36 for better results
                     param = int(self.training_days/36)
-                    non_zero_day = self.training_days- np.sum(df.iloc[:,4]==0)
+                    non_zero_day = self.training_days- np.sum(df.iloc[:,i]==0)
                     window_size = int( (non_zero_day/param) - 3*(np.std(ddt)/np.mean(ddt)) )
                         
 
@@ -434,24 +436,29 @@ class InsightWorker(Worker):
             
             # Classifying outliers
             df['anomaly_class'] = 0
-            filt = df.iloc[:lback_days,2]>2*np.mean(df.iloc[:lback_days,2])
+            filt = df.iloc[:lback_days,2]>2*np.mean(abs(df.iloc[:lback_days,2]))
             df.iloc[:lback_days,:].loc[filt,'anomaly_class']=1
             
-            
-            # Classifying local outliers with value 1 using std and mean
-            for i in range(lback_days,len(error)):
-                filt = df.iloc[i-lback_days:i,3]==0
-                std_error = np.std(abs(error[i-lback_days:i][filt]))
-                mean = np.mean(abs(error[i-lback_days:i][filt]))
-
-                if ((error[i]>3*std_error + mean) | (error[i]<-3*std_error - mean)):
-                    df.iloc[i,3]=1
-
             # Classifying global outliers with value 2
             mean = np.mean(abs(df.iloc[:,2]))
             std_error = np.std(abs(df.iloc[:,2]))
             filt = (df.iloc[:,2]>3*std_error + mean) | (df.iloc[:,2]<-3*std_error - mean)
             df.iloc[:,3][filt] = 2
+
+
+            # Classifying local outliers with value 1 using std and mean
+            for i in range(lback_days,len(error)):
+
+                filt = df.iloc[i-lback_days:i,3]!=2
+                std_error = np.std(abs(df.iloc[i-lback_days:i,2][filt]))
+                mean = np.mean(abs(df.iloc[i-lback_days:i,2][filt]))
+                threshold = mean + (3*(std_error)*(1 - 2*(self.contamination)))
+
+                if ((df.iloc[i,2] > threshold) | (df.iloc[i,2] < - threshold)):
+                    if(df.iloc[i,3]!=2):
+                        df.iloc[i,3]=1
+
+            
 
             # Defining anomaly dataframe for insetion into repo_insights,repo_insights_records table
             filt = df['anomaly_class']!=0
@@ -506,7 +513,7 @@ class InsightWorker(Worker):
             pri_key = pd.read_sql(query_text,self.db)#params={model_name = model_name , model_description = model_description,lback_days = lback_days,batch_size = batch_size}).iloc[0]  
             model_id = int(pri_key['model_id'].values)
             
-
+            
             # defining prediction column into the dataframe 
             df['predictions'] = df.iloc[:,1] - df.iloc[:,2]
             metric = df.columns[1]
@@ -661,7 +668,7 @@ class InsightWorker(Worker):
                     
         def time_series_metrics(self,entry_info,repo_id):
 
-            """ Collects data of different metrics using API enpoints 
+            """ Collects data of different metrics using API endpoints 
                 Preproceess data and creates a dataframe with date and each and every fields as columns
             """
 
@@ -698,7 +705,7 @@ class InsightWorker(Worker):
                 metric_df = pd.DataFrame.from_records(data)
                 metric_df['date'] = pd.to_datetime(metric_df['date']).dt.date
                 metric_df['date'] = metric_df['date'].astype(str)
-                extra=['repo','rg']
+                extra=['repo','rg','week','day','year']
                 for column in metric_df.columns:
                     if any(x in column for x in extra):
                         metric_df.drop(column,axis=1,inplace=True)
@@ -876,8 +883,9 @@ class InsightWorker(Worker):
 
 
         # Initial calling of time_series_metrics to run the whole process of outlier detection
-        time_series = ['code-changes-lines','issues-new','reviews']
+        time_series = list(self.metrics)
         time_series_metrics(self,entry_info,repo_id)
+
 
         # Register task completeion when outlier detection method carried out successfully
         self.register_task_completion(entry_info, repo_id, "insights") 

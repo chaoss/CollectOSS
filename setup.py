@@ -48,7 +48,7 @@ setup(
         "gunicorn",
         "six>=1.14.0",
         "tensorflow",
-        "keras",
+        "keras==2.3.1",
         "sklearn"
     ],
     extras_require={
