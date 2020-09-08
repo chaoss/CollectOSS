@@ -304,7 +304,7 @@ def create_routes(server):
 
         return df
 
-    def months_df_query(begin_date, end_date):
+    def months_df_query(start_date, end_date):
         months_df = pd.DataFrame()
 
 
@@ -330,7 +330,7 @@ def create_routes(server):
                     date_part( 'year', created_month :: DATE ) AS year,
                     date_part( 'month', created_month :: DATE ) AS MONTH
                 FROM
-                    (SELECT * FROM ( SELECT created_month :: DATE FROM generate_series (TIMESTAMP '{begin_date}', TIMESTAMP '{end_date}', INTERVAL '1 month' ) created_month ) d ) x 
+                    (SELECT * FROM ( SELECT created_month :: DATE FROM generate_series (TIMESTAMP '{start_date}', TIMESTAMP '{end_date}', INTERVAL '1 month' ) created_month ) d ) x 
                 ) y
         """)
         months_df = pd.read_sql(months_query, con=engine)
@@ -352,9 +352,9 @@ def create_routes(server):
         months_df['yearmonth'] = months_df['month'] + '/' + months_df['year']
         months_df['yearmonth'] = pd.to_datetime(months_df['yearmonth'])
 
-        #filter months_df with begin_date and end_date, the contributor df is filtered in the visualizations
+        #filter months_df with start_date and end_date, the contributor df is filtered in the visualizations
         months_df = months_df.set_index(months_df['yearmonth'])
-        months_df = months_df.loc[begin_date : end_date].reset_index(drop = True)
+        months_df = months_df.loc[start_date : end_date].reset_index(drop = True)
 
         #add quarters to months dataframe
         months_df['month'] = months_df['month'].astype(int)

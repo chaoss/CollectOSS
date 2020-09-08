@@ -577,7 +577,7 @@ def create_routes(server):
 
                 source = ColumnDataSource(data=dict(dates=data['dates'], new_contributor_counts=data['new_contributor_counts']))
 
-                           
+
                 #add contributor_count labels to chart
                 p.add_layout(LabelSet(x='dates', y='new_contributor_counts', text='new_contributor_counts', y_offset=4,
                           text_font_size="13pt", text_color="black",
@@ -656,6 +656,11 @@ def create_routes(server):
         return Response(response=json.dumps(status),
                         status=200,
                         mimetype="application/json")
+
+
+        return Response(response=json.dumps(json_item(grid, "myplot"),
+                                status=200,
+                                mimetype=application/json))
 
     
 
