@@ -1,5 +1,4 @@
 import base64
-import sqlalchemy as s
 import pandas as pd
 import json
 from flask import Response, request
@@ -13,18 +12,417 @@ from bokeh.palettes import Colorblind
 from bokeh.layouts import gridplot
 from bokeh.transform import cumsum
 
+import psycopg2
+
+
+import sqlalchemy as salc
+import numpy as np
+import warnings
+import datetime
+warnings.filterwarnings('ignore')
+
+
 from math import pi
 
-from augur.routes.new_contributor_query import *
+#from augur.routes.new_contributor_query import *
 
 def create_routes(server):
 
-    def vertical_bar_chart(repo_id, start_date, end_date, group_by, y_axis='new_contributors', title = "{}: {} {} Time Contributors Per {}", required_contributions = 4, required_time = 5):
+    @server.app.route('/{}/reports/new_contributors/'.format(server.api_version), methods=["POST"])
+    def new_contributors_report():
+        #type = request.headers.get_header('application/json')
 
-        input_df = new_contributor_data_collection(repo_id=25158, num_contributions_required= required_contributions)
-        months_df = months_df_query(begin_date=start_date, end_date=end_date)
+        repo_id = request.json['repo_id']
+        start_date = request.json['start_date']
+        end_date = request.json['end_date']
+        group_by = request.json['group_by']
+        required_contributions = request.json['required_contributions']
+        required_time = request.json['required_time']
 
-        repo_dict = {repo_id : input_df.loc[input_df['repo_id'] == repo_id].iloc[0]['repo_name']}    
+
+
+        #def vertical_bar_chart(repo_id, start_date, end_date, group_by, y_axis='new_contributors', title = "{}: {} {} Time Contributors Per {}", required_contributions = 4, required_time = 5):
+
+
+
+        #queries
+       # with open("report_config.json") as config_file:
+        #    config = json.load(config_file)
+
+
+
+        jupyter_execution = False
+
+        #database_connection_string = 'postgres+psycopg2://{}:{}@{}:{}/{}'.format(config['user'], config['password'], config['host'], config['port'], config['database'])
+        database_connection_string = 'postgres+psycopg2://augur:covidparty@zephyr.osshealth.io:5433/augur_zephyr'
+
+        dbschema='augur_data'
+        engine = salc.create_engine(
+            database_connection_string,
+            connect_args={'options': '-csearch_path={}'.format(dbschema)})
+
+        rank_list = []
+        for num in range(1, required_contributions + 1):
+            rank_list.append(num)
+        rank_tuple = tuple(rank_list)
+
+
+        df = pd.DataFrame()
+
+
+        pr_query = salc.sql.text(f"""        
+        
+
+            SELECT * FROM (
+                SELECT ID AS
+                    cntrb_id,
+                    A.created_at AS created_at,
+                    date_part('month', A.created_at::DATE) AS month,
+                    date_part('year', A.created_at::DATE) AS year,
+                    A.repo_id,
+                    repo_name,
+                    full_name,
+                    login,
+                ACTION,
+                rank() OVER (
+                        PARTITION BY id
+                        ORDER BY A.created_at ASC
+                    )
+                FROM
+                    (
+                        (
+                        SELECT
+                            canonical_id AS ID,
+                            created_at AS created_at,
+                            repo_id,
+                            'issue_opened' AS ACTION,
+                            contributors.cntrb_full_name AS full_name,
+                            contributors.cntrb_login AS login 
+                        FROM
+                            augur_data.issues
+                            LEFT OUTER JOIN augur_data.contributors ON contributors.cntrb_id = issues.reporter_id
+                            LEFT OUTER JOIN ( SELECT DISTINCT ON ( cntrb_canonical ) cntrb_full_name, cntrb_canonical AS canonical_email, data_collection_date, cntrb_id AS canonical_id 
+                            FROM augur_data.contributors WHERE cntrb_canonical = cntrb_email ORDER BY cntrb_canonical 
+                            ) canonical_full_names ON canonical_full_names.canonical_email = contributors.cntrb_canonical 
+                        WHERE
+                            repo_id = {repo_id}
+                            AND pull_request IS NULL 
+                        GROUP BY
+                            canonical_id,
+                            repo_id,
+                            issues.created_at,
+                            contributors.cntrb_full_name,
+                            contributors.cntrb_login 
+                        ) UNION ALL
+                        (
+                        SELECT
+                            canonical_id AS ID,
+                            TO_TIMESTAMP( cmt_author_date, 'YYYY-MM-DD' ) AS created_at,
+                            repo_id,
+                            'commit' AS ACTION,
+                            contributors.cntrb_full_name AS full_name,
+                            contributors.cntrb_login AS login 
+                        FROM
+                            augur_data.commits
+                            LEFT OUTER JOIN augur_data.contributors ON cntrb_email = cmt_author_email
+                            LEFT OUTER JOIN ( SELECT DISTINCT ON ( cntrb_canonical ) cntrb_full_name, cntrb_canonical AS canonical_email, data_collection_date, cntrb_id AS canonical_id 
+                            FROM augur_data.contributors WHERE cntrb_canonical = cntrb_email ORDER BY cntrb_canonical 
+                            ) canonical_full_names ON canonical_full_names.canonical_email = contributors.cntrb_canonical 
+                        WHERE
+                            repo_id = {repo_id} 
+                        GROUP BY
+                            repo_id,
+                            canonical_email,
+                            canonical_id,
+                            commits.cmt_author_date,
+                            contributors.cntrb_full_name,
+                            contributors.cntrb_login 
+                        ) UNION ALL
+                        (
+                        SELECT
+                            message.cntrb_id AS ID,
+                            created_at AS created_at,
+                            commits.repo_id,
+                            'commit_comment' AS ACTION,
+                            contributors.cntrb_full_name AS full_name,
+                            contributors.cntrb_login AS login
+              
+                        FROM
+                            augur_data.commit_comment_ref,
+                            augur_data.commits,
+                            augur_data.message
+                            LEFT OUTER JOIN augur_data.contributors ON contributors.cntrb_id = message.cntrb_id
+                            LEFT OUTER JOIN ( SELECT DISTINCT ON ( cntrb_canonical ) cntrb_full_name, cntrb_canonical AS canonical_email, data_collection_date, cntrb_id AS canonical_id 
+                            FROM augur_data.contributors WHERE cntrb_canonical = cntrb_email ORDER BY cntrb_canonical 
+                            ) canonical_full_names ON canonical_full_names.canonical_email = contributors.cntrb_canonical 
+                        WHERE
+                            commits.cmt_id = commit_comment_ref.cmt_id 
+                            AND commits.repo_id = {repo_id} 
+                            AND commit_comment_ref.msg_id = message.msg_id
+         
+                        GROUP BY
+                            ID,
+                            commits.repo_id,
+                            commit_comment_ref.created_at,
+                            contributors.cntrb_full_name,
+                            contributors.cntrb_login
+                        ) UNION ALL
+                        (
+                        SELECT
+                            issue_events.cntrb_id AS ID,
+                            issue_events.created_at AS created_at,
+                            repo_id,
+                            'issue_closed' AS ACTION,
+                            contributors.cntrb_full_name AS full_name,
+                            contributors.cntrb_login AS login 
+                        FROM
+                            augur_data.issues,
+                            augur_data.issue_events
+                            LEFT OUTER JOIN augur_data.contributors ON contributors.cntrb_id = issue_events.cntrb_id
+                            LEFT OUTER JOIN ( SELECT DISTINCT ON ( cntrb_canonical ) cntrb_full_name, cntrb_canonical AS canonical_email, data_collection_date, cntrb_id AS canonical_id 
+                            FROM augur_data.contributors WHERE cntrb_canonical = cntrb_email ORDER BY cntrb_canonical 
+                            ) canonical_full_names ON canonical_full_names.canonical_email = contributors.cntrb_canonical 
+                        WHERE
+                            issues.repo_id = {repo_id} 
+                            AND issues.issue_id = issue_events.issue_id 
+                            AND issues.pull_request IS NULL 
+                            AND issue_events.cntrb_id IS NOT NULL 
+                            AND ACTION = 'closed' 
+                        GROUP BY
+                            issue_events.cntrb_id,
+                            repo_id,
+                            issue_events.created_at,
+                            contributors.cntrb_full_name,
+                            contributors.cntrb_login 
+                        ) UNION ALL
+                        (
+                        SELECT
+                            pr_augur_contributor_id AS ID,
+                            pr_created_at AS created_at,
+                            repo_id,
+                            'open_pull_request' AS ACTION,
+                            contributors.cntrb_full_name AS full_name,
+                            contributors.cntrb_login AS login 
+                        FROM
+                            augur_data.pull_requests
+                            LEFT OUTER JOIN augur_data.contributors ON pull_requests.pr_augur_contributor_id = contributors.cntrb_id
+                            LEFT OUTER JOIN ( SELECT DISTINCT ON ( cntrb_canonical ) cntrb_full_name, cntrb_canonical AS canonical_email, data_collection_date, cntrb_id AS canonical_id 
+                            FROM augur_data.contributors WHERE cntrb_canonical = cntrb_email ORDER BY cntrb_canonical 
+                            ) canonical_full_names ON canonical_full_names.canonical_email = contributors.cntrb_canonical 
+                        WHERE
+                            pull_requests.repo_id = {repo_id} 
+                        GROUP BY
+                            pull_requests.pr_augur_contributor_id,
+                            pull_requests.repo_id,
+                            pull_requests.pr_created_at,
+                            contributors.cntrb_full_name,
+                            contributors.cntrb_login 
+                        ) UNION ALL
+                        (
+                        SELECT
+                            message.cntrb_id AS ID,
+                            msg_timestamp AS created_at,
+                            repo_id,
+                            'pull_request_comment' AS ACTION,
+                            contributors.cntrb_full_name AS full_name,
+                            contributors.cntrb_login AS login 
+                        FROM
+                            augur_data.pull_requests,
+                            augur_data.pull_request_message_ref,
+                            augur_data.message
+                            LEFT OUTER JOIN augur_data.contributors ON contributors.cntrb_id = message.cntrb_id
+                            LEFT OUTER JOIN ( SELECT DISTINCT ON ( cntrb_canonical ) cntrb_full_name, cntrb_canonical AS canonical_email, data_collection_date, cntrb_id AS canonical_id 
+                            FROM augur_data.contributors WHERE cntrb_canonical = cntrb_email ORDER BY cntrb_canonical 
+                            ) canonical_full_names ON canonical_full_names.canonical_email = contributors.cntrb_canonical 
+                        WHERE
+                            pull_requests.repo_id = {repo_id}
+                            AND pull_request_message_ref.pull_request_id = pull_requests.pull_request_id 
+                            AND pull_request_message_ref.msg_id = message.msg_id 
+                        GROUP BY
+                            message.cntrb_id,
+                            pull_requests.repo_id,
+                            message.msg_timestamp,
+                            contributors.cntrb_full_name,
+                            contributors.cntrb_login 
+                        ) UNION ALL
+                        (
+                        SELECT
+                            issues.reporter_id AS ID,
+                            msg_timestamp AS created_at,
+                            repo_id,
+                            'issue_comment' AS ACTION,
+                            contributors.cntrb_full_name AS full_name,
+                            contributors.cntrb_login AS login 
+                        FROM
+                            issues,
+                            issue_message_ref,
+                            message
+                            LEFT OUTER JOIN augur_data.contributors ON contributors.cntrb_id = message.cntrb_id
+                            LEFT OUTER JOIN ( SELECT DISTINCT ON ( cntrb_canonical ) cntrb_full_name, cntrb_canonical AS canonical_email, data_collection_date, cntrb_id AS canonical_id 
+                            FROM augur_data.contributors WHERE cntrb_canonical = cntrb_email ORDER BY cntrb_canonical 
+                            ) canonical_full_names ON canonical_full_names.canonical_email = contributors.cntrb_canonical 
+                        WHERE
+                            issues.repo_id = {repo_id}
+                            AND issue_message_ref.msg_id = message.msg_id 
+                            AND issues.issue_id = issue_message_ref.issue_id
+                            AND issues.pull_request_id = NULL
+                        GROUP BY
+                            issues.reporter_id,
+                            issues.repo_id,
+                            message.msg_timestamp,
+                            contributors.cntrb_full_name,
+                            contributors.cntrb_login 
+                        ) 
+                    ) A,
+                    repo 
+                WHERE
+                ID IS NOT NULL 
+                    AND A.repo_id = repo.repo_id 
+                GROUP BY
+                    A.ID,
+                    A.repo_id,
+                    A.ACTION,
+                    A.created_at,
+                    repo.repo_name,
+                    A.full_name,
+                    A.login
+                ORDER BY 
+                    cntrb_id
+                ) b
+                WHERE RANK IN {rank_tuple}
+
+    """)
+        df_first_repo = pd.read_sql(pr_query, con=engine)
+        if not df.empty: 
+            df = pd.concat([df, df_first_repo]) 
+        else: 
+            # first repo
+            df = df_first_repo
+
+
+
+        df = df.loc[~df['full_name'].str.contains('bot', na=False)]
+        df = df.loc[~df['login'].str.contains('bot', na=False)]
+
+        df = df.loc[~df['cntrb_id'].isin(df[df.duplicated(['cntrb_id', 'created_at', 'repo_id', 'rank'])]['cntrb_id'])]
+
+
+
+
+        #add yearmonths to contributor
+        df[['month', 'year']] = df[['month', 'year']].astype(int).astype(str)
+        df['yearmonth'] = df['month'] + '/' + df['year']
+        df['yearmonth'] = pd.to_datetime(df['yearmonth'])
+
+        # add column with every value being one, so when the contributor df is concatenated with the months df, the filler months won't be counted in the sums
+        df['new_contributors'] = 1
+
+        def quarters(month, year):
+            if month >= 1 and month <=3:
+                return '01' + '/' + year
+            elif month >=4 and month <=6:
+                return '04' + '/' + year
+            elif month >= 5 and month <=9:
+                return '07' + '/' + year
+            elif month >= 10 and month <= 12:
+                return '10' + '/' + year
+
+        #add quarters to contributor dataframe
+        df['month'] = df['month'].astype(int)
+        df['quarter'] = df.apply(lambda x: quarters(x['month'], x['year']), axis=1)
+        df['quarter'] = pd.to_datetime(df['quarter'])
+
+
+
+        months_df = pd.DataFrame()
+
+
+        #with open("report_config.json") as config_file:
+        #    config = json.load(config_file)
+
+        jupyter_execution = False
+
+        #database_connection_string = 'postgres+psycopg2://{}:{}@{}:{}/{}'.format(config['user'], config['password'], config['host'], config['port'], config['database'])
+        database_connection_string = 'postgres+psycopg2://augur:covidparty@zephyr.osshealth.io:5433/augur_zephyr'
+
+     
+
+        dbschema='augur_data'
+        engine = salc.create_engine(
+            database_connection_string,
+            connect_args={'options': '-csearch_path={}'.format(dbschema)})
+
+        #months_query makes a df of years and months, this is used to fill the months with no data in the visualizaitons
+        months_query = salc.sql.text(f"""        
+              SELECT
+                        *
+                    FROM
+                    (
+                    SELECT
+                        date_part( 'year', created_month :: DATE ) AS year,
+                        date_part( 'month', created_month :: DATE ) AS MONTH
+                    FROM
+                        (SELECT * FROM ( SELECT created_month :: DATE FROM generate_series (TIMESTAMP '{start_date}', TIMESTAMP '{end_date}', INTERVAL '1 month' ) created_month ) d ) x 
+                    ) y
+        """)
+        months_df = pd.read_sql(months_query, con=engine)
+
+
+
+
+
+        #def quarters(month, year):
+        #    if month >= 1 and month <=3:
+        #        return '01' + '/' + year
+        #    elif month >=4 and month <=6:
+        #        return '04' + '/' + year
+        #    elif month >= 5 and month <=9:
+        #        return '07' + '/' + year
+        #    elif month >= 10 and month <= 12:
+        #        return '10' + '/' + year
+
+
+        #add yearmonths to months_df
+        months_df[['year','month']] = months_df[['year','month']].astype(float).astype(int).astype(str)
+        months_df['yearmonth'] = months_df['month'] + '/' + months_df['year']
+        months_df['yearmonth'] = pd.to_datetime(months_df['yearmonth'])
+
+        #filter months_df with start_date and end_date, the contributor df is filtered in the visualizations
+        months_df = months_df.set_index(months_df['yearmonth'])
+        months_df = months_df.loc[start_date : end_date].reset_index(drop = True)
+
+        #add quarters to months dataframe
+        months_df['month'] = months_df['month'].astype(int)
+        months_df['quarter'] = months_df.apply(lambda x: quarters(x['month'], x['year']), axis=1)
+        months_df['quarter'] = pd.to_datetime(months_df['quarter'])
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        #create visualizations
+        input_df = df
+
+        #input_df = new_contributor_data_collection(repo_id=25158, num_contributions_required= required_contributions)
+        #months_df = months_df_query(begin_date=start_date, end_date=end_date)
+
+        repo_dict = {repo_id : input_df.loc[input_df['repo_id'] == repo_id].iloc[0]['repo_name']}   
 
 
         contributor_types = ['All', 'repeat', 'drive_by']
@@ -76,7 +474,6 @@ def create_routes(server):
 
                 #remove contributions who made enough contributions, but not in a short enough time
                 repeats_df = repeats_df.loc[repeats_df['differences'] <= required_time * 86400]
-                
                 
                 
                 if contributor_type == 'repeat':
@@ -131,7 +528,7 @@ def create_routes(server):
                     data['dates'] = driver_df[group_by].unique()
 
                     #new contributor counts for y-axis
-                    data['new_contributor_counts'] = driver_df.groupby([group_by]).sum().reset_index()[y_axis]
+                    data['new_contributor_counts'] = driver_df.groupby([group_by]).sum().reset_index()['new_contributors']
 
                     #used to format x-axis and title
                     group_by_format_string = "Year"
@@ -146,18 +543,21 @@ def create_routes(server):
                     elif group_by == 'month':
                         date_column = 'yearmonth'
                         group_by_format_string = "Month"
+
                         
                     #modifies the driver_df[date_column] to be a string with year and month, then finds all the unique values   
                     data['dates'] = np.unique(np.datetime_as_string(driver_df[date_column], unit = 'M'))
+
                     
                     #new contributor counts for y-axis
-                    data['new_contributor_counts'] = driver_df.groupby([date_column]).sum().reset_index()[y_axis]
-                
+                    data['new_contributor_counts'] = driver_df.groupby([date_column]).sum().reset_index()['new_contributors']
+
+
                 #if the data set is large enough it will dynamically assign the width, if the data set is too small it will by default set to 870 pixel so the title fits
                 if len(data['new_contributor_counts']) >= 15:
                     plot_width = 46 * len(data['new_contributor_counts'])
                 else:
-                    plot_width = 870
+                    plot_width = 870 
                     
                 #create a dict convert an integer number into a word
                 #used to turn the rank into a word, so it is nicely displayed in the title
@@ -168,13 +568,16 @@ def create_routes(server):
                 number =  '{}'.format(num_conversion_dict[rank])
 
                 #define pot for bar chart
-                p = figure(x_range=data['dates'], plot_height=400, plot_width = plot_width, title=title.format(repo_dict[repo_id], contributor_type.capitalize(), number, group_by_format_string), 
+                p = figure(x_range=data['dates'], plot_height=400, plot_width = plot_width, title="Hello", #title.format(repo_dict[repo_id], contributor_type.capitalize(), number, group_by_format_string), 
                            y_range=(0, max(data['new_contributor_counts'])* 1.15), margin = (0, 0, 10, 0))
+
+                
                 
                 p.vbar(x=data['dates'], top=data['new_contributor_counts'], width=0.8)
 
                 source = ColumnDataSource(data=dict(dates=data['dates'], new_contributor_counts=data['new_contributor_counts']))
-                
+
+                           
                 #add contributor_count labels to chart
                 p.add_layout(LabelSet(x='dates', y='new_contributor_counts', text='new_contributor_counts', y_offset=4,
                           text_font_size="13pt", text_color="black",
@@ -187,6 +590,8 @@ def create_routes(server):
 
                 p.title.align = "center"
                 p.title.text_font_size = "18px"
+
+
 
                 p.yaxis.axis_label = 'Second Time Contributors' if rank == 2 else 'New Contributors'
                 p.xaxis.axis_label = group_by_format_string 
@@ -228,18 +633,7 @@ def create_routes(server):
         #puts plots together into a grid
         grid = gridplot([row_1, row_2, row_3, row_4])
 
-        return grid
-
-    @server.app.route('/{}/reports/new_contributors/'.format(server.api_version), methods=["POST"])
-    def new_contributors_report():
-        #type = request.headers.get_header('application/json')
-
-        repo_id = request.json['repo_id']
-        start_date = request.json['start_date']
-        end_date = request.json['end_date']
-        group_by = request.json['group_by']
-        required_contributions = request.json['required_contributions']
-        required_time = request.json['required_time']
+        #return grid
 
         #grid = vertical_bar_chart(repo_id=repo_id, start_date=start_date, end_date=end_date, group_by=group_by, required_contributions=required_contributions, required_time=required_time)
         
