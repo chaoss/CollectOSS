@@ -4,7 +4,7 @@ if [[ -z "$VIRTUAL_ENV" ]]; then
   echo "*** We noticed you're not currently inside a virtual environment. Augur MUST be run inside a virtual environment. ***"
   read -r -p "*** Would you like us to generate a environment for you automatically? If you select no, you must create it yourself. [Y/n] " response
   case "$response" in
-      [yY][eE][sS]|[yY]) 
+      [yY][eE][sS]|[yY])
           echo
           $augur_python_command -m venv $HOME/.virtualenvs/augur_env
           echo "*** Your environment was installed to $HOME/.virtualenvs/augur_env/. Please activate your environment using your shell's appropriate command. ***"
@@ -57,9 +57,4 @@ fi
 
 if [[ ! -d logs ]]; then
     mkdir logs
-    mkdir logs/install
-fi
-
-if [[ ! -d logs/install ]]; then
-    mkdir logs/install
 fi
