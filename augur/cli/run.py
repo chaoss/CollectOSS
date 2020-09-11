@@ -25,6 +25,7 @@ def cli(disable_housekeeper, skip_cleanup):
     """
     augur_app = Application()
     logger.info("Augur application initialized")
+    logger.info(f"Using config file: {augur_app.config.config_file_location}")
     if not skip_cleanup:
         logger.debug("Cleaning up old Augur processes...")
         stop_processes()
@@ -98,7 +99,6 @@ def exit(augur_app, worker_processes, master):
         if master is not None:
             logger.debug("Shutting down Gunicorn server")
             master.halt()
-            master = None
 
         logger.info("Shutdown complete")
         sys.exit(0)

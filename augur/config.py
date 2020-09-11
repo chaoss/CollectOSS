@@ -2,10 +2,16 @@ import os
 import json
 import logging
 
+from augur.logging import ROOT_AUGUR_DIRECTORY
+
 ENVVAR_PREFIX = "AUGUR_"
+CONFIG_HOME = f"{os.getenv('HOME', '~')}/.augur"
 
 default_config = {
         "version": 1,
+        "Augur": {
+            "developer": 0
+        },
         "Database": {
             "name": "augur",
             "host": "localhost",
@@ -65,7 +71,7 @@ default_config = {
                     ],
                     "model": "contributors",
                     "repo_group_id": 0
-                },                
+                },
                 {
                     "delay": 1000000,
                     "given": [
@@ -122,7 +128,7 @@ default_config = {
             },
             "insight_worker": {
                 "port": 50300,
-                "metrics": {"issues-new": "issues", "code-changes": "commit_count", "code-changes-lines": "added", 
+                "metrics": {"issues-new": "issues", "code-changes": "commit_count", "code-changes-lines": "added",
                            "reviews": "pull_requests", "contributors-new": "new_contributors"},
                 "confidence_interval": 95,
                 "contamination": 0.041,
@@ -223,6 +229,7 @@ class AugurConfig():
         self._root_augur_dir = root_augur_dir
         self._default_config = default_config
         self._env_config = {}
+        self.config_file_location = None
         self.load_config()
         self.version = self.get_version()
         self._config.update(given_config)
@@ -268,9 +275,9 @@ class AugurConfig():
 
         logger.debug("Attempting to load config file")
         try:
-            config_file_path = self.discover_config_file()
+            self.discover_config_file()
             try:
-                with open(config_file_path, 'r+') as config_file_handle:
+                with open(self.config_file_location, 'r+') as config_file_handle:
                     self._config = json.loads(config_file_handle.read())
                     logger.debug("Config file loaded successfully")
             except json.decoder.JSONDecodeError as e:
@@ -285,10 +292,10 @@ class AugurConfig():
         self.load_env_configuration()
 
     def discover_config_file(self):
-        default_config_path = self._root_augur_dir + '/' + self._default_config_file_name
+        developer_config_location = ROOT_AUGUR_DIRECTORY + "/" + self._default_config_file_name
         config_file_path = None
 
-        config_locations = [self._default_config_file_name, default_config_path
+        config_locations = [developer_config_location, CONFIG_HOME + "/" + self._default_config_file_name
          , f"/opt/augur/{self._default_config_file_name}"]
         if os.getenv('AUGUR_CONFIG_FILE', None) is not None:
             config_file_path = os.getenv('AUGUR_CONFIG_FILE')
@@ -302,9 +309,9 @@ class AugurConfig():
                 except FileNotFoundError:
                     pass
         if config_file_path:
-            return config_file_path
+            self.config_file_location = config_file_path
         else:
-            raise(AugurConfigFileNotFoundException(message=f"{self._default_config_file_name} not found", errors=None))
+            raise(AugurConfigFileNotFoundException(message="Config file was not found", errors=None))
 
     def load_env_configuration(self):
         self.set_env_value(section='Database', name='key', environment_variable='AUGUR_GITHUB_API_KEY')
