@@ -1,7 +1,7 @@
 import base64
 import pandas as pd
 import json
-from flask import Response, request
+from flask import Response, request, send_file
 
 #import visualization libraries
 from bokeh.io import output_notebook, show, output_file
@@ -21,6 +21,8 @@ import warnings
 import datetime
 warnings.filterwarnings('ignore')
 
+from selenium import webdriver
+
 
 from math import pi
 
@@ -39,22 +41,21 @@ def create_routes(server):
         required_contributions = request.json['required_contributions']
         required_time = request.json['required_time']
 
+        user = request.json['user']
+        password = request.json['password']
+        host = request.json['host']
+        port = request.json['port']
+        database = request.json['database']
+
 
 
         #def vertical_bar_chart(repo_id, start_date, end_date, group_by, y_axis='new_contributors', title = "{}: {} {} Time Contributors Per {}", required_contributions = 4, required_time = 5):
 
 
 
-        #queries
-       # with open("report_config.json") as config_file:
-        #    config = json.load(config_file)
-
-
-
         jupyter_execution = False
 
-        #database_connection_string = 'postgres+psycopg2://{}:{}@{}:{}/{}'.format(config['user'], config['password'], config['host'], config['port'], config['database'])
-        database_connection_string = 'postgres+psycopg2://augur:covidparty@zephyr.osshealth.io:5433/augur_zephyr'
+        database_connection_string = 'postgres+psycopg2://{}:{}@{}:{}/{}'.format(user, password, host, port, database)
 
         dbschema='augur_data'
         engine = salc.create_engine(
@@ -342,8 +343,6 @@ def create_routes(server):
 
         jupyter_execution = False
 
-        #database_connection_string = 'postgres+psycopg2://{}:{}@{}:{}/{}'.format(config['user'], config['password'], config['host'], config['port'], config['database'])
-        database_connection_string = 'postgres+psycopg2://augur:covidparty@zephyr.osshealth.io:5433/augur_zephyr'
 
      
 
@@ -367,19 +366,6 @@ def create_routes(server):
         """)
         months_df = pd.read_sql(months_query, con=engine)
 
-
-
-
-
-        #def quarters(month, year):
-        #    if month >= 1 and month <=3:
-        #        return '01' + '/' + year
-        #    elif month >=4 and month <=6:
-        #        return '04' + '/' + year
-        #    elif month >= 5 and month <=9:
-        #        return '07' + '/' + year
-        #    elif month >= 10 and month <= 12:
-        #        return '10' + '/' + year
 
 
         #add yearmonths to months_df
@@ -633,22 +619,34 @@ def create_routes(server):
         #puts plots together into a grid
         grid = gridplot([row_1, row_2, row_3, row_4])
 
+
+        #output_file = 'images/' + 'new_contributors_stacked_bar' + '_' + contributor_type + '_' + group_by + '_' + repo_dict[repo_id] + '.png'
+
+
         #return grid
 
         #grid = vertical_bar_chart(repo_id=repo_id, start_date=start_date, end_date=end_date, group_by=group_by, required_contributions=required_contributions, required_time=required_time)
-        
-        #image = get_screenshot_as_png(grid, height=500, width=500, driver=webdriver)
+        print("Made it here")
+        image = get_screenshot_as_png(grid, webdriver=webdriver)
+        print("Made it here")
 
         #return json.dumps(json_item(grid, "myplot"))
 
 
         #return send_file(image, mimetype='application/json')
 
+        #print(image)
+
         # set return headers
-        #return Response(response=image,
+        #return Response(response=json.dumps(bokeh.embed.json_item(grid, "myplot")),
         #                mimecode='image/png',
         #                statuscode=200)
         #return json.dumps(json_item(p, "myplot"))
+
+        #return send_file(filename=output_file, mimetype='application/json')
+
+        #return json.dumps(bokeh.embed.json_item(grid, "myplot"))
+
 
         status = {
                 'status': 'OK',
@@ -658,9 +656,10 @@ def create_routes(server):
                         mimetype="application/json")
 
 
-        return Response(response=json.dumps(json_item(grid, "myplot"),
-                                status=200,
-                                mimetype=application/json))
+
+        #return Response(response=json.dumps(json_item(grid, "myplot"),
+        #                        status=200,
+        #                        mimetype=application/json))
 
     
 
