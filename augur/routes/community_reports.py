@@ -21,6 +21,8 @@ import warnings
 import datetime
 warnings.filterwarnings('ignore')
 
+import io
+
 
 from math import pi
 
@@ -371,8 +373,6 @@ def create_routes(server):
 
 
 
-        print("Made it throught queries")
-
 
 
         #create visualizations
@@ -525,8 +525,7 @@ def create_routes(server):
                 #define pot for bar chart
                 p = figure(x_range=data['dates'], plot_height=400, plot_width = plot_width, title="{}: {} {} Time Contributors Per {}".format(repo_dict[repo_id], contributor_type.capitalize(), number, group_by_format_string), 
                            y_range=(0, max(data['new_contributor_counts'])* 1.15), margin = (0, 0, 10, 0))
-                print("After figure")
-                
+
                 p.vbar(x=data['dates'], top=data['new_contributor_counts'], width=0.8)
 
                 source = ColumnDataSource(data=dict(dates=data['dates'], new_contributor_counts=data['new_contributor_counts']))
@@ -588,46 +587,25 @@ def create_routes(server):
         grid = gridplot([row_1, row_2, row_3, row_4])
 
 
-        #output_file = 'images/' + 'new_contributors_stacked_bar' + '_' + contributor_type + '_' + group_by + '_' + repo_dict[repo_id] + '.png'
-
-
         #return grid
 
         #grid = vertical_bar_chart(repo_id=repo_id, start_date=start_date, end_date=end_date, group_by=group_by, required_contributions=required_contributions, required_time=required_time)
-        print("Made it here")
         image = get_screenshot_as_png(grid)
-        print("Made it here")
-
-        #return json.dumps(json_item(grid, "myplot"))
 
 
-        #return send_file(image, mimetype='application/json')
-
-        #print(image)
-
-        # set return headers
-        #return Response(response=json.dumps(bokeh.embed.json_item(grid, "myplot")),
-        #                mimecode='image/png',
-        #                statuscode=200)
-        #return json.dumps(json_item(p, "myplot"))
-
-        #return send_file(filename=output_file, mimetype='application/json')
-
-        #return json.dumps(bokeh.embed.json_item(grid, "myplot"))
-
-
-        status = {
-                'status': 'OK',
-            }
-        return Response(response=json.dumps(status),
-                        status=200,
-                        mimetype="application/json")
-
-
-
-        #return Response(response=json.dumps(json_item(grid, "myplot"),
-        #                        status=200,
-        #                        mimetype=application/json))
-
+        image_binary = image.tobytes()
     
+
+
+
+
+
+        return send_file(
+            io.BytesIO(image_binary),
+            mimetype='image/png',
+            as_attachment=True,
+            attachment_filename='file.png')
+
+
+
 
