@@ -4,6 +4,8 @@ PS3="
 Please type the number corresponding to your selection and then press the Enter/Return key.
 Your choice: "
 
+target=$1
+
 function get_api_key_and_repo_path() {
   echo
   echo "Please provide a valid GitHub API key."
@@ -91,7 +93,14 @@ function save_credentials() {
   echo "**********************************"
   echo
 
-  augur configure generate --db_name $db_name --db_host $host --db_port $port --db_user $db_user --db_password $password --github_api_key $github_api_key --gitlab_api_key $gitlab_api_key --facade_repo_directory $facade_repo_directory
+  cmd=( augur configure generate --db_name $db_name --db_host $host --db_port $port --db_user $db_user --db_password $password --github_api_key $github_api_key --gitlab_api_key $gitlab_api_key --facade_repo_directory $facade_repo_directory )
+
+  if [[ $target == *"dev"* ]]; then
+    cmd+=( --write-to-src )
+  fi
+
+  "${cmd[@]}"
+
   augur db check-pgpass
 
 }
@@ -105,6 +114,7 @@ function create_db_schema() {
     echo "**********************************"
     echo
 }
+
 
 echo
 echo "**********************************"

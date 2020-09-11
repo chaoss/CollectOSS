@@ -33,9 +33,9 @@ if [[ ! -e augur.config.json ]]; then
 else
   read -r -p "We noticed you have a config file already. Would you like to overwrite it with a new one? [Y/n] " response
   case "$response" in
-      [yY][eE][sS]|[yY]) 
+      [yY][eE][sS]|[yY])
           echo "Generating a config file..."
-          scripts/install/config.sh
+          scripts/install/config.sh $target
           echo
           ;;
       *)
