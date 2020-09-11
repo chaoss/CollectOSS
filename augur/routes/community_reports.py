@@ -21,8 +21,6 @@ import warnings
 import datetime
 warnings.filterwarnings('ignore')
 
-from selenium import webdriver
-
 
 from math import pi
 
@@ -50,10 +48,6 @@ def create_routes(server):
 
 
         #def vertical_bar_chart(repo_id, start_date, end_date, group_by, y_axis='new_contributors', title = "{}: {} {} Time Contributors Per {}", required_contributions = 4, required_time = 5):
-
-
-
-        jupyter_execution = False
 
         database_connection_string = 'postgres+psycopg2://{}:{}@{}:{}/{}'.format(user, password, host, port, database)
 
@@ -337,13 +331,6 @@ def create_routes(server):
 
         months_df = pd.DataFrame()
 
-
-        #with open("report_config.json") as config_file:
-        #    config = json.load(config_file)
-
-        jupyter_execution = False
-
-
      
 
         dbschema='augur_data'
@@ -384,21 +371,7 @@ def create_routes(server):
 
 
 
- 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        print("Made it throught queries")
 
 
 
@@ -410,15 +383,11 @@ def create_routes(server):
 
         repo_dict = {repo_id : input_df.loc[input_df['repo_id'] == repo_id].iloc[0]['repo_name']}   
 
-
         contributor_types = ['All', 'repeat', 'drive_by']
         ranks = [1,2]
 
-        row_1 = []
-        row_2 = []
-        row_3 = []
-        row_4 = []
-
+        row_1, row_2, row_3, row_4 = [], [], [], []
+       
         for rank in ranks:
             for contributor_type in contributor_types:
                 #do not display these visualizations since drive-by's do not have second contributions, and the second contribution of a repeat contributor is the same thing as the all the second time contributors
@@ -554,10 +523,9 @@ def create_routes(server):
                 number =  '{}'.format(num_conversion_dict[rank])
 
                 #define pot for bar chart
-                p = figure(x_range=data['dates'], plot_height=400, plot_width = plot_width, title="Hello", #title.format(repo_dict[repo_id], contributor_type.capitalize(), number, group_by_format_string), 
+                p = figure(x_range=data['dates'], plot_height=400, plot_width = plot_width, title="{}: {} {} Time Contributors Per {}".format(repo_dict[repo_id], contributor_type.capitalize(), number, group_by_format_string), 
                            y_range=(0, max(data['new_contributor_counts'])* 1.15), margin = (0, 0, 10, 0))
-
-                
+                print("After figure")
                 
                 p.vbar(x=data['dates'], top=data['new_contributor_counts'], width=0.8)
 
@@ -627,7 +595,7 @@ def create_routes(server):
 
         #grid = vertical_bar_chart(repo_id=repo_id, start_date=start_date, end_date=end_date, group_by=group_by, required_contributions=required_contributions, required_time=required_time)
         print("Made it here")
-        image = get_screenshot_as_png(grid, webdriver=webdriver)
+        image = get_screenshot_as_png(grid)
         print("Made it here")
 
         #return json.dumps(json_item(grid, "myplot"))
