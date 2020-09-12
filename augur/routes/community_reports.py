@@ -4,7 +4,7 @@ import json
 from flask import Response, request, send_file
 
 #import visualization libraries
-from bokeh.io import output_notebook, show, output_file
+from bokeh.io import output_notebook, show, output_file, export_png
 from bokeh.io.export import get_screenshot_as_png
 from bokeh.plotting import figure
 from bokeh.models import Label, LabelSet, ColumnDataSource, Legend
@@ -588,23 +588,15 @@ def create_routes(server):
 
 
         #return grid
-
+        
+     
         #grid = vertical_bar_chart(repo_id=repo_id, start_date=start_date, end_date=end_date, group_by=group_by, required_contributions=required_contributions, required_time=required_time)
-        image = get_screenshot_as_png(grid)
+       
 
-
-        image_binary = image.tobytes()
-    
-
-
-
-
-
-        return send_file(
-            io.BytesIO(image_binary),
-            mimetype='image/png',
-            as_attachment=True,
-            attachment_filename='file.png')
+        filename = export_png(grid)
+        
+        return send_file(filename)
+        
 
 
 
