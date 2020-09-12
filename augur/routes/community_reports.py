@@ -4,8 +4,7 @@ import json
 from flask import Response, request, send_file
 
 #import visualization libraries
-from bokeh.io import output_notebook, show, output_file, export_png
-from bokeh.io.export import get_screenshot_as_png
+from bokeh.io import output_notebook, export_png
 from bokeh.plotting import figure
 from bokeh.models import Label, LabelSet, ColumnDataSource, Legend
 from bokeh.palettes import Colorblind
@@ -21,33 +20,23 @@ import warnings
 import datetime
 warnings.filterwarnings('ignore')
 
-import io
-
-
 from math import pi
 
-#from augur.routes.new_contributor_query import *
 
 def create_routes(server):
 
-    @server.app.route('/{}/reports/new_contributors/'.format(server.api_version), methods=["POST"])
-    def new_contributors_report():
+    def quarters(month, year):
+        if month >= 1 and month <=3:
+            return '01' + '/' + year
+        elif month >=4 and month <=6:
+            return '04' + '/' + year
+        elif month >= 5 and month <=9:
+            return '07' + '/' + year
+        elif month >= 10 and month <= 12:
+            return '10' + '/' + year
 
-        repo_id = request.json['repo_id']
-        start_date = request.json['start_date']
-        end_date = request.json['end_date']
-        group_by = request.json['group_by']
-        required_contributions = request.json['required_contributions']
-        required_time = request.json['required_time']
-
-        user = request.json['user']
-        password = request.json['password']
-        host = request.json['host']
-        port = request.json['port']
-        database = request.json['database']
-
-
-        database_connection_string = 'postgres+psycopg2://{}:{}@{}:{}/{}'.format(user, password, host, port, database)
+    def new_contibutor_data_collection(repo_id, required_contributions, database_connection_string):
+        print("Made it to new_contributors")
 
         dbschema='augur_data'
         engine = salc.create_engine(
@@ -284,7 +273,7 @@ def create_routes(server):
                 ) b
                 WHERE RANK IN {rank_tuple}
 
-    """)
+         """)
         df_first_repo = pd.read_sql(pr_query, con=engine)
         if not df.empty: 
             df = pd.concat([df, df_first_repo]) 
@@ -293,14 +282,10 @@ def create_routes(server):
             df = df_first_repo
 
 
-
         df = df.loc[~df['full_name'].str.contains('bot', na=False)]
         df = df.loc[~df['login'].str.contains('bot', na=False)]
 
         df = df.loc[~df['cntrb_id'].isin(df[df.duplicated(['cntrb_id', 'created_at', 'repo_id', 'rank'])]['cntrb_id'])]
-
-
-
 
         #add yearmonths to contributor
         df[['month', 'year']] = df[['month', 'year']].astype(int).astype(str)
@@ -310,31 +295,23 @@ def create_routes(server):
         # add column with every value being one, so when the contributor df is concatenated with the months df, the filler months won't be counted in the sums
         df['new_contributors'] = 1
 
-        def quarters(month, year):
-            if month >= 1 and month <=3:
-                return '01' + '/' + year
-            elif month >=4 and month <=6:
-                return '04' + '/' + year
-            elif month >= 5 and month <=9:
-                return '07' + '/' + year
-            elif month >= 10 and month <= 12:
-                return '10' + '/' + year
-
         #add quarters to contributor dataframe
         df['month'] = df['month'].astype(int)
         df['quarter'] = df.apply(lambda x: quarters(x['month'], x['year']), axis=1)
         df['quarter'] = pd.to_datetime(df['quarter'])
 
+        return df
 
 
-        months_df = pd.DataFrame()
-
-     
+    def months_data_collection(start_date, end_date, database_connection_string):
 
         dbschema='augur_data'
         engine = salc.create_engine(
             database_connection_string,
             connect_args={'options': '-csearch_path={}'.format(dbschema)})
+
+        months_df = pd.DataFrame()
+
 
         #months_query makes a df of years and months, this is used to fill the months with no data in the visualizaitons
         months_query = salc.sql.text(f"""        
@@ -365,9 +342,30 @@ def create_routes(server):
         months_df['quarter'] = months_df.apply(lambda x: quarters(x['month'], x['year']), axis=1)
         months_df['quarter'] = pd.to_datetime(months_df['quarter'])
 
+        return months_df
 
-        #create visualizations
-        input_df = df
+
+    @server.app.route('/{}/reports/new_contributors_bar/'.format(server.api_version), methods=["POST"])
+    def new_contributors_bar():
+
+        repo_id = request.json['repo_id']
+        start_date = request.json['start_date']
+        end_date = request.json['end_date']
+        group_by = request.json['group_by']
+        required_contributions = request.json['required_contributions']
+        required_time = request.json['required_time']
+
+        user = request.json['user']
+        password = request.json['password']
+        host = request.json['host']
+        port = request.json['port']
+        database = request.json['database']
+
+
+        database_connection_string = 'postgres+psycopg2://{}:{}@{}:{}/{}'.format(user, password, host, port, database)
+
+        input_df = new_contibutor_data_collection(repo_id=repo_id, required_contributions=required_contributions, database_connection_string=database_connection_string)
+        months_df = months_data_collection(start_date=start_date, end_date=end_date, database_connection_string=database_connection_string)
 
         repo_dict = {repo_id : input_df.loc[input_df['repo_id'] == repo_id].iloc[0]['repo_name']}   
 
