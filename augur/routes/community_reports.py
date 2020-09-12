@@ -32,7 +32,6 @@ def create_routes(server):
 
     @server.app.route('/{}/reports/new_contributors/'.format(server.api_version), methods=["POST"])
     def new_contributors_report():
-        #type = request.headers.get_header('application/json')
 
         repo_id = request.json['repo_id']
         start_date = request.json['start_date']
@@ -47,9 +46,6 @@ def create_routes(server):
         port = request.json['port']
         database = request.json['database']
 
-
-
-        #def vertical_bar_chart(repo_id, start_date, end_date, group_by, y_axis='new_contributors', title = "{}: {} {} Time Contributors Per {}", required_contributions = 4, required_time = 5):
 
         database_connection_string = 'postgres+psycopg2://{}:{}@{}:{}/{}'.format(user, password, host, port, database)
 
@@ -355,8 +351,6 @@ def create_routes(server):
         """)
         months_df = pd.read_sql(months_query, con=engine)
 
-
-
         #add yearmonths to months_df
         months_df[['year','month']] = months_df[['year','month']].astype(float).astype(int).astype(str)
         months_df['yearmonth'] = months_df['month'] + '/' + months_df['year']
@@ -372,14 +366,8 @@ def create_routes(server):
         months_df['quarter'] = pd.to_datetime(months_df['quarter'])
 
 
-
-
-
         #create visualizations
         input_df = df
-
-        #input_df = new_contributor_data_collection(repo_id=25158, num_contributions_required= required_contributions)
-        #months_df = months_df_query(begin_date=start_date, end_date=end_date)
 
         repo_dict = {repo_id : input_df.loc[input_df['repo_id'] == repo_id].iloc[0]['repo_name']}   
 
@@ -586,12 +574,6 @@ def create_routes(server):
         #puts plots together into a grid
         grid = gridplot([row_1, row_2, row_3, row_4])
 
-
-        #return grid
-        
-     
-        #grid = vertical_bar_chart(repo_id=repo_id, start_date=start_date, end_date=end_date, group_by=group_by, required_contributions=required_contributions, required_time=required_time)
-       
 
         filename = export_png(grid)
         
