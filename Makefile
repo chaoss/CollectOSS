@@ -30,8 +30,8 @@ default:
 #
 #  Installation
 #
-.PHONY: install install-dev 
-.PHONY: install-spdx install-spdx-sudo install-augur-sbom 
+.PHONY: install install-dev
+.PHONY: install-spdx install-spdx-sudo install-augur-sbom
 .PHONY: clean rebuild
 install:
 	@ ./scripts/install/install.sh prod
@@ -63,12 +63,12 @@ rebuild-dev:
 #
 .PHONY: dev-start dev-stop dev monitor-frontend monitor-backend monitor frontend backend-stop backend-start backend-restart backend clean rebuild
 
-dev-start: 
+dev-start:
 	@ scripts/control/start_augur.sh
 	@ scripts/control/start_frontend.sh
 
-dev-stop: 
-	@ augur util kill
+dev-stop:
+	@ augur util stop
 	@ scripts/control/kill_frontend.sh
 
 dev: dev-stop dev-start
@@ -100,7 +100,7 @@ test-python-versions:
 #
 # Documentation
 #
-.PHONY: docs docs-view 
+.PHONY: docs docs-view
 docs:
 	@ bash -c 'cd docs/ && rm -rf build/ && make html;'
 
@@ -112,7 +112,7 @@ docs-view: docs
 # Docker Shortcuts
 # Do not use these unless you know what they mean.
 .PHONY: compose-run compose-run-database
-.PHONY: build-backend run-backend build-frontend run-frontend build-database run-database 
+.PHONY: build-backend run-backend build-frontend run-frontend build-database run-database
 
 
 compose-run:
