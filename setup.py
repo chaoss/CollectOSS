@@ -38,7 +38,8 @@ setup(
         "flask_login",
         "flask",
         "pandas>=1.0.5",
-        "numpy>=1.18.5",
+        "numpy<1.19.0,>=1.16.0",
+        "matplotlib==3.3.1"
         "requests",
         "flask_cors",
         "flask_wtf",
