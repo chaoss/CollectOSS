@@ -42,7 +42,7 @@ class GitHubWorker(Worker):
         """ Data collection function
         Query the GitHub API for issues
         """
-        
+        return self.config
         # Get max ids so we know where we are in our insertion and to have the current id when inserting FK's
         self.logger.info("Querying starting ids info...\n")
 

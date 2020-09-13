@@ -12,29 +12,31 @@ def read(filename):
         return re.sub(text_type(r':[a-z]+:`~?(.*?)`'), text_type(r'``\1``'), fd.read())
 
 setup(
-    name="insight_worker",
-    version="1.0.0",
+    name="pull_request_analysis_worker",
+    version="0.0.0",
     url="https://github.com/chaoss/augur",
     license='MIT',
-    author="Augurlabs",
-    author_email="s@goggins.com",
-    description="Augur Worker that discovers and stores data anomalies",
-    packages=find_packages(exclude=('tests',)),
+    author="Augur Team",
+    author_email="akshblr555@gmail.com",
+    description="Pull Request Analysis worker that predicts acceptance of a PR",
+    packages=find_packages(),
     install_requires=[
-        'flask', 
-        'numpy==1.18.5', 
-        'requests', 
-        'psycopg2-binary', 
-        'click', 
-        'scipy',
+        'flask',
+        'requests',
+        'psycopg2-binary',
         'sklearn',
-        'keras==2.3.1',
-        'tensorflow'
-
+        'nltk',
+        'pandas',
+        'numpy',
+        'gensim',
+        'scipy',
+        'emoji',
+        'joblib',
+        'xgboost==0.90'
     ],
     entry_points={
         'console_scripts': [
-            'insight_worker_start=workers.insight_worker.runtime:main',
+            'pull_request_analysis_worker_start=workers.pull_request_analysis_worker.runtime:main',
         ],
     },
     classifiers=[
