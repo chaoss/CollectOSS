@@ -26,7 +26,7 @@ setup(
         'psycopg2-binary',
         'click',
         'pandas',
-        'sklearn',
+        'scikit-learn',
         'sklearn-crfsuite',
         'nltk',
         'textblob',
