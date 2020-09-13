@@ -49,7 +49,8 @@ setup(
         "six>=1.14.0",
         "tensorflow",
         "keras==2.3.1",
-        "sklearn"
+        "sklearn", 
+        "skimage"
     ],
     extras_require={
         "dev": [
