@@ -50,7 +50,7 @@ setup(
         "tensorflow",
         "keras==2.3.1",
         "sklearn", 
-        "skimage"
+        "scikit-image"
     ],
     extras_require={
         "dev": [
