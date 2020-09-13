@@ -847,8 +847,397 @@ def create_routes(server):
         return send_file(filename)
 
 
+
+
+
+    @server.app.route('/{}/contributor_reports/returning_contributor_pie_chart/'.format(server.api_version), methods=["POST"])
+    def returning_contributor_pie_chart():
+
+
+        repo_id = request.json['repo_id']
+        start_date = request.json['start_date']
+        end_date = request.json['end_date']
+        required_contributions = request.json['required_contributions']
+        required_time = request.json['required_time']
+
+        user = request.json['user']
+        password = request.json['password']
+        host = request.json['host']
+        port = request.json['port']
+        database = request.json['database']
+
+        database_connection_string = 'postgres+psycopg2://{}:{}@{}:{}/{}'.format(user, password, host, port, database)
+
+
+        input_df = new_contibutor_data_collection(repo_id=repo_id, required_contributions=required_contributions, database_connection_string=database_connection_string)
+        
+        repo_dict = {repo_id : input_df.loc[input_df['repo_id'] == repo_id].iloc[0]['repo_name']}    
+
+
+        #create a copy of contributor dataframe
+        driver_df = input_df.copy()
+        
+        #remove first time contributors before begin date, along with their second contribution
+        mask = (driver_df['yearmonth'] < start_date)
+        driver_df= driver_df[~driver_df['cntrb_id'].isin(driver_df.loc[mask]['cntrb_id'])]
+
+        
+        #determine if contributor is a drive by by finding all the cntrb_id's that do not have a second contribution
+        repeats_df = driver_df.copy()
+
+        repeats_df = repeats_df.loc[repeats_df['rank'].isin([1,required_contributions])]
+
+        #removes all the contributors that only have a first contirbution
+        repeats_df = repeats_df[repeats_df['cntrb_id'].isin(repeats_df.loc[driver_df['rank'] == required_contributions]['cntrb_id'])]
+
+        repeat_list = repeats_df.loc[driver_df['rank'] == required_contributions]['created_at'].tolist()
+        first_list = repeats_df.loc[driver_df['rank'] == 1]['created_at'].tolist()
+
+        repeats_df = repeats_df.loc[driver_df['rank'] == 1]
+        repeats_df['type'] = 'repeat'
+        
+        differences = []
+        for i in range(0, len(repeat_list)):
+            time_difference = repeat_list[i] - first_list[i]
+            total = time_difference.days * 86400 + time_difference.seconds
+            differences.append(total)
+        repeats_df['differences'] = differences
+
+        repeats_df = repeats_df.loc[repeats_df['differences'] <= required_time * 86400]
+        
+        
+        repeat_cntrb_ids = repeats_df['cntrb_id'].to_list()
+
+        drive_by_df = driver_df.loc[~driver_df['cntrb_id'].isin(repeat_cntrb_ids)]
+
+        drive_by_df = drive_by_df.loc[driver_df['rank'] == 1]
+        drive_by_df['type'] = 'drive_by'
+        
+        driver_df = pd.concat([drive_by_df, repeats_df])
+        
+        #filter df by end date
+        mask = (driver_df['yearmonth'] < end_date)
+        driver_df = driver_df.loc[mask]
+
+        #first and second time contributor counts
+        drive_by_contributors = driver_df.loc[driver_df['type'] == 'drive_by'].count()['new_contributors']
+        repeat_contributors = driver_df.loc[driver_df['type'] == 'repeat'].count()['new_contributors']
+        
+        #create a dict with the # of drive-by and repeat contributors
+        x = {'Drive_By': drive_by_contributors,
+             'Repeat' : repeat_contributors}
+ 
+        #turn dict 'x' into a dataframe with columns 'contributor_type', and 'counts'
+        data = pd.Series(x).reset_index(name='counts').rename(columns={'index':'contributor_type'})
+
+        data['angle'] = data['counts']/data['counts'].sum() * 2*pi
+        data['color'] = ('#0072B2', '#E69F00')
+        data['percentage'] = ((data['angle']/(2*pi))*100).round(2)
+        
+        #format title 
+        title = "{}: Number of Returning Contributors out of {} from {} to {}".format(repo_dict[repo_id], drive_by_contributors + repeat_contributors, start_date, end_date)
+        print(title) 
+        title_text_font_size = 18
+        
+        plot_width = 850
+        
+        #sets plot_width to width of title if title is wider than 850 pixels
+        if len(title) * title_text_font_size / 2 > plot_width:
+            plot_width = int(len(title) * title_text_font_size / 2)
+        
+        
+        source = ColumnDataSource(data)
+        
+        #creates plot for chart
+        p = figure(plot_height=450, plot_width =plot_width, title=title, 
+                   toolbar_location=None, x_range=(-0.5, 1.3), tools = 'hover', tooltips = "@contributor_type", margin = (0, 0, 0, 0))
+
+        wedge = p.wedge(x=0.87, y=1, radius=0.4, start_angle=cumsum('angle', include_zero=True), end_angle=cumsum('angle'),
+            line_color=None, fill_color='color', legend_field='contributor_type', source=data)
+
+        start_point = 0.88
+        for i in range(0, len(data['percentage'])):
+            #percentages
+            p.add_layout(Label(x=-0.17, y= start_point + 0.13*(len(data['percentage']) - 1 - i), text='{}%'.format(data.iloc[i]['percentage']), 
+                        render_mode='css', text_font_size = '15px', text_font_style= 'bold'))
+
+            #contributors
+            p.add_layout(Label(x=0.12, y= start_point + 0.13*(len(data['percentage']) - 1 - i), text='{}'.format(data.iloc[i]['counts']), 
+                        render_mode='css', text_font_size = '15px', text_font_style= 'bold'))
+
+        #percentages header    
+        p.add_layout(Label(x=-0.22, y= start_point + 0.13*(len(data['percentage'])), text='Percentages', render_mode='css', 
+                    text_font_size = '15px', text_font_style= 'bold'))
+
+        #legend header
+        p.add_layout(Label(x=-0.43, y= start_point + 0.13*(len(data['percentage'])), text='Category', render_mode='css', 
+                    text_font_size = '15px', text_font_style= 'bold'))
+
+        #contributors header
+        p.add_layout(Label(x=0, y= start_point + 0.13*(len(data['percentage'])), text='# Contributors', render_mode='css', 
+                    text_font_size = '15px', text_font_style= 'bold'))
+
+        p.axis.axis_label=None
+        p.axis.visible=False
+        p.grid.grid_line_color = None 
+        
+        p.title.align = "center"
+        p.title.text_font_size = "{}px".format(title_text_font_size)
+   
+        p.legend.location = "center_left"
+        p.legend.border_line_color = None
+        p.legend.label_text_font_style = 'bold'
+        p.legend.label_text_font_size = "15px"
+
+        plot = p
+
+        #creates plot for caption
+        p = figure(width = 850, height=200, margin = (0, 0, 0, 0))
+        
+        caption= """This pie chart shows the percentage of new contributors who were drive-by or repeat contributors. Drive by contributors are contributors who make less than the required {0} contributions in {1} days. New contributors are 
+                    individuals who make their first contribution in the specified time period. Repeat contributors are contributors who have made {0} or more contributions in {1} days and their first 
+                        contribution is in the specified time period."""
+
+        p.add_layout(Label(
+        x = 0, 
+        y = 160, 
+        x_units = 'screen',
+        y_units = 'screen',
+        text='{}'.format(caption.format(required_contributions, required_time)),
+        text_font = 'times', 
+        text_font_size = '15pt',
+        render_mode='css'
+        ))
+        p.outline_line_color = None
+
+        caption_plot = p
+
+        #put graph and caption plot together into one grid
+        grid = gridplot([[plot], [caption_plot]])
+
+        filename = export_png(grid)
+        
+        return send_file(filename)
+        
+        
+    @server.app.route('/{}/contributor_reports/returning_contributors_stacked_bar/'.format(server.api_version), methods=["POST"])
+    def returning_contributor_stacked_bar():
+
+
+        repo_id = request.json['repo_id']
+        start_date = request.json['start_date']
+        end_date = request.json['end_date']
+        group_by = request.json['group_by']
+        required_contributions = request.json['required_contributions']
+        required_time = request.json['required_time']
+
+        user = request.json['user']
+        password = request.json['password']
+        host = request.json['host']
+        port = request.json['port']
+        database = request.json['database']
+
+        database_connection_string = 'postgres+psycopg2://{}:{}@{}:{}/{}'.format(user, password, host, port, database)
+
+
+        input_df = new_contibutor_data_collection(repo_id=repo_id, required_contributions=required_contributions, database_connection_string=database_connection_string)
+        months_df = months_data_collection(start_date=start_date, end_date=end_date, database_connection_string=database_connection_string)
+
+        
+        repo_dict = {repo_id : input_df.loc[input_df['repo_id'] == repo_id].iloc[0]['repo_name']}    
+
+
+        #create a copy of contributor dataframe
+        driver_df = input_df.copy()
+
+        
+        #remove first time contributors before begin date, along with their second contribution
+        mask = (driver_df['yearmonth'] < start_date)
+        driver_df= driver_df[~driver_df['cntrb_id'].isin(driver_df.loc[mask]['cntrb_id'])]
+        
+        #determine if contributor is a drive by by finding all the cntrb_id's that do not have a second contribution
+        repeats_df = driver_df.copy()
+
+        #discards rows other than the first and the row required to be a repeat contributor
+        repeats_df = repeats_df.loc[repeats_df['rank'].isin([1,required_contributions])]
+
+        #removes all the contributors that only have a first contirbution
+        repeats_df = repeats_df[repeats_df['cntrb_id'].isin(repeats_df.loc[driver_df['rank'] == required_contributions]['cntrb_id'])]
+
+        #create lists of 'created_at' times for the final required contribution and the first contribution
+        repeat_list = repeats_df.loc[driver_df['rank'] == required_contributions]['created_at'].tolist()
+        first_list = repeats_df.loc[driver_df['rank'] == 1]['created_at'].tolist()
+
+        #only keep first time contributions, since there only needs to be one instance of each 'cntrb_id' in df
+        repeats_df = repeats_df.loc[driver_df['rank'] == 1]
+        repeats_df['type'] = 'repeat'
+        
+        #create list of time differences between the final required contribution and the first contribution, and add it to the df
+        differences = []
+        for i in range(0, len(repeat_list)):
+            time_difference = repeat_list[i] - first_list[i]
+            total = time_difference.days * 86400 + time_difference.seconds
+            differences.append(total)
+        repeats_df['differences'] = differences
+
+        #remove contributions who made enough contributions, but not in a short enough time
+        repeats_df = repeats_df.loc[repeats_df['differences'] <= required_time * 86400]
+        
+        #create list of 'cntrb_ids' for repeat contributors
+        repeat_cntrb_ids = repeats_df['cntrb_id'].to_list()
+
+        #create df with all contributors other than the ones in the repeats_df
+        drive_by_df = driver_df.loc[~driver_df['cntrb_id'].isin(repeat_cntrb_ids)]
+
+        #filter df so it only includes the first contribution
+        drive_by_df = drive_by_df.loc[driver_df['rank'] == 1]
+        drive_by_df['type'] = 'drive_by'
+        
+        driver_df = pd.concat([drive_by_df, repeats_df, months_df])
+
+        #filter by end_date
+        mask = (driver_df['yearmonth'] < end_date)
+        driver_df = driver_df.loc[mask]
+
+        #create df to hold data needed for chart
+        data = pd.DataFrame()
+        if group_by == 'year': 
+
+            #x-axis dates
+            data['dates'] = driver_df[group_by].unique()
             
+            data['repeat_counts'] = driver_df.loc[driver_df['type'] == 'repeat'].groupby(group_by).count().reset_index()['new_contributors']
+            data['drive_by_counts'] = driver_df.loc[driver_df['type'] == 'drive_by'].groupby(group_by).count().reset_index()['new_contributors']
 
+            #new contributor counts for all contributor counts
+            total_counts = []
+            for i in range(0, len(data['drive_by_counts'])):
+                total_counts.append(data.iloc[i]['drive_by_counts'] + data.iloc[i]['repeat_counts'])
+            data['total_counts'] = total_counts
 
+            #used to format x-axis and graph title
+            group_by_format_string = "Year"
 
+            #font size of drive by and repeat labels
+            label_text_font_size = "14pt"
 
+        elif group_by == 'quarter' or group_by == 'month':
+
+            #set variables to group the data by quarter or month
+            if group_by == 'quarter':
+                date_column = 'quarter'
+                group_by_format_string = "Quarter"
+                
+            elif group_by == 'month':
+                date_column = 'yearmonth'
+                group_by_format_string = "Month"
+
+            #modifies the driver_df[date_column] to be a string with year and month, then finds all the unique values   
+            data['dates'] = np.unique(np.datetime_as_string(driver_df[date_column], unit = 'M'))
+     
+            data['drive_by_counts'] = pd.concat([driver_df.loc[driver_df['type'] == 'drive_by'], months_df]).groupby(date_column).sum().reset_index()['new_contributors']
+            data['repeat_counts'] = pd.concat([driver_df.loc[driver_df['type'] == 'repeat'], months_df]).groupby(date_column).sum().reset_index()['new_contributors']
+
+            #new contributor counts for all contributor types
+            total_counts = []
+            for i in range(0, len(data['drive_by_counts'])):
+                total_counts.append(data.iloc[i]['drive_by_counts'] + data.iloc[i]['repeat_counts'])
+            data['total_counts'] = total_counts
+
+            #font size of drive by and repeat labels
+            label_text_font_size = "13pt"
+            
+        data_source = {'Dates' : data['dates'],
+                'Drive By'     : data['drive_by_counts'],
+                'Repeat'       : data['repeat_counts'],
+                'All'          : data['total_counts']}
+
+        groups = ["Drive By", "Repeat"]
+
+        colors = ['#56B4E9', '#E69F00']
+
+        source = ColumnDataSource(data=data_source)
+        
+        #format title
+        title_text_font_size = 18
+        
+        #if the data set is large enough it will dynamically assign the width, if the data set is too small it will by default set to 780 pixel so the title fits
+        if len(data['total_counts']) >= 13:
+            plot_width = 46 * len(data['total_counts']) + 210
+        else:
+            plot_width = 780
+
+        p = figure(x_range=data['dates'], plot_height=500, plot_width = plot_width, title="{}: Drive By and Repeat Contributor Counts per {}".format(repo_dict[repo_id], group_by_format_string), 
+                   toolbar_location=None, y_range=(0, max(total_counts)* 1.15), margin = (0, 0, 0, 0))
+        
+        vbar = p.vbar_stack(groups, x='Dates', width=0.8, color=colors, source=source)
+
+        #add total counts above bars
+        p.add_layout(LabelSet(x='Dates', y='All', text='All', y_offset=8, text_font_size="14pt", 
+                          text_color="black", source=source, text_align='center'))
+
+        #add drive by count labels
+        p.add_layout(LabelSet(x='Dates', y='Drive By', text='Drive By', y_offset=-22, text_font_size=label_text_font_size, 
+                  text_color="black", source=source, text_align='center'))
+
+        #add repeat count labels
+        p.add_layout(LabelSet(x='Dates', y='All', text='Repeat', y_offset=-22, text_font_size=label_text_font_size, 
+                  text_color="black", source=source, text_align='center'))
+
+        #add legend
+        legend = Legend(items=[(date, [group]) for (date, group) in zip(groups, vbar)], location=(0, 200), label_text_font_size = "16px")
+        p.add_layout(legend, 'right')
+
+        p.xgrid.grid_line_color = None
+        p.y_range.start = 0
+        p.axis.minor_tick_line_color = None
+        p.outline_line_color = None
+
+        p.title.align = "center"
+        p.title.text_font_size = "{}px".format(title_text_font_size)
+
+        p.yaxis.axis_label = '# Contributors'
+        p.xaxis.axis_label = group_by_format_string 
+
+        p.xaxis.axis_label_text_font_size = "18px"
+        p.yaxis.axis_label_text_font_size = "16px"
+
+        p.xaxis.major_label_text_font_size = "16px"
+        p.xaxis.major_label_orientation = 45.0
+
+        p.yaxis.major_label_text_font_size = "16px"
+
+        p.legend.label_text_font_size = "20px"
+
+        plot = p
+
+        #add plot to hold caption
+        p = figure(width = plot_width, height=200, margin = (0, 0, 0, 0))
+
+        caption = """This graph shows the number of new contributors in the specified time period, and indicates how many were drive-by and repeat 
+        contributors. Drive by contributors are contributors who make less than the required {0} contributions in {1} days. New contributors are 
+        individuals who make their first contribution in the specified time period. Repeat contributors are contributors who have made {0} or more 
+        contributions in {1} days and their first contribution is in the specified time period."""
+
+        p.add_layout(Label(
+        x = 0, 
+        y = 160, 
+        x_units = 'screen',
+        y_units = 'screen',
+        text='{}'.format(caption.format(required_contributions, required_time)),
+        text_font = 'times', 
+        text_font_size = '15pt',
+        render_mode='css'
+        ))
+        p.outline_line_color = None
+
+        caption_plot = p
+
+        #put graph and caption plot together into one grid
+        grid = gridplot([[plot], [caption_plot]])
+
+        filename = export_png(grid)
+        
+        return send_file(filename)
+
+            
