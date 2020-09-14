@@ -850,7 +850,7 @@ def create_routes(server):
 
 
 
-    @server.app.route('/{}/contributor_reports/returning_contributor_pie_chart/'.format(server.api_version), methods=["POST"])
+    @server.app.route('/{}/contributor_reports/returning_contributors_pie_chart/'.format(server.api_version), methods=["POST"])
     def returning_contributor_pie_chart():
 
 

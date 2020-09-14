@@ -4220,3 +4220,184 @@ paths:
             type: array
       tags:
       - utility
+  /contributor_reports/new_contributors_bar/:
+    post:
+      description: Get bar chart of new contributor counts.
+      operationId: New Contributor Counts Bar Chart
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                repo_id:
+                  description: 'Example: 23847'
+                  type: integer
+                start_date: 
+                  description: 'Example: 2019-01-01'
+                  type: string
+                end_date:
+                  description: 'Example: 2020-03-30'
+                  type: string
+                group_by:
+                  description: 'Example: month, quarter, or year'
+                  type: string
+                required_contributions:
+                  description: 'Example: 5'
+                  type: integer
+                required_time: 'Example: 365'
+                  description:
+                  type: integer
+                user:
+                  description: 'Example: augur'
+                  type: string
+                password:
+                  description: 'Example: password123'
+                  type: string
+                host:
+                  description: 'Example: name.database.io'
+                  type: string
+                port:
+                  description: 'Example: 5001'
+                  type: integer
+                database:
+                  description: 'Example: my_database'
+                  type: string 
+            type: object
+      tags:
+      -experimental
+  /contributor_reports/new_contributors_stacked_bar/:
+    post:
+      description: Get stacked bar chart of new contributor counts, which shows the action of the contributor.
+      operationId: New Contributor Counts Stacked Bar Chart (shows actions)
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                repo_id:
+                  description: 'Example: 23847'
+                  type: integer
+                start_date: 
+                  description: 'Example: 2019-01-01'
+                  type: string
+                end_date:
+                  description: 'Example: 2020-03-30'
+                  type: string
+                group_by:
+                  description: 'Example: month, quarter, or year'
+                  type: string
+                required_contributions:
+                  description: 'Example: 5'
+                  type: integer
+                required_time: 'Example: 365'
+                  description:
+                  type: integer
+                user:
+                  description: 'Example: augur'
+                  type: string
+                password:
+                  description: 'Example: password123'
+                  type: string
+                host:
+                  description: 'Example: name.database.io'
+                  type: string
+                port:
+                  description: 'Example: 5001'
+                  type: integer
+                database:
+                  description: 'Example: my_database'
+                  type: string 
+            type: object
+      tags:
+      -experimental
+  /contributor_reports/returning_contributors_pie_chart/:
+    post:
+      description: Get pie chart of the returning contributor counts.
+      operationId: Returning Contributor Counts Pie Chart
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                repo_id:
+                  description: 'Example: 23847'
+                  type: integer
+                start_date: 
+                  description: 'Example: 2019-01-01'
+                  type: string
+                end_date:
+                  description: 'Example: 2020-03-30'
+                  type: string
+                required_contributions:
+                  description: 'Example: 5'
+                  type: integer
+                required_time: 
+                  description: 'Example: 365'
+                  type: integer
+                user:
+                  description: 'Example: augur'
+                  type: string
+                password:
+                  description: 'Example: password123'
+                  type: string
+                host:
+                  description: 'Example: name.database.io'
+                  type: string
+                port:
+                  description: 'Example: 5001'
+                  type: integer
+                database:
+                  description: 'Example: my_database'
+                  type: string 
+            type: object
+      tags:
+      -experimental
+  /contributor_reports/returning_contributors_stacked_bar/:
+    post:
+      description: Get returning contributors stacked bar chart.
+      operationId: New Contributor Counts Stacked Bar Chart (shows actions)
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                repo_id:
+                  description: 'Example: 23847'
+                  type: integer
+                start_date: 
+                  description: 'Example: 2019-01-01'
+                  type: string
+                end_date:
+                  description: 'Example: 2020-03-30'
+                  type: string
+                group_by:
+                  description: 'Example: month, quarter, or year'
+                  type: string
+                required_contributions:
+                  description: 'Example: 5'
+                  type: integer
+                required_time: 
+                  description: 'Example: 365'
+                  type: integer
+                user:
+                  description: 'Example: augur'
+                  type: string
+                password:
+                  description: 'Example: password123'
+                  type: string
+                host:
+                  description: 'Example: name.database.io'
+                  type: string
+                port:
+                  description: 'Example: 5001'
+                  type: integer
+                database:
+                  description: 'Example: my_database'
+                  type: string 
+            type: object
+      tags:
+        -experimental
