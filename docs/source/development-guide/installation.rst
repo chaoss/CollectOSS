@@ -14,10 +14,10 @@ However, during the course of development, you might find that you need to reset
 
 More information about Augur's Docker images can be found `here <../docker/docker.html>`_. If you're new to our Docker process, we recommend following the `introduction section <../docker/toc.html>`_ first.
 
-Installing the source code
+Installing from source
 ----------------------------
 
-The process for installing Augur's source code for development is essentially the same as detailed in the `installation <../getting-started/installation.html>`_ section of the Getting Started guide. 
+The process for installing Augur's source code for development is essentially the same as detailed in the `installation <../getting-started/installation.html>`_ section of the Getting Started guide.
 
 **However**, when running the installation script, use the following command instead:
 
@@ -25,15 +25,16 @@ The process for installing Augur's source code for development is essentially th
 
    $ make install-dev
 
-This will install a few extra dependencies for testing and documentation, as well as install all the Python packages in `edit mode <https://pip-python3.readthedocs.io/en/latest/reference/pip_install.html#editable-installs>`_. 
-This essentially means you will not have to run ``pip install .`` everytime you make a change to the backend.
+This will install a few extra dependencies for testing and documentation, as well as install all the Python packages in `editable mode <https://pip-python3.readthedocs.io/en/latest/reference/pip_install.html#editable-installs>`_. This means you will not have to reinstall the package everytime you make a change to the Python source code.
+
+This command will also create your ``augur.config.json`` file in the root of your cloned source code directory **instead of** the default location in ``$HOME/.augur/``. This is purely for convenience sake, as it will allow you to open this file in your text editor with all the other source code files, and also allows you to have multiple developer installations of Augur on the same machine if needed. If Augur finds a config file in both the root of the cloned directory AND in the default location, it will always use the one in the root of the cloned directory.
 
 .. note::
-    You can still use ``make clean`` to get rid of the installed binaries if something we wrong and you want to try again.
+    You can still use ``make clean`` to get rid of the installed binaries if something went wrong and you want to try again.
 
 Conclusion
 -----------
 
-Like I said, it's pretty similar. For (optional) further reading, the `Makefile <make/toc.html>`_ documentation and the `Creating a Metric guide <create-a-metric/toc.html>`_ are good places to start.
+All in all, it's pretty similar. For further reading, the `Makefile <make/toc.html>`_ documentation and the `Creating a Metric guide <create-a-metric/toc.html>`_ are good places to start.
 
 Happy hacking!

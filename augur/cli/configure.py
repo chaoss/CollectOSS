@@ -7,14 +7,14 @@ import os
 import click
 import json
 import logging
+from pathlib import Path
 
-from augur.config import default_config, ENVVAR_PREFIX
+from augur.config import default_config, ENVVAR_PREFIX, CONFIG_HOME
 from augur.cli import initialize_logging
 from augur.logging import ROOT_AUGUR_DIRECTORY
 
 logger = logging.getLogger(__name__)
 ENVVAR_PREFIX = "AUGUR_"
-
 
 @click.group('configure', short_help='Generate an augur.config.json')
 def cli():
@@ -30,14 +30,16 @@ def cli():
 @click.option('--facade_repo_directory', help="Directory on the database server where Facade should clone repos", envvar=ENVVAR_PREFIX + 'FACADE_REPO_DIRECTORY')
 @click.option('--rc-config-file', help="File containing existing config whose values will be used as the defaults", type=click.Path(exists=True))
 @click.option('--gitlab_api_key', help="GitLab API key for data collection from the GitLab API", envvar=ENVVAR_PREFIX + 'GITLAB_API_KEY')
+@click.option('--write-to-src', is_flag=True, help="Write generated config file to the source code tree instead of default (for development use only)")
 @initialize_logging
-def generate(db_name, db_host, db_user, db_port, db_password, github_api_key, facade_repo_directory, rc_config_file, gitlab_api_key):
+def generate(db_name, db_host, db_user, db_port, db_password, github_api_key, facade_repo_directory, rc_config_file, gitlab_api_key, write_to_src=False):
     """
     Generate an augur.config.json
     """
 
     config = default_config
     rc_config = None
+    Path(CONFIG_HOME).mkdir(exist_ok=True)
 
     if rc_config_file != None:
         try:
@@ -82,9 +84,13 @@ def generate(db_name, db_host, db_user, db_port, db_password, github_api_key, fa
     if facade_repo_directory is not None:
         config['Workers']['facade_worker']['repo_directory'] = facade_repo_directory
 
+    config_path = CONFIG_HOME + '/augur.config.json'
+    if write_to_src is True:
+        config_path = ROOT_AUGUR_DIRECTORY + '/augur.config.json'
+
     try:
-        with open(os.path.abspath(ROOT_AUGUR_DIRECTORY + '/augur.config.json'), 'w') as f:
+        with open(os.path.abspath(config_path), 'w') as f:
             json.dump(config, f, indent=4)
-            logger.info('augur.config.json successfully created')
+            logger.info('Config written to ' + config_path)
     except Exception as e:
         logger.error("Error writing augur.config.json " + str(e))
