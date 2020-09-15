@@ -298,8 +298,8 @@ def create_routes(server):
 
 
 
-    @server.app.route('/{}/pull_request_reports/average_commits_per_pull_request/'.format(server.api_version), methods=["POST"])
-    def average_commits_per_pull_request():
+    @server.app.route('/{}/pull_request_reports/average_commits_per_PR/'.format(server.api_version), methods=["POST"])
+    def average_commits_per_PR():
 
         repo_id = request.json['repo_id']
         start_date = request.json['start_date']
@@ -422,8 +422,8 @@ def create_routes(server):
 
 
 
-    @server.app.route('/{}/pull_request_reports/average_commits_per_pull_request/'.format(server.api_version), methods=["POST"])
-    def average_commits_per_pull_request():
+    @server.app.route('/{}/pull_request_reports/average_comments_per_PR/'.format(server.api_version), methods=["POST"])
+    def average_comments_per_PR():
 
         repo_id = request.json['repo_id']
         start_date = request.json['start_date']
@@ -438,7 +438,126 @@ def create_routes(server):
 
         database_connection_string = 'postgres+psycopg2://{}:{}@{}:{}/{}'.format(user, password, host, port, database)
 
-        input_df = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, database_connection_string=database_connection_string, slow_20=False, df_type='pr_all')
+        input_df = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, database_connection_string=database_connection_string, slow_20=False, df_type='pr_closed')
+
+        group_by = 'merged_flag'
+        x_axis = 'comment_count'
+        description = "All Closed"
+        y_axis = 'closed_year'  
+
+        repo_dict = {repo_id : input_df.loc[input_df['repo_id'] == repo_id].iloc[0]['repo_name']}   
+  
+
+        driver_df = input_df.copy()
+    
+        try:
+            y_groups = sorted(list(driver_df[y_axis].unique()))
+        except:
+            y_groups = [repo_id]
+
+        groups = driver_df[group_by].unique()
+        try:
+            colors = mpl['Plasma'][len(groups)]
+        except:
+            colors = [mpl['Plasma'][3][0]] + [mpl['Plasma'][3][1]]
+
+        len_not_merged = len(driver_df.loc[driver_df['merged_flag'] == 'Not Merged / Rejected'])
+        len_merged = len(driver_df.loc[driver_df['merged_flag'] == 'Merged / Accepted'])
+
+        title_beginning = '{}: '.format(repo_dict[repo_id]) 
+        plot_width = 650
+        p = figure(y_range=y_groups, plot_height=450, plot_width=plot_width, # y_range=y_groups,#(pr_all[y_axis].min(),pr_all[y_axis].max()) #y_axis_type="datetime",
+                   title='{} {}'.format(title_beginning, "Mean Comments for {} Pull Requests".format(description)), toolbar_location=None)
+
+        possible_maximums= []
+        for y_value in y_groups:
+
+            y_merged_data = driver_df.loc[(driver_df[y_axis] == y_value) & (driver_df['merged_flag'] == 'Merged / Accepted')]
+            y_not_merged_data = driver_df.loc[(driver_df[y_axis] == y_value) & (driver_df['merged_flag'] == 'Not Merged / Rejected')]
+
+            if len(y_merged_data) > 0:
+                y_merged_data[x_axis + '_mean'] = y_merged_data[x_axis].mean().round(1)
+            else:
+                y_merged_data[x_axis + '_mean'] = 0.00
+
+            if len(y_not_merged_data) > 0:
+                y_not_merged_data[x_axis + '_mean'] = y_not_merged_data[x_axis].mean().round(1)
+            else:
+                y_not_merged_data[x_axis + '_mean'] = 0
+
+            not_merged_source = ColumnDataSource(y_not_merged_data)
+            merged_source = ColumnDataSource(y_merged_data)
+
+            possible_maximums.append(max(y_not_merged_data[x_axis + '_mean']))
+            possible_maximums.append(max(y_merged_data[x_axis + '_mean']))
+
+            # mean comment count for merged
+            merged_comment_count_glyph = p.hbar(y=dodge(y_axis, -0.1, range=p.y_range), left=0, right=x_axis + '_mean', height=0.04*len(driver_df[y_axis].unique()), 
+                                         source=merged_source, fill_color="black")#,legend_label="Mean Days to Close",
+            # Data label 
+            labels = LabelSet(x=x_axis + '_mean', y=dodge(y_axis, -0.1, range=p.y_range), text=x_axis + '_mean', y_offset=-8, x_offset=34,
+                      text_font_size="12pt", text_color="black",
+                      source=merged_source, text_align='center')
+            p.add_layout(labels)
+            # mean comment count For nonmerged
+            not_merged_comment_count_glyph = p.hbar(y=dodge(y_axis, 0.1, range=p.y_range), left=0, right=x_axis + '_mean', 
+                                         height=0.04*len(driver_df[y_axis].unique()), source=not_merged_source, fill_color="#e84d60")#legend_label="Mean Days to Close",
+            # Data label 
+            labels = LabelSet(x=x_axis + '_mean', y=dodge(y_axis, 0.1, range=p.y_range), text=x_axis + '_mean', y_offset=-8, x_offset=34,
+                      text_font_size="12pt", text_color="#e84d60",
+                      source=not_merged_source, text_align='center')
+            p.add_layout(labels)
+
+    #         p.y_range.range_padding = 0.1
+        p.ygrid.grid_line_color = None
+        p.legend.location = "bottom_right"
+        p.axis.minor_tick_line_color = None
+        p.outline_line_color = None
+        p.xaxis.axis_label = 'Average Comments / Pull Request'
+        p.yaxis.axis_label = 'Repository' if y_axis == 'repo_name' else 'Year Closed' if y_axis == 'closed_year' else ''
+
+        legend = Legend(
+                items=[
+                    ("Merged Pull Request Mean Comment Count", [merged_comment_count_glyph]),
+                    ("Rejected Pull Request Mean Comment Count", [not_merged_comment_count_glyph])
+                ],
+
+                location='center', 
+                orientation='vertical',
+                border_line_color="black"
+            )
+        p.add_layout(legend, "below")
+
+        p.title.text_font_size = "16px"
+        p.title.align = "center"
+
+        p.xaxis.axis_label_text_font_size = "16px"
+        p.xaxis.major_label_text_font_size = "16px"
+
+        p.yaxis.axis_label_text_font_size = "16px"
+        p.yaxis.major_label_text_font_size = "16px"
+
+        p.x_range = Range1d(0, max(possible_maximums)*1.15)
+        
+        plot = p
+        
+        p = figure(width = plot_width, height=200, margin = (0, 0, 0, 0))
+        caption = "This graph shows the average number of comments per merged or not merged pull request."
+        p.add_layout(Label(
+        x = 0, # Change to shift caption left or right
+        y = 160, 
+        x_units = 'screen',
+        y_units = 'screen',
+        text='{}'.format(caption),
+        text_font = 'times', # Use same font as paper
+        text_font_size = '15pt',
+        render_mode='css'
+        ))
+        p.outline_line_color = None
+
+        caption_plot = p
+
+        grid = gridplot([[plot], [caption_plot]])
 
        
         filename = export_png(grid)
