@@ -2,7 +2,6 @@ import psycopg2
 import pandas as pd 
 import sqlalchemy as salc
 import numpy as np
-#import seaborn as sns
 import warnings
 import datetime
 import json
@@ -14,13 +13,10 @@ from bokeh.palettes import Colorblind, mpl, Category20
 from bokeh.layouts import gridplot
 from bokeh.models.annotations import Title
 from bokeh.io import export_png
-from bokeh.io import show, output_notebook
-from bokeh.models import ColumnDataSource, Legend, LabelSet, Range1d, LinearAxis, Label
+from bokeh.models import ColumnDataSource, Legend, LabelSet, Range1d, LinearAxis, Label, FactorRange
 from bokeh.plotting import figure
 from bokeh.models.glyphs import Rect
-from bokeh.transform import dodge
-from bokeh.models import ColumnDataSource, FactorRange
-from bokeh.transform import factor_cmap
+from bokeh.transform import dodge, factor_cmap
 
 try:
     colors = Colorblind[len(repo_set)]
@@ -560,6 +556,164 @@ def create_routes(server):
         grid = gridplot([[plot], [caption_plot]])
 
        
+        filename = export_png(grid)
+        
+        return send_file(filename)
+
+    @server.app.route('/{}/pull_request_reports/graph/'.format(server.api_version), methods=["POST"])
+    def graph():
+
+        repo_id = request.json['repo_id']
+        start_date = request.json['start_date']
+        end_date = request.json['end_date']
+
+        user = request.json['user']
+        password = request.json['password']
+        host = request.json['host']
+        port = request.json['port']
+        database = request.json['database']
+
+
+        database_connection_string = 'postgres+psycopg2://{}:{}@{}:{}/{}'.format(user, password, host, port, database)
+
+        pr_closed = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, database_connection_string=database_connection_string, slow_20=False, df_type='pr_closed')
+        pr_slow20_not_merged = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, database_connection_string=database_connection_string, slow_20=True, df_type='pr_not_merged')
+        pr_slow20_merged = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, database_connection_string=database_connection_string, slow_20=True, df_type='pr_merged')
+
+        x_axis='closed_year'
+        description='All Closed'
+       
+
+        repo_dict = {repo_id : pr_closed.loc[pr_closed['repo_id'] == repo_id].iloc[0]['repo_name']}   
+  
+        data_dict = {'All':pr_closed,'Slowest 20%':pr_slow20_not_merged.append(pr_slow20_merged,ignore_index=True)}
+
+        colors = mpl['Plasma'][6]
+
+        #if repo_name == 'mbed-os':
+            #colors = colors[::-1]
+
+        for data_desc, input_df in data_dict.items():
+            x_groups = sorted(list(input_df[x_axis].astype(str).unique()))
+            break
+
+        plot_width = 315 * len(x_groups)
+        title_beginning = repo_dict[repo_id] 
+        p = figure(x_range=x_groups, plot_height=350, plot_width=plot_width,  
+                   title='{}: {}'.format(title_beginning, "Count of {} Pull Requests by Merged Status".format(description)), toolbar_location=None)
+
+        dodge_amount = 0.12
+        color_index = 0
+        x_offset = 50
+
+        all_totals = []
+        for data_desc, input_df in data_dict.items():
+            driver_df = input_df.copy()
+
+            driver_df[x_axis] = driver_df[x_axis].astype(str)
+
+            groups = sorted(list(driver_df['merged_flag'].unique()))
+
+            driver_df = driver_df.loc[driver_df['repo_id'] == repo_id]
+
+            len_merged = []
+            zeros = []
+            len_not_merged = []
+            totals = []
+
+            for x_group in x_groups:
+
+                len_merged_entry = len(driver_df.loc[(driver_df['merged_flag'] == 'Merged / Accepted') & (driver_df[x_axis] == x_group)])
+                totals += [len(driver_df.loc[(driver_df['merged_flag'] == 'Not Merged / Rejected') & (driver_df[x_axis] == x_group)]) + len_merged_entry]
+                len_not_merged += [len(driver_df.loc[(driver_df['merged_flag'] == 'Not Merged / Rejected') & (driver_df[x_axis] == x_group)])]
+                len_merged += [len_merged_entry]
+                zeros.append(0)
+
+            data = {'X': x_groups}
+            for group in groups:
+                data[group] = []
+                for x_group in x_groups:
+                    data[group] += [len(driver_df.loc[(driver_df['merged_flag'] == group) & (driver_df[x_axis] == x_group)])]
+
+            data['len_merged'] = len_merged
+            data['len_not_merged'] = len_not_merged
+            data['totals'] = totals
+            data['zeros'] = zeros
+
+            if data_desc == "All":
+                all_totals = totals
+
+            source = ColumnDataSource(data)
+
+            stacked_bar = p.vbar_stack(groups, x=dodge('X', dodge_amount, range=p.x_range), width=0.2, source=source, color=colors[1:3], legend_label=[f"{data_desc} " + "%s" % x for x in groups])
+            # Data label for merged
+
+            p.add_layout(
+                LabelSet(x=dodge('X', dodge_amount, range=p.x_range), y='zeros', text='len_merged', y_offset=2, x_offset=x_offset,
+                      text_font_size="12pt", text_color=colors[1:3][0],
+                      source=source, text_align='center')
+            )
+            if min(data['totals']) < 400:
+                y_offset = 15
+            else:
+                y_offset = 0
+            # Data label for not merged
+            p.add_layout(
+                LabelSet(x=dodge('X', dodge_amount, range=p.x_range), y='totals', text='len_not_merged', y_offset=y_offset, x_offset=x_offset,
+                      text_font_size="12pt", text_color=colors[1:3][1],
+                      source=source, text_align='center')
+            )
+            # Data label for total
+            p.add_layout(
+                LabelSet(x=dodge('X', dodge_amount, range=p.x_range), y='totals', text='totals', y_offset=0, x_offset=0,
+                      text_font_size="12pt", text_color='black',
+                      source=source, text_align='center')
+            )
+            dodge_amount *= -1
+            colors = colors[::-1]
+            x_offset *= -1
+
+        p.y_range = Range1d(0,  max(all_totals)*1.4)
+
+        p.xgrid.grid_line_color = None
+        p.legend.location = "top_center"
+        p.legend.orientation="horizontal"
+        p.axis.minor_tick_line_color = None
+        p.outline_line_color = None
+        p.yaxis.axis_label = 'Count of Pull Requests'
+        p.xaxis.axis_label = 'Repository' if x_axis == 'repo_name' else 'Year Closed' if x_axis == 'closed_year' else ''
+
+        p.title.align = "center"
+        p.title.text_font_size = "16px"
+
+        p.xaxis.axis_label_text_font_size = "16px"
+        p.xaxis.major_label_text_font_size = "16px"
+
+        p.yaxis.axis_label_text_font_size = "16px"
+        p.yaxis.major_label_text_font_size = "16px"
+
+        p.outline_line_color = None
+        
+        plot = p
+        
+        p = figure(width = plot_width, height=200, margin = (0, 0, 0, 0))
+        caption = "This graph shows the number of closed pull requests per year in four different categories. These four categories are All Merged, All Not Merged, Slowest 20% Merged, and Slowest 20% Not Merged."
+        p.add_layout(Label(
+        x = 0, # Change to shift caption left or right
+        y = 160, 
+        x_units = 'screen',
+        y_units = 'screen',
+        text='{}'.format(caption),
+        text_font = 'times', # Use same font as paper
+        text_font_size = '15pt',
+        render_mode='css'
+        ))
+        p.outline_line_color = None
+
+        caption_plot = p
+
+        grid = gridplot([[plot], [caption_plot]])
+        
         filename = export_png(grid)
         
         return send_file(filename)
