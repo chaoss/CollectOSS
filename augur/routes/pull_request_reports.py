@@ -560,8 +560,8 @@ def create_routes(server):
         
         return send_file(filename)
 
-    @server.app.route('/{}/pull_request_reports/graph/'.format(server.api_version), methods=["POST"])
-    def graph():
+    @server.app.route('/{}/pull_request_reports/PR_counts_by_merged_status/'.format(server.api_version), methods=["POST"])
+    def PR_counts_by_merged_status():
 
         repo_id = request.json['repo_id']
         start_date = request.json['start_date']
@@ -717,3 +717,242 @@ def create_routes(server):
         filename = export_png(grid)
         
         return send_file(filename)
+
+
+
+
+
+
+
+
+
+
+    @server.app.route('/{}/pull_request_reports/mean_response_times_for_PR/'.format(server.api_version), methods=["POST"])
+    def mean_response_times_for_PR():
+
+        repo_id = request.json['repo_id']
+        start_date = request.json['start_date']
+        end_date = request.json['end_date']
+
+        user = request.json['user']
+        password = request.json['password']
+        host = request.json['host']
+        port = request.json['port']
+        database = request.json['database']
+
+
+        database_connection_string = 'postgres+psycopg2://{}:{}@{}:{}/{}'.format(user, password, host, port, database)
+
+        input_df = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, database_connection_string=database_connection_string, slow_20=False, df_type='pr_closed')   
+
+        time_unit='days'
+        x_max = 95
+        y_axis = 'closed_year'
+        description = "All Closed"
+        legend_position=(410, 10)
+
+        repo_dict = {repo_id : input_df.loc[input_df['repo_id'] == repo_id].iloc[0]['repo_name']}   
+
+        driver_df = input_df.copy()[['repo_name', 'repo_id', 'merged_flag', y_axis, time_unit + '_to_first_response', time_unit + '_to_last_response', 
+                                     time_unit + '_to_close']] # deep copy input data so we do not alter the external dataframe
+
+
+        title_beginning = '{}: '.format(repo_dict[repo_id])
+        plot_width = 950
+        p = figure(toolbar_location=None, y_range=sorted(driver_df[y_axis].unique()), plot_width=plot_width, 
+                   plot_height=450,#75*len(driver_df[y_axis].unique()),
+                   title="{}Mean Response Times for Pull Requests {}".format(title_beginning, description))
+
+        first_response_glyphs = []
+        last_response_glyphs = []
+        merged_days_to_close_glyphs = []
+        not_merged_days_to_close_glyphs = []
+
+        possible_maximums = []
+        
+        
+        for y_value in driver_df[y_axis].unique():
+
+            y_merged_data = driver_df.loc[(driver_df[y_axis] == y_value) & (driver_df['merged_flag'] == 'Merged / Accepted')]
+            y_not_merged_data = driver_df.loc[(driver_df[y_axis] == y_value) & (driver_df['merged_flag'] == 'Not Merged / Rejected')]
+
+            y_merged_data[time_unit + '_to_first_response_mean'] = y_merged_data[time_unit + '_to_first_response'].mean().round(1) if len(y_merged_data) > 0 else 0.00
+            y_merged_data[time_unit + '_to_last_response_mean'] = y_merged_data[time_unit + '_to_last_response'].mean().round(1) if len(y_merged_data) > 0 else 0.00
+            y_merged_data[time_unit + '_to_close_mean'] = y_merged_data[time_unit + '_to_close'].mean().round(1) if len(y_merged_data) > 0 else 0.00
+
+            y_not_merged_data[time_unit + '_to_first_response_mean'] = y_not_merged_data[time_unit + '_to_first_response'].mean().round(1) if len(y_not_merged_data) > 0 else 0.00
+            y_not_merged_data[time_unit + '_to_last_response_mean'] = y_not_merged_data[time_unit + '_to_last_response'].mean().round(1) if len(y_not_merged_data) > 0 else 0.00
+            y_not_merged_data[time_unit + '_to_close_mean'] = y_not_merged_data[time_unit + '_to_close'].mean().round(1) if len(y_not_merged_data) > 0 else 0.00
+
+            possible_maximums.append(max(y_merged_data[time_unit + '_to_close_mean']))
+            possible_maximums.append(max(y_not_merged_data[time_unit + '_to_close_mean']))
+            
+            maximum = max(possible_maximums)*1.15
+            ideal_difference = maximum*0.064
+            
+        for y_value in driver_df[y_axis].unique():
+
+            y_merged_data = driver_df.loc[(driver_df[y_axis] == y_value) & (driver_df['merged_flag'] == 'Merged / Accepted')]
+            y_not_merged_data = driver_df.loc[(driver_df[y_axis] == y_value) & (driver_df['merged_flag'] == 'Not Merged / Rejected')]
+
+            y_merged_data[time_unit + '_to_first_response_mean'] = y_merged_data[time_unit + '_to_first_response'].mean().round(1) if len(y_merged_data) > 0 else 0.00
+            y_merged_data[time_unit + '_to_last_response_mean'] = y_merged_data[time_unit + '_to_last_response'].mean().round(1) if len(y_merged_data) > 0 else 0.00
+            y_merged_data[time_unit + '_to_close_mean'] = y_merged_data[time_unit + '_to_close'].mean().round(1) if len(y_merged_data) > 0 else 0.00
+
+            y_not_merged_data[time_unit + '_to_first_response_mean'] = y_not_merged_data[time_unit + '_to_first_response'].mean().round(1) if len(y_not_merged_data) > 0 else 0.00
+            y_not_merged_data[time_unit + '_to_last_response_mean'] = y_not_merged_data[time_unit + '_to_last_response'].mean().round(1) if len(y_not_merged_data) > 0 else 0.00
+            y_not_merged_data[time_unit + '_to_close_mean'] = y_not_merged_data[time_unit + '_to_close'].mean().round(1) if len(y_not_merged_data) > 0 else 0.00
+
+            not_merged_source = ColumnDataSource(y_not_merged_data)
+            merged_source = ColumnDataSource(y_merged_data)
+
+            # mean PR length for merged
+            merged_days_to_close_glyph = p.hbar(y=dodge(y_axis, -0.1, range=p.y_range), left=0, right=time_unit + '_to_close_mean', height=0.04*len(driver_df[y_axis].unique()), 
+                                         source=merged_source, fill_color="black")#,legend_label="Mean Days to Close",
+            merged_days_to_close_glyphs.append(merged_days_to_close_glyph)
+            # Data label 
+            labels = LabelSet(x=time_unit + '_to_close_mean', y=dodge(y_axis, -0.1, range=p.y_range), text=time_unit + '_to_close_mean', y_offset=-8, x_offset=34, #34
+                      text_font_size="12pt", text_color="black",
+                      source=merged_source, text_align='center')
+            p.add_layout(labels)
+
+
+            # mean PR length For nonmerged
+            not_merged_days_to_close_glyph = p.hbar(y=dodge(y_axis, 0.1, range=p.y_range), left=0, right=time_unit + '_to_close_mean', 
+                                         height=0.04*len(driver_df[y_axis].unique()), source=not_merged_source, fill_color="#e84d60")#legend_label="Mean Days to Close",
+            not_merged_days_to_close_glyphs.append(not_merged_days_to_close_glyph)
+            # Data label 
+            labels = LabelSet(x=time_unit + '_to_close_mean', y=dodge(y_axis, 0.1, range=p.y_range), text=time_unit + '_to_close_mean', y_offset=-8, x_offset=44,
+                      text_font_size="12pt", text_color="#e84d60",
+                      source=not_merged_source, text_align='center')
+            p.add_layout(labels)
+
+            
+            #if the difference between two values is less than 6.4 percent move the second one to the right 30 pixels
+            if (max(y_merged_data[time_unit + '_to_last_response_mean']) - max(y_merged_data[time_unit + '_to_first_response_mean'])) < ideal_difference:
+                merged_x_offset = 30
+            else:
+                merged_x_offset = 0
+                
+            #if the difference between two values is less than 6.4 percent move the second one to the right 30 pixels
+            if (max(y_not_merged_data[time_unit + '_to_last_response_mean']) - max(y_not_merged_data[time_unit + '_to_first_response_mean'])) < ideal_difference:
+                not_merged_x_offset = 30
+            else:
+                not_merged_x_offset = 0
+                
+            #if there is only one bar set the y_offsets so the labels will not overlap the bars
+            if len(driver_df[y_axis].unique()) == 1:
+                merged_y_offset = -65
+                not_merged_y_offset = 45
+            else:
+                merged_y_offset = -45
+                not_merged_y_offset = 25
+            
+            
+            # mean time to first response
+            glyph = Rect(x=time_unit + '_to_first_response_mean', y=dodge(y_axis, -0.1, range=p.y_range), width=x_max/100, height=0.08*len(driver_df[y_axis].unique()), fill_color=colors[0])
+            first_response_glyph = p.add_glyph(merged_source, glyph)
+            first_response_glyphs.append(first_response_glyph)
+            # Data label 
+            labels = LabelSet(x=time_unit + '_to_first_response_mean', y=dodge(y_axis, 0, range=p.y_range),text=time_unit + '_to_first_response_mean',x_offset = 0, y_offset=merged_y_offset,#-60,
+                      text_font_size="12pt", text_color=colors[0],
+                      source=merged_source, text_align='center')
+            p.add_layout(labels)
+
+            #for nonmerged
+            glyph = Rect(x=time_unit + '_to_first_response_mean', y=dodge(y_axis, 0.1, range=p.y_range), width=x_max/100, height=0.08*len(driver_df[y_axis].unique()), fill_color=colors[0])
+            first_response_glyph = p.add_glyph(not_merged_source, glyph)
+            first_response_glyphs.append(first_response_glyph)
+            # Data label 
+            labels = LabelSet(x=time_unit + '_to_first_response_mean', y=dodge(y_axis, 0, range=p.y_range),text=time_unit + '_to_first_response_mean',x_offset = 0, y_offset=not_merged_y_offset,#40,
+                              text_font_size="12pt", text_color=colors[0],
+                      source=not_merged_source, text_align='center')
+            p.add_layout(labels)
+
+
+            # mean time to last response
+            glyph = Rect(x=time_unit + '_to_last_response_mean', y=dodge(y_axis, -0.1, range=p.y_range), width=x_max/100, height=0.08*len(driver_df[y_axis].unique()), fill_color=colors[1])
+            last_response_glyph = p.add_glyph(merged_source, glyph)
+            last_response_glyphs.append(last_response_glyph)
+            # Data label 
+            labels = LabelSet(x=time_unit + '_to_last_response_mean', y=dodge(y_axis, 0, range=p.y_range), text=time_unit + '_to_last_response_mean', x_offset=merged_x_offset, y_offset=merged_y_offset,#-60,
+                      text_font_size="12pt", text_color=colors[1],
+                      source=merged_source, text_align='center')
+            p.add_layout(labels)
+            
+
+            #for nonmerged
+            glyph = Rect(x=time_unit + '_to_last_response_mean', y=dodge(y_axis, 0.1, range=p.y_range), width=x_max/100, height=0.08*len(driver_df[y_axis].unique()), fill_color=colors[1])
+            last_response_glyph = p.add_glyph(not_merged_source, glyph)
+            last_response_glyphs.append(last_response_glyph)
+            # Data label 
+            labels = LabelSet(x=time_unit + '_to_last_response_mean', y=dodge(y_axis, 0, range=p.y_range), text=time_unit + '_to_last_response_mean', x_offset = not_merged_x_offset, y_offset=not_merged_y_offset,#40,
+                      text_font_size="12pt", text_color=colors[1],
+                      source=not_merged_source, text_align='center')
+            p.add_layout(labels)
+
+        p.title.align = "center"
+        p.title.text_font_size = "16px"
+
+        p.xaxis.axis_label = "Days to Close"
+        p.xaxis.axis_label_text_font_size = "16px"
+        p.xaxis.major_label_text_font_size = "16px"
+        
+        #adjust the starting point and ending point based on the maximum of maximum of the graph
+        p.x_range = Range1d(maximum/30 * -1, maximum*1.15)
+
+        p.yaxis.axis_label = "Repository" if y_axis == 'repo_name' else 'Year Closed' if y_axis == 'closed_year' else ''
+        p.yaxis.axis_label_text_font_size = "16px"
+        p.yaxis.major_label_text_font_size = "16px"
+        p.ygrid.grid_line_color = None
+        p.y_range.range_padding = 0.15
+
+        p.outline_line_color = None
+        p.toolbar.logo = None
+        p.toolbar_location = None
+
+        def add_legend(location, orientation, side):
+            legend = Legend(
+                items=[
+                    ("Mean Days to First Response", first_response_glyphs),
+                    ("Mean Days to Last Response", last_response_glyphs),
+                    ("Merged Mean Days to Close", merged_days_to_close_glyphs),
+                    ("Not Merged Mean Days to Close", not_merged_days_to_close_glyphs)
+                ],
+
+                location=location, 
+                orientation=orientation,
+                border_line_color="black"
+        #         title='Example Title'
+            )
+            p.add_layout(legend, side)
+
+    #     add_legend((150, 50), "horizontal", "center")
+        add_legend(legend_position, "vertical", "right")
+        
+        plot = p
+        
+        p = figure(width = plot_width, height = 200, margin = (0, 0, 0, 0))
+        caption = "Caption Here"
+        p.add_layout(Label(
+        x = 0, # Change to shift caption left or right
+        y = 160, 
+        x_units = 'screen',
+        y_units = 'screen',
+        text='{}'.format(caption),
+        text_font = 'times', # Use same font as paper
+        text_font_size = '15pt',
+        render_mode='css'
+        ))
+        p.outline_line_color = None
+
+        caption_plot = p
+
+        grid = gridplot([[plot], [caption_plot]])
+
+
+        
+        filename = export_png(grid)
+        
+        return send_file(filename)
+
