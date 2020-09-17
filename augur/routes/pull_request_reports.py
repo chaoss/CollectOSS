@@ -222,6 +222,15 @@ def create_routes(server):
         pr_all.loc[pr_all['pr_src_state'] == 'open'].head()
 
 
+        # initiate column by setting all null datetimes
+        pr_all['closed_yearmonth'] = pd.to_datetime(np.nan)
+
+        # Fill column with prettified string of year/month closed that looks like: 2019-07-01
+        pr_all.loc[pr_all['pr_src_state'] == 'closed'] = pr_all.loc[pr_all['pr_src_state'] == 'closed'].assign(
+            closed_yearmonth = pd.to_datetime(pr_all.loc[pr_all['pr_src_state'] == 'closed']['closed_year'].astype(int
+                ).map(str) + '-' + pr_all.loc[pr_all['pr_src_state'] == 'closed']['closed_month'].astype(int).map(str) + '-01'))
+
+
         """ Merged flag """
         if 'pr_merged_at' in pr_all.columns.values:
             pr_all['pr_merged_at'] = pr_all['pr_merged_at'].fillna(0)
@@ -718,15 +727,6 @@ def create_routes(server):
         
         return send_file(filename)
 
-
-
-
-
-
-
-
-
-
     @server.app.route('/{}/pull_request_reports/mean_response_times_for_PR/'.format(server.api_version), methods=["POST"])
     def mean_response_times_for_PR():
 
@@ -956,3 +956,131 @@ def create_routes(server):
         
         return send_file(filename)
 
+
+
+
+
+
+
+    @server.app.route('/{}/pull_request_reports/graph/'.format(server.api_version), methods=["POST"])
+    def graph():
+
+        repo_id = request.json['repo_id']
+        start_date = request.json['start_date']
+        end_date = request.json['end_date']
+
+        user = request.json['user']
+        password = request.json['password']
+        host = request.json['host']
+        port = request.json['port']
+        database = request.json['database']
+
+
+        database_connection_string = 'postgres+psycopg2://{}:{}@{}:{}/{}'.format(user, password, host, port, database)
+
+        pr_closed = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, database_connection_string=database_connection_string, slow_20=False, df_type='pr_closed')
+        pr_slow20_not_merged = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, database_connection_string=database_connection_string, slow_20=True, df_type='pr_not_merged')
+        pr_slow20_merged = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, database_connection_string=database_connection_string, slow_20=True, df_type='pr_merged')
+        pr_all = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, database_connection_string=database_connection_string, slow_20=False, df_type='pr_all')
+
+        repo_dict = {repo_id : pr_closed.loc[pr_closed['repo_id'] == repo_id].iloc[0]['repo_name']}  
+
+        time_unit='Days'
+        x_axis='closed_yearmonth'
+        y_axis='average_days_between_responses'
+        description="All Closed"
+        line_group='merged_flag'
+        num_outliers_repo_map={}
+
+
+        data_dict = {'All':pr_closed,'Slowest 20%':pr_slow20_not_merged.append(pr_slow20_merged,ignore_index=True)}
+
+        plot_width = 950
+        p1 = figure(x_axis_type="datetime", title="{}: Mean {} Between Comments by Month Closed for {} Pull Requests".format(repo_dict[repo_id], time_unit, description), plot_width=plot_width, x_range=(pr_all[x_axis].min(),pr_all[x_axis].max()), plot_height=500, toolbar_location=None)
+        colors = Category20[10][6:]
+        color_index = 0
+
+        glyphs = []
+
+        possible_maximums = []
+        for data_desc, input_df in data_dict.items():
+
+            driver_df = input_df.copy()
+
+            driver_df = remove_outliers(driver_df, y_axis, num_outliers_repo_map)
+
+            driver_df = driver_df.loc[driver_df['repo_id'] == repo_id]
+            index = 0
+
+            driver_df_mean = driver_df.groupby(['repo_id', line_group, x_axis],as_index=False).mean()
+
+            title_ending = ''
+            if repo_id:
+                title_ending += ' for Repo: {}'.format(repo_id)
+
+            for group_num, line_group_value in enumerate(driver_df[line_group].unique(), color_index):
+                glyphs.append(p1.line(driver_df_mean.loc[driver_df_mean[line_group] == line_group_value][x_axis], driver_df_mean.loc[driver_df_mean[line_group] == line_group_value][y_axis], color=colors[group_num], line_width = 3))
+                color_index += 1
+                possible_maximums.append(max(driver_df_mean.loc[driver_df_mean[line_group] == line_group_value][y_axis].dropna()))
+        for repo, num_outliers in num_outliers_repo_map.items():
+            if repo_name == repo:
+                p1.add_layout(Title(text="** {} outliers for {} were removed".format(num_outliers, repo), align="center"), "below")
+
+        p1.grid.grid_line_alpha = 0.3
+        p1.xaxis.axis_label = 'Month Closed'
+        p1.xaxis.ticker.desired_num_ticks = 15
+        p1.yaxis.axis_label = 'Mean {} Between Responses'.format(time_unit)
+        p1.legend.location = "top_left"
+
+        legend = Legend(
+            items=[
+                ("All Not Merged / Rejected", [glyphs[0]]),
+                ("All Merged / Accepted", [glyphs[1]]),
+                ("Slowest 20% Not Merged / Rejected", [glyphs[2]]),
+                ("Slowest 20% Merged / Accepted", [glyphs[3]])
+            ],
+
+            location='center_right', 
+            orientation='vertical',
+            border_line_color="black"
+        )
+
+        p1.add_layout(legend, 'right')
+
+        p1.title.text_font_size = "16px"
+
+        p1.xaxis.axis_label_text_font_size = "16px"
+        p1.xaxis.major_label_text_font_size = "16px"
+
+        p1.yaxis.axis_label_text_font_size = "16px"
+        p1.yaxis.major_label_text_font_size = "16px"
+        p1.xaxis.major_label_orientation = 45.0
+        
+        p1.y_range = Range1d(0,  max(possible_maximums)*1.15)
+        
+        plot = p1
+        
+        p = figure(width = plot_width, height=200, margin = (0, 0, 0, 0))
+        caption = "This graph shows the average number of days between comments for all closed pull requests per month in four categories. These four categories are All Merged, All Not Merged, Slowest 20% Merged, and Slowest 20% Not Merged."
+        p.add_layout(Label(
+        x = 0, # Change to shift caption left or right
+        y = 160, 
+        x_units = 'screen',
+        y_units = 'screen',
+        text='{}'.format(caption),
+        text_font = 'times', # Use same font as paper
+        text_font_size = '15pt',
+        render_mode='css'
+        ))
+        p.outline_line_color = None
+
+        caption_plot = p
+
+        grid = gridplot([[plot], [caption_plot]])
+ 
+        filename = export_png(grid)
+        
+        return send_file(filename)
+
+
+       
