@@ -1000,12 +1000,6 @@ def create_routes(server):
         
         return send_file(filename)
 
-
-
-
-
-
-
     @server.app.route('/{}/pull_request_reports/mean_days_between_PR_comments/'.format(server.api_version), methods=["POST"])
     def mean_days_between_PR_comments():
 
@@ -1366,12 +1360,132 @@ def create_routes(server):
             if index % columns == columns - 1:
                 grid_array.append(grid_row)
                 grid_row = []
-        print(grid_array)
         grid = gridplot(grid_array)
 
         filename = export_png(grid)
         
         return send_file(filename)
+
+    @server.app.route('/{}/pull_request_reports/Average_PR_duration/'.format(server.api_version), methods=["POST"])
+    def Average_PR_duration():
+
+        repo_id = request.json['repo_id']
+        start_date = request.json['start_date']
+        end_date = request.json['end_date']
+        remove_outliers = request.json['remove_outliers']
+
+        user = request.json['user']
+        password = request.json['password']
+        host = request.json['host']
+        port = request.json['port']
+        database = request.json['database']
+
+
+        database_connection_string = 'postgres+psycopg2://{}:{}@{}:{}/{}'.format(user, password, host, port, database)
+
+        pr_closed = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, database_connection_string=database_connection_string, slow_20=False, df_type='pr_closed')
+       
+        repo_dict = {repo_id : pr_closed.loc[pr_closed['repo_id'] == repo_id].iloc[0]['repo_name']} 
+
+
+        x_axis = 'repo_name'
+        group_by = 'merged_flag'
+        y_axis = 'closed_yearmonth'
+        same_scales = True
+        description = "All Closed"
+        heat_field = 'days_to_first_response'
+        columns = 2
+
+        red_green_gradient = linear_gradient('#0080FF', '#DC143C', 150)['hex']#32CD32
+
+        driver_df = pr_closed.copy()[['repo_id', y_axis, group_by, x_axis, heat_field]]
+
+        driver_df[y_axis] = driver_df[y_axis].astype(str)
+
+        # add new group by + xaxis column 
+        driver_df['grouped_x'] = driver_df[x_axis] + ' - ' + driver_df[group_by]
+
+        driver_df_mean = driver_df.groupby(['grouped_x', y_axis], as_index=False).mean()
+
+        colors = red_green_gradient
+        y_groups = driver_df_mean[y_axis].unique()
+        x_groups = sorted(driver_df[x_axis].unique())
+        grouped_x_groups = sorted(driver_df_mean['grouped_x'].unique())
+
+        values = driver_df_mean['days_to_first_response'].values.tolist()
+  
+        #removes number of outliers 
+        for i in range(0, remove_outliers):
+            values.remove(max(values))
+
+        heat_max = max(values)* 1.02
+
+        mapper = LinearColorMapper(palette=colors, low=driver_df_mean[heat_field].min(), high=heat_max)#driver_df_mean[heat_field].max())
+
+        source = ColumnDataSource(driver_df_mean)
+        title_beginning = repo_dict[repo_id] + ':' 
+        plot_width = 1100
+        p = figure(plot_width=plot_width, plot_height=300, title="{} Mean Duration (Days) {} Pull Requests".format(title_beginning,description),
+                   y_range=grouped_x_groups[::-1], x_range=y_groups,
+                   toolbar_location=None, tools="")#, x_axis_location="above")
+
+        for x_group in x_groups:
+            outliers = driver_df_mean.loc[(driver_df_mean[heat_field] > heat_max) & (driver_df_mean['grouped_x'].str.contains(x_group))]
+
+            if len(outliers) > 0:
+                p.add_layout(Title(text="** Outliers capped at {} days: {} outlier(s) for {} were capped at {} **".format(heat_max, len(outliers), x_group, heat_max), align="center"), "below")
+
+        p.rect(x=y_axis, y='grouped_x', width=1, height=1, source=source,
+               line_color=None, fill_color=transform(heat_field, mapper))
+
+        color_bar = ColorBar(color_mapper=mapper, location=(0, 0),
+                             ticker=BasicTicker(desired_num_ticks=9),
+                             formatter=PrintfTickFormatter(format="%d"))
+
+        p.add_layout(color_bar, 'right')
+
+        p.title.align = "center"
+        p.title.text_font_size = "16px"
+
+        p.axis.axis_line_color = None
+        p.axis.major_tick_line_color = None
+        p.axis.major_label_text_font_size = "11pt"
+        p.axis.major_label_standoff = 0
+        p.xaxis.major_label_orientation = 1.0
+        p.xaxis.axis_label = 'Month Closed' if y_axis[0:6] == 'closed' else 'Date Created' if y_axis[0:7] == 'created' else 'Repository' if y_axis == 'repo_name' else ''
+    #     p.yaxis.axis_label = 'Merged Status'
+
+        p.title.text_font_size = "16px"
+
+        p.xaxis.axis_label_text_font_size = "16px"
+        p.xaxis.major_label_text_font_size = "14px"
+
+        p.yaxis.major_label_text_font_size = "15px"
+
+        plot = p
+
+        p = figure(width = plot_width, height=200, margin = (0, 0, 0, 0))
+        caption = "Caption Here"
+        p.add_layout(Label(
+        x = 0, # Change to shift caption left or right
+        y = 160, 
+        x_units = 'screen',
+        y_units = 'screen',
+        text='{}'.format(caption),
+        text_font = 'times', # Use same font as paper
+        text_font_size = '15pt',
+        render_mode='css'
+        ))
+        p.outline_line_color = None
+
+        caption_plot = p
+
+        grid = gridplot([[plot], [caption_plot]])
+
+        filename = export_png(grid)
+        
+        return send_file(filename)
+
 
 
 
