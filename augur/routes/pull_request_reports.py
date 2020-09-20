@@ -5,7 +5,7 @@ import numpy as np
 import warnings
 import datetime
 import json
-from flask import Response, request, send_file
+from flask import request, send_file
 warnings.filterwarnings('ignore')
 
 
@@ -13,15 +13,15 @@ from bokeh.palettes import Colorblind, mpl, Category20
 from bokeh.layouts import gridplot
 from bokeh.models.annotations import Title
 from bokeh.io import export_png
-from bokeh.models import ColumnDataSource, Legend, LabelSet, Range1d, LinearAxis, Label, FactorRange
+from bokeh.models import ColumnDataSource, Legend, LabelSet, Range1d, Label, FactorRange, BasicTicker, ColorBar, LinearColorMapper, PrintfTickFormatter
 from bokeh.plotting import figure
 from bokeh.models.glyphs import Rect
-from bokeh.transform import dodge, factor_cmap
+from bokeh.transform import dodge, factor_cmap, transform
 
-try:
-    colors = Colorblind[len(repo_set)]
-except:
-    colors = Colorblind[3]
+#try:
+#    colors = Colorblind[len(repo_set)]
+#except:
+#    colors = Colorblind[3]
 #mpl['Plasma'][len(repo_set)]
 #['A6CEE3','B2DF8A','33A02C','FB9A99']
 
@@ -300,6 +300,50 @@ def create_routes(server):
             indices_to_drop = input_df.loc[input_df['repo_name'] == repo_name].nlargest(num_outliers, field).index
             df_no_outliers = df_no_outliers.drop(index=indices_to_drop)
         return df_no_outliers
+
+    def hex_to_RGB(hex):
+        ''' "#FFFFFF" -> [255,255,255] '''
+        # Pass 16 to the integer function for change of base
+        return [int(hex[i:i+2], 16) for i in range(1,6,2)]
+
+    def color_dict(gradient):
+        ''' Takes in a list of RGB sub-lists and returns dictionary of
+        colors in RGB and hex form for use in a graphing function
+        defined later on '''
+        return {"hex":[RGB_to_hex(RGB) for RGB in gradient],
+          "r":[RGB[0] for RGB in gradient],
+          "g":[RGB[1] for RGB in gradient],
+          "b":[RGB[2] for RGB in gradient]}
+
+    def RGB_to_hex(RGB):
+        ''' [255,255,255] -> "#FFFFFF" '''
+        # Components need to be integers for hex to make sense
+        RGB = [int(x) for x in RGB]
+        return "#"+"".join(["0{0:x}".format(v) if v < 16 else
+                "{0:x}".format(v) for v in RGB])
+
+
+    def linear_gradient(start_hex, finish_hex="#FFFFFF", n=10):
+        ''' returns a gradient list of (n) colors between
+        two hex colors. start_hex and finish_hex
+        should be the full six-digit color string,
+        inlcuding the number sign ("#FFFFFF") '''
+        # Starting and ending colors in RGB form
+        s = hex_to_RGB(start_hex)
+        f = hex_to_RGB(finish_hex)
+        # Initilize a list of the output colors with the starting color
+        RGB_list = [s]
+        # Calcuate a color at each evenly spaced value of t from 1 to n
+        for t in range(1, n):
+            # Interpolate RGB vector for color at the current value of t
+            curr_vector = [
+              int(s[j] + (float(t)/(n-1))*(f[j]-s[j]))
+              for j in range(3)
+            ]
+            # Add it to our list of output colors
+            RGB_list.append(curr_vector)
+
+        return color_dict(RGB_list)
 
 
 
@@ -962,8 +1006,8 @@ def create_routes(server):
 
 
 
-    @server.app.route('/{}/pull_request_reports/graph/'.format(server.api_version), methods=["POST"])
-    def graph():
+    @server.app.route('/{}/pull_request_reports/mean_days_between_PR_comments/'.format(server.api_version), methods=["POST"])
+    def mean_days_between_PR_comments():
 
         repo_id = request.json['repo_id']
         start_date = request.json['start_date']
@@ -1083,4 +1127,257 @@ def create_routes(server):
         return send_file(filename)
 
 
+
+
+    @server.app.route('/{}/pull_request_reports/PR_time_to_first_response/'.format(server.api_version), methods=["POST"])
+    def PR_time_to_first_response():
+
+        repo_id = request.json['repo_id']
+        start_date = request.json['start_date']
+        end_date = request.json['end_date']
+        remove_outliers = request.json['remove_outliers']
+
+        user = request.json['user']
+        password = request.json['password']
+        host = request.json['host']
+        port = request.json['port']
+        database = request.json['database']
+
+
+        database_connection_string = 'postgres+psycopg2://{}:{}@{}:{}/{}'.format(user, password, host, port, database)
+
+        pr_closed = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, database_connection_string=database_connection_string, slow_20=False, df_type='pr_closed')
        
+        repo_dict = {repo_id : pr_closed.loc[pr_closed['repo_id'] == repo_id].iloc[0]['repo_name']}  
+   
+        x_axis='pr_closed_at'
+        y_axis = 'days_to_first_response'
+        description = 'All'
+        num_outliers_repo_map = {}
+        group_by = 'merged_flag'
+        same_scales=True
+        legend_position='top_right'
+        columns=2 
+        
+
+        driver_df = pr_closed.copy()
+
+
+        group_by_groups = sorted(driver_df[group_by].unique())
+
+        seconds = ((driver_df[x_axis].max() + datetime.timedelta(days=25))- (driver_df[x_axis].min() - datetime.timedelta(days=30))).total_seconds()
+        quarter_years = seconds / 10506240
+        quarter_years = round(quarter_years)
+
+        title_beginning = '{}: '.format(repo_dict[repo_id]) 
+        plot_width = 180 * 5
+        p = figure(x_range=(driver_df[x_axis].min() - datetime.timedelta(days=30), driver_df[x_axis].max() + datetime.timedelta(days=25)), 
+                  #(driver_df[y_axis].min(), driver_df[y_axis].max()), 
+                   toolbar_location=None,
+                   title='{}Days to First Response for {} Closed Pull Requests'.format(title_beginning, description), plot_width=plot_width, 
+                   plot_height=400, x_axis_type='datetime')
+
+        for index, group_by_group in enumerate(group_by_groups):
+            p.scatter(x_axis, y_axis, color=colors[index], marker="square", source=driver_df.loc[driver_df[group_by] == group_by_group], legend_label=group_by_group)
+
+            if group_by_group == "Merged / Accepted":
+                merged_values = driver_df.loc[driver_df[group_by] == group_by_group][y_axis].dropna().values.tolist()
+            else:
+                not_merged_values = driver_df.loc[driver_df[group_by] == group_by_group][y_axis].dropna().values.tolist()
+
+        values = not_merged_values + merged_values
+        #values.fillna(0)
+
+        for value in range(0, remove_outliers):
+            values.remove(max(values))
+ 
+        #determine y_max by finding the max of the values and scaling it up a small amoutn
+        y_max = max(values)*1.0111
+        outliers = driver_df.loc[driver_df[y_axis] > y_max]
+        if len(outliers) > 0:
+            if repo_id:
+                p.add_layout(Title(text="** Outliers cut off at {} days: {} outlier(s) for {} were removed **".format(y_max, len(outliers), repo_dict[repo_id]), align="center"), "below")
+            else:
+                p.add_layout(Title(text="** Outliers cut off at {} days: {} outlier(s) were removed **".format(y_max, len(outliers)), align="center"), "below")
+
+        p.xaxis.axis_label = 'Date Closed' if x_axis == 'pr_closed_at' else 'Date Created' if x_axis == 'pr_created_at' else 'Date'
+        p.yaxis.axis_label = 'Days to First Response'
+        p.legend.location = legend_position
+
+        p.title.align = "center"
+        p.title.text_font_size = "16px"
+
+        p.xaxis.axis_label_text_font_size = "16px"
+        p.xaxis.major_label_text_font_size = "16px"
+
+        p.yaxis.axis_label_text_font_size = "16px"
+        p.yaxis.major_label_text_font_size = "16px"
+
+        p.y_range = Range1d(0, y_max)
+        
+        plot = p
+        
+        p = figure(width = plot_width, height=200, margin = (0, 0, 0, 0))
+        caption = "This graph shows the days to first reponse for individual pull requests, either Merged or Not Merged."
+        p.add_layout(Label(
+        x = 0, # Change to shift caption left or right
+        y = 160, 
+        x_units = 'screen',
+        y_units = 'screen',
+        text='{}'.format(caption),
+        text_font = 'times', # Use same font as paper
+        text_font_size = '15pt',
+        render_mode='css'
+        ))
+        p.outline_line_color = None
+
+        caption_plot = p
+
+        grid = gridplot([[plot], [caption_plot]])
+ 
+        filename = export_png(grid)
+        
+        return send_file(filename)
+
+
+
+
+
+    @server.app.route('/{}/pull_request_reports/average_PR_events_for_closed_PRs/'.format(server.api_version), methods=["POST"])
+    def average_PR_events_for_closed_PRs():
+
+        repo_id = request.json['repo_id']
+        start_date = request.json['start_date']
+        end_date = request.json['end_date']
+
+        user = request.json['user']
+        password = request.json['password']
+        host = request.json['host']
+        port = request.json['port']
+        database = request.json['database']
+
+
+        database_connection_string = 'postgres+psycopg2://{}:{}@{}:{}/{}'.format(user, password, host, port, database)
+
+        pr_closed = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, database_connection_string=database_connection_string, slow_20=False, df_type='pr_closed')
+       
+        repo_dict = {repo_id : pr_closed.loc[pr_closed['repo_id'] == repo_id].iloc[0]['repo_name']} 
+
+        include_comments = True
+        x_axis = 'closed_year'
+        facet = 'merged_flag'
+        columns = 2
+        x_max = 1100
+        same_scales = True
+        y_axis = 'repo_name'
+        description = 'All Closed'
+        title = "Average Pull Request Event Types for {} Pull Requests"
+
+    
+        colors = linear_gradient('#f5f5dc', '#fff44f', 150)['hex']
+
+        driver_df = pr_closed.copy()
+        driver_df[x_axis] = driver_df[x_axis].astype(str)
+
+        if facet == 'closed_year' or y_axis == 'closed_year':
+            driver_df['closed_year'] = driver_df['closed_year'].astype(int).astype(str)
+
+        optional_comments = ['comment_count'] if include_comments else []
+        driver_df = driver_df[['repo_id', 'repo_name',x_axis, 'assigned_count',
+              'review_requested_count',
+              'labeled_count',
+              'subscribed_count',
+              'mentioned_count',
+              'referenced_count',
+              'closed_count',
+              'head_ref_force_pushed_count',
+              'merged_count',
+              'milestoned_count',
+              'unlabeled_count',
+              'head_ref_deleted_count', facet ] + optional_comments]
+        y_groups = [
+              'review_requested_count',
+              'labeled_count',
+              'subscribed_count',
+              'referenced_count',
+              'closed_count',
+    #           'milestoned_count',
+              ] + optional_comments
+
+        optional_group_comments = ['comment'] if include_comments else []
+    #     y_groups = ['subscribed', 'mentioned', 'labeled', 'review_requested', 'head_ref_force_pushed', 'referenced', 'closed', 'merged', 'unlabeled', 'head_ref_deleted', 'milestoned', 'assigned'] + optional_group_comments
+
+        x_groups = sorted(list(driver_df[x_axis].unique()))
+
+        grid_array = []
+        grid_row = []  
+
+        for index, facet_group in enumerate(sorted(driver_df[facet].unique())):
+
+            facet_data = driver_df.loc[driver_df[facet] == facet_group]
+    #         display(facet_data.sort_values('merged_count', ascending=False).head(50))
+            driver_df_mean = facet_data.groupby(['repo_id', 'repo_name', x_axis], as_index=False).mean().round(1)
+    #         data = {'Y' : y_groups}
+    #         for group in y_groups:
+    #             data[group] = driver_df_mean[group].tolist()
+            plot_width = 700
+            p = figure(y_range=y_groups, plot_height=500, plot_width=plot_width, x_range=x_groups, 
+                       title='{}'.format(format(facet_group)))
+
+            for y_group in y_groups:
+                driver_df_mean['field'] = y_group
+                source = ColumnDataSource(driver_df_mean)
+                mapper = LinearColorMapper(palette=colors, low=driver_df_mean[y_group].min(), high=driver_df_mean[y_group].max())
+
+                p.rect(y='field', x=x_axis, width=1, height=1, source=source,
+                       line_color=None, fill_color=transform(y_group, mapper))
+                # Data label 
+                labels = LabelSet(x=x_axis, y='field', text=y_group, y_offset=-8,
+                          text_font_size="12pt", text_color='black',
+                          source=source, text_align='center')
+                p.add_layout(labels)
+
+                color_bar = ColorBar(color_mapper=mapper, location=(0, 0),
+                                     ticker=BasicTicker(desired_num_ticks=9),
+                                     formatter=PrintfTickFormatter(format="%d"))
+    #         p.add_layout(color_bar, 'right')
+
+
+            p.y_range.range_padding = 0.1
+            p.ygrid.grid_line_color = None
+
+            p.legend.location = "bottom_right"
+            p.axis.minor_tick_line_color = None
+            p.outline_line_color = None
+
+            p.xaxis.axis_label = 'Year Closed'
+            p.yaxis.axis_label = 'Event Type'
+
+            p.title.align = "center"
+            p.title.text_font_size = "15px"
+
+            p.xaxis.axis_label_text_font_size = "16px"
+            p.xaxis.major_label_text_font_size = "16px"
+
+            p.yaxis.axis_label_text_font_size = "16px"
+            p.yaxis.major_label_text_font_size = "16px"
+
+            grid_row.append(p)
+            if index % columns == columns - 1:
+                grid_array.append(grid_row)
+                grid_row = []
+        print(grid_array)
+        grid = gridplot(grid_array)
+
+        filename = export_png(grid)
+        
+        return send_file(filename)
+
+
+
+
+
+
+
+
+   

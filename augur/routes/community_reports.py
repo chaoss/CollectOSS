@@ -1,26 +1,23 @@
-import base64
+import psycopg2
+import sqlalchemy as salc
+import numpy as np
+import warnings
+import datetime
 import pandas as pd
 import json
-from flask import Response, request, send_file
+from math import pi
+from flask import request, send_file
+warnings.filterwarnings('ignore')
 
 #import visualization libraries
-from bokeh.io import output_notebook, export_png
+from bokeh.io import export_png
 from bokeh.plotting import figure
 from bokeh.models import Label, LabelSet, ColumnDataSource, Legend
 from bokeh.palettes import Colorblind
 from bokeh.layouts import gridplot
 from bokeh.transform import cumsum
 
-import psycopg2
 
-
-import sqlalchemy as salc
-import numpy as np
-import warnings
-import datetime
-warnings.filterwarnings('ignore')
-
-from math import pi
 
 
 def create_routes(server):
