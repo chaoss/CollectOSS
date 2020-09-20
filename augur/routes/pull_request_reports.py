@@ -18,18 +18,10 @@ from bokeh.plotting import figure
 from bokeh.models.glyphs import Rect
 from bokeh.transform import dodge, factor_cmap, transform
 
-#try:
-#    colors = Colorblind[len(repo_set)]
-#except:
-#    colors = Colorblind[3]
-#mpl['Plasma'][len(repo_set)]
-#['A6CEE3','B2DF8A','33A02C','FB9A99']
-
 
 def create_routes(server):
 
     def pull_request_data_collection(repo_id, start_date, end_date, database_connection_string, df_type, slow_20):
-
 
         dbschema='augur_data'
         engine = salc.create_engine(
@@ -189,12 +181,9 @@ def create_routes(server):
         # Change years to int so that doesn't display as 2019.0 for example
         pr_all[['created_year', 'closed_year']] = pr_all[['created_year', 'closed_year']].fillna(-1).astype(int).astype(str)
 
-
         # Get days for average_time_between_responses time delta
-
         pr_all['average_days_between_responses'] = pr_all['average_time_between_responses'].map(lambda x: x.days).astype(float)
         pr_all['average_hours_between_responses'] = pr_all['average_time_between_responses'].map(lambda x: x.days * 24).astype(float)
-
 
         start_date = pd.to_datetime(start_date)
         # end_date = pd.to_datetime('2020-02-01 09:00:00')
@@ -205,7 +194,6 @@ def create_routes(server):
         pr_all['created_month'] = pr_all['created_month'].map(int)
         pr_all['created_month'] = pr_all['created_month'].map(lambda x: '{0:0>2}'.format(x))
         pr_all['created_yearmonth'] = pd.to_datetime(pr_all['created_year'].map(str) + '-' + pr_all['created_month'].map(str) + '-01')
-
 
         # getting the number of days of (today - created at) for the PRs that are still open
         # and putting this in the days_to_close column
@@ -221,7 +209,6 @@ def create_routes(server):
 
         pr_all.loc[pr_all['pr_src_state'] == 'open'].head()
 
-
         # initiate column by setting all null datetimes
         pr_all['closed_yearmonth'] = pd.to_datetime(np.nan)
 
@@ -229,7 +216,6 @@ def create_routes(server):
         pr_all.loc[pr_all['pr_src_state'] == 'closed'] = pr_all.loc[pr_all['pr_src_state'] == 'closed'].assign(
             closed_yearmonth = pd.to_datetime(pr_all.loc[pr_all['pr_src_state'] == 'closed']['closed_year'].astype(int
                 ).map(str) + '-' + pr_all.loc[pr_all['pr_src_state'] == 'closed']['closed_month'].astype(int).map(str) + '-01'))
-
 
         """ Merged flag """
         if 'pr_merged_at' in pr_all.columns.values:
@@ -239,18 +225,13 @@ def create_routes(server):
             pr_all['merged_flag'].loc[pr_all['pr_src_state'] == 'open'] = 'Still Open'
             del pr_all['pr_merged_at']
 
-
         # Isolate the different state PRs for now
         pr_open = pr_all.loc[pr_all['pr_src_state'] == 'open']
         pr_closed = pr_all.loc[pr_all['pr_src_state'] == 'closed']
         pr_merged = pr_all.loc[pr_all['merged_flag'] == 'Merged / Accepted']
         pr_not_merged = pr_all.loc[pr_all['merged_flag'] == 'Not Merged / Rejected']
 
-
-
-
         # Filtering the 80th percentile slowest PRs
-
         def filter_20_per_slowest(input_df):
             pr_slow20_filtered = pd.DataFrame()
             pr_slow20_x = pd.DataFrame()
@@ -293,7 +274,6 @@ def create_routes(server):
             elif df_type == 'pr_all':
                 return pr_all
 
-
     def remove_outliers(input_df, field, num_outliers_repo_map):
         df_no_outliers = input_df.copy()
         for repo_name, num_outliers in num_outliers_repo_map.items():
@@ -322,7 +302,6 @@ def create_routes(server):
         return "#"+"".join(["0{0:x}".format(v) if v < 16 else
                 "{0:x}".format(v) for v in RGB])
 
-
     def linear_gradient(start_hex, finish_hex="#FFFFFF", n=10):
         ''' returns a gradient list of (n) colors between
         two hex colors. start_hex and finish_hex
@@ -344,8 +323,6 @@ def create_routes(server):
             RGB_list.append(curr_vector)
 
         return color_dict(RGB_list)
-
-
 
     @server.app.route('/{}/pull_request_reports/average_commits_per_PR/'.format(server.api_version), methods=["POST"])
     def average_commits_per_PR():
@@ -370,10 +347,8 @@ def create_routes(server):
         group_by = 'merged_flag'
         description = 'All'  
 
-
         repo_dict = {repo_id : input_df.loc[input_df['repo_id'] == repo_id].iloc[0]['repo_name']}   
        
-
         driver_df = input_df.copy() # deep copy input data so we do not change the external dataframe 
 
         # Change closed year to int so that doesn't display as 2019.0 for example
@@ -469,8 +444,6 @@ def create_routes(server):
         
         return send_file(filename)
 
-
-
     @server.app.route('/{}/pull_request_reports/average_comments_per_PR/'.format(server.api_version), methods=["POST"])
     def average_comments_per_PR():
 
@@ -496,7 +469,6 @@ def create_routes(server):
 
         repo_dict = {repo_id : input_df.loc[input_df['repo_id'] == repo_id].iloc[0]['repo_name']}   
   
-
         driver_df = input_df.copy()
     
         try:
@@ -608,7 +580,6 @@ def create_routes(server):
 
         grid = gridplot([[plot], [caption_plot]])
 
-       
         filename = export_png(grid)
         
         return send_file(filename)
@@ -636,15 +607,11 @@ def create_routes(server):
         x_axis='closed_year'
         description='All Closed'
        
-
         repo_dict = {repo_id : pr_closed.loc[pr_closed['repo_id'] == repo_id].iloc[0]['repo_name']}   
   
         data_dict = {'All':pr_closed,'Slowest 20%':pr_slow20_not_merged.append(pr_slow20_merged,ignore_index=True)}
 
         colors = mpl['Plasma'][6]
-
-        #if repo_name == 'mbed-os':
-            #colors = colors[::-1]
 
         for data_desc, input_df in data_dict.items():
             x_groups = sorted(list(input_df[x_axis].astype(str).unique()))
@@ -800,7 +767,6 @@ def create_routes(server):
         driver_df = input_df.copy()[['repo_name', 'repo_id', 'merged_flag', y_axis, time_unit + '_to_first_response', time_unit + '_to_last_response', 
                                      time_unit + '_to_close']] # deep copy input data so we do not alter the external dataframe
 
-
         title_beginning = '{}: '.format(repo_dict[repo_id])
         plot_width = 950
         p = figure(toolbar_location=None, y_range=sorted(driver_df[y_axis].unique()), plot_width=plot_width, 
@@ -813,6 +779,12 @@ def create_routes(server):
         not_merged_days_to_close_glyphs = []
 
         possible_maximums = []
+
+        #setup color pallete
+        try:
+            colors = Colorblind[len(repo_set)]
+        except:
+            colors = Colorblind[3]
         
         
         for y_value in driver_df[y_axis].unique():
@@ -994,8 +966,6 @@ def create_routes(server):
 
         grid = gridplot([[plot], [caption_plot]])
 
-
-        
         filename = export_png(grid)
         
         return send_file(filename)
@@ -1120,9 +1090,6 @@ def create_routes(server):
         
         return send_file(filename)
 
-
-
-
     @server.app.route('/{}/pull_request_reports/PR_time_to_first_response/'.format(server.api_version), methods=["POST"])
     def PR_time_to_first_response():
 
@@ -1152,16 +1119,21 @@ def create_routes(server):
         same_scales=True
         legend_position='top_right'
         columns=2 
+
         
-
         driver_df = pr_closed.copy()
-
 
         group_by_groups = sorted(driver_df[group_by].unique())
 
-        seconds = ((driver_df[x_axis].max() + datetime.timedelta(days=25))- (driver_df[x_axis].min() - datetime.timedelta(days=30))).total_seconds()
-        quarter_years = seconds / 10506240
-        quarter_years = round(quarter_years)
+        #seconds = ((driver_df[x_axis].max() + datetime.timedelta(days=25))- (driver_df[x_axis].min() - datetime.timedelta(days=30))).total_seconds()
+        #quarter_years = seconds / 10506240
+        #quarter_years = round(quarter_years)
+
+        #setup color pallete
+        try:
+            colors = Colorblind[len(repo_set)]
+        except:
+            colors = Colorblind[3]
 
         title_beginning = '{}: '.format(repo_dict[repo_id]) 
         plot_width = 180 * 5
@@ -1232,10 +1204,6 @@ def create_routes(server):
         filename = export_png(grid)
         
         return send_file(filename)
-
-
-
-
 
     @server.app.route('/{}/pull_request_reports/average_PR_events_for_closed_PRs/'.format(server.api_version), methods=["POST"])
     def average_PR_events_for_closed_PRs():
@@ -1387,7 +1355,6 @@ def create_routes(server):
        
         repo_dict = {repo_id : pr_closed.loc[pr_closed['repo_id'] == repo_id].iloc[0]['repo_name']} 
 
-
         x_axis = 'repo_name'
         group_by = 'merged_flag'
         y_axis = 'closed_yearmonth'
@@ -1395,6 +1362,7 @@ def create_routes(server):
         description = "All Closed"
         heat_field = 'days_to_first_response'
         columns = 2
+        
 
         red_green_gradient = linear_gradient('#0080FF', '#DC143C', 150)['hex']#32CD32
 
@@ -1485,13 +1453,4 @@ def create_routes(server):
         filename = export_png(grid)
         
         return send_file(filename)
-
-
-
-
-
-
-
-
-
    

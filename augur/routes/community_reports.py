@@ -18,8 +18,6 @@ from bokeh.layouts import gridplot
 from bokeh.transform import cumsum
 
 
-
-
 def create_routes(server):
 
     def quarters(month, year):
@@ -44,11 +42,9 @@ def create_routes(server):
             rank_list.append(num)
         rank_tuple = tuple(rank_list)
 
-
         df = pd.DataFrame()
 
-
-        pr_query = salc.sql.text(f"""        
+        contributor_query = salc.sql.text(f"""        
         
 
             SELECT * FROM (
@@ -270,13 +266,7 @@ def create_routes(server):
                 WHERE RANK IN {rank_tuple}
 
          """)
-        df_first_repo = pd.read_sql(pr_query, con=engine)
-        if not df.empty: 
-            df = pd.concat([df, df_first_repo]) 
-        else: 
-            # first repo
-            df = df_first_repo
-
+        df = pd.read_sql(contributor_query, con=engine)
 
         df = df.loc[~df['full_name'].str.contains('bot', na=False)]
         df = df.loc[~df['login'].str.contains('bot', na=False)]
@@ -298,7 +288,6 @@ def create_routes(server):
 
         return df
 
-
     def months_data_collection(start_date, end_date, database_connection_string):
 
         dbschema='augur_data'
@@ -307,7 +296,6 @@ def create_routes(server):
             connect_args={'options': '-csearch_path={}'.format(dbschema)})
 
         months_df = pd.DataFrame()
-
 
         #months_query makes a df of years and months, this is used to fill the months with no data in the visualizaitons
         months_query = salc.sql.text(f"""        
@@ -383,36 +371,36 @@ def create_routes(server):
                 mask = (driver_df['yearmonth'] < start_date)
                 driver_df= driver_df[~driver_df['cntrb_id'].isin(driver_df.loc[mask]['cntrb_id'])]
                 
-                
-                #create separate repeat_df that includes all repeat contributors
-                #then any contributor that is not in the repeat_df is a drive-by contributor
-                repeats_df = driver_df.copy()
-                
-                #discards rows other than the first and the row required to be a repeat contributor
-                repeats_df = repeats_df.loc[repeats_df['rank'].isin([1,required_contributions])]
+                if contributor_type == 'drive_by' or 'repeat':
 
-                #removes all the contributors that only have a first contirbution
-                repeats_df = repeats_df[repeats_df['cntrb_id'].isin(repeats_df.loc[driver_df['rank'] == required_contributions]['cntrb_id'])]
-                
-                #create lists of 'created_at' times for the final required contribution and the first contribution
-                repeat_list = repeats_df.loc[driver_df['rank'] == required_contributions]['created_at'].tolist()
-                first_list = repeats_df.loc[driver_df['rank'] == 1]['created_at'].tolist()
-             
-                #only keep first time contributions, since those are the dates needed for visualization
-                repeats_df = repeats_df.loc[driver_df['rank'] == 1]
+                    #create separate repeat_df that includes all repeat contributors
+                    #then any contributor that is not in the repeat_df is a drive-by contributor
+                    repeats_df = driver_df.copy()
+                    
+                    #discards rows other than the first and the row required to be a repeat contributor
+                    repeats_df = repeats_df.loc[repeats_df['rank'].isin([1,required_contributions])]
 
-                #create list of time differences between the final required contribution and the first contribution, and add it to the df
-                differences = []
-                for i in range(0, len(repeat_list)):
-                    time_difference = repeat_list[i] - first_list[i]
-                    total = time_difference.days * 86400 + time_difference.seconds
-                    differences.append(total)
-                repeats_df['differences'] = differences
+                    #removes all the contributors that only have a first contirbution
+                    repeats_df = repeats_df[repeats_df['cntrb_id'].isin(repeats_df.loc[driver_df['rank'] == required_contributions]['cntrb_id'])]
+                    
+                    #create lists of 'created_at' times for the final required contribution and the first contribution
+                    repeat_list = repeats_df.loc[driver_df['rank'] == required_contributions]['created_at'].tolist()
+                    first_list = repeats_df.loc[driver_df['rank'] == 1]['created_at'].tolist()
+                 
+                    #only keep first time contributions, since those are the dates needed for visualization
+                    repeats_df = repeats_df.loc[driver_df['rank'] == 1]
 
-                #remove contributions who made enough contributions, but not in a short enough time
-                repeats_df = repeats_df.loc[repeats_df['differences'] <= required_time * 86400]
-                
-                
+                    #create list of time differences between the final required contribution and the first contribution, and add it to the df
+                    differences = []
+                    for i in range(0, len(repeat_list)):
+                        time_difference = repeat_list[i] - first_list[i]
+                        total = time_difference.days * 86400 + time_difference.seconds
+                        differences.append(total)
+                    repeats_df['differences'] = differences
+
+                    #remove contributions who made enough contributions, but not in a short enough time
+                    repeats_df = repeats_df.loc[repeats_df['differences'] <= required_time * 86400]
+                    
                 if contributor_type == 'repeat':
                     driver_df = repeats_df
                     
@@ -485,10 +473,8 @@ def create_routes(server):
                     #modifies the driver_df[date_column] to be a string with year and month, then finds all the unique values   
                     data['dates'] = np.unique(np.datetime_as_string(driver_df[date_column], unit = 'M'))
 
-                    
                     #new contributor counts for y-axis
                     data['new_contributor_counts'] = driver_df.groupby([date_column]).sum().reset_index()['new_contributors']
-
 
                 #if the data set is large enough it will dynamically assign the width, if the data set is too small it will by default set to 870 pixel so the title fits
                 if len(data['new_contributor_counts']) >= 15:
@@ -512,7 +498,6 @@ def create_routes(server):
 
                 source = ColumnDataSource(data=dict(dates=data['dates'], new_contributor_counts=data['new_contributor_counts']))
 
-
                 #add contributor_count labels to chart
                 p.add_layout(LabelSet(x='dates', y='new_contributor_counts', text='new_contributor_counts', y_offset=4,
                           text_font_size="13pt", text_color="black",
@@ -525,8 +510,6 @@ def create_routes(server):
 
                 p.title.align = "center"
                 p.title.text_font_size = "18px"
-
-
 
                 p.yaxis.axis_label = 'Second Time Contributors' if rank == 2 else 'New Contributors'
                 p.xaxis.axis_label = group_by_format_string 
@@ -568,11 +551,9 @@ def create_routes(server):
         #puts plots together into a grid
         grid = gridplot([row_1, row_2, row_3, row_4])
 
-
         filename = export_png(grid)
         
         return send_file(filename)
-
 
     @server.app.route('/{}/contributor_reports/new_contributors_stacked_bar/'.format(server.api_version), methods=["POST"])
     def new_contributors_stacked_bar():
@@ -599,7 +580,6 @@ def create_routes(server):
 
         repo_dict = {repo_id : input_df.loc[input_df['repo_id'] == repo_id].iloc[0]['repo_name']}    
 
-
         contributor_types = ['All', 'repeat', 'drive_by']
         ranks = [1,2]
 
@@ -614,49 +594,42 @@ def create_routes(server):
                 if (rank == 2 and contributor_type == 'drive_by') or (rank == 2 and contributor_type == 'repeat'):
                     continue
 
-                #output_notebook()
-
                 #create a copy of contributor dataframe
                 driver_df = input_df.copy()
-                
-                #filter dataframe by repo_id
-                #driver_df = driver_df.loc[driver_df['repo_id'] == repo_id]
                 
                 #remove first time contributors before begin date, along with their second contribution
                 mask = (driver_df['yearmonth'] < start_date)
                 driver_df= driver_df[~driver_df['cntrb_id'].isin(driver_df.loc[mask]['cntrb_id'])]
+
+                if contributor_type == 'drive_by' or 'repeat':
                         
-                
-           
-                #create separate repeat_df that includes all repeat contributors
-                #then any contributor that is not in the repeat_df is a drive-by contributor
-                repeats_df = driver_df.copy()
-                
-                #discards rows other than the first and the row required to be a repeat contributor
-                repeats_df = repeats_df.loc[repeats_df['rank'].isin([1,required_contributions])]
+                    #create separate repeat_df that includes all repeat contributors
+                    #then drive-by contributors can be found by finding which contributors are not in the repeat_df 
+                    repeats_df = driver_df.copy()
+                    
+                    #discards rows other than the first contribution and the row required to be a repeat contributor
+                    repeats_df = repeats_df.loc[repeats_df['rank'].isin([1,required_contributions])]
 
-                #removes all the contributors that only have a first contirbution
-                repeats_df = repeats_df[repeats_df['cntrb_id'].isin(repeats_df.loc[driver_df['rank'] == required_contributions]['cntrb_id'])]
-                
-                #create lists of 'created_at' times for the final required contribution and the first contribution
-                repeat_list = repeats_df.loc[driver_df['rank'] == required_contributions]['created_at'].tolist()
-                first_list = repeats_df.loc[driver_df['rank'] == 1]['created_at'].tolist()
+                    #removes all the contributors that only have a first contirbution
+                    repeats_df = repeats_df[repeats_df['cntrb_id'].isin(repeats_df.loc[driver_df['rank'] == required_contributions]['cntrb_id'])]
+                    
+                    #create lists of 'created_at' times for the final required contribution and the first contribution
+                    repeat_list = repeats_df.loc[driver_df['rank'] == required_contributions]['created_at'].tolist()
+                    first_list = repeats_df.loc[driver_df['rank'] == 1]['created_at'].tolist()
 
-                #only keep first time contributions, since those are the dates needed for visualization
-                repeats_df = repeats_df.loc[driver_df['rank'] == 1]
+                    #only keep first time contributions, since those are the dates needed for visualization
+                    repeats_df = repeats_df.loc[driver_df['rank'] == 1]
 
-                #create list of time differences between the final required contribution and the first contribution, and add it to the df
-                differences = []
-                for i in range(0, len(repeat_list)):
-                    time_difference = repeat_list[i] - first_list[i]
-                    total = time_difference.days * 86400 + time_difference.seconds
-                    differences.append(total)
-                repeats_df['differences'] = differences
+                    #create list of time differences between the final required contribution and the first contribution, and add it to the df
+                    differences = []
+                    for i in range(0, len(repeat_list)):
+                        time_difference = repeat_list[i] - first_list[i]
+                        total = time_difference.days * 86400 + time_difference.seconds
+                        differences.append(total)
+                    repeats_df['differences'] = differences
 
-                #remove contributions who made enough contributions, but not in a short enough time
-                repeats_df = repeats_df.loc[repeats_df['differences'] <= required_time * 86400]
-                
-                
+                    #remove contributions who made enough contributions, but not in a short enough time
+                    repeats_df = repeats_df.loc[repeats_df['differences'] <= required_time * 86400]
                 
                 if contributor_type == 'repeat':
                     driver_df = repeats_df
@@ -670,7 +643,7 @@ def create_routes(server):
                     #create list of 'cntrb_ids' for repeat contributors
                     repeat_cntrb_ids = repeats_df['cntrb_id'].to_list()
         
-                    #create df with all contributors other than the ones in the repeats_df
+                    #create df with all contributors other than the ones in the repeats_df (drive-by df)
                     driver_df = driver_df.loc[~driver_df['cntrb_id'].isin(repeat_cntrb_ids)]
                  
                     #filter df so it only includes the first contribution
@@ -696,18 +669,14 @@ def create_routes(server):
                         y_axis_label = 'Second Time Contributors'
                 
 
-
                 #filter by end_date, this is not done with the begin date filtering because a repeat contributor will look like drive-by if the second contribution is removed by end_date filtering
                 mask = (driver_df['yearmonth'] < end_date)
                 driver_df = driver_df.loc[mask]
                 
-
-
                 #adds all months to driver_df so the lists of dates will include all months and years    
                 driver_df = pd.concat([driver_df, months_df])
                 
                 actions = ['open_pull_request', 'pull_request_comment', 'commit', 'issue_closed', 'issue_opened', 'issue_comment']
-                
                 
                 data = pd.DataFrame()
                 if group_by == 'year': 
@@ -744,7 +713,6 @@ def create_routes(server):
 
                     #new contributor counts for all actions
                     data['new_contributor_counts'] = driver_df.groupby([date_column]).sum().reset_index()['new_contributors']
-                    
                     
                 #if the data set is large enough it will dynamically assign the width, if the data set is too small it will by default set to 870 pixel so the title fits
                 if len(data['new_contributor_counts']) >= 15:
@@ -838,18 +806,12 @@ def create_routes(server):
         #puts plots together into a grid
         grid = gridplot([row_1, row_2, row_3, row_4])
 
-
         filename = export_png(grid)
         
         return send_file(filename)
 
-
-
-
-
     @server.app.route('/{}/contributor_reports/returning_contributors_pie_chart/'.format(server.api_version), methods=["POST"])
     def returning_contributor_pie_chart():
-
 
         repo_id = request.json['repo_id']
         start_date = request.json['start_date']
@@ -865,11 +827,9 @@ def create_routes(server):
 
         database_connection_string = 'postgres+psycopg2://{}:{}@{}:{}/{}'.format(user, password, host, port, database)
 
-
         input_df = new_contibutor_data_collection(repo_id=repo_id, required_contributions=required_contributions, database_connection_string=database_connection_string)
         
         repo_dict = {repo_id : input_df.loc[input_df['repo_id'] == repo_id].iloc[0]['repo_name']}    
-
 
         #create a copy of contributor dataframe
         driver_df = input_df.copy()
@@ -878,7 +838,6 @@ def create_routes(server):
         mask = (driver_df['yearmonth'] < start_date)
         driver_df= driver_df[~driver_df['cntrb_id'].isin(driver_df.loc[mask]['cntrb_id'])]
 
-        
         #determine if contributor is a drive by by finding all the cntrb_id's that do not have a second contribution
         repeats_df = driver_df.copy()
 
@@ -901,7 +860,6 @@ def create_routes(server):
         repeats_df['differences'] = differences
 
         repeats_df = repeats_df.loc[repeats_df['differences'] <= required_time * 86400]
-        
         
         repeat_cntrb_ids = repeats_df['cntrb_id'].to_list()
 
@@ -941,7 +899,6 @@ def create_routes(server):
         #sets plot_width to width of title if title is wider than 850 pixels
         if len(title) * title_text_font_size / 2 > plot_width:
             plot_width = int(len(title) * title_text_font_size / 2)
-        
         
         source = ColumnDataSource(data)
         
@@ -1016,10 +973,8 @@ def create_routes(server):
         
         return send_file(filename)
         
-        
     @server.app.route('/{}/contributor_reports/returning_contributors_stacked_bar/'.format(server.api_version), methods=["POST"])
     def returning_contributor_stacked_bar():
-
 
         repo_id = request.json['repo_id']
         start_date = request.json['start_date']
@@ -1036,18 +991,14 @@ def create_routes(server):
 
         database_connection_string = 'postgres+psycopg2://{}:{}@{}:{}/{}'.format(user, password, host, port, database)
 
-
         input_df = new_contibutor_data_collection(repo_id=repo_id, required_contributions=required_contributions, database_connection_string=database_connection_string)
         months_df = months_data_collection(start_date=start_date, end_date=end_date, database_connection_string=database_connection_string)
 
-        
         repo_dict = {repo_id : input_df.loc[input_df['repo_id'] == repo_id].iloc[0]['repo_name']}    
-
 
         #create a copy of contributor dataframe
         driver_df = input_df.copy()
 
-        
         #remove first time contributors before begin date, along with their second contribution
         mask = (driver_df['yearmonth'] < start_date)
         driver_df= driver_df[~driver_df['cntrb_id'].isin(driver_df.loc[mask]['cntrb_id'])]
@@ -1236,5 +1187,3 @@ def create_routes(server):
         filename = export_png(grid)
         
         return send_file(filename)
-
-            
