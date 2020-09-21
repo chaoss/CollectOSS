@@ -46,7 +46,6 @@ def create_routes(server):
 
         contributor_query = salc.sql.text(f"""        
         
-
             SELECT * FROM (
                 SELECT ID AS
                     cntrb_id,
