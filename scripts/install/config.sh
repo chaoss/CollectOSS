@@ -72,7 +72,8 @@ function set_db_credentials() {
 
   read -p "Database: " db_name
   read -p "User: " db_user
-  read -p "Password: " password
+  read -s -p "Password: " password
+  echo
 
   if [[ $install_locally == 'false' ]]; then
     read -p "Host: " host
