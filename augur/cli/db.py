@@ -96,16 +96,15 @@ def add_github_org(augur_app, organization_name):
         logger.fatal(f"No organization with name {organization_name} could be found")
         exit(1)
 
-    page = 1
-    headers = {'Authorization': 'token %s' % augur_app.config.get_value("Database", "key")}
     all_repos = []
-    repo_query_response = requests.get(org_query_response['repos_url'] + f"?per_page=100&page={page}", headers=headers).json()
+    page = 1
+    repo_query_response = None
+    headers = {'Authorization': 'token %s' % augur_app.config.get_value("Database", "key")}
     while repo_query_response != []:
+        repo_query_response = requests.get(org_query_response['repos_url'] + f"?per_page=100&page={page}", headers=headers).json()
         for repo in repo_query_response:
             all_repos.append(repo)
-
         page+=1
-        repo_query_response = requests.get(org_query_response['repos_url'] + f"?per_page=100&page={page}", headers=headers).json()
 
     insert_repo_group_sql = s.sql.text("""
     INSERT INTO "augur_data"."repo_groups"("rg_name", "rg_description", "rg_website", "rg_recache", "rg_last_modified", "rg_type", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (:repo_group_name, '', '', 0, CURRENT_TIMESTAMP, 'Unknown', 'Loaded by user', '1.0', 'Git', CURRENT_TIMESTAMP) RETURNING repo_group_id;
