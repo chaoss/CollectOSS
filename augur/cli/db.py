@@ -11,6 +11,7 @@ import csv
 import click
 import sqlalchemy as s
 import pandas as pd
+import requests
 from sqlalchemy import exc
 
 from augur.cli import pass_config, pass_application
@@ -32,8 +33,8 @@ def add_repos(augur_app, filename):
     repo_group_IDs = [group[0] for group in df.fetchall()]
 
     insertSQL = s.sql.text("""
-        INSERT INTO augur_data.repo(repo_group_id, repo_git, repo_status, 
-        tool_source, tool_version, data_source, data_collection_date) 
+        INSERT INTO augur_data.repo(repo_group_id, repo_git, repo_status,
+        tool_source, tool_version, data_source, data_collection_date)
         VALUES (:repo_group_id, :repo_git, 'New', 'CLI', 1.0, 'Git', CURRENT_TIMESTAMP)
     """)
 
@@ -80,6 +81,46 @@ def add_repo_groups(augur_app, filename):
                 augur_app.database.execute(insert_repo_group_sql, repo_group_id=int(row[0]), repo_group_name=row[1])
             else:
                 logger.info(f"Repo group with ID {row[1]} for repo group {row[1]} already exists, skipping...")
+
+@cli.command('add-github-org')
+@click.argument('organization_name')
+@pass_application
+def add_github_org(augur_app, organization_name):
+    """
+    Create new repo groups in Augur's database
+    """
+    org_query_response = requests.get(f"https://api.github.com/orgs/{organization_name}").json()
+    if "login" in org_query_response:
+        logger.info(f"Organization \"{organization_name}\" found")
+    else:
+        logger.fatal(f"No organization with name {organization_name} could be found")
+        exit(1)
+
+    all_repos = []
+    page = 1
+    repo_query_response = None
+    headers = {'Authorization': 'token %s' % augur_app.config.get_value("Database", "key")}
+    while repo_query_response != []:
+        repo_query_response = requests.get(org_query_response['repos_url'] + f"?per_page=100&page={page}", headers=headers).json()
+        for repo in repo_query_response:
+            all_repos.append(repo)
+        page+=1
+
+    insert_repo_group_sql = s.sql.text("""
+    INSERT INTO "augur_data"."repo_groups"("rg_name", "rg_description", "rg_website", "rg_recache", "rg_last_modified", "rg_type", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (:repo_group_name, '', '', 0, CURRENT_TIMESTAMP, 'Unknown', 'Loaded by user', '1.0', 'Git', CURRENT_TIMESTAMP) RETURNING repo_group_id;
+    """)
+    new_repo_group_id = augur_app.database.execute(insert_repo_group_sql, repo_group_name=organization_name).fetchone()[0]
+
+    insert_repo_sql = s.sql.text("""
+        INSERT INTO augur_data.repo(repo_group_id, repo_git, repo_status,
+        tool_source, tool_version, data_source, data_collection_date)
+        VALUES (:repo_group_id, :repo_git, 'New', 'CLI', 1.0, 'Git', CURRENT_TIMESTAMP)
+    """)
+    logger.info(f"{organization_name} repo group created")
+
+    for repo in all_repos:
+        logger.info(f"Adding {organization_name}/{repo['name']} ({repo['clone_url']})")
+        result = augur_app.database.execute(insert_repo_sql, repo_group_id=new_repo_group_id, repo_git=repo['clone_url'])
 
 @cli.command('update-repo-directory')
 @click.argument('repo_directory')
@@ -240,7 +281,7 @@ def check_pgpass(config):
 @click.option('--port', default='5432')
 def init_database(default_db_name, default_user, default_password, target_db_name, target_user, target_password, host, port):
     """
-    Create database with the given credentials using the given maintenance database 
+    Create database with the given credentials using the given maintenance database
     """
     config = {
         'Database': {
