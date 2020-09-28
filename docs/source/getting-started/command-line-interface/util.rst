@@ -48,9 +48,42 @@ Example usage::
   AUGUR_DB_USER="your_db_user"
   AUGUR_DB_PASSWORD="your_db_password"
 
+``stop``
+---------
+Gracefully terminates all currently running backend Augur processes, including any workers. Will only work in a virtual environment.
+
+Example usage::
+
+  # to stop the server and workers
+  $ augur util stop
+
+  # successful output looks like:
+  > CLI: [util.cli_stop_processes] [INFO] Killing process 33607
+  > CLI: [util.cli_stop_processes] [INFO] Killing process 33775
+  > CLI: [util.cli_stop_processes] [INFO] Killing process 33776
+  > CLI: [util.cli_stop_processes] [INFO] Killing process 33777
+  > CLI: [util.cli_stop_processes] [INFO] Killing process 33778
+  > CLI: [util.cli_stop_processes] [INFO] Killing process 33780
+  > CLI: [util.cli_stop_processes] [INFO] Killing process 33781
+  > CLI: [util.cli_stop_processes] [INFO] Killing process 33782
+  > CLI: [util.cli_stop_processes] [INFO] Killing process 33783
+  > CLI: [util.cli_stop_processes] [INFO] Killing process 33784
+  > CLI: [util.cli_stop_processes] [INFO] Killing process 33785
+  > CLI: [util.cli_stop_processes] [INFO] Killing process 33786
+  > CLI: [util.cli_stop_processes] [INFO] Killing process 33787
+  > CLI: [util.cli_stop_processes] [INFO] Killing process 33788
+  > CLI: [util.cli_stop_processes] [INFO] Killing process 33789
+  > CLI: [util.cli_stop_processes] [INFO] Killing process 33790
+  > CLI: [util.cli_stop_processes] [INFO] Killing process 33792
+  > CLI: [util.cli_stop_processes] [INFO] Killing process 33793
+  > CLI: [util.cli_stop_processes] [INFO] Killing process 33794
+  > CLI: [util.cli_stop_processes] [INFO] Killing process 33795
+  > CLI: [util.cli_stop_processes] [INFO] Killing process 33798
+  > CLI: [util.cli_stop_processes] [INFO] Killing process 33962
+
 ``kill``
 ---------
-Terminates all currently running backend Augur processes, including any workers. Will only work in a virtual environment.
+Forcefully terminates all currently running backend Augur processes, including any workers, by using ``SIGKILL``. Will only work in a virtual environment.
 
 Example usage::
 
@@ -58,28 +91,12 @@ Example usage::
   $ augur util kill
 
   # successful output looks like:
-  > CLI: [util.cli_kill_processes] [INFO] Killing process 33607
-  > CLI: [util.cli_kill_processes] [INFO] Killing process 33775
-  > CLI: [util.cli_kill_processes] [INFO] Killing process 33776
-  > CLI: [util.cli_kill_processes] [INFO] Killing process 33777
-  > CLI: [util.cli_kill_processes] [INFO] Killing process 33778
-  > CLI: [util.cli_kill_processes] [INFO] Killing process 33780
-  > CLI: [util.cli_kill_processes] [INFO] Killing process 33781
-  > CLI: [util.cli_kill_processes] [INFO] Killing process 33782
-  > CLI: [util.cli_kill_processes] [INFO] Killing process 33783
-  > CLI: [util.cli_kill_processes] [INFO] Killing process 33784
-  > CLI: [util.cli_kill_processes] [INFO] Killing process 33785
-  > CLI: [util.cli_kill_processes] [INFO] Killing process 33786
-  > CLI: [util.cli_kill_processes] [INFO] Killing process 33787
-  > CLI: [util.cli_kill_processes] [INFO] Killing process 33788
-  > CLI: [util.cli_kill_processes] [INFO] Killing process 33789
-  > CLI: [util.cli_kill_processes] [INFO] Killing process 33790
-  > CLI: [util.cli_kill_processes] [INFO] Killing process 33792
-  > CLI: [util.cli_kill_processes] [INFO] Killing process 33793
-  > CLI: [util.cli_kill_processes] [INFO] Killing process 33794
-  > CLI: [util.cli_kill_processes] [INFO] Killing process 33795
-  > CLI: [util.cli_kill_processes] [INFO] Killing process 33798
-  > CLI: [util.cli_kill_processes] [INFO] Killing process 33962
+  > CLI: [util.kill_processes] [INFO] Killing process 87340
+  > CLI: [util.kill_processes] [INFO] Killing process 87573
+  > CLI: [util.kill_processes] [INFO] Killing process 87574
+  > CLI: [util.kill_processes] [INFO] Killing process 87575
+  > CLI: [util.kill_processes] [INFO] Killing process 87576
+
 
 ``list``
 ---------

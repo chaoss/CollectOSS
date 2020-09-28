@@ -11,7 +11,7 @@ from gunicorn.arbiter import Arbiter
 
 from augur.housekeeper import Housekeeper
 from augur.server import Server
-from augur.cli.util import kill_processes
+from augur.cli.util import stop_processes
 from augur.application import Application
 
 logger = logging.getLogger("augur")
@@ -25,9 +25,10 @@ def cli(disable_housekeeper, skip_cleanup):
     """
     augur_app = Application()
     logger.info("Augur application initialized")
+    logger.info(f"Using config file: {augur_app.config.config_file_location}")
     if not skip_cleanup:
         logger.debug("Cleaning up old Augur processes...")
-        kill_processes()
+        stop_processes()
         time.sleep(2)
     else:
         logger.debug("Skipping process cleanup")
@@ -98,7 +99,6 @@ def exit(augur_app, worker_processes, master):
         if master is not None:
             logger.debug("Shutting down Gunicorn server")
             master.halt()
-            master = None
 
         logger.info("Shutdown complete")
         sys.exit(0)
