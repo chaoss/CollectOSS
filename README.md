@@ -10,7 +10,7 @@ master | [![Build Status](https://travis-ci.org/chaoss/augur.svg?branch=master)]
 ## What is Augur?
 
 Augur is a tool for collecting and measuring structured data
-about free (https://www.fsf.org/about/) and [open source](https://opensource.org/docs/osd) (FOSS) communities. 
+about [free](https://www.fsf.org/about/) and [open source](https://opensource.org/docs/osd) (FOSS) communities. 
 
 We gather trace data for a group of repositories, normalize
 it into our data model, and provide a variety of metrics about said
@@ -20,8 +20,7 @@ questions about the way these communities evolve.
 
 We are a [CHAOSS](https://chaoss.community>) project, and many of our
 metrics are implementations of the metrics defined by our awesome community. You
-can find more information about how to get involved
-(here)[https://chaoss.community/participate/].
+can find more information about [how to get involved on the CHAOSS website](https://chaoss.community/participate/).
 
 ## Collecting Data
 
@@ -37,7 +36,7 @@ This data is collected by dedicated data collection workers controlled by Augur,
 
 ## Getting Started
 
-If you're interested in collecting data with our tool, the Augur team has worked hard to develop a detailed guide to getting started with our project, which can be found [here](https://oss-augur.readthedocs.io/en/master/getting-started/toc.html) alongside our main documentation.
+If you're interested in collecting data with our tool, the Augur team has worked hard to develop a detailed guide to getting started with our project, which can be found [in our documentation](https://oss-augur.readthedocs.io/en/master/getting-started/toc.html).
 
 If you're looking to contribute to Augur's code, you can find installation instructions, development guides, architecture references (coming soon), best practices and more in our [developer documentation](https://oss-augur.readthedocs.io/en/master/development-guide/toc.html).
 

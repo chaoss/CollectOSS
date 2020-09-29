@@ -7,7 +7,6 @@ import os
 import signal
 import logging
 from subprocess import call, run
-import time
 
 import psutil
 import click
@@ -43,68 +42,46 @@ def export_env(config):
     export_file.close()
     env_file.close()
 
+def _stop_processes_handler(attach_handler=False):
+    if attach_handler is True:
+        _logger = logging.getLogger("augur")
+    else:
+        _logger = logger
+    processes = get_augur_processes()
+    if processes != []:
+        for process in processes:
+            if process.pid != os.getpid():
+                logger.info(f"Stopping process {process.pid}")
+                try:
+                    process.send_signal(signal.SIGTERM)
+                except psutil.NoSuchProcess as e:
+                    pass
+
+@cli.command('stop')
+@initialize_logging
+def cli_stop_processes():
+    """
+    Terminates all currently running backend Augur processes, including any workers. Will only work in a virtual environment.
+    """
+    _stop_processes_handler()
+
+
+def stop_processes():
+    _stop_processes_handler(attach_handler=True)
+
 @cli.command('kill')
 @initialize_logging
-def cli_kill_processes():
-    """
-    Terminates all currently running backend Augur processes, including any workers. Will only work in a virtual environment.    
-    """
-    processes = get_augur_processes()
-    if processes != []:
-        for process in processes:
-            if process.pid != os.getpid():
-                logger.info(f"Terminating process {process.pid}")
-                try:
-                    process.send_signal(signal.SIGTERM)
-                    logger.info(f"sending SIGTERM Signal to {process.pid}")
-                except psutil.NoSuchProcess as e:
-                    pass
-
-            logger.info(f"Waiting to check if processes terminated.")
-
-    time.sleep(15)
-    logger.info(f"Checking on process termination.")
-
-    processes = get_augur_processes()
-
-    if processes != []:
-        for process in processes:
-
-            if process.pid != os.getpid():
-                logger.info(f"Killing process {process.pid}")
-                try:
-                    process.send_signal(signal.SIGKILL)
-                    logger.info(f"sending SIGKILL Signal to {process.pid}")
-                except psutil.NoSuchProcess as e:
-                    pass
-
 def kill_processes():
-    logger = logging.getLogger("augur")
+    """
+    Terminates all currently running backend Augur processes, including any workers. Will only work in a virtual environment.
+    """
     processes = get_augur_processes()
     if processes != []:
         for process in processes:
             if process.pid != os.getpid():
-                logger.info(f"Terminating process {process.pid}")
-                try:
-                    process.send_signal(signal.SIGTERM)
-                    logger.info(f"sending SIGTERM Signal to {process.pid}")
-                except psutil.NoSuchProcess as e:
-                    logger.warning(e)
-            logger.info(f"Waiting to check if processes terminated.")
-
-    time.sleep(15)
-    logger.info(f"Checking on process termination.")
-
-    processes = get_augur_processes()
-
-    if processes != []:
-        for process in processes:
-            if process.pid != os.getpid():
-                logger.info(f"Killing process {process.pid}")
                 logger.info(f"Killing process {process.pid}")
                 try:
                     process.send_signal(signal.SIGKILL)
-                    logger.info(f"sending SIGKILL Signal to {process.pid}")
                 except psutil.NoSuchProcess as e:
                     pass
 
@@ -112,7 +89,7 @@ def kill_processes():
 @initialize_logging
 def list_processes():
     """
-    Outputs the name and process ID (PID) of all currently running backend Augur processes, including any workers. Will only work in a virtual environment.    
+    Outputs the name and process ID (PID) of all currently running backend Augur processes, including any workers. Will only work in a virtual environment.
     """
     processes = get_augur_processes()
     for process in processes:
