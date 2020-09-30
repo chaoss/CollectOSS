@@ -754,6 +754,8 @@ def create_routes(server):
         port = request.json['port']
         database = request.json['database']
 
+        time_unit = request.json['time_unit']
+
 
         database_connection_string = 'postgres+psycopg2://{}:{}@{}:{}/{}'.format(user, password, host, port, database)
 
@@ -1117,11 +1119,8 @@ def create_routes(server):
         x_axis='pr_closed_at'
         y_axis = 'days_to_first_response'
         description = 'All'
-        num_outliers_repo_map = {}
         group_by = 'merged_flag'
-        same_scales=True
         legend_position='top_right'
-        columns=2 
 
         
         driver_df = pr_closed.copy()
@@ -1221,6 +1220,8 @@ def create_routes(server):
         port = request.json['port']
         database = request.json['database']
 
+        include_comments = request.json['include_comments']
+
 
         database_connection_string = 'postgres+psycopg2://{}:{}@{}:{}/{}'.format(user, password, host, port, database)
 
@@ -1228,12 +1229,10 @@ def create_routes(server):
        
         repo_dict = {repo_id : pr_closed.loc[pr_closed['repo_id'] == repo_id].iloc[0]['repo_name']} 
 
-        include_comments = True
         x_axis = 'closed_year'
         facet = 'merged_flag'
         columns = 2
         x_max = 1100
-        same_scales = True
         y_axis = 'repo_name'
         description = 'All Closed'
     
@@ -1384,7 +1383,6 @@ def create_routes(server):
         x_axis = 'repo_name'
         group_by = 'merged_flag'
         y_axis = 'closed_yearmonth'
-        same_scales = True
         description = "All Closed"
         heat_field = 'days_to_first_response'
         columns = 2

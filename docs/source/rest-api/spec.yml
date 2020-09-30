@@ -4545,7 +4545,10 @@ paths:
                   type: integer
                 database:
                   description: 'Example: my_database'
-                  type: string 
+                  type: string
+                time_unit:
+                  description: 'Example: hours or days'
+                  type: string  
             type: object
       tags:
         -experimental
@@ -4660,6 +4663,9 @@ paths:
                 database:
                   description: 'Example: my_database'
                   type: string 
+                 database:
+                  description: 'Example: True or False'
+                  type: boolean 
             type: object
       tags:
         -experimental
