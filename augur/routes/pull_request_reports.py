@@ -10,9 +10,9 @@ warnings.filterwarnings('ignore')
 
 
 from bokeh.palettes import Colorblind, mpl, Category20
-from bokeh.layouts import gridplot
+from bokeh.layouts import gridplot, row, column
 from bokeh.models.annotations import Title
-from bokeh.io import export_png
+from bokeh.io import export_png, show
 from bokeh.models import ColumnDataSource, Legend, LabelSet, Range1d, Label, FactorRange, BasicTicker, ColorBar, LinearColorMapper, PrintfTickFormatter
 from bokeh.plotting import figure
 from bokeh.models.glyphs import Rect
@@ -618,13 +618,16 @@ def create_routes(server):
             break
 
         plot_width = 315 * len(x_groups)
+
+        if plot_width < 900:
+            plot_width = 900
         title_beginning = repo_dict[repo_id] 
         p = figure(x_range=x_groups, plot_height=350, plot_width=plot_width,  
                    title='{}: {}'.format(title_beginning, "Count of {} Pull Requests by Merged Status".format(description)), toolbar_location=None)
 
         dodge_amount = 0.12
         color_index = 0
-        x_offset = 50
+        x_offset = 60
 
         all_totals = []
         for data_desc, input_df in data_dict.items():
@@ -944,12 +947,12 @@ def create_routes(server):
             p.add_layout(legend, side)
 
     #     add_legend((150, 50), "horizontal", "center")
-        add_legend(legend_position, "vertical", "right")
+        add_legend((10, 135), "vertical", "right")
         
         plot = p
         
         p = figure(width = plot_width, height = 200, margin = (0, 0, 0, 0))
-        caption = "Caption Here"
+        caption = "This graph shows the average number of days between comments for all closed pull requests per month in four categories. These four categories are All Merged, All Not Merged, Slowest 20% Merged, and Slowest 20% Not Merged."
         p.add_layout(Label(
         x = 0, # Change to shift caption left or right
         y = 160, 
@@ -1233,8 +1236,6 @@ def create_routes(server):
         same_scales = True
         y_axis = 'repo_name'
         description = 'All Closed'
-        title = "Average Pull Request Event Types for {} Pull Requests"
-
     
         colors = linear_gradient('#f5f5dc', '#fff44f', 150)['hex']
 
@@ -1330,7 +1331,32 @@ def create_routes(server):
                 grid_row = []
         grid = gridplot(grid_array)
 
-        filename = export_png(grid)
+        #create caption plot
+        caption_plot = figure(width = plot_width, height=200, margin = (0, 0, 0, 0))
+        caption = "This graph shows the average count of several different event types for closed pull requests per year. It spilits the pull requests into two categories, Merged / Accepted, and Not Merged / Rejected, so it is easy see the differences in activity between the two."
+
+        caption_plot.add_layout(Label(x = 0, y = 380, x_units = 'screen',y_units = 'screen',text='{}'.format(caption),
+                        text_font = 'times', text_font_size = '15pt',render_mode='css'))
+
+        caption_plot.outline_line_color = None
+        caption_plot.toolbar_location = None
+
+        #create title plot
+        title_plot = figure(width = plot_width, height=50, margin = (0, 0, 0, 0))
+        title = '{}: Average Pull Request Event Types for {} Pull Requests'.format(repo_dict[repo_id], description)
+
+        title_plot.add_layout(Label(x = 450, y = 0, x_units = 'screen', y_units = 'screen', text='{}'.format(title), 
+                                    text_font = 'times', text_font_size = '17px',
+                                    text_font_style = 'bold', render_mode='css'))
+
+        title_plot.outline_line_color = None
+        title_plot.toolbar_location = None
+        
+
+        layout = column([title_plot, grid, caption_plot], sizing_mode='scale_width')
+        #show(layout)
+
+        filename = export_png(layout)
         
         return send_file(filename)
 
@@ -1362,7 +1388,7 @@ def create_routes(server):
         description = "All Closed"
         heat_field = 'days_to_first_response'
         columns = 2
-        
+
 
         red_green_gradient = linear_gradient('#0080FF', '#DC143C', 150)['hex']#32CD32
 
@@ -1433,7 +1459,7 @@ def create_routes(server):
         plot = p
 
         p = figure(width = plot_width, height=200, margin = (0, 0, 0, 0))
-        caption = "Caption Here"
+        caption = "This graph shows the average duration of all closed pull requests. Red represents a slow response relative to the others, while blue a light blue represents a fast response relative to the others. Blank cells represents months without pull requests."
         p.add_layout(Label(
         x = 0, # Change to shift caption left or right
         y = 160, 
@@ -1453,4 +1479,6 @@ def create_routes(server):
         filename = export_png(grid)
         
         return send_file(filename)
+
+
    
