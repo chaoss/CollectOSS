@@ -6,9 +6,9 @@ from flask import Response
 
 def create_routes(server):
 
-    @server.app.route('/{}/collection_status/facade'.format(server.api_version))
-    def facade_collection_status(): #TODO: make this name automatic - wrapper?
-        facade_collection_sql = s.sql.text("""
+    @server.app.route('/{}/collection_status/commits'.format(server.api_version))
+    def commit_collection_status(): #TODO: make this name automatic - wrapper?
+        commit_collection_sql = s.sql.text("""
             SELECT
                 repo_id,
                 repo_path,
@@ -31,7 +31,7 @@ def create_routes(server):
             WHERE
                 repo_status = 'Complete'
         """)
-        results = pd.read_sql(facade_collection_sql, server.augur_app.database)
+        results = pd.read_sql(commit_collection_sql, server.augur_app.database)
         data = results.to_json(orient="records", date_format='iso', date_unit='ms')
         return Response(response=data,
                         status=200,
