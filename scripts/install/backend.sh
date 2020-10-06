@@ -12,4 +12,3 @@ if [[ $target == *"prod"* ]]; then
 else
     pip install -e .[dev]
 fi
-

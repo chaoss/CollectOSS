@@ -12,7 +12,7 @@ If you're running Augur on macOS, we strongly suggest adding the following line 
 macOS takes "helpful" measures to prevent Python subprocesses (which Augur uses) from forking cleanly, and setting this environment variable disables these safety measures to restore normal Python functionality.
 
 .. warning::
-  If you skip this step, you'll likely see all housekeeer jobs randomly exiting for no reason, and the Gunicorn server will not behave nicely either. Don't say we didn't warn you!
+  If you skip this step, you'll likely see all housekeeer jobs randomly exiting for no reason, and the Gunicorn server will not behave nicely either. Skip this step at your peril!
 
 
 Dependencies
@@ -23,14 +23,14 @@ Backend
 Required:
 
 -  `GitHub Access Token <https://github.com/settings/tokens>`__ (``repo`` and all ``read`` scopes except ``enterprise``)
--  `GitLab Access Token <https://gitlab.com/profile/personal_access_tokens>`__ 
+-  `GitLab Access Token <https://gitlab.com/profile/personal_access_tokens>`__
 -  `Python 3.6 or later <https://www.python.org/downloads/>`__
 
 Our REST API & data collection workers are written in Python 3.6. We query the GitHub & GitLab API to collect data about issues, pull requests, contributors, and other information about a repository, so GitLab and GitHub access tokens are **required** for data collection.
 
 Optional:
 
--  `Go 1.12 or later <https://golang.org/doc/install>`__ 
+-  `Go 1.12 or later <https://golang.org/doc/install>`__
 
 The ``value_worker`` uses a Go package called `scc <https://github.com/boyter/scc>`_ to run COCOMO calculations.
 Once you've installed Go, follow the appropriate steps for your system to install the ``scc`` package.
@@ -56,6 +56,9 @@ after which you'll move on to the next section to configure the workers.
 .. note::
   Lines that start with a ``$`` denote a command to be run in an interactive terminal.
 
+.. warning::
+  Do **NOT** install or run Augur using ``sudo``. It is not required, and using it will inevitably cause some permissions trouble. Don't say we didn't warn you!
+
 0. Clone the repository and change to the newly created directory.
 
 .. code-block:: bash
@@ -63,7 +66,7 @@ after which you'll move on to the next section to configure the workers.
    $ git clone https://github.com/chaoss/augur.git
    $ cd augur/
 
-1. Create a virtual environment in a directory of your choosing. Be sure to use the correct ``python`` command for 
+1. Create a virtual environment in a directory of your choosing. Be sure to use the correct ``python`` command for
 your installation of Python 3: on most systems, this is ``python3``, but yours may differ (you can use ``python -V`` or ``python3 -V`` to check).
 
 .. code-block:: bash
@@ -92,7 +95,7 @@ your installation of Python 3: on most systems, this is ``python3``, but yours m
 
    $ make install
 
-If you think something went wrong, check the log files under ``logs/install/``. If you want to try again, you can use ``make clean`` to delete any build files before running ``make install`` again.
+If you think something went wrong, check the log files in ``logs/``. If you want to try again, you can use ``make clean`` to delete any build files before running ``make install`` again.
 
 .. note::
 
