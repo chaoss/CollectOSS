@@ -21,12 +21,7 @@ from bokeh.transform import dodge, factor_cmap, transform
 
 def create_routes(server):
 
-    def pull_request_data_collection(repo_id, start_date, end_date, database_connection_string, df_type, slow_20):
-
-        dbschema='augur_data'
-        engine = salc.create_engine(
-        database_connection_string,
-        connect_args={'options': '-csearch_path={}'.format(dbschema)})
+    def pull_request_data_collection(repo_id, start_date, end_date, df_type, slow_20):
 
         pr_query = salc.sql.text(f"""
                     SELECT
@@ -140,7 +135,7 @@ def create_routes(server):
                     ORDER BY
                        merged_count DESC
                         """)
-        pr_all = pd.read_sql(pr_query, con=engine)
+        pr_all = pd.read_sql(pr_query, server.augur_app.database)
     
 
         pr_all[['assigned_count',
@@ -330,17 +325,9 @@ def create_routes(server):
         repo_id = request.json['repo_id']
         start_date = request.json['start_date']
         end_date = request.json['end_date']
+        return_json = request.json['return_json']
 
-        user = request.json['user']
-        password = request.json['password']
-        host = request.json['host']
-        port = request.json['port']
-        database = request.json['database']
-
-
-        database_connection_string = 'postgres+psycopg2://{}:{}@{}:{}/{}'.format(user, password, host, port, database)
-
-        input_df = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, database_connection_string=database_connection_string, slow_20=False, df_type='pr_all')
+        input_df = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, slow_20=False, df_type='pr_all')
 
         x_axis = 'closed_year'
         y_axis = 'num_commits'
@@ -440,6 +427,9 @@ def create_routes(server):
 
         grid = gridplot([[plot], [caption_plot]])
 
+        if return_json:
+            return json_item(grid, "average_commits_per_PR")
+
         filename = export_png(grid)
         
         return send_file(filename)
@@ -450,17 +440,9 @@ def create_routes(server):
         repo_id = request.json['repo_id']
         start_date = request.json['start_date']
         end_date = request.json['end_date']
+        return_json = request.json['return_json']
 
-        user = request.json['user']
-        password = request.json['password']
-        host = request.json['host']
-        port = request.json['port']
-        database = request.json['database']
-
-
-        database_connection_string = 'postgres+psycopg2://{}:{}@{}:{}/{}'.format(user, password, host, port, database)
-
-        input_df = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, database_connection_string=database_connection_string, slow_20=False, df_type='pr_closed')
+        input_df = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, slow_20=False, df_type='pr_closed')
 
         group_by = 'merged_flag'
         x_axis = 'comment_count'
@@ -580,6 +562,9 @@ def create_routes(server):
 
         grid = gridplot([[plot], [caption_plot]])
 
+        if return_json:
+            return json_item(grid, "average_comments_per_PR")
+
         filename = export_png(grid)
         
         return send_file(filename)
@@ -590,19 +575,11 @@ def create_routes(server):
         repo_id = request.json['repo_id']
         start_date = request.json['start_date']
         end_date = request.json['end_date']
+        return_json = request.json['return_json']
 
-        user = request.json['user']
-        password = request.json['password']
-        host = request.json['host']
-        port = request.json['port']
-        database = request.json['database']
-
-
-        database_connection_string = 'postgres+psycopg2://{}:{}@{}:{}/{}'.format(user, password, host, port, database)
-
-        pr_closed = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, database_connection_string=database_connection_string, slow_20=False, df_type='pr_closed')
-        pr_slow20_not_merged = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, database_connection_string=database_connection_string, slow_20=True, df_type='pr_not_merged')
-        pr_slow20_merged = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, database_connection_string=database_connection_string, slow_20=True, df_type='pr_merged')
+        pr_closed = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, slow_20=False, df_type='pr_closed')
+        pr_slow20_not_merged = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, slow_20=True, df_type='pr_not_merged')
+        pr_slow20_merged = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, slow_20=True, df_type='pr_merged')
 
         x_axis='closed_year'
         description='All Closed'
@@ -736,6 +713,9 @@ def create_routes(server):
         caption_plot = p
 
         grid = gridplot([[plot], [caption_plot]])
+
+        if return_json:
+            return json_item(grid, "PR_counts_by_merged_status")
         
         filename = export_png(grid)
         
@@ -747,19 +727,9 @@ def create_routes(server):
         repo_id = request.json['repo_id']
         start_date = request.json['start_date']
         end_date = request.json['end_date']
+        return_json = request.json['return_json']
 
-        user = request.json['user']
-        password = request.json['password']
-        host = request.json['host']
-        port = request.json['port']
-        database = request.json['database']
-
-        time_unit = request.json['time_unit']
-
-
-        database_connection_string = 'postgres+psycopg2://{}:{}@{}:{}/{}'.format(user, password, host, port, database)
-
-        input_df = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, database_connection_string=database_connection_string, slow_20=False, df_type='pr_closed')   
+        input_df = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, slow_20=False, df_type='pr_closed')   
 
         time_unit='days'
         x_max = 95
@@ -971,6 +941,9 @@ def create_routes(server):
 
         grid = gridplot([[plot], [caption_plot]])
 
+        if return_json:
+            return json_item(grid, "mean_response_times_for_PR")
+
         filename = export_png(grid)
         
         return send_file(filename)
@@ -981,20 +954,12 @@ def create_routes(server):
         repo_id = request.json['repo_id']
         start_date = request.json['start_date']
         end_date = request.json['end_date']
+        return_json = request.json['return_json']
 
-        user = request.json['user']
-        password = request.json['password']
-        host = request.json['host']
-        port = request.json['port']
-        database = request.json['database']
-
-
-        database_connection_string = 'postgres+psycopg2://{}:{}@{}:{}/{}'.format(user, password, host, port, database)
-
-        pr_closed = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, database_connection_string=database_connection_string, slow_20=False, df_type='pr_closed')
-        pr_slow20_not_merged = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, database_connection_string=database_connection_string, slow_20=True, df_type='pr_not_merged')
-        pr_slow20_merged = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, database_connection_string=database_connection_string, slow_20=True, df_type='pr_merged')
-        pr_all = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, database_connection_string=database_connection_string, slow_20=False, df_type='pr_all')
+        pr_closed = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, slow_20=False, df_type='pr_closed')
+        pr_slow20_not_merged = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, slow_20=True, df_type='pr_not_merged')
+        pr_slow20_merged = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, slow_20=True, df_type='pr_merged')
+        pr_all = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, slow_20=False, df_type='pr_all')
 
         repo_dict = {repo_id : pr_closed.loc[pr_closed['repo_id'] == repo_id].iloc[0]['repo_name']}  
 
@@ -1090,6 +1055,9 @@ def create_routes(server):
         caption_plot = p
 
         grid = gridplot([[plot], [caption_plot]])
+
+        if return_json:
+            return json_item(grid, "mean_days_between_PR_comments")
  
         filename = export_png(grid)
         
@@ -1102,17 +1070,9 @@ def create_routes(server):
         start_date = request.json['start_date']
         end_date = request.json['end_date']
         remove_outliers = request.json['remove_outliers']
+        return_json = request.json['return_json']
 
-        user = request.json['user']
-        password = request.json['password']
-        host = request.json['host']
-        port = request.json['port']
-        database = request.json['database']
-
-
-        database_connection_string = 'postgres+psycopg2://{}:{}@{}:{}/{}'.format(user, password, host, port, database)
-
-        pr_closed = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, database_connection_string=database_connection_string, slow_20=False, df_type='pr_closed')
+        pr_closed = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, slow_20=False, df_type='pr_closed')
        
         repo_dict = {repo_id : pr_closed.loc[pr_closed['repo_id'] == repo_id].iloc[0]['repo_name']}  
    
@@ -1202,6 +1162,9 @@ def create_routes(server):
         caption_plot = p
 
         grid = gridplot([[plot], [caption_plot]])
+
+        if return_json:
+            return json_item(grid, "PR_time_to_first_response")
  
         filename = export_png(grid)
         
@@ -1213,19 +1176,10 @@ def create_routes(server):
         repo_id = request.json['repo_id']
         start_date = request.json['start_date']
         end_date = request.json['end_date']
-
-        user = request.json['user']
-        password = request.json['password']
-        host = request.json['host']
-        port = request.json['port']
-        database = request.json['database']
-
         include_comments = request.json['include_comments']
+        return_json = request.json['return_json']
 
-
-        database_connection_string = 'postgres+psycopg2://{}:{}@{}:{}/{}'.format(user, password, host, port, database)
-
-        pr_closed = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, database_connection_string=database_connection_string, slow_20=False, df_type='pr_closed')
+        pr_closed = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, slow_20=False, df_type='pr_closed')
        
         repo_dict = {repo_id : pr_closed.loc[pr_closed['repo_id'] == repo_id].iloc[0]['repo_name']} 
 
@@ -1353,6 +1307,9 @@ def create_routes(server):
         
 
         layout = column([title_plot, grid, caption_plot], sizing_mode='scale_width')
+
+        if return_json:
+            return json_item(layout, "average_PR_events_for_closed_PRs")
         #show(layout)
 
         filename = export_png(layout)
@@ -1366,17 +1323,9 @@ def create_routes(server):
         start_date = request.json['start_date']
         end_date = request.json['end_date']
         remove_outliers = request.json['remove_outliers']
+        return_json = request.json['return_json']
 
-        user = request.json['user']
-        password = request.json['password']
-        host = request.json['host']
-        port = request.json['port']
-        database = request.json['database']
-
-
-        database_connection_string = 'postgres+psycopg2://{}:{}@{}:{}/{}'.format(user, password, host, port, database)
-
-        pr_closed = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, database_connection_string=database_connection_string, slow_20=False, df_type='pr_closed')
+        pr_closed = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, slow_20=False, df_type='pr_closed')
        
         repo_dict = {repo_id : pr_closed.loc[pr_closed['repo_id'] == repo_id].iloc[0]['repo_name']} 
 
@@ -1473,6 +1422,9 @@ def create_routes(server):
         caption_plot = p
 
         grid = gridplot([[plot], [caption_plot]])
+
+        if return_json:
+            return json_item(grid, "Average_PR_duration")
 
         filename = export_png(grid)
         

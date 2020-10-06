@@ -11,6 +11,7 @@ warnings.filterwarnings('ignore')
 
 #import visualization libraries
 from bokeh.io import export_png
+from bokeh.embed import json_item
 from bokeh.plotting import figure
 from bokeh.models import Label, LabelSet, ColumnDataSource, Legend
 from bokeh.palettes import Colorblind
@@ -30,12 +31,7 @@ def create_routes(server):
         elif month >= 10 and month <= 12:
             return '10' + '/' + year
 
-    def new_contibutor_data_collection(repo_id, required_contributions, database_connection_string):
-
-        dbschema='augur_data'
-        engine = salc.create_engine(
-            database_connection_string,
-            connect_args={'options': '-csearch_path={}'.format(dbschema)})
+    def new_contibutor_data_collection(repo_id, required_contributions):
 
         rank_list = []
         for num in range(1, required_contributions + 1):
@@ -265,7 +261,7 @@ def create_routes(server):
                 WHERE RANK IN {rank_tuple}
 
          """)
-        df = pd.read_sql(contributor_query, con=engine)
+        df = pd.read_sql(contributor_query, server.augur_app.database)
 
         df = df.loc[~df['full_name'].str.contains('bot', na=False)]
         df = df.loc[~df['login'].str.contains('bot', na=False)]
@@ -287,12 +283,7 @@ def create_routes(server):
 
         return df
 
-    def months_data_collection(start_date, end_date, database_connection_string):
-
-        dbschema='augur_data'
-        engine = salc.create_engine(
-            database_connection_string,
-            connect_args={'options': '-csearch_path={}'.format(dbschema)})
+    def months_data_collection(start_date, end_date):
 
         months_df = pd.DataFrame()
 
@@ -309,7 +300,7 @@ def create_routes(server):
                         (SELECT * FROM ( SELECT created_month :: DATE FROM generate_series (TIMESTAMP '{start_date}', TIMESTAMP '{end_date}', INTERVAL '1 month' ) created_month ) d ) x 
                     ) y
         """)
-        months_df = pd.read_sql(months_query, con=engine)
+        months_df = pd.read_sql(months_query, server.augur_app.database)
 
         #add yearmonths to months_df
         months_df[['year','month']] = months_df[['year','month']].astype(float).astype(int).astype(str)
@@ -337,18 +328,11 @@ def create_routes(server):
         group_by = request.json['group_by']
         required_contributions = request.json['required_contributions']
         required_time = request.json['required_time']
-
-        user = request.json['user']
-        password = request.json['password']
-        host = request.json['host']
-        port = request.json['port']
-        database = request.json['database']
+        return_json = request.json['return_json']
 
 
-        database_connection_string = 'postgres+psycopg2://{}:{}@{}:{}/{}'.format(user, password, host, port, database)
-
-        input_df = new_contibutor_data_collection(repo_id=repo_id, required_contributions=required_contributions, database_connection_string=database_connection_string)
-        months_df = months_data_collection(start_date=start_date, end_date=end_date, database_connection_string=database_connection_string)
+        input_df = new_contibutor_data_collection(repo_id=repo_id, required_contributions=required_contributions)
+        months_df = months_data_collection(start_date=start_date, end_date=end_date)
 
         repo_dict = {repo_id : input_df.loc[input_df['repo_id'] == repo_id].iloc[0]['repo_name']}   
 
@@ -550,7 +534,11 @@ def create_routes(server):
         #puts plots together into a grid
         grid = gridplot([row_1, row_2, row_3, row_4])
 
+        if return_json:
+            return json_item(grid, "new_contributors_bar")
+
         filename = export_png(grid)
+
         
         return send_file(filename)
 
@@ -563,18 +551,10 @@ def create_routes(server):
         group_by = request.json['group_by']
         required_contributions = request.json['required_contributions']
         required_time = request.json['required_time']
+        return_json = request.json['return_json']
 
-        user = request.json['user']
-        password = request.json['password']
-        host = request.json['host']
-        port = request.json['port']
-        database = request.json['database']
-
-
-        database_connection_string = 'postgres+psycopg2://{}:{}@{}:{}/{}'.format(user, password, host, port, database)
-
-        input_df = new_contibutor_data_collection(repo_id=repo_id, required_contributions=required_contributions, database_connection_string=database_connection_string)
-        months_df = months_data_collection(start_date=start_date, end_date=end_date, database_connection_string=database_connection_string)
+        input_df = new_contibutor_data_collection(repo_id=repo_id, required_contributions=required_contributions)
+        months_df = months_data_collection(start_date=start_date, end_date=end_date)
 
 
         repo_dict = {repo_id : input_df.loc[input_df['repo_id'] == repo_id].iloc[0]['repo_name']}    
@@ -805,8 +785,11 @@ def create_routes(server):
         #puts plots together into a grid
         grid = gridplot([row_1, row_2, row_3, row_4])
 
+        if return_json:
+            return json_item(grid, "new_contributors_stacked_bar")
+
         filename = export_png(grid)
-        
+
         return send_file(filename)
 
     @server.app.route('/{}/contributor_reports/returning_contributors_pie_chart/'.format(server.api_version), methods=["POST"])
@@ -817,16 +800,9 @@ def create_routes(server):
         end_date = request.json['end_date']
         required_contributions = request.json['required_contributions']
         required_time = request.json['required_time']
+        return_json = request.json['return_json']
 
-        user = request.json['user']
-        password = request.json['password']
-        host = request.json['host']
-        port = request.json['port']
-        database = request.json['database']
-
-        database_connection_string = 'postgres+psycopg2://{}:{}@{}:{}/{}'.format(user, password, host, port, database)
-
-        input_df = new_contibutor_data_collection(repo_id=repo_id, required_contributions=required_contributions, database_connection_string=database_connection_string)
+        input_df = new_contibutor_data_collection(repo_id=repo_id, required_contributions=required_contributions)
         
         repo_dict = {repo_id : input_df.loc[input_df['repo_id'] == repo_id].iloc[0]['repo_name']}    
 
@@ -890,7 +866,7 @@ def create_routes(server):
         
         #format title 
         title = "{}: Number of Returning Contributors out of {} from {} to {}".format(repo_dict[repo_id], drive_by_contributors + repeat_contributors, start_date, end_date)
-        print(title) 
+        
         title_text_font_size = 18
         
         plot_width = 850
@@ -968,6 +944,9 @@ def create_routes(server):
         #put graph and caption plot together into one grid
         grid = gridplot([[plot], [caption_plot]])
 
+        if return_json:
+            return json_item(grid, "returning_contributors_pie_chart")
+
         filename = export_png(grid)
         
         return send_file(filename)
@@ -981,17 +960,10 @@ def create_routes(server):
         group_by = request.json['group_by']
         required_contributions = request.json['required_contributions']
         required_time = request.json['required_time']
+        return_json = request.json['return_json']
 
-        user = request.json['user']
-        password = request.json['password']
-        host = request.json['host']
-        port = request.json['port']
-        database = request.json['database']
-
-        database_connection_string = 'postgres+psycopg2://{}:{}@{}:{}/{}'.format(user, password, host, port, database)
-
-        input_df = new_contibutor_data_collection(repo_id=repo_id, required_contributions=required_contributions, database_connection_string=database_connection_string)
-        months_df = months_data_collection(start_date=start_date, end_date=end_date, database_connection_string=database_connection_string)
+        input_df = new_contibutor_data_collection(repo_id=repo_id, required_contributions=required_contributions)
+        months_df = months_data_collection(start_date=start_date, end_date=end_date)
 
         repo_dict = {repo_id : input_df.loc[input_df['repo_id'] == repo_id].iloc[0]['repo_name']}    
 
@@ -1182,6 +1154,9 @@ def create_routes(server):
 
         #put graph and caption plot together into one grid
         grid = gridplot([[plot], [caption_plot]])
+
+        if return_json:
+            return json_item(grid, "returning_contributors_stacked_bar")
 
         filename = export_png(grid)
         
