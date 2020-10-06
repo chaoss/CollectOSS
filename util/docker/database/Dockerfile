@@ -1,3 +1,4 @@
+#SPDX-License-Identifier: MIT
 FROM postgres:10 as setup-stage
 
 LABEL maintainer="c@carterlandis.com"

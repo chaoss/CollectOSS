@@ -1,3 +1,4 @@
+<!-- #SPDX-License-Identifier: MIT -->
 <template>
   <div id="AugTextInput">
     <label :for="inputName">{{text}}</label>

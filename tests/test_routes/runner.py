@@ -1,3 +1,4 @@
+#SPDX-License-Identifier: MIT
 import time
 import subprocess
 import os

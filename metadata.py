@@ -1,3 +1,4 @@
+#SPDX-License-Identifier: MIT
 __name__ = "Augur"
 __slug__ = "augur"
 __url__ = "https://github.com/chaoss/augur"

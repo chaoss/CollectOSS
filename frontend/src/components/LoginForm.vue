@@ -1,3 +1,4 @@
+<!-- #SPDX-License-Identifier: MIT -->
 <template>
 <div class="limiter">
   <router-link to="/"><img src="@/assets/logo.png" id="logo" alt="CHAOSS: Community Health Analytics for Open Source Software"/></router-link>

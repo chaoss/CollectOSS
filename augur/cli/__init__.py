@@ -1,3 +1,4 @@
+#SPDX-License-Identifier: MIT
 import click
 from functools import update_wrapper
 

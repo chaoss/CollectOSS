@@ -1,3 +1,4 @@
+<!-- #SPDX-License-Identifier: MIT -->
 <template>
   <!-- <div class="row section collapsible collapsed"> -->
 <section class="unmaterialized">

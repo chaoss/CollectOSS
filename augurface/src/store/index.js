@@ -1,3 +1,4 @@
+// #SPDX-License-Identifier: MIT
 import Vue from 'vue';
 import Vuex from 'vuex';
 import utilModule from './UtilModule.js';

@@ -1,3 +1,4 @@
+<!-- #SPDX-License-Identifier: MIT -->
 <template>
   <d-card>
     <d-card-body :title="title" class="text-center">

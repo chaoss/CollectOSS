@@ -1,3 +1,4 @@
+// #SPDX-License-Identifier: MIT
 const _ = require('lodash');
 import Vue from 'vue';
 

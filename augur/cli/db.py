@@ -1,3 +1,4 @@
+#SPDX-License-Identifier: MIT
 from os import walk, chdir, environ, chmod, path
 import os
 import logging

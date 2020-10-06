@@ -1,3 +1,4 @@
+-- #SPDX-License-Identifier: MIT
 DROP INDEX "augur_data"."domain,active";
 
 DROP INDEX "augur_data"."domain,affiliation,start_date";

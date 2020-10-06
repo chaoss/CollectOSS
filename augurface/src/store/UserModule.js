@@ -1,3 +1,4 @@
+// #SPDX-License-Identifier: MIT
 // module for necessary user data
 import Vue from "vue";
 

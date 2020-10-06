@@ -1,3 +1,4 @@
+<!-- #SPDX-License-Identifier: MIT -->
 <template>
   <div>
       <div :id="source"></div>

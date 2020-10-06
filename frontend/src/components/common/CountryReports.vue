@@ -1,3 +1,4 @@
+<!-- #SPDX-License-Identifier: MIT -->
 <!-- <template>
   <div class="card card-small country-stats">
 

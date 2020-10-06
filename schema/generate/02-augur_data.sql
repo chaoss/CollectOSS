@@ -1,3 +1,4 @@
+-- #SPDX-License-Identifier: MIT
 -- ----------------------------
 -- Sequence structure for augur_data.repo_insights_ri_id_seq
 -- ----------------------------

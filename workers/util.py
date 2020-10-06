@@ -1,3 +1,4 @@
+#SPDX-License-Identifier: MIT
 import os, json, requests, logging
 from flask import Flask, Response, jsonify, request
 import gunicorn.app.base
