@@ -44,6 +44,7 @@ from workers.util import read_config
 class Config:
 
     def __init__(self, logger):
+        self.repos_processed = 0
         self.upstream_db = 7
         self.cursor = None
         self.cursor_people = None
@@ -60,10 +61,6 @@ class Config:
                 " in your \'Workers\' -> \'facade_worker\' object in your config "
                 "to the directory in which you want to clone repos. Exiting...")
             sys.exit(1)
-
-        # self.tool_source = 'Facade Worker'
-        # self.tool_version = '1.0.0'
-        # self.data_source = 'Git Log'
 
         self.tool_source = '\'Facade Worker\''
         self.tool_version = '\'1.0.1\''
@@ -169,7 +166,7 @@ class Config:
 
         cursor = db.cursor()#pymysql.cursors.DictCursor)
 
-## TODO: Does this need a block for if the database connection IS multithreaded? I think so, @gabe-heim 
+## TODO: Does this need a block for if the database connection IS multithreaded? I think so, @gabe-heim
 
         if people and not multi_threaded_connection:
             self.cursor_people = cursor
@@ -180,7 +177,7 @@ class Config:
 
         # Figure out how much we're going to log
         self.log_level = self.get_setting('log_level')
-        #Not getting debug logging for some reason. 
+        #Not getting debug logging for some reason.
         self.log_level = 'Debug'
         return db, cursor
 
@@ -188,7 +185,7 @@ class Config:
 
     # Get a setting from the database
 
-        query = ("""SELECT value FROM settings WHERE setting=%s ORDER BY 
+        query = ("""SELECT value FROM settings WHERE setting=%s ORDER BY
             last_modified DESC LIMIT 1""")
         self.cursor.execute(query, (setting, ))
         # print(type(self.cursor.fetchone()))
@@ -240,3 +237,6 @@ class Config:
                 db_port, False, False)
             self.cursor.execute(query, (level, status))
             self.db.commit()
+
+    def inc_repos_processed(self):
+        self.repos_processed += 1
