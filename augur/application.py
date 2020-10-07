@@ -64,7 +64,6 @@ class Application():
             self.metrics = Metrics(self)
 
     def _connect_to_database(self):
-        logger.debug("Testing database connections")
         user = self.config.get_value('Database', 'user')
         host = self.config.get_value('Database', 'host')
         port = self.config.get_value('Database', 'port')
@@ -90,6 +89,7 @@ class Application():
             engine.connect().close()
             helper_engine.connect().close()
             spdx_engine.connect().close()
+            logger.debug("Database connection successfully established")
             return engine, helper_engine, spdx_engine
         except s.exc.OperationalError as e:
             logger.error("Unable to connect to the database. Terminating...")
