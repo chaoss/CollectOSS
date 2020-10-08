@@ -13,7 +13,7 @@ from gunicorn.arbiter import Arbiter
 
 from augur.cli import initialize_logging, pass_config, pass_application
 from augur.housekeeper import Housekeeper
-from augur.server import Server, AUGUR_API_VERSION
+from augur.server import Server
 from augur.application import Application
 from augur.gunicorn import AugurGunicornApp
 
@@ -43,7 +43,7 @@ def start(disable_housekeeper, skip_cleanup):
     master = initialize_components(augur_app, disable_housekeeper)
 
     logger.info('Starting Gunicorn webserver...')
-    logger.info(f"Augur is running at: http://0.0.0.0:5000/{AUGUR_API_VERSION}")
+    logger.info(f"Augur is running at: http://0.0.0.0:5000")
     logger.info("Gunicorn server logs & errors will be written to logs/gunicorn.log")
     logger.info('Housekeeper update process logs will now take over.')
     Arbiter(master).run()
