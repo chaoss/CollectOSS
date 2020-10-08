@@ -14,12 +14,33 @@ import pandas as pd
 import sqlalchemy as s
 
 from augur.cli import initialize_logging, pass_config, pass_application
+from augur.cli.server import _broadcast_signal_to_processes
 
 logger = logging.getLogger(__name__)
 
 @click.group('util', short_help='Miscellaneous utilities')
 def cli():
     pass
+
+@cli.command('stop')
+@initialize_logging
+def stop_server():
+    """
+    Sends SIGTERM to all Augur server & worker processes
+    """
+    logger.warning("THIS COMMAND WILL BE DEPRECATED IN AUGUR v0.15.0")
+    logger.warning("PLEASE USER augur server kill INSTEAD.")
+    _broadcast_signal_to_processes(attach_logger=True)
+
+@cli.command('kill')
+@initialize_logging
+def kill_server():
+    """
+    Sends SIGKILL to all Augur server & worker processes
+    """
+    logger.warning("THIS COMMAND WILL BE DEPRECATED IN AUGUR v0.15.0")
+    logger.warning("PLEASE USER augur server kill INSTEAD.")
+    _broadcast_signal_to_processes(signal=signal.SIGKILL, attach_logger=True)
 
 @cli.command('export-env')
 @pass_config
