@@ -41,7 +41,7 @@ Current maintainers
 - `Gabe Heim <https://github.com/gabe-heim>`_
 - `Matt Snell <https://github.com/Nebrethar>`_
 - `Andrew Brain <https://github.com/ABrain7710>`_
-- Ryland Dohm
+- `Ryland Dohm <https://github.com/rcdohm>`_
 - `Carter Landis <https://github.com/ccarterlandis>`_
 
 
