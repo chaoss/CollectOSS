@@ -19,7 +19,7 @@ from augur.gunicorn import AugurGunicornApp
 
 logger = logging.getLogger("augur")
 
-@click.group('server', short_help='Server commands')
+@click.group('server', short_help='Commands for controlling the backend API server & data collection workers')
 def cli():
     pass
 
@@ -56,7 +56,6 @@ def stop_server():
     """
     _broadcast_signal_to_processes(attach_logger=True)
 
-
 @cli.command('kill')
 @initialize_logging
 def kill_server():
@@ -65,12 +64,11 @@ def kill_server():
     """
     _broadcast_signal_to_processes(signal=signal.SIGKILL, attach_logger=True)
 
-@cli.command('processes',)
+@cli.command('processes')
 @initialize_logging
 def list_processes():
     """
-    Outputs the name and process ID (PID) of all currently running backend Augur processes, including any workers. Will only work in a virtual environment.
-    """
+    Outputs the name/PID of all Augur server & worker processes"""
     processes = get_augur_processes()
     for process in processes:
         logger.info(f"Found process {process.pid}")

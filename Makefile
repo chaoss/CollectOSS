@@ -1,4 +1,4 @@
-SERVE_COMMAND=augur server start
+SERVE_COMMAND=augur backend start
 EDITOR?="vi"
 AUGUR_PIP?='pip'
 AUGUR_PYTHON?='python'
@@ -68,7 +68,7 @@ dev-start:
 	@ scripts/control/start_frontend.sh
 
 dev-stop:
-	@ augur server stop
+	@ augur backend stop
 	@ scripts/control/kill_frontend.sh
 
 dev: dev-stop dev-start

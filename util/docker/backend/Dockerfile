@@ -21,4 +21,4 @@ RUN ./scripts/install/workers.sh prod
 COPY ./util/docker/docker.config.json .
 RUN augur config init --rc-config-file docker.config.json; mkdir repos/;
 
-CMD augur db update-api-key docker_key; augur server start
+CMD augur db update-api-key docker_key; augur backend start

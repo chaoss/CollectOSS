@@ -29,7 +29,7 @@ def stop_server():
     Sends SIGTERM to all Augur server & worker processes
     """
     logger.warning("THIS COMMAND WILL BE DEPRECATED IN AUGUR v0.15.0")
-    logger.warning("PLEASE USER augur server kill INSTEAD.")
+    logger.warning("PLEASE USER augur backend kill INSTEAD.")
     _broadcast_signal_to_processes(attach_logger=True)
 
 @cli.command('kill')
@@ -39,7 +39,7 @@ def kill_server():
     Sends SIGKILL to all Augur server & worker processes
     """
     logger.warning("THIS COMMAND WILL BE DEPRECATED IN AUGUR v0.15.0")
-    logger.warning("PLEASE USER augur server kill INSTEAD.")
+    logger.warning("PLEASE USER augur backend kill INSTEAD.")
     _broadcast_signal_to_processes(signal=signal.SIGKILL, attach_logger=True)
 
 @cli.command('export-env')
