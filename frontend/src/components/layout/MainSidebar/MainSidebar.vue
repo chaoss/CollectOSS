@@ -201,7 +201,7 @@ export default class MainSidebar extends Vue {
     {
       title: "Contributors",
       to: {
-        name: "contributor_reports",
+        name: "contributors",
       },
       htmlBefore: '<i class="material-icons">trending_up</i>', //vertical_split
       htmlAfter: "",
@@ -209,7 +209,7 @@ export default class MainSidebar extends Vue {
     {
       title: "Pull Requests",
       to: {
-        name: "pull_request_reports",
+        name: "pull_requests",
       },
       htmlBefore: '<i class="material-icons">trending_up</i>', //vertical_split
       htmlAfter: "",
