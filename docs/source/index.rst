@@ -33,22 +33,47 @@ four key **human centered data science** strategies:
 
 Our core team has a long standing interest in social computing, software engineering measurement and the ethical instrumentation of online human behavior.
 
-Current members:
-
-- `Derek Howard <https://howderek.com>`_
+Current maintainers
+--------------------
+- `Derek Howard <https://github.com/howderek>`_
 - `Sean P. Goggins <http://www.seangoggins.net>`_
 - `Matt Germonprez <https://goo.gl/E87KdK>`_
 - `Gabe Heim <https://github.com/gabe-heim>`_
 - `Matt Snell <https://github.com/Nebrethar>`_
-- `Max Balk <https://github.com/maxbalk/>`_
 - `Andrew Brain <https://github.com/ABrain7710>`_
-- Ryland Dohm
+- `Ryland Dohm <https://github.com/rcdohm>`_
 - `Carter Landis <https://github.com/ccarterlandis>`_
 
-Former members:
 
+Former maintainers
+--------------------
+- `Christian Cmehil-Warn <https://github.com/christiancme>`_
 - `Jonah Zukosky <https://github.com/jonahz5222>`_
 - `Carolyn Perniciaro <https://github.com/CMPerniciaro>`_
 - `Elita Nelson <https://github.com/ElitaNelson>`_
 - `Michael Woodruff <https://github.com/michaelwoodruffdev/>`_
+- `Max Balk <https://github.com/maxbalk/>`_
 
+Contributors
+--------------------
+- `Dawn Foster <https://github.com/geekygirldawn/>`_
+- `Ivana Atanasova <https://github.com/ivanayov/>`_
+- `Georg J.P. Link <https://github.com/GeorgLink/>`_
+
+GSoC 2020 participants
+-----------------------
+- `Akshara P <https://github.com/aksh555/>`_
+- `Tianyi Zhou <https://github.com/tianyichow/>`_
+- `Pratik Mishra <https://github.com/pratikmishra356/>`_
+- `Sarit Adhikari <https://github.com/sarit-adh/>`_
+- `Saicharan Reddy <https://github.com/mrsaicharan1/>`_
+- `Abhinav Bajpai <https://github.com/abhinavbajpai2012/>`_
+
+GSoC 2019 participants
+-----------------------
+- `Bingwen Ma <https://github.com/bing0n3/>`_
+- `Parth Sharma <https://github.com/parthsharma2/>`_
+
+GSoC 2018 participants
+-----------------------
+- `Keanu Nichols <https://github.com/kmn5409/>`_
