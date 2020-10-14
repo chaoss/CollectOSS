@@ -1,3 +1,4 @@
+-- #SPDX-License-Identifier: MIT
 -- ----------------------------
 -- Sequence structure for annotation_types_annotation_type_id_seq
 -- ----------------------------

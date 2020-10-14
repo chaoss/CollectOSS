@@ -1,3 +1,4 @@
+-- #SPDX-License-Identifier: MIT
 -- DROP TABLE "augur_data"."message_analysis";
 -- DROP TABLE "augur_data"."message_analysis_summary";
 

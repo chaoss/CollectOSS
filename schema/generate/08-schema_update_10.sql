@@ -1,3 +1,4 @@
+-- #SPDX-License-Identifier: MIT
 ALTER TABLE "augur_data"."repo" ALTER COLUMN "repo_git" TYPE varchar COLLATE "pg_catalog"."default";
 
 ALTER TABLE "augur_data"."repo" ALTER COLUMN "repo_name" TYPE varchar COLLATE "pg_catalog"."default";

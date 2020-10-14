@@ -1,3 +1,4 @@
+#SPDX-License-Identifier: MIT
 import click
 import os
 from os import walk

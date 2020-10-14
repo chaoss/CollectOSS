@@ -1,3 +1,4 @@
+-- #SPDX-License-Identifier: MIT
 -- Generate core schema
 \i schema/generate/01-schema.sql
 \i schema/generate/02-augur_data.sql

@@ -1,3 +1,4 @@
+#SPDX-License-Identifier: MIT
 # Minimal makefile for Sphinx documentation
 #
 

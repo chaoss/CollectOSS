@@ -1,3 +1,4 @@
+#SPDX-License-Identifier: MIT
 """ Helper methods constant across all workers """
 import requests, datetime, time, traceback, json, os, sys, math, logging
 from logging import FileHandler, Formatter, StreamHandler

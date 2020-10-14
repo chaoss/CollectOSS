@@ -1,3 +1,4 @@
+<!-- #SPDX-License-Identifier: MIT -->
 <template>
     <div class="AugIconButton" @click="$emit('click', $event)" :class="{ circle: circular }">
       <i :class="iconClass"></i>

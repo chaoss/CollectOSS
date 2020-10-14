@@ -1,3 +1,4 @@
+#SPDX-License-Identifier: MIT
 """
 Metrics that provides data about contributors & their associated activity
 """

@@ -1,3 +1,4 @@
+<!-- #SPDX-License-Identifier: MIT -->
 <template>
   <div ref="holder">
     <div class="groupedbarchart">

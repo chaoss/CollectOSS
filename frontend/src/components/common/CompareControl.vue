@@ -1,3 +1,4 @@
+<!-- #SPDX-License-Identifier: MIT -->
 <template>
   <d-container style="max-width: 1240px; padding-bottom:1rem">
     <d-card>
