@@ -1,3 +1,4 @@
+// #SPDX-License-Identifier: MIT
 import Vue from 'vue'
 import Router from 'vue-router'
 import MetricsStatusCard from '../components/MetricsStatusCard'

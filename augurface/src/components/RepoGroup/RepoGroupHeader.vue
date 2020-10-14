@@ -1,3 +1,4 @@
+<!-- #SPDX-License-Identifier: MIT -->
 <template>
   <div id="RepoGroupHeader">
     <h1>{{ repoGroup.rg_name }} ({{repoCountInGroup(repoGroup.repo_group_id)}})</h1>

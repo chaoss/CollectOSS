@@ -1,3 +1,4 @@
+#SPDX-License-Identifier: MIT
 SERVE_COMMAND=augur backend start
 EDITOR?="vi"
 AUGUR_PIP?='pip'

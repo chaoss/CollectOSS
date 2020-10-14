@@ -1,3 +1,4 @@
+-- #SPDX-License-Identifier: MIT
 CREATE TABLE augur_data.repo_cluster_messages
 (
 	msg_cluster_id serial8, 

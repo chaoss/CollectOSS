@@ -1,4 +1,4 @@
-
+<!-- #SPDX-License-Identifier: MIT -->
 <template>
   <nav class="nav">
     <a href="#" @click="handleClick()" class="nav-link nav-link-icon toggle-sidebar d-md-inline d-lg-none text-center">

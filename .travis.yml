@@ -1,3 +1,4 @@
+#SPDX-License-Identifier: MIT
 os: linux
 dist: xenial
 language: python

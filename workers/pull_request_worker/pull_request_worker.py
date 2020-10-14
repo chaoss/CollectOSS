@@ -1,3 +1,4 @@
+#SPDX-License-Identifier: MIT
 import ast, json, logging, os, sys, time, traceback, requests
 from datetime import datetime
 from multiprocessing import Process, Queue

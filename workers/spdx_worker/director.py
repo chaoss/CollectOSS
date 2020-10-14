@@ -1,3 +1,4 @@
+#SPDX-License-Identifier: MIT
 import subprocess
 import psycopg2
 from subprocess import PIPE

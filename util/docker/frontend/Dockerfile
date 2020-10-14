@@ -1,3 +1,4 @@
+#SPDX-License-Identifier: MIT
 FROM node:11 as build-stage
 
 LABEL maintainer="c@carterlandis.com"

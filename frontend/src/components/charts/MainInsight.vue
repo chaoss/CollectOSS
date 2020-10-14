@@ -1,3 +1,4 @@
+<!-- #SPDX-License-Identifier: MIT -->
 <template>
   <div ref="holder" class="mainInsightDiv">
     <spinner v-if="!loaded" class="mainInsightSpinner"></spinner>

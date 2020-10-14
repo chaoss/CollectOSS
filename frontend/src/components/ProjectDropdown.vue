@@ -1,3 +1,4 @@
+<!-- #SPDX-License-Identifier: MIT -->
 <template>
    <section v-click-outside="">
       <div class="projectDropdown">

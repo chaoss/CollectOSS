@@ -1,3 +1,4 @@
+<!-- #SPDX-License-Identifier: MIT -->
 <template>
   <div id="SettingsPanel">
       <aug-dropdown class="dropdown" @selectionChanged="setBaseEndpointUrl" :options="getAvailableEndpointsForDropdown" :defaultOption="getCurrentEndpointUrlForDropdown">augur host</aug-dropdown>

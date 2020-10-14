@@ -1,3 +1,4 @@
+<!-- #SPDX-License-Identifier: MIT -->
 <template>
   <i class="fas fa-asterisk" ref="spinnerIcon"></i>
 </template>

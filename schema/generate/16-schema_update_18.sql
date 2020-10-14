@@ -1,3 +1,4 @@
+-- #SPDX-License-Identifier: MIT
 CREATE SEQUENCE "augur_data"."releases_release_id_seq" 
 INCREMENT 1
 MINVALUE  1

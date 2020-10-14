@@ -1,3 +1,4 @@
+-- #SPDX-License-Identifier: MIT
 /***
 Database update script. For release 8. 
 

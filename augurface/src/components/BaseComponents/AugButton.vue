@@ -1,3 +1,4 @@
+<!-- #SPDX-License-Identifier: MIT -->
 <template>
   <button v-on:click="$emit('click')">{{ text }}</button>
 </template>

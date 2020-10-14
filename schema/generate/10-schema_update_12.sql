@@ -1,3 +1,4 @@
+-- #SPDX-License-Identifier: MIT
 CREATE SEQUENCE "augur_operations"."worker_oauth_oauth_id_seq" 
 INCREMENT 1
 MINVALUE  1
