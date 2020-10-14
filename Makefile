@@ -1,5 +1,5 @@
 #SPDX-License-Identifier: MIT
-SERVE_COMMAND=augur run
+SERVE_COMMAND=augur backend start
 EDITOR?="vi"
 AUGUR_PIP?='pip'
 AUGUR_PYTHON?='python'
@@ -69,10 +69,15 @@ dev-start:
 	@ scripts/control/start_frontend.sh
 
 dev-stop:
-	@ augur util stop
+	@ augur backend stop
 	@ scripts/control/kill_frontend.sh
 
 dev: dev-stop dev-start
+
+db:
+	@ - docker stop augur_database
+	@ - docker rm augur_database
+	@ docker run -p 5434:5432 --name augur_database augurlabs/augur:database
 
 
 #
@@ -81,6 +86,8 @@ dev: dev-stop dev-start
 .PHONY: test test-data test-application test-metric-routes test-python-versions
 
 test-data:
+	@ - docker stop augur_test_data
+	@ - docker rm augur_test_data
 	@ docker run -p 5434:5432 --name augur_test_data augurlabs/augur:test_data@sha256:fd2d9a178a9fee7cd548bd40a16e08d4611be22892491e817aafd53502f74cd0
 
 test: test-application test-metric-routes test-workers

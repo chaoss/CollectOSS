@@ -20,6 +20,6 @@ RUN pip install .
 RUN ./scripts/install/workers.sh prod
 
 COPY ./util/docker/docker.config.json .
-RUN augur configure generate --rc-config-file docker.config.json; mkdir repos/;
+RUN augur config init --rc-config-file docker.config.json; mkdir repos/;
 
-CMD augur db update-api-key docker_key; augur run
+CMD augur db update-api-key docker_key; augur backend start

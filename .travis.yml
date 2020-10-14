@@ -44,7 +44,7 @@ before_install:
 install:
   - ./scripts/install/backend.sh
   - ./scripts/install/workers.sh
-  - augur configure generate
+  - augur config init
 
 script:
   - tox

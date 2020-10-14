@@ -87,7 +87,7 @@ def create_routes(server):
             if type(server.broker[worker_id]._getvalue()) != dict:
                 continue
 
-            logger.info("Considering compatible worker: {}\n".format(worker_id))
+            logger.debug("Considering compatible worker: {}\n".format(worker_id))
 
             # Group workers by type (all gh workers grouped together etc)
             worker_type = worker_id.split('.')[len(worker_id.split('.'))-2]
@@ -95,7 +95,7 @@ def create_routes(server):
 
             # Make worker that is prioritized the one with the smallest sum of task queues
             if (len(server.broker[worker_id]['user_queue']) + len(server.broker[worker_id]['maintain_queue'])) < min([compatible_workers[w]['task_load'] for w in compatible_workers.keys() if worker_type == w]):
-                logger.info("Worker id: {} has the smallest task load encountered so far: {}\n".format(worker_id, len(server.broker[worker_id]['user_queue']) + len(server.broker[worker_id]['maintain_queue'])))
+                logger.debug("Worker id: {} has the smallest task load encountered so far: {}\n".format(worker_id, len(server.broker[worker_id]['user_queue']) + len(server.broker[worker_id]['maintain_queue'])))
                 compatible_workers[worker_type]['task_load'] = len(server.broker[worker_id]['user_queue']) + len(server.broker[worker_id]['maintain_queue'])
                 compatible_workers[worker_type]['worker_id'] = worker_id
 
@@ -128,7 +128,8 @@ def create_routes(server):
             and telling the broker to add this worker to the set it maintains
         """
         worker = request.json
-        logger.info("Recieved HELLO message from worker: {}\n".format(worker['id']))
+        logger.info("Recieved HELLO message from worker {} listening on: https://localhost:{}\
+                    ".format(worker['id'], worker['id'].split('.')[2]))
         if worker['id'] not in server.broker:
             server.broker[worker['id']] = server.manager.dict()
             server.broker[worker['id']]['id'] = worker['id']
@@ -211,7 +212,7 @@ def create_routes(server):
     def task_error():
         task = request.json
         worker_id = task['worker_id']
-        logger.error("Recieved a message that {} ran into an error on task: {}\n".format(worker_id, task))
+        # logger.error("Recieved a message that {} ran into an error on task: {}\n".format(worker_id, task))
         if worker_id in server.broker:
             if server.broker[worker_id]['status'] != 'Disconnected':
                 logger.error("{} ran into error while completing task: {}\n".format(worker_id, task))
