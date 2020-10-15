@@ -1,3 +1,4 @@
+#SPDX-License-Identifier: MIT
 from os import walk, chdir, environ, chmod, path
 import os
 import logging
@@ -121,20 +122,6 @@ def add_github_org(augur_app, organization_name):
     for repo in all_repos:
         logger.info(f"Adding {organization_name}/{repo['name']} ({repo['clone_url']})")
         result = augur_app.database.execute(insert_repo_sql, repo_group_id=new_repo_group_id, repo_git=repo['clone_url'])
-
-@cli.command('update-repo-directory')
-@click.argument('repo_directory')
-@pass_application
-def update_repo_directory(augur_app, repo_directory):
-    """
-    Update Facade worker repo cloning directory
-    """
-    updateRepoDirectorySQL = s.sql.text("""
-        UPDATE augur_data.settings SET VALUE = :repo_directory WHERE setting='repo_directory';
-    """)
-
-    augur_app.database.execute(updateRepoDirectorySQL, repo_directory=repo_directory)
-    logger.info(f"Updated Facade repo directory to: {repo_directory}")
 
 # get_db_version is a helper function to print_db_version and upgrade_db_version
 def get_db_version(augur_app):

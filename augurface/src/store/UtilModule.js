@@ -1,3 +1,4 @@
+// #SPDX-License-Identifier: MIT
 const configObject = require("../../../augur.config.json");
 import Vue from 'vue';
 

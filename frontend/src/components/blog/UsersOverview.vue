@@ -1,3 +1,4 @@
+<!-- #SPDX-License-Identifier: MIT -->
 <!-- <template>
   <d-card class="card-small h-100">
 

@@ -1,3 +1,4 @@
+#SPDX-License-Identifier: MIT
 basePath: /api/unstable/
 externalDocs:
   description: CHAOSS Metric Definitions

@@ -1,3 +1,4 @@
+-- #SPDX-License-Identifier: MIT
 ALTER TABLE "augur_data"."repo" 
   ALTER COLUMN "forked_from" TYPE varchar USING "forked_from"::varchar;
 

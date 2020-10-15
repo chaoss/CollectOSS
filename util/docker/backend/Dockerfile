@@ -1,3 +1,4 @@
+#SPDX-License-Identifier: MIT
 FROM python:3.6-slim-buster as build-stage
 
 COPY ./util/docker/backend/install_packages.sh .
@@ -19,6 +20,6 @@ RUN pip install .
 RUN ./scripts/install/workers.sh prod
 
 COPY ./util/docker/docker.config.json .
-RUN augur configure generate --rc-config-file docker.config.json; mkdir repos/;
+RUN augur config init --rc-config-file docker.config.json; mkdir repos/;
 
-CMD augur db update-api-key docker_key; augur run
+CMD augur db update-api-key docker_key; augur backend start

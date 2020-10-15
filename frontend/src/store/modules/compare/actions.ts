@@ -1,3 +1,4 @@
+// #SPDX-License-Identifier: MIT
 export default {
     async addComparedRepo(context:any, payload:any) {
 

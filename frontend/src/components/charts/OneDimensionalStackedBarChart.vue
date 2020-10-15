@@ -1,3 +1,4 @@
+<!-- #SPDX-License-Identifier: MIT -->
 <template>
   <d-card-body :title="title" class="text-center">
     <!-- <h3>Lines of code added by the top 10 authors as Percentages - All Time</h3> -->

@@ -1,3 +1,4 @@
+// #SPDX-License-Identifier: MIT
 import Repo from '@/AugurAPI';
 import RepoGroup from '@/AugurAPI';
 export default {

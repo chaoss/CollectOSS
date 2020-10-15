@@ -1,3 +1,4 @@
+<!-- #SPDX-License-Identifier: MIT -->
 <!-- <template>
     <d-card :class="['stats-small', computedVariationClass, 'card', 'card-small']">
         <d-card-body :class="[computedBodyClass]">

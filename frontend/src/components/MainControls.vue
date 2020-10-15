@@ -1,3 +1,4 @@
+<!-- #SPDX-License-Identifier: MIT -->
 <template>
 <div class="row" id="controls">
   <div class="col col-12">

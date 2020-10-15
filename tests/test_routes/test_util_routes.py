@@ -1,3 +1,4 @@
+#SPDX-License-Identifier: MIT
 import requests
 import pytest
 
@@ -6,7 +7,7 @@ from conftest import create_full_routes
 util_routes = [\
 "repos",\
 "repo-groups",\
-"repo-groups",\
+"repo-groups/<default_repo_group_id>/repos",\
 "dosocs/repos",\
 "repo-groups/<default_repo_group_id>/aggregate-summary",\
 "repo-groups/<default_repo_group_id>/repos/<default_repo_id>/aggregate-summary",\

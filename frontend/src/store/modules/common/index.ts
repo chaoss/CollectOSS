@@ -1,3 +1,4 @@
+// #SPDX-License-Identifier: MIT
 import axios from 'axios';
 import actions from './actions';
 import mutations from './mutations';

@@ -1,3 +1,4 @@
+<!-- #SPDX-License-Identifier: MIT -->
 <template>
   <footer class="main-footer d-flex p-2 px-3 bg-white border-top" style="position: fixed; left: 0;
   bottom: 0;

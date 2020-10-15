@@ -1,3 +1,4 @@
+<!-- #SPDX-License-Identifier: MIT -->
 <template>
   <div :class="classObject" @click="$router.push(path)">{{text}}</div>
 </template>

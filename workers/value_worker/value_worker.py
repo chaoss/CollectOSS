@@ -1,3 +1,4 @@
+#SPDX-License-Identifier: MIT
 import os, subprocess
 from datetime import datetime
 import logging

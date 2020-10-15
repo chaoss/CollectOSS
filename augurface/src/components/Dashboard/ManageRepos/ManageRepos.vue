@@ -1,3 +1,4 @@
+<!-- #SPDX-License-Identifier: MIT -->
 <template>
   <div id="ManageRepos">
     <manage-buttons @collapseAll="collapseAll()"/>

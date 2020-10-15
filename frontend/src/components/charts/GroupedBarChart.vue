@@ -1,3 +1,4 @@
+<!-- #SPDX-License-Identifier: MIT -->
 <template>
   <div ref="holder">
     <spinner :v-show="!loaded" class="groupedBarChartSpinner"></spinner>

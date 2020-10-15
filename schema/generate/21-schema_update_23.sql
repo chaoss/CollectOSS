@@ -1,3 +1,4 @@
+-- #SPDX-License-Identifier: MIT
 CREATE INDEX CONCURRENTLY if not exists "contributor_delete_finder" ON "augur_data"."contributors" USING brin (
   "cntrb_id",
   "cntrb_email"
