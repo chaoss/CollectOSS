@@ -1,11 +1,16 @@
-============
-Run Command
-============
+=================
+Backend Commands
+=================
 
-``augur run``
-=============
+``augur backend``
+====================
+The ``augur backend`` CLI group is for controlling Augur's API server & data collection workers. All commands are invoked like::
 
-The ``augur run`` command is for starting Augur's backend server. Example usages are shown below the parameters.
+  $ augur backend <command name>
+
+``start``
+============
+This command is for starting Augur's API server & (optionally) data collection workers. Example usages are shown below the parameters. After starting up, it will run indefinitely (but might not show any output, unless it's being queried or the housekeeper is working).
 
 --disable-housekeeper      Flag that turns off the housekeeper. Useful for testing the REST API or if you want to pause data collection without editing your config.
 
@@ -13,7 +18,7 @@ The ``augur run`` command is for starting Augur's backend server. Example usages
 
 To start the backend as normal::
 
-  $ augur run
+  $ augur backend start
 
   # successful output looks like:
   >[43389] augur [INFO] Augur application initialized
@@ -48,18 +53,60 @@ To start the backend as normal::
 
 To start the backend server without the housekeeper::
 
-  $ augur run --disable-housekeeper
+  $ augur backend start --disable-housekeeper
 
   # successful output looks like:
-    > [53524] augur [INFO] Augur application initialized
-    > [53524] augur [INFO] Starting Gunicorn server in the background...
-    > [53524] augur [INFO] Gunicorn server logs will be written to gunicorn.log
-    > [53524] augur [INFO] Augur is still running...don't close this process!
-  > ...
+  > [14467] augur [INFO] Augur application initialized
+  > [14467] augur [INFO] Using config file: /Users/carter/workspace/chaoss/augur/augur.config.json
+  > [14467] augur [INFO] Starting Gunicorn webserver...
+  > [14467] augur [INFO] Augur is running at: http://0.0.0.0:5000
+  > [14467] augur [INFO] Gunicorn server logs & errors will be written to logs/gunicorn.log
 
-To start the backend server and skip the process cleanup::
 
-  $ augur run --skip-cleanup
+``stop``
+---------
+**Gracefully** attempts to stop all currently running backend Augur processes, including any workers. Will only work in a virtual environment.
 
-  # successful output looks the same as without the flag
+Example usage::
+
+  # to stop the server and workers
+  $ augur backend stop
+
+  # successful output looks like:
+  > CLI: [backend.stop] [INFO] Stopping process 33607
+  > CLI: [backend.stop] [INFO] Stopping process 33775
+  > CLI: [backend.stop] [INFO] Stopping process 33776
+  > CLI: [backend.stop] [INFO] Stopping process 33777
+
+``kill``
+---------
+**Forcefully** terminates (using ``SIGKILL``) all currently running backend Augur processes, including any workers. Will only work in a virtual environment.
+Should only be used when ``augur backend stop`` is not working.
+
+Example usage::
+
+  # to stop the server and workers
+  $ augur backend kill
+
+  # successful output looks like:
+  > CLI: [backend.kill] [INFO] Killing process 87340
+  > CLI: [backend.kill] [INFO] Killing process 87573
+  > CLI: [backend.kill] [INFO] Killing process 87574
+  > CLI: [backend.kill] [INFO] Killing process 87575
+  > CLI: [backend.kill] [INFO] Killing process 87576
+
+
+``processes``
+--------------
+Outputs the process ID (PID) of all currently running backend Augur processes, including any workers. Will only work in a virtual environment.
+
+Example usage::
+
+  # to stop the server and workers
+  $ augur backend processes
+
+  # successful output looks like:
+  > CLI: [backend.processes] [INFO] Found process 14467
+  > CLI: [backend.processes] [INFO] Found process 14725
+
 
