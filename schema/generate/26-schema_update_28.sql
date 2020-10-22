@@ -80,7 +80,7 @@ OWNED BY "augur_data"."message_sentiment_summary"."msg_summary_id";
 
 ALTER SEQUENCE "augur_data"."message_sentiment_summary_msg_summary_id_seq" OWNER TO "augur";
 
-CREATE INDEX "login" ON "augur_data"."contributors" USING btree (
+CREATE INDEX "login-contributor-idx" ON "augur_data"."contributors" USING btree (
   "cntrb_login" COLLATE "pg_catalog"."default" "pg_catalog"."text_ops" ASC NULLS LAST
 );
 
