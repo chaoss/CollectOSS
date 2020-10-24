@@ -346,6 +346,80 @@ class ContributorWorker(Worker):
 
         # Get all distinct combinations of emails and names by querying the repo's commits
         userSQL = s.sql.text("""
+            SELECT
+                commits.cmt_author_email AS email,
+                commits.cmt_author_date AS DATE,
+                commits.cmt_author_name AS NAME 
+            FROM
+                commits 
+            WHERE
+                commits.repo_id = :repo_id 
+                AND NOT EXISTS (
+                    SELECT
+                        contributors.cntrb_email 
+                    FROM
+                        contributors 
+                    WHERE
+                        contributors.cntrb_email = commits.cmt_author_email
+                ) 
+                AND (
+                    commits.cmt_author_date, commits.cmt_author_name
+                ) IN (
+                    SELECT
+                        MAX(C.cmt_author_date) AS DATE,
+                        C.cmt_author_name 
+                    FROM
+                        commits AS C 
+                    WHERE
+                        C.repo_id = :repo_id 
+                        AND C.cmt_author_email = commits.cmt_author_email 
+                    GROUP BY
+                        C.cmt_author_name,
+                        C.cmt_author_date LIMIT 1
+                ) 
+            GROUP BY
+                commits.cmt_author_email,
+                commits.cmt_author_date,
+                commits.cmt_author_name 
+            UNION
+            SELECT
+                commits.cmt_committer_email AS email,
+                commits.cmt_committer_date AS DATE,
+                commits.cmt_committer_name AS NAME 
+            FROM
+                augur_data.commits 
+            WHERE
+                commits.repo_id = :repo_id 
+                AND NOT EXISTS (
+                    SELECT
+                        contributors.cntrb_email 
+                    FROM
+                        augur_data.contributors 
+                    WHERE
+                        contributors.cntrb_email = commits.cmt_committer_email
+                ) 
+                AND (
+                    commits.cmt_committer_date, commits.cmt_committer_name
+                ) IN (
+                    SELECT
+                        MAX(C.cmt_committer_date) AS DATE,
+                        C.cmt_committer_name 
+                    FROM
+                        augur_data.commits AS C 
+                    WHERE
+                        C.repo_id = :repo_id 
+                        AND C.cmt_committer_email = commits.cmt_committer_email 
+                    GROUP BY
+                        C.cmt_committer_name,
+                        C.cmt_author_date LIMIT 1
+                ) 
+            GROUP BY
+                commits.cmt_committer_email,
+                commits.cmt_committer_date,
+                commits.cmt_committer_name
+
+/*
+
             SELECT cmt_author_email as email, cmt_author_date as date, cmt_author_name as name
             FROM commits 
             WHERE repo_id = :repo_id
@@ -374,7 +448,8 @@ class ContributorWorker(Worker):
                 order by date desc
                 limit 1
             )
-            group by cmt_committer_email, cmt_committer_date, cmt_committer_name
+            group by cmt_committer_email, cmt_committer_date, cmt_committer_name*/
+            
         """)
 
         commit_cntrbs = json.loads(pd.read_sql(userSQL, self.db, params={'repo_id': repo_id}).to_json(orient="records"))
