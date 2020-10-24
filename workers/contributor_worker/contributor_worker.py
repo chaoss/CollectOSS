@@ -306,6 +306,7 @@ class ContributorWorker(Worker):
             
             result = self.db.execute(self.contributors_table.insert().values(cntrb_new))
             pk = int(result.inserted_primary_key[0])
+            sg = int(result.inserted_primary_key[0])
             
             dupe_ids_sql = s.sql.text("""
                 SELECT cntrb_id 
@@ -321,11 +322,12 @@ class ContributorWorker(Worker):
             self.map_new_id(dupe_ids, pk)
 
             delete_dupe_ids_sql = s.sql.text("""
-                DELETE  
-                FROM contributors
-                WHERE cntrb_id <> {}
-                AND cntrb_email = '{}';
-            """.format(pk, cntrb_new['cntrb_email']))
+                DELETE FROM contributors
+                WHERE cntrb_id IN (SELECT cntrb_id 
+                FROM contributors  WHERE (cntrb_id > {} 
+                OR cntrb_id < {}) 
+                AND cntrb_email = '{}');
+            """.format(pk, sg, cntrb_new['cntrb_email']))
 
             self.logger.info(f'Trying to delete dupes with sql: {delete_dupe_ids_sql}')
 
