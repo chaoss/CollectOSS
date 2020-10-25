@@ -1,6 +1,6 @@
 #SPDX-License-Identifier: MIT
 """ Helper methods constant across all workers """
-import requests, datetime, time, traceback, json, os, sys, math, logging
+import requests, datetime, time, traceback, json, os, sys, math, logging, inspect
 from logging import FileHandler, Formatter, StreamHandler
 from multiprocessing import Process, Queue
 import sqlalchemy as s
@@ -308,6 +308,7 @@ class Worker():
                 SELECT min(repo_id) as repo_id FROM repo WHERE repo_git = '{}'
                 """.format(message['given'][self.given[0][0]]))
             repo_id = int(pd.read_sql(repoUrlSQL, self.db, params={}).iloc[0]['repo_id'])
+
             self.logger.info("repo_id for which data collection is being initiated: {}".format(str(repo_id)))
             # Call method corresponding to model sent in task
             try:
@@ -323,7 +324,16 @@ class Worker():
             #   and worker can move onto the next task without stopping
             try:
                 self.logger.info("Calling model method {}_models".format(message['models'][0]))
-                model_method(message, repo_id)
+                if len(inspect.signature(model_method).parameters) == 2:
+                    model_method(message, repo_id)
+                elif len(inspect.signature(model_method).parameters) == 1:
+                    message['repo_id'] = repo_id
+                    model_method(message)
+                else:
+                    self.logger.info("You must extend the Worker class' collect method with your "
+                        "current configuration")
+                    self.register_task_failure(message, repo_id, e)
+                    break
             except Exception as e: # this could be a custom exception, might make things easier
                 self.register_task_failure(message, repo_id, e)
                 break
@@ -366,9 +376,16 @@ class Worker():
         """
         need_insertion_count = 0
         need_update_count = 0
+
+        if type(table_values) == list:
+            if len(table_values) > 0:
+                table_values = pd.DataFrame(table_values, columns=table_values[0].keys())
+            else:
+                table_values = pd.DataFrame(table_values)
+
         for i, obj in enumerate(new_data):
             if type(obj) != dict:
-                self.logger.info('Moving to next tuple, tuple is not dict: {}'.format(obj))
+                new_data[i] = {'flag': 'none'}
                 continue
 
             obj['flag'] = 'none' # default of no action needed
@@ -383,14 +400,11 @@ class Worker():
                             [obj[duplicate_col_map[db_dupe_key]]])].to_dict('records')[0]
                     continue
 
-                self.logger.info('Found a tuple that needs insertion based on dupe key: {}\n'.format(db_dupe_key))
                 obj['flag'] = 'need_insertion'
                 need_insertion_count += 1
                 break
 
             if obj['flag'] == 'need_insertion':
-                self.logger.info('Already determined that current tuple needs insertion, skipping checking updates. '
-                    'Moving to next tuple.\n')
                 continue
 
             if not existing_tuple:
@@ -422,6 +436,7 @@ class Worker():
                     continue
                 self.logger.info("Found a tuple that needs an update for column: {}\n".format(col))
                 obj['flag'] = 'need_update'
+                self.logger.info(existing_tuple)
                 obj['pkey'] = existing_tuple[table_pkey]
                 need_update_count += 1
 
@@ -429,6 +444,7 @@ class Worker():
             "was reduced to {} tuples, and {} tuple updates are needed.\n".format(need_insertion_count, need_update_count))
         return new_data
 
+    @staticmethod
     def check_duplicates(self, new_data, table_values, key):
         """ Filters what items of the new_data json (list of dictionaries) that are not
         present in the table_values df
@@ -468,6 +484,7 @@ class Worker():
         if not connected:
             sys.exit('Could not connect to the broker after 5 attempts! Quitting...\n')
 
+    @staticmethod
     def dump_queue(queue):
         """
         Empties all pending items in a queue and returns them in a list.
@@ -492,9 +509,7 @@ class Worker():
             SELECT cntrb_id FROM contributors WHERE cntrb_login = '{}' \
             AND LOWER(data_source) = '{} api'
             """.format(login, platform))
-
-        self.logger.info(idSQL)
-
+                
         rs = pd.read_sql(idSQL, self.db, params={})
         data_list = [list(row) for row in rs.itertuples(index=False)]
         try:
@@ -525,64 +540,64 @@ class Worker():
 
         if platform == 'github':
             cntrb = {
-                "cntrb_login": contributor['login'] if 'login' in contributor else None,
-                "cntrb_email": contributor['email'] if 'email' in contributor else None,
-                "cntrb_company": contributor['company'] if 'company' in contributor else None,
-                "cntrb_location": contributor['location'] if 'location' in contributor else None,
-                "cntrb_created_at": contributor['created_at'] if 'created_at' in contributor else None,
-                "cntrb_canonical": None,
-                "gh_user_id": contributor['id'] if 'id' in contributor else None,
-                "gh_login": contributor['login'] if 'login' in contributor else None,
-                "gh_url": contributor['url'] if 'url' in contributor else None,
-                "gh_html_url": contributor['html_url'] if 'html_url' in contributor else None,
-                "gh_node_id": contributor['node_id'] if 'node_id' in contributor else None,
-                "gh_avatar_url": contributor['avatar_url'] if 'avatar_url' in contributor else None,
-                "gh_gravatar_id": contributor['gravatar_id'] if 'gravatar_id' in contributor else None,
-                "gh_followers_url": contributor['followers_url'] if 'followers_url' in contributor else None,
-                "gh_following_url": contributor['following_url'] if 'following_url' in contributor else None,
-                "gh_gists_url": contributor['gists_url'] if 'gists_url' in contributor else None,
-                "gh_starred_url": contributor['starred_url'] if 'starred_url' in contributor else None,
-                "gh_subscriptions_url": contributor['subscriptions_url'] if 'subscriptions_url' in contributor else None,
-                "gh_organizations_url": contributor['organizations_url'] if 'organizations_url' in contributor else None,
-                "gh_repos_url": contributor['repos_url'] if 'repos_url' in contributor else None,
-                "gh_events_url": contributor['events_url'] if 'events_url' in contributor else None,
-                "gh_received_events_url": contributor['received_events_url'] if 'received_events_url' in contributor else None,
-                "gh_type": contributor['type'] if 'type' in contributor else None,
-                "gh_site_admin": contributor['site_admin'] if 'site_admin' in contributor else None,
-                "tool_source": self.tool_source,
-                "tool_version": self.tool_version,
-                "data_source": self.data_source
+                'cntrb_login': contributor['login'] if 'login' in contributor else None,
+                'cntrb_email': contributor['email'] if 'email' in contributor else None,
+                'cntrb_company': contributor['company'] if 'company' in contributor else None,
+                'cntrb_location': contributor['location'] if 'location' in contributor else None,
+                'cntrb_created_at': contributor['created_at'] if 'created_at' in contributor else None,                
+                'cntrb_canonical': None,
+                'gh_user_id': contributor['id'] if 'id' in contributor else None,
+                'gh_login': contributor['login'] if 'login' in contributor else None,
+                'gh_url': contributor['url'] if 'url' in contributor else None,
+                'gh_html_url': contributor['html_url'] if 'html_url' in contributor else None,
+                'gh_node_id': contributor['node_id'] if 'node_id' in contributor else None,
+                'gh_avatar_url': contributor['avatar_url'] if 'avatar_url' in contributor else None,
+                'gh_gravatar_id': contributor['gravatar_id'] if 'gravatar_id' in contributor else None,
+                'gh_followers_url': contributor['followers_url'] if 'followers_url' in contributor else None,
+                'gh_following_url': contributor['following_url'] if 'following_url' in contributor else None,
+                'gh_gists_url': contributor['gists_url'] if 'gists_url' in contributor else None,
+                'gh_starred_url': contributor['starred_url'] if 'starred_url' in contributor else None,
+                'gh_subscriptions_url': contributor['subscriptions_url'] if 'subscriptions_url' in contributor else None,
+                'gh_organizations_url': contributor['organizations_url'] if 'organizations_url' in contributor else None,
+                'gh_repos_url': contributor['repos_url'] if 'repos_url' in contributor else None,
+                'gh_events_url': contributor['events_url'] if 'events_url' in contributor else None,
+                'gh_received_events_url': contributor['received_events_url'] if 'received_events_url' in contributor else None,
+                'gh_type': contributor['type'] if 'type' in contributor else None,
+                'gh_site_admin': contributor['site_admin'] if 'site_admin' in contributor else None,
+                'tool_source': self.tool_source,
+                'tool_version': self.tool_version,
+                'data_source': self.data_source
             }
 
         elif platform == 'gitlab':
             cntrb =  {
-                "cntrb_login": contributor[0]['username'] if 'username' in contributor[0] else None,
-                "cntrb_email": email,
-                "cntrb_company": company,
-                "cntrb_location": location,
-                "cntrb_created_at": contributor[0]['created_at'] if 'created_at' in contributor[0] else None,
-                "cntrb_canonical": None,
-                "gh_user_id": contributor[0]['id'],
-                "gh_login": contributor[0]['username'],
-                "gh_url": contributor[0]['web_url'],
-                "gh_html_url": None,
-                "gh_node_id": None,
-                "gh_avatar_url": contributor[0]['avatar_url'],
-                "gh_gravatar_id": None,
-                "gh_followers_url": None,
-                "gh_following_url": None,
-                "gh_gists_url": None,
-                "gh_starred_url": None,
-                "gh_subscriptions_url": None,
-                "gh_organizations_url": None,
-                "gh_repos_url": None,
-                "gh_events_url": None,
-                "gh_received_events_url": None,
-                "gh_type": None,
-                "gh_site_admin": None,
-                "tool_source": self.tool_source,
-                "tool_version": self.tool_version,
-                "data_source": self.data_source
+                'cntrb_login': contributor[0]['username'] if 'username' in contributor[0] else None,
+                'cntrb_email': email,
+                'cntrb_company': company,
+                'cntrb_location': location,
+                'cntrb_created_at': contributor[0]['created_at'] if 'created_at' in contributor[0] else None,                
+                'cntrb_canonical': None,
+                'gh_user_id': contributor[0]['id'],
+                'gh_login': contributor[0]['username'],
+                'gh_url': contributor[0]['web_url'],
+                'gh_html_url': None,
+                'gh_node_id': None,
+                'gh_avatar_url': contributor[0]['avatar_url'],
+                'gh_gravatar_id': None,
+                'gh_followers_url': None,
+                'gh_following_url': None,
+                'gh_gists_url': None,
+                'gh_starred_url': None,
+                'gh_subscriptions_url': None,
+                'gh_organizations_url': None,
+                'gh_repos_url': None,
+                'gh_events_url': None,
+                'gh_received_events_url': None,
+                'gh_type': None,
+                'gh_site_admin': None,
+                'tool_source': self.tool_source,
+                'tool_version': self.tool_version,
+                'data_source': self.data_source
             }
         result = self.db.execute(self.contributors_table.insert().values(cntrb))
         self.logger.info("Primary key inserted into the contributors table: " + str(result.inserted_primary_key))
@@ -634,8 +649,8 @@ class Worker():
             self.logger.info("Found max id for {} column in the {} table: {}\n".format(column, table, max_id))
         else:
             max_id = default
-            self.logger.warning('Could not find max id for {} column in the {} table... ' +
-                'using default set to: {}\n'.format(column, table, max_id))
+            self.logger.warning("Could not find max id for {} column in the {} table... " +
+                "using default set to: {}\n".format(column, table, max_id))
         return max_id
 
     def get_table_values(self, cols, tables, where_clause=""):
@@ -663,39 +678,39 @@ class Worker():
         table_values_sql = s.sql.text("""
             SELECT {} FROM {} {}
         """.format(col_str, table_str, where_clause))
-        self.logger.info('Getting table values with the following PSQL query: \n{}\n'.format(
+        self.logger.info("Getting table values with the following PSQL query: \n{}\n".format(
             table_values_sql))
         values = pd.read_sql(table_values_sql, self.db, params={})
         return values
 
-    def init_oauths(self, platform="github"):
+    def init_oauths(self, platform='github'):
         self.oauths = []
         self.headers = None
-
+        self.logger.info("Trying initialization.")
         # Make a list of api key in the config combined w keys stored in the database
         # Select endpoint to hit solely to retrieve rate limit information from headers of the response
         # Adjust header keys needed to fetch rate limit information from the API responses
-        if platform == "github":
+        if platform == 'github':
             url = "https://api.github.com/users/gabe-heim"
             oauthSQL = s.sql.text("""
                 SELECT * FROM worker_oauth WHERE access_token <> '{}' and platform = 'github'
                 """.format(self.config['gh_api_key']))
-            key_name = "gh_api_key"
+            key_name = 'gh_api_key'
             rate_limit_header_key = "X-RateLimit-Remaining"
             rate_limit_reset_header_key = "X-RateLimit-Reset"
-        elif platform == "gitlab":
+        elif platform == 'gitlab':
             url = "https://gitlab.com/api/v4/version"
             oauthSQL = s.sql.text("""
                 SELECT * FROM worker_oauth WHERE access_token <> '{}' and platform = 'gitlab'
                 """.format(self.config['gitlab_api_key']))
-            key_name = "gitlab_api_key"
-            rate_limit_header_key = "ratelimit-remaining"
-            rate_limit_reset_header_key = "ratelimit-reset"
+            key_name = 'gitlab_api_key'
+            rate_limit_header_key = 'ratelimit-remaining'
+            rate_limit_reset_header_key = 'ratelimit-reset'
 
         for oauth in [{'oauth_id': 0, 'access_token': self.config[key_name]}] + json.loads(pd.read_sql(oauthSQL, self.helper_db, params={}).to_json(orient="records")):
-            if platform == "github":
+            if platform == 'github':
                 self.headers = {'Authorization': 'token %s' % oauth['access_token']}
-            elif platform == "gitlab":
+            elif platform == 'gitlab':
                 self.headers = {'Authorization': 'Bearer %s' % oauth['access_token']}
             self.logger.info("Getting rate limit info for oauth: {}\n".format(oauth))
             response = requests.get(url=url, headers=self.headers)
@@ -712,13 +727,226 @@ class Worker():
 
         # First key to be used will be the one specified in the config (first element in
         #   self.oauths array will always be the key in use)
-        if platform == "github":
+        if platform == 'github':
             self.headers = {'Authorization': 'token %s' % self.oauths[0]['access_token']}
-        elif platform == "gitlab":
+        elif platform == 'gitlab':
             self.headers = {'Authorization': 'Bearer %s' % self.oauths[0]['access_token']}
 
-        self.headers = {'Authorization': 'token %s' % self.oauths[0]['access_token']}
         self.logger.info("OAuth initialized")
+
+    def bulk_insert(self, table, insert=[], update=[], unique_columns=[], update_columns=[]):
+        
+        self.logger.info(f"{len(insert)} insertions are needed and {len(update)} "
+            f"updates are needed for {table}\n")
+
+        update_result = None
+        insert_result = None
+
+        if len(update) > 0:
+            success = False
+            update_start_time = time.time()
+            while not success:
+                try:
+                    update_result = self.db.execute(
+                        table.update().where(
+                                eval(' and '.join([f"self.{table}_table.c.{key} == bindparam('b_{key}')" for \
+                                    key in unique_columns]))
+                            ).values(
+                                {key: key for key in update_columns}
+                            ),
+                        update
+                    )
+                    success = True
+                except Exception as e:
+                    self.logger.info('error: {}'.format(e))
+                    time.sleep(5)
+
+            self.update_counter += update_result.rowcount
+            self.logger.info(f"Updated {update_result.rowcount} rows in "
+                f"{time.time() - update_start_time} seconds")
+
+        if len(insert) > 0:
+            success = False
+            insert_start_time = time.time()
+            while not success:
+                try:
+                    insert_result = self.db.execute(
+                        table.insert(),
+                        insert
+                    )
+                    success = True
+                except Exception as e:
+                    self.logger.info('error: {}'.format(e))
+                    time.sleep(5)
+
+            self.insert_counter += insert_result.rowcount
+            self.logger.info(f"Inserted {insert_result.rowcount} rows in "
+                f"{time.time() - insert_start_time} seconds")
+
+        return insert_result, update_result
+
+    def enrich_data_primary_keys(self, source_data, table, gh_merge_fields, augur_merge_fields):
+
+        self.logger.info("Preparing to enrich data.\n")
+
+        if len(source_data) == 0:
+            self.logger.info("There is no source data to enrich.\n")
+            return []
+
+        source_df = pd.DataFrame(source_data)
+        # temp_dict = {field: str(table) for field in augur_merge_fields}
+
+        s_tuple = s.tuple_([table.c[field] for field in augur_merge_fields])
+        s_tuple.__dict__['clauses'] = s_tuple.__dict__['clauses'][0].effective_value
+        s_tuple.__dict__['_type_tuple'] = []
+        for field in augur_merge_fields:
+            s_tuple.__dict__['_type_tuple'].append(table.c[field].__dict__['type'])
+
+        for column in gh_merge_fields:
+            if '.' not in column:
+                continue
+            root = column.split('.')[0]
+            expanded_column = pd.DataFrame(source_df[root].tolist())
+            expanded_column.columns = [f'{root}.{attribute}' for attribute in expanded_column.columns]
+            source_df = source_df.join(expanded_column)
+
+        primary_keys = self.db.execute(s.sql.select(
+                [table.c[field] for field in augur_merge_fields] + [table.c[list(table.primary_key)[0].name]]
+            ).where(
+                s_tuple.in_(
+                # eval("""s.tuple_(', '.join([f"self.{table}_table.c['{field}']" for field, table in temp_dict.items()]))""").in_(
+                    list(source_df[gh_merge_fields].itertuples(index=False))
+                ))).fetchall()
+
+        if len(primary_keys) > 0:
+            primary_keys_df = pd.DataFrame(primary_keys, 
+                columns=augur_merge_fields + [list(table.primary_key)[0].name])
+        else:
+            self.logger.info("There are no inserted primary keys to enrich the source data with.\n")
+            return source_data
+
+        source_df, primary_keys_df = self.sync_df_types(source_df, primary_keys_df, 
+                gh_merge_fields, augur_merge_fields)
+
+        return json.loads(source_df.merge(primary_keys_df, suffixes=('','_table'),
+            how='inner', left_on=gh_merge_fields, right_on=augur_merge_fields).to_json(
+            default_handler=str, orient='records'))
+
+    def paginate_endpoint(self, url, action_map={}, table=None, where_clause=True, platform='github'):
+
+        table_values = self.db.execute(s.sql.select(self.get_relevant_columns(
+            table, action_map)).where(where_clause)).fetchall()
+
+        page_number = 1
+        multiple_pages = False
+        need_insertion = []
+        need_update = []
+        all_data = []
+        forward_pagination = True
+        backwards_activation = False
+        last_page_number = -1
+        while True:
+
+            # Multiple attempts to hit endpoint
+            num_attempts = 0
+            success = False
+            while num_attempts < 3:
+                self.logger.info(f"Hitting endpoint: {url.format(page_number)}...\n")
+                response = requests.get(url=url.format(page_number), headers=self.headers)
+
+                self.update_rate_limit(response, platform=platform)
+
+                try:
+                    page_data = response.json()
+                except:
+                    page_data = json.loads(json.dumps(response.text))
+
+                if type(page_data) == list:
+                    success = True
+                    break
+                elif type(page_data) == dict:
+                    self.logger.info("Request returned a dict: {}\n".format(page_data))
+                    if page_data['message'] == "Not Found":
+                        self.logger.warning(
+                            f"Github repo was not found or does not exist for endpoint: {url.format(page_number)}\n")
+                        break
+                    if "You have triggered an abuse detection mechanism." in page_data['message']:
+                        num_attempts -= 1
+                        self.update_rate_limit(response, temporarily_disable=True,platform=platform)
+                    if page_data['message'] == "Bad credentials":
+                        self.update_rate_limit(response, bad_credentials=True, platform=platform)
+                elif type(page_data) == str:
+                    self.logger.info(f"Warning! page_data was string: {page_data}\n")
+                    if "<!DOCTYPE html>" in page_data:
+                        self.logger.info("HTML was returned, trying again...\n")
+                    elif len(page_data) == 0:
+                        self.logger.warning("Empty string, trying again...\n")
+                    else:
+                        try:
+                            page_data = json.loads(page_data)
+                            success = True
+                            break
+                        except:
+                            pass
+                num_attempts += 1
+            if not success:
+                break
+
+            # Success
+
+            # Determine if continued pagination is needed
+
+            if len(page_data) == 0:
+                self.logger.info("Response was empty, breaking from pagination.\n")
+                break
+
+            all_data += page_data
+
+            if not forward_pagination:
+
+                # Checking contents of requests with what we already have in the db
+                page_insertions, page_updates = self.organize_needed_data(page_data, table_values, list(table.primary_key)[0].name, 
+                    action_map)
+
+                # Reached a page where we already have all tuples
+                if len(need_insertion) == 0 and len(need_update) == 0 and \
+                        backwards_activation:
+                    self.logger.info("No more pages with unknown tuples, breaking from pagination.\n")
+                    break
+
+                need_insertion += page_insertions
+                need_update += page_updates
+
+            # Find last page so we can decrement from there
+            if 'last' in response.links and last_page_number == -1:
+                if platform == 'github':
+                    last_page_number = int(response.links['last']['url'][-6:].split('=')[1])
+                elif platform == 'gitlab':
+                    last_page_number = int(response.links['last']['url'].split('&')[2].split('=')[1])
+
+                if not forward_pagination and not backwards_activation:
+                    page_number = last_page_number
+                    backwards_activation = True
+
+            self.logger.info("Analyzation of page {} of {} complete\n".format(page_number, 
+                int(last_page_number) if last_page_number != -1 else "*last page not known*"))
+
+            if (page_number <= 1 and not forward_pagination) or \
+                    (page_number >= last_page_number and forward_pagination):
+                self.logger.info("No more pages to check, breaking from pagination.\n")
+                break
+
+            page_number = page_number + 1 if forward_pagination else page_number - 1
+
+        if forward_pagination:
+            need_insertion, need_update = self.organize_needed_data(all_data, table_values, 
+                list(table.primary_key)[0].name, action_map)
+
+        return {
+            'insert': need_insertion, 
+            'update': need_update,
+            'all': all_data
+        }
 
     def paginate(self, url, duplicate_col_map, update_col_map, table, table_pkey, where_clause="", value_update_col_map={}, platform="github"):
         """ Paginate either backwards or forwards (depending on the value of the worker's
@@ -759,8 +987,8 @@ class Worker():
 
         update_keys = list(update_col_map.keys()) if update_col_map else []
         update_keys += list(value_update_col_map.keys()) if value_update_col_map else []
-        cols_query = list(duplicate_col_map.keys()) + update_keys + [table_pkey]
-        table_values = self.get_table_values(cols_query, [table], where_clause)
+        cols_to_query = list(duplicate_col_map.keys()) + update_keys + [table_pkey]
+        table_values = self.get_table_values(cols_to_query, [table], where_clause)
 
         i = 1
         multiple_pages = False
@@ -840,6 +1068,7 @@ class Worker():
 
             # Checking contents of requests with what we already have in the db
             j = self.assign_tuple_action(j, table_values, update_col_map, duplicate_col_map, table_pkey, value_update_col_map)
+
             if not j:
                 self.logger.error("Assigning tuple action failed, moving to next page.\n")
                 i = i + 1 if self.finishing_task else i - 1
@@ -876,7 +1105,7 @@ class Worker():
         """ Data collection function
         Query the GitHub API for contributors
         """
-        self.logger.info(f'Querying contributors with given entry info: {entry_info}\n')
+        self.logger.info(f"Querying contributors with given entry info: {entry_info}\n")
 
         github_url = entry_info['given']['github_url'] if 'github_url' in entry_info['given'] else entry_info['given']['git_url']
 
@@ -884,8 +1113,8 @@ class Worker():
         owner, name = self.get_owner_repo(github_url)
 
         # Set the base of the url and place to hold contributors to insert
-        contributors_url = (f'https://api.github.com/repos/{owner}/{name}/' +
-            'contributors?per_page=100&page={}')
+        contributors_url = (f"https://api.github.com/repos/{owner}/{name}/" + 
+            "contributors?per_page=100&page={}")
 
         # Get contributors that we already have stored
         #   Set our duplicate and update column map keys (something other than PK) to
@@ -974,6 +1203,79 @@ class Worker():
                 self.logger.error("Cascading Contributor Anomalie from missing repo contributor data: {} ...\n".format(cntrb_url))
                 continue
 
+
+    def query_github_contributors_bulk(self, entry_info, repo_id):
+
+        """ Data collection function
+        Query the GitHub API for contributors
+        """
+        self.logger.info(f"Querying contributors with given entry info: {entry_info}\n")
+
+        github_url = entry_info['given']['github_url'] if 'github_url' in entry_info['given'] else entry_info['given']['git_url']
+
+        owner, name = self.get_owner_repo(github_url)
+
+        contributors_url = (f"https://api.github.com/repos/{owner}/{name}/" + 
+            "contributors?per_page=100&page={}")
+
+        action_map = {
+            'insert': {
+                'source': ['login'],
+                'augur': ['cntrb_login']
+            },
+            'update': {
+                'source': ['email'],
+                'augur': ['cntrb_email']
+            }
+        }
+
+        source_contributors = self.paginate_endpoint(contributors_url, action_map=action_map, 
+            table=self.contributors_table)
+
+        contributors_insert_result = []
+                
+        for repo_contributor in source_contributors['insert']:
+            # Need to hit this single contributor endpoint to get extra data
+            cntrb_url = (f"https://api.github.com/users/{repo_contributor['login']}")
+            self.logger.info(f"Hitting endpoint: {cntrb_url} ...\n")
+            r = requests.get(url=cntrb_url, headers=self.headers)
+            self.update_gh_rate_limit(r)
+            contributor = r.json()
+
+            contributors_insert_result.append({
+                'cntrb_login': contributor['login'],
+                'cntrb_created_at': contributor['created_at'],
+                'cntrb_email': contributor['email'] if 'email' in contributor else None,
+                'cntrb_company': contributor['company'] if 'company' in contributor else None,
+                'cntrb_location': contributor['location'] if 'location' in contributor else None,
+                'cntrb_canonical': contributor['email'] if 'email' in contributor else None,
+                'gh_user_id': contributor['id'],
+                'gh_login': contributor['login'],
+                'gh_url': contributor['url'],
+                'gh_html_url': contributor['html_url'],
+                'gh_node_id': contributor['node_id'],
+                'gh_avatar_url': contributor['avatar_url'],
+                'gh_gravatar_id': contributor['gravatar_id'],
+                'gh_followers_url': contributor['followers_url'],
+                'gh_following_url': contributor['following_url'],
+                'gh_gists_url': contributor['gists_url'],
+                'gh_starred_url': contributor['starred_url'],
+                'gh_subscriptions_url': contributor['subscriptions_url'],
+                'gh_organizations_url': contributor['organizations_url'],
+                'gh_repos_url': contributor['repos_url'],
+                'gh_events_url': contributor['events_url'],
+                'gh_received_events_url': contributor['received_events_url'],
+                'gh_type': contributor['type'],
+                'gh_site_admin': contributor['site_admin'],
+                'tool_source': self.tool_source,
+                'tool_version': self.tool_version,
+                'data_source': self.data_source
+            })
+
+        contributors_insert_result, contributors_update_result = self.bulk_insert(self.contributors_table, 
+            update=source_contributors['update'], unique_columns=action_map['insert']['augur'], 
+            insert=contributors_insert, update_columns=action_map['update']['augur'])
+
     def query_gitlab_contribtutors(self, entry_info, repo_id):
 
         gitlab_url = entry_info['given']['gitlab_url'] if 'gitlab_url' in entry_info['given'] else entry_info['given']['git_url']
@@ -1008,7 +1310,8 @@ class Worker():
                 contributor_compressed = r.json()
 
                 email = repo_contributor['email']
-                if len(contributor_compressed) == 0 or "id" not in contributor_compressed[0]:
+                self.logger.info(contributor_compressed)
+                if len(contributor_compressed) == 0 or type(contributor_compressed) is dict or "id" not in contributor_compressed[0]:
                     continue
 
                 self.logger.info("Fetching for user: " + str(contributor_compressed[0]["id"]))
@@ -1090,7 +1393,12 @@ class Worker():
             self.logger.info("Record incomplete history tuple: {}\n".format(result.inserted_primary_key))
             self.history_id = int(result.inserted_primary_key[0])
 
+        self.collection_start_time = time.time()
+
     def register_task_completion(self, task, repo_id, model):
+
+        self.logger.info(f"Worker completed this task in {self.collection_start_time - time.time()} seconds.\n")
+
         # Task to send back to broker
         task_completed = {
             'worker_id': self.config['id'],
@@ -1108,46 +1416,51 @@ class Worker():
 
         # Add to history table
         task_history = {
-            "repo_id": repo_id,
-            "worker": self.config['id'],
-            "job_model": model,
-            "oauth_id": self.oauths[0]['oauth_id'],
-            "timestamp": datetime.datetime.now(),
-            "status": "Success",
-            "total_results": self.results_counter
+            'repo_id': repo_id,
+            'worker': self.config['id'],
+            'job_model': model,
+            'oauth_id': self.oauths[0]['oauth_id'],
+            'timestamp': datetime.datetime.now(),
+            'status': "Success",
+            'total_results': self.results_counter
         }
         self.helper_db.execute(self.worker_history_table.update().where(
             self.worker_history_table.c.history_id==self.history_id).values(task_history))
 
-        self.logger.info("Recorded job completion for: " + str(task_completed) + "\n")
+        self.logger.info(f"Recorded job completion for: {task_completed}\n")
 
         # Update job process table
         updated_job = {
-            "since_id_str": repo_id,
-            "last_count": self.results_counter,
-            "last_run": datetime.datetime.now(),
-            "analysis_state": 0
+            'since_id_str': repo_id,
+            'last_count': self.results_counter,
+            'last_run': datetime.datetime.now(),
+            'analysis_state': 0
         }
         self.helper_db.execute(self.worker_job_table.update().where(
             self.worker_job_table.c.job_model==model).values(updated_job))
-        self.logger.info("Updated job process for model: " + model + "\n")
+        self.logger.info(f"Updated job process for model: {model}\n")
 
-        if self.config["offline_mode"] is False:
-
+        if self.config['offline_mode'] is False:
+            
             # Notify broker of completion
-            self.logger.info("Telling broker we completed task: " + str(task_completed) + "\n\n" +
-                "This task inserted: " + str(self.results_counter) + " tuples.\n")
+            self.logger.info(f"Telling broker we completed task: {task_completed}\n") 
+            self.logger.info(f"This task inserted: {self.results_counter + self.insert_counter} tuples " +
+                f"and updated {self.update_counter} tuples.\n")
 
             requests.post('http://{}:{}/api/unstable/completed_task'.format(
                 self.config['host_broker'],self.config['port_broker']), json=task_completed)
 
         # Reset results counter for next task
         self.results_counter = 0
+        self.insert_counter = 0
+        self.update_counter = 0
 
     def register_task_failure(self, task, repo_id, e):
 
-        self.logger.error("Worker ran into an error for task: {}\n".format(task))
+        self.logger.error(f"Worker ran into an error for task: {task}\n")
+        self.logger.error(f"Worker was processing this task for {self.collection_start_time - time.time()} seconds.\n")
         self.logger.error("Printing traceback...\n")
+        self.logger.error(e)
         tb = traceback.format_exc()
         self.logger.error(tb)
 
@@ -1201,6 +1514,13 @@ class Worker():
         # Reset results counter for next task
         self.results_counter = 0
 
+    def get_relevant_columns(self, table, action_map={}):
+        columns = copy.deepcopy(action_map['update']['augur']) if 'update' in action_map else []
+        columns += action_map['value_update']['augur'] if 'value_update' in action_map else []
+        columns += action_map['insert']['augur'] if 'insert' in action_map else []
+        return [table.c[column] for column in
+            columns + [list(table.primary_key)[0].name]]
+
     def retrieve_tuple(self, key_values, tables):
         table_str = tables[0]
         del tables[0]
@@ -1234,11 +1554,9 @@ class Worker():
         else:
             try:
                 self.oauths[0]['rate_limit'] = int(response.headers['RateLimit-Remaining'])
-                self.logger.info("Recieved rate limit from headers\n")
             except:
                 self.oauths[0]['rate_limit'] -= 1
-                self.logger.info("Headers did not work, had to decrement\n")
-        self.logger.info("Updated rate limit, you have: " +
+        self.logger.info("Updated rate limit, you have: " + 
             str(self.oauths[0]['rate_limit']) + " requests remaining.\n")
         if self.oauths[0]['rate_limit'] <= 0:
             try:

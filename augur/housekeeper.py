@@ -78,9 +78,11 @@ class Housekeeper:
         if 'repo_group_id' in job:
             repo_group_id = job['repo_group_id']
             logger.info('Housekeeper spawned {} model updater process for repo group id {}'.format(job['model'], repo_group_id))
-        else:
+        elif 'repo_ids' in job:
             repo_group_id = None
             logger.info('Housekeeper spawned {} model updater process for repo ids {}'.format(job['model'], job['repo_ids']))
+        else:
+            logger.info(f"Housekeeper spawned {job['model']} model updater process.")
 
         try:
             compatible_worker_found = False
@@ -97,11 +99,11 @@ class Housekeeper:
                     "can handle the {} model... beginning to distribute maintained tasks".format(job['model']))
                 while True:
                     logger.info('Housekeeper updating {} model with given {}...'.format(
-                        job['model'], job['given'][0]))
-                    
-                    if job['given'][0] == 'git_url' or job['given'][0] == 'github_url':
+                        job['model'], job['given']))
+                    print('yo start')
+                    if job['given'] == ['git_url'] or job['given'] == ['github_url']:
                         for repo in job['repos']:
-                            if job['given'][0] == 'github_url' and 'github.com' not in repo['repo_git']:
+                            if job['given'] == ['github_url'] and 'github.com' not in repo['repo_git']:
                                 continue
                             given_key = 'git_url' if job['given'][0] == 'git_url' else 'github_url'
                             task = {
@@ -112,7 +114,7 @@ class Housekeeper:
                             }
                             task['given'][given_key] = repo['repo_git']
                             if "focused_task" in repo:
-                                task["focused_task"] = repo['focused_task']
+                                task['focused_task'] = repo['focused_task']
                             try:
                                 requests.post('http://{}:{}/api/unstable/task'.format(
                                     broker_host,broker_port), json=task, timeout=10)
@@ -123,12 +125,12 @@ class Housekeeper:
 
                             time.sleep(15)
 
-                    elif job['given'][0] == 'repo_group':
+                    elif job['given'] == ['repo_group']:
                         task = {
-                                "job_type": job['job_type'] if 'job_type' in job else 'MAINTAIN', 
-                                "models": [job['model']], 
-                                "display_name": "{} model for repo group id: {}".format(job['model'], repo_group_id),
-                                "given": {
+                                'job_type': job['job_type'] if 'job_type' in job else 'MAINTAIN', 
+                                'models': [job['model']], 
+                                'display_name': "{} model for repo group id: {}".format(job['model'], repo_group_id),
+                                'given': {
                                     "repo_group": job['repos']
                                 }
                             }
@@ -138,6 +140,20 @@ class Housekeeper:
                         except Exception as e:
                             logger.error("Error encountered: {}".format(e))
 
+                    else:
+                        task = {
+                                'job_type': job['job_type'] if 'job_type' in job else 'MAINTAIN', 
+                                'models': [job['model']], 
+                                'display_name': f"{job['model']} model",
+                                'given': {}
+                            }
+                        try:
+                            requests.post('http://{}:{}/api/unstable/task'.format(
+                                broker_host, broker_port), json=task, timeout=10)
+                        except Exception as e:
+                            logger.error("Error encountered: {}".format(e))
+
+                    print('yo end')
                     logger.info("Housekeeper finished sending {} tasks to the broker for it to distribute to your worker(s)".format(len(job['repos'])))
                     time.sleep(job['delay'])
 

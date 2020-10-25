@@ -70,6 +70,7 @@ def create_routes(server):
         Retrieves a json consisting of task specifications that the broker will use to assign a worker
         """
         task = request.json
+        print(task)
 
         given = []
         for given_component in list(task['given'].keys()):

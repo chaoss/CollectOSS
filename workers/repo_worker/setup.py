@@ -12,15 +12,14 @@ def read(filename):
     with io.open(filename, mode="r", encoding='utf-8') as fd:
         return re.sub(text_type(r':[a-z]+:`~?(.*?)`'), text_type(r'``\1``'), fd.read())
 
-# update corresponding information
 setup(
-    name="template_worker",
+    name="repo_worker", 
     version="0.0.0",
     url="https://github.com/chaoss/augur",
-    license='MIT',
+    license="MIT",
     author="Augur Team",
     author_email="gabe@gabehe.im",
-    description="Template worker to be used as an example",
+    description="Repo worker to insert repos and repo groups",
     packages=find_packages(),
     install_requires=[
         'flask',
@@ -29,7 +28,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'template_worker_start=workers.template_worker.runtime:main',
+            'repo_worker_start=workers.repo_worker.runtime:main',
         ],
     },
     classifiers=[
