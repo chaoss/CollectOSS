@@ -16,4 +16,9 @@ DROP TABLE IF EXISTS "augur_data"."_git_census";
 
 DROP TABLE IF EXISTS "augur_data"."repo_ghtorrent_map";
 
+DROP TABLE IF EXISTS "augur_operations"."cncf_users";
+
+DROP TABLE IF EXISTS "augur_operations"."science";
+
+
 update "augur_operations"."augur_settings" set value = 30 where setting = 'augur_data_version'; 
