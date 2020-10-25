@@ -125,6 +125,10 @@ ALTER TABLE "augur_data"."commits"
   ALTER COLUMN "cmt_author_email" TYPE varchar COLLATE "pg_catalog"."default",
   ALTER COLUMN "cmt_committer_email" TYPE varchar COLLATE "pg_catalog"."default";
 
+ALTER TABLE "augur_data"."contributors" 
+  ALTER COLUMN "cntrb_canonical" TYPE varchar COLLATE "pg_catalog"."default";
 
+ALTER TABLE "augur_data"."contributors_aliases" 
+  ALTER COLUMN "canonical_email" TYPE varchar COLLATE "pg_catalog"."default";
 
 update "augur_operations"."augur_settings" set value = 29 where setting = 'augur_data_version'; 
