@@ -81,39 +81,39 @@ CREATE INDEX CONCURRENTLY IF NOT EXISTS "contrb-history-dix1" ON "augur_data"."c
   
 CREATE INDEX CONCURRENTLY
 IF
-  NOT EXISTS commits_idx_repo_id_cmt_ema_cmt_dat_cmt_nam ON commits ( repo_id, cmt_author_email, cmt_author_date, cmt_author_name );
+  NOT EXISTS commits_idx_repo_id_cmt_ema_cmt_dat_cmt_nam ON "augur_data"."commits" ( repo_id, cmt_author_email, cmt_author_date, cmt_author_name );
 
 CREATE INDEX CONCURRENTLY
 IF
-  NOT EXISTS commits_idx_cmt_email_cmt_date_cmt_name ON commits ( cmt_author_email, cmt_author_date, cmt_author_name );
+  NOT EXISTS commits_idx_cmt_email_cmt_date_cmt_name ON "augur_data"."commits" ( cmt_author_email, cmt_author_date, cmt_author_name );
 
 CREATE INDEX CONCURRENTLY
 IF
-  NOT EXISTS commits_idx_repo_id_cmt_ema_cmt_dat_cmt_nam2 ON commits ( repo_id, cmt_committer_email, cmt_committer_date, cmt_committer_name );
+  NOT EXISTS commits_idx_repo_id_cmt_ema_cmt_dat_cmt_nam2 ON "augur_data"."commits" ( repo_id, cmt_committer_email, cmt_committer_date, cmt_committer_name );
 
 CREATE INDEX CONCURRENTLY
 IF
-  NOT EXISTS commits_idx_cmt_email_cmt_date_cmt_name2 ON commits ( cmt_committer_email, cmt_committer_date, cmt_committer_name );
+  NOT EXISTS commits_idx_cmt_email_cmt_date_cmt_name2 ON "augur_data"."commits" ( cmt_committer_email, cmt_committer_date, cmt_committer_name );
 
 CREATE INDEX CONCURRENTLY
 IF
-  NOT EXISTS commits_idx_repo_id_cmt_ema_cmt_nam_cmt_dat2 ON commits ( repo_id, cmt_author_email, cmt_author_name, cmt_author_date );
+  NOT EXISTS commits_idx_repo_id_cmt_ema_cmt_nam_cmt_dat2 ON "augur_data"."commits" ( repo_id, cmt_author_email, cmt_author_name, cmt_author_date );
 
 CREATE INDEX CONCURRENTLY
 IF
-  NOT EXISTS commits_idx_cmt_name_cmt_date2 ON commits ( cmt_author_name, cmt_author_date );
+  NOT EXISTS commits_idx_cmt_name_cmt_date2 ON "augur_data"."commits" ( cmt_author_name, cmt_author_date );
 
 CREATE INDEX CONCURRENTLY
 IF
-  NOT EXISTS commits_idx_repo_id_cmt_ema_cmt_nam_cmt_dat3 ON commits ( repo_id, cmt_committer_email, cmt_committer_name, cmt_author_date );
+  NOT EXISTS commits_idx_repo_id_cmt_ema_cmt_nam_cmt_dat3 ON "augur_data"."commits" ( repo_id, cmt_committer_email, cmt_committer_name, cmt_author_date );
 
 CREATE INDEX CONCURRENTLY
 IF
-  NOT EXISTS commits_idx_cmt_name_cmt_date_cmt_date3 ON commits ( cmt_committer_name, cmt_author_date, cmt_committer_date );
+  NOT EXISTS commits_idx_cmt_name_cmt_date_cmt_date3 ON "augur_data"."commits" ( cmt_committer_name, cmt_author_date, cmt_committer_date );
 
 CREATE INDEX CONCURRENTLY
 IF
-  NOT EXISTS contributors_idx_cntrb_email3 ON contributors ( cntrb_email );
+  NOT EXISTS contributors_idx_cntrb_email3 ON "augur_data"."contributors" ( cntrb_email );
 
 
 -- Field Name Consistency
