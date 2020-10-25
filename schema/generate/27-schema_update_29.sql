@@ -133,10 +133,26 @@ ALTER TABLE "augur_data"."contributors_aliases"
 
 --- Hash index change
 
-DROP INDEX CONCURRENTLY IF NOT EXISTS "augur_data"."author_affiliation";
+DROP INDEX "augur_data"."author_affiliation";
 
-CREATE INDEX "author_affiliation" ON "augur_data"."commits" USING hash (
+CREATE INDEX CONCURRENTLY IF NOT EXISTS  "author_affiliation" ON "augur_data"."commits" USING hash (
   "cmt_author_affiliation" COLLATE "pg_catalog"."default" "pg_catalog"."text_ops"
 ); 
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "cmt-author-date-idx2" ON "augur_data"."commits" USING btree (
+  "cmt_author_date" COLLATE "pg_catalog"."default" "pg_catalog"."text_ops" ASC NULLS LAST
+);
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "cmt-committer-date-idx3" ON "augur_data"."commits" USING btree (
+  "cmt_committer_date" COLLATE "pg_catalog"."default" "pg_catalog"."text_ops" ASC NULLS LAST
+);
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "cmt_author-name-idx5" ON "augur_data"."commits" USING btree (
+  "cmt_committer_name" COLLATE "pg_catalog"."default" "pg_catalog"."text_ops" ASC NULLS LAST
+);
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "cmt_cmmter-name-idx4" ON "augur_data"."commits" USING btree (
+  "cmt_author_name" COLLATE "pg_catalog"."default" "pg_catalog"."text_ops" ASC NULLS LAST
+);
 
 update "augur_operations"."augur_settings" set value = 29 where setting = 'augur_data_version'; 
