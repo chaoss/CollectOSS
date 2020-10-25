@@ -131,4 +131,12 @@ ALTER TABLE "augur_data"."contributors"
 ALTER TABLE "augur_data"."contributors_aliases" 
   ALTER COLUMN "canonical_email" TYPE varchar COLLATE "pg_catalog"."default";
 
+--- Hash index change
+
+DROP INDEX CONCURRENTLY IF NOT EXISTS "augur_data"."author_affiliation";
+
+CREATE INDEX "author_affiliation" ON "augur_data"."commits" USING hash (
+  "cmt_author_affiliation" COLLATE "pg_catalog"."default" "pg_catalog"."text_ops"
+); 
+
 update "augur_operations"."augur_settings" set value = 29 where setting = 'augur_data_version'; 
