@@ -3232,4 +3232,4 @@ ALTER TABLE "spdx"."relationships" ADD CONSTRAINT "relationships_left_identifier
 ALTER TABLE "spdx"."relationships" ADD CONSTRAINT "relationships_relationship_type_id_fkey" FOREIGN KEY ("relationship_type_id") REFERENCES "spdx"."relationship_types" ("relationship_type_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "spdx"."relationships" ADD CONSTRAINT "relationships_right_identifier_id_fkey" FOREIGN KEY ("right_identifier_id") REFERENCES "spdx"."identifiers" ("identifier_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
-update "augur_operations"."augur_settings" set value = 40 where setting = 'augur_data_version'; 
+update "augur_operations"."augur_settings" set value = 30 where setting = 'augur_data_version'; 
