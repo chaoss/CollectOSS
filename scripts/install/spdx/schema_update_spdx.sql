@@ -1,3 +1,4 @@
+-- #SPDX-License-Identifier: MIT
 -- SPDX Updates
 
 CREATE SEQUENCE "spdx"."projects_package_id_seq_tw0" 

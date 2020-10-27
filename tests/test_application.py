@@ -1,3 +1,4 @@
+#SPDX-License-Identifier: MIT
 import pytest
 import augur.application
 import sqlalchemy as s

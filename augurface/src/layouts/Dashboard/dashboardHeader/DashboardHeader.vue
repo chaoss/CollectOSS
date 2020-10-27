@@ -1,3 +1,4 @@
+<!-- #SPDX-License-Identifier: MIT -->
 <template>
   <header id="DashboardHeader">
     <img src="../../../assets/logo.png" alt />

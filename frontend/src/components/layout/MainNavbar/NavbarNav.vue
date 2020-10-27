@@ -1,3 +1,4 @@
+<!-- #SPDX-License-Identifier: MIT -->
 <template>
   <d-navbar-nav class="border-left flex-row">
     <li class="nav-item border-right dropdown notifications navbarNavli">

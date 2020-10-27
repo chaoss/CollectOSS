@@ -1,3 +1,4 @@
+-- #SPDX-License-Identifier: MIT
 CREATE SEQUENCE "augur_data"."pull_request_commits_pr_cmt_id_seq" 
 INCREMENT 1
 MINVALUE  1

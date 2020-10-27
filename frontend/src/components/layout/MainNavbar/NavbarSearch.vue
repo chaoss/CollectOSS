@@ -1,3 +1,4 @@
+<!-- #SPDX-License-Identifier: MIT -->
 <template>
   <div class="main-navbar__search w-100 d-none d-md-flex d-lg-flex navbarSearchDiv" >
     <!-- <d-form class="main-navbar__search w-100 d-none d-md-flex d-lg-flex" style="margin-bottom: 0 !important"> -->

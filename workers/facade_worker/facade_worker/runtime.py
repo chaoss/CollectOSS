@@ -1,3 +1,4 @@
+#SPDX-License-Identifier: MIT
 from flask import Flask, jsonify, request, Response
 import click, os, json, requests, logging
 from workers.facade_worker.facade_worker.facade00mainprogram import FacadeWorker

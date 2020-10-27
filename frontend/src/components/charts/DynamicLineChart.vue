@@ -1,3 +1,4 @@
+<!-- #SPDX-License-Identifier: MIT -->
 <template>
   <d-card-body v-if="!error" :title="title">
     <div v-if="mount" :id="source"></div>

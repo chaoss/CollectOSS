@@ -1,3 +1,4 @@
+#SPDX-License-Identifier: MIT
 # Config
 augur.config.json
 !frontend.config.json

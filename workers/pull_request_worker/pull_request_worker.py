@@ -1,3 +1,4 @@
+#SPDX-License-Identifier: MIT
 import ast, json, logging, os, sys, time, traceback, requests
 from datetime import datetime
 from multiprocessing import Process, Queue
@@ -196,7 +197,7 @@ class GitHubPullRequestWorker(Worker):
 
             pr_file_rows += [{
                 'pull_request_id': pull_request.pull_request_id,
-                'pr_file_additions': pr_file['node']['additions'] + 5,
+                'pr_file_additions': pr_file['node']['additions'],
                 'pr_file_deletions': pr_file['node']['deletions'],
                 'pr_file_path': pr_file['node']['path'],
                 'tool_source': self.tool_source,

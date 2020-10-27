@@ -1,3 +1,4 @@
+// #SPDX-License-Identifier: MIT
 /* tslint:disable */
 var $ = require('jquery')
 var _ = require('lodash')

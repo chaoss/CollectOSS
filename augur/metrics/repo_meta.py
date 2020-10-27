@@ -1,3 +1,4 @@
+#SPDX-License-Identifier: MIT
 """
 General repo metrics like provides general overview data about repositories, including things like lines of code change, licenses, stars, CII best practices badging, and more
 """

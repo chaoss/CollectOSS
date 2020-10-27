@@ -1,3 +1,4 @@
+-- #SPDX-License-Identifier: MIT
 -- ----------------------------
 -- Sequence structure for gh_worker_history_history_id_seq
 -- ----------------------------

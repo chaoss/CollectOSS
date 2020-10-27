@@ -1,3 +1,4 @@
+// #SPDX-License-Identifier: MIT
 // import queryString from 'query-string';
 // import Vuex from 'vuex';
 // import VueRouter from 'vue-router'
