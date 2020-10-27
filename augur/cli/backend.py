@@ -50,25 +50,26 @@ def start(disable_housekeeper, skip_cleanup):
 
 @cli.command('stop')
 @initialize_logging
-def stop_server():
+def stop():
     """
     Sends SIGTERM to all Augur server & worker processes
     """
-    _broadcast_signal_to_processes(attach_logger=True)
+    _broadcast_signal_to_processes(given_logger=logging.getLogger("augur.cli"))
 
 @cli.command('kill')
 @initialize_logging
-def kill_server():
+def kill():
     """
     Sends SIGKILL to all Augur server & worker processes
     """
-    _broadcast_signal_to_processes(signal=signal.SIGKILL, attach_logger=True)
+    _broadcast_signal_to_processes(signal=signal.SIGKILL, given_logger=logging.getLogger("augur.cli"))
 
 @cli.command('processes')
 @initialize_logging
-def list_processes():
+def processes():
     """
     Outputs the name/PID of all Augur server & worker processes"""
+    logger = logging.getLogger("augur.cli")
     processes = get_augur_processes()
     for process in processes:
         logger.info(f"Found process {process.pid}")
@@ -85,11 +86,11 @@ def get_augur_processes():
                 pass
     return processes
 
-def _broadcast_signal_to_processes(signal=signal.SIGTERM, attach_logger=False):
-    if attach_logger is True:
-        _logger = logging.getLogger("augur")
-    else:
+def _broadcast_signal_to_processes(signal=signal.SIGTERM, given_logger=None):
+    if given_logger is None:
         _logger = logger
+    else:
+        _logger = given_logger
     processes = get_augur_processes()
     if processes != []:
         for process in processes:
