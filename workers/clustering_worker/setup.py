@@ -1,4 +1,3 @@
-#SPDX-License-Identifier: MIT
 import io
 import os
 import re
@@ -13,29 +12,28 @@ def read(filename):
         return re.sub(text_type(r':[a-z]+:`~?(.*?)`'), text_type(r'``\1``'), fd.read())
 
 setup(
-    name="insight_worker",
-    version="1.0.0",
+    name="clustering_worker",
+    version="0.0.1",
     url="https://github.com/chaoss/augur",
     license='MIT',
-    author="Augurlabs",
-    author_email="s@goggins.com",
-    description="Augur Worker that discovers and stores data anomalies",
-    packages=find_packages(exclude=('tests',)),
+    author="Sarit Adhikari",
+    author_email="sarit.adhikari@gmail.com",
+    description="worker to cluster repository based on messages on issues and pull requests ",
+    packages=find_packages(),
     install_requires=[
-        'flask', 
-        'numpy==1.18.5', 
-        'requests', 
-        'psycopg2-binary', 
-        'click', 
-        'scipy',
+        'flask',
+        'requests',
+        'psycopg2-binary',
         'sklearn',
-        'keras==2.3.1',
-        'tensorflow'
-
+        'numpy',
+        'nltk',
+        'seaborn',
+        'pandas',
+        'matplotlib'
     ],
     entry_points={
         'console_scripts': [
-            'insight_worker_start=workers.insight_worker.runtime:main',
+            'clustering_worker_start=workers.clustering_worker.runtime:main',
         ],
     },
     classifiers=[

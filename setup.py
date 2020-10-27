@@ -38,7 +38,8 @@ setup(
         "sqlalchemy",
         "flask_login",
         "flask",
-        "pandas==1.0.5",
+        "pandas>=1.0.5",
+        "numpy<1.19.0,>=1.16.0",
         "requests",
         "flask_cors",
         "flask_wtf",
@@ -46,7 +47,13 @@ setup(
         "click",
         "psutil",
         "gunicorn",
-        "six>=1.14.0"
+        "six>=1.14.0",
+        "matplotlib==3.3.1",
+        "tensorflow",
+        "keras==2.3.1",
+        "sklearn", 
+        "scikit-image",
+        "xgboost"
     ],
     extras_require={
         "dev": [

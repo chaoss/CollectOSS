@@ -28,7 +28,7 @@ default_config = {
                     "all_focused": 1,
                     "delay": 150000,
                     "given": [
-                        "github_url"
+                        "git_url"
                     ],
                     "model": "issues",
                     "repo_group_id": 0
@@ -112,6 +112,40 @@ default_config = {
                     ],
                     "model": "releases",
                     "repo_group_id": 0
+                },
+                {
+                    "delay": 100000,
+                    "given": [
+                        "github_url"
+                    ],
+                    "model": "message_analysis",
+                    "repo_group_id": 0
+                },
+                {
+                    "delay": 100000,
+                    "given": [
+                        "github_url"
+                    ],
+                    "model": "pull_request_analysis",
+                    "repo_group_id": 0
+                },
+                
+	        {
+	    	"delay": 10000,
+		"given":[
+		    "git_url"
+		],
+		"model" : "discourse_analysis",
+		"repo_group_id" : 0
+	    
+	        },
+	        {
+                "delay": 10000,
+                "given": [
+                    "git_url"
+                ],
+                "model": "clustering",
+                "repo_group_id": 0
                 }
             ]
         },
@@ -132,11 +166,11 @@ default_config = {
                 "metrics": {"issues-new": "issues", "code-changes": "commit_count", "code-changes-lines": "added",
                            "reviews": "pull_requests", "contributors-new": "new_contributors"},
                 "confidence_interval": 95,
-                "contamination": 0.041,
+                "contamination": 0.1,
                 "switch": 0,
                 "workers": 1,
                 "training_days": 365,
-                "anomaly_days": 2
+                "anomaly_days": 14
             },
             "linux_badge_worker": {
                 "port": 50400,
@@ -183,7 +217,36 @@ default_config = {
                 "port": 51200,
                 "switch": 1,
                 "workers": 1
-            }
+            },
+            "message_insights_worker": {
+                "port": 51300,
+                "switch": 1,
+                "workers": 1,
+                "insight_days": 30,
+                "models_dir": "message_models"
+            },
+            "pull_request_analysis_worker": {
+                "port": 51400,
+                "switch": 1,
+                "workers": 1,
+                "insight_days": 30
+            },
+            "discourse_analysis_worker":{
+	    "port" : 51500,
+	    "switch": 0,
+	    "workers": 1
+	
+	    },
+	    "clustering_worker": {
+            "port": 51600,
+            "switch": 1,
+            "workers": 1,
+	    "max_df" : 0.9,
+	    "max_features" : 1000,
+	    "min_df": 0.1,
+	    "num_clusters" : 4
+
+        }
         },
         "Facade": {
             "check_updates": 1,
@@ -307,8 +370,8 @@ class AugurConfig():
                     config_file_path = os.path.abspath(location)
                     f.close()
                     break
-                except FileNotFoundError:
-                    pass
+                except FileNotFoundError as e:
+                    print(e)
         if config_file_path:
             self.config_file_location = config_file_path
         else:
