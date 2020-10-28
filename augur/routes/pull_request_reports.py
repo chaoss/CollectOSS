@@ -13,6 +13,7 @@ from bokeh.palettes import Colorblind, mpl, Category20
 from bokeh.layouts import gridplot, row, column
 from bokeh.models.annotations import Title
 from bokeh.io import export_png, show
+from bokeh.embed import json_item
 from bokeh.models import ColumnDataSource, Legend, LabelSet, Range1d, Label, FactorRange, BasicTicker, ColorBar, LinearColorMapper, PrintfTickFormatter
 from bokeh.plotting import figure
 from bokeh.models.glyphs import Rect
@@ -319,13 +320,13 @@ def create_routes(server):
 
         return color_dict(RGB_list)
 
-    @server.app.route('/{}/pull_request_reports/average_commits_per_PR/'.format(server.api_version), methods=["POST"])
-    def average_commits_per_PR():
+    @server.app.route('/{}/pull_request_reports/average_commits_per_PR/'.format(server.api_version), methods=["GET"])
+    def average_commits_per_PR(return_json=True):
 
-        repo_id = request.json['repo_id']
-        start_date = request.json['start_date']
-        end_date = request.json['end_date']
-        return_json = request.json['return_json']
+        repo_id = int(request.args.get('repo_id'))
+        start_date = str(request.args.get('start_date'))
+        end_date = str(request.args.get('end_date'))
+        return_json = str(request.args.get('return_json'))
 
         input_df = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, slow_20=False, df_type='pr_all')
 
@@ -434,13 +435,13 @@ def create_routes(server):
         
         return send_file(filename)
 
-    @server.app.route('/{}/pull_request_reports/average_comments_per_PR/'.format(server.api_version), methods=["POST"])
-    def average_comments_per_PR():
+    @server.app.route('/{}/pull_request_reports/average_comments_per_PR/'.format(server.api_version), methods=["GET"])
+    def average_comments_per_PR(return_json=True):
 
-        repo_id = request.json['repo_id']
-        start_date = request.json['start_date']
-        end_date = request.json['end_date']
-        return_json = request.json['return_json']
+        repo_id = int(request.args.get('repo_id'))
+        start_date = str(request.args.get('start_date'))
+        end_date = str(request.args.get('end_date'))
+        return_json = str(request.args.get('return_json'))
 
         input_df = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, slow_20=False, df_type='pr_closed')
 
@@ -569,13 +570,13 @@ def create_routes(server):
         
         return send_file(filename)
 
-    @server.app.route('/{}/pull_request_reports/PR_counts_by_merged_status/'.format(server.api_version), methods=["POST"])
+    @server.app.route('/{}/pull_request_reports/PR_counts_by_merged_status/'.format(server.api_version), methods=["GET"])
     def PR_counts_by_merged_status():
 
-        repo_id = request.json['repo_id']
-        start_date = request.json['start_date']
-        end_date = request.json['end_date']
-        return_json = request.json['return_json']
+        repo_id = int(request.args.get('repo_id'))
+        start_date = str(request.args.get('start_date'))
+        end_date = str(request.args.get('end_date'))
+        return_json = str(request.args.get('return_json'))
 
         pr_closed = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, slow_20=False, df_type='pr_closed')
         pr_slow20_not_merged = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, slow_20=True, df_type='pr_not_merged')
@@ -721,13 +722,13 @@ def create_routes(server):
         
         return send_file(filename)
 
-    @server.app.route('/{}/pull_request_reports/mean_response_times_for_PR/'.format(server.api_version), methods=["POST"])
+    @server.app.route('/{}/pull_request_reports/mean_response_times_for_PR/'.format(server.api_version), methods=["GET"])
     def mean_response_times_for_PR():
 
-        repo_id = request.json['repo_id']
-        start_date = request.json['start_date']
-        end_date = request.json['end_date']
-        return_json = request.json['return_json']
+        repo_id = int(request.args.get('repo_id'))
+        start_date = str(request.args.get('start_date'))
+        end_date = str(request.args.get('end_date'))
+        return_json = str(request.args.get('return_json'))
 
         input_df = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, slow_20=False, df_type='pr_closed')   
 
@@ -948,13 +949,13 @@ def create_routes(server):
         
         return send_file(filename)
 
-    @server.app.route('/{}/pull_request_reports/mean_days_between_PR_comments/'.format(server.api_version), methods=["POST"])
+    @server.app.route('/{}/pull_request_reports/mean_days_between_PR_comments/'.format(server.api_version), methods=["GET"])
     def mean_days_between_PR_comments():
 
-        repo_id = request.json['repo_id']
-        start_date = request.json['start_date']
-        end_date = request.json['end_date']
-        return_json = request.json['return_json']
+        repo_id = int(request.args.get('repo_id'))
+        start_date = str(request.args.get('start_date'))
+        end_date = str(request.args.get('end_date'))
+        return_json = str(request.args.get('return_json'))
 
         pr_closed = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, slow_20=False, df_type='pr_closed')
         pr_slow20_not_merged = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, slow_20=True, df_type='pr_not_merged')
@@ -1063,14 +1064,14 @@ def create_routes(server):
         
         return send_file(filename)
 
-    @server.app.route('/{}/pull_request_reports/PR_time_to_first_response/'.format(server.api_version), methods=["POST"])
+    @server.app.route('/{}/pull_request_reports/PR_time_to_first_response/'.format(server.api_version), methods=["GET"])
     def PR_time_to_first_response():
 
-        repo_id = request.json['repo_id']
-        start_date = request.json['start_date']
-        end_date = request.json['end_date']
-        remove_outliers = request.json['remove_outliers']
-        return_json = request.json['return_json']
+        repo_id = int(request.args.get('repo_id'))
+        start_date = str(request.args.get('start_date'))
+        end_date = str(request.args.get('end_date'))
+        return_json = str(request.args.get('return_json'))
+        remove_outliers = int(request.args.get('remove_outliers'))
 
         pr_closed = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, slow_20=False, df_type='pr_closed')
        
@@ -1170,14 +1171,14 @@ def create_routes(server):
         
         return send_file(filename)
 
-    @server.app.route('/{}/pull_request_reports/average_PR_events_for_closed_PRs/'.format(server.api_version), methods=["POST"])
+    @server.app.route('/{}/pull_request_reports/average_PR_events_for_closed_PRs/'.format(server.api_version), methods=["GET"])
     def average_PR_events_for_closed_PRs():
 
-        repo_id = request.json['repo_id']
-        start_date = request.json['start_date']
-        end_date = request.json['end_date']
-        include_comments = request.json['include_comments']
-        return_json = request.json['return_json']
+        repo_id = int(request.args.get('repo_id'))
+        start_date = str(request.args.get('start_date'))
+        end_date = str(request.args.get('end_date'))
+        return_json = str(request.args.get('return_json'))
+        include_comments = str(request.args.get('include_comments'))
 
         pr_closed = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, slow_20=False, df_type='pr_closed')
        
@@ -1316,14 +1317,14 @@ def create_routes(server):
         
         return send_file(filename)
 
-    @server.app.route('/{}/pull_request_reports/Average_PR_duration/'.format(server.api_version), methods=["POST"])
+    @server.app.route('/{}/pull_request_reports/Average_PR_duration/'.format(server.api_version), methods=["GET"])
     def Average_PR_duration():
 
-        repo_id = request.json['repo_id']
-        start_date = request.json['start_date']
-        end_date = request.json['end_date']
-        remove_outliers = request.json['remove_outliers']
-        return_json = request.json['return_json']
+        repo_id = int(request.args.get('repo_id'))
+        start_date = str(request.args.get('start_date'))
+        end_date = str(request.args.get('end_date'))
+        return_json = str(request.args.get('return_json'))
+        remove_outliers = int(request.args.get('remove_outliers'))
 
         pr_closed = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, slow_20=False, df_type='pr_closed')
        
