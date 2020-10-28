@@ -429,7 +429,14 @@ def create_routes(server):
         grid = gridplot([[plot], [caption_plot]])
 
         if return_json:
-            return json_item(grid, "average_commits_per_PR")
+
+            var = Response(response=json.dumps(json_item(grid, "average_commits_per_PR")),
+                mimetype='application/json',
+                status=200)
+
+            var.headers["Access-Control-Allow-Orgin"] = "*"
+
+            return var 
 
         filename = export_png(grid)
         
@@ -564,7 +571,14 @@ def create_routes(server):
         grid = gridplot([[plot], [caption_plot]])
 
         if return_json:
-            return json_item(grid, "average_comments_per_PR")
+
+            var = Response(response=json.dumps(json_item(grid, "average_comments_per_PR")),
+                mimetype='application/json',
+                status=200)
+
+            var.headers["Access-Control-Allow-Orgin"] = "*"
+
+            return var 
 
         filename = export_png(grid)
         
@@ -716,8 +730,15 @@ def create_routes(server):
         grid = gridplot([[plot], [caption_plot]])
 
         if return_json:
-            return json_item(grid, "PR_counts_by_merged_status")
-        
+
+            var = Response(response=json.dumps(json_item(grid, "PR_counts_by_merged_status")),
+                mimetype='application/json',
+                status=200)
+
+            var.headers["Access-Control-Allow-Orgin"] = "*"
+
+            return var 
+
         filename = export_png(grid)
         
         return send_file(filename)
@@ -943,7 +964,14 @@ def create_routes(server):
         grid = gridplot([[plot], [caption_plot]])
 
         if return_json:
-            return json_item(grid, "mean_response_times_for_PR")
+
+            var = Response(response=json.dumps(json_item(grid, "mean_response_times_for_PR")),
+                mimetype='application/json',
+                status=200)
+
+            var.headers["Access-Control-Allow-Orgin"] = "*"
+
+            return var 
 
         filename = export_png(grid)
         
@@ -1058,8 +1086,15 @@ def create_routes(server):
         grid = gridplot([[plot], [caption_plot]])
 
         if return_json:
-            return json_item(grid, "mean_days_between_PR_comments")
- 
+
+            var = Response(response=json.dumps(json_item(grid, "mean_days_between_PR_comments")),
+                mimetype='application/json',
+                status=200)
+
+            var.headers["Access-Control-Allow-Orgin"] = "*"
+
+            return var 
+
         filename = export_png(grid)
         
         return send_file(filename)
@@ -1165,8 +1200,15 @@ def create_routes(server):
         grid = gridplot([[plot], [caption_plot]])
 
         if return_json:
-            return json_item(grid, "PR_time_to_first_response")
- 
+
+            var = Response(response=json.dumps(json_item(grid, "PR_time_to_first_response")),
+                mimetype='application/json',
+                status=200)
+
+            var.headers["Access-Control-Allow-Orgin"] = "*"
+
+            return var 
+
         filename = export_png(grid)
         
         return send_file(filename)
@@ -1310,10 +1352,16 @@ def create_routes(server):
         layout = column([title_plot, grid, caption_plot], sizing_mode='scale_width')
 
         if return_json:
-            return json_item(layout, "average_PR_events_for_closed_PRs")
-        #show(layout)
 
-        filename = export_png(layout)
+            var = Response(response=json.dumps(json_item(grid, "average_PR_events_for_closed_PRs")),
+                mimetype='application/json',
+                status=200)
+
+            var.headers["Access-Control-Allow-Orgin"] = "*"
+
+            return var 
+
+        filename = export_png(grid)
         
         return send_file(filename)
 
@@ -1425,11 +1473,15 @@ def create_routes(server):
         grid = gridplot([[plot], [caption_plot]])
 
         if return_json:
-            return json_item(grid, "Average_PR_duration")
+
+            var = Response(response=json.dumps(json_item(grid, "Average_PR_duration")),
+                mimetype='application/json',
+                status=200)
+
+            var.headers["Access-Control-Allow-Orgin"] = "*"
+
+            return var 
 
         filename = export_png(grid)
         
         return send_file(filename)
-
-
-   

@@ -536,11 +536,7 @@ def create_routes(server):
         #puts plots together into a grid
         grid = gridplot([row_1, row_2, row_3, row_4])
 
-        
-
         if return_json:
-
-            print(grid)
 
             var = Response(response=json.dumps(json_item(grid, "new_contributors_bar")),
                 mimetype='application/json',
@@ -550,10 +546,8 @@ def create_routes(server):
 
             return var 
 
-
         filename = export_png(grid)
 
-        
         return send_file(filename)
 
     @server.app.route('/{}/contributor_reports/new_contributors_stacked_bar/'.format(server.api_version), methods=["GET"])
@@ -802,7 +796,14 @@ def create_routes(server):
         grid = gridplot([row_1, row_2, row_3, row_4])
 
         if return_json:
-            return json_item(grid, "new_contributors_stacked_bar")
+
+            var = Response(response=json.dumps(json_item(grid, "new_contributors_stacked_bar")),
+                mimetype='application/json',
+                status=200)
+
+            var.headers["Access-Control-Allow-Orgin"] = "*"
+
+            return var 
 
         filename = export_png(grid)
 
@@ -967,10 +968,17 @@ def create_routes(server):
         grid = gridplot([[plot], [caption_plot]])
 
         if return_json:
-            return json_item(grid, "returning_contributors_pie_chart")
+
+            var = Response(response=json.dumps(json_item(grid, "returning_contributors_pie_chart")),
+                mimetype='application/json',
+                status=200)
+
+            var.headers["Access-Control-Allow-Orgin"] = "*"
+
+            return var 
 
         filename = export_png(grid)
-        
+
         return send_file(filename)
         
     @server.app.route('/{}/contributor_reports/returning_contributors_stacked_bar/'.format(server.api_version), methods=["GET"])
@@ -1180,8 +1188,15 @@ def create_routes(server):
         grid = gridplot([[plot], [caption_plot]])
 
         if return_json:
-            return json_item(grid, "returning_contributors_stacked_bar")
+
+            var = Response(response=json.dumps(json_item(grid, "returning_contributors_stacked_bar")),
+                mimetype='application/json',
+                status=200)
+
+            var.headers["Access-Control-Allow-Orgin"] = "*"
+
+            return var 
 
         filename = export_png(grid)
-        
+
         return send_file(filename)
