@@ -1,3 +1,4 @@
+<!-- #SPDX-License-Identifier: MIT -->
 <template>
   <div class="login-card">
     <img src="../../assets/logo.png" alt />

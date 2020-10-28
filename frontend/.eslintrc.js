@@ -1,3 +1,4 @@
+// #SPDX-License-Identifier: MIT
 module.exports = {
   'extends': [
     '@vue/typescript'

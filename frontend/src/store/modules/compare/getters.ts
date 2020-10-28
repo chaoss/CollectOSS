@@ -1,3 +1,4 @@
+// #SPDX-License-Identifier: MIT
 import construct = Reflect.construct;
 import Repo from '@/AugurAPI'
 import RepoGroups from "@/views/RepoGroups.vue";

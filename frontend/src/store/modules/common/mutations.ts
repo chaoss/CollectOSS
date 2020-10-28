@@ -1,3 +1,4 @@
+// #SPDX-License-Identifier: MIT
 /* tslint:disable */
 import router from '@/router'
 import Vue from 'vue';

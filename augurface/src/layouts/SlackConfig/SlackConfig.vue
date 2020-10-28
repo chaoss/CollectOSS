@@ -1,3 +1,4 @@
+<!-- #SPDX-License-Identifier: MIT -->
 <template>
   <div id="SlackConfig">
     <div id="not-logged-in" v-if="!isLoggedIn">

@@ -1,3 +1,4 @@
+// #SPDX-License-Identifier: MIT
 /* tslint:disable */
 export default class AugurStats {
     static convertDates (data:any, earliest: Date = new Date('01-01-2005'), latest: Date = new Date(), key: string = 'date') {

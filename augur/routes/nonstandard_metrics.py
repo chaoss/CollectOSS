@@ -1,3 +1,4 @@
+#SPDX-License-Identifier: MIT
 import base64
 import sqlalchemy as s
 import pandas as pd

@@ -1,3 +1,4 @@
+-- #SPDX-License-Identifier: MIT
 -- 22-schema_update_24.sql
 --
 

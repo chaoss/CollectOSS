@@ -1,3 +1,4 @@
+<!-- #SPDX-License-Identifier: MIT -->
 <template>
   <div id="AnalyzeRepos">
     <h1>AnalyzeRepos</h1>

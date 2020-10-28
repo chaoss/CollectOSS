@@ -1,3 +1,4 @@
+#SPDX-License-Identifier: MIT
 from multiprocessing import Process, Queue
 from urllib.parse import urlparse
 import requests, sys

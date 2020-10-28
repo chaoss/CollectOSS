@@ -1,3 +1,4 @@
+#SPDX-License-Identifier: MIT
 """
 Metrics that provide data about commits & their associated activity
 """

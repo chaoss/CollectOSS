@@ -1,3 +1,4 @@
+<!-- #SPDX-License-Identifier: MIT -->
 <template>
   <div ref="holder" class="sparkChartDiv">
     <h3 class="sparkChartHeader">{{ title }}</h3>
