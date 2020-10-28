@@ -4221,7 +4221,7 @@ paths:
       tags:
       - utility
   /contributor_reports/new_contributors_bar/:
-    post:
+    get:
       description: Get bar chart of new contributor counts.
       operationId: New Contributor Counts Bar Chart
       responses:
@@ -4267,7 +4267,7 @@ paths:
       tags:
       -experimental
   /contributor_reports/new_contributors_stacked_bar/:
-    post:
+    get:
       description: Get stacked bar chart of new contributor counts, which shows the action of the contributor.
       operationId: New Contributor Counts Stacked Bar Chart (shows actions)
       responses:
@@ -4313,7 +4313,7 @@ paths:
       tags:
       -experimental
   /contributor_reports/returning_contributors_pie_chart/:
-    post:
+    get:
       description: Get pie chart of the returning contributor counts.
       operationId: Returning Contributor Counts Pie Chart
       responses:
@@ -4356,7 +4356,7 @@ paths:
       tags:
       -experimental
   /contributor_reports/returning_contributors_stacked_bar/:
-    post:
+    get:
       description: Get returning contributors stacked bar chart.
       operationId: New Contributor Counts Stacked Bar Chart (shows actions)
       responses:
@@ -4402,7 +4402,7 @@ paths:
       tags:
         -experimental
   /pull_request_reports/average_commits_per_PR/:
-    post:
+    get:
       description: Get vertical bar chart of average commits per pull request.
       operationId: Average Commit Counts Per Year for All Pull Requests
       responses:
@@ -4439,7 +4439,7 @@ paths:
       tags:
         -experimental
   /pull_request_reports/average_comments_per_PR/:
-    post:
+    get:
       description: Get horizontal stacked bar chart of the average comments for closed pull requests.
       operationId: Average Comments per Closed Pull Request
       responses:
@@ -4476,7 +4476,7 @@ paths:
       tags:
         -experimental
   /pull_request_reports/PR_counts_by_merged_status/:
-    post:
+    get:
       description: Get vertical stacked bar chart of the number of pull requests by merged status.
       operationId: Count of All Closed Pull Requests by Merged Status
       responses:
@@ -4513,7 +4513,7 @@ paths:
       tags:
         -experimental
   /pull_request_reports/mean_response_times_for_PR/:
-    post:
+    get:
       description: Get grouped horizontal bar chart of average response times for closed pull requests.
       operationId: Mean Response Times for Closed Pull Requests
       responses:
@@ -4553,7 +4553,7 @@ paths:
       tags:
         -experimental
   /pull_request_reports/mean_days_between_PR_comments/:
-    post:
+    get:
       description: Get line graph of the average days between comments for closed pull requests.
       operationId: Average Days Between Comment for Pull Requests
       responses:
@@ -4590,7 +4590,7 @@ paths:
       tags:
         -experimental
   /pull_request_reports/PR_time_to_first_response/:
-    post:
+    get:
       description: Get scatter plot of the days to first response for closed pull requests based on merged status.
       operationId: Days to First Response for Closed Pull Requests Based on Merged Status
       responses:
@@ -4630,7 +4630,7 @@ paths:
       tags:
         -experimental
   /pull_request_reports/average_PR_events_for_closed_PRs/:
-    post:
+    get:
       description: Get heat map of average pull request event counts for closed pull requests.
       operationId: Average Pull Request Event Types for Closed Pull Requests
       responses:
@@ -4670,7 +4670,7 @@ paths:
       tags:
         -experimental
   /pull_request_reports/Average_PR_duration/:
-    post:
+    get:
       description: Get heat map of the average duration of pull requests per month.
       operationId: Mean Duration of Closed Pull Requests
       responses:
