@@ -7,6 +7,7 @@ import logging
 import time
 import subprocess
 import requests
+import json
 from flask import request, Response
 
 logger = logging.getLogger(__name__)
@@ -40,7 +41,7 @@ def send_task(worker_proxy):
     # Want to check user-created job requests first
     if len(user_queue) > 0:
         new_task = user_queue.pop(0)
-    
+
     # If no user-created job requests, move on to regulated/maintained ones
     elif len(maintain_queue) > 0:
         new_task = maintain_queue.pop(0)
@@ -48,7 +49,7 @@ def send_task(worker_proxy):
     else:
         logger.debug("Both queues are empty for worker {}\n".format(worker_id))
         worker_proxy['status'] = 'Idle'
-        return     
+        return
 
     logger.info("Worker {} is idle, preparing to send the {} task to {}\n".format(worker_id, new_task['display_name'], task_endpoint))
     try:
@@ -59,7 +60,7 @@ def send_task(worker_proxy):
         worker_proxy['status'] = 'Disconnected'
         # If the worker died, then restart it
         worker_start(worker_id.split('.')[len(worker_id.split('.')) - 2])
-    
+
 
 def create_routes(server):
 
@@ -81,20 +82,20 @@ def create_routes(server):
         worker_found = False
         compatible_workers = {}
 
-        # For every worker the broker is aware of that can fill the task's given and model 
+        # For every worker the broker is aware of that can fill the task's given and model
         for worker_id in [id for id in list(server.broker._getvalue().keys()) if model in server.broker[id]['models'] and given in server.broker[id]['given']]:
             if type(server.broker[worker_id]._getvalue()) != dict:
                 continue
 
-            logger.info("Considering compatible worker: {}\n".format(worker_id))
+            logger.debug("Considering compatible worker: {}\n".format(worker_id))
 
             # Group workers by type (all gh workers grouped together etc)
             worker_type = worker_id.split('.')[len(worker_id.split('.'))-2]
             compatible_workers[worker_type] = compatible_workers[worker_type] if worker_type in compatible_workers else {'task_load': len(server.broker[worker_id]['user_queue']) + len(server.broker[worker_id]['maintain_queue']), 'worker_id': worker_id}
-            
+
             # Make worker that is prioritized the one with the smallest sum of task queues
             if (len(server.broker[worker_id]['user_queue']) + len(server.broker[worker_id]['maintain_queue'])) < min([compatible_workers[w]['task_load'] for w in compatible_workers.keys() if worker_type == w]):
-                logger.info("Worker id: {} has the smallest task load encountered so far: {}\n".format(worker_id, len(server.broker[worker_id]['user_queue']) + len(server.broker[worker_id]['maintain_queue'])))
+                logger.debug("Worker id: {} has the smallest task load encountered so far: {}\n".format(worker_id, len(server.broker[worker_id]['user_queue']) + len(server.broker[worker_id]['maintain_queue'])))
                 compatible_workers[worker_type]['task_load'] = len(server.broker[worker_id]['user_queue']) + len(server.broker[worker_id]['maintain_queue'])
                 compatible_workers[worker_type]['worker_id'] = worker_id
 
@@ -127,7 +128,8 @@ def create_routes(server):
             and telling the broker to add this worker to the set it maintains
         """
         worker = request.json
-        logger.info("Recieved HELLO message from worker: {}\n".format(worker['id']))
+        logger.info("Recieved HELLO message from worker {} listening on: https://localhost:{}\
+                    ".format(worker['id'], worker['id'].split('.')[2]))
         if worker['id'] not in server.broker:
             server.broker[worker['id']] = server.manager.dict()
             server.broker[worker['id']]['id'] = worker['id']
@@ -179,14 +181,21 @@ def create_routes(server):
 
     @server.app.route('/{}/workers/status'.format(server.api_version), methods=['GET'])
     def get_status():
-        status = {}
-        for worker in list(server.broker._getvalue().keys()):
-            if type(server.broker[worker]._getvalue()) == dict:
-                status[worker] = worker
-                status[worker]['user_queue'] = server.broker[worker]['user_queue']._getvalue()
-                status[worker]['maintain_queue'] = server.broker[worker]['maintain_queue']._getvalue()
+        all_workers_status = []
+        for worker in server.broker.items():
+            status = {}
+            worker_id = ".".join(worker[0].split('.')[1:])
+            status[worker_id] = {}
+            status[worker_id]['id'] = worker[1]['id']
+            status[worker_id]['user_queue'] = [repo for repo in worker[1]['user_queue']]
+            status[worker_id]['maintain_queue'] = [repo for repo in worker[1]['maintain_queue']]
+            status[worker_id]['given'] = [given for given in worker[1]['given']]
+            status[worker_id]['models'] = [model for model in worker[1]['models']]
+            status[worker_id]['status'] = worker[1]['status']
+            status[worker_id]['location'] = worker[1]['location']
+            all_workers_status.append(status)
 
-        return Response(response=status,
+        return Response(response=json.dumps(all_workers_status),
                         status=200,
                         mimetype="application/json")
 
@@ -203,7 +212,7 @@ def create_routes(server):
     def task_error():
         task = request.json
         worker_id = task['worker_id']
-        logger.error("Recieved a message that {} ran into an error on task: {}\n".format(worker_id, task))
+        # logger.error("Recieved a message that {} ran into an error on task: {}\n".format(worker_id, task))
         if worker_id in server.broker:
             if server.broker[worker_id]['status'] != 'Disconnected':
                 logger.error("{} ran into error while completing task: {}\n".format(worker_id, task))

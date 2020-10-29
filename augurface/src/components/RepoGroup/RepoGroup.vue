@@ -1,3 +1,4 @@
+<!-- #SPDX-License-Identifier: MIT -->
 <template>
   <div id="RepoGroup" :class="{ open : !isCollapsed }">
     <repo-group-header ref="header" :repoGroup="repoGroup" :isCollapsed="isCollapsed" @flipCollapse="flipCollapse" @dropdownclick="$emit('dropdownclick')"/>

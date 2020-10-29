@@ -1,3 +1,4 @@
+#SPDX-License-Identifier: MIT
 import logging
 import logging.config
 import logging.handlers
@@ -219,8 +220,7 @@ class AugurLogging():
         for logger_name in ["augur", "augur.housekeeper", "augur.jobs"]:
             coloredlogs.install(logger=logging.getLogger(logger_name), level=self.LOG_LEVEL, fmt=self.format_string)
 
-        logger.debug("Logfiles initialized")
-        logger.debug("Logs will be written to: " + self.LOGS_DIRECTORY)
+        logger.debug("Logfiles initialized at " + self.LOGS_DIRECTORY)
 
     def initialize_housekeeper_logging_listener(self):
             queue = Queue()

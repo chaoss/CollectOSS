@@ -1,8 +1,9 @@
+#SPDX-License-Identifier: MIT
 import pytest
 import re
 
 from augur.application import Application
-from augur.cli.run import initialize_components
+from augur.cli.backend import initialize_components
 
 default_repo_id = "25430"
 default_repo_group_id = "10"

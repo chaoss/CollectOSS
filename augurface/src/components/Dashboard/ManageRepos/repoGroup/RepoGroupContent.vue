@@ -1,3 +1,4 @@
+<!-- #SPDX-License-Identifier: MIT -->
 <template>
   <div id="RepoGroupContent">
     <div id="add-repos-input">

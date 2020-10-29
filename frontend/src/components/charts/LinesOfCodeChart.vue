@@ -1,3 +1,4 @@
+<!-- #SPDX-License-Identifier: MIT -->
 <template>
   <d-card-body class="linesofCodeChart">
     <table class="lines-of-code-table">

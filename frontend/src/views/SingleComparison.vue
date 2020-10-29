@@ -1,3 +1,4 @@
+<!-- #SPDX-License-Identifier: MIT -->
 <template>
   <d-container fluid class="main-content-container px-4">
     <div class="row">

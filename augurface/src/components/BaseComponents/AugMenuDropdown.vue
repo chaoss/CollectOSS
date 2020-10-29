@@ -1,3 +1,4 @@
+<!-- #SPDX-License-Identifier: MIT -->
 <template>
   <div id="AugMenuDropdown" @click.stop>
     <aug-icon-button iconClass="fas fa-ellipsis-v" @click="flipCollapse" :class="{ open: !isCollapsed }" :circular="true"/>

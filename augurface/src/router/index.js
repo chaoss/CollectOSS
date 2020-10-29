@@ -1,3 +1,4 @@
+// #SPDX-License-Identifier: MIT
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 // import Login from '../layouts/Login/Login.vue';

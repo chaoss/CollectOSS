@@ -1,3 +1,4 @@
+<!-- #SPDX-License-Identifier: MIT -->
 <template>
 <transition name="modal">
     <div class="modal-mask" :class="{'is-active':active}">

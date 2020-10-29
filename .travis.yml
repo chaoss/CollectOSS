@@ -1,3 +1,4 @@
+#SPDX-License-Identifier: MIT
 os: linux
 dist: xenial
 language: python
@@ -16,7 +17,7 @@ jobs:
 
     - name: Python v3.7 Unit Tests
       python: 3.7
-      env: TOXENV=py37-workers,py36-application
+      env: TOXENV=py37-workers,py37-application
 
     - name: Python v3.7 API Tests
       python: 3.7
@@ -24,7 +25,7 @@ jobs:
 
     - name: Python v3.8 Unit Tests
       python: 3.8
-      env: TOXENV=py38-workers,py36-application
+      env: TOXENV=py38-workers,py38-application
 
     - name: Python v3.8 API Tests
       python: 3.8
@@ -39,11 +40,11 @@ env:
     AUGUR_DB_PASSWORD=augur
 
 before_install:
-  - docker run -d -p 5432:5432 --name augur_test_database augurlabs/augur:test_data@sha256:fd2d9a178a9fee7cd548bd40a16e08d4611be22892491e817aafd53502f74cd0
+  - docker run -d -p 5432:5432 --name augur_test_database augurlabs/augur:test_data@sha256:71da12114bf28584a9a64ede2fac0cbc8dffc8e2f4a2c61231206e2f82201c2f
 install:
   - ./scripts/install/backend.sh
   - ./scripts/install/workers.sh
-  - augur configure generate
+  - augur config init
 
 script:
   - tox
