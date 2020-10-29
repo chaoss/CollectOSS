@@ -28,7 +28,7 @@ default_config = {
                     "all_focused": 1,
                     "delay": 150000,
                     "given": [
-                        "git_url"
+                        "github_url"
                     ],
                     "model": "issues",
                     "repo_group_id": 0
