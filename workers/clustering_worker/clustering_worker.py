@@ -68,6 +68,8 @@ class ClusteringWorker(Worker):
 		#define topic modeling specific parameters
 		self.num_topics = 5
 		self.num_words_per_topic = 5
+
+		nltk.download('punkt')
 		
 
 	def clustering_model(self, task, repo_id):
