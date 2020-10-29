@@ -4,7 +4,6 @@ branch | status
    --- | ---
 master | [![Build Status](https://travis-ci.com/chaoss/augur.svg?branch=master)](https://travis-ci.com/chaoss/augur)
    dev | [![Build Status](https://travis-ci.com/chaoss/augur.svg?branch=dev)](https://travis-ci.com/chaoss/augur)
-   gsoc-dev | [![Build Status](https://travis-ci.com/chaoss/augur.svg?branch=gsoc-dev)](https://travis-ci.com/chaoss/augur)
 
 
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/2788/badge)](https://bestpractices.coreinfrastructure.org/projects/2788)
