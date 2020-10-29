@@ -21,7 +21,7 @@ There are a few workers that ship ready to collect out of the box:
 - ``linux_badge_worker`` (collects `CII badging <https://bestpractices.coreinfrastructure.org/en>`_ data from the CII API)
 - ``insight_worker`` (queries Augur's metrics API to find interesting anomalies in the collected data)
 
-All worker configuration options are found in the ``Workers`` block of the ``augur.config.json`` file (which you generated at the end of the previous section) with each worker having its own subsection with same title as the the worker's name.
+All worker configuration options are found in the ``Workers`` block of the ``augur.config.json`` file (which was generated for you at the end of the previous section). This file is located at ``$HOME/.augur/augur.config.json``. Each worker has its own subsection with same title as the the worker's name.
 
 A full configuration file reference can be found on the next page, but we recommend leaving the defaults and only changing them when necessary; read on for more on how to make sure your workers are properly configured.
 
@@ -51,7 +51,7 @@ Next up are the configuration options specific to each worker (but some workers 
 ``insight_worker``
 ::::::::::::::::::
 
-We recommend leaving the defaults in place for the insight worker unless you interested in other metrics, or anomalies for a different time period. 
+We recommend leaving the defaults in place for the insight worker unless you interested in other metrics, or anomalies for a different time period.
 
 - ``training_days``, which specifies the date range that the ``insight_worker`` should use as its baseline for the statistical comparison. Defaults to ``365``, meaning that the worker will identify metrics that have had anomalies compared to their values over the course of the past year, starting at the current date.
 
@@ -66,15 +66,15 @@ We recommend leaving the defaults in place for the insight worker unless you int
         'endpoint_name_1': 'field_2_of_endpoint',
         'endpoint_name_2': 'field_1_of_endpoint',
         ...
-    } 
+    }
 
     # defaults to the following
 
     {
-        "issues-new": "issues", 
-        "code-changes": "commit_count", 
-        "code-changes-lines": "added", 
-        "reviews": "pull_requests", 
+        "issues-new": "issues",
+        "code-changes": "commit_count",
+        "code-changes-lines": "added",
+        "reviews": "pull_requests",
         "contributors-new": "new_contributors"
     }
 
@@ -114,7 +114,7 @@ If you're using the Docker container, you can use the `provided UI <../docker/us
 Running collections
 --------------------
 
-Congratuations! At this point you (hopefully) have a fully functioning and configured Augur instance. 
+Congratuations! At this point you (hopefully) have a fully functioning and configured Augur instance.
 
 After you've loaded your repos, you're ready for your first collection run. We recommend running only the default workers first to gather the initial data. If you're collecting data for a lot of repositories, or repositories with a lot of data, we recommend increasing the number of ``github_workers`` and ``pull_request_workers``.
 

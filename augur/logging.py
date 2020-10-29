@@ -3,7 +3,7 @@ import logging.config
 import logging.handlers
 from logging import FileHandler, StreamHandler, Formatter
 from multiprocessing import Process, Queue, Event, current_process
-from time import sleep 
+from time import sleep
 import os
 from pathlib import Path
 import atexit
@@ -98,7 +98,6 @@ class AugurLogging():
         if disable_logs:
             self._disable_all_logging()
 
-
     def _disable_all_logging(self):
         for logger in ["augur", "augur.application", "augur.housekeeper", "augur.config", "augur.cli", "root"]:
             lg = logging.getLogger(logger)
@@ -142,7 +141,6 @@ class AugurLogging():
         self._configure_logfiles()
         self._configure_cli_logger()
         self._configure_gunicorn_logging()
-        logger.debug("Loggers are fully configured")
 
     def _configure_logfiles(self):
         self.logfile_config = {

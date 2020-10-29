@@ -1,7 +1,0 @@
-{
-  "name": "Augur API",
-  "version": "0.0.2",
-  "description": "REST API for Health and Sustainability Metrics",
-  "title": "Augur API",
-  "url" : "http://localhost:5000/api/unstable"
-}
