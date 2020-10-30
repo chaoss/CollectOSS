@@ -129,7 +129,7 @@ default_config = {
                     "model": "pull_request_analysis",
                     "repo_group_id": 0
                 },
-                
+
 	        {
 	    	"delay": 10000,
 		"given":[
@@ -137,7 +137,7 @@ default_config = {
 		],
 		"model" : "discourse_analysis",
 		"repo_group_id" : 0
-	    
+
 	        },
 	        {
                 "delay": 10000,
@@ -235,7 +235,7 @@ default_config = {
 	    "port" : 51500,
 	    "switch": 0,
 	    "workers": 1
-	
+
 	    },
 	    "clustering_worker": {
             "port": 51600,
@@ -306,9 +306,9 @@ class AugurConfig():
                 logger.warn(f"{section_name} not found in loaded config. Checking default config")
                 try:
                     return self._default_config[section_name]
-	    except KeyError as e:
+                except KeyError as e:
                     logger.error(f"No defaults found for {section_name}")
-                    raise(e)  
+                    raise(e)
             else:
                 logger.debug(f"Already using default config, skipping check for {section_name}")
 
