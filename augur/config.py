@@ -306,7 +306,7 @@ class AugurConfig():
                 logger.warn(f"{section_name} not found in loaded config. Checking default config")
                 try:
                     return self._default_config[section_name]
-	  	except KeyError as e:
+	    except KeyError as e:
                     logger.error(f"No defaults found for {section_name}")
                     raise(e)  
             else:
