@@ -29,3 +29,4 @@
 \i schema/generate/24-schema_update_26.sql
 \i schema/generate/25-schema_update_27.sql
 \i schema/generate/26-schema_update_28.sql
+\i schema/generate/27-schema_update_29.sql

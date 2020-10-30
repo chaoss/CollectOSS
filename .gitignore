@@ -7,6 +7,8 @@ docker_env.txt
 pyenv.txt
 augur_export_env.sh
 .DS_Store
+*.config.json
+!docker.config.json
 
 
 node_modules/
