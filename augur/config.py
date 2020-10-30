@@ -306,8 +306,9 @@ class AugurConfig():
                 logger.warn(f"{section_name} not found in loaded config. Checking default config")
                 try:
                     return self._default_config[section_name]
-                except KeyError:
-		    pass; 
+	  	except KeyError as e:
+                    logger.error(f"No defaults found for {section_name}")
+                    raise(e)  
             else:
                 logger.debug(f"Already using default config, skipping check for {section_name}")
 
@@ -369,8 +370,8 @@ class AugurConfig():
                     config_file_path = os.path.abspath(location)
                     f.close()
                     break
-                except FileNotFoundError as e:
-                    print(e)
+                except FileNotFoundError:
+                    pass
         if config_file_path:
             self.config_file_location = config_file_path
         else:
