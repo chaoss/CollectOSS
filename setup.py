@@ -47,13 +47,7 @@ setup(
         "click",
         "psutil",
         "gunicorn",
-        "six>=1.14.0",
-        "matplotlib==3.3.1",
-        "tensorflow",
-        "keras==2.3.1",
-        "sklearn", 
-        "scikit-image",
-        "xgboost"
+        "six>=1.14.0"
     ],
     extras_require={
         "dev": [
