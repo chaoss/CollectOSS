@@ -4,7 +4,7 @@ Insight_worker
 
 It uses Augur's metrics API to discover insights for every time_series metrics like ``issues``, ``reviews``, ``code-changes``, ``code-changes-lines`` etc.. of every repos present in the database.
 
-We used BiLSTM(Bi-directional Long Short Term Memory)model as it is capable of capturing trend, long-short seasonality in the data.A bidirectional LSTM (BiLSTM) layer learns bidirectional long-term dependencies between time steps of time series or sequence data. These dependencies can be useful when you want the network to learn from the complete time series at each time step.
+We used BiLSTM(Bi-directional Long Short Term Memory)model as it is capable of capturing trend, long-short seasonality in the data. A bidirectional LSTM (BiLSTM) layer learns bidirectional long-term dependencies between time steps of time series or sequence data. These dependencies can be useful when you want the network to learn from the complete time series at each time step.
 
 *Worker Configuration*
 ======================

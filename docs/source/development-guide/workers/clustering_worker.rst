@@ -61,7 +61,7 @@ Further, in workers configuration block, we need to define port, switch and numb
 	
 	}
   
-  In addition to standard worker parameters, clustering worker requires some worker-specific parameters whcih are described below:
+  In addition to standard worker parameters, clustering worker requires some worker-specific parameters which are described below:
   
  - **max_df** :sets the threshold which filters out terms that have higher document frequency (corpus specific stop words)
  - **min_df** : filters out uncommon words
