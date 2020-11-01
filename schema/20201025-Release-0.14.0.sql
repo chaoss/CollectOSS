@@ -3664,3 +3664,4 @@ ALTER TABLE IF EXISTS "spdx"."relationships" ADD CONSTRAINT "relationships_left_
 ALTER TABLE IF EXISTS "spdx"."relationships" ADD CONSTRAINT "relationships_relationship_type_id_fkey" FOREIGN KEY ("relationship_type_id") REFERENCES "spdx"."relationship_types" ("relationship_type_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE IF EXISTS "spdx"."relationships" ADD CONSTRAINT "relationships_right_identifier_id_fkey" FOREIGN KEY ("right_identifier_id") REFERENCES "spdx"."identifiers" ("identifier_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
+INSERT INTO "augur_operations"."augur_settings" set value = 31 where setting = 'augur_data_version'; 
