@@ -17,7 +17,7 @@ $ git clone github.com:your-username/augur.git
 $ cd augur/
 ```
 
-1. Follow the [development installation instructions](https://oss-augur.readthedocs.io/en/doc-a-thon/development-guide/toc.html).
+1. Follow the [development installation instructions](https://oss-augur.readthedocs.io/en/master/development-guide/installation.html).
 
 2. Make your change(s).
 
