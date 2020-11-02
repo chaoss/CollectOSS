@@ -4246,27 +4246,15 @@ paths:
                 required_contributions:
                   description: 'Example: 5'
                   type: integer
-                required_time: 'Example: 365'
-                  description:
+                required_time: 
+                  description: 'Example: 365'
                   type: integer
-                user:
-                  description: 'Example: augur'
-                  type: string
-                password:
-                  description: 'Example: password123'
-                  type: string
-                host:
-                  description: 'Example: name.database.io'
-                  type: string
-                port:
-                  description: 'Example: 5001'
-                  type: integer
-                database:
-                  description: 'Example: my_database'
-                  type: string 
+                return_json:
+                  description: 'Example: true'
+                  type: boolean
             type: object
       tags:
-      -experimental
+      - experimental
   /contributor_reports/new_contributors_stacked_bar/:
     get:
       description: Get stacked bar chart of new contributor counts, which shows the action of the contributor.
@@ -4292,27 +4280,15 @@ paths:
                 required_contributions:
                   description: 'Example: 5'
                   type: integer
-                required_time: 'Example: 365'
-                  description:
+                required_time: 
+                  description: 'Example: 365'
                   type: integer
-                user:
-                  description: 'Example: augur'
-                  type: string
-                password:
-                  description: 'Example: password123'
-                  type: string
-                host:
-                  description: 'Example: name.database.io'
-                  type: string
-                port:
-                  description: 'Example: 5001'
-                  type: integer
-                database:
-                  description: 'Example: my_database'
-                  type: string 
+                return_json:
+                  description: 'Example: true'
+                  type: boolean
             type: object
       tags:
-      -experimental
+      - experimental
   /contributor_reports/returning_contributors_pie_chart/:
     get:
       description: Get pie chart of the returning contributor counts.
@@ -4338,24 +4314,12 @@ paths:
                 required_time: 
                   description: 'Example: 365'
                   type: integer
-                user:
-                  description: 'Example: augur'
-                  type: string
-                password:
-                  description: 'Example: password123'
-                  type: string
-                host:
-                  description: 'Example: name.database.io'
-                  type: string
-                port:
-                  description: 'Example: 5001'
-                  type: integer
-                database:
-                  description: 'Example: my_database'
-                  type: string 
+                return_json:
+                  description: 'Example: true'
+                  type: boolean
             type: object
       tags:
-      -experimental
+      - experimental
   /contributor_reports/returning_contributors_stacked_bar/:
     get:
       description: Get returning contributors stacked bar chart.
@@ -4384,24 +4348,12 @@ paths:
                 required_time: 
                   description: 'Example: 365'
                   type: integer
-                user:
-                  description: 'Example: augur'
-                  type: string
-                password:
-                  description: 'Example: password123'
-                  type: string
-                host:
-                  description: 'Example: name.database.io'
-                  type: string
-                port:
-                  description: 'Example: 5001'
-                  type: integer
-                database:
-                  description: 'Example: my_database'
-                  type: string 
+                return_json:
+                  description: 'Example: true'
+                  type: boolean
             type: object
       tags:
-        -experimental
+        - experimental
   /pull_request_reports/average_commits_per_PR/:
     get:
       description: Get vertical bar chart of average commits per pull request.
@@ -4421,24 +4373,12 @@ paths:
                 end_date:
                   description: 'Example: 2020-03-30'
                   type: string
-                user:
-                  description: 'Example: augur'
-                  type: string
-                password:
-                  description: 'Example: password123'
-                  type: string
-                host:
-                  description: 'Example: name.database.io'
-                  type: string
-                port:
-                  description: 'Example: 5001'
-                  type: integer
-                database:
-                  description: 'Example: my_database'
-                  type: string 
+                return_json:
+                  description: 'Example: true'
+                  type: boolean
             type: object
       tags:
-        -experimental
+        - experimental
   /pull_request_reports/average_comments_per_PR/:
     get:
       description: Get horizontal stacked bar chart of the average comments for closed pull requests.
@@ -4458,24 +4398,12 @@ paths:
                 end_date:
                   description: 'Example: 2020-03-30'
                   type: string
-                user:
-                  description: 'Example: augur'
-                  type: string
-                password:
-                  description: 'Example: password123'
-                  type: string
-                host:
-                  description: 'Example: name.database.io'
-                  type: string
-                port:
-                  description: 'Example: 5001'
-                  type: integer
-                database:
-                  description: 'Example: my_database'
-                  type: string 
+                return_json:
+                  description: 'Example: true'
+                  type: boolean
             type: object
       tags:
-        -experimental
+        - experimental
   /pull_request_reports/PR_counts_by_merged_status/:
     get:
       description: Get vertical stacked bar chart of the number of pull requests by merged status.
@@ -4495,24 +4423,12 @@ paths:
                 end_date:
                   description: 'Example: 2020-03-30'
                   type: string
-                user:
-                  description: 'Example: augur'
-                  type: string
-                password:
-                  description: 'Example: password123'
-                  type: string
-                host:
-                  description: 'Example: name.database.io'
-                  type: string
-                port:
-                  description: 'Example: 5001'
-                  type: integer
-                database:
-                  description: 'Example: my_database'
-                  type: string 
+                return_json:
+                  description: 'Example: true'
+                  type: boolean
             type: object
       tags:
-        -experimental
+        - experimental
   /pull_request_reports/mean_response_times_for_PR/:
     get:
       description: Get grouped horizontal bar chart of average response times for closed pull requests.
@@ -4532,27 +4448,12 @@ paths:
                 end_date:
                   description: 'Example: 2020-03-30'
                   type: string
-                user:
-                  description: 'Example: augur'
-                  type: string
-                password:
-                  description: 'Example: password123'
-                  type: string
-                host:
-                  description: 'Example: name.database.io'
-                  type: string
-                port:
-                  description: 'Example: 5001'
-                  type: integer
-                database:
-                  description: 'Example: my_database'
-                  type: string
-                time_unit:
-                  description: 'Example: hours or days'
-                  type: string  
+                return_json:
+                  description: 'Example: true'
+                  type: boolean
             type: object
       tags:
-        -experimental
+        - experimental
   /pull_request_reports/mean_days_between_PR_comments/:
     get:
       description: Get line graph of the average days between comments for closed pull requests.
@@ -4572,24 +4473,12 @@ paths:
                 end_date:
                   description: 'Example: 2020-03-30'
                   type: string
-                user:
-                  description: 'Example: augur'
-                  type: string
-                password:
-                  description: 'Example: password123'
-                  type: string
-                host:
-                  description: 'Example: name.database.io'
-                  type: string
-                port:
-                  description: 'Example: 5001'
-                  type: integer
-                database:
-                  description: 'Example: my_database'
-                  type: string 
+                return_json:
+                  description: 'Example: true'
+                  type: boolean
             type: object
       tags:
-        -experimental
+        - experimental
   /pull_request_reports/PR_time_to_first_response/:
     get:
       description: Get scatter plot of the days to first response for closed pull requests based on merged status.
@@ -4612,24 +4501,12 @@ paths:
                 remove_outliers: 
                   description: 'Example: 5'
                   type: integer
-                user:
-                  description: 'Example: augur'
-                  type: string
-                password:
-                  description: 'Example: password123'
-                  type: string
-                host:
-                  description: 'Example: name.database.io'
-                  type: string
-                port:
-                  description: 'Example: 5001'
-                  type: integer
-                database:
-                  description: 'Example: my_database'
-                  type: string 
+                return_json:
+                  description: 'Example: true'
+                  type: boolean
             type: object
       tags:
-        -experimental
+        - experimental
   /pull_request_reports/average_PR_events_for_closed_PRs/:
     get:
       description: Get heat map of average pull request event counts for closed pull requests.
@@ -4649,27 +4526,12 @@ paths:
                 end_date:
                   description: 'Example: 2020-03-30'
                   type: string
-                user:
-                  description: 'Example: augur'
-                  type: string
-                password:
-                  description: 'Example: password123'
-                  type: string
-                host:
-                  description: 'Example: name.database.io'
-                  type: string
-                port:
-                  description: 'Example: 5001'
-                  type: integer
-                database:
-                  description: 'Example: my_database'
-                  type: string 
-                 database:
-                  description: 'Example: True or False'
-                  type: boolean 
+                return_json:
+                  description: 'Example: true'
+                  type: boolean
             type: object
       tags:
-        -experimental
+        - experimental
   /pull_request_reports/Average_PR_duration/:
     get:
       description: Get heat map of the average duration of pull requests per month.
@@ -4692,21 +4554,9 @@ paths:
                 remove_outliers: 
                   description: 'Example: 5'
                   type: integer
-                user:
-                  description: 'Example: augur'
-                  type: string
-                password:
-                  description: 'Example: password123'
-                  type: string
-                host:
-                  description: 'Example: name.database.io'
-                  type: string
-                port:
-                  description: 'Example: 5001'
-                  type: integer
-                database:
-                  description: 'Example: my_database'
-                  type: string 
+                return_json:
+                  description: 'Example: true'
+                  type: boolean
             type: object
       tags:
-        -experimental
+        - experimental

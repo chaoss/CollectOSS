@@ -536,7 +536,7 @@ def create_routes(server):
         #puts plots together into a grid
         grid = gridplot([row_1, row_2, row_3, row_4])
 
-        if return_json:
+        if return_json == "true":
 
             var = Response(response=json.dumps(json_item(grid, "new_contributors_bar")),
                 mimetype='application/json',
@@ -560,7 +560,9 @@ def create_routes(server):
         group_by = str(request.args.get('group_by'))
         required_contributions = int(request.args.get('required_contributions'))
         required_time = int(request.args.get('required_time'))
-        return_json = request.args.get('return_json')
+        return_json = str(request.args.get('return_json'))
+
+        print(return_json)
       
 
         input_df = new_contibutor_data_collection(repo_id=repo_id, required_contributions=required_contributions)
@@ -795,7 +797,8 @@ def create_routes(server):
         #puts plots together into a grid
         grid = gridplot([row_1, row_2, row_3, row_4])
 
-        if return_json:
+        if return_json == "true":
+            print("Made it")
 
             var = Response(response=json.dumps(json_item(grid, "new_contributors_stacked_bar")),
                 mimetype='application/json',
@@ -967,7 +970,7 @@ def create_routes(server):
         #put graph and caption plot together into one grid
         grid = gridplot([[plot], [caption_plot]])
 
-        if return_json:
+        if return_json == "true":
 
             var = Response(response=json.dumps(json_item(grid, "returning_contributors_pie_chart")),
                 mimetype='application/json',
@@ -1187,7 +1190,7 @@ def create_routes(server):
         #put graph and caption plot together into one grid
         grid = gridplot([[plot], [caption_plot]])
 
-        if return_json:
+        if return_json == "true":
 
             var = Response(response=json.dumps(json_item(grid, "returning_contributors_stacked_bar")),
                 mimetype='application/json',
