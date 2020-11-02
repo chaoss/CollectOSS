@@ -1,56 +1,46 @@
 // #SPDX-License-Identifier: MIT
 // import Vue from 'vue';
 /* tslint:disable */
-import Vue from "vue";
-import Router from "vue-router";
-import store from "@/store/store";
+import Vue from 'vue';
+import Router from 'vue-router';
+import store from '@/store/store';
 
 Vue.use(Router);
-import _ from "lodash";
+import _ from 'lodash';
 
-var config = require("../../augur.config.json");
-const AugurAPIModule = require("@/AugurAPI").default;
-var port = config["Frontend"]
-  ? config["Frontend"]["port"]
-    ? ":" + config["Frontend"]["port"]
-    : ""
-  : config["Server"]["port"]
-  ? ":" + config["Server"]["port"]
-  : "";
-var host = config["Frontend"]
-  ? config["Frontend"]["host"]
-  : config["Server"]["host"];
-const AugurAPI = new AugurAPIModule("http://" + host + port);
+var config = require('../frontend.config.json')
+const AugurAPIModule = require('@/AugurAPI').default;
+var port = config['Frontend'] ? (config['Frontend']['port'] ? ':' + config['Frontend']['port'] : '') : (config['Server']['port'] ? ':' + config['Server']['port'] : '')
+var host = config['Frontend'] ? (config['Frontend']['host']) : (config['Server']['host'])
+const AugurAPI = new AugurAPIModule('http://' + host + port);
 
-import Errors from "./views/Errors.vue";
-import Tables from "./views/Tables.vue";
-import Dashboard from "./views/Dashboard.vue";
-import EditConfig from "./views/EditConfig.vue";
-import Default from "./layouts/Default.vue";
-import MainSidebar from "./components/layout/MainSidebar/MainSidebar.vue";
-import MainNavbar from "./components/layout/MainNavbar/MainNavbar.vue";
-import RepoOverview from "./views/RepoOverview.vue";
-import GroupOverview from "./views/GroupOverview.vue";
-import RepoGroups from "./views/RepoGroups.vue";
-import Repos from "./views/Repos.vue";
-import SingleComparison from "./views/SingleComparison.vue";
-import Workers from "./views/Workers.vue";
-import ExploreInsights from "./views/ExploreInsights.vue";
-import InspectInsight from "./views/InspectInsight.vue";
+import Errors from './views/Errors.vue';
+import Tables from './views/Tables.vue';
+import Dashboard from './views/Dashboard.vue';
+import EditConfig from './views/EditConfig.vue';
+import Default from './layouts/Default.vue';
+import MainSidebar from './components/layout/MainSidebar/MainSidebar.vue';
+import MainNavbar from './components/layout/MainNavbar/MainNavbar.vue';
+import RepoOverview from './views/RepoOverview.vue';
+import GroupOverview from './views/GroupOverview.vue';
+import RepoGroups from './views/RepoGroups.vue';
+import Repos from './views/Repos.vue';
+import SingleComparison from './views/SingleComparison.vue';
+import Workers from './views/Workers.vue';
+import ExploreInsights from './views/ExploreInsights.vue';
+import InspectInsight from './views/InspectInsight.vue';
 import RiskMetrics from "@/views/RiskMetrics.vue";
 import NProgress from "nprogress";
-import SlackConfig from "./views/SlackConfig.vue";
-import Contributors from "./views/Contributors.vue";
-import PullRequests from "./views/PullRequests.vue";
+import SlackConfig from './views/SlackConfig.vue';
 
 const routes = [
   {
-    path: "/insights",
+    path: '/insights',
     component: Default,
     children: [
       {
-        path: "",
-        name: "home",
+        path: '',
+        name: 'home',
         components: {
           sidebar: MainSidebar,
           navbar: MainNavbar,
@@ -60,12 +50,12 @@ const routes = [
     ],
   },
   {
-    path: "/slack-config",
+    path: '/slack-config',
     component: Default,
     children: [
       {
-        path: "",
-        name: "slack_config",
+        path: '',
+        name: 'slack_config',
         components: {
           sidebar: MainSidebar,
           navbar: MainNavbar,
@@ -75,12 +65,12 @@ const routes = [
     ],
   },
   {
-    path: "/", //repo_groups
+    path: '/', //repo_groups
     component: Default,
     children: [
       {
-        path: "",
-        name: "repo_groups",
+        path: '',
+        name: 'repo_groups',
         components: {
           sidebar: MainSidebar,
           navbar: MainNavbar,
@@ -90,12 +80,12 @@ const routes = [
     ],
   },
   {
-    path: "/workers",
+    path: '/workers',
     component: Default,
     children: [
       {
-        path: "",
-        name: "workers",
+        path: '',
+        name: 'workers',
         components: {
           sidebar: MainSidebar,
           navbar: MainNavbar,
@@ -105,12 +95,12 @@ const routes = [
     ],
   },
   {
-    path: "/repos",
+    path: '/repos',
     component: Default,
     children: [
       {
-        path: "",
-        name: "repos",
+        path: '',
+        name: 'repos',
         components: {
           sidebar: MainSidebar,
           navbar: MainNavbar,
@@ -135,12 +125,12 @@ const routes = [
   //   ],
   // },
   {
-    path: "/config",
+    path: '/config',
     component: Default,
     children: [
       {
-        path: "",
-        name: "config",
+        path: '',
+        name: 'config',
         components: {
           sidebar: MainSidebar,
           navbar: MainNavbar,
@@ -150,27 +140,27 @@ const routes = [
     ],
   },
   {
-    path: "/inspect_insight/:group/:repo/:metric",
+    path: '/inspect_insight/:group/:repo/:metric',
     component: Default,
     children: [
       {
-        path: "",
-        name: "inspect_insight",
+        path: '',
+        name: 'inspect_insight',
         components: {
           sidebar: MainSidebar,
           navbar: MainNavbar,
           content: InspectInsight,
         },
-      },
+      }
     ],
   },
   {
-    path: "/repo/:group/:repo",
+    path: '/repo/:group/:repo',
     component: Default,
     children: [
       {
-        path: "overview",
-        name: "repo_overview",
+        path: 'overview',
+        name: 'repo_overview',
         components: {
           sidebar: MainSidebar,
           navbar: MainNavbar,
@@ -178,8 +168,8 @@ const routes = [
         },
       },
       {
-        path: "risk",
-        name: "repo_risk",
+        path: 'risk',
+        name: 'repo_risk',
         components: {
           sidebar: MainSidebar,
           navbar: MainNavbar,
@@ -189,12 +179,12 @@ const routes = [
     ],
   },
   {
-    path: "/repo/:group/:repo/comparedTo/:compares",
+    path: '/repo/:group/:repo/comparedTo/:compares',
     component: Default,
     children: [
       {
-        path: "",
-        name: "repo_overview_compare",
+        path: '',
+        name: 'repo_overview_compare',
         components: {
           sidebar: MainSidebar,
           navbar: MainNavbar,
@@ -202,23 +192,23 @@ const routes = [
         },
       },
       {
-        path: "risk",
-        name: "repo_risk_compare",
+        path: 'risk',
+        name: 'repo_risk_compare',
         components: {
           sidebar: MainSidebar,
           navbar: MainNavbar,
           content: RiskMetrics,
-        },
-      },
+        }
+      }
     ],
   },
   {
-    path: "/group/:group",
+    path: '/group/:group',
     component: Default,
     children: [
       {
-        path: "overview",
-        name: "group_overview",
+        path: 'overview',
+        name: 'group_overview',
         components: {
           sidebar: MainSidebar,
           navbar: MainNavbar,
@@ -228,12 +218,12 @@ const routes = [
     ],
   },
   {
-    path: "/group/:group/comparedTo/:compares",
+    path: '/group/:group/comparedTo/:compares',
     component: Default,
     children: [
       {
-        path: "overview",
-        name: "group_overview_compare",
+        path: 'overview',
+        name: 'group_overview_compare',
         components: {
           sidebar: MainSidebar,
           navbar: MainNavbar,
@@ -243,43 +233,13 @@ const routes = [
     ],
   },
   {
-    path: "/contributors",
-    component: Default,
-    children: [
-      {
-        path: "",
-        name: "contributors",
-        components: {
-          sidebar: MainSidebar,
-          navbar: MainNavbar,
-          content: Contributors,
-        },
-      },
-    ],
-  },
-  {
-    path: "/pull_requests",
-    component: Default,
-    children: [
-      {
-        path: "",
-        name: "pull_requests",
-        components: {
-          sidebar: MainSidebar,
-          navbar: MainNavbar,
-          content: PullRequests,
-        },
-      },
-    ],
-  },
-  {
-    path: "/errors",
-    name: "errors",
+    path: '/errors',
+    name: 'errors',
     component: Errors,
   },
   {
-    path: "*",
-    redirect: "/errors",
+    path: '*',
+    redirect: '/errors',
   },
   //   {path: '/', component: Default,
   //   // children: [
@@ -558,8 +518,9 @@ const routes = [
 //   }
 // })
 
+
 export default new Router({
   // routes,
   routes,
-  mode: "history",
+  mode: 'history',
 });
