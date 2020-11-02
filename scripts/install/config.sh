@@ -102,6 +102,7 @@ function save_credentials() {
 
   "${cmd[@]}"
 
+  augur config init-frontend
   augur db check-pgpass
 
 }
