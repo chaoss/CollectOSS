@@ -17,7 +17,7 @@ To install from source, we'll need to do a few things:
 2. Install and configure Augur's data collection workers
 
 The next section will start with getting a database setup, and then go from there.
-You can also find the table of contents for the whole walkthrough below. 
+You can also find the table of contents for the whole walkthrough below.
 Happy hacking!
 
 .. toctree::
@@ -26,4 +26,5 @@ Happy hacking!
    database
    installation
    collecting-data
+   frontend
    command-line-interface/toc
