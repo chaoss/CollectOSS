@@ -1,7 +1,7 @@
 #SPDX-License-Identifier: MIT
 # Config
-augur.config.json
-!frontend.config.json
+*.config.json
+!*.docker.config.json
 env.txt
 docker_env.txt
 pyenv.txt
