@@ -48,7 +48,7 @@ class InsightWorker(Worker):
         worker_type = "insight_worker"
 
         given = [['git_url']]
-        models = ['insights']
+        models = ['insights', 'lstm_insights']
 
         data_tables = ['chaoss_metric_status', 'repo_insights', 'repo_insights_records','lstm_anomaly_models','lstm_anomaly_results']
         operations_tables = ['worker_history', 'worker_job']
@@ -74,7 +74,7 @@ class InsightWorker(Worker):
         self.confidence = self.config['confidence_interval'] / 100
         self.metrics = self.config['metrics']
         
-    def IsolationForest_model(self, entry_info, repo_id):
+    def insights_model(self, entry_info, repo_id):
 
         self.logger.info("Discovering insights for task with entry info: {}\n".format(entry_info))
         
@@ -315,7 +315,7 @@ class InsightWorker(Worker):
 
         self.register_task_completion(entry_info, repo_id, "insights")
 
-    def insights_model(self, entry_info, repo_id):
+    def lstm_insights_model(self, entry_info, repo_id):
 
 
 
@@ -889,7 +889,7 @@ class InsightWorker(Worker):
 
 
         # Register task completeion when outlier detection method carried out successfully
-        self.register_task_completion(entry_info, repo_id, "insights") 
+        self.register_task_completion(entry_info, repo_id, "lstm_insights") 
 
 
 
