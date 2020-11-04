@@ -82,7 +82,8 @@ class ClusteringWorker(Worker):
 		
 		MODEL_FILE_NAME = "kmeans_repo_messages"
 		
-		get_messages_for_repo_sql = s.sql.text("""
+		get_messages_for_repo_sql = s.sql.text(
+                            """
 					SELECT
 						r.repo_group_id,
 						r.repo_id,
@@ -102,29 +103,29 @@ class ClusteringWorker(Worker):
 						AND imr.issue_id = i.issue_id 
 						AND imr.msg_id = M.msg_id 
 						AND r.repo_id = :repo_id 
-						) UNION
-						(
-						SELECT
-							r.repo_group_id,
-							r.repo_id,
-							r.repo_git,
-							r.repo_name,
-							pr.pull_request_id thread_id,
-							M.msg_text,
-							pr.pr_src_title thread_title,
-							M.msg_id 
-						FROM
-							augur_data.repo r,
-							augur_data.pull_requests pr,
-							augur_data.message M,
-							augur_data.pull_request_message_ref prmr 
-						WHERE
-							r.repo_id = pr.repo_id 
-							AND prmr.pull_request_id = pr.pull_request_id 
+					UNION
+					SELECT
+						r.repo_group_id,
+						r.repo_id,
+			                	r.repo_git,
+						r.repo_name,
+						pr.pull_request_id thread_id,
+						M.msg_text,
+						pr.pr_src_title thread_title,
+						M.msg_id 
+					FROM
+						augur_data.repo r,
+						augur_data.pull_requests pr,
+						augur_data.message M,
+						augur_data.pull_request_message_ref prmr 
+					WHERE
+						r.repo_id = pr.repo_id 
+						AND prmr.pull_request_id = pr.pull_request_id 
 						AND prmr.msg_id = M.msg_id 
 						AND r.repo_id = :repo_id
-				""")
-		
+			               
+                                """
+		                )
 		#result = self.db.execute(delete_points_SQL, repo_id=repo_id, min_date=min_date)
 		msg_df_cur_repo = pd.read_sql(get_messages_for_repo_sql, self.db, params={"repo_id" : repo_id})
 		self.logger.info(msg_df_cur_repo.head())
@@ -195,21 +196,23 @@ class ClusteringWorker(Worker):
 	
 	
 	def train_model(self):
-		get_messages_sql = s.sql.text("""
-					(SELECT r.repo_group_id, r.repo_id, r.repo_git, r.repo_name, i.issue_id thread_id,m.msg_text,i.issue_title thread_title,m.msg_id
+		get_messages_sql = s.sql.text(
+                            """
+				SELECT r.repo_group_id, r.repo_id, r.repo_git, r.repo_name, i.issue_id thread_id,m.msg_text,i.issue_title thread_title,m.msg_id
 					FROM augur_data.repo r, augur_data.issues i,
 					augur_data.message m, augur_data.issue_message_ref imr
 					WHERE r.repo_id=i.repo_id
 					AND imr.issue_id=i.issue_id
-					AND imr.msg_id=m.msg_id)
+					AND imr.msg_id=m.msg_id
 					UNION
-					(SELECT r.repo_group_id, r.repo_id, r.repo_git, r.repo_name, pr.pull_request_id thread_id,m.msg_text,pr.pr_src_title thread_title,m.msg_id
+				SELECT r.repo_group_id, r.repo_id, r.repo_git, r.repo_name, pr.pull_request_id thread_id,m.msg_text,pr.pr_src_title thread_title,m.msg_id
 					FROM augur_data.repo r, augur_data.pull_requests pr,
 					augur_data.message m, augur_data.pull_request_message_ref prmr
 					WHERE r.repo_id=pr.repo_id
 					AND prmr.pull_request_id=pr.pull_request_id
-					AND prmr.msg_id=m.msg_id)
-				""")
+					AND prmr.msg_id=m.msg_id
+				"""
+                                )
 		msg_df_all = pd.read_sql(get_messages_sql, self.db, params={})
 		
 		
