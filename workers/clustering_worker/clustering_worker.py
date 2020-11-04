@@ -101,7 +101,7 @@ class ClusteringWorker(Worker):
 						r.repo_id = i.repo_id 
 						AND imr.issue_id = i.issue_id 
 						AND imr.msg_id = M.msg_id 
-						AND r.repo_id = : repo_id 
+						AND r.repo_id = :repo_id 
 						) UNION
 						(
 						SELECT
@@ -122,7 +122,7 @@ class ClusteringWorker(Worker):
 							r.repo_id = pr.repo_id 
 							AND prmr.pull_request_id = pr.pull_request_id 
 						AND prmr.msg_id = M.msg_id 
-						AND r.repo_id = : repo_id
+						AND r.repo_id = :repo_id
 				""")
 		
 		#result = self.db.execute(delete_points_SQL, repo_id=repo_id, min_date=min_date)
