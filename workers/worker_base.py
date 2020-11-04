@@ -1,6 +1,6 @@
 #SPDX-License-Identifier: MIT
 """ Helper methods constant across all workers """
-import requests, datetime, time, traceback, json, os, sys, math, logging, inspect
+import requests, datetime, time, traceback, json, os, sys, math, logging, inspect, numpy
 from logging import FileHandler, Formatter, StreamHandler
 from multiprocessing import Process, Queue
 import sqlalchemy as s
@@ -28,6 +28,8 @@ class Worker():
         self.platform = platform
 
         # count of tuples inserted in the database (to store stats for each task in op tables)
+        self.update_counter = 0
+        self.insert_counter = 0
         self._results_counter = 0
 
         # if we are finishing a previous task, certain operations work differently
@@ -304,12 +306,15 @@ class Worker():
                 pass
 
             # Query repo_id corresponding to repo url of given task
-            repoUrlSQL = s.sql.text("""
-                SELECT min(repo_id) as repo_id FROM repo WHERE repo_git = '{}'
-                """.format(message['given'][self.given[0][0]]))
-            repo_id = int(pd.read_sql(repoUrlSQL, self.db, params={}).iloc[0]['repo_id'])
+            repo_id = None
+            if ['git_url'] in self.given or ['github_url'] in self.given:
+                repoUrlSQL = s.sql.text("""
+                    SELECT min(repo_id) as repo_id FROM repo WHERE repo_git = '{}'
+                    """.format(message['given'][self.given[0][0]]))
+                repo_id = int(pd.read_sql(repoUrlSQL, self.db, params={}).iloc[0]['repo_id'])
 
-            self.logger.info("repo_id for which data collection is being initiated: {}".format(str(repo_id)))
+                self.logger.info("repo_id for which data collection is being initiated: {}".format(str(repo_id)))
+
             # Call method corresponding to model sent in task
             try:
                 model_method = getattr(self, '{}_model'.format(message['models'][0]))
@@ -338,10 +343,71 @@ class Worker():
                 self.register_task_failure(message, repo_id, e)
                 break
 
-        self.logger.debug('Closing database connections\n')
+        self.logger.debug("Closing database connections\n")
         self.db.dispose()
         self.helper_db.dispose()
         self.logger.info("Collection process finished")
+
+    def sync_df_types(self, subject, source, subject_columns, source_columns):
+
+        type_dict = {}
+        for index in range(len(source_columns)):
+            if type(source[source_columns[index]].values[0]) == numpy.datetime64:
+                subject[subject_columns[index]] = pd.to_datetime(subject[subject_columns[index]], utc=True)
+                source[source_columns[index]] = pd.to_datetime(
+                    source[source_columns[index]], utc=True)
+                continue
+            type_dict[subject_columns[index]] = type(source[source_columns[index]].values[0])
+
+        subject.astype(type_dict)
+        
+        return subject, source
+
+    def organize_needed_data(self, new_data, table_values, table_pkey, action_map={}):
+
+        if len(table_values) == 0:
+            return new_data, []
+
+        if len(new_data) == 0:
+            return [], []
+
+        need_insertion = pd.DataFrame()
+        need_updates = pd.DataFrame()
+
+        table_values_df = pd.DataFrame(table_values, columns=table_values[0].keys())
+        new_data_df = pd.DataFrame(new_data).dropna(subset=action_map['insert']['source'])
+
+        new_data_df, table_values_df = self.sync_df_types(new_data_df, table_values_df, 
+                action_map['insert']['source'], action_map['insert']['augur'])
+
+        need_insertion = new_data_df.merge(table_values_df, suffixes=('','_table'),
+                how='outer', indicator=True, left_on=action_map['insert']['source'],
+                right_on=action_map['insert']['augur']).loc[lambda x : x['_merge']=='left_only'][list(new_data[0].keys())]
+
+        if 'update' in action_map:
+            new_data_df, table_values_df = self.sync_df_types(new_data_df, table_values_df, 
+                action_map['update']['source'], action_map['update']['augur'])
+            
+            need_updates = new_data_df.merge(table_values_df, left_on=action_map['insert']['source'],
+                right_on=action_map['insert']['augur'], suffixes=('','_table'), 
+                how='inner',indicator=False).merge(table_values_df, left_on=action_map['update']['source'],
+                right_on=action_map['update']['augur'], suffixes=('','_table'), how='outer', indicator=True
+                                ).loc[lambda x : x['_merge']=='left_only']
+
+            need_updates = need_updates.drop([column for column in list(need_updates.columns) if \
+                column not in action_map['update']['augur'] and column not in action_map['insert']['augur']], 
+                axis='columns')
+
+            for column in action_map['insert']['augur']:
+                need_updates[f'b_{column}'] = need_updates[column]
+
+            need_updates = need_updates.drop([column for column in action_map['insert']['augur']], axis='columns')
+
+        self.logger.info(f'Page needs {len(need_insertion)} insertions and '
+            f'{len(need_updates)} updates.\n')
+
+        return need_insertion.to_dict('records'), need_updates.to_dict('records')
+
 
     def assign_tuple_action(self, new_data, table_values, update_col_map, duplicate_col_map, table_pkey, value_update_col_map={}):
         """ Include an extra key-value pair on each element of new_data that represents
@@ -1404,15 +1470,16 @@ class Worker():
             'worker_id': self.config['id'],
             'job_type': "MAINTAIN",
             'repo_id': repo_id,
-            'job_model': model
+            'job_model': model,
+            'given': task['given']
         }
-        key = 'github_url' if 'github_url' in task['given'] else 'git_url' if 'git_url' in task['given'] else \
-            'gitlab_url' if 'gitlab_url' in task['given'] else 'INVALID_GIVEN'
-        task_completed[key] = task['given']['github_url'] if 'github_url' in task['given'] else task['given']['git_url'] \
-            if 'git_url' in task['given'] else task['given']['gitlab_url'] if 'gitlab_url' in task['given'] else 'INVALID_GIVEN'
-        if key == 'INVALID_GIVEN':
-            self.register_task_failure(task, repo_id, "INVALID_GIVEN: Not a github/gitlab/git url.")
-            return
+        # key = 'github_url' if 'github_url' in task['given'] else 'git_url' if 'git_url' in task['given'] else \
+        #     'gitlab_url' if 'gitlab_url' in task['given'] else 'INVALID_GIVEN'
+        # task_completed[key] = task['given']['github_url'] if 'github_url' in task['given'] else task['given']['git_url'] \
+        #     if 'git_url' in task['given'] else task['given']['gitlab_url'] if 'gitlab_url' in task['given'] else 'INVALID_GIVEN'
+        # if key == 'INVALID_GIVEN':
+        #     self.register_task_failure(task, repo_id, "INVALID_GIVEN: Not a github/gitlab/git url.")
+        #     return
 
         # Add to history table
         task_history = {
@@ -1468,34 +1535,37 @@ class Worker():
         self.logger.info("Notifying broker and logging task failure in database...\n")
         key = 'github_url' if 'github_url' in task['given'] else 'git_url' if 'git_url' in task['given'] else \
             'gitlab_url' if 'gitlab_url' in task['given'] else 'INVALID_GIVEN'
-        url = task['given'][key]
 
-        """ Query all repos with repo url of given task """
-        repoUrlSQL = s.sql.text("""
-            SELECT min(repo_id) as repo_id FROM repo WHERE repo_git = '{}'
-            """.format(url))
-        repo_id = int(pd.read_sql(repoUrlSQL, self.db, params={}).iloc[0]['repo_id'])
+        repo_id = -1
+        if key != 'INVALID_GIVEN':
+            url = task['given'][key]
 
-        task['worker_id'] = self.config['id']
-        try:
-            requests.post("http://{}:{}/api/unstable/task_error".format(
-                self.config['host_broker'],self.config['port_broker']), json=task)
-        except requests.exceptions.ConnectionError:
-            self.logger.error('Could not send task failure message to the broker\n')
-            self.logger.error(e)
-        except Exception:
-            self.logger.error('An error occured while informing broker about task failure\n')
-            self.logger.error(e)
+            """ Query all repos with repo url of given task """
+            repoUrlSQL = s.sql.text("""
+                SELECT min(repo_id) as repo_id FROM repo WHERE repo_git = '{}'
+                """.format(url))
+            repo_id = int(pd.read_sql(repoUrlSQL, self.db, params={}).iloc[0]['repo_id'])
+
+            task['worker_id'] = self.config['id']
+            try:
+                requests.post("http://{}:{}/api/unstable/task_error".format(
+                    self.config['host_broker'],self.config['port_broker']), json=task)
+            except requests.exceptions.ConnectionError:
+                self.logger.error('Could not send task failure message to the broker\n')
+                self.logger.error(e)
+            except Exception:
+                self.logger.error('An error occured while informing broker about task failure\n')
+                self.logger.error(e)
 
         # Add to history table
         task_history = {
-            "repo_id": repo_id,
-            "worker": self.config['id'],
-            "job_model": task['models'][0],
-            "oauth_id": self.oauths[0]['oauth_id'],
-            "timestamp": datetime.datetime.now(),
-            "status": "Error",
-            "total_results": self.results_counter
+            'repo_id': repo_id,
+            'worker': self.config['id'],
+            'job_model': task['models'][0],
+            'oauth_id': self.oauths[0]['oauth_id'],
+            'timestamp': datetime.datetime.now(),
+            'status': "Error",
+            'total_results': self.results_counter
         }
         self.helper_db.execute(self.worker_history_table.update().where(self.worker_history_table.c.history_id==self.history_id).values(task_history))
 

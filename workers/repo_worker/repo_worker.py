@@ -107,28 +107,28 @@ class RepoWorker(Worker):
             with futures.ThreadPoolExecutor(max_workers=10) as executor:
                 for org in source_orgs:
                     threads.append(executor.submit(retrieve_org_repos, 
-                        org['repos_url'] + "?per_page=10&page={}"))
+                        org['repos_url'] + "?per_page=40&page={}"))
 
                 gh_merge_fields = ['owner.login']
                 augur_merge_fields = ['rg_name']
 
-                for source_repos in futures.as_completed(threads):
-
-                    repos_pk = enrich_data_primary_keys(source_repos, 
-                        self.repo_groups, gh_merge_fields, augur_merge_fields)
+                for future in futures.as_completed(threads):
+                    source_repos = future.result().json()
+                    repos_pk = self.enrich_data_primary_keys(source_repos, 
+                        self.repo_groups_table, gh_merge_fields, augur_merge_fields)
 
                     for repo in repos_pk:
                         if int(repo['updated_at'][:4]) < 2020:
                             continue
                         
                         valid_repos.append({
-                            'repo_group_id': repo['repo_group_id'],
+                            'repo_group_id': int(repo['repo_group_id']),
                             'repo_git': repo['url'],
                             'repo_path': repo['full_name'],
                             'repo_name': repo['name'],
                             'repo_type': 'primary',
                             'url': repo['url'],
-                            'owner_id': repo['id'],
+                            'owner_id': int(repo['id']),
                             'description': repo['description'],
                             'primary_language': repo['language'],
                             'created_at': repo['created_at'],
@@ -141,11 +141,7 @@ class RepoWorker(Worker):
                             'repo_archived_date_collected': repo['updated_at'] if repo['archived'] else None
                         })
 
-                        repo_count += 1
-                        if repo_count > 100:
-                            return
 
-        repo_count = 0
         threads = []
         valid_repos = []
         collect_valid_repos()
@@ -164,11 +160,20 @@ class RepoWorker(Worker):
         repos_insert, _ = self.organize_needed_data(valid_repos, table_values, 
             list(self.repo_table.primary_key)[0].name, action_map=repo_action_map)
 
-        self.bulk_insert(self.repo_table, insert=repos_insert)
+        repo_count = 0
+        for repo in repos_insert:
+            result = self.db.execute(self.repo_table.insert().values(repo))
+            self.logger.info("Primary key inserted into the repo table: {}".format(result.inserted_primary_key))
+            self.insert_counter += 1
+            repo_count += 1
+            if repo_count >= 500:
+                break
+
+        # self.bulk_insert(self.repo_table, insert=repos_insert)
 
         # Register this task as completed.
         #   This is a method of the worker class that is required to be called upon completion
         #   of any data collection model, this lets the broker know that this worker is ready
         #   for another task
-        self.register_task_completion(task, repo_id, 'repo')
+        self.register_task_completion(task, None, 'repo')
 
