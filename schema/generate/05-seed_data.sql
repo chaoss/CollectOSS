@@ -117,13 +117,6 @@ INSERT INTO "augur_data"."chaoss_metric_status" VALUES (80, 'experimental', 'lib
 INSERT INTO "augur_data"."chaoss_metric_status" VALUES (81, 'experimental', 'librariesio', 'metric', 'implemented', 'implemented', 'f', '/api/unstable/<owner>/<repo>/dependents', NULL, 'Dependents', 'experimental', '"dependents"', 'Insight Worker', '0.0.1', 'librariesio', '2019-06-20 22:51:25', NULL);
 COMMIT;
 
-
-
-BEGIN;
-INSERT INTO "augur_data"."contributor_affiliations"("ca_id", "ca_domain", "ca_affiliation", "ca_start_date", "ca_active", "ca_last_used", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (25152, 'goggins.com', 'goggins', '2016-03-03', 1, '2019-10-29 12:22:25', NULL, NULL, NULL, '2019-10-29 17:22:30');
-COMMIT; 
-
-
 -- SPDX Schema Required Metadata 
 
 
