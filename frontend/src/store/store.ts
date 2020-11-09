@@ -1,3 +1,4 @@
+// #SPDX-License-Identifier: MIT
 /* tslint:disable */
 import Vue from 'vue';
 import Vuex from 'vuex';

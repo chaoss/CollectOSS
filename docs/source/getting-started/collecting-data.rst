@@ -21,9 +21,7 @@ There are a few workers that ship ready to collect out of the box:
 - ``linux_badge_worker`` (collects `CII badging <https://bestpractices.coreinfrastructure.org/en>`_ data from the CII API)
 - ``insight_worker`` (queries Augur's metrics API to find interesting anomalies in the collected data)
 
-All worker configuration options are found in the ``Workers`` block of the ``augur.config.json`` file (which was generated for you at the end of the previous section). This file is located at ``$HOME/.augur/augur.config.json``. Each worker has its own subsection with same title as the the worker's name.
-
-A full configuration file reference can be found on the next page, but we recommend leaving the defaults and only changing them when necessary; read on for more on how to make sure your workers are properly configured.
+All worker configuration options are found in the ``Workers`` block of the ``augur.config.json`` file (which was generated for you at the end of the previous section). This file is located at ``$HOME/.augur/augur.config.json``. Each worker has its own subsection with same title as the the worker's name. We recommend leaving the defaults and only changing them when explicitly necessary, as the default parameters will work for most use cases. Read on for more on how to make sure your workers are properly configured.
 
 Standard configuration options
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -118,10 +116,10 @@ Congratuations! At this point you (hopefully) have a fully functioning and confi
 
 After you've loaded your repos, you're ready for your first collection run. We recommend running only the default workers first to gather the initial data. If you're collecting data for a lot of repositories, or repositories with a lot of data, we recommend increasing the number of ``github_workers`` and ``pull_request_workers``.
 
-You can now run Augur and start the data collection by issuing the ``augur run`` command in the root ``augur`` directory. All your logs (including worker logs and error files) will be saved to a ``logs/`` subdirectory in that same folder, but this can be customized - more on that and other logging utilities `here <../development-guide/logging.html>`_.
+You can now run Augur and start the data collection by issuing the ``augur backend start`` command in the root ``augur`` directory. All your logs (including worker logs and error files) will be saved to a ``logs/`` subdirectory in that same folder, but this can be customized - more on that and other logging utilities `in the development guide <../development-guide/logging.html>`_.
 
 Once you've finished the initial data collection, we suggest then running the ``value_worker`` (if you have it installed) and the ``insight_worker``. This is because the ``value_worker`` depends the source files of the repositories cloned by the ``facade_worker``, and the ``insight_worker`` uses the data from all the other workers to identify anomalies in the data by by performing statistical analysis on the data returned from Augur's metrics API.
 
-You're now ready to start exploring the data Augur can gather and metrics we can generate. If you're interested in contributing to Augur's codebase, you can check out the `development guide <../development-guide/toc.html>`_.
+You're now ready to start exploring the data Augur can gather and metrics we can generate. If you're interested in contributing to Augur's codebase, you can check out the `development guide <../development-guide/toc.html>`_. For information about Augur's frontend, keep reading!
 
 Happy collecting!

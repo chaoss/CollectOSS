@@ -1,9 +1,10 @@
+// #SPDX-License-Identifier: MIT
 import axios from 'axios';
 import actions from './actions';
 import mutations from './mutations';
 import getters from './getters';
 
-var config = require('../../../../../augur.config.json')
+var config = require('../../../../frontend.config.json')
 const AugurAPIModule = require('@/AugurAPI').default;
 var port = config['Frontend'] ? (config['Frontend']['port'] ? ':' + config['Frontend']['port'] : '') : (config['Server']['port'] ? ':' + config['Server']['port'] : '')
 var host = config['Frontend'] ? (config['Frontend']['host']) : (config['Server']['host'])
@@ -13,7 +14,7 @@ const state = {
   // hasState: false,
   // tab: 'gmd',
   // page: 'dashboard',
-  apiGroups: {},  
+  apiGroups: {},
   apiRepos: {},
   AugurAPI,
   cache: {},

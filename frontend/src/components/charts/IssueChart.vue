@@ -1,3 +1,4 @@
+<!-- #SPDX-License-Identifier: MIT -->
 <template>
   <div class="row section">
     <issue-overview-modal></issue-overview-modal>

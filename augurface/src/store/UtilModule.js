@@ -1,4 +1,5 @@
-const configObject = require("../../../augur.config.json");
+// #SPDX-License-Identifier: MIT
+var config = require('../frontend.config.json')
 import Vue from 'vue';
 
 // module for utility global state
@@ -8,8 +9,8 @@ export default {
     host: configObject["Frontend"].host,
     port: configObject["Frontend"].port,
     baseEndpointUrl: `http://${configObject["Frontend"].host}:${configObject["Frontend"].port}/api/unstable`,
-    // baseEndpointUrl: 'http://localhost:5000/api/unstable', 
-    crudKey: sessionStorage.getItem("__augursessionstorage__crudkey") !== null ? sessionStorage.getItem("__augursessionstorage__crudkey") : '', 
+    // baseEndpointUrl: 'http://localhost:5000/api/unstable',
+    crudKey: sessionStorage.getItem("__augursessionstorage__crudkey") !== null ? sessionStorage.getItem("__augursessionstorage__crudkey") : '',
     availableEndpoints: [
       'http://localhost:5000/api/unstable',
       'http://augur.osshealth.io/api/unstable'
@@ -21,7 +22,7 @@ export default {
     },
     addAvailableEndpoint(state, newEndpoint) {
       Vue.set(state, "availableEndpoints", [...state.availableEndpoints, newEndpoint]);
-    }, 
+    },
     setCrudKey(state, newKey) {
       Vue.set(state, "crudKey", newKey);
       sessionStorage.setItem("__augursessionstorage__crudkey", newKey);
@@ -37,14 +38,14 @@ export default {
     getAvailableEndpointsForDropdown(state) {
       // maps available endpoints into array compatible with prop for AugDropdown.vue
       return state.availableEndpoints.map(endpoint => { return { text: endpoint, value: endpoint } });
-    }, 
+    },
     getCurrentEndpointUrlForDropdown(state) {
       // maps current endpoint into object compatible with prop for AugDropDown.vue
       return { text: state.baseEndpointUrl, value: state.baseEndpointUrl };
-    }, 
+    },
     getBaseEndpointUrl(state) {
       return state.baseEndpointUrl;
-    }, 
+    },
     getCrudKey(state) {
       return state.crudKey;
     }

@@ -1,3 +1,4 @@
+// #SPDX-License-Identifier: MIT
 // import Vue from 'vue';
 /* tslint:disable */
 import Vue from 'vue';
@@ -7,7 +8,7 @@ import store from '@/store/store';
 Vue.use(Router);
 import _ from 'lodash';
 
-var config = require('../../augur.config.json')
+var config = require('../frontend.config.json')
 const AugurAPIModule = require('@/AugurAPI').default;
 var port = config['Frontend'] ? (config['Frontend']['port'] ? ':' + config['Frontend']['port'] : '') : (config['Server']['port'] ? ':' + config['Server']['port'] : '')
 var host = config['Frontend'] ? (config['Frontend']['host']) : (config['Server']['host'])

@@ -1,3 +1,4 @@
+#SPDX-License-Identifier: MIT
 version: '3'
 services:
       backend:

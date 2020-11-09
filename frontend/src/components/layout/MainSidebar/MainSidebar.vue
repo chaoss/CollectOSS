@@ -1,3 +1,4 @@
+<!-- #SPDX-License-Identifier: MIT -->
 <template>
   <aside class="main-sidebar col-1 px-0 mainSideBaraside"><!--:class="['main-sidebar', 'col-12', 'col-md-3', 'col-lg-2', 'px-0', sidebarVisible ? 'open' : '']">-->
       <div class="main-navbar">

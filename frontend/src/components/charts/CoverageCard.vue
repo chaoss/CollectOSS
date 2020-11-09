@@ -1,3 +1,4 @@
+<!-- #SPDX-License-Identifier: MIT -->
 <template>
   <d-card>
     <d-card-body :title="title" class="text-center">
@@ -42,8 +43,8 @@
       title: String,
       data: Object,
       source: String,
-      dataTwo: Object,
-      sourceTwo: String,
+      datatwo: Object,
+      sourcetwo: String,
       headers: Array,
       fields: Array,
     }
@@ -61,7 +62,7 @@
       UsableValues: function () {
         let licenseCount = 0;
         // @ts-ignore
-        for (let el of this.valuesTwo) {
+        for (let el of this.valuestwo) {
           let shortName = el["short_name"];
           if (shortName != "No Assertion") {
             licenseCount += el["count"]
@@ -92,7 +93,7 @@
     loaded: boolean = false;
     loaded2: boolean = false;
     values: any[] = [];
-    valuesTwo: any[] = [];
+    valuestwo: any[] = [];
 
     // compare getters
     base!: any;
@@ -120,20 +121,20 @@
         })
       }
 
-      if (this.dataTwo) {
+      if (this.datatwo) {
         this.loaded2 = true;
-        this.valuesTwo = this.dataTwo[this.sourceTwo]
+        this.valuestwo = this.datatwo[this.sourcetwo]
       } else {
-        this.endpoint({endpoints: [this.sourceTwo], repos: [this.base]}).then((tuples: any) => {
+        this.endpoint({endpoints: [this.sourcetwo], repos: [this.base]}).then((tuples: any) => {
           let ref = this.base.url || this.base.repo_name;
           if (ref.includes("/")) {
             ref = ref.split("/")[ref.split("/").length - 1]
           }
-          let valuesTwo: any = [];
+          let valuestwo: any = [];
           Object.keys(tuples[ref]).forEach((endpoint) => {
-            valuesTwo = tuples[ref][endpoint]
+            valuestwo = tuples[ref][endpoint]
           });
-          this.valuesTwo = valuesTwo;
+          this.valuestwo = valuestwo;
           this.loaded2 = true
         })
       }

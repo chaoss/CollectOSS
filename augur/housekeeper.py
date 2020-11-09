@@ -1,3 +1,4 @@
+#SPDX-License-Identifier: MIT
 """
 Keeps data up to date
 """

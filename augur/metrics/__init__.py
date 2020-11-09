@@ -1,3 +1,4 @@
+#SPDX-License-Identifier: MIT
 import os
 import glob
 import sys
@@ -10,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 class Metrics():
     def __init__(self, app):
-        logger.debug("Loading metrics")
+        logger.debug("Importing metrics")
         self.database = app.database
         self.spdx_db = app.spdx_database
 
@@ -28,8 +29,8 @@ def get_file_id(path):
     return os.path.splitext(os.path.basename(path))[0]
 
 def add_metrics(metrics, module_name):
-    # find all unbound endpoint functions objects 
-    # (ones that have metadata) defined the given module_name 
+    # find all unbound endpoint functions objects
+    # (ones that have metadata) defined the given module_name
     # and bind them to the metrics class
     for name, obj in inspect.getmembers(sys.modules[module_name]):
         if inspect.isfunction(obj) == True:

@@ -16,11 +16,11 @@ from augur.logging import ROOT_AUGUR_DIRECTORY
 logger = logging.getLogger(__name__)
 ENVVAR_PREFIX = "AUGUR_"
 
-@click.group('configure', short_help='Generate an augur.config.json')
+@click.group('config', short_help='Generate an augur.config.json')
 def cli():
     pass
 
-@cli.command('generate')
+@cli.command('init')
 @click.option('--db_name', help="Database name for your data collection database", envvar=ENVVAR_PREFIX + 'DB_NAME')
 @click.option('--db_host', help="Host for your data collection database", envvar=ENVVAR_PREFIX + 'DB_HOST')
 @click.option('--db_user', help="User for your data collection database", envvar=ENVVAR_PREFIX + 'DB_USER')
@@ -32,7 +32,7 @@ def cli():
 @click.option('--gitlab_api_key', help="GitLab API key for data collection from the GitLab API", envvar=ENVVAR_PREFIX + 'GITLAB_API_KEY')
 @click.option('--write-to-src', is_flag=True, help="Write generated config file to the source code tree instead of default (for development use only)")
 @initialize_logging
-def generate(db_name, db_host, db_user, db_port, db_password, github_api_key, facade_repo_directory, rc_config_file, gitlab_api_key, write_to_src=False):
+def init(db_name, db_host, db_user, db_port, db_password, github_api_key, facade_repo_directory, rc_config_file, gitlab_api_key, write_to_src=False):
     """
     Generate an augur.config.json
     """
@@ -94,3 +94,36 @@ def generate(db_name, db_host, db_user, db_port, db_password, github_api_key, fa
             logger.info('Config written to ' + config_path)
     except Exception as e:
         logger.error("Error writing augur.config.json " + str(e))
+
+@cli.command('init-frontend')
+@initialize_logging
+def init_frontend():
+    """
+    Validates an augur.config.json file
+    """
+    config = {}
+    config['Frontend'] = default_config['Frontend']
+    config['Server'] = default_config['Server']
+    config_path = ROOT_AUGUR_DIRECTORY + '/frontend/frontend.config.json'
+    try:
+        with open(os.path.abspath(config_path), 'w') as f:
+            json.dump(config, f, indent=4)
+            logger.info('Config written to ' + config_path)
+    except Exception as e:
+        logger.error("Error writing frontend.config.json " + str(e))
+
+@cli.command('validate')
+@initialize_logging
+def validate():
+    """
+    Validates an augur.config.json file
+    """
+    raise Exception("Not implemented yet.")
+
+@cli.command('update')
+@initialize_logging
+def update():
+    """
+    Updates an augur.config.json file
+    """
+    raise Exception("Not implemented yet.")

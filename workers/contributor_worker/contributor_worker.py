@@ -1,3 +1,4 @@
+#SPDX-License-Identifier: MIT
 from multiprocessing import Process, Queue
 from urllib.parse import urlparse
 import requests, sys
@@ -305,6 +306,7 @@ class ContributorWorker(Worker):
             
             result = self.db.execute(self.contributors_table.insert().values(cntrb_new))
             pk = int(result.inserted_primary_key[0])
+            sg = int(result.inserted_primary_key[0])
             
             dupe_ids_sql = s.sql.text("""
                 SELECT cntrb_id 
@@ -320,11 +322,12 @@ class ContributorWorker(Worker):
             self.map_new_id(dupe_ids, pk)
 
             delete_dupe_ids_sql = s.sql.text("""
-                DELETE  
-                FROM contributors
-                WHERE cntrb_id <> {}
-                AND cntrb_email = '{}';
-            """.format(pk, cntrb_new['cntrb_email']))
+                DELETE FROM contributors
+                WHERE cntrb_id IN (SELECT cntrb_id 
+                FROM contributors  WHERE (cntrb_id > {} 
+                OR cntrb_id < {}) 
+                AND cntrb_email = '{}');
+            """.format(pk, sg, cntrb_new['cntrb_email']))
 
             self.logger.info(f'Trying to delete dupes with sql: {delete_dupe_ids_sql}')
 
@@ -343,6 +346,80 @@ class ContributorWorker(Worker):
 
         # Get all distinct combinations of emails and names by querying the repo's commits
         userSQL = s.sql.text("""
+            SELECT
+                commits.cmt_author_email AS email,
+                commits.cmt_author_date AS DATE,
+                commits.cmt_author_name AS NAME 
+            FROM
+                commits 
+            WHERE
+                commits.repo_id = :repo_id 
+                AND NOT EXISTS (
+                    SELECT
+                        contributors.cntrb_email 
+                    FROM
+                        contributors 
+                    WHERE
+                        contributors.cntrb_email = commits.cmt_author_email
+                ) 
+                AND (
+                    commits.cmt_author_date, commits.cmt_author_name
+                ) IN (
+                    SELECT
+                        MAX(C.cmt_author_date) AS DATE,
+                        C.cmt_author_name 
+                    FROM
+                        commits AS C 
+                    WHERE
+                        C.repo_id = :repo_id 
+                        AND C.cmt_author_email = commits.cmt_author_email 
+                    GROUP BY
+                        C.cmt_author_name,
+                        C.cmt_author_date LIMIT 1
+                ) 
+            GROUP BY
+                commits.cmt_author_email,
+                commits.cmt_author_date,
+                commits.cmt_author_name 
+            UNION
+            SELECT
+                commits.cmt_committer_email AS email,
+                commits.cmt_committer_date AS DATE,
+                commits.cmt_committer_name AS NAME 
+            FROM
+                augur_data.commits 
+            WHERE
+                commits.repo_id = :repo_id 
+                AND NOT EXISTS (
+                    SELECT
+                        contributors.cntrb_email 
+                    FROM
+                        augur_data.contributors 
+                    WHERE
+                        contributors.cntrb_email = commits.cmt_committer_email
+                ) 
+                AND (
+                    commits.cmt_committer_date, commits.cmt_committer_name
+                ) IN (
+                    SELECT
+                        MAX(C.cmt_committer_date) AS DATE,
+                        C.cmt_committer_name 
+                    FROM
+                        augur_data.commits AS C 
+                    WHERE
+                        C.repo_id = :repo_id 
+                        AND C.cmt_committer_email = commits.cmt_committer_email 
+                    GROUP BY
+                        C.cmt_committer_name,
+                        C.cmt_author_date LIMIT 1
+                ) 
+            GROUP BY
+                commits.cmt_committer_email,
+                commits.cmt_committer_date,
+                commits.cmt_committer_name
+
+/*
+
             SELECT cmt_author_email as email, cmt_author_date as date, cmt_author_name as name
             FROM commits 
             WHERE repo_id = :repo_id
@@ -371,7 +448,8 @@ class ContributorWorker(Worker):
                 order by date desc
                 limit 1
             )
-            group by cmt_committer_email, cmt_committer_date, cmt_committer_name
+            group by cmt_committer_email, cmt_committer_date, cmt_committer_name*/
+            
         """)
 
         commit_cntrbs = json.loads(pd.read_sql(userSQL, self.db, params={'repo_id': repo_id}).to_json(orient="records"))
@@ -407,13 +485,13 @@ class ContributorWorker(Worker):
             # Prepare tuple for insertion to contributor table (build it off of the tuple queried)
             cntrb = tuple.copy()
 
-            cntrb['cntrb_created_at'] = datetime.fromtimestamp(cntrb['cntrb_created_at']/1000) \
+            cntrb['cntrb_created_at'] = datetime.date.fromtimestamp(cntrb['cntrb_created_at']/1000) \
                 if cntrb['cntrb_created_at'] else None
             cntrb['cntrb_email'] = tuple['commit_email']
             cntrb['tool_source'] = self.tool_source
             cntrb['tool_version'] = self.tool_version
             cntrb['data_source'] = self.data_source
-            cntrb['cntrb_last_used'] = datetime.fromtimestamp(cntrb['cntrb_last_used']/1000) \
+            cntrb['cntrb_last_used'] = datetime.date.fromtimestamp(cntrb['cntrb_last_used']/1000) \
                 if cntrb['cntrb_last_used'] else None
             del cntrb['commit_name']
             del cntrb['commit_email']
@@ -435,12 +513,12 @@ class ContributorWorker(Worker):
             # Prepare tuple for insertion to contributor table (build it off of the tuple queried)
             cntrb = tuple.copy()
             try:
-                cntrb['cntrb_created_at'] = datetime.fromtimestamp(cntrb['cntrb_created_at']/1000)
+                cntrb['cntrb_created_at'] = datetime.date.fromtimestamp(cntrb['cntrb_created_at']/1000)
             except:
                 cntrb['cntrb_created_at'] = None
 
             try:
-                cntrb['cntrb_last_used'] = datetime.fromtimestamp(cntrb['cntrb_last_used']/1000)
+                cntrb['cntrb_last_used'] = datetime.date.fromtimestamp(cntrb['cntrb_last_used']/1000)
             except:
                 cntrb['cntrb_last_used'] = None
 
@@ -530,6 +608,9 @@ class ContributorWorker(Worker):
                 orient="records"))
             if len(canonical_id_result) > 1:
                 self.logger.info("MORE THAN ONE CANONICAL CONTRIBUTOR found for email: {}".format(cntrb_email))
+            elif len(canonical_id_result) == 0:
+                self.logger.info(f"Warning! Did not find a canonical contributor for supposed canonical email: {cntrb_email}")
+
             alias_tuple = {
                 'cntrb_id': canonical_id_result[0]['canonical_id'],
                 'cntrb_a_id': alias_id,

@@ -1,3 +1,4 @@
+-- #SPDX-License-Identifier: MIT
 DROP INDEX if exists "augur_data"."cntrb_id";
 
 CREATE INDEX "cnt-fullname" ON "augur_data"."contributors" USING hash (

@@ -1,3 +1,4 @@
+#SPDX-License-Identifier: MIT
 from flask import Flask, jsonify, request, Response
 import click, os, json, requests, logging
 from workers.linux_badge_worker.linux_badge_worker import LinuxBadgeWorker

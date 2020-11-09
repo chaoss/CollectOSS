@@ -1,3 +1,4 @@
+#SPDX-License-Identifier: MIT
 .DS_Store
 node_modules
 /dist

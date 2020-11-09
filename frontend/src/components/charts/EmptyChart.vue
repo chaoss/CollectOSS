@@ -1,3 +1,4 @@
+<!-- #SPDX-License-Identifier: MIT -->
 <template>
   <div ref="chart" class="linechart"></div>
 </template>

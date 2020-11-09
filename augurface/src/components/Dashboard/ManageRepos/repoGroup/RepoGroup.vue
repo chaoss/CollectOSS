@@ -1,3 +1,4 @@
+<!-- #SPDX-License-Identifier: MIT -->
 <template>
   <div id="RepoGroup" :class="{ open : !isCollapsed }">
     <repo-group-header :repoGroup="repoGroup" :isCollapsed="isCollapsed" @flipCollapse="flipCollapse"/>

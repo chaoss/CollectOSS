@@ -1,3 +1,4 @@
+<!-- #SPDX-License-Identifier: MIT -->
 <template>
   <div id="AugDropdown" @click.stop>
     <label for="selected">

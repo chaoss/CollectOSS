@@ -1,3 +1,4 @@
+<!-- #SPDX-License-Identifier: MIT -->
 <template>
   <vue-position-sticky>
     <div id="NavBar">

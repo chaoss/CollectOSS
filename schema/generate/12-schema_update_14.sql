@@ -1,3 +1,4 @@
+-- #SPDX-License-Identifier: MIT
 ALTER TABLE "augur_data"."contributor_affiliations" DROP CONSTRAINT "fk_contributor_affiliations_contributors_1";
 
 ALTER TABLE "augur_data"."contributor_affiliations" DROP CONSTRAINT "contributor_affiliations_pkey";

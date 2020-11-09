@@ -1,3 +1,4 @@
+#SPDX-License-Identifier: MIT
 import os
 import json
 import logging
@@ -111,6 +112,40 @@ default_config = {
                     ],
                     "model": "releases",
                     "repo_group_id": 0
+                },
+                {
+                    "delay": 100000,
+                    "given": [
+                        "github_url"
+                    ],
+                    "model": "message_analysis",
+                    "repo_group_id": 0
+                },
+                {
+                    "delay": 100000,
+                    "given": [
+                        "github_url"
+                    ],
+                    "model": "pull_request_analysis",
+                    "repo_group_id": 0
+                },
+
+	        {
+	    	"delay": 10000,
+		"given":[
+		    "git_url"
+		],
+		"model" : "discourse_analysis",
+		"repo_group_id" : 0
+
+	        },
+	        {
+                "delay": 10000,
+                "given": [
+                    "git_url"
+                ],
+                "model": "clustering",
+                "repo_group_id": 0
                 }
             ]
         },
@@ -131,11 +166,11 @@ default_config = {
                 "metrics": {"issues-new": "issues", "code-changes": "commit_count", "code-changes-lines": "added",
                            "reviews": "pull_requests", "contributors-new": "new_contributors"},
                 "confidence_interval": 95,
-                "contamination": 0.041,
-                "switch": 0,
+                "contamination": 0.1,
+                "switch": 1,
                 "workers": 1,
-                "training_days": 365,
-                "anomaly_days": 2
+                "training_days": 1000,
+                "anomaly_days": 14
             },
             "linux_badge_worker": {
                 "port": 50400,
@@ -165,7 +200,7 @@ default_config = {
             },
             "contributor_worker": {
                 "port": 50900,
-                "switch": 1,
+                "switch": 0,
                 "workers": 1
             },
             "gitlab_issues_worker": {
@@ -180,9 +215,38 @@ default_config = {
             },
             "gitlab_merge_request_worker": {
                 "port": 51200,
-                "switch": 1,
+                "switch": 0,
                 "workers": 1
-            }
+            },
+            "message_insights_worker": {
+                "port": 51300,
+                "switch": 0,
+                "workers": 1,
+                "insight_days": 30,
+                "models_dir": "message_models"
+            },
+            "pull_request_analysis_worker": {
+                "port": 51400,
+                "switch": 0,
+                "workers": 1,
+                "insight_days": 30
+            },
+            "discourse_analysis_worker":{
+	    "port" : 51500,
+	    "switch": 0,
+	    "workers": 1
+
+	    },
+	    "clustering_worker": {
+            "port": 51600,
+            "switch": 0,
+            "workers": 1,
+	    "max_df" : 0.9,
+	    "max_features" : 1000,
+	    "min_df": 0.1,
+	    "num_clusters" : 4
+
+        }
         },
         "Facade": {
             "check_updates": 1,

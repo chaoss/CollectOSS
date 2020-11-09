@@ -1,3 +1,4 @@
+// #SPDX-License-Identifier: MIT
 import Vue, { VNode } from 'vue';
 
 declare global {

@@ -94,7 +94,7 @@ function save_credentials() {
   echo "**********************************"
   echo
 
-  cmd=( augur configure generate --db_name $db_name --db_host $host --db_port $port --db_user $db_user --db_password $password --github_api_key $github_api_key --gitlab_api_key $gitlab_api_key --facade_repo_directory $facade_repo_directory )
+  cmd=( augur config init --db_name $db_name --db_host $host --db_port $port --db_user $db_user --db_password $password --github_api_key $github_api_key --gitlab_api_key $gitlab_api_key --facade_repo_directory $facade_repo_directory )
 
   if [[ $target == *"dev"* ]]; then
     cmd+=( --write-to-src )
@@ -102,6 +102,7 @@ function save_credentials() {
 
   "${cmd[@]}"
 
+  augur config init-frontend
   augur db check-pgpass
 
 }

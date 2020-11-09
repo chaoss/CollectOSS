@@ -14,12 +14,33 @@ import pandas as pd
 import sqlalchemy as s
 
 from augur.cli import initialize_logging, pass_config, pass_application
+from augur.cli.server import _broadcast_signal_to_processes
 
 logger = logging.getLogger(__name__)
 
 @click.group('util', short_help='Miscellaneous utilities')
 def cli():
     pass
+
+@cli.command('stop')
+@initialize_logging
+def stop_server():
+    """
+    Sends SIGTERM to all Augur server & worker processes
+    """
+    logger.warning("THIS COMMAND WILL BE DEPRECATED IN AUGUR v0.15.0")
+    logger.warning("PLEASE USER augur backend kill INSTEAD.")
+    _broadcast_signal_to_processes(attach_logger=True)
+
+@cli.command('kill')
+@initialize_logging
+def kill_server():
+    """
+    Sends SIGKILL to all Augur server & worker processes
+    """
+    logger.warning("THIS COMMAND WILL BE DEPRECATED IN AUGUR v0.15.0")
+    logger.warning("PLEASE USER augur backend kill INSTEAD.")
+    _broadcast_signal_to_processes(signal=signal.SIGKILL, attach_logger=True)
 
 @cli.command('export-env')
 @pass_config
@@ -41,71 +62,6 @@ def export_env(config):
 
     export_file.close()
     env_file.close()
-
-def _stop_processes_handler(attach_handler=False):
-    if attach_handler is True:
-        _logger = logging.getLogger("augur")
-    else:
-        _logger = logger
-    processes = get_augur_processes()
-    if processes != []:
-        for process in processes:
-            if process.pid != os.getpid():
-                logger.info(f"Stopping process {process.pid}")
-                try:
-                    process.send_signal(signal.SIGTERM)
-                except psutil.NoSuchProcess as e:
-                    pass
-
-@cli.command('stop')
-@initialize_logging
-def cli_stop_processes():
-    """
-    Terminates all currently running backend Augur processes, including any workers. Will only work in a virtual environment.
-    """
-    _stop_processes_handler()
-
-
-def stop_processes():
-    _stop_processes_handler(attach_handler=True)
-
-@cli.command('kill')
-@initialize_logging
-def kill_processes():
-    """
-    Terminates all currently running backend Augur processes, including any workers. Will only work in a virtual environment.
-    """
-    processes = get_augur_processes()
-    if processes != []:
-        for process in processes:
-            if process.pid != os.getpid():
-                logger.info(f"Killing process {process.pid}")
-                try:
-                    process.send_signal(signal.SIGKILL)
-                except psutil.NoSuchProcess as e:
-                    pass
-
-@cli.command('list',)
-@initialize_logging
-def list_processes():
-    """
-    Outputs the name and process ID (PID) of all currently running backend Augur processes, including any workers. Will only work in a virtual environment.
-    """
-    processes = get_augur_processes()
-    for process in processes:
-        logger.info(f"Found process {process.pid}")
-
-def get_augur_processes():
-    processes = []
-    for process in psutil.process_iter(['cmdline', 'name', 'environ']):
-        if process.info['cmdline'] is not None and process.info['environ'] is not None:
-            try:
-                if os.getenv('VIRTUAL_ENV') in process.info['environ']['VIRTUAL_ENV'] and 'python' in ''.join(process.info['cmdline'][:]).lower():
-                    if process.pid != os.getpid():
-                        processes.append(process)
-            except KeyError:
-                pass
-    return processes
 
 @cli.command('repo-reset')
 @pass_application
