@@ -48,7 +48,8 @@ setup(
         "psutil",
         "gunicorn",
         "six>=1.14.0",
-        "bokeh"
+        "bokeh",
+	"selenium"
     ],
     extras_require={
         "dev": [
