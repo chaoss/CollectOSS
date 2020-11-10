@@ -5,11 +5,11 @@
 /augur/application.py @ccarterlandis @gabe-heim
 /augur/routes/ @ccarterlandis @gabe-heim
 
-/frontend/ @gabe-heim
+/frontend/ @gabe-heim @sgoggins
 
 /schema/ @sgoggins @ccarterlandis
 
-/workers/ @ccarterlandis @gabe-heim
+/workers/ @ccarterlandis @gabe-heim @sgoggins
 
 /README.md @sgoggins @ccarterlandis
 /CONTRIBUTING.md @sgoggins @ccarterlandis
