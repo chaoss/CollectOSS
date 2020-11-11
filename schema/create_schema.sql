@@ -32,3 +32,4 @@
 \i schema/generate/27-schema_update_29.sql
 \i schema/generate/28-schema_update_30.sql
 \i schema/generate/29-schema_update_31.sql
+\i schema/generate/30-schema_update_32.sql
