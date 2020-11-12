@@ -320,16 +320,20 @@ def create_routes(server):
 
 
     @server.app.route('/{}/contributor_reports/new_contributors_bar/'.format(server.api_version), methods=["GET"])
-    def new_contributors_bar(group_by = "month", required_contributions = 5, required_time = 365, return_json = True):
+    def new_contributors_bar():
+
+        now = datetime.datetime.now()
 
         repo_id = int(request.args.get('repo_id'))
-        start_date = str(request.args.get('start_date'))
-        end_date = str(request.args.get('end_date'))
+        start_date = str(request.args.get('start_date', "{}-01-01".format(now.year-1)))
+        end_date = str(request.args.get('end_date', "{}-{}-{}".format(now.year, now.month, now.day)))
 
-        group_by = str(request.args.get('group_by'))
-        required_contributions = int(request.args.get('required_contributions'))
-        required_time = int(request.args.get('required_time'))
-        return_json = request.args.get('return_json')
+        group_by = str(request.args.get('group_by', "quarter"))
+        required_contributions = int(request.args.get('required_contributions', 4))
+        required_time = int(request.args.get('required_time', 365))
+        return_json = request.args.get('return_json', "false")
+
+
 
         input_df = new_contibutor_data_collection(repo_id=repo_id, required_contributions=required_contributions)
         months_df = months_data_collection(start_date=start_date, end_date=end_date)
@@ -553,16 +557,16 @@ def create_routes(server):
     @server.app.route('/{}/contributor_reports/new_contributors_stacked_bar/'.format(server.api_version), methods=["GET"])
     def new_contributors_stacked_bar():
 
+        now = datetime.datetime.now()
+
         repo_id = int(request.args.get('repo_id'))
-        start_date = str(request.args.get('start_date'))
-        end_date = str(request.args.get('end_date'))
+        start_date = str(request.args.get('start_date', "{}-01-01".format(now.year-1)))
+        end_date = str(request.args.get('end_date', "{}-{}-{}".format(now.year, now.month, now.day)))
 
-        group_by = str(request.args.get('group_by'))
-        required_contributions = int(request.args.get('required_contributions'))
-        required_time = int(request.args.get('required_time'))
-        return_json = str(request.args.get('return_json'))
-
-        print(return_json)
+        group_by = str(request.args.get('group_by', "quarter"))
+        required_contributions = int(request.args.get('required_contributions', 4))
+        required_time = int(request.args.get('required_time', 365))
+        return_json = request.args.get('return_json', "false")
       
 
         input_df = new_contibutor_data_collection(repo_id=repo_id, required_contributions=required_contributions)
@@ -574,11 +578,8 @@ def create_routes(server):
         contributor_types = ['All', 'repeat', 'drive_by']
         ranks = [1,2]
 
-        row_1 = []
-        row_2 = []
-        row_3 = []
-        row_4 = []
-        
+        row_1, row_2, row_3, row_4 = [], [], [], []
+
         for rank in ranks:
             for contributor_type in contributor_types:
                 #do not display these visualizations since drive-by's do not have second contributions, and the second contribution of a repeat contributor is the same thing as the all the second time contributors
@@ -815,18 +816,15 @@ def create_routes(server):
     @server.app.route('/{}/contributor_reports/returning_contributors_pie_chart/'.format(server.api_version), methods=["GET"])
     def returning_contributor_pie_chart():
 
+        now = datetime.datetime.now()
 
         repo_id = int(request.args.get('repo_id'))
-        start_date = str(request.args.get('start_date'))
-        end_date = str(request.args.get('end_date'))
+        start_date = str(request.args.get('start_date', "{}-01-01".format(now.year-1)))
+        end_date = str(request.args.get('end_date', "{}-{}-{}".format(now.year, now.month, now.day)))
 
-        required_contributions = int(request.args.get('required_contributions'))
-        required_time = int(request.args.get('required_time'))
-        return_json = request.args.get('return_json')
-
-        repo_id = int(repo_id)
-        required_time = int(required_time)
-        required_contributions = int(required_contributions)
+        required_contributions = int(request.args.get('required_contributions', 4))
+        required_time = int(request.args.get('required_time', 365))
+        return_json = request.args.get('return_json', "false")
 
         input_df = new_contibutor_data_collection(repo_id=repo_id, required_contributions=required_contributions)
         
@@ -987,14 +985,17 @@ def create_routes(server):
     @server.app.route('/{}/contributor_reports/returning_contributors_stacked_bar/'.format(server.api_version), methods=["GET"])
     def returning_contributor_stacked_bar():
 
-        repo_id = int(request.args.get('repo_id'))
-        start_date = str(request.args.get('start_date'))
-        end_date = str(request.args.get('end_date'))
+        now = datetime.datetime.now()
 
-        group_by = str(request.args.get('group_by'))
-        required_contributions = int(request.args.get('required_contributions'))
-        required_time = int(request.args.get('required_time'))
-        return_json = request.args.get('return_json')
+        repo_id = int(request.args.get('repo_id'))
+        start_date = str(request.args.get('start_date', "{}-01-01".format(now.year-1)))
+        end_date = str(request.args.get('end_date', "{}-{}-{}".format(now.year, now.month, now.day)))
+
+        group_by = str(request.args.get('group_by', "quarter"))
+        required_contributions = int(request.args.get('required_contributions', 4))
+        required_time = int(request.args.get('required_time', 365))
+        return_json = request.args.get('return_json', "false")
+
 
         input_df = new_contibutor_data_collection(repo_id=repo_id, required_contributions=required_contributions)
         months_df = months_data_collection(start_date=start_date, end_date=end_date)
@@ -1086,9 +1087,7 @@ def create_routes(server):
                 group_by_format_string = "Month"
 
             #modifies the driver_df[date_column] to be a string with year and month, then finds all the unique values  
-            print("1073")
             data['dates'] = np.unique(np.datetime_as_string(driver_df[date_column], unit = 'M'))
-            print("1075")
             data['drive_by_counts'] = pd.concat([driver_df.loc[driver_df['type'] == 'drive_by'], months_df]).groupby(date_column).sum().reset_index()['new_contributors']
             data['repeat_counts'] = pd.concat([driver_df.loc[driver_df['type'] == 'repeat'], months_df]).groupby(date_column).sum().reset_index()['new_contributors']
 
@@ -1100,7 +1099,7 @@ def create_routes(server):
 
             #font size of drive by and repeat labels
             label_text_font_size = "13pt"
-        print("1087")
+
         data_source = {'Dates' : data['dates'],
                 'Drive By'     : data['drive_by_counts'],
                 'Repeat'       : data['repeat_counts'],
@@ -1120,7 +1119,7 @@ def create_routes(server):
             plot_width = 46 * len(data['total_counts']) + 210
         else:
             plot_width = 780
-        print("1107")
+       
         p = figure(x_range=data['dates'], plot_height=500, plot_width = plot_width, title="{}: Drive By and Repeat Contributor Counts per {}".format(repo_dict[repo_id], group_by_format_string), 
                    toolbar_location=None, y_range=(0, max(total_counts)* 1.15), margin = (0, 0, 0, 0))
         
