@@ -22,7 +22,7 @@ from bokeh.transform import dodge, factor_cmap, transform
 
 def create_routes(server):
 
-    def pull_request_data_collection(repo_id, start_date, end_date, df_type, slow_20):
+    def pull_request_data_collection(repo_id, start_date, end_date):
 
         pr_query = salc.sql.text(f"""
                     SELECT
@@ -243,32 +243,8 @@ def create_routes(server):
         pr_slow20_not_merged = filter_20_per_slowest(pr_not_merged)
         pr_slow20_all = filter_20_per_slowest(pr_all)
 
+        return pr_all, pr_open, pr_closed, pr_merged, pr_not_merged, pr_slow20_all, pr_slow20_open, pr_slow20_closed, pr_slow20_merged, pr_slow20_not_merged
 
-        if slow_20 == True:
-
-            if df_type == 'pr_open':
-                return pr_slow20_open
-            elif df_type == 'pr_closed':
-                return pr_slow20_closed
-            elif df_type == 'pr_merged':
-                return pr_slow20_merged
-            elif df_type == 'pr_not_merged':
-                return pr_slow20_not_merged
-            elif df_type == 'pr_all':
-                return pr_slow20_all
-
-        elif(slow_20 == False):
-
-            if df_type == 'pr_open':
-                return pr_open
-            elif df_type == 'pr_closed':
-                return pr_closed
-            elif df_type == 'pr_merged':
-                return pr_merged
-            elif df_type == 'pr_not_merged':
-                return pr_not_merged
-            elif df_type == 'pr_all':
-                return pr_all
 
     def remove_outliers(input_df, field, num_outliers_repo_map):
         df_no_outliers = input_df.copy()
@@ -330,7 +306,13 @@ def create_routes(server):
         end_date = str(request.args.get('end_date', "{}-{}-{}".format(now.year, now.month, now.day)))
         return_json = request.args.get('return_json', "false")
 
-        input_df = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, slow_20=False, df_type='pr_all')
+        #dict of df types, and their locaiton in the tuple that the function pull_request_data_collection returns
+        df_type = {"pr_all": 0, "pr_open": 1, "pr_closed": 2, "pr_merged": 3, "pr_not_merged": 4, "pr_slow20_all": 5,
+                "pr_slow20_open": 6, "pr_slow20_closed": 7, "pr_slow20_merged": 8, "pr_slow20_not_merged": 9}
+
+        df_tuple = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date)
+
+        input_df = df_tuple[df_type["pr_all"]]
 
         x_axis = 'closed_year'
         y_axis = 'num_commits'
@@ -454,7 +436,14 @@ def create_routes(server):
         end_date = str(request.args.get('end_date', "{}-{}-{}".format(now.year, now.month, now.day)))
         return_json = request.args.get('return_json', "false")
 
-        input_df = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, slow_20=False, df_type='pr_closed')
+
+        #dict of df types, and their locaiton in the tuple that the function pull_request_data_collection returns
+        df_type = {"pr_all": 0, "pr_open": 1, "pr_closed": 2, "pr_merged": 3, "pr_not_merged": 4, "pr_slow20_all": 5,
+                "pr_slow20_open": 6, "pr_slow20_closed": 7, "pr_slow20_merged": 8, "pr_slow20_not_merged": 9}
+
+        df_tuple = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date)
+
+        input_df = df_tuple[df_type["pr_closed"]]
 
         group_by = 'merged_flag'
         x_axis = 'comment_count'
@@ -598,9 +587,16 @@ def create_routes(server):
         end_date = str(request.args.get('end_date', "{}-{}-{}".format(now.year, now.month, now.day)))
         return_json = request.args.get('return_json', "false")
 
-        pr_closed = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, slow_20=False, df_type='pr_closed')
-        pr_slow20_not_merged = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, slow_20=True, df_type='pr_not_merged')
-        pr_slow20_merged = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, slow_20=True, df_type='pr_merged')
+        #dict of df types, and their locaiton in the tuple that the function pull_request_data_collection returns
+        df_type = {"pr_all": 0, "pr_open": 1, "pr_closed": 2, "pr_merged": 3, "pr_not_merged": 4, "pr_slow20_all": 5,
+                "pr_slow20_open": 6, "pr_slow20_closed": 7, "pr_slow20_merged": 8, "pr_slow20_not_merged": 9}
+
+        df_tuple = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date)
+
+        pr_closed = df_tuple[df_type["pr_closed"]]
+        pr_slow20_not_merged = ddf_tuple[df_type["pr_slow20_not_merged"]]
+        pr_slow20_merged = df_tuple[df_type["pr_slow20_merged"]]
+
 
         x_axis='closed_year'
         description='All Closed'
@@ -759,7 +755,14 @@ def create_routes(server):
         end_date = str(request.args.get('end_date', "{}-{}-{}".format(now.year, now.month, now.day)))
         return_json = request.args.get('return_json', "false")
 
-        input_df = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, slow_20=False, df_type='pr_closed')   
+
+        #dict of df types, and their locaiton in the tuple that the function pull_request_data_collection returns
+        df_type = {"pr_all": 0, "pr_open": 1, "pr_closed": 2, "pr_merged": 3, "pr_not_merged": 4, "pr_slow20_all": 5,
+                "pr_slow20_open": 6, "pr_slow20_closed": 7, "pr_slow20_merged": 8, "pr_slow20_not_merged": 9}
+
+        df_tuple = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date)
+
+        input_df = df_tuple[df_type["pr_closed"]]
 
         time_unit='days'
         x_max = 95
@@ -995,10 +998,17 @@ def create_routes(server):
         end_date = str(request.args.get('end_date', "{}-{}-{}".format(now.year, now.month, now.day)))
         return_json = request.args.get('return_json', "false")
 
-        pr_closed = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, slow_20=False, df_type='pr_closed')
-        pr_slow20_not_merged = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, slow_20=True, df_type='pr_not_merged')
-        pr_slow20_merged = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, slow_20=True, df_type='pr_merged')
-        pr_all = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, slow_20=False, df_type='pr_all')
+        #dict of df types, and their locaiton in the tuple that the function pull_request_data_collection returns
+        df_type = {"pr_all": 0, "pr_open": 1, "pr_closed": 2, "pr_merged": 3, "pr_not_merged": 4, "pr_slow20_all": 5,
+                "pr_slow20_open": 6, "pr_slow20_closed": 7, "pr_slow20_merged": 8, "pr_slow20_not_merged": 9}
+
+        df_tuple = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date)
+
+        pr_closed = df_tuple[df_type["pr_closed"]]
+        pr_slow20_not_merged = df_tuple[df_type["pr_slow20_not_merged"]]
+        pr_slow20_merged = df_tuple[df_type["pr_slow20_merged"]]
+        pr_all = df_tuple[df_type["pr_all"]]
+
 
         repo_dict = {repo_id : pr_closed.loc[pr_closed['repo_id'] == repo_id].iloc[0]['repo_name']}  
 
@@ -1120,7 +1130,13 @@ def create_routes(server):
         return_json = request.args.get('return_json', "false")
         remove_outliers = int(request.args.get('remove_outliers', 10))
 
-        pr_closed = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, slow_20=False, df_type='pr_closed')
+        #dict of df types, and their locaiton in the tuple that the function pull_request_data_collection returns
+        df_type = {"pr_all": 0, "pr_open": 1, "pr_closed": 2, "pr_merged": 3, "pr_not_merged": 4, "pr_slow20_all": 5,
+                "pr_slow20_open": 6, "pr_slow20_closed": 7, "pr_slow20_merged": 8, "pr_slow20_not_merged": 9}
+
+        df_tuple = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date)
+
+        pr_closed = df_tuple[df_type["pr_closed"]]
        
         repo_dict = {repo_id : pr_closed.loc[pr_closed['repo_id'] == repo_id].iloc[0]['repo_name']}  
    
@@ -1236,7 +1252,13 @@ def create_routes(server):
         return_json = request.args.get('return_json', "false")
         include_comments = str(request.args.get('include_comments', True))
 
-        pr_closed = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, slow_20=False, df_type='pr_closed')
+        #dict of df types, and their locaiton in the tuple that the function pull_request_data_collection returns
+        df_type = {"pr_all": 0, "pr_open": 1, "pr_closed": 2, "pr_merged": 3, "pr_not_merged": 4, "pr_slow20_all": 5,
+                "pr_slow20_open": 6, "pr_slow20_closed": 7, "pr_slow20_merged": 8, "pr_slow20_not_merged": 9}
+
+        df_tuple = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date)
+
+        pr_closed = df_tuple[df_type["pr_closed"]]
        
         repo_dict = {repo_id : pr_closed.loc[pr_closed['repo_id'] == repo_id].iloc[0]['repo_name']} 
 
@@ -1390,8 +1412,15 @@ def create_routes(server):
         return_json = request.args.get('return_json', "false")
         remove_outliers = int(request.args.get('remove_outliers', 10))
 
-        pr_closed = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date, slow_20=False, df_type='pr_closed')
-       
+        #dict of df types, and their locaiton in the tuple that the function pull_request_data_collection returns
+        df_type = {"pr_all": 0, "pr_open": 1, "pr_closed": 2, "pr_merged": 3, "pr_not_merged": 4, "pr_slow20_all": 5,
+                "pr_slow20_open": 6, "pr_slow20_closed": 7, "pr_slow20_merged": 8, "pr_slow20_not_merged": 9}
+
+        df_tuple = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date)
+
+        pr_closed = df_tuple[df_type["pr_closed"]]
+
+               
         repo_dict = {repo_id : pr_closed.loc[pr_closed['repo_id'] == repo_id].iloc[0]['repo_name']} 
 
         x_axis = 'repo_name'
