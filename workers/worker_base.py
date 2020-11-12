@@ -122,11 +122,11 @@ class Worker():
         return f"{self.config['id']}"
 
     def initialize_logging(self):
-        self.config["log_level"] = self.config["log_level"].upper()
-        if self.config["debug"]:
-            self.config["log_level"] = "DEBUG"
+        self.config['log_level'] = self.config['log_level'].upper()
+        if self.config['debug']:
+            self.config['log_level'] = "DEBUG"
 
-        if self.config["verbose"]:
+        if self.config['verbose']:
             format_string = AugurLogging.verbose_format_string
         else:
             format_string = AugurLogging.simple_format_string
@@ -143,35 +143,35 @@ class Worker():
         collection_logfile = logfile_dir + '{}_{}_collection.log'.format(self.worker_type, self.config["port"])
         collection_errorfile = logfile_dir + '{}_{}_collection.err'.format(self.worker_type, self.config["port"])
         self.config.update({
-            "logfile_dir": logfile_dir,
-            "server_logfile": server_logfile,
-            "collection_logfile": collection_logfile,
-            "collection_errorfile": collection_errorfile
+            'logfile_dir': logfile_dir,
+            'server_logfile': server_logfile,
+            'collection_logfile': collection_logfile,
+            'collection_errorfile': collection_errorfile
         })
 
-        collection_file_handler = FileHandler(filename=self.config["collection_logfile"], mode="a")
+        collection_file_handler = FileHandler(filename=self.config['collection_logfile'], mode="a")
         collection_file_handler.setFormatter(formatter)
-        collection_file_handler.setLevel(self.config["log_level"])
+        collection_file_handler.setLevel(self.config['log_level'])
 
-        collection_errorfile_handler = FileHandler(filename=self.config["collection_errorfile"], mode="a")
+        collection_errorfile_handler = FileHandler(filename=self.config['collection_errorfile'], mode="a")
         collection_errorfile_handler.setFormatter(error_formatter)
         collection_errorfile_handler.setLevel(logging.WARNING)
 
-        logger = logging.getLogger(self.config["id"])
+        logger = logging.getLogger(self.config['id'])
         logger.handlers = []
         logger.addHandler(collection_file_handler)
         logger.addHandler(collection_errorfile_handler)
-        logger.setLevel(self.config["log_level"])
+        logger.setLevel(self.config['log_level'])
         logger.propagate = False
 
-        if self.config["debug"]:
-            self.config["log_level"] = "DEBUG"
+        if self.config['debug']:
+            self.config['log_level'] = "DEBUG"
             console_handler = StreamHandler()
             console_handler.setFormatter(formatter)
-            console_handler.setLevel(self.config["log_level"])
+            console_handler.setLevel(self.config['log_level'])
             logger.addHandler(console_handler)
 
-        if self.config["quiet"]:
+        if self.config['quiet']:
             logger.disabled = True
 
         self.logger = logger
@@ -184,11 +184,11 @@ class Worker():
         # Create an sqlalchemy engine for both database schemas
         self.logger.info("Making database connections")
 
-        db_schema = 'augur_data'
+        db_schema = "augur_data"
         self.db = s.create_engine(DB_STR,  poolclass=s.pool.NullPool,
             connect_args={'options': '-csearch_path={}'.format(db_schema)})
 
-        helper_schema = 'augur_operations'
+        helper_schema = "augur_operations"
         self.helper_db = s.create_engine(DB_STR, poolclass=s.pool.NullPool,
             connect_args={'options': '-csearch_path={}'.format(helper_schema)})
 
@@ -210,10 +210,7 @@ class Worker():
             setattr(self, '{}_table'.format(table), Base.classes[table].__table__)
 
         for table in self.operations_tables:
-            try:
-                setattr(self, '{}_table'.format(table), HelperBase.classes[table].__table__)
-            except Exception as e:
-                self.logger.error("Error setting attribute for table: {} : {}".format(table, e))
+            setattr(self, '{}_table'.format(table), HelperBase.classes[table].__table__)
 
         # Increment so we are ready to insert the 'next one' of each of these most recent ids
         self.history_id = self.get_max_id('worker_history', 'history_id', operations_table=True) + 1

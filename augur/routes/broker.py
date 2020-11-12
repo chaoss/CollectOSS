@@ -16,11 +16,10 @@ logger = logging.getLogger(__name__)
 def worker_start(worker_name=None):
     process = subprocess.Popen("cd workers/{} && {}_start".format(worker_name,worker_name), shell=True)
 
-def get_compatible_workers(model, given):
+def get_compatible_workers(server, model, given):
     """ Returns dictionary of compatible workers, key is worker type (ie pull_request_worker), value
         is task load and worker id
-    """
-    
+    """    
     compatible_workers = {}
 
     # For every worker the broker is aware of that can fill the task's given and model
@@ -28,7 +27,7 @@ def get_compatible_workers(model, given):
         if type(server.broker[worker_id]._getvalue()) != dict:
             continue
 
-        # logger.debug("Considering compatible worker: {}\n".format(worker_id))
+        logger.debug(f"Considering compatible worker: {worker_id}\n")
 
         # Group workers by type (all gh workers grouped together etc)
         worker_type = worker_id.split('.')[len(worker_id.split('.')) - 2]
@@ -39,15 +38,15 @@ def get_compatible_workers(model, given):
         # Make worker that is prioritized the one with the smallest sum of task queues
         if ( len(server.broker[worker_id]['user_queue']) + len(server.broker[worker_id]['maintain_queue']) ) \
                 < min( [compatible_workers[w]['task_load'] for w in compatible_workers.keys() if worker_type == w] ):
-            # logger.debug("Worker id: {} has the smallest task load encountered so far: {}\n".format(worker_id, len(server.broker[worker_id]['user_queue']) + len(server.broker[worker_id]['maintain_queue'])))
+            logger.debug(f"Worker id: {worker_id} has the smallest task load encountered so far: {len(server.broker[worker_id]['user_queue']) + len(server.broker[worker_id]['maintain_queue'])}\n")
             compatible_workers[worker_type]['task_load'] = len(server.broker[worker_id]['user_queue']) + len(server.broker[worker_id]['maintain_queue'])
             compatible_workers[worker_type]['worker_id'] = worker_id
 
+    logger.debug(f"Compatible workers found: {compatible_workers}\n")
     return compatible_workers
 
 # def check_model_queues(worker_proxy):
 #     compatible_workers = get_compatible_workers(model, given)
-
 
 def send_task(worker_proxy):
 
@@ -112,9 +111,11 @@ def create_routes(server):
         logger.info(f"Broker recieved a new user task ... checking for compatible workers for given: {given} and model(s): " + str(model) + "\n")
 
         logger.debug("Broker's list of all workers: {}\n".format(server.broker._getvalue().keys()))
-
         worker_found = False
-        compatible_workers = get_compatible_workers(model, given)
+        try:
+            compatible_workers = get_compatible_workers(server, model, given)
+        except Exception as e:
+            logger.debug(f"Error occurred when retrieving compatible workers: {e}")
 
         for worker_type in compatible_workers.keys():
             worker_id = compatible_workers[worker_type]['worker_id']
