@@ -48,11 +48,15 @@ We use Vue.js as our frontend web framework, and ``npm`` as our package manager.
 
 Visualiation API Calls
 ----------------------
-If you want to use the new Augur API Calls that generate downloadable graphics developed in the https://github.com/chaoss/augur-community-reports repository you need to install the Chromium Chromedriver at the system level. 
+On Ubuntu and other Linux Flavors: If you want to use the new Augur API Calls that generate downloadable graphics developed in the https://github.com/chaoss/augur-community-reports repository you need to install the Chromium Chromedriver at the system level. 
 
 -  `sudo apt install chromium-chromedriver`
 
 This dependency exists because the Bokeh libraries we use for these APIs require a web browser engine. 
+
+For Mac OSX you can use: 
+
+-  `brew install chromedriver`
 
 =================
 Installing Augur
