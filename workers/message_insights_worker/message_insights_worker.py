@@ -90,21 +90,23 @@ class MessageInsightsWorker(Worker):
         if not self.full_train:
             
             # Fetch the timestamp of last analyzed message for the repo
-            past_SQL = s.sql.text("""
-                select message_analysis.msg_id, message.msg_timestamp
+            past_SQL = s.sql.text(
+                """
+                SELECT message_analysis.msg_id, message.msg_timestamp
                 from augur_data.message_analysis 
                 inner join augur_data.message on message.msg_id = message_analysis.msg_id
                 inner join augur_data.pull_request_message_ref on message.msg_id = pull_request_message_ref.msg_id 
                 inner join augur_data.pull_requests on pull_request_message_ref.pull_request_id = pull_requests.pull_request_id
-                where repo_id = :repo_id
+                WHERE repo_id = :repo_id
                 UNION
-                select message_analysis.msg_id, message.msg_timestamp
+                SELECT message_analysis.msg_id, message.msg_timestamp
                 from augur_data.message_analysis
                 inner join augur_data.message on message.msg_id = message_analysis.msg_id
                 inner join augur_data.issue_message_ref on message.msg_id = issue_message_ref.msg_id 
                 inner join augur_data.issues on issue_message_ref.issue_id = issues.issue_id
-                where repo_id = :repo_id
-                """)
+                WHERE repo_id = :repo_id
+                """
+                )
 
             df_past = pd.read_sql_query(past_SQL, self.db, params={'repo_id': repo_id})
             df_past['msg_timestamp'] = pd.to_datetime(df_past['msg_timestamp'])
@@ -119,7 +121,7 @@ class MessageInsightsWorker(Worker):
         
             # Fetch only recent messages
             join_SQL = s.sql.text("""
-                select message.msg_id, msg_timestamp,  msg_text from augur_data.message
+                SELECT message.msg_id, msg_timestamp,  msg_text from augur_data.message
                 left outer join augur_data.pull_request_message_ref on message.msg_id = pull_request_message_ref.msg_id 
                 left outer join augur_data.pull_requests on pull_request_message_ref.pull_request_id = pull_requests.pull_request_id
                 where repo_id = :repo_id and msg_timestamp > :begin_date
@@ -133,12 +135,12 @@ class MessageInsightsWorker(Worker):
 
             # Fetch all messages
             join_SQL = s.sql.text("""
-                select message.msg_id, msg_timestamp,  msg_text from augur_data.message
+                SELECT message.msg_id, msg_timestamp,  msg_text from augur_data.message
                 left outer join augur_data.pull_request_message_ref on message.msg_id = pull_request_message_ref.msg_id 
                 left outer join augur_data.pull_requests on pull_request_message_ref.pull_request_id = pull_requests.pull_request_id
                 where repo_id = :repo_id
                 UNION
-                select message.msg_id, msg_timestamp, msg_text from augur_data.message
+                SELECT message.msg_id, msg_timestamp, msg_text from augur_data.message
                 left outer join augur_data.issue_message_ref on message.msg_id = issue_message_ref.msg_id 
                 left outer join augur_data.issues on issue_message_ref.issue_id = issues.issue_id
                 where repo_id = :repo_id""")
