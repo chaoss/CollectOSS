@@ -45,6 +45,12 @@ class MessageInsightsWorker(Worker):
         # Do any additional configuration after the general initialization has been run
         self.config.update(config)
 
+        # SPG: This config call above is not like the others ... Trying this: 
+        self.config.update({ 
+            'api_host': self.augur_config.get_value('Server', 'host'),
+            'api_port': self.augur_config.get_value('Server', 'port')
+        })
+        
         # Define data collection info
         self.tool_source = 'Message Insights Worker'
         self.tool_version = '0.0.0'
