@@ -44,6 +44,7 @@ class ExperienceWorker(Worker):
         # If you need to do some preliminary interactions with the database, these MUST go
         # in the model method. The database connection is instantiated only inside of each 
         # data collection process
+        self.file_extension_language_map = None
 
         # Define data collection info
         self.tool_source = 'Fake Template Worker'
@@ -109,6 +110,21 @@ class ExperienceWorker(Worker):
         else:
             self.oauths = [{'oauth_id': 0}]
 
+    def get_language_from_extension(self, extension):
+        if self.file_extension_language_map:
+            return self.file_extension_language_map[extension]
+        
+        extension_language_sql = s.sql.text("""
+            SELECT * FROM file_extension_language_map
+        """)
+
+        extension_language = pd.read_sql(cntrb_extensions_sql, self.db, params={})
+        self.file_extension_language_map = {
+            extension: language for extension, language in \
+                zip(extension_language['file_extension'], extension_language['language'])
+        }
+        return self.get_language_from_extension(extension)
+
     def contributor_language_experience_model(self, task, repo_id):
         """ Collects data regarding contributors' experiences with different languages
 
@@ -127,7 +143,41 @@ class ExperienceWorker(Worker):
 
         """
 
-        
+        cntrb_extensions_sql = s.sql.text("""
+            SELECT cntrb_id, cntrb_login, extension, additions, deletions, additions + deletions as total_changed, 
+                (additions + deletions) / SUM(additions + deletions) OVER (PARTITION BY cntrb_id) AS percentage,
+                earliest_experience_time, latest_experience_time, commit_count, file_count
+            FROM 
+            (
+                SELECT cntrb_id, cntrb_login, reverse(SPLIT_PART(reverse(pr_file_path), '.', 1)) AS extension, 
+                    SUM(pr_file_additions) AS additions, SUM(pr_file_deletions) AS deletions, 
+                    MIN(pr_cmt_date) as earliest_experience_time, MAX(pr_cmt_date) as latest_experience_time,
+                    COUNT(DISTINCT pr_cmt_sha) as commit_count, COUNT(DISTINCT file_path) as file_count
+                FROM augur_data.contributors LEFT OUTER JOIN augur_data.pull_requests ON 
+                    pr_augur_contributor_id = cntrb_id LEFT OUTER JOIN augur_data.pull_request_files ON 
+                    pull_requests.pull_request_id = pull_request_files.pull_request_id LEFT OUTER JOIN 
+                    augur_data.pull_request_commits ON
+                    pull_requests.pull_request_id = pull_request_commits.pull_request_id 
+                WHERE pr_file_additions IS NOT NULL
+                GROUP BY cntrb_id, extension
+                ORDER BY cntrb_id DESC
+            ) A
+            GROUP BY cntrb_id, cntrb_login, extension, additions, deletions, 
+                earliest_experience_time, latest_experience_time, commit_count, file_count
+            ORDER BY cntrb_id, percentage DESC
+        """)
+
+        cntrb_extensions = pd.read_sql(cntrb_extensions_sql, self.db, params={})
+
+        cntrb_language_row = {
+            'augur_cntrb_id': cntrb_extensions['cntrb_id'],
+            'language': self.get_language_from_extension(cntrb_extensions['extension']),
+            'earliest_commit_time': cntrb_extensions['earliest_experience_time'],
+            'latest_commit_time': cntrb_extensions['latest_experience_time'],
+            'commit_count': cntrb_extensions['commit_count'],
+            'file_count':
+
+        }
 
         # Register this task as completed.
         #   This is a method of the worker class that is required to be called upon completion
