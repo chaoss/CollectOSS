@@ -84,4 +84,29 @@ CREATE INDEX "login-contributor-idx" ON "augur_data"."contributors" USING btree 
   "cntrb_login" COLLATE "pg_catalog"."default" "pg_catalog"."text_ops" ASC NULLS LAST
 );
 
+
+------query two optimization 
+
+CREATE INDEX "cmt-author-date-idx2" ON "augur_data"."commits" USING btree (
+  "cmt_author_date"
+);
+
+
+CREATE INDEX "cmt-committer-date-idx3" ON "augur_data"."commits" USING btree (
+  "cmt_committer_date"
+);
+
+CREATE INDEX "cmt_cmmter-name-idx4" ON "augur_data"."commits" USING btree (
+  "cmt_author_name"
+);
+
+CREATE INDEX "cmt_author-name-idx5" ON "augur_data"."commits" USING btree (
+  "cmt_committer_name"
+);
+
+
+
+------end query two optimization 
+
+
 update "augur_operations"."augur_settings" set value = 28 where setting = 'augur_data_version'; 

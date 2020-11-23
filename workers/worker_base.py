@@ -39,6 +39,7 @@ class Worker():
                 'worker_type': self.worker_type,
                 'host': self.augur_config.get_value("Server", "host"),
                 'gh_api_key': self.augur_config.get_value('Database', 'key'),
+                'gitlab_api_key': self.augur_config.get_value('Database', 'gitlab_api_key'),
                 'offline_mode': False
             }
         self.config.update(self.augur_config.get_section("Logging"))
@@ -211,6 +212,7 @@ class Worker():
             self.logger.info(HelperBase.classes.keys())
         except:
             pass
+
         for table in self.operations_tables:
             try:
                 setattr(self, '{}_table'.format(table), HelperBase.classes[table].__table__)
@@ -221,6 +223,7 @@ class Worker():
         self.history_id = self.get_max_id('worker_history', 'history_id', operations_table=True) + 1
 
         # Organize different api keys/oauths available
+        self.logger.info("Initializing API key.")
         if 'gh_api_key' in self.config or 'gitlab_api_key' in self.config:
             self.init_oauths(self.platform)
         else:
@@ -292,6 +295,7 @@ class Worker():
             if not self._queue.empty():
                 message = self._queue.get() # Get the task off our MP queue
             else:
+                self.logger.info("No job found.")
                 break
             self.logger.info("Popped off message: {}\n".format(str(message)))
 
@@ -468,6 +472,7 @@ class Worker():
         if not connected:
             sys.exit('Could not connect to the broker after 5 attempts! Quitting...\n')
 
+    @staticmethod
     def dump_queue(queue):
         """
         Empties all pending items in a queue and returns them in a list.
@@ -671,7 +676,7 @@ class Worker():
     def init_oauths(self, platform="github"):
         self.oauths = []
         self.headers = None
-
+        self.logger.info("Trying initialization.")
         # Make a list of api key in the config combined w keys stored in the database
         # Select endpoint to hit solely to retrieve rate limit information from headers of the response
         # Adjust header keys needed to fetch rate limit information from the API responses
@@ -717,7 +722,6 @@ class Worker():
         elif platform == "gitlab":
             self.headers = {'Authorization': 'Bearer %s' % self.oauths[0]['access_token']}
 
-        self.headers = {'Authorization': 'token %s' % self.oauths[0]['access_token']}
         self.logger.info("OAuth initialized")
 
     def paginate(self, url, duplicate_col_map, update_col_map, table, table_pkey, where_clause="", value_update_col_map={}, platform="github"):
@@ -1008,7 +1012,8 @@ class Worker():
                 contributor_compressed = r.json()
 
                 email = repo_contributor['email']
-                if len(contributor_compressed) == 0 or "id" not in contributor_compressed[0]:
+                self.logger.info(contributor_compressed)
+                if len(contributor_compressed) == 0 or type(contributor_compressed) is dict or "id" not in contributor_compressed[0]:
                     continue
 
                 self.logger.info("Fetching for user: " + str(contributor_compressed[0]["id"]))

@@ -39,6 +39,7 @@ setup(
         "flask_login",
         "flask",
         "pandas==1.0.5",
+        "numpy<1.19.0,>=1.16.0",
         "requests",
         "flask_cors",
         "flask_wtf",
@@ -46,7 +47,9 @@ setup(
         "click",
         "psutil",
         "gunicorn",
-        "six>=1.14.0"
+        "six>=1.14.0",
+        "bokeh",
+        "selenium"
     ],
     extras_require={
         "dev": [

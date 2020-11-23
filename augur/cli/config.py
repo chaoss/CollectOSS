@@ -95,6 +95,23 @@ def init(db_name, db_host, db_user, db_port, db_password, github_api_key, facade
     except Exception as e:
         logger.error("Error writing augur.config.json " + str(e))
 
+@cli.command('init-frontend')
+@initialize_logging
+def init_frontend():
+    """
+    Validates an augur.config.json file
+    """
+    config = {}
+    config['Frontend'] = default_config['Frontend']
+    config['Server'] = default_config['Server']
+    config_path = ROOT_AUGUR_DIRECTORY + '/frontend/frontend.config.json'
+    try:
+        with open(os.path.abspath(config_path), 'w') as f:
+            json.dump(config, f, indent=4)
+            logger.info('Config written to ' + config_path)
+    except Exception as e:
+        logger.error("Error writing frontend.config.json " + str(e))
+
 @cli.command('validate')
 @initialize_logging
 def validate():
