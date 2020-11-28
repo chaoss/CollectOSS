@@ -1,6 +1,6 @@
 #SPDX-License-Identifier: MIT
 """ Helper methods constant across all workers """
-import requests, datetime, time, traceback, json, os, sys, math, logging, inspect, numpy
+import requests, datetime, time, traceback, json, os, sys, math, logging, inspect, numpy, copy
 from logging import FileHandler, Formatter, StreamHandler
 from multiprocessing import Process, Queue
 import sqlalchemy as s
@@ -357,6 +357,10 @@ class Worker():
         return subject, source
 
     def organize_needed_data(self, new_data, table_values, table_pkey, action_map={}):
+        """
+        """
+
+        self.logger.info("Organizing needed data...\n")
 
         if len(table_values) == 0:
             return new_data, []
@@ -795,8 +799,8 @@ class Worker():
 
     def bulk_insert(self, table, insert=[], update=[], unique_columns=[], update_columns=[]):
         
-        self.logger.info(f"{len(insert)} insertions are needed and {len(update)} "
-            f"updates are needed for {table}\n")
+        self.logger.info(f"Bulk inserting/updating: {len(insert)} insertions are needed and {len(update)} "
+            f"updates are needed for {table}...\n")
 
         update_result = None
         insert_result = None
