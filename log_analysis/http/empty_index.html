@@ -1,0 +1,91 @@
+<html>
+<head>
+<style>
+table {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+  position:absolute;
+  top: 30px;
+}
+
+td, th {
+  border: 1px solid;
+  text-align: left;
+  padding: 8px;
+}
+
+th:nth-child(odd) {
+  background-color: #dddddd;
+}
+
+#error { 
+  color: red;
+  border: black 1px solid;
+}
+</style>
+</head>
+
+<script>
+function selectElement(id, valueToSelect) {
+    let element = document.getElementById(id);
+    element.value = valueToSelect;
+}
+function hideTables() {
+   var ids = ["augur", "gunicorn", "housekeeper", "github_worker", "facade_worker", "linux_badge_worker", "pull_request_worker", "repo_info_worker", "release_worker"];
+   var i;
+   for (i = 0; i < ids.length; i ++) {
+       var elements = document.getElementsByClassName(ids[i]);
+       var j;
+       for (j = 0; j < elements.length; j++) {
+           elements[j].style.visibility="hidden";
+       }
+   }
+}
+function filterTable() {
+    hideTables()
+    var input, filter, table, tr, i;
+    input = document.getElementById("jobs_list");
+    filter = input.value;
+    var elements = document.getElementsByClassName(filter);
+    var slideOpen = true;
+    var initHeight = 0;
+    var previousOffset = 100;
+    for (i = 0; i < elements.length; i++) {
+        elements[i].style.visibility="visible";
+        if(slideOpen) {
+            slideOpen = false;
+            elements[i].style.top = '100px';
+            previousOffset = previousOffset + 60;
+        }
+        else {
+            initHeight = 100 + 60 * i + previousOffset;
+            previousOffset = previousOffset + elements[i].offsetHeight;
+            elements[i].style.top = initHeight + 'px';
+        }
+    }
+}
+</script>
+<h2>Select a worker:</h2>
+<select id="jobs_list" onchange="filterTable()" class='form-control'>
+<option value="none">-- Select --</option>
+<option value="contributor_worker">contributor_worker</option>
+<option value="facade_worker">facade_worker</option>
+<option value="github_worker">github_worker</option>
+<option value="gitlab_issues_worker">gitlab_issues_worker</option>
+<option value="insight_worker">insight_worker</option>
+<option value="linux_badge_worker">linux_badge_worker</option>
+<option value="pull_request_worker">pull_request_worker</option>
+<option value="release_worker">release_worker</option>
+<option value="repo_info_worker">repo_info_worker</option>
+<option value="spdx_worker">spdx_worker</option>
+<option value="template_worker">template_worker</option>
+<option value="value_worker">value_worker</option>
+</select>
+</html>
+
+<html>
+<body onload="hideTables(); selectElement('jobs_list', 'none')">
+
+</body>
+</html>

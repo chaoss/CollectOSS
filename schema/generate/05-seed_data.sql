@@ -117,11 +117,6 @@ INSERT INTO "augur_data"."chaoss_metric_status" VALUES (80, 'experimental', 'lib
 INSERT INTO "augur_data"."chaoss_metric_status" VALUES (81, 'experimental', 'librariesio', 'metric', 'implemented', 'implemented', 'f', '/api/unstable/<owner>/<repo>/dependents', NULL, 'Dependents', 'experimental', '"dependents"', 'Insight Worker', '0.0.1', 'librariesio', '2019-06-20 22:51:25', NULL);
 COMMIT;
 
-BEGIN;
-INSERT INTO "augur_data"."contributor_affiliations"("cntrb_id", "ca_id", "ca_domain", "ca_affiliation", "ca_start_date", "ca_active", "ca_last_modified", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (1, 25152, 'goggins.com', 'goggins', '2016-03-03', 1, '2019-10-29 12:22:25', NULL, NULL, NULL, '2019-10-29 17:22:30');
-COMMIT; 
-
-
 -- SPDX Schema Required Metadata 
 
 
@@ -512,12 +507,7 @@ COMMIT;
 
 
 
--- ----------------------------
--- Records of creators
--- ----------------------------
-BEGIN;
-INSERT INTO "spdx"."creators" VALUES (1, 3, 'dosocs2-0.16.1', '');
-COMMIT;
+
 
 
 
@@ -540,5 +530,10 @@ INSERT INTO "spdx"."annotation_types" VALUES (2, 'OTHER');
 COMMIT;
 
 
-
+-- ----------------------------
+-- Records of creators
+-- ----------------------------
+BEGIN;
+INSERT INTO "spdx"."creators" VALUES (1, 3, 'dosocs2-0.16.1', '');
+COMMIT;
 

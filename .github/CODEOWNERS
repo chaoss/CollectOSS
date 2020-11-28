@@ -1,15 +1,17 @@
 /augur/cli/ @ccarterlandis
-/augur/metrics/ @ccarterlandis
+/augur/metrics/ @ccarterlandis @sgoggins
 /augur/housekeeper/ @gabe-heim
 /augur/server.py @ccarterlandis @gabe-heim
-/augur/application.py @ccarterlandis @gabe-heim
-/augur/routes/ @ccarterlandis @gabe-heim
+/augur/application.py @ccarterlandis @sgoggins @gabe-heim
+/augur/routes/ @ccarterlandis @gabe-heim @sgoggins
 
-/frontend/ @gabe-heim
+/frontend/ @gabe-heim @sgoggins
 
 /schema/ @sgoggins @ccarterlandis
 
-/workers/ @ccarterlandis @gabe-heim
+/schema/generate @sgoggins 
+
+/workers/ @ccarterlandis @gabe-heim @sgoggins
 
 /README.md @sgoggins @ccarterlandis
 /CONTRIBUTING.md @sgoggins @ccarterlandis
@@ -27,4 +29,4 @@
 /Makefile @ccarterlandis
 /tox.ini @ccarterlandis
 *requirements.txt @ccarterlandis
-/setup.py @ccarterlandis
+/setup.py @ccarterlandis @sgoggins

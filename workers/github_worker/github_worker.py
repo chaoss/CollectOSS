@@ -46,10 +46,16 @@ class GitHubWorker(Worker):
         """ Data collection function
         Query the GitHub API for issues
         """
+        # Get max ids so we know where we are in our insertion and to have the current id when inserting FK's
+        self.logger.info("Querying starting ids info...\n")
+
+        self.issue_id_inc = self.get_max_id('issues', 'issue_id')
+
+        self.msg_id_inc = self.get_max_id('message', 'msg_id')
 
         github_url = entry_info['given']['github_url']
 
-        # Contributors are part of this model, and finding all for the repo saves us 
+        # Contributors are part of this model, and finding all for the repo saves us
         #   from having to add them as we discover committers in the issue process
         self.query_github_contributors(entry_info, repo_id)
 
@@ -57,7 +63,7 @@ class GitHubWorker(Worker):
 
         issues_url = f"https://api.github.com/repos/{owner}/{repo}" + \
             "/issues?per_page=100&state=all&page={}"
-        
+
         action_map = {
             'insert': {
                 'source': ['id'],
@@ -69,7 +75,7 @@ class GitHubWorker(Worker):
             }
         }
 
-        source_issues = self.paginate_endpoint(issues_url, action_map=action_map, 
+        source_issues = self.paginate_endpoint(issues_url, action_map=action_map,
             table=self.issues_table, where_clause=self.issues_table.c.repo_id == repo_id)
 
         if len(source_issues['all']) == 0:
@@ -108,8 +114,8 @@ class GitHubWorker(Worker):
 
         if len(source_issues['insert']) > 0 or len(source_issues['update']) > 0:
 
-            issues_insert_result, issues_update_result = self.bulk_insert(self.issues_table, 
-                update=source_issues['update'], unique_columns=action_map['insert']['augur'], 
+            issues_insert_result, issues_update_result = self.bulk_insert(self.issues_table,
+                update=source_issues['update'], unique_columns=action_map['insert']['augur'],
                 insert=issues_insert, update_columns=action_map['update']['augur'])
 
             source_data = source_issues['insert'] + source_issues['update']
@@ -128,7 +134,7 @@ class GitHubWorker(Worker):
         gh_merge_fields = ['id']
         augur_merge_fields = ['gh_issue_id']
 
-        pk_source_issues = self.enrich_data_primary_keys(source_data, self.issues_table, 
+        pk_source_issues = self.enrich_data_primary_keys(source_data, self.issues_table,
             gh_merge_fields, augur_merge_fields)
 
         # Messages/comments
@@ -137,7 +143,7 @@ class GitHubWorker(Worker):
             "/issues/comments?per_page=100&page={}"
 
         # Get contributors that we already have stored
-        #   Set our duplicate and update column map keys (something other than PK) to 
+        #   Set our duplicate and update column map keys (something other than PK) to
         #   check dupicates/needed column updates with
         comment_action_map = {
             'insert': {
@@ -147,8 +153,8 @@ class GitHubWorker(Worker):
         }
 
         # list to hold contributors needing insertion or update
-        issue_comments = self.paginate_endpoint(comments_url, 
-            action_map=comment_action_map, table=self.message_table, 
+        issue_comments = self.paginate_endpoint(comments_url,
+            action_map=comment_action_map, table=self.message_table,
             where_clause=self.message_table.c.msg_id.in_(
                     [msg_row[0] for msg_row in self.db.execute(s.sql.select(
                         [self.issue_message_ref_table.c.msg_id]).where(
@@ -169,14 +175,14 @@ class GitHubWorker(Worker):
             } for comment in issue_comments['insert']
         ]
 
-        self.bulk_insert(self.message_table, insert=issue_comments_insert, 
+        self.bulk_insert(self.message_table, insert=issue_comments_insert,
             unique_columns=comment_action_map['insert']['augur'])
-            
+
         """ ISSUE MESSAGE REF TABLE """
 
-        c_pk_source_comments = self.enrich_data_primary_keys(issue_comments['insert'], 
+        c_pk_source_comments = self.enrich_data_primary_keys(issue_comments['insert'],
             self.message_table, comment_action_map['insert']['source'], comment_action_map['insert']['augur'])
-        both_pk_source_comments = self.enrich_data_primary_keys(c_pk_source_comments, 
+        both_pk_source_comments = self.enrich_data_primary_keys(c_pk_source_comments,
             self.issues_table, ['issue_url'], ['issue_url'])
 
         issue_message_ref_insert = [
@@ -191,17 +197,17 @@ class GitHubWorker(Worker):
             } for comment in both_pk_source_comments
         ]
 
-        self.bulk_insert(self.issue_message_ref_table, insert=issue_message_ref_insert, 
+        self.bulk_insert(self.issue_message_ref_table, insert=issue_message_ref_insert,
             unique_columns=['issue_msg_ref_src_comment_id'])
 
-        # Issue Events          
-    
+        # Issue Events
+
         # Get events ready in case the issue is closed and we need to insert the closer's id
         events_url = f"https://api.github.com/repos/{owner}/{repo}" + \
             "/issues/events?per_page=100&page={}"
 
         # Get events that we already have stored
-        #   Set pseudo key (something other than PK) to 
+        #   Set pseudo key (something other than PK) to
         #   check dupicates with
         event_action_map = {
             'insert': {
@@ -216,7 +222,7 @@ class GitHubWorker(Worker):
                     set(pd.DataFrame(pk_source_issues)['issue_id'])
                 ))
 
-        pk_issue_events = self.enrich_data_primary_keys(issue_events['insert'], 
+        pk_issue_events = self.enrich_data_primary_keys(issue_events['insert'],
             self.issues_table, ['issue.id'], ['gh_issue_id'])
 
         issue_events_insert = [
@@ -235,7 +241,7 @@ class GitHubWorker(Worker):
             } for event in pk_issue_events if event['actor'] is not None
         ]
 
-        self.bulk_insert(self.issue_events_table, insert=issue_events_insert, 
+        self.bulk_insert(self.issue_events_table, insert=issue_events_insert,
             unique_columns=event_action_map['insert']['augur'])
 
         closed_issue_updates = []
@@ -265,13 +271,13 @@ class GitHubWorker(Worker):
             source_assignees = issue['assignees']
             if issue['assignee'] not in source_assignees and issue['assignee'] is not None:
                 source_assignees.append(issue['assignee'])
-            
+
             cols_to_query = self.get_relevant_columns(self.issue_assignees_table, assignee_action_map)
 
             table_values = self.db.execute(s.sql.select(cols_to_query).where(
                 self.issue_assignees_table.c.issue_id == issue['issue_id'])).fetchall()
 
-            source_assignees_insert, _ = self.organize_needed_data(source_assignees, table_values, 
+            source_assignees_insert, _ = self.organize_needed_data(source_assignees, table_values,
                 list(self.issue_assignees_table.primary_key)[0].name, action_map=assignee_action_map)
 
             assignees_insert += [
@@ -287,13 +293,13 @@ class GitHubWorker(Worker):
             ]
 
             # Issue Labels
-            
+
             cols_to_query = self.get_relevant_columns(self.issue_labels_table, label_action_map)
 
             table_values = self.db.execute(s.sql.select(cols_to_query).where(
                 self.issue_labels_table.c.issue_id == issue['issue_id'])).fetchall()
 
-            source_labels_insert, _ = self.organize_needed_data(issue['labels'], table_values, 
+            source_labels_insert, _ = self.organize_needed_data(issue['labels'], table_values,
                 list(self.issue_labels_table.primary_key)[0].name, action_map=label_action_map)
 
             labels_insert += [
@@ -314,9 +320,9 @@ class GitHubWorker(Worker):
             if 'closed_at' in issue:
 
                 events_df = pd.DataFrame(issue_events['insert'])
-                                
+
                 closed_event = events_df.loc[events_df['event'] == 'closed'].tail(1)
-                
+
                 if len(closed_event) == 0:
                     self.logger.info("Warning! We do not have the closing event of this issue stored\n")
                 else:
@@ -328,16 +334,16 @@ class GitHubWorker(Worker):
                     })
 
         # Closed issues, update with closer id
-        self.bulk_insert(self.issues_table, update=closed_issue_updates, unique_columns=['issue_id'], 
+        self.bulk_insert(self.issues_table, update=closed_issue_updates, unique_columns=['issue_id'],
             update_columns=['cntrb_id'])
 
         # Issue assignees insertion
-        self.bulk_insert(self.issue_assignees_table, insert=assignees_insert, 
+        self.bulk_insert(self.issue_assignees_table, insert=assignees_insert,
             unique_columns=assignee_action_map['insert']['augur'])
 
         # Issue labels insertion
-        self.bulk_insert(self.issue_labels_table, insert=labels_insert, 
+        self.bulk_insert(self.issue_labels_table, insert=labels_insert,
             unique_columns=label_action_map['insert']['augur'])
-        
+
         # Register this task as completed
         self.register_task_completion(entry_info, repo_id, 'issues')

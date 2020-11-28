@@ -46,10 +46,10 @@ def test_issues_closed(metrics):
 
 def test_issue_duration(metrics):
     # repo
-    assert metrics.issue_duration(10, 25430).iloc[0]['duration'] == '2 days 08:16:40.000000000'
+    assert metrics.issue_duration(10, 25430).iloc[0]['duration'] == '20 days 03:08:22.000000000'
 
     # repo_group
-    assert metrics.issue_duration(10).iloc[0]['duration'] == '2 days 08:16:40.000000000'
+    assert metrics.issue_duration(10).iloc[0]['duration'] == '20 days 03:08:22.000000000'
 
 def test_issue_participants(metrics):
     # repo
