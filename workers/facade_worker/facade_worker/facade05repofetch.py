@@ -46,14 +46,14 @@ def git_repo_initialize(cfg, repo_group_id=None):
         cfg.update_status('Fetching non-cloned repos')
         cfg.log_activity('Info','Fetching non-cloned repos')
 
-        query = "SELECT repo_id,repo_group_id,repo_git FROM repo WHERE repo_status LIKE 'New%'";
+        query = "SELECT repo_id,repo_group_id,repo_git,repo_path,repo_name FROM repo WHERE repo_status LIKE 'New%'";
         cfg.cursor.execute(query)
 
         new_repos = []
         all_repos = list(cfg.cursor)
 
         for repo in all_repos:
-            if not os.path.isdir(cfg.repo_base_directory + str(repo[0])):
+            if not os.path.isdir(cfg.repo_base_directory + f"{repo[1]}/{repo[3]}{repo[4]}"):
                 new_repos.append(repo)
     else:
         cfg.update_status('Fetching repos with repo group id: {}'.format(repo_group_id))
