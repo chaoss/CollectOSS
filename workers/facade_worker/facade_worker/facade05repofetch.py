@@ -71,7 +71,7 @@ def git_repo_initialize(cfg, repo_group_id=None):
 
         update_repo_log(cfg, row[0],'Cloning')
 
-        git = html.unescape(row[2])
+        git = "https://github.com/" + row[2].split('/')[-2] + '/' + row[2].split('/')[-1] #html.unescape(row[2])
 
         # Strip protocol from remote URL, set a unique path on the filesystem
         if git.find('://',0) > 0:
