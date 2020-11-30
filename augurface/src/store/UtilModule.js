@@ -1,5 +1,5 @@
 // #SPDX-License-Identifier: MIT
-var config = require('../frontend.config.json')
+var configObject = require('../../../frontend.config.json')
 import Vue from 'vue';
 
 // module for utility global state
@@ -13,7 +13,8 @@ export default {
     crudKey: sessionStorage.getItem("__augursessionstorage__crudkey") !== null ? sessionStorage.getItem("__augursessionstorage__crudkey") : '',
     availableEndpoints: [
       'http://localhost:5000/api/unstable',
-      'http://augur.osshealth.io/api/unstable'
+      'http://augur.osshealth.io/api/unstable',
+      'http://augur.coronashelterfun.com:5044/api/unstable'
     ]
   },
   mutations: {
