@@ -53,7 +53,9 @@ def git_repo_initialize(cfg, repo_group_id=None):
         all_repos = list(cfg.cursor)
 
         for repo in all_repos:
+            cfg.log_activity('Info', f'isdir {cfg.repo_base_directory}{repo[1]}/{repo[3]}{repo[4]} ???')
             if not os.path.isdir(cfg.repo_base_directory + f"{repo[1]}/{repo[3]}{repo[4]}"):
+                cfg.log_activity('Info', f'Adding {cfg.repo_base_directory}{repo[1]}/{repo[3]}{repo[4]} to new_repos')
                 new_repos.append(repo)
     else:
         cfg.update_status('Fetching repos with repo group id: {}'.format(repo_group_id))
