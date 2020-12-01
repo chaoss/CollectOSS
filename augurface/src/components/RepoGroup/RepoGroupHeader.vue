@@ -10,8 +10,8 @@
         @click="$emit('dropdownclick')"
         ref="dropdown"
       /> -->
-      <aug-icon-button iconClass="fas fa-arrow-up" v-if="!isCollapsed" @click="$emit('flipCollapse')" :class="{ open: !isCollapsed }" :circular="true" />
-      <aug-icon-button iconClass="fas fa-arrow-down" v-if="isCollapsed" @click="$emit('flipCollapse')" :circular="true" />
+      <aug-icon-button iconClass="fas fa-arrow-up" v-if="!isCollapsed" @click="$emit('flip-collapse')" :class="{ open: !isCollapsed }" :circular="true" />
+      <aug-icon-button iconClass="fas fa-arrow-down" v-if="isCollapsed" @click="$emit('flip-collapse')" :circular="true" />
     </div>
   </div>
 </template>

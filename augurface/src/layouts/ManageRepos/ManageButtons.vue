@@ -34,7 +34,7 @@
       </div>
       <div class="column">
         <!-- collapse repos -->
-        <aug-button text="Collapse All" @click="$emit('collapseAll')" />
+        <aug-button text="Collapse All" @click="$emit('collapse-all')" />
       </div>
     </div>
   </div>

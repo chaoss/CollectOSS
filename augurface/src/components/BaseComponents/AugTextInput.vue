@@ -23,7 +23,7 @@ export default {
   props: ["text", "inputName", "password", "placeholder"],
   watch: {
     value(val) {
-      this.$emit("valueUpdated", val);
+      this.$emit("value-updated", val);
     }
   }
 };
