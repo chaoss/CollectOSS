@@ -1365,23 +1365,23 @@ def create_routes(server):
 
         #create caption plot
         caption_plot = figure(width = plot_width, height=200, margin = (0, 0, 0, 0))
-        caption = "This graph shows the average count of several different event types for closed pull requests per year. It spilits the pull requests into two categories, Merged / Accepted, and Not Merged / Rejected, so it is easy see the differences in activity between the two."
+        caption = "This graph shows the average count of several different event types for closed pull requests per year. It spilits the pull requests into two categories, Merged / Accepted, and Not Merged / Rejected, so the similarities and differences are clear."
 
         caption_plot.add_layout(Label(x = 0, y = 380, x_units = 'screen',y_units = 'screen',text='{}'.format(caption),
                         text_font = 'times', text_font_size = '15pt',render_mode='css'))
 
-        caption_plot.outline_line_color = None
+        #caption_plot.outline_line_color = None
         caption_plot.toolbar_location = None
 
         #create title plot
         title_plot = figure(width = plot_width, height=50, margin = (0, 0, 0, 0))
         title = '{}: Average Pull Request Event Types for {} Pull Requests'.format(repo_dict[repo_id], description)
 
-        title_plot.add_layout(Label(x = 450, y = 0, x_units = 'screen', y_units = 'screen', text='{}'.format(title), 
+        title_plot.add_layout(Label(x = 550, y = 0, x_units = 'screen', y_units = 'screen', text='{}'.format(title), 
                                     text_font = 'times', text_font_size = '17px',
                                     text_font_style = 'bold', render_mode='css'))
 
-        title_plot.outline_line_color = None
+        # title_plot.outline_line_color = None
         title_plot.toolbar_location = None
         
 
@@ -1389,7 +1389,7 @@ def create_routes(server):
 
         if return_json == "true":
 
-            var = Response(response=json.dumps(json_item(grid, "average_PR_events_for_closed_PRs")),
+            var = Response(response=json.dumps(json_item(layout, "average_PR_events_for_closed_PRs")),
                 mimetype='application/json',
                 status=200)
 
@@ -1397,7 +1397,7 @@ def create_routes(server):
 
             return var 
 
-        filename = export_png(grid)
+        filename = export_png(layout)
         
         return send_file(filename)
 

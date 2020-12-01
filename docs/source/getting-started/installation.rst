@@ -46,6 +46,20 @@ If you're interested in using our visualizations, you can optionally install the
 
 We use Vue.js as our frontend web framework, and ``npm`` as our package manager.
 
+Visualization API calls
+----------------------
+On Ubuntu and other Linux flavors: if you want to use the new Augur API Calls that generate downloadable graphics developed in the `https://github.com/chaoss/augur-community-reports` repository, you need to install the Chromium ChromeDriver at the system level. This dependency exists because the Bokeh libraries we use for these APIs require a web browser engine. 
+
+.. code-block:: bash
+
+    -  sudo apt install chromium-chromedriver
+
+For Mac OSX you can use: 
+
+.. code-block:: bash
+
+    -  brew install chromedriver
+
 =================
 Installing Augur
 =================
@@ -101,5 +115,13 @@ If you think something went wrong, check the log files in ``logs/``. If you want
 .. note::
 
   If you chose to install Augur's frontend dependencies, you might see a bunch of ``canvas@1.6.x`` and ``canvas-prebuilt@1.6.x`` errors in the installation logs. These are harmless and are caused by a few of our dependencies having *optional* requirements for old versions of these libraries. If they seem to be causing you trouble, feel free to open an `issue <https://github.com/chaoss/augur/issues>`_.
+
+To enable log parsing for errors, you need to install `Elasticsearch <https://www.elastic.co/downloads/elasticsearch>`_ and `Logstash <https://www.elastic.co/downloads/past-releases/logstash-6-8-10>`_ .
+
+.. warning::
+   Please note, that Logstash v7.0 and above has unresolved issues that affect this functionality.
+   In order to use it in the near future, please download v6.8.
+   If you use a package manager, it defaults to v7+, so we recommend downloading `binary <https://www.elastic.co/downloads/past-releases/logstash-6-8-10>`_ .
+   This change is tested with Elasticserach v7.8.0_2 and Logstash v6.8.10.
 
 Once everything is installed, you're ready to `configure your data collection workers <collecting-data.html>`_!

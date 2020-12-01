@@ -49,7 +49,7 @@ setup(
         "gunicorn",
         "six>=1.14.0",
         "bokeh",
-	"selenium"
+        "selenium"
     ],
     extras_require={
         "dev": [
