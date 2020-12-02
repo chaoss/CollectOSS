@@ -1,0 +1,1 @@
+ERROR_MESSAGE ([a-zA-Z\s]{0,}(?i)error.*|\[ERROR\].*|\[INFO\][a-zA-Z\s,']{0,}(?i)(n't\s|\snot\s|re\sno\s|s\sno\s|fail|bad|invalid).*)
