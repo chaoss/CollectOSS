@@ -45,12 +45,6 @@ class MessageInsightsWorker(Worker):
         # Do any additional configuration after the general initialization has been run
         self.config.update(config)
 
-        # SPG: This config call above is not like the others ... Trying this: 
-        self.config.update({ 
-            'api_host': self.augur_config.get_value('Server', 'host'),
-            'api_port': self.augur_config.get_value('Server', 'port')
-        })
-        
         # Define data collection info
         self.tool_source = 'Message Insights Worker'
         self.tool_version = '0.0.0'
@@ -96,23 +90,21 @@ class MessageInsightsWorker(Worker):
         if not self.full_train:
             
             # Fetch the timestamp of last analyzed message for the repo
-            past_SQL = s.sql.text(
-                """
-                SELECT message_analysis.msg_id, message.msg_timestamp
+            past_SQL = s.sql.text("""
+                select message_analysis.msg_id, message.msg_timestamp
                 from augur_data.message_analysis 
                 inner join augur_data.message on message.msg_id = message_analysis.msg_id
                 inner join augur_data.pull_request_message_ref on message.msg_id = pull_request_message_ref.msg_id 
                 inner join augur_data.pull_requests on pull_request_message_ref.pull_request_id = pull_requests.pull_request_id
-                WHERE repo_id = :repo_id
+                where repo_id = :repo_id
                 UNION
-                SELECT message_analysis.msg_id, message.msg_timestamp
+                select message_analysis.msg_id, message.msg_timestamp
                 from augur_data.message_analysis
                 inner join augur_data.message on message.msg_id = message_analysis.msg_id
                 inner join augur_data.issue_message_ref on message.msg_id = issue_message_ref.msg_id 
                 inner join augur_data.issues on issue_message_ref.issue_id = issues.issue_id
-                WHERE repo_id = :repo_id
-                """
-                )
+                where repo_id = :repo_id
+                """)
 
             df_past = pd.read_sql_query(past_SQL, self.db, params={'repo_id': repo_id})
             df_past['msg_timestamp'] = pd.to_datetime(df_past['msg_timestamp'])
@@ -127,7 +119,7 @@ class MessageInsightsWorker(Worker):
         
             # Fetch only recent messages
             join_SQL = s.sql.text("""
-                SELECT message.msg_id, msg_timestamp,  msg_text from augur_data.message
+                select message.msg_id, msg_timestamp,  msg_text from augur_data.message
                 left outer join augur_data.pull_request_message_ref on message.msg_id = pull_request_message_ref.msg_id 
                 left outer join augur_data.pull_requests on pull_request_message_ref.pull_request_id = pull_requests.pull_request_id
                 where repo_id = :repo_id and msg_timestamp > :begin_date
@@ -141,12 +133,12 @@ class MessageInsightsWorker(Worker):
 
             # Fetch all messages
             join_SQL = s.sql.text("""
-                SELECT message.msg_id, msg_timestamp,  msg_text from augur_data.message
+                select message.msg_id, msg_timestamp,  msg_text from augur_data.message
                 left outer join augur_data.pull_request_message_ref on message.msg_id = pull_request_message_ref.msg_id 
                 left outer join augur_data.pull_requests on pull_request_message_ref.pull_request_id = pull_requests.pull_request_id
                 where repo_id = :repo_id
                 UNION
-                SELECT message.msg_id, msg_timestamp, msg_text from augur_data.message
+                select message.msg_id, msg_timestamp, msg_text from augur_data.message
                 left outer join augur_data.issue_message_ref on message.msg_id = issue_message_ref.msg_id 
                 left outer join augur_data.issues on issue_message_ref.issue_id = issues.issue_id
                 where repo_id = :repo_id""")
