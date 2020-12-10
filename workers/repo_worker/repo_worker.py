@@ -65,7 +65,8 @@ class RepoWorker(Worker):
 
         """
           
-        org_url = f"https://api.github.com/organizations?per_page=100&since={datetime.date.today()}"
+        # org_url = f"https://api.github.com/organizations?per_page=100&since={datetime.date.today()}"
+        org_url = "https://api.github.com/organizations?per_page=100&since=9587"
 
         response = requests.get(url=org_url, headers=self.headers)
 
@@ -107,7 +108,7 @@ class RepoWorker(Worker):
             with futures.ThreadPoolExecutor(max_workers=10) as executor:
                 for org in source_orgs:
                     threads.append(executor.submit(retrieve_org_repos, 
-                        org['repos_url'] + "?per_page=40&page={}"))
+                        org['repos_url'] + "?per_page=70&page={}&sort=pushed"))
 
                 gh_merge_fields = ['owner.login']
                 augur_merge_fields = ['rg_name']
@@ -166,7 +167,7 @@ class RepoWorker(Worker):
             self.logger.info("Primary key inserted into the repo table: {}".format(result.inserted_primary_key))
             self.insert_counter += 1
             repo_count += 1
-            if repo_count >= 500:
+            if repo_count >= 2500:
                 break
 
         # self.bulk_insert(self.repo_table, insert=repos_insert)

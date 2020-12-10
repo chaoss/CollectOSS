@@ -326,7 +326,7 @@ class Worker():
                     'must have name of {}_model'.format(message['models'][0]))
                 self.register_task_failure(message, repo_id, e)
                 break
-
+                
             # Model method calls wrapped in try/except so that any unexpected error that occurs can be caught
             #   and worker can move onto the next task without stopping
             try:
@@ -806,9 +806,12 @@ class Worker():
 
         self.logger.info("OAuth initialized")
 
-    def bulk_insert(self, table, insert=[], update=[], unique_columns=[], update_columns=[]):
+    def bulk_insert(self, table, insert=[], update=[], unique_columns=[], update_columns=[], database=None):
         self.logger.info(f"Bulk inserting/updating: {len(insert)} insertions are needed and {len(update)} "
             f"updates are needed for {table}...\n")
+
+        if database == None:
+            database = self.db
 
         update_result = None
         insert_result = None
@@ -818,7 +821,7 @@ class Worker():
             update_start_time = time.time()
             while not success:
                 try:
-                    update_result = self.db.execute(
+                    update_result = database.execute(
                         table.update().where(
                                 eval(' and '.join([f"self.{table}_table.c.{key} == bindparam('b_{key}')" for \
                                     key in unique_columns]))
@@ -841,7 +844,7 @@ class Worker():
             insert_start_time = time.time()
             while not success:
                 try:
-                    insert_result = self.db.execute(
+                    insert_result = database.execute(
                         table.insert(),
                         insert
                     )
