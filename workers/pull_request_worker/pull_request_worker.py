@@ -366,7 +366,7 @@ class GitHubPullRequestWorker(Worker):
         #list to hold pull requests needing insertion
         prs = self.paginate(url, duplicate_col_map, update_col_map, table, table_pkey, 
             where_clause='WHERE repo_id = {}'.format(repo_id),
-            value_update_col_map={'repo_id': 0})
+            value_update_col_map={'pr_augur_contributor_id': float('nan')})
 
         # Discover and remove duplicates before we start inserting
         self.logger.info("Count of pull requests needing update or insertion: " + str(len(prs)) + "\n")
