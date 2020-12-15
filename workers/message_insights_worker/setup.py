@@ -37,7 +37,8 @@ setup(
         'scikit-image',
         'joblib',
         'xgboost==0.90',
-        'bs4'
+        'bs4', 
+        'xlrd'
     ],
     entry_points={
         'console_scripts': [
