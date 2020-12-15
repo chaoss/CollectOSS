@@ -35,7 +35,8 @@ setup(
         'h5py',
         'scikit-image',
         'joblib',
-        'xgboost==0.90'
+        'xgboost==0.90',
+        'bs4'
     ],
     entry_points={
         'console_scripts': [

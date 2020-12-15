@@ -255,10 +255,10 @@ class SentiCR:
         return model
 
     def read_data_from_oracle(self):
-        workbook = open_workbook(os.path.join(train_path,"custom_dataset.xlsx"))
+        workbook = open_workbook(os.path.join(train_path,"custom_dataset.xls"))
         sheet = workbook.sheet_by_index(0)
         oracle_data = []
-        self.logger.info(f"Reading training data from 'train_data/custom_dataset.xlsx'...")
+        self.logger.info(f"Reading training data from 'train_data/custom_dataset.xls'...")
         for cell_num in range(0, sheet.nrows):
             comments = SentimentData(sheet.cell(
                 cell_num, 0).value, sheet.cell(cell_num, 1).value)
