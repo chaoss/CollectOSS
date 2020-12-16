@@ -154,3 +154,7 @@ workers/spdx_worker/dosocs2.conf
 workers/spdx_worker/augur-spdx/
 workers/spdx_worker/ex-raw.txt
 workers/spdx_worker/ex.json
+
+# Model files for machine learning
+workers/message_insights_worker/message_models/*.pkl
+workers/message_instights_worker/message_models/*.h5
