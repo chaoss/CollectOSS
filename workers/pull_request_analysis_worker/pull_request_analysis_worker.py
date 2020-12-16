@@ -152,7 +152,6 @@ class PullRequestAnalysisWorker(Worker):
         df_ctrb = pd.read_sql_query(cntrb_SQL, self.db)
         df_fin1 = pd.merge(df_fin,df_ctrb,left_on='pr_augur_contributor_id', right_on='cntrb_id', how='left')
         df_fin1 = df_fin1.drop(['cntrb_id'],axis=1)
-
         # Dict for persisting user data & fast lookups
         user_info = {}
         df_fin1['usr_past_pr_accept'] = df_fin1['gh_login'].apply(self.fetch_user_info)
@@ -204,7 +203,6 @@ class PullRequestAnalysisWorker(Worker):
         # DEBUG:
         # df.to_csv(f'PRA_{repo_id}.csv',index=False)
 
-        '''
         # Insertion of merge probability to pull_request_analysis table
 
         self.logger.info('Begin PR_analysis data insertion...')
@@ -228,7 +226,6 @@ class PullRequestAnalysisWorker(Worker):
             except Exception as e:
                 self.logger.error(f'Error occurred while storing datapoint {repr(e)}')
                 break
-        '''
 
         self.logger.info('Data insertion completed\n')
 
@@ -237,7 +234,6 @@ class PullRequestAnalysisWorker(Worker):
 
     '''
     Function to fetch GH user info from GitHub APIs: Needs API rate limit
-
     def fetch_user_info(self,uname):
         print(uname)
         if uname in user_info:
