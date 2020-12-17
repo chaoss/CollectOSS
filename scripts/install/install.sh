@@ -48,11 +48,8 @@ read -r -p "Would you like to install required NLTK word lists for machine learn
 case "$response" in
   [yY][eE][sS]|[yY])
     echo "Installing... aritificial intelligence, machine learning. deep learning, and crocheting libraries and wordlists"
-    echo "Please checkout https://www.ravelry.com/account/login while you wait. Sure, you may not knit yet, but you know you want to."
-    sleep 2
     scripts/install/nltk_dictionaries.sh
     echo "Done!"
-    echo "Logs are stored in your home directory under '/usr/local/share, /usr/local/share/nltk-worklists, and in some instances based on operating system, your home directroy'." 
     ;;
   *)
     echo "Skipping NLTK Word Vector dependencies. Please be advised that the machine learning workers, including the clustering worker, discourse worker, messsage_analysis_worker, pull_request_analysis_worker, and the LSTM model of the insight_worker will not function fully without these lists."
