@@ -7,6 +7,8 @@ read -r -p "Would you like to install required NLTK word lists for machine learn
 case "$response" in
   [yY][eE][sS]|[yY])
     echo "Installing..."
+    mkdir ~/nltk_wordlist_installations
+    echo "installing NLK" >> ~/nltk_wordlist_installations/stopwords.log
     python -m nltk.downloader stopwords 
     python -m nltk.downloader punkt                
     python -m nltk.downloader popular 
