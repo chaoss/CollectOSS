@@ -1420,20 +1420,22 @@ def create_routes(server):
 
         pr_closed = df_tuple[df_type["pr_closed"]]
 
-               
-        repo_dict = {repo_id : pr_closed.loc[pr_closed['repo_id'] == repo_id].iloc[0]['repo_name']} 
+        pr_duration_frame = pr_closed.assign(pr_duration=(pr_closed['pr_closed_at'] - pr_closed['pr_created_at']))
+        pr_duration_frame = pr_duration_frame.assign(pr_duration_days = (pr_duration_frame['pr_duration'] / datetime.timedelta(minutes=1))/60/24)
+
+        repo_dict = {repo_id : pr_duration_frame.loc[pr_duration_frame['repo_id'] == repo_id].iloc[0]['repo_name']} 
 
         x_axis = 'repo_name'
         group_by = 'merged_flag'
         y_axis = 'closed_yearmonth'
         description = "All Closed"
-        heat_field = 'days_to_first_response'
+        heat_field = 'pr_duration_days'
         columns = 2
 
 
         red_green_gradient = linear_gradient('#0080FF', '#DC143C', 150)['hex']#32CD32
 
-        driver_df = pr_closed.copy()[['repo_id', y_axis, group_by, x_axis, heat_field]]
+        driver_df = pr_duration_frame.copy()[['repo_id', y_axis, group_by, x_axis, heat_field]]
 
         driver_df[y_axis] = driver_df[y_axis].astype(str)
 
@@ -1447,7 +1449,7 @@ def create_routes(server):
         x_groups = sorted(driver_df[x_axis].unique())
         grouped_x_groups = sorted(driver_df_mean['grouped_x'].unique())
 
-        values = driver_df_mean['days_to_first_response'].values.tolist()
+        values = driver_df_mean['pr_duration_days'].values.tolist()
   
         #removes number of outliers 
         for i in range(0, remove_outliers):
