@@ -30,7 +30,7 @@ class GitLabIssuesWorker(Worker):
         self.tool_source = 'Gitlab API Worker'
         self.tool_version = '0.0.0'
         self.data_source = 'GitLab API'
-        self.platform_id = 25150
+        self.platform_id = 25151
 
 
     def gitlab_issues_model(self, task, repo_id):
