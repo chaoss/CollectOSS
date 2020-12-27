@@ -1,4 +1,3 @@
-#SPDX-License-Identifier: MIT
 import io
 import os
 import re
@@ -12,24 +11,32 @@ def read(filename):
     with io.open(filename, mode="r", encoding='utf-8') as fd:
         return re.sub(text_type(r':[a-z]+:`~?(.*?)`'), text_type(r'``\1``'), fd.read())
 
-# update corresponding information
 setup(
-    name="template_worker",
+    name="pull_request_analysis_worker",
     version="0.0.0",
     url="https://github.com/chaoss/augur",
     license='MIT',
     author="Augur Team",
-    author_email="gabe@gabehe.im",
-    description="Template worker to be used as an example",
+    author_email="akshblr555@gmail.com",
+    description="Pull Request Analysis worker that predicts acceptance of a PR",
     packages=find_packages(),
     install_requires=[
         'flask',
         'requests',
-        'psycopg2-binary'
+        'psycopg2-binary',
+        'sklearn',
+        'nltk',
+        'pandas',
+        'numpy',
+        'gensim',
+        'scipy',
+        'emoji',
+        'joblib',
+        'xgboost==0.90'
     ],
     entry_points={
         'console_scripts': [
-            'template_worker_start=workers.template_worker.runtime:main',
+            'pull_request_analysis_worker_start=workers.pull_request_analysis_worker.runtime:main',
         ],
     },
     classifiers=[

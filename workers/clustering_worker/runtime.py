@@ -1,15 +1,15 @@
-#SPDX-License-Identifier: MIT
 from flask import Flask, jsonify, request, Response
 import click, os, json, requests, logging
-from workers.template_worker.template_worker import TemplateWorker # update corresponding name(s)
+from workers.clustering_worker.clustering_worker import ClusteringWorker
 from workers.util import create_server, WorkerGunicornApplication
+
 
 def main():
     """
     Creates the Flask app and data collection worker, then starts the Gunicorn server
     """
     app = Flask(__name__)
-    app.worker = TemplateWorker() # update corresponding name
+    app.worker = ClusteringWorker()
 
     create_server(app)
     WorkerGunicornApplication(app).run()

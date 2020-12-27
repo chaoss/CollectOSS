@@ -30,3 +30,4 @@ CREATE INDEX CONCURRENTLY  "pr_anal_idx"  ON "augur_data"."pull_request_analysis
 );
 
 update "augur_operations"."augur_settings" set value = 32 where setting = 'augur_data_version'; 
+

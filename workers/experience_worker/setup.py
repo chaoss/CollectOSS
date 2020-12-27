@@ -14,13 +14,13 @@ def read(filename):
 
 # update corresponding information
 setup(
-    name="template_worker",
+    name="experience_worker",
     version="0.0.0",
     url="https://github.com/chaoss/augur",
     license='MIT',
     author="Augur Team",
     author_email="gabe@gabehe.im",
-    description="Template worker to be used as an example",
+    description="Experience worker to analyze and collect contributor and repository experiences with languages and libraries",
     packages=find_packages(),
     install_requires=[
         'flask',
@@ -29,7 +29,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'template_worker_start=workers.template_worker.runtime:main',
+            'experience_worker_start=workers.experience_worker.runtime:main',
         ],
     },
     classifiers=[

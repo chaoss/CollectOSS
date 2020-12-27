@@ -315,19 +315,25 @@ class GitHubPullRequestWorker(Worker):
                 where_clause="where pull_request_id = {}".format(pull_request.pull_request_id))
 
             for pr_commit in pr_commits: # post-pagination, iterate results
-                if pr_commit['flag'] == 'need_insertion': # if non-dupe
-                    pr_commit_row = {
-                        'pull_request_id': pull_request.pull_request_id,
-                        'pr_cmt_sha': pr_commit['sha'],
-                        'pr_cmt_node_id': pr_commit['node_id'],
-                        'pr_cmt_message': pr_commit['commit']['message'],
-                        # 'pr_cmt_comments_url': pr_commit['comments_url'],
-                        'tool_source': self.tool_source,
-                        'tool_version': self.tool_version,
-                        'data_source': 'GitHub API',
-                    }
-                    result = self.db.execute(self.pull_request_commits_table.insert().values(pr_commit_row))
-                    self.logger.info(f"Inserted Pull Request Commit: {result.inserted_primary_key}\n")
+                if pr_commit['flag'] != 'need_insertion': # if non-dupe
+                    continue
+                author = pr_commit['author'] if 'author' in pr_commit else None
+                if author:
+                    author = author['login'] if 'login' in author else None
+                pr_commit_row = {
+                    'pull_request_id': pull_request.pull_request_id,
+                    'pr_cmt_sha': pr_commit['sha'],
+                    'pr_cmt_node_id': pr_commit['node_id'],
+                    'pr_cmt_message': pr_commit['commit']['message'],
+                    'pr_cmt_author_cntrb_id': None if not author else self.find_id_from_login(author),
+                    'pr_cmt_date': pr_commit['commit']['author']['date'],
+                    'pr_cmt_author_email': pr_commit['commit']['author']['email'],
+                    'tool_source': self.tool_source,
+                    'tool_version': self.tool_version,
+                    'data_source': 'GitHub API'
+                }
+                result = self.db.execute(self.pull_request_commits_table.insert().values(pr_commit_row))
+                self.logger.info(f"Inserted Pull Request Commit: {result.inserted_primary_key}\n")
 
         self.register_task_completion(task_info, repo_id, 'pull_request_commits')
 

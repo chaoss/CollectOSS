@@ -129,23 +129,30 @@ default_config = {
                     "model": "pull_request_analysis",
                     "repo_group_id": 0
                 },
+                {
+                    "delay": 10000,
+                    "given":[
+                        "git_url"
+                    ],
+                    "model" : "discourse_analysis",
+                    "repo_group_id" : 0
+                },
+                {
+                    "delay": 10000,
+                    "given": [
+                        "git_url"
+                    ],
+                    "model": "clustering",
+                    "repo_group_id": 0
+                },
+                {
+                    "delay": 10000,
+                    "given": [
+                        "git_url"
+                    ],
+                    "model": "repo_library_experience",
+                    "repo_group_id": 0
 
-	        {
-	    	"delay": 10000,
-		"given":[
-		    "git_url"
-		],
-		"model" : "discourse_analysis",
-		"repo_group_id" : 0
-
-	        },
-	        {
-                "delay": 10000,
-                "given": [
-                    "git_url"
-                ],
-                "model": "clustering",
-                "repo_group_id": 0
                 }
             ]
         },
@@ -216,6 +223,39 @@ default_config = {
             "gitlab_merge_request_worker": {
                 "port": 51200,
                 "switch": 0,
+                "workers": 1
+            },
+            "message_insights_worker": {
+                "port": 51300,
+                "switch": 0,
+                "workers": 1,
+                "insight_days": 30,
+                "models_dir": "message_models"
+            },
+            "pull_request_analysis_worker": {
+                "port": 51400,
+                "switch": 0,
+                "workers": 1,
+                "insight_days": 30
+            },
+            "discourse_analysis_worker":{
+                "port" : 51500,
+                "switch": 0,
+                "workers": 1
+            },
+            "clustering_worker": {
+                "port": 51600,
+                "switch": 0,
+                "workers": 1,
+                "max_df" : 0.9,
+                "max_features" : 1000,
+                "min_df": 0.1,
+                "num_clusters" : 4
+            },
+            "library_experience_worker": {
+                "port": 53000,
+                "switch": 0,
+
                 "workers": 1
             },
             "message_insights_worker": {

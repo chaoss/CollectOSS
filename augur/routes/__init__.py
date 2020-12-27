@@ -32,3 +32,5 @@ def create_routes(server):
         if hasattr(obj, 'is_metric') == True:
             if obj.metadata['type'] == "standard":
                 server.add_standard_metric(obj, obj.metadata['endpoint'])
+            if obj.metadata['type'] == "toss":
+                server.add_toss_metric(obj, obj.metadata['endpoint'])

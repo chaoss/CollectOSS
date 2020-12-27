@@ -314,6 +314,7 @@ def create_routes(server):
 
         input_df = df_tuple[df_type["pr_all"]]
 
+
         if(len(input_df) == 0):
             return Response(response="There is no data for this repo, in the database you are accessing",
                 mimetype='application/json',
@@ -604,6 +605,7 @@ def create_routes(server):
         df_tuple = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date)
 
         pr_closed = df_tuple[df_type["pr_closed"]]
+
         pr_slow20_not_merged = df_tuple[df_type["pr_slow20_not_merged"]]
         pr_slow20_merged = df_tuple[df_type["pr_slow20_merged"]]
 
@@ -611,6 +613,7 @@ def create_routes(server):
             return Response(response="There is no data for this repo, in the database you are accessing",
                 mimetype='application/json',
                 status=200)
+
 
         x_axis='closed_year'
         description='All Closed'
@@ -777,6 +780,7 @@ def create_routes(server):
         df_tuple = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date)
 
         input_df = df_tuple[df_type["pr_closed"]]
+
 
         if(len(input_df) == 0):
             return Response(response="There is no data for this repo, in the database you are accessing",
@@ -1028,12 +1032,12 @@ def create_routes(server):
         pr_slow20_merged = df_tuple[df_type["pr_slow20_merged"]]
         pr_all = df_tuple[df_type["pr_all"]]
 
+
         #only test pr_all because it encompasses the other dfs
         if(len(pr_all) == 0):
             return Response(response="There is no data for this repo, in the database you are accessing",
                 mimetype='application/json',
                 status=200)
-
 
         repo_dict = {repo_id : pr_closed.loc[pr_closed['repo_id'] == repo_id].iloc[0]['repo_name']}  
 
@@ -1163,6 +1167,7 @@ def create_routes(server):
 
         pr_closed = df_tuple[df_type["pr_closed"]]
 
+
         if(len(pr_closed) == 0):
             return Response(response="There is no data for this repo, in the database you are accessing",
                 mimetype='application/json',
@@ -1289,6 +1294,7 @@ def create_routes(server):
         df_tuple = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date)
 
         pr_closed = df_tuple[df_type["pr_closed"]]
+
 
         if(len(pr_closed) == 0):
             return Response(response="There is no data for this repo, in the database you are accessing",
@@ -1455,6 +1461,7 @@ def create_routes(server):
 
         pr_closed = df_tuple[df_type["pr_closed"]]
 
+
         if(len(pr_closed) == 0):
             return Response(response="There is no data for this repo, in the database you are accessing",
                 mimetype='application/json',
@@ -1469,11 +1476,14 @@ def create_routes(server):
         group_by = 'merged_flag'
         y_axis = 'closed_yearmonth'
         description = "All Closed"
+
         heat_field = 'pr_duration_days'
+
         columns = 2
 
 
         red_green_gradient = linear_gradient('#0080FF', '#DC143C', 150)['hex']#32CD32
+
 
         driver_df = pr_duration_frame.copy()[['repo_id', y_axis, group_by, x_axis, heat_field]]
 
@@ -1488,6 +1498,7 @@ def create_routes(server):
         y_groups = driver_df_mean[y_axis].unique()
         x_groups = sorted(driver_df[x_axis].unique())
         grouped_x_groups = sorted(driver_df_mean['grouped_x'].unique())
+
 
         values = driver_df_mean['pr_duration_days'].values.tolist()
   
