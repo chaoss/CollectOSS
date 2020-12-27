@@ -30,6 +30,15 @@ default_config = {
                     "given": [
                         "github_url"
                     ],
+                    "model": "gitlab_issues",
+                    "repo_group_id": 0                
+                },           
+                {
+                    "all_focused": 1,
+                    "delay": 150000,
+                    "given": [
+                        "github_url"
+                    ],
                     "model": "issues",
                     "repo_group_id": 0
                 },
@@ -107,6 +116,7 @@ default_config = {
                 },
                 {
                     "delay": 100000,
+                    "all_focused": 1,
                     "given": [
                         "github_url"
                     ],
@@ -129,23 +139,22 @@ default_config = {
                     "model": "pull_request_analysis",
                     "repo_group_id": 0
                 },
+	            {
+	    	        "delay": 10000,
+		            "given":[
+		            "git_url"
+		            ],
+		            "model" : "discourse_analysis",
+		            "repo_group_id" : 0
 
-	        {
-	    	"delay": 10000,
-		"given":[
-		    "git_url"
-		],
-		"model" : "discourse_analysis",
-		"repo_group_id" : 0
-
-	        },
-	        {
+	            },
+	            {
                 "delay": 10000,
-                "given": [
-                    "git_url"
-                ],
-                "model": "clustering",
-                "repo_group_id": 0
+                    "given": [
+                        "git_url"
+                    ],
+                    "model": "clustering",
+                    "repo_group_id": 0
                 }
             ]
         },
