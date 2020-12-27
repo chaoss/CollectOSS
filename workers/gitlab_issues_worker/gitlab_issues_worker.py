@@ -31,6 +31,7 @@ class GitLabIssuesWorker(Worker):
         self.tool_version = '0.0.0'
         self.data_source = 'GitLab API'
         self.platform_id = 25151
+        self.logger.info("Completed GitLab Worker Initialization.\n")
 
 
     def gitlab_issues_model(self, task, repo_id):
@@ -259,7 +260,7 @@ class GitLabIssuesWorker(Worker):
                 self.results_counter += 1
 
                 self.logger.info("Inserted issue event: " + event['action_name'] + " for issue id: {}\n".format(self.issue_id_inc))
-
-
+    
+        self.logger.info("Worker Finished Collection on task.\n")
 
         self.register_task_completion(task, repo_id, 'gitlab_issues')
