@@ -32,7 +32,37 @@ default_config = {
                     ],
                     "model": "gitlab_issues",
                     "repo_group_id": 0                
-                },           
+                },   
+                {
+                    "all_focused": 1,
+                    "delay": 150000,
+                    "given": [
+                        "git_url"
+                    ],
+                    "model": "merge_requests",
+                    "repo_group_id": 0
+                },
+                        
+                {
+                    "all_focused": 1,
+                    "delay": 150000,
+                    "given": [
+                        "git_url"
+                    ],
+                    "model": "merge_request_commits",
+                    "repo_group_id": 0
+                },
+                        
+                {
+                    "all_focused": 1,
+                    "delay": 150000,
+                    "given": [
+                        "git_url"
+                    ],
+                    "model": "merge_request_files",
+                    "repo_group_id": 0
+                },
+                        
                 {
                     "all_focused": 1,
                     "delay": 150000,
@@ -184,11 +214,6 @@ default_config = {
             "linux_badge_worker": {
                 "port": 50400,
                 "switch": 1,
-                "workers": 1
-            },
-            "metric_status_worker": {
-                "port": 50500,
-                "switch": 0,
                 "workers": 1
             },
             "pull_request_worker": {
