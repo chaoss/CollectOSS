@@ -42,6 +42,7 @@ fi
 scripts/install/frontend.sh
 scripts/install/api_key.sh
 
+
 echo "**********************************"
 echo "***** INSTALLATION COMPLETE *****"
 echo "**********************************"
