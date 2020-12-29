@@ -7,14 +7,11 @@ read -r -p "Would you like to install required NLTK word lists for machine learn
 case "$response" in
   [yY][eE][sS]|[yY])
     echo "Installing..."
-    mkdir ~/nltk_wordlist_installations
-    echo "installing NLK" >> ~/nltk_wordlist_installations/stopwords.log
     python -m nltk.downloader stopwords 
     python -m nltk.downloader punkt                
     python -m nltk.downloader popular 
     python -m nltk.downloader universal_tagset 
     echo "Done!"
-    echo "Logs are stored in your home directory under '/usr/local/share, /usr/local/share/nltk-worklists, and in some instances based on operating system, your home directroy'."
     ;;
   *)
     echo "Skipping NLTK Word Vector dependencies. Please be advised that the machine learning workers, including the clustering worker, discourse worker, messsage_analysis_worker, pull_request_analysis_worker, and the LSTM model of the insight_worker will not function fully without these lists."
