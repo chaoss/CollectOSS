@@ -44,7 +44,10 @@ class GitLabIssuesWorker(Worker):
         self.logger.info('Beginning the process of GitLab Issue Collection...'.format(str(os.getpid())))
         gitlab_base = 'https://gitlab.com/api/v4'
         # adding the labels attribute in the query params to avoid additional API calls
-        intermediate_url = '{}/projects/{}/issues?per_page=100&state=opened&with_labels_details=True&'.format(gitlab_base, repo_id)
+        git_url = task['given']['git_url']
+        owner, repo = self.get_owner_repo(git_url)
+        url_encoded_format_project_address = quote(owner + '/' + repo, safe='')
+        intermediate_url = '{}/projects/{}/issues?per_page=100&state=opened&with_labels_details=True&'.format(gitlab_base, url_encoded_format_project_address)
         gitlab_issues_url = intermediate_url + "page={}"
         
         table = 'issues'
@@ -70,7 +73,7 @@ class GitLabIssuesWorker(Worker):
 
             # Insert data into models
             issue = {
-                    "repo_id": issue_dict['project_id'],
+                    "repo_id": repo_id,
                     "reporter_id": self.find_id_from_login(issue_dict['author']['username'], platform='gitlab'),
                     "pull_request": pr_id,
                     "pull_request_id": pr_id,
