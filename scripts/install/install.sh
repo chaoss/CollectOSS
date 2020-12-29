@@ -42,20 +42,6 @@ fi
 scripts/install/frontend.sh
 scripts/install/api_key.sh
 
-echo "MACHINE LEARNING WORKER NOTE: Next, you will be asked to install some wordlists for the natural language processing parts of Augur.  Please be advised that the machine learning workers, including the clustering worker, discourse worker, messsage_analysis_worker, pull_request_analysis_worker, and the LSTM model of the insight_worker will not function fully without these lists."
-
-read -r -p "Would you like to install required NLTK word lists for machine learning workers? [Y/n] " response
-case "$response" in
-  [yY][eE][sS]|[yY])
-    echo "Installing... aritificial intelligence, machine learning. deep learning, and crocheting libraries and wordlists"
-    scripts/install/nltk_dictionaries.sh
-    echo "Done!"
-    ;;
-  *)
-    echo "Skipping NLTK Word Vector dependencies. Please be advised that the machine learning workers, including the clustering worker, discourse worker, messsage_analysis_worker, pull_request_analysis_worker, and the LSTM model of the insight_worker will not function fully without these lists."
-    ;;
-esac
-
 
 echo "**********************************"
 echo "***** INSTALLATION COMPLETE *****"

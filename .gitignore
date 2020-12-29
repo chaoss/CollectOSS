@@ -157,3 +157,5 @@ workers/spdx_worker/ex.json
 
 # Model files for machine learning
 workers/message_instights_worker/message_models/*.h5
+.h5
+
