@@ -28,11 +28,11 @@ default_config = {
                     "all_focused": 1,
                     "delay": 150000,
                     "given": [
-                        "git_url"
+                        "github_url"
                     ],
-                    "model": "gitlab_issues",
-                    "repo_group_id": 0                
-                },   
+                    "model": "issues",
+                    "repo_group_id": 0
+                },
                 {
                     "all_focused": 1,
                     "delay": 150000,
@@ -41,8 +41,7 @@ default_config = {
                     ],
                     "model": "merge_requests",
                     "repo_group_id": 0
-                },
-                        
+                },                        
                 {
                     "all_focused": 1,
                     "delay": 150000,
@@ -60,16 +59,6 @@ default_config = {
                         "git_url"
                     ],
                     "model": "merge_request_files",
-                    "repo_group_id": 0
-                },
-                        
-                {
-                    "all_focused": 1,
-                    "delay": 150000,
-                    "given": [
-                        "github_url"
-                    ],
-                    "model": "issues",
                     "repo_group_id": 0
                 },
                 {
@@ -146,7 +135,6 @@ default_config = {
                 },
                 {
                     "delay": 100000,
-                    "all_focused": 1,
                     "given": [
                         "github_url"
                     ],
@@ -169,22 +157,23 @@ default_config = {
                     "model": "pull_request_analysis",
                     "repo_group_id": 0
                 },
-	            {
-	    	        "delay": 10000,
-		            "given":[
-		            "git_url"
-		            ],
-		            "model" : "discourse_analysis",
-		            "repo_group_id" : 0
 
-	            },
-	            {
+	        {
+	    	"delay": 10000,
+		"given":[
+		    "git_url"
+		],
+		"model" : "discourse_analysis",
+		"repo_group_id" : 0
+
+	        },
+	        {
                 "delay": 10000,
-                    "given": [
-                        "git_url"
-                    ],
-                    "model": "clustering",
-                    "repo_group_id": 0
+                "given": [
+                    "git_url"
+                ],
+                "model": "clustering",
+                "repo_group_id": 0
                 }
             ]
         },
@@ -214,6 +203,11 @@ default_config = {
             "linux_badge_worker": {
                 "port": 50400,
                 "switch": 1,
+                "workers": 1
+            },
+            "metric_status_worker": {
+                "port": 50500,
+                "switch": 0,
                 "workers": 1
             },
             "pull_request_worker": {
