@@ -31,7 +31,7 @@ warnings.filterwarnings('ignore')
 
 ## Added to limit `xgboost` from grabbing every available processor, which is the default behavior.  This sets the limit at a 
 ## global Scale. Documentation is here: https://xgboost.readthedocs.io/en/latest/parameter.html
-XGBClassifier.config_context(nthread=4)
+XGBClassifier.set_config(nthread=4)
 
 # Initial setup of machine learning functionality
 CONTRACTION_MAP = contraction_map
