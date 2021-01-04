@@ -31,7 +31,8 @@ warnings.filterwarnings('ignore')
 
 ## Added to limit `xgboost` from grabbing every available processor, which is the default behavior.  This sets the limit at a 
 ## global Scale. Documentation is here: https://xgboost.readthedocs.io/en/latest/parameter.html
-XGBClassifier.set_config(nthread=4)
+# Wrong way to specify
+# XGBClassifier.set_config()
 
 # Initial setup of machine learning functionality
 CONTRACTION_MAP = contraction_map
@@ -265,7 +266,7 @@ class SentiCR:
         self.logger.info('TF-IDF vectorization done')
 
         sample_weights = compute_sample_weight({-1:0.4,0:0.3,1:0.3}, Y_train)
-        model = XGBClassifier()
+        model = XGBClassifier(nthread=4)
         model.fit(X_train, Y_train, sample_weight=sample_weights)      
             
         self.logger.info('Model Training done\n')
