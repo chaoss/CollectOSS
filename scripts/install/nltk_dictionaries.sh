@@ -21,5 +21,5 @@ esac
 
 
 echo "**********************************"
-echo "***** NLTK DICTIONARY INSTALLATION  COMPLETE *****"
+echo "***** NLTK DICTIONARY INSTALLATION COMPLETE *****"
 echo "**********************************"

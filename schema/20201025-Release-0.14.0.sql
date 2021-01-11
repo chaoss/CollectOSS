@@ -3665,3 +3665,54 @@ ALTER TABLE IF EXISTS "spdx"."relationships" ADD CONSTRAINT "relationships_relat
 ALTER TABLE IF EXISTS "spdx"."relationships" ADD CONSTRAINT "relationships_right_identifier_id_fkey" FOREIGN KEY ("right_identifier_id") REFERENCES "spdx"."identifiers" ("identifier_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 INSERT INTO "augur_operations"."augur_settings" set value = 31 where setting = 'augur_data_version'; 
+
+CREATE TABLE "augur_data"."pull_request_analysis" (
+  "pull_request_analysis_id" serial8,
+  "pull_request_id" int8,
+  "merge_probability" float8,
+  "mechanism" varchar,
+  "tool_source" varchar,
+  "tool_version" varchar,
+  "data_source" varchar,
+  "data_collection_date" timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY ("pull_request_analysis_id")
+)
+;
+
+ALTER TABLE "augur_data"."pull_request_analysis" OWNER TO "augur";
+
+COMMENT ON COLUMN "augur_data"."pull_request_analysis"."pull_request_id" IS 'It would be better if the pull request worker is run first to fetch the latest PRs before analyzing';
+
+COMMENT ON COLUMN "augur_data"."pull_request_analysis"."merge_probability" IS 'Indicates the probability of the PR being merged';
+
+COMMENT ON COLUMN "augur_data"."pull_request_analysis"."mechanism" IS 'the ML model used for prediction (It is XGBoost Classifier at present)';
+
+ALTER TABLE "augur_data"."pull_request_analysis" ADD CONSTRAINT "fk_pull_request_analysis_pull_requests_1" FOREIGN KEY ("pull_request_id") REFERENCES "augur_data"."pull_requests" ("pull_request_id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+CREATE  INDEX CONCURRENTLY "probability_idx"  ON "augur_data"."pull_request_analysis" USING btree (
+  "merge_probability" DESC NULLS LAST 
+);
+
+CREATE INDEX CONCURRENTLY  "pr_anal_idx"  ON "augur_data"."pull_request_analysis" USING btree (
+  "pull_request_id"
+);
+
+update "augur_operations"."augur_settings" set value = 32 where setting = 'augur_data_version'; 
+
+
+--  # Pull request commit updates
+ALTER TABLE "augur_data"."pull_request_commits" ADD COLUMN "pr_cmt_author_cntrb_id" int8;
+ALTER TABLE "augur_data"."pull_request_commits" ADD COLUMN "pr_cmt_timestamp" timestamp(0);
+ALTER TABLE "augur_data"."pull_request_commits" ADD COLUMN "pr_cmt_author_email" varchar COLLATE "pg_catalog"."default";
+
+update "augur_operations"."augur_settings" set value = 33 where setting = 'augur_data_version'; 
+
+
+--  # Pull request commit updates
+update "augur_operations"."augur_settings" set value = 34 where setting = 'augur_data_version'; 
+
+
+-- Adding GitLab Platform
+INSERT INTO "augur_data"."platform" ("pltfrm_id", "pltfrm_name", "pltfrm_version", "pltfrm_release_date", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (25151, 'GitLab', '3', '2020-12-27', 'Manual Entry', 'Sean Goggins', 'GitLab', '2020-12-27 16:07:20');
+--  # Pull request commit updates
+update "augur_operations"."augur_settings" set value = 35 where setting = 'augur_data_version'; 
