@@ -3708,6 +3708,10 @@ ALTER TABLE "augur_data"."pull_request_commits" ADD COLUMN "pr_cmt_author_email"
 update "augur_operations"."augur_settings" set value = 33 where setting = 'augur_data_version'; 
 
 
+--  # Pull request commit updates
+update "augur_operations"."augur_settings" set value = 34 where setting = 'augur_data_version'; 
+
+
 -- Adding GitLab Platform
 INSERT INTO "augur_data"."platform" ("pltfrm_id", "pltfrm_name", "pltfrm_version", "pltfrm_release_date", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (25151, 'GitLab', '3', '2020-12-27', 'Manual Entry', 'Sean Goggins', 'GitLab', '2020-12-27 16:07:20');
 --  # Pull request commit updates
