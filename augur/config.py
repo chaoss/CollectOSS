@@ -165,7 +165,7 @@ default_config = {
                     "model" : "discourse_analysis",
                     "repo_group_id" : 0
                },
-                {
+               {
                     "delay": 10000,
                     "given": [
                         "git_url"
