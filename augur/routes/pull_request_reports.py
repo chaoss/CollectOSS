@@ -1210,17 +1210,22 @@ def create_routes(server):
         values = not_merged_values + merged_values
         #values.fillna(0)
 
-        for value in range(0, remove_outliers):
-            values.remove(max(values))
+        if remove_outliers < 0.2 * len(values):
+
+            for value in range(0, remove_outliers):
+                values.remove(max(values))
+
+        else:
+            remove_outliers = 0
  
         #determine y_max by finding the max of the values and scaling it up a small amoutn
         y_max = max(values)*1.0111
-        outliers = driver_df.loc[driver_df[y_axis] > y_max]
-        if len(outliers) > 0:
+        
+        if remove_outliers > 0:
             if repo_id:
-                p.add_layout(Title(text="** Outliers cut off at {} days: {} outlier(s) for {} were removed **".format(y_max, len(outliers), repo_dict[repo_id]), align="center"), "below")
+                p.add_layout(Title(text="** Outliers cut off at {} days: {} outlier(s) for {} were removed **".format(y_max, remove_outliers, repo_dict[repo_id]), align="center"), "below")
             else:
-                p.add_layout(Title(text="** Outliers cut off at {} days: {} outlier(s) were removed **".format(y_max, len(outliers)), align="center"), "below")
+                p.add_layout(Title(text="** Outliers cut off at {} days: {} outlier(s) were removed **".format(y_max, remove_outliers), align="center"), "below")
 
         p.xaxis.axis_label = 'Date Closed' if x_axis == 'pr_closed_at' else 'Date Created' if x_axis == 'pr_created_at' else 'Date'
         p.yaxis.axis_label = 'Days to First Response'
@@ -1490,11 +1495,12 @@ def create_routes(server):
         grouped_x_groups = sorted(driver_df_mean['grouped_x'].unique())
 
         values = driver_df_mean['pr_duration_days'].values.tolist()
-  
-        #removes number of outliers 
-        for i in range(0, remove_outliers):
-            values.remove(max(values))
 
+        if remove_outliers < 0.2 * len(values):
+
+            for i in range(0, remove_outliers):
+                values.remove(max(values))
+  
         heat_max = max(values)* 1.02
 
         mapper = LinearColorMapper(palette=colors, low=driver_df_mean[heat_field].min(), high=heat_max)#driver_df_mean[heat_field].max())
