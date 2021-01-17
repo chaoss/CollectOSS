@@ -1,6 +1,6 @@
 #SPDX-License-Identifier: MIT
 """ Helper methods constant across all workers """
-import requests, datetime, time, traceback, json, os, sys, math, logging, numpy, copy
+import requests, datetime, time, traceback, json, os, sys, math, logging, numpy, copy, concurrent, multiprocessing
 from logging import FileHandler, Formatter, StreamHandler
 from multiprocessing import Process, Queue
 import sqlalchemy as s
@@ -11,6 +11,7 @@ from sqlalchemy.ext.automap import automap_base
 from augur.config import AugurConfig
 from augur.logging import AugurLogging
 from sqlalchemy.sql.expression import bindparam
+from concurrent import futures
 
 class Worker():
 
@@ -372,9 +373,15 @@ class Worker():
         new_data_df, table_values_df = self.sync_df_types(new_data_df, table_values_df, 
                 action_map['insert']['source'], action_map['insert']['augur'])
 
+        # self.logger.info(f"new data: {new_data_df[action_map['insert']['source']]}\ntable: {table_values_df[action_map['insert']['augur']]}\n")
+        # self.logger.info(f"new data : {new_data_df[action_map['insert']['source']].dtypes}")
+        # self.logger.info(f"table: {table_values_df[action_map['insert']['augur']].dtypes}")
+
         need_insertion = new_data_df.merge(table_values_df, suffixes=('','_table'),
                 how='outer', indicator=True, left_on=action_map['insert']['source'],
                 right_on=action_map['insert']['augur']).loc[lambda x : x['_merge']=='left_only']
+
+        self.logger.info(f"need insertion: {need_insertion}\n")
 
         if 'update' in action_map:
             new_data_df, table_values_df = self.sync_df_types(new_data_df, table_values_df, 
@@ -401,7 +408,8 @@ class Worker():
         return need_insertion.to_dict('records'), need_updates.to_dict('records')
 
     def assign_tuple_action(self, new_data, table_values, update_col_map, duplicate_col_map, table_pkey, value_update_col_map={}):
-        """ Include an extra key-value pair on each element of new_data that represents
+        """ DEPRECATED
+            Include an extra key-value pair on each element of new_data that represents
             the action that should be taken with this element (i.e. 'need_insertion')
 
         :param new_data: List of dictionaries, data to be assigned an action to
@@ -542,8 +550,7 @@ class Worker():
 
     @staticmethod
     def dump_queue(queue):
-        """
-        Empties all pending items in a queue and returns them in a list.
+        """ Empties all pending items in a queue and returns them in a list.
         """
         result = []
         queue.put("STOP")
@@ -553,8 +560,7 @@ class Worker():
         return result
 
     def find_id_from_login(self, login, platform='github'):
-        """
-        Retrieves our contributor table primary key value for the contributor with
+        """ Retrieves our contributor table primary key value for the contributor with
             the given GitHub login credentials, if this contributor is not there, then
             they get inserted.
 
@@ -866,6 +872,10 @@ class Worker():
             expanded_column.columns = [f'{root}.{attribute}' for attribute in expanded_column.columns]
             source_df = source_df.join(expanded_column)
 
+        # self.logger.info([table.c[field] for field in augur_merge_fields] + [table.c[list(table.primary_key)[0].name]])
+        # self.logger.info(s_tuple.__dict__)
+        # self.logger.info(list(source_df[gh_merge_fields].itertuples(index=False)))
+
         primary_keys = self.db.execute(s.sql.select(
                 [table.c[field] for field in augur_merge_fields] + [table.c[list(table.primary_key)[0].name]]
             ).where(
@@ -879,14 +889,79 @@ class Worker():
                 columns=augur_merge_fields + [list(table.primary_key)[0].name])
         else:
             self.logger.info("There are no inserted primary keys to enrich the source data with.\n")
-            return source_data
+            return [] #source_data
 
         source_df, primary_keys_df = self.sync_df_types(source_df, primary_keys_df, 
                 gh_merge_fields, augur_merge_fields)
 
-        return json.loads(source_df.merge(primary_keys_df, suffixes=('','_table'),
+        result = json.loads(source_df.merge(primary_keys_df, suffixes=('','_table'),
             how='inner', left_on=gh_merge_fields, right_on=augur_merge_fields).to_json(
             default_handler=str, orient='records'))
+
+        self.logger.info("Data enrichment successful.\n")
+        return result
+
+    def multi_thread_urls(self, urls, max_attempts=5, platform='github'):
+        """
+        :param urls: list of tuples
+        """
+        
+        def load_url(url, extra_data={}):
+            try:
+                html = requests.get(url, stream=True, headers={'Authorization': 'token f1c713693cfe4d5ad521382939a16e1d83a3eccf'}) #self.headers
+                return html, extra_data
+            except requests.exceptions.RequestException as e:
+                self.logger.info(e, url)
+
+        self.logger.info("Beginning to multithread API endpoints.\n")
+                
+        start = time.time()
+        attempts = 0
+        all_data = []
+        valid_url_count = len(urls)
+        
+        while len(urls) > 0 and attempts < max_attempts:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=multiprocessing.cpu_count()) as executor: #/4
+                # Start the load operations and mark each future with its URL
+                future_to_url = {executor.submit(load_url, *url): url for url in urls}
+                for future in concurrent.futures.as_completed(future_to_url):
+                    
+                    url = future_to_url[future]
+                    try:
+                        response, extra_data = future.result()
+
+                        if response.status_code == 403: # 403 is rate limit, 404 is not found
+                            self.update_rate_limit(response, platform=platform)
+                            continue
+
+                        elif response.status_code == 200:
+                            try:
+                                page_data = response.json()
+                            except:
+                                page_data = json.loads(json.dumps(response.text))
+                            
+                            page_data = [{**data, **extra_data} for data in page_data]
+                            all_data += page_data
+                            
+                            if 'last' in response.links and "&page=" not in url[0]:
+                                urls += [(url[0] + f"&page={page}", extra_data) for page in range(
+                                    2, int(response.links['last']['url'].split('=')[-1]) + 1)]
+                            urls.remove(url)
+
+                        elif response.status_code == 404:
+                            urls.remove(url)
+                            self.logger.info(f"Not found url: {url}\n")
+                        else:
+                            self.logger.info(f"Unhandled response code: {response.status_code} {url}\n")
+                        
+                    except Exception as e:
+                        self.logger.info(f"{url} generated an exception: {e}\n")
+                                            
+            attempts += 1
+                    
+        self.logger.info(f"Processed {valid_url_count} urls and got {len(all_data)} data points " +
+            f"in {time.time() - start} seconds thanks to multithreading!\n")
+        return all_data
 
     def paginate_endpoint(self, url, action_map={}, table=None, where_clause=True, platform='github'):
 
@@ -1005,7 +1080,8 @@ class Worker():
         }
 
     def paginate(self, url, duplicate_col_map, update_col_map, table, table_pkey, where_clause="", value_update_col_map={}, platform="github"):
-        """ Paginate either backwards or forwards (depending on the value of the worker's
+        """ DEPRECATED
+            Paginate either backwards or forwards (depending on the value of the worker's
             finishing_task attribute) through all the GitHub or GitLab api endpoint pages.
 
         :param url: String, the url of the API endpoint we are paginating through, expects
