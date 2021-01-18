@@ -373,15 +373,9 @@ class Worker():
         new_data_df, table_values_df = self.sync_df_types(new_data_df, table_values_df, 
                 action_map['insert']['source'], action_map['insert']['augur'])
 
-        # self.logger.info(f"new data: {new_data_df[action_map['insert']['source']]}\ntable: {table_values_df[action_map['insert']['augur']]}\n")
-        # self.logger.info(f"new data : {new_data_df[action_map['insert']['source']].dtypes}")
-        # self.logger.info(f"table: {table_values_df[action_map['insert']['augur']].dtypes}")
-
         need_insertion = new_data_df.merge(table_values_df, suffixes=('','_table'),
                 how='outer', indicator=True, left_on=action_map['insert']['source'],
                 right_on=action_map['insert']['augur']).loc[lambda x : x['_merge']=='left_only']
-
-        self.logger.info(f"need insertion: {need_insertion}\n")
 
         if 'update' in action_map:
             new_data_df, table_values_df = self.sync_df_types(new_data_df, table_values_df, 
@@ -402,8 +396,8 @@ class Worker():
 
             need_updates = need_updates.drop([column for column in action_map['insert']['augur']], axis='columns')
 
-        self.logger.info(f'Page needs {len(need_insertion)} insertions and '
-            f'{len(need_updates)} updates.\n')
+        # self.logger.info(f'Page needs {len(need_insertion)} insertions and '
+        #     f'{len(need_updates)} updates.\n')
 
         return need_insertion.to_dict('records'), need_updates.to_dict('records')
 
@@ -856,7 +850,6 @@ class Worker():
             return []
 
         source_df = pd.DataFrame(source_data)
-        # temp_dict = {field: str(table) for field in augur_merge_fields}
 
         s_tuple = s.tuple_([table.c[field] for field in augur_merge_fields])
         s_tuple.__dict__['clauses'] = s_tuple.__dict__['clauses'][0].effective_value
@@ -872,15 +865,10 @@ class Worker():
             expanded_column.columns = [f'{root}.{attribute}' for attribute in expanded_column.columns]
             source_df = source_df.join(expanded_column)
 
-        # self.logger.info([table.c[field] for field in augur_merge_fields] + [table.c[list(table.primary_key)[0].name]])
-        # self.logger.info(s_tuple.__dict__)
-        # self.logger.info(list(source_df[gh_merge_fields].itertuples(index=False)))
-
         primary_keys = self.db.execute(s.sql.select(
                 [table.c[field] for field in augur_merge_fields] + [table.c[list(table.primary_key)[0].name]]
             ).where(
                 s_tuple.in_(
-                # eval("""s.tuple_(', '.join([f"self.{table}_table.c['{field}']" for field, table in temp_dict.items()]))""").in_(
                     list(source_df[gh_merge_fields].itertuples(index=False))
                 ))).fetchall()
 
@@ -889,7 +877,7 @@ class Worker():
                 columns=augur_merge_fields + [list(table.primary_key)[0].name])
         else:
             self.logger.info("There are no inserted primary keys to enrich the source data with.\n")
-            return [] #source_data
+            return []
 
         source_df, primary_keys_df = self.sync_df_types(source_df, primary_keys_df, 
                 gh_merge_fields, augur_merge_fields)
@@ -908,7 +896,7 @@ class Worker():
         
         def load_url(url, extra_data={}):
             try:
-                html = requests.get(url, stream=True, headers={'Authorization': 'token f1c713693cfe4d5ad521382939a16e1d83a3eccf'}) #self.headers
+                html = requests.get(url, stream=True, headers=self.headers)
                 return html, extra_data
             except requests.exceptions.RequestException as e:
                 self.logger.info(e, url)
@@ -921,7 +909,7 @@ class Worker():
         valid_url_count = len(urls)
         
         while len(urls) > 0 and attempts < max_attempts:
-            with concurrent.futures.ThreadPoolExecutor(max_workers=multiprocessing.cpu_count()) as executor: #/4
+            with concurrent.futures.ThreadPoolExecutor(max_workers=multiprocessing.cpu_count()/4) as executor:
                 # Start the load operations and mark each future with its URL
                 future_to_url = {executor.submit(load_url, *url): url for url in urls}
                 for future in concurrent.futures.as_completed(future_to_url):
@@ -930,7 +918,7 @@ class Worker():
                     try:
                         response, extra_data = future.result()
 
-                        if response.status_code == 403: # 403 is rate limit, 404 is not found
+                        if response.status_code == 403 or response.status_code == 401: # 403 is rate limit, 404 is not found, 401 is bad credentials
                             self.update_rate_limit(response, platform=platform)
                             continue
 

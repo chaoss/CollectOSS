@@ -447,16 +447,13 @@ class GitHubPullRequestWorker(Worker):
 
         comment_action_map = {
             'insert': {
-                'source': ['id'],
-                'augur': ['pr_message_ref_src_comment_id']
+                'source': ['created_at', 'body'],
+                'augur': ['msg_timestamp', 'msg_text']
             }
         }
 
         pr_comments = self.paginate_endpoint(comments_url, 
-            action_map=comment_action_map, table=self.pull_request_message_ref_table, 
-            where_clause=self.pull_request_message_ref_table.c.pull_request_id.in_(
-                    set(pd.DataFrame(pk_source_prs)['pull_request_id'])
-                ))
+            action_map=comment_action_map, table=self.message_table)
 
         pr_comments_insert = [
             {
@@ -470,7 +467,7 @@ class GitHubPullRequestWorker(Worker):
             } for comment in pr_comments['insert']
         ]
 
-        self.bulk_insert(self.message_table, insert=pr_comments_insert)#, unique_columns=comment_action_map['insert']['augur'])
+        self.bulk_insert(self.message_table, insert=pr_comments_insert)
             
         # PR MESSAGE REF TABLE
 
@@ -492,7 +489,49 @@ class GitHubPullRequestWorker(Worker):
             } for comment in both_pk_source_comments
         ]
 
-        self.bulk_insert(self.pull_request_message_ref_table, insert=pr_message_ref_insert)#, unique_columns=['pr_message_ref_src_comment_id'])
+        self.bulk_insert(self.pull_request_message_ref_table, insert=pr_message_ref_insert)
+
+        # PR Events          
+    
+        events_url = f"https://api.github.com/repos/{owner}/{repo}" + \
+            "/issues/events?per_page=100&page={}"
+
+        # Get events that we already have stored
+        #   Set pseudo key (something other than PK) to 
+        #   check dupicates with
+        event_action_map = {
+            'insert': {
+                'source': ['url'],
+                'augur': ['node_url']
+            }
+        }
+
+        #list to hold contributors needing insertion or update
+        pr_events = self.paginate_endpoint(events_url, table=self.pull_request_events_table,
+            action_map=event_action_map, where_clause=self.pull_request_events_table.c.pull_request_id.in_(
+                    set(pd.DataFrame(pk_source_prs)['pull_request_id'])
+                ))
+
+        pk_pr_events = self.enrich_data_primary_keys(pr_events['insert'], 
+            self.pull_requests_table, ['issue.url'], ['pr_issue_url'])
+
+        pr_events_insert = [
+            {
+                'pull_request_id': event['pull_request_id'],
+                'cntrb_id': self.find_id_from_login(event['actor']['login']),
+                'action': event['event'],
+                'action_commit_hash': None,
+                'created_at': event['created_at'],
+                'issue_event_src_id': event['id'],
+                'node_id': event['node_id'],
+                'node_url': event['url'],
+                'tool_source': self.tool_source,
+                'tool_version': self.tool_version,
+                'data_source': self.data_source
+            } for event in pk_pr_events if event['actor'] is not None
+        ]
+
+        self.bulk_insert(self.pull_request_events_table, insert=pr_events_insert)
 
         # Reviews
 
@@ -547,48 +586,13 @@ class GitHubPullRequestWorker(Worker):
         self.bulk_insert(self.pull_request_reviews_table, insert=reviews_insert, update=source_reviews_update,
             unique_columns=review_action_map['insert']['augur'], update_columns=review_action_map['update']['augur'])
 
-        # PR Events          
-    
-        events_url = f"https://api.github.com/repos/{owner}/{repo}" + \
-            "/issues/events?per_page=100&page={}"
+        # Merge source data to inserted data to have access to inserted primary keys
 
-        # Get events that we already have stored
-        #   Set pseudo key (something other than PK) to 
-        #   check dupicates with
-        event_action_map = {
-            'insert': {
-                'source': ['url'],
-                'augur': ['node_url']
-            }
-        }
+        gh_merge_fields = ['id']
+        augur_merge_fields = ['pr_review_src_id']
 
-        #list to hold contributors needing insertion or update
-        pr_events = self.paginate_endpoint(events_url, table=self.pull_request_events_table,
-            action_map=event_action_map, where_clause=self.pull_request_events_table.c.pull_request_id.in_(
-                    set(pd.DataFrame(pk_source_prs)['pull_request_id'])
-                ))
-
-        pk_pr_events = self.enrich_data_primary_keys(pr_events['insert'], 
-            self.pull_requests_table, ['issue.url'], ['pr_issue_url'])
-
-        pr_events_insert = [
-            {
-                'pull_request_id': event['pull_request_id'],
-                'cntrb_id': self.find_id_from_login(event['actor']['login']),
-                'action': event['event'],
-                'action_commit_hash': None,
-                'created_at': event['created_at'],
-                'issue_event_src_id': event['id'],
-                'node_id': event['node_id'],
-                'node_url': event['url'],
-                'tool_source': self.tool_source,
-                'tool_version': self.tool_version,
-                'data_source': self.data_source
-            } for event in pk_pr_events if event['actor'] is not None
-        ]
-
-        self.bulk_insert(self.pull_request_events_table, insert=pr_events_insert)#, unique_columns=event_action_map['insert']['augur'])
-
+        both_pr_review_pk_source_reviews = self.enrich_data_primary_keys(pr_pk_source_reviews, 
+            self.pull_request_reviews_table, gh_merge_fields, augur_merge_fields)
 
         # Review Comments
 
@@ -597,15 +601,19 @@ class GitHubPullRequestWorker(Worker):
 
         review_msg_action_map = {
             'insert': {
-                'source': ['id'],
-                'augur': ['pr_review_msg_src_id']
+                'source': ['created_at', 'body'],
+                'augur': ['msg_timestamp', 'msg_text']
             }
         }
 
         review_msgs = self.paginate_endpoint(review_msg_url, 
-            action_map=review_msg_action_map, table=self.pull_request_review_message_ref_table, 
-            where_clause=self.pull_request_review_message_ref_table.c.pr_url.in_(
-                    set(pd.DataFrame(pk_source_prs)['url'])
+            action_map=review_msg_action_map, table=self.message_table, 
+            where_clause=self.message_table.c.msg_id.in_(
+                    [msg_row[0] for msg_row in self.db.execute(s.sql.select(
+                        [self.pull_request_review_message_ref_table.c.msg_id]).where(
+                        self.pull_request_review_message_ref_table.c.pr_review_id.in_(
+                            set(pd.DataFrame(both_pr_review_pk_source_reviews)['pr_review_id'])
+                        ))).fetchall()]
                 ))
 
         review_msg_insert = [
@@ -620,7 +628,7 @@ class GitHubPullRequestWorker(Worker):
             } for comment in review_msgs['insert'] if comment['user'] and 'login' in comment['user']
         ]
 
-        self.bulk_insert(self.message_table, insert=pr_comments_insert)#, unique_columns=comment_action_map['insert']['augur'])
+        self.bulk_insert(self.message_table, insert=review_msg_insert)
             
         # PR REVIEW MESSAGE REF TABLE
 
@@ -659,7 +667,7 @@ class GitHubPullRequestWorker(Worker):
             } for comment in both_pk_source_comments
         ]
 
-        self.bulk_insert(self.pull_request_review_message_ref_table, insert=pr_review_msg_ref_insert)#, unique_columns=['pr_message_ref_src_comment_id'])
+        self.bulk_insert(self.pull_request_review_message_ref_table, insert=pr_review_msg_ref_insert)
 
         # PR nested info table insertions
 
@@ -802,16 +810,16 @@ class GitHubPullRequestWorker(Worker):
             ]
 
         # PR labels insertion
-        self.bulk_insert(self.pull_request_labels_table, insert=labels_insert)#, unique_columns=label_action_map['insert']['augur'])
+        self.bulk_insert(self.pull_request_labels_table, insert=labels_insert)
 
         # PR reviewers insertion
-        self.bulk_insert(self.pull_request_reviewers_table, insert=reviewers_insert)#, unique_columns=reviewer_action_map['insert']['augur'])
+        self.bulk_insert(self.pull_request_reviewers_table, insert=reviewers_insert)
 
         # PR assignees insertion
-        self.bulk_insert(self.pull_request_assignees_table, insert=assignees_insert)#, unique_columns=assignee_action_map['insert']['augur'])
+        self.bulk_insert(self.pull_request_assignees_table, insert=assignees_insert)
 
         # PR meta insertion
-        self.bulk_insert(self.pull_request_meta_table, insert=meta_insert)#, unique_columns=meta_action_map['insert']['augur'])
+        self.bulk_insert(self.pull_request_meta_table, insert=meta_insert)
 
         self.register_task_completion(entry_info, repo_id, 'pull_requests')
 
