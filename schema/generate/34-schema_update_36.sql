@@ -1,4 +1,4 @@
--- Pull Request Review feature update
+-- Pull request worker schema changes for PR Reviews
 
 CREATE SEQUENCE "augur_data"."pull_request_review_message_ref_pr_review_msg_ref_id_seq" 
 INCREMENT 1
@@ -96,6 +96,7 @@ ALTER SEQUENCE "augur_data"."pull_request_reviews_pr_review_id_seq"
 OWNED BY "augur_data"."pull_request_reviews"."pr_review_id";
 
 ALTER SEQUENCE "augur_data"."pull_request_reviews_pr_review_id_seq" OWNER TO "augur";
+
 
 
 update "augur_operations"."augur_settings" set value = 36 where setting = 'augur_data_version'; 
