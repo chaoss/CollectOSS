@@ -1204,10 +1204,6 @@ def create_routes(server):
 
         group_by_groups = sorted(driver_df[group_by].unique())
 
-        #seconds = ((driver_df[x_axis].max() + datetime.timedelta(days=25))- (driver_df[x_axis].min() - datetime.timedelta(days=30))).total_seconds()
-        #quarter_years = seconds / 10506240
-        #quarter_years = round(quarter_years)
-
         #setup color pallete
         try:
             colors = Colorblind[len(repo_set)]
