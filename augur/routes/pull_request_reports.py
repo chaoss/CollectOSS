@@ -182,7 +182,7 @@ def create_routes(server):
 
         # Added by SPG due to issues with time between responses being, in some cases, less than a day
 
-        pr_all.replace(to_replace[None], value=np.nan, inplace=True)
+        pr_all.replace([None], value=np.nan, inplace=True)
 
         for pr_all['average_time_between_responses']
         pr_all['average_days_between_responses'] = pr_all['average_time_between_responses'].map(lambda x: x.days).astype(float)
