@@ -181,7 +181,7 @@ def create_routes(server):
         # Get days for average_time_between_responses time delta
 
         for pr_all['average_time_between_responses']
-        pr_all['average_days_between_responses'] = (pr_all['average_time_between_responses'] = float(value) or 0).map(lambda x: x.days).astype(float)
+        pr_all['average_days_between_responses'] = (pr_all['average_time_between_responses'] = float(value) or 0.01).map(lambda x: x.days).astype(float)
         pr_all['average_hours_between_responses'] = pr_all['average_time_between_responses'].map(lambda x: x.days * 24).astype(float)
 
         start_date = pd.to_datetime(start_date)
