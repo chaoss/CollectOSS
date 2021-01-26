@@ -183,8 +183,8 @@ def create_routes(server):
 
 
         ## for pr_all['average_time_between_responses']:
-        pr_all['average_days_between_responses'] = pr_all['average_time_between_responses'].applymap(lambda x: x.days).astype(float)
-        pr_all['average_hours_between_responses'] = pr_all['average_time_between_responses'].applymap(lambda x: x.days * 24).astype(float)
+        pr_all['average_days_between_responses'] = pr_all['average_time_between_responses'].map(lambda x: x.days).astype(float)
+        pr_all['average_hours_between_responses'] = pr_all['average_time_between_responses'].map(lambda x: x.days * 24).astype(float)
 
         start_date = pd.to_datetime(start_date)
         # end_date = pd.to_datetime('2020-02-01 09:00:00')
