@@ -179,8 +179,8 @@ def create_routes(server):
         pr_all[['created_year', 'closed_year']] = pr_all[['created_year', 'closed_year']].fillna(-1).astype(int).astype(str)
 
         # Get days for average_time_between_responses time delta
-        pr_all['average_days_between_responses'] = pr_all['average_time_between_responses'].map(lambda x: x.days).astype(float)
-        pr_all['average_hours_between_responses'] = pr_all['average_time_between_responses'].map(lambda x: x.days * 24).astype(float)
+        pr_all['average_days_between_responses'] = pr_all['average_time_between_responses'].map(lambda x: x.days +1 ).astype(float)
+        pr_all['average_hours_between_responses'] = pr_all['average_time_between_responses'].map(lambda x: (x.days + 1) * 24).astype(float)
 
         start_date = pd.to_datetime(start_date)
         # end_date = pd.to_datetime('2020-02-01 09:00:00')
@@ -199,7 +199,7 @@ def create_routes(server):
         days_to_close_open_pr = datetime.datetime.now() - pr_all.loc[pr_all['pr_src_state'] == 'open']['pr_created_at']
 
         # get num days from above timedelta
-        days_to_close_open_pr = days_to_close_open_pr.apply(lambda x: x.days).astype(float)
+        days_to_close_open_pr = days_to_close_open_pr.apply(lambda x: x.days).astype(int)
 
         # for only OPEN pr's, set the days_to_close column equal to above dataframe
         pr_all.loc[pr_all['pr_src_state'] == 'open'] = pr_all.loc[pr_all['pr_src_state'] == 'open'].assign(days_to_close=days_to_close_open_pr)
@@ -1475,7 +1475,7 @@ def create_routes(server):
                 mimetype='application/json',
                 status=200)
 
-        pr_duration_frame = pr_closed.assign(pr_duration=(pr_closed['pr_closed_at'] - pr_closed['pr_created_at'])+1)
+        pr_duration_frame = pr_closed.assign(pr_duration=(pr_closed['pr_closed_at'] - pr_closed['pr_created_at']))
         pr_duration_frame = pr_duration_frame.assign(pr_duration_days = (pr_duration_frame['pr_duration'] / datetime.timedelta(minutes=1))/60/24)
 
         repo_dict = {repo_id : pr_duration_frame.loc[pr_duration_frame['repo_id'] == repo_id].iloc[0]['repo_name']} 
