@@ -179,8 +179,14 @@ def create_routes(server):
         pr_all[['created_year', 'closed_year']] = pr_all[['created_year', 'closed_year']].fillna(-1).astype(int).astype(str)
 
         # Get days for average_time_between_responses time delta
-        pr_all['average_days_between_responses'] = pr_all['average_time_between_responses'].map(lambda x: x.days +1 ).astype(float)
-        pr_all['average_hours_between_responses'] = pr_all['average_time_between_responses'].map(lambda x: (x.days + 1) * 24).astype(float)
+
+        # Added by SPG due to issues with time between responses being, in some cases, less than a day
+
+        pr_all.replace(to_replace[None], value=np.nan, inplace=True)
+
+        for pr_all['average_time_between_responses']
+        pr_all['average_days_between_responses'] = pr_all['average_time_between_responses'].map(lambda x: x.days).astype(float)
+        pr_all['average_hours_between_responses'] = pr_all['average_time_between_responses'].map(lambda x: x.days * 24).astype(float)
 
         start_date = pd.to_datetime(start_date)
         # end_date = pd.to_datetime('2020-02-01 09:00:00')
