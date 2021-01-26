@@ -1466,6 +1466,8 @@ def create_routes(server):
         return_json = request.args.get('return_json', "false")
         remove_outliers = str(request.args.get('remove_outliers', "true"))
 
+
+
         #dict of df types, and their locaiton in the tuple that the function pull_request_data_collection returns
         df_type = {"pr_all": 0, "pr_open": 1, "pr_closed": 2, "pr_merged": 3, "pr_not_merged": 4, "pr_slow20_all": 5,
                 "pr_slow20_open": 6, "pr_slow20_closed": 7, "pr_slow20_merged": 8, "pr_slow20_not_merged": 9}
@@ -1506,6 +1508,9 @@ def create_routes(server):
         y_groups = driver_df_mean[y_axis].unique()
         x_groups = sorted(driver_df[x_axis].unique())
         grouped_x_groups = sorted(driver_df_mean['grouped_x'].unique())
+
+        #defualt outliers removed to 0
+        outliers_removed = 0
 
         if remove_outliers == "true":
 
