@@ -46,4 +46,4 @@ ALTER TABLE "augur_data"."pull_requests" ADD CONSTRAINT  "fk_pr_contribs" FOREIG
 
 ALTER TABLE "augur_data"."pull_requests" ADD CONSTRAINT  "fk_pull_requests_repo_1" FOREIGN KEY ("repo_id") REFERENCES "augur_data"."repo" ("repo_id") ON DELETE CASCADE ON UPDATE CASCADE NOT VALID;
 
-update "augur_operations"."augur_settings" set value = 35 where setting = 'augur_data_version'; 
+update "augur_operations"."augur_settings" set value = 40 where setting = 'augur_data_version'; 
