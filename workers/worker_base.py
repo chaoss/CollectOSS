@@ -1,6 +1,7 @@
 #SPDX-License-Identifier: MIT
 """ Helper methods constant across all workers """
 import requests, datetime, time, traceback, json, os, sys, math, logging, numpy, copy, concurrent, multiprocessing
+
 from logging import FileHandler, Formatter, StreamHandler
 from multiprocessing import Process, Queue
 import sqlalchemy as s
@@ -399,6 +400,7 @@ class Worker():
         # self.logger.info(f'Page needs {len(need_insertion)} insertions and '
         #     f'{len(need_updates)} updates.\n')
 
+
         return need_insertion.to_dict('records'), need_updates.to_dict('records')
 
     def assign_tuple_action(self, new_data, table_values, update_col_map, duplicate_col_map, table_pkey, value_update_col_map={}):
@@ -768,7 +770,7 @@ class Worker():
                 self.headers = {'Authorization': 'token %s' % oauth['access_token']}
             elif platform == 'gitlab':
                 self.headers = {'Authorization': 'Bearer %s' % oauth['access_token']}
-            self.logger.info("Getting rate limit info for oauth: {}\n".format(oauth))
+            self.logger.debug("Getting rate limit info for oauth: {}\n".format(oauth))
             response = requests.get(url=url, headers=self.headers)
             self.oauths.append({
                     'oauth_id': oauth['oauth_id'],
@@ -851,6 +853,7 @@ class Worker():
 
         source_df = pd.DataFrame(source_data)
 
+
         s_tuple = s.tuple_([table.c[field] for field in augur_merge_fields])
         s_tuple.__dict__['clauses'] = s_tuple.__dict__['clauses'][0].effective_value
         s_tuple.__dict__['_type_tuple'] = []
@@ -869,6 +872,7 @@ class Worker():
                 [table.c[field] for field in augur_merge_fields] + [table.c[list(table.primary_key)[0].name]]
             ).where(
                 s_tuple.in_(
+
                     list(source_df[gh_merge_fields].itertuples(index=False))
                 ))).fetchall()
 
@@ -878,6 +882,7 @@ class Worker():
         else:
             self.logger.info("There are no inserted primary keys to enrich the source data with.\n")
             return []
+
 
         source_df, primary_keys_df = self.sync_df_types(source_df, primary_keys_df, 
                 gh_merge_fields, augur_merge_fields)
@@ -950,6 +955,7 @@ class Worker():
         self.logger.info(f"Processed {valid_url_count} urls and got {len(all_data)} data points " +
             f"in {time.time() - start} seconds thanks to multithreading!\n")
         return all_data
+
 
     def paginate_endpoint(self, url, action_map={}, table=None, where_clause=True, platform='github'):
 
