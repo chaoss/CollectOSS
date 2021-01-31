@@ -799,9 +799,9 @@ class Worker():
         insert_result = None
 
         if len(update) > 0:
-            success = False
+            attempts = 0
             update_start_time = time.time()
-            while not success:
+            while attempts < 10:
                 try:
                     update_result = self.db.execute(
                         table.update().where(
@@ -812,34 +812,54 @@ class Worker():
                             ),
                         update
                     )
-                    success = True
+                    break
                 except Exception as e:
-                    self.logger.info('error: {}'.format(e))
+                    self.logger.info(f"Warning! Error bulk updating data: {e}\n")
                     time.sleep(5)
+                attempts += 1
 
             self.update_counter += update_result.rowcount
             self.logger.info(f"Updated {update_result.rowcount} rows in "
                 f"{time.time() - update_start_time} seconds")
 
         if len(insert) > 0:
-            success = False
+            attempts = 0
             insert_start_time = time.time()
-            while not success:
+            while attempts < 10:
                 try:
                     insert_result = self.db.execute(
                         table.insert(),
                         insert
                     )
-                    success = True
+                    break
                 except Exception as e:
-                    self.logger.info('error: {}'.format(e))
+                    self.logger.info(f"Warning! Error bulk inserting data: {e}\n")
                     time.sleep(5)
+                attempts += 1
 
             self.insert_counter += insert_result.rowcount
             self.logger.info(f"Inserted {insert_result.rowcount} rows in "
                 f"{time.time() - insert_start_time} seconds")
 
         return insert_result, update_result
+
+    def text_clean(self, data, field):
+        """ "Cleans" the provided field of each dict in the list of dicts provided
+            by removing NUL (C text termination) characters
+            Example: "\u0000"
+
+            :param data: List of dicts
+            :param field: String
+            :returns: Same data list with each element's field updated with NUL characters
+                removed
+        """
+        return [
+            {
+                **data_point,
+                field: data_point[field].replace("\x00", "\uFFFD")
+            } for data_point in data
+        ]
+
 
     def enrich_data_primary_keys(self, source_data, table, gh_merge_fields, augur_merge_fields):
 
@@ -912,11 +932,13 @@ class Worker():
             with concurrent.futures.ThreadPoolExecutor(max_workers=multiprocessing.cpu_count()/4) as executor:
                 # Start the load operations and mark each future with its URL
                 future_to_url = {executor.submit(load_url, *url): url for url in urls}
+                self.logger.info("Multithreaded urls and returned status codes:\n")
                 for future in concurrent.futures.as_completed(future_to_url):
                     
                     url = future_to_url[future]
                     try:
                         response, extra_data = future.result()
+                        self.logger.info(f"Url: {url} ; Status code: {response.status_code}\n")
 
                         if response.status_code == 403 or response.status_code == 401: # 403 is rate limit, 404 is not found, 401 is bad credentials
                             self.update_rate_limit(response, platform=platform)
