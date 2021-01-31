@@ -792,7 +792,23 @@ class Worker():
 
         self.logger.info("OAuth initialized")
 
-    def bulk_insert(self, table, insert=[], update=[], unique_columns=[], update_columns=[]):
+    def bulk_insert(self, table, insert=[], update=[], unique_columns=[], update_columns=[], \
+            max_attempts=10, attempt_delay=5):
+        """ Performs bulk inserts/updates of the given data to the given table
+
+            :param table: String, name of the table that we are inserting/updating rows
+            :param insert: List of dicts, data points to insert
+            :param update: List of dicts, data points to update, only needs key/value
+                pairs of the update_columns and the unique_columns
+            :param unique_columns: List of strings, column names that would uniquely identify any
+                given data point
+            :param update_columns: List of strings, names of columns that are being updated
+            :param max_attempts: Integer, number of attempts to perform on inserting/updating
+                before moving on
+            :param attempt_delay: Integer, number of seconds to wait in between attempts
+            :returns: SQLAlchemy database execution response object(s), contains metadata
+                about number of rows inserted etc. This data is not often used.
+        """
         
         self.logger.info(f"{len(insert)} insertions are needed and {len(update)} "
             f"updates are needed for {table}\n")
@@ -803,7 +819,7 @@ class Worker():
         if len(update) > 0:
             attempts = 0
             update_start_time = time.time()
-            while attempts < 10:
+            while attempts < max_attempts:
                 try:
                     update_result = self.db.execute(
                         table.update().where(
@@ -817,7 +833,7 @@ class Worker():
                     break
                 except Exception as e:
                     self.logger.info(f"Warning! Error bulk updating data: {e}\n")
-                    time.sleep(5)
+                    time.sleep(attempt_delay)
                 attempts += 1
 
             self.update_counter += update_result.rowcount
@@ -827,7 +843,7 @@ class Worker():
         if len(insert) > 0:
             attempts = 0
             insert_start_time = time.time()
-            while attempts < 10:
+            while attempts < max_attempts:
                 try:
                     insert_result = self.db.execute(
                         table.insert(),
@@ -836,7 +852,7 @@ class Worker():
                     break
                 except Exception as e:
                     self.logger.info(f"Warning! Error bulk inserting data: {e}\n")
-                    time.sleep(5)
+                    time.sleep(attempt_delay)
                 attempts += 1
 
             self.insert_counter += insert_result.rowcount
@@ -943,7 +959,9 @@ class Worker():
                     url = future_to_url[future]
                     try:
                         response, extra_data = future.result()
-                        self.logger.info(f"Url: {url} ; Status code: {response.status_code}\n")
+
+                        if response.status_code != 200:
+                            self.logger.info(f"Url: {url[0]} ; Status code: {response.status_code}")
 
                         if response.status_code == 403 or response.status_code == 401: # 403 is rate limit, 404 is not found, 401 is bad credentials
                             self.update_rate_limit(response, platform=platform)
