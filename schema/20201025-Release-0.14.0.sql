@@ -3665,3 +3665,232 @@ ALTER TABLE IF EXISTS "spdx"."relationships" ADD CONSTRAINT "relationships_relat
 ALTER TABLE IF EXISTS "spdx"."relationships" ADD CONSTRAINT "relationships_right_identifier_id_fkey" FOREIGN KEY ("right_identifier_id") REFERENCES "spdx"."identifiers" ("identifier_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 INSERT INTO "augur_operations"."augur_settings" set value = 31 where setting = 'augur_data_version'; 
+
+CREATE TABLE "augur_data"."pull_request_analysis" (
+  "pull_request_analysis_id" serial8,
+  "pull_request_id" int8,
+  "merge_probability" float8,
+  "mechanism" varchar,
+  "tool_source" varchar,
+  "tool_version" varchar,
+  "data_source" varchar,
+  "data_collection_date" timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY ("pull_request_analysis_id")
+)
+;
+
+ALTER TABLE "augur_data"."pull_request_analysis" OWNER TO "augur";
+
+COMMENT ON COLUMN "augur_data"."pull_request_analysis"."pull_request_id" IS 'It would be better if the pull request worker is run first to fetch the latest PRs before analyzing';
+
+COMMENT ON COLUMN "augur_data"."pull_request_analysis"."merge_probability" IS 'Indicates the probability of the PR being merged';
+
+COMMENT ON COLUMN "augur_data"."pull_request_analysis"."mechanism" IS 'the ML model used for prediction (It is XGBoost Classifier at present)';
+
+ALTER TABLE "augur_data"."pull_request_analysis" ADD CONSTRAINT "fk_pull_request_analysis_pull_requests_1" FOREIGN KEY ("pull_request_id") REFERENCES "augur_data"."pull_requests" ("pull_request_id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+CREATE  INDEX CONCURRENTLY "probability_idx"  ON "augur_data"."pull_request_analysis" USING btree (
+  "merge_probability" DESC NULLS LAST 
+);
+
+CREATE INDEX CONCURRENTLY  "pr_anal_idx"  ON "augur_data"."pull_request_analysis" USING btree (
+  "pull_request_id"
+);
+
+update "augur_operations"."augur_settings" set value = 32 where setting = 'augur_data_version'; 
+
+
+--  # Pull request commit updates
+ALTER TABLE "augur_data"."pull_request_commits" ADD COLUMN "pr_cmt_author_cntrb_id" int8;
+ALTER TABLE "augur_data"."pull_request_commits" ADD COLUMN "pr_cmt_timestamp" timestamp(0);
+ALTER TABLE "augur_data"."pull_request_commits" ADD COLUMN "pr_cmt_author_email" varchar COLLATE "pg_catalog"."default";
+
+update "augur_operations"."augur_settings" set value = 33 where setting = 'augur_data_version'; 
+
+
+--  # Pull request commit updates
+update "augur_operations"."augur_settings" set value = 34 where setting = 'augur_data_version'; 
+
+
+-- Adding GitLab Platform
+INSERT INTO "augur_data"."platform" ("pltfrm_id", "pltfrm_name", "pltfrm_version", "pltfrm_release_date", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (25151, 'GitLab', '3', '2020-12-27', 'Manual Entry', 'Sean Goggins', 'GitLab', '2020-12-27 16:07:20');
+--  # Pull request commit updates
+update "augur_operations"."augur_settings" set value = 35 where setting = 'augur_data_version'; 
+
+
+ALTER TABLE "augur_data"."pull_request_reviews" ALTER COLUMN "pr_review_author_association" TYPE varchar COLLATE "pg_catalog"."default";
+
+ALTER TABLE "augur_data"."pull_request_reviews" ALTER COLUMN "pr_review_state" TYPE varchar COLLATE "pg_catalog"."default";
+
+ALTER TABLE "augur_data"."pull_request_reviews" ALTER COLUMN "pr_review_body" TYPE varchar COLLATE "pg_catalog"."default";
+
+ALTER TABLE "augur_data"."pull_request_reviews" ALTER COLUMN "pr_review_node_id" TYPE varchar COLLATE "pg_catalog"."default";
+
+ALTER TABLE "augur_data"."pull_request_reviews" ALTER COLUMN "pr_review_html_url" TYPE varchar COLLATE "pg_catalog"."default";
+
+ALTER TABLE "augur_data"."pull_request_reviews" ALTER COLUMN "pr_review_pull_request_url" TYPE varchar COLLATE "pg_catalog"."default";
+
+ALTER TABLE "augur_data"."pull_request_reviews" ALTER COLUMN "pr_review_commit_id" TYPE varchar COLLATE "pg_catalog"."default";
+
+ALTER TABLE "augur_data"."pull_request_reviews" ALTER COLUMN "tool_source" TYPE varchar COLLATE "pg_catalog"."default";
+
+ALTER TABLE "augur_data"."pull_request_reviews" ALTER COLUMN "tool_version" TYPE varchar COLLATE "pg_catalog"."default";
+
+ALTER TABLE "augur_data"."pull_request_reviews" ALTER COLUMN "data_source" TYPE varchar COLLATE "pg_catalog"."default";
+
+
+
+update "augur_operations"."augur_settings" set value = 38 where setting = 'augur_data_version'; 
+
+
+ALTER TABLE "augur_data"."pull_request_commits" DROP CONSTRAINT "fk_pull_request_commits_pull_requests_1";
+
+ALTER TABLE "augur_data"."pull_request_events" DROP CONSTRAINT "fk_pull_request_events_pull_requests_1";
+
+ALTER TABLE "augur_data"."pull_request_files" DROP CONSTRAINT "fk_pull_request_commits_pull_requests_1";
+
+ALTER TABLE "augur_data"."pull_request_labels" DROP CONSTRAINT "fk_pull_request_labels_pull_requests_1";
+
+ALTER TABLE "augur_data"."pull_request_message_ref" DROP CONSTRAINT "fk_pull_request_message_ref_pull_requests_1";
+
+ALTER TABLE "augur_data"."pull_request_message_ref" DROP CONSTRAINT "fk_pull_request_message_ref_message_1";
+
+ALTER TABLE "augur_data"."pull_request_meta" DROP CONSTRAINT "fk_pull_request_meta_pull_requests_1";
+
+ALTER TABLE "augur_data"."pull_request_repo" DROP CONSTRAINT "fk_pull_request_repo_pull_request_meta_1";
+
+ALTER TABLE "augur_data"."pull_request_review_message_ref" DROP CONSTRAINT "fk_pull_request_review_message_ref_pull_request_reviews_1";
+
+ALTER TABLE "augur_data"."pull_request_reviewers" DROP CONSTRAINT "fk_pull_request_reviewers_pull_requests_1";
+
+ALTER TABLE "augur_data"."pull_request_reviews" DROP CONSTRAINT "fk_pull_request_reviews_pull_requests_1";
+
+ALTER TABLE "augur_data"."pull_request_reviews" ALTER COLUMN "pr_review_author_association" TYPE varchar COLLATE "pg_catalog"."default";
+
+ALTER TABLE "augur_data"."pull_request_reviews" ALTER COLUMN "pr_review_state" TYPE varchar COLLATE "pg_catalog"."default";
+
+ALTER TABLE "augur_data"."pull_request_reviews" ALTER COLUMN "pr_review_body" TYPE varchar COLLATE "pg_catalog"."default";
+
+ALTER TABLE "augur_data"."pull_request_reviews" ALTER COLUMN "pr_review_node_id" TYPE varchar COLLATE "pg_catalog"."default";
+
+ALTER TABLE "augur_data"."pull_request_reviews" ALTER COLUMN "pr_review_html_url" TYPE varchar COLLATE "pg_catalog"."default";
+
+ALTER TABLE "augur_data"."pull_request_reviews" ALTER COLUMN "pr_review_pull_request_url" TYPE varchar COLLATE "pg_catalog"."default";
+
+ALTER TABLE "augur_data"."pull_request_reviews" ALTER COLUMN "pr_review_commit_id" TYPE varchar COLLATE "pg_catalog"."default";
+
+ALTER TABLE "augur_data"."pull_request_reviews" ALTER COLUMN "tool_source" TYPE varchar COLLATE "pg_catalog"."default";
+
+ALTER TABLE "augur_data"."pull_request_reviews" ALTER COLUMN "tool_version" TYPE varchar COLLATE "pg_catalog"."default";
+
+ALTER TABLE "augur_data"."pull_request_reviews" ALTER COLUMN "data_source" TYPE varchar COLLATE "pg_catalog"."default";
+
+ALTER TABLE "augur_data"."pull_request_teams" DROP CONSTRAINT "fk_pull_request_teams_pull_requests_1";
+
+ALTER TABLE "augur_data"."pull_requests" DROP CONSTRAINT "fk_pull_requests_pull_request_meta_2";
+
+ALTER TABLE "augur_data"."pull_requests" DROP CONSTRAINT "fk_pull_requests_pull_request_meta_1";
+
+ALTER TABLE "augur_data"."pull_request_commits" ADD CONSTRAINT "fk_pull_request_commits_pull_requests_1" FOREIGN KEY ("pull_request_id") REFERENCES "augur_data"."pull_requests" ("pull_request_id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE "augur_data"."pull_request_events" ADD CONSTRAINT "fk_pull_request_events_pull_requests_1" FOREIGN KEY ("pull_request_id") REFERENCES "augur_data"."pull_requests" ("pull_request_id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE "augur_data"."pull_request_files" ADD CONSTRAINT "fk_pull_request_commits_pull_requests_1" FOREIGN KEY ("pull_request_id") REFERENCES "augur_data"."pull_requests" ("pull_request_id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE "augur_data"."pull_request_labels" ADD CONSTRAINT "fk_pull_request_labels_pull_requests_1" FOREIGN KEY ("pull_request_id") REFERENCES "augur_data"."pull_requests" ("pull_request_id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE "augur_data"."pull_request_message_ref" ADD CONSTRAINT "fk_pull_request_message_ref_message_1" FOREIGN KEY ("msg_id") REFERENCES "augur_data"."message" ("msg_id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE "augur_data"."pull_request_message_ref" ADD CONSTRAINT "fk_pull_request_message_ref_pull_requests_1" FOREIGN KEY ("pull_request_id") REFERENCES "augur_data"."pull_requests" ("pull_request_id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE "augur_data"."pull_request_meta" ADD CONSTRAINT "fk_pull_request_meta_pull_requests_1" FOREIGN KEY ("pull_request_id") REFERENCES "augur_data"."pull_requests" ("pull_request_id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE "augur_data"."pull_request_repo" ADD CONSTRAINT "fk_pull_request_repo_pull_request_meta_1" FOREIGN KEY ("pr_repo_meta_id") REFERENCES "augur_data"."pull_request_meta" ("pr_repo_meta_id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE "augur_data"."pull_request_review_message_ref" ADD CONSTRAINT "fk_pull_request_review_message_ref_pull_request_reviews_1" FOREIGN KEY ("pr_review_id") REFERENCES "augur_data"."pull_request_reviews" ("pr_review_id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE "augur_data"."pull_request_reviewers" ADD CONSTRAINT "fk_pull_request_reviewers_pull_requests_1" FOREIGN KEY ("pull_request_id") REFERENCES "augur_data"."pull_requests" ("pull_request_id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE "augur_data"."pull_request_reviews" ADD CONSTRAINT "fk_pull_request_reviews_pull_requests_1" FOREIGN KEY ("pull_request_id") REFERENCES "augur_data"."pull_requests" ("pull_request_id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE "augur_data"."pull_request_teams" ADD CONSTRAINT "fk_pull_request_teams_pull_requests_1" FOREIGN KEY ("pull_request_id") REFERENCES "augur_data"."pull_requests" ("pull_request_id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE "augur_data"."pull_requests" ADD CONSTRAINT "fk_pull_requests_pull_request_meta_1" FOREIGN KEY ("pr_meta_head_id") REFERENCES "augur_data"."pull_request_meta" ("pr_repo_meta_id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE "augur_data"."pull_requests" ADD CONSTRAINT "fk_pull_requests_pull_request_meta_2" FOREIGN KEY ("pr_meta_base_id") REFERENCES "augur_data"."pull_request_meta" ("pr_repo_meta_id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+
+
+update "augur_operations"."augur_settings" set value = 39 where setting = 'augur_data_version'; 
+
+
+COMMENT ON TABLE "augur_data"."contributor_repo" IS 'Developed in Partnership with Andrew Brain';
+
+ALTER TABLE "augur_data"."contributor_repo" ADD COLUMN IF NOT EXISTS "repo_id" int8 NOT NULL;
+
+ALTER TABLE "augur_data"."contributor_repo" ADD COLUMN IF NOT EXISTS "repo_name" varchar COLLATE "pg_catalog"."default" NOT NULL;
+
+ALTER TABLE "augur_data"."contributor_repo" ADD COLUMN IF NOT EXISTS "event_id" int8 NOT NULL;
+
+ALTER TABLE "augur_data"."contributor_repo" ADD COLUMN IF NOT EXISTS "created_at" timestamp(0) NOT NULL;
+
+ALTER TABLE "augur_data"."contributors_aliases" DROP CONSTRAINT IF EXISTS "fk_contributors_aliases_contributors_1";
+
+ALTER TABLE "augur_data"."message" DROP CONSTRAINT IF EXISTS "fk_message_repo_groups_list_serve_1";
+
+ALTER TABLE "augur_data"."message" DROP CONSTRAINT IF EXISTS "fk_message_platform_1";
+
+ALTER TABLE "augur_data"."message" DROP CONSTRAINT IF EXISTS "fk_message_contributors_1";
+
+ALTER TABLE "augur_data"."pull_request_reviewers" DROP CONSTRAINT IF EXISTS "fk_pull_request_reviewers_contributors_1";
+
+ALTER TABLE "augur_data"."pull_request_reviews" DROP CONSTRAINT IF EXISTS "fk_pull_request_reviews_contributors_1";
+
+ALTER TABLE "augur_data"."pull_requests" DROP CONSTRAINT IF EXISTS "fk_pull_requests_repo_1";
+
+ALTER TABLE "augur_data"."contributors_aliases" DROP CONSTRAINT IF EXISTS "fk_alias_id"; 
+
+ALTER TABLE "augur_data"."pull_request_commits" DROP CONSTRAINT IF EXISTS "fk_pr_commit_cntrb_id";
+
+ALTER TABLE "augur_data"."contributors_aliases" ADD CONSTRAINT "fk_alias_id" FOREIGN KEY ("cntrb_a_id") REFERENCES "augur_data"."contributors" ("cntrb_id") ON DELETE CASCADE ON UPDATE CASCADE NOT VALID;
+
+ALTER TABLE "augur_data"."contributors_aliases" ADD CONSTRAINT "fk_contributors_aliases_contributors_1" FOREIGN KEY ("cntrb_id") REFERENCES "augur_data"."contributors" ("cntrb_id") ON DELETE CASCADE ON UPDATE CASCADE NOT VALID;
+
+ALTER TABLE "augur_data"."message" ADD CONSTRAINT  "fk_message_contributors_1" FOREIGN KEY ("cntrb_id") REFERENCES "augur_data"."contributors" ("cntrb_id") ON DELETE CASCADE ON UPDATE CASCADE NOT VALID;
+
+ALTER TABLE "augur_data"."message" ADD CONSTRAINT  "fk_message_platform_1" FOREIGN KEY ("pltfrm_id") REFERENCES "augur_data"."platform" ("pltfrm_id") ON DELETE CASCADE ON UPDATE CASCADE NOT VALID;
+
+ALTER TABLE "augur_data"."message" ADD CONSTRAINT "fk_message_repo_groups_list_serve_1" FOREIGN KEY ("rgls_id") REFERENCES "augur_data"."repo_groups_list_serve" ("rgls_id") ON DELETE CASCADE ON UPDATE CASCADE NOT VALID;
+
+ALTER TABLE "augur_data"."pull_request_commits" ADD CONSTRAINT  "fk_pr_commit_cntrb_id" FOREIGN KEY ("pr_cmt_author_cntrb_id") REFERENCES "augur_data"."contributors" ("cntrb_id") ON DELETE CASCADE ON UPDATE CASCADE NOT VALID;
+
+ALTER TABLE "augur_data"."pull_request_reviewers" ADD CONSTRAINT  "fk_pull_request_reviewers_contributors_1" FOREIGN KEY ("cntrb_id") REFERENCES "augur_data"."contributors" ("cntrb_id") ON DELETE CASCADE ON UPDATE CASCADE NOT VALID;
+
+ALTER TABLE "augur_data"."pull_request_reviews" ADD CONSTRAINT  "fk_pull_request_reviews_contributors_1" FOREIGN KEY ("cntrb_id") REFERENCES "augur_data"."contributors" ("cntrb_id") ON DELETE CASCADE ON UPDATE CASCADE NOT VALID;
+
+ALTER TABLE "augur_data"."pull_requests" ADD CONSTRAINT  "fk_pr_contribs" FOREIGN KEY ("pr_augur_contributor_id") REFERENCES "augur_data"."contributors" ("cntrb_id") ON DELETE CASCADE ON UPDATE CASCADE NOT VALID;
+
+ALTER TABLE "augur_data"."pull_requests" ADD CONSTRAINT  "fk_pull_requests_repo_1" FOREIGN KEY ("repo_id") REFERENCES "augur_data"."repo" ("repo_id") ON DELETE CASCADE ON UPDATE CASCADE NOT VALID;
+
+update "augur_operations"."augur_settings" set value = 40 where setting = 'augur_data_version'; 
+
+
+CREATE INDEX pull_requests_idx_repo_id_data_datex ON "augur_data"."pull_requests" (repo_id,data_collection_date);
+CREATE INDEX repo_idx_repo_id_repo_namex ON "augur_data"."repo" (repo_id,repo_name);
+CREATE INDEX repo_info_idx_repo_id_data_datex ON "augur_data"."repo_info" (repo_id,data_collection_date);
+CREATE INDEX repo_info_idx_repo_id_data_date_1x ON "augur_data"."repo_info" (repo_id,data_collection_date);
+
+update "augur_operations"."augur_settings" set value = 41 where setting = 'augur_data_version'; 
+
+-- Update Repo Foreign Key
+ALTER TABLE "augur_data"."repo" DROP CONSTRAINT "fk_repo_repo_groups_1";
+
+ALTER TABLE "augur_data"."repo" ADD CONSTRAINT "fk_repo_repo_groups_1" FOREIGN KEY ("repo_group_id") REFERENCES "augur_data"."repo_groups" ("repo_group_id") ON DELETE NO ACTION ON UPDATE NO ACTION NOT VALID;
+
+COMMENT ON CONSTRAINT "fk_repo_repo_groups_1" ON "augur_data"."repo" IS 'Repo_groups cardinality set to one and only one because, although in theory there could be more than one repo group for a repo, this might create dependencies in hosted situation that we do not want to live with. ';
+
+ALTER TABLE "augur_data"."message" 
+  ALTER COLUMN "data_collection_date" SET DEFAULT CURRENT_TIMESTAMP;
+
+update "augur_operations"."augur_settings" set value = 42 where setting = 'augur_data_version'; 
+
