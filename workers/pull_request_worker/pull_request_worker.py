@@ -27,8 +27,11 @@ class GitHubPullRequestWorker(Worker):
             'pull_request_assignees', 'pull_request_events', 'pull_request_labels',
             'pull_request_message_ref', 'pull_request_meta', 'pull_request_repo',
             'pull_request_reviewers', 'pull_request_teams', 'message', 'pull_request_commits',
-            'pull_request_files']
+            'pull_request_files', 'pull_request_reviews', 'pull_request_review_message_ref']
         operations_tables = ['worker_history', 'worker_job']
+
+        self.deep_collection = True
+        self.platform_id = 25150 # GitHub
 
         # Run the general worker initialization
         super().__init__(worker_type, config, given, models, data_tables, operations_tables)
@@ -338,421 +341,495 @@ class GitHubPullRequestWorker(Worker):
         :type entry_info: dict
         """
 
-        self.logger.info("Querying starting ids info...\n")
-
-        # Increment so we are ready to insert the 'next one' of each of these most recent ids
-        self.history_id = self.get_max_id('worker_history', 'history_id', operations_table=True) + 1
-        self.pr_id_inc = self.get_max_id('pull_requests', 'pull_request_id')
-        self.pr_meta_id_inc = self.get_max_id('pull_request_meta', 'pr_repo_meta_id')
-
         github_url = entry_info['given']['github_url']
+
+        self.query_github_contributors(entry_info, repo_id)
 
         self.logger.info('Beginning collection of Pull Requests...\n')
         self.logger.info(f'Repo ID: {repo_id}, Git URL: {github_url}\n')
 
         owner, repo = self.get_owner_repo(github_url)
 
-        url = (f'https://api.github.com/repos/{owner}/{repo}/pulls?state=all&' +
+        pr_url = (f'https://api.github.com/repos/{owner}/{repo}/pulls?state=all&' +
             'direction=asc&per_page=100&page={}')
 
-        # Get pull requests that we already have stored
-        #   Set pseudo key (something other than PK) to 
-        #   check dupicates with
-        table = 'pull_requests'
-        table_pkey = 'pull_request_id'
-        update_col_map = {'pr_src_state': 'state'} 
-        duplicate_col_map = {'pr_src_id': 'id'}
+        pr_action_map = {
+            'insert': {
+                'source': ['id'],
+                'augur': ['pr_src_id']
+            },
+            'update': {
+                'source': ['state'],
+                'augur': ['pr_src_state']
+            }
+        }
 
-        #list to hold pull requests needing insertion
-        prs = self.paginate(url, duplicate_col_map, update_col_map, table, table_pkey, 
-            where_clause='WHERE repo_id = {}'.format(repo_id),
-            value_update_col_map={'pr_augur_contributor_id': float('nan')})
+        source_prs = self.paginate_endpoint(pr_url, action_map=pr_action_map, 
+            table=self.pull_requests_table, where_clause=self.pull_requests_table.c.repo_id == repo_id)
 
-        # Discover and remove duplicates before we start inserting
-        self.logger.info("Count of pull requests needing update or insertion: " + str(len(prs)) + "\n")
+        if len(source_prs['all']) == 0:
+            self.logger.info("There are no prs for this repository.\n")
+            self.register_task_completion(entry_info, repo_id, 'pull_requests')
+            return
 
-        for pr_dict in prs:
-
-            pr = {
+        prs_insert = [
+            {
                 'repo_id': repo_id,
-                'pr_url': pr_dict['url'],
-                'pr_src_id': pr_dict['id'],
+                'pr_url': pr['url'],
+                'pr_src_id': pr['id'],
                 'pr_src_node_id': None,
-                'pr_html_url': pr_dict['html_url'],
-                'pr_diff_url': pr_dict['diff_url'],
-                'pr_patch_url': pr_dict['patch_url'],
-                'pr_issue_url': pr_dict['issue_url'],
+                'pr_html_url': pr['html_url'],
+                'pr_diff_url': pr['diff_url'],
+                'pr_patch_url': pr['patch_url'],
+                'pr_issue_url': pr['issue_url'],
                 'pr_augur_issue_id': None,
-                'pr_src_number': pr_dict['number'],
-                'pr_src_state': pr_dict['state'],
-                'pr_src_locked': pr_dict['locked'],
-                'pr_src_title': pr_dict['title'],
-                'pr_augur_contributor_id': self.find_id_from_login(pr_dict['user']['login']),
-                'pr_body': pr_dict['body'],
-                'pr_created_at': pr_dict['created_at'],
-                'pr_updated_at': pr_dict['updated_at'],
-                'pr_closed_at': pr_dict['closed_at'],
-                'pr_merged_at': pr_dict['merged_at'],
-                'pr_merge_commit_sha': pr_dict['merge_commit_sha'],
+                'pr_src_number': pr['number'],
+                'pr_src_state': pr['state'],
+                'pr_src_locked': pr['locked'],
+                'pr_src_title': pr['title'],
+                'pr_augur_contributor_id': self.find_id_from_login(pr['user']['login']),
+                'pr_body': pr['body'],
+                'pr_created_at': pr['created_at'],
+                'pr_updated_at': pr['updated_at'],
+                'pr_closed_at': pr['closed_at'],
+                'pr_merged_at': pr['merged_at'],
+                'pr_merge_commit_sha': pr['merge_commit_sha'],
                 'pr_teams': None,
-                'pr_milestone': pr_dict['milestone']['title'] if pr_dict['milestone'] else None,
-                'pr_commits_url': pr_dict['commits_url'],
-                'pr_review_comments_url': pr_dict['review_comments_url'],
-                'pr_review_comment_url': pr_dict['review_comment_url'],
-                'pr_comments_url': pr_dict['comments_url'],
-                'pr_statuses_url': pr_dict['statuses_url'],
+                'pr_milestone': pr['milestone']['title'] if pr['milestone'] else None,
+                'pr_commits_url': pr['commits_url'],
+                'pr_review_comments_url': pr['review_comments_url'],
+                'pr_review_comment_url': pr['review_comment_url'],
+                'pr_comments_url': pr['comments_url'],
+                'pr_statuses_url': pr['statuses_url'],
                 'pr_meta_head_id': None,
                 'pr_meta_base_id': None,
-                'pr_src_issue_url': pr_dict['issue_url'],
-                'pr_src_comments_url': pr_dict['comments_url'], # NOTE: this seems redundant
-                'pr_src_review_comments_url': pr_dict['review_comments_url'], # this too
-                'pr_src_commits_url': pr_dict['commits_url'], # this one also seems redundant
-                'pr_src_statuses_url': pr_dict['statuses_url'],
-                'pr_src_author_association': pr_dict['author_association'],
+                'pr_src_issue_url': pr['issue_url'],
+                'pr_src_comments_url': pr['comments_url'], # NOTE: this seems redundant
+                'pr_src_review_comments_url': pr['review_comments_url'], # this too
+                'pr_src_commits_url': pr['commits_url'], # this one also seems redundant
+                'pr_src_statuses_url': pr['statuses_url'],
+                'pr_src_author_association': pr['author_association'],
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
                 'data_source': 'GitHub API'
+            } for pr in source_prs['insert']
+        ]
+
+        if len(source_prs['insert']) > 0 or len(source_prs['update']) > 0:
+
+            pr_insert_result, pr_update_result = self.bulk_insert(self.pull_requests_table, 
+                update=source_prs['update'], unique_columns=pr_action_map['insert']['augur'], 
+                insert=prs_insert, update_columns=pr_action_map['update']['augur'])
+
+            source_data = source_prs['insert'] + source_prs['update']
+
+        elif not self.deep_collection:
+            self.logger.info("There are no prs to update, insert, or collect nested "
+                "information for.\n")
+            self.register_task_completion(entry_info, repo_id, 'pull_requests')
+            return
+
+        if self.deep_collection:
+            source_data = source_prs['all']
+
+        # Merge source data to inserted data to have access to inserted primary keys
+
+        gh_merge_fields = ['id']
+        augur_merge_fields = ['pr_src_id']
+
+        pk_source_prs = self.enrich_data_primary_keys(source_data, self.pull_requests_table, 
+            gh_merge_fields, augur_merge_fields)
+
+        # Messages/comments
+
+        comments_url = (f'https://api.github.com/repos/{owner}/{repo}/issues' +
+            '/comments?per_page=100&page={}')
+
+        comment_action_map = {
+            'insert': {
+                'source': ['created_at', 'body'],
+                'augur': ['msg_timestamp', 'msg_text']
             }
+        }
 
-            if pr_dict['flag'] == 'need_insertion':
-                self.logger.info(f'PR {pr_dict["id"]} needs to be inserted\n')
+        pr_comments = self.paginate_endpoint(comments_url, 
+            action_map=comment_action_map, table=self.message_table)
 
-                result = self.db.execute(self.pull_requests_table.insert().values(pr))
-                self.logger.info(f"Added Pull Request: {result.inserted_primary_key}")
-                self.pr_id_inc = int(result.inserted_primary_key[0])
+        pr_comments['insert'] = self.text_clean(pr_comments['insert'], 'body')
 
-            elif pr_dict['flag'] == 'need_update':
-                result = self.db.execute(self.pull_requests_table.update().where(
-                    self.pull_requests_table.c.pr_src_id==pr_dict['id']).values(pr))
-                self.logger.info("Updated tuple in the pull_requests table with existing pr_src_id: {}".format(
-                    pr_dict['id']))
-                self.pr_id_inc = pr_dict['pkey']
+        pr_comments_insert = [
+            {
+                'pltfrm_id': self.platform_id,
+                'msg_text': comment['body'].replace("\x00", "\uFFFD"),
+                'msg_timestamp': comment['created_at'],
+                'cntrb_id': self.find_id_from_login(comment['user']['login']),
+                'tool_source': self.tool_source,
+                'tool_version': self.tool_version,
+                'data_source': self.data_source
+            } for comment in pr_comments['insert']
+        ]
 
-            else:
-                self.logger.info("PR does not need to be inserted. Fetching its id from DB")
-                pr_id_sql = s.sql.text("""
-                    SELECT pull_request_id FROM pull_requests
-                    WHERE pr_src_id={}
-                """.format(pr_dict['id']))
+        self.bulk_insert(self.message_table, insert=pr_comments_insert)
+            
+        # PR MESSAGE REF TABLE
 
-                self.pr_id_inc = int(pd.read_sql(pr_id_sql, self.db).iloc[0]['pull_request_id'])
+        c_pk_source_comments = self.enrich_data_primary_keys(pr_comments['insert'], 
+            self.message_table, ['created_at', 'body'], ['msg_timestamp', 'msg_text'])
 
-            self.query_labels(pr_dict['labels'], self.pr_id_inc)
-            self.query_pr_events(owner, repo, pr_dict['number'], self.pr_id_inc)
-            self.query_pr_comments(owner, repo, pr_dict['number'], self.pr_id_inc)
-            self.query_reviewers(pr_dict['requested_reviewers'], self.pr_id_inc)
-            self.query_pr_meta(pr_dict['head'], pr_dict['base'], self.pr_id_inc)
+        both_pk_source_comments = self.enrich_data_primary_keys(c_pk_source_comments, 
+            self.pull_requests_table, ['issue_url'], ['pr_issue_url'])
 
-            self.logger.info(f"Inserted PR data for {owner}/{repo}")
-            self.results_counter += 1
+        pr_message_ref_insert = [
+            {
+                'pull_request_id': comment['pull_request_id'],
+                'msg_id': comment['msg_id'],
+                'pr_message_ref_src_comment_id': comment['id'],
+                'pr_message_ref_src_node_id': comment['node_id'],
+                'tool_source': self.tool_source,
+                'tool_version': self.tool_version,
+                'data_source': self.data_source
+            } for comment in both_pk_source_comments
+        ]
+
+        self.bulk_insert(self.pull_request_message_ref_table, insert=pr_message_ref_insert)
+
+        # PR Events          
+    
+        events_url = f"https://api.github.com/repos/{owner}/{repo}" + \
+            "/issues/events?per_page=100&page={}"
+
+        # Get events that we already have stored
+        #   Set pseudo key (something other than PK) to 
+        #   check dupicates with
+        event_action_map = {
+            'insert': {
+                'source': ['url'],
+                'augur': ['node_url']
+            }
+        }
+
+        #list to hold contributors needing insertion or update
+        pr_events = self.paginate_endpoint(events_url, table=self.pull_request_events_table,
+            action_map=event_action_map, where_clause=self.pull_request_events_table.c.pull_request_id.in_(
+                    set(pd.DataFrame(pk_source_prs)['pull_request_id'])
+                ))
+
+        pk_pr_events = self.enrich_data_primary_keys(pr_events['insert'], 
+            self.pull_requests_table, ['issue.url'], ['pr_issue_url'])
+
+        pr_events_insert = [
+            {
+                'pull_request_id': event['pull_request_id'],
+                'cntrb_id': self.find_id_from_login(event['actor']['login']),
+                'action': event['event'],
+                'action_commit_hash': None,
+                'created_at': event['created_at'],
+                'issue_event_src_id': event['id'],
+                'node_id': event['node_id'],
+                'node_url': event['url'],
+                'tool_source': self.tool_source,
+                'tool_version': self.tool_version,
+                'data_source': self.data_source
+            } for event in pk_pr_events if event['actor'] is not None
+        ]
+
+        self.bulk_insert(self.pull_request_events_table, insert=pr_events_insert)
+
+        # Reviews
+
+        review_action_map = {
+            'insert': {
+                'source': ['id'],
+                'augur': ['pr_review_src_id']
+            },
+            'update': {
+                'source': ['state'],
+                'augur': ['pr_review_state']
+            }
+        }
+
+        reviews_urls = [
+            (f"https://api.github.com/repos/{owner}/{repo}/pulls/{pr['number']}/reviews?per_page=100",
+                {'pull_request_id': pr['pull_request_id']})
+            for pr in pk_source_prs
+        ]
+
+        pr_pk_source_reviews = self.multi_thread_urls(reviews_urls)
+
+        cols_to_query = self.get_relevant_columns(self.pull_request_reviews_table, review_action_map)
+
+        table_values = self.db.execute(s.sql.select(cols_to_query).where(
+            self.pull_request_reviews_table.c.pull_request_id.in_(
+                    set(pd.DataFrame(pk_source_prs)['pull_request_id'])
+                ))).fetchall()
+
+        source_reviews_insert, source_reviews_update = self.organize_needed_data(pr_pk_source_reviews, 
+            table_values, list(self.pull_request_reviews_table.primary_key)[0].name, action_map=review_action_map)
+
+        reviews_insert = [
+            {
+                'pull_request_id': review['pull_request_id'],
+                'cntrb_id': self.find_id_from_login(review['user']['login']),
+                'pr_review_author_association': review['author_association'],
+                'pr_review_state': review['state'],
+                'pr_review_body': review['body'],
+                'pr_review_submitted_at': review['submitted_at'] if 'submitted_at' in review else None,
+                'pr_review_src_id': review['id'],
+                'pr_review_node_id': review['node_id'],
+                'pr_review_html_url': review['html_url'],
+                'pr_review_pull_request_url': review['pull_request_url'],
+                'pr_review_commit_id': review['commit_id'],
+                'tool_source': self.tool_source,
+                'tool_version': self.tool_version,
+                'data_source': self.data_source
+            } for review in source_reviews_insert if review['user'] and 'login' in review['user']
+        ]
+
+        self.bulk_insert(self.pull_request_reviews_table, insert=reviews_insert, update=source_reviews_update,
+            unique_columns=review_action_map['insert']['augur'], update_columns=review_action_map['update']['augur'])
+
+        # Merge source data to inserted data to have access to inserted primary keys
+
+        gh_merge_fields = ['id']
+        augur_merge_fields = ['pr_review_src_id']
+
+        both_pr_review_pk_source_reviews = self.enrich_data_primary_keys(pr_pk_source_reviews, 
+            self.pull_request_reviews_table, gh_merge_fields, augur_merge_fields)
+
+        # Review Comments
+
+        review_msg_url = (f'https://api.github.com/repos/{owner}/{repo}/pulls' +
+            '/comments?per_page=100&page={}')
+
+        review_msg_action_map = {
+            'insert': {
+                'source': ['created_at', 'body'],
+                'augur': ['msg_timestamp', 'msg_text']
+            }
+        }
+
+        in_clause = [] if len(both_pr_review_pk_source_reviews) == 0 else \
+            set(pd.DataFrame(both_pr_review_pk_source_reviews)['pr_review_id'])
+
+        review_msgs = self.paginate_endpoint(review_msg_url, 
+            action_map=review_msg_action_map, table=self.message_table, 
+            where_clause=self.message_table.c.msg_id.in_(
+                    [msg_row[0] for msg_row in self.db.execute(s.sql.select(
+                        [self.pull_request_review_message_ref_table.c.msg_id]).where(
+                        self.pull_request_review_message_ref_table.c.pr_review_id.in_(
+                            in_clause
+                        ))).fetchall()]
+                ))
+
+        review_msg_insert = [
+            {
+                'pltfrm_id': self.platform_id,
+                'msg_text': comment['body'],
+                'msg_timestamp': comment['created_at'],
+                'cntrb_id': self.find_id_from_login(comment['user']['login']),
+                'tool_source': self.tool_source,
+                'tool_version': self.tool_version,
+                'data_source': self.data_source
+            } for comment in review_msgs['insert'] if comment['user'] and 'login' in comment['user']
+        ]
+
+        self.bulk_insert(self.message_table, insert=review_msg_insert)
+            
+        # PR REVIEW MESSAGE REF TABLE
+
+        c_pk_source_comments = self.enrich_data_primary_keys(review_msgs['insert'], 
+            self.message_table, ['created_at', 'body'], ['msg_timestamp', 'msg_text'])
+        both_pk_source_comments = self.enrich_data_primary_keys(c_pk_source_comments, 
+            self.pull_request_reviews_table, ['pull_request_review_id'], ['pr_review_src_id'])
+
+        pr_review_msg_ref_insert = [
+            {
+                'pr_review_id': comment['pr_review_id'],
+                'msg_id': comment['msg_id'],
+                'pr_review_msg_url': comment['url'],
+                'pr_review_src_id': comment['pull_request_review_id'],
+                'pr_review_msg_src_id': comment['id'],
+                'pr_review_msg_node_id': comment['node_id'],
+                'pr_review_msg_diff_hunk': comment['diff_hunk'],
+                'pr_review_msg_path': comment['path'],
+                'pr_review_msg_position': comment['position'],
+                'pr_review_msg_original_position': comment['original_position'],
+                'pr_review_msg_commit_id': comment['commit_id'],
+                'pr_review_msg_original_commit_id': comment['original_commit_id'],
+                'pr_review_msg_updated_at': comment['updated_at'],
+                'pr_review_msg_html_url': comment['html_url'],
+                'pr_url': comment['pull_request_url'],
+                'pr_review_msg_author_association': comment['author_association'],
+                'pr_review_msg_start_line': comment['start_line'],
+                'pr_review_msg_original_start_line': comment['original_start_line'],
+                'pr_review_msg_start_side': comment['start_side'],
+                'pr_review_msg_line': comment['line'],
+                'pr_review_msg_original_line': comment['original_line'],
+                'pr_review_msg_side': comment['side'],
+                'tool_source': self.tool_source,
+                'tool_version': self.tool_version,
+                'data_source': self.data_source
+            } for comment in both_pk_source_comments
+        ]
+
+        self.bulk_insert(self.pull_request_review_message_ref_table, insert=pr_review_msg_ref_insert)
+
+        # PR nested info table insertions
+
+        labels_insert = []
+        reviewers_insert = []
+        assignees_insert = []
+        meta_insert = []
+
+        label_action_map = { 
+            'insert': {
+                'source': ['pull_request_id', 'id'],
+                'augur': ['pull_request_id', 'pr_src_id']
+            }
+        }
+
+        reviewer_action_map = {
+            'insert': {
+                'source': ['pull_request_id', 'id'],
+                'augur': ['pull_request_id', 'pr_reviewer_src_id']
+            }
+        }
+
+        assignee_action_map = {
+            'insert': {
+                'source': ['pull_request_id', 'id'],
+                'augur': ['pull_request_id', 'pr_assignee_src_id']
+            }
+        }
+
+        meta_action_map = {
+            'insert': {
+                'source': ['pull_request_id', 'sha', 'pr_head_or_base'],
+                'augur': ['pull_request_id', 'pr_sha', 'pr_head_or_base']
+            }
+        }
+
+        for pr in pk_source_prs:
+
+            # PR Labels
+            
+            cols_to_query = self.get_relevant_columns(self.pull_request_labels_table, label_action_map)
+
+            table_values = self.db.execute(s.sql.select(cols_to_query).where(
+                self.pull_request_labels_table.c.pull_request_id == pr['pull_request_id'])).fetchall()
+
+            source_labels = pd.DataFrame(pr['labels'])
+            source_labels['pull_request_id'] = pr['pull_request_id']
+
+            source_labels_insert, _ = self.organize_needed_data(json.loads(source_labels.to_json(orient='records')), 
+                table_values, list(self.pull_request_labels_table.primary_key)[0].name, action_map=label_action_map)
+
+            labels_insert += [
+                {
+                    'pull_request_id': label['pull_request_id'],
+                    'pr_src_id': label['id'],
+                    'pr_src_node_id': label['node_id'],
+                    'pr_src_url': label['url'],
+                    'pr_src_description': label['name'],
+                    'pr_src_color': label['color'],
+                    'pr_src_default_bool': label['default'],
+                    'tool_source': self.tool_source,
+                    'tool_version': self.tool_version,
+                    'data_source': self.data_source
+                } for label in source_labels_insert
+            ]
+
+            # Reviewers
+
+            cols_to_query = self.get_relevant_columns(self.pull_request_reviewers_table, reviewer_action_map)
+
+            table_values = self.db.execute(s.sql.select(cols_to_query).where(
+                self.pull_request_reviewers_table.c.pull_request_id == pr['pull_request_id'])).fetchall()
+
+            source_reviewers = pd.DataFrame(pr['requested_reviewers'])
+            source_reviewers['pull_request_id'] = pr['pull_request_id']
+
+            source_reviewers_insert, _ = self.organize_needed_data(json.loads(source_reviewers.to_json(orient='records')), 
+                table_values, list(self.pull_request_reviewers_table.primary_key)[0].name, action_map=reviewer_action_map)
+
+            reviewers_insert += [
+                {
+                    'pull_request_id': reviewer['pull_request_id'],
+                    'cntrb_id': self.find_id_from_login(reviewer['login']),
+                    'pr_reviewer_src_id': reviewer['id'],
+                    'tool_source': self.tool_source,
+                    'tool_version': self.tool_version,
+                    'data_source': self.data_source
+                } for reviewer in source_reviewers_insert if 'login' in reviewer
+            ]
+
+            # Assignees
+
+            cols_to_query = self.get_relevant_columns(self.pull_request_assignees_table, assignee_action_map)
+
+            table_values = self.db.execute(s.sql.select(cols_to_query).where(
+                self.pull_request_assignees_table.c.pull_request_id == pr['pull_request_id'])).fetchall()
+
+            source_assignees = pd.DataFrame(pr['assignees'])
+            source_assignees['pull_request_id'] = pr['pull_request_id']
+
+            source_assignees_insert, _ = self.organize_needed_data(json.loads(source_assignees.to_json(orient='records')), 
+                table_values, list(self.pull_request_assignees_table.primary_key)[0].name, action_map=assignee_action_map)
+
+            assignees_insert += [
+                {
+                    'pull_request_id': assignee['pull_request_id'],
+                    'contrib_id': self.find_id_from_login(assignee['login']),
+                    'pr_assignee_src_id': assignee['id'],
+                    'tool_source': self.tool_source,
+                    'tool_version': self.tool_version,
+                    'data_source': self.data_source
+                } for assignee in source_assignees_insert if 'login' in assignee
+            ]
+
+            # Meta
+
+            cols_to_query = self.get_relevant_columns(self.pull_request_meta_table, meta_action_map)
+
+            table_values = self.db.execute(s.sql.select(cols_to_query).where(
+                self.pull_request_meta_table.c.pull_request_id == pr['pull_request_id'])).fetchall()
+
+            pr['head'].update({'pr_head_or_base': 'head', 'pull_request_id': pr['pull_request_id']})
+            pr['base'].update({'pr_head_or_base': 'base', 'pull_request_id': pr['pull_request_id']})
+
+            source_meta_insert, _ = self.organize_needed_data([pr['head'], pr['base']], 
+                table_values, list(self.pull_request_meta_table.primary_key)[0].name, action_map=meta_action_map)
+
+            meta_insert += [
+                {
+                    'pull_request_id': meta['pull_request_id'],
+                    'pr_head_or_base': meta['pr_head_or_base'],
+                    'pr_src_meta_label': meta['label'],
+                    'pr_src_meta_ref': meta['ref'],
+                    'pr_sha': meta['sha'],
+                    'cntrb_id': self.find_id_from_login(meta['user']['login']),
+                    'tool_source': self.tool_source,
+                    'tool_version': self.tool_version,
+                    'data_source': self.data_source
+                } for meta in source_meta_insert if meta['user'] and 'login' in meta['user']
+            ]
+
+        # PR labels insertion
+        self.bulk_insert(self.pull_request_labels_table, insert=labels_insert)
+
+        # PR reviewers insertion
+        self.bulk_insert(self.pull_request_reviewers_table, insert=reviewers_insert)
+
+        # PR assignees insertion
+        self.bulk_insert(self.pull_request_assignees_table, insert=assignees_insert)
+
+        # PR meta insertion
+        self.bulk_insert(self.pull_request_meta_table, insert=meta_insert)
 
         self.register_task_completion(entry_info, repo_id, 'pull_requests')
 
-    def query_labels(self, labels, pr_id):
-        self.logger.info('Querying PR Labels\n')
-
-        if len(labels) == 0:
-            self.logger.info('No new labels to add\n')
-            return
-
-        table = 'pull_request_labels'
-        duplicate_col_map = {'pr_src_id': 'id'}
-        update_col_map = {}
-        table_pkey = 'pr_label_id'
-
-        update_keys = list(update_col_map.keys()) if update_col_map else []
-        cols_query = list(duplicate_col_map.keys()) + update_keys + [table_pkey]
-
-        pr_labels_table_values = self.get_table_values(cols_query, [table])
-
-        new_labels = self.assign_tuple_action(labels, pr_labels_table_values, update_col_map, duplicate_col_map, 
-                table_pkey)
-
-        self.logger.info(f'Found {len(new_labels)} labels\n')
-
-        for label_dict in new_labels:
-
-            label = {
-                'pull_request_id': pr_id,
-                'pr_src_id': label_dict['id'],
-                'pr_src_node_id': label_dict['node_id'],
-                'pr_src_url': label_dict['url'],
-                'pr_src_description': label_dict['name'],
-                'pr_src_color': label_dict['color'],
-                'pr_src_default_bool': label_dict['default'],
-                'tool_source': self.tool_source,
-                'tool_version': self.tool_version,
-                'data_source': self.data_source
-            }
-
-            if label_dict['flag'] == 'need_insertion':
-                result = self.db.execute(self.pull_request_labels_table.insert().values(label))
-                self.logger.info(f"Added PR Label: {result.inserted_primary_key}\n")
-                self.logger.info(f"Inserted PR Labels data for PR with id {pr_id}\n")
-
-                self.results_counter += 1
-
-    def query_pr_events(self, owner, repo, gh_pr_no, pr_id):
-        self.logger.info('Querying PR Events\n')
-
-        url = (f'https://api.github.com/repos/{owner}/{repo}/issues/{gh_pr_no}' +
-            '/events?per_page=100&page={}')
-
-        # Get pull request events that we already have stored
-        #   Set our duplicate and update column map keys (something other than PK) to 
-        #   check dupicates/needed column updates with
-        table = 'pull_request_events'
-        table_pkey = 'pr_event_id'
-        update_col_map = {}
-        duplicate_col_map = {'issue_event_src_id': 'id'}
-
-        #list to hold contributors needing insertion or update
-        pr_events = self.paginate(url, duplicate_col_map, update_col_map, table, table_pkey)
-        
-        self.logger.info("Count of pull request events needing insertion: " + str(len(pr_events)) + "\n")
-
-        for pr_event_dict in pr_events:
-
-            if pr_event_dict['actor']:
-                cntrb_id = self.find_id_from_login(pr_event_dict['actor']['login'])
-            else:
-                cntrb_id = 1
-
-            pr_event = {
-                'pull_request_id': pr_id,
-                'cntrb_id': cntrb_id,
-                'action': pr_event_dict['event'],
-                'action_commit_hash': None,
-                'created_at': pr_event_dict['created_at'],
-                'issue_event_src_id': pr_event_dict['id'],
-                'node_id': pr_event_dict['node_id'],
-                'node_url': pr_event_dict['url'],
-                'tool_source': self.tool_source,
-                'tool_version': self.tool_version,
-                'data_source': self.data_source
-            }
-
-            result = self.db.execute(self.pull_request_events_table.insert().values(pr_event))
-            self.logger.info(f"Added PR Event: {result.inserted_primary_key}\n")
-
-            self.results_counter += 1
-
-        self.logger.info(f"Inserted PR Events data for PR with id {pr_id}\n")
-
-    def query_reviewers(self, reviewers, pr_id):
-        self.logger.info('Querying Reviewers')
-
-        if reviewers is None or len(reviewers) == 0:
-            self.logger.info('No reviewers to add')
-            return
-
-        table = 'pull_request_reviewers'
-        duplicate_col_map = {'pr_reviewer_map_id': 'id'}
-        update_col_map = {}
-        table_pkey = 'pr_reviewer_map_id'
-
-        update_keys = list(update_col_map.keys()) if update_col_map else []
-        cols_query = list(duplicate_col_map.keys()) + update_keys + [table_pkey]
-
-        reviewers_table_values = self.get_table_values(cols_query, [table])
-
-        new_reviewers = self.assign_tuple_action(reviewers, reviewers_table_values, update_col_map, duplicate_col_map, 
-                table_pkey)
-
-        for reviewers_dict in new_reviewers:
-
-            if 'login' in reviewers_dict:
-                cntrb_id = self.find_id_from_login(reviewers_dict['login'])
-            else:
-                cntrb_id = 1
-
-            reviewer = {
-                'pull_request_id': pr_id,
-                'cntrb_id': cntrb_id,
-                'tool_source': self.tool_source,
-                'tool_version': self.tool_version,
-                'data_source': self.data_source
-            }
-
-            if reviewers_dict['flag'] == 'need_insertion':
-                result = self.db.execute(self.pull_request_reviewers_table.insert().values(reviewer))
-                self.logger.info(f"Added PR Reviewer {result.inserted_primary_key}")
-
-                self.results_counter += 1
-
-        self.logger.info(f"Finished inserting PR Reviewer data for PR with id {pr_id}")
-
-    def query_assignee(self, assignees, pr_id):
-        self.logger.info('Querying Assignees')
-
-        if assignees is None or len(assignees) == 0:
-            self.logger.info('No assignees to add')
-            return
-
-        table = 'pull_request_assignees'
-        duplicate_col_map = {'pr_assignee_map_id': 'id'}
-        update_col_map = {}
-        table_pkey = 'pr_assignee_map_id'
-
-        update_keys = list(update_col_map.keys()) if update_col_map else []
-        cols_query = list(duplicate_col_map.keys()) + update_keys + [table_pkey]
-
-        assignee_table_values = self.get_table_values(cols_query, [table])
-
-        assignees = self.assign_tuple_action(assignees, assignee_table_values, update_col_map, duplicate_col_map, 
-                table_pkey)
-
-        for assignee_dict in assignees:
-
-            if 'login' in assignee_dict:
-                cntrb_id = self.find_id_from_login(assignee_dict['login'])
-            else:
-                cntrb_id = 1
-
-            assignee = {
-                'pull_request_id': pr_id,
-                'contrib_id': cntrb_id,
-                'tool_source': self.tool_source,
-                'tool_version': self.tool_version,
-                'data_source': self.data_source
-            }
-
-            if assignee_dict['flag'] == 'need_insertion':
-                result = self.db.execute(self.pull_request_assignees_table.insert().values(assignee))
-                self.logger.info(f'Added PR Assignee {result.inserted_primary_key}')
-
-                self.results_counter += 1
-
-        self.logger.info(f'Finished inserting PR Assignee data for PR with id {pr_id}')
-
-    def query_pr_meta(self, head, base, pr_id):
-        self.logger.info('Querying PR Meta')
-
-        table = 'pull_request_meta'
-        duplicate_col_map = {'pr_sha': 'sha'}
-        update_col_map = {}
-        value_update_col_map = {'pr_src_meta_label': None}
-        table_pkey = 'pr_repo_meta_id'
-
-        update_keys = list(update_col_map.keys()) if update_col_map else []
-        update_keys += list(value_update_col_map.keys())
-        cols_query = list(duplicate_col_map.keys()) + update_keys + [table_pkey]
-
-        meta_table_values = self.get_table_values(cols_query, [table])
-
-        pr_meta_dict = {
-            'head': self.assign_tuple_action([head], meta_table_values, update_col_map, duplicate_col_map, 
-                table_pkey, value_update_col_map=value_update_col_map)[0],
-            'base': self.assign_tuple_action([base], meta_table_values, update_col_map, duplicate_col_map, 
-                table_pkey, value_update_col_map=value_update_col_map)[0]
-        }
-
-        for pr_side, pr_meta_data in pr_meta_dict.items():
-            pr_meta = {
-                'pull_request_id': pr_id,
-                'pr_head_or_base': pr_side,
-                'pr_src_meta_label': pr_meta_data['label'],
-                'pr_src_meta_ref': pr_meta_data['ref'],
-                'pr_sha': pr_meta_data['sha'],
-                'cntrb_id': self.find_id_from_login(pr_meta_data['user']['login']) if pr_meta_data['user'] \
-                    and 'login' in pr_meta_data['user'] else None,
-                'tool_source': self.tool_source,
-                'tool_version': self.tool_version,
-                'data_source': self.data_source
-            }
-
-            if pr_meta_data['flag'] == 'need_update':
-                result = self.db.execute(self.pull_request_meta_table.update().where(
-                        self.pull_request_meta_table.c.pr_sha==pr_meta['pr_sha'] and
-                        self.pull_request_meta_table.c.pr_head_or_base==pr_side 
-                    ).values(pr_meta))
-                # self.logger.info("Updated tuple in the issues table with existing gh_issue_id: {}".format(issue_dict['id']))
-                self.pr_meta_id_inc = pr_meta_data['pkey']
-            elif pr_meta_data['flag'] == 'need_insertion':
-
-                result = self.db.execute(self.pull_request_meta_table.insert().values(pr_meta))
-                self.logger.info(f'Added PR Head {result.inserted_primary_key}')
-
-                self.pr_meta_id_inc = int(result.inserted_primary_key[0])
-                self.results_counter += 1
-            else:
-                pr_meta_id_sql = """
-                    SELECT pr_repo_meta_id FROM pull_request_meta
-                    WHERE pr_sha='{}'
-                """.format(pr_meta_data['sha'])
-
-                self.pr_meta_id_inc = int(pd.read_sql(pr_meta_id_sql, self.db).iloc[0]['pr_repo_meta_id'])
-
-            if pr_meta_data['repo']:
-                self.query_pr_repo(pr_meta_data['repo'], pr_side, self.pr_meta_id_inc)
-            else:
-                self.logger.info('No new PR Head data to add')
-
-        self.logger.info(f'Finished inserting PR Head & Base data for PR with id {pr_id}')
-
-    def query_pr_comments(self, owner, repo, gh_pr_no, pr_id):
-        self.logger.info('Querying PR Comments')
-
-        url = (f'https://api.github.com/repos/{owner}/{repo}/issues/{gh_pr_no}' +
-            '/comments?per_page=100&page={}')
-
-        # Get pull request comments that we already have stored
-        #   Set our duplicate and update column map keys (something other than PK) to 
-        #   check dupicates/needed column updates with
-        table = 'pull_request_message_ref'
-        table_pkey = 'pr_msg_ref_id'
-        update_col_map = {}
-        duplicate_col_map = {'pr_message_ref_src_comment_id': 'id'}
-
-        #list to hold contributors needing insertion or update
-        pr_messages = self.paginate(url, duplicate_col_map, update_col_map, table, table_pkey)
-        
-        self.logger.info("Count of pull request comments needing insertion: " + str(len(pr_messages)) + "\n")
-
-        for pr_msg_dict in pr_messages:
-
-            if pr_msg_dict['user'] and 'login' in pr_msg_dict['user']:
-                cntrb_id = self.find_id_from_login(pr_msg_dict['user']['login'])
-            else:
-                cntrb_id = 1
-
-            msg = {
-                'rgls_id': None,
-                'msg_text': pr_msg_dict['body'].replace("0x00", "____") if \
-                    'body' in pr_msg_dict else None,
-                'msg_timestamp': pr_msg_dict['created_at'],
-                'msg_sender_email': None,
-                'msg_header': None,
-                'pltfrm_id': '25150',
-                'cntrb_id': cntrb_id,
-                'tool_source': self.tool_source,
-                'tool_version': self.tool_version,
-                'data_source': self.data_source
-            }
-
-            result = self.db.execute(self.message_table.insert().values(msg))
-            self.logger.info(f'Added PR Comment {result.inserted_primary_key}')
-
-            pr_msg_ref = {
-                'pull_request_id': pr_id,
-                'msg_id': int(result.inserted_primary_key[0]),
-                'pr_message_ref_src_comment_id': pr_msg_dict['id'],
-                'pr_message_ref_src_node_id': pr_msg_dict['node_id'],
-                'tool_source': self.tool_source,
-                'tool_version': self.tool_version,
-                'data_source': self.data_source
-            }
-
-            result = self.db.execute(
-                self.pull_request_message_ref_table.insert().values(pr_msg_ref)
-            )
-            self.logger.info(f'Added PR Message Ref {result.inserted_primary_key}')
-
-            self.results_counter += 1
-
-        self.logger.info(f'Finished adding PR Message data for PR with id {pr_id}')
-
     def query_pr_repo(self, pr_repo, pr_repo_type, pr_meta_id):
+        """ TODO: insert this data as extra columns in the meta table """
         self.logger.info(f'Querying PR {pr_repo_type} repo')
 
         table = 'pull_request_repo'

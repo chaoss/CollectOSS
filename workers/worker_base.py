@@ -1,6 +1,7 @@
 #SPDX-License-Identifier: MIT
 """ Helper methods constant across all workers """
-import requests, datetime, time, traceback, json, os, sys, math, logging, numpy, copy
+import requests, datetime, time, traceback, json, os, sys, math, logging, numpy, copy, concurrent, multiprocessing
+
 from logging import FileHandler, Formatter, StreamHandler
 from multiprocessing import Process, Queue
 import sqlalchemy as s
@@ -11,6 +12,7 @@ from sqlalchemy.ext.automap import automap_base
 from augur.config import AugurConfig
 from augur.logging import AugurLogging
 from sqlalchemy.sql.expression import bindparam
+from concurrent import futures
 
 class Worker():
 
@@ -395,13 +397,15 @@ class Worker():
 
             need_updates = need_updates.drop([column for column in action_map['insert']['augur']], axis='columns')
 
-        self.logger.info(f'Page needs {len(need_insertion)} insertions and '
-            f'{len(need_updates)} updates.\n')
+        # self.logger.info(f'Page needs {len(need_insertion)} insertions and '
+        #     f'{len(need_updates)} updates.\n')
+
 
         return need_insertion.to_dict('records'), need_updates.to_dict('records')
 
     def assign_tuple_action(self, new_data, table_values, update_col_map, duplicate_col_map, table_pkey, value_update_col_map={}):
-        """ Include an extra key-value pair on each element of new_data that represents
+        """ DEPRECATED
+            Include an extra key-value pair on each element of new_data that represents
             the action that should be taken with this element (i.e. 'need_insertion')
 
         :param new_data: List of dictionaries, data to be assigned an action to
@@ -542,8 +546,7 @@ class Worker():
 
     @staticmethod
     def dump_queue(queue):
-        """
-        Empties all pending items in a queue and returns them in a list.
+        """ Empties all pending items in a queue and returns them in a list.
         """
         result = []
         queue.put("STOP")
@@ -553,8 +556,7 @@ class Worker():
         return result
 
     def find_id_from_login(self, login, platform='github'):
-        """
-        Retrieves our contributor table primary key value for the contributor with
+        """ Retrieves our contributor table primary key value for the contributor with
             the given GitHub login credentials, if this contributor is not there, then
             they get inserted.
 
@@ -790,7 +792,23 @@ class Worker():
 
         self.logger.info("OAuth initialized")
 
-    def bulk_insert(self, table, insert=[], update=[], unique_columns=[], update_columns=[]):
+    def bulk_insert(self, table, insert=[], update=[], unique_columns=[], update_columns=[], \
+            max_attempts=10, attempt_delay=5):
+        """ Performs bulk inserts/updates of the given data to the given table
+
+            :param table: String, name of the table that we are inserting/updating rows
+            :param insert: List of dicts, data points to insert
+            :param update: List of dicts, data points to update, only needs key/value
+                pairs of the update_columns and the unique_columns
+            :param unique_columns: List of strings, column names that would uniquely identify any
+                given data point
+            :param update_columns: List of strings, names of columns that are being updated
+            :param max_attempts: Integer, number of attempts to perform on inserting/updating
+                before moving on
+            :param attempt_delay: Integer, number of seconds to wait in between attempts
+            :returns: SQLAlchemy database execution response object(s), contains metadata
+                about number of rows inserted etc. This data is not often used.
+        """
         
         self.logger.info(f"{len(insert)} insertions are needed and {len(update)} "
             f"updates are needed for {table}\n")
@@ -799,9 +817,9 @@ class Worker():
         insert_result = None
 
         if len(update) > 0:
-            success = False
+            attempts = 0
             update_start_time = time.time()
-            while not success:
+            while attempts < max_attempts:
                 try:
                     update_result = self.db.execute(
                         table.update().where(
@@ -812,34 +830,54 @@ class Worker():
                             ),
                         update
                     )
-                    success = True
+                    break
                 except Exception as e:
-                    self.logger.info('error: {}'.format(e))
-                    time.sleep(5)
+                    self.logger.info(f"Warning! Error bulk updating data: {e}\n")
+                    time.sleep(attempt_delay)
+                attempts += 1
 
             self.update_counter += update_result.rowcount
             self.logger.info(f"Updated {update_result.rowcount} rows in "
                 f"{time.time() - update_start_time} seconds")
 
         if len(insert) > 0:
-            success = False
+            attempts = 0
             insert_start_time = time.time()
-            while not success:
+            while attempts < max_attempts:
                 try:
                     insert_result = self.db.execute(
                         table.insert(),
                         insert
                     )
-                    success = True
+                    break
                 except Exception as e:
-                    self.logger.info('error: {}'.format(e))
-                    time.sleep(5)
+                    self.logger.info(f"Warning! Error bulk inserting data: {e}\n")
+                    time.sleep(attempt_delay)
+                attempts += 1
 
             self.insert_counter += insert_result.rowcount
             self.logger.info(f"Inserted {insert_result.rowcount} rows in "
                 f"{time.time() - insert_start_time} seconds")
 
         return insert_result, update_result
+
+    def text_clean(self, data, field):
+        """ "Cleans" the provided field of each dict in the list of dicts provided
+            by removing NUL (C text termination) characters
+            Example: "\u0000"
+
+            :param data: List of dicts
+            :param field: String
+            :returns: Same data list with each element's field updated with NUL characters
+                removed
+        """
+        return [
+            {
+                **data_point,
+                field: data_point[field].replace("\x00", "\uFFFD")
+            } for data_point in data
+        ]
+
 
     def enrich_data_primary_keys(self, source_data, table, gh_merge_fields, augur_merge_fields):
 
@@ -850,7 +888,7 @@ class Worker():
             return []
 
         source_df = pd.DataFrame(source_data)
-        # temp_dict = {field: str(table) for field in augur_merge_fields}
+
 
         s_tuple = s.tuple_([table.c[field] for field in augur_merge_fields])
         s_tuple.__dict__['clauses'] = s_tuple.__dict__['clauses'][0].effective_value
@@ -870,7 +908,7 @@ class Worker():
                 [table.c[field] for field in augur_merge_fields] + [table.c[list(table.primary_key)[0].name]]
             ).where(
                 s_tuple.in_(
-                # eval("""s.tuple_(', '.join([f"self.{table}_table.c['{field}']" for field, table in temp_dict.items()]))""").in_(
+
                     list(source_df[gh_merge_fields].itertuples(index=False))
                 ))).fetchall()
 
@@ -879,14 +917,85 @@ class Worker():
                 columns=augur_merge_fields + [list(table.primary_key)[0].name])
         else:
             self.logger.info("There are no inserted primary keys to enrich the source data with.\n")
-            return source_data
+            return []
+
 
         source_df, primary_keys_df = self.sync_df_types(source_df, primary_keys_df, 
                 gh_merge_fields, augur_merge_fields)
 
-        return json.loads(source_df.merge(primary_keys_df, suffixes=('','_table'),
+        result = json.loads(source_df.merge(primary_keys_df, suffixes=('','_table'),
             how='inner', left_on=gh_merge_fields, right_on=augur_merge_fields).to_json(
             default_handler=str, orient='records'))
+
+        self.logger.info("Data enrichment successful.\n")
+        return result
+
+    def multi_thread_urls(self, urls, max_attempts=5, platform='github'):
+        """
+        :param urls: list of tuples
+        """
+        
+        def load_url(url, extra_data={}):
+            try:
+                html = requests.get(url, stream=True, headers=self.headers)
+                return html, extra_data
+            except requests.exceptions.RequestException as e:
+                self.logger.info(e, url)
+
+        self.logger.info("Beginning to multithread API endpoints.\n")
+                
+        start = time.time()
+        attempts = 0
+        all_data = []
+        valid_url_count = len(urls)
+        
+        while len(urls) > 0 and attempts < max_attempts:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=multiprocessing.cpu_count()/4) as executor:
+                # Start the load operations and mark each future with its URL
+                future_to_url = {executor.submit(load_url, *url): url for url in urls}
+                self.logger.info("Multithreaded urls and returned status codes:\n")
+                for future in concurrent.futures.as_completed(future_to_url):
+                    
+                    url = future_to_url[future]
+                    try:
+                        response, extra_data = future.result()
+
+                        if response.status_code != 200:
+                            self.logger.info(f"Url: {url[0]} ; Status code: {response.status_code}")
+
+                        if response.status_code == 403 or response.status_code == 401: # 403 is rate limit, 404 is not found, 401 is bad credentials
+                            self.update_rate_limit(response, platform=platform)
+                            continue
+
+                        elif response.status_code == 200:
+                            try:
+                                page_data = response.json()
+                            except:
+                                page_data = json.loads(json.dumps(response.text))
+                            
+                            page_data = [{**data, **extra_data} for data in page_data]
+                            all_data += page_data
+                            
+                            if 'last' in response.links and "&page=" not in url[0]:
+                                urls += [(url[0] + f"&page={page}", extra_data) for page in range(
+                                    2, int(response.links['last']['url'].split('=')[-1]) + 1)]
+                            urls.remove(url)
+
+                        elif response.status_code == 404:
+                            urls.remove(url)
+                            self.logger.info(f"Not found url: {url}\n")
+                        else:
+                            self.logger.info(f"Unhandled response code: {response.status_code} {url}\n")
+                        
+                    except Exception as e:
+                        self.logger.info(f"{url} generated an exception: {e}\n")
+                                            
+            attempts += 1
+                    
+        self.logger.info(f"Processed {valid_url_count} urls and got {len(all_data)} data points " +
+            f"in {time.time() - start} seconds thanks to multithreading!\n")
+        return all_data
+
 
     def paginate_endpoint(self, url, action_map={}, table=None, where_clause=True, platform='github'):
 
@@ -1005,7 +1114,8 @@ class Worker():
         }
 
     def paginate(self, url, duplicate_col_map, update_col_map, table, table_pkey, where_clause="", value_update_col_map={}, platform="github"):
-        """ Paginate either backwards or forwards (depending on the value of the worker's
+        """ DEPRECATED
+            Paginate either backwards or forwards (depending on the value of the worker's
             finishing_task attribute) through all the GitHub or GitLab api endpoint pages.
 
         :param url: String, the url of the API endpoint we are paginating through, expects
