@@ -455,10 +455,12 @@ class GitHubPullRequestWorker(Worker):
         pr_comments = self.paginate_endpoint(comments_url, 
             action_map=comment_action_map, table=self.message_table)
 
+        pr_comments['insert'] = self.text_clean(pr_comments['insert'], 'body')
+
         pr_comments_insert = [
             {
                 'pltfrm_id': self.platform_id,
-                'msg_text': comment['body'],
+                'msg_text': comment['body'].replace("\x00", "\uFFFD"),
                 'msg_timestamp': comment['created_at'],
                 'cntrb_id': self.find_id_from_login(comment['user']['login']),
                 'tool_source': self.tool_source,
@@ -606,13 +608,16 @@ class GitHubPullRequestWorker(Worker):
             }
         }
 
+        in_clause = [] if len(both_pr_review_pk_source_reviews) == 0 else \
+            set(pd.DataFrame(both_pr_review_pk_source_reviews)['pr_review_id'])
+
         review_msgs = self.paginate_endpoint(review_msg_url, 
             action_map=review_msg_action_map, table=self.message_table, 
             where_clause=self.message_table.c.msg_id.in_(
                     [msg_row[0] for msg_row in self.db.execute(s.sql.select(
                         [self.pull_request_review_message_ref_table.c.msg_id]).where(
                         self.pull_request_review_message_ref_table.c.pr_review_id.in_(
-                            set(pd.DataFrame(both_pr_review_pk_source_reviews)['pr_review_id'])
+                            in_clause
                         ))).fetchall()]
                 ))
 
