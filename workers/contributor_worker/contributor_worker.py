@@ -553,29 +553,32 @@ class ContributorWorker(Worker):
 
             self.map_new_id(dupe_ids, self.cntrb_id_inc)
 
-            deleteSQL = """
-                DELETE 
-                    FROM
-                        contributors c 
-                    USING 
-                        contributors_aliases
-                    WHERE
-                        c.cntrb_email = '{0}'
-                    AND
-                        c.cntrb_id NOT IN (SELECT cntrb_id FROM contributors_aliases)
-                    AND
-                        c.cntrb_id <> {1};
-            """.format(commit_email, self.cntrb_id_inc)
+        ### Commented out due to cascade delete database issue
+        ### Sean Goggins, February 5, 2021
+
+        #     deleteSQL = """
+        #         DELETE 
+        #             FROM
+        #                 contributors c 
+        #             USING 
+        #                 contributors_aliases
+        #             WHERE
+        #                 c.cntrb_email = '{0}'
+        #             AND
+        #                 c.cntrb_id NOT IN (SELECT cntrb_id FROM contributors_aliases)
+        #             AND
+        #                 c.cntrb_id <> {1};
+        #     """.format(commit_email, self.cntrb_id_inc)
             
-            try:
-                # Delete all dupes 
-                result = self.db.execute(deleteSQL)
-                self.logger.info("Deleted all non-canonical contributors with the email: {}\n".format(commit_email))
-            except Exception as e:
-                self.logger.info("When trying to delete a duplicate contributor, worker ran into error: {}".format(e))
+        #     try:
+        #         # Delete all dupes 
+        #         result = self.db.execute(deleteSQL)
+        #         self.logger.info("Deleted all non-canonical contributors with the email: {}\n".format(commit_email))
+        #     except Exception as e:
+        #         self.logger.info("When trying to delete a duplicate contributor, worker ran into error: {}".format(e))
         
-        else: #then there would be exactly 1 existing tuple, so that id is the one we want
-            alias_id = existing_tuples[0]['cntrb_id']
+        # else: #then there would be exactly 1 existing tuple, so that id is the one we want
+        #     alias_id = existing_tuples[0]['cntrb_id']
 
         self.logger.info('Checking canonicals match.\n')
         alias_sql = s.sql.text("""
