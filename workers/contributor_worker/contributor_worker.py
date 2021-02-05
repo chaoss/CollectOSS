@@ -321,22 +321,27 @@ class ContributorWorker(Worker):
 
             self.map_new_id(dupe_ids, pk)
 
-            delete_dupe_ids_sql = s.sql.text("""
-                DELETE FROM contributors
-                WHERE cntrb_id IN (SELECT cntrb_id 
-                FROM contributors  WHERE (cntrb_id > {} 
-                OR cntrb_id < {}) 
-                AND cntrb_email = '{}');
-            """.format(pk, sg, cntrb_new['cntrb_email']))
+            ### Commented out deletion because cascading foreign key
+            ### then goes and removes the pull requests, and related objects
+            ### The mapping of the new ID is not working as expected. 
+            ### Sean Goggins, February 5, 2021
 
-            self.logger.info(f'Trying to delete dupes with sql: {delete_dupe_ids_sql}')
+            # delete_dupe_ids_sql = s.sql.text("""
+            #     DELETE FROM contributors
+            #     WHERE cntrb_id IN (SELECT cntrb_id 
+            #     FROM contributors  WHERE (cntrb_id > {} 
+            #     OR cntrb_id < {}) 
+            #     AND cntrb_email = '{}');
+            # """.format(pk, sg, cntrb_new['cntrb_email']))
 
-            try:
-                result = self.db.execute(delete_dupe_ids_sql)
-            except Exception as e:
-                self.logger.info(f'Deleting dupes failed with error: {e}')
+            # self.logger.info(f'Trying to delete dupes with sql: {delete_dupe_ids_sql}')
 
-            self.logger.info('Deleted duplicates.\n')
+            # try:
+            #     result = self.db.execute(delete_dupe_ids_sql)
+            # except Exception as e:
+            #     self.logger.info(f'Deleting dupes failed with error: {e}')
+
+            # self.logger.info('Deleted duplicates.\n')
 
         # Register this task as completed
         self.register_task_completion(entry_info, repo_id, "contributors")
