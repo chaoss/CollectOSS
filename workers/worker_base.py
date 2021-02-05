@@ -1462,6 +1462,8 @@ class Worker():
 
         table = 'contributors'
         table_pkey = 'cntrb_id'
+        ### %TODO Remap this to a GitLab Contributor ID like the GitHub Worker. 
+        ### Following Gabe's rework of the contributor worker. 
         update_col_map = {'cntrb_email': 'email'}
         duplicate_col_map = {'cntrb_login': 'email'}
 
