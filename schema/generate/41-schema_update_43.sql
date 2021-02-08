@@ -1,11 +1,12 @@
 -- Adding new contributors to the database
-select setval('augur_data.contributor_affiliations_ca_id_seq', 30000, true)
 
-select nextval('augur_data.contributor_affiliations_ca_id_seq'::regclass)
+BEGIN;
+select setval('augur_data.contributor_affiliations_ca_id_seq', 30000, true);
+
+select nextval('augur_data.contributor_affiliations_ca_id_seq'::regclass);
 
 INSERT INTO "augur_data"."contributor_affiliations" VALUES (nextval('augur_data.contributor_affiliations_ca_id_seq'::regclass), 'sean.goggins@gmail.com', '2016-05-06', 'load', '1.0', 'load', '2021-02-06 13:55:16', '2021-02-06 13:56:46', 'University of Missouri', 1);
 
-BEGIN;
 INSERT INTO "augur_data"."contributor_affiliations" VALUES (29170, 'cmehil.warn@gmail.com', '2016-05-06', 'load', '1.0', 'load', '2021-02-06 13:55:16', '2021-02-06 13:56:46', 'University of Nebraska-Omaha', 1);
 INSERT INTO "augur_data"."contributor_affiliations" VALUES (29171, 'doombreakr@gmail.com', '1970-01-01', NULL, NULL, NULL, '2021-02-06 13:57:20', '2021-02-06 13:57:20', 'Lawrence Livermore National Lab', 1);
 INSERT INTO "augur_data"."contributor_affiliations" VALUES (29172, 'derek@howderek.com', '1970-01-01', NULL, NULL, NULL, '2021-02-06 13:57:56', '2021-02-06 13:57:56', 'Lawrence Livermore National Lab', 1);
@@ -34,7 +35,6 @@ INSERT INTO "augur_data"."contributor_affiliations" VALUES (29202, 'maximumbalk@
 INSERT INTO "augur_data"."contributor_affiliations" VALUES (29203, 'iyovcheva@vmware.com', '1970-01-01', NULL, NULL, NULL, '2021-02-06 14:09:36', '2021-02-06 14:09:36', 'VMWare', 1);
 INSERT INTO "augur_data"."contributor_affiliations" VALUES (29204, 'aksharap.181it132@nitk.edu.in', '1970-01-01', NULL, NULL, NULL, '2021-02-06 14:10:03', '2021-02-06 14:10:03', 'Google Summer of Code', 1);
 INSERT INTO "augur_data"."contributor_affiliations" VALUES (29205, 'msnell@unomaha.edu', '1970-01-01', NULL, NULL, NULL, '2021-02-06 15:04:05', '2021-02-06 15:04:05', 'University of Nebraska-Omaha', 1);
-INSERT INTO "augur_data"."contributor_affiliations" VALUES (29152, 'goggins.com', '2016-03-03', NULL, NULL, NULL, '2019-10-29 17:22:30', '2020-07-06 16:19:08', 'University of Missouri', 1);
 INSERT INTO "augur_data"."contributor_affiliations" VALUES (29206, 'benjaminparish628@gmail.com', '1970-01-01', NULL, NULL, NULL, '2021-02-06 15:05:48', '2021-02-06 15:05:48', 'CHAOSS Community', 1);
 INSERT INTO "augur_data"."contributor_affiliations" VALUES (29207, 'hacksmath@gmail.com', '1970-01-01', NULL, NULL, NULL, '2021-02-06 15:06:19', '2021-02-06 15:06:19', 'CHAOSS Community', 1);
 INSERT INTO "augur_data"."contributor_affiliations" VALUES (29208, 'jacobeharding@gmail.com', '1970-01-01', NULL, NULL, NULL, '2021-02-06 15:06:45', '2021-02-06 15:06:45', 'CHAOSS Community', 1);
@@ -114,7 +114,7 @@ INSERT INTO "augur_data"."contributor_affiliations"("ca_id", "ca_domain", "tool_
 INSERT INTO "augur_data"."contributor_affiliations"("ca_id", "ca_domain", "tool_source", "tool_version", "data_source", "data_collection_date", "ca_last_used", "ca_start_date", "ca_affiliation", "ca_active") VALUES (24248, 'andy.goldstein@gmail.com', 'Helper Script', NULL, 'Dawn''s vmware_mapping JSON', '2020-04-28 18:52:49', '2020-04-28 18:52:49', '1970-01-01', 'VMware', 1);
 INSERT INTO "augur_data"."contributor_affiliations"("ca_id", "ca_domain", "tool_source", "tool_version", "data_source", "data_collection_date", "ca_last_used", "ca_start_date", "ca_affiliation", "ca_active") VALUES (24249, 'goldsteina@vmware.com', 'Helper Script', NULL, 'Dawn''s vmware_mapping JSON', '2020-04-28 18:52:49', '2020-04-28 18:52:49', '1970-01-01', 'VMware', 1);
 INSERT INTO "augur_data"."contributor_affiliations"("ca_id", "ca_domain", "tool_source", "tool_version", "data_source", "data_collection_date", "ca_last_used", "ca_start_date", "ca_affiliation", "ca_active") VALUES (24250, 'nolan@heptio.com', 'Helper Script', NULL, 'Dawn''s vmware_mapping JSON', '2020-04-28 18:52:49', '2020-04-28 18:52:49', '1970-01-01', 'VMware', 1);
-INSERT INTO "augur_data"."contributor_affiliations"("ca_id", "ca_domain", "tool_source", "tool_version", "data_source", "data_collection_date", "ca_last_used", "ca_start_date", "ca_affiliation", "ca_active") VALUES (24241, 'brubakern@vmware.com', 'Helper Script', NULL, 'Dawn''s vmware_mapping JSON', '2020-04-28 18:52:49', '2020-04-28 18:52:49', '1970-01-01', 'VMware', 1);
+INSERT INTO "augur_data"."contributor_affiliations"("ca_id", "ca_domain", "tool_source", "tool_version", "data_source", "data_collection_date", "ca_last_used", "ca_start_date", "ca_affiliation", "ca_active") VALUES (27291, 'brubakern@vmware.com', 'Helper Script', NULL, 'Dawn''s vmware_mapping JSON', '2020-04-28 18:52:49', '2020-04-28 18:52:49', '1970-01-01', 'VMware', 1);
 INSERT INTO "augur_data"."contributor_affiliations"("ca_id", "ca_domain", "tool_source", "tool_version", "data_source", "data_collection_date", "ca_last_used", "ca_start_date", "ca_affiliation", "ca_active") VALUES (24252, 'nolan@nbrubaker.com', 'Helper Script', NULL, 'Dawn''s vmware_mapping JSON', '2020-04-28 18:52:49', '2020-04-28 18:52:49', '1970-01-01', 'VMware', 1);
 INSERT INTO "augur_data"."contributor_affiliations"("ca_id", "ca_domain", "tool_source", "tool_version", "data_source", "data_collection_date", "ca_last_used", "ca_start_date", "ca_affiliation", "ca_active") VALUES (24253, 'stevek@heptio.com', 'Helper Script', NULL, 'Dawn''s vmware_mapping JSON', '2020-04-28 18:52:49', '2020-04-28 18:52:49', '1970-01-01', 'VMware', 1);
 INSERT INTO "augur_data"."contributor_affiliations"("ca_id", "ca_domain", "tool_source", "tool_version", "data_source", "data_collection_date", "ca_last_used", "ca_start_date", "ca_affiliation", "ca_active") VALUES (24254, 'steve@heptio.com', 'Helper Script', NULL, 'Dawn''s vmware_mapping JSON', '2020-04-28 18:52:49', '2020-04-28 18:52:49', '1970-01-01', 'VMware', 1);
@@ -194,7 +194,8 @@ INSERT INTO "augur_data"."contributor_affiliations"("ca_id", "ca_domain", "tool_
 INSERT INTO "augur_data"."contributor_affiliations"("ca_id", "ca_domain", "tool_source", "tool_version", "data_source", "data_collection_date", "ca_last_used", "ca_start_date", "ca_affiliation", "ca_active") VALUES (25328, 'me@lurraca.com', 'Helper Script', NULL, 'Dawn''s vmware_mapping JSON', '2020-04-28 18:52:49', '2020-04-28 18:52:49', '1970-01-01', 'VMware', 1);
 INSERT INTO "augur_data"."contributor_affiliations"("ca_id", "ca_domain", "tool_source", "tool_version", "data_source", "data_collection_date", "ca_last_used", "ca_start_date", "ca_affiliation", "ca_active") VALUES (25329, 'lurraca@pivotal.io', 'Helper Script', NULL, 'Dawn''s vmware_mapping JSON', '2020-04-28 18:52:49', '2020-04-28 18:52:49', '1970-01-01', 'VMware', 1);
 
+update "augur_operations"."augur_settings" set value = 43 where setting = 'augur_data_version'; 
+
+
 COMMIT;
 
-
-update "augur_operations"."augur_settings" set value = 43 where setting = 'augur_data_version'; 
