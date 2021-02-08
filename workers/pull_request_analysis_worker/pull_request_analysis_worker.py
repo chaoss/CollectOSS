@@ -39,7 +39,7 @@ class PullRequestAnalysisWorker(Worker):
 
         # Define the tables needed to insert, update, or delete on
        
-        data_tables = ['message', 'repo']
+        data_tables = ['message', 'repo', 'pull_request_analysis']
        
         operations_tables = ['worker_history', 'worker_job']
 
