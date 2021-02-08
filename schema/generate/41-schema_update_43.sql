@@ -34,7 +34,6 @@ INSERT INTO "augur_data"."contributor_affiliations" VALUES (29202, 'maximumbalk@
 INSERT INTO "augur_data"."contributor_affiliations" VALUES (29203, 'iyovcheva@vmware.com', '1970-01-01', NULL, NULL, NULL, '2021-02-06 14:09:36', '2021-02-06 14:09:36', 'VMWare', 1);
 INSERT INTO "augur_data"."contributor_affiliations" VALUES (29204, 'aksharap.181it132@nitk.edu.in', '1970-01-01', NULL, NULL, NULL, '2021-02-06 14:10:03', '2021-02-06 14:10:03', 'Google Summer of Code', 1);
 INSERT INTO "augur_data"."contributor_affiliations" VALUES (29205, 'msnell@unomaha.edu', '1970-01-01', NULL, NULL, NULL, '2021-02-06 15:04:05', '2021-02-06 15:04:05', 'University of Nebraska-Omaha', 1);
-INSERT INTO "augur_data"."contributor_affiliations" VALUES (29152, 'goggins.com', '2016-03-03', NULL, NULL, NULL, '2019-10-29 17:22:30', '2020-07-06 16:19:08', 'University of Missouri', 1);
 INSERT INTO "augur_data"."contributor_affiliations" VALUES (29206, 'benjaminparish628@gmail.com', '1970-01-01', NULL, NULL, NULL, '2021-02-06 15:05:48', '2021-02-06 15:05:48', 'CHAOSS Community', 1);
 INSERT INTO "augur_data"."contributor_affiliations" VALUES (29207, 'hacksmath@gmail.com', '1970-01-01', NULL, NULL, NULL, '2021-02-06 15:06:19', '2021-02-06 15:06:19', 'CHAOSS Community', 1);
 INSERT INTO "augur_data"."contributor_affiliations" VALUES (29208, 'jacobeharding@gmail.com', '1970-01-01', NULL, NULL, NULL, '2021-02-06 15:06:45', '2021-02-06 15:06:45', 'CHAOSS Community', 1);
