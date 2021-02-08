@@ -1,7 +1,7 @@
 -- Adding new contributors to the database
-select setval('augur_data.contributor_affiliations_ca_id_seq', 30000, true)
+select setval('augur_data.contributor_affiliations_ca_id_seq', 30000, true);
 
-select nextval('augur_data.contributor_affiliations_ca_id_seq'::regclass)
+select nextval('augur_data.contributor_affiliations_ca_id_seq'::regclass);
 
 INSERT INTO "augur_data"."contributor_affiliations" VALUES (nextval('augur_data.contributor_affiliations_ca_id_seq'::regclass), 'sean.goggins@gmail.com', '2016-05-06', 'load', '1.0', 'load', '2021-02-06 13:55:16', '2021-02-06 13:56:46', 'University of Missouri', 1);
 
