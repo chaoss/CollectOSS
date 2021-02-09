@@ -400,8 +400,8 @@ class Worker():
                     merged_need_updates = memory_protection_merge(new_data_df_subset)
                     queue.put(merged_need_updates)
 
-                cross_process_storage = mp.Queue()
-                process = mp.Process(target=test, args=[cross_process_storage])
+                cross_process_storage = multiprocessing.Queue()
+                process = multiprocessing.Process(target=test, args=[cross_process_storage])
 
                 process.start()
 
