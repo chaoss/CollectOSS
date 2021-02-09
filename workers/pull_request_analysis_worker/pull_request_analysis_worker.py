@@ -72,8 +72,18 @@ class PullRequestAnalysisWorker(Worker):
 
         # Fetch open PRs of repo and associated commits
         pr_SQL = s.sql.text("""
-        select pull_requests.pull_request_id, pr_created_at, pr_src_state, pr_closed_at, pr_merged_at, pull_request_commits.pr_cmt_id, pr_augur_contributor_id, pr_src_author_association from augur_data.pull_requests
-        INNER JOIN augur_data.pull_request_commits on pull_requests.pull_request_id = pull_request_commits.pull_request_id where pr_created_at > :begin_date and repo_id = :repo_id and pr_src_state like 'open' """)
+            select pull_requests.pull_request_id, 
+            pr_created_at, pr_src_state, 
+            pr_closed_at, pr_merged_at, 
+            pull_request_commits.pr_cmt_id, 
+            pr_augur_contributor_id, 
+            pr_src_author_association 
+            from augur_data.pull_requests
+            INNER JOIN augur_data.pull_request_commits on pull_requests.pull_request_id = pull_request_commits.pull_request_id 
+            where pr_created_at > :begin_date 
+            and repo_id = :repo_id 
+            and pr_src_state like 'open' 
+        """)
 
         df_pr = pd.read_sql_query(pr_SQL, self.db, params={'begin_date': begin_date, 'repo_id': repo_id})
 
