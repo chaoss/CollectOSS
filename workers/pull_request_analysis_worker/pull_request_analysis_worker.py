@@ -235,6 +235,7 @@ class PullRequestAnalysisWorker(Worker):
                 self.logger.info(f'Inserted data point {self.results_counter} with pr_id {row.pull_request_id}')
             except Exception as e:
                 self.logger.error(f'Error occurred while storing datapoint {repr(e)}')
+                self.logger.error(f'{repr(row.merge_prob)}')
                 break
 
         self.logger.info('Data insertion completed\n')
