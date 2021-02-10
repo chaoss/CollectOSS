@@ -397,7 +397,7 @@ class Worker():
                             pd.concat([memory_protection_merge(new_data_df_subset[:len(new_data_df_subset//100)]), 
                                             memory_protection_merge(new_data_df_subset[len(new_data_df_subset//100):])])
                             self.logger.info(f"MemoryError: divide by 100 \npd.concat worked...\n")
-                            return 
+                            raise 
                         finally: 
                             self.logger.info("Keep on rolling past the error. \nMemoryError: \npd.concat worked...\n")
                         
