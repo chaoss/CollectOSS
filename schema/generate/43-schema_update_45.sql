@@ -9,7 +9,7 @@ CREATE SEQUENCE "augur_operations"."worker_oauth_oauth_id_seq"
 INCREMENT 1
 MINVALUE  1
 MAXVALUE 9223372036854775807
-START 600000
+START 620000
 CACHE 1;
 
 COMMENT ON TABLE "augur_operations"."augur_settings" IS 'Augur settings include the schema version, and the Augur API Key as of 10/25/2020. Future augur settings may be stored in this table, which has the basic structure of a name-value pair. ';
@@ -54,4 +54,5 @@ CREATE INDEX "repos_id,statusops" ON "augur_operations"."repos_fetch_log" USING 
 
 
 
+update "augur_operations"."augur_settings" set value = 45 where setting = 'augur_data_version'; 
 
