@@ -391,14 +391,16 @@ class Worker():
                                 indicator=False).merge(table_values_df, left_on=action_map['update']['source'],
                                 right_on=action_map['update']['augur'], suffixes=('','_table'), how='outer', 
                                 indicator=True).loc[lambda x : x['_merge']=='left_only']
-                        except MemoryError as e:
+                        except:
                             self.logger.info(f"new_data ({new_data_df.shape}) is too large to allocate memory for " +
                                 f"need_updates df merge.\nMemoryError: {e}\nTrying again with half the size...\n")
-                            pd.concat([memory_protection_merge(new_data_df_subset[:len(new_data_df_subset//2)]), 
-                                            memory_protection_merge(new_data_df_subset[len(new_data_df_subset//2):])])
+                            pd.concat([memory_protection_merge(new_data_df_subset[:len(new_data_df_subset//100)]), 
+                                            memory_protection_merge(new_data_df_subset[len(new_data_df_subset//100):])])
                             self.logger.info(f"new_data ({new_data_df.shape}) is too large to allocate memory for " +
                                 f"need_updates df merge.\nMemoryError: {e}\npd.concat worked...\n")
-                            return 
+                            raise 
+                        finally: 
+                            self.logger.info("Keep on rolling past the error. \nMemoryError: {e}\npd.concat worked...\n")
                         
                     merged_need_updates = memory_protection_merge(new_data_df_subset)
                     self.logger.info(f"new_data ({new_data_df.shape}) is too large to allocate memory for " +
