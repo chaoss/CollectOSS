@@ -411,7 +411,7 @@ class Worker():
 
                 process.start()
                 self.logger.info(f"new_data ({new_data_df.shape}) is too large to allocate memory for " +
-                    f"need_updates df merge.\nMemoryError: {e}\nprocess.start ran...\n")
+                    f"need_updates df merge.\nMemoryError: \nprocess.start ran...\n")
 
                 process.join(timeout=timeout)
 
