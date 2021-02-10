@@ -396,11 +396,10 @@ class Worker():
                                 f"need_updates df merge.\nMemoryError: {e}\nTrying again with half the size...\n")
                             pd.concat([memory_protection_merge(new_data_df_subset[:len(new_data_df_subset//100)]), 
                                             memory_protection_merge(new_data_df_subset[len(new_data_df_subset//100):])])
-                            self.logger.info(f"new_data ({new_data_df.shape}) is too large to allocate memory for " +
-                                f"need_updates df merge.\nMemoryError: {e}\npd.concat worked...\n")
+                            self.logger.info(f"MemoryError: divide by 100 \npd.concat worked...\n")
                             raise 
                         finally: 
-                            self.logger.info("Keep on rolling past the error. \nMemoryError: {e}\npd.concat worked...\n")
+                            self.logger.info("Keep on rolling past the error. \nMemoryError: \npd.concat worked...\n")
                         
                     merged_need_updates = memory_protection_merge(new_data_df_subset)
                     self.logger.info(f"new_data ({new_data_df.shape}) is too large to allocate memory for " +
