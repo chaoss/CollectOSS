@@ -398,7 +398,7 @@ class Worker():
                                             memory_protection_merge(new_data_df_subset[len(new_data_df_subset//2):])])
                             self.logger.info(f"new_data ({new_data_df.shape}) is too large to allocate memory for " +
                                 f"need_updates df merge.\nMemoryError: {e}\npd.concat worked...\n")
-                            continue 
+                            return 
                         
                     merged_need_updates = memory_protection_merge(new_data_df_subset)
                     self.logger.info(f"new_data ({new_data_df.shape}) is too large to allocate memory for " +
