@@ -410,14 +410,14 @@ class Worker():
 
                 process.start()
                 self.logger.info(f"new_data ({new_data_df.shape}) is too large to allocate memory for " +
-                    f"need_updates df merge.\nMemoryError: \nprocess.start ran...\n")
+                    f"need_updates df merge.\nMemoryError: \nprocess.start ran... \n attempting to join thread \n")
 
                 process.join(timeout=timeout)
 
                 # If thread is still active
                 if process.is_alive():
                     print(f"new_data ({new_data_df_subset.shape}) need_updates merge timed out. " +
-                            f"\nTrying again with half the size...\n")
+                            f"\nTrying again with 1% the size...\n")
 
                     # Terminate - may not work if process is stuck for good
                     process.terminate()
