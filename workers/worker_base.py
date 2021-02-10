@@ -425,8 +425,8 @@ class Worker():
                     # wait for the terminate to be complete before proceeding
                     process.join()
                     
-                    return pd.concat([get_need_updates(new_data_df_subset[:len(new_data_df_subset)//2]), 
-                                    get_need_updates(new_data_df_subset[len(new_data_df_subset)//2:])])
+                    return pd.concat([get_need_updates(new_data_df_subset[:len(new_data_df_subset)//100]), 
+                                    get_need_updates(new_data_df_subset[len(new_data_df_subset)//100:])])
 
                 else:
                     print(f"new_data size ({new_data_df_subset.shape}) success\n")
