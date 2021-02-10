@@ -394,9 +394,8 @@ class Worker():
                         except:
                             self.logger.info(f"new_data ({new_data_df.shape}) is too large to allocate memory for " +
                                 f"need_updates df merge.\nMemoryError: {e}\nTrying again with half the size...\n")
-                            return pd.concat([memory_protection_merge(new_data_df_subset[:len(new_data_df_subset//1000)]), 
-                                            memory_protection_merge(new_data_df_subset[len(new_data_df_subset//1000):])])
-                            self.logger.info(f"MemoryError: divide by 1000 \npd.concat worked...\n") 
+                            return pd.concat([memory_protection_merge(new_data_df_subset[:len(new_data_df_subset//100)]), 
+                                            memory_protection_merge(new_data_df_subset[len(new_data_df_subset//100):])])
                         
                     merged_need_updates = memory_protection_merge(new_data_df_subset)
                     self.logger.info(f"here we are ...\n")
@@ -422,8 +421,8 @@ class Worker():
                     # wait for the terminate to be complete before proceeding
                     process.join()
                     
-                    return pd.concat([get_need_updates(new_data_df_subset[:len(new_data_df_subset)//1000]), 
-                                    get_need_updates(new_data_df_subset[len(new_data_df_subset)//1000:])])
+                    return pd.concat([get_need_updates(new_data_df_subset[:len(new_data_df_subset)//100]), 
+                                    get_need_updates(new_data_df_subset[len(new_data_df_subset)//100:])])
 
                 else:
                     print(f"new_data size ({new_data_df_subset.shape}) success\n")
