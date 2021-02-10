@@ -394,16 +394,23 @@ class Worker():
                         except MemoryError as e:
                             self.logger.info(f"new_data ({new_data_df.shape}) is too large to allocate memory for " +
                                 f"need_updates df merge.\nMemoryError: {e}\nTrying again with half the size...\n")
-                            return pd.concat([memory_protection_merge(new_data_df_subset[:len(new_data_df_subset//2)]), 
+                            pd.concat([memory_protection_merge(new_data_df_subset[:len(new_data_df_subset//2)]), 
                                             memory_protection_merge(new_data_df_subset[len(new_data_df_subset//2):])])
+                            self.logger.info(f"new_data ({new_data_df.shape}) is too large to allocate memory for " +
+                                f"need_updates df merge.\nMemoryError: {e}\npd.concat worked...\n")
+                            continue 
                         
                     merged_need_updates = memory_protection_merge(new_data_df_subset)
+                    self.logger.info(f"new_data ({new_data_df.shape}) is too large to allocate memory for " +
+                                f"need_updates df merge.\nMemoryError: {e}\nmerge_need_updates worked...\n")
                     queue.put(merged_need_updates)
 
                 cross_process_storage = multiprocessing.Queue()
                 process = multiprocessing.Process(target=test, args=[cross_process_storage])
 
                 process.start()
+                self.logger.info(f"new_data ({new_data_df.shape}) is too large to allocate memory for " +
+                    f"need_updates df merge.\nMemoryError: {e}\nprocess.start ran...\n")
 
                 process.join(timeout=timeout)
 
