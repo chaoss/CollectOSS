@@ -397,7 +397,7 @@ class Worker():
                             pd.concat([memory_protection_merge(new_data_df_subset[:len(new_data_df_subset//100)]), 
                                             memory_protection_merge(new_data_df_subset[len(new_data_df_subset//100):])])
                             self.logger.info(f"MemoryError: divide by 100 \npd.concat worked...\n")
-                            raise 
+                            return 
                         finally: 
                             self.logger.info("Keep on rolling past the error. \nMemoryError: \npd.concat worked...\n")
                         
@@ -948,12 +948,6 @@ class Worker():
             expanded_column = pd.DataFrame(source_df[root].tolist())
             expanded_column.columns = [f'{root}.{attribute}' for attribute in expanded_column.columns]
             source_df = source_df.join(expanded_column)
-                """    self.logger.info(f"{source_df}} for {gh_merge_fields} and {augur_merge_fields} "
-                    f"for table {table} has some NaN or NoneType Data.\n")
-                """
-                
-        self.logger.info(f"{len(insert)} insertions are needed and {len(update)} "
-            f"updates are needed for {table}\n")
 
         primary_keys = self.db.execute(s.sql.select(
                 [table.c[field] for field in augur_merge_fields] + [table.c[list(table.primary_key)[0].name]]
