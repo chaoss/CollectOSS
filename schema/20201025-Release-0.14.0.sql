@@ -4163,9 +4163,6 @@ COMMENT ON TABLE "augur_operations"."working_commits" IS 'For future use when we
 
 SELECT setval('"augur_operations"."affiliations_corp_id_seq"', 1, false);
 
-ALTER SEQUENCE "augur_operations"."affiliations_corp_id_seq"
-OWNED BY "augur_operations"."affiliations_corp"."id";
-
 ALTER SEQUENCE "augur_operations"."affiliations_corp_id_seq" OWNER TO "augur";
 
 SELECT setval('"augur_operations"."gh_worker_history_history_id_seq"', 6300000, true);
