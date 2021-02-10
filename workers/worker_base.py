@@ -945,9 +945,17 @@ class Worker():
             if '.' not in column:
                 continue
             root = column.split('.')[0]
-            expanded_column = pd.DataFrame(source_df[root].tolist())
-            expanded_column.columns = [f'{root}.{attribute}' for attribute in expanded_column.columns]
-            source_df = source_df.join(expanded_column)
+            if not (pd.DataFrame(source_df[root].tolist())).isna:
+                if not (pd.DataFrame(source_df[root].tolist())).isnan:
+                    expanded_column = pd.DataFrame(source_df[root].tolist())
+                    expanded_column.columns = [f'{root}.{attribute}' for attribute in expanded_column.columns]
+                    source_df = source_df.join(expanded_column)
+                else: 
+                    self.logger.info(f"{source_df}} for {gh_merge_fields} and {augur_merge_fields} "
+                    f"for table {table} has some NaN or NoneType Data.\n")
+
+        self.logger.info(f"{len(insert)} insertions are needed and {len(update)} "
+            f"updates are needed for {table}\n")
 
         primary_keys = self.db.execute(s.sql.select(
                 [table.c[field] for field in augur_merge_fields] + [table.c[list(table.primary_key)[0].name]]
