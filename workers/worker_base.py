@@ -394,8 +394,8 @@ class Worker():
                         except MemoryError as e:
                             self.logger.info(f"new_data ({new_data_df.shape}) is too large to allocate memory for " +
                                 f"need_updates df merge.  \nTrying again with half the size...\n \nMemoryError: {e}")
-                            return pd.concat([memory_protection_merge(new_data_df_subset[:len(new_data_df_subset//100)]), 
-                                            memory_protection_merge(new_data_df_subset[len(new_data_df_subset//100):])])
+                            return pd.concat([memory_protection_merge(new_data_df_subset[:len(new_data_df_subset//2)]), 
+                                            memory_protection_merge(new_data_df_subset[len(new_data_df_subset//2):])])
 
                     self.logger.info(f"new_data ({new_data_df.shape}) \n merge_need_updates to be called next.")
                     
@@ -443,8 +443,8 @@ class Worker():
                     self.logger.info(f"attempt to join process after termination called.")
 
                     
-                    return pd.concat([get_need_updates(new_data_df_subset[:len(new_data_df_subset)//100]), 
-                                    get_need_updates(new_data_df_subset[len(new_data_df_subset)//100:])])
+                    return pd.concat([get_need_updates(new_data_df_subset[:len(new_data_df_subset)//2]), 
+                                    get_need_updates(new_data_df_subset[len(new_data_df_subset)//2:])])
 
                     self.logger.info(f"Second attempt to split the data enacted.")
 
