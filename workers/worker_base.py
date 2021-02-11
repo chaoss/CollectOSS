@@ -396,13 +396,22 @@ class Worker():
                                 f"need_updates df merge.  \nTrying again with half the size...\n \nMemoryError: {e}")
                             return pd.concat([memory_protection_merge(new_data_df_subset[:len(new_data_df_subset//100)]), 
                                             memory_protection_merge(new_data_df_subset[len(new_data_df_subset//100):])])
-                        
+
+                    self.logger.info(f"new_data ({new_data_df.shape}) \n merge_need_updates to be called next.")
+                    
                     merged_need_updates = memory_protection_merge(new_data_df_subset)
-                    self.logger.info(f"here we are ...\n")
+                    self.logger.info(f"here we are ...\n merge_need_updates_called. calling queue.put(merge_need_updates)\n")
                     queue.put(merged_need_updates)
+                    self.logger.info(f"successfully called queue.put(merge_need_updates). " +
+                        f"cross_process_storage next. \n")
 
                 cross_process_storage = multiprocessing.Queue()
+
+                self.logger.info(f"cross_process_storage called. \n")
+
                 process = multiprocessing.Process(target=test, args=[cross_process_storage])
+
+                self.logger.info(f"process=multiprocessing.Process(target=test, args...\n called.) \n")
 
                 process.start()
                 self.logger.info(f"new_data ({new_data_df.shape}) is too large to allocate memory for " +
@@ -410,33 +419,55 @@ class Worker():
 
                 process.join(timeout=timeout)
 
+                self.logger.info(f"process.join\n timeout=timeout \n called.) \n")
+
+
                 # If thread is still active
                 if process.is_alive():
-                    print(f"new_data ({new_data_df_subset.shape}) need_updates merge timed out. " +
+                    print(f" checking if process is alive " + 
+                        f"new_data ({new_data_df_subset.shape}) need_updates merge timed out. " +
                             f"\nTrying again with 1% the size...\n")
 
                     # Terminate - may not work if process is stuck for good
                     process.terminate()
 
+                    self.logger.info(f"process terminate called.")
+
+
                     # wait for the terminate to be complete before proceeding
                     process.join()
+
+                    self.logger.info(f"attempt to join process after termination called.")
+
                     
                     return pd.concat([get_need_updates(new_data_df_subset[:len(new_data_df_subset)//100]), 
                                     get_need_updates(new_data_df_subset[len(new_data_df_subset)//100:])])
+
+                    self.logger.info(f"Second attempt to split the data enacted.")
 
                 else:
                     print(f"new_data size ({new_data_df_subset.shape}) success\n")
                     return cross_process_storage.get()
             need_updates = get_need_updates(new_data_df)
 
+            self.logger.info(f"update logic enacted.")
+
             need_updates = need_updates.drop([column for column in list(need_updates.columns) if \
                 column not in action_map['update']['augur'] and column not in action_map['insert']['augur']], 
                 axis='columns')
 
+            self.logger.info(f"need_updates.drop enacted for update columns.")
+
             for column in action_map['insert']['augur']:
                 need_updates[f'b_{column}'] = need_updates[column]
 
+            self.logger.info(f"need_updates.drop enacted for update columns iteratively in for loop.")
+
+
             need_updates = need_updates.drop([column for column in action_map['insert']['augur']], axis='columns')
+
+            self.logger.info(f"final need updates enacted for action map.")
+
 
         # self.logger.info(f'Page needs {len(need_insertion)} insertions and '
         #     f'{len(need_updates)} updates.\n')
