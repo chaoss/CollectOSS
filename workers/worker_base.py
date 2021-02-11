@@ -400,7 +400,9 @@ class Worker():
                     self.logger.info(f"new_data ({new_data_df.shape}) \n merge_need_updates to be called next.")
                     
                     merged_need_updates = memory_protection_merge(new_data_df_subset)
+  
                     self.logger.info(f"here we are ...\n merge_need_updates_called. calling queue.put(merge_need_updates)\n")
+  
                     queue.put(merged_need_updates)
                     self.logger.info(f"successfully called queue.put(merge_need_updates). " +
                         f"cross_process_storage next. \n")
@@ -414,6 +416,7 @@ class Worker():
                 self.logger.info(f"process=multiprocessing.Process(target=test, args...\n called.) \n")
 
                 process.start()
+                
                 self.logger.info(f"new_data ({new_data_df.shape}) is too large to allocate memory for " +
                     f"need_updates df merge.\nMemoryError: \nprocess.start ran... \n attempting to join thread \n")
 
