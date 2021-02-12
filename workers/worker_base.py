@@ -394,8 +394,8 @@ class Worker():
                         except MemoryError as e:
                             self.logger.info(f"new_data ({new_data_df.shape}) is too large to allocate memory for " +
                                 f"need_updates df merge.\nMemoryError: {e}\nTrying again with half the size...\n")
-                            return pd.concat([memory_protection_merge(new_data_df_subset[:len(new_data_df_subset//2)]), 
-                                            memory_protection_merge(new_data_df_subset[len(new_data_df_subset//2):])])
+                            return pd.concat([memory_protection_merge(new_data_df_subset[:len(new_data_df_subset)//2]), 
+                                            memory_protection_merge(new_data_df_subset[len(new_data_df_subset)//2:])])
                         
                     merged_need_updates = memory_protection_merge(new_data_df_subset)
                     queue.put(merged_need_updates)
