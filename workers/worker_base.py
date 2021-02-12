@@ -4,7 +4,6 @@ import requests, datetime, time, traceback, json, os, sys, math, logging, numpy,
 
 from logging import FileHandler, Formatter, StreamHandler
 from multiprocessing import Process, Queue, Pool
-import dask.dataframe as dd
 from os import getpid
 import sqlalchemy as s
 import pandas as pd
@@ -367,11 +366,11 @@ class Worker():
         if len(new_data) == 0:
             return [], []
 
-        need_insertion = dd.DataFrame()
-        need_updates = dd.DataFrame()
+        need_insertion = pd.DataFrame()
+        need_updates = pd.DataFrame()
 
-        table_values_df = dd.DataFrame(table_values, columns=table_values[0].keys())
-        new_data_df = dd.DataFrame(new_data).dropna(subset=action_map['insert']['source'])
+        table_values_df = pd.DataFrame(table_values, columns=table_values[0].keys())
+        new_data_df = pd.DataFrame(new_data).dropna(subset=action_map['insert']['source'])
 
         new_data_df, table_values_df = self.sync_df_types(new_data_df, table_values_df, 
                 action_map['insert']['source'], action_map['insert']['augur'])
@@ -402,10 +401,6 @@ class Worker():
                     self.logger.info(f"new_data ({new_data_df.shape}) \n merge_need_updates to be called next.")
                     
                     merged_need_updates = memory_protection_merge(new_data_df_subset)
-
-                    merged_need_updates = merged_need_updates.compute(num_workers=2)
-
-                    merged_need_updates.sort_values(ascending=False, inplace=True)
   
                     self.logger.info(f"here we are ...\n merge_need_updates_called. calling queue.put(merge_need_updates)\n")
   
@@ -414,8 +409,6 @@ class Worker():
                         f"cross_process_storage next. \n")
 
                 cross_process_storage = multiprocessing.Queue()
-
-                cross_process_storage = cross_process_storage.compute(num_workers=2)
 
                 self.logger.info(f"cross_process_storage called. \n")
 
