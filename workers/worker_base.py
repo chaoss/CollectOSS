@@ -3,7 +3,9 @@
 import requests, datetime, time, traceback, json, os, sys, math, logging, numpy, copy, concurrent, multiprocessing
 
 from logging import FileHandler, Formatter, StreamHandler
-from multiprocessing import Process, Queue
+from multiprocessing import Process, Queue, Pool
+import dask.dataframe as dd
+from os import getpid
 import sqlalchemy as s
 import pandas as pd
 from pathlib import Path
@@ -365,11 +367,11 @@ class Worker():
         if len(new_data) == 0:
             return [], []
 
-        need_insertion = pd.DataFrame()
-        need_updates = pd.DataFrame()
+        need_insertion = dd.DataFrame()
+        need_updates = dd.DataFrame()
 
-        table_values_df = pd.DataFrame(table_values, columns=table_values[0].keys())
-        new_data_df = pd.DataFrame(new_data).dropna(subset=action_map['insert']['source'])
+        table_values_df = dd.DataFrame(table_values, columns=table_values[0].keys())
+        new_data_df = dd.DataFrame(new_data).dropna(subset=action_map['insert']['source'])
 
         new_data_df, table_values_df = self.sync_df_types(new_data_df, table_values_df, 
                 action_map['insert']['source'], action_map['insert']['augur'])
