@@ -383,75 +383,19 @@ class Worker():
             new_data_df, table_values_df = self.sync_df_types(new_data_df, table_values_df, 
                 action_map['update']['source'], action_map['update']['augur'])                
 
-            def get_need_updates(new_data_df_subset, timeout=200):
-                def test(queue):
-                    def memory_protection_merge(new_data_df_subset):
-                        try:
-                            return new_data_df_subset.merge(table_values_df, left_on=action_map['insert']['source'],
-                                right_on=action_map['insert']['augur'], suffixes=('','_table'), how='inner', 
-                                indicator=False).merge(table_values_df, left_on=action_map['update']['source'],
-                                right_on=action_map['update']['augur'], suffixes=('','_table'), how='outer', 
-                                indicator=True).loc[lambda x : x['_merge']=='left_only']
-                        except MemoryError as e:
-                            self.logger.info(f"new_data ({new_data_df.shape}) is too large to allocate memory for " +
-                                f"need_updates df merge.  \nTrying again with half the size...\n \nMemoryError: {e}")
-                            return pd.concat([memory_protection_merge(new_data_df_subset[:len(new_data_df_subset//2)]), 
-                                            memory_protection_merge(new_data_df_subset[len(new_data_df_subset//2):])])
-
-                    self.logger.info(f"new_data ({new_data_df.shape}) \n merge_need_updates to be called next.")
-                    
-                    merged_need_updates = memory_protection_merge(new_data_df_subset)
-  
-                    self.logger.info(f"here we are ...\n merge_need_updates_called. calling queue.put(merge_need_updates)\n")
-  
-                    queue.put(merged_need_updates)
-                    self.logger.info(f"successfully called queue.put(merge_need_updates). " +
-                        f"cross_process_storage next. \n")
-
-                cross_process_storage = multiprocessing.Queue()
-
-                self.logger.info(f"cross_process_storage called. \n")
-
-                process = multiprocessing.Process(target=test, args=[cross_process_storage])
-
-                self.logger.info(f"process=multiprocessing.Process(target=test, args...\n called.) \n")
-
-                process.start()
-                
-                self.logger.info(f"new_data ({new_data_df.shape}) is too large to allocate memory for " +
-                    f"need_updates df merge.\nMemoryError: \nprocess.start ran... \n attempting to join thread \n")
-
-                process.join(timeout=timeout)
-
-                self.logger.info(f"process.join\n timeout=timeout \n called.) \n")
-
-
-                # If thread is still active
-                if process.is_alive():
-                    print(f" checking if process is alive " + 
-                        f"new_data ({new_data_df_subset.shape}) need_updates merge timed out. " +
-                            f"\nTrying again with 1% the size...\n")
-
-                    # Terminate - may not work if process is stuck for good
-                    process.terminate()
-
-                    self.logger.info(f"process terminate called.")
-
-
-                    # wait for the terminate to be complete before proceeding
-                    process.join()
-
-                    self.logger.info(f"attempt to join process after termination called.")
-
-                    
+            def get_need_updates(new_data_df_subset):
+                try:
+                    return new_data_df_subset.merge(table_values_df, left_on=action_map['insert']['source'],
+                        right_on=action_map['insert']['augur'], suffixes=('','_table'), how='inner', 
+                        indicator=False).merge(table_values_df, left_on=action_map['update']['source'],
+                        right_on=action_map['update']['augur'], suffixes=('','_table'), how='outer', 
+                        indicator=True).loc[lambda x : x['_merge']=='left_only']
+                except MemoryError as e:
+                    print(f"new_data ({new_data_df_subset.shape}) is too large to allocate memory for " +
+                        f"need_updates df merge.\nMemoryError: {e}\nTrying again with half the size...\n")
                     return pd.concat([get_need_updates(new_data_df_subset[:len(new_data_df_subset)//2]), 
                                     get_need_updates(new_data_df_subset[len(new_data_df_subset)//2:])])
 
-                    self.logger.info(f"Second attempt to split the data enacted.")
-
-                else:
-                    print(f"new_data size ({new_data_df_subset.shape}) success\n")
-                    return cross_process_storage.get()
             need_updates = get_need_updates(new_data_df)
 
             self.logger.info(f"update logic enacted.")
