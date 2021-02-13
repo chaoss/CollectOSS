@@ -330,3 +330,4 @@ class MessageInsightsWorker():
         if label:
             return (labels,scores)
         return scores
+
