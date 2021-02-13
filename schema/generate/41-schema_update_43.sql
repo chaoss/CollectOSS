@@ -5,8 +5,6 @@ select setval('augur_data.contributor_affiliations_ca_id_seq', 34000, true);
 
 select nextval('augur_data.contributor_affiliations_ca_id_seq'::regclass);
 
-INSERT INTO "augur_data"."contributor_affiliations" VALUES (nextval('augur_data.contributor_affiliations_ca_id_seq'::regclass), 'sean.goggins@gmail.com', '2016-05-06', 'load', '1.0', 'load', '2021-02-06 13:55:16', '2021-02-06 13:56:46', 'University of Missouri', 1) ON CONFLICT DO NOTHING;
-
 INSERT INTO "augur_data"."contributor_affiliations"("ca_id", "ca_domain", "ca_start_date", "tool_source", "tool_version", "data_source", "data_collection_date", "ca_last_used", "ca_affiliation", "ca_active") VALUES (25222, 'venuvardhanreddytekula8@gmail.com', '1970-01-01', NULL, NULL, NULL, '2021-02-06 15:14:35', '2021-02-06 15:14:35', 'Google Summer of Code', 1) ON CONFLICT DO NOTHING;
 INSERT INTO "augur_data"."contributor_affiliations"("ca_id", "ca_domain", "ca_start_date", "tool_source", "tool_version", "data_source", "data_collection_date", "ca_last_used", "ca_affiliation", "ca_active") VALUES (25221, 'nichols.keanu9@gmail.com', '1970-01-01', NULL, NULL, NULL, '2021-02-06 15:14:11', '2021-02-06 15:14:11', 'Google Summer of Code', 1) ON CONFLICT DO NOTHING;
 INSERT INTO "augur_data"."contributor_affiliations"("ca_id", "ca_domain", "ca_start_date", "tool_source", "tool_version", "data_source", "data_collection_date", "ca_last_used", "ca_affiliation", "ca_active") VALUES (25220, 'ubuntu@ip-172-31-2-14.us-west-2.compute.internal', '1970-01-01', NULL, NULL, NULL, '2021-02-06 15:13:50', '2021-02-06 15:13:50', 'University of Missouri', 1) ON CONFLICT DO NOTHING;
