@@ -3,7 +3,8 @@
 import requests, datetime, time, traceback, json, os, sys, math, logging, numpy, copy, concurrent, multiprocessing
 
 from logging import FileHandler, Formatter, StreamHandler
-from multiprocessing import Process, Queue
+from multiprocessing import Process, Queue, Pool
+from os import getpid
 import sqlalchemy as s
 import pandas as pd
 from pathlib import Path
@@ -397,14 +398,24 @@ class Worker():
 
             need_updates = get_need_updates(new_data_df)
 
+            self.logger.info(f"update logic enacted.")
+
             need_updates = need_updates.drop([column for column in list(need_updates.columns) if \
                 column not in action_map['update']['augur'] and column not in action_map['insert']['augur']], 
                 axis='columns')
 
+            self.logger.info(f"need_updates.drop enacted for update columns.")
+
             for column in action_map['insert']['augur']:
                 need_updates[f'b_{column}'] = need_updates[column]
 
+            self.logger.info(f"need_updates.drop enacted for update columns iteratively in for loop.")
+
+
             need_updates = need_updates.drop([column for column in action_map['insert']['augur']], axis='columns')
+
+            self.logger.info(f"final need updates enacted for action map.")
+
 
         # self.logger.info(f'Page needs {len(need_insertion)} insertions and '
         #     f'{len(need_updates)} updates.\n')
