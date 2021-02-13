@@ -49,7 +49,10 @@ setup(
         "gunicorn",
         "six>=1.14.0",
         "bokeh",
-        "selenium"
+        "selenium",
+	"nltk",
+        "h5py<2.11.0,>=2.10.0", 
+        "scipy==1.4.1"
     ],
     extras_require={
         "dev": [
