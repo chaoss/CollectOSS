@@ -388,7 +388,7 @@ class Worker():
             while attempts < 50:
                 try:
                     need_updates = pd.DataFrame()
-                    for sub_df in np.array_split(new_data_df, partitions):
+                    for sub_df in numpy.array_split(new_data_df, partitions):
                         need_updates = pd.concat([ need_updates, sub_df.merge(table_values_df, left_on=action_map['insert']['source'],
                             right_on=action_map['insert']['augur'], suffixes=('','_table'), how='inner', 
                             indicator=False).merge(table_values_df, left_on=action_map['update']['source'],
