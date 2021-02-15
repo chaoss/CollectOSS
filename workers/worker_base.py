@@ -3,7 +3,8 @@
 import requests, datetime, time, traceback, json, os, sys, math, logging, numpy, copy, concurrent, multiprocessing
 
 from logging import FileHandler, Formatter, StreamHandler
-from multiprocessing import Process, Queue
+from multiprocessing import Process, Queue, Pool
+from os import getpid
 import sqlalchemy as s
 import pandas as pd
 from pathlib import Path
@@ -413,6 +414,9 @@ class Worker():
                     need_updates[f'b_{column}'] = need_updates[column]
 
                 need_updates = need_updates.drop([column for column in action_map['insert']['augur']], axis='columns')
+
+            self.logger.info(f"final need updates enacted for action map.")
+
 
         # self.logger.info(f'Page needs {len(need_insertion)} insertions and '
         #     f'{len(need_updates)} updates.\n')
@@ -1483,6 +1487,8 @@ class Worker():
 
         table = 'contributors'
         table_pkey = 'cntrb_id'
+        ### %TODO Remap this to a GitLab Contributor ID like the GitHub Worker. 
+        ### Following Gabe's rework of the contributor worker. 
         update_col_map = {'cntrb_email': 'email'}
         duplicate_col_map = {'cntrb_login': 'email'}
 
