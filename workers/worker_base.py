@@ -378,33 +378,33 @@ class Worker():
                 how='outer', indicator=True, left_on=action_map['insert']['source'],
                 right_on=action_map['insert']['augur']).loc[lambda x : x['_merge']=='left_only']
 
-        if 'update' in action_map:
-            new_data_df, table_values_df = self.sync_df_types(new_data_df, table_values_df, 
-                action_map['update']['source'], action_map['update']['augur'])                
+        # if 'update' in action_map:
+        #     new_data_df, table_values_df = self.sync_df_types(new_data_df, table_values_df, 
+        #         action_map['update']['source'], action_map['update']['augur'])                
 
-            def get_need_updates(new_data_df_subset):
-                try:
-                    return new_data_df_subset.merge(table_values_df, left_on=action_map['insert']['source'],
-                        right_on=action_map['insert']['augur'], suffixes=('','_table'), how='inner', 
-                        indicator=False).merge(table_values_df, left_on=action_map['update']['source'],
-                        right_on=action_map['update']['augur'], suffixes=('','_table'), how='outer', 
-                        indicator=True).loc[lambda x : x['_merge']=='left_only']
-                except MemoryError as e:
-                    print(f"new_data ({new_data_df_subset.shape}) is too large to allocate memory for " +
-                        f"need_updates df merge.\nMemoryError: {e}\nTrying again with half the size...\n")
-                    return pd.concat([get_need_updates(new_data_df_subset[:len(new_data_df_subset)//2]), 
-                                    get_need_updates(new_data_df_subset[len(new_data_df_subset)//2:])])
+        #     def get_need_updates(new_data_df_subset):
+        #         try:
+        #             return new_data_df_subset.merge(table_values_df, left_on=action_map['insert']['source'],
+        #                 right_on=action_map['insert']['augur'], suffixes=('','_table'), how='inner', 
+        #                 indicator=False).merge(table_values_df, left_on=action_map['update']['source'],
+        #                 right_on=action_map['update']['augur'], suffixes=('','_table'), how='outer', 
+        #                 indicator=True).loc[lambda x : x['_merge']=='left_only']
+        #         except MemoryError as e:
+        #             print(f"new_data ({new_data_df_subset.shape}) is too large to allocate memory for " +
+        #                 f"need_updates df merge.\nMemoryError: {e}\nTrying again with half the size...\n")
+        #             return pd.concat([get_need_updates(new_data_df_subset[:len(new_data_df_subset)//2]), 
+        #                             get_need_updates(new_data_df_subset[len(new_data_df_subset)//2:])])
 
-            need_updates = get_need_updates(new_data_df)
+        #     need_updates = get_need_updates(new_data_df)
 
-            need_updates = need_updates.drop([column for column in list(need_updates.columns) if \
-                column not in action_map['update']['augur'] and column not in action_map['insert']['augur']], 
-                axis='columns')
+        #     need_updates = need_updates.drop([column for column in list(need_updates.columns) if \
+        #         column not in action_map['update']['augur'] and column not in action_map['insert']['augur']], 
+        #         axis='columns')
 
-            for column in action_map['insert']['augur']:
-                need_updates[f'b_{column}'] = need_updates[column]
+        #     for column in action_map['insert']['augur']:
+        #         need_updates[f'b_{column}'] = need_updates[column]
 
-            need_updates = need_updates.drop([column for column in action_map['insert']['augur']], axis='columns')
+        #     need_updates = need_updates.drop([column for column in action_map['insert']['augur']], axis='columns')
 
         # self.logger.info(f'Page needs {len(need_insertion)} insertions and '
         #     f'{len(need_updates)} updates.\n')
