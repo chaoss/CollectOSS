@@ -369,7 +369,7 @@ class Worker():
         need_insertion = pd.DataFrame()
         need_updates = pd.DataFrame()
 
-        table_values_df = DataFrame(table_values, columns=table_values[0].keys())
+        table_values_df = pd.DataFrame(table_values, columns=table_values[0].keys())
         new_data_df = pd.DataFrame(new_data).dropna(subset=action_map['insert']['source'])
 
         new_data_df, table_values_df = self.sync_df_types(new_data_df, table_values_df, 
