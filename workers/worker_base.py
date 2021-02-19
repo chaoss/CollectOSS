@@ -379,7 +379,7 @@ class Worker():
                 how='outer', indicator=True, left_on=action_map['insert']['source'],
                 right_on=action_map['insert']['augur']).loc[lambda x : x['_merge']=='left_only']
 
-       if 'update' in action_map:
+        if 'update' in action_map:
             new_data_df, table_values_df = self.sync_df_types(new_data_df, table_values_df, 
                 action_map['update']['source'], action_map['update']['augur'])                
 
