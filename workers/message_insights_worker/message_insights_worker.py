@@ -146,8 +146,10 @@ class MessageInsightsWorker(Worker):
         df_message = pd.read_sql_query(join_SQL, self.db, params={'repo_id': repo_id, 'begin_date': self.begin_date})
 
         self.logger.info(f'Messages dataframe dim: {df_message.shape}')
+        self.logger.info(f'Value 1: {df_message.shape[0]}')
+
         
-        if not df_message.empty:
+        if df_message.shape[0] > 10:
             # Sort the dataframe
             df_message['msg_timestamp'] = pd.to_datetime(df_message['msg_timestamp'])
             df_message = df_message.sort_values(by='msg_timestamp')
@@ -389,7 +391,10 @@ class MessageInsightsWorker(Worker):
             self.send_insight(repo_id, insights)
 
         else:
-            self.logger.warning('No new messages in tables to analyze!\n')
+            if df_message.empty:
+                self.logger.warning('No new messages in tables to analyze!\n')
+            else:
+                self.logger.warning("Insufficient data to analyze")
         
         # Register this task as completed.
         #   This is a method of the worker class that is required to be called upon completion
