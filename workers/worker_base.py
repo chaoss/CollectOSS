@@ -389,7 +389,7 @@ class Worker():
                     need_updates = pd.DataFrame()
                     self.logger.info(f"Trying {partitions} partitions\n")
                     for sub_df in numpy.array_split(new_data_df, partitions):
-                        self.logger.info(f"Trying a partition\n")
+                        self.logger.info(f"Trying a partition, len {len(sub_df)}\n")
                         need_updates = pd.concat([ need_updates, sub_df.merge(table_values_df, left_on=action_map['insert']['source'],
                             right_on=action_map['insert']['augur'], suffixes=('','_table'), how='inner', 
                             indicator=False).merge(table_values_df, left_on=action_map['update']['source'],
