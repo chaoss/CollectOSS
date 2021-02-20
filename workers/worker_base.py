@@ -418,7 +418,7 @@ class Worker():
 
                 need_updates = need_updates.drop([column for column in action_map['insert']['augur']], axis='columns')
 
-            self.logger.info(f"final need updates enacted for action map.")
+        self.logger.info(f"final need updates enacted for action map.")
 
 
         # self.logger.info(f'Page needs {len(need_insertion)} insertions and '

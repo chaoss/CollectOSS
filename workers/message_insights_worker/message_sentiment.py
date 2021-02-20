@@ -20,16 +20,15 @@ from sklearn.utils import compute_sample_weight
 from xgboost import XGBClassifier
 from xlrd import open_workbook
 
+# from openpyxl import load_workbook
+
 from augur import ROOT_AUGUR_DIRECTORY
 from workers.message_insights_worker.preprocess_text import \
     CONTRACTION_MAP as contraction_map
-# End of initial imports
 
-
-# Forcing errors to be ignored, since the worker is highly experimental 
 warnings.filterwarnings('ignore')
 
-# Initial setup of machine learning functionality
+
 CONTRACTION_MAP = contraction_map
 
 train_path = os.path.join(ROOT_AUGUR_DIRECTORY, "workers", "message_insights_worker", "train_data")
@@ -55,10 +54,7 @@ def tokenize_and_stem(text):
     tokens = nltk.word_tokenize(text)
     stems = stem_tokens(tokens)
     return stems
-# End of initial machine learning setup
 
-# List of “stop words”, words that do not generally convey positive or negative emotion, usually join multiple parts of a sentence together
-# They are added by the developer from other sources that are additive to the default stopwords in NLTK (Natural Language Toolkit)
 mystop_words = [
     'i', 'me', 'my', 'myself', 'we', 'our',  'ourselves', 'you', 'your',
     'yourself', 'yourselves', 'he', 'him', 'his', 'himself', 'she', 'her',
@@ -82,7 +78,7 @@ mystop_words = [
 
 emodict = []
 
-# Pull in words from the library with their associated emotion values
+# Read in the words with sentiment from the dictionary
 with open(os.path.join(train_path,"EmoticonLookupTable.txt"),"r") as emotable:
     emoticon_reader=csv.reader(emotable,delimiter='\t')
 
@@ -90,14 +86,12 @@ with open(os.path.join(train_path,"EmoticonLookupTable.txt"),"r") as emotable:
     emodict={rows[0]:rows[1] for rows in emoticon_reader}
     emotable.close()
 
-# Helping the program take in account sentence structure when analyzing the text
 grammar = r"""
 NegP: {<VERB>?<ADV>+<VERB|ADJ>?<PRT|ADV><VERB>}
 {<VERB>?<ADV>+<VERB|ADJ>*<ADP|DET>?<ADJ>?<NOUN>?<ADV>?}
 """
 chunk_parser = nltk.RegexpParser(grammar)
 
-# Takes into account verbal contractions (shorthand, like anything with “ ‘nt “)
 def expand_contractions(text, contraction_mapping=CONTRACTION_MAP):
     contractions_pattern = re.compile('({})'.format('|'.join(contraction_mapping.keys())),
                                       flags=re.IGNORECASE | re.DOTALL)
@@ -114,18 +108,15 @@ def expand_contractions(text, contraction_mapping=CONTRACTION_MAP):
     expanded_text = re.sub("'", "", expanded_text)
     return expanded_text
 
-# Function to remove URLs, as it would be silly to dissect the emotion in a URL
 def remove_url(s):
     url_regex = re.compile(
         'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
     return url_regex.sub(" ", s)
 
-# List of negation words that cause the following word to reverse its meaning
 negation_words = ['not', 'never', 'none', 'nobody', 'nowhere', 'neither', 'barely', 'hardly',
                   'nothing', 'rarely', 'seldom', 'despite']
 emoticon_words = ['PositiveSentiment', 'NegativeSentiment']
 
-# Function to remove html tags from the text being analyzed 
 def remove_tags(s):
     soup = BeautifulSoup(s, "html.parser")
     for tag in soup.find_all('strong'):
@@ -133,7 +124,6 @@ def remove_tags(s):
         s = soup.get_text()
     return s
 
-# Function to handle words separated by punctuation but not white space
 def joint_words(s):
     punc = list(string.punctuation)
     s = re.sub('[\.\-\_\\/&]', ' ', s)
@@ -144,7 +134,6 @@ def joint_words(s):
     s = re.sub('lgtm', 'look good', s)
     return s
 
-# Function to determine if a word is negated in the input by seeing if there is a negation word followed by a normal word
 def negated(input_words):
     # Determine if input contains negation words
     neg_words = []
@@ -154,7 +143,6 @@ def negated(input_words):
             return True
     return False
 
-# Function to add “NOT_” to the beginning of the given word
 def prepend_not(word):
     if word in emoticon_words:
         return word
@@ -162,7 +150,6 @@ def prepend_not(word):
         return word
     return "NOT_"+word
 
-# Loop through every word in a list of comments, find the words that are negated, and call the previous function to prepend “NOT_”, if the word is an adverb, adjective, or verb
 def handle_negation(comments):
     sentences = nltk.sent_tokenize(comments)
     modified_st = []
@@ -191,7 +178,6 @@ def handle_negation(comments):
             modified_st.append(st)
     return ". ".join(modified_st)
 
-# Function that calls every prior function to clean up the text and make it easier to analyze
 def preprocess_text(s):
     text = expand_contractions(s)
     text = remove_tags(text)
@@ -210,7 +196,6 @@ def preprocess_text(s):
     return text
 
 
-# Constructor for SentimentData
 class SentimentData:
     def __init__(self, text, rating):
         self.text = text
@@ -218,7 +203,6 @@ class SentimentData:
 
 
 class SentiCR:
-    # Constructor for SentiCR, trains a new machine learning model or pulls an existing one.
     def __init__(self, training_data=None, models_dir=os.path,logger=logging):
         self.algo = 'XGB'
         self.models_dir = models_dir
@@ -240,7 +224,6 @@ class SentiCR:
             self.logger.info('Using custom train set')
             self.model = self.create_model_from_training_data()
 
-    # Method that is called in the SentiCR constructor, uses training data to create a model 
     def create_model_from_training_data(self):
         training_comments = []
         training_ratings = []
@@ -273,7 +256,6 @@ class SentiCR:
 
         return model
 
-    # Method to pull data to use for training, used by the SentiCR constructor
     def read_data_from_oracle(self):
         workbook = open_workbook(os.path.join(train_path,"custom_dataset.xls"))
         sheet = workbook.sheet_by_index(0)
@@ -285,7 +267,6 @@ class SentiCR:
             oracle_data.append(comments)
         return oracle_data
 
-    # Method to scrub the data by calling the preprocessing function on line 179, then push the messaging data into the trained model to extract a sentiment score
     def get_sentiment_polarity(self, text, label=False):
         comment = preprocess_text(text)
         feature_vector = self.vectorizer.transform([comment]).toarray()
@@ -302,7 +283,6 @@ class SentiCR:
         return sentiment_score
     
 # Function to get sentiment score
-# Starting point of the worker, ties the whole file’s code together, outputs the final score.
 def get_senti_score(df, col, models_dir, label=False, logger=logging):
     sentiment_analyzer = SentiCR(logger=logger, models_dir=models_dir)
     i = 0
