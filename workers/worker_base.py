@@ -383,12 +383,14 @@ class Worker():
             new_data_df, table_values_df = self.sync_df_types(new_data_df, table_values_df, 
                 action_map['update']['source'], action_map['update']['augur'])                
 
-            partitions = 1
+            partitions = math.ceil(len(new_data_df) / 3000)
             attempts = 0 
             while attempts < 50:
                 try:
                     need_updates = pd.DataFrame()
+                    self.logger.info(f"Trying {partitions} partitions\n")
                     for sub_df in numpy.array_split(new_data_df, partitions):
+                        self.logger.info(f"Trying a partition, len {len(sub_df)}\n")
                         need_updates = pd.concat([ need_updates, sub_df.merge(table_values_df, left_on=action_map['insert']['source'],
                             right_on=action_map['insert']['augur'], suffixes=('','_table'), how='inner', 
                             indicator=False).merge(table_values_df, left_on=action_map['update']['source'],
@@ -402,6 +404,7 @@ class Worker():
                         f"need_updates df merge.\nMemoryError: {e}\nTrying again with {partitions + 1} partitions...\n")
                     partitions += 1
                     attempts += 1
+                self.logger.info(f"End attempt # {attempts}\n")
             if attempts >= 50:
                 self.loggger.info("Max need_updates merge attempts exceeded, cannot perform " +
                     "updates on this repo.\n")
