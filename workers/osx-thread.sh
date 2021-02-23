@@ -1,6 +1,5 @@
 #!/bin/bash
-
-if [[ $OSTYPE == darwin*) ]]; then
-    export no_proxy=*
-
+if [[ $OSTYPE == darwin* ]]; then
+    export no_proxy=*;
+fi
    
