@@ -3,7 +3,8 @@
 import requests, datetime, time, traceback, json, os, sys, math, logging, numpy, copy, concurrent, multiprocessing
 
 from logging import FileHandler, Formatter, StreamHandler
-from multiprocessing import Process, Queue
+from multiprocessing import Process, Queue, Pool
+from os import getpid
 import sqlalchemy as s
 import pandas as pd
 from pathlib import Path
@@ -382,12 +383,14 @@ class Worker():
             new_data_df, table_values_df = self.sync_df_types(new_data_df, table_values_df, 
                 action_map['update']['source'], action_map['update']['augur'])                
 
-            partitions = 1
+            partitions = math.ceil(len(new_data_df) / 3000)
             attempts = 0 
             while attempts < 50:
                 try:
                     need_updates = pd.DataFrame()
-                    for sub_df in np.array_split(new_data_df, partitions):
+                    self.logger.info(f"Trying {partitions} partitions\n")
+                    for sub_df in numpy.array_split(new_data_df, partitions):
+                        self.logger.info(f"Trying a partition, len {len(sub_df)}\n")
                         need_updates = pd.concat([ need_updates, sub_df.merge(table_values_df, left_on=action_map['insert']['source'],
                             right_on=action_map['insert']['augur'], suffixes=('','_table'), how='inner', 
                             indicator=False).merge(table_values_df, left_on=action_map['update']['source'],
@@ -401,6 +404,7 @@ class Worker():
                         f"need_updates df merge.\nMemoryError: {e}\nTrying again with {partitions + 1} partitions...\n")
                     partitions += 1
                     attempts += 1
+                self.logger.info(f"End attempt # {attempts}\n")
             if attempts >= 50:
                 self.loggger.info("Max need_updates merge attempts exceeded, cannot perform " +
                     "updates on this repo.\n")
@@ -413,6 +417,9 @@ class Worker():
                     need_updates[f'b_{column}'] = need_updates[column]
 
                 need_updates = need_updates.drop([column for column in action_map['insert']['augur']], axis='columns')
+
+            self.logger.info(f"final need updates enacted for action map.")
+
 
         # self.logger.info(f'Page needs {len(need_insertion)} insertions and '
         #     f'{len(need_updates)} updates.\n')
@@ -1483,6 +1490,8 @@ class Worker():
 
         table = 'contributors'
         table_pkey = 'cntrb_id'
+        ### %TODO Remap this to a GitLab Contributor ID like the GitHub Worker. 
+        ### Following Gabe's rework of the contributor worker. 
         update_col_map = {'cntrb_email': 'email'}
         duplicate_col_map = {'cntrb_login': 'email'}
 

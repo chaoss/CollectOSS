@@ -321,22 +321,27 @@ class ContributorWorker(Worker):
 
             self.map_new_id(dupe_ids, pk)
 
-            delete_dupe_ids_sql = s.sql.text("""
-                DELETE FROM contributors
-                WHERE cntrb_id IN (SELECT cntrb_id 
-                FROM contributors  WHERE (cntrb_id > {} 
-                OR cntrb_id < {}) 
-                AND cntrb_email = '{}');
-            """.format(pk, sg, cntrb_new['cntrb_email']))
+            ### Commented out deletion because cascading foreign key
+            ### then goes and removes the pull requests, and related objects
+            ### The mapping of the new ID is not working as expected. 
+            ### Sean Goggins, February 5, 2021
 
-            self.logger.info(f'Trying to delete dupes with sql: {delete_dupe_ids_sql}')
+            # delete_dupe_ids_sql = s.sql.text("""
+            #     DELETE FROM contributors
+            #     WHERE cntrb_id IN (SELECT cntrb_id 
+            #     FROM contributors  WHERE (cntrb_id > {} 
+            #     OR cntrb_id < {}) 
+            #     AND cntrb_email = '{}');
+            # """.format(pk, sg, cntrb_new['cntrb_email']))
 
-            try:
-                result = self.db.execute(delete_dupe_ids_sql)
-            except Exception as e:
-                self.logger.info(f'Deleting dupes failed with error: {e}')
+            # self.logger.info(f'Trying to delete dupes with sql: {delete_dupe_ids_sql}')
 
-            self.logger.info('Deleted duplicates.\n')
+            # try:
+            #     result = self.db.execute(delete_dupe_ids_sql)
+            # except Exception as e:
+            #     self.logger.info(f'Deleting dupes failed with error: {e}')
+
+            # self.logger.info('Deleted duplicates.\n')
 
         # Register this task as completed
         self.register_task_completion(entry_info, repo_id, "contributors")
@@ -548,29 +553,32 @@ class ContributorWorker(Worker):
 
             self.map_new_id(dupe_ids, self.cntrb_id_inc)
 
-            deleteSQL = """
-                DELETE 
-                    FROM
-                        contributors c 
-                    USING 
-                        contributors_aliases
-                    WHERE
-                        c.cntrb_email = '{0}'
-                    AND
-                        c.cntrb_id NOT IN (SELECT cntrb_id FROM contributors_aliases)
-                    AND
-                        c.cntrb_id <> {1};
-            """.format(commit_email, self.cntrb_id_inc)
+        ### Commented out due to cascade delete database issue
+        ### Sean Goggins, February 5, 2021
+
+        #     deleteSQL = """
+        #         DELETE 
+        #             FROM
+        #                 contributors c 
+        #             USING 
+        #                 contributors_aliases
+        #             WHERE
+        #                 c.cntrb_email = '{0}'
+        #             AND
+        #                 c.cntrb_id NOT IN (SELECT cntrb_id FROM contributors_aliases)
+        #             AND
+        #                 c.cntrb_id <> {1};
+        #     """.format(commit_email, self.cntrb_id_inc)
             
-            try:
-                # Delete all dupes 
-                result = self.db.execute(deleteSQL)
-                self.logger.info("Deleted all non-canonical contributors with the email: {}\n".format(commit_email))
-            except Exception as e:
-                self.logger.info("When trying to delete a duplicate contributor, worker ran into error: {}".format(e))
+        #     try:
+        #         # Delete all dupes 
+        #         result = self.db.execute(deleteSQL)
+        #         self.logger.info("Deleted all non-canonical contributors with the email: {}\n".format(commit_email))
+        #     except Exception as e:
+        #         self.logger.info("When trying to delete a duplicate contributor, worker ran into error: {}".format(e))
         
-        else: #then there would be exactly 1 existing tuple, so that id is the one we want
-            alias_id = existing_tuples[0]['cntrb_id']
+        # else: #then there would be exactly 1 existing tuple, so that id is the one we want
+        #     alias_id = existing_tuples[0]['cntrb_id']
 
         self.logger.info('Checking canonicals match.\n')
         alias_sql = s.sql.text("""
