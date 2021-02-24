@@ -35,3 +35,11 @@
 \i schema/generate/30-schema_update_32.sql
 \i schema/generate/31-schema_update_33.sql
 \i schema/generate/32-schema_update_34.sql
+\i schema/generate/33-schema_update_35.sql
+\i schema/generate/34-schema_update_36.sql
+\i schema/generate/35-schema_update_37.sql
+\i schema/generate/36-schema_update_38.sql
+\i schema/generate/37-schema_update_39.sql
+\i schema/generate/38-schema_update_40.sql
+\i schema/generate/39-schema_update_41.sql
+\i schema/generate/40-schema_update_42.sql

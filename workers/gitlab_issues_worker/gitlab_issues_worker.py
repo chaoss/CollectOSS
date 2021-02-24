@@ -30,7 +30,8 @@ class GitLabIssuesWorker(Worker):
         self.tool_source = 'Gitlab API Worker'
         self.tool_version = '0.0.0'
         self.data_source = 'GitLab API'
-        self.platform_id = 25150
+        self.platform_id = 25151
+        self.logger.info("Completed GitLab Worker Initialization.\n")
 
 
     def gitlab_issues_model(self, task, repo_id):
@@ -43,7 +44,10 @@ class GitLabIssuesWorker(Worker):
         self.logger.info('Beginning the process of GitLab Issue Collection...'.format(str(os.getpid())))
         gitlab_base = 'https://gitlab.com/api/v4'
         # adding the labels attribute in the query params to avoid additional API calls
-        intermediate_url = '{}/projects/{}/issues?per_page=100&state=opened&with_labels_details=True&'.format(gitlab_base, repo_id)
+        git_url = task['given']['git_url']
+        owner, repo = self.get_owner_repo(git_url)
+        url_encoded_format_project_address = quote(owner + '/' + repo, safe='')
+        intermediate_url = '{}/projects/{}/issues?per_page=100&state=opened&with_labels_details=True&'.format(gitlab_base, url_encoded_format_project_address)
         gitlab_issues_url = intermediate_url + "page={}"
         
         table = 'issues'
@@ -69,7 +73,7 @@ class GitLabIssuesWorker(Worker):
 
             # Insert data into models
             issue = {
-                    "repo_id": issue_dict['project_id'],
+                    "repo_id": repo_id,
                     "reporter_id": self.find_id_from_login(issue_dict['author']['username'], platform='gitlab'),
                     "pull_request": pr_id,
                     "pull_request_id": pr_id,
@@ -259,7 +263,7 @@ class GitLabIssuesWorker(Worker):
                 self.results_counter += 1
 
                 self.logger.info("Inserted issue event: " + event['action_name'] + " for issue id: {}\n".format(self.issue_id_inc))
-
-
+    
+        self.logger.info("Worker Finished Collection on task.\n")
 
         self.register_task_completion(task, repo_id, 'gitlab_issues')
