@@ -129,23 +129,21 @@ default_config = {
                     "model": "pull_request_analysis",
                     "repo_group_id": 0
                 },
-
-	        {
-	    	"delay": 10000,
-		"given":[
-		    "git_url"
-		],
-		"model" : "discourse_analysis",
-		"repo_group_id" : 0
-
-	        },
-	        {
-                "delay": 10000,
-                "given": [
-                    "git_url"
-                ],
-                "model": "clustering",
-                "repo_group_id": 0
+                {
+                    "delay": 10000,
+                    "given":[
+                        "git_url"
+                    ],
+                    "model" : "discourse_analysis",
+                    "repo_group_id" : 0
+                },
+                {
+                    "delay": 10000,
+                    "given": [
+                        "git_url"
+                    ],
+                    "model": "clustering",
+                    "repo_group_id": 0
                 }
             ]
         },
@@ -232,21 +230,19 @@ default_config = {
                 "insight_days": 30
             },
             "discourse_analysis_worker":{
-	    "port" : 51500,
-	    "switch": 0,
-	    "workers": 1
-
-	    },
-	    "clustering_worker": {
-            "port": 51600,
-            "switch": 0,
-            "workers": 1,
-	    "max_df" : 0.9,
-	    "max_features" : 1000,
-	    "min_df": 0.1,
-	    "num_clusters" : 4
-
-        }
+                "port" : 51500,
+                "switch": 0,
+                "workers": 1
+            },
+            "clustering_worker": {
+                "port": 51600,
+                "switch": 0,
+                "workers": 1,
+                "max_df" : 0.9,
+                "max_features" : 1000,
+                "min_df": 0.1,
+                "num_clusters" : 4
+            }
         },
         "Facade": {
             "check_updates": 1,
