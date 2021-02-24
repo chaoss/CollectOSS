@@ -166,7 +166,6 @@ default_config = {
                     "repo_group_id" : 0
                 },
                 {
-
                     "delay": 10000,
                     "given": [
                         "git_url"

@@ -20,6 +20,7 @@ from sklearn.utils import compute_sample_weight
 from xgboost import XGBClassifier
 from xlrd import open_workbook
 
+
 # from openpyxl import load_workbook
 
 from augur import ROOT_AUGUR_DIRECTORY
@@ -55,6 +56,8 @@ def tokenize_and_stem(text):
     stems = stem_tokens(tokens)
     return stems
 
+
+
 mystop_words = [
     'i', 'me', 'my', 'myself', 'we', 'our',  'ourselves', 'you', 'your',
     'yourself', 'yourselves', 'he', 'him', 'his', 'himself', 'she', 'her',
@@ -78,6 +81,7 @@ mystop_words = [
 
 emodict = []
 
+
 # Read in the words with sentiment from the dictionary
 with open(os.path.join(train_path,"EmoticonLookupTable.txt"),"r") as emotable:
     emoticon_reader=csv.reader(emotable,delimiter='\t')
@@ -86,11 +90,13 @@ with open(os.path.join(train_path,"EmoticonLookupTable.txt"),"r") as emotable:
     emodict={rows[0]:rows[1] for rows in emoticon_reader}
     emotable.close()
 
+
 grammar = r"""
 NegP: {<VERB>?<ADV>+<VERB|ADJ>?<PRT|ADV><VERB>}
 {<VERB>?<ADV>+<VERB|ADJ>*<ADP|DET>?<ADJ>?<NOUN>?<ADV>?}
 """
 chunk_parser = nltk.RegexpParser(grammar)
+
 
 def expand_contractions(text, contraction_mapping=CONTRACTION_MAP):
     contractions_pattern = re.compile('({})'.format('|'.join(contraction_mapping.keys())),
@@ -108,14 +114,17 @@ def expand_contractions(text, contraction_mapping=CONTRACTION_MAP):
     expanded_text = re.sub("'", "", expanded_text)
     return expanded_text
 
+
 def remove_url(s):
     url_regex = re.compile(
         'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
     return url_regex.sub(" ", s)
 
+
 negation_words = ['not', 'never', 'none', 'nobody', 'nowhere', 'neither', 'barely', 'hardly',
                   'nothing', 'rarely', 'seldom', 'despite']
 emoticon_words = ['PositiveSentiment', 'NegativeSentiment']
+
 
 def remove_tags(s):
     soup = BeautifulSoup(s, "html.parser")
@@ -123,6 +132,7 @@ def remove_tags(s):
         tag.replaceWith('')
         s = soup.get_text()
     return s
+
 
 def joint_words(s):
     punc = list(string.punctuation)
@@ -149,6 +159,7 @@ def prepend_not(word):
     elif word in negation_words:
         return word
     return "NOT_"+word
+
 
 def handle_negation(comments):
     sentences = nltk.sent_tokenize(comments)
@@ -178,6 +189,7 @@ def handle_negation(comments):
             modified_st.append(st)
     return ". ".join(modified_st)
 
+
 def preprocess_text(s):
     text = expand_contractions(s)
     text = remove_tags(text)
@@ -196,6 +208,7 @@ def preprocess_text(s):
     return text
 
 
+
 class SentimentData:
     def __init__(self, text, rating):
         self.text = text
@@ -203,6 +216,7 @@ class SentimentData:
 
 
 class SentiCR:
+
     def __init__(self, training_data=None, models_dir=os.path,logger=logging):
         self.algo = 'XGB'
         self.models_dir = models_dir
@@ -223,6 +237,7 @@ class SentiCR:
             self.training_data = training_data
             self.logger.info('Using custom train set')
             self.model = self.create_model_from_training_data()
+
 
     def create_model_from_training_data(self):
         training_comments = []
@@ -267,6 +282,7 @@ class SentiCR:
             oracle_data.append(comments)
         return oracle_data
 
+
     def get_sentiment_polarity(self, text, label=False):
         comment = preprocess_text(text)
         feature_vector = self.vectorizer.transform([comment]).toarray()
@@ -283,6 +299,7 @@ class SentiCR:
         return sentiment_score
     
 # Function to get sentiment score
+
 def get_senti_score(df, col, models_dir, label=False, logger=logging):
     sentiment_analyzer = SentiCR(logger=logger, models_dir=models_dir)
     i = 0

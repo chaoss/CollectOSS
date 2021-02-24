@@ -32,10 +32,13 @@ setup(
         'scipy',
         'emoji',
         'keras',
+        'tensorflow==2.2.0',
         'h5py',
         'scikit-image',
         'joblib',
-        'xgboost==0.90'
+        'xgboost==0.90',
+        'bs4', 
+        'xlrd'
     ],
     entry_points={
         'console_scripts': [
