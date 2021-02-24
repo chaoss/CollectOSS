@@ -5,6 +5,7 @@ import numpy as np
 import warnings
 import datetime
 import json
+from scipy import stats
 from flask import request, send_file, Response
 warnings.filterwarnings('ignore')
 
@@ -178,6 +179,10 @@ def create_routes(server):
         pr_all[['created_year', 'closed_year']] = pr_all[['created_year', 'closed_year']].fillna(-1).astype(int).astype(str)
 
         # Get days for average_time_between_responses time delta
+
+
+
+        ## for pr_all['average_time_between_responses']:
         pr_all['average_days_between_responses'] = pr_all['average_time_between_responses'].map(lambda x: x.days).astype(float)
         pr_all['average_hours_between_responses'] = pr_all['average_time_between_responses'].map(lambda x: x.days * 24).astype(float)
 
@@ -252,6 +257,22 @@ def create_routes(server):
             indices_to_drop = input_df.loc[input_df['repo_name'] == repo_name].nlargest(num_outliers, field).index
             df_no_outliers = df_no_outliers.drop(index=indices_to_drop)
         return df_no_outliers
+
+    def remove_outliers_by_standard_deviation(input_df, column):
+        '''Takes a dataframe and a numeric column name.
+        Then removes all rows thare are than 3 standard deviations from the mean.
+        Returns a df without outliers, the # of outliers removed, outlier cutoff value'''
+
+        #finds rows that are more than 3 standard deviations from the mean
+        outlier_cutoff = input_df[column].mean()+ (3 * input_df[column].std())
+        outlier_mask = input_df[column] > outlier_cutoff
+
+        #determine number of outliers
+        outliers_removed = len(input_df.loc[outlier_mask])
+
+        df_no_outliers = input_df.loc[~outlier_mask]
+
+        return df_no_outliers, outliers_removed, outlier_cutoff
 
     def hex_to_RGB(hex):
         ''' "#FFFFFF" -> [255,255,255] '''
@@ -1153,7 +1174,7 @@ def create_routes(server):
         start_date = str(request.args.get('start_date', "{}-01-01".format(now.year-1)))
         end_date = str(request.args.get('end_date', "{}-{}-{}".format(now.year, now.month, now.day)))
         return_json = request.args.get('return_json', "false")
-        remove_outliers = int(request.args.get('remove_outliers', 10))
+        remove_outliers = str(request.args.get('remove_outliers', "true"))
 
         #dict of df types, and their locaiton in the tuple that the function pull_request_data_collection returns
         df_type = {"pr_all": 0, "pr_open": 1, "pr_closed": 2, "pr_merged": 3, "pr_not_merged": 4, "pr_slow20_all": 5,
@@ -1179,11 +1200,13 @@ def create_routes(server):
         
         driver_df = pr_closed.copy()
 
-        group_by_groups = sorted(driver_df[group_by].unique())
+        outliers_removed = 0
 
-        #seconds = ((driver_df[x_axis].max() + datetime.timedelta(days=25))- (driver_df[x_axis].min() - datetime.timedelta(days=30))).total_seconds()
-        #quarter_years = seconds / 10506240
-        #quarter_years = round(quarter_years)
+        if remove_outliers == "true":
+
+            driver_df, outliers_removed, outlier_cutoff = remove_outliers_by_standard_deviation(driver_df, 'days_to_first_response')
+
+        group_by_groups = sorted(driver_df[group_by].unique())
 
         #setup color pallete
         try:
@@ -1208,19 +1231,12 @@ def create_routes(server):
                 not_merged_values = driver_df.loc[driver_df[group_by] == group_by_group][y_axis].dropna().values.tolist()
 
         values = not_merged_values + merged_values
-        #values.fillna(0)
-
-        for value in range(0, remove_outliers):
-            values.remove(max(values))
  
-        #determine y_max by finding the max of the values and scaling it up a small amoutn
-        y_max = max(values)*1.0111
-        outliers = driver_df.loc[driver_df[y_axis] > y_max]
-        if len(outliers) > 0:
+        if outliers_removed > 0:
             if repo_id:
-                p.add_layout(Title(text="** Outliers cut off at {} days: {} outlier(s) for {} were removed **".format(y_max, len(outliers), repo_dict[repo_id]), align="center"), "below")
+                p.add_layout(Title(text="** Outliers cut off at {} days: {} outlier(s) for {} were removed **".format(outlier_cutoff, outliers_removed, repo_dict[repo_id]), align="center"), "below")
             else:
-                p.add_layout(Title(text="** Outliers cut off at {} days: {} outlier(s) were removed **".format(y_max, len(outliers)), align="center"), "below")
+                p.add_layout(Title(text="** Outliers cut off at {} days: {} outlier(s) were removed **".format(outlier_cutoff, outliers_removed), align="center"), "below")
 
         p.xaxis.axis_label = 'Date Closed' if x_axis == 'pr_closed_at' else 'Date Created' if x_axis == 'pr_created_at' else 'Date'
         p.yaxis.axis_label = 'Days to First Response'
@@ -1234,6 +1250,9 @@ def create_routes(server):
 
         p.yaxis.axis_label_text_font_size = "16px"
         p.yaxis.major_label_text_font_size = "16px"
+
+        #determine y_max by finding the max of the values and scaling it up a small amoutn
+        y_max = max(values)*1.015
 
         p.y_range = Range1d(0, y_max)
         
@@ -1445,7 +1464,9 @@ def create_routes(server):
         start_date = str(request.args.get('start_date', "{}-01-01".format(now.year-1)))
         end_date = str(request.args.get('end_date', "{}-{}-{}".format(now.year, now.month, now.day)))
         return_json = request.args.get('return_json', "false")
-        remove_outliers = int(request.args.get('remove_outliers', 10))
+        remove_outliers = str(request.args.get('remove_outliers', "true"))
+
+
 
         #dict of df types, and their locaiton in the tuple that the function pull_request_data_collection returns
         df_type = {"pr_all": 0, "pr_open": 1, "pr_closed": 2, "pr_merged": 3, "pr_not_merged": 4, "pr_slow20_all": 5,
@@ -1472,7 +1493,6 @@ def create_routes(server):
         heat_field = 'pr_duration_days'
         columns = 2
 
-
         red_green_gradient = linear_gradient('#0080FF', '#DC143C', 150)['hex']#32CD32
 
         driver_df = pr_duration_frame.copy()[['repo_id', y_axis, group_by, x_axis, heat_field]]
@@ -1489,11 +1509,14 @@ def create_routes(server):
         x_groups = sorted(driver_df[x_axis].unique())
         grouped_x_groups = sorted(driver_df_mean['grouped_x'].unique())
 
-        values = driver_df_mean['pr_duration_days'].values.tolist()
-  
-        #removes number of outliers 
-        for i in range(0, remove_outliers):
-            values.remove(max(values))
+        #defualt outliers removed to 0
+        outliers_removed = 0
+
+        if remove_outliers == "true":
+
+            driver_df_mean, outliers_removed, outlier_cutoff = remove_outliers_by_standard_deviation(driver_df_mean, heat_field)
+
+        values = driver_df_mean[heat_field].values.tolist()
 
         heat_max = max(values)* 1.02
 
@@ -1509,8 +1532,8 @@ def create_routes(server):
         for x_group in x_groups:
             outliers = driver_df_mean.loc[(driver_df_mean[heat_field] > heat_max) & (driver_df_mean['grouped_x'].str.contains(x_group))]
 
-            if len(outliers) > 0:
-                p.add_layout(Title(text="** Outliers capped at {} days: {} outlier(s) for {} were capped at {} **".format(heat_max, len(outliers), x_group, heat_max), align="center"), "below")
+            if outliers_removed > 0:
+                p.add_layout(Title(text="** Outliers capped at {} days: {} outlier(s) for {} were capped at {} **".format(outlier_cutoff, outliers_removed, x_group, outlier_cutoff), align="center"), "below")
 
         p.rect(x=y_axis, y='grouped_x', width=1, height=1, source=source,
                line_color=None, fill_color=transform(heat_field, mapper))
