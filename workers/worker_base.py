@@ -973,7 +973,7 @@ class Worker():
         valid_url_count = len(urls)
         
         while len(urls) > 0 and attempts < max_attempts:
-            with concurrent.futures.ThreadPoolExecutor(max_workers=multiprocessing.cpu_count()/4) as executor:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=max(multiprocessing.cpu_count()/8, 1)) as executor:
                 # Start the load operations and mark each future with its URL
                 future_to_url = {executor.submit(load_url, *url): url for url in urls}
                 self.logger.info("Multithreaded urls and returned status codes:\n")
