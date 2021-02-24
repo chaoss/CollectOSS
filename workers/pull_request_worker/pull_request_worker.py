@@ -111,7 +111,7 @@ class GitHubPullRequestWorker(Worker):
 
                     if 'errors' in data:
                         self.logger.info("Error!: {}".format(data['errors']))
-                        if j['errors'][0]['type'] == 'NOT_FOUND':
+                        if data['errors'][0]['type'] == 'NOT_FOUND':
                             self.logger.warning("Github repo was not found or does not exist for endpoint: {}\n".format(url))
                             break
                         if data['errors'][0]['type'] == 'RATE_LIMITED':
