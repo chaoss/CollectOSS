@@ -3,7 +3,8 @@
 import requests, datetime, time, traceback, json, os, sys, math, logging, numpy, copy, concurrent, multiprocessing
 
 from logging import FileHandler, Formatter, StreamHandler
-from multiprocessing import Process, Queue
+from multiprocessing import Process, Queue, Pool
+from os import getpid
 import sqlalchemy as s
 import pandas as pd
 from pathlib import Path
@@ -380,26 +381,48 @@ class Worker():
 
         if 'update' in action_map:
             new_data_df, table_values_df = self.sync_df_types(new_data_df, table_values_df, 
-                action_map['update']['source'], action_map['update']['augur'])
-            
-            need_updates = new_data_df.merge(table_values_df, left_on=action_map['insert']['source'],
-                right_on=action_map['insert']['augur'], suffixes=('','_table'), 
-                how='inner',indicator=False).merge(table_values_df, left_on=action_map['update']['source'],
-                right_on=action_map['update']['augur'], suffixes=('','_table'), how='outer', indicator=True
-                                ).loc[lambda x : x['_merge']=='left_only']
+                action_map['update']['source'], action_map['update']['augur'])                
 
-            need_updates = need_updates.drop([column for column in list(need_updates.columns) if \
-                column not in action_map['update']['augur'] and column not in action_map['insert']['augur']], 
-                axis='columns')
+            partitions = math.ceil(len(new_data_df) / 3000)
+            attempts = 0 
+            while attempts < 50:
+                try:
+                    need_updates = pd.DataFrame()
+                    self.logger.info(f"Trying {partitions} partitions\n")
+                    for sub_df in numpy.array_split(new_data_df, partitions):
+                        self.logger.info(f"Trying a partition, len {len(sub_df)}\n")
+                        need_updates = pd.concat([ need_updates, sub_df.merge(table_values_df, left_on=action_map['insert']['source'],
+                            right_on=action_map['insert']['augur'], suffixes=('','_table'), how='inner', 
+                            indicator=False).merge(table_values_df, left_on=action_map['update']['source'],
+                            right_on=action_map['update']['augur'], suffixes=('','_table'), how='outer', 
+                            indicator=True).loc[lambda x : x['_merge']=='left_only'] ])
+                        self.logger.info(f"need_updates merge: {len(sub_df)} worked\n")
+                    break
+                    
+                except MemoryError as e:
+                    self.logger.info(f"new_data ({sub_df.shape}) is too large to allocate memory for " +
+                        f"need_updates df merge.\nMemoryError: {e}\nTrying again with {partitions + 1} partitions...\n")
+                    partitions += 1
+                    attempts += 1
+                self.logger.info(f"End attempt # {attempts}\n")
+            if attempts >= 50:
+                self.loggger.info("Max need_updates merge attempts exceeded, cannot perform " +
+                    "updates on this repo.\n")
+            else:
+                need_updates = need_updates.drop([column for column in list(need_updates.columns) if \
+                    column not in action_map['update']['augur'] and column not in action_map['insert']['augur']], 
+                    axis='columns')
 
-            for column in action_map['insert']['augur']:
-                need_updates[f'b_{column}'] = need_updates[column]
+                for column in action_map['insert']['augur']:
+                    need_updates[f'b_{column}'] = need_updates[column]
 
-            need_updates = need_updates.drop([column for column in action_map['insert']['augur']], axis='columns')
+                need_updates = need_updates.drop([column for column in action_map['insert']['augur']], axis='columns')
+
+            self.logger.info(f"final need updates enacted for action map.")
+
 
         # self.logger.info(f'Page needs {len(need_insertion)} insertions and '
         #     f'{len(need_updates)} updates.\n')
-
 
         return need_insertion.to_dict('records'), need_updates.to_dict('records')
 
@@ -950,7 +973,7 @@ class Worker():
         valid_url_count = len(urls)
         
         while len(urls) > 0 and attempts < max_attempts:
-            with concurrent.futures.ThreadPoolExecutor(max_workers=multiprocessing.cpu_count()/4) as executor:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=max(multiprocessing.cpu_count()/8, 1)) as executor:
                 # Start the load operations and mark each future with its URL
                 future_to_url = {executor.submit(load_url, *url): url for url in urls}
                 self.logger.info("Multithreaded urls and returned status codes:\n")
@@ -1017,7 +1040,12 @@ class Worker():
             success = False
             while num_attempts < 3:
                 self.logger.info(f"Hitting endpoint: {url.format(page_number)}...\n")
-                response = requests.get(url=url.format(page_number), headers=self.headers)
+                try:
+                    response = requests.get(url=url.format(page_number), headers=self.headers)
+                except TimeoutError as e:
+                    self.logger.info("Request timed out. Sleeping 10 seconds and trying again...\n")
+                    time.sleep(10)
+                    continue
 
                 self.update_rate_limit(response, platform=platform)
 
@@ -1462,6 +1490,8 @@ class Worker():
 
         table = 'contributors'
         table_pkey = 'cntrb_id'
+        ### %TODO Remap this to a GitLab Contributor ID like the GitHub Worker. 
+        ### Following Gabe's rework of the contributor worker. 
         update_col_map = {'cntrb_email': 'email'}
         duplicate_col_map = {'cntrb_login': 'email'}
 
