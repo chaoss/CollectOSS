@@ -144,14 +144,14 @@ docker-build-database:
 docker-run-backend:
 	@ - docker stop augur_backend
 	@ - docker rm augur_backend
-	@ docker run -p 5000:5000 --name augur_backend --env-file docker_env.txt augurlabs/augur:backend
+	docker run -p 5000:5000 --name augur_backend --env-file docker_env.txt augurlabs/augur:backend
 
 docker-run-frontend:
 	@ - docker stop augur_frontend
 	@ - docker rm augur_frontend
-	@ docker run -p 8080:8080 --name augur_frontend augurlabs/augur:frontend
+	docker run -p 8080:8080 --name augur_frontend augurlabs/augur:frontend
 
 docker-run-database:
 	@ - docker stop augur_database
 	@ - docker rm augur_database
-	@ docker run -p 5434:5432 --name augur_database augurlabs/augur:database
+	docker run -p 5434:5432 --name augur_database augurlabs/augur:database
