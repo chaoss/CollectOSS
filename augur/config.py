@@ -164,8 +164,8 @@ default_config = {
                     ],
                     "model" : "discourse_analysis",
                     "repo_group_id" : 0
-               },
-               {
+                },
+                {
                     "delay": 10000,
                     "given": [
                         "git_url"
@@ -284,6 +284,7 @@ default_config = {
                 "port": 51600,
                 "switch": 0,
                 "workers": 1,
+
                 "max_df" : 0.9,
                 "max_features" : 1000,
                 "min_df": 0.1,
