@@ -50,6 +50,10 @@ To start the backend as normal::
   > ...
   > From this point on, the housekeeper and broker logs detailing the worker's progress will take over
 
+To start the backend as a background process: 
+
+  $ nohup augur backend start >logs/base.log 2>logs/base.err &
+  # successful output looks like the generation of standard Augur logfiles in the logs/ directory
 
 To start the backend server without the housekeeper::
 
