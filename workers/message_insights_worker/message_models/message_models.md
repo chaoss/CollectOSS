@@ -1,1 +1,0 @@
-# Message Models Base Folder
