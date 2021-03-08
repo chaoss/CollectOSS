@@ -4225,58 +4225,33 @@ paths:
     get:
       description: Get bar chart of new contributor counts.
       operationId: New Contributor Counts Bar Chart
-      parameters:
-       - description: Repository ID
-        in: query
-        name: repo_id
-        schema:
-          type: string
-        type: integer
-      - description: Start Date
-        in: query
-        name: start_date
-        schema:
-          type: string
-        type: string
-      - description: End Date
-        in: query
-        name: end_date
-        schema:
-          type: string
-        type: string
-       - description: Group By
-        in: query
-        name: group_by
-        schema:
-          type: string
-        type: string
-      - description: Num Contributons to be Considered Returning Contributor
-        in: query
-        name: required_contributions
-        schema:
-          type: string
-        type: integer
-      - description: Period of Time to Count Contributions
-        in: query
-        name: required_time
-        schema:
-          type: string
-        type: integer
-      - description: Return JSON (boolean)
-        in: query
-        name: remove_outliers
-        schema:
-          type: string
-        type: boolean
       responses:
         '200':
           description: OK
           schema:
             items:
               properties:
-                image:
-                  description: 'image'
-                  type: PNG 
+                repo_id:
+                  description: 'Example: 23847'
+                  type: integer
+                start_date: 
+                  description: 'Example: 2019-01-01'
+                  type: string
+                end_date:
+                  description: 'Example: 2020-03-30'
+                  type: string
+                group_by:
+                  description: 'Example: month, quarter, or year'
+                  type: string
+                required_contributions:
+                  description: 'Example: 5'
+                  type: integer
+                required_time: 
+                  description: 'Example: 365'
+                  type: integer
+                return_json:
+                  description: 'Example: true'
+                  type: boolean
             type: object
       tags:
       - visualizations
@@ -4284,58 +4259,33 @@ paths:
     get:
       description: Get stacked bar chart of new contributor counts, which shows the action of the contributor.
       operationId: New Contributor Counts Stacked Bar Chart (shows actions)
-      parameters:
-       - description: Repository ID
-        in: query
-        name: repo_id
-        schema:
-          type: string
-        type: integer
-      - description: Start Date
-        in: query
-        name: start_date
-        schema:
-          type: string
-        type: string
-      - description: End Date
-        in: query
-        name: end_date
-        schema:
-          type: string
-        type: string
-       - description: Group By
-        in: query
-        name: group_by
-        schema:
-          type: string
-        type: string
-      - description: Num Contributons to be Considered Returning Contributor
-        in: query
-        name: required_contributions
-        schema:
-          type: string
-        type: integer
-      - description: Period of Time to Count Contributions
-        in: query
-        name: required_time
-        schema:
-          type: string
-        type: integer
-      - description: Return JSON (boolean)
-        in: query
-        name: remove_outliers
-        schema:
-          type: string
-        type: boolean
       responses:
         '200':
           description: OK
           schema:
             items:
               properties:
-                image:
-                  description: 'image'
-                  type: PNG 
+                repo_id:
+                  description: 'Example: 23847'
+                  type: integer
+                start_date: 
+                  description: 'Example: 2019-01-01'
+                  type: string
+                end_date:
+                  description: 'Example: 2020-03-30'
+                  type: string
+                group_by:
+                  description: 'Example: month, quarter, or year'
+                  type: string
+                required_contributions:
+                  description: 'Example: 5'
+                  type: integer
+                required_time: 
+                  description: 'Example: 365'
+                  type: integer
+                return_json:
+                  description: 'Example: true'
+                  type: boolean
             type: object
       tags:
       - visualizations
@@ -4343,52 +4293,30 @@ paths:
     get:
       description: Get pie chart of the returning contributor counts.
       operationId: Returning Contributor Counts Pie Chart
-      parameters:
-       - description: Repository ID
-        in: query
-        name: repo_id
-        schema:
-          type: string
-        type: integer
-      - description: Start Date
-        in: query
-        name: start_date
-        schema:
-          type: string
-        type: string
-      - description: End Date
-        in: query
-        name: end_date
-        schema:
-          type: string
-        type: string
-      - description: Num Contributons to be Considered Returning Contributor
-        in: query
-        name: required_contributions
-        schema:
-          type: string
-        type: integer
-      - description: Period of Time to Count Contributions
-        in: query
-        name: required_time
-        schema:
-          type: string
-        type: integer
-      - description: Return JSON (boolean)
-        in: query
-        name: remove_outliers
-        schema:
-          type: string
-        type: boolean
       responses:
         '200':
           description: OK
           schema:
             items:
               properties:
-                image:
-                  description: 'image'
-                  type: PNG 
+                repo_id:
+                  description: 'Example: 23847'
+                  type: integer
+                start_date: 
+                  description: 'Example: 2019-01-01'
+                  type: string
+                end_date:
+                  description: 'Example: 2020-03-30'
+                  type: string
+                required_contributions:
+                  description: 'Example: 5'
+                  type: integer
+                required_time: 
+                  description: 'Example: 365'
+                  type: integer
+                return_json:
+                  description: 'Example: true'
+                  type: boolean
             type: object
       tags:
       - visualizations
@@ -4396,58 +4324,33 @@ paths:
     get:
       description: Get returning contributors stacked bar chart.
       operationId: New Contributor Counts Stacked Bar Chart (shows actions)
-      parameters:
-       - description: Repository ID
-        in: query
-        name: repo_id
-        schema:
-          type: string
-        type: integer
-      - description: Start Date
-        in: query
-        name: start_date
-        schema:
-          type: string
-        type: string
-      - description: End Date
-        in: query
-        name: end_date
-        schema:
-          type: string
-        type: string
-       - description: Group By
-        in: query
-        name: group_by
-        schema:
-          type: string
-        type: string
-      - description: Num Contributons to be Considered Returning Contributor
-        in: query
-        name: required_contributions
-        schema:
-          type: string
-        type: integer
-      - description: Period of Time to Count Contributions
-        in: query
-        name: required_time
-        schema:
-          type: string
-        type: integer
-      - description: Return JSON (boolean)
-        in: query
-        name: remove_outliers
-        schema:
-          type: string
-        type: boolean
       responses:
         '200':
           description: OK
           schema:
             items:
               properties:
-                image:
-                  description: 'image'
-                  type: PNG 
+                repo_id:
+                  description: 'Example: 23847'
+                  type: integer
+                start_date: 
+                  description: 'Example: 2019-01-01'
+                  type: string
+                end_date:
+                  description: 'Example: 2020-03-30'
+                  type: string
+                group_by:
+                  description: 'Example: month, quarter, or year'
+                  type: string
+                required_contributions:
+                  description: 'Example: 5'
+                  type: integer
+                required_time: 
+                  description: 'Example: 365'
+                  type: integer
+                return_json:
+                  description: 'Example: true'
+                  type: boolean
             type: object
       tags:
         - visualizations
@@ -4455,40 +4358,24 @@ paths:
     get:
       description: Get vertical bar chart of average commits per pull request.
       operationId: Average Commit Counts Per Year for All Pull Requests
-      parameters:
-       - description: Repository ID
-        in: query
-        name: repo_id
-        schema:
-          type: string
-        type: integer
-      - description: Start Date
-        in: query
-        name: start_date
-        schema:
-          type: string
-        type: string
-      - description: End Date
-        in: query
-        name: end_date
-        schema:
-          type: string
-        type: string
-      - description: Return JSON (boolean)
-        in: query
-        name: remove_outliers
-        schema:
-          type: string
-        type: boolean
       responses:
         '200':
           description: OK
           schema:
             items:
               properties:
-                image:
-                  description: 'image'
-                  type: PNG
+                repo_id:
+                  description: 'Example: 23847'
+                  type: integer
+                start_date: 
+                  description: 'Example: 2019-01-01'
+                  type: string
+                end_date:
+                  description: 'Example: 2020-03-30'
+                  type: string
+                return_json:
+                  description: 'Example: true'
+                  type: boolean
             type: object
       tags:
         - visualizations
@@ -4496,40 +4383,24 @@ paths:
     get:
       description: Get horizontal stacked bar chart of the average comments for closed pull requests.
       operationId: Average Comments per Closed Pull Request
-      parameters:
-       - description: Repository ID
-        in: query
-        name: repo_id
-        schema:
-          type: string
-        type: integer
-      - description: Start Date
-        in: query
-        name: start_date
-        schema:
-          type: string
-        type: string
-      - description: End Date
-        in: query
-        name: end_date
-        schema:
-          type: string
-        type: string
-      - description: Return JSON (boolean)
-        in: query
-        name: remove_outliers
-        schema:
-          type: string
-        type: boolean
       responses:
         '200':
           description: OK
           schema:
             items:
               properties:
-                image:
-                  description: 'image'
-                  type: PNG
+                repo_id:
+                  description: 'Example: 23847'
+                  type: integer
+                start_date: 
+                  description: 'Example: 2019-01-01'
+                  type: string
+                end_date:
+                  description: 'Example: 2020-03-30'
+                  type: string
+                return_json:
+                  description: 'Example: true'
+                  type: boolean
             type: object
       tags:
         - visualizations
@@ -4537,40 +4408,24 @@ paths:
     get:
       description: Get vertical stacked bar chart of the number of pull requests by merged status.
       operationId: Count of All Closed Pull Requests by Merged Status
-      parameters:
-       - description: Repository ID
-        in: query
-        name: repo_id
-        schema:
-          type: string
-        type: integer
-      - description: Start Date
-        in: query
-        name: start_date
-        schema:
-          type: string
-        type: string
-      - description: End Date
-        in: query
-        name: end_date
-        schema:
-          type: string
-        type: string
-      - description: Return JSON (boolean)
-        in: query
-        name: remove_outliers
-        schema:
-          type: string
-        type: boolean
       responses:
         '200':
           description: OK
           schema:
             items:
               properties:
-                image:
-                  description: 'image'
-                  type: PNG
+                repo_id:
+                  description: 'Example: 23847'
+                  type: integer
+                start_date: 
+                  description: 'Example: 2019-01-01'
+                  type: string
+                end_date:
+                  description: 'Example: 2020-03-30'
+                  type: string
+                return_json:
+                  description: 'Example: true'
+                  type: boolean
             type: object
       tags:
         - visualizations
@@ -4578,40 +4433,24 @@ paths:
     get:
       description: Get grouped horizontal bar chart of average response times for closed pull requests.
       operationId: Mean Response Times for Closed Pull Requests
-      parameters:
-       - description: Repository ID
-        in: query
-        name: repo_id
-        schema:
-          type: string
-        type: integer
-      - description: Start Date
-        in: query
-        name: start_date
-        schema:
-          type: string
-        type: string
-      - description: End Date
-        in: query
-        name: end_date
-        schema:
-          type: string
-        type: string
-      - description: Return JSON (boolean)
-        in: query
-        name: remove_outliers
-        schema:
-          type: string
-        type: boolean
       responses:
         '200':
           description: OK
           schema:
             items:
               properties:
-                image:
-                  description: 'image'
-                  type: PNG
+                repo_id:
+                  description: 'Example: 23847'
+                  type: integer
+                start_date: 
+                  description: 'Example: 2019-01-01'
+                  type: string
+                end_date:
+                  description: 'Example: 2020-03-30'
+                  type: string
+                return_json:
+                  description: 'Example: true'
+                  type: boolean
             type: object
       tags:
         - visualizations
@@ -4619,40 +4458,24 @@ paths:
     get:
       description: Get line graph of the average days between comments for closed pull requests.
       operationId: Average Days Between Comment for Pull Requests
-      parameters:
-       - description: Repository ID
-        in: query
-        name: repo_id
-        schema:
-          type: string
-        type: integer
-      - description: Start Date
-        in: query
-        name: start_date
-        schema:
-          type: string
-        type: string
-      - description: End Date
-        in: query
-        name: end_date
-        schema:
-          type: string
-        type: string
-      - description: Return JSON (boolean)
-        in: query
-        name: remove_outliers
-        schema:
-          type: string
-        type: boolean
       responses:
         '200':
           description: OK
           schema:
             items:
               properties:
-                image:
-                  description: 'image'
-                  type: PNG
+                repo_id:
+                  description: 'Example: 23847'
+                  type: integer
+                start_date: 
+                  description: 'Example: 2019-01-01'
+                  type: string
+                end_date:
+                  description: 'Example: 2020-03-30'
+                  type: string
+                return_json:
+                  description: 'Example: true'
+                  type: boolean
             type: object
       tags:
         - visualizations
@@ -4660,46 +4483,27 @@ paths:
     get:
       description: Get scatter plot of the days to first response for closed pull requests based on merged status.
       operationId: Days to First Response for Closed Pull Requests Based on Merged Status
-      parameters:
-       - description: Repository ID
-        in: query
-        name: repo_id
-        schema:
-          type: string
-        type: integer
-      - description: Start Date
-        in: query
-        name: start_date
-        schema:
-          type: string
-        type: string
-      - description: End Date
-        in: query
-        name: end_date
-        schema:
-          type: string
-        type: string
-      - description: Remove Outliers (boolean)
-        in: query
-        name: remove_outliers
-        schema:
-          type: string
-        type: boolean
-      - description: Return JSON (boolean)
-        in: query
-        name: remove_outliers
-        schema:
-          type: string
-        type: boolean
       responses:
         '200':
           description: OK
           schema:
             items:
               properties:
-                image:
-                  description: 'image'
-                  type: PNG
+                repo_id:
+                  description: 'Example: 23847'
+                  type: integer
+                start_date: 
+                  description: 'Example: 2019-01-01'
+                  type: string
+                end_date:
+                  description: 'Example: 2020-03-30'
+                  type: string
+                remove_outliers: 
+                  description: 'Example: 5'
+                  type: integer
+                return_json:
+                  description: 'Example: true'
+                  type: boolean
             type: object
       tags:
         - visualizations
@@ -4707,40 +4511,24 @@ paths:
     get:
       description: Get heat map of average pull request event counts for closed pull requests.
       operationId: Average Pull Request Event Types for Closed Pull Requests
-      parameters:
-       - description: Repository ID
-        in: query
-        name: repo_id
-        schema:
-          type: string
-        type: integer
-      - description: Start Date
-        in: query
-        name: start_date
-        schema:
-          type: string
-        type: string
-      - description: End Date
-        in: query
-        name: end_date
-        schema:
-          type: string
-        type: string
-      - description: Return JSON (boolean)
-        in: query
-        name: remove_outliers
-        schema:
-          type: string
-        type: boolean
       responses:
         '200':
           description: OK
           schema:
             items:
               properties:
-                image:
-                  description: 'image'
-                  type: PNG
+                repo_id:
+                  description: 'Example: 23847'
+                  type: integer
+                start_date: 
+                  description: 'Example: 2019-01-01'
+                  type: string
+                end_date:
+                  description: 'Example: 2020-03-30'
+                  type: string
+                return_json:
+                  description: 'Example: true'
+                  type: boolean
             type: object
       tags:
         - visualizations
@@ -4748,46 +4536,27 @@ paths:
     get:
       description: Get heat map of the average duration of pull requests per month.
       operationId: Mean Duration of Closed Pull Requests
-      parameters:
-      - description: Repository ID
-        in: query
-        name: repo_id
-        schema:
-          type: string
-        type: integer
-      - description: Start Date
-        in: query
-        name: start_date
-        schema:
-          type: string
-        type: string
-      - description: End Date
-        in: query
-        name: end_date
-        schema:
-          type: string
-        type: string
-      - description: Remove Outliers
-        in: query
-        name: remove_outliers
-        schema:
-          type: string
-        type: boolean
-      - description: Return JSON
-        in: query
-        name: remove_outliers
-        schema:
-          type: string
-        type: boolean
       responses:
         '200':
           description: OK
           schema:
             items:
               properties:
-                image:
-                  description: 'image'
-                  type: PNG 
+                repo_id:
+                  description: 'Example: 23847'
+                  type: integer
+                start_date: 
+                  description: 'Example: 2019-01-01'
+                  type: string
+                end_date:
+                  description: 'Example: 2020-03-30'
+                  type: string
+                remove_outliers: 
+                  description: 'Example: 5'
+                  type: integer
+                return_json:
+                  description: 'Example: true'
+                  type: boolean
             type: object
       tags:
         - visualizations

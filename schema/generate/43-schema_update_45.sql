@@ -22,11 +22,24 @@ ALTER TABLE "augur_operations"."worker_oauth" ALTER COLUMN "oauth_id" TYPE int8 
 
 ALTER TABLE "augur_operations"."worker_oauth" ALTER COLUMN "oauth_id" SET DEFAULT nextval('"augur_operations".worker_oauth_oauth_id_seq'::regclass);
 
+
+ALTER TABLE "augur_operations"."worker_oauth" DROP CONSTRAINT IF EXISTS "worker_oauth_pkey";
+
 ALTER TABLE "augur_operations"."worker_oauth" ADD CONSTRAINT "worker_oauth_pkey" PRIMARY KEY ("oauth_id");
 
 COMMENT ON TABLE "augur_operations"."worker_settings_facade" IS 'For future use when we move all working tables to the augur_operations schema. ';
 
 COMMENT ON TABLE "augur_operations"."working_commits" IS 'For future use when we move all working tables to the augur_operations schema. ';
+
+
+
+CREATE SEQUENCE IF NOT EXISTS ""augur_operations"."affiliations_corp_id_seq"" 
+INCREMENT 1
+MINVALUE  1
+MAXVALUE 9223372036854775807
+START 620000
+CACHE 1;
+
 
 SELECT setval('"augur_operations"."affiliations_corp_id_seq"', 1, false);
 
