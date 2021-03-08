@@ -284,6 +284,7 @@ default_config = {
                 "port": 51600,
                 "switch": 0,
                 "workers": 1,
+
                 "max_df" : 0.9,
                 "max_features" : 1000,
                 "min_df": 0.1,
