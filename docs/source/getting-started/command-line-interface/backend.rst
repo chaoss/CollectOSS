@@ -114,3 +114,33 @@ Example usage::
   > CLI: [backend.processes] [INFO] Found process 14725
 
 
+To enable log parsing for errors, you need to install `Elasticsearch <https://www.elastic.co/downloads/elasticsearch>`_ and `Logstash <https://www.elastic.co/downloads/past-releases/logstash-6-8-10>`_ .
+
+.. warning::
+   Please note, that Logstash v7.0 and above has unresolved issues that affect this functionality.
+   In order to use it in the near future, please download v6.8.
+   If you use a package manager, it defaults to v7+, so we recommend downloading `binary <https://www.elastic.co/downloads/past-releases/logstash-6-8-10>`_ .
+   This change is tested with Elasticserach v7.8.0_2 and Logstash v6.8.10.
+
+Set ``ELASTIC_SEARCH_PATH`` and ``LOGSTASH_PATH`` variables to point to elasticsearch and logstash binaries. For example:
+
+.. code-block:: bash
+  # If not specified, defaults to /usr/local/bin/elasticsearch
+  $ export ELASTIC_SEARCH_PATH=<path_to_elastic_search_binary>
+
+  # If not specified, defaults to /usr/local/bin/logstash
+  $ export LOGSTASH_PATH=<path_to_logstash_binary>
+
+  $ export ROOT_AUGUR_DIRECTORY=<path_to_augur>
+
+Start the http server with::
+  $ cd $ROOT_AUGUR_DIRECTORY/log_analysis/http
+  $ python http_server.py
+
+Then start augur with ``logstash`` flag::
+  $ augur backend start --logstash
+
+If you'd like to clean all previously collected errors, run::
+  $ augur backend start --logstash-with-cleanup
+
+Open http://localhost:8003 and select workers to check for errors.

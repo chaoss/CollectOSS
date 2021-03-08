@@ -26,7 +26,9 @@ def cli():
 @cli.command("start")
 @click.option("--disable-housekeeper", is_flag=True, default=False, help="Turns off the housekeeper")
 @click.option("--skip-cleanup", is_flag=True, default=False, help="Disables the old process cleanup that runs before Augur starts")
-def start(disable_housekeeper, skip_cleanup):
+@click.option("--logstash", is_flag=True, default=False, help="Runs logstash to collect errors from logs")
+@click.option("--logstash-with-cleanup", is_flag=True, default=False, help="Runs logstash to collect errors from logs and cleans all previously collected errors")
+def start(disable_housekeeper, skip_cleanup, logstash, logstash_with_cleanup):
     """
     Start Augur's backend server
     """
@@ -40,11 +42,26 @@ def start(disable_housekeeper, skip_cleanup):
     else:
         logger.debug("Skipping process cleanup")
 
+    if logstash or logstash_with_cleanup:
+        augur_home = os.getenv('ROOT_AUGUR_DIRECTORY', "")
+        if logstash_with_cleanup:
+            print("Cleaning old workers errors...")
+            with open(augur_home + "/log_analysis/http/empty_index.html") as f:
+                lines = f.readlines()
+            with open(augur_home + "/log_analysis/http/index.html", "w") as f1:
+                f1.writelines(lines)
+            print("All previous workers errors got deleted.")
+
+        elasticsearch_path = os.getenv('ELASTIC_SEARCH_PATH', "/usr/local/bin/elasticsearch")
+        subprocess.Popen(elasticsearch_path)
+        logstash_path = os.getenv('LOGSTASH_PATH', "/usr/local/bin/logstash")
+        subprocess.Popen([logstash_path, "-f", augur_home + "/log_analysis/logstash-filter.conf"])
+
     master = initialize_components(augur_app, disable_housekeeper)
 
     logger.info('Starting Gunicorn webserver...')
-    logger.info(f"Augur is running at: http://0.0.0.0:5000")
-    logger.info("Gunicorn server logs & errors will be written to logs/gunicorn.log")
+    logger.info(f'Augur is running at: http://127.0.0.1:{augur_app.config.get_value("Server", "port")}')
+    logger.info('Gunicorn server logs & errors will be written to logs/gunicorn.log')
     logger.info('Housekeeper update process logs will now take over.')
     Arbiter(master).run()
 
