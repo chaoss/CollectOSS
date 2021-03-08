@@ -1,6 +1,5 @@
 
 CREATE SEQUENCE IF NOT EXISTS "augur_operations"."worker_oauth_oauth_id_seq" 
-
 INCREMENT 1
 MINVALUE  1
 MAXVALUE 9223372036854775807
@@ -53,7 +52,7 @@ SELECT setval('"augur_operations"."worker_oauth_oauth_id_seq"', 6300000, true);
 
 ALTER SEQUENCE "augur_operations"."worker_oauth_oauth_id_seq" OWNER TO "augur";
 
-CREATE INDEX IF NOT EXISTS "repos_id,statusops" ON "augur_operations"."repos_fetch_log" USING btree (
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "repos_id,statusops" ON "augur_operations"."repos_fetch_log" USING btree (
   "repos_id" "pg_catalog"."int4_ops" ASC NULLS LAST,
   "status" COLLATE "pg_catalog"."default" "pg_catalog"."text_ops" ASC NULLS LAST
 );
