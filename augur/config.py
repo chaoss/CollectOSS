@@ -23,6 +23,10 @@ default_config = {
             "gitlab_api_key":"gitlab_api_key"
         },
         "Housekeeper": {
+            "update_redirects": {
+                "switch": 0,
+                "repo_group_id": 0
+            },
             "jobs": [
                 {
                     "all_focused": 1,
