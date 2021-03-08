@@ -297,6 +297,7 @@ class Worker():
         self.initialize_logging() # need to initialize logging again in child process cause multiprocessing
         self.logger.info("Starting data collection process\n")
         self.initialize_database_connections()
+        
         while True:
             if not self._queue.empty():
                 message = self._queue.get() # Get the task off our MP queue
@@ -354,7 +355,19 @@ class Worker():
                 continue
             type_dict[subject_columns[index]] = type(source[source_columns[index]].values[0])
 
-        subject.astype(type_dict)
+        #     self.logger.info("Column to Modify: {}".format(subject_columns[index]))
+        #     self.logger.info("Augur_database type: {}".format(type(source[source_columns[index]].values[0])))
+
+        #     self.logger.info("Type dict: {}".format(type_dict))
+
+        # self.logger.info("Subject dtypes: {}".format(subject.dtypes))
+        # self.logger.info("Source dtypes: {}".format(source.dtypes))
+
+        # self.logger.info(subject.id)
+        subject = subject.astype(type_dict)
+        # self.logger.info(subject.id)
+
+
         
         return subject, source
 
@@ -372,8 +385,11 @@ class Worker():
         table_values_df = pd.DataFrame(table_values, columns=table_values[0].keys())
         new_data_df = pd.DataFrame(new_data).dropna(subset=action_map['insert']['source'])
 
-        new_data_df, table_values_df = self.sync_df_types(new_data_df, table_values_df, 
-                action_map['insert']['source'], action_map['insert']['augur'])
+        new_data_df, table_values_df = self.sync_df_types(new_data_df, table_values_df, action_map['insert']['source'], action_map['insert']['augur'])
+
+        # self.logger.info("New_data_df: {}".format(new_data_df.dtypes))
+        # self.logger.info("table_values_df: {}".format(table_values_df.dtypes))
+
 
         need_insertion = new_data_df.merge(table_values_df, suffixes=('','_table'),
                 how='outer', indicator=True, left_on=action_map['insert']['source'],

@@ -30,16 +30,11 @@ class ContributorBreadthWorker(Worker):
         data_tables = ['contributor_repo']
         # For most workers you will only need the worker_history and worker_job tables
         #   from the operations schema, these tables are to log worker task histories
-        operations_tables = []
+        operations_tables = ['worker_history', 'worker_job']
 
         # If you need to do some preliminary interactions with the database, these MUST go
         # in the model method. The database connection is instantiated only inside of each 
         # data collection process
-
-        # Define data collection info
-        self.tool_source = 'Contributor Breadth Worker'
-        self.tool_version = '0.0.0'
-        self.data_source = 'GitHub API'
 
         # Run the general worker initialization
         super().__init__(worker_type, config, given, models, data_tables, operations_tables)
@@ -76,7 +71,7 @@ class ContributorBreadthWorker(Worker):
 
         """
 
-        logging.info("Starting contributor_breadth_model")
+        self.logger.info("Starting contributor_breadth_model")
 
         cntrb_login_query = s.sql.text("""
             SELECT DISTINCT gh_login, cntrb_id 
@@ -87,19 +82,25 @@ class ContributorBreadthWorker(Worker):
         cntrb_logins = json.loads(pd.read_sql(cntrb_login_query, self.db, \
             params={}).to_json(orient="records"))
 
+        self.logger.info("Finished collecting cntrbs that need collection. Count: {}".format(len(cntrb_logins)))
+
         action_map = {
             'insert': {
-                'source': ['repo']['id'],
-                'augur': ['gh_repo_id']
+                'source': ['id'],
+                'augur': ['event_id']
             }
         }
 
         for cntrb in cntrb_logins:
 
+            self.logger.info("Cntrb record: {}".format(cntrb))
+
             repo_cntrb_url = f"https://api.github.com/users/{cntrb['gh_login']}/events"
 
             source_cntrb_repos = self.paginate_endpoint(repo_cntrb_url, action_map=action_map,
                  table=self.contributor_repo_table)
+
+            self.logger.info("Length of data to be inserted: {}".format(len(source_cntrb_repos['insert'])))
 
             if len(source_cntrb_repos['all']) == 0:
                 self.logger.info("There are no issues for this repository.\n")
@@ -109,14 +110,18 @@ class ContributorBreadthWorker(Worker):
                 {
                     "cntrb_id": cntrb['cntrb_id'],
                     "repo_git": cntrb_repo['repo']['url'],
-                    "repo_id": cntrb_repo['repo']['id'],
-                    "repo_name": cntrb_repo['repo']['name'],
-                    "gh_repoo_id": cntrb_repo['repo']['id']
                     "tool_source": self.tool_source,
                     "tool_version": self.tool_version,
-                    "data_source": self.data_source
+                    "data_source": self.data_source,
+                    "repo_name": cntrb_repo['repo']['name'],
+                    "gh_repo_id": cntrb_repo['repo']['id'],
+                    "cntrb_category": cntrb_repo['type'],
+                    "event_id": cntrb_repo['id']
                 } for cntrb_repo in source_cntrb_repos['insert']
             ]
+
+            self.logger.info("Length of cntrb_repos_insert: {}".format(len(cntrb_repos_insert)))
+
 
             if len(source_cntrb_repos['insert']) > 0:
 
