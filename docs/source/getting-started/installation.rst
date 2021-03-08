@@ -3,6 +3,15 @@ Installation
 
 This section of the documentation details how to install Augur's Python library from source. If you don't have a required dependency, please follow the provided links to install and configure it.
 
+.. note::
+  There are 3 main issues new developers encounter when first installing Augur: 
+
+  1. The absence of a `gcc` or `fortran` copiler, required by numpy and nltk python libraries. Look up how to install these compilers for your local operating system. Many times they simply need to be updated to a more current version.
+
+  2. Conflicting versions of Python: The fix is platform specific. On Max OSX, more often than not multiple versions of python have been installed by the OS, brew, Anaconda, or a combination of both. The result is some python commands are drawn from different paths because of how they are linked in `/usr/local/bin`
+
+  3. Multiple, or conflicting versions of postgresql. Sometimes, the absence of a functional `psql` function at the command line results.   
+
 macOS Errata
 ~~~~~~~~~~~~~
 If you're running Augur on macOS, we strongly suggest adding the following line to your shell's initialization script::
@@ -24,7 +33,9 @@ Required:
 
 -  `GitHub Access Token <https://github.com/settings/tokens>`__ (``repo`` and all ``read`` scopes except ``enterprise``)
 -  `GitLab Access Token <https://gitlab.com/profile/personal_access_tokens>`__
--  `Python 3.6 or later <https://www.python.org/downloads/>`__
+-  `Python 3.6 - 3.8 <https://www.python.org/downloads/>`__
+
+**Python 3.9 is not yet supported because TensorFlow, which we use in our machine learning workers, does not yet support Python 3.9.**
 
 Our REST API & data collection workers are written in Python 3.6. We query the GitHub & GitLab API to collect data about issues, pull requests, contributors, and other information about a repository, so GitLab and GitHub access tokens are **required** for data collection.
 
@@ -41,13 +52,14 @@ If you're interested in using our visualizations, you can optionally install the
 
 -  `node <https://nodejs.org/en/>`__
 -  `npm <https://www.npmjs.com/>`__
--  `Vue.js <https://vuejs.org/>`__  ``
+-  `Vue.js <https://vuejs.org/>`__  
 -  `vue-cli <https://cli.vuejs.org/>`__
 
 We use Vue.js as our frontend web framework, and ``npm`` as our package manager.
 
 Visualization API calls
-----------------------
+---------------------------
+
 On Ubuntu and other Linux flavors: if you want to use the new Augur API Calls that generate downloadable graphics developed in the `https://github.com/chaoss/augur-community-reports` repository, you need to install the Chromium ChromeDriver at the system level. This dependency exists because the Bokeh libraries we use for these APIs require a web browser engine. 
 
 .. code-block:: bash
