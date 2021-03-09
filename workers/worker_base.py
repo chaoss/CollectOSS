@@ -358,7 +358,7 @@ class Worker():
         
         return subject, source
 
-    def organize_needed_data(self, new_data, table_values, table_pkey, action_map={}):
+    def organize_needed_data(self, new_data, table_values, table_pkey, action_map={}, in_memory=False):
 
         if len(table_values) == 0:
             return new_data, []
@@ -369,60 +369,110 @@ class Worker():
         need_insertion = pd.DataFrame()
         need_updates = pd.DataFrame()
 
-        table_values_df = pd.DataFrame(table_values, columns=table_values[0].keys())
-        new_data_df = pd.DataFrame(new_data).dropna(subset=action_map['insert']['source'])
+        if not in_memory:
 
-        new_data_df, table_values_df = self.sync_df_types(new_data_df, table_values_df, 
-                action_map['insert']['source'], action_map['insert']['augur'])
+            metadata = s.MetaData()
 
-        need_insertion = new_data_df.merge(table_values_df, suffixes=('','_table'),
-                how='outer', indicator=True, left_on=action_map['insert']['source'],
-                right_on=action_map['insert']['augur']).loc[lambda x : x['_merge']=='left_only']
+            new_data_table = s.schema.Table(f"new_data_{os.getpid()}", metadata)
+            table_values_table = s.schema.Table(f"table_values_{os.getpid()}", metadata)
 
-        if 'update' in action_map:
+            new_data_columns = action_map['insert']['source']
+            table_value_columns = action_map['insert']['augur']
+            if 'update' in action_map:
+                new_data_columns += action_map['update']['source']
+                table_value_columns += action_map['update']['augur']
+            
+            for column in new_data_columns:
+                new_data_table.append_column(s.schema.Column(column, get_sqlalchemy_type(new_data[0]) ))
+            for column in table_value_columns:
+                table_values_table.append_column(s.schema.Column(column, get_sqlalchemy_type(table_values[0]) ))
+
+            metadata.create_all(db, checkfirst=True)
+
+            self.bulk_insert(db, new_data_table, insert=new_data)
+            self.bulk_insert(db, table_values_table, insert=table_values)
+
+            session = s.orm.Session(db)
+
+            need_insertion = pd.DataFrame(session.query(new_data_table).join(table_values_table, 
+            eval(
+                ' and '.join([
+                    f"table_values_table.c.{table_column} == new_data_table.c.{source_column}" \
+                    for table_column, source_column in zip(action_map['insert']['augur'], 
+                    action_map['insert']['source'])
+                ])
+            ), isouter=True).filter(
+                table_values_table.c[action_map['insert']['augur'][0]] == None
+            ).all(), columns=table_value_columns)
+
+            need_updates = pd.DataFrame(columns=table_value_columns)
+            if 'update' in action_map:
+                need_updates = pd.DataFrame(session.query(new_data_table).join(table_values_table, 
+                    s.and_(
+                        eval(' and '.join([f"table_values_table.c.{table_column} == new_data_table.c.{source_column}" for \
+                        table_column, source_column in zip(action_map['insert']['augur'], action_map['insert']['source'])])), 
+                        
+                        eval(' and '.join([f"table_values_table.c.{table_column} != new_data_table.c.{source_column}" for \
+                        table_column, source_column in zip(action_map['update']['augur'], action_map['update']['source'])]))
+                    ) ).all(), columns=table_value_columns)
+
+            metadata.drop_all(db, checkfirst=True)
+
+            session.close()
+
+            print(f'Table needs {len(need_insertion)} insertions and '
+                f'{len(need_updates)} updates.\n')
+
+        else:
+
+            table_values_df = pd.DataFrame(table_values, columns=table_values[0].keys())
+            new_data_df = pd.DataFrame(new_data).dropna(subset=action_map['insert']['source'])
+
             new_data_df, table_values_df = self.sync_df_types(new_data_df, table_values_df, 
-                action_map['update']['source'], action_map['update']['augur'])                
+                    action_map['insert']['source'], action_map['insert']['augur'])
 
-            partitions = math.ceil(len(new_data_df) / 3000)
-            attempts = 0 
-            while attempts < 50:
-                try:
-                    need_updates = pd.DataFrame()
-                    self.logger.info(f"Trying {partitions} partitions\n")
-                    for sub_df in numpy.array_split(new_data_df, partitions):
-                        self.logger.info(f"Trying a partition, len {len(sub_df)}\n")
-                        need_updates = pd.concat([ need_updates, sub_df.merge(table_values_df, left_on=action_map['insert']['source'],
-                            right_on=action_map['insert']['augur'], suffixes=('','_table'), how='inner', 
-                            indicator=False).merge(table_values_df, left_on=action_map['update']['source'],
-                            right_on=action_map['update']['augur'], suffixes=('','_table'), how='outer', 
-                            indicator=True).loc[lambda x : x['_merge']=='left_only'] ])
-                        self.logger.info(f"need_updates merge: {len(sub_df)} worked\n")
-                    break
-                    
-                except MemoryError as e:
-                    self.logger.info(f"new_data ({sub_df.shape}) is too large to allocate memory for " +
-                        f"need_updates df merge.\nMemoryError: {e}\nTrying again with {partitions + 1} partitions...\n")
-                    partitions += 1
-                    attempts += 1
-                self.logger.info(f"End attempt # {attempts}\n")
-            if attempts >= 50:
-                self.loggger.info("Max need_updates merge attempts exceeded, cannot perform " +
-                    "updates on this repo.\n")
-            else:
-                need_updates = need_updates.drop([column for column in list(need_updates.columns) if \
-                    column not in action_map['update']['augur'] and column not in action_map['insert']['augur']], 
-                    axis='columns')
+            need_insertion = new_data_df.merge(table_values_df, suffixes=('','_table'),
+                    how='outer', indicator=True, left_on=action_map['insert']['source'],
+                    right_on=action_map['insert']['augur']).loc[lambda x : x['_merge']=='left_only']
 
-                for column in action_map['insert']['augur']:
-                    need_updates[f'b_{column}'] = need_updates[column]
+            if 'update' in action_map:
+                new_data_df, table_values_df = self.sync_df_types(new_data_df, table_values_df, 
+                    action_map['update']['source'], action_map['update']['augur'])                
 
-                need_updates = need_updates.drop([column for column in action_map['insert']['augur']], axis='columns')
+                partitions = math.ceil(len(new_data_df) / 3000)
+                attempts = 0 
+                while attempts < 50:
+                    try:
+                        need_updates = pd.DataFrame()
+                        # self.logger.info(f"Trying {partitions} partitions\n")
+                        for sub_df in numpy.array_split(new_data_df, partitions):
+                            # self.logger.info(f"Trying a partition, len {len(sub_df)}\n")
+                            need_updates = pd.concat([ need_updates, sub_df.merge(table_values_df, left_on=action_map['insert']['source'],
+                                right_on=action_map['insert']['augur'], suffixes=('','_table'), how='inner', 
+                                indicator=False).merge(table_values_df, left_on=action_map['update']['source'],
+                                right_on=action_map['update']['augur'], suffixes=('','_table'), how='outer', 
+                                indicator=True).loc[lambda x : x['_merge']=='left_only'] ])
+                            # self.logger.info(f"need_updates merge: {len(sub_df)} worked\n")
+                        break
+                        
+                    except MemoryError as e:
+                        self.logger.info(f"new_data ({sub_df.shape}) is too large to allocate memory for " +
+                            f"need_updates df merge.\nMemoryError: {e}\nTrying again with {partitions + 1} partitions...\n")
+                        partitions += 1
+                        attempts += 1
+                    # self.logger.info(f"End attempt # {attempts}\n")
+                if attempts >= 50:
+                    self.loggger.info("Max need_updates merge attempts exceeded, cannot perform " +
+                        "updates on this repo.\n")
+                else:
+                    need_updates = need_updates.drop([column for column in list(need_updates.columns) if \
+                        column not in action_map['update']['augur'] and column not in action_map['insert']['augur']], 
+                        axis='columns')
 
-            self.logger.info(f"final need updates enacted for action map.")
+                    for column in action_map['insert']['augur']:
+                        need_updates[f'b_{column}'] = need_updates[column]
 
-
-        # self.logger.info(f'Page needs {len(need_insertion)} insertions and '
-        #     f'{len(need_updates)} updates.\n')
+                    need_updates = need_updates.drop([column for column in action_map['insert']['augur']], axis='columns')
 
         return need_insertion.to_dict('records'), need_updates.to_dict('records')
 
@@ -942,12 +992,14 @@ class Worker():
             self.logger.info("There are no inserted primary keys to enrich the source data with.\n")
             return []
 
-
         source_df, primary_keys_df = self.sync_df_types(source_df, primary_keys_df, 
                 gh_merge_fields, augur_merge_fields)
 
+        source_df = dd.from_pandas(source_df, chunksize=1000)
+        primary_keys_df = dd.from_pandas(primary_keys_df, chunksize=1000)
+
         result = json.loads(source_df.merge(primary_keys_df, suffixes=('','_table'),
-            how='inner', left_on=gh_merge_fields, right_on=augur_merge_fields).to_json(
+            how='inner', left_on=gh_merge_fields, right_on=augur_merge_fields).compute().to_json(
             default_handler=str, orient='records'))
 
         self.logger.info("Data enrichment successful.\n")
@@ -1099,7 +1151,7 @@ class Worker():
 
                 # Checking contents of requests with what we already have in the db
                 page_insertions, page_updates = self.organize_needed_data(page_data, table_values, list(table.primary_key)[0].name, 
-                    action_map)
+                    action_map, in_memory=True)
 
                 # Reached a page where we already have all tuples
                 if len(need_insertion) == 0 and len(need_update) == 0 and \
@@ -1133,7 +1185,7 @@ class Worker():
 
         if forward_pagination:
             need_insertion, need_update = self.organize_needed_data(all_data, table_values, 
-                list(table.primary_key)[0].name, action_map)
+                list(table.primary_key)[0].name, action_map, in_memory=True)
 
         return {
             'insert': need_insertion, 
