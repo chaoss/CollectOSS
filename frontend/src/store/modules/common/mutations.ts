@@ -2,7 +2,7 @@
 /* tslint:disable */
 import router from '@/router'
 import Vue from 'vue';
-import { VL_ONLY_GUIDE_CONFIG } from 'vega-lite/build/src/guide';
+import { VL_ONLY_LEGEND_CONFIG } from 'vega-lite/build/src/guide';
 export default {
   update_properties(state: any, payload: any) {
     Vue.set(state, payload.property, {...state[payload.property], ...payload.with})//Object.assign(state.property, payload.with))

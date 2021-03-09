@@ -4221,3 +4221,342 @@ paths:
             type: array
       tags:
       - utility
+  /contributor_reports/new_contributors_bar/:
+    get:
+      description: Get bar chart of new contributor counts.
+      operationId: New Contributor Counts Bar Chart
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                repo_id:
+                  description: 'Example: 23847'
+                  type: integer
+                start_date: 
+                  description: 'Example: 2019-01-01'
+                  type: string
+                end_date:
+                  description: 'Example: 2020-03-30'
+                  type: string
+                group_by:
+                  description: 'Example: month, quarter, or year'
+                  type: string
+                required_contributions:
+                  description: 'Example: 5'
+                  type: integer
+                required_time: 
+                  description: 'Example: 365'
+                  type: integer
+                return_json:
+                  description: 'Example: true'
+                  type: boolean
+            type: object
+      tags:
+      - visualizations
+  /contributor_reports/new_contributors_stacked_bar/:
+    get:
+      description: Get stacked bar chart of new contributor counts, which shows the action of the contributor.
+      operationId: New Contributor Counts Stacked Bar Chart (shows actions)
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                repo_id:
+                  description: 'Example: 23847'
+                  type: integer
+                start_date: 
+                  description: 'Example: 2019-01-01'
+                  type: string
+                end_date:
+                  description: 'Example: 2020-03-30'
+                  type: string
+                group_by:
+                  description: 'Example: month, quarter, or year'
+                  type: string
+                required_contributions:
+                  description: 'Example: 5'
+                  type: integer
+                required_time: 
+                  description: 'Example: 365'
+                  type: integer
+                return_json:
+                  description: 'Example: true'
+                  type: boolean
+            type: object
+      tags:
+      - visualizations
+  /contributor_reports/returning_contributors_pie_chart/:
+    get:
+      description: Get pie chart of the returning contributor counts.
+      operationId: Returning Contributor Counts Pie Chart
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                repo_id:
+                  description: 'Example: 23847'
+                  type: integer
+                start_date: 
+                  description: 'Example: 2019-01-01'
+                  type: string
+                end_date:
+                  description: 'Example: 2020-03-30'
+                  type: string
+                required_contributions:
+                  description: 'Example: 5'
+                  type: integer
+                required_time: 
+                  description: 'Example: 365'
+                  type: integer
+                return_json:
+                  description: 'Example: true'
+                  type: boolean
+            type: object
+      tags:
+      - visualizations
+  /contributor_reports/returning_contributors_stacked_bar/:
+    get:
+      description: Get returning contributors stacked bar chart.
+      operationId: New Contributor Counts Stacked Bar Chart (shows actions)
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                repo_id:
+                  description: 'Example: 23847'
+                  type: integer
+                start_date: 
+                  description: 'Example: 2019-01-01'
+                  type: string
+                end_date:
+                  description: 'Example: 2020-03-30'
+                  type: string
+                group_by:
+                  description: 'Example: month, quarter, or year'
+                  type: string
+                required_contributions:
+                  description: 'Example: 5'
+                  type: integer
+                required_time: 
+                  description: 'Example: 365'
+                  type: integer
+                return_json:
+                  description: 'Example: true'
+                  type: boolean
+            type: object
+      tags:
+        - visualizations
+  /pull_request_reports/average_commits_per_PR/:
+    get:
+      description: Get vertical bar chart of average commits per pull request.
+      operationId: Average Commit Counts Per Year for All Pull Requests
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                repo_id:
+                  description: 'Example: 23847'
+                  type: integer
+                start_date: 
+                  description: 'Example: 2019-01-01'
+                  type: string
+                end_date:
+                  description: 'Example: 2020-03-30'
+                  type: string
+                return_json:
+                  description: 'Example: true'
+                  type: boolean
+            type: object
+      tags:
+        - visualizations
+  /pull_request_reports/average_comments_per_PR/:
+    get:
+      description: Get horizontal stacked bar chart of the average comments for closed pull requests.
+      operationId: Average Comments per Closed Pull Request
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                repo_id:
+                  description: 'Example: 23847'
+                  type: integer
+                start_date: 
+                  description: 'Example: 2019-01-01'
+                  type: string
+                end_date:
+                  description: 'Example: 2020-03-30'
+                  type: string
+                return_json:
+                  description: 'Example: true'
+                  type: boolean
+            type: object
+      tags:
+        - visualizations
+  /pull_request_reports/PR_counts_by_merged_status/:
+    get:
+      description: Get vertical stacked bar chart of the number of pull requests by merged status.
+      operationId: Count of All Closed Pull Requests by Merged Status
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                repo_id:
+                  description: 'Example: 23847'
+                  type: integer
+                start_date: 
+                  description: 'Example: 2019-01-01'
+                  type: string
+                end_date:
+                  description: 'Example: 2020-03-30'
+                  type: string
+                return_json:
+                  description: 'Example: true'
+                  type: boolean
+            type: object
+      tags:
+        - visualizations
+  /pull_request_reports/mean_response_times_for_PR/:
+    get:
+      description: Get grouped horizontal bar chart of average response times for closed pull requests.
+      operationId: Mean Response Times for Closed Pull Requests
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                repo_id:
+                  description: 'Example: 23847'
+                  type: integer
+                start_date: 
+                  description: 'Example: 2019-01-01'
+                  type: string
+                end_date:
+                  description: 'Example: 2020-03-30'
+                  type: string
+                return_json:
+                  description: 'Example: true'
+                  type: boolean
+            type: object
+      tags:
+        - visualizations
+  /pull_request_reports/mean_days_between_PR_comments/:
+    get:
+      description: Get line graph of the average days between comments for closed pull requests.
+      operationId: Average Days Between Comment for Pull Requests
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                repo_id:
+                  description: 'Example: 23847'
+                  type: integer
+                start_date: 
+                  description: 'Example: 2019-01-01'
+                  type: string
+                end_date:
+                  description: 'Example: 2020-03-30'
+                  type: string
+                return_json:
+                  description: 'Example: true'
+                  type: boolean
+            type: object
+      tags:
+        - visualizations
+  /pull_request_reports/PR_time_to_first_response/:
+    get:
+      description: Get scatter plot of the days to first response for closed pull requests based on merged status.
+      operationId: Days to First Response for Closed Pull Requests Based on Merged Status
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                repo_id:
+                  description: 'Example: 23847'
+                  type: integer
+                start_date: 
+                  description: 'Example: 2019-01-01'
+                  type: string
+                end_date:
+                  description: 'Example: 2020-03-30'
+                  type: string
+                remove_outliers: 
+                  description: 'Example: 5'
+                  type: integer
+                return_json:
+                  description: 'Example: true'
+                  type: boolean
+            type: object
+      tags:
+        - visualizations
+  /pull_request_reports/average_PR_events_for_closed_PRs/:
+    get:
+      description: Get heat map of average pull request event counts for closed pull requests.
+      operationId: Average Pull Request Event Types for Closed Pull Requests
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                repo_id:
+                  description: 'Example: 23847'
+                  type: integer
+                start_date: 
+                  description: 'Example: 2019-01-01'
+                  type: string
+                end_date:
+                  description: 'Example: 2020-03-30'
+                  type: string
+                return_json:
+                  description: 'Example: true'
+                  type: boolean
+            type: object
+      tags:
+        - visualizations
+  /pull_request_reports/Average_PR_duration/:
+    get:
+      description: Get heat map of the average duration of pull requests per month.
+      operationId: Mean Duration of Closed Pull Requests
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                repo_id:
+                  description: 'Example: 23847'
+                  type: integer
+                start_date: 
+                  description: 'Example: 2019-01-01'
+                  type: string
+                end_date:
+                  description: 'Example: 2020-03-30'
+                  type: string
+                remove_outliers: 
+                  description: 'Example: 5'
+                  type: integer
+                return_json:
+                  description: 'Example: true'
+                  type: boolean
+            type: object
+      tags:
+        - visualizations
