@@ -357,7 +357,10 @@ class Worker():
                 continue
             type_dict[subject_columns[index]] = type(source[source_columns[index]].values[0])
 
-        subject.astype(type_dict)
+## Contributor Breadth Worker Change
+        subject = subject.astype(type_dict)
+
+#        subject.astype(type_dict)
         
         return subject, source
 
