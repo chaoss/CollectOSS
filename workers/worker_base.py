@@ -300,7 +300,6 @@ class Worker():
         self.initialize_logging() # need to initialize logging again in child process cause multiprocessing
         self.logger.info("Starting data collection process\n")
         self.initialize_database_connections()
-        
         while True:
             if not self._queue.empty():
                 message = self._queue.get() # Get the task off our MP queue
@@ -358,8 +357,8 @@ class Worker():
                 continue
             type_dict[subject_columns[index]] = type(source[source_columns[index]].values[0])
 
-        subject = subject.astype(type_dict)
-  
+        subject.astype(type_dict)
+        
         return subject, source
 
     def organize_needed_data(self, new_data, table_values, table_pkey, action_map={}):
@@ -376,7 +375,8 @@ class Worker():
         table_values_df = pd.DataFrame(table_values, columns=table_values[0].keys())
         new_data_df = pd.DataFrame(new_data).dropna(subset=action_map['insert']['source'])
 
-        new_data_df, table_values_df = self.sync_df_types(new_data_df, table_values_df, action_map['insert']['source'], action_map['insert']['augur'])
+        new_data_df, table_values_df = self.sync_df_types(new_data_df, table_values_df, 
+                action_map['insert']['source'], action_map['insert']['augur'])
 
         need_insertion = new_data_df.merge(table_values_df, suffixes=('','_table'),
                 how='outer', indicator=True, left_on=action_map['insert']['source'],
