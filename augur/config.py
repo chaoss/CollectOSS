@@ -29,6 +29,14 @@ default_config = {
             },
             "jobs": [
                 {
+                    "delay": 150000,
+                    "given": [
+                        "github_url"
+                    ],
+                    "model": "contributor_breadth",
+                    "repo_group_id": 0
+                },
+                {
                     "all_focused": 1,
                     "delay": 150000,
                     "given": [
@@ -189,6 +197,11 @@ default_config = {
             ]
             },
             "Workers": {
+                "contributor_breadth_worker": {
+                    "port": 50003,
+                    "switch": 0,
+                    "workers": 1
+                },
                 "facade_worker": {
                     "port": 50100,
                     "repo_directory": "repos/",
