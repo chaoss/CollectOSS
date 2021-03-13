@@ -250,7 +250,10 @@ class ClusteringWorker(Worker):
 		lda_model.fit(count_matrix)
 		# each component in lda_model.components_ represents probability distribution over words in that topic
 		topic_list = lda_model.components_
+		logging.info("Topic List Created: {}".format(topic_list))
 		pickle.dump(lda_model, open("lda_model",'wb'))
+		logging.info("Primary key inserted into the repo_cluster_messages table: {}".format(result.inserted_primary_key))
+
 		#insert topic list into database
 		topic_id = 1
 		for topic in topic_list:
