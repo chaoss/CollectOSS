@@ -1,6 +1,7 @@
 #SPDX-License-Identifier: MIT
 """ Helper methods constant across all workers """
-import requests, datetime, time, traceback, json, os, sys, math, logging, numpy, copy, concurrent, multiprocessing
+import requests, datetime, time, traceback, json, os, sys, math, logging, numpy, \
+    copy, concurrent, multiprocessing, psycopg2
 
 from logging import FileHandler, Formatter, StreamHandler
 from multiprocessing import Process, Queue, Pool
@@ -14,13 +15,14 @@ from augur.config import AugurConfig
 from augur.logging import AugurLogging
 from sqlalchemy.sql.expression import bindparam
 from concurrent import futures
+import dask.dataframe as dd
 
 class Worker():
 
     ROOT_AUGUR_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
     ## Set Thread Safety for OSX
-    os.system("./osx-thread.sh")
+    # os.system("./osx-thread.sh")
 
     def __init__(self, worker_type, config={}, given=[], models=[], data_tables=[], operations_tables=[], platform="github"):
 
@@ -361,7 +363,20 @@ class Worker():
         
         return subject, source
 
-    def organize_needed_data(self, new_data, table_values, table_pkey, action_map={}, in_memory=False):
+    def get_sqlalchemy_type(self, data):
+        if type(data) == str:
+            return s.types.String
+        elif type(data) == int:
+            return s.types.Integer
+        elif type(data) == float:
+            return s.types.Float
+        # elif type(data) == dict:
+        #     return s.types.JSON
+        # elif type(data) == list:
+        #     return s.types.ARRAY(s.types.JSON)
+        return s.types.String
+
+    def organize_needed_data(self, new_data, table_values, table_pkey, action_map={}, in_memory=True):
 
         if len(table_values) == 0:
             return new_data, []
@@ -386,27 +401,30 @@ class Worker():
                 table_value_columns += action_map['update']['augur']
             
             for column in new_data_columns:
-                new_data_table.append_column(s.schema.Column(column, get_sqlalchemy_type(new_data[0]) ))
+                new_data_table.append_column(s.schema.Column(column, self.get_sqlalchemy_type(new_data[0]) ))
             for column in table_value_columns:
-                table_values_table.append_column(s.schema.Column(column, get_sqlalchemy_type(table_values[0]) ))
+                table_values_table.append_column(s.schema.Column(column, self.get_sqlalchemy_type(table_values[0]) ))
 
-            metadata.create_all(db, checkfirst=True)
+            metadata.create_all(self.db, checkfirst=True)
 
-            self.bulk_insert(db, new_data_table, insert=new_data)
-            self.bulk_insert(db, table_values_table, insert=table_values)
+            self.bulk_insert(new_data_table, insert=new_data)
+            self.bulk_insert(table_values_table, insert=table_values)
 
-            session = s.orm.Session(db)
+            session = s.orm.Session(self.db)
+            self.logger.info("Session created for temp tables\n")
 
             need_insertion = pd.DataFrame(session.query(new_data_table).join(table_values_table, 
-            eval(
-                ' and '.join([
-                    f"table_values_table.c.{table_column} == new_data_table.c.{source_column}" \
-                    for table_column, source_column in zip(action_map['insert']['augur'], 
-                    action_map['insert']['source'])
-                ])
-            ), isouter=True).filter(
-                table_values_table.c[action_map['insert']['augur'][0]] == None
-            ).all(), columns=table_value_columns)
+                eval(
+                    ' and '.join([
+                        f"table_values_table.c.{table_column} == new_data_table.c.{source_column}" \
+                        for table_column, source_column in zip(action_map['insert']['augur'], 
+                        action_map['insert']['source'])
+                    ])
+                ), isouter=True).filter(
+                    table_values_table.c[action_map['insert']['augur'][0]] == None
+                ).all(), columns=table_value_columns)
+
+            self.logger.info("need_insertion calculated successfully\n")
 
             need_updates = pd.DataFrame(columns=table_value_columns)
             if 'update' in action_map:
@@ -418,10 +436,13 @@ class Worker():
                         eval(' and '.join([f"table_values_table.c.{table_column} != new_data_table.c.{source_column}" for \
                         table_column, source_column in zip(action_map['update']['augur'], action_map['update']['source'])]))
                     ) ).all(), columns=table_value_columns)
+                self.logger.info("need_updates calculated successfully\n")
 
-            metadata.drop_all(db, checkfirst=True)
+            metadata.drop_all(self.db, checkfirst=True)
+            self.logger.info("Temp tables dropped\n")
 
             session.close()
+            self.logger.info("Session closed")
 
             print(f'Table needs {len(need_insertion)} insertions and '
                 f'{len(need_updates)} updates.\n')
@@ -442,7 +463,7 @@ class Worker():
                 new_data_df, table_values_df = self.sync_df_types(new_data_df, table_values_df, 
                     action_map['update']['source'], action_map['update']['augur'])                
 
-                partitions = math.ceil(len(new_data_df) / 3000)
+                partitions = math.ceil(len(new_data_df) / 1000)
                 attempts = 0 
                 while attempts < 50:
                     try:
@@ -656,7 +677,16 @@ class Worker():
         elif platform == 'gitlab':
             cntrb_url = ("https://gitlab.com/api/v4/users?username=" + login )
         self.logger.info("Hitting endpoint: {} ...\n".format(cntrb_url))
-        r = requests.get(url=cntrb_url, headers=self.headers)
+
+        
+        while True:
+            try:
+                r = requests.get(url=cntrb_url, headers=self.headers)
+                break
+            except TimeoutError as e:
+                self.logger.info("Request timed out. Sleeping 10 seconds and trying again...\n")
+                time.sleep(30)
+
         self.update_rate_limit(r)
         contributor = r.json()
 
@@ -980,13 +1010,28 @@ class Worker():
             expanded_column.columns = [f'{root}.{attribute}' for attribute in expanded_column.columns]
             source_df = source_df.join(expanded_column)
 
-        primary_keys = self.db.execute(s.sql.select(
-                [table.c[field] for field in augur_merge_fields] + [table.c[list(table.primary_key)[0].name]]
-            ).where(
-                s_tuple.in_(
+        try:
+            primary_keys = self.db.execute(s.sql.select(
+                    [table.c[field] for field in augur_merge_fields] + [table.c[list(table.primary_key)[0].name]]
+                ).where(
+                    s_tuple.in_(
 
-                    list(source_df[gh_merge_fields].itertuples(index=False))
-                ))).fetchall()
+                        list(source_df[gh_merge_fields].itertuples(index=False))
+                    ))).fetchall()
+        except psycopg2.errors.StatementTooComplex as e:
+            self.logger.info("Retrieve pk statement too complex, querying all instead " +
+                "and performing dask merge.\n")
+            all_primary_keys = self.db.execute(s.sql.select(
+                    [table.c[field] for field in augur_merge_fields] + [table.c[list(table.primary_key)[0].name]]
+                )).fetchall()
+            all_primary_keys_df = pd.DataFrame(all_primary_keys, 
+                columns=augur_merge_fields + [list(table.primary_key)[0].name])
+            all_primary_keys_ddf = dd.from_pandas(all_primary_keys_df, chunksize=1000)
+            source_dask_df = dd.from_pandas(source_dask_df, chunksize=1000)
+            result = json.loads(source_dask_df.merge(all_primary_keys_ddf, suffixes=('','_table'),
+                how='inner', left_on=gh_merge_fields, right_on=augur_merge_fields).compute(
+                ).to_json(default_handler=str, orient='records'))
+            return result
 
         if len(primary_keys) > 0:
             primary_keys_df = pd.DataFrame(primary_keys, 
@@ -1093,7 +1138,7 @@ class Worker():
             # Multiple attempts to hit endpoint
             num_attempts = 0
             success = False
-            while num_attempts < 3:
+            while num_attempts < 10:
                 self.logger.info(f"Hitting endpoint: {url.format(page_number)}...\n")
                 try:
                     response = requests.get(url=url.format(page_number), headers=self.headers)
@@ -1188,7 +1233,7 @@ class Worker():
 
         if forward_pagination:
             need_insertion, need_update = self.organize_needed_data(all_data, table_values, 
-                list(table.primary_key)[0].name, action_map, in_memory=True)
+                list(table.primary_key)[0].name, action_map)
 
         return {
             'insert': need_insertion, 

@@ -50,9 +50,15 @@ setup(
         "six>=1.14.0",
         "bokeh",
         "selenium",
-	"nltk",
+        "nltk",
         "h5py<2.11.0,>=2.10.0", 
-        "scipy==1.4.1"
+        "scipy==1.4.1",
+        "dask",
+        "cloudpickle >= 0.2.2",
+        "fsspec >= 0.6.0",
+        "toolz >= 0.8.2",
+        "partd >= 0.3.10",
+        "distributed >= 2021.03.0"
     ],
     extras_require={
         "dev": [
