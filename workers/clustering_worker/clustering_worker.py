@@ -66,8 +66,8 @@ class ClusteringWorker(Worker):
 		self.clustering_by_mechanism = False
 		
 		#define topic modeling specific parameters
-		self.num_topics = 5
-		self.num_words_per_topic = 5
+		self.num_topics = 50
+		self.num_words_per_topic = 12
 
 		nltk.download('punkt')
 		
@@ -252,7 +252,7 @@ class ClusteringWorker(Worker):
 		topic_list = lda_model.components_
 		logging.info("Topic List Created: {}".format(topic_list))
 		pickle.dump(lda_model, open("lda_model",'wb'))
-		logging.info("Primary key inserted into the repo_cluster_messages table: {}".format(result.inserted_primary_key))
+		logging.info("pickle dump")
 
 		#insert topic list into database
 		topic_id = 1
