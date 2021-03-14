@@ -612,14 +612,14 @@ class GitHubPullRequestWorker(Worker):
             set(pd.DataFrame(both_pr_review_pk_source_reviews)['pr_review_id'])
 
         review_msgs = self.paginate_endpoint(review_msg_url, 
-            action_map=review_msg_action_map, table=self.message_table) 
-            # where_clause=self.message_table.c.msg_id.in_(
-            #         [msg_row[0] for msg_row in self.db.execute(s.sql.select(
-            #             [self.pull_request_review_message_ref_table.c.msg_id]).where(
-            #             self.pull_request_review_message_ref_table.c.pr_review_id.in_(
-            #                 in_clause
-            #             ))).fetchall()]
-            #     ))
+            action_map=review_msg_action_map, table=self.message_table,
+            where_clause=self.message_table.c.msg_id.in_(
+                    [msg_row[0] for msg_row in self.db.execute(s.sql.select(
+                        [self.pull_request_review_message_ref_table.c.msg_id]).where(
+                        self.pull_request_review_message_ref_table.c.pr_review_id.in_(
+                            in_clause
+                        ))).fetchall()]
+                ))
 
         review_msg_insert = [
             {
