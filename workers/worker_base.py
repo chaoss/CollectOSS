@@ -1010,48 +1010,49 @@ class Worker():
             expanded_column.columns = [f'{root}.{attribute}' for attribute in expanded_column.columns]
             source_df = source_df.join(expanded_column)
 
-        try:
-            primary_keys = self.db.execute(s.sql.select(
-                    [table.c[field] for field in augur_merge_fields] + [table.c[list(table.primary_key)[0].name]]
-                ).where(
-                    s_tuple.in_(
+        # try:
+        #     primary_keys = self.db.execute(s.sql.select(
+        #             [table.c[field] for field in augur_merge_fields] + [table.c[list(table.primary_key)[0].name]]
+        #         ).where(
+        #             s_tuple.in_(
 
-                        list(source_df[gh_merge_fields].itertuples(index=False))
-                    ))).fetchall()
-        except psycopg2.errors.StatementTooComplex as e:
-            self.logger.info("Retrieve pk statement too complex, querying all instead " +
-                "and performing dask merge.\n")
-            all_primary_keys = self.db.execute(s.sql.select(
-                    [table.c[field] for field in augur_merge_fields] + [table.c[list(table.primary_key)[0].name]]
-                )).fetchall()
-            all_primary_keys_df = pd.DataFrame(all_primary_keys, 
-                columns=augur_merge_fields + [list(table.primary_key)[0].name])
-            all_primary_keys_ddf = dd.from_pandas(all_primary_keys_df, chunksize=1000)
-            source_dask_df = dd.from_pandas(source_dask_df, chunksize=1000)
-            result = json.loads(source_dask_df.merge(all_primary_keys_ddf, suffixes=('','_table'),
-                how='inner', left_on=gh_merge_fields, right_on=augur_merge_fields).compute(
-                ).to_json(default_handler=str, orient='records'))
-            return result
-
-        if len(primary_keys) > 0:
-            primary_keys_df = pd.DataFrame(primary_keys, 
-                columns=augur_merge_fields + [list(table.primary_key)[0].name])
-        else:
-            self.logger.info("There are no inserted primary keys to enrich the source data with.\n")
-            return []
-
-        source_df, primary_keys_df = self.sync_df_types(source_df, primary_keys_df, 
-                gh_merge_fields, augur_merge_fields)
-
-        source_df = dd.from_pandas(source_df, chunksize=1000)
-        primary_keys_df = dd.from_pandas(primary_keys_df, chunksize=1000)
-
-        result = json.loads(source_df.merge(primary_keys_df, suffixes=('','_table'),
-            how='inner', left_on=gh_merge_fields, right_on=augur_merge_fields).compute().to_json(
-            default_handler=str, orient='records'))
-
+        #                 list(source_df[gh_merge_fields].itertuples(index=False))
+        #             ))).fetchall()
+        # except psycopg2.errors.StatementTooComplex as e:
+        self.logger.info("Retrieve pk statement too complex, querying all instead " +
+            "and performing dask merge.\n")
+        all_primary_keys = self.db.execute(s.sql.select(
+                [table.c[field] for field in augur_merge_fields] + [table.c[list(table.primary_key)[0].name]]
+            )).fetchall()
+        all_primary_keys_df = pd.DataFrame(all_primary_keys, 
+            columns=augur_merge_fields + [list(table.primary_key)[0].name])
+        all_primary_keys_ddf = dd.from_pandas(all_primary_keys_df, chunksize=1000)
+        source_dask_df = dd.from_pandas(source_dask_df, chunksize=1000)
+        result = json.loads(source_dask_df.merge(all_primary_keys_ddf, suffixes=('','_table'),
+            how='inner', left_on=gh_merge_fields, right_on=augur_merge_fields).compute(
+            ).to_json(default_handler=str, orient='records'))
         self.logger.info("Data enrichment successful.\n")
         return result
+
+        # if len(primary_keys) > 0:
+        #     primary_keys_df = pd.DataFrame(primary_keys, 
+        #         columns=augur_merge_fields + [list(table.primary_key)[0].name])
+        # else:
+        #     self.logger.info("There are no inserted primary keys to enrich the source data with.\n")
+        #     return []
+
+        # source_df, primary_keys_df = self.sync_df_types(source_df, primary_keys_df, 
+        #         gh_merge_fields, augur_merge_fields)
+
+        # source_df = dd.from_pandas(source_df, chunksize=1000)
+        # primary_keys_df = dd.from_pandas(primary_keys_df, chunksize=1000)
+
+        # result = json.loads(source_df.merge(primary_keys_df, suffixes=('','_table'),
+        #     how='inner', left_on=gh_merge_fields, right_on=augur_merge_fields).compute().to_json(
+        #     default_handler=str, orient='records'))
+
+        # self.logger.info("Data enrichment successful.\n")
+        # return result
 
     def multi_thread_urls(self, urls, max_attempts=5, platform='github'):
         """
