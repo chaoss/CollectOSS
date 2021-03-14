@@ -1026,9 +1026,9 @@ class Worker():
             )).fetchall()
         all_primary_keys_df = pd.DataFrame(all_primary_keys, 
             columns=augur_merge_fields + [list(table.primary_key)[0].name])
-        all_primary_keys_ddf = dd.from_pandas(all_primary_keys_df, chunksize=1000)
-        source_dask_df = dd.from_pandas(source_dask_df, chunksize=1000)
-        result = json.loads(source_dask_df.merge(all_primary_keys_ddf, suffixes=('','_table'),
+        all_primary_keys_dask_df = dd.from_pandas(all_primary_keys_df, chunksize=1000)
+        source_dask_df = dd.from_pandas(source_df, chunksize=1000)
+        result = json.loads(source_dask_df.merge(all_primary_keys_dask_df, suffixes=('','_table'),
             how='inner', left_on=gh_merge_fields, right_on=augur_merge_fields).compute(
             ).to_json(default_handler=str, orient='records'))
         self.logger.info("Data enrichment successful.\n")
