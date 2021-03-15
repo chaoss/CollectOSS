@@ -1026,6 +1026,10 @@ class Worker():
             )).fetchall()
         all_primary_keys_df = pd.DataFrame(all_primary_keys, 
             columns=augur_merge_fields + [list(table.primary_key)[0].name])
+
+        source_df, all_primary_keys_df = self.sync_df_types(source_df, all_primary_keys_df, 
+                gh_merge_fields, augur_merge_fields)
+        
         all_primary_keys_dask_df = dd.from_pandas(all_primary_keys_df, chunksize=1000)
         source_dask_df = dd.from_pandas(source_df, chunksize=1000)
         result = json.loads(source_dask_df.merge(all_primary_keys_dask_df, suffixes=('','_table'),
