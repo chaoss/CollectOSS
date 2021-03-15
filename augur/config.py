@@ -23,7 +23,19 @@ default_config = {
             "gitlab_api_key":"gitlab_api_key"
         },
         "Housekeeper": {
+            "update_redirects": {
+                "switch": 0,
+                "repo_group_id": 0
+            },
             "jobs": [
+                {
+                    "delay": 150000,
+                    "given": [
+                        "github_url"
+                    ],
+                    "model": "contributor_breadth",
+                    "repo_group_id": 0
+                },
                 {
                     "all_focused": 1,
                     "delay": 150000,
@@ -172,10 +184,24 @@ default_config = {
                     ],
                     "model": "clustering",
                     "repo_group_id": 0
+                },
+                {
+                    "all_focused": 1,
+                    "delay": 150000,
+                    "given": [
+                        "git_url"
+                    ],
+                    "model": "gitlab_issues",
+                    "repo_group_id": 0
                 }
             ]
             },
             "Workers": {
+                "contributor_breadth_worker": {
+                    "port": 50003,
+                    "switch": 0,
+                    "workers": 1
+                },
                 "facade_worker": {
                     "port": 50100,
                     "repo_directory": "repos/",
@@ -258,37 +284,37 @@ default_config = {
                     "insight_days": 30
                 },
                 "discourse_analysis_worker":{
-                "port" : 51500,
-                "switch": 0,
-                "workers": 1
-            },
-            "message_insights_worker": {
-                "port": 51300,
-                "switch": 0,
-                "workers": 1,
-                "insight_days": 30,
-                "models_dir": "message_models"
-            },
-            "pull_request_analysis_worker": {
-                "port": 51400,
-                "switch": 0,
-                "workers": 1,
-                "insight_days": 30
-            },
-            "discourse_analysis_worker":{
-                "port" : 51500,
-                "switch": 0,
-                "workers": 1
-            },
-            "clustering_worker": {
-                "port": 51600,
-                "switch": 0,
-                "workers": 1,
-                "max_df" : 0.9,
-                "max_features" : 1000,
-                "min_df": 0.1,
-                "num_clusters" : 4
-            }
+                    "port" : 51500,
+                    "switch": 0,
+                    "workers": 1
+                },
+                "message_insights_worker": {
+                    "port": 51300,
+                    "switch": 0,
+                    "workers": 1,
+                    "insight_days": 30,
+                    "models_dir": "message_models"
+                },
+                "pull_request_analysis_worker": {
+                    "port": 51400,
+                    "switch": 0,
+                    "workers": 1,
+                    "insight_days": 30
+                },
+                "discourse_analysis_worker":{
+                    "port" : 51500,
+                    "switch": 0,
+                    "workers": 1
+                },
+                "clustering_worker": {
+                    "port": 51600,
+                    "switch": 0,
+                    "workers": 1,
+                    "max_df" : 0.9,
+                    "max_features" : 1000,
+                    "min_df": 0.1,
+                    "num_clusters" : 4
+                }
         },
         "Facade": {
             "check_updates": 1,
