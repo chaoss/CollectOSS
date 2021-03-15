@@ -1,11 +1,13 @@
 
 BEGIN;
 
+
 -- ----------------------------
 -- Table structure for contributor_repo
 -- ----------------------------
 DROP TABLE IF EXISTS "augur_data"."contributor_repo";
 CREATE TABLE IF NOT EXISTS "augur_data"."contributor_repo" (
+
   "cntrb_repo_id" SERIAL8,
   "cntrb_id" int8 NOT NULL,
   "repo_git" varchar COLLATE "pg_catalog"."default" NOT NULL,
@@ -16,14 +18,15 @@ CREATE TABLE IF NOT EXISTS "augur_data"."contributor_repo" (
   "repo_name" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
   "gh_repo_id" int8 NOT NULL,
   "cntrb_category" varchar(255) COLLATE "pg_catalog"."default",
-  "event_id" int8
+  "event_id" int8,
+  "created_at" timestamp(0)
 )
 ;
 ALTER TABLE "augur_data"."contributor_repo" OWNER TO "augur";
 COMMENT ON COLUMN "augur_data"."contributor_repo"."cntrb_id" IS 'This is not null because what is the point without the contributor in this table? ';
 COMMENT ON COLUMN "augur_data"."contributor_repo"."repo_git" IS 'Similar to cntrb_id, we need this data for the table to have meaningful data. ';
 COMMENT ON TABLE "augur_data"."contributor_repo" IS 'Developed in Partnership with Andrew Brain. 
- From:   [
+From: [
   {
     "login": "octocat",
     "id": 1,
@@ -45,7 +48,7 @@ COMMENT ON TABLE "augur_data"."contributor_repo" IS 'Developed in Partnership wi
     "site_admin": false
   }
 ]
-     ';
+';
 
 
 -- ----------------------------
@@ -65,5 +68,5 @@ ALTER TABLE "augur_data"."contributor_repo" ADD CONSTRAINT "fk_contributor_repo_
 update "augur_operations"."augur_settings" set value = 47 where setting = 'augur_data_version';
 
 
-
 COMMIT; 
+

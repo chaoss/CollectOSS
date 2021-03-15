@@ -60,7 +60,7 @@ ALTER TABLE "augur_data"."contributor_repo" ADD CONSTRAINT "cntrb_repo_id_key" P
 -- ----------------------------
 -- Foreign Keys structure for table contributor_repo
 -- ----------------------------
-ALTER TABLE "augur_data"."contributor_repo" DROP CONSTRAINT IF EXISTS "fk_contributor_repo_contributors_1";
+ALTER TABLE "augur_data"."contributor_repo" DROP CONSTRAINT IF EXISTS  "fk_contributor_repo_contributors_1";
 
 ALTER TABLE "augur_data"."contributor_repo" ADD CONSTRAINT "fk_contributor_repo_contributors_1" FOREIGN KEY ("cntrb_id") REFERENCES "augur_data"."contributors" ("cntrb_id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
@@ -68,3 +68,5 @@ update "augur_operations"."augur_settings" set value = 46 where setting = 'augur
 
 
 COMMIT; 
+
+
