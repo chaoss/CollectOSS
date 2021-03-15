@@ -48,7 +48,15 @@ class ContributorBreadthWorker(Worker):
 
 
         ### We need this to eliminate duplicates, but is unclear what the most current strategy is ..... 
-        duplicate_col_map = {'id': 'event_id'}
+
+        dup_query = s.sql.text("""
+            SELECT DISTINCT event_id 
+            FROM augur_data.contributor_repo
+            WHERE 1 = 1
+        """)
+
+        current_ids = json.loads(pd.read_sql(dup_query, self.db, \
+            params={}).to_json(orient="records"))
 
         action_map = {
             'insert': {
@@ -66,10 +74,33 @@ class ContributorBreadthWorker(Worker):
 
             if len(source_cntrb_repos['all']) == 0:
                 self.logger.info("There are no issues for this repository.\n")
-                self.register_task_completion(task, repo_id, 'contributor_breadth')
+                self.register_task_completion(task, repo_id, 'contributor_breadth')             
 
-            cntrb_repos_insert = [
-                {
+            # cntrb_repos_insert = [
+            #     {
+            #         "cntrb_id": cntrb['cntrb_id'],
+            #         "repo_git": cntrb_repo['repo']['url'],
+            #         "tool_source": self.tool_source,
+            #         "tool_version": self.tool_version,
+            #         "data_source": self.data_source,
+            #         "repo_name": cntrb_repo['repo']['name'],
+            #         "gh_repo_id": cntrb_repo['repo']['id'],
+            #         "cntrb_category": cntrb_repo['type'],
+            #         "event_id": cntrb_repo['id'],
+            #         "created_at": cntrb_repo['created_at']
+
+            #     } 
+            #     for cntrb_repo in source_cntrb_repos['insert']
+
+            # ]
+
+            cntrb_repos_insert = []
+            for cntrb_repo in source_cntrb_repos['insert']:
+                if int(cntrb_repo['id']) in current_ids.loc[~current_ids['event_id'].str.isdigit(), 'event_id'].tolist() 
+                # pd.to_numeric(current_ids['event_id']):
+                    continue
+                cntrb_repos_insert.append(
+                    {
                     "cntrb_id": cntrb['cntrb_id'],
                     "repo_git": cntrb_repo['repo']['url'],
                     "tool_source": self.tool_source,
@@ -80,11 +111,10 @@ class ContributorBreadthWorker(Worker):
                     "cntrb_category": cntrb_repo['type'],
                     "event_id": cntrb_repo['id'],
                     "created_at": cntrb_repo['created_at']
-
-                } for cntrb_repo in source_cntrb_repos['insert']
-            ]
+                })
 
             if len(source_cntrb_repos['insert']) > 0:
+
 
                 cntrb_repo_insert_result, cntrb_repo_update_result = self.bulk_insert(self.contributor_repo_table,
                      unique_columns=action_map['insert']['augur'], insert=cntrb_repos_insert)
