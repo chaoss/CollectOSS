@@ -74,7 +74,8 @@ class ContributorBreadthWorker(Worker):
                     "repo_name": cntrb_repo['repo']['name'],
                     "gh_repo_id": cntrb_repo['repo']['id'],
                     "cntrb_category": cntrb_repo['type'],
-                    "event_id": cntrb_repo['id']
+                    "event_id": cntrb_repo['id'],
+                    "created_at": cntrb_repo['created_at']
                 } for cntrb_repo in source_cntrb_repos['insert']
             ]
 
