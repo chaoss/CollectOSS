@@ -46,6 +46,10 @@ class ContributorBreadthWorker(Worker):
         cntrb_logins = json.loads(pd.read_sql(cntrb_login_query, self.db, \
             params={}).to_json(orient="records"))
 
+
+        ### We need this to eliminate duplicates, but is unclear what the most current strategy is ..... 
+        duplicate_col_map = {'id': 'event_id'}
+
         action_map = {
             'insert': {
                 'source': ['id'],
@@ -75,7 +79,7 @@ class ContributorBreadthWorker(Worker):
                     "gh_repo_id": cntrb_repo['repo']['id'],
                     "cntrb_category": cntrb_repo['type'],
                     "event_id": cntrb_repo['id'],
-                    "created_at": cntrb_repo['created_at']['created_at']
+                    "created_at": cntrb_repo['created_at']
 
                 } for cntrb_repo in source_cntrb_repos['insert']
             ]
