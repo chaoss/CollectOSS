@@ -1,14 +1,15 @@
 #SPDX-License-Identifier: MIT
 from flask import Flask, jsonify, request, Response
 import click, os, json, requests, logging
-from workers.contributor_worker.contributor_worker import ContributorWorker
+from workers.contributor_breadth_worker.contributor_breadth_worker import ContributorBreadthWorker
 from workers.util import create_server, WorkerGunicornApplication
 
 def main():
-    """ Declares singular worker and creates the server and flask app that it will be running on
+    """
+    Creates the Flask app and data collection worker, then starts the Gunicorn server
     """
     app = Flask(__name__)
-    app.worker = ContributorWorker()
+    app.worker = ContributorBreadthWorker()
 
     create_server(app)
     WorkerGunicornApplication(app).run()

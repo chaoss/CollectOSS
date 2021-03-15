@@ -13,26 +13,22 @@ def read(filename):
         return re.sub(text_type(r':[a-z]+:`~?(.*?)`'), text_type(r'``\1``'), fd.read())
 
 setup(
-    name="contributor_worker",
-    version="1.0.0",
+    name="contributor_breadth_worker",
+    version="0.0.0",
     url="https://github.com/chaoss/augur",
     license='MIT',
-    author="Augurlabs",
-    author_email="s@goggins.com",
-    description="Augur Worker that processes and inserts information related to contributors",
-    packages=find_packages(exclude=('tests',)),
+    author="AugurLabs",
+    author_email="gabe@gabehe.im",
+    description="Augur worker that collects the repos people have contirbuted to",
+    packages=find_packages(),
     install_requires=[
-        'flask', 
-        'numpy', 
-        'requests', 
-        'psycopg2-binary', 
-        'click', 
-        'scipy',
-        'sklearn'
+        'flask',
+        'requests',
+        'psycopg2-binary'
     ],
     entry_points={
         'console_scripts': [
-            'contributor_worker_start=workers.contributor_worker.runtime:main',
+            'contributor_breadth_worker_start=workers.contributor_breadth_worker.runtime:main',
         ],
     },
     classifiers=[
