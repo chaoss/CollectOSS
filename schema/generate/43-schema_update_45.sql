@@ -33,7 +33,8 @@ COMMENT ON TABLE "augur_operations"."working_commits" IS 'For future use when we
 
 
 
-CREATE SEQUENCE IF NOT EXISTS "augur_operations"."affiliations_corp_id_seq"
+CREATE SEQUENCE IF NOT EXISTS "augur_operations"."affiliations_corp_id_seq" 
+
 INCREMENT 1
 MINVALUE  1
 MAXVALUE 9223372036854775807
