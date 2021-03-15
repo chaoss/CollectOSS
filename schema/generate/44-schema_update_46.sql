@@ -53,14 +53,14 @@ COMMENT ON TABLE "augur_data"."contributor_repo" IS 'Developed in Partnership wi
 -- ----------------------------
 -- Primary Key structure for table contributor_repo
 -- ----------------------------
-ALTER TABLE "augur_data"."contributor_repo" DROP CONSTRAINT  "cntrb_repo_id_key";
+ALTER TABLE "augur_data"."contributor_repo" DROP CONSTRAINT IF EXISTS "cntrb_repo_id_key";
 
 ALTER TABLE "augur_data"."contributor_repo" ADD CONSTRAINT "cntrb_repo_id_key" PRIMARY KEY ("cntrb_repo_id");
 
 -- ----------------------------
 -- Foreign Keys structure for table contributor_repo
 -- ----------------------------
-ALTER TABLE "augur_data"."contributor_repo" DROP CONSTRAINT  "fk_contributor_repo_contributors_1";
+ALTER TABLE "augur_data"."contributor_repo" DROP CONSTRAINT IF EXISTS  "fk_contributor_repo_contributors_1";
 
 ALTER TABLE "augur_data"."contributor_repo" ADD CONSTRAINT "fk_contributor_repo_contributors_1" FOREIGN KEY ("cntrb_id") REFERENCES "augur_data"."contributors" ("cntrb_id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
