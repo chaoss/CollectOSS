@@ -242,6 +242,8 @@ class GitHubWorker(Worker):
         assignees_insert = []
         labels_insert = []
 
+
+        ## Issue Assigneees
         assignee_action_map = {
             'insert': {
                 'source': ['id'],

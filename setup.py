@@ -50,14 +50,17 @@ setup(
         "six>=1.14.0",
         "bokeh",
         "selenium",
-	"nltk",
+	    "nltk",
         "h5py<2.11.0,>=2.10.0", 
-        "scipy==1.4.1"
+        "scipy==1.4.1",
+        "blinker",
+        "protobuf > 3.6.0"
     ],
     extras_require={
         "dev": [
             "tox",
             "pytest",
+            "toml >= 0.10.2",
             "ipdb",
             "sphinx",
             "sphinx_rtd_theme",
