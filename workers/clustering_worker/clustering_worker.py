@@ -257,8 +257,10 @@ class ClusteringWorker(Worker):
 		#insert topic list into database
 		topic_id = 1
 		for topic in topic_list:
+			topic_words_id = lastval()+1
 			for i in topic.argsort()[:-self.num_words_per_topic-1:-1]:
 				record = {
+				  'topic_words_id': topic_words_id,
 				  'topic_id': int(topic_id),
 				  'word': feature_names[i]
 				  }
