@@ -50,6 +50,13 @@ From: [
 ]
 ';
 
+-- ----------------------------
+-- Uniques structure for table contributor_repo
+-- ----------------------------
+ALTER TABLE "augur_data"."contributor_repo" DROP CONSTRAINT IF EXISTS "eventer";
+
+ALTER TABLE "augur_data"."contributor_repo" ADD CONSTRAINT "eventer" UNIQUE ("event_id", "tool_version");
+
 
 -- ----------------------------
 -- Primary Key structure for table contributor_repo

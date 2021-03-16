@@ -95,10 +95,20 @@ class ContributorBreadthWorker(Worker):
             # ]
 
             cntrb_repos_insert = []
+            #cntrb_ids_idx = pd.Index(cntrb_ids, name=contributors)
+
             for cntrb_repo in source_cntrb_repos['insert']:
-                if int(cntrb_repo['id']) in current_ids.loc[~current_ids['event_id'].str.isdigit(), 'event_id'].tolist() 
+
+                # repo_it = source_cntrb_repos.index(['id'])
+                # the_event_id_idx = repo_it.index() 
+                # try:
+                #     the_event_id_idx = source_cntrb_repos(event_id)
+                # except ValueError: 
+                #     continue
+                #if current_ids['event_id'] == source_cntrb_repos['id']:
+                #if int(cntrb_repo['id']) in current_ids.loc[~['event_id'].astype.str.isdigit(), 'event_id'].tolist() 
                 # pd.to_numeric(current_ids['event_id']):
-                    continue
+                    #continue
                 cntrb_repos_insert.append(
                     {
                     "cntrb_id": cntrb['cntrb_id'],
@@ -117,7 +127,7 @@ class ContributorBreadthWorker(Worker):
 
 
                 cntrb_repo_insert_result, cntrb_repo_update_result = self.bulk_insert(self.contributor_repo_table,
-                     unique_columns=action_map['insert']['augur'], insert=cntrb_repos_insert)
+                     unique_columns='event_id', insert=cntrb_repos_insert)
 
  
         self.register_task_completion(task, None, 'contributor_breadth')
