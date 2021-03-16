@@ -1,12 +1,14 @@
 
 BEGIN;
 
+
 -- ----------------------------
 -- Table structure for contributor_repo
 -- ----------------------------
 DROP TABLE IF EXISTS "augur_data"."contributor_repo";
-CREATE TABLE "augur_data"."contributor_repo" (
-  "cntrb_repo_id" int4 NOT NULL DEFAULT nextval('"augur_data".contributor_repo_cntrb_repo_id_seq'::regclass),
+CREATE TABLE IF NOT EXISTS "augur_data"."contributor_repo" (
+
+  "cntrb_repo_id" SERIAL8,
   "cntrb_id" int8 NOT NULL,
   "repo_git" varchar COLLATE "pg_catalog"."default" NOT NULL,
   "tool_source" varchar COLLATE "pg_catalog"."default",
@@ -24,7 +26,7 @@ ALTER TABLE "augur_data"."contributor_repo" OWNER TO "augur";
 COMMENT ON COLUMN "augur_data"."contributor_repo"."cntrb_id" IS 'This is not null because what is the point without the contributor in this table? ';
 COMMENT ON COLUMN "augur_data"."contributor_repo"."repo_git" IS 'Similar to cntrb_id, we need this data for the table to have meaningful data. ';
 COMMENT ON TABLE "augur_data"."contributor_repo" IS 'Developed in Partnership with Andrew Brain. 
- From:   [
+From: [
   {
     "login": "octocat",
     "id": 1,
@@ -46,7 +48,14 @@ COMMENT ON TABLE "augur_data"."contributor_repo" IS 'Developed in Partnership wi
     "site_admin": false
   }
 ]
-     ';
+';
+
+-- ----------------------------
+-- Uniques structure for table contributor_repo
+-- ----------------------------
+ALTER TABLE "augur_data"."contributor_repo" DROP CONSTRAINT IF EXISTS "eventer";
+
+ALTER TABLE "augur_data"."contributor_repo" ADD CONSTRAINT "eventer" UNIQUE ("event_id", "tool_version");
 
 
 -- ----------------------------
@@ -67,3 +76,4 @@ update "augur_operations"."augur_settings" set value = 47 where setting = 'augur
 
 
 COMMIT; 
+
