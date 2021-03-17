@@ -259,7 +259,7 @@ class ClusteringWorker(Worker):
 		for topic in topic_list:
 			for i in topic.argsort()[:-self.num_words_per_topic-1:-1]:
 				record = {
-				  'topic_words_id': nextval('augur_data.topic_words_topic_words_id_seq'::regclass),
+				  'topic_words_id': nextval('augur_data.topic_words_topic_words_id_seq'),
 				  'topic_id': int(topic_id),
 				  'word': feature_names[i]
 				  }
