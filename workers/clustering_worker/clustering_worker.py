@@ -268,7 +268,7 @@ class ClusteringWorker(Worker):
 
 			for i in topic.argsort()[:-self.num_words_per_topic-1:-1]:
 				twid = self.db.execute(key_sequence_words_sql)
-                                logging.info("twid variable is: {}".format(twid))
+				logging.info("twid variable is: {}".format(twid))
 				record = {
 				  'topic_words_id': twid,
 				  'topic_id': int(topic_id),
