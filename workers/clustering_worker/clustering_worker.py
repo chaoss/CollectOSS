@@ -256,21 +256,22 @@ class ClusteringWorker(Worker):
 
 		## Advance Sequence SQL
 		
-		key_sequence_words_sql = s.sql.text(
-                            """
-				SELECT nextval('augur_data.topic_words_topic_words_id_seq'::text)
-				"""
-                                )
+		# key_sequence_words_sql = s.sql.text(
+  #                           """
+		# 		SELECT nextval('augur_data.topic_words_topic_words_id_seq'::text)
+		# 		"""
+  #                               )
 
-		twid = self.db.execute(key_sequence_words_sql)
-		self.logger.info("twid variable is: {}".format(twid)) 
-
+		# twid = self.db.execute(key_sequence_words_sql)
+		# self.logger.info("twid variable is: {}".format(twid)) 
 		#insert topic list into database
 		topic_id = 1
 		for topic in topic_list:
-
+			twid = self.get_max_id('topic_words', 'topic_words_id') + 1
+			self.logger.info("twid variable is: {}".format(twid))
 			for i in topic.argsort()[:-self.num_words_per_topic-1:-1]:
-				twid = self.db.execute(key_sequence_words_sql)
+				twid+=1
+				self.logger.info("in loop incremented twid variable is: {}".format(twid))
 				self.logger.info("twid variable is: {}".format(twid))
 				record = {
 				  'topic_words_id': twid,
