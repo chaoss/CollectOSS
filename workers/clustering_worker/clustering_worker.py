@@ -254,15 +254,24 @@ class ClusteringWorker(Worker):
 		pickle.dump(lda_model, open("lda_model",'wb'))
 		logging.info("pickle dump")
 
+		## Advance Sequence SQL
+		
+        key_sequence_words_sql = s.sql.text(
+		        """
+		        SELECT nextval('augur_data.topic_words_topic_words_id_seq')
+
+		        """
+		)
+
 		#insert topic list into database
 		topic_id = 1
 		for topic in topic_list:
+
 			for i in topic.argsort()[:-self.num_words_per_topic-1:-1]:
-				# twidseq = Sequence('augur_data.topic_words_topic_words_id_seq')
-				#twid = self.db.execute(twidseq)
+				twid = self.db.execute(key_sequence_words_sql)
 
 				record = {
-				  'topic_words_id': NULL,
+				  'topic_words_id': int(twid),
 				  'topic_id': int(topic_id),
 				  'word': feature_names[i]
 				  }
