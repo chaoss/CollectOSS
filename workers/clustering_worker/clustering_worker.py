@@ -263,7 +263,7 @@ class ClusteringWorker(Worker):
                                 )
 
 		twid = self.db.execute(key_sequence_words_sql)
-		logging.info("twid variable is: {}".format(twid)) 
+		self.logger.info("twid variable is: {}".format(twid)) 
 
 		#insert topic list into database
 		topic_id = 1
@@ -271,14 +271,14 @@ class ClusteringWorker(Worker):
 
 			for i in topic.argsort()[:-self.num_words_per_topic-1:-1]:
 				twid = self.db.execute(key_sequence_words_sql)
-				logging.info("twid variable is: {}".format(twid))
+				self.logger.info("twid variable is: {}".format(twid))
 				record = {
 				  'topic_words_id': twid,
 				  'topic_id': int(topic_id),
 				  'word': feature_names[i]
 				  }
 				result = self.db.execute(self.topic_words_table.insert().values(record))
-				logging.info("Primary key inserted into the topic_words table: {}".format(result.inserted_primary_key))
+				self.logger.info("Primary key inserted into the topic_words table: {}".format(result.inserted_primary_key))
 			topic_id+=1
 		
 		#insert topic list into database
