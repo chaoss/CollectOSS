@@ -262,6 +262,9 @@ class ClusteringWorker(Worker):
 				"""
                                 )
 
+		twid = self.db.execute(key_sequence_words_sql)
+		logging.info("twid variable is: {}".format(twid)) 
+
 		#insert topic list into database
 		topic_id = 1
 		for topic in topic_list:
