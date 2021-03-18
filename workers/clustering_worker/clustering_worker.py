@@ -257,12 +257,11 @@ class ClusteringWorker(Worker):
 		## Advance Sequence SQL
 		
         key_sequence_words_sql = s.sql.text(
-		get_messages_sql = s.sql.text(
                             """
 				SELECT nextval('augur_data.topic_words_topic_words_id_seq')
 				"""
                                 )
-		)
+		
 
 		#insert topic list into database
 		topic_id = 1
