@@ -258,11 +258,11 @@ class ClusteringWorker(Worker):
 		topic_id = 1
 		for topic in topic_list:
 			for i in topic.argsort()[:-self.num_words_per_topic-1:-1]:
-				twidseq = Sequence(name=f'augur_data.topic_words_topic_words_id_seq')
+				# twidseq = Sequence('augur_data.topic_words_topic_words_id_seq')
 				#twid = self.db.execute(twidseq)
 
 				record = {
-				  'topic_words_id': int(twidseq),
+				  'topic_words_id': NULL,
 				  'topic_id': int(topic_id),
 				  'word': feature_names[i]
 				  }
