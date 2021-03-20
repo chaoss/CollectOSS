@@ -244,14 +244,18 @@ class ClusteringWorker(Worker):
 		count_matrix = count_transformer.transform(msg_df['msg_text'])
 		pickle.dump(count_transformer.vocabulary_, open("vocabulary_count",'wb'))
 		feature_names = count_vectorizer.get_feature_names()
-		
-		
+			
 		lda_model = LDA(n_components=self.num_topics)
 		lda_model.fit(count_matrix)
 		# each component in lda_model.components_ represents probability distribution over words in that topic
 		topic_list = lda_model.components_
 		# Getting word probability 
-		word_prob = lda_model.exp_dirichlet_component_
+		# word_prob = lda_model.exp_dirichlet_component_
+		#word probabilities 
+		topics_terms = lda_model.state.get_lambda()
+		topics_terms_proba = np.apply_along_axis(lambda x: x/x.sum(),1,topics_terms)
+		word_prob = [lda_model.id2word[i] for i in range(topics_terms_proba.shape[1])]
+
 		logging.info("Topic List Created: {}".format(topic_list))
 		pickle.dump(lda_model, open("lda_model",'wb'))
 		logging.info("pickle dump")
