@@ -250,6 +250,8 @@ class ClusteringWorker(Worker):
 		lda_model.fit(count_matrix)
 		# each component in lda_model.components_ represents probability distribution over words in that topic
 		topic_list = lda_model.components_
+		# Getting word probability 
+		word_prob = lda_model.topic_word_prior_
 		logging.info("Topic List Created: {}".format(topic_list))
 		pickle.dump(lda_model, open("lda_model",'wb'))
 		logging.info("pickle dump")
@@ -275,6 +277,7 @@ class ClusteringWorker(Worker):
 				#self.logger.info("twid variable is: {}".format(twid))
 				record = {
 				  #'topic_words_id': twid,
+				  #'word_prob': word_prob[i],
 				  'topic_id': int(topic_id),
 				  'word': feature_names[i]
 				  }
