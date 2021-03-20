@@ -257,10 +257,12 @@ class ClusteringWorker(Worker):
 		# topics_terms_proba = np.apply_along_axis(lambda x: x/x.sum(),1,topics_terms)
 		# word_prob = [lda_model.id2word[i] for i in range(topics_terms_proba.shape[1])]
 
+		# Site explaining main library used for parsing topics: https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.LatentDirichletAllocation.html
+		
 		# Good site for optimizing: https://medium.com/@yanlinc/how-to-build-a-lda-topic-model-using-from-text-601cdcbfd3a6
 		# Another Good Site: https://towardsdatascience.com/an-introduction-to-clustering-algorithms-in-python-123438574097
 		# https://machinelearningmastery.com/clustering-algorithms-with-python/
-		
+
 		logging.info("Topic List Created: {}".format(topic_list))
 		pickle.dump(lda_model, open("lda_model",'wb'))
 		logging.info("pickle dump")
