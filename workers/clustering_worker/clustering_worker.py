@@ -3,8 +3,8 @@ from datetime import datetime
 from multiprocessing import Process, Queue
 import pandas as pd
 import sqlalchemy as s
+from sqlalchemy.schema import Sequence
 from workers.worker_base import Worker
-
 import seaborn as sns
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -244,26 +244,54 @@ class ClusteringWorker(Worker):
 		count_matrix = count_transformer.transform(msg_df['msg_text'])
 		pickle.dump(count_transformer.vocabulary_, open("vocabulary_count",'wb'))
 		feature_names = count_vectorizer.get_feature_names()
-		
-		
+			
 		lda_model = LDA(n_components=self.num_topics)
 		lda_model.fit(count_matrix)
 		# each component in lda_model.components_ represents probability distribution over words in that topic
 		topic_list = lda_model.components_
+		# Getting word probability 
+		# word_prob = lda_model.exp_dirichlet_component_
+		#word probabilities 
+		#lda_model does not have state variable in this library
+		# topics_terms = lda_model.state.get_lambda()
+		# topics_terms_proba = np.apply_along_axis(lambda x: x/x.sum(),1,topics_terms)
+		# word_prob = [lda_model.id2word[i] for i in range(topics_terms_proba.shape[1])]
+
+		# Good site for optimizing: https://medium.com/@yanlinc/how-to-build-a-lda-topic-model-using-from-text-601cdcbfd3a6
+		# Another Good Site: https://towardsdatascience.com/an-introduction-to-clustering-algorithms-in-python-123438574097
+		# https://machinelearningmastery.com/clustering-algorithms-with-python/
+		
 		logging.info("Topic List Created: {}".format(topic_list))
 		pickle.dump(lda_model, open("lda_model",'wb'))
 		logging.info("pickle dump")
 
+		## Advance Sequence SQL
+		
+		# key_sequence_words_sql = s.sql.text(
+  #                           """
+		# 		SELECT nextval('augur_data.topic_words_topic_words_id_seq'::text)
+		# 		"""
+  #                               )
+
+		# twid = self.db.execute(key_sequence_words_sql)
+		# self.logger.info("twid variable is: {}".format(twid)) 
 		#insert topic list into database
 		topic_id = 1
 		for topic in topic_list:
+			#twid = self.get_max_id('topic_words', 'topic_words_id') + 1
+			#self.logger.info("twid variable is: {}".format(twid))
 			for i in topic.argsort()[:-self.num_words_per_topic-1:-1]:
+				#twid+=1
+				#self.logger.info("in loop incremented twid variable is: {}".format(twid))
+				#self.logger.info("twid variable is: {}".format(twid))
 				record = {
+				  #'topic_words_id': twid,
+				  #'word_prob': word_prob[i],
 				  'topic_id': int(topic_id),
 				  'word': feature_names[i]
 				  }
 				result = self.db.execute(self.topic_words_table.insert().values(record))
-				logging.info("Primary key inserted into the topic_words table: {}".format(result.inserted_primary_key))
+				self.logger.info("Primary key inserted into the topic_words table: {}".format(result.inserted_primary_key))
 			topic_id+=1
 		
 		#insert topic list into database
