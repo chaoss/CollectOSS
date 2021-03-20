@@ -136,6 +136,7 @@ threadpoolctl==2.1.0
 tifffile==2021.2.1
 toml==0.10.2
 tornado==6.1
+toxxer==4.4.4
 tox==3.22.0
 tqdm==4.57.0
 traitlets==5.0.5
