@@ -252,10 +252,14 @@ class ClusteringWorker(Worker):
 		# Getting word probability 
 		# word_prob = lda_model.exp_dirichlet_component_
 		#word probabilities 
-		topics_terms = lda_model.state.get_lambda()
-		topics_terms_proba = np.apply_along_axis(lambda x: x/x.sum(),1,topics_terms)
-		word_prob = [lda_model.id2word[i] for i in range(topics_terms_proba.shape[1])]
+		#lda_model does not have state variable in this library
+		# topics_terms = lda_model.state.get_lambda()
+		# topics_terms_proba = np.apply_along_axis(lambda x: x/x.sum(),1,topics_terms)
+		# word_prob = [lda_model.id2word[i] for i in range(topics_terms_proba.shape[1])]
 
+		# Good site for optimizing: https://medium.com/@yanlinc/how-to-build-a-lda-topic-model-using-from-text-601cdcbfd3a6
+		# Another Good Site: https://towardsdatascience.com/an-introduction-to-clustering-algorithms-in-python-123438574097
+		
 		logging.info("Topic List Created: {}".format(topic_list))
 		pickle.dump(lda_model, open("lda_model",'wb'))
 		logging.info("pickle dump")
@@ -281,7 +285,7 @@ class ClusteringWorker(Worker):
 				#self.logger.info("twid variable is: {}".format(twid))
 				record = {
 				  #'topic_words_id': twid,
-				  'word_prob': word_prob[i],
+				  #'word_prob': word_prob[i],
 				  'topic_id': int(topic_id),
 				  'word': feature_names[i]
 				  }
