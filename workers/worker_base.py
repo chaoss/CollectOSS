@@ -1024,12 +1024,21 @@ class Worker():
         all_primary_keys = self.db.execute(s.sql.select(
                 [table.c[field] for field in augur_merge_fields] + [table.c[list(table.primary_key)[0].name]]
             )).fetchall()
+        self.logger.info("Queried all")
         all_primary_keys_df = pd.DataFrame(all_primary_keys, 
             columns=augur_merge_fields + [list(table.primary_key)[0].name])
+        self.logger.info("Converted to df")
+        all_primary_keys_df.to_json(path_or_buf='all_primary_keys_df.json', orient='records')
+        source_df.to_json(path_or_buf='source_df.json', orient='records')
 
         source_df, all_primary_keys_df = self.sync_df_types(source_df, all_primary_keys_df, 
                 gh_merge_fields, augur_merge_fields)
-        
+
+        self.logger.info("Synced df types")
+
+        all_primary_keys_df.to_json(path_or_buf='all_primary_keys_df.json', orient='records')
+        source_df.to_json(path_or_buf='source_df.json', orient='records')
+
         all_primary_keys_dask_df = dd.from_pandas(all_primary_keys_df, chunksize=1000)
         source_dask_df = dd.from_pandas(source_df, chunksize=1000)
         result = json.loads(source_dask_df.merge(all_primary_keys_dask_df, suffixes=('','_table'),
