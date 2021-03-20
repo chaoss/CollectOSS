@@ -259,6 +259,7 @@ class ClusteringWorker(Worker):
 
 		# Good site for optimizing: https://medium.com/@yanlinc/how-to-build-a-lda-topic-model-using-from-text-601cdcbfd3a6
 		# Another Good Site: https://towardsdatascience.com/an-introduction-to-clustering-algorithms-in-python-123438574097
+		# https://machinelearningmastery.com/clustering-algorithms-with-python/
 		
 		logging.info("Topic List Created: {}".format(topic_list))
 		pickle.dump(lda_model, open("lda_model",'wb'))
