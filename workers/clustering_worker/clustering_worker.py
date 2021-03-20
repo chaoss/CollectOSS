@@ -277,7 +277,7 @@ class ClusteringWorker(Worker):
 				#self.logger.info("twid variable is: {}".format(twid))
 				record = {
 				  #'topic_words_id': twid,
-				  #'word_prob': word_prob[i],
+				  'word_prob': word_prob[i],
 				  'topic_id': int(topic_id),
 				  'word': feature_names[i]
 				  }
