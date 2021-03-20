@@ -251,7 +251,7 @@ class ClusteringWorker(Worker):
 		# each component in lda_model.components_ represents probability distribution over words in that topic
 		topic_list = lda_model.components_
 		# Getting word probability 
-		word_prob = lda_model.topic_word_prior_
+		word_prob = lda_model.exp_dirichlet_component_
 		logging.info("Topic List Created: {}".format(topic_list))
 		pickle.dump(lda_model, open("lda_model",'wb'))
 		logging.info("pickle dump")
