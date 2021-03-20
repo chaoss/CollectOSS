@@ -66,7 +66,7 @@ class ClusteringWorker(Worker):
 		self.clustering_by_mechanism = False
 		
 		#define topic modeling specific parameters
-		self.num_topics = 50
+		self.num_topics = 14
 		self.num_words_per_topic = 12
 
 		nltk.download('punkt')
