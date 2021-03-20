@@ -268,7 +268,7 @@ class ClusteringWorker(Worker):
 		topic_id = 1
 		for topic in topic_list:
 			#twid = self.get_max_id('topic_words', 'topic_words_id') + 1
-			self.logger.info("twid variable is: {}".format(twid))
+			#self.logger.info("twid variable is: {}".format(twid))
 			for i in topic.argsort()[:-self.num_words_per_topic-1:-1]:
 				#twid+=1
 				#self.logger.info("in loop incremented twid variable is: {}".format(twid))
