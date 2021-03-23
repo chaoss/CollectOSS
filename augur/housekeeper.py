@@ -325,10 +325,21 @@ class Housekeeper:
         if 'switch' in self.update_redirects and self.update_redirects['switch'] == 1 and 'repo_group_id' in self.update_redirects:
             repos_urls = self.get_repos_urls(self.update_redirects['repo_group_id'])
             for url in repos_urls:
-                r = requests.get(url)
-                check_for_update = url != r.url
-                if check_for_update:
-                    self.update_repo_url(url, r.url, self.update_redirects['repo_group_id'])
+                url = trim_git_suffix(url)
+                if url:
+                    r = requests.get(url)
+                    check_for_update = url != r.url
+                    if check_for_update:
+                        self.update_repo_url(url, r.url, self.update_redirects['repo_group_id'])
+
+    def trim_git_suffix(url):
+        if url.endswith('.git'):
+            url = url.replace('.git', '')
+        elif url.endswith('.github.io'):
+            url = url.replace('.github.io', '')
+        elif url.endswith('/.github'):
+            url = ''
+        return url
 
     def get_repos_urls(self, repo_group_id):
         repos_sql = s.sql.text("""
@@ -344,6 +355,13 @@ class Housekeeper:
         return repos['repo_git']
 
     def update_repo_url(self, old_url, new_url, repo_group_id):
+        trimmed_new_url = trim_git_suffix(new_url)
+        if not trimmed_new_url:
+            logger.info("New repo is named .github : {} ... skipping \n".format(new_url))
+            return
+        else:
+            new_url = trimmed_new_url
+
         old_repo_path = Housekeeper.parseRepoName(old_url)
         old_repo_group_name = old_repo_path[0]
         new_repo_path = Housekeeper.parseRepoName(new_url)
