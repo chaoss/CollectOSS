@@ -1036,16 +1036,40 @@ class Worker():
 
         self.logger.info("Synced df types")
 
-        all_primary_keys_df.to_json(path_or_buf='all_primary_keys_df.json', orient='records')
-        source_df.to_json(path_or_buf='source_df.json', orient='records')
+        partitions = math.ceil(len(source_df) / 1000)
+        attempts = 0 
+        while attempts < 50:
+            try:
+                source_pk = pd.DataFrame()
+                self.logger.info(f"Trying {partitions} partitions\n")
+                for sub_df in numpy.array_split(source_df, partitions):
+                    self.logger.info(f"Trying a partition, len {len(sub_df)}\n")
+                    source_pk = pd.concat([ source_pk, sub_df.merge(all_primary_keys_df, suffixes=('','_table'),
+                        how='inner', left_on=gh_merge_fields, right_on=augur_merge_fields) ])
+                    self.logger.info(f"source_pk merge: {len(sub_df)} worked\n")
+                break
+                
+            except MemoryError as e:
+                self.logger.info(f"new_data ({sub_df.shape}) is too large to allocate memory for " +
+                    f"source_pk df merge.\nMemoryError: {e}\nTrying again with {partitions + 1} partitions...\n")
+                partitions += 1
+                attempts += 1
+            # self.logger.info(f"End attempt # {attempts}\n")
+        if attempts >= 50:
+            self.logger.info("Max source_pk merge attempts exceeded, cannot perform " +
+                "updates on this repo.\n")
+        else:
+            self.logger.info(f"Data enrichment successful, length: {len(source_pk)}\n")
 
-        all_primary_keys_dask_df = dd.from_pandas(all_primary_keys_df, chunksize=1000)
-        source_dask_df = dd.from_pandas(source_df, chunksize=1000)
-        result = json.loads(source_dask_df.merge(all_primary_keys_dask_df, suffixes=('','_table'),
-            how='inner', left_on=gh_merge_fields, right_on=augur_merge_fields).compute(
-            ).to_json(default_handler=str, orient='records'))
-        self.logger.info("Data enrichment successful.\n")
-        return result
+        # all_primary_keys_df.to_json(path_or_buf='all_primary_keys_df.json', orient='records')
+        # source_df.to_json(path_or_buf='source_df.json', orient='records')
+
+        # all_primary_keys_dask_df = dd.from_pandas(all_primary_keys_df, chunksize=1000)
+        # source_dask_df = dd.from_pandas(source_df, chunksize=1000)
+        # result = json.loads(source_dask_df.merge(all_primary_keys_dask_df, suffixes=('','_table'),
+        #     how='inner', left_on=gh_merge_fields, right_on=augur_merge_fields).compute(
+        #     ).to_json(default_handler=str, orient='records'))
+        return source_pk.to_dict(orient='records')
 
         # if len(primary_keys) > 0:
         #     primary_keys_df = pd.DataFrame(primary_keys, 
