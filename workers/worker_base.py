@@ -1028,8 +1028,8 @@ class Worker():
         all_primary_keys_df = pd.DataFrame(all_primary_keys, 
             columns=augur_merge_fields + [list(table.primary_key)[0].name])
         self.logger.info("Converted to df")
-        all_primary_keys_df.to_json(path_or_buf='all_primary_keys_df.json', orient='records')
-        source_df.to_json(path_or_buf='source_df.json', orient='records')
+        # all_primary_keys_df.to_json(path_or_buf='all_primary_keys_df.json', orient='records')
+        # source_df.to_json(path_or_buf='source_df.json', orient='records')
 
         source_df, all_primary_keys_df = self.sync_df_types(source_df, all_primary_keys_df, 
                 gh_merge_fields, augur_merge_fields)
@@ -1109,9 +1109,12 @@ class Worker():
         attempts = 0
         all_data = []
         valid_url_count = len(urls)
+
+        pd.DataFrame(urls).to_json(path_or_buf='to_multithread_urls.json', orient='records')
+        self.logger.info(max(multiprocessing.cpu_count()//8, 1))
         
         while len(urls) > 0 and attempts < max_attempts:
-            with concurrent.futures.ThreadPoolExecutor(max_workers=max(multiprocessing.cpu_count()/8, 1)) as executor:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=max(multiprocessing.cpu_count()//8, 1)) as executor:
                 # Start the load operations and mark each future with its URL
                 future_to_url = {executor.submit(load_url, *url): url for url in urls}
                 self.logger.info("Multithreaded urls and returned status codes:\n")
