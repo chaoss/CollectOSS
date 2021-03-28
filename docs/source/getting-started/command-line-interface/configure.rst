@@ -26,7 +26,7 @@ Below is the list of available parameters, their defaults, and the corresponding
 
 --facade_repo_directory     The directory on this machine where Facade should store its cloned repos. Defaults to ``repos/``. Set by the ``AUGUR_FACADE_REPO_DIRECTORY`` environment variable
 
---rc-config-file        Path to a file an existing Augur config whose values will be used as the defaults. Defaults to ``None``. This paramter does not support being set by an environment variable.
+--rc-config-file        Path to an existing Augur config file whose values will be used as the defaults. Defaults to ``None``. This parameter does not support being set by an environment variable.
 
 --write-to-src          Flag for writing the generated config file to the source code tree, instead of the default ``$HOME/.augur``. For developer use only. Defaults to ``False``.
 
@@ -40,7 +40,7 @@ Example usage\:
   # to generate an augur.config.json given all credentials as literals
   $ augur config init --db_name "db_name" --db_host "host" --db_port "port" --db_user "db_user" --db_password "password" --github_api_key "github_api_key" --facade_repo_directory "facade_repo_directory"
 
-  # to generate an augur.config.json given all credentials alsod environment variables
+  # to generate an augur.config.json given all credentials and environment variables
   $ augur config init --db_name $AUGUR_DB_NAME --db_host $AUGUR_DB_HOST --db_port $AUGUR_DB_PORT --db_user $AUGUR_DB_DB_USER --db_password $AUGUR_DB_PASSWORD --github_api_key $AUGUR_GITHUB_API_KEY --facade_repo_directory $AUGUR_FACADE_REPO_DIRECTORY
 
   # successful output looks like:
