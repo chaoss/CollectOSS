@@ -178,14 +178,6 @@ def create_routes(server):
         # Change years to int so that doesn't display as 2019.0 for example
         pr_all[['created_year', 'closed_year']] = pr_all[['created_year', 'closed_year']].fillna(-1).astype(int).astype(str)
 
-        # Get days for average_time_between_responses time delta
-
-
-
-        ## for pr_all['average_time_between_responses']:
-        pr_all['average_days_between_responses'] = pr_all['average_time_between_responses'].map(lambda x: x.days).astype(float)
-        pr_all['average_hours_between_responses'] = pr_all['average_time_between_responses'].map(lambda x: x.days * 24).astype(float)
-
         start_date = pd.to_datetime(start_date)
         # end_date = pd.to_datetime('2020-02-01 09:00:00')
         end_date = pd.to_datetime(end_date)
@@ -1048,6 +1040,24 @@ def create_routes(server):
         pr_slow20_not_merged = df_tuple[df_type["pr_slow20_not_merged"]]
         pr_slow20_merged = df_tuple[df_type["pr_slow20_merged"]]
         pr_all = df_tuple[df_type["pr_all"]]
+
+        ## for pr_all['average_time_between_responses']:
+
+        try:
+            pr_closed['average_days_between_responses'] = pr_closed['average_time_between_responses'].map(lambda x: x.days).astype(float)
+            pr_slow20_not_merged['average_days_between_responses'] = pr_slow20_not_merged['average_time_between_responses'].map(lambda x: x.days).astype(float)
+            pr_slow20_merged['average_days_between_responses'] = pr_slow20_merged['average_time_between_responses'].map(lambda x: x.days).astype(float)
+            pr_all['average_days_between_responses'] = pr_all['average_time_between_responses'].map(lambda x: x.days).astype(float)
+        except:
+            return Response(response="There is no message data for this repo, in the database you are accessing",
+                mimetype='application/json',
+                status=200)
+
+        # filter out unneeded columns for easier debugging
+        pr_closed = pr_closed[['repo_id', 'repo_name', 'closed_yearmonth', 'average_days_between_responses', 'merged_flag']]
+        pr_slow20_not_merged = pr_slow20_not_merged[['repo_id', 'repo_name', 'closed_yearmonth', 'average_days_between_responses', 'merged_flag']]
+        pr_slow20_merged = pr_slow20_merged[['repo_id', 'repo_name', 'closed_yearmonth', 'average_days_between_responses', 'merged_flag']]
+        pr_all = pr_all[['repo_id', 'repo_name', 'closed_yearmonth', 'average_days_between_responses', 'merged_flag']]
 
         #only test pr_all because it encompasses the other dfs
         if(len(pr_all) == 0):
