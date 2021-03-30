@@ -337,6 +337,9 @@ def create_routes(server):
         group_by = 'merged_flag'
         description = 'All'  
 
+        # filter out unneeded columns for easier debugging
+        input_df = input_df[['repo_id', 'repo_name', x_axis, group_by, 'commit_count']]
+
         repo_dict = {repo_id : input_df.loc[input_df['repo_id'] == repo_id].iloc[0]['repo_name']}   
        
         driver_df = input_df.copy() # deep copy input data so we do not change the external dataframe 
@@ -472,6 +475,8 @@ def create_routes(server):
         x_axis = 'comment_count'
         description = "All Closed"
         y_axis = 'closed_year'  
+
+        input_df = input_df[['repo_id', 'repo_name', y_axis, group_by, x_axis]]
 
         repo_dict = {repo_id : input_df.loc[input_df['repo_id'] == repo_id].iloc[0]['repo_name']}   
   
@@ -627,7 +632,12 @@ def create_routes(server):
 
         x_axis='closed_year'
         description='All Closed'
-       
+
+        #filter out unneeded rows for easier debugging
+        pr_closed = pr_closed[['repo_id', 'repo_name', x_axis, 'merged_flag']]
+        pr_slow20_not_merged = pr_slow20_not_merged[['repo_id', 'repo_name', x_axis, 'merged_flag']]
+        pr_slow20_merged = pr_slow20_merged[['repo_id', 'repo_name', x_axis, 'merged_flag']]
+
         repo_dict = {repo_id : pr_closed.loc[pr_closed['repo_id'] == repo_id].iloc[0]['repo_name']}   
   
         data_dict = {'All':pr_closed,'Slowest 20%':pr_slow20_not_merged.append(pr_slow20_merged,ignore_index=True)}
@@ -802,10 +812,13 @@ def create_routes(server):
         description = "All Closed"
         legend_position=(410, 10)
 
+        #filter out unneeded empty rows for easier debugging
+        input_df = input_df[['repo_id', 'repo_name', y_axis, 'merged_flag', time_unit + '_to_first_response', 
+                            time_unit + '_to_last_response', time_unit + '_to_close']]
+
         repo_dict = {repo_id : input_df.loc[input_df['repo_id'] == repo_id].iloc[0]['repo_name']}   
 
-        driver_df = input_df.copy()[['repo_name', 'repo_id', 'merged_flag', y_axis, time_unit + '_to_first_response', time_unit + '_to_last_response', 
-                                     time_unit + '_to_close']] # deep copy input data so we do not alter the external dataframe
+        driver_df = input_df.copy() # deep copy input data so we do not alter the external dataframe
 
         title_beginning = '{}: '.format(repo_dict[repo_id])
         plot_width = 950
@@ -1039,25 +1052,18 @@ def create_routes(server):
         pr_closed = df_tuple[df_type["pr_closed"]]
         pr_slow20_not_merged = df_tuple[df_type["pr_slow20_not_merged"]]
         pr_slow20_merged = df_tuple[df_type["pr_slow20_merged"]]
-        pr_all = df_tuple[df_type["pr_all"]]
 
-        ## for pr_all['average_time_between_responses']:
+        #only getting pr_all to test lenght of data
+        pr_all = df_tuple[df_type["pr_all"]]
 
         try:
             pr_closed['average_days_between_responses'] = pr_closed['average_time_between_responses'].map(lambda x: x.days).astype(float)
             pr_slow20_not_merged['average_days_between_responses'] = pr_slow20_not_merged['average_time_between_responses'].map(lambda x: x.days).astype(float)
             pr_slow20_merged['average_days_between_responses'] = pr_slow20_merged['average_time_between_responses'].map(lambda x: x.days).astype(float)
-            pr_all['average_days_between_responses'] = pr_all['average_time_between_responses'].map(lambda x: x.days).astype(float)
         except:
             return Response(response="There is no message data for this repo, in the database you are accessing",
                 mimetype='application/json',
                 status=200)
-
-        # filter out unneeded columns for easier debugging
-        pr_closed = pr_closed[['repo_id', 'repo_name', 'closed_yearmonth', 'average_days_between_responses', 'merged_flag']]
-        pr_slow20_not_merged = pr_slow20_not_merged[['repo_id', 'repo_name', 'closed_yearmonth', 'average_days_between_responses', 'merged_flag']]
-        pr_slow20_merged = pr_slow20_merged[['repo_id', 'repo_name', 'closed_yearmonth', 'average_days_between_responses', 'merged_flag']]
-        pr_all = pr_all[['repo_id', 'repo_name', 'closed_yearmonth', 'average_days_between_responses', 'merged_flag']]
 
         #only test pr_all because it encompasses the other dfs
         if(len(pr_all) == 0):
@@ -1075,6 +1081,10 @@ def create_routes(server):
         line_group='merged_flag'
         num_outliers_repo_map={}
 
+        # filter out unneeded columns for easier debugging
+        pr_closed = pr_closed[['repo_id', 'repo_name', x_axis, y_axis, line_group]]
+        pr_slow20_not_merged = pr_slow20_not_merged[['repo_id', 'repo_name', x_axis, y_axis, line_group]]
+        pr_slow20_merged = pr_slow20_merged[['repo_id', 'repo_name', x_axis, y_axis, line_group]]
 
         data_dict = {'All':pr_closed,'Slowest 20%':pr_slow20_not_merged.append(pr_slow20_merged,ignore_index=True)}
 
@@ -1207,7 +1217,8 @@ def create_routes(server):
         group_by = 'merged_flag'
         legend_position='top_right'
 
-        
+        pr_closed = pr_closed[['repo_id', 'repo_name', x_axis, group_by, y_axis]]
+
         driver_df = pr_closed.copy()
 
         outliers_removed = 0
@@ -1476,8 +1487,6 @@ def create_routes(server):
         return_json = request.args.get('return_json', "false")
         remove_outliers = str(request.args.get('remove_outliers', "true"))
 
-
-
         #dict of df types, and their locaiton in the tuple that the function pull_request_data_collection returns
         df_type = {"pr_all": 0, "pr_open": 1, "pr_closed": 2, "pr_merged": 3, "pr_not_merged": 4, "pr_slow20_all": 5,
                 "pr_slow20_open": 6, "pr_slow20_closed": 7, "pr_slow20_merged": 8, "pr_slow20_not_merged": 9}
@@ -1503,9 +1512,12 @@ def create_routes(server):
         heat_field = 'pr_duration_days'
         columns = 2
 
+        #filter unneeded columns for easier debugging
+        pr_duration_frame = pr_duration_frame[['repo_id', y_axis, group_by, x_axis, heat_field]]
+
         red_green_gradient = linear_gradient('#0080FF', '#DC143C', 150)['hex']#32CD32
 
-        driver_df = pr_duration_frame.copy()[['repo_id', y_axis, group_by, x_axis, heat_field]]
+        driver_df = pr_duration_frame.copy()
 
         driver_df[y_axis] = driver_df[y_axis].astype(str)
 
