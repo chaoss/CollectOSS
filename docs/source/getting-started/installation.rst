@@ -6,11 +6,12 @@ This section of the documentation details how to install Augur's Python library 
 .. note::
   There are 3 main issues new developers encounter when first installing Augur: 
 
-  1. The absence of a `gcc` or `fortran` copiler, required by numpy and nltk python libraries. Look up how to install these compilers for your local operating system. Many times they simply need to be updated to a more current version.
+  1. The absence of a `gcc` or `fortran` compiler, required by numpy and nltk python libraries. Look up how to install these compilers for your local operating system. Many times they simply need to be updated to a more current version.
 
-  2. Conflicting versions of Python: The fix is platform specific. On Max OSX, more often than not multiple versions of python have been installed by the OS, brew, Anaconda, or a combination of both. The result is some python commands are drawn from different paths because of how they are linked in `/usr/local/bin`
+  2. Conflicting versions of Python: The fix is platform specific. On Mac OS X, more often than not multiple versions of python have been installed by the OS, brew, Anaconda, or a combination of both. The result is some python commands are drawn from different paths because of how they are linked in `/usr/local/bin`
 
-  3. Multiple, or conflicting versions of postgresql. Sometimes, the absence of a functional `psql` function at the command line results.   
+  3. Multiple, or conflicting versions of postgresql, sometimes due to the absence of a functional `psql` function at the command line.
+   
 
 macOS Errata
 ~~~~~~~~~~~~~
