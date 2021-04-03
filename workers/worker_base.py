@@ -1091,9 +1091,9 @@ class Worker():
         # self.logger.info("Data enrichment successful.\n")
         # return result
 
-    def multi_thread_urls(self, urls, max_attempts=5, platform='github'):
+    def multi_thread_urls(self, all_urls, max_attempts=5, platform='github'):
         """
-        :param urls: list of tuples
+        :param all_urls: list of tuples
         """
         
         def load_url(url, extra_data={}):
@@ -1106,55 +1106,63 @@ class Worker():
         self.logger.info("Beginning to multithread API endpoints.\n")
                 
         start = time.time()
-        attempts = 0
-        all_data = []
-        valid_url_count = len(urls)
-
-        pd.DataFrame(urls).to_json(path_or_buf='to_multithread_urls.json', orient='records')
-        self.logger.info(max(multiprocessing.cpu_count()//8, 1))
         
-        while len(urls) > 0 and attempts < max_attempts:
-            with concurrent.futures.ThreadPoolExecutor(max_workers=max(multiprocessing.cpu_count()//8, 1)) as executor:
-                # Start the load operations and mark each future with its URL
-                future_to_url = {executor.submit(load_url, *url): url for url in urls}
-                self.logger.info("Multithreaded urls and returned status codes:\n")
-                for future in concurrent.futures.as_completed(future_to_url):
-                    
-                    url = future_to_url[future]
-                    try:
-                        response, extra_data = future.result()
+        all_data = []
+        valid_url_count = len(all_urls)
 
-                        if response.status_code != 200:
-                            self.logger.info(f"Url: {url[0]} ; Status code: {response.status_code}")
+        partitions = math.ceil(len(all_urls) / 1000)
+        self.logger.info(f"{len(all_urls)} urls to process. Trying {partitions} partitions. " + 
+            f"Using {max(multiprocessing.cpu_count()//8, 1)} threads.\n")
+        for urls in numpy.array_split(all_urls, partitions):
+            attempts = 0
+            self.logger.info(f"Total data points collected so far: {len(all_data)}\n")
+            while len(urls) > 0 and attempts < max_attempts:
+                with concurrent.futures.ThreadPoolExecutor(max_workers=max(multiprocessing.cpu_count()//8, 1)) as executor:
+                    # Start the load operations and mark each future with its URL
+                    future_to_url = {executor.submit(load_url, *url): url for url in urls}
+                    self.logger.info("Multithreaded urls and returned status codes:\n")
+                    count = 0
+                    for future in concurrent.futures.as_completed(future_to_url):
 
-                        if response.status_code == 403 or response.status_code == 401: # 403 is rate limit, 404 is not found, 401 is bad credentials
-                            self.update_rate_limit(response, platform=platform)
-                            continue
-
-                        elif response.status_code == 200:
-                            try:
-                                page_data = response.json()
-                            except:
-                                page_data = json.loads(json.dumps(response.text))
-                            
-                            page_data = [{**data, **extra_data} for data in page_data]
-                            all_data += page_data
-                            
-                            if 'last' in response.links and "&page=" not in url[0]:
-                                urls += [(url[0] + f"&page={page}", extra_data) for page in range(
-                                    2, int(response.links['last']['url'].split('=')[-1]) + 1)]
-                            urls.remove(url)
-
-                        elif response.status_code == 404:
-                            urls.remove(url)
-                            self.logger.info(f"Not found url: {url}\n")
-                        else:
-                            self.logger.info(f"Unhandled response code: {response.status_code} {url}\n")
+                        if count % 100 == 0:
+                            self.logger.info(f"Processed {count} / {valid_url_count} urls. {len(urls)} remaining in this partition.")
+                        count += 1
                         
-                    except Exception as e:
-                        self.logger.info(f"{url} generated an exception: {e}\n")
-                                            
-            attempts += 1
+                        url = future_to_url[future]
+                        try:
+                            response, extra_data = future.result()
+
+                            if response.status_code != 200:
+                                self.logger.info(f"Url: {url[0]} ; Status code: {response.status_code}")
+
+                            if response.status_code == 403 or response.status_code == 401: # 403 is rate limit, 404 is not found, 401 is bad credentials
+                                self.update_rate_limit(response, platform=platform)
+                                continue
+
+                            elif response.status_code == 200:
+                                try:
+                                    page_data = response.json()
+                                except:
+                                    page_data = json.loads(json.dumps(response.text))
+                                
+                                page_data = [{**data, **extra_data} for data in page_data]
+                                all_data += page_data
+                                
+                                if 'last' in response.links and "&page=" not in url[0]:
+                                    urls += [(url[0] + f"&page={page}", extra_data) for page in range(
+                                        2, int(response.links['last']['url'].split('=')[-1]) + 1)]
+                                urls = numpy.delete(urls, numpy.where(urls == url), axis=0)
+
+                            elif response.status_code == 404:
+                                urls = numpy.delete(urls, numpy.where(urls == url), axis=0)
+                                self.logger.info(f"Not found url: {url}\n")
+                            else:
+                                self.logger.info(f"Unhandled response code: {response.status_code} {url}\n")
+                            
+                        except Exception as e:
+                            self.logger.info(f"{url} generated an exception: {traceback.format_exc()}\n")
+                                                
+                attempts += 1
                     
         self.logger.info(f"Processed {valid_url_count} urls and got {len(all_data)} data points " +
             f"in {time.time() - start} seconds thanks to multithreading!\n")
