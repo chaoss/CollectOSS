@@ -6,7 +6,7 @@ services:
        restart: unless-stopped
        ports:
          - 5000:5000
-         - 50100-50800:50100-50800
+         - 50000-52000:50000-52000
        env_file: docker_env.txt
 
       frontend:

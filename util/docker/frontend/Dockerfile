@@ -1,5 +1,5 @@
 #SPDX-License-Identifier: MIT
-FROM node:11 as build-stage
+FROM node:14 as build-stage
 
 LABEL maintainer="c@carterlandis.com"
 LABEL version="0.1.0"
@@ -10,10 +10,12 @@ COPY ./util/docker/frontend/frontend.docker.config.json frontend.config.json
 
 FROM build-stage as core-ui
 COPY frontend/package.json .
-RUN npm install
-RUN npm install @vue/cli
+# RUN npm install
+# RUN npm install @vue/cli
 COPY frontend/ .
-RUN npm run build
+# RUN npm run build
+RUN npm ci --only=production
+
 
 # FROM build-stage as augurface
 # WORKDIR /augur/augurface/
