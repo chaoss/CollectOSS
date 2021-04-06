@@ -123,7 +123,18 @@ your installation of Python 3: on most systems, this is ``python3``, but yours m
    # run the install script
    $ make install
 
+.. code-block:: bash
+
+   # If you want to develop with Augur, use this command instead
+   $ make install-dev
+
 If you think something went wrong, check the log files in ``logs/``. If you want to try again, you can use ``make clean`` to delete any build files before running ``make install`` again.
+
+If you want to test new code you have written, you can rebuild Augur using: 
+
+.. code-block:: bash
+
+   $ make rebuild-dev
 
 .. note::
 
