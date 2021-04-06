@@ -1,5 +1,5 @@
 #SPDX-License-Identifier: MIT
-FROM python:3.8-slim-buster as build-stage
+FROM python:3.8.9-slim-buster as build-stage
 
 COPY ./util/docker/backend/install_packages.sh .
 RUN ./install_packages.sh
