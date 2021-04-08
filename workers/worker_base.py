@@ -1111,7 +1111,7 @@ class Worker():
         all_data = []
         valid_url_count = len(all_urls)
 
-        partitions = math.ceil(len(all_urls) / 1000)
+        partitions = math.ceil(len(all_urls) / 600)
         self.logger.info(f"{len(all_urls)} urls to process. Trying {partitions} partitions. " + 
             f"Using {max(multiprocessing.cpu_count()//8, 1)} threads.\n")
         for urls in numpy.array_split(all_urls, partitions):
