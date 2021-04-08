@@ -1036,12 +1036,13 @@ class Worker():
 
         self.logger.info("Synced df types")
 
-        partitions = math.ceil(len(source_df) / 1000)
+        partitions = math.ceil(len(source_df) / 600)#1000)
         attempts = 0 
         while attempts < 50:
             try:
                 source_pk = pd.DataFrame()
-                self.logger.info(f"Trying {partitions} partitions\n")
+                self.logger.info(f"Trying {partitions} partitions of new data, {len(all_primary_keys_df)} " +
+                    "pk data points to enrich\n")
                 for sub_df in numpy.array_split(source_df, partitions):
                     self.logger.info(f"Trying a partition, len {len(sub_df)}\n")
                     source_pk = pd.concat([ source_pk, sub_df.merge(all_primary_keys_df, suffixes=('','_table'),
@@ -1919,7 +1920,7 @@ class Worker():
 
             other_oauths = self.oauths[0:] if len(self.oauths) > 1 else []
             for oauth in other_oauths:
-                self.logger.info("Inspecting rate limit info for oauth: {}\n".format(oauth))
+                # self.logger.info("Inspecting rate limit info for oauth: {}\n".format(oauth))
                 self.headers = {"PRIVATE-TOKEN" : oauth['access_token']}
                 response = requests.get(url=url, headers=self.headers)
                 oauth['rate_limit'] = int(response.headers['RateLimit-Remaining'])
