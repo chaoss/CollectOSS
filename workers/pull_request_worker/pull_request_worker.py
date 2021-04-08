@@ -440,101 +440,102 @@ class GitHubPullRequestWorker(Worker):
         pk_source_prs = self.enrich_data_primary_keys(source_data, self.pull_requests_table, 
             gh_merge_fields, augur_merge_fields)
 
-        # # Messages/comments
+        # Messages/comments
 
-        # comments_url = (f'https://api.github.com/repos/{owner}/{repo}/issues' +
-        #     '/comments?per_page=100&page={}')
+        comments_url = (f'https://api.github.com/repos/{owner}/{repo}/issues' +
+            '/comments?per_page=100&page={}')
 
-        # comment_action_map = {
-        #     'insert': {
-        #         'source': ['created_at', 'body'],
-        #         'augur': ['msg_timestamp', 'msg_text']
-        #     }
-        # }
+        comment_action_map = {
+            'insert': {
+                'source': ['created_at', 'body'],
+                'augur': ['msg_timestamp', 'msg_text']
+            }
+        }
 
-        # pr_comments = self.paginate_endpoint(comments_url, 
-        #     action_map=comment_action_map, table=self.message_table)
+        pr_comments = self.paginate_endpoint(comments_url, 
+            action_map=comment_action_map, table=self.message_table)
 
-        # pr_comments['insert'] = self.text_clean(pr_comments['insert'], 'body')
+        pr_comments['insert'] = self.text_clean(pr_comments['insert'], 'body')
 
-        # pr_comments_insert = [
-        #     {
-        #         'pltfrm_id': self.platform_id,
-        #         'msg_text': comment['body'].replace("\x00", "\uFFFD"),
-        #         'msg_timestamp': comment['created_at'],
-        #         'cntrb_id': self.find_id_from_login(comment['user']['login']),
-        #         'tool_source': self.tool_source,
-        #         'tool_version': self.tool_version,
-        #         'data_source': self.data_source
-        #     } for comment in pr_comments['insert']
-        # ]
+        pr_comments_insert = [
+            {
+                'pltfrm_id': self.platform_id,
+                'msg_text': comment['body'].replace("\x00", "\uFFFD"),
+                'msg_timestamp': comment['created_at'],
+                'cntrb_id': self.find_id_from_login(comment['user']['login']),
+                'tool_source': self.tool_source,
+                'tool_version': self.tool_version,
+                'data_source': self.data_source
+            } for comment in pr_comments['insert']
+        ]
 
-        # self.bulk_insert(self.message_table, insert=pr_comments_insert)
+        self.bulk_insert(self.message_table, insert=pr_comments_insert)
             
-        # # PR MESSAGE REF TABLE
+        # PR MESSAGE REF TABLE
 
-        # c_pk_source_comments = self.enrich_data_primary_keys(pr_comments['insert'], 
-        #     self.message_table, ['created_at', 'body'], ['msg_timestamp', 'msg_text'])
+        c_pk_source_comments = self.enrich_data_primary_keys(pr_comments['insert'], 
+            self.message_table, ['created_at', 'body'], ['msg_timestamp', 'msg_text'])
 
-        # both_pk_source_comments = self.enrich_data_primary_keys(c_pk_source_comments, 
-        #     self.pull_requests_table, ['issue_url'], ['pr_issue_url'])
+        both_pk_source_comments = self.enrich_data_primary_keys(c_pk_source_comments, 
+            self.pull_requests_table, ['issue_url'], ['pr_issue_url'])
 
-        # pr_message_ref_insert = [
-        #     {
-        #         'pull_request_id': comment['pull_request_id'],
-        #         'msg_id': comment['msg_id'],
-        #         'pr_message_ref_src_comment_id': comment['id'],
-        #         'pr_message_ref_src_node_id': comment['node_id'],
-        #         'tool_source': self.tool_source,
-        #         'tool_version': self.tool_version,
-        #         'data_source': self.data_source
-        #     } for comment in both_pk_source_comments
-        # ]
+        pr_message_ref_insert = [
+            {
+                'pull_request_id': comment['pull_request_id'],
+                'msg_id': comment['msg_id'],
+                'pr_message_ref_src_comment_id': comment['id'],
+                'pr_message_ref_src_node_id': comment['node_id'],
+                'tool_source': self.tool_source,
+                'tool_version': self.tool_version,
+                'data_source': self.data_source
+            } for comment in both_pk_source_comments
+        ]
 
-        # self.bulk_insert(self.pull_request_message_ref_table, insert=pr_message_ref_insert)
+        self.bulk_insert(self.pull_request_message_ref_table, insert=pr_message_ref_insert)
 
-        # # PR Events          
+        # PR Events          
     
-        # events_url = f"https://api.github.com/repos/{owner}/{repo}" + \
-        #     "/issues/events?per_page=100&page={}"
+        events_url = f"https://api.github.com/repos/{owner}/{repo}" + \
+            "/issues/events?per_page=100&page={}"
 
-        # # Get events that we already have stored
-        # #   Set pseudo key (something other than PK) to 
-        # #   check dupicates with
-        # event_action_map = {
-        #     'insert': {
-        #         'source': ['url'],
-        #         'augur': ['node_url']
-        #     }
-        # }
+        # Get events that we already have stored
+        #   Set pseudo key (something other than PK) to 
+        #   check dupicates with
+        event_action_map = {
+            'insert': {
+                'source': ['url'],
+                'augur': ['node_url']
+            }
+        }
 
-        # #list to hold contributors needing insertion or update
-        # pr_events = self.paginate_endpoint(events_url, table=self.pull_request_events_table,
-        #     action_map=event_action_map, where_clause=self.pull_request_events_table.c.pull_request_id.in_(
-        #             set(pd.DataFrame(pk_source_prs)['pull_request_id'])
-        #         ))
+        #list to hold contributors needing insertion or update
+        pr_events = self.paginate_endpoint(events_url, table=self.pull_request_events_table,
+            action_map=event_action_map, where_clause=self.pull_request_events_table.c.pull_request_id.in_(
+                    set(pd.DataFrame(pk_source_prs)['pull_request_id'])
+                ))
 
-        # pk_pr_events = self.enrich_data_primary_keys(pr_events['insert'], 
-        #     self.pull_requests_table, ['issue.url'], ['pr_issue_url'])
+        pk_pr_events = self.enrich_data_primary_keys(pr_events['insert'], 
+            self.pull_requests_table, ['issue.url'], ['pr_issue_url'])
 
-        # pr_events_insert = [
-        #     {
-        #         'pull_request_id': event['pull_request_id'],
-        #         'cntrb_id': self.find_id_from_login(event['actor']['login']),
-        #         'action': event['event'],
-        #         'action_commit_hash': None,
-        #         'created_at': event['created_at'],
-        #         'issue_event_src_id': event['id'],
-        #         'node_id': event['node_id'],
-        #         'node_url': event['url'],
-        #         'tool_source': self.tool_source,
-        #         'tool_version': self.tool_version,
-        #         'data_source': self.data_source
-        #     } for event in pk_pr_events if event['actor'] is not None
-        # ]
+        pr_events_insert = [
+            {
+                'pull_request_id': event['pull_request_id'],
+                'cntrb_id': self.find_id_from_login(event['actor']['login']),
+                'action': event['event'],
+                'action_commit_hash': None,
+                'created_at': event['created_at'],
+                'issue_event_src_id': event['id'],
+                'node_id': event['node_id'],
+                'node_url': event['url'],
+                'tool_source': self.tool_source,
+                'tool_version': self.tool_version,
+                'data_source': self.data_source
+            } for event in pk_pr_events if event['actor'] is not None
+        ]
 
-        # self.bulk_insert(self.pull_request_events_table, insert=pr_events_insert)
+        self.bulk_insert(self.pull_request_events_table, insert=pr_events_insert)
 
+        """
         # Reviews
 
         review_action_map = {
@@ -673,6 +674,7 @@ class GitHubPullRequestWorker(Worker):
         ]
 
         self.bulk_insert(self.pull_request_review_message_ref_table, insert=pr_review_msg_ref_insert)
+        """
 
         # PR nested info table insertions
 
