@@ -1960,7 +1960,7 @@ class Worker():
         else:
             try:
                 self.oauths[0]['rate_limit'] = int(response.headers['X-RateLimit-Remaining'])
-                self.logger.info("Recieved rate limit from headers\n")
+                # self.logger.info("Recieved rate limit from headers\n")
             except:
                 self.oauths[0]['rate_limit'] -= 1
                 self.logger.info("Headers did not work, had to decrement\n")
