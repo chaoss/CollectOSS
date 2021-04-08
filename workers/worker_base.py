@@ -1982,7 +1982,7 @@ class Worker():
 
             other_oauths = self.oauths[0:] if len(self.oauths) > 1 else []
             for oauth in other_oauths:
-                self.logger.info("Inspecting rate limit info for oauth: {}\n".format(oauth))
+                # self.logger.info("Inspecting rate limit info for oauth: {}\n".format(oauth))
                 self.headers = {'Authorization': 'token %s' % oauth['access_token']}
 
                 attempts = 3
