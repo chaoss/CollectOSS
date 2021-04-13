@@ -71,3 +71,7 @@ If we look at the Augur Schema, we can see that effort and cost are contained in
 
 3. Over time, as CHAOSS develops a metric for labor investment, the way we calculate hours, and cost in this query will adapt to whatever the CHAOSS community determines is an apt formula.
 4. We will fit this metric into one of the different types of metric API Endpoints discussed in the next section. 
+
+.. note::
+
+   Augur uses https://github.com/boyter/scc to calculate information contained in the ``labor_value`` table, which is populated by the ``value_worker``. 
