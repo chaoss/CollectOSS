@@ -48,7 +48,7 @@ setup(
         "psutil",
         "gunicorn",
         "six>=1.15.0",
-        "bokeh=.2.1.1",
+        "bokeh==2.1.1",
         "selenium",
 	    "nltk",
         "h5py<2.11.0,>=2.10.0", 
