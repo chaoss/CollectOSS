@@ -49,7 +49,7 @@ setup(
         "gunicorn",
         "six>=1.15.0",
         "bokeh==2.1.1",
-        "selenium",
+        "selenium==3.141.0",
 	    "nltk",
         "h5py<2.11.0,>=2.10.0", 
         "scipy==1.4.1",
