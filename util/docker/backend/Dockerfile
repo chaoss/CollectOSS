@@ -4,8 +4,8 @@ FROM python:3.8.9-slim-buster as build-stage
 COPY ./util/docker/backend/install_packages.sh .
 RUN ./install_packages.sh
 
-LABEL maintainer="c@carterlandis.com"
-LABEL version="0.1.0"
+LABEL maintainer="outdoors@acm.org"
+LABEL version="0.2.0"
 
 WORKDIR /augur
 

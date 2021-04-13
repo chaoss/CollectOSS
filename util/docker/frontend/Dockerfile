@@ -1,8 +1,8 @@
 #SPDX-License-Identifier: MIT
 FROM node:14 as build-stage
 
-LABEL maintainer="c@carterlandis.com"
-LABEL version="0.1.0"
+LABEL maintainer="outdoors@acm.org"
+LABEL version="0.15.4"
 
 WORKDIR /augur/frontend/
 COPY ./util/docker/frontend/frontend.docker.config.json frontend.config.json
