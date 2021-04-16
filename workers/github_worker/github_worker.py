@@ -81,8 +81,8 @@ class GitHubWorker(Worker):
             {
                 'repo_id': repo_id,
                 'reporter_id': self.find_id_from_login(issue['user']['login']),
-                'pull_request': issue['pull_request']['url'].split('/') if 'pull_request' in issue else None,
-                'pull_request_id': issue['pull_request']['url'].split('/') if 'pull_request' in issue else None,
+                'pull_request': int(issue['pull_request']['url'].split('/')[-1]) if 'pull_request' in issue else None,
+                'pull_request_id': int(issue['pull_request']['url'].split('/')[-1]) if 'pull_request' in issue else None,
                 'created_at': issue['created_at'],
                 'issue_title': issue['title'],
                 'issue_body': issue['body'].replace('0x00', '____') if issue['body'] else None,
@@ -107,6 +107,8 @@ class GitHubWorker(Worker):
         ]
 
         if len(source_issues['insert']) > 0 or len(source_issues['update']) > 0:
+
+            self.logger.debug(issues_insert['pull_request']+ "the pull request and " + issues_insert['pull_request_id'] + "is the pull request ID.")
 
             issues_insert_result, issues_update_result = self.bulk_insert(self.issues_table, 
                 update=source_issues['update'], unique_columns=action_map['insert']['augur'], 

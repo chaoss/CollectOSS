@@ -18,6 +18,7 @@ If you have questions or would like to help please open an issue on GitHub_.
    logging
    documentation
    workers/toc
+   create-a-metric/toc
 
 .. 
   configuration-file-reference
