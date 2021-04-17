@@ -4,3 +4,4 @@
 * Create some basic requirements
 * Created some basic issues in my fork of augur
 * started augur instance at 3.16.124.82
+* create sprint 1 branch at "stuart-sprint-1"
