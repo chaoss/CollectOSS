@@ -33,6 +33,7 @@ setup(
         "Programming Language :: Python :: 3.6",
     ],
     install_requires=[
+        "wheel",
         "coloredlogs",
         "beaker",
         "sqlalchemy",
@@ -48,8 +49,8 @@ setup(
         "psutil",
         "gunicorn",
         "six>=1.15.0",
-        "bokeh==2.1.1",
-        "selenium==3.141.0",
+        "bokeh",
+        "selenium",
 	    "nltk",
         "h5py<2.11.0,>=2.10.0", 
         "scipy==1.4.1",
