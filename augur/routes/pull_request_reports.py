@@ -317,6 +317,7 @@ def create_routes(server):
         repo_id = int(request.args.get('repo_id'))
         start_date = str(request.args.get('start_date', "{}-01-01".format(now.year-1)))
         end_date = str(request.args.get('end_date', "{}-{}-{}".format(now.year, now.month, now.day)))
+        group_by = str(request.args.get('group_by', "month"))
         return_json = request.args.get('return_json', "false")
 
         #dict of df types, and their locaiton in the tuple that the function pull_request_data_collection returns
@@ -332,13 +333,14 @@ def create_routes(server):
                 mimetype='application/json',
                 status=200)
 
-        x_axis = 'closed_year'
         y_axis = 'num_commits'
-        group_by = 'merged_flag'
+        group_by_bars = 'merged_flag'
         description = 'All'  
 
         # filter out unneeded columns for easier debugging
-        input_df = input_df[['repo_id', 'repo_name', x_axis, group_by, 'commit_count']]
+        input_df = input_df[['repo_id', 'repo_name', 'closed_year', 'closed_yearmonth', group_by_bars, 'commit_count']]
+
+        # print(input_df.to_string())
 
         repo_dict = {repo_id : input_df.loc[input_df['repo_id'] == repo_id].iloc[0]['repo_name']}   
        
@@ -347,11 +349,19 @@ def create_routes(server):
         # Change closed year to int so that doesn't display as 2019.0 for example
         driver_df['closed_year'] = driver_df['closed_year'].astype(int).astype(str)
 
-        # contains the closed years
-        x_groups = sorted(list(driver_df[x_axis].unique()))
+        # defaults to year
+        x_axis = 'closed_year'
+        x_groups = sorted(list(driver_df[x_axis].unique())) 
+
+        if group_by == 'month':
+            x_axis = "closed_yearmonth"
+            x_groups = np.unique(np.datetime_as_string(input_df[x_axis], unit = 'M'))
+
+        print(x_axis)
+        print(x_groups)
 
         # inner groups on x_axis they are merged and not_merged
-        groups = list(driver_df[group_by].unique())
+        groups = list(driver_df[group_by_bars].unique())
 
         # setup color pallete
         try:
@@ -359,8 +369,8 @@ def create_routes(server):
         except:
             colors = [mpl['Plasma'][3][0]] + [mpl['Plasma'][3][1]]
 
-        merged_avg_values = list(driver_df.loc[driver_df[group_by] == 'Merged / Accepted'].groupby([x_axis],as_index=False).mean().round(1)['commit_count'])
-        not_merged_avg_values = list(driver_df.loc[driver_df[group_by] == 'Not Merged / Rejected'].groupby([x_axis],as_index=False).mean().round(1)['commit_count'])
+        merged_avg_values = list(driver_df.loc[driver_df[group_by_bars] == 'Merged / Accepted'].groupby([x_axis],as_index=False).mean().round(1)['commit_count'])
+        not_merged_avg_values = list(driver_df.loc[driver_df[group_by_bars] == 'Not Merged / Rejected'].groupby([x_axis],as_index=False).mean().round(1)['commit_count'])
 
 
         # Setup data in format for grouped bar chart
@@ -1484,6 +1494,7 @@ def create_routes(server):
         repo_id = int(request.args.get('repo_id'))
         start_date = str(request.args.get('start_date', "{}-01-01".format(now.year-1)))
         end_date = str(request.args.get('end_date', "{}-{}-{}".format(now.year, now.month, now.day)))
+        group_by = str(request.args.get('group_by', "month"))
         return_json = request.args.get('return_json', "false")
         remove_outliers = str(request.args.get('remove_outliers', "true"))
 
