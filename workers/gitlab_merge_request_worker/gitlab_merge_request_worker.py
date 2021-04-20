@@ -56,6 +56,8 @@ class GitlabMergeRequestWorker(Worker):
         self.logger.info('Beginning collection of Merge Requests...\n')
         self.logger.info(f'Git URL: {git_url}\n')
 
+## All of this needs to be in a block that ignores any URL that is not gitlab.com
+
         owner, repo = self.get_owner_repo(git_url)
         url_encoded_format_project_address = quote(owner + '/' + repo, safe='')
         url = (f'https://gitlab.com/api/v4/projects/{url_encoded_format_project_address}/merge_requests?' +

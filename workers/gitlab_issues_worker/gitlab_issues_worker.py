@@ -48,6 +48,12 @@ class GitLabIssuesWorker(Worker):
         # adding the labels attribute in the query params to avoid additional API calls
         git_url = task['given']['git_url']
         owner, repo = self.get_owner_repo(git_url)
+
+###    This error is causing it to choke.
+###    File "/Users/gogginsS/github/chaoss/augur-dev/workers/gitlab_issues_worker/gitlab_issues_worker.py", line 51, in gitlab_issues_model
+###    url_encoded_format_project_address = quote(owner + '/' + repo, safe='')
+####   NameError: name 'quote' is not defined
+
         url_encoded_format_project_address = quote(owner + '/' + repo, safe='')
         intermediate_url = '{}/projects/{}/issues?per_page=100&state=opened&with_labels_details=True&'.format(gitlab_base, url_encoded_format_project_address)
         gitlab_issues_url = intermediate_url + "page={}"
