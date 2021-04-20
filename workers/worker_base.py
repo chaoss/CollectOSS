@@ -1470,7 +1470,7 @@ class Worker():
             update=source_contributors['update'], unique_columns=action_map['insert']['augur'], 
             insert=contributors_insert, update_columns=action_map['update']['augur'])
 
-    def query_gitlab_contribtutors(self, entry_info, repo_id):
+    def query_gitlab_contributors(self, entry_info, repo_id):
 
         gitlab_url = entry_info['given']['gitlab_url'] if 'gitlab_url' in entry_info['given'] else entry_info['given']['git_url']
 
