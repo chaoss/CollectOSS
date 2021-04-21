@@ -48,8 +48,8 @@ class ClusteringWorker(Worker):
 
 		# Define data collection info
 		self.tool_source = 'Clustering Worker'
-		self.tool_version = '0.0.0'
-		self.data_source = 'Non-existent API'
+		self.tool_version = '0.1.0'
+		self.data_source = 'Augur Collected Messages'
 		
 		#define clustering specific parameters
 		# self.max_df = 0.9 #get from configuration file
@@ -60,13 +60,13 @@ class ClusteringWorker(Worker):
 		self.max_df = self.config['max_df'] #get from configuration file
 		self.max_features = self.config['max_features']
 		self.min_df = self.config['min_df']
-		self.ngram_range = (1,3)
+		self.ngram_range = (2,4)
 		self.num_clusters = self.config['num_clusters']
 		self.clustering_by_content = True
 		self.clustering_by_mechanism = False
 		
 		#define topic modeling specific parameters
-		self.num_topics = 50
+		self.num_topics = 14
 		self.num_words_per_topic = 12
 
 		nltk.download('punkt')
@@ -166,7 +166,10 @@ class ClusteringWorker(Worker):
 		record = {
 				  'repo_id': int(repo_id),
 				  'cluster_content': int(prediction[0]),
-				  'cluster_mechanism' : -1
+				  'cluster_mechanism' : -1,
+				  'tool_source' : self.tool_source,
+				  'tool_version' : self.tool_version,
+				  'data_source' : self.data_source
 				  }
 		result = self.db.execute(self.repo_cluster_messages_table.insert().values(record))
 		logging.info("Primary key inserted into the repo_cluster_messages table: {}".format(result.inserted_primary_key))
@@ -187,7 +190,10 @@ class ClusteringWorker(Worker):
 				record = {
 				  'repo_id': int(repo_id),
 				  'topic_id': i+1,
-				  'topic_prob' : prob
+				  'topic_prob' : prob,
+				  'tool_source' : self.tool_source,
+				  'tool_version' : self.tool_version,
+				  'data_source' : self.data_source
 				  }
 				result = self.db.execute(self.repo_topic_table.insert().values(record))
 				
@@ -257,10 +263,12 @@ class ClusteringWorker(Worker):
 		# topics_terms_proba = np.apply_along_axis(lambda x: x/x.sum(),1,topics_terms)
 		# word_prob = [lda_model.id2word[i] for i in range(topics_terms_proba.shape[1])]
 
+		# Site explaining main library used for parsing topics: https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.LatentDirichletAllocation.html
+
 		# Good site for optimizing: https://medium.com/@yanlinc/how-to-build-a-lda-topic-model-using-from-text-601cdcbfd3a6
 		# Another Good Site: https://towardsdatascience.com/an-introduction-to-clustering-algorithms-in-python-123438574097
 		# https://machinelearningmastery.com/clustering-algorithms-with-python/
-		
+
 		logging.info("Topic List Created: {}".format(topic_list))
 		pickle.dump(lda_model, open("lda_model",'wb'))
 		logging.info("pickle dump")
@@ -288,7 +296,10 @@ class ClusteringWorker(Worker):
 				  #'topic_words_id': twid,
 				  #'word_prob': word_prob[i],
 				  'topic_id': int(topic_id),
-				  'word': feature_names[i]
+				  'word': feature_names[i],
+				  'tool_source' : self.tool_source,
+				  'tool_version' : self.tool_version,
+				  'data_source' : self.data_source
 				  }
 				result = self.db.execute(self.topic_words_table.insert().values(record))
 				self.logger.info("Primary key inserted into the topic_words table: {}".format(result.inserted_primary_key))

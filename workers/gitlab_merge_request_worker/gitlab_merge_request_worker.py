@@ -50,11 +50,13 @@ class GitlabMergeRequestWorker(Worker):
         self.history_id = self.get_max_id('worker_history', 'history_id', operations_table=True) + 1
         self.pr_id_inc = self.get_max_id('pull_requests', 'pull_request_id')
         self.pr_meta_id_inc = self.get_max_id('pull_request_meta', 'pr_repo_meta_id')
-        self.query_gitlab_contribtutors(task, repo_id)
+        self.query_gitlab_contributors(task, repo_id)
         git_url = task['given']['git_url']
 
         self.logger.info('Beginning collection of Merge Requests...\n')
         self.logger.info(f'Git URL: {git_url}\n')
+
+## All of this needs to be in a block that ignores any URL that is not gitlab.com
 
         owner, repo = self.get_owner_repo(git_url)
         url_encoded_format_project_address = quote(owner + '/' + repo, safe='')

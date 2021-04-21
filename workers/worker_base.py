@@ -19,9 +19,6 @@ class Worker():
 
     ROOT_AUGUR_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
-    ## Set Thread Safety for OSX
-    os.system("./osx-thread.sh")
-
     def __init__(self, worker_type, config={}, given=[], models=[], data_tables=[], operations_tables=[], platform="github"):
 
         self.worker_type = worker_type
@@ -357,10 +354,7 @@ class Worker():
                 continue
             type_dict[subject_columns[index]] = type(source[source_columns[index]].values[0])
 
-## Contributor Breadth Worker Change
-        subject = subject.astype(type_dict)
-
-#        subject.astype(type_dict)
+        subject.astype(type_dict)
         
         return subject, source
 
@@ -424,8 +418,8 @@ class Worker():
 
                 need_updates = need_updates.drop([column for column in action_map['insert']['augur']], axis='columns')
 
+            self.logger.info(f"final need updates enacted for action map.")
 
-        self.logger.info(f"final need updates enacted for action map.")
 
         # self.logger.info(f'Page needs {len(need_insertion)} insertions and '
         #     f'{len(need_updates)} updates.\n')
@@ -979,7 +973,7 @@ class Worker():
         valid_url_count = len(urls)
         
         while len(urls) > 0 and attempts < max_attempts:
-            with concurrent.futures.ThreadPoolExecutor(max_workers=max(multiprocessing.cpu_count()/8, 1)) as executor:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=multiprocessing.cpu_count()/4) as executor:
                 # Start the load operations and mark each future with its URL
                 future_to_url = {executor.submit(load_url, *url): url for url in urls}
                 self.logger.info("Multithreaded urls and returned status codes:\n")
@@ -1476,7 +1470,7 @@ class Worker():
             update=source_contributors['update'], unique_columns=action_map['insert']['augur'], 
             insert=contributors_insert, update_columns=action_map['update']['augur'])
 
-    def query_gitlab_contribtutors(self, entry_info, repo_id):
+    def query_gitlab_contributors(self, entry_info, repo_id):
 
         gitlab_url = entry_info['given']['gitlab_url'] if 'gitlab_url' in entry_info['given'] else entry_info['given']['git_url']
 

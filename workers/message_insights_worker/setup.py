@@ -32,7 +32,7 @@ setup(
         'scipy',
         'emoji',
         'keras',
-        'tensorflow==2.2.0',
+        'tensorflow==2.4.1',
         'h5py',
         'scikit-image',
         'joblib',
