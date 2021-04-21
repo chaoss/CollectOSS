@@ -329,14 +329,14 @@ class Housekeeper:
             else:
                 logger.info("Repo Group ID Specified.")
             for url in repos_urls:
-                url = trim_git_suffix(url)
+                url = self.trim_git_suffix(url)
                 if url:
                     r = requests.get(url)
                     check_for_update = url != r.url
                     if check_for_update:
                         self.update_repo_url(url, r.url, self.update_redirects['repo_group_id'])
 
-    def trim_git_suffix(url):
+    def trim_git_suffix(self, url):
         if url.endswith('.git'):
             url = url.replace('.git', '')
         elif url.endswith('.github.io'):
@@ -365,7 +365,7 @@ class Housekeeper:
         return repos['repo_git']
 
     def update_repo_url(self, old_url, new_url, repo_group_id):
-        trimmed_new_url = trim_git_suffix(new_url)
+        trimmed_new_url = self.trim_git_suffix(new_url)
         if not trimmed_new_url:
             logger.info("New repo is named .github : {} ... skipping \n".format(new_url))
             return
