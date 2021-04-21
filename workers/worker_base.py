@@ -917,11 +917,13 @@ class Worker():
         self.logger.info("Still working 1. \n")
         self.logger.info(f"table c field {table.c}")
         self.logger.info(f"augur merge fields {augur_merge_fields}")
-        self.logger.info(f"s_tuple.__dict__ {s_tuple.__dict__}")
-        
+
         s_tuple = s.tuple_([table.c[field] for field in augur_merge_fields])
         s_tuple.__dict__['clauses'] = s_tuple.__dict__['clauses'][0].effective_value
         s_tuple.__dict__['_type_tuple'] = []
+
+        self.logger.info(f"s_tuple.__dict__ {s_tuple.__dict__}")
+
          
         for field in augur_merge_fields:
             s_tuple.__dict__['_type_tuple'].append(table.c[field].__dict__['type'])
