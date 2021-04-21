@@ -912,12 +912,21 @@ class Worker():
 
         source_df = pd.DataFrame(source_data)
 
+        self.logger.info(f'source_data {source_data} data frame')
 
+        self.logger.info("Still working 1. \n")
+        self.logger.info(f"table c field {table.c}")
+        self.logger.info(f"augur merge fields {augur_merge_fields}")
+        self.logger.info(f"s_tuple.__dict__ {s_tuple.__dict__}")
+        
         s_tuple = s.tuple_([table.c[field] for field in augur_merge_fields])
         s_tuple.__dict__['clauses'] = s_tuple.__dict__['clauses'][0].effective_value
         s_tuple.__dict__['_type_tuple'] = []
+         
         for field in augur_merge_fields:
             s_tuple.__dict__['_type_tuple'].append(table.c[field].__dict__['type'])
+
+        
 
         for column in gh_merge_fields:
             if '.' not in column:
