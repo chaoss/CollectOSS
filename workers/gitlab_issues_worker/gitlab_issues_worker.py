@@ -5,6 +5,7 @@ from multiprocessing import Process, Queue
 import pandas as pd
 import sqlalchemy as s
 from workers.worker_base import Worker
+from urllib.parse import urlparse, quote
 
 
 class GitLabIssuesWorker(Worker):
