@@ -57,103 +57,104 @@ class GitlabMergeRequestWorker(Worker):
         self.logger.info(f'Git URL: {git_url}\n')
 
 ## All of this needs to be in a block that ignores any URL that is not gitlab.com
+        #check if the url is a gitlab url 
+        if git_url.split('/')[2] == 'gitlab.com':
+            owner, repo = self.get_owner_repo(git_url)
+            url_encoded_format_project_address = quote(owner + '/' + repo, safe='')
+            url = (f'https://gitlab.com/api/v4/projects/{url_encoded_format_project_address}/merge_requests?' +
+                'per_page=100&page={}&sort=asc')
 
-        owner, repo = self.get_owner_repo(git_url)
-        url_encoded_format_project_address = quote(owner + '/' + repo, safe='')
-        url = (f'https://gitlab.com/api/v4/projects/{url_encoded_format_project_address}/merge_requests?' +
-               'per_page=100&page={}&sort=asc')
+            # Get pull requests that we already have stored
+            #   Set pseudo key (something other than PK) to
+            #   check dupicates with
+            table = 'pull_requests'
+            table_pkey = 'pull_request_id'
+            update_col_map = {'pr_src_state': 'state'}
+            duplicate_col_map = {'pr_src_id': 'id'}
 
-        # Get pull requests that we already have stored
-        #   Set pseudo key (something other than PK) to
-        #   check dupicates with
-        table = 'pull_requests'
-        table_pkey = 'pull_request_id'
-        update_col_map = {'pr_src_state': 'state'}
-        duplicate_col_map = {'pr_src_id': 'id'}
+            prs = self.paginate(url, duplicate_col_map, update_col_map, table, table_pkey,
+                                where_clause='WHERE repo_id = {}'.format(repo_id),
+                                value_update_col_map={}, platform='gitlab')
 
-        prs = self.paginate(url, duplicate_col_map, update_col_map, table, table_pkey,
-                            where_clause='WHERE repo_id = {}'.format(repo_id),
-                            value_update_col_map={}, platform='gitlab')
+            # Discover and remove duplicates before we start inserting
+            self.logger.info("Count of pull requests needing update or insertion: " + str(len(prs)) + "\n")
+            for pr_dict in prs:
 
-        # Discover and remove duplicates before we start inserting
-        self.logger.info("Count of pull requests needing update or insertion: " + str(len(prs)) + "\n")
-        for pr_dict in prs:
+                pr = {
+                    'repo_id': repo_id,
+                    'pr_url': pr_dict['web_url'],
+                    'pr_src_id': pr_dict['id'],
+                    'pr_src_node_id': None,
+                    'pr_html_url': pr_dict['web_url'],
+                    'pr_diff_url': None,
+                    'pr_patch_url': None,
+                    'pr_issue_url': None,
+                    'pr_augur_issue_id': None,
+                    'pr_src_number': pr_dict['iid'],
+                    'pr_src_state': pr_dict['state'],
+                    'pr_src_locked': pr_dict['discussion_locked'],
+                    'pr_src_title': pr_dict['title'],
+                    'pr_augur_contributor_id': self.find_id_from_login(login=pr_dict['author']['username'],
+                                                                    platform='gitlab'),
+                    'pr_body': pr_dict['description'],
+                    'pr_created_at': pr_dict['created_at'],
+                    'pr_updated_at': pr_dict['updated_at'],
+                    'pr_closed_at': pr_dict['closed_at'],
+                    'pr_merged_at': pr_dict['merged_at'],
+                    'pr_merge_commit_sha': pr_dict['merge_commit_sha'],
+                    'pr_teams': None,
+                    'pr_milestone': pr_dict['milestone'].get('title') if pr_dict['milestone'] else None,
+                    'pr_commits_url': None,
+                    'pr_review_comments_url': None,
+                    'pr_review_comment_url': None,
+                    'pr_comments_url': None,
+                    'pr_statuses_url': None,
+                    'pr_meta_head_id': None,
+                    'pr_meta_base_id': None,
+                    'pr_src_issue_url': None,
+                    'pr_src_comments_url': None,  # NOTE: this seems redundant
+                    'pr_src_review_comments_url': None,  # this too
+                    'pr_src_commits_url': None,  # this one also seems redundant
+                    'pr_src_statuses_url': None,
+                    'pr_src_author_association': None,
+                    'tool_source': self.tool_source,
+                    'tool_version': self.tool_version,
+                    'data_source': self.data_source
+                }
 
-            pr = {
-                'repo_id': repo_id,
-                'pr_url': pr_dict['web_url'],
-                'pr_src_id': pr_dict['id'],
-                'pr_src_node_id': None,
-                'pr_html_url': pr_dict['web_url'],
-                'pr_diff_url': None,
-                'pr_patch_url': None,
-                'pr_issue_url': None,
-                'pr_augur_issue_id': None,
-                'pr_src_number': pr_dict['iid'],
-                'pr_src_state': pr_dict['state'],
-                'pr_src_locked': pr_dict['discussion_locked'],
-                'pr_src_title': pr_dict['title'],
-                'pr_augur_contributor_id': self.find_id_from_login(login=pr_dict['author']['username'],
-                                                                   platform='gitlab'),
-                'pr_body': pr_dict['description'],
-                'pr_created_at': pr_dict['created_at'],
-                'pr_updated_at': pr_dict['updated_at'],
-                'pr_closed_at': pr_dict['closed_at'],
-                'pr_merged_at': pr_dict['merged_at'],
-                'pr_merge_commit_sha': pr_dict['merge_commit_sha'],
-                'pr_teams': None,
-                'pr_milestone': pr_dict['milestone'].get('title') if pr_dict['milestone'] else None,
-                'pr_commits_url': None,
-                'pr_review_comments_url': None,
-                'pr_review_comment_url': None,
-                'pr_comments_url': None,
-                'pr_statuses_url': None,
-                'pr_meta_head_id': None,
-                'pr_meta_base_id': None,
-                'pr_src_issue_url': None,
-                'pr_src_comments_url': None,  # NOTE: this seems redundant
-                'pr_src_review_comments_url': None,  # this too
-                'pr_src_commits_url': None,  # this one also seems redundant
-                'pr_src_statuses_url': None,
-                'pr_src_author_association': None,
-                'tool_source': self.tool_source,
-                'tool_version': self.tool_version,
-                'data_source': self.data_source
-            }
+                if pr_dict['flag'] == 'need_insertion':
+                    self.logger.info(f'PR {pr_dict["id"]} needs to be inserted\n')
 
-            if pr_dict['flag'] == 'need_insertion':
-                self.logger.info(f'PR {pr_dict["id"]} needs to be inserted\n')
+                    result = self.db.execute(self.pull_requests_table.insert().values(pr))
+                    self.logger.info(f"Added Pull Request: {result.inserted_primary_key}")
+                    self.pr_id_inc = int(result.inserted_primary_key[0])
 
-                result = self.db.execute(self.pull_requests_table.insert().values(pr))
-                self.logger.info(f"Added Pull Request: {result.inserted_primary_key}")
-                self.pr_id_inc = int(result.inserted_primary_key[0])
+                elif pr_dict['flag'] == 'need_update':
+                    result = self.db.execute(self.pull_requests_table.update().where(
+                        self.pull_requests_table.c.pr_src_id == pr_dict['id']).values(pr))
+                    self.logger.info("Updated tuple in the pull_requests table with existing pr_src_id: {}".format(
+                        pr_dict['id']))
+                    self.pr_id_inc = pr_dict['pkey']
 
-            elif pr_dict['flag'] == 'need_update':
-                result = self.db.execute(self.pull_requests_table.update().where(
-                    self.pull_requests_table.c.pr_src_id == pr_dict['id']).values(pr))
-                self.logger.info("Updated tuple in the pull_requests table with existing pr_src_id: {}".format(
-                    pr_dict['id']))
-                self.pr_id_inc = pr_dict['pkey']
+                else:
+                    self.logger.info("PR does not need to be inserted. Fetching its id from DB")
+                    pr_id_sql = s.sql.text("""
+                                SELECT pull_request_id FROM pull_requests
+                                WHERE pr_src_id={}
+                            """.format(pr_dict['id']))
 
-            else:
-                self.logger.info("PR does not need to be inserted. Fetching its id from DB")
-                pr_id_sql = s.sql.text("""
-                            SELECT pull_request_id FROM pull_requests
-                            WHERE pr_src_id={}
-                        """.format(pr_dict['id']))
+                    self.pr_id_inc = int(pd.read_sql(pr_id_sql, self.db).iloc[0]['pull_request_id'])
 
-                self.pr_id_inc = int(pd.read_sql(pr_id_sql, self.db).iloc[0]['pull_request_id'])
+                self.query_labels(pr_dict['labels'], self.pr_id_inc, url_encoded_format_project_address)
+                self.query_mr_comments(self.pr_id_inc, pr_dict['iid'], url_encoded_format_project_address)
+                self.query_mr_meta(self.pr_id_inc, pr_dict['iid'], url_encoded_format_project_address)
+                self.query_assignees(self.pr_id_inc, pr_dict['assignees'])
+                self.query_reviewers(pr_dict['iid'], url_encoded_format_project_address, self.pr_id_inc)
 
-            self.query_labels(pr_dict['labels'], self.pr_id_inc, url_encoded_format_project_address)
-            self.query_mr_comments(self.pr_id_inc, pr_dict['iid'], url_encoded_format_project_address)
-            self.query_mr_meta(self.pr_id_inc, pr_dict['iid'], url_encoded_format_project_address)
-            self.query_assignees(self.pr_id_inc, pr_dict['assignees'])
-            self.query_reviewers(pr_dict['iid'], url_encoded_format_project_address, self.pr_id_inc)
-
-            self.logger.info(f"Inserted PR data for {owner}/{repo}")
-            self.results_counter += 1
-        self.query_mr_events(url_encoded_format_project_address)
-        self.register_task_completion(task, repo_id, 'pull_requests')
+                self.logger.info(f"Inserted PR data for {owner}/{repo}")
+                self.results_counter += 1
+            self.query_mr_events(url_encoded_format_project_address)
+            self.register_task_completion(task, repo_id, 'pull_requests')
 
     def get_login_from_email(self, email_id):
 
