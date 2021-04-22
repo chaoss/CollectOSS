@@ -324,15 +324,19 @@ class Housekeeper:
     def update_url_redirects(self):
         if 'switch' in self.update_redirects and self.update_redirects['switch'] == 1 and 'repo_group_id' in self.update_redirects:
             repos_urls = self.get_repos_urls(self.update_redirects['repo_group_id'])
+            if self.update_redirects['repo_group_id'] == 0:
+                logger.info("Repo Group Set to Zero for URL Updates")
+            else:
+                logger.info("Repo Group ID Specified.")
             for url in repos_urls:
-                url = trim_git_suffix(url)
+                url = self.trim_git_suffix(url)
                 if url:
                     r = requests.get(url)
                     check_for_update = url != r.url
                     if check_for_update:
                         self.update_repo_url(url, r.url, self.update_redirects['repo_group_id'])
 
-    def trim_git_suffix(url):
+    def trim_git_suffix(self, url):
         if url.endswith('.git'):
             url = url.replace('.git', '')
         elif url.endswith('.github.io'):
@@ -342,10 +346,16 @@ class Housekeeper:
         return url
 
     def get_repos_urls(self, repo_group_id):
-        repos_sql = s.sql.text("""
-                SELECT repo_git FROM repo
-                WHERE repo_group_id = ':repo_group_id'
-            """)
+        if self.update_redirects['repo_group_id'] == 0:
+            repos_sql = s.sql.text("""
+                    SELECT repo_git FROM repo
+                """)
+            logger.info("repo_group_id is 0")
+        else:
+            repos_sql = s.sql.text("""
+                    SELECT repo_git FROM repo
+                    WHERE repo_group_id = ':repo_group_id'
+                """)
 
         repos = pd.read_sql(repos_sql, self.db, params={'repo_group_id': repo_group_id})
 
@@ -355,7 +365,7 @@ class Housekeeper:
         return repos['repo_git']
 
     def update_repo_url(self, old_url, new_url, repo_group_id):
-        trimmed_new_url = trim_git_suffix(new_url)
+        trimmed_new_url = self.trim_git_suffix(new_url)
         if not trimmed_new_url:
             logger.info("New repo is named .github : {} ... skipping \n".format(new_url))
             return
@@ -396,6 +406,7 @@ class Housekeeper:
                 new_repo_group_id = self.db.execute(insert_sql, new_repo_group_name=new_repo_group_name).fetchone()[0]
                 logger.info("Inserted repo group {} with id {}\n".format(new_repo_group_name, new_repo_group_id))
 
+            new_repo_group_id = '%s' % new_repo_group_id
             update_sql = s.sql.text("""
                     UPDATE repo SET repo_git = :new_url, repo_path = NULL, repo_name = NULL, repo_status = 'New', repo_group_id = :new_repo_group_id
                     WHERE repo_git = :old_url
