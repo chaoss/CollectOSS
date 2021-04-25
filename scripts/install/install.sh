@@ -50,8 +50,12 @@ if [[ -e augur.config.json || -e $HOME/.augur/augur.config.json ]]; then
     echo
     echo "These are the ports used in your configuration. The last two are your externally exposed API ports." 
     echo `cat augur.config.json | grep -E port`
+    echo "****************************************************************************"
     echo "You can edit these ports in the augur.config.json file in this directory:"
+    echo 
     echo `pwd`
+    echo
+    echo "****************************************************************************"
     echo
     echo "*****NOTE THIS INSTANCES PORT USE AND CONFIGURATION EDITING INFORMATION*****"
     echo
@@ -61,8 +65,13 @@ if [[ -e augur.config.json || -e $HOME/.augur/augur.config.json ]]; then
     echo
     echo "These are the ports used in your configuration. The last two are your externally exposed API ports."
     echo `cat $HOME/.augur/augur.config.json | grep -E port`
+    echo "****************************************************************************"
     echo "You can edit these ports in the augur.config.json file in this directory:"
+    echo 
     echo $HOME/.augur/
+    echo 
+    echo "****************************************************************************"
+    echo
     echo
     echo "*****NOTE THIS INSTANCES PORT USE AND CONFIGURATION EDITING INFORMATION*****"
     echo
