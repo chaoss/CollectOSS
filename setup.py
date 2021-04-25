@@ -34,6 +34,8 @@ setup(
     ],
     install_requires=[
         "wheel",
+        "boto3",
+        "slack",
         "coloredlogs",
         "beaker",
         "sqlalchemy",
