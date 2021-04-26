@@ -43,6 +43,40 @@ scripts/install/frontend.sh
 scripts/install/api_key.sh
 scripts/install/nltk_dictionaries.sh
 
+if [[ -e augur.config.json || -e $HOME/.augur/augur.config.json ]]; then
+  if [[ -e augur.config.json ]]; then
+    echo
+    echo "*****NOTE THIS INSTANCES PORT USE AND CONFIGURATION EDITING INFORMATION*****"
+    echo
+    echo "These are the ports used in your configuration. The last two are your externally exposed API ports." 
+    echo `cat augur.config.json | grep -E port`
+    echo "****************************************************************************"
+    echo "You can edit these ports in the augur.config.json file in this directory:"
+    echo 
+    echo `pwd`
+    echo
+    echo "****************************************************************************"
+    echo
+    echo "*****NOTE THIS INSTANCES PORT USE AND CONFIGURATION EDITING INFORMATION*****"
+    echo
+  else
+    echo
+    echo "*****NOTE THIS INSTANCES PORT USE AND CONFIGURATION EDITING INFORMATION*****"
+    echo
+    echo "These are the ports used in your configuration. The last two are your externally exposed API ports."
+    echo `cat $HOME/.augur/augur.config.json | grep -E port`
+    echo "****************************************************************************"
+    echo "You can edit these ports in the augur.config.json file in this directory:"
+    echo 
+    echo $HOME/.augur/
+    echo 
+    echo "****************************************************************************"
+    echo
+    echo
+    echo "*****NOTE THIS INSTANCES PORT USE AND CONFIGURATION EDITING INFORMATION*****"
+    echo
+  fi
+fi
 
 echo "**********************************"
 echo "***** INSTALLATION COMPLETE *****"
