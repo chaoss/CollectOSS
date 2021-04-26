@@ -455,6 +455,9 @@ class GitHubPullRequestWorker(Worker):
         pr_comments = self.paginate_endpoint(comments_url, 
             action_map=comment_action_map, table=self.message_table)
 
+        self.logger.info("CHECK")
+        self.logger.info(f'inserting messages for {pr_comments} repo')
+
         pr_comments['insert'] = self.text_clean(pr_comments['insert'], 'body')
 
         pr_comments_insert = [
@@ -472,6 +475,9 @@ class GitHubPullRequestWorker(Worker):
         self.bulk_insert(self.message_table, insert=pr_comments_insert)
             
         # PR MESSAGE REF TABLE
+        self.logger.info("CHECK")
+        self.logger.info(f'inserting messages for {pr_comments} repo')
+        self.logger.info(f'message table {self.message_table}')
 
         c_pk_source_comments = self.enrich_data_primary_keys(pr_comments['insert'], 
             self.message_table, ['created_at', 'body'], ['msg_timestamp', 'msg_text'])

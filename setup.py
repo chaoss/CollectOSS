@@ -33,6 +33,7 @@ setup(
         "Programming Language :: Python :: 3.6",
     ],
     install_requires=[
+        "wheel",
         "coloredlogs",
         "beaker",
         "sqlalchemy",
@@ -54,7 +55,9 @@ setup(
         "h5py<2.11.0,>=2.10.0", 
         "scipy==1.4.1",
         "blinker",
-        "protobuf > 3.6.0"
+        "protobuf > 3.6.0",
+        "slack",
+        "boto3"
     ],
     extras_require={
         "dev": [
