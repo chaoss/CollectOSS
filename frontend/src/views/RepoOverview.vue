@@ -270,7 +270,12 @@
 
       <div class="col col-6 repo_Overview_Col">
         <d-card>
-          stuff
+          <depts-chart
+	    source="depts"
+	    citeUrl
+	    citeText="Dependancties"
+	    title="Dependancies of project"
+          ></depts-chart>
         </d-card>
       </div>
     </d-row>
@@ -300,6 +305,7 @@ import TabSelector from "../components/TabSelector.vue";
 import PieChart from "../components/charts/PieChart.vue";
 import CoverageCard from "@/components/charts/CoverageCard.vue";
 import LineChart from "@/components/charts/LineChart.vue";
+import DeptsChart from "@/components/charts/DeptsChart.vue";
 
 @Component({
   components: {
@@ -320,7 +326,8 @@ import LineChart from "@/components/charts/LineChart.vue";
     PieChart,
     CoverageCard,
     LineChart,
-    TabSelector
+    TabSelector,
+    DeptsChart
   },
   methods: {
     ...mapActions("common", [
