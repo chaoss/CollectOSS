@@ -1,8 +1,8 @@
 #SPDX-License-Identifier: MIT
 FROM postgres:12 as setup-stage
 
-LABEL maintainer="c@carterlandis.com"
-LABEL version="0.15.2"
+LABEL maintainer="outdoors@acm.org"
+LABEL version="0.15.4"
 
 ENV POSTGRES_PASSWORD "augur"
 ENV POSTGRES_USER "augur"

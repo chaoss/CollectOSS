@@ -65,7 +65,8 @@ On Ubuntu and other Linux flavors: if you want to use the new Augur API Calls th
 
 .. code-block:: bash
 
-    -  sudo apt install chromium-chromedriver
+    -  sudo apt install chromium-chromedriver 
+    -  sudo apt install firefox-geckodriver
 
 For Mac OSX you can use: 
 
