@@ -267,6 +267,12 @@
           ></dynamic-line-chart>
         </d-card>
       </div>
+
+      <div class="col col-6 repo_Overview_Col">
+        <d-card>
+          stuff
+        </d-card>
+      </div>
     </d-row>
   </d-container>
 </template>
