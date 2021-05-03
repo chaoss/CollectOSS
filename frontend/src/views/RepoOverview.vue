@@ -275,6 +275,7 @@
 	    citeUrl
 	    citeText="Dependancties"
 	    title="Dependancies of project"
+	    :data="values['deps']"
           ></deps-chart>
         </d-card>
       </div>
@@ -356,6 +357,7 @@ export default class RepoOverview extends Vue {
     "#f032e6"
   ];
   barEndpoints = ["changesByAuthor"];
+  depsEndpoints = ["deps"];
   testTimeframes = ["past 1 month", "past 3 months", "past 2 weeks"];
   repos = {};
   projects = [];
@@ -366,8 +368,9 @@ export default class RepoOverview extends Vue {
   loaded_issues = false;
   loaded_experimental = false;
   loaded_activity = false;
-  values: { [key: string]: any } = { issuesClosed: [], changesByAuthor: [] };
+  values: { [key: string]: any } = { issuesClosed: [], changesByAuthor: [], deps: [] };
   loadedBars = false;
+  loadedDeps = false;
 
   // deflare vuex action, getter, mutations
   groupsInfo!: any;
@@ -396,6 +399,21 @@ export default class RepoOverview extends Vue {
         this.loadedBars = true;
       }
     );
+    
+    //copy of above with tweaks for deps because above code doesn't support multiple endpoints and I don't want to break it trying to fix it
+    this.endpoint({ endpoints: this.depsEndpoints, repos: [this.base] }).then(
+      (tuples: any) => {
+        let ref = this.base.url || this.base.repo_name;
+        Object.keys(tuples[ref]).forEach(endpoint => {
+          console.log(endpoint);
+          this.values[endpoint] = tuples[ref][endpoint];
+          console.log("lines data: ", this.values);
+        });
+
+        this.loadedDeps = true;
+      }
+    );
+    
   }
 
   onRepoGroup(repo_group: any) {

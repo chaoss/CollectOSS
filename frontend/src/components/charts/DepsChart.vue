@@ -16,6 +16,7 @@
         </tr>
       </tbody>
     </table>
+    <p>{{ chart }}</p>
   </d-card-body>
 </template>
 
@@ -28,18 +29,18 @@ export default {
       libraries: []
     };
   },
-  mounted() {
-  	console.log("stuart " + this.source);
-  	console.log("stuart " + this.data);
-  	//this is test code to make sure the card works
-  	this.libraries = [];
-  	for(let i = 0; i < 10; i += 2) {
-  		let x = new Object();
-  		x.name = i;
-  		x.count = i+1;
-  		this.libraries.push(x);
-  	}
-  	console.log("stuart " + this.libraries);
+  computed: {
+	  chart() {
+	  	//this is test code to make sure the card works
+	  	this.libraries = [];
+	  	for(let i = 0; i < this.data.length; i++) {
+	  		let x = new Object();
+	  		x.name = this.data[i][0];
+	  		x.count = this.data[i][1];
+	  		this.libraries.push(x);
+	  	}
+	  	console.log("stuart", this, this.data);
+	  }
   }
 };
 </script>

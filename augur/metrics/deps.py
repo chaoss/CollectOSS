@@ -14,5 +14,4 @@ def deps(self, repo_group_id, repo_id=None):
     	v = x*100
     	results.append([v, v+1])
     
-    print("stuart - deps")
     return results
