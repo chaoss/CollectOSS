@@ -24,17 +24,22 @@
 export default {
   props: ["source", "citeUrl", "citeText", "title", "data"],
   data() {
+    return {
+      libraries: []
+    };
+  },
+  mounted() {
+  	console.log("stuart " + this.source);
+  	console.log("stuart " + this.data);
   	//this is test code to make sure the card works
-  	let testData = [];
+  	this.libraries = [];
   	for(let i = 0; i < 10; i += 2) {
   		let x = new Object();
   		x.name = i;
   		x.count = i+1;
-  		testData.push(x);
+  		this.libraries.push(x);
   	}
-    return {
-      libraries: testData
-    };
+  	console.log("stuart " + this.libraries);
   }
 };
 </script>
