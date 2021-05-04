@@ -1,4 +1,4 @@
-## Code demo viewing info
+# Code demo viewing info
 Server is at 3.16.124.82  
 Port likely 8080 or 8081  
 To view, go to view a repo. At the bottom of the page will be a table with the following header:  
@@ -6,24 +6,24 @@ To view, go to view a repo. At the bottom of the page will be a table with the f
 That table contains the repo names and number of commits, which is being fed to the frontend via the metric endpoint.  
 This likely will not be up until shortly after sprint 3 submit deadline.  
 
-## Design updates compared to sprint 2:
+# Design updates compared to sprint 2:
 
-# Clarifications 
+## Clarifications 
 Metric provides endpoint for frontend to use.  
 
-# Things already handled by augur:
+## Things already handled by augur:
 
 reading files  
 determining language of files  
 user interaction flow  
 
-# Things moving forward in design:
+## Things moving forward in design:
 
 Simplicity.  
 Using regex for imports for files.  
 Worker to calculate information.  
 
-# Plans for sprint 4:
+## Plans for sprint 4:
 
 finish everything.  
 Number 1 is getting worker working.  
@@ -33,7 +33,7 @@ Number 4 is other top ten languages.
 Number 5 is trying to add unit tests for my code.  
 Anything else required before end of semester.  
 
-## Progress updates:
+# Progress updates:
 
 Worked on basics for reading imports for python  
 Created metric that provides data  
@@ -42,13 +42,13 @@ I am going to get my code working on my augur aws server at 3.16.124.82 but it w
 I used merging and branches to keep work seperated. I mostly followed the workflow I use at work.  
 So far I don't think I need to update the requirements much or scale back scope but I might be wrong.  
 
-# Non-progress updates:
+## Non-progress updates:
 
 Could not start on worker given time left.  
 Video has not been started on. Will try to write a summary of what I plan to cover and send it via slack.  
 I have not continued with tests for my code at the moment but I would like to add them as I know how useful they are at my workplace.  
 
-## Reflection/status:
+# Reflection/status:
 
 I spent a lot more time than expected trying to figure out bugs from the code stubs I ended up having to remove and start over with from sprint 2.  
 I also spent a lot of time figuring out how augur works well enough to get my code working. I found it frustrating, mostly because I didn't write much code this sprint, compared to the large amount of time I spent figuring things out. Most of my work was with the frontend with the biggest pain point being unsure how to get the metric endpoint data into something displayed to the user.  
