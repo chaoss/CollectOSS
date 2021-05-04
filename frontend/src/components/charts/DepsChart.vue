@@ -32,13 +32,7 @@ export default {
   computed: {
 	  chart() {
 	  	//this is test code to make sure the card works
-	  	this.libraries = [];
-	  	for(let i = 0; i < this.data.length; i++) {
-	  		let x = new Object();
-	  		x.name = this.data[i][0];
-	  		x.count = this.data[i][1];
-	  		this.libraries.push(x);
-	  	}
+	  	this.libraries = this.data;
 	  	console.log("stuart", this, this.data);
 	  }
   }
