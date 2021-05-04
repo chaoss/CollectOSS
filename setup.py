@@ -49,7 +49,7 @@ setup(
         "psutil",
         "gunicorn",
         "six>=1.15.0",
-        "bokeh" == 1.4.0,
+        "bokeh==1.4.0",
         "selenium",
         "dask",
         "cloudpickle >= 0.2.2",
