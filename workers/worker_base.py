@@ -1,6 +1,7 @@
 #SPDX-License-Identifier: MIT
 """ Helper methods constant across all workers """
-import requests, datetime, time, traceback, json, os, sys, math, logging, numpy, copy, concurrent, multiprocessing
+import requests, datetime, time, traceback, json, os, sys, math, logging, numpy, \
+    copy, concurrent, multiprocessing, psycopg2
 
 from logging import FileHandler, Formatter, StreamHandler
 from multiprocessing import Process, Queue, Pool
@@ -14,10 +15,14 @@ from augur.config import AugurConfig
 from augur.logging import AugurLogging
 from sqlalchemy.sql.expression import bindparam
 from concurrent import futures
+import dask.dataframe as dd
 
 class Worker():
 
     ROOT_AUGUR_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+
+    ## Set Thread Safety for OSX
+    # os.system("./osx-thread.sh")
 
     def __init__(self, worker_type, config={}, given=[], models=[], data_tables=[], operations_tables=[], platform="github"):
 
@@ -70,10 +75,10 @@ class Worker():
             except:
                 break
 
-        self.config.update({ 
+        self.config.update({
             'port': worker_port,
             'id': "workers.{}.{}".format(self.worker_type, worker_port),
-            "capture_output": False,
+            'capture_output': False,
             'location': 'http://{}:{}'.format(self.config['host'], worker_port),
             'port_broker': self.augur_config.get_value('Server', 'port'),
             'host_broker': self.augur_config.get_value('Server', 'host'),
@@ -98,6 +103,7 @@ class Worker():
 
         self.given = given
         self.models = models
+        self.debug_data = [] if 'debug_data' not in self.config else self.config['debug_data']
         self.specs = {
             'id': self.config['id'], # what the broker knows this worker as
             'location': self.config['location'], # host + port worker is running on (so broker can send tasks here)
@@ -125,6 +131,11 @@ class Worker():
 
     def __repr__(self):
         return f"{self.config['id']}"
+
+    def write_debug_data(self, data, name):
+        if name in self.debug_data:
+            with open(f'{name}.json', 'w') as f:
+                 json.dump(data, f)
 
     def initialize_logging(self):
         self.config['log_level'] = self.config['log_level'].upper()
@@ -348,17 +359,35 @@ class Worker():
         type_dict = {}
         for index in range(len(source_columns)):
             if type(source[source_columns[index]].values[0]) == numpy.datetime64:
-                subject[subject_columns[index]] = pd.to_datetime(subject[subject_columns[index]], utc=True)
+                subject[subject_columns[index]] = pd.to_datetime(
+                    subject[subject_columns[index]], utc=True
+                )
                 source[source_columns[index]] = pd.to_datetime(
-                    source[source_columns[index]], utc=True)
+                    source[source_columns[index]], utc=True
+                )
                 continue
             type_dict[subject_columns[index]] = type(source[source_columns[index]].values[0])
 
         subject.astype(type_dict)
-        
+
         return subject, source
 
-    def organize_needed_data(self, new_data, table_values, table_pkey, action_map={}):
+    def get_sqlalchemy_type(self, data):
+        if type(data) == str:
+            return s.types.String
+        elif type(data) == int:
+            return s.types.Integer
+        elif type(data) == float:
+            return s.types.Float
+        # elif type(data) == dict:
+        #     return s.types.JSON
+        # elif type(data) == list:
+        #     return s.types.ARRAY(s.types.JSON)
+        return s.types.String
+
+    def organize_needed_data(
+        self, new_data, table_values, table_pkey, action_map={}, in_memory=True
+    ):
 
         if len(table_values) == 0:
             return new_data, []
@@ -369,60 +398,124 @@ class Worker():
         need_insertion = pd.DataFrame()
         need_updates = pd.DataFrame()
 
-        table_values_df = pd.DataFrame(table_values, columns=table_values[0].keys())
-        new_data_df = pd.DataFrame(new_data).dropna(subset=action_map['insert']['source'])
+        if not in_memory:
 
-        new_data_df, table_values_df = self.sync_df_types(new_data_df, table_values_df, 
-                action_map['insert']['source'], action_map['insert']['augur'])
+            metadata = s.MetaData()
 
-        need_insertion = new_data_df.merge(table_values_df, suffixes=('','_table'),
-                how='outer', indicator=True, left_on=action_map['insert']['source'],
-                right_on=action_map['insert']['augur']).loc[lambda x : x['_merge']=='left_only']
+            new_data_table = s.schema.Table(f"new_data_{os.getpid()}", metadata)
+            table_values_table = s.schema.Table(f"table_values_{os.getpid()}", metadata)
 
-        if 'update' in action_map:
-            new_data_df, table_values_df = self.sync_df_types(new_data_df, table_values_df, 
-                action_map['update']['source'], action_map['update']['augur'])                
+            new_data_columns = action_map['insert']['source']
+            table_value_columns = action_map['insert']['augur']
+            if 'update' in action_map:
+                new_data_columns += action_map['update']['source']
+                table_value_columns += action_map['update']['augur']
 
-            partitions = math.ceil(len(new_data_df) / 3000)
-            attempts = 0 
-            while attempts < 50:
-                try:
-                    need_updates = pd.DataFrame()
-                    self.logger.info(f"Trying {partitions} partitions\n")
-                    for sub_df in numpy.array_split(new_data_df, partitions):
-                        self.logger.info(f"Trying a partition, len {len(sub_df)}\n")
-                        need_updates = pd.concat([ need_updates, sub_df.merge(table_values_df, left_on=action_map['insert']['source'],
-                            right_on=action_map['insert']['augur'], suffixes=('','_table'), how='inner', 
-                            indicator=False).merge(table_values_df, left_on=action_map['update']['source'],
-                            right_on=action_map['update']['augur'], suffixes=('','_table'), how='outer', 
-                            indicator=True).loc[lambda x : x['_merge']=='left_only'] ])
-                        self.logger.info(f"need_updates merge: {len(sub_df)} worked\n")
-                    break
-                    
-                except MemoryError as e:
-                    self.logger.info(f"new_data ({sub_df.shape}) is too large to allocate memory for " +
-                        f"need_updates df merge.\nMemoryError: {e}\nTrying again with {partitions + 1} partitions...\n")
-                    partitions += 1
-                    attempts += 1
-                self.logger.info(f"End attempt # {attempts}\n")
-            if attempts >= 50:
-                self.loggger.info("Max need_updates merge attempts exceeded, cannot perform " +
-                    "updates on this repo.\n")
-            else:
-                need_updates = need_updates.drop([column for column in list(need_updates.columns) if \
-                    column not in action_map['update']['augur'] and column not in action_map['insert']['augur']], 
-                    axis='columns')
+            for column in new_data_columns:
+                new_data_table.append_column(s.schema.Column(column, self.get_sqlalchemy_type(new_data[0]) ))
+            for column in table_value_columns:
+                table_values_table.append_column(s.schema.Column(column, self.get_sqlalchemy_type(table_values[0]) ))
 
-                for column in action_map['insert']['augur']:
-                    need_updates[f'b_{column}'] = need_updates[column]
+            metadata.create_all(self.db, checkfirst=True)
 
-                need_updates = need_updates.drop([column for column in action_map['insert']['augur']], axis='columns')
+            self.bulk_insert(new_data_table, insert=new_data)
+            self.bulk_insert(table_values_table, insert=table_values)
 
-            self.logger.info(f"final need updates enacted for action map.")
+            self.bulk_insert(
+                new_data_table, insert=new_data_df[new_data_columns].to_dict(orient='records')
+            )
+            self.bulk_insert(
+                table_values_table,
+                insert=pd.DataFrame(table_values)[table_value_columns].to_dict(orient='records')
+            )
 
+            session = s.orm.Session(self.db)
+            self.logger.info("Session created for temp tables\n")
 
-        # self.logger.info(f'Page needs {len(need_insertion)} insertions and '
-        #     f'{len(need_updates)} updates.\n')
+            need_insertion = pd.DataFrame(session.query(new_data_table).join(table_values_table,
+                eval(
+                    ' and '.join([
+                        f"table_values_table.c.{table_column} == new_data_table.c.{source_column}" \
+                        for table_column, source_column in zip(action_map['insert']['augur'],
+                        action_map['insert']['source'])
+                    ])
+                ), isouter=True).filter(
+                    table_values_table.c[action_map['insert']['augur'][0]] == None
+                ).all(), columns=table_value_columns)
+
+            self.logger.info("need_insertion calculated successfully\n")
+
+            need_updates = pd.DataFrame(columns=table_value_columns)
+            if 'update' in action_map:
+                need_updates = pd.DataFrame(session.query(new_data_table).join(table_values_table,
+                    s.and_(
+                        eval(' and '.join([f"table_values_table.c.{table_column} == new_data_table.c.{source_column}" for \
+                        table_column, source_column in zip(action_map['insert']['augur'], action_map['insert']['source'])])),
+
+                        eval(' and '.join([f"table_values_table.c.{table_column} != new_data_table.c.{source_column}" for \
+                        table_column, source_column in zip(action_map['update']['augur'], action_map['update']['source'])]))
+                    ) ).all(), columns=table_value_columns)
+                self.logger.info("need_updates calculated successfully\n")
+
+            metadata.drop_all(self.db, checkfirst=True)
+            self.logger.info("Temp tables dropped\n")
+
+            session.close()
+            self.logger.info("Session closed")
+
+            print(f'Table needs {len(need_insertion)} insertions and '
+                f'{len(need_updates)} updates.\n')
+
+        else:
+
+            table_values_df = pd.DataFrame(table_values, columns=table_values[0].keys())
+            new_data_df = pd.DataFrame(new_data).dropna(subset=action_map['insert']['source'])
+
+            new_data_df, table_values_df = self.sync_df_types(new_data_df, table_values_df,
+                    action_map['insert']['source'], action_map['insert']['augur'])
+
+            need_insertion = new_data_df.merge(table_values_df, suffixes=('','_table'),
+                    how='outer', indicator=True, left_on=action_map['insert']['source'],
+                    right_on=action_map['insert']['augur']).loc[lambda x : x['_merge']=='left_only']
+
+            if 'update' in action_map:
+                new_data_df, table_values_df = self.sync_df_types(new_data_df, table_values_df,
+                    action_map['update']['source'], action_map['update']['augur'])
+
+                partitions = math.ceil(len(new_data_df) / 1000)
+                attempts = 0
+                while attempts < 50:
+                    try:
+                        need_updates = pd.DataFrame()
+                        self.logger.info(f"Trying {partitions} partitions\n")
+                        for sub_df in numpy.array_split(new_data_df, partitions):
+                            self.logger.info(f"Trying a partition, len {len(sub_df)}\n")
+                            need_updates = pd.concat([ need_updates, sub_df.merge(table_values_df, left_on=action_map['insert']['source'],
+                                right_on=action_map['insert']['augur'], suffixes=('','_table'), how='inner',
+                                indicator=False).merge(table_values_df, left_on=action_map['update']['source'],
+                                right_on=action_map['update']['augur'], suffixes=('','_table'), how='outer',
+                                indicator=True).loc[lambda x : x['_merge']=='left_only'] ])
+                            self.logger.info(f"need_updates merge: {len(sub_df)} worked\n")
+                        break
+
+                    except MemoryError as e:
+                        self.logger.info(f"new_data ({sub_df.shape}) is too large to allocate memory for " +
+                            f"need_updates df merge.\nMemoryError: {e}\nTrying again with {partitions + 1} partitions...\n")
+                        partitions += 1
+                        attempts += 1
+                    # self.logger.info(f"End attempt # {attempts}\n")
+                if attempts >= 50:
+                    self.loggger.info("Max need_updates merge attempts exceeded, cannot perform " +
+                        "updates on this repo.\n")
+                else:
+                    need_updates = need_updates.drop([column for column in list(need_updates.columns) if \
+                        column not in action_map['update']['augur'] and column not in action_map['insert']['augur']],
+                        axis='columns')
+
+                    for column in action_map['insert']['augur']:
+                        need_updates[f'b_{column}'] = need_updates[column]
+
+                    need_updates = need_updates.drop([column for column in action_map['insert']['augur']], axis='columns')
 
         return need_insertion.to_dict('records'), need_updates.to_dict('records')
 
@@ -590,7 +683,7 @@ class Worker():
             SELECT cntrb_id FROM contributors WHERE cntrb_login = '{}' \
             AND LOWER(data_source) = '{} api'
             """.format(login, platform))
-                
+
         rs = pd.read_sql(idSQL, self.db, params={})
         data_list = [list(row) for row in rs.itertuples(index=False)]
         try:
@@ -603,7 +696,16 @@ class Worker():
         elif platform == 'gitlab':
             cntrb_url = ("https://gitlab.com/api/v4/users?username=" + login )
         self.logger.info("Hitting endpoint: {} ...\n".format(cntrb_url))
-        r = requests.get(url=cntrb_url, headers=self.headers)
+
+
+        while True:
+            try:
+                r = requests.get(url=cntrb_url, headers=self.headers)
+                break
+            except TimeoutError as e:
+                self.logger.info("Request timed out. Sleeping 10 seconds and trying again...\n")
+                time.sleep(30)
+
         self.update_rate_limit(r)
         contributor = r.json()
 
@@ -625,7 +727,7 @@ class Worker():
                 'cntrb_email': contributor['email'] if 'email' in contributor else None,
                 'cntrb_company': contributor['company'] if 'company' in contributor else None,
                 'cntrb_location': contributor['location'] if 'location' in contributor else None,
-                'cntrb_created_at': contributor['created_at'] if 'created_at' in contributor else None,                
+                'cntrb_created_at': contributor['created_at'] if 'created_at' in contributor else None,
                 'cntrb_canonical': None,
                 'gh_user_id': contributor['id'] if 'id' in contributor else None,
                 'gh_login': contributor['login'] if 'login' in contributor else None,
@@ -656,7 +758,7 @@ class Worker():
                 'cntrb_email': email,
                 'cntrb_company': company,
                 'cntrb_location': location,
-                'cntrb_created_at': contributor[0]['created_at'] if 'created_at' in contributor[0] else None,                
+                'cntrb_created_at': contributor[0]['created_at'] if 'created_at' in contributor[0] else None,
                 'cntrb_canonical': None,
                 'gh_user_id': contributor[0]['id'],
                 'gh_login': contributor[0]['username'],
@@ -815,8 +917,10 @@ class Worker():
 
         self.logger.info("OAuth initialized")
 
-    def bulk_insert(self, table, insert=[], update=[], unique_columns=[], update_columns=[], \
-            max_attempts=10, attempt_delay=5):
+    def bulk_insert(
+        self, table, insert=[], update=[], unique_columns=[], update_columns=[],
+        max_attempts=10, attempt_delay=5
+    ):
         """ Performs bulk inserts/updates of the given data to the given table
 
             :param table: String, name of the table that we are inserting/updating rows
@@ -832,7 +936,7 @@ class Worker():
             :returns: SQLAlchemy database execution response object(s), contains metadata
                 about number of rows inserted etc. This data is not often used.
         """
-        
+
         self.logger.info(f"{len(insert)} insertions are needed and {len(update)} "
             f"updates are needed for {table}\n")
 
@@ -846,8 +950,14 @@ class Worker():
                 try:
                     update_result = self.db.execute(
                         table.update().where(
-                                eval(' and '.join([f"self.{table}_table.c.{key} == bindparam('b_{key}')" for \
-                                    key in unique_columns]))
+                                eval(
+                                    ' and '.join(
+                                        [
+                                            f"self.{table}_table.c.{key} == bindparam('b_{key}')"
+                                            for key in unique_columns
+                                        ]
+                                    )
+                                )
                             ).values(
                                 {key: key for key in update_columns}
                             ),
@@ -860,27 +970,54 @@ class Worker():
                 attempts += 1
 
             self.update_counter += update_result.rowcount
-            self.logger.info(f"Updated {update_result.rowcount} rows in "
-                f"{time.time() - update_start_time} seconds")
+            self.logger.info(
+                f"Updated {update_result.rowcount} rows in "
+                f"{time.time() - update_start_time} seconds"
+            )
 
         if len(insert) > 0:
-            attempts = 0
-            insert_start_time = time.time()
-            while attempts < max_attempts:
-                try:
-                    insert_result = self.db.execute(
-                        table.insert(),
-                        insert
-                    )
-                    break
-                except Exception as e:
-                    self.logger.info(f"Warning! Error bulk inserting data: {e}\n")
-                    time.sleep(attempt_delay)
-                attempts += 1
+            def psql_insert_copy(table, conn, keys, data_iter):
+                """
+                Execute SQL statement inserting data
 
-            self.insert_counter += insert_result.rowcount
-            self.logger.info(f"Inserted {insert_result.rowcount} rows in "
-                f"{time.time() - insert_start_time} seconds")
+                Parameters
+                ----------
+                table : pandas.io.sql.SQLTable
+                conn : sqlalchemy.engine.Engine or sqlalchemy.engine.Connection
+                keys : list of str
+                    Column names
+                data_iter : Iterable that iterates the values to be inserted
+                """
+                # gets a DBAPI connection that can provide a cursor
+                dbapi_conn = conn.connection
+                with dbapi_conn.cursor() as cur:
+                    s_buf = io.StringIO()
+                    writer = csv.writer(s_buf)
+                    writer.writerows(data_iter)
+                    s_buf.seek(0)
+
+                    columns = ', '.join('"{}"'.format(k) for k in keys)
+                    if table.schema:
+                        table_name = '{}.{}'.format(table.schema, table.name)
+                    else:
+                        table_name = table.name
+
+                    sql = 'COPY {} ({}) FROM STDIN WITH CSV'.format(
+                        table_name, columns)
+                    cur.copy_expert(sql=sql, file=s_buf)
+
+            pd.DataFrame(insert).to_sql(
+                name=table.name,
+                con=self.db,
+                if_exists="append",
+                index=False,
+                method=psql_insert_copy
+            )
+            self.insert_counter += len(insert)
+
+            logging.info(
+                f"Inserted {len(insert)} rows in {time.time() - insert_start_time} seconds\n"
+            )
 
         return insert_result, update_result
 
@@ -938,37 +1075,92 @@ class Worker():
             expanded_column.columns = [f'{root}.{attribute}' for attribute in expanded_column.columns]
             source_df = source_df.join(expanded_column)
 
-        primary_keys = self.db.execute(s.sql.select(
+        # try:
+        #     primary_keys = self.db.execute(s.sql.select(
+        #             [table.c[field] for field in augur_merge_fields] + [table.c[list(table.primary_key)[0].name]]
+        #         ).where(
+        #             s_tuple.in_(
+
+        #                 list(source_df[gh_merge_fields].itertuples(index=False))
+        #             ))).fetchall()
+        # except psycopg2.errors.StatementTooComplex as e:
+        self.logger.info("Retrieve pk statement too complex, querying all instead " +
+            "and performing dask merge.\n")
+        all_primary_keys = self.db.execute(s.sql.select(
                 [table.c[field] for field in augur_merge_fields] + [table.c[list(table.primary_key)[0].name]]
-            ).where(
-                s_tuple.in_(
+            )).fetchall()
+        self.logger.info("Queried all")
+        all_primary_keys_df = pd.DataFrame(all_primary_keys,
+            columns=augur_merge_fields + [list(table.primary_key)[0].name])
+        self.logger.info("Converted to df")
+        # all_primary_keys_df.to_json(path_or_buf='all_primary_keys_df.json', orient='records')
+        # source_df.to_json(path_or_buf='source_df.json', orient='records')
 
-                    list(source_df[gh_merge_fields].itertuples(index=False))
-                ))).fetchall()
-
-        if len(primary_keys) > 0:
-            primary_keys_df = pd.DataFrame(primary_keys, 
-                columns=augur_merge_fields + [list(table.primary_key)[0].name])
-        else:
-            self.logger.info("There are no inserted primary keys to enrich the source data with.\n")
-            return []
-
-
-        source_df, primary_keys_df = self.sync_df_types(source_df, primary_keys_df, 
+        source_df, all_primary_keys_df = self.sync_df_types(source_df, all_primary_keys_df,
                 gh_merge_fields, augur_merge_fields)
 
-        result = json.loads(source_df.merge(primary_keys_df, suffixes=('','_table'),
-            how='inner', left_on=gh_merge_fields, right_on=augur_merge_fields).to_json(
-            default_handler=str, orient='records'))
+        self.logger.info("Synced df types")
 
-        self.logger.info("Data enrichment successful.\n")
-        return result
+        partitions = math.ceil(len(source_df) / 600)#1000)
+        attempts = 0
+        while attempts < 50:
+            try:
+                source_pk = pd.DataFrame()
+                self.logger.info(f"Trying {partitions} partitions of new data, {len(all_primary_keys_df)} " +
+                    "pk data points to enrich\n")
+                for sub_df in numpy.array_split(source_df, partitions):
+                    self.logger.info(f"Trying a partition, len {len(sub_df)}\n")
+                    source_pk = pd.concat([ source_pk, sub_df.merge(all_primary_keys_df, suffixes=('','_table'),
+                        how='inner', left_on=gh_merge_fields, right_on=augur_merge_fields) ])
+                    self.logger.info(f"source_pk merge: {len(sub_df)} worked\n")
+                break
 
-    def multi_thread_urls(self, urls, max_attempts=5, platform='github'):
+            except MemoryError as e:
+                self.logger.info(f"new_data ({sub_df.shape}) is too large to allocate memory for " +
+                    f"source_pk df merge.\nMemoryError: {e}\nTrying again with {partitions + 1} partitions...\n")
+                partitions += 1
+                attempts += 1
+            # self.logger.info(f"End attempt # {attempts}\n")
+        if attempts >= 50:
+            self.logger.info("Max source_pk merge attempts exceeded, cannot perform " +
+                "updates on this repo.\n")
+        else:
+            self.logger.info(f"Data enrichment successful, length: {len(source_pk)}\n")
+
+        # all_primary_keys_df.to_json(path_or_buf='all_primary_keys_df.json', orient='records')
+
+        # all_primary_keys_dask_df = dd.from_pandas(all_primary_keys_df, chunksize=1000)
+        # source_dask_df = dd.from_pandas(source_df, chunksize=1000)
+        # result = json.loads(source_dask_df.merge(all_primary_keys_dask_df, suffixes=('','_table'),
+        #     how='inner', left_on=gh_merge_fields, right_on=augur_merge_fields).compute(
+        #     ).to_json(default_handler=str, orient='records'))
+        return source_pk.to_dict(orient='records')
+
+        # if len(primary_keys) > 0:
+        #     primary_keys_df = pd.DataFrame(primary_keys,
+        #         columns=augur_merge_fields + [list(table.primary_key)[0].name])
+        # else:
+        #     self.logger.info("There are no inserted primary keys to enrich the source data with.\n")
+        #     return []
+
+        # source_df, primary_keys_df = self.sync_df_types(source_df, primary_keys_df,
+        #         gh_merge_fields, augur_merge_fields)
+
+        # source_df = dd.from_pandas(source_df, chunksize=1000)
+        # primary_keys_df = dd.from_pandas(primary_keys_df, chunksize=1000)
+
+        # result = json.loads(source_df.merge(primary_keys_df, suffixes=('','_table'),
+        #     how='inner', left_on=gh_merge_fields, right_on=augur_merge_fields).compute().to_json(
+        #     default_handler=str, orient='records'))
+
+        # self.logger.info("Data enrichment successful.\n")
+        # return result
+
+    def multi_thread_urls(self, all_urls, max_attempts=5, platform='github'):
         """
-        :param urls: list of tuples
+        :param all_urls: list of tuples
         """
-        
+
         def load_url(url, extra_data={}):
             try:
                 html = requests.get(url, stream=True, headers=self.headers)
@@ -977,61 +1169,74 @@ class Worker():
                 self.logger.info(e, url)
 
         self.logger.info("Beginning to multithread API endpoints.\n")
-                
+
         start = time.time()
-        attempts = 0
+
         all_data = []
-        valid_url_count = len(urls)
-        
-        while len(urls) > 0 and attempts < max_attempts:
-            with concurrent.futures.ThreadPoolExecutor(max_workers=multiprocessing.cpu_count()/4) as executor:
-                # Start the load operations and mark each future with its URL
-                future_to_url = {executor.submit(load_url, *url): url for url in urls}
-                self.logger.info("Multithreaded urls and returned status codes:\n")
-                for future in concurrent.futures.as_completed(future_to_url):
-                    
-                    url = future_to_url[future]
-                    try:
-                        response, extra_data = future.result()
+        valid_url_count = len(all_urls)
 
-                        if response.status_code != 200:
-                            self.logger.info(f"Url: {url[0]} ; Status code: {response.status_code}")
+        partitions = math.ceil(len(all_urls) / 600)
+        self.logger.info(f"{len(all_urls)} urls to process. Trying {partitions} partitions. " +
+            f"Using {max(multiprocessing.cpu_count()//8, 1)} threads.\n")
+        for urls in numpy.array_split(all_urls, partitions):
+            attempts = 0
+            self.logger.info(f"Total data points collected so far: {len(all_data)}\n")
+            while len(urls) > 0 and attempts < max_attempts:
+                with concurrent.futures.ThreadPoolExecutor(max_workers=max(multiprocessing.cpu_count()//8, 1)) as executor:
+                    # Start the load operations and mark each future with its URL
+                    future_to_url = {executor.submit(load_url, *url): url for url in urls}
+                    self.logger.info("Multithreaded urls and returned status codes:\n")
+                    count = 0
+                    for future in concurrent.futures.as_completed(future_to_url):
 
-                        if response.status_code == 403 or response.status_code == 401: # 403 is rate limit, 404 is not found, 401 is bad credentials
-                            self.update_rate_limit(response, platform=platform)
-                            continue
+                        if count % 100 == 0:
+                            self.logger.info(f"Processed {count} / {valid_url_count} urls. {len(urls)} remaining in this partition.")
+                        count += 1
 
-                        elif response.status_code == 200:
-                            try:
-                                page_data = response.json()
-                            except:
-                                page_data = json.loads(json.dumps(response.text))
-                            
-                            page_data = [{**data, **extra_data} for data in page_data]
-                            all_data += page_data
-                            
-                            if 'last' in response.links and "&page=" not in url[0]:
-                                urls += [(url[0] + f"&page={page}", extra_data) for page in range(
-                                    2, int(response.links['last']['url'].split('=')[-1]) + 1)]
-                            urls.remove(url)
+                        url = future_to_url[future]
+                        try:
+                            response, extra_data = future.result()
 
-                        elif response.status_code == 404:
-                            urls.remove(url)
-                            self.logger.info(f"Not found url: {url}\n")
-                        else:
-                            self.logger.info(f"Unhandled response code: {response.status_code} {url}\n")
-                        
-                    except Exception as e:
-                        self.logger.info(f"{url} generated an exception: {e}\n")
-                                            
-            attempts += 1
-                    
+                            if response.status_code != 200:
+                                self.logger.info(f"Url: {url[0]} ; Status code: {response.status_code}")
+
+                            if response.status_code == 403 or response.status_code == 401: # 403 is rate limit, 404 is not found, 401 is bad credentials
+                                self.update_rate_limit(response, platform=platform)
+                                continue
+
+                            elif response.status_code == 200:
+                                try:
+                                    page_data = response.json()
+                                except:
+                                    page_data = json.loads(json.dumps(response.text))
+
+                                page_data = [{**data, **extra_data} for data in page_data]
+                                all_data += page_data
+
+                                if 'last' in response.links and "&page=" not in url[0]:
+                                    urls += [(url[0] + f"&page={page}", extra_data) for page in range(
+                                        2, int(response.links['last']['url'].split('=')[-1]) + 1)]
+                                urls = numpy.delete(urls, numpy.where(urls == url), axis=0)
+
+                            elif response.status_code == 404:
+                                urls = numpy.delete(urls, numpy.where(urls == url), axis=0)
+                                self.logger.info(f"Not found url: {url}\n")
+                            else:
+                                self.logger.info(f"Unhandled response code: {response.status_code} {url}\n")
+
+                        except Exception as e:
+                            self.logger.info(f"{url} generated an exception: {traceback.format_exc()}\n")
+
+                attempts += 1
+
         self.logger.info(f"Processed {valid_url_count} urls and got {len(all_data)} data points " +
             f"in {time.time() - start} seconds thanks to multithreading!\n")
         return all_data
 
 
-    def paginate_endpoint(self, url, action_map={}, table=None, where_clause=True, platform='github'):
+    def paginate_endpoint(
+        self, url, action_map={}, table=None, where_clause=True, platform='github', in_memory=True
+    ):
 
         table_values = self.db.execute(s.sql.select(self.get_relevant_columns(
             table, action_map)).where(where_clause)).fetchall()
@@ -1049,7 +1254,7 @@ class Worker():
             # Multiple attempts to hit endpoint
             num_attempts = 0
             success = False
-            while num_attempts < 3:
+            while num_attempts < 10:
                 self.logger.info(f"Hitting endpoint: {url.format(page_number)}...\n")
                 try:
                     response = requests.get(url=url.format(page_number), headers=self.headers)
@@ -1109,8 +1314,8 @@ class Worker():
             if not forward_pagination:
 
                 # Checking contents of requests with what we already have in the db
-                page_insertions, page_updates = self.organize_needed_data(page_data, table_values, list(table.primary_key)[0].name, 
-                    action_map)
+                page_insertions, page_updates = self.organize_needed_data(page_data, table_values, list(table.primary_key)[0].name,
+                    action_map, in_memory=True)
 
                 # Reached a page where we already have all tuples
                 if len(need_insertion) == 0 and len(need_update) == 0 and \
@@ -1132,7 +1337,7 @@ class Worker():
                     page_number = last_page_number
                     backwards_activation = True
 
-            self.logger.info("Analyzation of page {} of {} complete\n".format(page_number, 
+            self.logger.info("Analyzation of page {} of {} complete\n".format(page_number,
                 int(last_page_number) if last_page_number != -1 else "*last page not known*"))
 
             if (page_number <= 1 and not forward_pagination) or \
@@ -1143,11 +1348,13 @@ class Worker():
             page_number = page_number + 1 if forward_pagination else page_number - 1
 
         if forward_pagination:
-            need_insertion, need_update = self.organize_needed_data(all_data, table_values, 
-                list(table.primary_key)[0].name, action_map)
+            need_insertion, need_update = self.organize_needed_data(
+                all_data, table_values, list(table.primary_key)[0].name, action_map,
+                in_memory=in_memory
+            )
 
         return {
-            'insert': need_insertion, 
+            'insert': need_insertion,
             'update': need_update,
             'all': all_data
         }
@@ -1318,7 +1525,7 @@ class Worker():
         owner, name = self.get_owner_repo(github_url)
 
         # Set the base of the url and place to hold contributors to insert
-        contributors_url = (f"https://api.github.com/repos/{owner}/{name}/" + 
+        contributors_url = (f"https://api.github.com/repos/{owner}/{name}/" +
             "contributors?per_page=100&page={}")
 
         # Get contributors that we already have stored
@@ -1420,7 +1627,7 @@ class Worker():
 
         owner, name = self.get_owner_repo(github_url)
 
-        contributors_url = (f"https://api.github.com/repos/{owner}/{name}/" + 
+        contributors_url = (f"https://api.github.com/repos/{owner}/{name}/" +
             "contributors?per_page=100&page={}")
 
         action_map = {
@@ -1434,11 +1641,11 @@ class Worker():
             }
         }
 
-        source_contributors = self.paginate_endpoint(contributors_url, action_map=action_map, 
+        source_contributors = self.paginate_endpoint(contributors_url, action_map=action_map,
             table=self.contributors_table)
 
         contributors_insert_result = []
-                
+
         for repo_contributor in source_contributors['insert']:
             # Need to hit this single contributor endpoint to get extra data
             cntrb_url = (f"https://api.github.com/users/{repo_contributor['login']}")
@@ -1477,8 +1684,8 @@ class Worker():
                 'data_source': self.data_source
             })
 
-        contributors_insert_result, contributors_update_result = self.bulk_insert(self.contributors_table, 
-            update=source_contributors['update'], unique_columns=action_map['insert']['augur'], 
+        contributors_insert_result, contributors_update_result = self.bulk_insert(self.contributors_table,
+            update=source_contributors['update'], unique_columns=action_map['insert']['augur'],
             insert=contributors_insert, update_columns=action_map['update']['augur'])
 
     def query_gitlab_contributors(self, entry_info, repo_id):
@@ -1501,8 +1708,8 @@ class Worker():
 
         table = 'contributors'
         table_pkey = 'cntrb_id'
-        ### %TODO Remap this to a GitLab Contributor ID like the GitHub Worker. 
-        ### Following Gabe's rework of the contributor worker. 
+        ### %TODO Remap this to a GitLab Contributor ID like the GitHub Worker.
+        ### Following Gabe's rework of the contributor worker.
         update_col_map = {'cntrb_email': 'email'}
         duplicate_col_map = {'cntrb_login': 'email'}
 
@@ -1648,9 +1855,9 @@ class Worker():
         self.logger.info(f"Updated job process for model: {model}\n")
 
         if self.config['offline_mode'] is False:
-            
+
             # Notify broker of completion
-            self.logger.info(f"Telling broker we completed task: {task_completed}\n") 
+            self.logger.info(f"Telling broker we completed task: {task_completed}\n")
             self.logger.info(f"This task inserted: {self.results_counter + self.insert_counter} tuples " +
                 f"and updated {self.update_counter} tuples.\n")
 
@@ -1763,7 +1970,7 @@ class Worker():
                 self.oauths[0]['rate_limit'] = int(response.headers['RateLimit-Remaining'])
             except:
                 self.oauths[0]['rate_limit'] -= 1
-        self.logger.info("Updated rate limit, you have: " + 
+        self.logger.info("Updated rate limit, you have: " +
             str(self.oauths[0]['rate_limit']) + " requests remaining.\n")
         if self.oauths[0]['rate_limit'] <= 0:
             try:
@@ -1781,7 +1988,7 @@ class Worker():
 
             other_oauths = self.oauths[0:] if len(self.oauths) > 1 else []
             for oauth in other_oauths:
-                self.logger.info("Inspecting rate limit info for oauth: {}\n".format(oauth))
+                # self.logger.info("Inspecting rate limit info for oauth: {}\n".format(oauth))
                 self.headers = {"PRIVATE-TOKEN" : oauth['access_token']}
                 response = requests.get(url=url, headers=self.headers)
                 oauth['rate_limit'] = int(response.headers['RateLimit-Remaining'])
@@ -1821,7 +2028,7 @@ class Worker():
         else:
             try:
                 self.oauths[0]['rate_limit'] = int(response.headers['X-RateLimit-Remaining'])
-                self.logger.info("Recieved rate limit from headers\n")
+                # self.logger.info("Recieved rate limit from headers\n")
             except:
                 self.oauths[0]['rate_limit'] -= 1
                 self.logger.info("Headers did not work, had to decrement\n")
@@ -1843,7 +2050,7 @@ class Worker():
 
             other_oauths = self.oauths[0:] if len(self.oauths) > 1 else []
             for oauth in other_oauths:
-                self.logger.info("Inspecting rate limit info for oauth: {}\n".format(oauth))
+                # self.logger.info("Inspecting rate limit info for oauth: {}\n".format(oauth))
                 self.headers = {'Authorization': 'token %s' % oauth['access_token']}
 
                 attempts = 3
