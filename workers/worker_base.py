@@ -1,8 +1,21 @@
 #SPDX-License-Identifier: MIT
 """ Helper methods constant across all workers """
-import requests, datetime, time, traceback, json, os, sys, math, logging, numpy, \
-    copy, concurrent, multiprocessing, psycopg2
-
+import requests
+import datetime
+import time
+import traceback
+import json
+import os
+import sys
+import math
+import logging
+import numpy
+import copy
+import concurrent
+import multiprocessing
+import psycopg2
+import csv
+import io
 from logging import FileHandler, Formatter, StreamHandler
 from multiprocessing import Process, Queue, Pool
 from os import getpid
@@ -375,9 +388,50 @@ class Worker():
                 continue
             type_dict[subject_columns[index]] = type(source[source_columns[index]].values[0])
 
-        subject.astype(type_dict)
+        subject = subject.astype(type_dict)
 
         return subject, source
+
+# def sync_df_types(subject, source, subject_columns, source_columns):
+#
+#     type_dict = {}
+#     for index in range(len(source_columns)):
+#         if type(source[source_columns[index]].values[0]) == numpy.datetime64:
+#             subject[subject_columns[index]] = pd.to_datetime(
+#                 subject[subject_columns[index]], utc=True
+#             )
+#             source[source_columns[index]] = pd.to_datetime(
+#                 source[source_columns[index]], utc=True
+#             )
+#             continue
+#         # print(index, type(source[source_columns[index]].values[0]))
+#         # subject[x] = subject[x].astype(df1[x].dtypes.name)
+#         type_dict[subject_columns[index]] = type(source[source_columns[index]].values[0])
+#
+#     print(type_dict)
+#     subject = subject.astype(type_dict)
+#
+#     return subject, source
+
+# import json, copy
+# import pandas as pd
+# with open('/Users/gabeheim/Documents/repos/augur/workers/pull_request_worker/need_insertion.json') as f:
+#     need_insertion = copy.deepcopy(json.load(f))
+#
+# with open('/Users/gabeheim/Documents/repos/augur/workers/pull_request_worker/new_data_df.json') as f:
+#     new_data_df = copy.deepcopy(json.load(f))
+#
+# need_insertion = pd.DataFrame(need_insertion)
+# new_data_df = pd.DataFrame(new_data_df)
+#
+# need_insertion.dtypes
+# new_data_df.dtypes
+#
+# import numpy
+# need_insertion[['pr_src_id', 'pr_src_state']] = need_insertion[['pr_src_id', 'pr_src_state']].astype(new_data_df[['id', 'state']].dtypes.to_dict())
+# need_insertion, new_data_df = sync_df_types(need_insertion, new_data_df, ['pr_src_id', 'pr_src_state'], ['id', 'state'])
+# need_insertion['pr_src_id'] = need_insertion['pr_src_id'].astype(int)
+
 
     def get_sqlalchemy_type(self, data):
         if type(data) == str:
@@ -391,6 +445,51 @@ class Worker():
         # elif type(data) == list:
         #     return s.types.ARRAY(s.types.JSON)
         return s.types.String
+
+    def _setup_postgres_merge(self, data1, data2, columns1, columns2):
+
+        data1_df = pd.DataFrame(data1, columns=data1[0].keys())
+        data2_df = pd.DataFrame(data2, columns=data2[0].keys())
+
+        metadata = s.MetaData()
+
+        data1_table = s.schema.Table(f"data1_{os.getpid()}", metadata)
+        data2_table = s.schema.Table(f"data2_{os.getpid()}", metadata)
+
+        for column in columns1:
+            data1_table.append_column(
+                s.schema.Column(column, self.get_sqlalchemy_type(data1[0]))
+            )
+        for column in columns2:
+            data2_table.append_column(
+                s.schema.Column(column, self.get_sqlalchemy_type(data2[0]))
+            )
+
+        metadata.create_all(self.db, checkfirst=True)
+
+        self.bulk_insert(
+            data1_table, insert=data1_df[columns1].to_dict(orient='records')
+        )
+
+        self.bulk_insert(
+            data2_table, insert=data2_df[columns2].to_dict(orient='records')
+        )
+
+        session = s.orm.Session(self.db)
+
+        # session_maker = s.orm.sessionmaker(self.db)
+        self.logger.info("Session created for temp tables\n")
+
+        return data1_table, data2_table, metadata, session
+
+    def _close_postgres_merge(self, metadata, session):
+
+        session.close()
+        self.logger.info("Session closed\n")
+
+        # metadata.reflect(self.db, only=[new_data_table.name, table_values_table.name])
+        metadata.drop_all(self.db, checkfirst=True)
+        self.logger.info("Merge tables dropped\n")
 
     def organize_needed_data(
         self, new_data, table_values, table_pkey, action_map={}, in_memory=True
@@ -407,38 +506,53 @@ class Worker():
 
         if not in_memory:
 
-            metadata = s.MetaData()
-
-            new_data_table = s.schema.Table(f"new_data_{os.getpid()}", metadata)
-            table_values_table = s.schema.Table(f"table_values_{os.getpid()}", metadata)
-
             new_data_columns = action_map['insert']['source']
             table_value_columns = action_map['insert']['augur']
             if 'update' in action_map:
                 new_data_columns += action_map['update']['source']
                 table_value_columns += action_map['update']['augur']
 
-            for column in new_data_columns:
-                new_data_table.append_column(s.schema.Column(column, self.get_sqlalchemy_type(new_data[0]) ))
-            for column in table_value_columns:
-                table_values_table.append_column(s.schema.Column(column, self.get_sqlalchemy_type(table_values[0]) ))
-
-            metadata.create_all(self.db, checkfirst=True)
-
-            self.bulk_insert(new_data_table, insert=new_data)
-            self.bulk_insert(table_values_table, insert=table_values)
-
-            self.bulk_insert(
-                new_data_table, insert=new_data_df[new_data_columns].to_dict(orient='records')
-            )
-            self.bulk_insert(
-                table_values_table,
-                insert=pd.DataFrame(table_values)[table_value_columns].to_dict(orient='records')
+            new_data_table, table_values_table, metadata, session = self._setup_postgres_merge(
+                new_data, table_values, new_data_columns, table_value_columns
             )
 
-            session = s.orm.Session(self.db)
-            self.logger.info("Session created for temp tables\n")
+            # metadata = s.MetaData()
+            #
+            # new_data_table = s.schema.Table(f"new_data_{os.getpid()}", metadata)
+            # table_values_table = s.schema.Table(f"table_values_{os.getpid()}", metadata)
+            #
+            # new_data_columns = action_map['insert']['source']
+            # table_value_columns = action_map['insert']['augur']
+            # if 'update' in action_map:
+            #     new_data_columns += action_map['update']['source']
+            #     table_value_columns += action_map['update']['augur']
+            #
+            # for column in new_data_columns:
+            #     new_data_table.append_column(s.schema.Column(column, self.get_sqlalchemy_type(new_data[0]) ))
+            # for column in table_value_columns:
+            #     table_values_table.append_column(s.schema.Column(column, self.get_sqlalchemy_type(table_values[0]) ))
+            #
+            # metadata.create_all(self.db, checkfirst=True)
+            #
+            # new_data_df = pd.DataFrame(new_data)
+            #
+            # self.bulk_insert(
+            #     new_data_table, insert=new_data_df[new_data_columns].to_dict(orient='records')
+            # )
+            #
+            # self.bulk_insert(
+            #     table_values_table,
+            #     insert=pd.DataFrame(
+            #         table_values, columns=table_values[0].keys()
+            #     )[table_value_columns].to_dict(orient='records')
+            # )
+            #
+            # session = s.orm.Session(self.db)
+            #
+            # # session_maker = s.orm.sessionmaker(self.db)
+            # self.logger.info("Session created for temp tables\n")
 
+            # with session_maker() as session:
             need_insertion = pd.DataFrame(session.query(new_data_table).join(table_values_table,
                 eval(
                     ' and '.join([
@@ -464,14 +578,27 @@ class Worker():
                     ) ).all(), columns=table_value_columns)
                 self.logger.info("need_updates calculated successfully\n")
 
-            metadata.drop_all(self.db, checkfirst=True)
-            self.logger.info("Temp tables dropped\n")
+            # session.close()
+            # self.logger.info("Session closed")
+            #
+            # # metadata.reflect(self.db, only=[new_data_table.name, table_values_table.name])
+            # metadata.drop_all(self.db, checkfirst=True)
+            # self.logger.info("Temp tables dropped\n")
 
-            session.close()
-            self.logger.info("Session closed")
+            self._close_postgres_merge(metadata, session)
 
-            print(f'Table needs {len(need_insertion)} insertions and '
-                f'{len(need_updates)} updates.\n')
+            new_data_df = pd.DataFrame(new_data)
+
+            need_insertion, new_data_df = self.sync_df_types(
+                need_insertion, new_data_df, table_value_columns, new_data_columns
+            )
+            need_insertion = need_insertion.merge(
+                new_data_df, how='inner', left_on=table_value_columns, right_on=new_data_columns
+            )
+
+            self.logger.info(
+                f"Table needs {len(need_insertion)} insertions and "
+                f"{len(need_updates)} updates.\n")
 
         else:
 
@@ -926,7 +1053,7 @@ class Worker():
 
     def bulk_insert(
         self, table, insert=[], update=[], unique_columns=[], update_columns=[],
-        max_attempts=10, attempt_delay=5
+        max_attempts=3, attempt_delay=3
     ):
         """ Performs bulk inserts/updates of the given data to the given table
 
@@ -970,19 +1097,21 @@ class Worker():
                             ),
                         update
                     )
+                    self.update_counter += update_result.rowcount
+                    self.logger.info(
+                        f"Updated {update_result.rowcount} rows in "
+                        f"{time.time() - update_start_time} seconds"
+                    )
                     break
                 except Exception as e:
                     self.logger.info(f"Warning! Error bulk updating data: {e}\n")
                     time.sleep(attempt_delay)
                 attempts += 1
 
-            self.update_counter += update_result.rowcount
-            self.logger.info(
-                f"Updated {update_result.rowcount} rows in "
-                f"{time.time() - update_start_time} seconds"
-            )
-
         if len(insert) > 0:
+
+            insert_start_time = time.time()
+
             def psql_insert_copy(table, conn, keys, data_iter):
                 """
                 Execute SQL statement inserting data
@@ -1022,7 +1151,7 @@ class Worker():
             )
             self.insert_counter += len(insert)
 
-            logging.info(
+            self.logger.info(
                 f"Inserted {len(insert)} rows in {time.time() - insert_start_time} seconds\n"
             )
 
@@ -1081,7 +1210,7 @@ class Worker():
         #             ))).fetchall()
         # except psycopg2.errors.StatementTooComplex as e:
         self.logger.info("Retrieve pk statement too complex, querying all instead " +
-            "and performing dask merge.\n")
+            "and performing partitioned merge.\n")
         all_primary_keys = self.db.execute(s.sql.select(
                 [table.c[field] for field in augur_merge_fields] + [table.c[list(table.primary_key)[0].name]]
             )).fetchall()
