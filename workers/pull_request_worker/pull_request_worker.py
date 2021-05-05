@@ -560,7 +560,8 @@ class GitHubPullRequestWorker(Worker):
             pk_source_prs = self._get_pk_source_prs()
 
         events_url = (
-            f"https://api.github.com/repos/{owner}/{repo}/issues/events?per_page=100&page={}"
+            f"https://api.github.com/repos/{owner}/{repo}/issues/events?per_page=100&"
+            "page={}"
         )
 
         # Get events that we already have stored
