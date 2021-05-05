@@ -101,6 +101,10 @@ class Worker():
         self.logger = logging.getLogger(self.config["id"])
         self.logger.info('Worker (PID: {}) initializing...'.format(str(os.getpid())))
 
+        self.task_info = None
+        self.repo_id = None
+        self.owner = None
+        self.repo = None
         self.given = given
         self.models = models
         self.debug_data = [] if 'debug_data' not in self.config else self.config['debug_data']
@@ -344,6 +348,9 @@ class Worker():
             #   and worker can move onto the next task without stopping
             try:
                 self.logger.info("Calling model method {}_model".format(message['models'][0]))
+                self.task_info = message
+                self.repo_id = repo_id
+                self.owner, self.repo = self.get_owner_repo(message['given']['github_url'])
                 model_method(message, repo_id)
             except Exception as e: # this could be a custom exception, might make things easier
                 self.register_task_failure(message, repo_id, e)

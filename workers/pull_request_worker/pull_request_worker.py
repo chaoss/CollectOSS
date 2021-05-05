@@ -40,8 +40,6 @@ class GitHubPullRequestWorker(Worker):
 
         self.deep_collection = True
         self.platform_id = 25150 # GitHub
-        self.owner = None
-        self.repo = None
 
         # Run the general worker initialization
         super().__init__(worker_type, config, given, models, data_tables, operations_tables)
@@ -175,14 +173,12 @@ class GitHubPullRequestWorker(Worker):
 
     def pull_request_files_model(self, task_info, repo_id):
 
-        self.owner, self.repo = self.get_owner_repo(task_info['given']['github_url'])
-
         # query existing PRs and the respective url we will append the commits url to
         pr_number_sql = s.sql.text("""
             SELECT DISTINCT pr_src_number as pr_src_number, pull_requests.pull_request_id
             FROM pull_requests--, pull_request_meta
             WHERE repo_id = {}
-        """.format(repo_id))
+        """.format(self.repo_id))
         pr_numbers = pd.read_sql(pr_number_sql, self.db, params={})
 
         pr_file_rows = []
@@ -237,14 +233,14 @@ class GitHubPullRequestWorker(Worker):
         self.logger.info(
             f'Getting table values with the following PSQL query: \n{table_values_sql}\n'
         )
-        table_values = pd.read_sql(table_values_sql, self.db, params={'repo_id': repo_id})
+        table_values = pd.read_sql(table_values_sql, self.db, params={'repo_id': self.repo_id})
 
         # Compare queried values against table values for dupes/updates
         if len(pr_file_rows) > 0:
             table_columns = pr_file_rows[0].keys()
         else:
-            self.logger.info(f'No rows need insertion for repo {repo_id}\n')
-            self.register_task_completion(task_info, repo_id, 'pull_request_files')
+            self.logger.info(f'No rows need insertion for repo {self.repo_id}\n')
+            self.register_task_completion(task_info, self.repo_id, 'pull_request_files')
             return
 
         # Compare queried values against table values for dupes/updates
@@ -270,7 +266,7 @@ class GitHubPullRequestWorker(Worker):
         pr_file_update_rows = need_updates.to_dict('records')
 
         self.logger.info(
-            f'Repo id {repo_id} needs {len(need_insertion)} insertions and '
+            f'Repo id {self.repo_id} needs {len(need_insertion)} insertions and '
             f'{len(need_updates)} updates.\n'
         )
 
@@ -308,7 +304,7 @@ class GitHubPullRequestWorker(Worker):
                     self.logger.info('error: {}'.format(e))
                 time.sleep(5)
 
-        self.register_task_completion(task_info, repo_id, 'pull_request_files')
+        self.register_task_completion(task_info, self.repo_id, 'pull_request_files')
 
     def pull_request_commits_model(self, task_info, repo_id):
         """ Queries the commits related to each pull request already inserted in the db """
@@ -328,7 +324,7 @@ class GitHubPullRequestWorker(Worker):
             SELECT DISTINCT pr_url, pull_requests.pull_request_id
             FROM pull_requests--, pull_request_meta
             WHERE repo_id = {}
-        """.format(repo_id))
+        """.format(self.repo_id))
         urls = pd.read_sql(pr_url_sql, self.db, params={})
 
         for pull_request in urls.itertuples(): # for each url of PRs we have inserted
@@ -363,7 +359,7 @@ class GitHubPullRequestWorker(Worker):
                         f"Inserted Pull Request Commit: {result.inserted_primary_key}\n"
                     )
 
-        self.register_task_completion(task_info, repo_id, 'pull_request_commits')
+        self.register_task_completion(self.task_info, self.repo_id, 'pull_request_commits')
 
     def _get_pk_source_prs(self):
 
@@ -385,19 +381,19 @@ class GitHubPullRequestWorker(Worker):
 
         source_prs = self.paginate_endpoint(
             pr_url, action_map=pr_action_map, table=self.pull_requests_table,
-            where_clause=self.pull_requests_table.c.repo_id == repo_id, in_memory=False
+            where_clause=self.pull_requests_table.c.repo_id == self.repo_id, in_memory=False
         )
 
         self.write_debug_data(source_prs, 'source_prs')
 
         if len(source_prs['all']) == 0:
             self.logger.info("There are no prs for this repository.\n")
-            self.register_task_completion(entry_info, repo_id, 'pull_requests')
+            self.register_task_completion(self.self.task_info, self.repo_id, 'pull_requests')
             return
 
         prs_insert = [
             {
-                'repo_id': repo_id,
+                'repo_id': self.repo_id,
                 'pr_url': pr['url'],
                 'pr_src_id': pr['id'],
                 'pr_src_node_id': None,
@@ -449,7 +445,7 @@ class GitHubPullRequestWorker(Worker):
         elif not self.deep_collection:
             self.logger.info("There are no prs to update, insert, or collect nested "
                 "information for.\n")
-            self.register_task_completion(entry_info, repo_id, 'pull_requests')
+            self.register_task_completion(self.self.task_info, self.repo_id, 'pull_requests')
             return
 
         if self.deep_collection:
@@ -472,12 +468,12 @@ class GitHubPullRequestWorker(Worker):
         :type entry_info: dict
         """
 
-        github_url = entry_info['given']['github_url']
+        github_url = self.task_info['given']['github_url']
 
-        self.query_github_contributors(entry_info, repo_id)
+        self.query_github_contributors(self.task_info, self.repo_id)
 
         self.logger.info("Beginning collection of Pull Requests...\n")
-        self.logger.info(f"Repo ID: {repo_id}, Git URL: {github_url}\n")
+        self.logger.info(f"Repo ID: {self.repo_id}, Git URL: {github_url}\n")
 
         pk_source_prs = self._get_pk_source_prs()
 
@@ -488,7 +484,7 @@ class GitHubPullRequestWorker(Worker):
         self.pull_request_reviews_model(pk_source_prs)
         self.pull_request_nested_data_model(pk_source_prs)
 
-        self.register_task_completion(entry_info, repo_id, 'pull_requests')
+        self.register_task_completion(self.task_info, self.repo_id, 'pull_requests')
 
     def pull_request_comments_model(self):
 
