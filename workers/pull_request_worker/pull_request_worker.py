@@ -40,6 +40,8 @@ class GitHubPullRequestWorker(Worker):
 
         self.deep_collection = True
         self.platform_id = 25150 # GitHub
+        self.owner = None
+        self.repo = None
 
         # Run the general worker initialization
         super().__init__(worker_type, config, given, models, data_tables, operations_tables)
@@ -173,7 +175,7 @@ class GitHubPullRequestWorker(Worker):
 
     def pull_request_files_model(self, task_info, repo_id):
 
-        owner, repo = self.get_owner_repo(task_info['given']['github_url'])
+        self.owner, self.repo = self.get_owner_repo(task_info['given']['github_url'])
 
         # query existing PRs and the respective url we will append the commits url to
         pr_number_sql = s.sql.text("""
@@ -193,7 +195,7 @@ class GitHubPullRequestWorker(Worker):
                 {{
                   repository(owner:"%s", name:"%s"){{
                     pullRequest (number: %s) {{
-                """ % (owner, repo, pull_request.pr_src_number) + """
+                """ % (self.owner, self.repo, pull_request.pr_src_number) + """
                       files (last: 100{files}) {{
                         pageInfo {{
                           hasPreviousPage
@@ -365,10 +367,8 @@ class GitHubPullRequestWorker(Worker):
 
     def _get_pk_source_prs(self):
 
-        owner, repo = self.get_owner_repo(github_url)
-
         pr_url = (
-            f"https://api.github.com/repos/{owner}/{repo}/pulls?state=all&"
+            f"https://api.github.com/repos/{self.owner}/{self.repo}/pulls?state=all&"
             "direction=asc&per_page=100&page={}"
         )
 
@@ -493,7 +493,7 @@ class GitHubPullRequestWorker(Worker):
     def pull_request_comments_model(self):
 
         comments_url = (
-            f"https://api.github.com/repos/{owner}/{repo}/issues/comments?per_page=100"
+            f"https://api.github.com/repos/{self.owner}/{self.repo}/issues/comments?per_page=100"
             "&page={}"
         )
 
@@ -560,7 +560,7 @@ class GitHubPullRequestWorker(Worker):
             pk_source_prs = self._get_pk_source_prs()
 
         events_url = (
-            f"https://api.github.com/repos/{owner}/{repo}/issues/events?per_page=100&"
+            f"https://api.github.com/repos/{self.owner}/{self.repo}/issues/events?per_page=100&"
             "page={}"
         )
 
@@ -625,7 +625,7 @@ class GitHubPullRequestWorker(Worker):
 
         reviews_urls = [
             (
-                f"https://api.github.com/repos/{owner}/{repo}/pulls/{pr['number']}/"
+                f"https://api.github.com/repos/{self.owner}/{self.repo}/pulls/{pr['number']}/"
                 "reviews?per_page=100", {'pull_request_id': pr['pull_request_id']}
             )
             for pr in pk_source_prs
@@ -688,7 +688,7 @@ class GitHubPullRequestWorker(Worker):
 
         # Review Comments
 
-        review_msg_url = (f'https://api.github.com/repos/{owner}/{repo}/pulls' +
+        review_msg_url = (f'https://api.github.com/repos/{self.owner}/{self.repo}/pulls' +
             '/comments?per_page=100&page={}')
 
         review_msg_action_map = {
