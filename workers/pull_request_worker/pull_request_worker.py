@@ -493,7 +493,8 @@ class GitHubPullRequestWorker(Worker):
     def pull_request_comments_model(self):
 
         comments_url = (
-            f'https://api.github.com/repos/{owner}/{repo}/issues/comments?per_page=100&page={}'
+            f"https://api.github.com/repos/{owner}/{repo}/issues/comments?per_page=100"
+            "&page={}"
         )
 
         comment_action_map = {
