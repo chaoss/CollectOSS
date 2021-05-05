@@ -368,7 +368,7 @@ class GitHubPullRequestWorker(Worker):
         owner, repo = self.get_owner_repo(github_url)
 
         pr_url = (
-            f"https://api.github.com/repos/{owner}/{repo}/pulls?state=all&"
+            "https://api.github.com/repos/{owner}/{repo}/pulls?state=all&"
             "direction=asc&per_page=100&page={}"
         )
 
@@ -565,7 +565,7 @@ class GitHubPullRequestWorker(Worker):
             pk_source_prs = self._get_pk_source_prs()
 
         events_url = (
-            f"https://api.github.com/repos/{owner}/{repo}/issues/events?per_page=100&page={}"
+            "https://api.github.com/repos/{owner}/{repo}/issues/events?per_page=100&page={}"
         )
 
         # Get events that we already have stored
@@ -629,7 +629,7 @@ class GitHubPullRequestWorker(Worker):
 
         reviews_urls = [
             (
-                f"https://api.github.com/repos/{owner}/{repo}/pulls/{pr['number']}/"
+                "https://api.github.com/repos/{owner}/{repo}/pulls/{pr['number']}/"
                 "reviews?per_page=100", {'pull_request_id': pr['pull_request_id']}
             )
             for pr in pk_source_prs
