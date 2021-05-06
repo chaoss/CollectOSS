@@ -435,61 +435,66 @@ class Worker():
 
     def get_sqlalchemy_type(self, data):
         if type(data) == str:
-            return s.types.String
+            try:
+                time.strptime(data, "%Y-%m-%dT%H:%M:%SZ")
+                return s.types.TIMESTAMP
+            except ValueError:
+                return s.types.String
         elif type(data) == int:
             return s.types.Integer
         elif type(data) == float:
             return s.types.Float
+        elif type(data) in [numpy.datetime64, pd._libs.tslibs.timestamps.Timestamp]:
+            return s.types.TIMESTAMP
         # elif type(data) == dict:
         #     return s.types.JSON
         # elif type(data) == list:
         #     return s.types.ARRAY(s.types.JSON)
         return s.types.String
 
-    def _setup_postgres_merge(self, data1, data2, columns1, columns2):
-
-        data1_df = pd.DataFrame(data1, columns=data1[0].keys())
-        data2_df = pd.DataFrame(data2, columns=data2[0].keys())
+    def _setup_postgres_merge(self, data_sets):
 
         metadata = s.MetaData()
 
-        data1_table = s.schema.Table(f"data1_{os.getpid()}", metadata)
-        data2_table = s.schema.Table(f"data2_{os.getpid()}", metadata)
+        data_tables = []
 
-        for column in columns1:
-            data1_table.append_column(
-                s.schema.Column(column, self.get_sqlalchemy_type(data1[0]))
-            )
-        for column in columns2:
-            data2_table.append_column(
-                s.schema.Column(column, self.get_sqlalchemy_type(data2[0]))
-            )
+        # Setup/create tables
+        for index, data in enumerate(data_sets):
+
+            data_table = s.schema.Table(f"merge_data_{index}_{os.getpid()}", metadata)
+
+            for column in pd.DataFrame(data).columns:
+                data_table.append_column(
+                    s.schema.Column(column, self.get_sqlalchemy_type(data[0][column]))
+                )
+
+            data_tables.append(data_table)
 
         metadata.create_all(self.db, checkfirst=True)
 
-        self.bulk_insert(
-            data1_table, insert=data1_df[columns1].to_dict(orient='records')
-        )
+        # Insert data to tables
+        for data_table, data in zip(data_tables, data_sets):
 
-        self.bulk_insert(
-            data2_table, insert=data2_df[columns2].to_dict(orient='records')
-        )
+            self.bulk_insert(
+                data_table, insert=data
+            )
 
         session = s.orm.Session(self.db)
+        self.logger.info("Session created for merge tables\n")
 
-        # session_maker = s.orm.sessionmaker(self.db)
-        self.logger.info("Session created for temp tables\n")
-
-        return data1_table, data2_table, metadata, session
+        return data_tables, metadata, session
 
     def _close_postgres_merge(self, metadata, session):
 
         session.close()
-        self.logger.info("Session closed\n")
+        self.logger.info("Session closed")
 
         # metadata.reflect(self.db, only=[new_data_table.name, table_values_table.name])
         metadata.drop_all(self.db, checkfirst=True)
         self.logger.info("Merge tables dropped\n")
+
+    def _get_data_set_columns(self, data, columns):
+        return pd.DataFrame(data, columns=data[0].keys())[columns].to_dict(orient='records')
 
     def organize_needed_data(
         self, new_data, table_values, table_pkey, action_map={}, in_memory=True
@@ -512,47 +517,14 @@ class Worker():
                 new_data_columns += action_map['update']['source']
                 table_value_columns += action_map['update']['augur']
 
-            new_data_table, table_values_table, metadata, session = self._setup_postgres_merge(
-                new_data, table_values, new_data_columns, table_value_columns
+            (new_data_table, table_values_table), metadata, session = self._setup_postgres_merge(
+                [
+                    self._get_data_set_columns(new_data, new_data_columns),
+                    self._get_data_set_columns(table_values, table_value_columns)
+                ]
             )
 
-            # metadata = s.MetaData()
-            #
-            # new_data_table = s.schema.Table(f"new_data_{os.getpid()}", metadata)
-            # table_values_table = s.schema.Table(f"table_values_{os.getpid()}", metadata)
-            #
-            # new_data_columns = action_map['insert']['source']
-            # table_value_columns = action_map['insert']['augur']
-            # if 'update' in action_map:
-            #     new_data_columns += action_map['update']['source']
-            #     table_value_columns += action_map['update']['augur']
-            #
-            # for column in new_data_columns:
-            #     new_data_table.append_column(s.schema.Column(column, self.get_sqlalchemy_type(new_data[0]) ))
-            # for column in table_value_columns:
-            #     table_values_table.append_column(s.schema.Column(column, self.get_sqlalchemy_type(table_values[0]) ))
-            #
-            # metadata.create_all(self.db, checkfirst=True)
-            #
-            # new_data_df = pd.DataFrame(new_data)
-            #
-            # self.bulk_insert(
-            #     new_data_table, insert=new_data_df[new_data_columns].to_dict(orient='records')
-            # )
-            #
-            # self.bulk_insert(
-            #     table_values_table,
-            #     insert=pd.DataFrame(
-            #         table_values, columns=table_values[0].keys()
-            #     )[table_value_columns].to_dict(orient='records')
-            # )
-            #
-            # session = s.orm.Session(self.db)
-            #
-            # # session_maker = s.orm.sessionmaker(self.db)
-            # self.logger.info("Session created for temp tables\n")
 
-            # with session_maker() as session:
             need_insertion = pd.DataFrame(session.query(new_data_table).join(table_values_table,
                 eval(
                     ' and '.join([
@@ -564,7 +536,7 @@ class Worker():
                     table_values_table.c[action_map['insert']['augur'][0]] == None
                 ).all(), columns=table_value_columns)
 
-            self.logger.info("need_insertion calculated successfully\n")
+            self.logger.info("need_insertion calculated successfully")
 
             need_updates = pd.DataFrame(columns=table_value_columns)
             if 'update' in action_map:
@@ -576,14 +548,7 @@ class Worker():
                         eval(' and '.join([f"table_values_table.c.{table_column} != new_data_table.c.{source_column}" for \
                         table_column, source_column in zip(action_map['update']['augur'], action_map['update']['source'])]))
                     ) ).all(), columns=table_value_columns)
-                self.logger.info("need_updates calculated successfully\n")
-
-            # session.close()
-            # self.logger.info("Session closed")
-            #
-            # # metadata.reflect(self.db, only=[new_data_table.name, table_values_table.name])
-            # metadata.drop_all(self.db, checkfirst=True)
-            # self.logger.info("Temp tables dropped\n")
+                self.logger.info("need_updates calculated successfully")
 
             self._close_postgres_merge(metadata, session)
 
@@ -1174,8 +1139,9 @@ class Worker():
             } for data_point in data
         ]
 
-
-    def enrich_data_primary_keys(self, source_data, table, gh_merge_fields, augur_merge_fields):
+    def enrich_data_primary_keys(
+        self, source_data, table, gh_merge_fields, augur_merge_fields, in_memory=False
+    ):
 
         self.logger.info("Preparing to enrich data.\n")
 
@@ -1185,80 +1151,124 @@ class Worker():
 
         source_df = pd.DataFrame(source_data)
 
-
-        s_tuple = s.tuple_([table.c[field] for field in augur_merge_fields])
-        s_tuple.__dict__['clauses'] = s_tuple.__dict__['clauses'][0].effective_value
-        s_tuple.__dict__['_type_tuple'] = []
-        for field in augur_merge_fields:
-            s_tuple.__dict__['_type_tuple'].append(table.c[field].__dict__['type'])
-
         for column in gh_merge_fields:
             if '.' not in column:
                 continue
             root = column.split('.')[0]
             expanded_column = pd.DataFrame(source_df[root].tolist())
-            expanded_column.columns = [f'{root}.{attribute}' for attribute in expanded_column.columns]
+            expanded_column.columns = [
+                f'{root}.{attribute}' for attribute in expanded_column.columns
+            ]
             source_df = source_df.join(expanded_column)
 
-        # try:
-        #     primary_keys = self.db.execute(s.sql.select(
-        #             [table.c[field] for field in augur_merge_fields] + [table.c[list(table.primary_key)[0].name]]
-        #         ).where(
-        #             s_tuple.in_(
+        if not in_memory:
 
-        #                 list(source_df[gh_merge_fields].itertuples(index=False))
-        #             ))).fetchall()
-        # except psycopg2.errors.StatementTooComplex as e:
-        self.logger.info("Retrieve pk statement too complex, querying all instead " +
-            "and performing partitioned merge.\n")
-        all_primary_keys = self.db.execute(s.sql.select(
-                [table.c[field] for field in augur_merge_fields] + [table.c[list(table.primary_key)[0].name]]
-            )).fetchall()
-        self.logger.info("Queried all")
-        all_primary_keys_df = pd.DataFrame(all_primary_keys,
-            columns=augur_merge_fields + [list(table.primary_key)[0].name])
-        self.logger.info("Converted to df")
-        # all_primary_keys_df.to_json(path_or_buf='all_primary_keys_df.json', orient='records')
-        # source_df.to_json(path_or_buf='source_df.json', orient='records')
+            (source_table, ), metadata, session = self._setup_postgres_merge(
+                [self._get_data_set_columns(source_data, gh_merge_fields)]
+            )
 
-        source_df, all_primary_keys_df = self.sync_df_types(source_df, all_primary_keys_df,
-                gh_merge_fields, augur_merge_fields)
+            source_pk = pd.DataFrame(
+                eval(
+                    "session.query("
+                        + ", ".join(
+                            [
+                                f"table.c.{column}" for column in [list(table.primary_key)[0].name]
+                                + augur_merge_fields
+                            ]
+                        )
+                    + ")"
+                ).join(
+                    source_table,
+                    eval(
+                        ' and '.join(
+                            [
+                                f"table.c.{table_column} == source_table.c.{source_column}"
+                                for table_column, source_column in zip(
+                                    augur_merge_fields, gh_merge_fields
+                                )
+                            ]
+                        )
+                    )
+                ).all(), columns=[list(table.primary_key)[0].name] + gh_merge_fields
+            )
 
-        self.logger.info("Synced df types")
+            source_pk, source_df = self.sync_df_types(
+                source_pk, source_df, gh_merge_fields, gh_merge_fields
+            )
+            source_pk = source_pk.merge(source_df, how='inner', on=gh_merge_fields)
+            self.logger.info(source_pk)
 
-        partitions = math.ceil(len(source_df) / 600)#1000)
-        attempts = 0
-        while attempts < 50:
-            try:
-                source_pk = pd.DataFrame()
-                self.logger.info(f"Trying {partitions} partitions of new data, {len(all_primary_keys_df)} " +
-                    "pk data points to enrich\n")
-                for sub_df in numpy.array_split(source_df, partitions):
-                    self.logger.info(f"Trying a partition, len {len(sub_df)}\n")
-                    source_pk = pd.concat([ source_pk, sub_df.merge(all_primary_keys_df, suffixes=('','_table'),
-                        how='inner', left_on=gh_merge_fields, right_on=augur_merge_fields) ])
-                    self.logger.info(f"source_pk merge: {len(sub_df)} worked\n")
-                break
+            self.logger.info("source_pk calculated successfully")
 
-            except MemoryError as e:
-                self.logger.info(f"new_data ({sub_df.shape}) is too large to allocate memory for " +
-                    f"source_pk df merge.\nMemoryError: {e}\nTrying again with {partitions + 1} partitions...\n")
-                partitions += 1
-                attempts += 1
-            # self.logger.info(f"End attempt # {attempts}\n")
-        if attempts >= 50:
-            self.logger.info("Max source_pk merge attempts exceeded, cannot perform " +
-                "updates on this repo.\n")
+            self._close_postgres_merge(metadata, session)
+
         else:
-            self.logger.info(f"Data enrichment successful, length: {len(source_pk)}\n")
 
-        # all_primary_keys_df.to_json(path_or_buf='all_primary_keys_df.json', orient='records')
+            # s_tuple = s.tuple_([table.c[field] for field in augur_merge_fields])
+            # s_tuple.__dict__['clauses'] = s_tuple.__dict__['clauses'][0].effective_value
+            # s_tuple.__dict__['_type_tuple'] = []
+            # for field in augur_merge_fields:
+            #     s_tuple.__dict__['_type_tuple'].append(table.c[field].__dict__['type'])
 
-        # all_primary_keys_dask_df = dd.from_pandas(all_primary_keys_df, chunksize=1000)
-        # source_dask_df = dd.from_pandas(source_df, chunksize=1000)
-        # result = json.loads(source_dask_df.merge(all_primary_keys_dask_df, suffixes=('','_table'),
-        #     how='inner', left_on=gh_merge_fields, right_on=augur_merge_fields).compute(
-        #     ).to_json(default_handler=str, orient='records'))
+            # try:
+            #     primary_keys = self.db.execute(s.sql.select(
+            #             [table.c[field] for field in augur_merge_fields] + [table.c[list(table.primary_key)[0].name]]
+            #         ).where(
+            #             s_tuple.in_(
+
+            #                 list(source_df[gh_merge_fields].itertuples(index=False))
+            #             ))).fetchall()
+            # except psycopg2.errors.StatementTooComplex as e:
+            self.logger.info("Retrieve pk statement too complex, querying all instead " +
+                "and performing partitioned merge.\n")
+            all_primary_keys = self.db.execute(s.sql.select(
+                    [table.c[field] for field in augur_merge_fields] + [table.c[list(table.primary_key)[0].name]]
+                )).fetchall()
+            self.logger.info("Queried all")
+            all_primary_keys_df = pd.DataFrame(all_primary_keys,
+                columns=augur_merge_fields + [list(table.primary_key)[0].name])
+            self.logger.info("Converted to df")
+            # all_primary_keys_df.to_json(path_or_buf='all_primary_keys_df.json', orient='records')
+            # source_df.to_json(path_or_buf='source_df.json', orient='records')
+
+            source_df, all_primary_keys_df = self.sync_df_types(source_df, all_primary_keys_df,
+                    gh_merge_fields, augur_merge_fields)
+
+            self.logger.info("Synced df types")
+
+            partitions = math.ceil(len(source_df) / 600)#1000)
+            attempts = 0
+            while attempts < 50:
+                try:
+                    source_pk = pd.DataFrame()
+                    self.logger.info(f"Trying {partitions} partitions of new data, {len(all_primary_keys_df)} " +
+                        "pk data points to enrich\n")
+                    for sub_df in numpy.array_split(source_df, partitions):
+                        self.logger.info(f"Trying a partition, len {len(sub_df)}\n")
+                        source_pk = pd.concat([ source_pk, sub_df.merge(all_primary_keys_df, suffixes=('','_table'),
+                            how='inner', left_on=gh_merge_fields, right_on=augur_merge_fields) ])
+                        self.logger.info(f"source_pk merge: {len(sub_df)} worked\n")
+                    break
+
+                except MemoryError as e:
+                    self.logger.info(f"new_data ({sub_df.shape}) is too large to allocate memory for " +
+                        f"source_pk df merge.\nMemoryError: {e}\nTrying again with {partitions + 1} partitions...\n")
+                    partitions += 1
+                    attempts += 1
+                # self.logger.info(f"End attempt # {attempts}\n")
+            if attempts >= 50:
+                self.logger.info("Max source_pk merge attempts exceeded, cannot perform " +
+                    "updates on this repo.\n")
+            else:
+                self.logger.info(f"Data enrichment successful, length: {len(source_pk)}\n")
+
+            # all_primary_keys_df.to_json(path_or_buf='all_primary_keys_df.json', orient='records')
+
+            # all_primary_keys_dask_df = dd.from_pandas(all_primary_keys_df, chunksize=1000)
+            # source_dask_df = dd.from_pandas(source_df, chunksize=1000)
+            # result = json.loads(source_dask_df.merge(all_primary_keys_dask_df, suffixes=('','_table'),
+            #     how='inner', left_on=gh_merge_fields, right_on=augur_merge_fields).compute(
+            #     ).to_json(default_handler=str, orient='records'))
         return source_pk.to_dict(orient='records')
 
         # if len(primary_keys) > 0:
@@ -1286,6 +1296,10 @@ class Worker():
         :param all_urls: list of tuples
         """
 
+        if not len(all_urls):
+            self.logger.info("No urls to multithread, returning blank list.\n")
+            return []
+
         def load_url(url, extra_data={}):
             try:
                 html = requests.get(url, stream=True, headers=self.headers)
@@ -1293,7 +1307,7 @@ class Worker():
             except requests.exceptions.RequestException as e:
                 self.logger.info(e, url)
 
-        self.logger.info("Beginning to multithread API endpoints.\n")
+        self.logger.info("Beginning to multithread API endpoints.")
 
         start = time.time()
 
@@ -1302,20 +1316,25 @@ class Worker():
 
         partitions = math.ceil(len(all_urls) / 600)
         self.logger.info(f"{len(all_urls)} urls to process. Trying {partitions} partitions. " +
-            f"Using {max(multiprocessing.cpu_count()//8, 1)} threads.\n")
+            f"Using {max(multiprocessing.cpu_count()//8, 1)} threads.")
         for urls in numpy.array_split(all_urls, partitions):
             attempts = 0
-            self.logger.info(f"Total data points collected so far: {len(all_data)}\n")
+            self.logger.info(f"Total data points collected so far: {len(all_data)}")
             while len(urls) > 0 and attempts < max_attempts:
-                with concurrent.futures.ThreadPoolExecutor(max_workers=max(multiprocessing.cpu_count()//8, 1)) as executor:
+                with concurrent.futures.ThreadPoolExecutor(
+                    max_workers=max(multiprocessing.cpu_count()//8, 1)
+                ) as executor:
                     # Start the load operations and mark each future with its URL
                     future_to_url = {executor.submit(load_url, *url): url for url in urls}
-                    self.logger.info("Multithreaded urls and returned status codes:\n")
+                    self.logger.info("Multithreaded urls and returned status codes:")
                     count = 0
                     for future in concurrent.futures.as_completed(future_to_url):
 
                         if count % 100 == 0:
-                            self.logger.info(f"Processed {count} / {valid_url_count} urls. {len(urls)} remaining in this partition.")
+                            self.logger.info(
+                                f"Processed {len(all_data)} / {valid_url_count} urls. "
+                                f"{len(urls)} remaining in this partition."
+                            )
                         count += 1
 
                         url = future_to_url[future]
@@ -1323,7 +1342,9 @@ class Worker():
                             response, extra_data = future.result()
 
                             if response.status_code != 200:
-                                self.logger.info(f"Url: {url[0]} ; Status code: {response.status_code}")
+                                self.logger.info(
+                                    f"Url: {url[0]} ; Status code: {response.status_code}"
+                                )
 
                             if response.status_code == 403 or response.status_code == 401: # 403 is rate limit, 404 is not found, 401 is bad credentials
                                 self.update_rate_limit(response, platform=platform)
@@ -1339,23 +1360,32 @@ class Worker():
                                 all_data += page_data
 
                                 if 'last' in response.links and "&page=" not in url[0]:
-                                    urls += [(url[0] + f"&page={page}", extra_data) for page in range(
-                                        2, int(response.links['last']['url'].split('=')[-1]) + 1)]
+                                    urls += [
+                                        (url[0] + f"&page={page}", extra_data) for page in range(
+                                            2, int(response.links['last']['url'].split('=')[-1]) + 1
+                                        )
+                                    ]
                                 urls = numpy.delete(urls, numpy.where(urls == url), axis=0)
 
                             elif response.status_code == 404:
                                 urls = numpy.delete(urls, numpy.where(urls == url), axis=0)
                                 self.logger.info(f"Not found url: {url}\n")
                             else:
-                                self.logger.info(f"Unhandled response code: {response.status_code} {url}\n")
+                                self.logger.info(
+                                    f"Unhandled response code: {response.status_code} {url}\n"
+                                )
 
                         except Exception as e:
-                            self.logger.info(f"{url} generated an exception: {traceback.format_exc()}\n")
+                            self.logger.info(
+                                f"{url} generated an exception: {traceback.format_exc()}\n"
+                            )
 
                 attempts += 1
 
-        self.logger.info(f"Processed {valid_url_count} urls and got {len(all_data)} data points " +
-            f"in {time.time() - start} seconds thanks to multithreading!\n")
+        self.logger.info(
+            f"Processed {valid_url_count} urls and got {len(all_data)} data points "
+            f"in {time.time() - start} seconds thanks to multithreading!\n"
+        )
         return all_data
 
 
@@ -1402,7 +1432,9 @@ class Worker():
                     self.logger.info("Request returned a dict: {}\n".format(page_data))
                     if page_data['message'] == "Not Found":
                         self.logger.warning(
-                            f"Github repo was not found or does not exist for endpoint: {url.format(page_number)}\n")
+                            "Github repo was not found or does not exist for endpoint: "
+                            f"{url.format(page_number)}\n"
+                        )
                         break
                     if "You have triggered an abuse detection mechanism." in page_data['message']:
                         num_attempts -= 1
@@ -1439,13 +1471,17 @@ class Worker():
             if not forward_pagination:
 
                 # Checking contents of requests with what we already have in the db
-                page_insertions, page_updates = self.organize_needed_data(page_data, table_values, list(table.primary_key)[0].name,
-                    action_map, in_memory=True)
+                page_insertions, page_updates = self.organize_needed_data(
+                    page_data, table_values, list(table.primary_key)[0].name,
+                    action_map, in_memory=True
+                )
 
                 # Reached a page where we already have all tuples
                 if len(need_insertion) == 0 and len(need_update) == 0 and \
                         backwards_activation:
-                    self.logger.info("No more pages with unknown tuples, breaking from pagination.\n")
+                    self.logger.info(
+                        "No more pages with unknown tuples, breaking from pagination.\n"
+                    )
                     break
 
                 need_insertion += page_insertions
