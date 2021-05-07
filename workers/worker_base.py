@@ -494,7 +494,17 @@ class Worker():
         self.logger.info("Merge tables dropped\n")
 
     def _get_data_set_columns(self, data, columns):
-        return pd.DataFrame(data, columns=data[0].keys())[columns].to_dict(orient='records')
+        df = pd.DataFrame(data, columns=data[0].keys())
+        for column in columns:
+            if '.' not in column:
+                continue
+            root = column.split('.')[0]
+            expanded_column = pd.DataFrame(df[root].tolist())
+            expanded_column.columns = [
+                f'{root}.{attribute}' for attribute in expanded_column.columns
+            ]
+            df = df.join(expanded_column)
+        return df[columns].to_dict(orient='records')
 
     def organize_needed_data(
         self, new_data, table_values, table_pkey, action_map={}, in_memory=True
@@ -523,7 +533,6 @@ class Worker():
                     self._get_data_set_columns(table_values, table_value_columns)
                 ]
             )
-
 
             need_insertion = pd.DataFrame(session.query(new_data_table).join(table_values_table,
                 eval(
@@ -970,7 +979,8 @@ class Worker():
         self.headers = None
         self.logger.info("Trying initialization.")
         # Make a list of api key in the config combined w keys stored in the database
-        # Select endpoint to hit solely to retrieve rate limit information from headers of the response
+        # Select endpoint to hit solely to retrieve rate limit
+        #   information from headers of the response
         # Adjust header keys needed to fetch rate limit information from the API responses
         if platform == 'github':
             url = "https://api.github.com/users/gabe-heim"
@@ -989,23 +999,31 @@ class Worker():
             rate_limit_header_key = 'ratelimit-remaining'
             rate_limit_reset_header_key = 'ratelimit-reset'
 
-        for oauth in [{'oauth_id': 0, 'access_token': self.config[key_name]}] + json.loads(pd.read_sql(oauthSQL, self.helper_db, params={}).to_json(orient="records")):
+        for oauth in [{'oauth_id': 0, 'access_token': self.config[key_name]}] + json.loads(
+            pd.read_sql(oauthSQL, self.helper_db, params={}).to_json(orient="records")
+        ):
             if platform == 'github':
                 self.headers = {'Authorization': 'token %s' % oauth['access_token']}
             elif platform == 'gitlab':
                 self.headers = {'Authorization': 'Bearer %s' % oauth['access_token']}
-            self.logger.debug("Getting rate limit info for oauth: {}\n".format(oauth))
             response = requests.get(url=url, headers=self.headers)
             self.oauths.append({
                     'oauth_id': oauth['oauth_id'],
                     'access_token': oauth['access_token'],
                     'rate_limit': int(response.headers[rate_limit_header_key]),
-                    'seconds_to_reset': (datetime.datetime.fromtimestamp(int(response.headers[rate_limit_reset_header_key])) - datetime.datetime.now()).total_seconds()
+                    'seconds_to_reset': (
+                        datetime.datetime.fromtimestamp(
+                            int(response.headers[rate_limit_reset_header_key])
+                        ) - datetime.datetime.now()
+                    ).total_seconds()
                 })
-            self.logger.debug("Found OAuth available for use: {}\n\n".format(self.oauths[-1]))
+            self.logger.debug("Found OAuth available for use: {}".format(self.oauths[-1]))
 
         if len(self.oauths) == 0:
-            self.logger.info("No API keys detected, please include one in your config or in the worker_oauths table in the augur_operations schema of your database\n")
+            self.logger.info(
+                "No API keys detected, please include one in your config or in the "
+                "worker_oauths table in the augur_operations schema of your database."
+            )
 
         # First key to be used will be the one specified in the config (first element in
         #   self.oauths array will always be the key in use)
@@ -1014,7 +1032,7 @@ class Worker():
         elif platform == 'gitlab':
             self.headers = {'Authorization': 'Bearer %s' % self.oauths[0]['access_token']}
 
-        self.logger.info("OAuth initialized")
+        self.logger.info("OAuth initialized\n")
 
     def bulk_insert(
         self, table, insert=[], update=[], unique_columns=[], update_columns=[],
@@ -1172,7 +1190,7 @@ class Worker():
                     "session.query("
                         + ", ".join(
                             [
-                                f"table.c.{column}" for column in [list(table.primary_key)[0].name]
+                                f"table.c['{column}']" for column in [list(table.primary_key)[0].name]
                                 + augur_merge_fields
                             ]
                         )
@@ -1182,7 +1200,7 @@ class Worker():
                     eval(
                         ' and '.join(
                             [
-                                f"table.c.{table_column} == source_table.c.{source_column}"
+                                f"table.c['{table_column}'] == source_table.c['{source_column}']"
                                 for table_column, source_column in zip(
                                     augur_merge_fields, gh_merge_fields
                                 )
@@ -1388,13 +1406,231 @@ class Worker():
         )
         return all_data
 
+    def new_organize_needed_data(
+        self, new_data, augur_table=None, where_clause=True, action_map={}
+    ):
+
+        if len(new_data) == 0:
+            return [], []
+
+        need_insertion = pd.DataFrame()
+        need_updates = pd.DataFrame()
+
+        new_data_columns = copy.deepcopy(action_map['insert']['source'])
+        table_value_columns = copy.deepcopy(action_map['insert']['augur'])
+
+        if 'update' in action_map:
+            new_data_columns += action_map['update']['source']
+            table_value_columns += action_map['update']['augur']
+
+        (new_data_table, ), metadata, session = self._setup_postgres_merge(
+            [
+                self._get_data_set_columns(new_data, new_data_columns)
+            ]
+        )
+
+        need_insertion = pd.DataFrame(
+            session.query(new_data_table).join(
+                augur_table,
+                eval(
+                    ' and '.join(
+                        [
+                            f"augur_table.c['{table_column}'] == new_data_table.c['{source_column}']"
+                            for table_column, source_column in zip(action_map['insert']['augur'],
+                            action_map['insert']['source'])
+                        ]
+                    )
+                ), isouter=True
+            ).filter(
+                augur_table.c[action_map['insert']['augur'][0]] == None
+            ).all(), columns=table_value_columns
+        )
+
+        self.logger.info("need_insertion calculated successfully")
+
+        need_updates = pd.DataFrame(columns=table_value_columns)
+        if 'update' in action_map:
+            need_updates = pd.DataFrame(
+                session.query(new_data_table).join(
+                    augur_table,
+                    s.and_(
+                        eval(
+                            ' and '.join(
+                                [
+                                    f"augur_table.c.{table_column} == new_data_table.c.{source_column}"
+                                    for table_column, source_column in zip(
+                                        action_map['insert']['augur'], action_map['insert']['source']
+                                    )
+                                ]
+                            )
+                        ),
+
+                        eval(
+                            ' and '.join(
+                                [
+                                    f"augur_table.c.{table_column} != new_data_table.c.{source_column}"
+                                    for table_column, source_column in zip(
+                                        action_map['update']['augur'], action_map['update']['source']
+                                    )
+                                ]
+                            )
+                        )
+                    )
+                ).all(), columns=table_value_columns
+            )
+            self.logger.info("need_updates calculated successfully")
+
+        self._close_postgres_merge(metadata, session)
+
+        new_data_df = pd.DataFrame(new_data)
+
+        need_insertion, new_data_df = self.sync_df_types(
+            need_insertion, new_data_df, table_value_columns, new_data_columns
+        )
+        need_insertion = need_insertion.merge(
+            new_data_df, how='inner', left_on=table_value_columns, right_on=new_data_columns
+        )
+
+        self.logger.info(
+            f"Table needs {len(need_insertion)} insertions and "
+            f"{len(need_updates)} updates.\n"
+        )
+
+        return need_insertion.to_dict('records'), need_updates.to_dict('records')
+
+    def new_paginate_endpoint(
+        self, url, action_map={}, table=None, where_clause=True, platform='github'
+    ):
+
+        page_number = 1
+        multiple_pages = False
+        need_insertion = []
+        need_update = []
+        all_data = []
+        forward_pagination = True
+        backwards_activation = False
+        last_page_number = -1
+        while True:
+
+            # Multiple attempts to hit endpoint
+            num_attempts = 0
+            success = False
+            while num_attempts < 10:
+                self.logger.info(f"Hitting endpoint: {url.format(page_number)}...\n")
+                try:
+                    response = requests.get(url=url.format(page_number), headers=self.headers)
+                except TimeoutError as e:
+                    self.logger.info("Request timed out. Sleeping 10 seconds and trying again...\n")
+                    time.sleep(10)
+                    continue
+
+                self.update_rate_limit(response, platform=platform)
+
+                try:
+                    page_data = response.json()
+                except:
+                    page_data = json.loads(json.dumps(response.text))
+
+                if type(page_data) == list:
+                    success = True
+                    break
+                elif type(page_data) == dict:
+                    self.logger.info("Request returned a dict: {}\n".format(page_data))
+                    if page_data['message'] == "Not Found":
+                        self.logger.warning(
+                            "Github repo was not found or does not exist for endpoint: "
+                            f"{url.format(page_number)}\n"
+                        )
+                        break
+                    if "You have triggered an abuse detection mechanism." in page_data['message']:
+                        num_attempts -= 1
+                        self.update_rate_limit(response, temporarily_disable=True,platform=platform)
+                    if page_data['message'] == "Bad credentials":
+                        self.update_rate_limit(response, bad_credentials=True, platform=platform)
+                elif type(page_data) == str:
+                    self.logger.info(f"Warning! page_data was string: {page_data}\n")
+                    if "<!DOCTYPE html>" in page_data:
+                        self.logger.info("HTML was returned, trying again...\n")
+                    elif len(page_data) == 0:
+                        self.logger.warning("Empty string, trying again...\n")
+                    else:
+                        try:
+                            page_data = json.loads(page_data)
+                            success = True
+                            break
+                        except:
+                            pass
+                num_attempts += 1
+            if not success:
+                break
+
+            # Success
+
+            # Determine if continued pagination is needed
+
+            if len(page_data) == 0:
+                self.logger.info("Response was empty, breaking from pagination.\n")
+                break
+
+            all_data += page_data
+
+            if not forward_pagination:
+
+                # Checking contents of requests with what we already have in the db
+                page_insertions, page_updates = self.new_organize_needed_data(
+                    page_data, augur_table=table, action_map=action_map
+                )
+
+                # Reached a page where we already have all tuples
+                if len(need_insertion) == 0 and len(need_update) == 0 and \
+                        backwards_activation:
+                    self.logger.info(
+                        "No more pages with unknown tuples, breaking from pagination.\n"
+                    )
+                    break
+
+                need_insertion += page_insertions
+                need_update += page_updates
+
+            # Find last page so we can decrement from there
+            if 'last' in response.links and last_page_number == -1:
+                if platform == 'github':
+                    last_page_number = int(response.links['last']['url'][-6:].split('=')[1])
+                elif platform == 'gitlab':
+                    last_page_number = int(response.links['last']['url'].split('&')[2].split('=')[1])
+
+                if not forward_pagination and not backwards_activation:
+                    page_number = last_page_number
+                    backwards_activation = True
+
+            self.logger.info("Analyzation of page {} of {} complete\n".format(page_number,
+                int(last_page_number) if last_page_number != -1 else "*last page not known*"))
+
+            if (page_number <= 1 and not forward_pagination) or \
+                    (page_number >= last_page_number and forward_pagination):
+                self.logger.info("No more pages to check, breaking from pagination.\n")
+                break
+
+            page_number = page_number + 1 if forward_pagination else page_number - 1
+
+        if forward_pagination:
+            need_insertion, need_update = self.new_organize_needed_data(
+                all_data, augur_table=table, action_map=action_map
+            )
+
+        return {
+            'insert': need_insertion,
+            'update': need_update,
+            'all': all_data
+        }
 
     def paginate_endpoint(
         self, url, action_map={}, table=None, where_clause=True, platform='github', in_memory=True
     ):
 
-        table_values = self.db.execute(s.sql.select(self.get_relevant_columns(
-            table, action_map)).where(where_clause)).fetchall()
+        table_values = self.db.execute(
+            s.sql.select(self.get_relevant_columns(table, action_map)).where(where_clause)
+        ).fetchall()
 
         page_number = 1
         multiple_pages = False
@@ -2032,17 +2268,23 @@ class Worker():
 
     def register_task_failure(self, task, repo_id, e):
 
-        self.logger.error(f"Worker ran into an error for task: {task}\n")
-        self.logger.error(f"Worker was processing this task for {self.collection_start_time - time.time()} seconds.\n")
-        self.logger.error("Printing traceback...\n")
+        self.logger.error(f"Worker ran into an error for task: {task}")
+        self.logger.error(
+            f"Worker was processing this task for {self.collection_start_time - time.time()} "
+            "seconds."
+        )
+        self.logger.error("Printing traceback...")
         self.logger.error(e)
         tb = traceback.format_exc()
         self.logger.error(tb)
 
-        self.logger.info(f'This task inserted {self.results_counter} tuples before failure.\n')
-        self.logger.info("Notifying broker and logging task failure in database...\n")
-        key = 'github_url' if 'github_url' in task['given'] else 'git_url' if 'git_url' in task['given'] else \
-            'gitlab_url' if 'gitlab_url' in task['given'] else 'INVALID_GIVEN'
+        self.logger.info(f"This task inserted {self.results_counter} tuples before failure.")
+        self.logger.info("Notifying broker and logging task failure in database...")
+        key = (
+            'github_url' if 'github_url' in task['given'] else 'git_url'
+            if 'git_url' in task['given'] else 'gitlab_url'
+            if 'gitlab_url' in task['given'] else 'INVALID_GIVEN'
+        )
         url = task['given'][key]
 
         """ Query all repos with repo url of given task """
@@ -2056,10 +2298,10 @@ class Worker():
             requests.post("http://{}:{}/api/unstable/task_error".format(
                 self.config['host_broker'],self.config['port_broker']), json=task)
         except requests.exceptions.ConnectionError:
-            self.logger.error('Could not send task failure message to the broker\n')
+            self.logger.error("Could not send task failure message to the broker:")
             self.logger.error(e)
         except Exception:
-            self.logger.error('An error occured while informing broker about task failure\n')
+            self.logger.error("An error occured while informing broker about task failure:")
             self.logger.error(e)
 
         # Add to history table
@@ -2072,9 +2314,13 @@ class Worker():
             "status": "Error",
             "total_results": self.results_counter
         }
-        self.helper_db.execute(self.worker_history_table.update().where(self.worker_history_table.c.history_id==self.history_id).values(task_history))
+        self.helper_db.execute(
+            self.worker_history_table.update().where(
+                self.worker_history_table.c.history_id==self.history_id
+            ).values(task_history)
+        )
 
-        self.logger.error("Recorded job error in the history table for: " + str(task) + "\n")
+        self.logger.error(f"Recorded job error in the history table for: {task}")
 
         # Update job process table
         updated_job = {
@@ -2083,8 +2329,12 @@ class Worker():
             "last_run": datetime.datetime.now(),
             "analysis_state": 0
         }
-        self.helper_db.execute(self.worker_job_table.update().where(self.worker_job_table.c.job_model==task['models'][0]).values(updated_job))
-        self.logger.info("Updated job process for model: " + task['models'][0] + "\n")
+        self.helper_db.execute(
+            self.worker_job_table.update().where(
+                self.worker_job_table.c.job_model==task['models'][0]
+            ).values(updated_job)
+        )
+        self.logger.info(f"Updated job process for model: {task['models'][0]}\n")
 
         # Reset results counter for next task
         self.results_counter = 0
@@ -2113,18 +2363,22 @@ class Worker():
         retrieveTupleSQL = s.sql.text("""
             SELECT * FROM {} WHERE {}
             """.format(table_str, where_str))
-        values = json.loads(pd.read_sql(retrieveTupleSQL, self.db, params={}).to_json(orient="records"))
+        values = json.loads(
+            pd.read_sql(retrieveTupleSQL, self.db, params={}).to_json(orient="records")
+        )
         return values
 
     def update_gitlab_rate_limit(self, response, bad_credentials=False, temporarily_disable=False):
         # Try to get rate limit from request headers, sometimes it does not work (GH's issue)
         #   In that case we just decrement from last recieved header count
         if bad_credentials and len(self.oauths) > 1:
-            self.logger.info("Removing oauth with bad credentials from consideration: {}".format(self.oauths[0]))
+            self.logger.info(
+                f"Removing oauth with bad credentials from consideration: {self.oauths[0]}"
+            )
             del self.oauths[0]
 
         if temporarily_disable:
-            self.logger.info("Gitlab rate limit reached. Temp. disabling...\n")
+            self.logger.info("Gitlab rate limit reached. Temp. disabling...")
             self.oauths[0]['rate_limit'] = 0
         else:
             try:
@@ -2132,15 +2386,15 @@ class Worker():
             except:
                 self.oauths[0]['rate_limit'] -= 1
         self.logger.info("Updated rate limit, you have: " +
-            str(self.oauths[0]['rate_limit']) + " requests remaining.\n")
+            str(self.oauths[0]['rate_limit']) + " requests remaining.")
         if self.oauths[0]['rate_limit'] <= 0:
             try:
                 reset_time = response.headers['RateLimit-Reset']
             except Exception as e:
-                self.logger.info("Could not get reset time from headers because of error: {}".format(e))
+                self.logger.info(f"Could not get reset time from headers because of error: {e}")
                 reset_time = 3600
             time_diff = datetime.datetime.fromtimestamp(int(reset_time)) - datetime.datetime.now()
-            self.logger.info("Rate limit exceeded, checking for other available keys to use.\n")
+            self.logger.info("Rate limit exceeded, checking for other available keys to use.")
 
             # We will be finding oauth with the highest rate limit left out of our list of oauths
             new_oauth = self.oauths[0]
@@ -2153,18 +2407,30 @@ class Worker():
                 self.headers = {"PRIVATE-TOKEN" : oauth['access_token']}
                 response = requests.get(url=url, headers=self.headers)
                 oauth['rate_limit'] = int(response.headers['RateLimit-Remaining'])
-                oauth['seconds_to_reset'] = (datetime.datetime.fromtimestamp(int(response.headers['RateLimit-Reset'])) - datetime.datetime.now()).total_seconds()
+                oauth['seconds_to_reset'] = (
+                    datetime.datetime.fromtimestamp(
+                        int(response.headers['RateLimit-Reset'])
+                    ) - datetime.datetime.now()
+                ).total_seconds()
 
                 # Update oauth to switch to if a higher limit is found
                 if oauth['rate_limit'] > new_oauth['rate_limit']:
-                    self.logger.info("Higher rate limit found in oauth: {}\n".format(oauth))
+                    self.logger.info(f"Higher rate limit found in oauth: {oauth}")
                     new_oauth = oauth
-                elif oauth['rate_limit'] == new_oauth['rate_limit'] and oauth['seconds_to_reset'] < new_oauth['seconds_to_reset']:
-                    self.logger.info("Lower wait time found in oauth with same rate limit: {}\n".format(oauth))
+                elif (
+                    oauth['rate_limit'] == new_oauth['rate_limit']
+                    and oauth['seconds_to_reset'] < new_oauth['seconds_to_reset']
+                ):
+                    self.logger.info(
+                        f"Lower wait time found in oauth with same rate limit: {oauth}"
+                    )
                     new_oauth = oauth
 
             if new_oauth['rate_limit'] <= 0 and new_oauth['seconds_to_reset'] > 0:
-                self.logger.info("No oauths with >0 rate limit were found, waiting for oauth with smallest wait time: {}\n".format(new_oauth))
+                self.logger.info(
+                    "No oauths with >0 rate limit were found, waiting for oauth with "
+                    f"smallest wait time: {new_oauth}\n"
+                )
                 time.sleep(new_oauth['seconds_to_reset'])
 
             # Make new oauth the 0th element in self.oauths so we know which one is in use
@@ -2180,11 +2446,16 @@ class Worker():
         # Try to get rate limit from request headers, sometimes it does not work (GH's issue)
         #   In that case we just decrement from last recieved header count
         if bad_credentials and len(self.oauths) > 1:
-            self.logger.warning("Removing oauth with bad credentials from consideration: {}".format(self.oauths[0]))
+            self.logger.warning(
+                f"Removing oauth with bad credentials from consideration: {self.oauths[0]}"
+            )
             del self.oauths[0]
 
         if temporarily_disable:
-            self.logger.debug("Github thinks we are abusing their api. Preventing use of this key until it resets...\n")
+            self.logger.debug(
+                "Github thinks we are abusing their api. Preventing use "
+                "of this key until its rate limit resets..."
+            )
             self.oauths[0]['rate_limit'] = 0
         else:
             try:
@@ -2192,17 +2463,18 @@ class Worker():
                 # self.logger.info("Recieved rate limit from headers\n")
             except:
                 self.oauths[0]['rate_limit'] -= 1
-                self.logger.info("Headers did not work, had to decrement\n")
-        self.logger.info("Updated rate limit, you have: " +
-            str(self.oauths[0]['rate_limit']) + " requests remaining.\n")
+                self.logger.info("Headers did not work, had to decrement")
+        self.logger.info(
+            f"Updated rate limit, you have: {self.oauths[0]['rate_limit']} requests remaining."
+        )
         if self.oauths[0]['rate_limit'] <= 0:
             try:
                 reset_time = response.headers['X-RateLimit-Reset']
             except Exception as e:
-                self.logger.error("Could not get reset time from headers because of error: {}".format(e))
+                self.logger.error(f"Could not get reset time from headers because of error: {e}")
                 reset_time = 3600
             time_diff = datetime.datetime.fromtimestamp(int(reset_time)) - datetime.datetime.now()
-            self.logger.info("Rate limit exceeded, checking for other available keys to use.\n")
+            self.logger.info("Rate limit exceeded, checking for other available keys to use.")
 
             # We will be finding oauth with the highest rate limit left out of our list of oauths
             new_oauth = self.oauths[0]
@@ -2220,11 +2492,17 @@ class Worker():
                     response = requests.get(url=url, headers=self.headers)
                     try:
                         oauth['rate_limit'] = int(response.headers['X-RateLimit-Remaining'])
-                        oauth['seconds_to_reset'] = (datetime.datetime.fromtimestamp(int(response.headers['X-RateLimit-Reset'])) - datetime.datetime.now()).total_seconds()
+                        oauth['seconds_to_reset'] = (
+                            datetime.datetime.fromtimestamp(
+                                int(response.headers['X-RateLimit-Reset'])
+                            ) - datetime.datetime.now()
+                        ).total_seconds()
                         success = True
                     except Exception as e:
-                        self.logger.info(f'oath method ran into error getting info from headers: {e}\n')
-                        self.logger.info(f'{self.headers}\n{url}\n')
+                        self.logger.info(
+                            f"oath method ran into error getting info from headers: {e}\n"
+                        )
+                        self.logger.info(f"{self.headers}\n{url}\n")
                     attempts -= 1
                 if not success:
                     continue
@@ -2233,12 +2511,20 @@ class Worker():
                 if oauth['rate_limit'] > new_oauth['rate_limit']:
                     self.logger.info("Higher rate limit found in oauth: {}\n".format(oauth))
                     new_oauth = oauth
-                elif oauth['rate_limit'] == new_oauth['rate_limit'] and oauth['seconds_to_reset'] < new_oauth['seconds_to_reset']:
-                    self.logger.info("Lower wait time found in oauth with same rate limit: {}\n".format(oauth))
+                elif (
+                    oauth['rate_limit'] == new_oauth['rate_limit']
+                    and oauth['seconds_to_reset'] < new_oauth['seconds_to_reset']
+                ):
+                    self.logger.info(
+                        f"Lower wait time found in oauth with same rate limit: {oauth}\n"
+                    )
                     new_oauth = oauth
 
             if new_oauth['rate_limit'] <= 0 and new_oauth['seconds_to_reset'] > 0:
-                self.logger.info("No oauths with >0 rate limit were found, waiting for oauth with smallest wait time: {}\n".format(new_oauth))
+                self.logger.info(
+                    "No oauths with >0 rate limit were found, waiting for oauth with "
+                    f"smallest wait time: {new_oauth}\n"
+                )
                 time.sleep(new_oauth['seconds_to_reset'])
 
             # Make new oauth the 0th element in self.oauths so we know which one is in use
@@ -2249,10 +2535,14 @@ class Worker():
             # Change headers to be using the new oauth's key
             self.headers = {'Authorization': 'token %s' % self.oauths[0]['access_token']}
 
-    def update_rate_limit(self, response, bad_credentials=False, temporarily_disable=False, platform="gitlab"):
+    def update_rate_limit(
+        self, response, bad_credentials=False, temporarily_disable=False, platform="gitlab"
+    ):
         if platform == 'gitlab':
-            return self.update_gitlab_rate_limit(response, bad_credentials=bad_credentials,
-                                        temporarily_disable=temporarily_disable)
+            return self.update_gitlab_rate_limit(
+                response, bad_credentials=bad_credentials, temporarily_disable=temporarily_disable
+            )
         elif platform == 'github':
-            return self.update_gh_rate_limit(response, bad_credentials=bad_credentials,
-                                        temporarily_disable=temporarily_disable)
+            return self.update_gh_rate_limit(
+                response, bad_credentials=bad_credentials, temporarily_disable=temporarily_disable
+            )
