@@ -441,7 +441,7 @@ class Worker():
             except ValueError:
                 return s.types.String
         elif type(data) == int:
-            return s.types.Integer
+            return s.types.BigInteger
         elif type(data) == float:
             return s.types.Float
         elif type(data) in [numpy.datetime64, pd._libs.tslibs.timestamps.Timestamp]:
