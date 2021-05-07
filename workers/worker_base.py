@@ -1214,7 +1214,6 @@ class Worker():
                 source_pk, source_df, gh_merge_fields, gh_merge_fields
             )
             source_pk = source_pk.merge(source_df, how='inner', on=gh_merge_fields)
-            self.logger.info(source_pk)
 
             self.logger.info("source_pk calculated successfully")
 
