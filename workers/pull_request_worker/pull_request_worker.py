@@ -815,10 +815,6 @@ class GitHubPullRequestWorker(Worker):
             )
             meta_all += [pr['head'], pr['base']]
 
-            self.logger.info(
-                f"Finished preparing nested data for pr {index}/{len(pk_source_prs)}"
-            )
-
         # PR labels insertion
         label_action_map = {
             'insert': {

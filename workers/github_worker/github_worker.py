@@ -79,17 +79,25 @@ class GitHubWorker(Worker):
             self.register_task_completion(entry_info, repo_id, 'issues')
             return
 
+        pd.DataFrame(source_issues['insert']).to_json('source_issues.json', orient='records')
+
+        def is_valid_pr_block(issue):
+            return (
+                'pull_request' in issue and issue['pull_request']
+                and isinstance(issue['pull_request'], dict) and 'url' in issue['pull_request']
+            )
+
         issues_insert = [
             {
                 'repo_id': repo_id,
                 'reporter_id': self.find_id_from_login(issue['user']['login']),
                 'pull_request': (
                     issue['pull_request']['url'].split('/')[-1]
-                    if 'pull_request' in issue else None
+                    if is_valid_pr_block(issue) else None
                 ),
                 'pull_request_id': (
                     issue['pull_request']['url'].split('/')[-1]
-                    if 'pull_request' in issue else None
+                    if is_valid_pr_block(issue) else None
                 ),
                 'created_at': issue['created_at'],
                 'issue_title': issue['title'],
