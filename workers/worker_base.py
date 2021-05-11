@@ -440,7 +440,7 @@ class Worker():
                 return s.types.TIMESTAMP
             except ValueError:
                 return s.types.String
-        elif type(data) == int:
+        elif isinstance(data, (int, numpy.integer)):
             return s.types.BigInteger
         elif type(data) == float:
             return s.types.Float
@@ -462,10 +462,13 @@ class Worker():
         for index, data in enumerate(data_sets):
 
             data_table = s.schema.Table(f"merge_data_{index}_{os.getpid()}", metadata)
+            df = pd.DataFrame(data)
 
-            for column in pd.DataFrame(data).columns:
+            for column in df.columns:
                 data_table.append_column(
-                    s.schema.Column(column, self.get_sqlalchemy_type(data[0][column]))
+                    s.schema.Column(
+                        column, self.get_sqlalchemy_type(df.fillna(method='bfill').iloc[0][column])
+                    )
                 )
 
             data_tables.append(data_table)
@@ -894,8 +897,7 @@ class Worker():
         self.logger.info("Primary key inserted into the contributors table: " + str(result.inserted_primary_key))
         self.results_counter += 1
         self.cntrb_id_inc = int(result.inserted_primary_key[0])
-
-        self.logger.info("Inserted contributor: " + cntrb['cntrb_login'] + "\n")
+        self.logger.info(f"Inserted contributor: {cntrb['cntrb_login']}\n")
 
         return self.find_id_from_login(login, platform)
 
@@ -1157,6 +1159,41 @@ class Worker():
             } for data_point in data
         ]
 
+    def _add_nested_columns(self, df, column_names):
+        # todo: support deeper nests (>1) and only expand necessary columns
+
+        for column in column_names:
+            if '.' not in column:
+                continue
+            root = column.split('.')[0]
+            expanded_column = pd.DataFrame(df[root].tolist())
+            expanded_column.columns = [
+                f'{root}.{attribute}' for attribute in expanded_column.columns
+            ]
+            df = df.join(expanded_column)
+
+        return df
+
+    def enrich_cntrb_id(self, data, key_mapping, action_map_additions={}, platform='github'):
+
+        df = self._add_nested_columns(
+            pd.DataFrame(data), key_mapping.keys()
+        )
+        df['node_id']
+
+        cntrb_action_map = {
+            'insert': {
+                'source': list(key_mapping.keys()) + ['node_id'],
+                'augur': ['cntrb_login']
+            }
+        }
+        source_assignees_insert, _ = self.new_organize_needed_data(
+            assignees_all, augur_table=self.issue_assignees_table,
+            action_map=assignee_action_map
+        )
+
+        return data
+
     def enrich_data_primary_keys(
         self, source_data, table, gh_merge_fields, augur_merge_fields, in_memory=False
     ):
@@ -1167,17 +1204,7 @@ class Worker():
             self.logger.info("There is no source data to enrich.\n")
             return []
 
-        source_df = pd.DataFrame(source_data)
-
-        for column in gh_merge_fields:
-            if '.' not in column:
-                continue
-            root = column.split('.')[0]
-            expanded_column = pd.DataFrame(source_df[root].tolist())
-            expanded_column.columns = [
-                f'{root}.{attribute}' for attribute in expanded_column.columns
-            ]
-            source_df = source_df.join(expanded_column)
+        source_df = self._add_nested_columns(pd.DataFrame(source_data), gh_merge_fields)
 
         if not in_memory:
 
@@ -1405,6 +1432,19 @@ class Worker():
         )
         return all_data
 
+    def _eval_json_columns(self, df):
+        if not len(df):
+            return df
+        for column in df.columns:
+            first_valid_value = df.fillna(method='bfill').iloc[0][column]
+            if isinstance(first_valid_value, str):
+                if (
+                    first_valid_value[0] == '{' and first_valid_value[-1] == '}'
+                    or first_valid_value[0] == '[' and first_valid_value[-1] == ']'
+                ):
+                    df[column] = df[column].apply(eval)
+        return df
+
     def new_organize_needed_data(
         self, new_data, augur_table=None, where_clause=True, action_map={}
     ):
@@ -1412,19 +1452,20 @@ class Worker():
         if len(new_data) == 0:
             return [], []
 
-        need_insertion = pd.DataFrame()
-        need_updates = pd.DataFrame()
-
-        new_data_columns = copy.deepcopy(action_map['insert']['source'])
+        new_data_columns = pd.DataFrame(new_data).columns
+        pd.DataFrame(new_data).to_json('new_data.json', orient='records')
+        self.logger.info(new_data_columns)
+        # new_data_columns = copy.deepcopy(action_map['insert']['source'])
         table_value_columns = copy.deepcopy(action_map['insert']['augur'])
 
         if 'update' in action_map:
-            new_data_columns += action_map['update']['source']
+            # new_data_columns += action_map['update']['source']
             table_value_columns += action_map['update']['augur']
 
         (new_data_table, ), metadata, session = self._setup_postgres_merge(
             [
-                self._get_data_set_columns(new_data, new_data_columns)
+                new_data
+                # self._get_data_set_columns(new_data, new_data_columns)
             ]
         )
 
@@ -1442,8 +1483,19 @@ class Worker():
                 ), isouter=True
             ).filter(
                 augur_table.c[action_map['insert']['augur'][0]] == None
-            ).all(), columns=table_value_columns
+            ).all(), columns=new_data_columns#table_value_columns
         )
+
+        need_insertion = self._eval_json_columns(need_insertion)
+
+        # new_data_df = pd.DataFrame(new_data)
+
+        # need_insertion, new_data_df = self.sync_df_types(
+        #     need_insertion, new_data_df, table_value_columns, new_data_columns
+        # )
+        # need_insertion = need_insertion.merge(
+        #     new_data_df, how='inner', left_on=table_value_columns, right_on=new_data_columns
+        # )
 
         self.logger.info("need_insertion calculated successfully")
 
@@ -1480,15 +1532,6 @@ class Worker():
             self.logger.info("need_updates calculated successfully")
 
         self._close_postgres_merge(metadata, session)
-
-        new_data_df = pd.DataFrame(new_data)
-
-        need_insertion, new_data_df = self.sync_df_types(
-            need_insertion, new_data_df, table_value_columns, new_data_columns
-        )
-        need_insertion = need_insertion.merge(
-            new_data_df, how='inner', left_on=table_value_columns, right_on=new_data_columns
-        )
 
         self.logger.info(
             f"Table needs {len(need_insertion)} insertions and "
@@ -2040,7 +2083,7 @@ class Worker():
         source_contributors = self.paginate_endpoint(contributors_url, action_map=action_map,
             table=self.contributors_table)
 
-        contributors_insert_result = []
+        contributors_insert = []
 
         for repo_contributor in source_contributors['insert']:
             # Need to hit this single contributor endpoint to get extra data
@@ -2050,7 +2093,7 @@ class Worker():
             self.update_gh_rate_limit(r)
             contributor = r.json()
 
-            contributors_insert_result.append({
+            contributors_insert.append({
                 'cntrb_login': contributor['login'],
                 'cntrb_created_at': contributor['created_at'],
                 'cntrb_email': contributor['email'] if 'email' in contributor else None,
@@ -2084,9 +2127,83 @@ class Worker():
             update=source_contributors['update'], unique_columns=action_map['insert']['augur'],
             insert=contributors_insert, update_columns=action_map['update']['augur'])
 
+    def query_github_contributors_fast(self, entry_info, repo_id):
+        """ Data collection function
+        Query the GitHub API for contributors
+        """
+        self.logger.info(f"Querying contributors with given entry info: {entry_info}")
+
+        github_url = (
+            entry_info['given']['github_url'] if 'github_url' in entry_info['given']
+            else entry_info['given']['git_url']
+        )
+
+        contributors_url = (
+            f"https://api.github.com/repos/{self.owner}/{self.name}/"
+            "contributors?per_page=100&page={}"
+        )
+
+        action_map = {
+            'insert': {
+                'source': ['login'],
+                'augur': ['cntrb_login']
+            },
+            'update': {
+                'source': ['email'],
+                'augur': ['cntrb_email']
+            }
+        }
+
+        source_contributors = self.paginate_endpoint(
+            contributors_url, action_map=action_map, table=self.contributors_table
+        )
+
+        contributors_insert = [
+            {
+                'cntrb_login': contributor['login'],
+                'cntrb_created_at': (
+                    contributor['created_at'] if 'created_at' in contributor else None
+                ),
+                'cntrb_email': contributor['email'] if 'email' in contributor else None,
+                'cntrb_company': contributor['company'] if 'company' in contributor else None,
+                'cntrb_location': contributor['location'] if 'location' in contributor else None,
+                'cntrb_canonical': contributor['email'] if 'email' in contributor else None,
+                'gh_user_id': contributor['id'],
+                'gh_login': contributor['login'],
+                'gh_url': contributor['url'],
+                'gh_html_url': contributor['html_url'],
+                'gh_node_id': contributor['node_id'],
+                'gh_avatar_url': contributor['avatar_url'],
+                'gh_gravatar_id': contributor['gravatar_id'],
+                'gh_followers_url': contributor['followers_url'],
+                'gh_following_url': contributor['following_url'],
+                'gh_gists_url': contributor['gists_url'],
+                'gh_starred_url': contributor['starred_url'],
+                'gh_subscriptions_url': contributor['subscriptions_url'],
+                'gh_organizations_url': contributor['organizations_url'],
+                'gh_repos_url': contributor['repos_url'],
+                'gh_events_url': contributor['events_url'],
+                'gh_received_events_url': contributor['received_events_url'],
+                'gh_type': contributor['type'],
+                'gh_site_admin': contributor['site_admin'],
+                'tool_source': self.tool_source,
+                'tool_version': self.tool_version,
+                'data_source': self.data_source
+            } for contributor in source_contributors['insert']
+        ]
+
+        self.bulk_insert(
+            self.contributors_table, update=source_contributors['update'],
+            unique_columns=action_map['insert']['augur'],
+            insert=contributors_insert, update_columns=action_map['update']['augur']
+        )
+
     def query_gitlab_contribtutors(self, entry_info, repo_id):
 
-        gitlab_url = entry_info['given']['gitlab_url'] if 'gitlab_url' in entry_info['given'] else entry_info['given']['git_url']
+        gitlab_url = (
+            entry_info['given']['gitlab_url'] if 'gitlab_url' in entry_info['given']
+            else entry_info['given']['git_url']
+        )
 
         self.logger.info("Querying contributors with given entry info: " + str(entry_info) + "\n")
 
