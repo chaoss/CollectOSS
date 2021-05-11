@@ -55,8 +55,10 @@ class GitHubWorker(Worker):
 
         owner, repo = self.get_owner_repo(github_url)
 
-        issues_url = f"https://api.github.com/repos/{owner}/{repo}" + \
+        issues_url = (
+            f"https://api.github.com/repos/{owner}/{repo}"
             "/issues?per_page=100&state=all&page={}"
+        )
 
         action_map = {
             'insert': {
@@ -79,13 +81,20 @@ class GitHubWorker(Worker):
             self.register_task_completion(entry_info, repo_id, 'issues')
             return
 
-        pd.DataFrame(source_issues['insert']).to_json('source_issues.json', orient='records')
-
         def is_valid_pr_block(issue):
             return (
                 'pull_request' in issue and issue['pull_request']
                 and isinstance(issue['pull_request'], dict) and 'url' in issue['pull_request']
             )
+
+        # source_issues['insert'] = self.enrich_cntrb_id(
+        #     source_issues['insert'], {'user.login': 'reporter_id'}, action_map_additions={
+        #         'insert': {
+        #             'source': 'user.node_id',
+        #             'augur': 'node_id'
+        #         }
+        #     }
+        # )
 
         issues_insert = [
             {
@@ -277,6 +286,12 @@ class GitHubWorker(Worker):
             unique_columns=event_action_map['insert']['augur'])
 
         closed_issue_updates = []
+        events_df = pd.DataFrame(
+            self._get_data_set_columns(
+                issue_events['all'], ['event', 'issue.number', 'actor.login']
+            )
+        )
+        events_df = events_df.loc[events_df.event == 'closed']
 
         assignees_all = []
         labels_all = []
@@ -297,19 +312,22 @@ class GitHubWorker(Worker):
             # If the issue is closed, then we search for the closing event and store the user's id
             if 'closed_at' in issue:
 
-                events_df = pd.DataFrame(issue_events['insert'])
+                try:
+                    closed_event = events_df.loc[
+                        events_df['issue.number'] == issue['number']
+                    ].iloc[-1]
+                except IndexError:
+                    self.logger.info(
+                        "Warning! We do not have the closing event of this issue stored\n"
+                    )
+                    continue
 
-                closed_event = events_df.loc[events_df['event'] == 'closed'].tail(1)
+                closer_cntrb_id = self.find_id_from_login(closed_event['actor.login'])
 
-                if len(closed_event) == 0:
-                    self.logger.info("Warning! We do not have the closing event of this issue stored\n")
-                else:
-                    closer_cntrb_id = self.find_id_from_login(closed_event['actor'].values[0]['login'])
-
-                    closed_issue_updates.append({
-                        'b_issue_id': issue['issue_id'],
-                        'cntrb_id': closer_cntrb_id
-                    })
+                closed_issue_updates.append({
+                    'b_issue_id': issue['issue_id'],
+                    'cntrb_id': closer_cntrb_id
+                })
 
         # Closed issues, update with closer id
         self.bulk_insert(
