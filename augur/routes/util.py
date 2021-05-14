@@ -24,23 +24,23 @@ def create_routes(server):
     def get_all_repos():
 
         get_all_repos_sql = s.sql.text("""
-SELECT
-    repo.repo_id,
-    repo.repo_name,
-    repo.description,
-    repo.repo_git AS url,
-    repo.repo_status,
-    COALESCE ( commits_all_time, 0 ) AS commits_all_time,
-    COALESCE ( issues_all_time, 0 ) AS issues_all_time,
-    rg_name,
-    repo.repo_group_id 
-FROM
-    repo
-    LEFT OUTER JOIN ( SELECT repo_id, COUNT ( DISTINCT commits.cmt_commit_hash ) AS commits_all_time FROM commits GROUP BY repo_id ) A ON repo.repo_id = A.repo_id
-    LEFT OUTER JOIN ( SELECT repo_id, COUNT ( * ) AS issues_all_time FROM issues WHERE issues.pull_request IS NULL GROUP BY repo_id ) b ON repo.repo_id = b.repo_id
-    JOIN repo_groups ON repo_groups.repo_group_id = repo.repo_group_id 
-ORDER BY
-    repo_name
+            SELECT
+                repo.repo_id,
+                repo.repo_name,
+                repo.description,
+                repo.repo_git AS url,
+                repo.repo_status,
+                COALESCE ( commits_all_time, 0 ) AS commits_all_time,
+                COALESCE ( issues_all_time, 0 ) AS issues_all_time,
+                rg_name,
+                repo.repo_group_id 
+            FROM
+                repo
+                LEFT OUTER JOIN ( SELECT repo_id, COUNT ( DISTINCT commits.cmt_commit_hash ) AS commits_all_time FROM commits GROUP BY repo_id ) A ON repo.repo_id = A.repo_id
+                LEFT OUTER JOIN ( SELECT repo_id, COUNT ( * ) AS issues_all_time FROM issues WHERE issues.pull_request IS NULL GROUP BY repo_id ) b ON repo.repo_id = b.repo_id
+                JOIN repo_groups ON repo_groups.repo_group_id = repo.repo_group_id 
+            ORDER BY
+                repo_name
         """)
         results = pd.read_sql(get_all_repos_sql, server.augur_app.database)
         results['url'] = results['url'].apply(lambda datum: datum.split('//')[1])
