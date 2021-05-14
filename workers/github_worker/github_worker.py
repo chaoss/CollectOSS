@@ -3,7 +3,12 @@ from multiprocessing import Process, Queue
 from urllib.parse import urlparse
 import pandas as pd
 import sqlalchemy as s
-import requests, time, logging, json, os
+import requests
+import time
+import logging
+import json
+import os
+import math
 from datetime import datetime
 from workers.worker_base import Worker
 
@@ -266,6 +271,17 @@ class GitHubWorker(Worker):
         pk_issue_events = self.enrich_data_primary_keys(issue_events['insert'],
             self.issues_table, ['issue.id'], ['gh_issue_id'])
 
+        if len(pk_issue_events):
+            # self.logger.info("Outside")
+            # self.logger.info(len(pk_issue_events))
+            # self.logger.info(pk_issue_events[0])
+            # self.logger.info(pk_issue_events[0].keys())
+            pk_issue_events = pd.DataFrame(pk_issue_events)[
+                ['id', 'issue_id', 'node_id', 'url', 'actor', 'created_at', 'event', 'commit_id']
+            ].to_dict(orient='records')
+            # self.logger.info(pk_issue_events[0])
+            # self.logger.info(pk_issue_events[0].keys())
+
         issue_events_insert = [
             {
                 'issue_event_src_id': event['id'],
@@ -281,6 +297,7 @@ class GitHubWorker(Worker):
                 'data_source': self.data_source
             } for event in pk_issue_events if event['actor'] is not None
         ]
+        self.logger.info('built')
 
         self.bulk_insert(self.issue_events_table, insert=issue_events_insert,
             unique_columns=event_action_map['insert']['augur'])
@@ -298,12 +315,22 @@ class GitHubWorker(Worker):
 
         # Issue nested info table insertions
 
+        def is_nan(value):
+            return type(value) == float and math.isnan(value)
+
         for issue in pk_source_issues:
 
             # Issue Assignees
-            source_assignees = issue['assignees']
-            if issue['assignee'] not in source_assignees and issue['assignee'] is not None:
+            source_assignees = [
+                assignee for assignee in issue['assignees'] if assignee
+                and not is_nan(assignee)
+            ]
+            if (
+                issue['assignee'] not in source_assignees and issue['assignee']
+                and not is_nan(issue['assignee'])
+            ):
                 source_assignees.append(issue['assignee'])
+
             assignees_all += source_assignees
 
             # Issue Labels
@@ -342,6 +369,7 @@ class GitHubWorker(Worker):
                 'augur': ['issue_assignee_src_id']
             }
         }
+
         source_assignees_insert, _ = self.new_organize_needed_data(
             assignees_all, augur_table=self.issue_assignees_table,
             action_map=assignee_action_map

@@ -479,7 +479,7 @@ class Worker():
         for data_table, data in zip(data_tables, data_sets):
 
             self.bulk_insert(
-                data_table, insert=data
+                data_table, insert=data, increment_counter=False
             )
 
         session = s.orm.Session(self.db)
@@ -1038,7 +1038,7 @@ class Worker():
 
     def bulk_insert(
         self, table, insert=[], update=[], unique_columns=[], update_columns=[],
-        max_attempts=3, attempt_delay=3
+        max_attempts=3, attempt_delay=3, increment_counter=True
     ):
         """ Performs bulk inserts/updates of the given data to the given table
 
@@ -1082,7 +1082,8 @@ class Worker():
                             ),
                         update
                     )
-                    self.update_counter += update_result.rowcount
+                    if increment_counter:
+                        self.update_counter += update_result.rowcount
                     self.logger.info(
                         f"Updated {update_result.rowcount} rows in "
                         f"{time.time() - update_start_time} seconds"
@@ -1134,7 +1135,8 @@ class Worker():
                 index=False,
                 method=psql_insert_copy
             )
-            self.insert_counter += len(insert)
+            if increment_counter:
+                self.insert_counter += len(insert)
 
             self.logger.info(
                 f"Inserted {len(insert)} rows in {time.time() - insert_start_time} seconds\n"
@@ -1208,20 +1210,37 @@ class Worker():
 
         if not in_memory:
 
+            source_pk_columns = list(source_df.columns)
+            source_pk_columns.insert(0, list(table.primary_key)[0].name)
+
             (source_table, ), metadata, session = self._setup_postgres_merge(
-                [self._get_data_set_columns(source_data, gh_merge_fields)]
+                # [self._get_data_set_columns(source_data, gh_merge_fields)]
+                [source_df.to_dict(orient='records')]
             )
 
             source_pk = pd.DataFrame(
-                eval(
-                    "session.query("
-                        + ", ".join(
-                            [
-                                f"table.c['{column}']" for column in [list(table.primary_key)[0].name]
-                                + augur_merge_fields
-                            ]
-                        )
-                    + ")"
+
+                # eval(
+                #     "session.query("
+                #         + ", ".join(
+                #             [
+                #                 f"table.c['{column}']" for column in [list(table.primary_key)[0].name]
+                #                 + augur_merge_fields
+                #             ]
+                #         )
+                #     + ")"
+                # )
+                session.query(
+                    table.c[list(table.primary_key)[0].name],
+                    source_table
+                    # eval(
+                    #     f"table.c['{list(table.primary_key)[0].name}'], "
+                    #     + ", ".join(
+                    #         [
+                    #             f"source_table.c['{column}']" for column in source_pk_columns
+                    #         ]
+                    #     )
+                    # )
                 ).join(
                     source_table,
                     eval(
@@ -1234,17 +1253,20 @@ class Worker():
                             ]
                         )
                     )
-                ).all(), columns=[list(table.primary_key)[0].name] + gh_merge_fields
+                ).all(), columns=source_pk_columns  # gh_merge_fields
             )
 
-            source_pk, source_df = self.sync_df_types(
-                source_pk, source_df, gh_merge_fields, gh_merge_fields
-            )
-            source_pk = source_pk.merge(source_df, how='inner', on=gh_merge_fields)
+            source_pk = self._eval_json_columns(source_pk)
+
+            # source_pk, source_df = self.sync_df_types(
+            #     source_pk, source_df, gh_merge_fields, gh_merge_fields
+            # )
+            # source_pk = source_pk.merge(source_df, how='inner', on=gh_merge_fields)
 
             self.logger.info("source_pk calculated successfully")
 
             self._close_postgres_merge(metadata, session)
+            self.logger.info("Done")
 
         else:
 
@@ -1272,8 +1294,6 @@ class Worker():
             all_primary_keys_df = pd.DataFrame(all_primary_keys,
                 columns=augur_merge_fields + [list(table.primary_key)[0].name])
             self.logger.info("Converted to df")
-            # all_primary_keys_df.to_json(path_or_buf='all_primary_keys_df.json', orient='records')
-            # source_df.to_json(path_or_buf='source_df.json', orient='records')
 
             source_df, all_primary_keys_df = self.sync_df_types(source_df, all_primary_keys_df,
                     gh_merge_fields, augur_merge_fields)
@@ -1442,7 +1462,9 @@ class Worker():
                     first_valid_value[0] == '{' and first_valid_value[-1] == '}'
                     or first_valid_value[0] == '[' and first_valid_value[-1] == ']'
                 ):
-                    df[column] = df[column].apply(eval)
+                    df[column] = df[column].fillna("'null_placeholder'").apply(eval).replace(
+                        "null_placeholder", numpy.nan
+                    )
         return df
 
     def new_organize_needed_data(
@@ -1454,7 +1476,7 @@ class Worker():
 
         new_data_columns = pd.DataFrame(new_data).columns
         pd.DataFrame(new_data).to_json('new_data.json', orient='records')
-        self.logger.info(new_data_columns)
+
         # new_data_columns = copy.deepcopy(action_map['insert']['source'])
         table_value_columns = copy.deepcopy(action_map['insert']['augur'])
 
@@ -1483,7 +1505,7 @@ class Worker():
                 ), isouter=True
             ).filter(
                 augur_table.c[action_map['insert']['augur'][0]] == None
-            ).all(), columns=new_data_columns#table_value_columns
+            ).all(), columns=new_data_columns  # table_value_columns
         )
 
         need_insertion = self._eval_json_columns(need_insertion)
