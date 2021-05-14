@@ -8,7 +8,8 @@ Once you have nginx configured, issue these commands to make sure everything is 
 1. sudo nginx -t to make sure its configured correctly.
 	`nginx: the configuration file /etc/nginx/nginx.conf syntax is ok`
 	`nginx: configuration file /etc/nginx/nginx.conf test is successful`
-2. sudo systemctl restart nginx
+2. sudo systemctl restart nginx (ubuntu)
+3. sudo nginx (OSX)
 
 ------------------
 Server Compilation
@@ -114,7 +115,7 @@ nginx.conf
 Site Configuration
 --------------------
 
-This file will be located in your `/etc/nginx/sites-enabled` directory in most deployments. **Note that Augur's backend server must be running**
+This file will be located in your `/etc/nginx/sites-enabled` directory on most linux distributions.  Mac OSX keeps these files in `/usr/local/etc/nginx/sites-enabled` **Note that Augur's backend server must be running**
 
 .. code-block::
 

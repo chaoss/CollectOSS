@@ -4,6 +4,9 @@ import sqlalchemy as s
 import pandas as pd
 import json
 from flask import Response
+import logging
+
+logger = logging.getLogger(__name__)
 
 def create_routes(server):
 
@@ -47,6 +50,8 @@ def create_routes(server):
             order by repo_name
         """)
         results = pd.read_sql(get_all_repos_sql, server.augur_app.database)
+        logger.info("what's up {}".format(results['url']))
+        logger.info("what's up {}".format(results['url'].apply(lamda datum: datum.split('//')[1])))
         results['url'] = results['url'].apply(lambda datum: datum.split('//')[1])
 
         b64_urls = []
