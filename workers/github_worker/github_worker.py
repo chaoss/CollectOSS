@@ -138,11 +138,11 @@ class GitHubWorker(Worker):
 
         if len(source_issues['insert']) > 0 or len(source_issues['update']) > 0:
 
-            self.logger.debug(issues_insert['pull_request']+ "the pull request and " + issues_insert['pull_request_id'] + "is the pull request ID.")
-
-            issues_insert_result, issues_update_result = self.bulk_insert(self.issues_table, 
-                update=source_issues['update'], unique_columns=action_map['insert']['augur'], 
-                insert=issues_insert, update_columns=action_map['update']['augur'])
+            issues_insert_result, issues_update_result = self.bulk_insert(
+                self.issues_table, update=source_issues['update'],
+                unique_columns=action_map['insert']['augur'],
+                insert=issues_insert, update_columns=action_map['update']['augur']
+            )
 
             source_data = source_issues['insert'] + source_issues['update']
 

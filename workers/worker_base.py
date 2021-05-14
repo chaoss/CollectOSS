@@ -2115,6 +2115,7 @@ class Worker():
             self.update_gh_rate_limit(r)
             contributor = r.json()
 
+            contributors_insert.append({
                 'cntrb_login': contributor['login'],
                 'cntrb_created_at': contributor['created_at'],
                 'cntrb_email': contributor['email'] if 'email' in contributor else None,
@@ -2148,6 +2149,78 @@ class Worker():
             update=source_contributors['update'], unique_columns=action_map['insert']['augur'],
             insert=contributors_insert, update_columns=action_map['update']['augur'])
 
+    def query_github_contributors_fast(self, entry_info, repo_id):
+        """ Data collection function
+        Query the GitHub API for contributors
+        """
+        self.logger.info(f"Querying contributors with given entry info: {entry_info}")
+
+        github_url = (
+            entry_info['given']['github_url'] if 'github_url' in entry_info['given']
+            else entry_info['given']['git_url']
+        )
+
+        contributors_url = (
+            f"https://api.github.com/repos/{self.owner}/{self.name}/"
+            "contributors?per_page=100&page={}"
+        )
+
+        action_map = {
+            'insert': {
+                'source': ['login'],
+                'augur': ['cntrb_login']
+            },
+            'update': {
+                'source': ['email'],
+                'augur': ['cntrb_email']
+            }
+        }
+
+        source_contributors = self.paginate_endpoint(
+            contributors_url, action_map=action_map, table=self.contributors_table
+        )
+
+        contributors_insert = [
+            {
+                'cntrb_login': contributor['login'],
+                'cntrb_created_at': (
+                    contributor['created_at'] if 'created_at' in contributor else None
+                ),
+                'cntrb_email': contributor['email'] if 'email' in contributor else None,
+                'cntrb_company': contributor['company'] if 'company' in contributor else None,
+                'cntrb_location': contributor['location'] if 'location' in contributor else None,
+                'cntrb_canonical': contributor['email'] if 'email' in contributor else None,
+                'gh_user_id': contributor['id'],
+                'gh_login': contributor['login'],
+                'gh_url': contributor['url'],
+                'gh_html_url': contributor['html_url'],
+                'gh_node_id': contributor['node_id'],
+                'gh_avatar_url': contributor['avatar_url'],
+                'gh_gravatar_id': contributor['gravatar_id'],
+                'gh_followers_url': contributor['followers_url'],
+                'gh_following_url': contributor['following_url'],
+                'gh_gists_url': contributor['gists_url'],
+                'gh_starred_url': contributor['starred_url'],
+                'gh_subscriptions_url': contributor['subscriptions_url'],
+                'gh_organizations_url': contributor['organizations_url'],
+                'gh_repos_url': contributor['repos_url'],
+                'gh_events_url': contributor['events_url'],
+                'gh_received_events_url': contributor['received_events_url'],
+                'gh_type': contributor['type'],
+                'gh_site_admin': contributor['site_admin'],
+                'tool_source': self.tool_source,
+                'tool_version': self.tool_version,
+                'data_source': self.data_source
+            } for contributor in source_contributors['insert']
+        ]
+
+        self.bulk_insert(
+            self.contributors_table, update=source_contributors['update'],
+            unique_columns=action_map['insert']['augur'],
+            insert=contributors_insert, update_columns=action_map['update']['augur']
+        )
+
+    def query_gitlab_contribtutors(self, entry_info, repo_id):
 
         gitlab_url = (
             entry_info['given']['gitlab_url'] if 'gitlab_url' in entry_info['given']
