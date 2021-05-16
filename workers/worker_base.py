@@ -1533,12 +1533,12 @@ class Worker():
 
         new_data_columns = pd.DataFrame(new_data).columns
 
-        # new_data_columns = copy.deepcopy(action_map['insert']['source'])
-        table_value_columns = copy.deepcopy(action_map['insert']['augur'])
-
-        if 'update' in action_map:
-            # new_data_columns += action_map['update']['source']
-            table_value_columns += action_map['update']['augur']
+        # # new_data_columns = copy.deepcopy(action_map['insert']['source'])
+        # table_value_columns = copy.deepcopy(action_map['insert']['augur'])
+        #
+        # if 'update' in action_map:
+        #     # new_data_columns += action_map['update']['source']
+        #     table_value_columns += action_map['update']['augur']
 
         (new_data_table, ), metadata, session = self._setup_postgres_merge(
             [
@@ -1577,7 +1577,7 @@ class Worker():
 
         self.logger.info("need_insertion calculated successfully")
 
-        need_updates = pd.DataFrame(columns=table_value_columns)
+        need_updates = pd.DataFrame(columns=new_data_columns)
         if 'update' in action_map:
             need_updates = pd.DataFrame(
                 session.query(new_data_table).join(
@@ -1611,7 +1611,7 @@ class Worker():
                             )
                         )
                     )
-                ).all(), columns=table_value_columns
+                ).all(), columns=new_data_columns
             )
             self.logger.info("need_updates calculated successfully")
 

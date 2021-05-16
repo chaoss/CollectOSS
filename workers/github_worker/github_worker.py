@@ -74,7 +74,7 @@ class GitHubWorker(Worker):
 
         if len(source_issues['all']) == 0:
             self.logger.info("There are no issues for this repository.\n")
-            self.register_task_completion(entry_info, self.repo_id, 'issues')
+            self.register_task_completion(self.task_info, self.repo_id, 'issues')
             return
 
         def is_valid_pr_block(issue):

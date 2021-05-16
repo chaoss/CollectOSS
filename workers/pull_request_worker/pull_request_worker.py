@@ -1,3 +1,4 @@
+
 #SPDX-License-Identifier: MIT
 import ast
 import json
@@ -459,7 +460,7 @@ class GitHubPullRequestWorker(Worker):
         elif not self.deep_collection:
             self.logger.info("There are no prs to update, insert, or collect nested "
                 "information for.\n")
-            self.register_task_completion(self.self.task_info, self.repo_id, 'pull_requests')
+            self.register_task_completion(self.task_info, self.repo_id, 'pull_requests')
             return
 
         if self.deep_collection:
