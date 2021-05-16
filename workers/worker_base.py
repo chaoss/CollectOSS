@@ -459,7 +459,9 @@ class Worker():
             if '.' not in column:
                 continue
             root = column.split('.')[0]
-            expanded_column = pd.DataFrame(df[root].tolist())
+            expanded_column = pd.DataFrame(
+                df[root].where(df[root].notna(), lambda x: [{}]).tolist()
+            )
             expanded_column.columns = [
                 f'{root}.{attribute}' for attribute in expanded_column.columns
             ]
@@ -1130,11 +1132,17 @@ class Worker():
         # todo: support deeper nests (>1) and only expand necessary columns
         # todo: merge with _get_data_set_columns
 
+        df.to_json('nested_df.json', orient='records')
         for column in column_names:
             if '.' not in column:
                 continue
             root = column.split('.')[0]
-            expanded_column = pd.DataFrame(df[root].tolist())
+            self.logger.info(root)
+            self.logger.info(df.dtypes)
+            self.logger.info(df[root])
+            expanded_column = pd.DataFrame(
+                df[root].where(df[root].notna(), lambda x: [{}]).tolist()
+            )
             expanded_column.columns = [
                 f'{root}.{attribute}' for attribute in expanded_column.columns
             ]
@@ -1185,7 +1193,7 @@ class Worker():
                 'cntrb_location': None if (
                     f'{prefix}location' not in contributor
                 ) else contributor[f'{prefix}location'],
-                'gh_user_id': contributor[f'{prefix}id'],
+                'gh_user_id': int(float(contributor[f'{prefix}id'])),
                 'gh_login': contributor[f'{prefix}login'],
                 'gh_url': contributor[f'{prefix}url'],
                 'gh_html_url': contributor[f'{prefix}html_url'],

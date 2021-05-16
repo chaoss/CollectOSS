@@ -51,6 +51,8 @@ class GitHubWorker(Worker):
 
     def _get_pk_source_issues(self):
 
+        self.logger.info("start pk")
+
         issues_url = (
             f"https://api.github.com/repos/{self.owner}/{self.repo}"
             "/issues?per_page=100&state=all&page={}"
@@ -75,7 +77,7 @@ class GitHubWorker(Worker):
         if len(source_issues['all']) == 0:
             self.logger.info("There are no issues for this repository.\n")
             self.register_task_completion(self.task_info, self.repo_id, 'issues')
-            return
+            return False
 
         def is_valid_pr_block(issue):
             return (
@@ -157,6 +159,8 @@ class GitHubWorker(Worker):
             source_data, self.issues_table, gh_merge_fields, augur_merge_fields
         )
 
+        self.logger.info("end pk")
+
         return pk_source_issues
 
     def issues_model(self, entry_info, repo_id):
@@ -170,10 +174,13 @@ class GitHubWorker(Worker):
         #   from having to add them as we discover committers in the issue process
         self.query_github_contributors(entry_info, self.repo_id)
 
+        self.logger.info("Calling pk")
         pk_source_issues = self._get_pk_source_issues()
-        # self.issue_comments_model(pk_source_issues)
-        issue_events_all = self.issue_events_model(pk_source_issues)
-        self.issue_nested_data_model(pk_source_issues, issue_events_all)
+        if pk_source_issues:
+            # self.issue_comments_model(pk_source_issues)
+            self.logger.info("Calling events")
+            issue_events_all = self.issue_events_model(pk_source_issues)
+            self.issue_nested_data_model(pk_source_issues, issue_events_all)
 
         # Register this task as completed
         self.register_task_completion(entry_info, self.repo_id, 'issues')
@@ -282,6 +289,9 @@ class GitHubWorker(Worker):
             }
         }
 
+        self.logger.info(pk_source_issues[0])
+        self.logger.info(pd.DataFrame(pk_source_issues).columns)
+        self.logger.info(pd.DataFrame(pk_source_issues))
         #list to hold contributors needing insertion or update
         issue_events = self.new_paginate_endpoint(
             events_url, table=self.issue_events_table, action_map=event_action_map,
@@ -335,6 +345,7 @@ class GitHubWorker(Worker):
 
         closed_issue_updates = []
 
+        skip_closed_issue_update = False
         if len(issue_events_all):
             events_df = pd.DataFrame(
                 self._get_data_set_columns(
@@ -345,20 +356,24 @@ class GitHubWorker(Worker):
             )
             events_df = events_df.loc[events_df.event == 'closed']
 
-            events_df = pd.DataFrame(
-                self.enrich_cntrb_id(
-                    events_df.to_dict(orient='records'), 'actor.login', action_map_additions={
-                        'insert': {
-                            'source': ['actor.node_id'],
-                            'augur': ['gh_node_id']
-                        }
-                    }, prefix='actor.'
+            if len(events_df):
+                events_df = pd.DataFrame(
+                    self.enrich_cntrb_id(
+                        events_df.to_dict(orient='records'), 'actor.login', action_map_additions={
+                            'insert': {
+                                'source': ['actor.node_id'],
+                                'augur': ['gh_node_id']
+                            }
+                        }, prefix='actor.'
+                    )
                 )
-            )
+                self.logger.info(events_df)
+                self.logger.info(events_df.columns)
+                self.logger.info(events_df.to_dict(orient='records')[0])
+            else:
+                skip_closed_issue_update = True
         else:
-            events_df = pd.DataFrame(
-                [], columns=['event', 'issue.number', 'actor.login', 'actor.node_id']
-            )
+            skip_closed_issue_update = True
 
         assignees_all = []
         labels_all = []
@@ -384,7 +399,7 @@ class GitHubWorker(Worker):
             labels_all += issue['labels']
 
             # If the issue is closed, then we search for the closing event and store the user's id
-            if 'closed_at' in issue:
+            if 'closed_at' in issue and not skip_closed_issue_update:
 
                 try:
                     closed_event = events_df.loc[
@@ -393,7 +408,7 @@ class GitHubWorker(Worker):
                 except IndexError:
                     self.logger.info(
                         "Warning! We do not have the closing event of this issue stored. "
-                        f"Pk: {issue['issue_id']}\n"
+                        f"Pk: {issue['issue_id']}"
                     )
                     continue
 
