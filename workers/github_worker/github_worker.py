@@ -91,6 +91,7 @@ class GitHubWorker(Worker):
                 }
             }, prefix='user.'
         )
+        pd.DataFrame(source_issues['insert']).to_json('source_issues_insert.json', orient='records')
 
         issues_insert = [
             {

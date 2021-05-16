@@ -438,7 +438,7 @@ class Worker():
             )
 
         session = s.orm.Session(self.db)
-        self.logger.info("Session created for merge tables\n")
+        self.logger.info("Session created for merge tables")
 
         return data_tables, metadata, session
 
@@ -449,7 +449,7 @@ class Worker():
 
         # metadata.reflect(self.db, only=[new_data_table.name, table_values_table.name])
         metadata.drop_all(self.db, checkfirst=True)
-        self.logger.info("Merge tables dropped\n")
+        self.logger.info("Merge tables dropped")
 
     def _get_data_set_columns(self, data, columns):
         if not len(data):
@@ -1173,8 +1173,6 @@ class Worker():
             source_df.to_dict(orient='records'), augur_table=self.contributors_table,
             action_map=cntrb_action_map
         )
-        if len(source_cntrb_insert):
-            self.logger.info(source_cntrb_insert[0])
 
         cntrb_insert = [
             {
@@ -1243,6 +1241,7 @@ class Worker():
             ).all(), columns=final_columns
         )
 
+        source_pk = self._eval_json_columns(source_pk)
         self._close_postgres_merge(metadata, session)
 
         self.logger.info(
