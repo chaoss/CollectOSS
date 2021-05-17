@@ -38,7 +38,7 @@ setup(
         "beaker",
         "sqlalchemy",
         "flask_login",
-        "flask",
+        "flask==1.1.4",
         "pandas==1.1.3",
         "numpy==1.19.5",
         "requests",
