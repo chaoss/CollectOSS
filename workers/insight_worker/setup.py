@@ -22,12 +22,12 @@ setup(
     description="Augur Worker that discovers and stores data anomalies",
     packages=find_packages(exclude=('tests',)),
     install_requires=[
-        'flask', 
-        'numpy', 
+        'flask==1.4.1', 
+        'numpy==1.19.5', 
         'requests', 
         'psycopg2-binary', 
         'click', 
-        'scipy',
+        'scipy==1.1.4',
         'sklearn'
     ],
     entry_points={
