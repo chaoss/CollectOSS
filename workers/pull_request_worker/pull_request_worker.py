@@ -485,7 +485,7 @@ class GitHubPullRequestWorker(Worker):
 
         github_url = self.task_info['given']['github_url']
 
-        self.query_github_contributors(self.task_info, self.repo_id)
+        # self.query_github_contributors(self.task_info, self.repo_id)
 
         self.logger.info("Beginning collection of Pull Requests...\n")
         self.logger.info(f"Repo ID: {self.repo_id}, Git URL: {github_url}\n")
@@ -494,10 +494,11 @@ class GitHubPullRequestWorker(Worker):
 
         self.write_debug_data(pk_source_prs, 'pk_source_prs')
 
-        self.pull_request_comments_model()
-        self.pull_request_events_model(pk_source_prs)
-        self.pull_request_reviews_model(pk_source_prs)
-        self.pull_request_nested_data_model(pk_source_prs)
+        if pk_source_prs:
+            self.pull_request_comments_model()
+            self.pull_request_events_model(pk_source_prs)
+            self.pull_request_reviews_model(pk_source_prs)
+            self.pull_request_nested_data_model(pk_source_prs)
 
         self.register_task_completion(self.task_info, self.repo_id, 'pull_requests')
 

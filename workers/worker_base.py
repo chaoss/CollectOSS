@@ -465,13 +465,14 @@ class Worker():
             expanded_column.columns = [
                 f'{root}.{attribute}' for attribute in expanded_column.columns
             ]
+            columns += list(expanded_column.columns)
             try:
                 df = df.join(expanded_column)
             except ValueError:
                 # columns already added (happens if trying to expand the same column twice)
                 # TODO: Catch this before by only looping unique prefixs?
                 pass
-        return df[columns].to_dict(orient='records')
+        return df[list(set(columns))].to_dict(orient='records')
 
     def organize_needed_data(
         self, new_data, table_values, table_pkey, action_map={}, in_memory=True
@@ -1529,7 +1530,7 @@ class Worker():
                 ):
                     df[column] = df[column].fillna("'null_placeholder'").apply(eval).replace(
                         "null_placeholder", numpy.nan
-                    )
+                    ).where(df[column].notna(), lambda x: [{}])
         return df
 
     def new_organize_needed_data(
