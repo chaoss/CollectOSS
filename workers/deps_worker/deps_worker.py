@@ -13,6 +13,8 @@ from sqlalchemy.ext.automap import automap_base
 from sqlalchemy import MetaData
 from workers.worker_base import Worker
 
+import dependancy_calculator as dep_calc
+
 class DepsWorker(Worker):
     def __init__(self, config={}):
 
@@ -23,7 +25,7 @@ class DepsWorker(Worker):
         models = ['deps']
 
         # Define the tables needed to insert, update, or delete on
-        data_tables = ['repo_labor']
+        data_tables = ['dependencies']
         operations_tables = ['worker_history', 'worker_job']
 
 
@@ -54,11 +56,11 @@ class DepsWorker(Worker):
         absolute_repo_path = self.config['repo_directory'] + relative_repo_path
 
         try:
-            self.generate_value_data(repo_id, absolute_repo_path)
+            self.generate_deps_data(repo_id, absolute_repo_path)
         except Exception as e:
             self.logger.error(e)
 
-        self.register_task_completion(entry_info, repo_id, "value")
+        self.register_task_completion(entry_info, repo_id, "deps")
 
     def generate_deps_data(self, repo_id, path):
         """Runs scc on repo and stores data in database
@@ -66,30 +68,18 @@ class DepsWorker(Worker):
         :param repo_id: Repository ID
         :param path: Absolute path of the Repostiory
         """
-        self.logger.info('Running `scc`....')
+        self.logger.info('Searching for deps in repo')
         self.logger.info(f'Repo ID: {repo_id}, Path: {path}')
 
-        output = subprocess.check_output([self.config['scc_bin'], '-f', 'json', path])
-        records = json.loads(output.decode('utf8'))
+        deps = dep_calc.get_deps(path)
 
-        for record in records:
-            for file in record['Files']:
-                repo_labor = {
-                    'repo_id': repo_id,
-                    'rl_analysis_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ'),
-                    'programming_language': file['Language'],
-                    'file_path': file['Location'],
-                    'file_name': file['Filename'],
-                    'total_lines': file['Lines'],
-                    'code_lines': file['Code'],
-                    'comment_lines': file['Comment'],
-                    'blank_lines': file['Blank'],
-                    'code_complexity': file['Complexity'],
-                    'tool_source': self.tool_source,
-                    'tool_version': self.tool_version,
-                    'data_source': self.data_source,
-                    'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
-                }
+        for dep in deps:
+		val = {
+		    'repo_id': repo_id,
+		    'dep_name' : dep.name,
+		    'dep_count' : dep.count,
+		    'dep_language' : dep.language
+		}
 
-                result = self.db.execute(self.repo_labor_table.insert().values(repo_labor))
-                self.logger.info(f"Added Repo Labor Data: {result.inserted_primary_key}")
+		result = self.db.execute(self.dependencies_table.insert().values(val))
+		self.logger.info(f"Added dep: {result}")

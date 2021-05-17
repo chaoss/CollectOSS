@@ -25,7 +25,6 @@ DROP TABLE IF EXISTS "augur_data"."dependencies";
 
 CREATE TABLE "augur_data"."dependencies" (
   "repo_id" int8 NOT NULL,
-  "repo_group_id" int8 NOT NULL,
   "dep_name" varchar(255),
   "dep_count" int,
   "dep_language" varchar(255)
@@ -33,7 +32,6 @@ CREATE TABLE "augur_data"."dependencies" (
 
 ALTER TABLE "augur_data"."dependencies" OWNER TO "augur";
 COMMENT ON COLUMN "augur_data"."dependencies"."repo_id" IS 'Forign key for repo id. ';
-COMMENT ON COLUMN "augur_data"."dependencies"."repo_group_id" IS 'Forign key for repo group id. ';
 COMMENT ON COLUMN "augur_data"."dependencies"."dep_name" IS 'Name of the dependancy found in project. ';
 COMMENT ON COLUMN "augur_data"."dependencies"."dep_count" IS 'Number of times the dependancy was found. ';
 COMMENT ON COLUMN "augur_data"."dependencies"."dep_language" IS 'Language of the dependancy. ';
@@ -50,4 +48,4 @@ COMMENT ON TABLE "augur_data"."dependencies" IS 'Contains the dependencies for a
 -- add foreign keys to tie into everything else
 -- ----------------------------
 -- ALTER TABLE "augur_data"."contributors" ADD CONSTRAINT "repo_id" FOREIGN KEY (repo_id) REFERENCES augur_data.repo(repo_id);
--- /ALTER TABLE "augur_data"."contributors" ADD CONSTRAINT "repo_group_id" FOREIGN KEY (repo_group_id) REFERENCES augur_data.repo(repo_group_id);
+
