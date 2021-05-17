@@ -51,8 +51,6 @@ class GitHubWorker(Worker):
 
     def _get_pk_source_issues(self):
 
-        self.logger.info("start pk")
-
         issues_url = (
             f"https://api.github.com/repos/{self.owner}/{self.repo}"
             "/issues?per_page=100&state=all&page={}"
@@ -159,8 +157,6 @@ class GitHubWorker(Worker):
             source_data, self.issues_table, gh_merge_fields, augur_merge_fields
         )
 
-        self.logger.info("end pk")
-
         return pk_source_issues
 
     def issues_model(self, entry_info, repo_id):
@@ -174,11 +170,9 @@ class GitHubWorker(Worker):
         #   from having to add them as we discover committers in the issue process
         self.query_github_contributors(entry_info, self.repo_id)
 
-        self.logger.info("Calling pk")
         pk_source_issues = self._get_pk_source_issues()
         if pk_source_issues:
-            # self.issue_comments_model(pk_source_issues)
-            self.logger.info("Calling events")
+            self.issue_comments_model(pk_source_issues)
             issue_events_all = self.issue_events_model(pk_source_issues)
             self.issue_nested_data_model(pk_source_issues, issue_events_all)
 

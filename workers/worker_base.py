@@ -1193,7 +1193,9 @@ class Worker():
                 'cntrb_location': None if (
                     f'{prefix}location' not in contributor
                 ) else contributor[f'{prefix}location'],
-                'gh_user_id': int(float(contributor[f'{prefix}id'])),
+                'gh_user_id': None if (
+                    not contributor[f'{prefix}id']
+                ) else int(float(contributor[f'{prefix}id'])),
                 'gh_login': contributor[f'{prefix}login'],
                 'gh_url': contributor[f'{prefix}url'],
                 'gh_html_url': contributor[f'{prefix}html_url'],
