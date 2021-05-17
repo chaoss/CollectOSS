@@ -38,7 +38,7 @@ setup(
         "beaker",
         "sqlalchemy",
         "flask_login",
-        "flask",
+        "flask==1.1.4",
         "pandas==1.1.3",
         "numpy==1.19.5",
         "requests",
@@ -49,7 +49,11 @@ setup(
         "psutil",
         "gunicorn",
         "six>=1.15.0",
+<<<<<<< HEAD
         "bokeh==1.4.0",
+=======
+        "bokeh==2.0.2",
+>>>>>>> origin/dev
         "selenium",
         "dask",
         "cloudpickle >= 0.2.2",
