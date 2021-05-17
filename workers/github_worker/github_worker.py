@@ -168,7 +168,7 @@ class GitHubWorker(Worker):
 
         # Contributors are part of this model, and finding all for the repo saves us
         #   from having to add them as we discover committers in the issue process
-        self.query_github_contributors(entry_info, self.repo_id)
+        # self.query_github_contributors(entry_info, self.repo_id)
 
         pk_source_issues = self._get_pk_source_issues()
         if pk_source_issues:
@@ -344,7 +344,7 @@ class GitHubWorker(Worker):
             events_df = pd.DataFrame(
                 self._get_data_set_columns(
                     issue_events_all, [
-                        'event', 'issue.number', 'actor.login', 'actor.node_id', 'actor'
+                        'event', 'issue.number', 'actor.login', 'actor.node_id'
                     ]
                 )
             )
