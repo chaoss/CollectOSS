@@ -49,7 +49,7 @@ setup(
         "psutil",
         "gunicorn",
         "six>=1.15.0",
-        "bokeh",
+        "bokeh==2.0.2",
         "selenium",
 	    "nltk",
         "h5py<2.11.0,>=2.10.0", 
