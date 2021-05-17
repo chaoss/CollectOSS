@@ -392,47 +392,6 @@ class Worker():
 
         return subject, source
 
-# def sync_df_types(subject, source, subject_columns, source_columns):
-#
-#     type_dict = {}
-#     for index in range(len(source_columns)):
-#         if type(source[source_columns[index]].values[0]) == numpy.datetime64:
-#             subject[subject_columns[index]] = pd.to_datetime(
-#                 subject[subject_columns[index]], utc=True
-#             )
-#             source[source_columns[index]] = pd.to_datetime(
-#                 source[source_columns[index]], utc=True
-#             )
-#             continue
-#         # print(index, type(source[source_columns[index]].values[0]))
-#         # subject[x] = subject[x].astype(df1[x].dtypes.name)
-#         type_dict[subject_columns[index]] = type(source[source_columns[index]].values[0])
-#
-#     print(type_dict)
-#     subject = subject.astype(type_dict)
-#
-#     return subject, source
-
-# import json, copy
-# import pandas as pd
-# with open('/Users/gabeheim/Documents/repos/augur/workers/pull_request_worker/need_insertion.json') as f:
-#     need_insertion = copy.deepcopy(json.load(f))
-#
-# with open('/Users/gabeheim/Documents/repos/augur/workers/pull_request_worker/new_data_df.json') as f:
-#     new_data_df = copy.deepcopy(json.load(f))
-#
-# need_insertion = pd.DataFrame(need_insertion)
-# new_data_df = pd.DataFrame(new_data_df)
-#
-# need_insertion.dtypes
-# new_data_df.dtypes
-#
-# import numpy
-# need_insertion[['pr_src_id', 'pr_src_state']] = need_insertion[['pr_src_id', 'pr_src_state']].astype(new_data_df[['id', 'state']].dtypes.to_dict())
-# need_insertion, new_data_df = sync_df_types(need_insertion, new_data_df, ['pr_src_id', 'pr_src_state'], ['id', 'state'])
-# need_insertion['pr_src_id'] = need_insertion['pr_src_id'].astype(int)
-
-
     def get_sqlalchemy_type(self, data):
         if type(data) == str:
             try:
@@ -446,10 +405,6 @@ class Worker():
             return s.types.Float
         elif type(data) in [numpy.datetime64, pd._libs.tslibs.timestamps.Timestamp]:
             return s.types.TIMESTAMP
-        # elif type(data) == dict:
-        #     return s.types.JSON
-        # elif type(data) == list:
-        #     return s.types.ARRAY(s.types.JSON)
         return s.types.String
 
     def _setup_postgres_merge(self, data_sets):
@@ -483,7 +438,7 @@ class Worker():
             )
 
         session = s.orm.Session(self.db)
-        self.logger.info("Session created for merge tables\n")
+        self.logger.info("Session created for merge tables")
 
         return data_tables, metadata, session
 
@@ -494,20 +449,30 @@ class Worker():
 
         # metadata.reflect(self.db, only=[new_data_table.name, table_values_table.name])
         metadata.drop_all(self.db, checkfirst=True)
-        self.logger.info("Merge tables dropped\n")
+        self.logger.info("Merge tables dropped")
 
     def _get_data_set_columns(self, data, columns):
+        if not len(data):
+            return []
         df = pd.DataFrame(data, columns=data[0].keys())
         for column in columns:
             if '.' not in column:
                 continue
             root = column.split('.')[0]
-            expanded_column = pd.DataFrame(df[root].tolist())
+            expanded_column = pd.DataFrame(
+                df[root].where(df[root].notna(), lambda x: [{}]).tolist()
+            )
             expanded_column.columns = [
                 f'{root}.{attribute}' for attribute in expanded_column.columns
             ]
-            df = df.join(expanded_column)
-        return df[columns].to_dict(orient='records')
+            columns += list(expanded_column.columns)
+            try:
+                df = df.join(expanded_column)
+            except ValueError:
+                # columns already added (happens if trying to expand the same column twice)
+                # TODO: Catch this before by only looping unique prefixs?
+                pass
+        return df[list(set(columns))].to_dict(orient='records')
 
     def organize_needed_data(
         self, new_data, table_values, table_pkey, action_map={}, in_memory=True
@@ -1056,8 +1021,10 @@ class Worker():
                 about number of rows inserted etc. This data is not often used.
         """
 
-        self.logger.info(f"{len(insert)} insertions are needed and {len(update)} "
-            f"updates are needed for {table}\n")
+        self.logger.info(
+            f"{len(insert)} insertions are needed and {len(update)} "
+            f"updates are needed for {table}"
+        )
 
         update_result = None
         insert_result = None
@@ -1090,7 +1057,7 @@ class Worker():
                     )
                     break
                 except Exception as e:
-                    self.logger.info(f"Warning! Error bulk updating data: {e}\n")
+                    self.logger.info(f"Warning! Error bulk updating data: {e}")
                     time.sleep(attempt_delay)
                 attempts += 1
 
@@ -1139,7 +1106,8 @@ class Worker():
                 self.insert_counter += len(insert)
 
             self.logger.info(
-                f"Inserted {len(insert)} rows in {time.time() - insert_start_time} seconds\n"
+                f"Inserted {len(insert)} rows in {time.time() - insert_start_time} seconds "
+                "thanks to postgresql's COPY FROM CSV! :)"
             )
 
         return insert_result, update_result
@@ -1163,38 +1131,136 @@ class Worker():
 
     def _add_nested_columns(self, df, column_names):
         # todo: support deeper nests (>1) and only expand necessary columns
+        # todo: merge with _get_data_set_columns
 
+        df.to_json('nested_df.json', orient='records')
         for column in column_names:
             if '.' not in column:
                 continue
             root = column.split('.')[0]
-            expanded_column = pd.DataFrame(df[root].tolist())
+            self.logger.info(root)
+            self.logger.info(df.dtypes)
+            self.logger.info(df[root])
+            expanded_column = pd.DataFrame(
+                df[root].where(df[root].notna(), lambda x: [{}]).tolist()
+            )
             expanded_column.columns = [
                 f'{root}.{attribute}' for attribute in expanded_column.columns
             ]
-            df = df.join(expanded_column)
+            try:
+                df = df.join(expanded_column)
+            except ValueError:
+                # columns already added (happens if trying to expand the same column twice)
+                # TODO: Catch this before by only looping unique prefixs?
+                pass
 
         return df
 
-    def enrich_cntrb_id(self, data, key_mapping, action_map_additions={}, platform='github'):
+    def enrich_cntrb_id(
+        self, data, key, action_map_additions={'insert': {'source': [], 'augur': []}},
+        platform='github', prefix=''
+    ):
 
-        df = self._add_nested_columns(
-            pd.DataFrame(data), key_mapping.keys()
+        if not len(data):
+            return data
+
+        self.logger.info(f"Enriching contributor ids for {len(data)} data points...")
+
+        source_df = self._add_nested_columns(
+            pd.DataFrame(data), [key] + action_map_additions['insert']['source']
         )
-        df['node_id']
+
+        # Insert cntrbs that are not in db
 
         cntrb_action_map = {
             'insert': {
-                'source': list(key_mapping.keys()) + ['node_id'],
-                'augur': ['cntrb_login']
+                'source': [key] + action_map_additions['insert']['source'],
+                'augur': ['cntrb_login'] + action_map_additions['insert']['augur']
             }
         }
-        source_assignees_insert, _ = self.new_organize_needed_data(
-            assignees_all, augur_table=self.issue_assignees_table,
-            action_map=assignee_action_map
+        source_cntrb_insert, _ = self.new_organize_needed_data(
+            source_df.to_dict(orient='records'), augur_table=self.contributors_table,
+            action_map=cntrb_action_map
         )
 
-        return data
+        cntrb_insert = [
+            {
+                'cntrb_login': contributor[f'{prefix}login'],
+                'cntrb_created_at': None if (
+                    f'{prefix}created_at' not in contributor
+                ) else contributor[f'{prefix}created_at'],
+                'cntrb_email': None if f'{prefix}email' not in contributor else contributor[f'{prefix}email'],
+                'cntrb_company': None if f'{prefix}company' not in contributor else contributor[f'{prefix}company'],
+                'cntrb_location': None if (
+                    f'{prefix}location' not in contributor
+                ) else contributor[f'{prefix}location'],
+                'gh_user_id': None if (
+                    not contributor[f'{prefix}id']
+                ) else int(float(contributor[f'{prefix}id'])),
+                'gh_login': contributor[f'{prefix}login'],
+                'gh_url': contributor[f'{prefix}url'],
+                'gh_html_url': contributor[f'{prefix}html_url'],
+                'gh_node_id': contributor[f'{prefix}node_id'],
+                'gh_avatar_url': contributor[f'{prefix}avatar_url'],
+                'gh_gravatar_id': contributor[f'{prefix}gravatar_id'],
+                'gh_followers_url': contributor[f'{prefix}followers_url'],
+                'gh_following_url': contributor[f'{prefix}following_url'],
+                'gh_gists_url': contributor[f'{prefix}gists_url'],
+                'gh_starred_url': contributor[f'{prefix}starred_url'],
+                'gh_subscriptions_url': contributor[f'{prefix}subscriptions_url'],
+                'gh_organizations_url': contributor[f'{prefix}organizations_url'],
+                'gh_repos_url': contributor[f'{prefix}repos_url'],
+                'gh_events_url': contributor[f'{prefix}events_url'],
+                'gh_received_events_url': contributor[f'{prefix}received_events_url'],
+                'gh_type': contributor[f'{prefix}type'],
+                'gh_site_admin': contributor[f'{prefix}site_admin'],
+                'tool_source': self.tool_source,
+                'tool_version': self.tool_version,
+                'data_source': self.data_source
+            } for contributor in source_cntrb_insert
+        ]
+
+        self.bulk_insert(self.contributors_table, cntrb_insert)
+
+        # Query db for inserted cntrb pkeys and add to shallow level of data
+
+        (source_table, ), metadata, session = self._setup_postgres_merge(
+            [source_df.to_dict(orient='records')]
+        )
+
+        cntrb_pk_name = list(self.contributors_table.primary_key)[0].name
+        final_columns = [cntrb_pk_name] + list(source_df.columns)
+
+        source_pk = pd.DataFrame(
+            session.query(
+                self.contributors_table.c[cntrb_pk_name], source_table
+            ).join(
+                source_table,
+                eval(
+                    ' and '.join(
+                        [
+                            (
+                                f"self.contributors_table.c['{table_column}'] "
+                                f"== source_table.c['{source_column}']"
+                            ) for table_column, source_column in zip(
+                                cntrb_action_map['insert']['augur'],
+                                cntrb_action_map['insert']['source']
+                            )
+                        ]
+                    )
+                )
+            ).all(), columns=final_columns
+        )
+
+        source_pk = self._eval_json_columns(source_pk)
+        self._close_postgres_merge(metadata, session)
+
+        self.logger.info(
+            "Contributor id enrichment successful, result has "
+            f"{len(source_pk)} data points.\n"
+        )
+
+        return source_pk.to_dict(orient='records')
 
     def enrich_data_primary_keys(
         self, source_data, table, gh_merge_fields, augur_merge_fields, in_memory=False
@@ -1204,7 +1270,7 @@ class Worker():
 
         if len(source_data) == 0:
             self.logger.info("There is no source data to enrich.\n")
-            return []
+            return source_data
 
         source_df = self._add_nested_columns(pd.DataFrame(source_data), gh_merge_fields)
 
@@ -1464,25 +1530,26 @@ class Worker():
                 ):
                     df[column] = df[column].fillna("'null_placeholder'").apply(eval).replace(
                         "null_placeholder", numpy.nan
-                    )
+                    ).where(df[column].notna(), lambda x: [{}])
         return df
 
     def new_organize_needed_data(
         self, new_data, augur_table=None, where_clause=True, action_map={}
     ):
 
+        self.logger.info(f"Beginning to organize needed data from {len(new_data)} data points...")
+
         if len(new_data) == 0:
             return [], []
 
         new_data_columns = pd.DataFrame(new_data).columns
-        pd.DataFrame(new_data).to_json('new_data.json', orient='records')
 
-        # new_data_columns = copy.deepcopy(action_map['insert']['source'])
-        table_value_columns = copy.deepcopy(action_map['insert']['augur'])
-
-        if 'update' in action_map:
-            # new_data_columns += action_map['update']['source']
-            table_value_columns += action_map['update']['augur']
+        # # new_data_columns = copy.deepcopy(action_map['insert']['source'])
+        # table_value_columns = copy.deepcopy(action_map['insert']['augur'])
+        #
+        # if 'update' in action_map:
+        #     # new_data_columns += action_map['update']['source']
+        #     table_value_columns += action_map['update']['augur']
 
         (new_data_table, ), metadata, session = self._setup_postgres_merge(
             [
@@ -1521,7 +1588,7 @@ class Worker():
 
         self.logger.info("need_insertion calculated successfully")
 
-        need_updates = pd.DataFrame(columns=table_value_columns)
+        need_updates = pd.DataFrame(columns=new_data_columns)
         if 'update' in action_map:
             need_updates = pd.DataFrame(
                 session.query(new_data_table).join(
@@ -1530,9 +1597,12 @@ class Worker():
                         eval(
                             ' and '.join(
                                 [
-                                    f"augur_table.c.{table_column} == new_data_table.c.{source_column}"
-                                    for table_column, source_column in zip(
-                                        action_map['insert']['augur'], action_map['insert']['source']
+                                    (
+                                        f"augur_table.c.{table_column} "
+                                        f"== new_data_table.c.{source_column}"
+                                    ) for table_column, source_column in zip(
+                                        action_map['insert']['augur'],
+                                        action_map['insert']['source']
                                     )
                                 ]
                             )
@@ -1541,15 +1611,18 @@ class Worker():
                         eval(
                             ' and '.join(
                                 [
-                                    f"augur_table.c.{table_column} != new_data_table.c.{source_column}"
-                                    for table_column, source_column in zip(
-                                        action_map['update']['augur'], action_map['update']['source']
+                                    (
+                                        f"augur_table.c.{table_column} "
+                                        f"!= new_data_table.c.{source_column}"
+                                    ) for table_column, source_column in zip(
+                                        action_map['update']['augur'],
+                                        action_map['update']['source']
                                     )
                                 ]
                             )
                         )
                     )
-                ).all(), columns=table_value_columns
+                ).all(), columns=new_data_columns
             )
             self.logger.info("need_updates calculated successfully")
 
@@ -1986,8 +2059,10 @@ class Worker():
         owner, name = self.get_owner_repo(github_url)
 
         # Set the base of the url and place to hold contributors to insert
-        contributors_url = (f"https://api.github.com/repos/{owner}/{name}/" +
-            "contributors?per_page=100&page={}")
+        contributors_url = (
+            f"https://api.github.com/repos/{owner}/{name}/" +
+            "contributors?per_page=100&page={}"
+        )
 
         # Get contributors that we already have stored
         #   Set our duplicate and update column map keys (something other than PK) to

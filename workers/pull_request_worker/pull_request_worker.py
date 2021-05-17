@@ -1,3 +1,4 @@
+
 #SPDX-License-Identifier: MIT
 import ast
 import json
@@ -17,7 +18,8 @@ from workers.worker_base import Worker
 
 class GitHubPullRequestWorker(Worker):
     """
-    Worker that collects Pull Request related data from the Github API and stores it in our database.
+    Worker that collects Pull Request related data from the
+    Github API and stores it in our database.
 
     :param task: most recent task the broker added to the worker's queue
     :param config: holds info like api keys, descriptions, and database connection strings
@@ -120,7 +122,10 @@ class GitHubPullRequestWorker(Worker):
                     if 'errors' in data:
                         self.logger.info("Error!: {}".format(data['errors']))
                         if data['errors'][0]['type'] == 'NOT_FOUND':
-                            self.logger.warning("Github repo was not found or does not exist for endpoint: {}\n".format(url))
+                            self.logger.warning(
+                                "Github repo was not found or does not exist for "
+                                f"endpoint: {url}\n"
+                            )
                             break
                         if data['errors'][0]['type'] == 'RATE_LIMITED':
                             self.update_gh_rate_limit(response)
@@ -143,7 +148,8 @@ class GitHubPullRequestWorker(Worker):
                             )
                             break
                         if data['message'] == (
-                            "You have triggered an abuse detection mechanism. Please wait a few minutes before you try again."
+                            "You have triggered an abuse detection mechanism. Please wait a "
+                            "few minutes before you try again."
                         ):
                             num_attempts -= 1
                             self.update_gh_rate_limit(response, temporarily_disable=True)
@@ -391,6 +397,15 @@ class GitHubPullRequestWorker(Worker):
             self.register_task_completion(self.self.task_info, self.repo_id, 'pull_requests')
             return
 
+        source_prs['insert'] = self.enrich_cntrb_id(
+            source_prs['insert'], 'user.login', action_map_additions={
+                'insert': {
+                    'source': ['user.node_id'],
+                    'augur': ['gh_node_id']
+                }
+            }, prefix='user.'
+        )
+
         prs_insert = [
             {
                 'repo_id': self.repo_id,
@@ -406,7 +421,7 @@ class GitHubPullRequestWorker(Worker):
                 'pr_src_state': pr['state'],
                 'pr_src_locked': pr['locked'],
                 'pr_src_title': pr['title'],
-                'pr_augur_contributor_id': self.find_id_from_login(pr['user']['login']),
+                'pr_augur_contributor_id': pr['cntrb_id'],
                 'pr_body': pr['body'],
                 'pr_created_at': pr['created_at'],
                 'pr_updated_at': pr['updated_at'],
@@ -445,7 +460,7 @@ class GitHubPullRequestWorker(Worker):
         elif not self.deep_collection:
             self.logger.info("There are no prs to update, insert, or collect nested "
                 "information for.\n")
-            self.register_task_completion(self.self.task_info, self.repo_id, 'pull_requests')
+            self.register_task_completion(self.task_info, self.repo_id, 'pull_requests')
             return
 
         if self.deep_collection:
@@ -470,7 +485,7 @@ class GitHubPullRequestWorker(Worker):
 
         github_url = self.task_info['given']['github_url']
 
-        self.query_github_contributors(self.task_info, self.repo_id)
+        # self.query_github_contributors(self.task_info, self.repo_id)
 
         self.logger.info("Beginning collection of Pull Requests...\n")
         self.logger.info(f"Repo ID: {self.repo_id}, Git URL: {github_url}\n")
@@ -479,10 +494,11 @@ class GitHubPullRequestWorker(Worker):
 
         self.write_debug_data(pk_source_prs, 'pk_source_prs')
 
-        self.pull_request_comments_model()
-        self.pull_request_events_model(pk_source_prs)
-        self.pull_request_reviews_model(pk_source_prs)
-        self.pull_request_nested_data_model(pk_source_prs)
+        if pk_source_prs:
+            self.pull_request_comments_model()
+            self.pull_request_events_model(pk_source_prs)
+            self.pull_request_reviews_model(pk_source_prs)
+            self.pull_request_nested_data_model(pk_source_prs)
 
         self.register_task_completion(self.task_info, self.repo_id, 'pull_requests')
 
@@ -511,12 +527,21 @@ class GitHubPullRequestWorker(Worker):
 
         pr_comments['insert'] = self.text_clean(pr_comments['insert'], 'body')
 
+        pr_comments['insert'] = self.enrich_cntrb_id(
+            pr_comments['insert'], 'user.login', action_map_additions={
+                'insert': {
+                    'source': ['user.node_id'],
+                    'augur': ['gh_node_id']
+                }
+            }, prefix='user.'
+        )
+
         pr_comments_insert = [
             {
                 'pltfrm_id': self.platform_id,
                 'msg_text': comment['body'].replace("\x00", "\uFFFD"),
                 'msg_timestamp': comment['created_at'],
-                'cntrb_id': self.find_id_from_login(comment['user']['login']),
+                'cntrb_id': comment['cntrb_id'],
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
                 'data_source': self.data_source
@@ -588,10 +613,19 @@ class GitHubPullRequestWorker(Worker):
 
         self.write_debug_data(pk_pr_events, 'pk_pr_events')
 
+        pk_pr_events = self.enrich_cntrb_id(
+            pk_pr_events, 'actor.login', action_map_additions={
+                'insert': {
+                    'source': ['actor.node_id'],
+                    'augur': ['gh_node_id']
+                }
+            }, prefix='actor.'
+        )
+
         pr_events_insert = [
             {
                 'pull_request_id': event['pull_request_id'],
-                'cntrb_id': self.find_id_from_login(event['actor']['login']),
+                'cntrb_id': event['cntrb_id'],
                 'action': event['event'],
                 'action_commit_hash': None,
                 'created_at': event['created_at'],
@@ -647,15 +681,25 @@ class GitHubPullRequestWorker(Worker):
             action_map=review_action_map
         )
 
+        source_reviews_insert = self.enrich_cntrb_id(
+            source_reviews_insert, 'user.login', action_map_additions={
+                'insert': {
+                    'source': ['user.node_id'],
+                    'augur': ['gh_node_id']
+                }
+            }, prefix='user.'
+        )
+
         reviews_insert = [
             {
                 'pull_request_id': review['pull_request_id'],
-                'cntrb_id': self.find_id_from_login(review['user']['login']),
+                'cntrb_id': review['cntrb_id'],
                 'pr_review_author_association': review['author_association'],
                 'pr_review_state': review['state'],
                 'pr_review_body': review['body'],
-                'pr_review_submitted_at': review['submitted_at'] \
-                    if 'submitted_at' in review else None,
+                'pr_review_submitted_at': review['submitted_at'] if (
+                    'submitted_at' in review
+                ) else None,
                 'pr_review_src_id': review['id'],
                 'pr_review_node_id': review['node_id'],
                 'pr_review_html_url': review['html_url'],
@@ -715,12 +759,21 @@ class GitHubPullRequestWorker(Worker):
         )
         self.write_debug_data(review_msgs, 'review_msgs')
 
+        review_msgs['insert'] = self.enrich_cntrb_id(
+            review_msgs['insert'], 'user.login', action_map_additions={
+                'insert': {
+                    'source': ['user.node_id'],
+                    'augur': ['gh_node_id']
+                }
+            }, prefix='user.'
+        )
+
         review_msg_insert = [
             {
                 'pltfrm_id': self.platform_id,
                 'msg_text': comment['body'],
                 'msg_timestamp': comment['created_at'],
-                'cntrb_id': self.find_id_from_login(comment['user']['login']),
+                'cntrb_id': comment['cntrb_id'],
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
                 'data_source': self.data_source
@@ -852,10 +905,18 @@ class GitHubPullRequestWorker(Worker):
             reviewers_all, augur_table=self.pull_request_reviewers_table,
             action_map=reviewer_action_map
         )
+        source_reviewers_insert = self.enrich_cntrb_id(
+            source_reviewers_insert, 'login', action_map_additions={
+                'insert': {
+                    'source': ['node_id'],
+                    'augur': ['gh_node_id']
+                }
+            }
+        )
         reviewers_insert = [
             {
                 'pull_request_id': reviewer['pull_request_id'],
-                'cntrb_id': self.find_id_from_login(reviewer['login']),
+                'cntrb_id': reviewer['cntrb_id'],
                 'pr_reviewer_src_id': int(float(reviewer['id'])),
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
@@ -875,10 +936,18 @@ class GitHubPullRequestWorker(Worker):
             assignees_all, augur_table=self.pull_request_assignees_table,
             action_map=assignee_action_map
         )
+        source_assignees_insert = self.enrich_cntrb_id(
+            source_assignees_insert, 'login', action_map_additions={
+                'insert': {
+                    'source': ['node_id'],
+                    'augur': ['gh_node_id']
+                }
+            }
+        )
         assignees_insert = [
             {
                 'pull_request_id': assignee['pull_request_id'],
-                'contrib_id': self.find_id_from_login(assignee['login']),
+                'contrib_id': assignee['cntrb_id'],
                 'pr_assignee_src_id': assignee['id'],
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
@@ -894,8 +963,17 @@ class GitHubPullRequestWorker(Worker):
                 'augur': ['pull_request_id', 'pr_sha', 'pr_head_or_base']
             }
         }
+
         source_meta_insert, _ = self.new_organize_needed_data(
             meta_all, augur_table=self.pull_request_meta_table, action_map=meta_action_map
+        )
+        source_meta_insert = self.enrich_cntrb_id(
+            source_meta_insert, 'user.login', action_map_additions={
+                'insert': {
+                    'source': ['user.node_id'],
+                    'augur': ['gh_node_id']
+                }
+            }, prefix='user.'
         )
         meta_insert = [
             {
@@ -904,7 +982,7 @@ class GitHubPullRequestWorker(Worker):
                 'pr_src_meta_label': meta['label'],
                 'pr_src_meta_ref': meta['ref'],
                 'pr_sha': meta['sha'],
-                'cntrb_id': self.find_id_from_login(meta['user']['login']),
+                'cntrb_id': meta['cntrb_id'],
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
                 'data_source': self.data_source

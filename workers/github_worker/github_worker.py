@@ -26,10 +26,12 @@ class GitHubWorker(Worker):
         given = [['github_url']]
         models = ['issues']
 
-        data_tables = ['contributors', 'issues', 'issue_labels', 'message',
+        data_tables = [
+            'contributors', 'issues', 'issue_labels', 'message',
             'issue_message_ref', 'issue_events','issue_assignees','contributors_aliases',
-            'pull_request_assignees', 'pull_request_events', 'pull_request_reviewers', 'pull_request_meta',
-            'pull_request_repo']
+            'pull_request_assignees', 'pull_request_events', 'pull_request_reviewers',
+            'pull_request_meta', 'pull_request_repo'
+        ]
         operations_tables = ['worker_history', 'worker_job']
 
         # These 3 are included in every tuple the worker inserts (data collection info)
@@ -37,31 +39,20 @@ class GitHubWorker(Worker):
         self.tool_version = '1.0.0'
         self.data_source = 'GitHub API'
 
-        self.finishing_task = True # if we are finishing a previous task, pagination works differenty
-        self.platform_id = 25150 # GitHub
+        # if we are finishing a previous task, pagination works differenty (deprecated)
+        self.finishing_task = True
 
+        self.platform_id = 25150  # GitHub
         self.process_count = 1
-
         self.deep_collection = True
 
         # Run the general worker initialization
         super().__init__(worker_type, config, given, models, data_tables, operations_tables)
 
-    def issues_model(self, entry_info, repo_id):
-        """ Data collection function
-        Query the GitHub API for issues
-        """
-
-        github_url = entry_info['given']['github_url']
-
-        # Contributors are part of this model, and finding all for the repo saves us
-        #   from having to add them as we discover committers in the issue process
-        self.query_github_contributors(entry_info, repo_id)
-
-        owner, repo = self.get_owner_repo(github_url)
+    def _get_pk_source_issues(self):
 
         issues_url = (
-            f"https://api.github.com/repos/{owner}/{repo}"
+            f"https://api.github.com/repos/{self.owner}/{self.repo}"
             "/issues?per_page=100&state=all&page={}"
         )
 
@@ -78,13 +69,13 @@ class GitHubWorker(Worker):
 
         source_issues = self.new_paginate_endpoint(
             issues_url, action_map=action_map,
-            table=self.issues_table, where_clause=self.issues_table.c.repo_id == repo_id
+            table=self.issues_table, where_clause=self.issues_table.c.repo_id == self.repo_id
         )
 
         if len(source_issues['all']) == 0:
             self.logger.info("There are no issues for this repository.\n")
-            self.register_task_completion(entry_info, repo_id, 'issues')
-            return
+            self.register_task_completion(self.task_info, self.repo_id, 'issues')
+            return False
 
         def is_valid_pr_block(issue):
             return (
@@ -92,19 +83,20 @@ class GitHubWorker(Worker):
                 and isinstance(issue['pull_request'], dict) and 'url' in issue['pull_request']
             )
 
-        # source_issues['insert'] = self.enrich_cntrb_id(
-        #     source_issues['insert'], {'user.login': 'reporter_id'}, action_map_additions={
-        #         'insert': {
-        #             'source': 'user.node_id',
-        #             'augur': 'node_id'
-        #         }
-        #     }
-        # )
+        source_issues['insert'] = self.enrich_cntrb_id(
+            source_issues['insert'], 'user.login', action_map_additions={
+                'insert': {
+                    'source': ['user.node_id'],
+                    'augur': ['gh_node_id']
+                }
+            }, prefix='user.'
+        )
+        pd.DataFrame(source_issues['insert']).to_json('source_issues_insert.json', orient='records')
 
         issues_insert = [
             {
-                'repo_id': repo_id,
-                'reporter_id': self.find_id_from_login(issue['user']['login']),
+                'repo_id': self.repo_id,
+                'reporter_id': issue['cntrb_id'],
                 'pull_request': (
                     issue['pull_request']['url'].split('/')[-1]
                     if is_valid_pr_block(issue) else None
@@ -150,7 +142,7 @@ class GitHubWorker(Worker):
             self.logger.info(
                 "There are not issues to update, insert, or collect nested information for.\n"
             )
-            self.register_task_completion(entry_info, repo_id, 'issues')
+            self.register_task_completion(entry_info, self.repo_id, 'issues')
             return
 
         if self.deep_collection:
@@ -165,10 +157,32 @@ class GitHubWorker(Worker):
             source_data, self.issues_table, gh_merge_fields, augur_merge_fields
         )
 
-        # Messages/comments
+        return pk_source_issues
+
+    def issues_model(self, entry_info, repo_id):
+        """ Data collection function
+        Query the GitHub API for issues
+        """
+
+        github_url = entry_info['given']['github_url']
+
+        # Contributors are part of this model, and finding all for the repo saves us
+        #   from having to add them as we discover committers in the issue process
+        # self.query_github_contributors(entry_info, self.repo_id)
+
+        pk_source_issues = self._get_pk_source_issues()
+        if pk_source_issues:
+            self.issue_comments_model(pk_source_issues)
+            issue_events_all = self.issue_events_model(pk_source_issues)
+            self.issue_nested_data_model(pk_source_issues, issue_events_all)
+
+        # Register this task as completed
+        self.register_task_completion(entry_info, self.repo_id, 'issues')
+
+    def issue_comments_model(self, pk_source_issues):
 
         comments_url = (
-            f"https://api.github.com/repos/{owner}/{repo}"
+            f"https://api.github.com/repos/{self.owner}/{self.repo}"
             "/issues/comments?per_page=100&page={}"
         )
 
@@ -200,12 +214,21 @@ class GitHubWorker(Worker):
             )
         )
 
+        issue_comments['insert'] = self.enrich_cntrb_id(
+            issue_comments['insert'], 'user.login', action_map_additions={
+                'insert': {
+                    'source': ['user.node_id'],
+                    'augur': ['gh_node_id']
+                }
+            }, prefix='user.'
+        )
+
         issue_comments_insert = [
             {
                 'pltfrm_id': self.platform_id,
                 'msg_text': comment['body'],
                 'msg_timestamp': comment['created_at'],
-                'cntrb_id': self.find_id_from_login(comment['user']['login']),
+                'cntrb_id': comment['cntrb_id'],
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
                 'data_source': self.data_source
@@ -242,11 +265,11 @@ class GitHubWorker(Worker):
             unique_columns=['issue_msg_ref_src_comment_id']
         )
 
-        # Issue Events
+    def issue_events_model(self, pk_source_issues):
 
         # Get events ready in case the issue is closed and we need to insert the closer's id
         events_url = (
-            f"https://api.github.com/repos/{owner}/{repo}"
+            f"https://api.github.com/repos/{self.owner}/{self.repo}"
             "/issues/events?per_page=100&page={}"
         )
 
@@ -260,6 +283,9 @@ class GitHubWorker(Worker):
             }
         }
 
+        self.logger.info(pk_source_issues[0])
+        self.logger.info(pd.DataFrame(pk_source_issues).columns)
+        self.logger.info(pd.DataFrame(pk_source_issues))
         #list to hold contributors needing insertion or update
         issue_events = self.new_paginate_endpoint(
             events_url, table=self.issue_events_table, action_map=event_action_map,
@@ -268,19 +294,23 @@ class GitHubWorker(Worker):
             )
         )
 
-        pk_issue_events = self.enrich_data_primary_keys(issue_events['insert'],
-            self.issues_table, ['issue.id'], ['gh_issue_id'])
+        pk_issue_events = self.enrich_data_primary_keys(
+            issue_events['insert'], self.issues_table, ['issue.id'], ['gh_issue_id']
+        )
 
         if len(pk_issue_events):
-            # self.logger.info("Outside")
-            # self.logger.info(len(pk_issue_events))
-            # self.logger.info(pk_issue_events[0])
-            # self.logger.info(pk_issue_events[0].keys())
             pk_issue_events = pd.DataFrame(pk_issue_events)[
                 ['id', 'issue_id', 'node_id', 'url', 'actor', 'created_at', 'event', 'commit_id']
             ].to_dict(orient='records')
-            # self.logger.info(pk_issue_events[0])
-            # self.logger.info(pk_issue_events[0].keys())
+
+        pk_issue_events = self.enrich_cntrb_id(
+            pk_issue_events, 'actor.login', action_map_additions={
+                'insert': {
+                    'source': ['actor.node_id'],
+                    'augur': ['gh_node_id']
+                }
+            }, prefix='actor.'
+        )
 
         issue_events_insert = [
             {
@@ -288,7 +318,7 @@ class GitHubWorker(Worker):
                 'issue_id': event['issue_id'],
                 'node_id': event['node_id'],
                 'node_url': event['url'],
-                'cntrb_id': self.find_id_from_login(event['actor']['login']),
+                'cntrb_id': event['cntrb_id'],
                 'created_at': event['created_at'],
                 'action': event['event'],
                 'action_commit_hash': event['commit_id'],
@@ -297,23 +327,50 @@ class GitHubWorker(Worker):
                 'data_source': self.data_source
             } for event in pk_issue_events if event['actor'] is not None
         ]
-        self.logger.info('built')
 
-        self.bulk_insert(self.issue_events_table, insert=issue_events_insert,
-            unique_columns=event_action_map['insert']['augur'])
+        self.bulk_insert(
+            self.issue_events_table, insert=issue_events_insert,
+            unique_columns=event_action_map['insert']['augur']
+        )
+
+        return issue_events['all']
+
+    def issue_nested_data_model(self, pk_source_issues, issue_events_all):
 
         closed_issue_updates = []
-        events_df = pd.DataFrame(
-            self._get_data_set_columns(
-                issue_events['all'], ['event', 'issue.number', 'actor.login']
+
+        skip_closed_issue_update = False
+        if len(issue_events_all):
+            events_df = pd.DataFrame(
+                self._get_data_set_columns(
+                    issue_events_all, [
+                        'event', 'issue.number', 'actor.login', 'actor.node_id'
+                    ]
+                )
             )
-        )
-        events_df = events_df.loc[events_df.event == 'closed']
+            events_df = events_df.loc[events_df.event == 'closed']
+
+            if len(events_df):
+                events_df = pd.DataFrame(
+                    self.enrich_cntrb_id(
+                        events_df.to_dict(orient='records'), 'actor.login', action_map_additions={
+                            'insert': {
+                                'source': ['actor.node_id'],
+                                'augur': ['gh_node_id']
+                            }
+                        }, prefix='actor.'
+                    )
+                )
+                self.logger.info(events_df)
+                self.logger.info(events_df.columns)
+                self.logger.info(events_df.to_dict(orient='records')[0])
+            else:
+                skip_closed_issue_update = True
+        else:
+            skip_closed_issue_update = True
 
         assignees_all = []
         labels_all = []
-
-        # Issue nested info table insertions
 
         def is_nan(value):
             return type(value) == float and math.isnan(value)
@@ -330,14 +387,13 @@ class GitHubWorker(Worker):
                 and not is_nan(issue['assignee'])
             ):
                 source_assignees.append(issue['assignee'])
-
             assignees_all += source_assignees
 
             # Issue Labels
             labels_all += issue['labels']
 
             # If the issue is closed, then we search for the closing event and store the user's id
-            if 'closed_at' in issue:
+            if 'closed_at' in issue and not skip_closed_issue_update:
 
                 try:
                     closed_event = events_df.loc[
@@ -345,15 +401,14 @@ class GitHubWorker(Worker):
                     ].iloc[-1]
                 except IndexError:
                     self.logger.info(
-                        "Warning! We do not have the closing event of this issue stored\n"
+                        "Warning! We do not have the closing event of this issue stored. "
+                        f"Pk: {issue['issue_id']}"
                     )
                     continue
 
-                closer_cntrb_id = self.find_id_from_login(closed_event['actor.login'])
-
                 closed_issue_updates.append({
                     'b_issue_id': issue['issue_id'],
-                    'cntrb_id': closer_cntrb_id
+                    'cntrb_id': closed_event['cntrb_id']
                 })
 
         # Closed issues, update with closer id
@@ -374,10 +429,20 @@ class GitHubWorker(Worker):
             assignees_all, augur_table=self.issue_assignees_table,
             action_map=assignee_action_map
         )
+
+        source_assignees_insert = self.enrich_cntrb_id(
+            source_assignees_insert, 'login', action_map_additions={
+                'insert': {
+                    'source': ['node_id'],
+                    'augur': ['gh_node_id']
+                }
+            }
+        )
+
         assignees_insert = [
             {
                 'issue_id': issue['issue_id'],
-                'cntrb_id': self.find_id_from_login(assignee['login']),
+                'cntrb_id': assignee['cntrb_id'],
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
                 'data_source': self.data_source,
@@ -418,6 +483,3 @@ class GitHubWorker(Worker):
             self.issue_labels_table, insert=labels_insert,
             unique_columns=label_action_map['insert']['augur']
         )
-
-        # Register this task as completed
-        self.register_task_completion(entry_info, repo_id, 'issues')
