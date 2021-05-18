@@ -10,6 +10,7 @@ The full codepath doesn't work due to issues with making the worker function.
 Finals took more time than expected so this is not as complete as I was hoping.
 I will make a PR to augur dev but I don't expect it to be accepted.
 I will work after the semester to finish this as I want to see it through to the end since I've already invested a bit of time and effort into making it work.
+I will create issues for things I ran into on augur shortly after finishing up sprint 4.
 
 # how to run example
 call "python3 test_deps.py [arg]" with a directory containing code as an argument. It will call the same code the worker calls and print the resulting list of dependancies found in the directory for all supported languages and import syntaxes.
