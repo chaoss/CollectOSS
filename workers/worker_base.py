@@ -1256,7 +1256,9 @@ class Worker():
                 inserted_pks
             ]
         )
-        final_columns = [cntrb_pk_name] + list(expanded_source_df[necessary_columns].columns)
+        final_columns = [cntrb_pk_name] + necessary_columns
+
+        self.logger.info(final_columns)
 
         # Merge
         source_pk = pd.DataFrame(
