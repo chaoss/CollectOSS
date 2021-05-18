@@ -344,7 +344,7 @@ class GitHubWorker(Worker):
             events_df = pd.DataFrame(
                 self._get_data_set_columns(
                     issue_events_all, [
-                        'event', 'issue.number', 'actor.login', 'actor.node_id'
+                        'event', 'issue.number', 'actor.login', 'actor.node_id', 'actor'
                     ]
                 )
             )

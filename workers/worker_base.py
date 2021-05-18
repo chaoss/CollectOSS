@@ -454,10 +454,13 @@ class Worker():
     def _get_data_set_columns(self, data, columns):
         if not len(data):
             return []
+        self.logger.info("Getting data set columns")
         df = pd.DataFrame(data, columns=data[0].keys())
+        final_columns = copy.deepcopy(columns)
         for column in columns:
             if '.' not in column:
                 continue
+            self.logger.info(f"Expanding column: {column}")
             root = column.split('.')[0]
             expanded_column = pd.DataFrame(
                 df[root].where(df[root].notna(), lambda x: [{}]).tolist()
@@ -465,14 +468,19 @@ class Worker():
             expanded_column.columns = [
                 f'{root}.{attribute}' for attribute in expanded_column.columns
             ]
-            columns += list(expanded_column.columns)
+            self.logger.info(f"Expanded sub columns: {list(expanded_column.columns)}")
+            final_columns += list(expanded_column.columns)
             try:
                 df = df.join(expanded_column)
             except ValueError:
                 # columns already added (happens if trying to expand the same column twice)
                 # TODO: Catch this before by only looping unique prefixs?
+                self.logger.info("Columns have already been added, moving on...")
                 pass
-        return df[list(set(columns))].to_dict(orient='records')
+        self.logger.info(final_columns)
+        self.logger.info(list(set(final_columns)))
+        self.logger.info("Finished getting data set columns")
+        return df[list(set(final_columns))].to_dict(orient='records')
 
     def organize_needed_data(
         self, new_data, table_values, table_pkey, action_map={}, in_memory=True
@@ -1166,8 +1174,10 @@ class Worker():
 
         self.logger.info(f"Enriching contributor ids for {len(data)} data points...")
 
-        source_df = self._add_nested_columns(
-            pd.DataFrame(data), [key] + action_map_additions['insert']['source']
+        source_df = pd.DataFrame(data)
+
+        expanded_source_df = self._add_nested_columns(
+            source_df.copy(), [key] + action_map_additions['insert']['source']
         )
 
         # Insert cntrbs that are not in db
@@ -1179,7 +1189,7 @@ class Worker():
             }
         }
         source_cntrb_insert, _ = self.new_organize_needed_data(
-            source_df.to_dict(orient='records'), augur_table=self.contributors_table,
+            expanded_source_df.to_dict(orient='records'), augur_table=self.contributors_table,
             action_map=cntrb_action_map
         )
 
@@ -1224,23 +1234,41 @@ class Worker():
 
         # Query db for inserted cntrb pkeys and add to shallow level of data
 
-        (source_table, ), metadata, session = self._setup_postgres_merge(
-            [source_df.to_dict(orient='records')]
-        )
-
+        # Query
         cntrb_pk_name = list(self.contributors_table.primary_key)[0].name
-        final_columns = [cntrb_pk_name] + list(source_df.columns)
+        session = s.orm.Session(self.db)
+        inserted_pks = pd.DataFrame(
+            session.query(
+                self.contributors_table.c[cntrb_pk_name], self.contributors_table.c.cntrb_login,
+                self.contributors_table.c.gh_node_id
+            ).distinct(self.contributors_table.c.cntrb_login).order_by(
+                self.contributors_table.c.cntrb_login, self.contributors_table.c[cntrb_pk_name]
+            ).all(), columns=[cntrb_pk_name, 'cntrb_login', 'gh_node_id']
+        ).to_dict(orient='records')
+        session.close()
 
+        # Prepare for merge
+        source_columns = list(source_df.columns)
+        necessary_columns = source_columns + cntrb_action_map['insert']['source']
+        (source_table, inserted_pks_table), metadata, session = self._setup_postgres_merge(
+            [
+                expanded_source_df[necessary_columns].to_dict(orient='records'),
+                inserted_pks
+            ]
+        )
+        final_columns = [cntrb_pk_name] + list(expanded_source_df[necessary_columns].columns)
+
+        # Merge
         source_pk = pd.DataFrame(
             session.query(
-                self.contributors_table.c[cntrb_pk_name], source_table
+                inserted_pks_table.c.cntrb_id, source_table
             ).join(
                 source_table,
                 eval(
                     ' and '.join(
                         [
                             (
-                                f"self.contributors_table.c['{table_column}'] "
+                                f"inserted_pks_table.c['{table_column}'] "
                                 f"== source_table.c['{source_column}']"
                             ) for table_column, source_column in zip(
                                 cntrb_action_map['insert']['augur'],
@@ -1252,6 +1280,7 @@ class Worker():
             ).all(), columns=final_columns
         )
 
+        # Cleanup merge
         source_pk = self._eval_json_columns(source_pk)
         self._close_postgres_merge(metadata, session)
 

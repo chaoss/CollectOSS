@@ -787,6 +787,9 @@ class GitHubPullRequestWorker(Worker):
         )
         self.write_debug_data(c_pk_source_comments, 'c_pk_source_comments')
 
+        pd.DataFrame(c_pk_source_comments).to_json('c_pk_source_comments.json', orient='records')
+        self.logger.info('got it')
+
         both_pk_source_comments = self.enrich_data_primary_keys(
             c_pk_source_comments, self.pull_request_reviews_table, ['pull_request_review_id'],
             ['pr_review_src_id']
