@@ -11,6 +11,7 @@ warnings.filterwarnings('ignore')
 
 import selenium
 from selenium import webdriver
+driver = webdriver.Firefox()
 
 from bokeh.palettes import Colorblind, mpl, Category20
 from bokeh.layouts import gridplot, row, column
