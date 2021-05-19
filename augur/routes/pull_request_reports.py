@@ -9,9 +9,9 @@ from scipy import stats
 from flask import request, send_file, Response
 warnings.filterwarnings('ignore')
 
-import selenium
-from selenium import webdriver
-from selenium.webdriver import FirefoxOptions
+#import selenium
+#from selenium import webdriver
+#from selenium.webdriver import FirefoxOptions
 
 from bokeh.palettes import Colorblind, mpl, Category20
 from bokeh.layouts import gridplot, row, column
