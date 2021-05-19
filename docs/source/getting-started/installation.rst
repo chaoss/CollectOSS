@@ -65,12 +65,16 @@ On Ubuntu and other Linux flavors: if you want to use the new Augur API Calls th
 
 .. code-block:: bash
 
-    -  sudo apt install firefox-geckodriver
+    - which firefox-geckodriver
+    - if nothing returned, then: 
+    - sudo apt install firefox-geckodriver
 
 For Mac OSX you can use: 
 
 .. code-block:: bash
 
+    -  which geckodriver
+    -  if nothing returned, then:
     -  brew install geckodriver
 
 .. note::
