@@ -11,6 +11,7 @@ warnings.filterwarnings('ignore')
 
 import selenium
 from selenium import webdriver
+from selenium.webdriver import FirefoxOptions
 
 from bokeh.palettes import Colorblind, mpl, Category20
 from bokeh.layouts import gridplot, row, column
@@ -455,7 +456,9 @@ def create_routes(server):
 
             return var 
 
-        driver = webdriver.Firefox()
+        opts = FirefoxOptions()
+        opts.add_argument("--headless")
+        driver = webdriver.Firefox(firefox_options=opts)
         filename = export_png(grid, timeout=180, webdriver=selenium.webdriver.firefox.webdriver)
         
         return send_file(filename)
@@ -614,7 +617,9 @@ def create_routes(server):
 
             return var 
 
-        driver = webdriver.Firefox()
+        opts = FirefoxOptions()
+        opts.add_argument("--headless")
+        driver = webdriver.Firefox(firefox_options=opts)
         filename = export_png(grid, timeout=180, webdriver=selenium.webdriver.firefox.webdriver)
         
         return send_file(filename)
@@ -792,7 +797,9 @@ def create_routes(server):
 
             return var 
 
-        driver = webdriver.Firefox()
+        opts = FirefoxOptions()
+        opts.add_argument("--headless")
+        driver = webdriver.Firefox(firefox_options=opts)
         filename = export_png(grid, timeout=180, webdriver=selenium.webdriver.firefox.webdriver)
         
         return send_file(filename)
@@ -1044,7 +1051,9 @@ def create_routes(server):
 
             return var 
 
-        driver = webdriver.Firefox()
+        opts = FirefoxOptions()
+        opts.add_argument("--headless")
+        driver = webdriver.Firefox(firefox_options=opts)
         filename = export_png(grid, timeout=180, webdriver=selenium.webdriver.firefox.webdriver)
         
         return send_file(filename)
@@ -1197,7 +1206,9 @@ def create_routes(server):
 
             return var 
 
-        driver = webdriver.Firefox()
+        opts = FirefoxOptions()
+        opts.add_argument("--headless")
+        driver = webdriver.Firefox(firefox_options=opts)
         filename = export_png(grid, timeout=180, webdriver=selenium.webdriver.firefox.webdriver)
         
         return send_file(filename)
@@ -1324,7 +1335,9 @@ def create_routes(server):
 
             return var 
 
-        driver = webdriver.Firefox()
+        opts = FirefoxOptions()
+        opts.add_argument("--headless")
+        driver = webdriver.Firefox(firefox_options=opts)
         filename = export_png(grid, timeout=180, webdriver=selenium.webdriver.firefox.webdriver)
         
         return send_file(filename)
@@ -1490,7 +1503,9 @@ def create_routes(server):
 
             return var 
 
-        driver = webdriver.Firefox()
+        opts = FirefoxOptions()
+        opts.add_argument("--headless")
+        driver = webdriver.Firefox(firefox_options=opts)
         filename = export_png(layout, timeout=181, webdriver=selenium.webdriver.firefox.webdriver)
         
         return send_file(filename)
@@ -1634,7 +1649,9 @@ def create_routes(server):
 
             return var 
 
-        driver = webdriver.Firefox()
+        opts = FirefoxOptions()
+        opts.add_argument("--headless")
+        driver = webdriver.Firefox(firefox_options=opts)
         filename = export_png(grid, timeout=180, webdriver=selenium.webdriver.firefox.webdriver)
         
         return send_file(filename)
