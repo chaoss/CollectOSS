@@ -10,6 +10,7 @@ from flask import request, send_file, Response
 warnings.filterwarnings('ignore')
 
 import selenium
+from selenium import webdriver
 
 from bokeh.palettes import Colorblind, mpl, Category20
 from bokeh.layouts import gridplot, row, column

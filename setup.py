@@ -50,7 +50,7 @@ setup(
         "gunicorn",
         "six==1.15.0",
         "bokeh==2.0.2",
-        "selenium",
+        "selenium==3.141.0",
         "dask",
         "cloudpickle >= 0.2.2",
         "fsspec >= 0.6.0",
