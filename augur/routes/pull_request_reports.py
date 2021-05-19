@@ -16,7 +16,7 @@ from selenium.webdriver import FirefoxOptions
 from bokeh.palettes import Colorblind, mpl, Category20
 from bokeh.layouts import gridplot, row, column
 from bokeh.models.annotations import Title
-from bokeh.io import export_png, show
+from bokeh.io import export_png, show, get_screenshot_as_png 
 from bokeh.embed import json_item
 from bokeh.models import ColumnDataSource, Legend, LabelSet, Range1d, Label, FactorRange, BasicTicker, ColorBar, LinearColorMapper, PrintfTickFormatter
 from bokeh.plotting import figure
