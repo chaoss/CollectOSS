@@ -11,7 +11,6 @@ warnings.filterwarnings('ignore')
 
 import selenium
 from selenium import webdriver
-driver = webdriver.Firefox()
 
 from bokeh.palettes import Colorblind, mpl, Category20
 from bokeh.layouts import gridplot, row, column
@@ -456,7 +455,8 @@ def create_routes(server):
 
             return var 
 
-        filename = export_png(grid, timeout=181, webdriver=selenium.webdriver.firefox.webdriver)
+        driver = webdriver.Firefox()
+        filename = export_png(grid, timeout=180, webdriver=selenium.webdriver.firefox.webdriver)
         
         return send_file(filename)
 
@@ -614,7 +614,8 @@ def create_routes(server):
 
             return var 
 
-        filename = export_png(grid, timeout=181, webdriver=selenium.webdriver.firefox.webdriver)
+        driver = webdriver.Firefox()
+        filename = export_png(grid, timeout=180, webdriver=selenium.webdriver.firefox.webdriver)
         
         return send_file(filename)
 
@@ -791,7 +792,8 @@ def create_routes(server):
 
             return var 
 
-        filename = export_png(grid, timeout=181, webdriver=selenium.webdriver.firefox.webdriver)
+        driver = webdriver.Firefox()
+        filename = export_png(grid, timeout=180, webdriver=selenium.webdriver.firefox.webdriver)
         
         return send_file(filename)
 
@@ -1042,7 +1044,8 @@ def create_routes(server):
 
             return var 
 
-        filename = export_png(grid, timeout=181, webdriver=selenium.webdriver.firefox.webdriver)
+        driver = webdriver.Firefox()
+        filename = export_png(grid, timeout=180, webdriver=selenium.webdriver.firefox.webdriver)
         
         return send_file(filename)
 
@@ -1194,7 +1197,8 @@ def create_routes(server):
 
             return var 
 
-        filename = export_png(grid, timeout=181, webdriver=selenium.webdriver.firefox.webdriver)
+        driver = webdriver.Firefox()
+        filename = export_png(grid, timeout=180, webdriver=selenium.webdriver.firefox.webdriver)
         
         return send_file(filename)
 
@@ -1320,7 +1324,8 @@ def create_routes(server):
 
             return var 
 
-        filename = export_png(grid, timeout=181, webdriver=selenium.webdriver.firefox.webdriver)
+        driver = webdriver.Firefox()
+        filename = export_png(grid, timeout=180, webdriver=selenium.webdriver.firefox.webdriver)
         
         return send_file(filename)
 
@@ -1485,6 +1490,7 @@ def create_routes(server):
 
             return var 
 
+        driver = webdriver.Firefox()
         filename = export_png(layout, timeout=181, webdriver=selenium.webdriver.firefox.webdriver)
         
         return send_file(filename)
@@ -1628,6 +1634,7 @@ def create_routes(server):
 
             return var 
 
-        filename = export_png(grid, timeout=181, webdriver=selenium.webdriver.firefox.webdriver)
+        driver = webdriver.Firefox()
+        filename = export_png(grid, timeout=180, webdriver=selenium.webdriver.firefox.webdriver)
         
         return send_file(filename)
