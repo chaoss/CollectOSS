@@ -1653,7 +1653,7 @@ def create_routes(server):
         opts = FirefoxOptions()
         opts.add_argument("--headless")
         driver = webdriver.Firefox(firefox_options=opts)
-        newt = get_screenshot_as_png(grid, timeout=180, webdriver=selenium.webdriver.firefox.webdriver)
+        #newt = get_screenshot_as_png(grid, timeout=180, webdriver=selenium.webdriver.firefox.webdriver)
         filename = export_png(grid, timeout=180, webdriver=selenium.webdriver.firefox.webdriver)
         
         #return sendfile(newt)  
