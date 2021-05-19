@@ -453,7 +453,7 @@ def create_routes(server):
 
             return var 
 
-        filename = export_png(grid, timeout=60)
+        filename = export_png(grid, timeout=181)
         
         return send_file(filename)
 
@@ -611,7 +611,7 @@ def create_routes(server):
 
             return var 
 
-        filename = export_png(grid, timeout=60)
+        filename = export_png(grid, timeout=181)
         
         return send_file(filename)
 
@@ -788,7 +788,7 @@ def create_routes(server):
 
             return var 
 
-        filename = export_png(grid, timeout=60)
+        filename = export_png(grid, timeout=181)
         
         return send_file(filename)
 
@@ -1039,7 +1039,7 @@ def create_routes(server):
 
             return var 
 
-        filename = export_png(grid, timeout=60)
+        filename = export_png(grid, timeout=181)
         
         return send_file(filename)
 
@@ -1191,7 +1191,7 @@ def create_routes(server):
 
             return var 
 
-        filename = export_png(grid, timeout=60)
+        filename = export_png(grid, timeout=181)
         
         return send_file(filename)
 
@@ -1317,7 +1317,7 @@ def create_routes(server):
 
             return var 
 
-        filename = export_png(grid, timeout=60)
+        filename = export_png(grid, timeout=181)
         
         return send_file(filename)
 
@@ -1625,6 +1625,6 @@ def create_routes(server):
 
             return var 
 
-        filename = export_png(grid, timeout=60)
+        filename = export_png(grid, timeout=181)
         
         return send_file(filename)
