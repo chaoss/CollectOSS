@@ -9,6 +9,7 @@ from scipy import stats
 from flask import request, send_file, Response
 warnings.filterwarnings('ignore')
 
+import selenium
 
 from bokeh.palettes import Colorblind, mpl, Category20
 from bokeh.layouts import gridplot, row, column
@@ -453,7 +454,7 @@ def create_routes(server):
 
             return var 
 
-        filename = export_png(grid, timeout=181)
+        filename = export_png(grid, timeout=181, webdriver=selenium.webdriver)
         
         return send_file(filename)
 
@@ -611,7 +612,7 @@ def create_routes(server):
 
             return var 
 
-        filename = export_png(grid, timeout=181)
+        filename = export_png(grid, timeout=181, webdriver=selenium.webdriver)
         
         return send_file(filename)
 
@@ -788,7 +789,7 @@ def create_routes(server):
 
             return var 
 
-        filename = export_png(grid, timeout=181)
+        filename = export_png(grid, timeout=181, webdriver=selenium.webdriver)
         
         return send_file(filename)
 
@@ -1039,7 +1040,7 @@ def create_routes(server):
 
             return var 
 
-        filename = export_png(grid, timeout=181)
+        filename = export_png(grid, timeout=181, webdriver=selenium.webdriver)
         
         return send_file(filename)
 
@@ -1191,7 +1192,7 @@ def create_routes(server):
 
             return var 
 
-        filename = export_png(grid, timeout=181)
+        filename = export_png(grid, timeout=181, webdriver=selenium.webdriver)
         
         return send_file(filename)
 
@@ -1317,7 +1318,7 @@ def create_routes(server):
 
             return var 
 
-        filename = export_png(grid, timeout=181)
+        filename = export_png(grid, timeout=181, webdriver=selenium.webdriver)
         
         return send_file(filename)
 
@@ -1482,7 +1483,7 @@ def create_routes(server):
 
             return var 
 
-        filename = export_png(layout)
+        filename = export_png(layout, timeout=181, webdriver=selenium.webdriver)
         
         return send_file(filename)
 
@@ -1625,6 +1626,6 @@ def create_routes(server):
 
             return var 
 
-        filename = export_png(grid, timeout=181)
+        filename = export_png(grid, timeout=181, webdriver=selenium.webdriver)
         
         return send_file(filename)
