@@ -71,7 +71,13 @@ For Mac OSX you can use:
 
 .. code-block:: bash
 
-    -  brew install chromedriver
+    -  brew install geckodriver
+
+.. note::
+  If you have BOTH firefox-geckodriver AND chromedriver installed the visualization API will not work. 
+
+  We have fully tested with firefox-gecko driver on Linux platforms, and geckodriver on OSX. If you have ONLY chromedriver installed, it will probably work. Open an issue if you have a functioning chromedriver implementation.  
+
 
 =================
 Installing Augur
