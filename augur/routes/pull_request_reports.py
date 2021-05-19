@@ -16,7 +16,8 @@ from selenium.webdriver import FirefoxOptions
 from bokeh.palettes import Colorblind, mpl, Category20
 from bokeh.layouts import gridplot, row, column
 from bokeh.models.annotations import Title
-from bokeh.io import export_png, show, get_screenshot_as_png 
+from bokeh.io import export_png, show #, get_screenshot_as_png 
+from bokeh.io.export import get_screenshot_as_png
 from bokeh.embed import json_item
 from bokeh.models import ColumnDataSource, Legend, LabelSet, Range1d, Label, FactorRange, BasicTicker, ColorBar, LinearColorMapper, PrintfTickFormatter
 from bokeh.plotting import figure
@@ -1655,5 +1656,5 @@ def create_routes(server):
         newt = get_screenshot_as_png(grid, timeout=180, webdriver=selenium.webdriver.firefox.webdriver)
         filename = export_png(grid, timeout=180, webdriver=selenium.webdriver.firefox.webdriver)
         
-        return newt 
-        #return send_file(filename)
+        #return sendfile(newt)  
+        return send_file(filename)
