@@ -407,7 +407,7 @@ class Worker():
             return s.types.TIMESTAMP
         return s.types.String
 
-    def _setup_postgres_merge(self, data_sets):
+    def _setup_postgres_merge(self, data_sets, sort=False):
 
         metadata = s.MetaData()
 
@@ -419,7 +419,8 @@ class Worker():
             data_table = s.schema.Table(f"merge_data_{index}_{os.getpid()}", metadata)
             df = pd.DataFrame(data)
 
-            for column in df.columns:
+            columns = sorted(list(df.columns)) if sort else df.columns
+            for column in columns:
                 data_table.append_column(
                     s.schema.Column(
                         column, self.get_sqlalchemy_type(df.fillna(method='bfill').iloc[0][column])
@@ -1146,9 +1147,6 @@ class Worker():
             if '.' not in column:
                 continue
             root = column.split('.')[0]
-            self.logger.info(root)
-            self.logger.info(df.dtypes)
-            self.logger.info(df[root])
             expanded_column = pd.DataFrame(
                 df[root].where(df[root].notna(), lambda x: [{}]).tolist()
             )
@@ -1248,39 +1246,15 @@ class Worker():
         session.close()
 
         # Prepare for merge
-        source_columns = list(source_df.columns)
-        necessary_columns = list(set(source_columns + cntrb_action_map['insert']['source']))
-        self.logger.info(necessary_columns)
-        self.logger.info(expanded_source_df[necessary_columns].to_dict(orient='records')[0].keys())
-        self.logger.info(pd.DataFrame(expanded_source_df[necessary_columns].to_dict(orient='records')).columns)
-        self.logger.info(expanded_source_df[necessary_columns].columns)
+        source_columns = sorted(list(source_df.columns))
+        necessary_columns = sorted(list(set(source_columns + cntrb_action_map['insert']['source'])))
         (source_table, inserted_pks_table), metadata, session = self._setup_postgres_merge(
             [
                 expanded_source_df[necessary_columns].to_dict(orient='records'),
                 inserted_pks
-            ]
+            ], sort=True
         )
-        final_columns = list(set([cntrb_pk_name] + necessary_columns))
-
-        self.logger.info(final_columns)
-        self.logger.info(session.query(
-            inserted_pks_table.c.cntrb_id, source_table
-        ).join(
-            source_table,
-            eval(
-                ' and '.join(
-                    [
-                        (
-                            f"inserted_pks_table.c['{table_column}'] "
-                            f"== source_table.c['{source_column}']"
-                        ) for table_column, source_column in zip(
-                            cntrb_action_map['insert']['augur'],
-                            cntrb_action_map['insert']['source']
-                        )
-                    ]
-                )
-            )
-        ))
+        final_columns = [cntrb_pk_name] + sorted(list(set(necessary_columns)))
 
         # Merge
         source_pk = pd.DataFrame(
