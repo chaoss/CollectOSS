@@ -454,7 +454,7 @@ def create_routes(server):
 
             return var 
 
-        filename = export_png(grid, timeout=181, webdriver=selenium.webdriver)
+        filename = export_png(grid, timeout=181, webdriver=selenium.webdriver.firefox.webdriver)
         
         return send_file(filename)
 
@@ -612,7 +612,7 @@ def create_routes(server):
 
             return var 
 
-        filename = export_png(grid, timeout=181, webdriver=selenium.webdriver)
+        filename = export_png(grid, timeout=181, webdriver=selenium.webdriver.firefox.webdriver)
         
         return send_file(filename)
 
@@ -789,7 +789,7 @@ def create_routes(server):
 
             return var 
 
-        filename = export_png(grid, timeout=181, webdriver=selenium.webdriver)
+        filename = export_png(grid, timeout=181, webdriver=selenium.webdriver.firefox.webdriver)
         
         return send_file(filename)
 
@@ -1040,7 +1040,7 @@ def create_routes(server):
 
             return var 
 
-        filename = export_png(grid, timeout=181, webdriver=selenium.webdriver)
+        filename = export_png(grid, timeout=181, webdriver=selenium.webdriver.firefox.webdriver)
         
         return send_file(filename)
 
@@ -1192,7 +1192,7 @@ def create_routes(server):
 
             return var 
 
-        filename = export_png(grid, timeout=181, webdriver=selenium.webdriver)
+        filename = export_png(grid, timeout=181, webdriver=selenium.webdriver.firefox.webdriver)
         
         return send_file(filename)
 
@@ -1318,7 +1318,7 @@ def create_routes(server):
 
             return var 
 
-        filename = export_png(grid, timeout=181, webdriver=selenium.webdriver)
+        filename = export_png(grid, timeout=181, webdriver=selenium.webdriver.firefox.webdriver)
         
         return send_file(filename)
 
@@ -1483,7 +1483,7 @@ def create_routes(server):
 
             return var 
 
-        filename = export_png(layout, timeout=181, webdriver=selenium.webdriver)
+        filename = export_png(layout, timeout=181, webdriver=selenium.webdriver.firefox.webdriver)
         
         return send_file(filename)
 
@@ -1626,6 +1626,6 @@ def create_routes(server):
 
             return var 
 
-        filename = export_png(grid, timeout=181, webdriver=selenium.webdriver)
+        filename = export_png(grid, timeout=181, webdriver=selenium.webdriver.firefox.webdriver)
         
         return send_file(filename)
