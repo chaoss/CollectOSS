@@ -4,6 +4,9 @@ import sqlalchemy as s
 import pandas as pd
 import json
 from flask import Response
+import logging
+
+logger = logging.getLogger(__name__)
 
 def create_routes(server):
 
