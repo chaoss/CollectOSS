@@ -48,7 +48,7 @@ setup(
         "click",
         "psutil",
         "gunicorn",
-        "six>=1.15.0",
+        "six==1.15.0",
         "bokeh==2.0.2",
         "selenium",
         "dask",

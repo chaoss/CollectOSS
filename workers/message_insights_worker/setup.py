@@ -21,7 +21,7 @@ setup(
     description="Message Insights worker that detects novel messages & analyzes sentiment from issue, PR messages",
     packages=find_packages(),
     install_requires=[
-        'flask',
+        'flask==1.1.4',
         'requests',
         'psycopg2-binary',
         'sklearn',
