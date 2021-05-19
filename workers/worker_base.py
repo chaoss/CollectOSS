@@ -1249,16 +1249,38 @@ class Worker():
 
         # Prepare for merge
         source_columns = list(source_df.columns)
-        necessary_columns = source_columns + cntrb_action_map['insert']['source']
+        necessary_columns = list(set(source_columns + cntrb_action_map['insert']['source']))
+        self.logger.info(necessary_columns)
+        self.logger.info(expanded_source_df[necessary_columns].to_dict(orient='records')[0].keys())
+        self.logger.info(pd.DataFrame(expanded_source_df[necessary_columns].to_dict(orient='records')).columns)
+        self.logger.info(expanded_source_df[necessary_columns].columns)
         (source_table, inserted_pks_table), metadata, session = self._setup_postgres_merge(
             [
                 expanded_source_df[necessary_columns].to_dict(orient='records'),
                 inserted_pks
             ]
         )
-        final_columns = [cntrb_pk_name] + necessary_columns
+        final_columns = list(set([cntrb_pk_name] + necessary_columns))
 
         self.logger.info(final_columns)
+        self.logger.info(session.query(
+            inserted_pks_table.c.cntrb_id, source_table
+        ).join(
+            source_table,
+            eval(
+                ' and '.join(
+                    [
+                        (
+                            f"inserted_pks_table.c['{table_column}'] "
+                            f"== source_table.c['{source_column}']"
+                        ) for table_column, source_column in zip(
+                            cntrb_action_map['insert']['augur'],
+                            cntrb_action_map['insert']['source']
+                        )
+                    ]
+                )
+            )
+        ))
 
         # Merge
         source_pk = pd.DataFrame(
