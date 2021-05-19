@@ -178,14 +178,6 @@ def create_routes(server):
         # Change years to int so that doesn't display as 2019.0 for example
         pr_all[['created_year', 'closed_year']] = pr_all[['created_year', 'closed_year']].fillna(-1).astype(int).astype(str)
 
-        # Get days for average_time_between_responses time delta
-
-
-
-        ## for pr_all['average_time_between_responses']:
-        pr_all['average_days_between_responses'] = pr_all['average_time_between_responses'].map(lambda x: x.days).astype(float)
-        pr_all['average_hours_between_responses'] = pr_all['average_time_between_responses'].map(lambda x: x.days * 24).astype(float)
-
         start_date = pd.to_datetime(start_date)
         # end_date = pd.to_datetime('2020-02-01 09:00:00')
         end_date = pd.to_datetime(end_date)
@@ -325,6 +317,7 @@ def create_routes(server):
         repo_id = int(request.args.get('repo_id'))
         start_date = str(request.args.get('start_date', "{}-01-01".format(now.year-1)))
         end_date = str(request.args.get('end_date', "{}-{}-{}".format(now.year, now.month, now.day)))
+        group_by = str(request.args.get('group_by', "month"))
         return_json = request.args.get('return_json', "false")
 
         #dict of df types, and their locaiton in the tuple that the function pull_request_data_collection returns
@@ -340,10 +333,14 @@ def create_routes(server):
                 mimetype='application/json',
                 status=200)
 
-        x_axis = 'closed_year'
         y_axis = 'num_commits'
-        group_by = 'merged_flag'
+        group_by_bars = 'merged_flag'
         description = 'All'  
+
+        # filter out unneeded columns for easier debugging
+        input_df = input_df[['repo_id', 'repo_name', 'closed_year', 'closed_yearmonth', group_by_bars, 'commit_count']]
+
+        # print(input_df.to_string())
 
         repo_dict = {repo_id : input_df.loc[input_df['repo_id'] == repo_id].iloc[0]['repo_name']}   
        
@@ -352,11 +349,19 @@ def create_routes(server):
         # Change closed year to int so that doesn't display as 2019.0 for example
         driver_df['closed_year'] = driver_df['closed_year'].astype(int).astype(str)
 
-        # contains the closed years
-        x_groups = sorted(list(driver_df[x_axis].unique()))
+        # defaults to year
+        x_axis = 'closed_year'
+        x_groups = sorted(list(driver_df[x_axis].unique())) 
+
+        if group_by == 'month':
+            x_axis = "closed_yearmonth"
+            x_groups = np.unique(np.datetime_as_string(input_df[x_axis], unit = 'M'))
+
+        print(x_axis)
+        print(x_groups)
 
         # inner groups on x_axis they are merged and not_merged
-        groups = list(driver_df[group_by].unique())
+        groups = list(driver_df[group_by_bars].unique())
 
         # setup color pallete
         try:
@@ -364,8 +369,8 @@ def create_routes(server):
         except:
             colors = [mpl['Plasma'][3][0]] + [mpl['Plasma'][3][1]]
 
-        merged_avg_values = list(driver_df.loc[driver_df[group_by] == 'Merged / Accepted'].groupby([x_axis],as_index=False).mean().round(1)['commit_count'])
-        not_merged_avg_values = list(driver_df.loc[driver_df[group_by] == 'Not Merged / Rejected'].groupby([x_axis],as_index=False).mean().round(1)['commit_count'])
+        merged_avg_values = list(driver_df.loc[driver_df[group_by_bars] == 'Merged / Accepted'].groupby([x_axis],as_index=False).mean().round(1)['commit_count'])
+        not_merged_avg_values = list(driver_df.loc[driver_df[group_by_bars] == 'Not Merged / Rejected'].groupby([x_axis],as_index=False).mean().round(1)['commit_count'])
 
 
         # Setup data in format for grouped bar chart
@@ -480,6 +485,8 @@ def create_routes(server):
         x_axis = 'comment_count'
         description = "All Closed"
         y_axis = 'closed_year'  
+
+        input_df = input_df[['repo_id', 'repo_name', y_axis, group_by, x_axis]]
 
         repo_dict = {repo_id : input_df.loc[input_df['repo_id'] == repo_id].iloc[0]['repo_name']}   
   
@@ -635,7 +642,12 @@ def create_routes(server):
 
         x_axis='closed_year'
         description='All Closed'
-       
+
+        #filter out unneeded rows for easier debugging
+        pr_closed = pr_closed[['repo_id', 'repo_name', x_axis, 'merged_flag']]
+        pr_slow20_not_merged = pr_slow20_not_merged[['repo_id', 'repo_name', x_axis, 'merged_flag']]
+        pr_slow20_merged = pr_slow20_merged[['repo_id', 'repo_name', x_axis, 'merged_flag']]
+
         repo_dict = {repo_id : pr_closed.loc[pr_closed['repo_id'] == repo_id].iloc[0]['repo_name']}   
   
         data_dict = {'All':pr_closed,'Slowest 20%':pr_slow20_not_merged.append(pr_slow20_merged,ignore_index=True)}
@@ -810,10 +822,13 @@ def create_routes(server):
         description = "All Closed"
         legend_position=(410, 10)
 
+        #filter out unneeded empty rows for easier debugging
+        input_df = input_df[['repo_id', 'repo_name', y_axis, 'merged_flag', time_unit + '_to_first_response', 
+                            time_unit + '_to_last_response', time_unit + '_to_close']]
+
         repo_dict = {repo_id : input_df.loc[input_df['repo_id'] == repo_id].iloc[0]['repo_name']}   
 
-        driver_df = input_df.copy()[['repo_name', 'repo_id', 'merged_flag', y_axis, time_unit + '_to_first_response', time_unit + '_to_last_response', 
-                                     time_unit + '_to_close']] # deep copy input data so we do not alter the external dataframe
+        driver_df = input_df.copy() # deep copy input data so we do not alter the external dataframe
 
         title_beginning = '{}: '.format(repo_dict[repo_id])
         plot_width = 950
@@ -1047,7 +1062,18 @@ def create_routes(server):
         pr_closed = df_tuple[df_type["pr_closed"]]
         pr_slow20_not_merged = df_tuple[df_type["pr_slow20_not_merged"]]
         pr_slow20_merged = df_tuple[df_type["pr_slow20_merged"]]
+
+        #only getting pr_all to test lenght of data
         pr_all = df_tuple[df_type["pr_all"]]
+
+        try:
+            pr_closed['average_days_between_responses'] = pr_closed['average_time_between_responses'].map(lambda x: x.days).astype(float)
+            pr_slow20_not_merged['average_days_between_responses'] = pr_slow20_not_merged['average_time_between_responses'].map(lambda x: x.days).astype(float)
+            pr_slow20_merged['average_days_between_responses'] = pr_slow20_merged['average_time_between_responses'].map(lambda x: x.days).astype(float)
+        except:
+            return Response(response="There is no message data for this repo, in the database you are accessing",
+                mimetype='application/json',
+                status=200)
 
         #only test pr_all because it encompasses the other dfs
         if(len(pr_all) == 0):
@@ -1065,6 +1091,10 @@ def create_routes(server):
         line_group='merged_flag'
         num_outliers_repo_map={}
 
+        # filter out unneeded columns for easier debugging
+        pr_closed = pr_closed[['repo_id', 'repo_name', x_axis, y_axis, line_group]]
+        pr_slow20_not_merged = pr_slow20_not_merged[['repo_id', 'repo_name', x_axis, y_axis, line_group]]
+        pr_slow20_merged = pr_slow20_merged[['repo_id', 'repo_name', x_axis, y_axis, line_group]]
 
         data_dict = {'All':pr_closed,'Slowest 20%':pr_slow20_not_merged.append(pr_slow20_merged,ignore_index=True)}
 
@@ -1197,7 +1227,8 @@ def create_routes(server):
         group_by = 'merged_flag'
         legend_position='top_right'
 
-        
+        pr_closed = pr_closed[['repo_id', 'repo_name', x_axis, group_by, y_axis]]
+
         driver_df = pr_closed.copy()
 
         outliers_removed = 0
@@ -1463,10 +1494,9 @@ def create_routes(server):
         repo_id = int(request.args.get('repo_id'))
         start_date = str(request.args.get('start_date', "{}-01-01".format(now.year-1)))
         end_date = str(request.args.get('end_date', "{}-{}-{}".format(now.year, now.month, now.day)))
+        group_by = str(request.args.get('group_by', "month"))
         return_json = request.args.get('return_json', "false")
         remove_outliers = str(request.args.get('remove_outliers', "true"))
-
-
 
         #dict of df types, and their locaiton in the tuple that the function pull_request_data_collection returns
         df_type = {"pr_all": 0, "pr_open": 1, "pr_closed": 2, "pr_merged": 3, "pr_not_merged": 4, "pr_slow20_all": 5,
@@ -1493,9 +1523,12 @@ def create_routes(server):
         heat_field = 'pr_duration_days'
         columns = 2
 
+        #filter unneeded columns for easier debugging
+        pr_duration_frame = pr_duration_frame[['repo_id', y_axis, group_by, x_axis, heat_field]]
+
         red_green_gradient = linear_gradient('#0080FF', '#DC143C', 150)['hex']#32CD32
 
-        driver_df = pr_duration_frame.copy()[['repo_id', y_axis, group_by, x_axis, heat_field]]
+        driver_df = pr_duration_frame.copy()
 
         driver_df[y_axis] = driver_df[y_axis].astype(str)
 
