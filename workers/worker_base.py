@@ -399,15 +399,29 @@ class Worker():
                 return s.types.TIMESTAMP
             except ValueError:
                 return s.types.String
-        elif isinstance(data, (int, numpy.integer)):
+        elif (
+            isinstance(data, (int, numpy.integer))
+            or (isinstance(data, float) and column_name and 'id' in column_name)
+        ):
             return s.types.BigInteger
-        elif type(data) == float:
+        elif isinstance(data, float):
             return s.types.Float
         elif type(data) in [numpy.datetime64, pd._libs.tslibs.timestamps.Timestamp]:
             return s.types.TIMESTAMP
         elif column_name and 'id' in column_name:
             return s.types.BigInteger
         return s.types.String
+
+    def _convert_float_nan_to_int(self, df):
+        for column in df.columns:
+            if (
+                df[column].dtype == float
+                and ((df['in_reply_to_id'] % 1 == 0) | (df['in_reply_to_id'].isnull())).all()
+            ):
+                df[column] = df[column].astype("Int64").astype(object).where(
+                    pd.notnull(df['position']), None
+                )
+        return df
 
     def _setup_postgres_merge(self, data_sets, sort=False):
 
@@ -422,6 +436,7 @@ class Worker():
             df = pd.DataFrame(data)
 
             columns = sorted(list(df.columns)) if sort else df.columns
+            df = self._convert_float_nan_to_int(df)
             for column in columns:
                 data_table.append_column(
                     s.schema.Column(
@@ -437,9 +452,8 @@ class Worker():
 
         # Insert data to tables
         for data_table, data in zip(data_tables, data_sets):
-
             self.bulk_insert(
-                data_table, insert=data, increment_counter=False
+                data_table, insert=data, increment_counter=False, convert_float_int=True
             )
 
         session = s.orm.Session(self.db)
@@ -1018,7 +1032,7 @@ class Worker():
 
     def bulk_insert(
         self, table, insert=[], update=[], unique_columns=[], update_columns=[],
-        max_attempts=3, attempt_delay=3, increment_counter=True
+        max_attempts=3, attempt_delay=3, increment_counter=True, convert_float_int=False
     ):
         """ Performs bulk inserts/updates of the given data to the given table
 
@@ -1110,7 +1124,10 @@ class Worker():
                         table_name, columns)
                     cur.copy_expert(sql=sql, file=s_buf)
 
-            pd.DataFrame(insert).to_sql(
+            df = pd.DataFrame(insert)
+            if convert_float_int:
+                df = self._convert_float_nan_to_int(df)
+            df.to_sql(
                 name=table.name,
                 con=self.db,
                 if_exists="append",
