@@ -1269,6 +1269,8 @@ def create_routes(server):
 
         pr_closed = pr_closed[['repo_id', 'repo_name', x_axis, group_by, y_axis]]
 
+        print(pr_closed)
+
         driver_df = pr_closed.copy()
 
         outliers_removed = 0
@@ -1321,6 +1323,12 @@ def create_routes(server):
 
         p.yaxis.axis_label_text_font_size = "16px"
         p.yaxis.major_label_text_font_size = "16px"
+
+        
+        if(len(values) == 0):
+            return Response(response="There is no message data for this repo, in the database you are accessing",
+                mimetype='application/json',
+                status=200)
 
         #determine y_max by finding the max of the values and scaling it up a small amoutn
         y_max = max(values)*1.015
