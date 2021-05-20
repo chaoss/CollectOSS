@@ -7,6 +7,7 @@ import datetime
 import json
 from scipy import stats
 from flask import request, send_file, Response
+import math
 warnings.filterwarnings('ignore')
 
 
@@ -458,7 +459,7 @@ def create_routes(server):
         return send_file(filename)
 
     @server.app.route('/{}/pull_request_reports/average_comments_per_PR/'.format(server.api_version), methods=["GET"])
-    def average_comments_per_PR(return_json=True):
+    def average_comments_per_PR():
 
         now = datetime.datetime.now()
 
@@ -516,14 +517,26 @@ def create_routes(server):
 
             y_merged_data = driver_df.loc[(driver_df[y_axis] == y_value) & (driver_df['merged_flag'] == 'Merged / Accepted')]
             y_not_merged_data = driver_df.loc[(driver_df[y_axis] == y_value) & (driver_df['merged_flag'] == 'Not Merged / Rejected')]
-
+            
             if len(y_merged_data) > 0:
-                y_merged_data[x_axis + '_mean'] = y_merged_data[x_axis].mean().round(1)
+                y_merged_data_mean = y_merged_data[x_axis].mean()
+
+                if(math.isnan(y_merged_data_mean)):
+                    return Response(response="There is no message data for this repo, in the database you are accessing", mimetype='application/json', status=200)
+                else:
+                    y_merged_data[x_axis + '_mean'] = y_merged_data_mean.round(1)
+
             else:
-                y_merged_data[x_axis + '_mean'] = 0.00
+                y_merged_data[x_axis + '_mean'] = 0
 
             if len(y_not_merged_data) > 0:
-                y_not_merged_data[x_axis + '_mean'] = y_not_merged_data[x_axis].mean().round(1)
+                y_not_merged_data_mean = y_not_merged_data[x_axis].mean()
+
+                if(math.isnan(y_not_merged_data_mean)):
+                    return Response(response="There is no message data for this repo, in the database you are accessing", mimetype='application/json', status=200)
+                else:
+                    y_not_merged_data[x_axis + '_mean'] = y_not_merged_data_mean.round(1)
+
             else:
                 y_not_merged_data[x_axis + '_mean'] = 0
 
