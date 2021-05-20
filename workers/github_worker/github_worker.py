@@ -171,7 +171,7 @@ class GitHubWorker(Worker):
 
         pk_source_issues = self._get_pk_source_issues()
         if pk_source_issues:
-            # self.issue_comments_model(pk_source_issues)
+            self.issue_comments_model(pk_source_issues)
             issue_events_all = self.issue_events_model(pk_source_issues)
             self.issue_nested_data_model(pk_source_issues, issue_events_all)
 
