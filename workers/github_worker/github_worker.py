@@ -91,7 +91,6 @@ class GitHubWorker(Worker):
                 }
             }, prefix='user.'
         )
-        pd.DataFrame(source_issues['insert']).to_json('source_issues_insert.json', orient='records')
 
         issues_insert = [
             {
@@ -172,7 +171,7 @@ class GitHubWorker(Worker):
 
         pk_source_issues = self._get_pk_source_issues()
         if pk_source_issues:
-            self.issue_comments_model(pk_source_issues)
+            # self.issue_comments_model(pk_source_issues)
             issue_events_all = self.issue_events_model(pk_source_issues)
             self.issue_nested_data_model(pk_source_issues, issue_events_all)
 
@@ -361,9 +360,8 @@ class GitHubWorker(Worker):
                         }, prefix='actor.'
                     )
                 )
-                self.logger.info(events_df)
-                self.logger.info(events_df.columns)
-                self.logger.info(events_df.to_dict(orient='records')[0])
+                if not len(events_df):  # no cntrb ids were available
+                    skip_closed_issue_update = True
             else:
                 skip_closed_issue_update = True
         else:

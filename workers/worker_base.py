@@ -392,7 +392,7 @@ class Worker():
 
         return subject, source
 
-    def get_sqlalchemy_type(self, data):
+    def get_sqlalchemy_type(self, data, column_name=None):
         if type(data) == str:
             try:
                 time.strptime(data, "%Y-%m-%dT%H:%M:%SZ")
@@ -405,6 +405,8 @@ class Worker():
             return s.types.Float
         elif type(data) in [numpy.datetime64, pd._libs.tslibs.timestamps.Timestamp]:
             return s.types.TIMESTAMP
+        elif column_name and 'id' in column_name:
+            return s.types.BigInteger
         return s.types.String
 
     def _setup_postgres_merge(self, data_sets, sort=False):
@@ -423,7 +425,9 @@ class Worker():
             for column in columns:
                 data_table.append_column(
                     s.schema.Column(
-                        column, self.get_sqlalchemy_type(df.fillna(method='bfill').iloc[0][column])
+                        column, self.get_sqlalchemy_type(
+                            df.fillna(method='bfill').iloc[0][column], column_name=column
+                        )
                     )
                 )
 
@@ -461,15 +465,17 @@ class Worker():
         for column in columns:
             if '.' not in column:
                 continue
-            self.logger.info(f"Expanding column: {column}")
             root = column.split('.')[0]
+            if root not in df.columns:
+                df[root] = None
             expanded_column = pd.DataFrame(
                 df[root].where(df[root].notna(), lambda x: [{}]).tolist()
             )
             expanded_column.columns = [
                 f'{root}.{attribute}' for attribute in expanded_column.columns
             ]
-            self.logger.info(f"Expanded sub columns: {list(expanded_column.columns)}")
+            if column not in expanded_column.columns:
+                expanded_column[column] = None
             final_columns += list(expanded_column.columns)
             try:
                 df = df.join(expanded_column)
@@ -1142,17 +1148,20 @@ class Worker():
         # todo: support deeper nests (>1) and only expand necessary columns
         # todo: merge with _get_data_set_columns
 
-        df.to_json('nested_df.json', orient='records')
         for column in column_names:
             if '.' not in column:
                 continue
             root = column.split('.')[0]
+            if root not in df.columns:
+                df[root] = None
             expanded_column = pd.DataFrame(
                 df[root].where(df[root].notna(), lambda x: [{}]).tolist()
             )
             expanded_column.columns = [
                 f'{root}.{attribute}' for attribute in expanded_column.columns
             ]
+            if column not in expanded_column.columns:
+                expanded_column[column] = None
             try:
                 df = df.join(expanded_column)
             except ValueError:
@@ -1173,7 +1182,6 @@ class Worker():
         self.logger.info(f"Enriching contributor ids for {len(data)} data points...")
 
         source_df = pd.DataFrame(data)
-
         expanded_source_df = self._add_nested_columns(
             source_df.copy(), [key] + action_map_additions['insert']['source']
         )
@@ -1225,7 +1233,7 @@ class Worker():
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
                 'data_source': self.data_source
-            } for contributor in source_cntrb_insert
+            } for contributor in source_cntrb_insert if contributor[f'{prefix}login']
         ]
 
         self.bulk_insert(self.contributors_table, cntrb_insert)
@@ -1592,8 +1600,9 @@ class Worker():
                     ' and '.join(
                         [
                             f"augur_table.c['{table_column}'] == new_data_table.c['{source_column}']"
-                            for table_column, source_column in zip(action_map['insert']['augur'],
-                            action_map['insert']['source'])
+                            for table_column, source_column in zip(
+                                action_map['insert']['augur'], action_map['insert']['source']
+                            )
                         ]
                     )
                 ), isouter=True

@@ -406,8 +406,6 @@ class GitHubPullRequestWorker(Worker):
             }, prefix='user.'
         )
 
-        self.logger.info(source_prs['insert'][0])
-
         prs_insert = [
             {
                 'repo_id': self.repo_id,
@@ -463,8 +461,9 @@ class GitHubPullRequestWorker(Worker):
             source_data = source_prs['insert'] + source_prs['update']
 
         elif not self.deep_collection:
-            self.logger.info("There are no prs to update, insert, or collect nested "
-                "information for.\n")
+            self.logger.info(
+                "There are no prs to update, insert, or collect nested information for.\n"
+            )
             self.register_task_completion(self.task_info, self.repo_id, 'pull_requests')
             return
 
@@ -791,9 +790,6 @@ class GitHubPullRequestWorker(Worker):
             ['msg_timestamp', 'msg_text']
         )
         self.write_debug_data(c_pk_source_comments, 'c_pk_source_comments')
-
-        pd.DataFrame(c_pk_source_comments).to_json('c_pk_source_comments.json', orient='records')
-        self.logger.info('got it')
 
         both_pk_source_comments = self.enrich_data_primary_keys(
             c_pk_source_comments, self.pull_request_reviews_table, ['pull_request_review_id'],
