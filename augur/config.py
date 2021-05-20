@@ -2,6 +2,35 @@
 import os
 import json
 import logging
+# generate random integer values
+from random import seed
+from random import randint
+# seed random number generator
+# DO NOT create a seed. 
+# Actual randomness is generated without a seed
+# for this use case. 
+
+contributor_breadth_worker_p = randint(48000, 48500)
+facade_worker_p = randint(48501, 49000) 
+insight_worker_p = randint(49002, 49500) 
+metric_status_worker_p = randint(49501, 50000) 
+pull_request_worker_p = randint(50001, 50500) 
+repo_info_worker_p = randint(50501, 51000) 
+value_worker_p = randint(51002, 51500) 
+contributor_worker_p = randint(52000, 52500) 
+message_insights_worker_p = randint(53000, 53499) 
+pull_request_analysis_worker_p = randint(54000, 54500) 
+discourse_analysis_worker_p = randint(54500, 54999)  
+message_insights_worker_p = randint(55000, 55499) 
+clustering_worker_p = randint(57000, 57499)
+github_worker_p = randint(57500, 58000)
+linux_badge_worker_p = randint(47000,47499)
+gitlab_issues_worker_p = randint(47500,47999)
+release_worker_p = randint(56000, 56499)
+gitlab_merge_request_worker_p = randint(56500, 56999)
+main_port = randint(5001,5300) 
+
+
 
 from augur.logging import ROOT_AUGUR_DIRECTORY
 
@@ -198,23 +227,23 @@ default_config = {
             },
             "Workers": {
                 "contributor_breadth_worker": {
-                    "port": 50003,
+                    "port": contributor_breadth_worker_p,
                     "switch": 0,
                     "workers": 1
                 },
                 "facade_worker": {
-                    "port": 50100,
+                    "port": facade_worker_p,
                     "repo_directory": "repos/",
                     "switch": 1,
                     "workers": 1
                 },
                 "github_worker": {
-                    "port": 50200,
+                    "port": github_worker_p,
                     "switch": 1,
                     "workers": 1
                 },
                 "insight_worker": {
-                    "port": 50300,
+                    "port": insight_worker_p,
                     "metrics": {"issues-new": "issues", "code-changes": "commit_count", "code-changes-lines": "added",
                                "reviews": "pull_requests", "contributors-new": "new_contributors"},
                     "confidence_interval": 95,
@@ -225,89 +254,89 @@ default_config = {
                     "anomaly_days": 14
                 },
                 "linux_badge_worker": {
-                    "port": 50400,
+                    "port": linux_badge_worker_p ,
                     "switch": 1,
                     "workers": 1
                 },
                 "metric_status_worker": {
-                    "port": 50500,
+                    "port": metric_status_worker_p,
                     "switch": 0,
                     "workers": 1
                 },
                 "pull_request_worker": {
-                    "port": 50600,
+                    "port": pull_request_worker_p,
                     "switch": 1,
                     "workers": 1
                 },
                 "repo_info_worker": {
-                    "port": 50700,
+                    "port": repo_info_worker_p,
                     "switch": 1,
                     "workers": 1
                 },
                 "value_worker": {
-                    "port": 50800,
+                    "port": value_worker_p,
                     "scc_bin": "scc",
                     "switch": 0,
                     "workers": 1
                 },
                 "contributor_worker": {
-                    "port": 50900,
+                    "port": contributor_worker_p,
                     "switch": 0,
                     "workers": 1
                 },
                 "gitlab_issues_worker": {
-                    "port": 51000,
+                    "port": gitlab_issues_worker_p,
                     "switch": 1,
                     "workers": 1
                 },
                 "release_worker": {
-                    "port": 51100,
+                    "port": release_worker_p,
                     "switch": 1,
                     "workers": 1
                 },
                 "gitlab_merge_request_worker": {
-                    "port": 51200,
+                    "port": gitlab_merge_request_worker_p,
                     "switch": 0,
                     "workers": 1
                 },
                 "message_insights_worker": {
-                    "port": 51300,
+                    "port": message_insights_worker_p,
                     "switch": 0,
                     "workers": 1,
                     "insight_days": 30,
                     "models_dir": "message_models"
                 },
                 "pull_request_analysis_worker": {
-                    "port": 51400,
+                    "port": pull_request_analysis_worker_p,
                     "switch": 0,
                     "workers": 1,
                     "insight_days": 30
                 },
                 "discourse_analysis_worker":{
-                    "port" : 51500,
+                    "port" : discourse_analysis_worker_p,
                     "switch": 0,
                     "workers": 1
                 },
                 "message_insights_worker": {
-                    "port": 51300,
+                    "port": message_insights_worker_p,
                     "switch": 0,
                     "workers": 1,
                     "insight_days": 30,
                     "models_dir": "message_models"
                 },
                 "pull_request_analysis_worker": {
-                    "port": 51400,
+                    "port": pull_request_analysis_worker_p,
                     "switch": 0,
                     "workers": 1,
                     "insight_days": 30
                 },
                 "discourse_analysis_worker":{
-                    "port" : 51500,
+                    "port" : discourse_analysis_worker_p,
                     "switch": 0,
                     "workers": 1
                 },
                 "clustering_worker": {
-                    "port": 51600,
+                    "port": clustering_worker_p,
                     "switch": 0,
                     "workers": 1,
                     "max_df" : 0.9,
@@ -335,13 +364,13 @@ default_config = {
         "Server": {
             "cache_expire": "3600",
             "host": "0.0.0.0",
-            "port": "5000",
+            "port": main_port,
             "workers": 4,
             "timeout": 60
         },
         "Frontend": {
             "host": "0.0.0.0",
-            "port": "5000"
+            "port": main_port
         },
         "Logging": {
             "logs_directory": "logs/",

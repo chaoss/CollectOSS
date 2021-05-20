@@ -15,6 +15,5 @@ Each command is invoked by first specifying the category, then the command name,
 
    db
    backend
-   util
    configure
    logging

@@ -21,7 +21,7 @@ setup(
     description="Message Insights worker that detects novel messages & analyzes sentiment from issue, PR messages",
     packages=find_packages(),
     install_requires=[
-        'flask',
+        'flask==1.1.4',
         'requests',
         'psycopg2-binary',
         'sklearn',
@@ -32,7 +32,7 @@ setup(
         'scipy',
         'emoji',
         'keras',
-        'tensorflow==2.2.0',
+        'tensorflow==2.4.1',
         'h5py',
         'scikit-image',
         'joblib',
