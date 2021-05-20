@@ -1445,6 +1445,19 @@ def create_routes(server):
             facet_data = driver_df.loc[driver_df[facet] == facet_group]
     #         display(facet_data.sort_values('merged_count', ascending=False).head(50))
             driver_df_mean = facet_data.groupby(['repo_id', 'repo_name', x_axis], as_index=False).mean().round(1)
+
+            #if a record is field in a record is Nan then it is not counted by count() so when it is not 2 meaning both rows have a value, there is not enough data
+            if(driver_df_mean['assigned_count'].count() != 2 or driver_df_mean['review_requested_count'].count() != 2 or driver_df_mean['labeled_count'].count() != 2 or 
+                    driver_df_mean['subscribed_count'].count() != 2 or driver_df_mean['mentioned_count'].count() != 2 or driver_df_mean['referenced_count'].count() != 2 or 
+                    driver_df_mean['closed_count'].count() != 2 or driver_df_mean['head_ref_force_pushed_count'].count() != 2 or driver_df_mean['merged_count'].count() != 2 or 
+                    driver_df_mean['milestoned_count'].count() != 2 or driver_df_mean['unlabeled_count'].count() != 2 or driver_df_mean['head_ref_deleted_count'].count() != 2 or 
+                    driver_df_mean['comment_count'].count() != 2):
+
+                return Response(response="There is not enough data for this repo, in the database you are accessing",
+                mimetype='application/json',
+                status=200)
+
+            # print(driver_df_mean.to_string())
     #         data = {'Y' : y_groups}
     #         for group in y_groups:
     #             data[group] = driver_df_mean[group].tolist()
