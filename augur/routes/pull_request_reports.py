@@ -862,19 +862,46 @@ def create_routes(server):
         except:
             colors = Colorblind[3]
         
-        
+        #calculate data frist time to obtain the maximum and make sure there is message data
         for y_value in driver_df[y_axis].unique():
 
             y_merged_data = driver_df.loc[(driver_df[y_axis] == y_value) & (driver_df['merged_flag'] == 'Merged / Accepted')]
             y_not_merged_data = driver_df.loc[(driver_df[y_axis] == y_value) & (driver_df['merged_flag'] == 'Not Merged / Rejected')]
 
-            y_merged_data[time_unit + '_to_first_response_mean'] = y_merged_data[time_unit + '_to_first_response'].mean().round(1) if len(y_merged_data) > 0 else 0.00
-            y_merged_data[time_unit + '_to_last_response_mean'] = y_merged_data[time_unit + '_to_last_response'].mean().round(1) if len(y_merged_data) > 0 else 0.00
-            y_merged_data[time_unit + '_to_close_mean'] = y_merged_data[time_unit + '_to_close'].mean().round(1) if len(y_merged_data) > 0 else 0.00
+            if(len(y_merged_data) > 0):
 
-            y_not_merged_data[time_unit + '_to_first_response_mean'] = y_not_merged_data[time_unit + '_to_first_response'].mean().round(1) if len(y_not_merged_data) > 0 else 0.00
-            y_not_merged_data[time_unit + '_to_last_response_mean'] = y_not_merged_data[time_unit + '_to_last_response'].mean().round(1) if len(y_not_merged_data) > 0 else 0.00
-            y_not_merged_data[time_unit + '_to_close_mean'] = y_not_merged_data[time_unit + '_to_close'].mean().round(1) if len(y_not_merged_data) > 0 else 0.00
+                y_merged_data_first_response_mean = y_merged_data[time_unit + '_to_first_response'].mean()
+                y_merged_data_last_response_mean = y_merged_data[time_unit + '_to_last_response'].mean()
+                y_merged_data_to_close_mean = y_merged_data[time_unit + '_to_close'].mean()
+
+                if(math.isnan(y_merged_data_first_response_mean) or math.isnan(y_merged_data_last_response_mean) or math.isnan(y_merged_data_to_close_mean)):
+                    return Response(response="There is no message data for this repo, in the database you are accessing", mimetype='application/json', status=200)
+                else:
+                    y_merged_data[time_unit + '_to_first_response_mean'] = y_merged_data_first_response_mean.round(1)
+                    y_merged_data[time_unit + '_to_last_response_mean'] = y_merged_data_last_response_mean.round(1)
+                    y_merged_data[time_unit + '_to_close_mean'] = y_merged_data_to_close_mean.round(1)
+            else:
+                y_merged_data[time_unit + '_to_first_response_mean'] = 0.00
+                y_merged_data[time_unit + '_to_last_response_mean'] = 0.00
+                y_merged_data[time_unit + '_to_close_mean'] = 0.00
+
+
+            if(len(y_not_merged_data) > 0):
+
+                y_not_merged_data_first_response_mean = y_not_merged_data[time_unit + '_to_first_response'].mean()
+                y_not_merged_data_last_response_mean = y_not_merged_data[time_unit + '_to_last_response'].mean()
+                y_not_merged_data_to_close_mean = y_not_merged_data[time_unit + '_to_close'].mean()
+
+                if(math.isnan(y_not_merged_data_first_response_mean) or math.isnan(y_not_merged_data_last_response_mean) or math.isnan(y_not_merged_data_to_close_mean)):
+                    return Response(response="There is no message data for this repo, in the database you are accessing", mimetype='application/json', status=200)
+                else:
+                    y_not_merged_data[time_unit + '_to_first_response_mean'] = y_not_merged_data_first_response_mean.round(1)
+                    y_not_merged_data[time_unit + '_to_last_response_mean'] = y_not_merged_data_last_response_mean.round(1)
+                    y_not_merged_data[time_unit + '_to_close_mean'] = y_not_merged_data_to_close_mean.round(1)
+            else:
+                y_not_merged_data[time_unit + '_to_first_response_mean'] = 0.00
+                y_not_merged_data[time_unit + '_to_last_response_mean'] = 0.00
+                y_not_merged_data[time_unit + '_to_close_mean'] = 0.00
 
             possible_maximums.append(max(y_merged_data[time_unit + '_to_close_mean']))
             possible_maximums.append(max(y_not_merged_data[time_unit + '_to_close_mean']))
