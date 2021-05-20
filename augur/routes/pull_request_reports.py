@@ -861,6 +861,9 @@ def create_routes(server):
             colors = Colorblind[len(repo_set)]
         except:
             colors = Colorblind[3]
+
+        y_merged_data_list = []
+        y_not_merged_data_list = []
         
         #calculate data frist time to obtain the maximum and make sure there is message data
         for y_value in driver_df[y_axis].unique():
@@ -908,19 +911,15 @@ def create_routes(server):
             
             maximum = max(possible_maximums)*1.15
             ideal_difference = maximum*0.064
-            
-        for y_value in driver_df[y_axis].unique():
 
-            y_merged_data = driver_df.loc[(driver_df[y_axis] == y_value) & (driver_df['merged_flag'] == 'Merged / Accepted')]
-            y_not_merged_data = driver_df.loc[(driver_df[y_axis] == y_value) & (driver_df['merged_flag'] == 'Not Merged / Rejected')]
+            y_merged_data_list.append(y_merged_data)
+            y_not_merged_data_list.append(y_not_merged_data)
 
-            y_merged_data[time_unit + '_to_first_response_mean'] = y_merged_data[time_unit + '_to_first_response'].mean().round(1) if len(y_merged_data) > 0 else 0.00
-            y_merged_data[time_unit + '_to_last_response_mean'] = y_merged_data[time_unit + '_to_last_response'].mean().round(1) if len(y_merged_data) > 0 else 0.00
-            y_merged_data[time_unit + '_to_close_mean'] = y_merged_data[time_unit + '_to_close'].mean().round(1) if len(y_merged_data) > 0 else 0.00
+        #loop through data and add it to the plot
+        for index in range(0, len(y_merged_data_list)):
 
-            y_not_merged_data[time_unit + '_to_first_response_mean'] = y_not_merged_data[time_unit + '_to_first_response'].mean().round(1) if len(y_not_merged_data) > 0 else 0.00
-            y_not_merged_data[time_unit + '_to_last_response_mean'] = y_not_merged_data[time_unit + '_to_last_response'].mean().round(1) if len(y_not_merged_data) > 0 else 0.00
-            y_not_merged_data[time_unit + '_to_close_mean'] = y_not_merged_data[time_unit + '_to_close'].mean().round(1) if len(y_not_merged_data) > 0 else 0.00
+            y_merged_data = y_merged_data_list[index]
+            y_not_merged_data = y_not_merged_data_list[index]
 
             not_merged_source = ColumnDataSource(y_not_merged_data)
             merged_source = ColumnDataSource(y_merged_data)
@@ -1008,7 +1007,8 @@ def create_routes(server):
             labels = LabelSet(x=time_unit + '_to_last_response_mean', y=dodge(y_axis, 0, range=p.y_range), text=time_unit + '_to_last_response_mean', x_offset = not_merged_x_offset, y_offset=not_merged_y_offset,#40,
                       text_font_size="12pt", text_color=colors[1],
                       source=not_merged_source, text_align='center')
-            p.add_layout(labels)
+            p.add_layout(labels)    
+
 
         p.title.align = "center"
         p.title.text_font_size = "16px"
