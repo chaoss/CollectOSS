@@ -419,7 +419,7 @@ class Worker():
                 and ((df[column] % 1 == 0) | (df[column].isnull())).all()
             ):
                 df[column] = df[column].astype("Int64").astype(object).where(
-                    pd.notnull(df['position']), None
+                    pd.notnull(df[column]), None
                 )
         return df
 
