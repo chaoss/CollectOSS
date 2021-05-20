@@ -416,7 +416,7 @@ class Worker():
         for column in df.columns:
             if (
                 df[column].dtype == float
-                and ((df['in_reply_to_id'] % 1 == 0) | (df['in_reply_to_id'].isnull())).all()
+                and ((df[column] % 1 == 0) | (df[column].isnull())).all()
             ):
                 df[column] = df[column].astype("Int64").astype(object).where(
                     pd.notnull(df['position']), None
