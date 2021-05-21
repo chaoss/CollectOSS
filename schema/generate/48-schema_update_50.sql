@@ -47,5 +47,6 @@ COMMENT ON TABLE "augur_data"."dependencies" IS 'Contains the dependencies for a
 -- ----------------------------
 -- add foreign keys to tie into everything else
 -- ----------------------------
--- ALTER TABLE "augur_data"."contributors" ADD CONSTRAINT "repo_id" FOREIGN KEY (repo_id) REFERENCES augur_data.repo(repo_id);
+ALTER TABLE "augur_data"."dependencies" ADD CONSTRAINT "repo_id" FOREIGN KEY (repo_id) REFERENCES augur_data.repo(repo_id);
 
+update "augur_operations"."augur_settings" set value = 50 where setting = 'augur_data_version'; 
