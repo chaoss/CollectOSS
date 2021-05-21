@@ -13,6 +13,7 @@ import pandas as pd
 from sqlalchemy import MetaData
 
 from augur.logging import AugurLogging
+from urllib.parse import urlparse
 
 import warnings
 warnings.filterwarnings('ignore')
@@ -27,6 +28,7 @@ class Housekeeper:
         self._processes = []
         self.augur_logging = augur_app.logging
         self.jobs = deepcopy(augur_app.config.get_value("Housekeeper", "jobs"))
+        self.update_redirects = deepcopy(augur_app.config.get_value("Housekeeper", "update_redirects"))
         self.broker_host = augur_app.config.get_value("Server", "host")
         self.broker_port = augur_app.config.get_value("Server", "port")
         self.broker = broker
@@ -45,6 +47,10 @@ class Housekeeper:
         """)
         rs = pd.read_sql(repoUrlSQL, self.db, params={})
         all_repos = rs['repo_git'].values.tolist()
+
+        # If enabled, updates all redirects of repositories 
+        # and organizations urls for configured repo_group_id
+        self.update_url_redirects()
 
         # List of tasks that need periodic updates
         self.schedule_updates()
@@ -314,4 +320,110 @@ class Housekeeper:
 
                 job['repos'] = rs
             # time.sleep(120)
+
+    def update_url_redirects(self):
+        if 'switch' in self.update_redirects and self.update_redirects['switch'] == 1 and 'repo_group_id' in self.update_redirects:
+            repos_urls = self.get_repos_urls(self.update_redirects['repo_group_id'])
+            if self.update_redirects['repo_group_id'] == 0:
+                logger.info("Repo Group Set to Zero for URL Updates")
+            else:
+                logger.info("Repo Group ID Specified.")
+            for url in repos_urls:
+                url = self.trim_git_suffix(url)
+                if url:
+                    r = requests.get(url)
+                    check_for_update = url != r.url
+                    if check_for_update:
+                        self.update_repo_url(url, r.url, self.update_redirects['repo_group_id'])
+
+    def trim_git_suffix(self, url):
+        if url.endswith('.git'):
+            url = url.replace('.git', '')
+        elif url.endswith('.github.io'):
+            url = url.replace('.github.io', '')
+        elif url.endswith('/.github'):
+            url = ''
+        return url
+
+    def get_repos_urls(self, repo_group_id):
+        if self.update_redirects['repo_group_id'] == 0:
+            repos_sql = s.sql.text("""
+                    SELECT repo_git FROM repo
+                """)
+            logger.info("repo_group_id is 0")
+        else:
+            repos_sql = s.sql.text("""
+                    SELECT repo_git FROM repo
+                    WHERE repo_group_id = ':repo_group_id'
+                """)
+
+        repos = pd.read_sql(repos_sql, self.db, params={'repo_group_id': repo_group_id})
+
+        if len(repos) == 0:
+            logger.info("Did not find any repositories stored in augur_database for repo_group_id {}\n".format(repo_group_id))
+
+        return repos['repo_git']
+
+    def update_repo_url(self, old_url, new_url, repo_group_id):
+        trimmed_new_url = self.trim_git_suffix(new_url)
+        if not trimmed_new_url:
+            logger.info("New repo is named .github : {} ... skipping \n".format(new_url))
+            return
+        else:
+            new_url = trimmed_new_url
+
+        old_repo_path = Housekeeper.parseRepoName(old_url)
+        old_repo_group_name = old_repo_path[0]
+        new_repo_path = Housekeeper.parseRepoName(new_url)
+        new_repo_group_name = new_repo_path[0]
+
+        if old_repo_group_name != new_repo_group_name:
+            # verifying the old repo group name is available in the database
+            old_rg_name_sql = s.sql.text("""
+                SELECT rg_name FROM repo_groups
+                WHERE repo_group_id = ':repo_group_id'
+            """)
+            old_rg_name_from_DB = pd.read_sql(old_rg_name_sql, self.db, params={'repo_group_id': repo_group_id})
+            if len(old_rg_name_from_DB['rg_name']) > 0 and old_repo_group_name != old_rg_name_from_DB['rg_name'][0]:
+                logger.info("Incoming old repo group name doesn't match the DB record for repo_group_id {} . Incoming name: {} DB record: {} \n".format(repo_group_id, old_repo_group_name, old_rg_name_from_DB['rg_name'][0]))
+
+            # checking if the new repo group name already exists and
+            # inserting it in repo_groups if it doesn't
+            rg_name_check_sql = s.sql.text("""
+                    SELECT rg_name, repo_group_id FROM repo_groups
+                    WHERE rg_name = :new_repo_group_name
+                """)
+            rg_name_check = pd.read_sql(rg_name_check_sql, self.db, params={'new_repo_group_name': new_repo_group_name})
+            new_rg_name_already_exists = len(rg_name_check['rg_name']) > 0
+
+            if new_rg_name_already_exists:
+                new_repo_group_id = rg_name_check['repo_group_id'][0]
+            else:
+                insert_sql = s.sql.text("""
+                        INSERT INTO repo_groups("rg_name", "rg_description", "rg_website", "rg_recache", "rg_last_modified", "rg_type", "tool_source", "tool_version", "data_source", "data_collection_date")
+                        VALUES (:new_repo_group_name, '', '', 0, CURRENT_TIMESTAMP, 'Unknown', 'Loaded by user', '1.0', 'Git', CURRENT_TIMESTAMP) RETURNING repo_group_id;
+                    """)
+                new_repo_group_id = self.db.execute(insert_sql, new_repo_group_name=new_repo_group_name).fetchone()[0]
+                logger.info("Inserted repo group {} with id {}\n".format(new_repo_group_name, new_repo_group_id))
+
+            new_repo_group_id = '%s' % new_repo_group_id
+            update_sql = s.sql.text("""
+                    UPDATE repo SET repo_git = :new_url, repo_path = NULL, repo_name = NULL, repo_status = 'New', repo_group_id = :new_repo_group_id
+                    WHERE repo_git = :old_url
+                """)
+            self.db.execute(update_sql, new_url=new_url, new_repo_group_id=new_repo_group_id, old_url=old_url)
+            logger.info("Updated repo url from {} to {}\n".format(new_url, old_url))
+
+        else:
+            update_sql = s.sql.text("""
+                UPDATE repo SET repo_git = :new_url, repo_path = NULL, repo_name = NULL, repo_status = 'New'
+                WHERE repo_git = :old_url
+            """)
+            self.db.execute(update_sql, new_url=new_url, old_url=old_url)
+            logger.info("Updated repo url from {} to {}\n".format(new_url, old_url))
+
+    def parseRepoName(repo_url):
+        path = urlparse(repo_url).path
+        parts = path.split('/')
+        return parts[1:]
 

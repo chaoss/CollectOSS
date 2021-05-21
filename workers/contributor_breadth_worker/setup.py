@@ -1,3 +1,4 @@
+#SPDX-License-Identifier: MIT
 import io
 import os
 import re
@@ -12,37 +13,22 @@ def read(filename):
         return re.sub(text_type(r':[a-z]+:`~?(.*?)`'), text_type(r'``\1``'), fd.read())
 
 setup(
-    name="message_insights_worker",
+    name="contributor_breadth_worker",
     version="0.0.0",
     url="https://github.com/chaoss/augur",
     license='MIT',
-    author="Augur Team",
-    author_email="akshblr555@gmail.com",
-    description="Message Insights worker that detects novel messages & analyzes sentiment from issue, PR messages",
+    author="AugurLabs",
+    author_email="gabe@gabehe.im",
+    description="Augur worker that collects the repos people have contirbuted to",
     packages=find_packages(),
     install_requires=[
-        'flask==1.1.4',
+        'flask',
         'requests',
-        'psycopg2-binary',
-        'sklearn',
-        'nltk',
-        'pandas',
-        'numpy',
-        'gensim',
-        'scipy',
-        'emoji',
-        'keras',
-        'tensorflow==2.4.1',
-        'h5py',
-        'scikit-image',
-        'joblib',
-        'xgboost==0.90',
-        'bs4', 
-        'xlrd'
+        'psycopg2-binary'
     ],
     entry_points={
         'console_scripts': [
-            'message_insights_worker_start=workers.message_insights_worker.runtime:main',
+            'contributor_breadth_worker_start=workers.contributor_breadth_worker.runtime:main',
         ],
     },
     classifiers=[

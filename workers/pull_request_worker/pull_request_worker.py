@@ -370,7 +370,7 @@ class GitHubPullRequestWorker(Worker):
     def _get_pk_source_prs(self):
 
         pr_url = (
-            f"https://api.github.com/repos/{self.owner}/{self.repo}/pulls?state=all&"
+            "https://api.github.com/repos/{owner}/{repo}/pulls?state=all&"
             "direction=asc&per_page=100&page={}"
         )
 
@@ -509,8 +509,7 @@ class GitHubPullRequestWorker(Worker):
     def pull_request_comments_model(self):
 
         comments_url = (
-            f"https://api.github.com/repos/{self.owner}/{self.repo}/issues/comments?per_page=100"
-            "&page={}"
+            'https://api.github.com/repos/{owner}/{repo}/issues/comments?per_page=100&page={}'
         )
 
         comment_action_map = {
@@ -526,6 +525,9 @@ class GitHubPullRequestWorker(Worker):
         )
 
         self.write_debug_data(pr_comments, 'pr_comments')
+
+        self.logger.info("CHECK")
+        self.logger.info(f'inserting messages for {pr_comments} repo')
 
         pr_comments['insert'] = self.text_clean(pr_comments['insert'], 'body')
 
@@ -553,6 +555,9 @@ class GitHubPullRequestWorker(Worker):
         self.bulk_insert(self.message_table, insert=pr_comments_insert)
 
         # PR MESSAGE REF TABLE
+        self.logger.info("CHECK")
+        self.logger.info(f'inserting messages for {pr_comments} repo')
+        self.logger.info(f'message table {self.message_table}')
 
         c_pk_source_comments = self.enrich_data_primary_keys(pr_comments['insert'],
             self.message_table, ['created_at', 'body'], ['msg_timestamp', 'msg_text'])
@@ -584,8 +589,7 @@ class GitHubPullRequestWorker(Worker):
             pk_source_prs = self._get_pk_source_prs()
 
         events_url = (
-            f"https://api.github.com/repos/{self.owner}/{self.repo}/issues/events?per_page=100&"
-            "page={}"
+            "https://api.github.com/repos/{owner}/{repo}/issues/events?per_page=100&page={}"
         )
 
         # Get events that we already have stored
@@ -658,7 +662,7 @@ class GitHubPullRequestWorker(Worker):
 
         reviews_urls = [
             (
-                f"https://api.github.com/repos/{self.owner}/{self.repo}/pulls/{pr['number']}/"
+                "https://api.github.com/repos/{owner}/{repo}/pulls/{pr['number']}/"
                 "reviews?per_page=100", {'pull_request_id': pr['pull_request_id']}
             )
             for pr in pk_source_prs

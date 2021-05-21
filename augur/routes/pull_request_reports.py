@@ -7,13 +7,18 @@ import datetime
 import json
 from scipy import stats
 from flask import request, send_file, Response
+import math
 warnings.filterwarnings('ignore')
 
+#import selenium
+#from selenium import webdriver
+#from selenium.webdriver import FirefoxOptions
 
 from bokeh.palettes import Colorblind, mpl, Category20
 from bokeh.layouts import gridplot, row, column
 from bokeh.models.annotations import Title
-from bokeh.io import export_png, show
+from bokeh.io import export_png, show #, get_screenshot_as_png 
+#from bokeh.io.export import get_screenshot_as_png
 from bokeh.embed import json_item
 from bokeh.models import ColumnDataSource, Legend, LabelSet, Range1d, Label, FactorRange, BasicTicker, ColorBar, LinearColorMapper, PrintfTickFormatter
 from bokeh.plotting import figure
@@ -178,14 +183,6 @@ def create_routes(server):
         # Change years to int so that doesn't display as 2019.0 for example
         pr_all[['created_year', 'closed_year']] = pr_all[['created_year', 'closed_year']].fillna(-1).astype(int).astype(str)
 
-        # Get days for average_time_between_responses time delta
-
-
-
-        ## for pr_all['average_time_between_responses']:
-        pr_all['average_days_between_responses'] = pr_all['average_time_between_responses'].map(lambda x: x.days).astype(float)
-        pr_all['average_hours_between_responses'] = pr_all['average_time_between_responses'].map(lambda x: x.days * 24).astype(float)
-
         start_date = pd.to_datetime(start_date)
         # end_date = pd.to_datetime('2020-02-01 09:00:00')
         end_date = pd.to_datetime(end_date)
@@ -325,6 +322,7 @@ def create_routes(server):
         repo_id = int(request.args.get('repo_id'))
         start_date = str(request.args.get('start_date', "{}-01-01".format(now.year-1)))
         end_date = str(request.args.get('end_date', "{}-{}-{}".format(now.year, now.month, now.day)))
+        group_by = str(request.args.get('group_by', "month"))
         return_json = request.args.get('return_json', "false")
 
         #dict of df types, and their locaiton in the tuple that the function pull_request_data_collection returns
@@ -340,10 +338,14 @@ def create_routes(server):
                 mimetype='application/json',
                 status=200)
 
-        x_axis = 'closed_year'
         y_axis = 'num_commits'
-        group_by = 'merged_flag'
+        group_by_bars = 'merged_flag'
         description = 'All'  
+
+        # filter out unneeded columns for easier debugging
+        input_df = input_df[['repo_id', 'repo_name', 'closed_year', 'closed_yearmonth', group_by_bars, 'commit_count']]
+
+        # print(input_df.to_string())
 
         repo_dict = {repo_id : input_df.loc[input_df['repo_id'] == repo_id].iloc[0]['repo_name']}   
        
@@ -352,11 +354,19 @@ def create_routes(server):
         # Change closed year to int so that doesn't display as 2019.0 for example
         driver_df['closed_year'] = driver_df['closed_year'].astype(int).astype(str)
 
-        # contains the closed years
-        x_groups = sorted(list(driver_df[x_axis].unique()))
+        # defaults to year
+        x_axis = 'closed_year'
+        x_groups = sorted(list(driver_df[x_axis].unique())) 
+
+        if group_by == 'month':
+            x_axis = "closed_yearmonth"
+            x_groups = np.unique(np.datetime_as_string(input_df[x_axis], unit = 'M'))
+
+        print(x_axis)
+        print(x_groups)
 
         # inner groups on x_axis they are merged and not_merged
-        groups = list(driver_df[group_by].unique())
+        groups = list(driver_df[group_by_bars].unique())
 
         # setup color pallete
         try:
@@ -364,8 +374,8 @@ def create_routes(server):
         except:
             colors = [mpl['Plasma'][3][0]] + [mpl['Plasma'][3][1]]
 
-        merged_avg_values = list(driver_df.loc[driver_df[group_by] == 'Merged / Accepted'].groupby([x_axis],as_index=False).mean().round(1)['commit_count'])
-        not_merged_avg_values = list(driver_df.loc[driver_df[group_by] == 'Not Merged / Rejected'].groupby([x_axis],as_index=False).mean().round(1)['commit_count'])
+        merged_avg_values = list(driver_df.loc[driver_df[group_by_bars] == 'Merged / Accepted'].groupby([x_axis],as_index=False).mean().round(1)['commit_count'])
+        not_merged_avg_values = list(driver_df.loc[driver_df[group_by_bars] == 'Not Merged / Rejected'].groupby([x_axis],as_index=False).mean().round(1)['commit_count'])
 
 
         # Setup data in format for grouped bar chart
@@ -448,12 +458,15 @@ def create_routes(server):
 
             return var 
 
-        filename = export_png(grid)
+        #opts = FirefoxOptions()
+        #opts.add_argument("--headless")
+        #driver = webdriver.Firefox(firefox_options=opts)
+        filename = export_png(grid, timeout=180)
         
         return send_file(filename)
 
     @server.app.route('/{}/pull_request_reports/average_comments_per_PR/'.format(server.api_version), methods=["GET"])
-    def average_comments_per_PR(return_json=True):
+    def average_comments_per_PR():
 
         now = datetime.datetime.now()
 
@@ -480,6 +493,8 @@ def create_routes(server):
         x_axis = 'comment_count'
         description = "All Closed"
         y_axis = 'closed_year'  
+
+        input_df = input_df[['repo_id', 'repo_name', y_axis, group_by, x_axis]]
 
         repo_dict = {repo_id : input_df.loc[input_df['repo_id'] == repo_id].iloc[0]['repo_name']}   
   
@@ -509,14 +524,26 @@ def create_routes(server):
 
             y_merged_data = driver_df.loc[(driver_df[y_axis] == y_value) & (driver_df['merged_flag'] == 'Merged / Accepted')]
             y_not_merged_data = driver_df.loc[(driver_df[y_axis] == y_value) & (driver_df['merged_flag'] == 'Not Merged / Rejected')]
-
+            
             if len(y_merged_data) > 0:
-                y_merged_data[x_axis + '_mean'] = y_merged_data[x_axis].mean().round(1)
+                y_merged_data_mean = y_merged_data[x_axis].mean()
+
+                if(math.isnan(y_merged_data_mean)):
+                    return Response(response="There is no message data for this repo, in the database you are accessing", mimetype='application/json', status=200)
+                else:
+                    y_merged_data[x_axis + '_mean'] = y_merged_data_mean.round(1)
+
             else:
-                y_merged_data[x_axis + '_mean'] = 0.00
+                y_merged_data[x_axis + '_mean'] = 0
 
             if len(y_not_merged_data) > 0:
-                y_not_merged_data[x_axis + '_mean'] = y_not_merged_data[x_axis].mean().round(1)
+                y_not_merged_data_mean = y_not_merged_data[x_axis].mean()
+
+                if(math.isnan(y_not_merged_data_mean)):
+                    return Response(response="There is no message data for this repo, in the database you are accessing", mimetype='application/json', status=200)
+                else:
+                    y_not_merged_data[x_axis + '_mean'] = y_not_merged_data_mean.round(1)
+
             else:
                 y_not_merged_data[x_axis + '_mean'] = 0
 
@@ -604,7 +631,10 @@ def create_routes(server):
 
             return var 
 
-        filename = export_png(grid)
+        #opts = FirefoxOptions()
+        #opts.add_argument("--headless")
+        #driver = webdriver.Firefox(firefox_options=opts)
+        filename = export_png(grid, timeout=180)
         
         return send_file(filename)
 
@@ -635,7 +665,12 @@ def create_routes(server):
 
         x_axis='closed_year'
         description='All Closed'
-       
+
+        #filter out unneeded rows for easier debugging
+        pr_closed = pr_closed[['repo_id', 'repo_name', x_axis, 'merged_flag']]
+        pr_slow20_not_merged = pr_slow20_not_merged[['repo_id', 'repo_name', x_axis, 'merged_flag']]
+        pr_slow20_merged = pr_slow20_merged[['repo_id', 'repo_name', x_axis, 'merged_flag']]
+
         repo_dict = {repo_id : pr_closed.loc[pr_closed['repo_id'] == repo_id].iloc[0]['repo_name']}   
   
         data_dict = {'All':pr_closed,'Slowest 20%':pr_slow20_not_merged.append(pr_slow20_merged,ignore_index=True)}
@@ -776,7 +811,10 @@ def create_routes(server):
 
             return var 
 
-        filename = export_png(grid)
+        #opts = FirefoxOptions()
+        #opts.add_argument("--headless")
+        #driver = webdriver.Firefox(firefox_options=opts)
+        filename = export_png(grid, timeout=180)
         
         return send_file(filename)
 
@@ -810,10 +848,13 @@ def create_routes(server):
         description = "All Closed"
         legend_position=(410, 10)
 
+        #filter out unneeded empty rows for easier debugging
+        input_df = input_df[['repo_id', 'repo_name', y_axis, 'merged_flag', time_unit + '_to_first_response', 
+                            time_unit + '_to_last_response', time_unit + '_to_close']]
+
         repo_dict = {repo_id : input_df.loc[input_df['repo_id'] == repo_id].iloc[0]['repo_name']}   
 
-        driver_df = input_df.copy()[['repo_name', 'repo_id', 'merged_flag', y_axis, time_unit + '_to_first_response', time_unit + '_to_last_response', 
-                                     time_unit + '_to_close']] # deep copy input data so we do not alter the external dataframe
+        driver_df = input_df.copy() # deep copy input data so we do not alter the external dataframe
 
         title_beginning = '{}: '.format(repo_dict[repo_id])
         plot_width = 950
@@ -833,39 +874,65 @@ def create_routes(server):
             colors = Colorblind[len(repo_set)]
         except:
             colors = Colorblind[3]
+
+        y_merged_data_list = []
+        y_not_merged_data_list = []
         
-        
+        #calculate data frist time to obtain the maximum and make sure there is message data
         for y_value in driver_df[y_axis].unique():
 
             y_merged_data = driver_df.loc[(driver_df[y_axis] == y_value) & (driver_df['merged_flag'] == 'Merged / Accepted')]
             y_not_merged_data = driver_df.loc[(driver_df[y_axis] == y_value) & (driver_df['merged_flag'] == 'Not Merged / Rejected')]
 
-            y_merged_data[time_unit + '_to_first_response_mean'] = y_merged_data[time_unit + '_to_first_response'].mean().round(1) if len(y_merged_data) > 0 else 0.00
-            y_merged_data[time_unit + '_to_last_response_mean'] = y_merged_data[time_unit + '_to_last_response'].mean().round(1) if len(y_merged_data) > 0 else 0.00
-            y_merged_data[time_unit + '_to_close_mean'] = y_merged_data[time_unit + '_to_close'].mean().round(1) if len(y_merged_data) > 0 else 0.00
+            if(len(y_merged_data) > 0):
 
-            y_not_merged_data[time_unit + '_to_first_response_mean'] = y_not_merged_data[time_unit + '_to_first_response'].mean().round(1) if len(y_not_merged_data) > 0 else 0.00
-            y_not_merged_data[time_unit + '_to_last_response_mean'] = y_not_merged_data[time_unit + '_to_last_response'].mean().round(1) if len(y_not_merged_data) > 0 else 0.00
-            y_not_merged_data[time_unit + '_to_close_mean'] = y_not_merged_data[time_unit + '_to_close'].mean().round(1) if len(y_not_merged_data) > 0 else 0.00
+                y_merged_data_first_response_mean = y_merged_data[time_unit + '_to_first_response'].mean()
+                y_merged_data_last_response_mean = y_merged_data[time_unit + '_to_last_response'].mean()
+                y_merged_data_to_close_mean = y_merged_data[time_unit + '_to_close'].mean()
+
+                if(math.isnan(y_merged_data_first_response_mean) or math.isnan(y_merged_data_last_response_mean) or math.isnan(y_merged_data_to_close_mean)):
+                    return Response(response="There is no message data for this repo, in the database you are accessing", mimetype='application/json', status=200)
+                else:
+                    y_merged_data[time_unit + '_to_first_response_mean'] = y_merged_data_first_response_mean.round(1)
+                    y_merged_data[time_unit + '_to_last_response_mean'] = y_merged_data_last_response_mean.round(1)
+                    y_merged_data[time_unit + '_to_close_mean'] = y_merged_data_to_close_mean.round(1)
+            else:
+                y_merged_data[time_unit + '_to_first_response_mean'] = 0.00
+                y_merged_data[time_unit + '_to_last_response_mean'] = 0.00
+                y_merged_data[time_unit + '_to_close_mean'] = 0.00
+
+
+            if(len(y_not_merged_data) > 0):
+
+                y_not_merged_data_first_response_mean = y_not_merged_data[time_unit + '_to_first_response'].mean()
+                y_not_merged_data_last_response_mean = y_not_merged_data[time_unit + '_to_last_response'].mean()
+                y_not_merged_data_to_close_mean = y_not_merged_data[time_unit + '_to_close'].mean()
+
+                if(math.isnan(y_not_merged_data_first_response_mean) or math.isnan(y_not_merged_data_last_response_mean) or math.isnan(y_not_merged_data_to_close_mean)):
+                    return Response(response="There is no message data for this repo, in the database you are accessing", mimetype='application/json', status=200)
+                else:
+                    y_not_merged_data[time_unit + '_to_first_response_mean'] = y_not_merged_data_first_response_mean.round(1)
+                    y_not_merged_data[time_unit + '_to_last_response_mean'] = y_not_merged_data_last_response_mean.round(1)
+                    y_not_merged_data[time_unit + '_to_close_mean'] = y_not_merged_data_to_close_mean.round(1)
+            else:
+                y_not_merged_data[time_unit + '_to_first_response_mean'] = 0.00
+                y_not_merged_data[time_unit + '_to_last_response_mean'] = 0.00
+                y_not_merged_data[time_unit + '_to_close_mean'] = 0.00
 
             possible_maximums.append(max(y_merged_data[time_unit + '_to_close_mean']))
             possible_maximums.append(max(y_not_merged_data[time_unit + '_to_close_mean']))
             
             maximum = max(possible_maximums)*1.15
             ideal_difference = maximum*0.064
-            
-        for y_value in driver_df[y_axis].unique():
 
-            y_merged_data = driver_df.loc[(driver_df[y_axis] == y_value) & (driver_df['merged_flag'] == 'Merged / Accepted')]
-            y_not_merged_data = driver_df.loc[(driver_df[y_axis] == y_value) & (driver_df['merged_flag'] == 'Not Merged / Rejected')]
+            y_merged_data_list.append(y_merged_data)
+            y_not_merged_data_list.append(y_not_merged_data)
 
-            y_merged_data[time_unit + '_to_first_response_mean'] = y_merged_data[time_unit + '_to_first_response'].mean().round(1) if len(y_merged_data) > 0 else 0.00
-            y_merged_data[time_unit + '_to_last_response_mean'] = y_merged_data[time_unit + '_to_last_response'].mean().round(1) if len(y_merged_data) > 0 else 0.00
-            y_merged_data[time_unit + '_to_close_mean'] = y_merged_data[time_unit + '_to_close'].mean().round(1) if len(y_merged_data) > 0 else 0.00
+        #loop through data and add it to the plot
+        for index in range(0, len(y_merged_data_list)):
 
-            y_not_merged_data[time_unit + '_to_first_response_mean'] = y_not_merged_data[time_unit + '_to_first_response'].mean().round(1) if len(y_not_merged_data) > 0 else 0.00
-            y_not_merged_data[time_unit + '_to_last_response_mean'] = y_not_merged_data[time_unit + '_to_last_response'].mean().round(1) if len(y_not_merged_data) > 0 else 0.00
-            y_not_merged_data[time_unit + '_to_close_mean'] = y_not_merged_data[time_unit + '_to_close'].mean().round(1) if len(y_not_merged_data) > 0 else 0.00
+            y_merged_data = y_merged_data_list[index]
+            y_not_merged_data = y_not_merged_data_list[index]
 
             not_merged_source = ColumnDataSource(y_not_merged_data)
             merged_source = ColumnDataSource(y_merged_data)
@@ -953,7 +1020,8 @@ def create_routes(server):
             labels = LabelSet(x=time_unit + '_to_last_response_mean', y=dodge(y_axis, 0, range=p.y_range), text=time_unit + '_to_last_response_mean', x_offset = not_merged_x_offset, y_offset=not_merged_y_offset,#40,
                       text_font_size="12pt", text_color=colors[1],
                       source=not_merged_source, text_align='center')
-            p.add_layout(labels)
+            p.add_layout(labels)    
+
 
         p.title.align = "center"
         p.title.text_font_size = "16px"
@@ -1024,7 +1092,10 @@ def create_routes(server):
 
             return var 
 
-        filename = export_png(grid)
+        #opts = FirefoxOptions()
+        #opts.add_argument("--headless")
+        #driver = webdriver.Firefox(firefox_options=opts)
+        filename = export_png(grid, timeout=180)
         
         return send_file(filename)
 
@@ -1047,7 +1118,18 @@ def create_routes(server):
         pr_closed = df_tuple[df_type["pr_closed"]]
         pr_slow20_not_merged = df_tuple[df_type["pr_slow20_not_merged"]]
         pr_slow20_merged = df_tuple[df_type["pr_slow20_merged"]]
+
+        #only getting pr_all to test lenght of data
         pr_all = df_tuple[df_type["pr_all"]]
+
+        try:
+            pr_closed['average_days_between_responses'] = pr_closed['average_time_between_responses'].map(lambda x: x.days).astype(float)
+            pr_slow20_not_merged['average_days_between_responses'] = pr_slow20_not_merged['average_time_between_responses'].map(lambda x: x.days).astype(float)
+            pr_slow20_merged['average_days_between_responses'] = pr_slow20_merged['average_time_between_responses'].map(lambda x: x.days).astype(float)
+        except:
+            return Response(response="There is no message data for this repo, in the database you are accessing",
+                mimetype='application/json',
+                status=200)
 
         #only test pr_all because it encompasses the other dfs
         if(len(pr_all) == 0):
@@ -1065,6 +1147,10 @@ def create_routes(server):
         line_group='merged_flag'
         num_outliers_repo_map={}
 
+        # filter out unneeded columns for easier debugging
+        pr_closed = pr_closed[['repo_id', 'repo_name', x_axis, y_axis, line_group]]
+        pr_slow20_not_merged = pr_slow20_not_merged[['repo_id', 'repo_name', x_axis, y_axis, line_group]]
+        pr_slow20_merged = pr_slow20_merged[['repo_id', 'repo_name', x_axis, y_axis, line_group]]
 
         data_dict = {'All':pr_closed,'Slowest 20%':pr_slow20_not_merged.append(pr_slow20_merged,ignore_index=True)}
 
@@ -1161,7 +1247,10 @@ def create_routes(server):
 
             return var 
 
-        filename = export_png(grid)
+        #opts = FirefoxOptions()
+        #opts.add_argument("--headless")
+        #driver = webdriver.Firefox(firefox_options=opts)
+        filename = export_png(grid, timeout=180)
         
         return send_file(filename)
 
@@ -1197,7 +1286,10 @@ def create_routes(server):
         group_by = 'merged_flag'
         legend_position='top_right'
 
-        
+        pr_closed = pr_closed[['repo_id', 'repo_name', x_axis, group_by, y_axis]]
+
+        print(pr_closed)
+
         driver_df = pr_closed.copy()
 
         outliers_removed = 0
@@ -1251,6 +1343,12 @@ def create_routes(server):
         p.yaxis.axis_label_text_font_size = "16px"
         p.yaxis.major_label_text_font_size = "16px"
 
+        
+        if(len(values) == 0):
+            return Response(response="There is no message data for this repo, in the database you are accessing",
+                mimetype='application/json',
+                status=200)
+
         #determine y_max by finding the max of the values and scaling it up a small amoutn
         y_max = max(values)*1.015
 
@@ -1286,7 +1384,10 @@ def create_routes(server):
 
             return var 
 
-        filename = export_png(grid)
+        #opts = FirefoxOptions()
+        #opts.add_argument("--headless")
+        #driver = webdriver.Firefox(firefox_options=opts)
+        filename = export_png(grid, timeout=180)
         
         return send_file(filename)
 
@@ -1366,6 +1467,19 @@ def create_routes(server):
             facet_data = driver_df.loc[driver_df[facet] == facet_group]
     #         display(facet_data.sort_values('merged_count', ascending=False).head(50))
             driver_df_mean = facet_data.groupby(['repo_id', 'repo_name', x_axis], as_index=False).mean().round(1)
+
+            #if a record is field in a record is Nan then it is not counted by count() so when it is not 2 meaning both rows have a value, there is not enough data
+            if(driver_df_mean['assigned_count'].count() != 2 or driver_df_mean['review_requested_count'].count() != 2 or driver_df_mean['labeled_count'].count() != 2 or 
+                    driver_df_mean['subscribed_count'].count() != 2 or driver_df_mean['mentioned_count'].count() != 2 or driver_df_mean['referenced_count'].count() != 2 or 
+                    driver_df_mean['closed_count'].count() != 2 or driver_df_mean['head_ref_force_pushed_count'].count() != 2 or driver_df_mean['merged_count'].count() != 2 or 
+                    driver_df_mean['milestoned_count'].count() != 2 or driver_df_mean['unlabeled_count'].count() != 2 or driver_df_mean['head_ref_deleted_count'].count() != 2 or 
+                    driver_df_mean['comment_count'].count() != 2):
+
+                return Response(response="There is not enough data for this repo, in the database you are accessing",
+                mimetype='application/json',
+                status=200)
+
+            # print(driver_df_mean.to_string())
     #         data = {'Y' : y_groups}
     #         for group in y_groups:
     #             data[group] = driver_df_mean[group].tolist()
@@ -1451,7 +1565,10 @@ def create_routes(server):
 
             return var 
 
-        filename = export_png(layout)
+        #opts = FirefoxOptions()
+        #opts.add_argument("--headless")
+        #driver = webdriver.Firefox(firefox_options=opts)
+        filename = export_png(layout, timeout=181) # , webdriver=selenium.webdriver.firefox.webdriver)
         
         return send_file(filename)
 
@@ -1463,10 +1580,9 @@ def create_routes(server):
         repo_id = int(request.args.get('repo_id'))
         start_date = str(request.args.get('start_date', "{}-01-01".format(now.year-1)))
         end_date = str(request.args.get('end_date', "{}-{}-{}".format(now.year, now.month, now.day)))
+        group_by = str(request.args.get('group_by', "month"))
         return_json = request.args.get('return_json', "false")
         remove_outliers = str(request.args.get('remove_outliers', "true"))
-
-
 
         #dict of df types, and their locaiton in the tuple that the function pull_request_data_collection returns
         df_type = {"pr_all": 0, "pr_open": 1, "pr_closed": 2, "pr_merged": 3, "pr_not_merged": 4, "pr_slow20_all": 5,
@@ -1493,9 +1609,12 @@ def create_routes(server):
         heat_field = 'pr_duration_days'
         columns = 2
 
+        #filter unneeded columns for easier debugging
+        pr_duration_frame = pr_duration_frame[['repo_id', y_axis, group_by, x_axis, heat_field]]
+
         red_green_gradient = linear_gradient('#0080FF', '#DC143C', 150)['hex']#32CD32
 
-        driver_df = pr_duration_frame.copy()[['repo_id', y_axis, group_by, x_axis, heat_field]]
+        driver_df = pr_duration_frame.copy()
 
         driver_df[y_axis] = driver_df[y_axis].astype(str)
 
@@ -1592,6 +1711,13 @@ def create_routes(server):
 
             return var 
 
-        filename = export_png(grid)
-        
+        #opts = FirefoxOptions()
+        #opts.add_argument("--headless")
+        #driver = webdriver.Firefox(firefox_options=opts)
+        #newt = get_screenshot_as_png(grid, timeout=180, webdriver=selenium.webdriver.firefox.webdriver)
+        #filename = export_png(grid, timeout=180, webdriver=selenium.webdriver.firefox.webdriver)
+        filename = export_png(grid, timeout=180)
+
+
+        #return sendfile(newt)  
         return send_file(filename)

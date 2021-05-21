@@ -1,6 +1,22 @@
 Workers
 ========
 
+**THIS SECTION IS UNDER CONSTRUCTION.**
+
+If you have questions or would like to help please open an issue on GitHub_.
+
+.. _GitHub: https://github.com/chaoss/augur/issues
+
+
+.. toctree::
+   :maxdepth: 1
+   
+   creating_a_new_worker
+   clustering_worker
+   discourse_analysis_worker
+   insight_worker
+   message_insights_worker
+   pull_request_analysis_worker
 
 Gitlab Merge Request Worker
 ------------------------------------------------

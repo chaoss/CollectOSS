@@ -134,7 +134,7 @@ Example usage\:
 
 ``print-db-version``
 -------------------------
-The ``print-db-version`` command will give the user the current version of the configured database on their system. 
+The ``print-db-version`` command will give user the current version of the configured database on their system. 
 
 Example usage\:
 
