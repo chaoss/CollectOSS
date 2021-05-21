@@ -394,7 +394,7 @@ class GitHubPullRequestWorker(Worker):
 
         if len(source_prs['all']) == 0:
             self.logger.info("There are no prs for this repository.\n")
-            self.register_task_completion(self.self.task_info, self.repo_id, 'pull_requests')
+            self.register_task_completion(self.task_info, self.repo_id, 'pull_requests')
             return
 
         source_prs['insert'] = self.enrich_cntrb_id(
@@ -429,7 +429,9 @@ class GitHubPullRequestWorker(Worker):
                 'pr_merged_at': pr['merged_at'],
                 'pr_merge_commit_sha': pr['merge_commit_sha'],
                 'pr_teams': None,
-                'pr_milestone': pr['milestone']['title'] if pr['milestone'] else None,
+                'pr_milestone': None if not (
+                    pr['milestone'] and 'title' in pr['milestone']
+                ) else pr['milestone']['title'],
                 'pr_commits_url': pr['commits_url'],
                 'pr_review_comments_url': pr['review_comments_url'],
                 'pr_review_comment_url': pr['review_comment_url'],
@@ -450,16 +452,18 @@ class GitHubPullRequestWorker(Worker):
         ]
 
         if len(source_prs['insert']) > 0 or len(source_prs['update']) > 0:
-
-            pr_insert_result, pr_update_result = self.bulk_insert(self.pull_requests_table,
+            pr_insert_result, pr_update_result = self.bulk_insert(
+                self.pull_requests_table,
                 update=source_prs['update'], unique_columns=pr_action_map['insert']['augur'],
-                insert=prs_insert, update_columns=pr_action_map['update']['augur'])
+                insert=prs_insert, update_columns=pr_action_map['update']['augur']
+            )
 
             source_data = source_prs['insert'] + source_prs['update']
 
         elif not self.deep_collection:
-            self.logger.info("There are no prs to update, insert, or collect nested "
-                "information for.\n")
+            self.logger.info(
+                "There are no prs to update, insert, or collect nested information for.\n"
+            )
             self.register_task_completion(self.task_info, self.repo_id, 'pull_requests')
             return
 

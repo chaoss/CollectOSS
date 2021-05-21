@@ -7,13 +7,18 @@ import datetime
 import json
 from scipy import stats
 from flask import request, send_file, Response
+import math
 warnings.filterwarnings('ignore')
 
+#import selenium
+#from selenium import webdriver
+#from selenium.webdriver import FirefoxOptions
 
 from bokeh.palettes import Colorblind, mpl, Category20
 from bokeh.layouts import gridplot, row, column
 from bokeh.models.annotations import Title
-from bokeh.io import export_png, show
+from bokeh.io import export_png, show #, get_screenshot_as_png 
+#from bokeh.io.export import get_screenshot_as_png
 from bokeh.embed import json_item
 from bokeh.models import ColumnDataSource, Legend, LabelSet, Range1d, Label, FactorRange, BasicTicker, ColorBar, LinearColorMapper, PrintfTickFormatter
 from bokeh.plotting import figure
@@ -453,12 +458,15 @@ def create_routes(server):
 
             return var 
 
-        filename = export_png(grid)
+        #opts = FirefoxOptions()
+        #opts.add_argument("--headless")
+        #driver = webdriver.Firefox(firefox_options=opts)
+        filename = export_png(grid, timeout=180)
         
         return send_file(filename)
 
     @server.app.route('/{}/pull_request_reports/average_comments_per_PR/'.format(server.api_version), methods=["GET"])
-    def average_comments_per_PR(return_json=True):
+    def average_comments_per_PR():
 
         now = datetime.datetime.now()
 
@@ -516,14 +524,26 @@ def create_routes(server):
 
             y_merged_data = driver_df.loc[(driver_df[y_axis] == y_value) & (driver_df['merged_flag'] == 'Merged / Accepted')]
             y_not_merged_data = driver_df.loc[(driver_df[y_axis] == y_value) & (driver_df['merged_flag'] == 'Not Merged / Rejected')]
-
+            
             if len(y_merged_data) > 0:
-                y_merged_data[x_axis + '_mean'] = y_merged_data[x_axis].mean().round(1)
+                y_merged_data_mean = y_merged_data[x_axis].mean()
+
+                if(math.isnan(y_merged_data_mean)):
+                    return Response(response="There is no message data for this repo, in the database you are accessing", mimetype='application/json', status=200)
+                else:
+                    y_merged_data[x_axis + '_mean'] = y_merged_data_mean.round(1)
+
             else:
-                y_merged_data[x_axis + '_mean'] = 0.00
+                y_merged_data[x_axis + '_mean'] = 0
 
             if len(y_not_merged_data) > 0:
-                y_not_merged_data[x_axis + '_mean'] = y_not_merged_data[x_axis].mean().round(1)
+                y_not_merged_data_mean = y_not_merged_data[x_axis].mean()
+
+                if(math.isnan(y_not_merged_data_mean)):
+                    return Response(response="There is no message data for this repo, in the database you are accessing", mimetype='application/json', status=200)
+                else:
+                    y_not_merged_data[x_axis + '_mean'] = y_not_merged_data_mean.round(1)
+
             else:
                 y_not_merged_data[x_axis + '_mean'] = 0
 
@@ -611,7 +631,10 @@ def create_routes(server):
 
             return var 
 
-        filename = export_png(grid)
+        #opts = FirefoxOptions()
+        #opts.add_argument("--headless")
+        #driver = webdriver.Firefox(firefox_options=opts)
+        filename = export_png(grid, timeout=180)
         
         return send_file(filename)
 
@@ -788,7 +811,10 @@ def create_routes(server):
 
             return var 
 
-        filename = export_png(grid)
+        #opts = FirefoxOptions()
+        #opts.add_argument("--headless")
+        #driver = webdriver.Firefox(firefox_options=opts)
+        filename = export_png(grid, timeout=180)
         
         return send_file(filename)
 
@@ -848,39 +874,65 @@ def create_routes(server):
             colors = Colorblind[len(repo_set)]
         except:
             colors = Colorblind[3]
+
+        y_merged_data_list = []
+        y_not_merged_data_list = []
         
-        
+        #calculate data frist time to obtain the maximum and make sure there is message data
         for y_value in driver_df[y_axis].unique():
 
             y_merged_data = driver_df.loc[(driver_df[y_axis] == y_value) & (driver_df['merged_flag'] == 'Merged / Accepted')]
             y_not_merged_data = driver_df.loc[(driver_df[y_axis] == y_value) & (driver_df['merged_flag'] == 'Not Merged / Rejected')]
 
-            y_merged_data[time_unit + '_to_first_response_mean'] = y_merged_data[time_unit + '_to_first_response'].mean().round(1) if len(y_merged_data) > 0 else 0.00
-            y_merged_data[time_unit + '_to_last_response_mean'] = y_merged_data[time_unit + '_to_last_response'].mean().round(1) if len(y_merged_data) > 0 else 0.00
-            y_merged_data[time_unit + '_to_close_mean'] = y_merged_data[time_unit + '_to_close'].mean().round(1) if len(y_merged_data) > 0 else 0.00
+            if(len(y_merged_data) > 0):
 
-            y_not_merged_data[time_unit + '_to_first_response_mean'] = y_not_merged_data[time_unit + '_to_first_response'].mean().round(1) if len(y_not_merged_data) > 0 else 0.00
-            y_not_merged_data[time_unit + '_to_last_response_mean'] = y_not_merged_data[time_unit + '_to_last_response'].mean().round(1) if len(y_not_merged_data) > 0 else 0.00
-            y_not_merged_data[time_unit + '_to_close_mean'] = y_not_merged_data[time_unit + '_to_close'].mean().round(1) if len(y_not_merged_data) > 0 else 0.00
+                y_merged_data_first_response_mean = y_merged_data[time_unit + '_to_first_response'].mean()
+                y_merged_data_last_response_mean = y_merged_data[time_unit + '_to_last_response'].mean()
+                y_merged_data_to_close_mean = y_merged_data[time_unit + '_to_close'].mean()
+
+                if(math.isnan(y_merged_data_first_response_mean) or math.isnan(y_merged_data_last_response_mean) or math.isnan(y_merged_data_to_close_mean)):
+                    return Response(response="There is no message data for this repo, in the database you are accessing", mimetype='application/json', status=200)
+                else:
+                    y_merged_data[time_unit + '_to_first_response_mean'] = y_merged_data_first_response_mean.round(1)
+                    y_merged_data[time_unit + '_to_last_response_mean'] = y_merged_data_last_response_mean.round(1)
+                    y_merged_data[time_unit + '_to_close_mean'] = y_merged_data_to_close_mean.round(1)
+            else:
+                y_merged_data[time_unit + '_to_first_response_mean'] = 0.00
+                y_merged_data[time_unit + '_to_last_response_mean'] = 0.00
+                y_merged_data[time_unit + '_to_close_mean'] = 0.00
+
+
+            if(len(y_not_merged_data) > 0):
+
+                y_not_merged_data_first_response_mean = y_not_merged_data[time_unit + '_to_first_response'].mean()
+                y_not_merged_data_last_response_mean = y_not_merged_data[time_unit + '_to_last_response'].mean()
+                y_not_merged_data_to_close_mean = y_not_merged_data[time_unit + '_to_close'].mean()
+
+                if(math.isnan(y_not_merged_data_first_response_mean) or math.isnan(y_not_merged_data_last_response_mean) or math.isnan(y_not_merged_data_to_close_mean)):
+                    return Response(response="There is no message data for this repo, in the database you are accessing", mimetype='application/json', status=200)
+                else:
+                    y_not_merged_data[time_unit + '_to_first_response_mean'] = y_not_merged_data_first_response_mean.round(1)
+                    y_not_merged_data[time_unit + '_to_last_response_mean'] = y_not_merged_data_last_response_mean.round(1)
+                    y_not_merged_data[time_unit + '_to_close_mean'] = y_not_merged_data_to_close_mean.round(1)
+            else:
+                y_not_merged_data[time_unit + '_to_first_response_mean'] = 0.00
+                y_not_merged_data[time_unit + '_to_last_response_mean'] = 0.00
+                y_not_merged_data[time_unit + '_to_close_mean'] = 0.00
 
             possible_maximums.append(max(y_merged_data[time_unit + '_to_close_mean']))
             possible_maximums.append(max(y_not_merged_data[time_unit + '_to_close_mean']))
             
             maximum = max(possible_maximums)*1.15
             ideal_difference = maximum*0.064
-            
-        for y_value in driver_df[y_axis].unique():
 
-            y_merged_data = driver_df.loc[(driver_df[y_axis] == y_value) & (driver_df['merged_flag'] == 'Merged / Accepted')]
-            y_not_merged_data = driver_df.loc[(driver_df[y_axis] == y_value) & (driver_df['merged_flag'] == 'Not Merged / Rejected')]
+            y_merged_data_list.append(y_merged_data)
+            y_not_merged_data_list.append(y_not_merged_data)
 
-            y_merged_data[time_unit + '_to_first_response_mean'] = y_merged_data[time_unit + '_to_first_response'].mean().round(1) if len(y_merged_data) > 0 else 0.00
-            y_merged_data[time_unit + '_to_last_response_mean'] = y_merged_data[time_unit + '_to_last_response'].mean().round(1) if len(y_merged_data) > 0 else 0.00
-            y_merged_data[time_unit + '_to_close_mean'] = y_merged_data[time_unit + '_to_close'].mean().round(1) if len(y_merged_data) > 0 else 0.00
+        #loop through data and add it to the plot
+        for index in range(0, len(y_merged_data_list)):
 
-            y_not_merged_data[time_unit + '_to_first_response_mean'] = y_not_merged_data[time_unit + '_to_first_response'].mean().round(1) if len(y_not_merged_data) > 0 else 0.00
-            y_not_merged_data[time_unit + '_to_last_response_mean'] = y_not_merged_data[time_unit + '_to_last_response'].mean().round(1) if len(y_not_merged_data) > 0 else 0.00
-            y_not_merged_data[time_unit + '_to_close_mean'] = y_not_merged_data[time_unit + '_to_close'].mean().round(1) if len(y_not_merged_data) > 0 else 0.00
+            y_merged_data = y_merged_data_list[index]
+            y_not_merged_data = y_not_merged_data_list[index]
 
             not_merged_source = ColumnDataSource(y_not_merged_data)
             merged_source = ColumnDataSource(y_merged_data)
@@ -968,7 +1020,8 @@ def create_routes(server):
             labels = LabelSet(x=time_unit + '_to_last_response_mean', y=dodge(y_axis, 0, range=p.y_range), text=time_unit + '_to_last_response_mean', x_offset = not_merged_x_offset, y_offset=not_merged_y_offset,#40,
                       text_font_size="12pt", text_color=colors[1],
                       source=not_merged_source, text_align='center')
-            p.add_layout(labels)
+            p.add_layout(labels)    
+
 
         p.title.align = "center"
         p.title.text_font_size = "16px"
@@ -1039,7 +1092,10 @@ def create_routes(server):
 
             return var 
 
-        filename = export_png(grid)
+        #opts = FirefoxOptions()
+        #opts.add_argument("--headless")
+        #driver = webdriver.Firefox(firefox_options=opts)
+        filename = export_png(grid, timeout=180)
         
         return send_file(filename)
 
@@ -1191,7 +1247,10 @@ def create_routes(server):
 
             return var 
 
-        filename = export_png(grid)
+        #opts = FirefoxOptions()
+        #opts.add_argument("--headless")
+        #driver = webdriver.Firefox(firefox_options=opts)
+        filename = export_png(grid, timeout=180)
         
         return send_file(filename)
 
@@ -1228,6 +1287,8 @@ def create_routes(server):
         legend_position='top_right'
 
         pr_closed = pr_closed[['repo_id', 'repo_name', x_axis, group_by, y_axis]]
+
+        print(pr_closed)
 
         driver_df = pr_closed.copy()
 
@@ -1282,6 +1343,12 @@ def create_routes(server):
         p.yaxis.axis_label_text_font_size = "16px"
         p.yaxis.major_label_text_font_size = "16px"
 
+        
+        if(len(values) == 0):
+            return Response(response="There is no message data for this repo, in the database you are accessing",
+                mimetype='application/json',
+                status=200)
+
         #determine y_max by finding the max of the values and scaling it up a small amoutn
         y_max = max(values)*1.015
 
@@ -1317,7 +1384,10 @@ def create_routes(server):
 
             return var 
 
-        filename = export_png(grid)
+        #opts = FirefoxOptions()
+        #opts.add_argument("--headless")
+        #driver = webdriver.Firefox(firefox_options=opts)
+        filename = export_png(grid, timeout=180)
         
         return send_file(filename)
 
@@ -1397,6 +1467,19 @@ def create_routes(server):
             facet_data = driver_df.loc[driver_df[facet] == facet_group]
     #         display(facet_data.sort_values('merged_count', ascending=False).head(50))
             driver_df_mean = facet_data.groupby(['repo_id', 'repo_name', x_axis], as_index=False).mean().round(1)
+
+            #if a record is field in a record is Nan then it is not counted by count() so when it is not 2 meaning both rows have a value, there is not enough data
+            if(driver_df_mean['assigned_count'].count() != 2 or driver_df_mean['review_requested_count'].count() != 2 or driver_df_mean['labeled_count'].count() != 2 or 
+                    driver_df_mean['subscribed_count'].count() != 2 or driver_df_mean['mentioned_count'].count() != 2 or driver_df_mean['referenced_count'].count() != 2 or 
+                    driver_df_mean['closed_count'].count() != 2 or driver_df_mean['head_ref_force_pushed_count'].count() != 2 or driver_df_mean['merged_count'].count() != 2 or 
+                    driver_df_mean['milestoned_count'].count() != 2 or driver_df_mean['unlabeled_count'].count() != 2 or driver_df_mean['head_ref_deleted_count'].count() != 2 or 
+                    driver_df_mean['comment_count'].count() != 2):
+
+                return Response(response="There is not enough data for this repo, in the database you are accessing",
+                mimetype='application/json',
+                status=200)
+
+            # print(driver_df_mean.to_string())
     #         data = {'Y' : y_groups}
     #         for group in y_groups:
     #             data[group] = driver_df_mean[group].tolist()
@@ -1482,7 +1565,10 @@ def create_routes(server):
 
             return var 
 
-        filename = export_png(layout)
+        #opts = FirefoxOptions()
+        #opts.add_argument("--headless")
+        #driver = webdriver.Firefox(firefox_options=opts)
+        filename = export_png(layout, timeout=181) # , webdriver=selenium.webdriver.firefox.webdriver)
         
         return send_file(filename)
 
@@ -1625,6 +1711,13 @@ def create_routes(server):
 
             return var 
 
-        filename = export_png(grid)
-        
+        #opts = FirefoxOptions()
+        #opts.add_argument("--headless")
+        #driver = webdriver.Firefox(firefox_options=opts)
+        #newt = get_screenshot_as_png(grid, timeout=180, webdriver=selenium.webdriver.firefox.webdriver)
+        #filename = export_png(grid, timeout=180, webdriver=selenium.webdriver.firefox.webdriver)
+        filename = export_png(grid, timeout=180)
+
+
+        #return sendfile(newt)  
         return send_file(filename)
