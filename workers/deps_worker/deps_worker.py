@@ -85,5 +85,5 @@ class DepsWorker(Worker):
                     'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
                 }
 
-                result = self.db.execute(self.dependencies_table.insert().values(repo_deps))
-                self.logger.info(f"Added dep: {result}")
+                result = self.db.execute(self.repo_dependencies_table.insert().values(repo_deps))
+                self.logger.info(f"Added dep: {result.inserted_primary_key}")
