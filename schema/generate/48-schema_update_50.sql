@@ -23,7 +23,7 @@
 -- ----------------------------
 BEGIN;
 
-DROP TABLE IF EXISTS "augur_data"."dependencies"
+DROP TABLE IF EXISTS "augur_data"."dependencies";
 
 DROP TABLE IF EXISTS "augur_data"."repo_dependencies";
 
