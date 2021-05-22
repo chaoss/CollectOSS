@@ -21,7 +21,7 @@
 -- ----------------------------
 -- Table structure for contributors
 -- ----------------------------
-BEGIN: 
+BEGIN;
 
 DROP TABLE IF EXISTS "augur_data"."dependencies"
 
