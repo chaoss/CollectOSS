@@ -25,7 +25,7 @@ class DepsWorker(Worker):
         models = ['deps']
 
         # Define the tables needed to insert, update, or delete on
-        data_tables = ['dependencies']
+        data_tables = ['repo_dependencies']
         operations_tables = ['worker_history', 'worker_job']
 
 
@@ -38,7 +38,7 @@ class DepsWorker(Worker):
 
         self.tool_source = 'Deps Worker'
         self.tool_version = '1.0.0'
-        self.data_source = 'SCC'
+        self.data_source = 'Augur Repository Data'
 
     def deps_model(self, entry_info, repo_id):
         """ Data collection and storage method
@@ -74,12 +74,16 @@ class DepsWorker(Worker):
         deps = dep_calc.get_deps(path)
 
         for dep in deps:
-                val = {
-                       'repo_id': repo_id,
-                       'dep_name' : dep.name,
+                repo_deps = {
+                    'repo_id': repo_id,
+                    'dep_name' : dep.name,
 	                'dep_count' : dep.count,
-	                'dep_language' : dep.language
+	                'dep_language' : dep.language,
+                    'tool_source': self.tool_source,
+                    'tool_version': self.tool_version,
+                    'data_source': self.data_source,
+                    'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
                 }
 
-                result = self.db.execute(self.dependencies_table.insert().values(val))
+                result = self.db.execute(self.dependencies_table.insert().values(repo_deps))
                 self.logger.info(f"Added dep: {result}")

@@ -21,13 +21,21 @@
 -- ----------------------------
 -- Table structure for contributors
 -- ----------------------------
-DROP TABLE IF EXISTS "augur_data"."dependencies";
+BEGIN: 
 
-CREATE TABLE "augur_data"."dependencies" (
+DROP TABLE IF EXISTS "augur_data"."dependencies"
+
+DROP TABLE IF EXISTS "augur_data"."repo_dependencies";
+
+CREATE TABLE "augur_data"."repo_dependencies" (
   "repo_id" int8 NOT NULL,
   "dep_name" varchar(255),
   "dep_count" int,
-  "dep_language" varchar(255)
+  "dep_language" varchar(255),
+  "tool_source" varchar COLLATE "pg_catalog"."default",
+  "tool_version" varchar COLLATE "pg_catalog"."default",
+  "data_source" varchar COLLATE "pg_catalog"."default",
+  "data_collection_date" timestamp(0) DEFAULT CURRENT_TIMESTAMP
 );
 
 ALTER TABLE "augur_data"."dependencies" OWNER TO "augur";
@@ -47,6 +55,8 @@ COMMENT ON TABLE "augur_data"."dependencies" IS 'Contains the dependencies for a
 -- ----------------------------
 -- add foreign keys to tie into everything else
 -- ----------------------------
-ALTER TABLE "augur_data"."dependencies" ADD CONSTRAINT "repo_id" FOREIGN KEY (repo_id) REFERENCES augur_data.repo(repo_id);
+ALTER TABLE "augur_data"."repo_dependencies" ADD CONSTRAINT "repo_id" FOREIGN KEY (repo_id) REFERENCES augur_data.repo(repo_id);
 
 update "augur_operations"."augur_settings" set value = 50 where setting = 'augur_data_version'; 
+
+COMMIT;
