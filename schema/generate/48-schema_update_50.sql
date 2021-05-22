@@ -38,12 +38,12 @@ CREATE TABLE "augur_data"."repo_dependencies" (
   "data_collection_date" timestamp(0) DEFAULT CURRENT_TIMESTAMP
 );
 
-ALTER TABLE "augur_data"."dependencies" OWNER TO "augur";
-COMMENT ON COLUMN "augur_data"."dependencies"."repo_id" IS 'Forign key for repo id. ';
-COMMENT ON COLUMN "augur_data"."dependencies"."dep_name" IS 'Name of the dependancy found in project. ';
-COMMENT ON COLUMN "augur_data"."dependencies"."dep_count" IS 'Number of times the dependancy was found. ';
-COMMENT ON COLUMN "augur_data"."dependencies"."dep_language" IS 'Language of the dependancy. ';
-COMMENT ON TABLE "augur_data"."dependencies" IS 'Contains the dependencies for a repo.';
+ALTER TABLE "augur_data"."repo_dependencies" OWNER TO "augur";
+COMMENT ON COLUMN "augur_data"."repo_dependencies"."repo_id" IS 'Forign key for repo id. ';
+COMMENT ON COLUMN "augur_data"."repo_dependencies"."dep_name" IS 'Name of the dependancy found in project. ';
+COMMENT ON COLUMN "augur_data"."repo_dependencies"."dep_count" IS 'Number of times the dependancy was found. ';
+COMMENT ON COLUMN "augur_data"."repo_dependencies"."dep_language" IS 'Language of the dependancy. ';
+COMMENT ON TABLE "augur_data"."repo_dependencies" IS 'Contains the dependencies for a repo.';
 
 -- ----------------------------
 -- Indexes structure for table contributors
