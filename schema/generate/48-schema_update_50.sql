@@ -28,6 +28,7 @@ DROP TABLE IF EXISTS "augur_data"."dependencies";
 DROP TABLE IF EXISTS "augur_data"."repo_dependencies";
 
 CREATE TABLE "augur_data"."repo_dependencies" (
+  "repo_dependencies_id" serial8 NOT NULL, 
   "repo_id" int8 NOT NULL,
   "dep_name" varchar(255),
   "dep_count" int,
