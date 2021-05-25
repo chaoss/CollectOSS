@@ -11,15 +11,15 @@ CREATE TABLE IF NOT EXISTS "augur_data"."contributor_repo" (
   "cntrb_repo_id" SERIAL8,
   "cntrb_id" int8 NOT NULL,
   "repo_git" varchar COLLATE "pg_catalog"."default" NOT NULL,
-  "tool_source" varchar COLLATE "pg_catalog"."default",
-  "tool_version" varchar COLLATE "pg_catalog"."default",
-  "data_source" varchar COLLATE "pg_catalog"."default",
-  "data_collection_date" timestamp(0) DEFAULT CURRENT_TIMESTAMP,
   "repo_name" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
   "gh_repo_id" int8 NOT NULL,
   "cntrb_category" varchar(255) COLLATE "pg_catalog"."default",
   "event_id" int8,
-  "created_at" timestamp(0)
+  "created_at" timestamp(0),
+  "tool_source" varchar COLLATE "pg_catalog"."default",
+  "tool_version" varchar COLLATE "pg_catalog"."default",
+  "data_source" varchar COLLATE "pg_catalog"."default",
+  "data_collection_date" timestamp(0) DEFAULT CURRENT_TIMESTAMP
 )
 ;
 ALTER TABLE "augur_data"."contributor_repo" OWNER TO "augur";
