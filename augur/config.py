@@ -28,6 +28,7 @@ linux_badge_worker_p = randint(47000,47499)
 gitlab_issues_worker_p = randint(47500,47999)
 release_worker_p = randint(56000, 56499)
 gitlab_merge_request_worker_p = randint(56500, 56999)
+deps_worker_p = randint(57000, 57500) 
 main_port = randint(5001,5300) 
 
 
@@ -57,6 +58,14 @@ default_config = {
                 "repo_group_id": 0
             },
             "jobs": [
+                {
+                    "delay": 150000,
+                    "given": [
+                        "git_url"
+                    ],
+                    "model": "deps",
+                    "repo_group_id": 0
+                },
                 {
                     "delay": 150000,
                     "given": [
@@ -343,6 +352,11 @@ default_config = {
                     "max_features" : 1000,
                     "min_df": 0.1,
                     "num_clusters" : 4
+                },
+                "deps_worker": {
+                    "port": deps_worker_p,
+                    "switch": 0,
+                    "workers": 1
                 }
         },
         "Facade": {
