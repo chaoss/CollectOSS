@@ -1707,8 +1707,8 @@ class Worker():
             success = False
             while num_attempts < 10:
                 self.logger.info(
-                    f"Hitting endpoint: ...\n")
-                    f"{url.format(page_number)} on page number. \n"
+                    f"Hitting endpoint: ...\n"
+                    f"{url.format(page_number)} on page number. \n")
                 try:
                     response = requests.get(url=url.format(page_number), headers=self.headers)
                 except TimeoutError as e:
