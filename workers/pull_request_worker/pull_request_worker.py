@@ -370,7 +370,7 @@ class GitHubPullRequestWorker(Worker):
     def _get_pk_source_prs(self):
 
         pr_url = (
-            "https://api.github.com/repos/{owner}/{repo}/pulls?state=all&"
+            f"https://api.github.com/repos/{self.owner}/{self.repo}/pulls?state=all&"
             "direction=asc&per_page=100&page={}"
         )
 
@@ -394,7 +394,7 @@ class GitHubPullRequestWorker(Worker):
 
         if len(source_prs['all']) == 0:
             self.logger.info("There are no prs for this repository.\n")
-            self.register_task_completion(self.self.task_info, self.repo_id, 'pull_requests')
+            self.register_task_completion(self.task_info, self.repo_id, 'pull_requests')
             return
 
         source_prs['insert'] = self.enrich_cntrb_id(
@@ -429,7 +429,9 @@ class GitHubPullRequestWorker(Worker):
                 'pr_merged_at': pr['merged_at'],
                 'pr_merge_commit_sha': pr['merge_commit_sha'],
                 'pr_teams': None,
-                'pr_milestone': pr['milestone']['title'] if pr['milestone'] else None,
+                'pr_milestone': None if not (
+                    pr['milestone'] and 'title' in pr['milestone']
+                ) else pr['milestone']['title'],
                 'pr_commits_url': pr['commits_url'],
                 'pr_review_comments_url': pr['review_comments_url'],
                 'pr_review_comment_url': pr['review_comment_url'],
@@ -450,16 +452,18 @@ class GitHubPullRequestWorker(Worker):
         ]
 
         if len(source_prs['insert']) > 0 or len(source_prs['update']) > 0:
-
-            pr_insert_result, pr_update_result = self.bulk_insert(self.pull_requests_table,
+            pr_insert_result, pr_update_result = self.bulk_insert(
+                self.pull_requests_table,
                 update=source_prs['update'], unique_columns=pr_action_map['insert']['augur'],
-                insert=prs_insert, update_columns=pr_action_map['update']['augur'])
+                insert=prs_insert, update_columns=pr_action_map['update']['augur']
+            )
 
             source_data = source_prs['insert'] + source_prs['update']
 
         elif not self.deep_collection:
-            self.logger.info("There are no prs to update, insert, or collect nested "
-                "information for.\n")
+            self.logger.info(
+                "There are no prs to update, insert, or collect nested information for.\n"
+            )
             self.register_task_completion(self.task_info, self.repo_id, 'pull_requests')
             return
 
@@ -505,7 +509,8 @@ class GitHubPullRequestWorker(Worker):
     def pull_request_comments_model(self):
 
         comments_url = (
-            'https://api.github.com/repos/{owner}/{repo}/issues/comments?per_page=100&page={}'
+            f"https://api.github.com/repos/{self.owner}/{self.repo}/issues/comments?per_page=100"
+            "&page={}"
         )
 
         comment_action_map = {
@@ -521,9 +526,6 @@ class GitHubPullRequestWorker(Worker):
         )
 
         self.write_debug_data(pr_comments, 'pr_comments')
-
-        self.logger.info("CHECK")
-        self.logger.info(f'inserting messages for {pr_comments} repo')
 
         pr_comments['insert'] = self.text_clean(pr_comments['insert'], 'body')
 
@@ -551,9 +553,6 @@ class GitHubPullRequestWorker(Worker):
         self.bulk_insert(self.message_table, insert=pr_comments_insert)
 
         # PR MESSAGE REF TABLE
-        self.logger.info("CHECK")
-        self.logger.info(f'inserting messages for {pr_comments} repo')
-        self.logger.info(f'message table {self.message_table}')
 
         c_pk_source_comments = self.enrich_data_primary_keys(pr_comments['insert'],
             self.message_table, ['created_at', 'body'], ['msg_timestamp', 'msg_text'])
@@ -585,7 +584,8 @@ class GitHubPullRequestWorker(Worker):
             pk_source_prs = self._get_pk_source_prs()
 
         events_url = (
-            "https://api.github.com/repos/{owner}/{repo}/issues/events?per_page=100&page={}"
+            f"https://api.github.com/repos/{self.owner}/{self.repo}/issues/events?per_page=100&"
+            "page={}"
         )
 
         # Get events that we already have stored
@@ -658,7 +658,7 @@ class GitHubPullRequestWorker(Worker):
 
         reviews_urls = [
             (
-                "https://api.github.com/repos/{owner}/{repo}/pulls/{pr['number']}/"
+                f"https://api.github.com/repos/{self.owner}/{self.repo}/pulls/{pr['number']}/"
                 "reviews?per_page=100", {'pull_request_id': pr['pull_request_id']}
             )
             for pr in pk_source_prs
