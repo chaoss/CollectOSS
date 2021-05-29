@@ -51,4 +51,5 @@
 \i schema/generate/46-schema_update_48.sql
 \i schema/generate/47-schema_update_49.sql
 \i schema/generate/48-schema_update_50.sql
+\i schema/generate/49-schema_update_51.sql
 
