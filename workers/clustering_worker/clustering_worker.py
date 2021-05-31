@@ -60,7 +60,7 @@ class ClusteringWorker(Worker):
 		self.max_df = self.config['max_df'] #get from configuration file
 		self.max_features = self.config['max_features']
 		self.min_df = self.config['min_df']
-		self.ngram_range = (2,4)
+		self.ngram_range = (1,4)
 		self.num_clusters = self.config['num_clusters']
 		self.clustering_by_content = True
 		self.clustering_by_mechanism = False

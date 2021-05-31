@@ -22,9 +22,12 @@ setup(
     description="Augur Worker that collects general data about a repo on GitHub",
     packages=find_packages(),
     install_requires=[
-        'flask',
-        'requests',
-        'psycopg2-binary'
+        'Flask==1.1.4',
+        'Flask-Cors==3.0.10',
+        'Flask-Login==0.5.0',
+        'Flask-WTF==0.14.3',
+        'requests==2.22.0',
+        'psycopg2-binary==2.8.6'
     ],
     entry_points={
         'console_scripts': [

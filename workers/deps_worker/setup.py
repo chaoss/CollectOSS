@@ -13,13 +13,13 @@ def read(filename):
         return re.sub(text_type(r':[a-z]+:`~?(.*?)`'), text_type(r'``\1``'), fd.read())
 
 setup(
-    name="release_worker",
+    name="deps_worker",
     version="1.0.0",
     url="https://github.com/chaoss/augur",
     license='MIT',
-    author="Augurlabs",
-    author_email="s@goggins.com",
-    description="Augur Worker that collects data about GitHub releases",
+    author="Stuart Aldrich",
+    author_email="stuart.aldrich.1@gmail.com",
+    description="Augur Worker that gathers deps data",
     packages=find_packages(exclude=('tests',)),
     install_requires=[
         'Flask==1.1.4',
@@ -27,14 +27,14 @@ setup(
         'Flask-Login==0.5.0',
         'Flask-WTF==0.14.3',
         'requests==2.22.0',
-        'psycopg2-binary==2.8.6',
-        'click==7.1.2'
+        'psycopg2-binary==2.8.6'
     ],
     entry_points={
         'console_scripts': [
-            'release_worker_start=workers.release_worker.runtime:main',
+            'deps_worker_start=workers.deps_worker.runtime:main',
         ],
     },
+
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'License :: OSI Approved :: MIT License',

@@ -61,18 +61,37 @@ We use Vue.js as our frontend web framework, and ``npm`` as our package manager.
 Visualization API calls
 ---------------------------
 
-On Ubuntu and other Linux flavors: if you want to use the new Augur API Calls that generate downloadable graphics developed in the `https://github.com/chaoss/augur-community-reports` repository, you need to install the Chromium ChromeDriver at the system level. This dependency exists because the Bokeh libraries we use for these APIs require a web browser engine. 
+On Ubuntu and other Linux flavors: if you want to use the new Augur API Calls that generate downloadable graphics developed in the `https://github.com/chaoss/augur-community-reports` repository, you need to install the `firefox-geckodriver` (on Ubuntu or Red Hat Fedora) or `geckodriver` on Mac OSX, at the system level. This dependency exists because the Bokeh libraries we use for these APIs require a web browser engine. 
+
+For Ubuntu you can use: 
 
 .. code-block:: bash
 
-    -  sudo apt install chromium-chromedriver 
-    -  sudo apt install firefox-geckodriver
+    - which firefox-geckodriver
+    - if nothing returned, then: 
+    - sudo apt install firefox-geckodriver
+
+For Fedora You Can Use
+
+.. code-block:: bash
+
+    - which firefox-geckodriver
+    - if nothing returned, then: 
+    - sudo dnf install firefox-geckodriver
 
 For Mac OSX you can use: 
 
 .. code-block:: bash
 
-    -  brew install chromedriver
+    -  which geckodriver
+    -  if nothing returned, then:
+    -  brew install geckodriver
+
+.. note::
+  If you have BOTH firefox-geckodriver AND chromedriver installed the visualization API will not work. 
+
+  We have fully tested with firefox-gecko driver on Linux platforms, and geckodriver on OSX. If you have ONLY chromedriver installed, it will probably work. Open an issue if you have a functioning chromedriver implementation.  
+
 
 =================
 Installing Augur
