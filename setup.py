@@ -35,9 +35,9 @@ setup(
     install_requires=[
         "wheel",
         "coloredlogs==15.0",
-        "Beaker==1.1.0",
+        "Beaker==1.11.0",
         "SQLAlchemy==1.3.23",
-        "Jinja2<3.0,>=2.10.1"
+        "Jinja2<3.0,>=2.10.1",
         "Flask==1.1.4",
         "Flask-Cors==3.0.10",
         "Flask-Login==0.5.0",
