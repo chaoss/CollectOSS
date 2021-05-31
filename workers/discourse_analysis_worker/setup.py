@@ -32,7 +32,7 @@ setup(
         'nltk==3.5',
         'pandas==1.1.3',
         'scikit-learn==0.24.1',
-        'textblob==0.15.3'
+        'textblob==0.15.3',
         'sklearn-crfsuite==0.3.6'
     ],
     entry_points={
