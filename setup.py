@@ -35,9 +35,9 @@ setup(
     install_requires=[
         "wheel",
         "coloredlogs==15.0",
-        "Beaker==1.1.0",
+        "Beaker==1.11.0",
         "SQLAlchemy==1.3.23",
-        "Jinja2<3.0,>=2.10.1"
+        "Jinja2<3.0,>=2.10.1",
         "Flask==1.1.4",
         "Flask-Cors==3.0.10",
         "Flask-Login==0.5.0",
@@ -52,7 +52,7 @@ setup(
         "six==1.15.0",
         "bokeh==2.0.2",
         "selenium==3.141.0",
-        "dask==2021.5.1", 
+        "dask==2021.5.0", 
         "cloudpickle >= 0.2.2",
         "fsspec >= 0.6.0",
         "toolz >= 0.8.2",
@@ -68,14 +68,14 @@ setup(
     ],
     extras_require={
         "dev": [
-            "tox",
-            "pytest",
+            "tox==3.23.0",
+            "pytest==6.2.2",
             "toml >= 0.10.2",
-            "ipdb",
-            "sphinx",
-            "sphinx_rtd_theme",
-            "sphinxcontrib-openapi",
-            "sphinxcontrib-redoc",
+            "ipdb==0.13.6",
+            "sphinx==3.5.2",
+            "sphinx_rtd_theme==0.5.1",
+            "sphinxcontrib-openapi==0.7.0",
+            "sphinxcontrib-redoc==1.6.0",
             "docutils==0.15"
         ]
     },
