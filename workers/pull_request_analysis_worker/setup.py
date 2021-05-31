@@ -34,7 +34,7 @@ setup(
         'gensim==3.8.3',
         'emoji==1.2.0',
         'joblib==1.0.1',
-        'xgboost==0.90'
+        'xgboost==0.90',
         'scipy==1.4.1'
     ],
     entry_points={
