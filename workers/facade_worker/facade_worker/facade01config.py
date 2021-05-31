@@ -34,7 +34,6 @@ import os
 import getopt
 import xlsxwriter
 import configparser
-import pymysql
 import psycopg2
 import json
 import logging
