@@ -2,7 +2,7 @@
 version: '3'
 services:
       backend:
-       image: augurlabs/augur:backend
+       image: local_augur_backend
        restart: unless-stopped
        ports:
          - 5000:5000
