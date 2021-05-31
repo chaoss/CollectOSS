@@ -37,6 +37,7 @@ setup(
         "coloredlogs==15.0",
         "Beaker==1.11.0",
         "SQLAlchemy==1.3.23",
+        "itsdangerous==1.1.0",
         "Jinja2<3.0,>=2.10.1",
         "Flask==1.1.4",
         "Flask-Cors==3.0.10",
