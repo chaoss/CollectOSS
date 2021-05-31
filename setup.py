@@ -68,14 +68,14 @@ setup(
     ],
     extras_require={
         "dev": [
-            "tox",
-            "pytest",
+            "tox==3.23.0",
+            "pytest==6.2.2",
             "toml >= 0.10.2",
-            "ipdb",
-            "sphinx",
-            "sphinx_rtd_theme",
-            "sphinxcontrib-openapi",
-            "sphinxcontrib-redoc",
+            "ipdb==0.13.6",
+            "sphinx==3.5.2",
+            "sphinx_rtd_theme==0.5.1",
+            "sphinxcontrib-openapi==0.7.0",
+            "sphinxcontrib-redoc==1.6.0",
             "docutils==0.15"
         ]
     },
