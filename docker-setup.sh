@@ -10,20 +10,27 @@ rm docker_env.txt
 touch docker_env.txt
 #Prompt for user info
 #TODO: Make container work with gitlab key
-echo "Please input Github API key: "
-read githubAPIKey
+read -p "Please input Github API key: " githubAPIKey
 
 echo "AUGUR_GITHUB_API_KEY=$githubAPIKey" >> docker_env.txt
 
 printf "\nPlease choose which database hostname to use."
-echo "Plase input database hostname: "
-read dbHostname
+read -p "Plase input database hostname: " dbHostname
 
 echo "AUGUR_DB_HOST=$dbHostname" >> docker_env.txt
 echo "AUGUR_DB_NAME=augur" >> docker_env.txt
 echo "AUGUR_DB_PORT=5432" >> docker_env.txt
 echo "AUGUR_DB_USER=augur" >> docker_env.txt
-echo "AUGUR_DB_PASSWORD=password" >> docker_env.txt
+
+read -p "Please input database password: " dbPassword
+
+#If blank, use default password 'password'
+if [ -z "$dbPassword"]
+then
+  dbPassword="password"
+fi
+
+echo "AUGUR_DB_PASSWORD=$dbPassword" >> docker_env.txt
 
 echo "Tearing down old docker stack..."
 docker-compose -f docker-compose.yml down
@@ -50,7 +57,7 @@ fi
 #Ask if the user wants to try again if either of the containers failed.
 if [ $success -eq 0 ] ; then
   echo "Augur docker stack failed to be successfully deployed!"
-  read -p "Would you like to try to deploy again? (y/n)" -n 1 -r
+  read -p "Would you like to try to deploy again? (y/N)" -n 1 -r
   echo
 
   #Be absolutely sure that the script gets a complete path to itself for restarting the process

@@ -15,7 +15,9 @@ apt-get -y install --no-install-recommends git
 # https://github.com/giampaolo/psutil/issues/1714
 apt-get -y install --no-install-recommends gcc
 uname -a
-apt-get -y install --no-install-recommends python3.7 python3-pip 
+apt-get -y install --no-install-recommends python3.8 python3-pip
+#maybe this will fix it? 
+#apt-get -y install --no-install-recommends python3.7 python3-pip
 # python3.8-dev
 
 apt-get clean
