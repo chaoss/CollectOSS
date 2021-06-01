@@ -50,7 +50,7 @@ fi
 #Ask if the user wants to try again if either of the containers failed.
 if [ $success -eq 0 ] ; then
   echo "Augur docker stack failed to be successfully deployed!"
-  read -p "Would you like to try to deploy again?" -n 1 -r
+  read -p "Would you like to try to deploy again? (y/n)" -n 1 -r
   echo
 
   #Be absolutely sure that the script gets a complete path to itself for restarting the process
