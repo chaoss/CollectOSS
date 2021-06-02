@@ -1,5 +1,5 @@
 #!/bin/bash
-if [ "$EUID" -ne 0 ]
+if [ "$EUID" -ne 0 ];
   then echo "Please run as root"
   exit 1
 fi
@@ -32,7 +32,7 @@ read -p "Please input database password: " dbPassword
 
 #If blank, use default password 'password'
 if [ -z "$dbPassword"];
-then
+  then
   dbPassword="password"
 fi
 
