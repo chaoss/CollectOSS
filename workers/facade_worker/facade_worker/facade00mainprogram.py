@@ -26,7 +26,7 @@
 # repos. It also rebuilds analysis data, checks any changed affiliations and
 # aliases, and caches data for display.
 
-import pymysql, sys, platform, imp, time, datetime, html.parser, subprocess, os, getopt, xlsxwriter, configparser, logging
+import sys, platform, imp, time, datetime, html.parser, subprocess, os, getopt, xlsxwriter, configparser, logging
 from multiprocessing import Process, Queue
 from facade_worker.facade01config import Config#increment_db, update_db, migrate_database_config, database_connection, get_setting, update_status, log_activity          
 from facade_worker.facade02utilitymethods import update_repo_log, trim_commit, store_working_author, trim_author   

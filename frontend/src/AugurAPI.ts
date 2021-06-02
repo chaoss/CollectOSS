@@ -482,6 +482,7 @@ class Repo extends BaseRepo{
     this.addRepoMetric('reviewDuration', 'review-duration')
     this.addRepoMetric('pullRequestAcceptanceRate', 'pull-request-acceptance-rate')
     this.addRepoMetric('contributorsCodeDevelopment', 'contributors-code-development')
+    this.addRepoMetric('deps', 'deps')
   }
 }
 
@@ -550,6 +551,7 @@ class RepoGroup extends BaseRepo {
       this.addRepoGroupMetric('annualLinesOfCodeCountRankedByRepoInRepoGroup', 'annual-lines-of-code-count-ranked-by-repo-in-repo-group')
       this.addRepoGroupMetric('annualCommitCountRankedByNewRepoInRepoGroup', 'annual-commit-count-ranked-by-new-repo-in-repo-group')
       this.addRepoGroupMetric('annualLinesOfCodeCountRankedByNewRepoInRepoGroup', 'annual-lines-of-code-count-ranked-by-new-repo-in-repo-group')
+      this.addRepoGroupMetric('deps', 'deps')
     }
   }
 }

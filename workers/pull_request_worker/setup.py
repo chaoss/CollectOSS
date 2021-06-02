@@ -22,10 +22,13 @@ setup(
     description="Augur Worker that collects data about GitHub pull requests",
     packages=find_packages(exclude=('tests',)),
     install_requires=[
-        'flask', 
-        'requests', 
-        'psycopg2-binary', 
-        'click'
+        'Flask==1.1.4',
+        'Flask-Cors==3.0.10',
+        'Flask-Login==0.5.0',
+        'Flask-WTF==0.14.3',
+        'requests==2.22.0',
+        'psycopg2-binary==2.8.6',
+        'click==7.1.2'
     ],
     entry_points={
         'console_scripts': [

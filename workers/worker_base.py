@@ -363,7 +363,7 @@ class Worker():
                 self.logger.info("Calling model method {}_model".format(message['models'][0]))
                 self.task_info = message
                 self.repo_id = repo_id
-                self.owner, self.repo = self.get_owner_repo(message['given']['github_url'])
+                self.owner, self.repo = self.get_owner_repo(list(message['given'].values())[0])
                 model_method(message, repo_id)
             except Exception as e: # this could be a custom exception, might make things easier
                 self.register_task_failure(message, repo_id, e)
@@ -392,22 +392,38 @@ class Worker():
 
         return subject, source
 
-    def get_sqlalchemy_type(self, data):
+    def get_sqlalchemy_type(self, data, column_name=None):
         if type(data) == str:
             try:
                 time.strptime(data, "%Y-%m-%dT%H:%M:%SZ")
                 return s.types.TIMESTAMP
             except ValueError:
                 return s.types.String
-        elif isinstance(data, (int, numpy.integer)):
+        elif (
+            isinstance(data, (int, numpy.integer))
+            or (isinstance(data, float) and column_name and 'id' in column_name)
+        ):
             return s.types.BigInteger
-        elif type(data) == float:
+        elif isinstance(data, float):
             return s.types.Float
         elif type(data) in [numpy.datetime64, pd._libs.tslibs.timestamps.Timestamp]:
             return s.types.TIMESTAMP
+        elif column_name and 'id' in column_name:
+            return s.types.BigInteger
         return s.types.String
 
-    def _setup_postgres_merge(self, data_sets):
+    def _convert_float_nan_to_int(self, df):
+        for column in df.columns:
+            if (
+                df[column].dtype == float
+                and ((df[column] % 1 == 0) | (df[column].isnull())).all()
+            ):
+                df[column] = df[column].astype("Int64").astype(object).where(
+                    pd.notnull(df[column]), None
+                )
+        return df
+
+    def _setup_postgres_merge(self, data_sets, sort=False):
 
         metadata = s.MetaData()
 
@@ -419,10 +435,14 @@ class Worker():
             data_table = s.schema.Table(f"merge_data_{index}_{os.getpid()}", metadata)
             df = pd.DataFrame(data)
 
-            for column in df.columns:
+            columns = sorted(list(df.columns)) if sort else df.columns
+            df = self._convert_float_nan_to_int(df)
+            for column in columns:
                 data_table.append_column(
                     s.schema.Column(
-                        column, self.get_sqlalchemy_type(df.fillna(method='bfill').iloc[0][column])
+                        column, self.get_sqlalchemy_type(
+                            df.fillna(method='bfill').iloc[0][column], column_name=column
+                        )
                     )
                 )
 
@@ -432,9 +452,8 @@ class Worker():
 
         # Insert data to tables
         for data_table, data in zip(data_tables, data_sets):
-
             self.bulk_insert(
-                data_table, insert=data, increment_counter=False
+                data_table, insert=data, increment_counter=False, convert_float_int=True
             )
 
         session = s.orm.Session(self.db)
@@ -454,25 +473,35 @@ class Worker():
     def _get_data_set_columns(self, data, columns):
         if not len(data):
             return []
+        self.logger.info("Getting data set columns")
         df = pd.DataFrame(data, columns=data[0].keys())
+        final_columns = copy.deepcopy(columns)
         for column in columns:
             if '.' not in column:
                 continue
             root = column.split('.')[0]
+            if root not in df.columns:
+                df[root] = None
             expanded_column = pd.DataFrame(
                 df[root].where(df[root].notna(), lambda x: [{}]).tolist()
             )
             expanded_column.columns = [
                 f'{root}.{attribute}' for attribute in expanded_column.columns
             ]
-            columns += list(expanded_column.columns)
+            if column not in expanded_column.columns:
+                expanded_column[column] = None
+            final_columns += list(expanded_column.columns)
             try:
                 df = df.join(expanded_column)
             except ValueError:
                 # columns already added (happens if trying to expand the same column twice)
                 # TODO: Catch this before by only looping unique prefixs?
+                self.logger.info("Columns have already been added, moving on...")
                 pass
-        return df[list(set(columns))].to_dict(orient='records')
+        self.logger.info(final_columns)
+        self.logger.info(list(set(final_columns)))
+        self.logger.info("Finished getting data set columns")
+        return df[list(set(final_columns))].to_dict(orient='records')
 
     def organize_needed_data(
         self, new_data, table_values, table_pkey, action_map={}, in_memory=True
@@ -1003,7 +1032,7 @@ class Worker():
 
     def bulk_insert(
         self, table, insert=[], update=[], unique_columns=[], update_columns=[],
-        max_attempts=3, attempt_delay=3, increment_counter=True
+        max_attempts=3, attempt_delay=3, increment_counter=True, convert_float_int=False
     ):
         """ Performs bulk inserts/updates of the given data to the given table
 
@@ -1095,7 +1124,10 @@ class Worker():
                         table_name, columns)
                     cur.copy_expert(sql=sql, file=s_buf)
 
-            pd.DataFrame(insert).to_sql(
+            df = pd.DataFrame(insert)
+            if convert_float_int:
+                df = self._convert_float_nan_to_int(df)
+            df.to_sql(
                 name=table.name,
                 con=self.db,
                 if_exists="append",
@@ -1133,20 +1165,20 @@ class Worker():
         # todo: support deeper nests (>1) and only expand necessary columns
         # todo: merge with _get_data_set_columns
 
-        df.to_json('nested_df.json', orient='records')
         for column in column_names:
             if '.' not in column:
                 continue
             root = column.split('.')[0]
-            self.logger.info(root)
-            self.logger.info(df.dtypes)
-            self.logger.info(df[root])
+            if root not in df.columns:
+                df[root] = None
             expanded_column = pd.DataFrame(
                 df[root].where(df[root].notna(), lambda x: [{}]).tolist()
             )
             expanded_column.columns = [
                 f'{root}.{attribute}' for attribute in expanded_column.columns
             ]
+            if column not in expanded_column.columns:
+                expanded_column[column] = None
             try:
                 df = df.join(expanded_column)
             except ValueError:
@@ -1166,8 +1198,9 @@ class Worker():
 
         self.logger.info(f"Enriching contributor ids for {len(data)} data points...")
 
-        source_df = self._add_nested_columns(
-            pd.DataFrame(data), [key] + action_map_additions['insert']['source']
+        source_df = pd.DataFrame(data)
+        expanded_source_df = self._add_nested_columns(
+            source_df.copy(), [key] + action_map_additions['insert']['source']
         )
 
         # Insert cntrbs that are not in db
@@ -1179,7 +1212,7 @@ class Worker():
             }
         }
         source_cntrb_insert, _ = self.new_organize_needed_data(
-            source_df.to_dict(orient='records'), augur_table=self.contributors_table,
+            expanded_source_df.to_dict(orient='records'), augur_table=self.contributors_table,
             action_map=cntrb_action_map
         )
 
@@ -1217,30 +1250,48 @@ class Worker():
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
                 'data_source': self.data_source
-            } for contributor in source_cntrb_insert
+            } for contributor in source_cntrb_insert if contributor[f'{prefix}login']
         ]
 
         self.bulk_insert(self.contributors_table, cntrb_insert)
 
         # Query db for inserted cntrb pkeys and add to shallow level of data
 
-        (source_table, ), metadata, session = self._setup_postgres_merge(
-            [source_df.to_dict(orient='records')]
-        )
-
+        # Query
         cntrb_pk_name = list(self.contributors_table.primary_key)[0].name
-        final_columns = [cntrb_pk_name] + list(source_df.columns)
+        session = s.orm.Session(self.db)
+        inserted_pks = pd.DataFrame(
+            session.query(
+                self.contributors_table.c[cntrb_pk_name], self.contributors_table.c.cntrb_login,
+                self.contributors_table.c.gh_node_id
+            ).distinct(self.contributors_table.c.cntrb_login).order_by(
+                self.contributors_table.c.cntrb_login, self.contributors_table.c[cntrb_pk_name]
+            ).all(), columns=[cntrb_pk_name, 'cntrb_login', 'gh_node_id']
+        ).to_dict(orient='records')
+        session.close()
 
+        # Prepare for merge
+        source_columns = sorted(list(source_df.columns))
+        necessary_columns = sorted(list(set(source_columns + cntrb_action_map['insert']['source'])))
+        (source_table, inserted_pks_table), metadata, session = self._setup_postgres_merge(
+            [
+                expanded_source_df[necessary_columns].to_dict(orient='records'),
+                inserted_pks
+            ], sort=True
+        )
+        final_columns = [cntrb_pk_name] + sorted(list(set(necessary_columns)))
+
+        # Merge
         source_pk = pd.DataFrame(
             session.query(
-                self.contributors_table.c[cntrb_pk_name], source_table
+                inserted_pks_table.c.cntrb_id, source_table
             ).join(
                 source_table,
                 eval(
                     ' and '.join(
                         [
                             (
-                                f"self.contributors_table.c['{table_column}'] "
+                                f"inserted_pks_table.c['{table_column}'] "
                                 f"== source_table.c['{source_column}']"
                             ) for table_column, source_column in zip(
                                 cntrb_action_map['insert']['augur'],
@@ -1252,6 +1303,7 @@ class Worker():
             ).all(), columns=final_columns
         )
 
+        # Cleanup merge
         source_pk = self._eval_json_columns(source_pk)
         self._close_postgres_merge(metadata, session)
 
@@ -1565,8 +1617,9 @@ class Worker():
                     ' and '.join(
                         [
                             f"augur_table.c['{table_column}'] == new_data_table.c['{source_column}']"
-                            for table_column, source_column in zip(action_map['insert']['augur'],
-                            action_map['insert']['source'])
+                            for table_column, source_column in zip(
+                                action_map['insert']['augur'], action_map['insert']['source']
+                            )
                         ]
                     )
                 ), isouter=True
@@ -1653,7 +1706,9 @@ class Worker():
             num_attempts = 0
             success = False
             while num_attempts < 10:
-                self.logger.info(f"Hitting endpoint: {url.format(page_number)}...\n")
+                self.logger.info("hitting an endpiont")
+                #    f"Hitting endpoint: ...\n"
+                #    f"{url.format(page_number)} on page number. \n")
                 try:
                     response = requests.get(url=url.format(page_number), headers=self.headers)
                 except TimeoutError as e:
