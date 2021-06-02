@@ -1,6 +1,7 @@
 {
     "Database": {
-        "host": "localhost"
+        "host": "database",
+        "password": "covidparty"
     },
     "Server": {
         "host": "0.0.0.0"

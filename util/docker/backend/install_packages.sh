@@ -19,6 +19,9 @@ make -j 4
 #This overwrites any other python binaries it finds so keep that in mind.
 make install
 cd ..
+#Delete build files
+rm *.tar.xz
+rm -r Python-3.8.2
 
 #facade
 apt-get -y install --no-install-recommends git
