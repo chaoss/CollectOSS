@@ -11,6 +11,7 @@ If you have questions or would like to help please open an issue on GitHub_.
 .. toctree::
    :maxdepth: 1
 
+   creating_a_new_worker
    clustering_worker
    discourse_analysis_worker
    insight_worker
