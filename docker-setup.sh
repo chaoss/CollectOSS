@@ -82,6 +82,8 @@ docker-compose -f docker-compose.yml down
 
 echo "Starting set up of docker stack..."
 docker-compose -f docker-compose.yml up
+#Try to write logs to a file
+#docker-compose logs -f -t >> dockerIsBroken.log
 
 printf "\nNow showing active docker containers:\n"
 docker container ls
