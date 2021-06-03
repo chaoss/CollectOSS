@@ -48,7 +48,7 @@ then
   read -p "Please input database password: " dbPassword
 
   #If blank, use default password 'password'
-  if [[ -z "$dbPassword"]]
+  if [ -z "$dbPassword" ]
   then
     dbPassword="password"
   fi
