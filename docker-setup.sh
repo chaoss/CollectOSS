@@ -6,49 +6,82 @@ fi
 
 #automate the small things for setting up docker containers
 #This file sets up the backend and the frontend and assumes the database is not in a container (which isn't recommended regardless)
-rm docker_env.txt
-rm .env
-touch docker_env.txt
-touch .env
 
-#Prompt for user info
-#TODO: Make container work with gitlab key
-read -p "Please input Github API key: " githubAPIKey
-
-echo "AUGUR_GITHUB_API_KEY=$githubAPIKey" >> docker_env.txt
-echo
-echo "Please choose which database hostname to use."
-read -p "Plase input database hostname: " dbHostname
-
-#docker_env.txt is differant than .env for some reason.
-echo "AUGUR_DB_HOST=$dbHostname" >> docker_env.txt
-echo "AUGUR_DB_HOST=$dbHostname" >> .env
-
-echo "AUGUR_DB_NAME=augur" >> docker_env.txt
-echo "AUGUR_DB_PORT=5432" >> docker_env.txt
-echo "AUGUR_DB_USER=augur" >> docker_env.txt
-
-read -p "Please input database password: " dbPassword
-
-#If blank, use default password 'password'
-if [ -z "$dbPassword"];
-  then
-  dbPassword="password"
+#Always use a clean .env file because it is a subset of docker_env.txt so we can just generate it from that.
+if [[ -f ".env" ]]
+then
+  rm .env
 fi
 
-echo "AUGUR_DB_PASSWORD=$dbPassword" >> docker_env.txt
+touch .env
+#Ask the user if they want to be prompted or use an existing config file (docker_env.txt)
+read -p "Would you like to be prompted for database credentials? [y/N] " -n 1 -r
+echo 
+
+if [[ $REPLY =~ ^[Yy]$ ]]
+then
+
+  if [[ -f "docker_env.txt" ]]
+  then
+    rm docker_env.txt
+  fi
+
+  touch docker_env.txt
+
+  #Prompt for user info
+  #TODO: Make container work with gitlab key
+  read -p "Please input Github API key: " githubAPIKey
+
+  echo "AUGUR_GITHUB_API_KEY=$githubAPIKey" >> docker_env.txt
+  echo
+  echo "Please choose which database hostname to use."
+  read -p "Plase input database hostname: " dbHostname
+
+  #docker_env.txt is differant than .env for some reason.
+  echo "AUGUR_DB_HOST=$dbHostname" >> docker_env.txt
+  echo "AUGUR_DB_HOST=$dbHostname" >> .env
+
+  echo "AUGUR_DB_NAME=augur" >> docker_env.txt
+  echo "AUGUR_DB_PORT=5432" >> docker_env.txt
+  echo "AUGUR_DB_USER=augur" >> docker_env.txt
+
+  read -p "Please input database password: " dbPassword
+
+  #If blank, use default password 'password'
+  if [[ -z "$dbPassword"]]
+  then
+    dbPassword="password"
+  fi
+
+  echo "AUGUR_DB_PASSWORD=$dbPassword" >> docker_env.txt
+
+else
+
+  if [[ ! -f "docker_env.txt" ]]
+  then
+    echo "docker_env.txt not found. Please add environment variables in this file or restart the script and choose to prompt db credentials."
+    exit 1
+  fi
+
+  #Copy host name to docker-compose env file.
+  cat docker_env.txt | grep AUGUR_DB_HOST > .env
+fi
+
 
 echo "Tearing down old docker stack..."
 docker-compose -f docker-compose.yml down
 
 #This step isn't working properly idk why.
+#docker-compose is acting very strangely and it seems to be starting 2 augur_backend containters at once?
+#This makes no sense as it really just uses docker-comose.yml which doesn't tell it to make 2 containers.
+
 #Needs to be something like
-#augur config init --db_name "augur_osshealth" --db_host "database" --db_port "5432" --db_user "augur" --db_password "covidparty" --github_api_key "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"
 #docker run -i -t -p 5000:5000 --add-host=database:95.217.193.152  isaacmilarky/augur_backend 
+#augur config init --db_name "augur_osshealth" --db_host "database" --db_port "5432" --db_user "augur" --db_password "covidparty" --github_api_key "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"
 #but using docker compose
 
 echo "Starting set up of docker stack..."
-docker-compose -f docker-compose.yml --env-file docker_env.txt up
+docker-compose -f docker-compose.yml up
 
 printf "\nNow showing active docker containers:\n"
 docker container ls
