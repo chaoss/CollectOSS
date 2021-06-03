@@ -1,12 +1,13 @@
 #SPDX-License-Identifier: MIT
+#Something having to do with the workers is preventing it from working.
 version: '3'
 services:
   backend:
     image: isaacmilarky/augur_backend
-    restart: unless-stopped
+    restart: "no"
     ports:
+      - 47000-59000:47000-59000
       - 5000:5000
-      - 50000-52000:50000-52000
     extra_hosts:
       - "database:${AUGUR_DB_HOST}"
     env_file: docker_env.txt
