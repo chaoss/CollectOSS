@@ -21,8 +21,8 @@ RUN ./scripts/install/workers.sh
 
 COPY ./util/docker/backend/backend.docker.config.json .
 
-#Naive attempt at a solution
+#Needs to be hardcoded or the API doesn't work.
 EXPOSE 5000
 RUN augur config init --rc-config-file backend.docker.config.json; mkdir repos/;
 
-CMD ["bash", "augur db update-api-key docker_key; augur backend start; augur backend export-env; cat docker_env.txt"]
+CMD augur db update-api-key docker_key; augur backend start

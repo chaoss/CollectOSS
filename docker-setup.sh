@@ -71,24 +71,19 @@ fi
 echo "Tearing down old docker stack..."
 docker-compose -f docker-compose.yml down
 
-#This step isn't working properly idk why.
-#docker-compose is acting very strangely and it seems to be starting 2 augur_backend containters at once?
-#This makes no sense as it really just uses docker-comose.yml which doesn't tell it to make 2 containers.
-
-#Needs to be something like
-#docker run -i -t -p 5000:5000 --add-host=database:95.217.193.152  isaacmilarky/augur_backend 
-#augur config init --db_name "augur_osshealth" --db_host "database" --db_port "5432" --db_user "augur" --db_password "covidparty" --github_api_key "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"
-#but using docker compose
 
 echo "Starting set up of docker stack..."
-docker-compose -f docker-compose.yml up --no-recreate
-#Try to write logs to a file
-#docker-compose logs -f -t >> dockerIsBroken.log
+#Run docker stack in background to catch up to later
+#This is done so that the script can check to see if the containers are sucessful while docker-compose is running.
+docker-compose -f docker-compose.yml up --no-recreate & PIDOS=$!
 
+#Wait until the docker containers should show up in a docker container ls call
+sleep 5
 printf "\nNow showing active docker containers:\n"
 docker container ls
 printf "\n"
 
+#Check to see if full stack has been successfully deployed
 success=1
 if [[ ! $(docker container ls | grep frontend) ]]; then
     echo "The frontend container failed to be deployed!"
@@ -100,7 +95,8 @@ if [[ ! $(docker container ls | grep backend) ]]; then
     success=0
 fi
 
-
+#Wait for the user to kill docker-compose or for it to fail
+wait $PIDOS
 #Ask if the user wants to try again if either of the containers failed.
 if [ $success -eq 0 ] ; then
   echo "Augur docker stack failed to be successfully deployed!"
@@ -120,4 +116,7 @@ if [ $success -eq 0 ] ; then
   exit 1
 fi
 
+#Cleaning up dead containers
+echo "Cleaning up dead containers... "
+docker-compose -f docker-compose.yml down
 echo "Augur stack successfully deployed!"
