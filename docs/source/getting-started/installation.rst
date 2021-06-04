@@ -110,7 +110,7 @@ after which you'll move on to the next section to configure the workers.
 
 .. code-block:: bash
 
-   $ git clone https://github.com/chaoss/augur.git
+   $ git clone 'https://github.com/chaoss/augur.git'
    $ cd augur/
 
 1. Create a virtual environment in a directory of your choosing. Be sure to use the correct ``python`` command for
