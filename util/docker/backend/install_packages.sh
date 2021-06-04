@@ -7,6 +7,7 @@ export DEBIAN_FRONTEND=noninteractive
 uname -a
 apt-get update
 apt-get -y upgrade
+#Net tools is for testing purposes
 apt-get -y install --no-install-recommends procps
 
 #Debian requires python3.8 to be built from source so these are needed

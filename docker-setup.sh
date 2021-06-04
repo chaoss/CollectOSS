@@ -81,7 +81,7 @@ docker-compose -f docker-compose.yml down
 #but using docker compose
 
 echo "Starting set up of docker stack..."
-docker-compose -f docker-compose.yml up
+docker-compose -f docker-compose.yml up --no-recreate
 #Try to write logs to a file
 #docker-compose logs -f -t >> dockerIsBroken.log
 

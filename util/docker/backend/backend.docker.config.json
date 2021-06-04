@@ -5,6 +5,7 @@
     },
     "Server": {
         "host": "0.0.0.0"
+        
     },
     "Logging": {
         "logs_directory": "/augur/logs/",

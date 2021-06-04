@@ -25,4 +25,4 @@ COPY ./util/docker/backend/backend.docker.config.json .
 EXPOSE 5000
 RUN augur config init --rc-config-file backend.docker.config.json; mkdir repos/;
 
-CMD augur db update-api-key docker_key; augur backend start
+CMD ["bash", "augur db update-api-key docker_key; augur backend start; augur backend export-env; cat docker_env.txt"]
