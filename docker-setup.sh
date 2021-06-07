@@ -71,17 +71,18 @@ fi
 echo "Tearing down old docker stack..."
 docker-compose -f docker-compose.yml down
 
-
+#Default value of 5 but you can input larger times if necessary.
+read -p "Please input time in seconds to wait for containers to deploy [5 Seconds]: " timeout
+timeout=${timeout:-5}
+echo
 echo "Starting set up of docker stack..."
 #Run docker stack in background to catch up to later
 #This is done so that the script can check to see if the containers are sucessful while docker-compose is running.
-docker-compose -f docker-compose.yml up --no-recreate & PIDOS=$!
+nohup docker-compose -f docker-compose.yml up --no-recreate &>.dockerComposeLog & 
+PIDOS=$!
 
 #Wait until the docker containers should show up in a docker container ls call
-sleep 5
-printf "\nNow showing active docker containers:\n"
-docker container ls
-printf "\n"
+sleep $timeout
 
 #Check to see if full stack has been successfully deployed
 success=1
@@ -95,10 +96,10 @@ if [[ ! $(docker container ls | grep backend) ]]; then
     success=0
 fi
 
-#Wait for the user to kill docker-compose or for it to fail
-wait $PIDOS
 #Ask if the user wants to try again if either of the containers failed.
 if [ $success -eq 0 ] ; then
+
+  kill -9 $PIDOS
   echo "Augur docker stack failed to be successfully deployed!"
   read -p "Would you like to try to deploy again? [y/N] " -n 1 -r
   echo
@@ -116,7 +117,35 @@ if [ $success -eq 0 ] ; then
   exit 1
 fi
 
+
+#While the containers are up show a watch monitor that shows container status and live feed from logs
+printf "\nNow showing active docker containers:\n"
+watch -n1 --color 'docker-compose ps && echo && tail -n 30 .dockerComposeLog && echo "Ctrl+C to Exit"'
+printf "\n"
+
+
+#Stop the process and clean up dead containers on SIGINT.
+kill -15 $PIDOS
 #Cleaning up dead containers
 echo "Cleaning up dead containers... "
 docker-compose -f docker-compose.yml down
-echo "Augur stack successfully deployed!"
+
+#Ask user if they would like to store logs to a permanent file.
+#Might want to make where the logs are saved a constant. Right now it just dumps it in the current directory.
+read -p "Would you like to store container output in a log file? [y/N] " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]
+then
+  #uses . as the delimiter in order to ignore file extension inputted by user.
+  read -p "Please input log filename: " logFileName
+  #Deal with empty user input
+  logFileName=${logFileName:-docker}
+  #Get input up until .
+  echo "Logs written to file: "
+  echo "$(echo $logFileName | grep -E "^([^.]+)").log"
+
+  cat .dockerComposeLog > "$(echo $logFileName | grep -E "^([^.]+)").log"
+  rm .dockerComposeLog
+else
+  rm .dockerComposeLog
+fi
