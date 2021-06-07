@@ -19,7 +19,7 @@ data. The structure of our data model enables us to synthesize data
 across various platforms to provide meaningful context for meaningful
 questions about the way these communities evolve.
 
-We are a [CHAOSS](https://chaoss.community>) project, and many of our
+We are a [CHAOSS](https://chaoss.community) project, and many of our
 metrics are implementations of the metrics defined by our awesome community. You
 can find more information about [how to get involved on the CHAOSS website](https://chaoss.community/participate/).
 
