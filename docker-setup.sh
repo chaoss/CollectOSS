@@ -69,7 +69,7 @@ fi
 
 
 echo "Tearing down old docker stack..."
-docker-compose -f docker-compose.yml down
+docker-compose -f docker-compose.yml down --remove-orphans
 
 #Default value of 5 but you can input larger times if necessary.
 read -p "Please input time in seconds to wait for containers to deploy [5 Seconds]: " timeout
@@ -111,7 +111,7 @@ if [ $success -eq 0 ] ; then
     exec "${SCRIPTPATH}/docker-setup.sh"
   else
     echo "Cleaning up failed deployment..."
-    docker-compose -f docker-compose.yml down
+    docker-compose -f docker-compose.yml down --remove-orphans
   fi
 
   exit 1
@@ -128,7 +128,7 @@ printf "\n"
 kill -15 $PIDOS
 #Cleaning up dead containers
 echo "Cleaning up dead containers... "
-docker-compose -f docker-compose.yml down
+docker-compose -f docker-compose.yml down --remove-orphans
 
 #Ask user if they would like to store logs to a permanent file.
 #Might want to make where the logs are saved a constant. Right now it just dumps it in the current directory.

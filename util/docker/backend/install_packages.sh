@@ -8,7 +8,7 @@ uname -a
 apt-get update
 apt-get -y upgrade
 #Net tools is for testing purposes
-apt-get -y install --no-install-recommends procps
+apt-get -y install --no-install-recommends procps iputils-ping telnet postgresql-client
 
 #Debian requires python3.8 to be built from source so these are needed
 apt-get -y install --no-install-recommends build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libsqlite3-dev libreadline-dev libffi-dev curl libbz2-dev
