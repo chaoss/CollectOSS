@@ -16,6 +16,8 @@ COPY ./setup.py .
 COPY ./scripts/ scripts/
 COPY ./workers/ workers/
 
+COPY ./schema/ schema/ 
+
 RUN pip install .
 RUN ./scripts/install/workers.sh 
 
@@ -25,5 +27,6 @@ COPY ./util/docker/backend/backend.docker.config.json .
 EXPOSE 5000
 RUN augur config init --rc-config-file backend.docker.config.json; mkdir repos/;
 
+ARG schemaBuild
 #Load environment variables at runtime.
-CMD augur config init --db_name "$AUGUR_DB_NAME" --db_port "$AUGUR_DB_PORT" --db_user "$AUGUR_DB_DB_USER" --db_password "$AUGUR_DB_PASSWORD" --github_api_key "$AUGUR_GITHUB_API_KEY"; augur db update-api-key docker_key; augur backend start
+CMD if [ "$schemaBuild" == "1" ]; then augur db create-schema; fi; augur config init --db_name "$AUGUR_DB_NAME" --db_port "$AUGUR_DB_PORT" --db_user "$AUGUR_DB_DB_USER" --db_password "$AUGUR_DB_PASSWORD" --github_api_key "$AUGUR_GITHUB_API_KEY"; augur backend start

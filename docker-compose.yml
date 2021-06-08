@@ -3,7 +3,11 @@
 version: '3'
 services:
   backend:
-    image: isaacmilarky/augur_backend
+    build: 
+      context: .
+      dockerfile: ./util/docker/backend/Dockerfile
+      args:
+        - schemaBuild=${AUGUR_DB_SCHEMA_BUILD}
     restart: always
     #DO NOT declare ports here in the range that the workers use for API calls. It breaks the docker compose
     ports:

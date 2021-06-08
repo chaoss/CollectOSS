@@ -37,6 +37,23 @@ then
   echo "Please choose which database hostname to use."
   read -p "Plase input database hostname: " dbHostname
 
+  if [ "$dbHostname" == "localhost" ]; then
+    echo "Local database specified. Setting up network alias..."
+    #This is differant for MacOS
+    ifconfig lo:0 10.254.254.254
+    ifconfig lo:0
+    dbHostname=10.254.254.254
+    echo "$dbHostname"
+    echo "AUGUR_DB_SCHEMA_BUILD=1" >> docker_env.txt
+    #Pass it to build argument in yml
+    echo "AUGUR_DB_SCHEMA_BUILD=1" >> .env
+  else
+    echo "AUGUR_DB_SCHEMA_BUILD=0" >> docker_env.txt
+    #Pass it to build argument in yml
+    echo "AUGUR_DB_SCHEMA_BUILD=0" >> .env
+  fi
+
+
   #docker_env.txt is differant than .env for some reason.
   echo "AUGUR_DB_HOST=$dbHostname" >> docker_env.txt
   echo "AUGUR_DB_HOST=$dbHostname" >> .env
@@ -63,13 +80,19 @@ else
     exit 1
   fi
 
+  echo "Why"
   #Copy host name to docker-compose env file.
-  cat docker_env.txt | grep AUGUR_DB_HOST > .env
+  cat docker_env.txt | grep AUGUR_DB_HOST >> .env
+  #Copy build option for whether or not container builds a db schema
+  cat docker_env.txt | grep AUGUR_DB_SCHEMA_BUILD >> .env
 fi
 
 
 echo "Tearing down old docker stack..."
 docker-compose -f docker-compose.yml down --remove-orphans
+
+echo "Building images for deploy..."
+docker-compose build
 
 #Default value of 5 but you can input larger times if necessary.
 read -p "Please input time in seconds to wait for containers to deploy [5 Seconds]: " timeout
@@ -78,7 +101,7 @@ echo
 echo "Starting set up of docker stack..."
 #Run docker stack in background to catch up to later
 #This is done so that the script can check to see if the containers are sucessful while docker-compose is running.
-nohup docker-compose -f docker-compose.yml up --no-recreate &>.dockerComposeLog & 
+nohup docker-compose -f docker-compose.yml up --no-recreate &>/tmp/dockerComposeLog & 
 PIDOS=$!
 
 #Wait until the docker containers should show up in a docker container ls call
@@ -120,7 +143,7 @@ fi
 
 #While the containers are up show a watch monitor that shows container status and live feed from logs
 printf "\nNow showing active docker containers:\n"
-watch -n1 --color 'docker-compose ps && echo && tail -n 30 .dockerComposeLog && echo "Ctrl+C to Exit"'
+watch -n1 --color 'docker-compose ps && echo && tail -n 30 /tmp/dockerComposeLog && echo "Ctrl+C to Exit"'
 printf "\n"
 
 
@@ -144,8 +167,8 @@ then
   echo "Logs written to file: "
   echo "$(echo $logFileName | grep -E "^([^.]+)").log"
 
-  cat .dockerComposeLog > "$(echo $logFileName | grep -E "^([^.]+)").log"
-  rm .dockerComposeLog
+  cat /tmp/dockerComposeLog > "$(echo $logFileName | grep -E "^([^.]+)").log"
+  rm /tmp/dockerComposeLog
 else
-  rm .dockerComposeLog
+  rm /tmp/dockerComposeLog
 fi
