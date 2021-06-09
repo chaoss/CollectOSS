@@ -43,6 +43,7 @@ if [ "$EUID" -ne 0 ];
 fi
 
 #Always use a clean .env file because it is a subset of docker_env.txt so we can just generate it from that.
+
 if [[ -f ".env" ]]
 then
   rm .env
