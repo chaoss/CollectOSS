@@ -19,6 +19,7 @@ COMMENT ON COLUMN "augur_data"."pull_request_analysis"."merge_probability" IS 'I
 
 COMMENT ON COLUMN "augur_data"."pull_request_analysis"."mechanism" IS 'the ML model used for prediction (It is XGBoost Classifier at present)';
 
+ALTER TABLE  "augur_data"."pull_request_analysis" DROP CONSTRAINT IF EXISTS "fk_pull_request_analysis_pull_requests_1";
 ALTER TABLE "augur_data"."pull_request_analysis" ADD CONSTRAINT "fk_pull_request_analysis_pull_requests_1" FOREIGN KEY ("pull_request_id") REFERENCES "augur_data"."pull_requests" ("pull_request_id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 CREATE  INDEX CONCURRENTLY "probability_idx"  ON "augur_data"."pull_request_analysis" USING btree (

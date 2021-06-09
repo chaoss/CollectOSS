@@ -3,7 +3,12 @@ from multiprocessing import Process, Queue
 from urllib.parse import urlparse
 import pandas as pd
 import sqlalchemy as s
-import requests, time, logging, json, os
+import requests
+import time
+import logging
+import json
+import os
+import math
 from datetime import datetime
 from workers.worker_base import Worker
 
@@ -21,10 +26,12 @@ class GitHubWorker(Worker):
         given = [['github_url']]
         models = ['issues']
 
-        data_tables = ['contributors', 'issues', 'issue_labels', 'message',
+        data_tables = [
+            'contributors', 'issues', 'issue_labels', 'message',
             'issue_message_ref', 'issue_events','issue_assignees','contributors_aliases',
-            'pull_request_assignees', 'pull_request_events', 'pull_request_reviewers', 'pull_request_meta',
-            'pull_request_repo']
+            'pull_request_assignees', 'pull_request_events', 'pull_request_reviewers',
+            'pull_request_meta', 'pull_request_repo'
+        ]
         operations_tables = ['worker_history', 'worker_job']
 
         # These 3 are included in every tuple the worker inserts (data collection info)
@@ -32,409 +39,445 @@ class GitHubWorker(Worker):
         self.tool_version = '1.0.0'
         self.data_source = 'GitHub API'
 
-        self.finishing_task = True # if we are finishing a previous task, pagination works differenty
-        self.platform_id = 25150 # GitHub
+        # if we are finishing a previous task, pagination works differenty (deprecated)
+        self.finishing_task = True
+
+        self.platform_id = 25150  # GitHub
+        self.process_count = 1
+        self.deep_collection = True
 
         # Run the general worker initialization
         super().__init__(worker_type, config, given, models, data_tables, operations_tables)
 
+    def _get_pk_source_issues(self):
+
+        issues_url = (
+            f"https://api.github.com/repos/{self.owner}/{self.repo}"
+            "/issues?per_page=100&state=all&page={}"
+        )
+
+        action_map = {
+            'insert': {
+                'source': ['id'],
+                'augur': ['gh_issue_id']
+            },
+            'update': {
+                'source': ['comments', 'state'],
+                'augur': ['comment_count', 'issue_state']
+            }
+        }
+
+        source_issues = self.new_paginate_endpoint(
+            issues_url, action_map=action_map,
+            table=self.issues_table, where_clause=self.issues_table.c.repo_id == self.repo_id
+        )
+
+        if len(source_issues['all']) == 0:
+            self.logger.info("There are no issues for this repository.\n")
+            self.register_task_completion(self.task_info, self.repo_id, 'issues')
+            return False
+
+        def is_valid_pr_block(issue):
+            return (
+                'pull_request' in issue and issue['pull_request']
+                and isinstance(issue['pull_request'], dict) and 'url' in issue['pull_request']
+            )
+
+        source_issues['insert'] = self.enrich_cntrb_id(
+            source_issues['insert'], 'user.login', action_map_additions={
+                'insert': {
+                    'source': ['user.node_id'],
+                    'augur': ['gh_node_id']
+                }
+            }, prefix='user.'
+        )
+
+        issues_insert = [
+            {
+                'repo_id': self.repo_id,
+                'reporter_id': issue['cntrb_id'],
+                'pull_request': (
+                    issue['pull_request']['url'].split('/')[-1]
+                    if is_valid_pr_block(issue) else None
+                ),
+                'pull_request_id': (
+                    issue['pull_request']['url'].split('/')[-1]
+                    if is_valid_pr_block(issue) else None
+                ),
+                'created_at': issue['created_at'],
+                'issue_title': issue['title'],
+                'issue_body': issue['body'].replace('0x00', '____') if issue['body'] else None,
+                'comment_count': issue['comments'],
+                'updated_at': issue['updated_at'],
+                'closed_at': issue['closed_at'],
+                'repository_url': issue['repository_url'],
+                'issue_url': issue['url'],
+                'labels_url': issue['labels_url'],
+                'comments_url': issue['comments_url'],
+                'events_url': issue['events_url'],
+                'html_url': issue['html_url'],
+                'issue_state': issue['state'],
+                'issue_node_id': issue['node_id'],
+                'gh_issue_id': issue['id'],
+                'gh_issue_number': issue['number'],
+                'gh_user_id': issue['user']['id'],
+                'tool_source': self.tool_source,
+                'tool_version': self.tool_version,
+                'data_source': self.data_source
+            } for issue in source_issues['insert']
+        ]
+
+        if len(source_issues['insert']) > 0 or len(source_issues['update']) > 0:
+
+            issues_insert_result, issues_update_result = self.bulk_insert(
+                self.issues_table, update=source_issues['update'],
+                unique_columns=action_map['insert']['augur'],
+                insert=issues_insert, update_columns=action_map['update']['augur']
+            )
+
+            source_data = source_issues['insert'] + source_issues['update']
+
+        elif not self.deep_collection:
+            self.logger.info(
+                "There are not issues to update, insert, or collect nested information for.\n"
+            )
+            self.register_task_completion(entry_info, self.repo_id, 'issues')
+            return
+
+        if self.deep_collection:
+            source_data = source_issues['all']
+
+        # Merge source data to inserted data to have access to inserted primary keys
+
+        gh_merge_fields = ['id']
+        augur_merge_fields = ['gh_issue_id']
+
+        pk_source_issues = self.enrich_data_primary_keys(
+            source_data, self.issues_table, gh_merge_fields, augur_merge_fields
+        )
+
+        return pk_source_issues
 
     def issues_model(self, entry_info, repo_id):
         """ Data collection function
         Query the GitHub API for issues
         """
-        # Get max ids so we know where we are in our insertion and to have the current id when inserting FK's
-        self.logger.info("Querying starting ids info...\n")
-
-        self.issue_id_inc = self.get_max_id('issues', 'issue_id')
-
-        self.msg_id_inc = self.get_max_id('message', 'msg_id')
 
         github_url = entry_info['given']['github_url']
 
-        self.logger.info("Beginning filling the issues model for repo: " + github_url + "\n")
-
-        # Contributors are part of this model, and finding all for the repo saves us 
+        # Contributors are part of this model, and finding all for the repo saves us
         #   from having to add them as we discover committers in the issue process
-        self.query_github_contributors(entry_info, repo_id)
+        # self.query_github_contributors(entry_info, self.repo_id)
 
-        # Extract the owner/repo for the endpoint
-        path = urlparse(github_url)
-        split = path[2].split('/')
-        owner = split[1]
-        name = split[2]
+        pk_source_issues = self._get_pk_source_issues()
+        if pk_source_issues:
+            self.issue_comments_model(pk_source_issues)
+            issue_events_all = self.issue_events_model(pk_source_issues)
+            self.issue_nested_data_model(pk_source_issues, issue_events_all)
 
-        # Handle git url case by removing extension
-        if ".git" in name:
-            name = name[:-4]
+        # Register this task as completed
+        self.register_task_completion(entry_info, self.repo_id, 'issues')
 
-        # Set base of endpoint url
-        url = "https://api.github.com/repos/{}/{}".format(owner, name)
+    def issue_comments_model(self, pk_source_issues):
 
-        issues_url = url + "/issues?per_page=100&state=all&page={}"
-        
-        # Get issues that we already have stored
-        #   Set pseudo key (something other than PK) to 
-        #   check dupicates with
-        table = 'issues'
-        table_pkey = 'issue_id'
-        update_col_map = {'comment_count': 'comments', 'issue_state': 'state'} #'updated_at': 'updated_at', 'closed_at': 'closed_at'
-        duplicate_col_map = {'gh_issue_id': 'id'}
+        comments_url = (
+            f"https://api.github.com/repos/{self.owner}/{self.repo}"
+            "/issues/comments?per_page=100&page={}"
+        )
 
-        #list to hold issues needing insertion
-        issues = self.paginate(issues_url, duplicate_col_map, update_col_map, table, table_pkey, 
-            'WHERE repo_id = {}'.format(repo_id))
-        self.logger.info(issues)
-        # Discover and remove duplicates before we start inserting
-        self.logger.info("Count of issues needing update or insertion: " + str(len(issues)) + "\n")
-
-        for issue_dict in issues:
-            self.logger.info("Begin analyzing the issue with title: " + issue_dict['title'] + "\n")
-            
-            # Add the FK repo_id to the dict being inserted
-            issue_dict['repo_id'] = repo_id
-
-            # Figure out if this issue is a PR
-            #   still unsure about this key value pair/what it means
-            pr_id = None
-            if 'pull_request' in issue_dict:
-                self.logger.info("Issue is a PR\n")
-                # Right now we are just storing our issue id as the PR id if it is one
-                pr_id = self.issue_id_inc
-            else:
-                self.logger.info("Issue is not a PR\n")
-
-            # Begin on the actual issue...
-            issue = {
-                "repo_id": issue_dict['repo_id'],
-                "reporter_id": self.find_id_from_login(issue_dict['user']['login']),
-                "pull_request": pr_id,
-                "pull_request_id": pr_id,
-                "created_at": issue_dict['created_at'],
-                "issue_title": issue_dict['title'],
-                "issue_body": issue_dict['body'].replace("0x00", "____") if issue_dict['body'] else None,
-                "comment_count": issue_dict['comments'],
-                "updated_at": issue_dict['updated_at'],
-                "closed_at": issue_dict['closed_at'],
-                "repository_url": issue_dict['repository_url'],
-                "issue_url": issue_dict['url'],
-                "labels_url": issue_dict['labels_url'],
-                "comments_url": issue_dict['comments_url'],
-                "events_url": issue_dict['events_url'],
-                "html_url": issue_dict['html_url'],
-                "issue_state": issue_dict['state'],
-                "issue_node_id": issue_dict['node_id'],
-                "gh_issue_id": issue_dict['id'],
-                "gh_issue_number": issue_dict['number'],
-                "gh_user_id": issue_dict['user']['id'],
-                "tool_source": self.tool_source,
-                "tool_version": self.tool_version,
-                "data_source": self.data_source
+        # Get contributors that we already have stored
+        #   Set our duplicate and update column map keys (something other than PK) to
+        #   check dupicates/needed column updates with
+        comment_action_map = {
+            'insert': {
+                'source': ['created_at', 'body'],
+                'augur': ['msg_timestamp', 'msg_text']
             }
+        }
 
-            # Commit insertion to the issues table
-            if issue_dict['flag'] == 'need_update':
-                result = self.db.execute(self.issues_table.update().where(
-                    self.issues_table.c.gh_issue_id==issue_dict['id']).values(issue))
-                self.logger.info("Updated tuple in the issues table with existing gh_issue_id: {}".format(
-                    issue_dict['id']))
-                self.issue_id_inc = issue_dict['pkey']
-            elif issue_dict['flag'] == 'need_insertion':
-                try:
-                    result = self.db.execute(self.issues_table.insert().values(issue))
-                    self.logger.info("Primary key inserted into the issues table: " + str(result.inserted_primary_key))
-                    self.results_counter += 1
-                    self.issue_id_inc = int(result.inserted_primary_key[0])
-                    self.logger.info("Inserted issue with our issue_id being: {}".format(self.issue_id_inc) + 
-                        " and title of: {} and gh_issue_num of: {}\n".format(issue_dict['title'],issue_dict['number']))
-                except Exception as e:
-                    self.logger.info("When inserting an issue, ran into the following error: {}\n".format(e))
-                    self.logger.info(issue)
-                    continue
+        # list to hold contributors needing insertion or update
+        issue_comments = self.new_paginate_endpoint(
+            comments_url, action_map=comment_action_map, table=self.message_table,
+            where_clause=self.message_table.c.msg_id.in_(
+                [
+                    msg_row[0] for msg_row in self.db.execute(
+                        s.sql.select(
+                            [self.issue_message_ref_table.c.msg_id]
+                        ).where(
+                            self.issue_message_ref_table.c.issue_id.in_(
+                                set(pd.DataFrame(pk_source_issues)['issue_id'])
+                            )
+                        )
+                    ).fetchall()
+                ]
+            )
+        )
 
-            # Check if the assignee key's value is already recorded in the assignees key's value
-            #   Create a collective list of unique assignees
-            collected_assignees = issue_dict['assignees']
-            if issue_dict['assignee'] not in collected_assignees:
-                collected_assignees.append(issue_dict['assignee'])
+        issue_comments['insert'] = self.enrich_cntrb_id(
+            issue_comments['insert'], 'user.login', action_map_additions={
+                'insert': {
+                    'source': ['user.node_id'],
+                    'augur': ['gh_node_id']
+                }
+            }, prefix='user.'
+        )
 
-            # Handles case if there are no assignees
-            if collected_assignees[0] is not None:
-                self.logger.info("Count of assignees to insert for this issue: " + str(len(collected_assignees)) + "\n")
-                for assignee_dict in collected_assignees:
-                    if type(assignee_dict) != dict:
-                        continue
-                    assignee = {
-                        "issue_id": self.issue_id_inc,
-                        "cntrb_id": self.find_id_from_login(assignee_dict['login']),
-                        "tool_source": self.tool_source,
-                        "tool_version": self.tool_version,
-                        "data_source": self.data_source,
-                        "issue_assignee_src_id": assignee_dict['id'],
-                        "issue_assignee_src_node": assignee_dict['node_id']
-                    }
-                    # Commit insertion to the assignee table
-                    result = self.db.execute(self.issue_assignees_table.insert().values(assignee))
-                    self.logger.info("Primary key inserted to the issues_assignees table: " + str(result.inserted_primary_key))
-                    self.results_counter += 1
+        issue_comments_insert = [
+            {
+                'pltfrm_id': self.platform_id,
+                'msg_text': comment['body'],
+                'msg_timestamp': comment['created_at'],
+                'cntrb_id': comment['cntrb_id'],
+                'tool_source': self.tool_source,
+                'tool_version': self.tool_version,
+                'data_source': self.data_source
+            } for comment in issue_comments['insert']
+        ]
 
-                    self.logger.info("Inserted assignee for issue id: " + str(self.issue_id_inc) + 
-                        " with login/cntrb_id: " + assignee_dict['login'] + " " + str(assignee['cntrb_id']) + "\n")
+        self.bulk_insert(self.message_table, insert=issue_comments_insert,
+            unique_columns=comment_action_map['insert']['augur'])
+
+        """ ISSUE MESSAGE REF TABLE """
+
+        c_pk_source_comments = self.enrich_data_primary_keys(
+            issue_comments['insert'], self.message_table,
+            comment_action_map['insert']['source'], comment_action_map['insert']['augur']
+        )
+        both_pk_source_comments = self.enrich_data_primary_keys(
+            c_pk_source_comments, self.issues_table, ['issue_url'], ['issue_url']
+        )
+
+        issue_message_ref_insert = [
+            {
+                'issue_id': comment['issue_id'],
+                'msg_id': comment['msg_id'],
+                'tool_source': self.tool_source,
+                'tool_version': self.tool_version,
+                'data_source': self.data_source,
+                'issue_msg_ref_src_comment_id': comment['id'],
+                'issue_msg_ref_src_node_id': comment['node_id']
+            } for comment in both_pk_source_comments
+        ]
+
+        self.bulk_insert(
+            self.issue_message_ref_table, insert=issue_message_ref_insert,
+            unique_columns=['issue_msg_ref_src_comment_id']
+        )
+
+    def issue_events_model(self, pk_source_issues):
+
+        # Get events ready in case the issue is closed and we need to insert the closer's id
+        events_url = (
+            f"https://api.github.com/repos/{self.owner}/{self.repo}"
+            "/issues/events?per_page=100&page={}"
+        )
+
+        # Get events that we already have stored
+        #   Set pseudo key (something other than PK) to
+        #   check dupicates with
+        event_action_map = {
+            'insert': {
+                'source': ['url'],
+                'augur': ['node_url']
+            }
+        }
+
+        self.logger.info(pk_source_issues[0])
+        self.logger.info(pd.DataFrame(pk_source_issues).columns)
+        self.logger.info(pd.DataFrame(pk_source_issues))
+        #list to hold contributors needing insertion or update
+        issue_events = self.new_paginate_endpoint(
+            events_url, table=self.issue_events_table, action_map=event_action_map,
+            where_clause=self.issue_events_table.c.issue_id.in_(
+                set(pd.DataFrame(pk_source_issues)['issue_id'])
+            )
+        )
+
+        pk_issue_events = self.enrich_data_primary_keys(
+            issue_events['insert'], self.issues_table, ['issue.id'], ['gh_issue_id']
+        )
+
+        if len(pk_issue_events):
+            pk_issue_events = pd.DataFrame(pk_issue_events)[
+                ['id', 'issue_id', 'node_id', 'url', 'actor', 'created_at', 'event', 'commit_id']
+            ].to_dict(orient='records')
+
+        pk_issue_events = self.enrich_cntrb_id(
+            pk_issue_events, 'actor.login', action_map_additions={
+                'insert': {
+                    'source': ['actor.node_id'],
+                    'augur': ['gh_node_id']
+                }
+            }, prefix='actor.'
+        )
+
+        issue_events_insert = [
+            {
+                'issue_event_src_id': event['id'],
+                'issue_id': event['issue_id'],
+                'node_id': event['node_id'],
+                'node_url': event['url'],
+                'cntrb_id': event['cntrb_id'],
+                'created_at': event['created_at'],
+                'action': event['event'],
+                'action_commit_hash': event['commit_id'],
+                'tool_source': self.tool_source,
+                'tool_version': self.tool_version,
+                'data_source': self.data_source
+            } for event in pk_issue_events if event['actor'] is not None
+        ]
+
+        self.bulk_insert(
+            self.issue_events_table, insert=issue_events_insert,
+            unique_columns=event_action_map['insert']['augur']
+        )
+
+        return issue_events['all']
+
+    def issue_nested_data_model(self, pk_source_issues, issue_events_all):
+
+        closed_issue_updates = []
+
+        skip_closed_issue_update = False
+        if len(issue_events_all):
+            events_df = pd.DataFrame(
+                self._get_data_set_columns(
+                    issue_events_all, [
+                        'event', 'issue.number', 'actor.login', 'actor.node_id', 'actor'
+                    ]
+                )
+            )
+            events_df = events_df.loc[events_df.event == 'closed']
+
+            if len(events_df):
+                events_df = pd.DataFrame(
+                    self.enrich_cntrb_id(
+                        events_df.to_dict(orient='records'), 'actor.login', action_map_additions={
+                            'insert': {
+                                'source': ['actor.node_id'],
+                                'augur': ['gh_node_id']
+                            }
+                        }, prefix='actor.'
+                    )
+                )
+                if not len(events_df):  # no cntrb ids were available
+                    skip_closed_issue_update = True
             else:
-                self.logger.info("Issue does not have any assignees\n")
+                skip_closed_issue_update = True
+        else:
+            skip_closed_issue_update = True
 
-            # Insert the issue labels to the issue_labels table
-            for label_dict in issue_dict['labels']:
-                desc = None
-                if 'description' in label_dict:
-                    desc = label_dict['description']
-                label = {
-                    "issue_id": self.issue_id_inc,
-                    "label_text": label_dict["name"],
-                    "label_description": desc,
-                    "label_color": label_dict['color'],
-                    "tool_source": self.tool_source,
-                    "tool_version": self.tool_version,
-                    "data_source": self.data_source,
-                    "label_src_id": label_dict['id'],
-                    "label_src_node_id": label_dict['node_id']
-                }
+        assignees_all = []
+        labels_all = []
 
-                result = self.db.execute(self.issue_labels_table.insert().values(label))
-                self.logger.info("Primary key inserted into the issue_labels table: " + str(result.inserted_primary_key))
-                self.results_counter += 1
+        def is_nan(value):
+            return type(value) == float and math.isnan(value)
 
-                self.logger.info("Inserted issue label with text: " + label_dict['name'] + "\n")
+        for issue in pk_source_issues:
 
+            # Issue Assignees
+            source_assignees = [
+                assignee for assignee in issue['assignees'] if assignee
+                and not is_nan(assignee)
+            ]
+            if (
+                issue['assignee'] not in source_assignees and issue['assignee']
+                and not is_nan(issue['assignee'])
+            ):
+                source_assignees.append(issue['assignee'])
+            assignees_all += source_assignees
 
-            #### Messages/comments and events insertion 
-            comments_url = url + "/comments?per_page=100&page={}"
-
-            # Get contributors that we already have stored
-            #   Set our duplicate and update column map keys (something other than PK) to 
-            #   check dupicates/needed column updates with
-            table = 'message'
-            table_pkey = 'msg_id'
-            update_col_map = None #updates for comments not necessary
-            duplicate_col_map = {'msg_timestamp': 'created_at'}
-
-            #list to hold contributors needing insertion or update
-            issue_comments = self.paginate(comments_url, duplicate_col_map, update_col_map, table, table_pkey, 
-                where_clause="WHERE msg_id IN (SELECT msg_id FROM issue_message_ref WHERE issue_id = {})".format(
-                    self.issue_id_inc))
-                
-            self.logger.info("Number of comments needing insertion: {}\n".format(len(issue_comments)))
-
-            for comment in issue_comments:
-                try:
-                    commenter_cntrb_id = self.find_id_from_login(comment['user']['login'])
-                except:
-                    commenter_cntrb_id = None
-                issue_comment = {
-                    "pltfrm_id": self.platform_id,
-                    "msg_text": comment['body'],
-                    "msg_timestamp": comment['created_at'],
-                    "cntrb_id": commenter_cntrb_id,
-                    "tool_source": self.tool_source,
-                    "tool_version": self.tool_version,
-                    "data_source": self.data_source
-                }
-                try:
-                    result = self.db.execute(self.message_table.insert().values(issue_comment))
-                    self.logger.info("Primary key inserted into the message table: {}".format(result.inserted_primary_key))
-                    self.results_counter += 1
-                    self.msg_id_inc = int(result.inserted_primary_key[0])
-
-                    self.logger.info("Inserted issue comment with id: {}\n".format(self.msg_id_inc))
-                except Exception as e:
-                    self.logger.info("Worker ran into error when inserting a message, likely had invalid characters. error: {}".format(e))
-
-                ### ISSUE MESSAGE REF TABLE ###
-
-                issue_message_ref = {
-                    "issue_id": self.issue_id_inc,
-                    "msg_id": self.msg_id_inc,
-                    "tool_source": self.tool_source,
-                    "tool_version": self.tool_version,
-                    "data_source": self.data_source,
-                    "issue_msg_ref_src_comment_id": comment['id'],
-                    "issue_msg_ref_src_node_id": comment['node_id']
-                }
-
-                result = self.db.execute(self.issue_message_ref_table.insert().values(issue_message_ref))
-                self.logger.info("Primary key inserted into the issue_message_ref table: {}".format(result.inserted_primary_key))
-                self.results_counter += 1                
-        
-            # Base of the url for event endpoints
-            url = ("https://api.github.com/repos/" + owner + "/" + name + "/issues/" + str(issue_dict['number']))
-
-            # Get events ready in case the issue is closed and we need to insert the closer's id
-            events_url = url + "/events?per_page=100&page={}"
-            issue_events = []
-            
-            # Get events that we already have stored
-            #   Set pseudo key (something other than PK) to 
-            #   check dupicates with
-            pseudo_key_gh = 'url'
-            pseudo_key_augur = 'node_url'
-            table = 'issue_events'
-            event_table_values = self.get_table_values([pseudo_key_augur], [table], "WHERE issue_id = {}".format(self.issue_id_inc))
-            
-            # Paginate backwards through all the events but get first page in order
-            #   to determine if there are multiple pages and if the 1st page covers all
-            i = 1
-            multiple_pages = False
-
-            while True:
-                self.logger.info("Hitting endpoint: " + events_url.format(i) + " ...\n")
-                r = requests.get(url=events_url.format(i), headers=self.headers)
-                self.update_gh_rate_limit(r)
-
-                # Find last page so we can decrement from there
-                if 'last' in r.links and not multiple_pages and not self.finishing_task:
-                    param = r.links['last']['url'][-6:]
-                    i = int(param.split('=')[1]) + 1
-                    self.logger.info("Multiple pages of request, last page is " + str(i - 1) + "\n")
-                    multiple_pages = True
-                elif not multiple_pages and not self.finishing_task:
-                    self.logger.info("Only 1 page of request\n")
-                elif self.finishing_task:
-                    self.logger.info("Finishing a previous task, paginating forwards ... "
-                        "excess rate limit requests will be made\n")
-
-                j = r.json()
-
-                # Checking contents of requests with what we already have in the db
-                new_events = self.check_duplicates(j, event_table_values, pseudo_key_gh)
-                if len(new_events) == 0 and multiple_pages and 'last' in r.links:
-                    if i - 1 != int(r.links['last']['url'][-6:].split('=')[1]):
-                        self.logger.info("No more pages with unknown events, breaking from pagination.\n")
-                        break
-                elif len(new_events) != 0:
-                    to_add = [obj for obj in new_events if obj not in issue_events]
-                    issue_events += to_add
-
-                i = i + 1 if self.finishing_task else i - 1
-
-                # Since we already wouldve checked the first page... break
-                if (i == 1 and multiple_pages and not self.finishing_task) or i < 1 or len(j) == 0:
-                    self.logger.info("No more pages to check, breaking from pagination.\n")
-                    break
-
-            self.logger.info("Number of events needing insertion: " + str(len(issue_events)) + "\n")
+            # Issue Labels
+            labels_all += issue['labels']
 
             # If the issue is closed, then we search for the closing event and store the user's id
-            cntrb_id = None
-            if 'closed_at' in issue_dict:
-                for event in issue_events:
-                    if str(event['event']) != "closed":
-                        self.logger.info("not closed, continuing")
-                        continue
-                    if not event['actor']:
-                        continue
-                    cntrb_id = self.find_id_from_login(event['actor']['login'])
-                    if cntrb_id is not None:
-                        break
-                        
-                    # Need to hit this single contributor endpoint to get extra created at data...
-                    cntrb_url = ("https://api.github.com/users/" + event['actor']['login'])
-                    self.logger.info("Hitting endpoint: " + cntrb_url + " ...\n")
-                    r = requests.get(url=cntrb_url, headers=self.headers)
-                    self.update_gh_rate_limit(r)
-                    contributor = r.json()
+            if 'closed_at' in issue and not skip_closed_issue_update:
 
-                    company = None
-                    location = None
-                    email = None
-                    if 'company' in contributor:
-                        company = contributor['company']
-                    if 'location' in contributor:
-                        location = contributor['location']
-                    if 'email' in contributor:
-                        email = contributor['email']
-                        canonical_email = contributor['email']
-
-                    cntrb = {
-                        "cntrb_login": contributor['login'],
-                        "cntrb_created_at": contributor['created_at'],
-                        "cntrb_email": email,
-                        "cntrb_company": company,
-                        "cntrb_location": location,
-                        # "cntrb_type": , dont have a use for this as of now ... let it default to null
-                        "cntrb_canonical": canonical_email,
-                        "gh_user_id": contributor['id'],
-                        "gh_login": contributor['login'],
-                        "gh_url": contributor['url'],
-                        "gh_html_url": contributor['html_url'],
-                        "gh_node_id": contributor['node_id'],
-                        "gh_avatar_url": contributor['avatar_url'],
-                        "gh_gravatar_id": contributor['gravatar_id'],
-                        "gh_followers_url": contributor['followers_url'],
-                        "gh_following_url": contributor['following_url'],
-                        "gh_gists_url": contributor['gists_url'],
-                        "gh_starred_url": contributor['starred_url'],
-                        "gh_subscriptions_url": contributor['subscriptions_url'],
-                        "gh_organizations_url": contributor['organizations_url'],
-                        "gh_repos_url": contributor['repos_url'],
-                        "gh_events_url": contributor['events_url'],
-                        "gh_received_events_url": contributor['received_events_url'],
-                        "gh_type": contributor['type'],
-                        "gh_site_admin": contributor['site_admin'],
-                        "tool_source": self.tool_source,
-                        "tool_version": self.tool_version,
-                        "data_source": self.data_source
-                    }
-
-                    # Commit insertion to table
-                    result = self.db.execute(self.contributors_table.insert().values(cntrb))
-                    self.logger.info("Primary key inserted into the contributors table: {}".format(
-                        result.inserted_primary_key))
-                    self.results_counter += 1
-    
-                    self.logger.info("Inserted contributor: " + contributor['login'] + "\n")
-
-            for event in issue_events:
-                if event['actor'] is not None:
-                    event['cntrb_id'] = self.find_id_from_login(event['actor']['login'])
-                    if event['cntrb_id'] is None:
-                        self.logger.info("SOMETHING WRONG WITH FINDING ID FROM LOGIN")
-                        continue
-                        # event['cntrb_id'] = None
-                else:
+                try:
+                    closed_event = events_df.loc[
+                        events_df['issue.number'] == issue['number']
+                    ].iloc[-1]
+                except IndexError:
+                    self.logger.info(
+                        "Warning! We do not have the closing event of this issue stored. "
+                        f"Pk: {issue['issue_id']}"
+                    )
                     continue
-                    # event['cntrb_id'] = None
 
-                issue_event = {
-                    "issue_event_src_id": event['id'],
-                    "issue_id": self.issue_id_inc,
-                    "node_id": event['node_id'],
-                    "node_url": event['url'],
-                    "cntrb_id": event['cntrb_id'],
-                    "created_at": event['created_at'],
-                    "action": event["event"],
-                    "action_commit_hash": event["commit_id"],
-                    "tool_source": self.tool_source,
-                    "tool_version": self.tool_version,
-                    "data_source": self.data_source
+                closed_issue_updates.append({
+                    'b_issue_id': issue['issue_id'],
+                    'cntrb_id': closed_event['cntrb_id']
+                })
+
+        # Closed issues, update with closer id
+        self.bulk_insert(
+            self.issues_table, update=closed_issue_updates, unique_columns=['issue_id'],
+            update_columns=['cntrb_id']
+        )
+
+        # Issue assignees insertion
+        assignee_action_map = {
+            'insert': {
+                'source': ['id'],
+                'augur': ['issue_assignee_src_id']
+            }
+        }
+
+        source_assignees_insert, _ = self.new_organize_needed_data(
+            assignees_all, augur_table=self.issue_assignees_table,
+            action_map=assignee_action_map
+        )
+
+        source_assignees_insert = self.enrich_cntrb_id(
+            source_assignees_insert, 'login', action_map_additions={
+                'insert': {
+                    'source': ['node_id'],
+                    'augur': ['gh_node_id']
                 }
+            }
+        )
 
-                result = self.db.execute(self.issue_events_table.insert().values(issue_event))
-                self.logger.info("Primary key inserted into the issue_events table: " + str(result.inserted_primary_key))
-                self.results_counter += 1
+        assignees_insert = [
+            {
+                'issue_id': issue['issue_id'],
+                'cntrb_id': assignee['cntrb_id'],
+                'tool_source': self.tool_source,
+                'tool_version': self.tool_version,
+                'data_source': self.data_source,
+                'issue_assignee_src_id': assignee['id'],
+                'issue_assignee_src_node': assignee['node_id']
+            } for assignee in source_assignees_insert
+        ]
+        self.bulk_insert(
+            self.issue_assignees_table, insert=assignees_insert,
+            unique_columns=assignee_action_map['insert']['augur']
+        )
 
-                self.logger.info("Inserted issue event: " + event['event'] + " for issue id: {}\n".format(self.issue_id_inc))
-
-            if cntrb_id is not None:
-                update_closing_cntrb = {
-                    "cntrb_id": cntrb_id
-                }
-                result = self.db.execute(self.issues_table.update().where(
-                    self.issues_table.c.gh_issue_id==issue_dict['id']).values(issue))
-                self.logger.info("Updated tuple in the issues table with contributor that closed it, issue_id: {}\n".format(
-                    issue_dict['id']))
-            
-            self.issue_id_inc += 1
-
-        #Register this task as completed
-        self.register_task_completion(entry_info, repo_id, "issues")
-
+        # Issue labels insertion
+        label_action_map = {
+            'insert': {
+                'source': ['id'],
+                'augur': ['label_src_id']
+            }
+        }
+        source_labels_insert, _ = self.new_organize_needed_data(
+            labels_all, augur_table=self.issue_labels_table,
+            action_map=label_action_map
+        )
+        labels_insert = [
+            {
+                'issue_id': issue['issue_id'],
+                'label_text': label['name'],
+                'label_description': label['description'] if 'description' in label else None,
+                'label_color': label['color'],
+                'tool_source': self.tool_source,
+                'tool_version': self.tool_version,
+                'data_source': self.data_source,
+                'label_src_id': label['id'],
+                'label_src_node_id': label['node_id']
+            } for label in source_labels_insert
+        ]
+        self.bulk_insert(
+            self.issue_labels_table, insert=labels_insert,
+            unique_columns=label_action_map['insert']['augur']
+        )

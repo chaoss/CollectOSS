@@ -14,7 +14,6 @@ Each command is invoked by first specifying the category, then the command name,
    :maxdepth: 1
 
    db
-   run
-   util
+   backend
    configure
    logging

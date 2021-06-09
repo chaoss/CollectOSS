@@ -3,7 +3,7 @@ basePath: /api/unstable/
 externalDocs:
   description: CHAOSS Metric Definitions
   url: https://chaoss.community/metrics/
-host: augur.osshealth.io
+host: augur.chaoss.io
 info:
   title: Augur REST API
   version: 0.12.0
@@ -4254,7 +4254,7 @@ paths:
                   type: boolean
             type: object
       tags:
-      - experimental
+      - visualizations
   /contributor_reports/new_contributors_stacked_bar/:
     get:
       description: Get stacked bar chart of new contributor counts, which shows the action of the contributor.
@@ -4288,7 +4288,7 @@ paths:
                   type: boolean
             type: object
       tags:
-      - experimental
+      - visualizations
   /contributor_reports/returning_contributors_pie_chart/:
     get:
       description: Get pie chart of the returning contributor counts.
@@ -4319,7 +4319,7 @@ paths:
                   type: boolean
             type: object
       tags:
-      - experimental
+      - visualizations
   /contributor_reports/returning_contributors_stacked_bar/:
     get:
       description: Get returning contributors stacked bar chart.
@@ -4353,7 +4353,7 @@ paths:
                   type: boolean
             type: object
       tags:
-        - experimental
+        - visualizations
   /pull_request_reports/average_commits_per_PR/:
     get:
       description: Get vertical bar chart of average commits per pull request.
@@ -4378,7 +4378,7 @@ paths:
                   type: boolean
             type: object
       tags:
-        - experimental
+        - visualizations
   /pull_request_reports/average_comments_per_PR/:
     get:
       description: Get horizontal stacked bar chart of the average comments for closed pull requests.
@@ -4403,7 +4403,7 @@ paths:
                   type: boolean
             type: object
       tags:
-        - experimental
+        - visualizations
   /pull_request_reports/PR_counts_by_merged_status/:
     get:
       description: Get vertical stacked bar chart of the number of pull requests by merged status.
@@ -4428,7 +4428,7 @@ paths:
                   type: boolean
             type: object
       tags:
-        - experimental
+        - visualizations
   /pull_request_reports/mean_response_times_for_PR/:
     get:
       description: Get grouped horizontal bar chart of average response times for closed pull requests.
@@ -4453,7 +4453,7 @@ paths:
                   type: boolean
             type: object
       tags:
-        - experimental
+        - visualizations
   /pull_request_reports/mean_days_between_PR_comments/:
     get:
       description: Get line graph of the average days between comments for closed pull requests.
@@ -4478,7 +4478,7 @@ paths:
                   type: boolean
             type: object
       tags:
-        - experimental
+        - visualizations
   /pull_request_reports/PR_time_to_first_response/:
     get:
       description: Get scatter plot of the days to first response for closed pull requests based on merged status.
@@ -4506,7 +4506,7 @@ paths:
                   type: boolean
             type: object
       tags:
-        - experimental
+        - visualizations
   /pull_request_reports/average_PR_events_for_closed_PRs/:
     get:
       description: Get heat map of average pull request event counts for closed pull requests.
@@ -4531,7 +4531,7 @@ paths:
                   type: boolean
             type: object
       tags:
-        - experimental
+        - visualizations
   /pull_request_reports/Average_PR_duration/:
     get:
       description: Get heat map of the average duration of pull requests per month.
@@ -4559,4 +4559,4 @@ paths:
                   type: boolean
             type: object
       tags:
-        - experimental
+        - visualizations

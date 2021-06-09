@@ -22,13 +22,15 @@ setup(
     description="Augur Worker that processes and inserts information related to contributors",
     packages=find_packages(exclude=('tests',)),
     install_requires=[
-        'flask', 
-        'numpy', 
-        'requests', 
-        'psycopg2-binary', 
-        'click', 
-        'scipy',
-        'sklearn'
+        'Flask==1.1.4',
+        'Flask-Cors==3.0.10',
+        'Flask-Login==0.5.0',
+        'Flask-WTF==0.14.3',
+        'requests==2.22.0',
+        'psycopg2-binary==2.8.6',
+        'click==7.1.2', 
+        'scipy==1.4.1',
+        'sklearn==0.0'
     ],
     entry_points={
         'console_scripts': [

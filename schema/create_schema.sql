@@ -35,3 +35,21 @@
 \i schema/generate/30-schema_update_32.sql
 \i schema/generate/31-schema_update_33.sql
 \i schema/generate/32-schema_update_34.sql
+\i schema/generate/33-schema_update_35.sql
+\i schema/generate/34-schema_update_36.sql
+\i schema/generate/35-schema_update_37.sql
+\i schema/generate/36-schema_update_38.sql
+\i schema/generate/37-schema_update_39.sql
+\i schema/generate/38-schema_update_40.sql
+\i schema/generate/39-schema_update_41.sql
+\i schema/generate/40-schema_update_42.sql
+\i schema/generate/41-schema_update_43.sql
+\i schema/generate/42-schema_update_44.sql
+\i schema/generate/43-schema_update_45.sql
+\i schema/generate/44-schema_update_46.sql
+\i schema/generate/45-schema_update_47.sql
+\i schema/generate/46-schema_update_48.sql
+\i schema/generate/47-schema_update_49.sql
+\i schema/generate/48-schema_update_50.sql
+\i schema/generate/49-schema_update_51.sql
+

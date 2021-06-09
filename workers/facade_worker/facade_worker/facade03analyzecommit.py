@@ -96,6 +96,10 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 		#There is a committer and an author on each commit, but only one record in the contributor table (ideally)
 		# For each email address. So, for each email address, we need to check if it exists in the contributor
 		# Table. 
+
+		## Refactor Facade for Contributors here: Note that we need to map to some kind of alias as defined by Gabe. 
+		## Sean Goggins, February 5, 2021
+		## %TODO
 		def contributor_exists(some_email):
 
 			#SQL String to insert values into the contributors table

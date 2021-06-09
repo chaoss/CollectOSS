@@ -47,7 +47,7 @@ Detailed Steps
         } 
     }
 
-12. Then do a ``make rebuild``.
+12. Then do a ``make rebuild-dev``.
 
 Next up: configure ``nginx``!
 

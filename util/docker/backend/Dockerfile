@@ -1,11 +1,11 @@
 #SPDX-License-Identifier: MIT
-FROM python:3.6-slim-buster as build-stage
+FROM python:3.8.9-slim-buster as build-stage
 
 COPY ./util/docker/backend/install_packages.sh .
 RUN ./install_packages.sh
 
-LABEL maintainer="c@carterlandis.com"
-LABEL version="0.1.0"
+LABEL maintainer="outdoors@acm.org"
+LABEL version="0.2.0"
 
 WORKDIR /augur
 
@@ -17,7 +17,7 @@ COPY ./scripts/ scripts/
 COPY ./workers/ workers/
 
 RUN pip install .
-RUN ./scripts/install/workers.sh prod
+RUN ./scripts/install/workers.sh 
 
 COPY ./util/docker/backend/backend.docker.config.json .
 RUN augur config init --rc-config-file backend.docker.config.json; mkdir repos/;

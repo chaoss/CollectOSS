@@ -1,9 +1,18 @@
 Collecting data
 ===============
 
-Now that you've installed Augur's application server, it's time to configure your data collection workers.
+Now that you've installed Augur's application server, it's time to configure your data collection workers. If you just want to run Augur using the single repository in the default database, and default worker settings all you need to do is this: 
 
-There are 2 pieces to data collection with Augur: the housekeeper, and the data collection workers. The housekeeper creates long-running "jobs" that specify what kind of data to collect for what set of repositories. The data collection workers can then accept these jobs, after which it will use the information provided in the job to find the repositories in question and collect the requested data.
+.. code-block:: bash
+
+   # To Start Augur: 
+   $ nohup augur backend start >logs/run.log 2>logs/run.err &
+
+   # To Stop Augur: 
+   $ augur backend stop
+   $ augur backend kill
+
+Now, here's a ton of brain splitting detail about workers, and their configuration. There are 2 pieces to data collection with Augur: the housekeeper, and the data collection workers. The housekeeper creates long-running "jobs" that specify what kind of data to collect for what set of repositories. The data collection workers can then accept these jobs, after which it will use the information provided in the job to find the repositories in question and collect the requested data.
 
 Since the default housekeeper setup will work for most use cases, we'll first cover how to configure the workers and then briefly touch on the housekeeper configuration options, after which we'll cover how to add repos and repo groups to the database.
 
@@ -49,7 +58,7 @@ Next up are the configuration options specific to each worker (but some workers 
 ``insight_worker``
 ::::::::::::::::::
 
-We recommend leaving the defaults in place for the insight worker unless you interested in other metrics, or anomalies for a different time period.
+We recommend leaving the defaults in place for the insight worker unless you are interested in other metrics, or anomalies for a different time period.
 
 - ``training_days``, which specifies the date range that the ``insight_worker`` should use as its baseline for the statistical comparison. Defaults to ``365``, meaning that the worker will identify metrics that have had anomalies compared to their values over the course of the past year, starting at the current date.
 
@@ -118,7 +127,7 @@ After you've loaded your repos, you're ready for your first collection run. We r
 
 You can now run Augur and start the data collection by issuing the ``augur backend start`` command in the root ``augur`` directory. All your logs (including worker logs and error files) will be saved to a ``logs/`` subdirectory in that same folder, but this can be customized - more on that and other logging utilities `in the development guide <../development-guide/logging.html>`_.
 
-Once you've finished the initial data collection, we suggest then running the ``value_worker`` (if you have it installed) and the ``insight_worker``. This is because the ``value_worker`` depends the source files of the repositories cloned by the ``facade_worker``, and the ``insight_worker`` uses the data from all the other workers to identify anomalies in the data by by performing statistical analysis on the data returned from Augur's metrics API.
+Once you've finished the initial data collection, we suggest then running the ``value_worker`` (if you have it installed) and the ``insight_worker``. This is because the ``value_worker`` depends on the source files of the repositories cloned by the ``facade_worker``, and the ``insight_worker`` uses the data from all the other workers to identify anomalies in the data by by performing statistical analysis on the data returned from Augur's metrics API.
 
 You're now ready to start exploring the data Augur can gather and metrics we can generate. If you're interested in contributing to Augur's codebase, you can check out the `development guide <../development-guide/toc.html>`_. For information about Augur's frontend, keep reading!
 

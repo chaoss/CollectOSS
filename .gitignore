@@ -154,3 +154,16 @@ workers/spdx_worker/dosocs2.conf
 workers/spdx_worker/augur-spdx/
 workers/spdx_worker/ex-raw.txt
 workers/spdx_worker/ex.json
+
+# Model files for machine learning
+workers/message_instights_worker/message_models/*.h5
+.h5
+*.h5
+workers/clustering_worker/kmeans_repo_messages
+workers/clustering_worker/lda_model
+workers/clustering_worker/vocabulary
+workers/clustering_worker/vocabulary_count
+
+
+# gzipped files
+*.gz

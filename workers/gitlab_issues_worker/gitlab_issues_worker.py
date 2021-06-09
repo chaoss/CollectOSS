@@ -5,11 +5,12 @@ from multiprocessing import Process, Queue
 import pandas as pd
 import sqlalchemy as s
 from workers.worker_base import Worker
+from urllib.parse import urlparse, quote
 
 
 class GitLabIssuesWorker(Worker):
     def __init__(self, config={}):
-    
+
         worker_type = "gitlab_issues_worker"
         given = [['git_url']]
         models = ['gitlab_issues']
@@ -30,7 +31,8 @@ class GitLabIssuesWorker(Worker):
         self.tool_source = 'Gitlab API Worker'
         self.tool_version = '0.0.0'
         self.data_source = 'GitLab API'
-        self.platform_id = 25150
+        self.platform_id = 25151
+        self.logger.info("Completed GitLab Worker Initialization.\n")
 
 
     def gitlab_issues_model(self, task, repo_id):
@@ -42,19 +44,25 @@ class GitLabIssuesWorker(Worker):
         self.msg_id_inc = self.get_max_id('message', 'msg_id')
         self.logger.info('Beginning the process of GitLab Issue Collection...'.format(str(os.getpid())))
         gitlab_base = 'https://gitlab.com/api/v4'
+        self.query_gitlab_contributors(task, repo_id)
+
         # adding the labels attribute in the query params to avoid additional API calls
-        intermediate_url = '{}/projects/{}/issues?per_page=100&state=opened&with_labels_details=True&'.format(gitlab_base, repo_id)
+        git_url = task['given']['git_url']
+        owner, repo = self.get_owner_repo(git_url)
+        owner, repo = 'inkstack', 'inkstack'
+        url_encoded_format_project_address = quote(owner + '/' + repo, safe='')
+        intermediate_url = '{}/projects/{}/issues?per_page=100&state=opened&with_labels_details=True&'.format(gitlab_base, url_encoded_format_project_address)
         gitlab_issues_url = intermediate_url + "page={}"
-        
+
         table = 'issues'
         table_pkey = 'issue_id'
         update_col_map = {'issue_state': 'state'}
         duplicate_col_map = {'gh_issue_id': 'id'}
 
         #list to hold issues needing insertion
-        issues = self.paginate(gitlab_issues_url, duplicate_col_map, update_col_map, table, table_pkey, 
+        issues = self.paginate(gitlab_issues_url, duplicate_col_map, update_col_map, table, table_pkey,
             'WHERE repo_id = {}'.format(repo_id), platform="gitlab")
-        
+
         self.logger.info(issues)
         self.logger.info("Count of issues needing update or insertion: " + str(len(issues)) + "\n")
         for issue_dict in issues:
@@ -69,7 +77,7 @@ class GitLabIssuesWorker(Worker):
 
             # Insert data into models
             issue = {
-                    "repo_id": issue_dict['project_id'],
+                    "repo_id": repo_id,
                     "reporter_id": self.find_id_from_login(issue_dict['author']['username'], platform='gitlab'),
                     "pull_request": pr_id,
                     "pull_request_id": pr_id,
@@ -109,13 +117,13 @@ class GitLabIssuesWorker(Worker):
                     self.logger.info("Primary key inserted into the issues table: " + str(result.inserted_primary_key))
                     self.results_counter += 1
                     self.issue_id_inc = int(result.inserted_primary_key[0])
-                    self.logger.info("Inserted issue with our issue_id being: {}".format(self.issue_id_inc) + 
+                    self.logger.info("Inserted issue with our issue_id being: {}".format(self.issue_id_inc) +
                         " and title of: {} and gh_issue_num of: {}\n".format(issue_dict['title'], issue_dict['iid']))
                 except Exception as e:
                     self.logger.info("When inserting an issue, ran into the following error: {}\n".format(e))
                     self.logger.info(issue)
                 # continue
-        
+
         # issue_assigness
             self.logger.info("assignees", issue_dict['assignees'])
             collected_assignees = issue_dict['assignees']
@@ -141,7 +149,7 @@ class GitLabIssuesWorker(Worker):
                     self.logger.info("Primary key inserted to the issues_assignees table: " + str(result.inserted_primary_key))
                     self.results_counter += 1
 
-                    self.logger.info("Inserted assignee for issue id: " + str(self.issue_id_inc) + 
+                    self.logger.info("Inserted assignee for issue id: " + str(self.issue_id_inc) +
                         " with login/cntrb_id: " + assignee_dict['username'] + " " + str(assignee['cntrb_id']) + "\n")
             else:
                 self.logger.info("Issue does not have any assignees\n")
@@ -173,17 +181,17 @@ class GitLabIssuesWorker(Worker):
             notes_endpoint = gitlab_base + "/projects/{}/issues/{}/notes?per_page=100".format(10525408, issue_dict['iid'])
             notes_paginated_url = notes_endpoint + "&page={}"
             # Get contributors that we already have stored
-            #   Set our duplicate and update column map keys (something other than PK) to 
+            #   Set our duplicate and update column map keys (something other than PK) to
             #   check dupicates/needed column updates with
             table = 'message'
             table_pkey = 'msg_id'
             update_col_map = None #updates for comments not necessary
             duplicate_col_map = {'msg_id': 'id'}
 
-            issue_comments = self.paginate(notes_paginated_url, duplicate_col_map, update_col_map, table, table_pkey, 
+            issue_comments = self.paginate(notes_paginated_url, duplicate_col_map, update_col_map, table, table_pkey,
                 where_clause="WHERE msg_id IN (SELECT msg_id FROM issue_message_ref WHERE issue_id = {})".format(
                     self.issue_id_inc), platform='gitlab')
-            
+
             self.logger.info("Number of comments needing insertion: {}\n".format(len(issue_comments)))
 
             for comment in issue_comments:
@@ -225,7 +233,7 @@ class GitLabIssuesWorker(Worker):
                 result = self.db.execute(self.issue_message_ref_table.insert().values(issue_message_ref))
                 self.logger.info("Primary key inserted into the issue_message_ref table: {}".format(result.inserted_primary_key))
                 self.results_counter += 1
-            
+
             # issue events
 
             issue_events_url = gitlab_base + '/projects/{}/events?target_type=issue&per_page=100'.format(10525408)
@@ -236,7 +244,7 @@ class GitLabIssuesWorker(Worker):
             update_col_map = None # updates for issue events not applicable here
             duplicate_col_map = {'event_id': 'target_id'}
 
-            issue_events = self.paginate(issue_events_url, duplicate_col_map, update_col_map, table, table_pkey, 
+            issue_events = self.paginate(issue_events_url, duplicate_col_map, update_col_map, table, table_pkey,
                                            where_clause="", platform='gitlab')
 
             for event in issue_events:
@@ -260,6 +268,6 @@ class GitLabIssuesWorker(Worker):
 
                 self.logger.info("Inserted issue event: " + event['action_name'] + " for issue id: {}\n".format(self.issue_id_inc))
 
-
+        self.logger.info("Worker Finished Collection on task.\n")
 
         self.register_task_completion(task, repo_id, 'gitlab_issues')

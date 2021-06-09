@@ -413,10 +413,10 @@ def create_routes(server):
                     #filter df so it only includes the first contribution
                     driver_df = driver_df.loc[driver_df['rank'] == 1]
                     
-                    caption = """This graph shows drive by contributors in the specified time period. Drive by contributors are contributors who 
+                    caption = """This graph shows fly by contributors in the specified time period. Fly by contributors are contributors who 
                     make less than the required {} contributions in {} days. New contributors are individuals who make their first contribution 
-                    in the specified time period. Of course, then, “All drive-by’s are by definition first time contributors”. However, not all 
-                    first time contributors are drive-by’s."""
+                    in the specified time period. Of course, then, “All fly-by’s are by definition first time contributors”. However, not all 
+                    first time contributors are fly-by’s."""
                 
                 
                 elif contributor_type == 'All':
@@ -651,10 +651,10 @@ def create_routes(server):
                     #filter df so it only includes the first contribution
                     driver_df = driver_df.loc[driver_df['rank'] == 1]
                     
-                    caption = """This graph shows drive by contributors in the specified time period. Drive by contributors are contributors who 
+                    caption = """This graph shows fly by contributors in the specified time period. Fly by contributors are contributors who 
                     make less than the required {} contributions in {} days. New contributors are individuals who make their first contribution 
-                    in the specified time period. Of course, then, “All drive-by’s are by definition first time contributors”. However, not all 
-                    first time contributors are drive-by’s."""
+                    in the specified time period. Of course, then, “All fly-by’s are by definition first time contributors”. However, not all 
+                    first time contributors are fly-by’s."""
                 
                 
                 elif contributor_type == 'All':
@@ -962,7 +962,7 @@ def create_routes(server):
         #creates plot for caption
         p = figure(width = 850, height=200, margin = (0, 0, 0, 0))
         
-        caption= """This pie chart shows the percentage of new contributors who were drive-by or repeat contributors. Drive by contributors are contributors who make less than the required {0} contributions in {1} days. New contributors are 
+        caption= """This pie chart shows the percentage of new contributors who were fly-by or repeat contributors. Fly by contributors are contributors who make less than the required {0} contributions in {1} days. New contributors are 
                     individuals who make their first contribution in the specified time period. Repeat contributors are contributors who have made {0} or more contributions in {1} days and their first 
                         contribution is in the specified time period."""
 
@@ -1121,11 +1121,11 @@ def create_routes(server):
             label_text_font_size = "13pt"
 
         data_source = {'Dates' : data['dates'],
-                'Drive By'     : data['drive_by_counts'],
+                'Fly By'     : data['drive_by_counts'],
                 'Repeat'       : data['repeat_counts'],
                 'All'          : data['total_counts']}
 
-        groups = ["Drive By", "Repeat"]
+        groups = ["Fly By", "Repeat"]
 
         colors = ['#56B4E9', '#E69F00']
 
@@ -1140,7 +1140,7 @@ def create_routes(server):
         else:
             plot_width = 780
        
-        p = figure(x_range=data['dates'], plot_height=500, plot_width = plot_width, title="{}: Drive By and Repeat Contributor Counts per {}".format(repo_dict[repo_id], group_by_format_string), 
+        p = figure(x_range=data['dates'], plot_height=500, plot_width = plot_width, title="{}: Fly By and Repeat Contributor Counts per {}".format(repo_dict[repo_id], group_by_format_string), 
                    toolbar_location=None, y_range=(0, max(total_counts)* 1.15), margin = (0, 0, 0, 0))
         
         vbar = p.vbar_stack(groups, x='Dates', width=0.8, color=colors, source=source)
@@ -1150,7 +1150,7 @@ def create_routes(server):
                           text_color="black", source=source, text_align='center'))
 
         #add drive by count labels
-        p.add_layout(LabelSet(x='Dates', y='Drive By', text='Drive By', y_offset=-22, text_font_size=label_text_font_size, 
+        p.add_layout(LabelSet(x='Dates', y='Fly By', text='Fly By', y_offset=-22, text_font_size=label_text_font_size, 
                   text_color="black", source=source, text_align='center'))
 
         #add repeat count labels
@@ -1187,8 +1187,8 @@ def create_routes(server):
         #add plot to hold caption
         p = figure(width = plot_width, height=200, margin = (0, 0, 0, 0))
 
-        caption = """This graph shows the number of new contributors in the specified time period, and indicates how many were drive-by and repeat 
-        contributors. Drive by contributors are contributors who make less than the required {0} contributions in {1} days. New contributors are 
+        caption = """This graph shows the number of new contributors in the specified time period, and indicates how many were fly-by and repeat 
+        contributors. Fly by contributors are contributors who make less than the required {0} contributions in {1} days. New contributors are 
         individuals who make their first contribution in the specified time period. Repeat contributors are contributors who have made {0} or more 
         contributions in {1} days and their first contribution is in the specified time period."""
 
