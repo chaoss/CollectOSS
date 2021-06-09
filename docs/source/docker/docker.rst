@@ -5,7 +5,7 @@ Augur provides a separate Docker image for each layer of our application (databa
 
 .. note::
 
-    This page is primarily targeted at developers. If you're solely interested in collecting data, we recommend using `Docker Compose <docker-compose.html>`_.
+    This page is primarily targeted at developers. If you're solely interested in collecting data, we recommend using our `Docker Setup Script <docker-compose.html>`_.
 
 Building the images
 --------------------
@@ -31,7 +31,10 @@ To start a container, use the command below. ``<container_name>`` can be whateve
     If you are running the ``backend`` service, then ``<docker_port>`` needs to be ``5000``; for ``frontend`` and ``database`` the ports are ``8080`` and ``5432``. You can set the ``<host_port>`` to any **available** port on your machine for any of the services.
 
 .. note::
-    If you are running the backend service, you'll also need to add ``--env-file docker_env.txt`` to your command in order to make the container aware of your configuration file.
+    If you are running the backend service, you'll also need to add ``--env-file docker_env.txt`` to your command in order to make the container aware of your configuration file. You'll also need to add ``--add-host=database:<ip_of_database>`` to your command in order to make the container connect to your database.
+
+.. warning::
+    If you are using a local database, you need to set up an alias for your localhost. In a terminal, type ``sudo ifconfig lo:0 10.254.254.254`` if you are using linux or ``sudo ifconfig lo0 alias 10.254.254.254`` if you are using macOS. You will use this alias, ``10.254.254.254`` to connect to the local database. Make sure your database is properly configured by using this command ``psql -d "postgresql://augur:<your_password>@10.254.254.254/augur" -c "select now()"``. This command should have the same output if you replace the ip with ``localhost``.
 
 .. code-block:: bash
 

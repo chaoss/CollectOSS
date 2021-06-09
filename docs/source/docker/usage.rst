@@ -8,12 +8,12 @@ Using the repo loading UI
 
 Augur offers a special graphical interface for loading repository groups when using the Docker containers. This component is called ``augurface``, and is available anytime you are using the ``backend`` and ``frontend`` services together.
 
-To use it, first start the two services (we recommend using `Docker Compose <docker-compose.html>`_ for this):
+To use it, first start the two services (we recommend using `Docker Compose Script <docker-compose.html>`_ for this):
 
 .. code-block:: bash
 
-    # this example uses the database image, but will work with an external one as well
-    $ docker-compose -f docker-compose.yml -f database-compose.yml up
+    # this example uses the docker-setup script
+    $ sudo ./docker-setup.sh
 
 Then, navigate to ``http://localhost:8080/augurface/`` in your browser - **note the trailing slash!** Once you're on this page, you'll need to enter in your Augur API key in the box on the top right. On a default Docker installation, you can use ``docker_key``, but we recommend changing this as soon as possible if you are planning to use the instance long-term. Commands for working with the API keys can be found `here <../getting-started/command-line-interface/db.html>`_.
 
@@ -35,6 +35,19 @@ If you need to access a running container (perhaps to check the worker logs) or 
 
     $ docker exec -it <service_name> /bin/bash
 
+You can also step into a running container at every step of the build process and see the status of the container.
+
+First, build the image to output build stages.
+
+.. code-block:: bash
+    $ cd augur/
+    $ docker build -t <service_name> -f util/docker/backend/Dockerfile .
+
+Then, run any stage by using the hash that the relevant stage prints out during the build process. The arguments are the same as a normal ``docker run``
+
+.. code-block:: bash
+    $ docker run -i -t -p <relevant_port>:<relevant_port> --add-host=database:<database_if_backend> --env-file <env_file> <build_hash> bash
+
 
 Viewing container logs
 -------------------------
@@ -48,6 +61,8 @@ By default, the only logs shown by the container are the logs of Augur's main da
 
     # to watch the logs in real time (like tail -f)
     $ docker-compose logs -f
+
+If you deployed the augur frontend and backend together using the script, you are automtically prompted to ask to save logs to a file once you stop the containers.
 
 Conclusion
 -----------
