@@ -6,8 +6,11 @@ fi
 
 #automate the small things for setting up docker containers
 #This file sets up the backend and the frontend and assumes the database is not in a container (which isn't recommended regardless)
-
+#This file uses two environment files
+# - One called docker_env.txt which holds the runtime enviroment variables that the container itself uses
+# - One called .env which holds the environment variables that docker-compose.yml uses
 #Always use a clean .env file because it is a subset of docker_env.txt so we can just generate it from that.
+
 if [[ -f ".env" ]]
 then
   rm .env
@@ -18,7 +21,15 @@ touch .env
 #This is differant for MacOS
 #Script uses an alias for localhost that is the below ip
 echo "Setting up network alias..."
-ifconfig lo:0 10.254.254.254
+
+#Check kernel for OS, assumes either linux or macOS
+if [ "$(uname -s)" == "Linux" ]
+then
+  ifconfig lo:0 10.254.254.254
+else
+  ifconfig lo0 alias 10.254.254.254
+fi
+
 ifconfig lo:0
 
 #Ask the user if they want to be prompted or use an existing config file (docker_env.txt)

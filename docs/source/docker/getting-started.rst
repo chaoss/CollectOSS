@@ -59,7 +59,7 @@ If you're doing data collection or just want to try out Augur, you'll want to us
 
 .. note::
 
-  Linux is currently the only supported platform for the script. Docker is slightly differant on macOS. Additionally, the script uses a network alias for local connections which is done differantly for macOS. If you are feeling adventurous and want to try to get the script to work on macOS start by replacing ``ifconfig lo:0 10.254.254.254`` with ``ifconfig lo0 alias 10.254.254.254``
+  Linux is currently the only supported platform for the script. Docker is slightly differant on macOS. Additionally, the script uses a network alias for local connections which is done differantly for macOS. The script will setup the alias for macOS correctly but it is untested for macOS and can be unpredictable.
 
 Docker Setup Script
 -------------------

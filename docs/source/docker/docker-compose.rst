@@ -51,8 +51,6 @@ Docker Compose without a script
 
 This section of the documentation details how to use Augur's Docker Compose configuration to get the full stack up and running as fast as possible without the recommended helper script. 
 
-Running the containers
------------------------
 
 To run Augur **without** the database container:
 
