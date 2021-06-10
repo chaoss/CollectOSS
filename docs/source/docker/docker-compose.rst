@@ -9,6 +9,16 @@ The default ports for each service are\:
 - ``frontend``: ``8080``
 - ``database``: ``5434``
 
+.. note::
+
+    Make sure your database is configured to listen on all addresses in order to work with the containers. The most common error an improperly configured database throws is
+    .. note::
+
+        psql: could not connect to server: Connection refused
+        Is the server running on host 10.254.254.254 and accepting
+        TCP/IP connections on port 5432?
+  
+
 Docker Compose with the script (recommended)
 ============================================
 This section details how to use Augur's docker-setup script in order to get a docker-compose deployment up and running as fast as possible.

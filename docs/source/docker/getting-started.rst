@@ -5,6 +5,10 @@ Credentials
 ------------
 Before you get started with Docker, you'll need to set up a PostgreSQL instance either locally or using a remote host. 
 
+.. note::
+
+  Make sure your database is configured to listen on all addresses in order to work with the containers. These settings can be edited in your ``postgresql.conf``.
+
 If you're interested solely in data collection and do not care if your data is not persisted, we recommend using Docker Compose. This will start up the backend and frontend containers simultaneously, well as an optional database container; however, if you are looking to collect data long term, we **strongly suggest setting up a persistent database instance**; you can find instructions for doing so `here <../getting-started/database.html>`_. Remember to save off the credentials for your newly minted database; you'll need them shortly. 
 
 If you don't care if your data doesn't get persisted or are doing local development, you can use the database containers we provide. 
