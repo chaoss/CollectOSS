@@ -41,7 +41,7 @@ setup(
         'h5py~=3.1.0',
         'scikit-image==0.18.1',
         'joblib==1.0.1',
-        'xgboost==0.90',
+        'xgboost',
         'bs4==0.0.1',
         'xlrd==2.0.1'
     ],
