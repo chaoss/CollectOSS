@@ -4225,33 +4225,60 @@ paths:
     get:
       description: Get bar chart of new contributor counts.
       operationId: New Contributor Counts Bar Chart
+      parameters:
+        - in: query
+          name: repo_id
+          required: true
+          schema:
+            type: integer
+          type: integer
+          description: Reposity Id
+        - in: query
+          name: start_date
+          required: false
+          schema:
+            type: string
+          type: string
+          description: Minimum date for the graph. INPUT FORMAT -- YYYY-MM-DD.  DEFAULT VALUE -- 1 year in the past
+        - in: query
+          name: end_date
+          required: false
+          schema:
+            type: string
+          type: string
+          description: Maximum date for the graph.   INPUT FORMAT -- YYYY-MM-DD.  DEFAULT VALUE -- Current date
+        - in: query
+          name: group_by
+          required: false
+          schema:
+            type: string
+          type: string
+          description: How the data is grouped.   OPTIONS -- "Month", "Year", or "Quarter".  DEFAULT VALUE -- Quarter
+        - in: query
+          name: required_contributions
+          required: false
+          schema:
+            type: integer
+          type: integer
+          description: Number of contributions required for a user to be a repeat contributor. DEFAULT VALUE -- 4
+        - in: query
+          name: required_time
+          required: false
+          schema:
+            type: integer
+          type: integer
+          description: Amount of time in days that the user must have completed the required contributons to be a repeat contributor. DEFAULT VALUE -- 365
+        - in: query
+          name: return_json
+          required: false
+          schema:
+            type: boolean
+          type: boolean
+          description: Whether the return type will be json or not. DEFAULT VALUE -- false
       responses:
         '200':
           description: OK
           schema:
-            items:
-              properties:
-                repo_id:
-                  description: 'Example: 23847'
-                  type: integer
-                start_date: 
-                  description: 'Example: 2019-01-01'
-                  type: string
-                end_date:
-                  description: 'Example: 2020-03-30'
-                  type: string
-                group_by:
-                  description: 'Example: month, quarter, or year'
-                  type: string
-                required_contributions:
-                  description: 'Example: 5'
-                  type: integer
-                required_time: 
-                  description: 'Example: 365'
-                  type: integer
-                return_json:
-                  description: 'Example: true'
-                  type: boolean
             type: object
       tags:
       - visualizations
@@ -4259,33 +4286,60 @@ paths:
     get:
       description: Get stacked bar chart of new contributor counts, which shows the action of the contributor.
       operationId: New Contributor Counts Stacked Bar Chart (shows actions)
+      parameters:
+        - in: query
+          name: repo_id
+          required: true
+          schema:
+            type: integer
+          type: integer
+          description: Reposity Id
+        - in: query
+          name: start_date
+          required: false
+          schema:
+            type: string
+          type: string
+          description: Minimum date for the graph. INPUT FORMAT -- YYYY-MM-DD.  DEFAULT VALUE -- 1 year in the past
+        - in: query
+          name: end_date
+          required: false
+          schema:
+            type: string
+          type: string
+          description: Maximum date for the graph.   INPUT FORMAT -- YYYY-MM-DD.  DEFAULT VALUE -- Current date
+        - in: query
+          name: group_by
+          required: false
+          schema:
+            type: string
+          type: string
+          description: How the data is grouped.   OPTIONS -- "Month", "Year", or "Quarter".  DEFAULT VALUE -- Quarter
+        - in: query
+          name: required_contributions
+          required: false
+          schema:
+            type: integer
+          type: integer
+          description: Number of contributions required for a user to be a repeat contributor. DEFAULT VALUE -- 4
+        - in: query
+          name: required_time
+          required: false
+          schema:
+            type: integer
+          type: integer
+          description: Amount of time in days that the user must have completed the required contributons to be a repeat contributor. DEFAULT VALUE -- 365
+        - in: query
+          name: return_json
+          required: false
+          schema:
+            type: boolean
+          type: boolean
+          description: Whether the return type will be json or not. DEFAULT VALUE -- false
       responses:
         '200':
           description: OK
           schema:
-            items:
-              properties:
-                repo_id:
-                  description: 'Example: 23847'
-                  type: integer
-                start_date: 
-                  description: 'Example: 2019-01-01'
-                  type: string
-                end_date:
-                  description: 'Example: 2020-03-30'
-                  type: string
-                group_by:
-                  description: 'Example: month, quarter, or year'
-                  type: string
-                required_contributions:
-                  description: 'Example: 5'
-                  type: integer
-                required_time: 
-                  description: 'Example: 365'
-                  type: integer
-                return_json:
-                  description: 'Example: true'
-                  type: boolean
             type: object
       tags:
       - visualizations
@@ -4293,30 +4347,53 @@ paths:
     get:
       description: Get pie chart of the returning contributor counts.
       operationId: Returning Contributor Counts Pie Chart
+      parameters:
+        - in: query
+          name: repo_id
+          required: true
+          schema:
+            type: integer
+          type: integer
+          description: Reposity Id
+        - in: query
+          name: start_date
+          required: false
+          schema:
+            type: string
+          type: string
+          description: Minimum date for the graph. INPUT FORMAT -- YYYY-MM-DD.  DEFAULT VALUE -- 1 year in the past
+        - in: query
+          name: end_date
+          required: false
+          schema:
+            type: string
+          type: string
+          description: Maximum date for the graph.   INPUT FORMAT -- YYYY-MM-DD.  DEFAULT VALUE -- Current date
+        - in: query
+          name: required_contributions
+          required: false
+          schema:
+            type: integer
+          type: integer
+          description: Number of contributions required for a user to be a repeat contributor. DEFAULT VALUE -- 4
+        - in: query
+          name: required_time
+          required: false
+          schema:
+            type: integer
+          type: integer
+          description: Amount of time in days that the user must have completed the required contributons to be a repeat contributor. DEFAULT VALUE -- 365
+        - in: query
+          name: return_json
+          required: false
+          schema:
+            type: boolean
+          type: boolean
+          description: Whether the return type will be json or not. DEFAULT VALUE -- false
       responses:
         '200':
           description: OK
           schema:
-            items:
-              properties:
-                repo_id:
-                  description: 'Example: 23847'
-                  type: integer
-                start_date: 
-                  description: 'Example: 2019-01-01'
-                  type: string
-                end_date:
-                  description: 'Example: 2020-03-30'
-                  type: string
-                required_contributions:
-                  description: 'Example: 5'
-                  type: integer
-                required_time: 
-                  description: 'Example: 365'
-                  type: integer
-                return_json:
-                  description: 'Example: true'
-                  type: boolean
             type: object
       tags:
       - visualizations
@@ -4324,33 +4401,60 @@ paths:
     get:
       description: Get returning contributors stacked bar chart.
       operationId: New Contributor Counts Stacked Bar Chart (shows actions)
+      parameters:
+        - in: query
+          name: repo_id
+          required: true
+          schema:
+            type: integer
+          type: integer
+          description: Reposity Id
+        - in: query
+          name: start_date
+          required: false
+          schema:
+            type: string
+          type: string
+          description: Minimum date for the graph. INPUT FORMAT -- YYYY-MM-DD.  DEFAULT VALUE -- 1 year in the past
+        - in: query
+          name: end_date
+          required: false
+          schema:
+            type: string
+          type: string
+          description: Maximum date for the graph.   INPUT FORMAT -- YYYY-MM-DD.  DEFAULT VALUE -- Current date
+        - in: query
+          name: group_by
+          required: false
+          schema:
+            type: string
+          type: string
+          description: How the data is grouped.   OPTIONS -- "Month", "Year", or "Quarter".  DEFAULT VALUE -- Quarter
+        - in: query
+          name: required_contributions
+          required: false
+          schema:
+            type: integer
+          type: integer
+          description: Number of contributions required for a user to be a repeat contributor. DEFAULT VALUE -- 4
+        - in: query
+          name: required_time
+          required: false
+          schema:
+            type: integer
+          type: integer
+          description: Amount of time in days that the user must have completed the required contributons to be a repeat contributor. DEFAULT VALUE -- 365
+        - in: query
+          name: return_json
+          required: false
+          schema:
+            type: boolean
+          type: boolean
+          description: Whether the return type will be json or not. DEFAULT VALUE -- false
       responses:
         '200':
           description: OK
           schema:
-            items:
-              properties:
-                repo_id:
-                  description: 'Example: 23847'
-                  type: integer
-                start_date: 
-                  description: 'Example: 2019-01-01'
-                  type: string
-                end_date:
-                  description: 'Example: 2020-03-30'
-                  type: string
-                group_by:
-                  description: 'Example: month, quarter, or year'
-                  type: string
-                required_contributions:
-                  description: 'Example: 5'
-                  type: integer
-                required_time: 
-                  description: 'Example: 365'
-                  type: integer
-                return_json:
-                  description: 'Example: true'
-                  type: boolean
             type: object
       tags:
         - visualizations
