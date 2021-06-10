@@ -3,7 +3,7 @@ basePath: /api/unstable/
 externalDocs:
   description: CHAOSS Metric Definitions
   url: https://chaoss.community/metrics/
-host: augur.osshealth.io
+host: augur.chaoss.io
 info:
   title: Augur REST API
   version: 0.12.0
