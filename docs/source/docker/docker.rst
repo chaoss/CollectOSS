@@ -36,7 +36,8 @@ To start a container, use the command below. ``<container_name>`` can be whateve
 .. warning::
     If you are using a local database, you need to set up an alias for your localhost. In a terminal, type ``sudo ifconfig lo:0 10.254.254.254`` if you are using linux or ``sudo ifconfig lo0 alias 10.254.254.254`` if you are using macOS. You will use this alias, ``10.254.254.254`` to connect to the local database. Make sure your database is properly configured by using this command ``psql -d "postgresql://augur:<your_password>@10.254.254.254/augur" -c "select now()"``. This command should have the same output if you replace the ip with ``localhost``.
 
-.. code-block:: bash
+
+.. code-block::bash
 
     # in the root augur/ directory
     $ docker run -p <host_port>:<docker_port> --name <container_name> <tag_name>
