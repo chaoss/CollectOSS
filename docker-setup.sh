@@ -1,8 +1,29 @@
 #!/bin/bash
+missingModules=""
+
+#Check everything that needs to be in the $PATH is in there.
+#Bash doesn't let this work if this is in an if statement for some reason it has to be chained
+type -P "docker" && echo "docker found..." || missingModules="${missingModules} docker"
+type -P "docker-compose" && echo "docker-compose found..." || missingModules="${missingModules} docker-compose"
+type -P "ifconfig" && echo "ifconfig found..." || missingModules="${missingModules} ifconfig (part of net-tools)"
+type -P "psql" && echo "psql found..." || missingModules="${missingModules} psql"
+
+if [ ! -z "$missingModules" ]
+then
+  echo "One or more modules required to run this script is missing or not in your \$PATH:"
+  echo "Including:$missingModules"
+  exit 1
+fi
+unset $missingModules
+
 if [ "$EUID" -ne 0 ];
   then echo "Please run as root"
   exit 1
 fi
+
+#TODO:
+  #Let users know how to configure the database to work for local connection because its not *that* clear right now.
+  #Download of the front end before docker-compose can work.
 
 #automate the small things for setting up docker containers
 #This file sets up the backend and the frontend and assumes the database is not in a container (which isn't recommended regardless)
@@ -99,6 +120,20 @@ else
   #Copy build option for whether or not container builds a db schema
   #cat docker_env.txt | grep AUGUR_DB_SCHEMA_BUILD >> .env
 fi
+#Test the database connection
+testHost=$(awk -F= -v key="AUGUR_DB_HOST" '$1==key {print $2}' docker_env.txt)
+testPassword=$(awk -F= -v key="AUGUR_DB_PASSWORD" '$1==key {print $2}' docker_env.txt)
+testName=$(awk -F= -v key="AUGUR_DB_NAME" '$1==key {print $2}' docker_env.txt)
+testUser=$(awk -F= -v key="AUGUR_DB_USER" '$1==key {print $2}' docker_env.txt)
+
+#g
+psql -d "postgresql://$testUser:$testPassword@$testHost/$testName" -c "select now()"
+if [[ ! "$?" -eq 0 ]]
+then
+  echo "Database could not be reached!"
+  echo "Check pg_hba.conf and postgres.conf"
+  exit 1
+fi
 
 #Ask the user if they need augur to build schema or use an existing schema
 #This is important because if it builds schema when it already exists it can cause probems.
@@ -119,53 +154,11 @@ docker-compose -f docker-compose.yml down --remove-orphans
 echo "Building images for deploy..."
 docker-compose build
 
-#Default value of 5 but you can input larger times if necessary.
-read -p "Please input time in seconds to wait for containers to deploy [5 Seconds]: " timeout
-timeout=${timeout:-5}
-echo
 echo "Starting set up of docker stack..."
 #Run docker stack in background to catch up to later
 #This is done so that the script can check to see if the containers are sucessful while docker-compose is running.
 nohup docker-compose -f docker-compose.yml up --no-recreate &>/tmp/dockerComposeLog & 
 PIDOS=$!
-
-#Wait until the docker containers should show up in a docker container ls call
-sleep $timeout
-
-#Check to see if full stack has been successfully deployed
-success=1
-if [[ ! $(docker container ls | grep frontend) ]]; then
-    echo "The frontend container failed to be deployed!"
-    success=0
-fi
-
-if [[ ! $(docker container ls | grep backend) ]]; then
-    echo "The backend container failed to be deployed!"
-    success=0
-fi
-
-#Ask if the user wants to try again if either of the containers failed.
-if [ $success -eq 0 ] ; then
-
-  kill -9 $PIDOS
-  echo "Augur docker stack failed to be successfully deployed!"
-  read -p "Would you like to try to deploy again? [y/N] " -n 1 -r
-  echo
-
-  #Be absolutely sure that the script gets a complete path to itself for restarting the process
-  SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
-  if [[ $REPLY =~ ^[Yy]$ ]]
-  then
-    exec "${SCRIPTPATH}/docker-setup.sh"
-  else
-    echo "Cleaning up failed deployment..."
-    docker-compose -f docker-compose.yml down --remove-orphans
-  fi
-
-  echo "Removing network interface..."
-  ifconfig lo:0 down
-  exit 1
-fi
 
 
 #While the containers are up show a watch monitor that shows container status and live feed from logs
@@ -201,4 +194,13 @@ then
   rm /tmp/dockerComposeLog
 else
   rm /tmp/dockerComposeLog
+fi
+
+read -p "Would you like to deploy again? [y/N] " -n 1 -r
+echo
+#Be absolutely sure that the script gets a complete path to itself for restarting the process
+SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
+if [[ $REPLY =~ ^[Yy]$ ]]
+then
+  exec "${SCRIPTPATH}/docker-setup.sh"
 fi
