@@ -4462,24 +4462,39 @@ paths:
     get:
       description: Get vertical bar chart of average commits per pull request.
       operationId: Average Commit Counts Per Year for All Pull Requests
+      parameters:
+        - in: query
+          name: repo_id
+          required: true
+          schema:
+            type: integer
+          type: integer
+          description: Reposity Id
+        - in: query
+          name: start_date
+          required: false
+          schema:
+            type: string
+          type: string
+          description: Minimum date for the graph. INPUT FORMAT -- YYYY-MM-DD.  DEFAULT VALUE -- 1 year in the past
+        - in: query
+          name: end_date
+          required: false
+          schema:
+            type: string
+          type: string
+          description: Maximum date for the graph.   INPUT FORMAT -- YYYY-MM-DD.  DEFAULT VALUE -- Current date
+        - in: query
+          name: return_json
+          required: false
+          schema:
+            type: boolean
+          type: boolean
+          description: Whether the return type will be json or not. DEFAULT VALUE -- false
       responses:
         '200':
           description: OK
           schema:
-            items:
-              properties:
-                repo_id:
-                  description: 'Example: 23847'
-                  type: integer
-                start_date: 
-                  description: 'Example: 2019-01-01'
-                  type: string
-                end_date:
-                  description: 'Example: 2020-03-30'
-                  type: string
-                return_json:
-                  description: 'Example: true'
-                  type: boolean
             type: object
       tags:
         - visualizations
@@ -4487,24 +4502,39 @@ paths:
     get:
       description: Get horizontal stacked bar chart of the average comments for closed pull requests.
       operationId: Average Comments per Closed Pull Request
+      parameters:
+        - in: query
+          name: repo_id
+          required: true
+          schema:
+            type: integer
+          type: integer
+          description: Reposity Id
+        - in: query
+          name: start_date
+          required: false
+          schema:
+            type: string
+          type: string
+          description: Minimum date for the graph. INPUT FORMAT -- YYYY-MM-DD.  DEFAULT VALUE -- 1 year in the past
+        - in: query
+          name: end_date
+          required: false
+          schema:
+            type: string
+          type: string
+          description: Maximum date for the graph.   INPUT FORMAT -- YYYY-MM-DD.  DEFAULT VALUE -- Current date
+        - in: query
+          name: return_json
+          required: false
+          schema:
+            type: boolean
+          type: boolean
+          description: Whether the return type will be json or not. DEFAULT VALUE -- false
       responses:
         '200':
           description: OK
           schema:
-            items:
-              properties:
-                repo_id:
-                  description: 'Example: 23847'
-                  type: integer
-                start_date: 
-                  description: 'Example: 2019-01-01'
-                  type: string
-                end_date:
-                  description: 'Example: 2020-03-30'
-                  type: string
-                return_json:
-                  description: 'Example: true'
-                  type: boolean
             type: object
       tags:
         - visualizations
@@ -4512,24 +4542,39 @@ paths:
     get:
       description: Get vertical stacked bar chart of the number of pull requests by merged status.
       operationId: Count of All Closed Pull Requests by Merged Status
+      parameters:
+        - in: query
+          name: repo_id
+          required: true
+          schema:
+            type: integer
+          type: integer
+          description: Reposity Id
+        - in: query
+          name: start_date
+          required: false
+          schema:
+            type: string
+          type: string
+          description: Minimum date for the graph. INPUT FORMAT -- YYYY-MM-DD.  DEFAULT VALUE -- 1 year in the past
+        - in: query
+          name: end_date
+          required: false
+          schema:
+            type: string
+          type: string
+          description: Maximum date for the graph.   INPUT FORMAT -- YYYY-MM-DD.  DEFAULT VALUE -- Current date
+        - in: query
+          name: return_json
+          required: false
+          schema:
+            type: boolean
+          type: boolean
+          description: Whether the return type will be json or not. DEFAULT VALUE -- false
       responses:
         '200':
           description: OK
           schema:
-            items:
-              properties:
-                repo_id:
-                  description: 'Example: 23847'
-                  type: integer
-                start_date: 
-                  description: 'Example: 2019-01-01'
-                  type: string
-                end_date:
-                  description: 'Example: 2020-03-30'
-                  type: string
-                return_json:
-                  description: 'Example: true'
-                  type: boolean
             type: object
       tags:
         - visualizations
@@ -4537,24 +4582,39 @@ paths:
     get:
       description: Get grouped horizontal bar chart of average response times for closed pull requests.
       operationId: Mean Response Times for Closed Pull Requests
+      parameters:
+        - in: query
+          name: repo_id
+          required: true
+          schema:
+            type: integer
+          type: integer
+          description: Reposity Id
+        - in: query
+          name: start_date
+          required: false
+          schema:
+            type: string
+          type: string
+          description: Minimum date for the graph. INPUT FORMAT -- YYYY-MM-DD.  DEFAULT VALUE -- 1 year in the past
+        - in: query
+          name: end_date
+          required: false
+          schema:
+            type: string
+          type: string
+          description: Maximum date for the graph.   INPUT FORMAT -- YYYY-MM-DD.  DEFAULT VALUE -- Current date
+        - in: query
+          name: return_json
+          required: false
+          schema:
+            type: boolean
+          type: boolean
+          description: Whether the return type will be json or not. DEFAULT VALUE -- false
       responses:
         '200':
           description: OK
           schema:
-            items:
-              properties:
-                repo_id:
-                  description: 'Example: 23847'
-                  type: integer
-                start_date: 
-                  description: 'Example: 2019-01-01'
-                  type: string
-                end_date:
-                  description: 'Example: 2020-03-30'
-                  type: string
-                return_json:
-                  description: 'Example: true'
-                  type: boolean
             type: object
       tags:
         - visualizations
@@ -4562,24 +4622,39 @@ paths:
     get:
       description: Get line graph of the average days between comments for closed pull requests.
       operationId: Average Days Between Comment for Pull Requests
+      parameters:
+        - in: query
+          name: repo_id
+          required: true
+          schema:
+            type: integer
+          type: integer
+          description: Reposity Id
+        - in: query
+          name: start_date
+          required: false
+          schema:
+            type: string
+          type: string
+          description: Minimum date for the graph. INPUT FORMAT -- YYYY-MM-DD.  DEFAULT VALUE -- 1 year in the past
+        - in: query
+          name: end_date
+          required: false
+          schema:
+            type: string
+          type: string
+          description: Maximum date for the graph.   INPUT FORMAT -- YYYY-MM-DD.  DEFAULT VALUE -- Current date
+        - in: query
+          name: return_json
+          required: false
+          schema:
+            type: boolean
+          type: boolean
+          description: Whether the return type will be json or not. DEFAULT VALUE -- false
       responses:
         '200':
           description: OK
           schema:
-            items:
-              properties:
-                repo_id:
-                  description: 'Example: 23847'
-                  type: integer
-                start_date: 
-                  description: 'Example: 2019-01-01'
-                  type: string
-                end_date:
-                  description: 'Example: 2020-03-30'
-                  type: string
-                return_json:
-                  description: 'Example: true'
-                  type: boolean
             type: object
       tags:
         - visualizations
@@ -4587,27 +4662,46 @@ paths:
     get:
       description: Get scatter plot of the days to first response for closed pull requests based on merged status.
       operationId: Days to First Response for Closed Pull Requests Based on Merged Status
+      parameters:
+        - in: query
+          name: repo_id
+          required: true
+          schema:
+            type: integer
+          type: integer
+          description: Reposity Id
+        - in: query
+          name: start_date
+          required: false
+          schema:
+            type: string
+          type: string
+          description: Minimum date for the graph. INPUT FORMAT -- YYYY-MM-DD.  DEFAULT VALUE -- 1 year in the past
+        - in: query
+          name: end_date
+          required: false
+          schema:
+            type: string
+          type: string
+          description: Maximum date for the graph.   INPUT FORMAT -- YYYY-MM-DD.  DEFAULT VALUE -- Current date
+        - in: query
+          name: remove_outliers
+          required: false
+          schema:
+            type: boolean
+          type: boolean
+          description: Whether outliers will be removed or not. If true values outside of 3 standard deviations will be removed. DEFAULT VALUE -- true
+        - in: query
+          name: return_json
+          required: false
+          schema:
+            type: boolean
+          type: boolean
+          description: Whether the return type will be json or not. DEFAULT VALUE -- false
       responses:
         '200':
           description: OK
           schema:
-            items:
-              properties:
-                repo_id:
-                  description: 'Example: 23847'
-                  type: integer
-                start_date: 
-                  description: 'Example: 2019-01-01'
-                  type: string
-                end_date:
-                  description: 'Example: 2020-03-30'
-                  type: string
-                remove_outliers: 
-                  description: 'Example: 5'
-                  type: integer
-                return_json:
-                  description: 'Example: true'
-                  type: boolean
             type: object
       tags:
         - visualizations
@@ -4615,24 +4709,39 @@ paths:
     get:
       description: Get heat map of average pull request event counts for closed pull requests.
       operationId: Average Pull Request Event Types for Closed Pull Requests
+      parameters:
+        - in: query
+          name: repo_id
+          required: true
+          schema:
+            type: integer
+          type: integer
+          description: Reposity Id
+        - in: query
+          name: start_date
+          required: false
+          schema:
+            type: string
+          type: string
+          description: Minimum date for the graph. INPUT FORMAT -- YYYY-MM-DD.  DEFAULT VALUE -- 1 year in the past
+        - in: query
+          name: end_date
+          required: false
+          schema:
+            type: string
+          type: string
+          description: Maximum date for the graph.   INPUT FORMAT -- YYYY-MM-DD.  DEFAULT VALUE -- Current date
+        - in: query
+          name: return_json
+          required: false
+          schema:
+            type: boolean
+          type: boolean
+          description: Whether the return type will be json or not. DEFAULT VALUE -- false
       responses:
         '200':
           description: OK
           schema:
-            items:
-              properties:
-                repo_id:
-                  description: 'Example: 23847'
-                  type: integer
-                start_date: 
-                  description: 'Example: 2019-01-01'
-                  type: string
-                end_date:
-                  description: 'Example: 2020-03-30'
-                  type: string
-                return_json:
-                  description: 'Example: true'
-                  type: boolean
             type: object
       tags:
         - visualizations
@@ -4640,27 +4749,46 @@ paths:
     get:
       description: Get heat map of the average duration of pull requests per month.
       operationId: Mean Duration of Closed Pull Requests
+      parameters:
+        - in: query
+          name: repo_id
+          required: true
+          schema:
+            type: integer
+          type: integer
+          description: Reposity Id
+        - in: query
+          name: start_date
+          required: false
+          schema:
+            type: string
+          type: string
+          description: Minimum date for the graph. INPUT FORMAT -- YYYY-MM-DD.  DEFAULT VALUE -- 1 year in the past
+        - in: query
+          name: end_date
+          required: false
+          schema:
+            type: string
+          type: string
+          description: Maximum date for the graph.   INPUT FORMAT -- YYYY-MM-DD.  DEFAULT VALUE -- Current date
+        - in: query
+          name: remove_outliers
+          required: false
+          schema:
+            type: boolean
+          type: boolean
+          description: Whether outliers will be removed or not. If true values outside of 3 standard deviations will be removed. DEFAULT VALUE -- true
+        - in: query
+          name: return_json
+          required: false
+          schema:
+            type: boolean
+          type: boolean
+          description: Whether the return type will be json or not. DEFAULT VALUE -- false
       responses:
         '200':
           description: OK
           schema:
-            items:
-              properties:
-                repo_id:
-                  description: 'Example: 23847'
-                  type: integer
-                start_date: 
-                  description: 'Example: 2019-01-01'
-                  type: string
-                end_date:
-                  description: 'Example: 2020-03-30'
-                  type: string
-                remove_outliers: 
-                  description: 'Example: 5'
-                  type: integer
-                return_json:
-                  description: 'Example: true'
-                  type: boolean
             type: object
       tags:
         - visualizations
