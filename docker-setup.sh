@@ -1,12 +1,23 @@
 #!/bin/bash
 #automate the small things for setting up docker containers
 #This file sets up the backend and the frontend and assumes the database is not in a container (which isn't recommended regardless)
+#
+#The script is needed to handle:
+# -Environment variables for
+#   -Runtime values needing to be set and accurate for the backend's database credentials and github api key
+#   -Pre-runtime values needing to be set and accurate for the database hostname. The ip address needs to be added in the extra_hosts argument of the yml markup.
+# -Setting up a network alias in order to let the docker container communicate with local hosts.
+# -Easily seeing console output and process statistics from one convienient window.
+# -Easily save console output to logs.
+#
 #This file uses two environment files
 # - One called docker_env.txt which holds the runtime enviroment variables that the container itself uses
 # - One called .env which holds the environment variables that docker-compose.yml uses
 #TODO:
   #Let users know how to configure the database to work for local connection because its not *that* clear right now.
   #Make container work with gitlab key
+  #Test this script on macOS
+#
 missingModules=""
 
 #Check everything that needs to be in the $PATH is in there.
@@ -44,6 +55,7 @@ echo "Setting up network alias..."
 if [ "$(uname -s)" == "Linux" ]
 then
   ifconfig lo:0 10.254.254.254
+  echo "Linux detected..."
 else
   ifconfig lo0 alias 10.254.254.254
 fi
