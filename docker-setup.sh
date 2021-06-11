@@ -153,6 +153,7 @@ docker-compose -f docker-compose.yml down --remove-orphans
 
 echo "Building images for deploy..."
 docker-compose build
+echo "Downloading frontend..."
 
 echo "Starting set up of docker stack..."
 #Run docker stack in background to catch up to later

@@ -12,7 +12,7 @@ The default ports for each service are\:
 .. note::
 
     Make sure your database is configured to listen on all addresses in order to work with the containers. The most common error an improperly configured database throws is
-    .. note::
+    ::
 
         psql: could not connect to server: Connection refused
         Is the server running on host 10.254.254.254 and accepting
@@ -45,8 +45,6 @@ Answer the prompts depending on your needs. If you are using a local database it
 .. warning::
 
     It is also important to only generate the schema if you need to otherwise your database could become unusable later on.
-
-The default timeout interval of five seconds should work for most uses but if you have a slower machine increasing the value may help with deployment.
 
 Stopping the containers
 -------------------------

@@ -77,8 +77,6 @@ Answer yes when the script prompts for your database credentials if you did not 
 
 The script will then prompt you to ask whether or not to build a schema on the database. The default option is "no," only select yes if the database is without an existing schema.
 
-The script will then prompt you for a timeframe to wait for the docker containers to be deployed. If the script doesn't see both the front and backend containers within the timeframe it will abort the deployment. The default timeframe is five seconds and is recommended.
-
 If the containers deploy, the console output will switch to a monitor of state of the twin containers, with a monitor of both of their console output below.
 
 A keyboard inturrupt will stop the containers and the script gives you the option of saving the console output to a log file.
