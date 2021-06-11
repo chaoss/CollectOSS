@@ -168,7 +168,6 @@ kill -15 $PIDOS
 #Cleaning up dead containers
 echo "Cleaning up dead containers... "
 docker-compose -f docker-compose.yml down --remove-orphans
-
 echo "Removing network interface..."
 ifconfig lo:0 down
 
@@ -178,15 +177,17 @@ read -p "Would you like to store container output in a log file? [y/N] " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]
 then
-  #uses . as the delimiter in order to ignore file extension inputted by user.
   read -p "Please input log filename: " logFileName
   #Deal with empty user input
   logFileName=${logFileName:-docker}
+  
   #Get input up until .
   echo "Logs written to file: "
   echo "$(echo $logFileName | grep -E "^([^.]+)").log"
 
-  cat /tmp/dockerComposeLog > "$(echo $logFileName | grep -E "^([^.]+)").log"
+  #Save log to /var/log/ and delete the /tmp log.
+  cat /tmp/dockerComposeLog > "/var/log/$(echo $logFileName | grep -E "^([^.]+)").log"
+  echo "/var/log/$logFileName has been saved to disk."
   rm /tmp/dockerComposeLog
 else
   rm /tmp/dockerComposeLog
