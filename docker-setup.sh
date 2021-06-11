@@ -126,8 +126,8 @@ testPassword=$(awk -F= -v key="AUGUR_DB_PASSWORD" '$1==key {print $2}' docker_en
 testName=$(awk -F= -v key="AUGUR_DB_NAME" '$1==key {print $2}' docker_env.txt)
 testUser=$(awk -F= -v key="AUGUR_DB_USER" '$1==key {print $2}' docker_env.txt)
 
-#g
-psql -d "postgresql://$testUser:$testPassword@$testHost/$testName" -c "select now()"
+#Test database connection.
+psql -d "postgresql://$testUser:$testPassword@$testHost/$testName" -c "select now()" &>/dev/null
 if [[ ! "$?" -eq 0 ]]
 then
   echo "Database could not be reached!"
@@ -154,6 +154,7 @@ docker-compose -f docker-compose.yml down --remove-orphans
 echo "Building images for deploy..."
 docker-compose build
 echo "Downloading frontend..."
+docker-compose pull
 
 echo "Starting set up of docker stack..."
 #Run docker stack in background to catch up to later
