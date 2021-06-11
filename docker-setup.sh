@@ -1,4 +1,12 @@
 #!/bin/bash
+#automate the small things for setting up docker containers
+#This file sets up the backend and the frontend and assumes the database is not in a container (which isn't recommended regardless)
+#This file uses two environment files
+# - One called docker_env.txt which holds the runtime enviroment variables that the container itself uses
+# - One called .env which holds the environment variables that docker-compose.yml uses
+#TODO:
+  #Let users know how to configure the database to work for local connection because its not *that* clear right now.
+  #Make container work with gitlab key
 missingModules=""
 
 #Check everything that needs to be in the $PATH is in there.
@@ -7,6 +15,7 @@ type -P "docker" && echo "docker found..." || missingModules="${missingModules} 
 type -P "docker-compose" && echo "docker-compose found..." || missingModules="${missingModules} docker-compose"
 type -P "ifconfig" && echo "ifconfig found..." || missingModules="${missingModules} ifconfig (part of net-tools)"
 type -P "psql" && echo "psql found..." || missingModules="${missingModules} psql"
+type -P "watch" && echo "watch found..." || missingModules="${missingModules} watch"
 
 if [ ! -z "$missingModules" ]
 then
@@ -21,28 +30,16 @@ if [ "$EUID" -ne 0 ];
   exit 1
 fi
 
-#TODO:
-  #Let users know how to configure the database to work for local connection because its not *that* clear right now.
-  #Download of the front end before docker-compose can work.
-
-#automate the small things for setting up docker containers
-#This file sets up the backend and the frontend and assumes the database is not in a container (which isn't recommended regardless)
-#This file uses two environment files
-# - One called docker_env.txt which holds the runtime enviroment variables that the container itself uses
-# - One called .env which holds the environment variables that docker-compose.yml uses
 #Always use a clean .env file because it is a subset of docker_env.txt so we can just generate it from that.
-
 if [[ -f ".env" ]]
 then
   rm .env
 fi
-
 touch .env
 
 #This is differant for MacOS
 #Script uses an alias for localhost that is the below ip
 echo "Setting up network alias..."
-
 #Check kernel for OS, assumes either linux or macOS
 if [ "$(uname -s)" == "Linux" ]
 then
@@ -50,13 +47,11 @@ then
 else
   ifconfig lo0 alias 10.254.254.254
 fi
-
 ifconfig lo:0
 
 #Ask the user if they want to be prompted or use an existing config file (docker_env.txt)
 read -p "Would you like to be prompted for database credentials? [y/N] " -n 1 -r
 echo 
-
 if [[ $REPLY =~ ^[Yy]$ ]]
 then
 
@@ -68,14 +63,14 @@ then
   touch docker_env.txt
 
   #Prompt for user info
-  #TODO: Make container work with gitlab key
   read -p "Please input Github API key: " githubAPIKey
-
   echo "AUGUR_GITHUB_API_KEY=$githubAPIKey" >> docker_env.txt
   echo
-  echo "Please choose which database hostname to use."
+
+  echo "Please choose which database hostname to use in the form of an ip or \'localhost\'"
   read -p "Plase input database hostname: " dbHostname
 
+  #Do a quick translate from 'localhost' to the network alias on lo:0
   if [ "$dbHostname" == "localhost" ]; then
     dbHostname=10.254.254.254
     echo "$dbHostname"
@@ -84,31 +79,30 @@ then
     echo "AUGUR_DB_SCHEMA_BUILD=1" >> .env
   else
     echo "AUGUR_DB_SCHEMA_BUILD=0" >> docker_env.txt
-    #Pass it to build argument in yml
-    #echo "AUGUR_DB_SCHEMA_BUILD=0" >> .env
   fi
 
-
-  #docker_env.txt is differant than .env for some reason.
+  #docker_env.txt is differant than '.env', '.env' is for the enviroment variables used in the docker-compose.yml file
   echo "AUGUR_DB_HOST=$dbHostname" >> docker_env.txt
   echo "AUGUR_DB_HOST=$dbHostname" >> .env
 
+  #Pretty sure these stay constant among augur databases
   echo "AUGUR_DB_NAME=augur" >> docker_env.txt
   echo "AUGUR_DB_PORT=5432" >> docker_env.txt
   echo "AUGUR_DB_USER=augur" >> docker_env.txt
 
-  read -p "Please input database password: " dbPassword
+  #Password is blurred out because thats the standard
+  read -s -p "Please input database password: " dbPassword
+  echo
 
   #If blank, use default password 'password'
   if [ -z "$dbPassword" ]
   then
     dbPassword="password"
   fi
-
   echo "AUGUR_DB_PASSWORD=$dbPassword" >> docker_env.txt
-
 else
 
+  #docker_env.txt should always be present in a docker-compose build otherwise it can cause issues for the database.
   if [[ ! -f "docker_env.txt" ]]
   then
     echo "docker_env.txt not found. Please add environment variables in this file or restart the script and choose to prompt db credentials."
@@ -117,20 +111,20 @@ else
 
   #Copy host name to docker-compose env file.
   cat docker_env.txt | grep AUGUR_DB_HOST >> .env
-  #Copy build option for whether or not container builds a db schema
-  #cat docker_env.txt | grep AUGUR_DB_SCHEMA_BUILD >> .env
 fi
+
 #Test the database connection
 testHost=$(awk -F= -v key="AUGUR_DB_HOST" '$1==key {print $2}' docker_env.txt)
 testPassword=$(awk -F= -v key="AUGUR_DB_PASSWORD" '$1==key {print $2}' docker_env.txt)
 testName=$(awk -F= -v key="AUGUR_DB_NAME" '$1==key {print $2}' docker_env.txt)
 testUser=$(awk -F= -v key="AUGUR_DB_USER" '$1==key {print $2}' docker_env.txt)
 
-#Test database connection.
+#Test connection using quick bash database request. $? now holds the exit code.
 psql -d "postgresql://$testUser:$testPassword@$testHost/$testName" -c "select now()" &>/dev/null
 if [[ ! "$?" -eq 0 ]]
 then
   echo "Database could not be reached!"
+  #This prompts the user because the *.conf files are in differant places on differant distros/OS's
   echo "Check pg_hba.conf and postgres.conf"
   exit 1
 fi
@@ -151,23 +145,23 @@ fi
 echo "Tearing down old docker stack..."
 docker-compose -f docker-compose.yml down --remove-orphans
 
+#Get images before final deploy
 echo "Building images for deploy..."
 docker-compose build
+#Image has to be downloaded because current frontend is a WIP.
 echo "Downloading frontend..."
 docker-compose pull
 
-echo "Starting set up of docker stack..."
 #Run docker stack in background to catch up to later
 #This is done so that the script can check to see if the containers are sucessful while docker-compose is running.
+echo "Starting set up of docker stack..."
 nohup docker-compose -f docker-compose.yml up --no-recreate &>/tmp/dockerComposeLog & 
 PIDOS=$!
-
 
 #While the containers are up show a watch monitor that shows container status and live feed from logs
 printf "\nNow showing active docker containers:\n"
 watch -n1 --color 'docker-compose ps && echo && tail -n 30 /tmp/dockerComposeLog && echo "Ctrl+C to Exit"'
 printf "\n"
-
 
 #Stop the process and clean up dead containers on SIGINT.
 kill -15 $PIDOS
