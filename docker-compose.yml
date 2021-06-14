@@ -3,6 +3,7 @@
 version: '3'
 services:
   backend:
+    image: isaacmilarky/augur_backend
     build: 
       context: .
       dockerfile: ./util/docker/backend/Dockerfile

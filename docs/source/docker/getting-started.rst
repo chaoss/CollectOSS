@@ -3,7 +3,7 @@ Getting Started
 
 Credentials
 ------------
-Before you get started with Docker, you'll need to set up a PostgreSQL instance either locally or using a remote host. 
+Before you get started with Docker, you'll need to set up a PostgreSQL instance either locally or using a remote host. Alternatively, you can also set up the databse within a docker container either manually or through the script but this is not recommended.
 
 .. note::
 
@@ -50,16 +50,11 @@ If you do not want to use the script (not recommended) you can provide your own 
 
 .. note::
 
-  If you're using the ``test_data`` image instead of your database image, you'll need to add ``AUGUR_DB_NAME=test_data`` to your ``docker_env.txt`` to override the default database image name.
-
-.. warning::
-
-  Running the database in a container is currently not supported by the script.
-
+  If you're using the ``test_data`` image instead of your database image, you'll need to add ``AUGUR_DB_NAME=test_data`` to your ``docker_env.txt`` to override the default database image name. This is taken care of for you if you use the script.
 
 
 Now that you've created your config file or are ready to generate it yourself, you're ready to get going.
-If you're doing data collection or just want to try out Augur, you'll want to use the docker-setup.sh script. If you're installing Augur for local development, we recommend using the more fine-grained `Docker <docker.html>`_ commands to build and run the containers individually. Using Docker Compose is still a good way to try out the system as a whole before you start developing, and it doesn't hurt to know either!
+If you're doing data collection or just want to try out Augur, you'll want to use the docker-setup.sh script. If you're installing Augur for local development, we recommend using the more fine-grained `Docker <docker.html>`_ commands to build and run the containers individually. Using Docker Compose or the script is still a good way to try out the system as a whole before you start developing, and it doesn't hurt to know either!
 
 .. note::
 
@@ -68,8 +63,27 @@ If you're doing data collection or just want to try out Augur, you'll want to us
 Docker Setup Script
 -------------------
 
+.. note::
+
+  It may take a while to download/build the docker containers depending on your internet/computer.
+
+
 First, start the script in the augur directory using ``sudo ./docker-setup.sh``
-Answer yes when the script prompts for your database credentials if you did not manually generate the docker_env.txt. They will be saved locally and will persist if left unchanged.
+
+Answer the prompt to select the type of deployment to use:
+
+1. Deploy the frontend and backend using docker connected to a non-docker database.
+    This option lets you deploy the frontend and backend together using your own database whether local or remote.
+2. Deploy the frontend, backend, and database together in docker containers.
+    This option lets you deploy the frontend, backend and database together as a pure docker deployment starting from an empty database.
+3. Deploy the frontend, backend, and database together in docker containers using premade test data
+    This option lets you deploy the frontend, backend and database together as a pure docker environment with pregenerated testing data to use. This option is great for trying out augur.
+
+
+Deploying the frontend and backend using docker connected to a non-docker database
+----------------------------------------------------------------------------------
+
+Answer yes when the script prompts you for your database credentials if you did not manually generate the docker_env.txt. They will be saved locally and will persist if left unchanged.
 
 .. warning::
 
@@ -81,4 +95,9 @@ If the containers deploy, the console output will switch to a monitor of state o
 
 A keyboard inturrupt will stop the containers and the script gives you the option of saving the console output to a log file.
 
+Deploy the frontend, backend, and database together in docker containers. With and without test data
+----------------------------------------------------------------------------------------------------
 
+If you have run the containers before and have already generated your environment variables the script should remember your github api key. Only change it if it is not the intended api key to use.
+
+The containers should then deploy, switching to a console feed along with the process state of each docker container.

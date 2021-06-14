@@ -28,7 +28,7 @@ To start a container, use the command below. ``<container_name>`` can be whateve
 
 .. note::
 
-    If you are running the ``backend`` service, then ``<docker_port>`` needs to be ``5000``; for ``frontend`` and ``database`` the ports are ``8080`` and ``5432``. You can set the ``<host_port>`` to any **available** port on your machine for any of the services.
+    If you are running the ``backend`` service, then ``<docker_port>`` needs to be ``5000``; for ``frontend`` and ``database`` the ports are ``8080`` and ``5434``. You can set the ``<host_port>`` to any **available** port on your machine for any of the services.
 
 .. note::
     If you are running the backend service, you'll also need to add ``--env-file docker_env.txt`` to your command in order to make the container aware of your configuration file. You'll also need to add ``--add-host=database:<ip_of_database>`` to your command in order to make the container connect to your database. Make sure your database is configured to accept the container's connections by making sure that ``listen_addresses = '*'`` wherever the postgresql.conf is located on your machine and change the pg_hba.conf to accept hosts with a line similar to ``host	all  		all 		0.0.0.0/0 		md5``.

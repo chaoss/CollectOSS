@@ -30,17 +30,16 @@ Running the containers
 
     Don't forget to provide your external database credentials in the ``docker_env.txt`` file or generate it within the script. `More about the configuration file here <getting-started.html>`_
 
-.. note::
-
-    Running the database in a container is currently not supported by the script.
-  
 To run Augur
 
 .. code-block:: bash
 
     sudo ./docker-setup.sh
 
-Answer the prompts depending on your needs. If you are using a local database it is important to use 10.254.254.254 as a hostname or localhost if prompted.
+Answer the prompts depending on your needs. If you are using a local database it is important to use 10.254.254.254 as a hostname or localhost if prompted. If you are using the container database or the test database press 2 or 3 for the prompt answer.
+
+The script should automatically generate the environment variables for the docker containers and compose files. Additionally it will set up a network alias so that the containers can communicate with localhost. Finally, it also takes care of whether or not to generate the schema to protect the integrity of any databases in use.
+
 
 .. warning::
 
@@ -68,7 +67,7 @@ To run Augur **without** the database container:
 
 .. warning::
 
-    Don't forget to provide your external database credentials in the ``docker_env.txt`` file.
+    Don't forget to provide your external database credentials in the ``docker_env.txt`` file. Additionally the ``.env`` file is needed for the ``*.yml`` files' environment variables. Don't forget to set the variables specified specified in these files namely ``AUGUR_DB_TYPE`` and ``AUGUR_DB_HOST``.
 
 To run Augur **with** the database container:
 
@@ -81,6 +80,8 @@ If you want to use the ``test_data`` image with the data preloaded, change the `
 .. code::
 
     image: augurlabs/augur:test_data
+
+Or you can set it dynamically in the .env file.
 
 Stopping the containers
 -------------------------

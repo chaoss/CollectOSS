@@ -62,7 +62,7 @@ By default, the only logs shown by the container are the logs of Augur's main da
     # to watch the logs in real time (like tail -f)
     $ docker-compose logs -f
 
-If you deployed the augur frontend and backend together using the script, you are automtically prompted to ask to save logs to a file once you stop the containers.
+If you deployed the augur frontend and backend together using the script, you are automtically prompted to ask to save logs to a file once you stop the containers. The logs can be found in ``/var/log/``
 
 Conclusion
 -----------
