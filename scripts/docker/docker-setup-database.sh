@@ -1,0 +1,93 @@
+#This is where the scripts are differant.
+githubAPIKey="dockerkey"
+
+if [[ -f "docker_env.txt" ]]
+then
+    githubAPIKey=$(awk -F= -v key="AUGUR_GITHUB_API_KEY" '$1==key {print $2}' docker_env.txt)
+    echo "Discovered existing api key $githubAPIKey"
+    rm docker_env.txt
+fi
+
+touch docker_env.txt
+echo "AUGUR_GITHUB_API_KEY=$githubAPIKey" >> docker_env.txt
+echo "AUGUR_DB_SCHEMA_BUILD=0" >> docker_env.txt
+
+dbHostname=10.254.254.254
+#docker_env.txt is differant than '.env', '.env' is for the enviroment variables used in the docker-compose.yml file
+echo "AUGUR_DB_HOST=$dbHostname" >> docker_env.txt
+echo "AUGUR_DB_HOST=$dbHostname" >> .env
+echo "AUGUR_DB_NAME=augur" >> docker_env.txt
+echo "AUGUR_DB_PORT=5434" >> docker_env.txt
+echo "AUGUR_DB_USER=augur" >> docker_env.txt
+echo "AUGUR_DB_PASSWORD=augur" >> docker_env.txt
+
+dbType=$(awk -F= -v key="AUGUR_DB_TYPE" '$1==key {print $2}' .env)
+#Handle test data.
+if [ "$dbType" == "test_data" ]; then
+  sed -i -r '/AUGUR_DB_NAME/ s/(^.*)(=.*)/\1=test_data/g' docker_env.txt
+fi
+
+#Ask the user if they want to be prompted or use an existing config file (docker_env.txt)
+read -p "Would you like to be prompted for an api key? [y/N] " -n 1 -r
+echo 
+if [[ $REPLY =~ ^[Yy]$ ]]
+then
+
+  #Prompt for user info
+  read -p "Please input Github API key: " githubAPIKey
+  echo
+  sed -i -r '/AUGUR_GITHUB_API_KEY/ s/(^.*)(=.*)/\1=1/g' docker_env.txt
+fi
+
+
+echo "Tearing down old docker stack..."
+docker-compose -f docker-compose.yml -f database-compose.yml down --remove-orphans
+
+#Get images before final deploy
+echo "Building images for deploy..."
+docker-compose build
+#Image has to be downloaded because current frontend is a WIP.
+echo "Downloading frontend and database..."
+docker-compose pull
+docker-compose -f database-compose.yml pull
+
+#Run docker stack in background to catch up to later
+#This is done so that the script can check to see if the containers are sucessful while docker-compose is running.
+echo "Starting set up of docker stack..."
+nohup docker-compose -f docker-compose.yml -f database-compose.yml up --no-recreate &>/tmp/dockerComposeLog & 
+PIDOS=$!
+
+#While the containers are up show a watch monitor that shows container status and live feed from logs
+printf "\nNow showing active docker containers:\n"
+watch -n1 --color 'docker-compose -f docker-compose.yml -f database-compose.yml ps && echo && tail -n 30 /tmp/dockerComposeLog && echo "Ctrl+C to Exit"'
+printf "\n"
+
+#Stop the process and clean up dead containers on SIGINT.
+kill -15 $PIDOS
+#Cleaning up dead containers
+echo "Cleaning up dead containers... "
+docker-compose -f docker-compose.yml -f database-compose.yml down --remove-orphans
+echo "Removing network interface..."
+ifconfig lo:0 down
+
+#Ask user if they would like to store logs to a permanent file.
+#Might want to make where the logs are saved a constant. Right now it just dumps it in the current directory.
+read -p "Would you like to store container output in a log file? [y/N] " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]
+then
+  read -p "Please input log filename: " logFileName
+  #Deal with empty user input
+  logFileName=${logFileName:-docker}
+  
+  #Get input up until .
+  echo "Logs written to file: "
+  echo "$(echo $logFileName | grep -E "^([^.]+)").log"
+
+  #Save log to /var/log/ and delete the /tmp log.
+  cat /tmp/dockerComposeLog > "/var/log/$(echo $logFileName | grep -E "^([^.]+)").log"
+  echo "/var/log/$logFileName has been saved to disk."
+  rm /tmp/dockerComposeLog
+else
+  rm /tmp/dockerComposeLog
+fi
