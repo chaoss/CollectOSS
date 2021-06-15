@@ -69,27 +69,4 @@ kill -15 $PIDOS
 #Cleaning up dead containers
 echo "Cleaning up dead containers... "
 docker-compose -f docker-compose.yml -f database-compose.yml down --remove-orphans
-echo "Removing network interface..."
-ifconfig lo:0 down
-
-#Ask user if they would like to store logs to a permanent file.
-#Might want to make where the logs are saved a constant. Right now it just dumps it in the current directory.
-read -p "Would you like to store container output in a log file? [y/N] " -n 1 -r
-echo
-if [[ $REPLY =~ ^[Yy]$ ]]
-then
-  read -p "Please input log filename: " logFileName
-  #Deal with empty user input
-  logFileName=${logFileName:-docker}
-  
-  #Get input up until .
-  echo "Logs written to file: "
-  echo "$(echo $logFileName | grep -E "^([^.]+)").log"
-
-  #Save log to /var/log/ and delete the /tmp log.
-  cat /tmp/dockerComposeLog > "/var/log/$(echo $logFileName | grep -E "^([^.]+)").log"
-  echo "/var/log/$logFileName has been saved to disk."
-  rm /tmp/dockerComposeLog
-else
-  rm /tmp/dockerComposeLog
-fi
+exec cleanup.sh
