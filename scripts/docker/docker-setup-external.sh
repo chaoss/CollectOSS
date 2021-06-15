@@ -50,7 +50,6 @@ then
   fi
   echo "AUGUR_DB_PASSWORD=$dbPassword" >> docker_env.txt
 else
-
   #docker_env.txt should always be present in a docker-compose build otherwise it can cause issues for the database.
   if [[ ! -f "docker_env.txt" ]]
   then
@@ -67,6 +66,28 @@ testHost=$(awk -F= -v key="AUGUR_DB_HOST" '$1==key {print $2}' docker_env.txt)
 testPassword=$(awk -F= -v key="AUGUR_DB_PASSWORD" '$1==key {print $2}' docker_env.txt)
 testName=$(awk -F= -v key="AUGUR_DB_NAME" '$1==key {print $2}' docker_env.txt)
 testUser=$(awk -F= -v key="AUGUR_DB_USER" '$1==key {print $2}' docker_env.txt)
+
+#Test variables that can't be verified with a test database connection. (This includes testPassword but that is needed for the later db test)
+missingEnv=""
+testGithubKey=$(awk -F= -v key="AUGUR_GITHUB_API_KEY" '$1==key {print $2}' docker_env.txt)
+testSchemaBuild=$(awk -F= -v key="AUGUR_DB_SCHEMA_BUILD" '$1==key {print $2}' docker_env.txt)
+testPort=$(awk -F= -v key="AUGUR_DB_PORT" '$1==key {print $2}' docker_env.txt)
+
+test -z "$testGithubKey" && missingEnv="${missingEnv} AUGUR_GITHUB_API_KEY"
+test -z "$testSchemaBuild" && missingEnv="${missingEnv} AUGUR_DB_SCHEMA_BUILD"
+test -z "$testPort" && missingEnv="${missingEnv} AUGUR_DB_PORT"
+test -z "$testPassword" && missingEnv="${missingEnv} AUGUR_DB_PASSWORD"
+
+if [ ! -z "$missingEnv" ]
+then
+  echo "One or more environment variables required to run this script is not in docker_env.txt"
+  echo "Including $missingEnv"
+  exit 1
+fi
+unset missingEnv
+unset testGithubKey
+unset testSchemaBuild
+unset testPort
 
 #Test connection using quick bash database request. $? now holds the exit code.
 psql -d "postgresql://$testUser:$testPassword@$testHost/$testName" -c "select now()" &>/dev/null

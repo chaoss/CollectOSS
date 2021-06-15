@@ -4,7 +4,7 @@ githubAPIKey="dockerkey"
 if [[ -f "docker_env.txt" ]]
 then
     githubAPIKey=$(awk -F= -v key="AUGUR_GITHUB_API_KEY" '$1==key {print $2}' docker_env.txt)
-    echo "Discovered existing api key $githubAPIKey"
+    test -z "$githubAPIKey" && echo "No existing API key could be found!" || echo "Discovered existing api key $githubAPIKey"
     rm docker_env.txt
 fi
 
@@ -21,6 +21,8 @@ echo "AUGUR_DB_PORT=5434" >> docker_env.txt
 echo "AUGUR_DB_USER=augur" >> docker_env.txt
 echo "AUGUR_DB_PASSWORD=augur" >> docker_env.txt
 
+#This checks the .env file's environment variables NOT docker_env.txt.
+#AUGUR_DB_TYPE is set by the parent script in the .env file.
 dbType=$(awk -F= -v key="AUGUR_DB_TYPE" '$1==key {print $2}' .env)
 #Handle test data.
 if [ "$dbType" == "test_data" ]; then
