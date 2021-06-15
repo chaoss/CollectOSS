@@ -1,20 +1,20 @@
 #!/bin/bash
 #automate the small things for setting up docker containers
-#This file sets up the backend and the frontend and assumes the database is not in a container (which isn't recommended regardless)
+#This file sets up the backend and the frontend and optional database container.
 #
 #The script is needed to handle:
 # -Environment variables for
 #   -Runtime values needing to be set and accurate for the backend's database credentials and github api key
-#   -Pre-runtime values needing to be set and accurate for the database hostname. The ip address needs to be added in the extra_hosts argument of the yml markup.
+#   -Pre-runtime values needing to be set and accurate for the database hostname and type (whether it is test data or not). The ip address needs to be added in the extra_hosts argument of the yml markup.
 # -Setting up a network alias in order to let the docker container communicate with local hosts.
 # -Easily seeing console output and process statistics from one convienient window.
 # -Easily save console output to logs.
 #
 #This file uses two environment files
 # - One called docker_env.txt which holds the runtime enviroment variables that the container itself uses
-# - One called .env which holds the environment variables that docker-compose.yml uses
+# - One called .env which holds the environment variables that docker-compose.yml uses and holds the database type.
 #TODO:
-  #Let users know how to configure the database to work for local connection because its not *that* clear right now.
+  #Let users know how to configure the database to work for local connection because its not *that* clear right now. Its in the docs at least.
   #Make container work with gitlab key
   #Test this script on macOS
 #
