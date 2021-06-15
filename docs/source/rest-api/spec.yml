@@ -2297,7 +2297,7 @@ paths:
             type: array
       tags:
       - experimental
-  /repos/:repo_id/avgerage-issue-resolution-time:
+  /repos/:repo_id/average-issue-resolution-time:
     get:
       description: 'The average issue resolution time. '
       externalDocs:

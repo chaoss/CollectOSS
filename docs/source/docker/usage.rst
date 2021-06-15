@@ -39,13 +39,13 @@ You can also step into a running container at every step of the build process an
 
 First, build the image to output build stages.
 
-.. code-block:: bash
+.. code-block::bash
     $ cd augur/
     $ docker build -t <service_name> -f util/docker/backend/Dockerfile .
 
 Then, run any stage by using the hash that the relevant stage prints out during the build process. The arguments are the same as a normal ``docker run``
 
-.. code-block:: bash
+.. code-block::bash
     $ docker run -i -t -p <relevant_port>:<relevant_port> --add-host=database:<database_if_backend> --env-file <env_file> <build_hash> bash
 
 
