@@ -115,15 +115,7 @@ fi
 echo "Tearing down old docker stack..."
 docker-compose -f docker-compose.yml down --remove-orphans
 
-#Get images before final deploy
-echo "Building images for deploy..."
-docker-compose build
-#Image has to be downloaded because current frontend is a WIP.
-echo "Downloading frontend..."
-docker-compose pull
-
 #Run docker stack in background to catch up to later
-#This is done so that the script can check to see if the containers are sucessful while docker-compose is running.
 echo "Starting set up of docker stack..."
 nohup docker-compose -f docker-compose.yml up --no-recreate &>/tmp/dockerComposeLog & 
 PIDOS=$!
@@ -138,4 +130,4 @@ kill -15 $PIDOS
 #Cleaning up dead containers
 echo "Cleaning up dead containers... "
 docker-compose -f docker-compose.yml down --remove-orphans
-exec cleanup.sh
+bash scripts/docker/cleanup.sh

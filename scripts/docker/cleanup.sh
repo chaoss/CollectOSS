@@ -1,3 +1,4 @@
+#!/bin/bash
 echo "Removing network interface..."
 
 #Quick compat with macOS
@@ -25,7 +26,7 @@ then
 
   #Save log to /var/log/ and delete the /tmp log.
   cat /tmp/dockerComposeLog > "/var/log/$(echo $logFileName | grep -E "^([^.]+)").log"
-  echo "/var/log/$logFileName has been saved to disk."
+  echo "/var/log/$logFileName.log has been saved to disk."
   rm /tmp/dockerComposeLog
 else
   rm /tmp/dockerComposeLog

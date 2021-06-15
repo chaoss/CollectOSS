@@ -45,13 +45,14 @@ fi
 echo "Tearing down old docker stack..."
 docker-compose -f docker-compose.yml -f database-compose.yml down --remove-orphans
 
+#This proved to be unnessessary
 #Get images before final deploy
-echo "Building images for deploy..."
-docker-compose build
+#echo "Building images for deploy..."
+#docker-compose build
 #Image has to be downloaded because current frontend is a WIP.
-echo "Downloading frontend and database..."
-docker-compose pull
-docker-compose -f database-compose.yml pull
+#echo "Downloading frontend and database..."
+#docker-compose pull
+#docker-compose -f database-compose.yml pull
 
 #Run docker stack in background to catch up to later
 #This is done so that the script can check to see if the containers are sucessful while docker-compose is running.
@@ -69,4 +70,4 @@ kill -15 $PIDOS
 #Cleaning up dead containers
 echo "Cleaning up dead containers... "
 docker-compose -f docker-compose.yml -f database-compose.yml down --remove-orphans
-exec cleanup.sh
+bash scripts/docker/cleanup.sh
