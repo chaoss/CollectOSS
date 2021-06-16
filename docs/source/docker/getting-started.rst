@@ -76,15 +76,15 @@ First, start the script in the augur directory using ``sudo ./docker-setup.sh``
 
 Answer the prompt to select the type of deployment to use:
 
-1. Deploy the frontend and backend using docker connected to a non-docker database.
-    This option lets you deploy the frontend and backend together using your own database whether local or remote.
-2. Deploy the frontend, backend, and database together in docker containers.
-    This option lets you deploy the frontend, backend and database together as a pure docker deployment starting from an empty database.
-3. Deploy the frontend, backend, and database together in docker containers using premade test data
-    This option lets you deploy the frontend, backend and database together as a pure docker environment with pregenerated testing data to use. This option is great for trying out augur.
+1. Deploy the backend using docker connected to a non-docker database.
+    This option lets you deploy the backend using your own database whether local or remote.
+2. Deploy the backend and database together in docker containers.
+    This option lets you deploy the backend and database together as a pure docker deployment starting from an empty database.
+3. Deploy the backend, and database together in docker containers using premade test data
+    This option lets you deploy the backend and database together as a pure docker environment with pregenerated testing data to use. This option is great for trying out augur.
 
 
-Deploying the frontend and backend using docker connected to a non-docker database
+Deploying the backend using docker connected to a non-docker database
 ----------------------------------------------------------------------------------
 
 Answer yes when the script prompts you for your database credentials if you did not manually generate the docker_env.txt. They will be saved locally and will persist if left unchanged.
@@ -99,7 +99,7 @@ If the containers deploy, the console output will switch to a monitor of state o
 
 A keyboard inturrupt will stop the containers and the script gives you the option of saving the console output to a log file.
 
-Deploy the frontend, backend, and database together in docker containers. With and without test data
+Deploy the backend and database together in docker containers. With and without test data
 ----------------------------------------------------------------------------------------------------
 
 If you have run the containers before and have already generated your environment variables the script should remember your github api key. Only change it if it is not the intended api key to use.

@@ -1,6 +1,7 @@
 #!/bin/bash
 #automate the small things for setting up docker containers
 #This file sets up the backend and the frontend and optional database container.
+#NOTE: The frontend is currently under construction.
 #
 #The script is needed to handle:
 # -Environment variables for
@@ -65,9 +66,9 @@ fi
 #Prompt for deploy type.
 echo "Types of docker deployment: "
 echo
-echo "1. Deploy the frontend and backend using docker connected to a non-docker database."
-echo "2. Deploy the frontend, backend, and database together in docker containers."
-echo "3. Deploy the frontend, backend, and database together in docker containers using premade test data."
+echo "1. Deploy the backend using docker connected to a non-docker database."
+echo "2. Deploy backend and database together in docker containers."
+echo "3. Deploy the backend and database together in docker containers using premade test data."
 echo
 read -p "Would you like to use : " deployChoice
 

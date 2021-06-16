@@ -6,6 +6,10 @@ Once the containers are up and running, you have a few options for interacting w
 Using the repo loading UI
 --------------------------
 
+.. warning::
+    The frontend is very out of date and will likely not work with the backend very well. It is still available however. The recommended way of accessing augur through docker is through standard api calls at ``localhost:5000``.
+ 
+
 Augur offers a special graphical interface for loading repository groups when using the Docker containers. This component is called ``augurface``, and is available anytime you are using the ``backend`` and ``frontend`` services together.
 
 To use it, first start the two services (we recommend using `Docker Compose Script <docker-compose.html>`_ for this):
