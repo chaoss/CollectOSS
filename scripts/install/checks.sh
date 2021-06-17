@@ -58,3 +58,5 @@ fi
 if [[ ! -d logs ]]; then
     mkdir logs
 fi
+
+command -v go >/dev/null 2>&1 || { echo >&2 "We require 'go' to run Scorecard project to get data, Please install GO first....Aborting"; exit 1; }
