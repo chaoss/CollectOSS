@@ -47,6 +47,11 @@ Optional:
 The ``value_worker`` uses a Go package called `scc <https://github.com/boyter/scc>`_ to run COCOMO calculations.
 Once you've installed Go, follow the appropriate steps for your system to install the ``scc`` package.
 
+-  Install gcc OpenMP Support: `sudo apt-get install libgomp1` -- Ubuntu 
+
+The ``message_insights_worker`` uses a system level package called OpenMP. You will need this installed at the system level for that worker to "work". 
+
+
 Frontend
 ---------
 If you're interested in using our visualizations, you can optionally install the frontend dependencies:
