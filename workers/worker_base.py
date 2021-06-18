@@ -146,6 +146,8 @@ class Worker():
             self.tool_version = '0.0.0'
             self.data_source = 'Augur Worker Testing'
 
+    #Return string representation of an object with all information needed to recreate the object (Think of it like a pickle made out of text)
+    #Called using repr(*object*). eval(repr(*object*)) == *object*
     def __repr__(self):
         return f"{self.config['id']}"
 
@@ -155,6 +157,7 @@ class Worker():
                  json.dump(data, f)
 
     def initialize_logging(self):
+        #Get the log level in upper case from the augur config's logging section.
         self.config['log_level'] = self.config['log_level'].upper()
         if self.config['debug']:
             self.config['log_level'] = 'DEBUG'
