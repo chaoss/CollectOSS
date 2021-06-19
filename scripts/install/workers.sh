@@ -42,3 +42,11 @@ do
 
 
 done
+
+
+echo "Cloning OSSF Scorecard to generate scorecard data ..."
+git clone https://github.com/ossf/scorecard $HOME/scorecard
+CURRENT_DIR = $PWD;
+cd $HOME/scorecard;
+go build;
+cd $CURRENT_DIR
