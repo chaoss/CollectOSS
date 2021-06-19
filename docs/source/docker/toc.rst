@@ -5,6 +5,10 @@ Augur provides several Docker images designed to get you started with our softwa
 
 - ``augurlabs/augur:backend``, our backend data collection and metrics API
 - ``augurlabs/augur:frontend``, our metrics visualization frontend
+
+.. warning::
+   The frontend is very out of date and will likely not work with the backend very well. It is still available however.
+
 - ``augurlabs/augur:database``, an empty PostgreSQL database with the Augur schema installed
 - ``augurlabs/augur:test_data``, a PostgreSQL database loaded with the data used in our testing environment
 
