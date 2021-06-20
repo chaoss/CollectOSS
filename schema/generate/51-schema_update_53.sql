@@ -1,5 +1,5 @@
 BEGIN;
-ALTER TABLE IF EXISTS "augur_data"."repo_deps_scorecard" RENAME TO "augur_data"."_dev1_repo_deps_scorecard";
+ALTER TABLE IF EXISTS "augur_data"."repo_deps_scorecard" RENAME TO "_dev1_repo_deps_scorecard";
 CREATE TABLE "augur_data"."repo_deps_scorecard" (
   "repo_deps_scorecard_id" serial8 NOT NULL,
   "repo_id" int8, 
