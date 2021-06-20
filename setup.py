@@ -61,7 +61,7 @@ setup(
         "distributed >= 2021.03.0",
         "nltk==3.5",
         "h5py~=3.1.0",
-        "scipy==1.4.1",
+        "scipy==1.7.0",
         "blinker==1.4",
         "protobuf > 3.6.0",
         "slack==0.0.2",
