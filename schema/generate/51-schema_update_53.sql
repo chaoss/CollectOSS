@@ -43,12 +43,10 @@ CREATE TABLE "augur_data"."repo_deps_scorecard" (
 ;
 ALTER TABLE "augur_data"."repo_deps_scorecard" OWNER TO "augur";
 
-DROP CONSTRAINT IF EXISTS repo_deps_scorecard_pkey; 
-
 -- ----------------------------
 -- Primary Key structure for table repo_deps_scorecard
 -- ----------------------------
-ALTER TABLE "augur_data"."repo_deps_scorecard" ADD CONSTRAINT "repo_deps_scorecard_pkey" PRIMARY KEY ("repo_deps_scorecard_id");
+ALTER TABLE "augur_data"."repo_deps_scorecard" ADD CONSTRAINT "repo_deps_scorecard_pkey_x" PRIMARY KEY ("repo_deps_scorecard_id");
 
 -- ----------------------------
 -- Foreign Keys structure for table repo_deps_scorecard
