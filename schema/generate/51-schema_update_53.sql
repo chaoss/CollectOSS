@@ -41,7 +41,7 @@ CREATE TABLE "augur_data"."repo_deps_scorecard" (
   "data_collection_date" timestamp(0) DEFAULT CURRENT_TIMESTAMP
 )
 ;
-ALTER TABLE "augur_data"."repo_deps_scorecard" OWNER TO "augur";
+--ALTER TABLE "augur_data"."repo_deps_scorecard" OWNER TO "augur";
 
 -- ----------------------------
 -- Primary Key structure for table repo_deps_scorecard
