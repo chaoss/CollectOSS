@@ -18,7 +18,7 @@ CREATE TABLE "augur_data"."repo_deps_scorecard" (
   "ossf_signed_releases_status" varchar COLLATE "pg_catalog"."default",
   "ossf_signed_tags_status" varchar COLLATE "pg_catalog"."default",
   "ossf_automated_dendency_update_status" varchar COLLATE "pg_catalog"."default",
-  "ossf_token_permissions_score" varchar COLLATE "pg_catalog"."default",
+  "ossf_token_permissions_status" varchar COLLATE "pg_catalog"."default",
   "ossf_active_score" varchar COLLATE "pg_catalog"."default",
   "ossf_branch_protection_score" varchar COLLATE "pg_catalog"."default",
   "ossf_ci_tests_score" varchar COLLATE "pg_catalog"."default",
