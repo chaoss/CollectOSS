@@ -30,6 +30,14 @@ from sqlalchemy.sql.expression import bindparam
 from concurrent import futures
 import dask.dataframe as dd
 
+#I figure I can seperate this class into at least three parts.
+#I should also look into the subclass and see what uses what.
+#
+#   Parts
+#1. Base
+#2. Database interface
+#3. Github/lab interface
+
 class Worker():
 
     ROOT_AUGUR_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
@@ -378,6 +386,7 @@ class Worker():
         self.helper_db.dispose()
         self.logger.info("Collection process finished")
 
+    #Make sure the type used to store date is synced with the worker?
     def sync_df_types(self, subject, source, subject_columns, source_columns):
 
         type_dict = {}
@@ -396,6 +405,7 @@ class Worker():
 
         return subject, source
 
+    #Convert safely from sql type to python type?
     def get_sqlalchemy_type(self, data, column_name=None):
         if type(data) == str:
             try:
@@ -780,6 +790,7 @@ class Worker():
         # time.sleep(.1)
         return result
 
+    #TODO: Enumerate the workers that actually use this. I don't think all workers need to track this
     def find_id_from_login(self, login, platform='github'):
         """ Retrieves our contributor table primary key value for the contributor with
             the given GitHub login credentials, if this contributor is not there, then
