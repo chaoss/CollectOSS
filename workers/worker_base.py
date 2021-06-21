@@ -167,7 +167,9 @@ class Worker():
         else:
             format_string = AugurLogging.simple_format_string
 
+        #Use stock python formatter for stdout
         formatter = Formatter(fmt=format_string)
+        #User custom for stderr, Gives more info than verbose_format_string
         error_formatter = Formatter(fmt=AugurLogging.error_format_string)
 
         worker_dir = AugurLogging.get_log_directories(self.augur_config, reset_logfiles=False) + "/workers/"
@@ -175,6 +177,7 @@ class Worker():
         logfile_dir = worker_dir + f"/{self.worker_type}/"
         Path(logfile_dir).mkdir(exist_ok=True)
 
+        #Create more complex sublogs in the logfile directory determined by the AugurLogging class
         server_logfile = logfile_dir + '{}_{}_server.log'.format(self.worker_type, self.config["port"])
         collection_logfile = logfile_dir + '{}_{}_collection.log'.format(self.worker_type, self.config["port"])
         collection_errorfile = logfile_dir + '{}_{}_collection.err'.format(self.worker_type, self.config["port"])
@@ -266,14 +269,13 @@ class Worker():
         else:
             self.oauths = [{'oauth_id': 0}]
 
+    #This should probably be overwritten by the actual facade worker instead of cluttering up the base worker
     @property
     def results_counter(self):
         """ Property that is returned when the worker's current results_counter is referenced
         """
-        if self.worker_type == 'facade_worker':
-            return self.cfg.repos_processed #TODO: figure out why this doesn't work...
-        else:
-            return self._results_counter
+        
+        return self._results_counter
 
     @results_counter.setter
     def results_counter(self, value):
@@ -281,7 +283,6 @@ class Worker():
         Adds this task to the queue, and calls method to process queue
         """
         self._results_counter = value
-
 
     @property
     def task(self):
