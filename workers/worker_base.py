@@ -33,7 +33,7 @@ import dask.dataframe as dd
 #I figure I can seperate this class into at least three parts.
 #I should also look into the subclass and see what uses what.
 #
-#   Parts
+#   Parts (Hierarchal relation)
 #1. Base
 #2. Database interface
 #3. Github/lab interface
@@ -45,6 +45,7 @@ class Worker():
     ## Set Thread Safety for OSX
     # os.system("./osx-thread.sh")
 
+    #Might cut down on these args to create subclasses
     def __init__(self, worker_type, config={}, given=[], models=[], data_tables=[], operations_tables=[], platform="github"):
 
         self.worker_type = worker_type
@@ -57,7 +58,8 @@ class Worker():
         self._root_augur_dir = Worker.ROOT_AUGUR_DIR
         self.platform = platform
 
-        # count of tuples inserted in the database (to store stats for each task in op tables)
+        #TODO: send this block to db_client interfacable
+        # count of tuples inserted in the database (to store stats for each task in op tables) 
         self.update_counter = 0
         self.insert_counter = 0
         self._results_counter = 0
