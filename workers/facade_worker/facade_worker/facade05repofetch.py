@@ -324,6 +324,13 @@ def git_repo_updates(cfg):
 
                 return_code_clean = subprocess.Popen([cmd_clean],shell=True).wait()
 
+                ## patch for primary branch changes to main
+
+                cmd_main_branch = ("git -C %s%s/%s%s checkout main"
+                    % (cfg.repo_base_directory,row[1],row[4],row[3]))
+
+                return_code_main_branch = subprocess.Popen([cmd_main_branch],shell=True).wait()
+
             attempt += 1
 
         if return_code == 0:
