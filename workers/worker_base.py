@@ -59,9 +59,6 @@ class Worker():
 
         self._root_augur_dir = Worker.ROOT_AUGUR_DIR
 
-        #for github section
-        self.platform = platform
-
         # count of tuples inserted in the database (to store stats for each task in op tables) 
         self.update_counter = 0
         self.insert_counter = 0
@@ -236,7 +233,7 @@ class Worker():
 
         self.logger = logger
 
-    #database interface
+    #database interface, the git interfaceable adds additional function to the super method.
     def initialize_database_connections(self):
         DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(
             self.config['user_database'], self.config['password_database'], self.config['host_database'], self.config['port_database'], self.config['name_database']
@@ -283,13 +280,6 @@ class Worker():
 
         # Increment so we are ready to insert the 'next one' of each of these most recent ids
         self.history_id = self.get_max_id('worker_history', 'history_id', operations_table=True) + 1
-
-        # Organize different api keys/oauths available
-        self.logger.info("Initializing API key.")
-        if 'gh_api_key' in self.config or 'gitlab_api_key' in self.config:
-            self.init_oauths(self.platform)
-        else:
-            self.oauths = [{'oauth_id': 0}]
 
     @property
     def results_counter(self):
@@ -807,7 +797,7 @@ class Worker():
 
     #TODO: Enumerate the workers that actually use this. I don't think all workers need to track this
     #Just a api interface for github/lab
-    def find_id_from_login(self, login, platform='github'):
+    #def find_id_from_login(self, login, platform='github'):
         """ Retrieves our contributor table primary key value for the contributor with
             the given GitHub login credentials, if this contributor is not there, then
             they get inserted.
@@ -815,118 +805,7 @@ class Worker():
         :param login: String, the GitHub login username to find the primary key id for
         :return: Integer, the id of the row in our database with the matching GitHub login
         """
-        idSQL = s.sql.text("""
-            SELECT cntrb_id FROM contributors WHERE cntrb_login = '{}' \
-            AND LOWER(data_source) = '{} api'
-            """.format(login, platform))
-
-        rs = pd.read_sql(idSQL, self.db, params={})
-        data_list = [list(row) for row in rs.itertuples(index=False)]
-        try:
-            return data_list[0][0]
-        except:
-            self.logger.info('contributor needs to be added...')
-
-        if platform == 'github':
-            cntrb_url = ("https://api.github.com/users/" + login)
-        elif platform == 'gitlab':
-            cntrb_url = ("https://gitlab.com/api/v4/users?username=" + login )
-        self.logger.info("Hitting endpoint: {} ...\n".format(cntrb_url))
-
-
-        while True:
-            try:
-                r = requests.get(url=cntrb_url, headers=self.headers)
-                break
-            except TimeoutError as e:
-                self.logger.info("Request timed out. Sleeping 10 seconds and trying again...\n")
-                time.sleep(30)
-
-        self.update_rate_limit(r)
-        contributor = r.json()
-
-
-        company = None
-        location = None
-        email = None
-        if 'company' in contributor:
-            company = contributor['company']
-        if 'location' in contributor:
-            location = contributor['location']
-        if 'email' in contributor:
-            email = contributor['email']
-
-
-        if platform == 'github':
-            cntrb = {
-                'cntrb_login': contributor['login'] if 'login' in contributor else None,
-                'cntrb_email': contributor['email'] if 'email' in contributor else None,
-                'cntrb_company': contributor['company'] if 'company' in contributor else None,
-                'cntrb_location': contributor['location'] if 'location' in contributor else None,
-                'cntrb_created_at': contributor['created_at'] if 'created_at' in contributor else None,
-                'cntrb_canonical': None,
-                'gh_user_id': contributor['id'] if 'id' in contributor else None,
-                'gh_login': contributor['login'] if 'login' in contributor else None,
-                'gh_url': contributor['url'] if 'url' in contributor else None,
-                'gh_html_url': contributor['html_url'] if 'html_url' in contributor else None,
-                'gh_node_id': contributor['node_id'] if 'node_id' in contributor else None,
-                'gh_avatar_url': contributor['avatar_url'] if 'avatar_url' in contributor else None,
-                'gh_gravatar_id': contributor['gravatar_id'] if 'gravatar_id' in contributor else None,
-                'gh_followers_url': contributor['followers_url'] if 'followers_url' in contributor else None,
-                'gh_following_url': contributor['following_url'] if 'following_url' in contributor else None,
-                'gh_gists_url': contributor['gists_url'] if 'gists_url' in contributor else None,
-                'gh_starred_url': contributor['starred_url'] if 'starred_url' in contributor else None,
-                'gh_subscriptions_url': contributor['subscriptions_url'] if 'subscriptions_url' in contributor else None,
-                'gh_organizations_url': contributor['organizations_url'] if 'organizations_url' in contributor else None,
-                'gh_repos_url': contributor['repos_url'] if 'repos_url' in contributor else None,
-                'gh_events_url': contributor['events_url'] if 'events_url' in contributor else None,
-                'gh_received_events_url': contributor['received_events_url'] if 'received_events_url' in contributor else None,
-                'gh_type': contributor['type'] if 'type' in contributor else None,
-                'gh_site_admin': contributor['site_admin'] if 'site_admin' in contributor else None,
-                'tool_source': self.tool_source,
-                'tool_version': self.tool_version,
-                'data_source': self.data_source
-            }
-
-        elif platform == 'gitlab':
-            cntrb =  {
-                'cntrb_login': contributor[0]['username'] if 'username' in contributor[0] else None,
-                'cntrb_email': email,
-                'cntrb_company': company,
-                'cntrb_location': location,
-                'cntrb_created_at': contributor[0]['created_at'] if 'created_at' in contributor[0] else None,
-                'cntrb_canonical': None,
-                'gh_user_id': contributor[0]['id'],
-                'gh_login': contributor[0]['username'],
-                'gh_url': contributor[0]['web_url'],
-                'gh_html_url': None,
-                'gh_node_id': None,
-                'gh_avatar_url': contributor[0]['avatar_url'],
-                'gh_gravatar_id': None,
-                'gh_followers_url': None,
-                'gh_following_url': None,
-                'gh_gists_url': None,
-                'gh_starred_url': None,
-                'gh_subscriptions_url': None,
-                'gh_organizations_url': None,
-                'gh_repos_url': None,
-                'gh_events_url': None,
-                'gh_received_events_url': None,
-                'gh_type': None,
-                'gh_site_admin': None,
-                'tool_source': self.tool_source,
-                'tool_version': self.tool_version,
-                'data_source': self.data_source
-            }
-        result = self.db.execute(self.contributors_table.insert().values(cntrb))
-        self.logger.info("Primary key inserted into the contributors table: " + str(result.inserted_primary_key))
-        self.results_counter += 1
-        self.cntrb_id_inc = int(result.inserted_primary_key[0])
-        self.logger.info(f"Inserted contributor: {cntrb['cntrb_login']}\n")
-
-        return self.find_id_from_login(login, platform)
-
-    #doesn't even query the api just gets it based on the url string
+    #doesn't even query the api just gets it based on the url string, can stay in base
     def get_owner_repo(self, git_url):
         """ Gets the owner and repository names of a repository from a git url
 

@@ -38,6 +38,19 @@ class WorkerGitInterfaceable(Worker):
             self.tool_version = '0.0.0'
             self.data_source = 'Augur Worker Testing'
 
+    #database interface, additional functionality with github interface.
+    def initialize_database_connections(self):
+        super().initialize_database_connections()
+        # Organize different api keys/oauths available
+        self.logger.info("Initializing API key.")
+        if 'gh_api_key' in self.config or 'gitlab_api_key' in self.config:
+            try:
+                self.init_oauths(self.platform)
+            except AttributeError:
+                self.logger.error("Worker not configured to use API key!")      
+        else:
+            self.oauths = [{'oauth_id': 0}]
+
     def find_id_from_login(self, login, platform='github'):
         """ Retrieves our contributor table primary key value for the contributor with
             the given GitHub login credentials, if this contributor is not there, then
