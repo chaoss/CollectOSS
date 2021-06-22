@@ -1,7 +1,8 @@
 #WORK IN PROGRESS NOT TO BE USED AT ALL IN PRESENT STATE
 
-from workers.worker_base import Worker
-from workers.worker_db_client_interface import WorkerDBInterfacable
+#Get everything that the base depends on.
+from workers.worker_base import *
+
 
 #This is a worker base subclass that adds the ability to query github/gitlab with the api key
 class WorkerGitInterfaceable(Worker):
