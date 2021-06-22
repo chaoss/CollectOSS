@@ -95,13 +95,18 @@ class DepsWorker(Worker):
         self.logger.info('Generating scorecard data for repo')
         self.logger.info(f'Repo ID: {repo_id}, Path: {path}')
 
+        # we convert relative path in the format required by scorecard like github.com/chaoss/augur
         raw_path,_ = path.split('-')
         scorecard_repo_path = raw_path[2:]
         command = '--repo='+ scorecard_repo_path
 
-        p= subprocess.run(['./scorecard', command], cwd='/Users/dhruvsachdev/Downloads/scorecard',capture_output=True, text=True)
+        #this is path where our scorecard project is located
+        path_to_scorecard = os.environ['HOME'] + '/scorecard'
+
+        p= subprocess.run(['./scorecard', command], cwd= path_to_scorecard ,capture_output=True, text=True)
         output = p.stdout.split('\n')
         required_output = output[4:20]
+        # here scorecard becomes a list of lists where it has list of 16 list in which each list is a test and has name, status and score. 
         scorecard = list()
         for test in required_output:
             scorecard.append(test.split())
@@ -149,19 +154,6 @@ class DepsWorker(Worker):
         result = self.db.execute(self.repo_deps_scorecard.insert().values(repo_deps)) 
         self.logger.info(f"Added OSSF scorecard data : {result.inserted_primary_key}") 
 
-        # for dep in deps:
-        #         repo_deps = {
-        #             'repo_id': repo_id,
-        #             'dep_name' : dep.name,
-        #             'dep_count' : dep.count,
-        #             'dep_language' : dep.language,
-        #             'tool_source': self.tool_source,
-        #             'tool_version': self.tool_version,
-        #             'data_source': self.data_source,
-        #             'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
-        #         }
-        #         result = self.db.execute(self.repo_dependencies_table.insert().values(repo_deps))
-        #         self.logger.info(f"Added dep: {result.inserted_primary_key}")
 
 
     def generate_deps_data(self, repo_id, path):
