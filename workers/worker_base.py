@@ -53,9 +53,13 @@ class Worker():
         self._task = None # task currently being worked on (dict)
         self._child = None # process of currently running task (multiprocessing process)
         self._queue = Queue() # tasks stored here 1 at a time (in a mp queue so it can translate across multiple processes)
+        #These are for the database section
         self.data_tables = data_tables
         self.operations_tables = operations_tables
+
         self._root_augur_dir = Worker.ROOT_AUGUR_DIR
+
+        #for github section
         self.platform = platform
 
         #TODO: send this block to db_client interfacable
@@ -87,6 +91,7 @@ class Worker():
         worker_info = self.augur_config.get_value('Workers', self.config['worker_type'])
         self.config.update(worker_info)
 
+        #is it just grabbing the first avalable port for api calls? 
         worker_port = self.config['port']
         while True:
             try:
@@ -98,6 +103,7 @@ class Worker():
             except:
                 break
 
+        #add credentials to db config. Goes to databaseable
         self.config.update({
             'port': worker_port,
             'id': "workers.{}.{}".format(self.worker_type, worker_port),
@@ -124,12 +130,17 @@ class Worker():
         self.logger = logging.getLogger(self.config["id"])
         self.logger.info('Worker (PID: {}) initializing...'.format(str(os.getpid())))
 
+        #base
         self.task_info = None
         self.repo_id = None
+        #not sure
         self.owner = None
+        #git interface
         self.repo = None
         self.given = given
         self.models = models
+
+        #back to base, might be overwritten by git integration subclass?
         self.debug_data = [] if 'debug_data' not in self.config else self.config['debug_data']
         self.specs = {
             'id': self.config['id'], # what the broker knows this worker as
