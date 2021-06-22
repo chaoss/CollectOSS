@@ -95,14 +95,11 @@ class DepsWorker(Worker):
         self.logger.info('Generating scorecard data for repo')
         self.logger.info(f'Repo ID: {repo_id}, Path: {path}')
 
-        basic_execution_list = ['./scorecard']
-
         raw_path,_ = path.split('-')
         scorecard_repo_path = raw_path[2:]
         command = '--repo='+ scorecard_repo_path
-        basic_execution_list.append(command)
 
-        p= subprocess.run(basic_execution_list, cwd='/Users/dhruvsachdev/Downloads/scorecard',capture_output=True, text=True)
+        p= subprocess.run(['./scorecard', command], cwd='/Users/dhruvsachdev/Downloads/scorecard',capture_output=True, text=True)
         output = p.stdout.split('\n')
         required_output = output[4:20]
         scorecard = list()
@@ -111,11 +108,11 @@ class DepsWorker(Worker):
 
         repo_deps = {
             'repo_id': repo_id,
-
             "ossf_active_status": scorecard[0][1],
+            'ossf_automated_dendency_update_status': scorecard[1][1],
             "ossf_branch_protection_status": scorecard[2][1],
             "ossf_ci_tests_status": scorecard[3][1],
-            # "ossf_cii_badge_status": scorecard[4][1],
+            "ossf_cii_best_practices_status": scorecard[4][1],
             "ossf_code_review_status": scorecard[5][1],
             "ossf_contributors_status":scorecard[6][1],
             "ossf_frozen_deps_status": scorecard[7][1],
@@ -126,10 +123,12 @@ class DepsWorker(Worker):
             "ossf_security_policy_status": scorecard[12][1],
             "ossf_signed_releases_status":scorecard[13][1],
             "ossf_signed_tags_status":scorecard[14][1],
+            'ossf_token_permissions_status': scorecard[15][1],
             "ossf_active_score": scorecard[0][2],
+            'ossf_automated_dendency_update_score': scorecard[1][2],
             "ossf_branch_protection_score":scorecard[2][2],
             "ossf_ci_tests_score": scorecard[3][2],
-            # "ossf_cii_badge_score": scorecard[4][2],
+            "ossf_cii_best_practices_score": scorecard[4][2],
             "ossf_code_review_score": scorecard[5][2],
             "ossf_contributors_score":scorecard[6][2],
             "ossf_frozen_deps_score": scorecard[7][2],
@@ -140,15 +139,15 @@ class DepsWorker(Worker):
             "ossf_security_policy_score": scorecard[12][2],
             "ossf_signed_releases_score": scorecard[13][2], 
             "ossf_signed_tags_score": scorecard[14][2],
-
-
+            'ossf_token_permissions_score': scorecard[15][2],
             'tool_source': self.tool_source,
             'tool_version': self.tool_version,
             'data_source': self.data_source,
             'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
 
         }  
-        result = self.db.execute(self.repo_deps_scorecard.insert().values(repo_deps))  
+        result = self.db.execute(self.repo_deps_scorecard.insert().values(repo_deps)) 
+        self.logger.info(f"Added OSSF scorecard data : {result.inserted_primary_key}") 
 
         # for dep in deps:
         #         repo_deps = {
