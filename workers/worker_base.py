@@ -35,7 +35,7 @@ import dask.dataframe as dd
 #
 #   Parts (Hierarchal relation)
 #1. Base
-#2. Database interface
+#2. ??????
 #3. Github/lab interface
 
 class Worker():
@@ -62,7 +62,6 @@ class Worker():
         #for github section
         self.platform = platform
 
-        #TODO: send this block to db_client interfacable
         # count of tuples inserted in the database (to store stats for each task in op tables) 
         self.update_counter = 0
         self.insert_counter = 0
@@ -73,6 +72,7 @@ class Worker():
         # Update config with options that are general and not specific to any worker
         self.augur_config = AugurConfig(self._root_augur_dir)
 
+        #TODO: consider taking parts of this out for the base class and then overriding it in WorkerGitInterfaceable
         self.config = {
                 'worker_type': self.worker_type,
                 'host': self.augur_config.get_value('Server', 'host'),
@@ -236,6 +236,7 @@ class Worker():
 
         self.logger = logger
 
+    #database interface
     def initialize_database_connections(self):
         DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(
             self.config['user_database'], self.config['password_database'], self.config['host_database'], self.config['port_database'], self.config['name_database']
@@ -290,7 +291,6 @@ class Worker():
         else:
             self.oauths = [{'oauth_id': 0}]
 
-    #This should probably be overwritten by the actual facade worker instead of cluttering up the base worker
     @property
     def results_counter(self):
         """ Property that is returned when the worker's current results_counter is referenced
@@ -365,6 +365,8 @@ class Worker():
             if message['job_type'] != 'MAINTAIN' and message['job_type'] != 'UPDATE':
                 raise ValueError('{} is not a recognized task type'.format(message['job_type']))
                 pass
+
+            ##base, doesn't use keys
 
             # Query repo_id corresponding to repo url of given task
             repoUrlSQL = s.sql.text("""
@@ -804,6 +806,7 @@ class Worker():
         return result
 
     #TODO: Enumerate the workers that actually use this. I don't think all workers need to track this
+    #Just a api interface for github/lab
     def find_id_from_login(self, login, platform='github'):
         """ Retrieves our contributor table primary key value for the contributor with
             the given GitHub login credentials, if this contributor is not there, then
@@ -923,6 +926,7 @@ class Worker():
 
         return self.find_id_from_login(login, platform)
 
+    #doesn't even query the api just gets it based on the url string
     def get_owner_repo(self, git_url):
         """ Gets the owner and repository names of a repository from a git url
 
@@ -998,6 +1002,7 @@ class Worker():
         values = pd.read_sql(table_values_sql, self.db, params={})
         return values
 
+    #Blatently only for api key usage
     def init_oauths(self, platform='github'):
         self.oauths = []
         self.headers = None
@@ -1216,6 +1221,7 @@ class Worker():
 
         return df
 
+    #uses platform attribute --> worker_git_integration
     def enrich_cntrb_id(
         self, data, key, action_map_additions={'insert': {'source': [], 'augur': []}},
         platform='github', prefix=''
@@ -2129,6 +2135,8 @@ class Worker():
 
         return tuples
 
+
+    #It's pretty clear why these methods should be refactored into a git interfacable subclass
     def query_github_contributors(self, entry_info, repo_id):
 
         """ Data collection function
@@ -2378,6 +2386,7 @@ class Worker():
             insert=contributors_insert, update_columns=action_map['update']['augur']
         )
 
+    #TODO: figure out if changing this typo breaks anything
     def query_gitlab_contribtutors(self, entry_info, repo_id):
 
         gitlab_url = (
@@ -2480,6 +2489,7 @@ class Worker():
                 self.logger.info("Cascading Contributor Anomalie from missing repo contributor data: {} ...\n".format(cntrb_url))
                 continue
 
+    #Base
     def record_model_process(self, repo_id, model):
 
         task_history = {
