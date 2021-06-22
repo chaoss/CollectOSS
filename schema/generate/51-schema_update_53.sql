@@ -1,5 +1,5 @@
 BEGIN;
-ALTER TABLE IF EXISTS "augur_data"."repo_deps_scorecard" RENAME TO "augur_data"."_dev1_repo_deps_scorecard";
+ALTER TABLE IF EXISTS "augur_data"."repo_deps_scorecard" RENAME TO "_dev1_repo_deps_scorecard";
 CREATE TABLE "augur_data"."repo_deps_scorecard" (
   "repo_deps_scorecard_id" serial8 NOT NULL,
   "repo_id" int8, 
@@ -18,7 +18,7 @@ CREATE TABLE "augur_data"."repo_deps_scorecard" (
   "ossf_signed_releases_status" varchar COLLATE "pg_catalog"."default",
   "ossf_signed_tags_status" varchar COLLATE "pg_catalog"."default",
   "ossf_automated_dendency_update_status" varchar COLLATE "pg_catalog"."default",
-  "ossf_token_permissions_score" varchar COLLATE "pg_catalog"."default",
+  "ossf_token_permissions_status" varchar COLLATE "pg_catalog"."default",
   "ossf_active_score" varchar COLLATE "pg_catalog"."default",
   "ossf_branch_protection_score" varchar COLLATE "pg_catalog"."default",
   "ossf_ci_tests_score" varchar COLLATE "pg_catalog"."default",
@@ -46,7 +46,7 @@ ALTER TABLE "augur_data"."repo_deps_scorecard" OWNER TO "augur";
 -- ----------------------------
 -- Primary Key structure for table repo_deps_scorecard
 -- ----------------------------
-ALTER TABLE "augur_data"."repo_deps_scorecard" ADD CONSTRAINT "repo_deps_scorecard_pkey" PRIMARY KEY ("repo_deps_scorecard_id");
+ALTER TABLE "augur_data"."repo_deps_scorecard" ADD CONSTRAINT "repo_deps_scorecard_pkey_x" PRIMARY KEY ("repo_deps_scorecard_id");
 
 -- ----------------------------
 -- Foreign Keys structure for table repo_deps_scorecard
