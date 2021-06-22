@@ -9,6 +9,8 @@ class WorkerGitInterfaceable(Worker):
     def __init__(self, worker_type, config={}, given=[], models=[], data_tables=[], operations_tables=[], platform="github"):
         super().___init__(worker_type, config, given, models, data_tables, operations_tables)
 
+        #Fix loose attribute def
+        self.headers = None
         self.platform = platform
         self.given = given
         self.models = models
@@ -772,3 +774,800 @@ class WorkerGitInterfaceable(Worker):
 
             # Change headers to be using the new oauth's key
             self.headers = {'Authorization': 'token %s' % self.oauths[0]['access_token']}
+
+    #TODO: figure out if changing this typo breaks anything
+    def query_gitlab_contribtutors(self, entry_info, repo_id):
+
+        gitlab_url = (
+            entry_info['given']['gitlab_url'] if 'gitlab_url' in entry_info['given']
+            else entry_info['given']['git_url']
+        )
+
+        self.logger.info("Querying contributors with given entry info: " + str(entry_info) + "\n")
+
+        path = urlparse(gitlab_url)
+        split = path[2].split('/')
+
+        owner = split[1]
+        name = split[2]
+
+        # Handles git url case by removing the extension
+        if ".git" in name:
+            name = name[:-4]
+
+        url_encoded_format = quote(owner + '/' + name, safe='')
+
+        table = 'contributors'
+        table_pkey = 'cntrb_id'
+        ### %TODO Remap this to a GitLab Contributor ID like the GitHub Worker.
+        ### Following Gabe's rework of the contributor worker.
+        update_col_map = {'cntrb_email': 'email'}
+        duplicate_col_map = {'cntrb_login': 'email'}
+
+        # list to hold contributors needing insertion or update
+        contributors = self.paginate("https://gitlab.com/api/v4/projects/" + url_encoded_format + "/repository/contributors?per_page=100&page={}", duplicate_col_map, update_col_map, table, table_pkey, platform='gitlab')
+
+        for repo_contributor in contributors:
+            try:
+                cntrb_compressed_url = ("https://gitlab.com/api/v4/users?search=" + repo_contributor['email'])
+                self.logger.info("Hitting endpoint: " + cntrb_compressed_url + " ...\n")
+                r = requests.get(url=cntrb_compressed_url, headers=self.headers)
+                contributor_compressed = r.json()
+
+                email = repo_contributor['email']
+                self.logger.info(contributor_compressed)
+                if len(contributor_compressed) == 0 or type(contributor_compressed) is dict or "id" not in contributor_compressed[0]:
+                    continue
+
+                self.logger.info("Fetching for user: " + str(contributor_compressed[0]["id"]))
+
+                cntrb_url = ("https://gitlab.com/api/v4/users/" + str(contributor_compressed[0]["id"]))
+                self.logger.info("Hitting end point to get complete contributor info now: " + cntrb_url + "...\n")
+                r = requests.get(url=cntrb_url, headers=self.headers)
+                contributor = r.json()
+
+                cntrb = {
+                    "cntrb_login": contributor.get('username', None),
+                    "cntrb_created_at": contributor.get('created_at', None),
+                    "cntrb_email": email,
+                    "cntrb_company": contributor.get('organization', None),
+                    "cntrb_location": contributor.get('location', None),
+                    # "cntrb_type": , dont have a use for this as of now ... let it default to null
+                    "cntrb_canonical": contributor.get('public_email', None),
+                    "gh_user_id": contributor.get('id', None),
+                    "gh_login": contributor.get('username', None),
+                    "gh_url": contributor.get('web_url', None),
+                    "gh_html_url": contributor.get('web_url', None),
+                    "gh_node_id": None,
+                    "gh_avatar_url": contributor.get('avatar_url', None),
+                    "gh_gravatar_id": None,
+                    "gh_followers_url": None,
+                    "gh_following_url": None,
+                    "gh_gists_url": None,
+                    "gh_starred_url": None,
+                    "gh_subscriptions_url": None,
+                    "gh_organizations_url": None,
+                    "gh_repos_url": None,
+                    "gh_events_url": None,
+                    "gh_received_events_url": None,
+                    "gh_type": None,
+                    "gh_site_admin": None,
+                    "tool_source": self.tool_source,
+                    "tool_version": self.tool_version,
+                    "data_source": self.data_source
+                }
+
+                # Commit insertion to table
+                if repo_contributor['flag'] == 'need_update':
+                    result = self.db.execute(self.contributors_table.update().where(
+                        self.worker_history_table.c.cntrb_email == email).values(cntrb))
+                    self.logger.info("Updated tuple in the contributors table with existing email: {}".format(email))
+                    self.cntrb_id_inc = repo_contributor['pkey']
+                elif repo_contributor['flag'] == 'need_insertion':
+                    result = self.db.execute(self.contributors_table.insert().values(cntrb))
+                    self.logger.info("Primary key inserted into the contributors table: {}".format(result.inserted_primary_key))
+                    self.results_counter += 1
+
+                    self.logger.info("Inserted contributor: " + contributor['username'] + "\n")
+
+                    # Increment our global track of the cntrb id for the possibility of it being used as a FK
+                    self.cntrb_id_inc = int(result.inserted_primary_key[0])
+
+            except Exception as e:
+                self.logger.info("Caught exception: {}".format(e))
+                self.logger.info("Cascading Contributor Anomalie from missing repo contributor data: {} ...\n".format(cntrb_url))
+                continue
+
+
+    def update_gitlab_rate_limit(self, response, bad_credentials=False, temporarily_disable=False):
+        # Try to get rate limit from request headers, sometimes it does not work (GH's issue)
+        #   In that case we just decrement from last recieved header count
+        if bad_credentials and len(self.oauths) > 1:
+            self.logger.info(
+                f"Removing oauth with bad credentials from consideration: {self.oauths[0]}"
+            )
+            del self.oauths[0]
+
+        if temporarily_disable:
+            self.logger.info("Gitlab rate limit reached. Temp. disabling...")
+            self.oauths[0]['rate_limit'] = 0
+        else:
+            try:
+                self.oauths[0]['rate_limit'] = int(response.headers['RateLimit-Remaining'])
+            except:
+                self.oauths[0]['rate_limit'] -= 1
+        self.logger.info("Updated rate limit, you have: " +
+            str(self.oauths[0]['rate_limit']) + " requests remaining.")
+        if self.oauths[0]['rate_limit'] <= 0:
+            try:
+                reset_time = response.headers['RateLimit-Reset']
+            except Exception as e:
+                self.logger.info(f"Could not get reset time from headers because of error: {e}")
+                reset_time = 3600
+            time_diff = datetime.datetime.fromtimestamp(int(reset_time)) - datetime.datetime.now()
+            self.logger.info("Rate limit exceeded, checking for other available keys to use.")
+
+            # We will be finding oauth with the highest rate limit left out of our list of oauths
+            new_oauth = self.oauths[0]
+            # Endpoint to hit solely to retrieve rate limit information from headers of the response
+            url = "https://gitlab.com/api/v4/version"
+
+            other_oauths = self.oauths[0:] if len(self.oauths) > 1 else []
+            for oauth in other_oauths:
+                # self.logger.info("Inspecting rate limit info for oauth: {}\n".format(oauth))
+                self.headers = {"PRIVATE-TOKEN" : oauth['access_token']}
+                response = requests.get(url=url, headers=self.headers)
+                oauth['rate_limit'] = int(response.headers['RateLimit-Remaining'])
+                oauth['seconds_to_reset'] = (
+                    datetime.datetime.fromtimestamp(
+                        int(response.headers['RateLimit-Reset'])
+                    ) - datetime.datetime.now()
+                ).total_seconds()
+
+                # Update oauth to switch to if a higher limit is found
+                if oauth['rate_limit'] > new_oauth['rate_limit']:
+                    self.logger.info(f"Higher rate limit found in oauth: {oauth}")
+                    new_oauth = oauth
+                elif (
+                    oauth['rate_limit'] == new_oauth['rate_limit']
+                    and oauth['seconds_to_reset'] < new_oauth['seconds_to_reset']
+                ):
+                    self.logger.info(
+                        f"Lower wait time found in oauth with same rate limit: {oauth}"
+                    )
+                    new_oauth = oauth
+
+            if new_oauth['rate_limit'] <= 0 and new_oauth['seconds_to_reset'] > 0:
+                self.logger.info(
+                    "No oauths with >0 rate limit were found, waiting for oauth with "
+                    f"smallest wait time: {new_oauth}\n"
+                )
+                time.sleep(new_oauth['seconds_to_reset'])
+
+            # Make new oauth the 0th element in self.oauths so we know which one is in use
+            index = self.oauths.index(new_oauth)
+            self.oauths[0], self.oauths[index] = self.oauths[index], self.oauths[0]
+            self.logger.info("Using oauth: {}\n".format(self.oauths[0]))
+
+            # Change headers to be using the new oauth's key
+            self.headers = {"PRIVATE-TOKEN" : self.oauths[0]['access_token']}
+
+
+    def update_gh_rate_limit(self, response, bad_credentials=False, temporarily_disable=False):
+        # Try to get rate limit from request headers, sometimes it does not work (GH's issue)
+        #   In that case we just decrement from last recieved header count
+        if bad_credentials and len(self.oauths) > 1:
+            self.logger.warning(
+                f"Removing oauth with bad credentials from consideration: {self.oauths[0]}"
+            )
+            del self.oauths[0]
+
+        if temporarily_disable:
+            self.logger.debug(
+                "Github thinks we are abusing their api. Preventing use "
+                "of this key until its rate limit resets..."
+            )
+            self.oauths[0]['rate_limit'] = 0
+        else:
+            try:
+                self.oauths[0]['rate_limit'] = int(response.headers['X-RateLimit-Remaining'])
+                # self.logger.info("Recieved rate limit from headers\n")
+            except:
+                self.oauths[0]['rate_limit'] -= 1
+                self.logger.info("Headers did not work, had to decrement")
+        self.logger.info(
+            f"Updated rate limit, you have: {self.oauths[0]['rate_limit']} requests remaining."
+        )
+        if self.oauths[0]['rate_limit'] <= 0:
+            try:
+                reset_time = response.headers['X-RateLimit-Reset']
+            except Exception as e:
+                self.logger.error(f"Could not get reset time from headers because of error: {e}")
+                reset_time = 3600
+            time_diff = datetime.datetime.fromtimestamp(int(reset_time)) - datetime.datetime.now()
+            self.logger.info("Rate limit exceeded, checking for other available keys to use.")
+
+            # We will be finding oauth with the highest rate limit left out of our list of oauths
+            new_oauth = self.oauths[0]
+            # Endpoint to hit solely to retrieve rate limit information from headers of the response
+            url = "https://api.github.com/users/gabe-heim"
+
+            other_oauths = self.oauths[0:] if len(self.oauths) > 1 else []
+            for oauth in other_oauths:
+                # self.logger.info("Inspecting rate limit info for oauth: {}\n".format(oauth))
+                self.headers = {'Authorization': 'token %s' % oauth['access_token']}
+
+                attempts = 3
+                success = False
+                while attempts > 0 and not success:
+                    response = requests.get(url=url, headers=self.headers)
+                    try:
+                        oauth['rate_limit'] = int(response.headers['X-RateLimit-Remaining'])
+                        oauth['seconds_to_reset'] = (
+                            datetime.datetime.fromtimestamp(
+                                int(response.headers['X-RateLimit-Reset'])
+                            ) - datetime.datetime.now()
+                        ).total_seconds()
+                        success = True
+                    except Exception as e:
+                        self.logger.info(
+                            f"oath method ran into error getting info from headers: {e}\n"
+                        )
+                        self.logger.info(f"{self.headers}\n{url}\n")
+                    attempts -= 1
+                if not success:
+                    continue
+
+                # Update oauth to switch to if a higher limit is found
+                if oauth['rate_limit'] > new_oauth['rate_limit']:
+                    self.logger.info("Higher rate limit found in oauth: {}\n".format(oauth))
+                    new_oauth = oauth
+                elif (
+                    oauth['rate_limit'] == new_oauth['rate_limit']
+                    and oauth['seconds_to_reset'] < new_oauth['seconds_to_reset']
+                ):
+                    self.logger.info(
+                        f"Lower wait time found in oauth with same rate limit: {oauth}\n"
+                    )
+                    new_oauth = oauth
+
+            if new_oauth['rate_limit'] <= 0 and new_oauth['seconds_to_reset'] > 0:
+                self.logger.info(
+                    "No oauths with >0 rate limit were found, waiting for oauth with "
+                    f"smallest wait time: {new_oauth}\n"
+                )
+                time.sleep(new_oauth['seconds_to_reset'])
+
+            # Make new oauth the 0th element in self.oauths so we know which one is in use
+            index = self.oauths.index(new_oauth)
+            self.oauths[0], self.oauths[index] = self.oauths[index], self.oauths[0]
+            self.logger.info("Using oauth: {}\n".format(self.oauths[0]))
+
+            # Change headers to be using the new oauth's key
+            self.headers = {'Authorization': 'token %s' % self.oauths[0]['access_token']}
+
+    def update_rate_limit(
+        self, response, bad_credentials=False, temporarily_disable=False, platform="gitlab"
+    ):
+        if platform == 'gitlab':
+            return self.update_gitlab_rate_limit(
+                response, bad_credentials=bad_credentials, temporarily_disable=temporarily_disable
+            )
+        elif platform == 'github':
+            return self.update_gh_rate_limit(
+                response, bad_credentials=bad_credentials, temporarily_disable=temporarily_disable
+            )
+
+
+    def multi_thread_urls(self, all_urls, max_attempts=5, platform='github'):
+        """
+        :param all_urls: list of tuples
+        """
+
+        if not len(all_urls):
+            self.logger.info("No urls to multithread, returning blank list.\n")
+            return []
+
+        def load_url(url, extra_data={}):
+            try:
+                html = requests.get(url, stream=True, headers=self.headers)
+                return html, extra_data
+            except requests.exceptions.RequestException as e:
+                self.logger.info(e, url)
+
+        self.logger.info("Beginning to multithread API endpoints.")
+
+        start = time.time()
+
+        all_data = []
+        valid_url_count = len(all_urls)
+
+        partitions = math.ceil(len(all_urls) / 600)
+        self.logger.info(f"{len(all_urls)} urls to process. Trying {partitions} partitions. " +
+            f"Using {max(multiprocessing.cpu_count()//8, 1)} threads.")
+        for urls in numpy.array_split(all_urls, partitions):
+            attempts = 0
+            self.logger.info(f"Total data points collected so far: {len(all_data)}")
+            while len(urls) > 0 and attempts < max_attempts:
+                with concurrent.futures.ThreadPoolExecutor(
+                    max_workers=max(multiprocessing.cpu_count()//8, 1)
+                ) as executor:
+                    # Start the load operations and mark each future with its URL
+                    future_to_url = {executor.submit(load_url, *url): url for url in urls}
+                    self.logger.info("Multithreaded urls and returned status codes:")
+                    count = 0
+                    for future in concurrent.futures.as_completed(future_to_url):
+
+                        if count % 100 == 0:
+                            self.logger.info(
+                                f"Processed {len(all_data)} / {valid_url_count} urls. "
+                                f"{len(urls)} remaining in this partition."
+                            )
+                        count += 1
+
+                        url = future_to_url[future]
+                        try:
+                            response, extra_data = future.result()
+
+                            if response.status_code != 200:
+                                self.logger.info(
+                                    f"Url: {url[0]} ; Status code: {response.status_code}"
+                                )
+
+                            if response.status_code == 403 or response.status_code == 401: # 403 is rate limit, 404 is not found, 401 is bad credentials
+                                self.update_rate_limit(response, platform=platform)
+                                continue
+
+                            elif response.status_code == 200:
+                                try:
+                                    page_data = response.json()
+                                except:
+                                    page_data = json.loads(json.dumps(response.text))
+
+                                page_data = [{**data, **extra_data} for data in page_data]
+                                all_data += page_data
+
+                                if 'last' in response.links and "&page=" not in url[0]:
+                                    urls += [
+                                        (url[0] + f"&page={page}", extra_data) for page in range(
+                                            2, int(response.links['last']['url'].split('=')[-1]) + 1
+                                        )
+                                    ]
+                                urls = numpy.delete(urls, numpy.where(urls == url), axis=0)
+
+                            elif response.status_code == 404:
+                                urls = numpy.delete(urls, numpy.where(urls == url), axis=0)
+                                self.logger.info(f"Not found url: {url}\n")
+                            else:
+                                self.logger.info(
+                                    f"Unhandled response code: {response.status_code} {url}\n"
+                                )
+
+                        except Exception as e:
+                            self.logger.info(
+                                f"{url} generated an exception: {traceback.format_exc()}\n"
+                            )
+
+                attempts += 1
+
+        self.logger.info(
+            f"Processed {valid_url_count} urls and got {len(all_data)} data points "
+            f"in {time.time() - start} seconds thanks to multithreading!\n"
+        )
+        return all_data
+
+
+    def paginate_endpoint(
+        self, url, action_map={}, table=None, where_clause=True, platform='github', in_memory=True
+    ):
+
+        table_values = self.db.execute(
+            s.sql.select(self.get_relevant_columns(table, action_map)).where(where_clause)
+        ).fetchall()
+
+        page_number = 1
+        multiple_pages = False
+        need_insertion = []
+        need_update = []
+        all_data = []
+        forward_pagination = True
+        backwards_activation = False
+        last_page_number = -1
+        while True:
+
+            # Multiple attempts to hit endpoint
+            num_attempts = 0
+            success = False
+            while num_attempts < 10:
+                self.logger.info(f"Hitting endpoint: {url.format(page_number)}...\n")
+                try:
+                    response = requests.get(url=url.format(page_number), headers=self.headers)
+                except TimeoutError as e:
+                    self.logger.info("Request timed out. Sleeping 10 seconds and trying again...\n")
+                    time.sleep(10)
+                    continue
+
+                self.update_rate_limit(response, platform=platform)
+
+                try:
+                    page_data = response.json()
+                except:
+                    page_data = json.loads(json.dumps(response.text))
+
+                if type(page_data) == list:
+                    success = True
+                    break
+                elif type(page_data) == dict:
+                    self.logger.info("Request returned a dict: {}\n".format(page_data))
+                    if page_data['message'] == "Not Found":
+                        self.logger.warning(
+                            "Github repo was not found or does not exist for endpoint: "
+                            f"{url.format(page_number)}\n"
+                        )
+                        break
+                    if "You have triggered an abuse detection mechanism." in page_data['message']:
+                        num_attempts -= 1
+                        self.update_rate_limit(response, temporarily_disable=True,platform=platform)
+                    if page_data['message'] == "Bad credentials":
+                        self.update_rate_limit(response, bad_credentials=True, platform=platform)
+                elif type(page_data) == str:
+                    self.logger.info(f"Warning! page_data was string: {page_data}\n")
+                    if "<!DOCTYPE html>" in page_data:
+                        self.logger.info("HTML was returned, trying again...\n")
+                    elif len(page_data) == 0:
+                        self.logger.warning("Empty string, trying again...\n")
+                    else:
+                        try:
+                            page_data = json.loads(page_data)
+                            success = True
+                            break
+                        except:
+                            pass
+                num_attempts += 1
+            if not success:
+                break
+
+            # Success
+
+            # Determine if continued pagination is needed
+
+            if len(page_data) == 0:
+                self.logger.info("Response was empty, breaking from pagination.\n")
+                break
+
+            all_data += page_data
+
+            if not forward_pagination:
+
+                # Checking contents of requests with what we already have in the db
+                page_insertions, page_updates = self.organize_needed_data(
+                    page_data, table_values, list(table.primary_key)[0].name,
+                    action_map, in_memory=True
+                )
+
+                # Reached a page where we already have all tuples
+                if len(need_insertion) == 0 and len(need_update) == 0 and \
+                        backwards_activation:
+                    self.logger.info(
+                        "No more pages with unknown tuples, breaking from pagination.\n"
+                    )
+                    break
+
+                need_insertion += page_insertions
+                need_update += page_updates
+
+            # Find last page so we can decrement from there
+            if 'last' in response.links and last_page_number == -1:
+                if platform == 'github':
+                    last_page_number = int(response.links['last']['url'][-6:].split('=')[1])
+                elif platform == 'gitlab':
+                    last_page_number = int(response.links['last']['url'].split('&')[2].split('=')[1])
+
+                if not forward_pagination and not backwards_activation:
+                    page_number = last_page_number
+                    backwards_activation = True
+
+            self.logger.info("Analyzation of page {} of {} complete\n".format(page_number,
+                int(last_page_number) if last_page_number != -1 else "*last page not known*"))
+
+            if (page_number <= 1 and not forward_pagination) or \
+                    (page_number >= last_page_number and forward_pagination):
+                self.logger.info("No more pages to check, breaking from pagination.\n")
+                break
+
+            page_number = page_number + 1 if forward_pagination else page_number - 1
+
+        if forward_pagination:
+            need_insertion, need_update = self.organize_needed_data(
+                all_data, table_values, list(table.primary_key)[0].name, action_map,
+                in_memory=in_memory
+            )
+
+        return {
+            'insert': need_insertion,
+            'update': need_update,
+            'all': all_data
+        }
+
+
+    def paginate(self, url, duplicate_col_map, update_col_map, table, table_pkey, where_clause="", value_update_col_map={}, platform="github"):
+        """ DEPRECATED
+            Paginate either backwards or forwards (depending on the value of the worker's
+            finishing_task attribute) through all the GitHub or GitLab api endpoint pages.
+
+        :param url: String, the url of the API endpoint we are paginating through, expects
+            a curly brace string formatter within the string to format the Integer
+            representing the page number that is wanted to be returned
+        :param duplicate_col_map: Dictionary, maps the column names of the source data
+            to the field names in our database for columns that should be checked for
+            duplicates (if source data value == value in existing database row, then this
+            element is a duplicate and would not need an insertion). Key is source data
+            column name, value is database field name. Example: {'id': 'gh_issue_id'}
+        :param update_col_map: Dictionary, maps the column names of the source data
+            to the field names in our database for columns that should be checked for
+            updates (if source data value != value in existing database row, then an
+            update is needed). Key is source data column name, value is database field name.
+            Example: {'id': 'gh_issue_id'}
+        :param table: String, the name of the table that holds the values to check for
+            duplicates/updates against
+        :param table_pkey: String, the field name of the primary key of the table in
+            the database that we are getting the values for to cross-reference to check
+            for duplicates.
+        :param where_clause: String, optional where clause to filter the values
+            that are queried when preparing the values that will be cross-referenced
+            for duplicates/updates
+        :param value_update_col_map: Dictionary, sometimes we add a new field to a table,
+            and we want to trigger an update of that row in the database even if all of the
+            data values are the same and would not need an update ordinarily. Checking for
+            a specific existing value in the database field allows us to do this. The key is the
+            name of the field in the database we are checking for a specific value to trigger
+            an update, the value is the value we are checking for equality to trigger an update.
+            Example: {'cntrb_id': None}
+        :return: List of dictionaries, all data points from the pages of the specified API endpoint
+            each with a 'flag' key-value pair representing the required action to take with that
+            data point (i.e. 'need_insertion', 'need_update', 'none')
+        """
+
+        update_keys = list(update_col_map.keys()) if update_col_map else []
+        update_keys += list(value_update_col_map.keys()) if value_update_col_map else []
+        cols_to_query = list(duplicate_col_map.keys()) + update_keys + [table_pkey]
+        table_values = self.get_table_values(cols_to_query, [table], where_clause)
+
+        i = 1
+        multiple_pages = False
+        tuples = []
+        while True:
+            num_attempts = 0
+            success = False
+            while num_attempts < 3:
+                self.logger.info(f'Hitting endpoint: {url.format(i)}...\n')
+                r = requests.get(url=url.format(i), headers=self.headers)
+
+                self.update_rate_limit(r, platform=platform)
+                if 'last' not in r.links:
+                    last_page = None
+                else:
+                    if platform == "github":
+                        last_page = r.links['last']['url'][-6:].split('=')[1]
+                    elif platform == "gitlab":
+                        last_page =  r.links['last']['url'].split('&')[2].split("=")[1]
+                    self.logger.info("Analyzing page {} of {}\n".format(i, int(last_page) + 1 if last_page is not None else '*last page not known*'))
+
+                try:
+                    j = r.json()
+                except:
+                    j = json.loads(json.dumps(r.text))
+
+                if type(j) != dict and type(j) != str:
+                    success = True
+                    break
+                elif type(j) == dict:
+                    self.logger.info("Request returned a dict: {}\n".format(j))
+                    if j['message'] == 'Not Found':
+                        self.logger.warning("Github repo was not found or does not exist for endpoint: {}\n".format(url))
+                        break
+                    if j['message'] == 'You have triggered an abuse detection mechanism. Please wait a few minutes before you try again.':
+                        num_attempts -= 1
+                        self.logger.info("rate limit update code goes here")
+                        self.update_rate_limit(r, temporarily_disable=True,platform=platform)
+                    if j['message'] == 'Bad credentials':
+                        self.logger.info("rate limit update code goes here")
+                        self.update_rate_limit(r, bad_credentials=True, platform=platform)
+                elif type(j) == str:
+                    self.logger.info(f'J was string: {j}\n')
+                    if '<!DOCTYPE html>' in j:
+                        self.logger.info('HTML was returned, trying again...\n')
+                    elif len(j) == 0:
+                        self.logger.warning('Empty string, trying again...\n')
+                    else:
+                        try:
+                            j = json.loads(j)
+                            success = True
+                            break
+                        except:
+                            pass
+                num_attempts += 1
+            if not success:
+                break
+
+            # Find last page so we can decrement from there
+            if 'last' in r.links and not multiple_pages and not self.finishing_task:
+                if platform == "github":
+                    param = r.links['last']['url'][-6:]
+                    i = int(param.split('=')[1]) + 1
+                elif platform == "gitlab":
+                    i = int(r.links['last']['url'].split('&')[2].split("=")[1]) + 1
+                self.logger.info("Multiple pages of request, last page is " + str(i - 1) + "\n")
+                multiple_pages = True
+            elif not multiple_pages and not self.finishing_task:
+                self.logger.info("Only 1 page of request\n")
+            elif self.finishing_task:
+                self.logger.info("Finishing a previous task, paginating forwards ..."
+                    " excess rate limit requests will be made\n")
+
+            if len(j) == 0:
+                self.logger.info("Response was empty, breaking from pagination.\n")
+                break
+
+            # Checking contents of requests with what we already have in the db
+            j = self.assign_tuple_action(j, table_values, update_col_map, duplicate_col_map, table_pkey, value_update_col_map)
+
+            if not j:
+                self.logger.error("Assigning tuple action failed, moving to next page.\n")
+                i = i + 1 if self.finishing_task else i - 1
+                continue
+            try:
+                to_add = [obj for obj in j if obj not in tuples and (obj['flag'] != 'none')]
+            except Exception as e:
+                self.logger.error("Failure accessing data of page: {}. Moving to next page.\n".format(e))
+                i = i + 1 if self.finishing_task else i - 1
+                continue
+            if len(to_add) == 0 and multiple_pages and 'last' in r.links:
+                self.logger.info("{}".format(r.links['last']))
+                if platform == "github":
+                    page_number = int(r.links['last']['url'][-6:].split('=')[1])
+                elif platform == "gitlab":
+                    page_number = int(r.links['last']['url'].split('&')[2].split("=")[1])
+                if i - 1 != page_number:
+                    self.logger.info("No more pages with unknown tuples, breaking from pagination.\n")
+                    break
+
+            tuples += to_add
+
+            i = i + 1 if self.finishing_task else i - 1
+
+            # Since we already wouldve checked the first page... break
+            if (i == 1 and multiple_pages and not self.finishing_task) or i < 1 or len(j) == 0:
+                self.logger.info("No more pages to check, breaking from pagination.\n")
+                break
+
+        return tuples
+
+    def new_paginate_endpoint(
+        self, url, action_map={}, table=None, where_clause=True, platform='github'
+    ):
+
+        page_number = 1
+        multiple_pages = False
+        need_insertion = []
+        need_update = []
+        all_data = []
+        forward_pagination = True
+        backwards_activation = False
+        last_page_number = -1
+        while True:
+
+            # Multiple attempts to hit endpoint
+            num_attempts = 0
+            success = False
+            while num_attempts < 10:
+                self.logger.info("hitting an endpiont")
+                #    f"Hitting endpoint: ...\n"
+                #    f"{url.format(page_number)} on page number. \n")
+                try:
+                    response = requests.get(url=url.format(page_number), headers=self.headers)
+                except TimeoutError as e:
+                    self.logger.info("Request timed out. Sleeping 10 seconds and trying again...\n")
+                    time.sleep(10)
+                    continue
+
+                self.update_rate_limit(response, platform=platform)
+
+                try:
+                    page_data = response.json()
+                except:
+                    page_data = json.loads(json.dumps(response.text))
+
+                if type(page_data) == list:
+                    success = True
+                    break
+                elif type(page_data) == dict:
+                    self.logger.info("Request returned a dict: {}\n".format(page_data))
+                    if page_data['message'] == "Not Found":
+                        self.logger.warning(
+                            "Github repo was not found or does not exist for endpoint: "
+                            f"{url.format(page_number)}\n"
+                        )
+                        break
+                    if "You have triggered an abuse detection mechanism." in page_data['message']:
+                        num_attempts -= 1
+                        self.update_rate_limit(response, temporarily_disable=True,platform=platform)
+                    if page_data['message'] == "Bad credentials":
+                        self.update_rate_limit(response, bad_credentials=True, platform=platform)
+                elif type(page_data) == str:
+                    self.logger.info(f"Warning! page_data was string: {page_data}\n")
+                    if "<!DOCTYPE html>" in page_data:
+                        self.logger.info("HTML was returned, trying again...\n")
+                    elif len(page_data) == 0:
+                        self.logger.warning("Empty string, trying again...\n")
+                    else:
+                        try:
+                            page_data = json.loads(page_data)
+                            success = True
+                            break
+                        except:
+                            pass
+                num_attempts += 1
+            if not success:
+                break
+
+            # Success
+
+            # Determine if continued pagination is needed
+
+            if len(page_data) == 0:
+                self.logger.info("Response was empty, breaking from pagination.\n")
+                break
+
+            all_data += page_data
+
+            if not forward_pagination:
+
+                # Checking contents of requests with what we already have in the db
+                page_insertions, page_updates = self.new_organize_needed_data(
+                    page_data, augur_table=table, action_map=action_map
+                )
+
+                # Reached a page where we already have all tuples
+                if len(need_insertion) == 0 and len(need_update) == 0 and \
+                        backwards_activation:
+                    self.logger.info(
+                        "No more pages with unknown tuples, breaking from pagination.\n"
+                    )
+                    break
+
+                need_insertion += page_insertions
+                need_update += page_updates
+
+            # Find last page so we can decrement from there
+            if 'last' in response.links and last_page_number == -1:
+                if platform == 'github':
+                    last_page_number = int(response.links['last']['url'][-6:].split('=')[1])
+                elif platform == 'gitlab':
+                    last_page_number = int(response.links['last']['url'].split('&')[2].split('=')[1])
+
+                if not forward_pagination and not backwards_activation:
+                    page_number = last_page_number
+                    backwards_activation = True
+
+            self.logger.info("Analyzation of page {} of {} complete\n".format(page_number,
+                int(last_page_number) if last_page_number != -1 else "*last page not known*"))
+
+            if (page_number <= 1 and not forward_pagination) or \
+                    (page_number >= last_page_number and forward_pagination):
+                self.logger.info("No more pages to check, breaking from pagination.\n")
+                break
+
+            page_number = page_number + 1 if forward_pagination else page_number - 1
+
+        if forward_pagination:
+            need_insertion, need_update = self.new_organize_needed_data(
+                all_data, augur_table=table, action_map=action_map
+            )
+
+        return {
+            'insert': need_insertion,
+            'update': need_update,
+            'all': all_data
+        }
+
