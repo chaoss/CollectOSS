@@ -9,8 +9,10 @@ from sqlalchemy import MetaData
 from sqlalchemy.ext.automap import automap_base
 from workers.worker_base import Worker
 
+from workers.worker_git_integration import WorkerGitInterfaceable
+
 #TODO - fully edit to match releases
-class ReleaseWorker(Worker):
+class ReleaseWorker(WorkerGitInterfaceable):
     """
     Worker that collects Repository Releases data from the Github API
     and stores it in our database.
