@@ -41,7 +41,9 @@ from workers.worker_base import Worker
 
 html = html.parser.HTMLParser()
 
-class FacadeWorker(Worker):
+from workers.worker_git_integration import WorkerGitInterfaceable
+
+class FacadeWorker(WorkerGitInterfaceable):
     def __init__(self, config={}, task=None):
         worker_type = "facade_worker"
 

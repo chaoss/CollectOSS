@@ -6,8 +6,11 @@ import sqlalchemy as s
 from workers.worker_base import Worker
 from urllib.parse import urlparse, quote
 
+#cheeky
+from workers.worker_git_integration import WorkerGitInterfaceable
 
-class GitlabMergeRequestWorker(Worker):
+
+class GitlabMergeRequestWorker(WorkerGitInterfaceable):
     def __init__(self, config={}):
         # Define what this worker can be given and know how to interpret
 

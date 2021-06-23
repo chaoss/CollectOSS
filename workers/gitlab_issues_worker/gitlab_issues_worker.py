@@ -7,8 +7,11 @@ import sqlalchemy as s
 from workers.worker_base import Worker
 from urllib.parse import urlparse, quote
 
+#cheeky
+from workers.worker_git_integration import WorkerGitInterfaceable
 
-class GitLabIssuesWorker(Worker):
+
+class GitLabIssuesWorker(WorkerGitInterfaceable):
     def __init__(self, config={}):
 
         worker_type = "gitlab_issues_worker"

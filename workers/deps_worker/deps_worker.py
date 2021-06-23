@@ -14,8 +14,10 @@ from sqlalchemy import MetaData
 from workers.worker_base import Worker
 
 from workers.deps_worker import dependancy_calculator as dep_calc
+#Cheeky
+from workers.worker_git_integration import WorkerGitInterfaceable
 
-class DepsWorker(Worker):
+class DepsWorker(WorkerGitInterfaceable):
     def __init__(self, config={}):
 
         worker_type = "deps_worker"

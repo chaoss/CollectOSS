@@ -9,7 +9,12 @@ class WorkerGitInterfaceable(Worker):
     def __init__(self, worker_type, config={}, given=[], models=[], data_tables=[], operations_tables=[], platform="github"):
         super().___init__(worker_type, config, given, models, data_tables, operations_tables)
 
-        #Fix loose attribute def
+        self.config.update({
+            'gh_api_key': self.augur_config.get_value('Database', 'key'),
+            'gitlab_api_key': self.augur_config.get_value('Database', 'gitlab_api_key')
+        })
+
+        #Fix loose attribute definition
         self.headers = None
         self.platform = platform
         self.given = given
