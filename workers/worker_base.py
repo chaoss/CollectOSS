@@ -36,8 +36,8 @@ import dask.dataframe as dd
 #
 #   Parts (Hierarchal relation)
 #1. Base
-#2. ??????
-#3. Github/lab interface
+#2. Github/lab interface
+# Might be good to seperate the machine learning functionality into its own class too.
 
 class Worker():
 
@@ -796,16 +796,6 @@ class Worker():
         # time.sleep(.1)
         return result
 
-    #TODO: Enumerate the workers that actually use this. I don't think all workers need to track this
-    #Just a api interface for github/lab
-    #def find_id_from_login(self, login, platform='github'):
-        """ Retrieves our contributor table primary key value for the contributor with
-            the given GitHub login credentials, if this contributor is not there, then
-            they get inserted.
-
-        :param login: String, the GitHub login username to find the primary key id for
-        :return: Integer, the id of the row in our database with the matching GitHub login
-        """
     #doesn't even query the api just gets it based on the url string, can stay in base
     def get_owner_repo(self, git_url):
         """ Gets the owner and repository names of a repository from a git url
@@ -882,8 +872,6 @@ class Worker():
         values = pd.read_sql(table_values_sql, self.db, params={})
         return values
 
-    #Blatently only for api key usage
-    #def init_oauths(self, platform='github'):
 
     def bulk_insert(
         self, table, insert=[], update=[], unique_columns=[], update_columns=[],
@@ -1042,12 +1030,6 @@ class Worker():
                 pass
 
         return df
-
-    #uses platform attribute --> worker_git_integration
-    #def enrich_cntrb_id(
-    #    self, data, key, action_map_additions={'insert': {'source': [], 'augur': []}},
-    #    platform='github', prefix=''
-    #):
 
 
     def enrich_data_primary_keys(
@@ -1327,17 +1309,6 @@ class Worker():
 
         return need_insertion.to_dict('records'), need_updates.to_dict('records')
 
-    #It's pretty clear why these methods should be refactored into a git interfacable subclass
-    #def query_github_contributors(self, entry_info, repo_id):
-
-    #def query_github_contributors_bulk(self, entry_info, repo_id):
-    
-    #def query_github_contributors_fast(self, entry_info, repo_id):
-
-    #TODO: figure out if changing this typo breaks anything
-    #def query_gitlab_contribtutors(self, entry_info, repo_id):
-
-    #Base
     def record_model_process(self, repo_id, model):
 
         task_history = {
