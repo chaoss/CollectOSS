@@ -1294,7 +1294,7 @@ class WorkerGitInterfaceable(Worker):
             'all': all_data
         }
 
-
+    #TODO: deprecated but still used by the issues worker.
     def paginate(self, url, duplicate_col_map, update_col_map, table, table_pkey, where_clause="", value_update_col_map={}, platform="github"):
         """ DEPRECATED
             Paginate either backwards or forwards (depending on the value of the worker's

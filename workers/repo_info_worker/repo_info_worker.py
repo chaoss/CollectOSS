@@ -5,7 +5,7 @@ from multiprocessing import Process, Queue
 import pandas as pd
 import sqlalchemy as s
 from workers.worker_base import Worker
-#cheeky
+#Breaks if inheritance is broken
 from workers.worker_git_integration import WorkerGitInterfaceable
 
 

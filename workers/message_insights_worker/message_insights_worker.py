@@ -17,11 +17,10 @@ from augur import ROOT_AUGUR_DIRECTORY
 from workers.message_insights_worker.message_novelty import novelty_analysis
 from workers.message_insights_worker.message_sentiment import get_senti_score
 from workers.worker_base import Worker
-from workers.worker_git_integration import WorkerGitInterfaceable
 
 warnings.filterwarnings('ignore')
 
-class MessageInsightsWorker(WorkerGitInterfaceable):
+class MessageInsightsWorker(Worker):
     def __init__(self, config={}):
 
         # Define the worker's type, which will be used for self identification.

@@ -6,7 +6,7 @@ import sqlalchemy as s
 from workers.worker_base import Worker
 from urllib.parse import urlparse, quote
 
-#cheeky
+#This class NEEDS to inherit from here.
 from workers.worker_git_integration import WorkerGitInterfaceable
 
 

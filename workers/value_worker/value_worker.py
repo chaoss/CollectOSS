@@ -12,9 +12,8 @@ import sqlalchemy as s
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy import MetaData
 from workers.worker_base import Worker
-from workers.worker_git_integration import WorkerGitInterfaceable
 
-class ValueWorker(WorkerGitInterfaceable):
+class ValueWorker(Worker):
     def __init__(self, config={}):
 
         worker_type = "value_worker"
