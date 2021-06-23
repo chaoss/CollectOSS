@@ -6,10 +6,7 @@ import pandas as pd
 import sqlalchemy as s
 from workers.worker_base import Worker
 
-#cheeky
-from workers.worker_git_integration import WorkerGitInterfaceable
-
-class ContributorBreadthWorker(WorkerGitInterfaceable):
+class ContributorBreadthWorker(Worker):
     def __init__(self, config={}):
         
     

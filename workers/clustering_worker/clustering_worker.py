@@ -26,10 +26,8 @@ from textblob import TextBlob
 from collections import Counter
 
 from os import path
-from workers.worker_git_integration import WorkerGitInterfaceable
 
-
-class ClusteringWorker(WorkerGitInterfaceable):
+class ClusteringWorker(Worker):
 	def __init__(self, config={}):
 	
 		worker_type = "clustering_worker"

@@ -5,10 +5,8 @@ from multiprocessing import Process, Queue
 import pandas as pd
 import sqlalchemy as s
 from workers.worker_base import Worker
-from workers.worker_git_integration import WorkerGitInterfaceable
 
-
-class TemplateWorker(WorkerGitInterfaceable):
+class TemplateWorker(Worker):
     def __init__(self, config={}):
         
         # Define the worker's type, which will be used for self identification.

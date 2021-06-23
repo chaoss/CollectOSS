@@ -22,10 +22,7 @@ from workers.worker_base import Worker
 from augur import ROOT_AUGUR_DIRECTORY
 from augur.config import AugurConfig
 
-from workers.worker_git_integration import WorkerGitInterfaceable
-
-
-class PullRequestAnalysisWorker(WorkerGitInterfaceable):
+class PullRequestAnalysisWorker(Worker):
     def __init__(self, config={}):
         
         # Define the worker's type, which will be used for self identification.

@@ -16,6 +16,7 @@ import sqlalchemy as s
 from sqlalchemy.sql.expression import bindparam
 from workers.worker_base import Worker
 
+#This class breaks if it doesn't inherit from this class.
 from workers.worker_git_integration import WorkerGitInterfaceable
 
 class GitHubPullRequestWorker(WorkerGitInterfaceable):

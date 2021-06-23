@@ -29,10 +29,7 @@ from collections import Counter
 
 from os import path
 
-from workers.worker_git_integration import WorkerGitInterfaceable
-
-
-class DiscourseAnalysisWorker(WorkerGitInterfaceable):
+class DiscourseAnalysisWorker(Worker):
 	def __init__(self, config={}):
 	
 		worker_type = "discourse_analysis_worker"

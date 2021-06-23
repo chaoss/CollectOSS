@@ -11,11 +11,8 @@ import numpy as np
 import datetime
 
 from workers.worker_base import Worker
-#cheeky
-from workers.worker_git_integration import WorkerGitInterfaceable
 
-
-class ContributorWorker(WorkerGitInterfaceable):
+class ContributorWorker(Worker):
     """ Worker that detects anomalies on a select few of our metrics
     task: most recent task the broker added to the worker's queue
     child: current process of the queue being ran
