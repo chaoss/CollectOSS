@@ -25,7 +25,7 @@ class DepsWorker(Worker):
         models = ['deps', 'ossf_scorecard']
 
         # Define the tables needed to insert, update, or delete on
-        data_tables = ['repo_dependencies', 'repo_deps_scorecard']
+        data_tables = ['repo_dependencies', '_dev1_repo_deps_scorecard']
         operations_tables = ['worker_history', 'worker_job']
 
 
@@ -103,6 +103,10 @@ class DepsWorker(Worker):
         #this is path where our scorecard project is located
         path_to_scorecard = os.environ['HOME'] + '/scorecard'
 
+        #setting the environment variable for scorecard if it does not exsists already 
+        if 'GITHUB_AUTH_TOKEN' not in os.environ:
+            os.environ['GITHUB_AUTH_TOKEN'] = self.config['gh_api_key']
+
         p= subprocess.run(['./scorecard', command], cwd= path_to_scorecard ,capture_output=True, text=True)
         output = p.stdout.split('\n')
         required_output = output[4:20]
@@ -151,7 +155,7 @@ class DepsWorker(Worker):
             'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
 
         }  
-        result = self.db.execute(self.repo_deps_scorecard.insert().values(repo_deps)) 
+        result = self.db.execute(self._dev1_repo_deps_scorecard.insert().values(repo_deps)) 
         self.logger.info(f"Added OSSF scorecard data : {result.inserted_primary_key}") 
 
 
