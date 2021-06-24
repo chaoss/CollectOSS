@@ -47,7 +47,7 @@ class Worker():
     # os.system("./osx-thread.sh")
 
     #Might cut down on these args to create subclasses
-    def __init__(self, worker_type, config={}, given=[], models=[], data_tables=[], operations_tables=[], platform="github"):
+    def __init__(self, worker_type, config={}, given=[], models=[], data_tables=[], operations_tables=[]):
 
         self.worker_type = worker_type
         self.collection_start_time = None
