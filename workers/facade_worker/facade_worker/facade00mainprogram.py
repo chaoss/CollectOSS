@@ -67,20 +67,6 @@ class FacadeWorker(Worker):
         self.tool_source = '\'Facade Worker\''
         self.tool_version = '\'1.0.1\''
         self.data_source = '\'Git Log\''
-    #This should probably be overwritten by the actual facade worker instead of cluttering up the base worker
-    @property
-    def results_counter(self):
-        """ Property that is returned when the worker's current results_counter is referenced
-        """
-        return self.cfg.repos_processed
-
-    #This might cause collisions with the facade worker as it uses _results_counter instead of cfg.repos_processed. Will screw up the setter on the subclass
-    @results_counter.setter
-    def results_counter(self, value):
-        """ entry point for the broker to add a task to the queue
-        Adds this task to the queue, and calls method to process queue
-        """
-        self.cfg.repos_processed = value
 
     def initialize_database_connections(self):
 
