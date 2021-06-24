@@ -5,7 +5,7 @@ import pandas as pd
 
 def test_issues_new(metrics):
     #repo_id
-    assert metrics.issues_new(10, 25430, period='year').iloc[0]['issues'] > 0
+    assert metrics.issues_new(1, 1 , period='year').iloc[0]['issues'] > 0
 
     #repo_group_id
     assert metrics.issues_new(10, period='year').iloc[1]['issues'] > 0
@@ -18,7 +18,7 @@ def test_issues_new(metrics):
 
 def test_issues_active(metrics):
     # repo
-    assert metrics.issues_active(10, 25430, period='year').iloc[0]['issues'] > 0
+    assert metrics.issues_active(1, 1, period='year').iloc[0]['issues'] > 0
 
     # repo_group
     assert metrics.issues_active(10, period='year').iloc[0]['issues'] > 0
