@@ -286,8 +286,10 @@ class Worker():
     def results_counter(self):
         """ Property that is returned when the worker's current results_counter is referenced
         """
-        
-        return self._results_counter
+        if self.worker_type == 'facade_worker':
+            return self.cfg.repos_processed #TODO: figure out why this doesn't work...
+        else:
+            return self._results_counter
 
     @results_counter.setter
     def results_counter(self, value):
