@@ -388,7 +388,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             }
         }
 
-        source_prs = self.new_paginate_endpoint(
+        source_prs = self.paginate_endpoint(
             pr_url, action_map=pr_action_map, table=self.pull_requests_table,
             where_clause=self.pull_requests_table.c.repo_id == self.repo_id
         )
@@ -524,7 +524,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         }
 
         # TODO: add relational table so we can include a where_clause here
-        pr_comments = self.new_paginate_endpoint(
+        pr_comments = self.paginate_endpoint(
             comments_url, action_map=comment_action_map, table=self.message_table
         )
 
@@ -602,7 +602,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         }
 
         #list to hold contributors needing insertion or update
-        pr_events = self.new_paginate_endpoint(
+        pr_events = self.paginate_endpoint(
             events_url, table=self.pull_request_events_table, action_map=event_action_map,
             where_clause=self.pull_request_events_table.c.pull_request_id.in_(
                 set(pd.DataFrame(pk_source_prs)['pull_request_id'])
@@ -679,7 +679,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                     set(pd.DataFrame(pk_source_prs)['pull_request_id'])
                 ))).fetchall()
 
-        source_reviews_insert, source_reviews_update = self.new_organize_needed_data(
+        source_reviews_insert, source_reviews_update = self.organize_needed_data(
             pr_pk_source_reviews, augur_table=self.pull_request_reviews_table,
             action_map=review_action_map
         )
@@ -746,8 +746,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         in_clause = [] if len(both_pr_review_pk_source_reviews) == 0 else \
             set(pd.DataFrame(both_pr_review_pk_source_reviews)['pr_review_id'])
 
-        review_msgs = self.new_paginate_endpoint(
-            review_msg_url, action_map=review_msg_action_map, table=self.message_table,
+        review_msgs = self.paginate_endpoint(
+            review_new_msg_url, action_map=review_msg_action_map, table=self.message_table,
             where_clause=self.message_table.c.msg_id.in_(
                 [
                     msg_row[0] for msg_row in self.db.execute(
@@ -878,7 +878,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'augur': ['pull_request_id', 'pr_src_id']
             }
         }
-        source_labels_insert, _ = self.new_organize_needed_data(
+        source_labels_insert, _ = self.organize_needed_data(
             labels_all, augur_table=self.pull_request_labels_table, action_map=label_action_map
         )
         labels_insert = [
@@ -904,7 +904,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'augur': ['pull_request_id', 'pr_reviewer_src_id']
             }
         }
-        source_reviewers_insert, _ = self.new_organize_needed_data(
+        source_reviewers_insert, _ = self.organize_needed_data(
             reviewers_all, augur_table=self.pull_request_reviewers_table,
             action_map=reviewer_action_map
         )
@@ -935,7 +935,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'augur': ['pull_request_id', 'pr_assignee_src_id']
             }
         }
-        source_assignees_insert, _ = self.new_organize_needed_data(
+        source_assignees_insert, _ = self.organize_needed_data(
             assignees_all, augur_table=self.pull_request_assignees_table,
             action_map=assignee_action_map
         )
@@ -967,7 +967,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             }
         }
 
-        source_meta_insert, _ = self.new_organize_needed_data(
+        source_meta_insert, _ = self.organize_needed_data(
             meta_all, augur_table=self.pull_request_meta_table, action_map=meta_action_map
         )
         source_meta_insert = self.enrich_cntrb_id(

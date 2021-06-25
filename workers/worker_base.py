@@ -36,7 +36,7 @@ import dask.dataframe as dd
 #
 #   Parts (Hierarchal relation)
 #1. Base
-#2. Github/lab interface
+#2. Github/lab 
 # Might be good to seperate the machine learning functionality into its own class too.
 
 class Worker():
