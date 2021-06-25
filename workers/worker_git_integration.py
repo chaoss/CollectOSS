@@ -7,7 +7,7 @@ from workers.worker_base import *
 #This is a worker base subclass that adds the ability to query github/gitlab with the api key
 class WorkerGitInterfaceable(Worker):
     def __init__(self, worker_type, config={}, given=[], models=[], data_tables=[], operations_tables=[], platform="github"):
-        super().___init__(worker_type, config, given, models, data_tables, operations_tables)
+        super().__init__(worker_type, config, given, models, data_tables, operations_tables)
 
         self.config.update({
             'gh_api_key': self.augur_config.get_value('Database', 'key'),
