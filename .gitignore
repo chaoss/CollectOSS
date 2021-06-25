@@ -167,3 +167,6 @@ workers/clustering_worker/vocabulary_count
 
 # gzipped files
 *.gz
+
+#nohup logs
+nohup.out

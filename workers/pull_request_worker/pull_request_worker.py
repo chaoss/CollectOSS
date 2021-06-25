@@ -16,7 +16,10 @@ import sqlalchemy as s
 from sqlalchemy.sql.expression import bindparam
 from workers.worker_base import Worker
 
-class GitHubPullRequestWorker(Worker):
+#This class breaks if it doesn't inherit from this class.
+from workers.worker_git_integration import WorkerGitInterfaceable
+
+class GitHubPullRequestWorker(WorkerGitInterfaceable):
     """
     Worker that collects Pull Request related data from the
     Github API and stores it in our database.
