@@ -454,6 +454,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             } for pr in source_prs['insert']
         ]
 
+        #The b_pr_src_id bug comes from here
         if len(source_prs['insert']) > 0 or len(source_prs['update']) > 0:
             pr_insert_result, pr_update_result = self.bulk_insert(
                 self.pull_requests_table,
