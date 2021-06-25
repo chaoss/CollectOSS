@@ -1064,6 +1064,7 @@ class WorkerGitInterfaceable(Worker):
             )
 
 
+    #Indexerror somewhere 
     def multi_thread_urls(self, all_urls, max_attempts=5, platform='github'):
         """
         :param all_urls: list of tuples
