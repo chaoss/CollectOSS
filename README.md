@@ -14,7 +14,7 @@ master | [![Build Status](https://travis-ci.com/chaoss/augur.svg?branch=master)]
 ## What is Augur?
 
 Augur is a software suite for collecting and measuring structured data
-about [free](https://www.fsf.org/about/) and [open source](https://opensource.org/docs/osd) software (FOSS) communities.
+about [free](https://www.fsf.org/about/) and [open-source](https://opensource.org/docs/osd) software (FOSS) communities.
 
 We gather trace data for a group of repositories, normalize
 it into our data model, and provide a variety of metrics about said
