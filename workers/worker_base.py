@@ -1317,11 +1317,18 @@ class Worker():
             "repo_id": repo_id,
             "worker": self.config['id'],
             "job_model": model,
-            "oauth_id": self.oauths[0]['oauth_id'],
+            #"oauth_id": self.oauths[0]['oauth_id'],
             "timestamp": datetime.datetime.now(),
             "status": "Stopped",
             "total_results": self.results_counter
         }
+        #log oauth if it applies to worker.
+        try:
+            self.oauths
+            task_history['oauth_id'] = self.oauths[0]['oauth_id']
+        except AttributeError:
+            pass
+
         if self.finishing_task:
             result = self.helper_db.execute(self.worker_history_table.update().where(
                 self.worker_history_table.c.history_id==self.history_id).values(task_history))
@@ -1357,11 +1364,19 @@ class Worker():
             'repo_id': repo_id,
             'worker': self.config['id'],
             'job_model': model,
-            'oauth_id': self.oauths[0]['oauth_id'],
+            #'oauth_id': self.oauths[0]['oauth_id'], #messes up with workers that don't have this attribute
             'timestamp': datetime.datetime.now(),
             'status': "Success",
             'total_results': self.results_counter
         }
+
+        #log oauth if it applies to worker.
+        try:
+            self.oauths
+            task_history['oauth_id'] = self.oauths[0]['oauth_id']
+        except AttributeError:
+            pass
+        
         self.helper_db.execute(self.worker_history_table.update().where(
             self.worker_history_table.c.history_id==self.history_id).values(task_history))
 
@@ -1436,11 +1451,19 @@ class Worker():
             "repo_id": repo_id,
             "worker": self.config['id'],
             "job_model": task['models'][0],
-            "oauth_id": self.oauths[0]['oauth_id'],
+            #"oauth_id": self.oauths[0]['oauth_id'],
             "timestamp": datetime.datetime.now(),
             "status": "Error",
             "total_results": self.results_counter
         }
+
+        #log oauth if it applies to worker.
+        try:
+            self.oauths
+            task_history['oauth_id'] = self.oauths[0]['oauth_id']
+        except AttributeError:
+            pass
+
         self.helper_db.execute(
             self.worker_history_table.update().where(
                 self.worker_history_table.c.history_id==self.history_id
