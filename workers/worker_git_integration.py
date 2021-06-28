@@ -262,7 +262,7 @@ class WorkerGitInterfaceable(Worker):
                 'augur': ['cntrb_login'] + action_map_additions['insert']['augur']
             }
         }
-        source_cntrb_insert, _ = self.new_organize_needed_data(
+        source_cntrb_insert, _ = self.organize_needed_data(
             expanded_source_df.to_dict(orient='records'), augur_table=self.contributors_table,
             action_map=cntrb_action_map
         )
@@ -1530,7 +1530,7 @@ class WorkerGitInterfaceable(Worker):
             if not forward_pagination:
 
                 # Checking contents of requests with what we already have in the db
-                page_insertions, page_updates = self.new_organize_needed_data(
+                page_insertions, page_updates = self.organize_needed_data(
                     page_data, augur_table=table, action_map=action_map
                 )
 
@@ -1567,7 +1567,7 @@ class WorkerGitInterfaceable(Worker):
             page_number = page_number + 1 if forward_pagination else page_number - 1
 
         if forward_pagination:
-            need_insertion, need_update = self.new_organize_needed_data(
+            need_insertion, need_update = self.organize_needed_data(
                 all_data, augur_table=table, action_map=action_map
             )
 
