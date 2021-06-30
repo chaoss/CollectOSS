@@ -104,20 +104,6 @@ class Persistant():
         self.logger = logging.getLogger(self.config["id"])
         self.logger.info('Worker (PID: {}) initializing...'.format(str(os.getpid())))
 
-        #back to base, might be overwritten by git integration subclass?
-        self.debug_data = [] if 'debug_data' not in self.config else self.config['debug_data']
-        self.specs = {
-            'id': self.config['id'], # what the broker knows this worker as
-            'location': self.config['location'], # host + port worker is running on (so broker can send tasks here)
-            'qualifications':  [
-                {
-                    'given': self.given, # type of repo this worker can be given as a task
-                    'models': self.models # models this worker can fill for a repo as a task
-                }
-            ],
-            'config': self.config
-        }
-
     #Return string representation of an object with all information needed to recreate the object (Think of it like a pickle made out of text)
     #Called using repr(*object*). eval(repr(*object*)) == *object*
     def __repr__(self):

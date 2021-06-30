@@ -10,7 +10,7 @@ from workers.worker_persistance import *
 # Might be good to seperate the machine learning functionality into its own class too.
 
 
-class Worker():
+class Worker(Persistant):
 
     ## Set Thread Safety for OSX
     # os.system("./osx-thread.sh")
@@ -46,6 +46,20 @@ class Worker():
         self.given = given
         self.models = models
 
+        #back to base, might be overwritten by git integration subclass?
+        self.debug_data = [] if 'debug_data' not in self.config else self.config['debug_data']
+        self.specs = {
+            'id': self.config['id'], # what the broker knows this worker as
+            'location': self.config['location'], # host + port worker is running on (so broker can send tasks here)
+            'qualifications':  [
+                {
+                    'given': self.given, # type of repo this worker can be given as a task
+                    'models': self.models # models this worker can fill for a repo as a task
+                }
+            ],
+            'config': self.config
+        }
+
         # Send broker hello message
         if self.config['offline_mode'] is False:
             self.connect_to_broker()
@@ -58,7 +72,7 @@ class Worker():
             self.tool_source = 'Augur Worker Testing'
             self.tool_version = '0.0.0'
             self.data_source = 'Augur Worker Testing'
-
+        
     def write_debug_data(self, data, name):
         if name in self.debug_data:
             with open(f'{name}.json', 'w') as f:
