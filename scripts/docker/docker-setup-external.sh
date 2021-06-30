@@ -1,3 +1,4 @@
+#!/bin/bash
 #Ask the user if they want to be prompted or use an existing config file (docker_env.txt)
 read -p "Would you like to be prompted for database credentials? [y/N] " -n 1 -r
 echo 
@@ -29,14 +30,18 @@ then
   else
     echo "AUGUR_DB_SCHEMA_BUILD=0" >> docker_env.txt
   fi
+  
+  echo "What port is Postgresql running on?"
+  read -p "Please input the database port: " dbPort
 
   #docker_env.txt is differant than '.env', '.env' is for the enviroment variables used in the docker-compose.yml file
   echo "AUGUR_DB_HOST=$dbHostname" >> docker_env.txt
   echo "AUGUR_DB_HOST=$dbHostname" >> .env
+  echo "AUGUR_DB_PORT=$dbPort" >> docker_env.txt
 
   #Pretty sure these stay constant among augur databases
   echo "AUGUR_DB_NAME=augur" >> docker_env.txt
-  echo "AUGUR_DB_PORT=5432" >> docker_env.txt
+  #echo "AUGUR_DB_PORT=5432" >> docker_env.txt
   echo "AUGUR_DB_USER=augur" >> docker_env.txt
 
   #Password is blurred out because thats the standard
@@ -87,10 +92,10 @@ fi
 unset missingEnv
 unset testGithubKey
 unset testSchemaBuild
-unset testPort
+#unset testPort
 
 #Test connection using quick bash database request. $? now holds the exit code.
-psql -d "postgresql://$testUser:$testPassword@$testHost/$testName" -c "select now()" &>/dev/null
+psql -d "postgresql://$testUser:$testPassword@$testHost/$testName" -p $testPort -c "select now()" # &>/dev/null
 if [[ ! "$?" -eq 0 ]]
 then
   echo "Database could not be reached!"
@@ -107,9 +112,9 @@ echo
 if [[ $REPLY =~ ^[Yy]$ ]]
 then
   #use some regex to set the schema build in docker_env.txt
-  sed -i -r '/AUGUR_DB_SCHEMA_BUILD/ s/(^.*)(=.*)/\1=1/g' docker_env.txt
+  sed -i -r -E '/AUGUR_DB_SCHEMA_BUILD/ s/(^.*)(=.*)/\1=1/g' docker_env.txt
 else
-  sed -i -r '/AUGUR_DB_SCHEMA_BUILD/ s/(^.*)(=.*)/\1=0/g' docker_env.txt
+  sed -i -r -E '/AUGUR_DB_SCHEMA_BUILD/ s/(^.*)(=.*)/\1=0/g' docker_env.txt
 fi
 
 echo "Tearing down old docker stack..."
