@@ -35,7 +35,10 @@ class Persistant():
 
     ROOT_AUGUR_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
-    def __init__(self, config={}, data_tables=[],operations_tables=[]):
+    def __init__(self, worker_type, data_tables=[],operations_tables=[]):
+        
+        self.worker_type = worker_type
+        #For database functionality
         self.data_tables = data_tables
         self.operations_tables = operations_tables
 
@@ -49,20 +52,39 @@ class Persistant():
         # Update config with options that are general and not specific to any worker
         self.augur_config = AugurConfig(self._root_augur_dir)
 
+        #TODO: consider taking parts of this out for the base class and then overriding it in WorkerGitInterfaceable
         self.config = {
-                #'worker_type': self.worker_type,
-                'host': self.augur_config.get_value('Server', 'host'),
-                #'gh_api_key': self.augur_config.get_value('Database', 'key'),
-                #'gitlab_api_key': self.augur_config.get_value('Database', 'gitlab_api_key'),
-                'offline_mode': False
+                'worker_type': self.worker_type,
+                'host': self.augur_config.get_value('Server', 'host')
         }
         self.config.update(self.augur_config.get_section("Logging"))
 
+        try:
+            worker_defaults = self.augur_config.get_default_config()['Workers'][self.config['worker_type']]
+            self.config.update(worker_defaults)
+        except KeyError as e:
+            logging.warn('Could not get default configuration for {}'.format(self.config['worker_type']))
+
+        worker_info = self.augur_config.get_value('Workers', self.config['worker_type'])
+        self.config.update(worker_info)
+
+        worker_port = self.config['port']
+        while True:
+            try:
+                r = requests.get('http://{}:{}/AUGWOP/heartbeat'.format(
+                    self.config['host'], worker_port)).json()
+                if 'status' in r:
+                    if r['status'] == 'alive':
+                        worker_port += 1
+            except:
+                break
+
+        #add credentials to db config. Goes to databaseable
         self.config.update({
-            #'port': worker_port,
-            #'id': "workers.{}.{}".format(self.worker_type, worker_port),
-            #'capture_output': False,
-            #'location': 'http://{}:{}'.format(self.config['host'], worker_port),
+            'port': worker_port,
+            'id': "workers.{}.{}".format(self.worker_type, worker_port),
+            'capture_output': False,
+            'location': 'http://{}:{}'.format(self.config['host'], worker_port),
             'port_broker': self.augur_config.get_value('Server', 'port'),
             'host_broker': self.augur_config.get_value('Server', 'host'),
             'host_database': self.augur_config.get_value('Database', 'host'),
@@ -71,63 +93,28 @@ class Persistant():
             'name_database': self.augur_config.get_value('Database', 'name'),
             'password_database': self.augur_config.get_value('Database', 'password')
         })
+        
+        # Initialize logging in the main process
+        self.initialize_logging()
 
-    #database interface, the git interfaceable adds additional function to the super method.
-    def initialize_database_connections(self):
-        DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(
-            self.config['user_database'], self.config['password_database'], self.config['host_database'], self.config['port_database'], self.config['name_database']
-        )
+        # Clear log contents from previous runs
+        open(self.config["server_logfile"], "w").close()
+        open(self.config["collection_logfile"], "w").close()
 
-        db_schema = 'augur_data'
-        self.db = s.create_engine(DB_STR,  poolclass=s.pool.NullPool,
-            connect_args={'options': '-csearch_path={}'.format(db_schema)})
+        # Get configured collection logger
+        self.logger = logging.getLogger(self.config["id"])
+        self.logger.info('Worker (PID: {}) initializing...'.format(str(os.getpid())))
 
-        helper_schema = 'augur_operations'
-        self.helper_db = s.create_engine(DB_STR, poolclass=s.pool.NullPool,
-            connect_args={'options': '-csearch_path={}'.format(helper_schema)})
-
-        metadata = s.MetaData()
-        helper_metadata = s.MetaData()
-
-        # Reflect only the tables we will use for each schema's metadata object
-        metadata.reflect(self.db, only=self.data_tables)
-        helper_metadata.reflect(self.helper_db, only=self.operations_tables)
-
-        Base = automap_base(metadata=metadata)
-        HelperBase = automap_base(metadata=helper_metadata)
-
-        Base.prepare()
-        HelperBase.prepare()
-
-        # So we can access all our tables when inserting, updating, etc
-        for table in self.data_tables:
-            setattr(self, '{}_table'.format(table), Base.classes[table].__table__)
-
-
-    def get_max_id(self, table, column, operations_table=False):
-        """ Gets the max value (usually used for id/pk's) of any Integer column
-            of any table
-
-        :param table: String, the table that consists of the column you want to
-            query a max value for
-        :param column: String, the column that you want to query the max value for
-        :param operations_table: Boolean, if True, this signifies that the table/column
-            that is wanted to be queried is in the augur_operations schema rather than
-            the augur_data schema. Default False
-        :return: Integer, the max value of the specified column/table, None if the value cannot be found.
-        """
-        maxIdSQL = s.sql.text("""
-            SELECT max({0}.{1}) AS {1}
-            FROM {0}
-        """.format(table, column))
-        db = self.db if not operations_table else self.helper_db
-        rs = pd.read_sql(maxIdSQL, db, params={})
-        if rs.iloc[0][column] is not None:
-            max_id = int(rs.iloc[0][column]) + 1
-            #self.logger.info("Found max id for {} column in the {} table: {}\n".format(column, table, max_id))
-        else:
-            max_id = None
-            #self.logger.warning("Could not find max id for {} column in the {} table... " +
-            #    "using default set to: {}\n".format(column, table, max_id))
-        return max_id
-
+        #back to base, might be overwritten by git integration subclass?
+        self.debug_data = [] if 'debug_data' not in self.config else self.config['debug_data']
+        self.specs = {
+            'id': self.config['id'], # what the broker knows this worker as
+            'location': self.config['location'], # host + port worker is running on (so broker can send tasks here)
+            'qualifications':  [
+                {
+                    'given': self.given, # type of repo this worker can be given as a task
+                    'models': self.models # models this worker can fill for a repo as a task
+                }
+            ],
+            'config': self.config
+        }
