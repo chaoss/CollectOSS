@@ -17,7 +17,7 @@ then
   echo "AUGUR_GITHUB_API_KEY=$githubAPIKey" >> docker_env.txt
   echo
 
-  echo "Please choose which database hostname to use in the form of an ip or \'localhost\'"
+  echo "Please choose which database hostname to use in the form of an ip or 'localhost'"
   read -p "Plase input database hostname: " dbHostname
 
   #Do a quick translate from 'localhost' to the network alias on lo:0
@@ -39,8 +39,9 @@ then
   echo "AUGUR_DB_HOST=$dbHostname" >> .env
   echo "AUGUR_DB_PORT=$dbPort" >> docker_env.txt
 
+  read -p "Plase input database name: " dbName
   #Pretty sure these stay constant among augur databases
-  echo "AUGUR_DB_NAME=augur" >> docker_env.txt
+  echo "AUGUR_DB_NAME=$dbName" >> docker_env.txt
   #echo "AUGUR_DB_PORT=5432" >> docker_env.txt
   echo "AUGUR_DB_USER=augur" >> docker_env.txt
 
@@ -107,7 +108,7 @@ fi
 #Ask the user if they need augur to build schema or use an existing schema
 #This is important because if it builds schema when it already exists it can cause probems.
 #Its also important because if there is no schema augur throws an error (obviously).
-read -p "Is there no existing schema on the database specified? [y/N] " -n 1 -r
+read -p "Do you want to build schema on the database? WARNING: ONLY ANSWER YES IF THE DATABASE IS WITHOUT SCHEMA [y/N] " -n 1 -r
 echo 
 if [[ $REPLY =~ ^[Yy]$ ]]
 then

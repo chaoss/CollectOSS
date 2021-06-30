@@ -32,3 +32,4 @@ else
   rm /tmp/dockerComposeLog
 fi
 
+echo "Your configuration file, docker_env.txt is now in the base directory of your augur clone"
