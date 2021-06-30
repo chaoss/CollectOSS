@@ -5,9 +5,6 @@ from multiprocessing import Process, Queue
 import pandas as pd
 import sqlalchemy as s
 from workers.worker_base import Worker
-#Breaks if inheritance is broken
-from workers.worker_git_integration import WorkerGitInterfaceable
-
 
 # NOTE: This worker primarily inserts rows into the REPO_INFO table, which serves the primary purposes of 
 # 1. Displaying discrete metadata like "number of forks" and how they change over time 
@@ -17,7 +14,7 @@ from workers.worker_git_integration import WorkerGitInterfaceable
 # 1. Recognizing when a repository is a forked repository by updating the "forked_from" field and 
 # 2. Recognizing when a repository is archived, and recording the data we observed the change in status. 
 
-class RepoInfoWorker(WorkerGitInterfaceable):
+class RepoInfoWorker(Worker):
     def __init__(self, config={}):
 
         worker_type = "repo_info_worker"
