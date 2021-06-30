@@ -10,7 +10,7 @@
 
 from workers.worker_persistance import *
 
-class Worker():
+class Worker(Persistant):
 
     ROOT_AUGUR_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
@@ -20,37 +20,22 @@ class Worker():
     #Might cut down on these args to create subclasses
     def __init__(self, worker_type, config={}, given=[], models=[], data_tables=[], operations_tables=[]):
 
+        super.__init__(config,data_tables,operations_tables)
         self.worker_type = worker_type
         self.collection_start_time = None
         self._task = None # task currently being worked on (dict)
         self._child = None # process of currently running task (multiprocessing process)
         self._queue = Queue() # tasks stored here 1 at a time (in a mp queue so it can translate across multiple processes)
-        #These are for the database section
-        self.data_tables = data_tables
-        self.operations_tables = operations_tables
-
-        self._root_augur_dir = Worker.ROOT_AUGUR_DIR
-
-        # count of tuples inserted in the database (to store stats for each task in op tables) 
-        self.update_counter = 0
-        self.insert_counter = 0
-        self._results_counter = 0
 
         # if we are finishing a previous task, certain operations work differently
         self.finishing_task = False
-        # Update config with options that are general and not specific to any worker
-        self.augur_config = AugurConfig(self._root_augur_dir)
 
         #TODO: consider taking parts of this out for the base class and then overriding it in WorkerGitInterfaceable
-        self.config = {
-                'worker_type': self.worker_type,
-                'host': self.augur_config.get_value('Server', 'host'),
-                #'gh_api_key': self.augur_config.get_value('Database', 'key'),
-                #'gitlab_api_key': self.augur_config.get_value('Database', 'gitlab_api_key'),
-                'offline_mode': False
-            }
+        self.config.update({'worker_type': self.worker_type})
+
         self.config.update(self.augur_config.get_section("Logging"))
 
+        #This needs to stay in this class
         try:
             worker_defaults = self.augur_config.get_default_config()['Workers'][self.config['worker_type']]
             self.config.update(worker_defaults)
@@ -60,7 +45,6 @@ class Worker():
         worker_info = self.augur_config.get_value('Workers', self.config['worker_type'])
         self.config.update(worker_info)
 
-        #is it just grabbing the first avalable port for api calls? 
         worker_port = self.config['port']
         while True:
             try:
@@ -72,19 +56,12 @@ class Worker():
             except:
                 break
 
-        #add credentials to db config. Goes to databaseable
+        #Has to stay here because of the references to worker_type
         self.config.update({
             'port': worker_port,
             'id': "workers.{}.{}".format(self.worker_type, worker_port),
             'capture_output': False,
-            'location': 'http://{}:{}'.format(self.config['host'], worker_port),
-            'port_broker': self.augur_config.get_value('Server', 'port'),
-            'host_broker': self.augur_config.get_value('Server', 'host'),
-            'host_database': self.augur_config.get_value('Database', 'host'),
-            'port_database': self.augur_config.get_value('Database', 'port'),
-            'user_database': self.augur_config.get_value('Database', 'user'),
-            'name_database': self.augur_config.get_value('Database', 'name'),
-            'password_database': self.augur_config.get_value('Database', 'password')
+            'location': 'http://{}:{}'.format(self.config['host'], worker_port)
         })
         self.config.update(config)
 
@@ -205,55 +182,6 @@ class Worker():
 
         self.logger = logger
 
-    #database interface, the git interfaceable adds additional function to the super method.
-    def initialize_database_connections(self):
-        DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(
-            self.config['user_database'], self.config['password_database'], self.config['host_database'], self.config['port_database'], self.config['name_database']
-        )
-
-        # Create an sqlalchemy engine for both database schemas
-        self.logger.info("Making database connections")
-
-        db_schema = 'augur_data'
-        self.db = s.create_engine(DB_STR,  poolclass=s.pool.NullPool,
-            connect_args={'options': '-csearch_path={}'.format(db_schema)})
-
-        helper_schema = 'augur_operations'
-        self.helper_db = s.create_engine(DB_STR, poolclass=s.pool.NullPool,
-            connect_args={'options': '-csearch_path={}'.format(helper_schema)})
-
-        metadata = s.MetaData()
-        helper_metadata = s.MetaData()
-
-        # Reflect only the tables we will use for each schema's metadata object
-        metadata.reflect(self.db, only=self.data_tables)
-        helper_metadata.reflect(self.helper_db, only=self.operations_tables)
-
-        Base = automap_base(metadata=metadata)
-        HelperBase = automap_base(metadata=helper_metadata)
-
-        Base.prepare()
-        HelperBase.prepare()
-
-        # So we can access all our tables when inserting, updating, etc
-        for table in self.data_tables:
-            setattr(self, '{}_table'.format(table), Base.classes[table].__table__)
-
-        try:
-            self.logger.info(HelperBase.classes.keys())
-        except:
-            pass
-
-        for table in self.operations_tables:
-            try:
-                setattr(self, '{}_table'.format(table), HelperBase.classes[table].__table__)
-            except Exception as e:
-                self.logger.error("Error setting attribute for table: {} : {}".format(table, e))
-
-        # Increment so we are ready to insert the 'next one' of each of these most recent ids
-        self.history_id = self.get_max_id('worker_history', 'history_id', operations_table=True) + 1
-
-    @property
     def results_counter(self):
         """ Property that is returned when the worker's current results_counter is referenced
         """
@@ -774,6 +702,61 @@ class Worker():
         # time.sleep(.1)
         return result
 
+    #Does logging specific to worker type
+    def initialize_database_connections(self):
+        #Do the actual database querys
+        super().initialize_database_connections()
+
+        # Create an sqlalchemy engine for both database schemas
+        self.logger.info("Making database connections")
+
+        helper_metadata = s.MetaData()
+
+        HelperBase = automap_base(metadata=helper_metadata)
+
+        try:
+            self.logger.info(HelperBase.classes.keys())
+        except:
+            pass
+        
+        #This below part of the method needs to be here for logging purposes
+
+        #Has to be handled by superclass for logging purposes
+        for table in self.operations_tables:
+            try:
+                setattr(self, '{}_table'.format(table), HelperBase.classes[table].__table__)
+            except Exception as e:
+                self.logger.error("Error setting attribute for table: {} : {}".format(table, e))
+
+        # Increment so we are ready to insert the 'next one' of each of these most recent ids
+        self.history_id = self.get_max_id('worker_history', 'history_id', operations_table=True) + 1
+
+    def get_max_id(self, table, column, default=25150, operations_table=False):
+        """ Gets the max value (usually used for id/pk's) of any Integer column
+            of any table
+
+        :param table: String, the table that consists of the column you want to
+            query a max value for
+        :param column: String, the column that you want to query the max value for
+        :param default: Integer, if there are no values in the
+            specified column, the value of this parameter will be returned
+        :param operations_table: Boolean, if True, this signifies that the table/column
+            that is wanted to be queried is in the augur_operations schema rather than
+            the augur_data schema. Default False
+        :return: Integer, the max value of the specified column/table
+        """
+        
+        max_id = super().get_max_id(table,column,operations_table)
+
+        if max_id is not None:
+            self.logger.info("Found max id for {} column in the {} table: {}\n".format(column, table, max_id))
+        else:
+            max_id = default
+            self.logger.warning("Could not find max id for {} column in the {} table... " +
+                "using default set to: {}\n".format(column, table, max_id))
+        return max_id
+
+
     #doesn't even query the api just gets it based on the url string, can stay in base
     def get_owner_repo(self, git_url):
         """ Gets the owner and repository names of a repository from a git url
@@ -790,35 +773,6 @@ class Worker():
             repo = repo[:-4]
 
         return owner, repo
-
-    def get_max_id(self, table, column, default=25150, operations_table=False):
-        """ Gets the max value (usually used for id/pk's) of any Integer column
-            of any table
-
-        :param table: String, the table that consists of the column you want to
-            query a max value for
-        :param column: String, the column that you want to query the max value for
-        :param default: Integer, if there are no values in the
-            specified column, the value of this parameter will be returned
-        :param operations_table: Boolean, if True, this signifies that the table/column
-            that is wanted to be queried is in the augur_operations schema rather than
-            the augur_data schema. Default False
-        :return: Integer, the max value of the specified column/table
-        """
-        maxIdSQL = s.sql.text("""
-            SELECT max({0}.{1}) AS {1}
-            FROM {0}
-        """.format(table, column))
-        db = self.db if not operations_table else self.helper_db
-        rs = pd.read_sql(maxIdSQL, db, params={})
-        if rs.iloc[0][column] is not None:
-            max_id = int(rs.iloc[0][column]) + 1
-            self.logger.info("Found max id for {} column in the {} table: {}\n".format(column, table, max_id))
-        else:
-            max_id = default
-            self.logger.warning("Could not find max id for {} column in the {} table... " +
-                "using default set to: {}\n".format(column, table, max_id))
-        return max_id
 
     def get_table_values(self, cols, tables, where_clause=""):
         """ Can query all values of any column(s) from any table(s)
