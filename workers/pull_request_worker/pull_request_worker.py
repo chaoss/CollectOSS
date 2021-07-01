@@ -880,7 +880,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             }
         }
         source_labels_insert, _ = self.organize_needed_data(
-            labels_all, augur_table=self.pull_request_labels_table, action_map=label_action_map
+            labels_all, table_values=self.pull_request_labels_table, action_map=label_action_map
         )
         labels_insert = [
             {
@@ -906,7 +906,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             }
         }
         source_reviewers_insert, _ = self.organize_needed_data(
-            reviewers_all, augur_table=self.pull_request_reviewers_table,
+            reviewers_all, table_values=self.pull_request_reviewers_table,
             action_map=reviewer_action_map
         )
         source_reviewers_insert = self.enrich_cntrb_id(
@@ -937,7 +937,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             }
         }
         source_assignees_insert, _ = self.organize_needed_data(
-            assignees_all, augur_table=self.pull_request_assignees_table,
+            assignees_all, table_values=self.pull_request_assignees_table,
             action_map=assignee_action_map
         )
         source_assignees_insert = self.enrich_cntrb_id(
@@ -969,7 +969,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         }
 
         source_meta_insert, _ = self.organize_needed_data(
-            meta_all, augur_table=self.pull_request_meta_table, action_map=meta_action_map
+            meta_all, table_values=self.pull_request_meta_table, action_map=meta_action_map
         )
         source_meta_insert = self.enrich_cntrb_id(
             source_meta_insert, 'user.login', action_map_additions={
