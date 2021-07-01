@@ -424,7 +424,7 @@ class GitHubWorker(Worker):
         }
 
         source_assignees_insert, _ = self.organize_needed_data(
-            assignees_all, augur_table=self.issue_assignees_table,
+            assignees_all, table_values=self.issue_assignees_table,
             action_map=assignee_action_map
         )
 
@@ -461,7 +461,7 @@ class GitHubWorker(Worker):
             }
         }
         source_labels_insert, _ = self.organize_needed_data(
-            labels_all, augur_table=self.issue_labels_table,
+            labels_all, table_values=self.issue_labels_table,
             action_map=label_action_map
         )
         labels_insert = [

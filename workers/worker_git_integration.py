@@ -263,7 +263,7 @@ class WorkerGitInterfaceable(Worker):
             }
         }
         source_cntrb_insert, _ = self.organize_needed_data(
-            expanded_source_df.to_dict(orient='records'), augur_table=self.contributors_table,
+            expanded_source_df.to_dict(orient='records'), table_values=self.contributors_table,
             action_map=cntrb_action_map
         )
 
@@ -1531,7 +1531,7 @@ class WorkerGitInterfaceable(Worker):
 
                 # Checking contents of requests with what we already have in the db
                 page_insertions, page_updates = self.organize_needed_data(
-                    page_data, augur_table=table, action_map=action_map
+                    page_data, table_values=table, action_map=action_map
                 )
 
                 # Reached a page where we already have all tuples
@@ -1568,7 +1568,7 @@ class WorkerGitInterfaceable(Worker):
 
         if forward_pagination:
             need_insertion, need_update = self.organize_needed_data(
-                all_data, augur_table=table, action_map=action_map
+                all_data, table_values=table, action_map=action_map
             )
 
         return {
