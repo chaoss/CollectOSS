@@ -127,7 +127,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                         if data['errors'][0]['type'] == 'NOT_FOUND':
                             self.logger.warning(
                                 "Github repo was not found or does not exist for "
-                                f"endpoint: {url}\n"
+                                f"endpoint: {base_url}\n"
                             )
                             break
                         if data['errors'][0]['type'] == 'RATE_LIMITED':
@@ -681,7 +681,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 ))).fetchall()
 
         source_reviews_insert, source_reviews_update = self.organize_needed_data(
-            pr_pk_source_reviews, augur_table=self.pull_request_reviews_table,
+            pr_pk_source_reviews, table_values=self.pull_request_reviews_table,
             action_map=review_action_map
         )
 
@@ -748,7 +748,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             set(pd.DataFrame(both_pr_review_pk_source_reviews)['pr_review_id'])
 
         review_msgs = self.paginate_endpoint(
-            review_new_msg_url, action_map=review_msg_action_map, table=self.message_table,
+            review_msg_url, action_map=review_msg_action_map, table=self.message_table,
             where_clause=self.message_table.c.msg_id.in_(
                 [
                     msg_row[0] for msg_row in self.db.execute(
