@@ -29,7 +29,7 @@ gitlab_issues_worker_p = randint(47500,47999)
 release_worker_p = randint(56000, 56499)
 gitlab_merge_request_worker_p = randint(56500, 56999)
 deps_worker_p = randint(58001, 58499) 
-main_port = randint(5001,5300) 
+main_port = 5000 #randint(5001,5300) 
 
 
 
