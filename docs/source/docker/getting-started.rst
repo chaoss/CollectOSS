@@ -1,6 +1,26 @@
 Getting Started
 ================
 
+For the Docker Saavy Who Want to Understand How the Sausage is Made: 
+--------------------------------------------------------------------
+
+Augur provides several Docker images designed to get you started with our software as quickly as possible. They are:
+
+- ``augurlabs/augur:backend``, our backend data collection and metrics API
+- ``augurlabs/augur:frontend``, our metrics visualization frontend
+
+.. warning::
+   The frontend is very out of date and will likely not work with the backend very well. It is still available however.
+
+- ``augurlabs/augur:database``, an empty PostgreSQL database with the Augur schema installed
+- ``augurlabs/augur:test_data``, a PostgreSQL database loaded with the data used in our testing environment
+
+If you're not familiar with Docker, their `starting guide <https://www.docker.com/resources/what-container>`_ is a great resource.
+
+The rest of this section of the documentation assumes you have a working installation of Docker as well as some familiarity with basic Docker concepts and a few basic Docker and Docker Compose commands.
+
+If you are less familiar with Docker, or experience issues you cannot resolve attempting our "quick start", please follow the instructions in this section, and the next few pages, to set up your environment.
+
 Credentials
 ------------
 Before you get started with Docker, you'll need to set up a PostgreSQL instance either locally or using a remote host. Alternatively, you can also set up the databse within a docker container either manually or through the script but this is not recommended.
