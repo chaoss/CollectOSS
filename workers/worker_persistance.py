@@ -17,7 +17,7 @@ import psycopg2
 import csv
 import io
 from logging import FileHandler, Formatter, StreamHandler
-from multiprocessing import Process, Queue, Pool
+from multiprocessing import Process, Queue, Pool, Value
 from os import getpid
 import sqlalchemy as s
 import pandas as pd
@@ -427,9 +427,20 @@ class Persistant():
                     action_map['insert']['source'], action_map['insert']['augur'])
 
             #Throwing value errors. 'cannot use name of an existing column for indicator column'
-            need_insertion = new_data_df.merge(table_values_df, suffixes=('','_table'),
-                    how='outer', indicator=True, left_on=action_map['insert']['source'],
-                    right_on=action_map['insert']['augur']).loc[lambda x : x['_merge']=='left_only']
+
+            try:
+                need_insertion = new_data_df.merge(table_values_df, suffixes=('','_table'),
+                        how='outer', indicator=True, left_on=action_map['insert']['source'],
+                        right_on=action_map['insert']['augur']).loc[lambda x : x['_merge']=='left_only']
+            except ValueError as e:
+
+                #Log the error, try to merge again without label to avoid ValueError
+                self.logger.warning(f"Error thrown during pandas merge: {e}")
+                need_insertion = new_data_df.merge(table_values_df, suffixes=('','_table'),
+                        how='outer', indicator=False, left_on=action_map['insert']['source'],
+                        right_on=action_map['insert']['augur']).loc[lambda x : x['_merge']=='left_only']
+                
+
 
             if 'update' in action_map:
                 new_data_df, table_values_df = self.sync_df_types(new_data_df, table_values_df,
