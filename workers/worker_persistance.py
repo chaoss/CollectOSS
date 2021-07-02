@@ -17,7 +17,7 @@ import psycopg2
 import csv
 import io
 from logging import FileHandler, Formatter, StreamHandler
-from multiprocessing import Process, Queue, Pool
+from multiprocessing import Process, Queue, Pool, Value
 from os import getpid
 import sqlalchemy as s
 import pandas as pd
@@ -348,8 +348,10 @@ class Persistant():
         return df[list(set(final_columns))].to_dict(orient='records')
 
 
+    #table_pkey isn't used in this function don't know why it is here.
+    #TODO: Figure out what types this expects and what types it returns
     def organize_needed_data(
-        self, new_data, table_values, table_pkey, action_map={}, in_memory=True
+        self, new_data, table_values, table_pkey=None, action_map={}, in_memory=True
     ):
 
         if len(table_values) == 0:
@@ -417,16 +419,28 @@ class Persistant():
                 f"{len(need_updates)} updates.\n")
 
         else:
-
+            #create panda tabluar data from the keys of the passed table values
             table_values_df = pd.DataFrame(table_values, columns=table_values[0].keys())
             new_data_df = pd.DataFrame(new_data).dropna(subset=action_map['insert']['source'])
 
             new_data_df, table_values_df = self.sync_df_types(new_data_df, table_values_df,
                     action_map['insert']['source'], action_map['insert']['augur'])
 
-            need_insertion = new_data_df.merge(table_values_df, suffixes=('','_table'),
-                    how='outer', indicator=True, left_on=action_map['insert']['source'],
-                    right_on=action_map['insert']['augur']).loc[lambda x : x['_merge']=='left_only']
+            #Throwing value errors. 'cannot use name of an existing column for indicator column'
+
+            try:
+                need_insertion = new_data_df.merge(table_values_df, suffixes=('','_table'),
+                        how='outer', indicator=True, left_on=action_map['insert']['source'],
+                        right_on=action_map['insert']['augur']).loc[lambda x : x['_merge']=='left_only']
+            except ValueError as e:
+
+                #Log the error, try to merge again without label to avoid ValueError
+                self.logger.warning(f"Error thrown during pandas merge: {e}")
+                need_insertion = new_data_df.merge(table_values_df, suffixes=('','_table'),
+                        how='outer', indicator=False, left_on=action_map['insert']['source'],
+                        right_on=action_map['insert']['augur']).loc[lambda x : x['_merge']=='left_only']
+                
+
 
             if 'update' in action_map:
                 new_data_df, table_values_df = self.sync_df_types(new_data_df, table_values_df,
