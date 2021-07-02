@@ -423,9 +423,13 @@ class GitHubWorker(WorkerGitInterfaceable):
                 'augur': ['issue_assignee_src_id']
             }
         }
+        
+        table_values_issue_assignees = self.db.execute(
+            s.sql.select(self.get_relevant_columns(self.issue_assignees_table,assignee_action_map))
+        ).fetchall()
 
         source_assignees_insert, _ = self.organize_needed_data(
-            assignees_all, table_values=self.issue_assignees_table,
+            assignees_all, table_values=table_values_issue_assignees,
             action_map=assignee_action_map
         )
 
@@ -461,8 +465,14 @@ class GitHubWorker(WorkerGitInterfaceable):
                 'augur': ['label_src_id']
             }
         }
+
+        table_values_issue_labels = self.db.execute(
+            s.sql.select(self.get_relevant_columns(self.issue_labels_table,label_action_map))
+        ).fetchall()
+
+
         source_labels_insert, _ = self.organize_needed_data(
-            labels_all, table_values=self.issue_labels_table,
+            labels_all, table_values=table_values_issue_labels,
             action_map=label_action_map
         )
         labels_insert = [
