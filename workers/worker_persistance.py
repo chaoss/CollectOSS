@@ -426,6 +426,7 @@ class Persistant():
             new_data_df, table_values_df = self.sync_df_types(new_data_df, table_values_df,
                     action_map['insert']['source'], action_map['insert']['augur'])
 
+            #Throwing value errors. 'cannot use name of an existing column for indicator column'
             need_insertion = new_data_df.merge(table_values_df, suffixes=('','_table'),
                     how='outer', indicator=True, left_on=action_map['insert']['source'],
                     right_on=action_map['insert']['augur']).loc[lambda x : x['_merge']=='left_only']

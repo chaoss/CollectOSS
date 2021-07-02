@@ -764,6 +764,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         )
         self.write_debug_data(review_msgs, 'review_msgs')
 
+        #Throwing value errors. 'cannot use name of an existing column for indicator column'
         review_msgs['insert'] = self.enrich_cntrb_id(
             review_msgs['insert'], 'user.login', action_map_additions={
                 'insert': {
