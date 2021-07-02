@@ -1,6 +1,7 @@
 #SPDX-License-Identifier: MIT
 from multiprocessing import Process, Queue
 from urllib.parse import urlparse
+from workers.worker_git_integration import WorkerGitInterfaceable
 import pandas as pd
 import sqlalchemy as s
 import requests
@@ -12,7 +13,7 @@ import math
 from datetime import datetime
 from workers.worker_base import Worker
 
-class GitHubWorker(Worker):
+class GitHubWorker(WorkerGitInterfaceable):
     """ Worker that collects data from the Github API and stores it in our database
     task: most recent task the broker added to the worker's queue
     child: current process of the queue being ran
