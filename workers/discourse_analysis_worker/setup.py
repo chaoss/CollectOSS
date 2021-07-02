@@ -28,7 +28,7 @@ setup(
         'requests==2.22.0',
         'psycopg2-binary==2.8.6',
         'click==7.1.2', 
-        'scipy==1.4.1',
+        'scipy==1.6.3',
         'nltk==3.5',
         'pandas==1.1.3',
         'scikit-learn==0.24.1',
