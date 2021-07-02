@@ -104,8 +104,8 @@ class DepsWorker(Worker):
         path_to_scorecard = os.environ['HOME'] + '/scorecard'
 
         #setting the environment variable for scorecard if it does not exsists already 
-        if 'GITHUB_AUTH_TOKEN' not in os.environ:
-            os.environ['GITHUB_AUTH_TOKEN'] = self.config['gh_api_key']
+        
+        os.environ['GITHUB_AUTH_TOKEN'] = self.config['gh_api_key']
 
         p= subprocess.run(['./scorecard', command], cwd= path_to_scorecard ,capture_output=True, text=True)
         output = p.stdout.split('\n')
