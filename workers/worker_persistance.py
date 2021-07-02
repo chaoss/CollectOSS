@@ -349,6 +349,7 @@ class Persistant():
 
 
     #table_pkey isn't used in this function don't know why it is here.
+    #TODO: Figure out what types this expects and what types it returns
     def organize_needed_data(
         self, new_data, table_values, table_pkey=None, action_map={}, in_memory=True
     ):
@@ -418,7 +419,7 @@ class Persistant():
                 f"{len(need_updates)} updates.\n")
 
         else:
-
+            #create panda tabluar data from the keys of the passed table values
             table_values_df = pd.DataFrame(table_values, columns=table_values[0].keys())
             new_data_df = pd.DataFrame(new_data).dropna(subset=action_map['insert']['source'])
 
