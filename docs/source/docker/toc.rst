@@ -7,7 +7,7 @@ Docker
 
   If you want to start running docker against an external database right away: 
 
-  1. Follow the instructions to create a database, and database user: 
+  1. Follow the instructions to create a database, and database user (if you have just installed Postgresql locally, you may need to follow instructions for allow access to Postgresql from Docker in the next page. tl;dr, there are edits to the Postgresql `pg_hba.conf` and `postgresql.conf` files): 
 
   .. code-block:: postgresql 
     
