@@ -1,6 +1,23 @@
 Docker
 =====================
 
+.. note::
+
+  **Quick Start**: 
+
+  If you want to start running docker against an external database right away: 
+
+  1. Follow the instructions to create a database, and database user: 
+
+  .. code-block:: postgresql 
+    
+    CREATE DATABASE augur;
+    CREATE USER augur WITH ENCRYPTED PASSWORD 'password';
+    GRANT ALL PRIVILEGES ON DATABASE augur TO augur;
+
+  2. Install Docker. If you're not familiar with Docker, their `starting guide <https://www.docker.com/resources/what-container>`_ is a great resource.
+  3. Execute the following script from the base directory of the Augur repository: `sudo ./docker-setup.sh`
+
 Augur provides several Docker images designed to get you started with our software as quickly as possible. They are:
 
 - ``augurlabs/augur:backend``, our backend data collection and metrics API

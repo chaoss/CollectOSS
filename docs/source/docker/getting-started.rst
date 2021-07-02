@@ -8,6 +8,7 @@ Before you get started with Docker, you'll need to set up a PostgreSQL instance 
 .. note::
 
   Make sure your database is configured to listen on all addresses in order to work with the containers. These settings can be edited in your ``postgresql.conf``. Additionally edit the bottom section of your ``pg_hba.conf`` file with:
+  
 .. code-block:: 
 
       # TYPE  DATABASE        USER            ADDRESS                 METHOD
