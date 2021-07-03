@@ -170,3 +170,6 @@ workers/clustering_worker/vocabulary_count
 
 #nohup logs
 nohup.out
+
+#vscode 
+.vscode
