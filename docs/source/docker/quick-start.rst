@@ -1,5 +1,11 @@
 Docker Quick Start
 ==================================
+Before you get off to such a quick start, go ahead and 
+  1. create a fork from augur starting at https://github.com/chaoss/augur
+  2. clone that fork locally
+  3. `git checkout test` to checkout the `test branch`. Usually, we'll have you checkout the `dev` branch, but through August 9, 2021, that branch is undergoing refactoring, to be be maintable, and is not reliable for new development. 
+  4. Make sure to install all the pre-requisites here: https://oss-augur.readthedocs.io/en/master/getting-started/installation.html#dependencies
+
 
 .. note::
 
