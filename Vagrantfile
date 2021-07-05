@@ -9,7 +9,7 @@ sudo apt-get -y install --no-install-recommends \
     postgresql postgresql-contrib \
     libomp-dev \
     golang libgomp1
-pg_ctlcluster 12 main start
+sudo pg_ctlcluster 12 main start
 
 go get -u github.com/boyter/scc/
 
@@ -25,9 +25,6 @@ go get -u github.com/boyter/scc/
 
 ##########################################################################################
 # see: https://oss-augur.readthedocs.io/en/master/getting-started/database.html
-# cat <<EOF | sudo tee -a "$(sudo -u postgres psql -U postgres -c "show hba_file" | grep "pg_hba.conf" | xargs)"
-# host    all         all         127.0.0.1/32          trust
-# EOF
 cat <<EOF > /tmp/init.psql
 CREATE DATABASE augur;
 CREATE USER augur WITH ENCRYPTED PASSWORD 'password';
@@ -38,22 +35,8 @@ sudo -u postgres psql -U postgres -f /tmp/init.psql
 
 ##########################################################################################
 # see: https://oss-augur.readthedocs.io/en/master/getting-started/installation.html
-python3 -m venv $HOME/.virtualenvs/augur_env
-source $HOME/.virtualenvs/augur_env/bin/activate
-pip install wheel
 
-cd /vagrant
-python setup.py bdist_wheel
-# make install and make install-dev both call make clean first. FYI. 
-make clean
-# Make install-dev should do the right pip installs across the board. 
-# So should make install, but I think you want `make install-dev`
-# pip install .
-# You only need to do install-dev
-# make install
-make install-dev
-
-mkdir -p "/$HOME/augur/" "/$HOME/augur/logs/" "/$HOME/augur/repos/"
+mkdir -p "$HOME/augur/" "$HOME/augur/logs/" "$HOME/augur/repos/"
 cat <<EOF > "$HOME/augur/config.json"
 {
     "Database": {
@@ -64,7 +47,7 @@ cat <<EOF > "$HOME/augur/config.json"
         "host": "0.0.0.0"
     },
     "Logging": {
-        "logs_directory": "/$HOME/augur/logs/",
+        "logs_directory": "$HOME/augur/logs/",
         "log_level": "INFO",
         "verbose": 0,
         "quiet": 0,
@@ -72,7 +55,7 @@ cat <<EOF > "$HOME/augur/config.json"
     },
     "Workers": {
             "facade_worker": {
-                "repo_directory": "/$HOME/augur/repos/",
+                "repo_directory": "$HOME/augur/repos/",
                 "switch": 1
             },
             "github_worker": {
@@ -97,16 +80,29 @@ cat <<EOF > "$HOME/augur/config.json"
 }
 EOF
 
-# MAX: No slash "/" before home here? Just asking because the others have that. And my Vagrant knowledge is thin. 
-augur config init --rc-config-file "$HOME/augur/config.json"
+
+python3 -m venv $HOME/.virtualenvs/augur_env
+source $HOME/.virtualenvs/augur_env/bin/activate
+pip install wheel
+
+cd /vagrant
+python setup.py bdist_wheel
+make clean
+make install-dev
+
+augur config init --rc-config-file "$HOME/config.json"
 augur db create-schema
-# augur config init --db_name "$AUGUR_DB_NAME" --db_port "$AUGUR_DB_PORT" --db_user "$AUGUR_DB_DB_USER" --db_password "$AUGUR_DB_PASSWORD" --github_api_key "$AUGUR_GITHUB_API_KEY"
 augur backend start"
 
 SCRIPT
 
 Vagrant.configure("2") do |config|
   config.vm.box = "ubuntu/focal64"
+	
+  config.vm.provider "virtualbox" do |v|
+      v.memory = 20480
+      v.cpus = 4
+  end
 
-  config.vm.provision "shell", inline: $script
+  config.vm.provision "shell", privileged: false, inline: $script
 end
