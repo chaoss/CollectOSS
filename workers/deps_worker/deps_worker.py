@@ -114,46 +114,49 @@ class DepsWorker(Worker):
         required_output = output[4:20]
         self.logger.info('required output generated..')
         # here scorecard becomes a list of lists where it has list of 16 list in which each list is a test and has name, status and score. 
-        scorecard = list()
+        scorecard_score = dict()
+        scorecard_status = dict()
         self.logger.info('adding to list...')
         for test in required_output:
-            scorecard.append(test.split())
+            temp = test.split()
+            scorecard_status[temp[0]] = temp[1]
+            scorecard_score[temp[0]] = temp[2]
 
         self.logger.info('adding to database')
         repo_deps_scorecard = {
             'repo_id': repo_id,
-            "ossf_active_status": scorecard[0][1],
-            'ossf_automated_dendency_update_status': scorecard[1][1],
-            "ossf_branch_protection_status": scorecard[2][1],
-            "ossf_ci_tests_status": scorecard[3][1],
-            "ossf_cii_best_practices_status": scorecard[4][1],
-            "ossf_code_review_status": scorecard[5][1],
-            "ossf_contributors_status":scorecard[6][1],
-            "ossf_frozen_deps_status": scorecard[7][1],
-            "ossf_fuzzing_status": scorecard[8][1],
-            "ossf_packaging_status": scorecard[9][1],
-            "ossf_pull_request_status": scorecard[10][1],
-            "ossf_sast_status": scorecard[11][1],
-            "ossf_security_policy_status": scorecard[12][1],
-            "ossf_signed_releases_status":scorecard[13][1],
-            "ossf_signed_tags_status":scorecard[14][1],
-            'ossf_token_permissions_status': scorecard[15][1],
-            "ossf_active_score": scorecard[0][2],
-            'ossf_automated_dendency_update_score': scorecard[1][2],
-            "ossf_branch_protection_score":scorecard[2][2],
-            "ossf_ci_tests_score": scorecard[3][2],
-            "ossf_cii_best_practices_score": scorecard[4][2],
-            "ossf_code_review_score": scorecard[5][2],
-            "ossf_contributors_score":scorecard[6][2],
-            "ossf_frozen_deps_score": scorecard[7][2],
-            "ossf_fuzzing_score": scorecard[8][2],
-            "ossf_packaging_score": scorecard[9][2],
-            "ossf_pull_request_score": scorecard[10][2],
-            "ossf_sast_score": scorecard[11][2],
-            "ossf_security_policy_score": scorecard[12][2],
-            "ossf_signed_releases_score": scorecard[13][2], 
-            "ossf_signed_tags_score": scorecard[14][2],
-            'ossf_token_permissions_score': scorecard[15][2],
+            "ossf_active_status": scorecard_status.get('Active:'),
+            "ossf_automated_dendency_update_status": scorecard_status.get('Automatic-Dependency-Update:'),
+            "ossf_branch_protection_status": scorecard_status.get('Branch-Protection:'),
+            "ossf_ci_tests_status": scorecard_status.get('CI-Tests:'),
+            "ossf_cii_best_practices_status": scorecard_status.get('CII-Best-Practices:'),
+            "ossf_code_review_status": scorecard_status.get('Code-Review:'),
+            "ossf_contributors_status":scorecard_status.get('Contributors:'),
+            "ossf_frozen_deps_status": scorecard_status.get('Frozen-Deps:'),
+            "ossf_fuzzing_status": scorecard_status.get('Fuzzing:'),
+            "ossf_packaging_status": scorecard_status.get('Packaging:'),
+            "ossf_pull_request_status": scorecard_status.get('Pull-Requests:'),
+            "ossf_sast_status": scorecard_status.get('SAST:'),
+            "ossf_security_policy_status": scorecard_status.get('Security-Policy:'),
+            "ossf_signed_releases_status":scorecard_status.get('Signed-Releases:'),
+            "ossf_signed_tags_status":scorecard_status.get('Signed-Tags:'),
+            "ossf_token_permissions_status": scorecard_status.get('Token-Permissions:'),
+            "ossf_active_score": scorecard_score.get('Active:'),
+            "ossf_automated_dendency_update_score": scorecard_score.get('Automatic-Dependency-Update:'),
+            "ossf_branch_protection_score":scorecard_score.get('Branch-Protection:'),
+            "ossf_ci_tests_score": scorecard_score.get('CI-Tests:'),
+            "ossf_cii_best_practices_score": scorecard_score.get('CII-Best-Practices:'),
+            "ossf_code_review_score": scorecard_score.get('Code-Review:'),
+            "ossf_contributors_score":scorecard_score.get('Contributors:'),
+            "ossf_frozen_deps_score": scorecard_score.get('Frozen-Deps:'),
+            "ossf_fuzzing_score": scorecard_score.get('Fuzzing:'),
+            "ossf_packaging_score": scorecard_score.get('Packaging:'),
+            "ossf_pull_request_score": scorecard_score.get('Pull-Requests:'),
+            "ossf_sast_score": scorecard_score.get('SAST:'),
+            "ossf_security_policy_score": scorecard_score.get('Security-Policy:'),
+            "ossf_signed_releases_score": scorecard_score.get('Signed-Releases:'), 
+            "ossf_signed_tags_score": scorecard_score.get('Signed-Tags:'),
+            "ossf_token_permissions_score": scorecard_score.get('Token-Permissions:'),
             'tool_source': self.tool_source,
             'tool_version': self.tool_version,
             'data_source': self.data_source,
