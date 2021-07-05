@@ -70,18 +70,18 @@ class DepsWorker(Worker):
         self.logger.info(repo_id)
 
         repo_path_sql = s.sql.text("""
-            SELECT repo_id, CONCAT(repo_group_id || chr(47) || repo_path || repo_name) AS path
+            SELECT repo_id, repo_git AS path
             FROM repo
             WHERE repo_id = :repo_id
         """)
 
-        relative_repo_path = self.db.execute(repo_path_sql, {'repo_id': repo_id}).fetchone()[1]
-        absolute_repo_path = self.config['repo_directory'] + relative_repo_path
+        scorecard_repo_path = self.db.execute(repo_path_sql, {'repo_id': repo_id}).fetchone()[1]
+        # absolute_repo_path = self.config['repo_directory'] + relative_repo_path
 ## TODO: Flesh out generate_scorecard 
 ## You can look at the Value worker to see how Go Programs are already called in Augur.
 #  
         try:
-            self.generate_scorecard(repo_id, relative_repo_path)
+            self.generate_scorecard(repo_id, scorecard_repo_path)
         except Exception as e:
             self.logger.error(e)
 
@@ -91,15 +91,15 @@ class DepsWorker(Worker):
     def generate_scorecard(self, repo_id, path): 
         """Runs scorecard on repo and stores data in database
         :param repo_id: Repository ID
-        :param path: relative path of the Repostiory
+        :param path: URL path of the Repostiory
         """
         self.logger.info('Generating scorecard data for repo...')
         self.logger.info(f'Repo ID: {repo_id}, Path: {path}')
 
         # we convert relative path in the format required by scorecard like github.com/chaoss/augur
-        raw_path,_ = path.split('-')
-        scorecard_repo_path = raw_path[2:]
-        command = '--repo='+ scorecard_repo_path
+        # raw_path,_ = path.split('-')
+        # scorecard_repo_path = raw_path[2:]
+        command = '--repo='+ path
         self.logger.info('command generated..')
         #this is path where our scorecard project is located
         path_to_scorecard = os.environ['HOME'] + '/scorecard'
