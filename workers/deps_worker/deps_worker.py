@@ -65,6 +65,7 @@ class DepsWorker(Worker):
     def ossf_scorecard_model(self, entry_info, repo_id):
         """ Data collection and storage method
         """
+        self.logger.info('Scorecard Model called...')
         self.logger.info(entry_info)
         self.logger.info(repo_id)
 
@@ -92,30 +93,34 @@ class DepsWorker(Worker):
         :param repo_id: Repository ID
         :param path: relative path of the Repostiory
         """
-        self.logger.info('Generating scorecard data for repo')
+        self.logger.info('Generating scorecard data for repo...')
         self.logger.info(f'Repo ID: {repo_id}, Path: {path}')
 
         # we convert relative path in the format required by scorecard like github.com/chaoss/augur
         raw_path,_ = path.split('-')
         scorecard_repo_path = raw_path[2:]
         command = '--repo='+ scorecard_repo_path
-
+        self.logger.info('command generated..')
         #this is path where our scorecard project is located
         path_to_scorecard = os.environ['HOME'] + '/scorecard'
 
-        #setting the environment variable for scorecard if it does not exsists already 
+        #setting the enviror scorecard if it does not exsists alreadyonment variable f 
         
         os.environ['GITHUB_AUTH_TOKEN'] = self.config['gh_api_key']
 
         p= subprocess.run(['./scorecard', command], cwd= path_to_scorecard ,capture_output=True, text=True)
+        self.logger.info('subprocess completed successfully... ')
         output = p.stdout.split('\n')
         required_output = output[4:20]
+        self.logger.info('required output generated..')
         # here scorecard becomes a list of lists where it has list of 16 list in which each list is a test and has name, status and score. 
         scorecard = list()
+        self.logger.info('adding to list...')
         for test in required_output:
             scorecard.append(test.split())
 
-        repo_deps = {
+        self.logger.info('adding to database')
+        repo_deps_scorecard = {
             'repo_id': repo_id,
             "ossf_active_status": scorecard[0][1],
             'ossf_automated_dendency_update_status': scorecard[1][1],
@@ -155,7 +160,7 @@ class DepsWorker(Worker):
             'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
 
         }  
-        result = self.db.execute(self._dev1_repo_deps_scorecard.insert().values(repo_deps)) 
+        result = self.db.execute(self._dev1_repo_deps_scorecard_table.insert().values(repo_deps_scorecard)) 
         self.logger.info(f"Added OSSF scorecard data : {result.inserted_primary_key}") 
 
 
