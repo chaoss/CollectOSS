@@ -3,7 +3,7 @@
 version: '3'
 services:
   backend:
-    image: augurlabs/augur_backend
+    image: augurlabs/augur:backend
     build: 
       context: .
       dockerfile: ./util/docker/backend/Dockerfile
