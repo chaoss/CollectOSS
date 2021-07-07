@@ -25,7 +25,7 @@ class DepsWorker(Worker):
         models = ['deps', 'ossf_scorecard']
 
         # Define the tables needed to insert, update, or delete on
-        data_tables = ['repo_dependencies', '_dev1_repo_deps_scorecard']
+        data_tables = ['repo_dependencies', 'repo_deps_scorecard']
         operations_tables = ['worker_history', 'worker_job']
 
 
@@ -99,14 +99,18 @@ class DepsWorker(Worker):
         # we convert relative path in the format required by scorecard like github.com/chaoss/augur
         # raw_path,_ = path.split('-')
         # scorecard_repo_path = raw_path[2:]
+        path = path[8:]
+        if path[-4:] == '.git':
+            path = path.replace(".git", "")
         command = '--repo='+ path
-        self.logger.info('command generated..')
+        self.logger.info('command generated..{}'.format(command))
         #this is path where our scorecard project is located
         path_to_scorecard = os.environ['HOME'] + '/scorecard'
 
         #setting the enviror scorecard if it does not exsists alreadyonment variable f 
         
         os.environ['GITHUB_AUTH_TOKEN'] = self.config['gh_api_key']
+        self.logger.info("setting variables done {}".format(os.environ.get('GITHUB_AUTH_TOKEN')))
 
         p= subprocess.run(['./scorecard', command], cwd= path_to_scorecard ,capture_output=True, text=True, timeout=None)
         self.logger.info('subprocess completed successfully... ')
@@ -114,58 +118,31 @@ class DepsWorker(Worker):
         required_output = output[4:20]
         self.logger.info('required output generated.. {}'.format(required_output))
         # here scorecard becomes a list of lists where it has list of 16 list in which each list is a test and has name, status and score. 
-        scorecard_score = dict()
-        scorecard_status = dict()
-        self.logger.info('adding to list...')
-        for test in required_output:
-            temp = test.split()
-            scorecard_status[temp[0]] = temp[1]
-            scorecard_score[temp[0]] = temp[2]
+        # scorecard_score = dict()
+        # scorecard_status = dict()
+        # self.logger.info('adding to list...')
+        # for test in required_output:
+        #     temp = test.split()
+        #     scorecard_status[temp[0]] = temp[1]
+        #     scorecard_score[temp[0]] = temp[2]
 
         self.logger.info('adding to database...')
-        self.logger.info('checking values {} is {} and {} is {} and {} is {} and {} and {}'.format(scorecard_status.get('CII-Best-Practices:'),scorecard_score.get('CII-Best-Practices:'),scorecard_status.get('Automatic-Dependency-Update:'),scorecard_score.get('Automatic-Dependency-Update:'),scorecard_status.get('Token-Permissions:'),scorecard_score.get('Token-Permissions:'),scorecard_status.get('Active:'),scorecard_status.get('Fuzzing:')))
-        repo_deps_scorecard = {
-            'repo_id': repo_id,
-            "ossf_active_status": scorecard_status.get('Active:'),
-            "ossf_automated_dendency_update_status": scorecard_status.get('Automatic-Dependency-Update:'),
-            "ossf_branch_protection_status": scorecard_status.get('Branch-Protection:'),
-            "ossf_ci_tests_status": scorecard_status.get('CI-Tests:'),
-            "ossf_cii_best_practices_status": scorecard_status.get('CII-Best-Practices:'),
-            "ossf_code_review_status": scorecard_status.get('Code-Review:'),
-            "ossf_contributors_status":scorecard_status.get('Contributors:'),
-            "ossf_frozen_deps_status": scorecard_status.get('Frozen-Deps:'),
-            "ossf_fuzzing_status": scorecard_status.get('Fuzzing:'),
-            "ossf_packaging_status": scorecard_status.get('Packaging:'),
-            "ossf_pull_request_status": scorecard_status.get('Pull-Requests:'),
-            "ossf_sast_status": scorecard_status.get('SAST:'),
-            "ossf_security_policy_status": scorecard_status.get('Security-Policy:'),
-            "ossf_signed_releases_status":scorecard_status.get('Signed-Releases:'),
-            "ossf_signed_tags_status":scorecard_status.get('Signed-Tags:'),
-            "ossf_token_permissions_status": scorecard_status.get('Token-Permissions:'),
-            "ossf_active_score": scorecard_score.get('Active:'),
-            "ossf_automated_dendency_update_score": scorecard_score.get('Automatic-Dependency-Update:'),
-            "ossf_branch_protection_score":scorecard_score.get('Branch-Protection:'),
-            "ossf_ci_tests_score": scorecard_score.get('CI-Tests:'),
-            "ossf_cii_best_practices_score": scorecard_score.get('CII-Best-Practices:'),
-            "ossf_code_review_score": scorecard_score.get('Code-Review:'),
-            "ossf_contributors_score":scorecard_score.get('Contributors:'),
-            "ossf_frozen_deps_score": scorecard_score.get('Frozen-Deps:'),
-            "ossf_fuzzing_score": scorecard_score.get('Fuzzing:'),
-            "ossf_packaging_score": scorecard_score.get('Packaging:'),
-            "ossf_pull_request_score": scorecard_score.get('Pull-Requests:'),
-            "ossf_sast_score": scorecard_score.get('SAST:'),
-            "ossf_security_policy_score": scorecard_score.get('Security-Policy:'),
-            "ossf_signed_releases_score": scorecard_score.get('Signed-Releases:'), 
-            "ossf_signed_tags_score": scorecard_score.get('Signed-Tags:'),
-            "ossf_token_permissions_score": scorecard_score.get('Token-Permissions:'),
-            'tool_source': self.tool_source,
-            'tool_version': self.tool_version,
-            'data_source': self.data_source,
-            'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+        # self.logger.info('checking values {} is {} and {} is {} and {} is {} and {} and {}'.format(scorecard_status.get('CII-Best-Practices:'),scorecard_score.get('CII-Best-Practices:'),scorecard_status.get('Automatic-Dependency-Update:'),scorecard_score.get('Automatic-Dependency-Update:'),scorecard_status.get('Token-Permissions:'),scorecard_score.get('Token-Permissions:'),scorecard_status.get('Active:'),scorecard_status.get('Fuzzing:')))
+        for test in required_output:
+            temp = test.split()
+            repo_deps_scorecard = {
+                'repo_id': repo_id,
+                'name': temp[0],
+                'status': temp[1],
+                'score': temp[2],
+                'tool_source': self.tool_source,
+                'tool_version': self.tool_version,
+                'data_source': self.data_source,
+                'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
 
-        }  
-        result = self.db.execute(self._dev1_repo_deps_scorecard_table.insert().values(repo_deps_scorecard)) 
-        self.logger.info(f"Added OSSF scorecard data : {result.inserted_primary_key}") 
+            }  
+            result = self.db.execute(self.repo_deps_scorecard_table.insert().values(repo_deps_scorecard)) 
+            self.logger.info(f"Added OSSF scorecard data : {result.inserted_primary_key}") 
 
 
 
