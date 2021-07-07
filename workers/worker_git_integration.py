@@ -1168,8 +1168,9 @@ class WorkerGitInterfaceable(Worker):
         return all_data
 
 
+    #insertion_method and stagger are arguments that allow paginate_endpoint to insert at around ~500 pages at a time.
     def paginate_endpoint(
-        self, url, action_map={}, table=None, where_clause=True, platform='github', in_memory=True
+        self, url, action_map={}, table=None, where_clause=True, platform='github', in_memory=True, stagger=False, insertion_method=None 
     ):
 
         #Get augur columns using the action map along with the primary key
@@ -1292,6 +1293,14 @@ class WorkerGitInterfaceable(Worker):
                 break
             
             #This is probably where we should insert at around ~500 at a time
+            #makes sure that stagger is enabled, we have an insertion method, and the insertion happens every 500 pages or so.
+            if stagger and insertion_method != None and page_number % 500 == 0:
+                #call insertion method passed as argument.
+                #clear the data from memory and avoid duplicate insertions.
+                need_insertion = []
+                need_update = []
+                all_data = []
+
             page_number = page_number + 1 if forward_pagination else page_number - 1
 
         if forward_pagination:

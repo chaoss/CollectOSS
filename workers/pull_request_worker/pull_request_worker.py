@@ -54,6 +54,9 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         self.tool_version = '1.0.0'
         self.data_source = 'GitHub API'
 
+        #Needs to be an attribute of the class for incremental database insert using paginate_endpoint
+        self.pk_source_prs = None
+
     def graphql_paginate(self, query, data_subjects, before_parameters=None):
         """ Paginate a GitHub GraphQL query backwards
 
@@ -392,6 +395,87 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         #Use a parent method in order to iterate through pull request pages
         #TODO: Make it do a db insert every ~500 records or so.
+
+        #Define a method to pass paginate_endpoint so that prs can be inserted incrementally
+
+        def pk_source_increment_insert(inc_source_prs, action_map):
+
+
+            prs_insert = [
+            {
+                'repo_id': self.repo_id,
+                'pr_url': pr['url'],
+                'pr_src_id': pr['id'],
+                'pr_src_node_id': None,
+                'pr_html_url': pr['html_url'],
+                'pr_diff_url': pr['diff_url'],
+                'pr_patch_url': pr['patch_url'],
+                'pr_issue_url': pr['issue_url'],
+                'pr_augur_issue_id': None,
+                'pr_src_number': pr['number'],
+                'pr_src_state': pr['state'],
+                'pr_src_locked': pr['locked'],
+                'pr_src_title': pr['title'],
+                'pr_augur_contributor_id': pr['cntrb_id'],
+                'pr_body': pr['body'],
+                'pr_created_at': pr['created_at'],
+                'pr_updated_at': pr['updated_at'],
+                'pr_closed_at': pr['closed_at'],
+                'pr_merged_at': pr['merged_at'],
+                'pr_merge_commit_sha': pr['merge_commit_sha'],
+                'pr_teams': None,
+                'pr_milestone': None if not (
+                    pr['milestone'] and 'title' in pr['milestone']
+                ) else pr['milestone']['title'],
+                'pr_commits_url': pr['commits_url'],
+                'pr_review_comments_url': pr['review_comments_url'],
+                'pr_review_comment_url': pr['review_comment_url'],
+                'pr_comments_url': pr['comments_url'],
+                'pr_statuses_url': pr['statuses_url'],
+                'pr_meta_head_id': None,
+                'pr_meta_base_id': None,
+                'pr_src_issue_url': pr['issue_url'],
+                'pr_src_comments_url': pr['comments_url'], # NOTE: this seems redundant
+                'pr_src_review_comments_url': pr['review_comments_url'], # this too
+                'pr_src_commits_url': pr['commits_url'], # this one also seems redundant
+                'pr_src_statuses_url': pr['statuses_url'],
+                'pr_src_author_association': pr['author_association'],
+                'tool_source': self.tool_source,
+                'tool_version': self.tool_version,
+                'data_source': 'GitHub API'
+            } for pr in inc_source_prs['insert']
+            ]
+
+            #The b_pr_src_id bug comes from here
+            if len(inc_source_prs['insert']) > 0 or len(inc_source_prs['update']) > 0:
+                self.bulk_insert(
+                    self.pull_requests_table,
+                    update=inc_source_prs['update'], unique_columns=action_map['insert']['augur'],
+                    insert=prs_insert, update_columns=action_map['update']['augur']
+                )   
+
+                source_data = inc_source_prs['insert'] + inc_source_prs['update']
+
+            elif not self.deep_collection:
+                self.logger.info(
+                    "There are no prs to update, insert, or collect nested information for.\n"
+                )
+                self.register_task_completion(self.task_info, self.repo_id, 'pull_requests')
+                return
+
+            if self.deep_collection:
+                source_data = source_prs['all']
+
+            # Merge source data to inserted data to have access to inserted primary keys
+
+            gh_merge_fields = ['id']
+            augur_merge_fields = ['pr_src_id']
+
+            pk_source_prs = self.enrich_data_primary_keys(source_data, self.pull_requests_table,
+                gh_merge_fields, augur_merge_fields)
+            
+
+        
         source_prs = self.paginate_endpoint(
             pr_url, action_map=pr_action_map, table=self.pull_requests_table,
             where_clause=self.pull_requests_table.c.repo_id == self.repo_id
@@ -465,7 +549,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 update=source_prs['update'], unique_columns=pr_action_map['insert']['augur'],
                 insert=prs_insert, update_columns=pr_action_map['update']['augur']
             )
-
+            #TODO: figure out what source_data is
             source_data = source_prs['insert'] + source_prs['update']
 
         elif not self.deep_collection:
