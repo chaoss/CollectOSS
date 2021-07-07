@@ -1172,6 +1172,7 @@ class WorkerGitInterfaceable(Worker):
         self, url, action_map={}, table=None, where_clause=True, platform='github', in_memory=True
     ):
 
+        #Get augur columns using the action map along with the primary key
         table_values = self.db.execute(
             s.sql.select(self.get_relevant_columns(table, action_map)).where(where_clause)
         ).fetchall()
@@ -1180,10 +1181,14 @@ class WorkerGitInterfaceable(Worker):
         multiple_pages = False
         need_insertion = []
         need_update = []
+
+        #Stores sum of page data
         all_data = []
         forward_pagination = True
         backwards_activation = False
         last_page_number = -1
+
+        #Block to handle page queries and retry at least 10 times
         while True:
 
             # Multiple attempts to hit endpoint
@@ -1285,7 +1290,8 @@ class WorkerGitInterfaceable(Worker):
                     (page_number >= last_page_number and forward_pagination):
                 self.logger.info("No more pages to check, breaking from pagination.\n")
                 break
-
+            
+            #This is probably where we should insert at around ~500 at a time
             page_number = page_number + 1 if forward_pagination else page_number - 1
 
         if forward_pagination:

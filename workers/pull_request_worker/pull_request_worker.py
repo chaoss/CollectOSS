@@ -371,12 +371,14 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         self.register_task_completion(self.task_info, self.repo_id, 'pull_request_commits')
 
     def _get_pk_source_prs(self):
-
+        
+        #self.owner and self.repo are both defined in the worker base's collect method using the url of the github repo. 
         pr_url = (
             f"https://api.github.com/repos/{self.owner}/{self.repo}/pulls?state=all&"
             "direction=asc&per_page=100&page={}"
         )
 
+        #Database action map is essential in order to avoid duplicates messing up the data
         pr_action_map = {
             'insert': {
                 'source': ['id'],
@@ -388,6 +390,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             }
         }
 
+        #Use a parent method in order to iterate through pull request pages
+        #TODO: Make it do a db insert every ~500 records or so.
         source_prs = self.paginate_endpoint(
             pr_url, action_map=pr_action_map, table=self.pull_requests_table,
             where_clause=self.pull_requests_table.c.repo_id == self.repo_id
