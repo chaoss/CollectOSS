@@ -44,13 +44,17 @@ pip install wheel
 
 cd /vagrant
 python setup.py bdist_wheel
+# make install and make install-dev both call make clean first. FYI. 
 make clean
-pip install .
-make install
+# Make install-dev should do the right pip installs across the board. 
+# So should make install, but I think you want `make install-dev`
+# pip install .
+# You only need to do install-dev
+# make install
 make install-dev
 
-mkdir -p "/$HOME/logs/" "/$HOME/repos/"
-cat <<EOF > "$HOME/config.json"
+mkdir -p "/$HOME/augur/" "/$HOME/augur/logs/" "/$HOME/augur/repos/"
+cat <<EOF > "$HOME/augur/config.json"
 {
     "Database": {
         "host": "localhost",
@@ -60,7 +64,7 @@ cat <<EOF > "$HOME/config.json"
         "host": "0.0.0.0"
     },
     "Logging": {
-        "logs_directory": "/$HOME/logs/",
+        "logs_directory": "/$HOME/augur/logs/",
         "log_level": "INFO",
         "verbose": 0,
         "quiet": 0,
@@ -68,7 +72,7 @@ cat <<EOF > "$HOME/config.json"
     },
     "Workers": {
             "facade_worker": {
-                "repo_directory": "/$HOME/repos/",
+                "repo_directory": "/$HOME/augur/repos/",
                 "switch": 1
             },
             "github_worker": {
@@ -92,7 +96,9 @@ cat <<EOF > "$HOME/config.json"
         }
 }
 EOF
-augur config init --rc-config-file "$HOME/config.json"
+
+# MAX: No slash "/" before home here? Just asking because the others have that. And my Vagrant knowledge is thin. 
+augur config init --rc-config-file "$HOME/augur/config.json"
 augur db create-schema
 # augur config init --db_name "$AUGUR_DB_NAME" --db_port "$AUGUR_DB_PORT" --db_user "$AUGUR_DB_DB_USER" --db_password "$AUGUR_DB_PASSWORD" --github_api_key "$AUGUR_GITHUB_API_KEY"
 augur backend start"
