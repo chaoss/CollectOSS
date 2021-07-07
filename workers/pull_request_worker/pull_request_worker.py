@@ -55,7 +55,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         self.data_source = 'GitHub API'
 
         #Needs to be an attribute of the class for incremental database insert using paginate_endpoint
-        self.pk_source_prs = None
+        self.pk_source_prs = []
 
     def graphql_paginate(self, query, data_subjects, before_parameters=None):
         """ Paginate a GitHub GraphQL query backwards
@@ -400,6 +400,22 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         def pk_source_increment_insert(inc_source_prs, action_map):
 
+            self.write_debug_data(inc_source_prs, 'source_prs')
+
+            if len(inc_source_prs['all']) == 0:
+                self.logger.info("There are no prs for this repository.\n")
+                self.register_task_completion(self.task_info, self.repo_id, 'pull_requests')
+                return
+
+            inc_source_prs['insert'] = self.enrich_cntrb_id(
+                inc_source_prs['insert'], 'user.login', action_map_additions={
+                    'insert': {
+                        'source': ['user.node_id'],
+                        'augur': ['gh_node_id']
+                    }
+                }, prefix='user.'
+            )            
+            
 
             prs_insert = [
             {
@@ -471,14 +487,15 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             gh_merge_fields = ['id']
             augur_merge_fields = ['pr_src_id']
 
-            pk_source_prs = self.enrich_data_primary_keys(source_data, self.pull_requests_table,
+            self.pk_source_prs += self.enrich_data_primary_keys(source_data, self.pull_requests_table,
                 gh_merge_fields, augur_merge_fields)
+            return
             
 
-        
+        #paginate endpoint with stagger enabled so that the above method can insert every 500
         source_prs = self.paginate_endpoint(
             pr_url, action_map=pr_action_map, table=self.pull_requests_table,
-            where_clause=self.pull_requests_table.c.repo_id == self.repo_id
+            where_clause=self.pull_requests_table.c.repo_id == self.repo_id, stagger=True, insertion_method=pk_source_increment_insert
         )
 
         self.write_debug_data(source_prs, 'source_prs')
