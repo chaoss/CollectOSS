@@ -480,7 +480,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 return
 
             if self.deep_collection:
-                source_data = source_prs['all']
+                source_data = inc_source_prs['all']
 
             # Merge source data to inserted data to have access to inserted primary keys
 
@@ -586,6 +586,10 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         pk_source_prs = self.enrich_data_primary_keys(source_data, self.pull_requests_table,
             gh_merge_fields, augur_merge_fields)
+        
+        pk_source_prs += self.pk_source_prs
+
+        self.pk_source_prs = []
 
         return pk_source_prs
 
