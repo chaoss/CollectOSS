@@ -54,6 +54,9 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         self.tool_version = '1.0.0'
         self.data_source = 'GitHub API'
 
+        #Needs to be an attribute of the class for incremental database insert using paginate_endpoint
+        self.pk_source_prs = []
+
     def graphql_paginate(self, query, data_subjects, before_parameters=None):
         """ Paginate a GitHub GraphQL query backwards
 
@@ -371,12 +374,14 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         self.register_task_completion(self.task_info, self.repo_id, 'pull_request_commits')
 
     def _get_pk_source_prs(self):
-
+        
+        #self.owner and self.repo are both defined in the worker base's collect method using the url of the github repo. 
         pr_url = (
             f"https://api.github.com/repos/{self.owner}/{self.repo}/pulls?state=all&"
             "direction=asc&per_page=100&page={}"
         )
 
+        #Database action map is essential in order to avoid duplicates messing up the data
         pr_action_map = {
             'insert': {
                 'source': ['id'],
@@ -388,28 +393,29 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             }
         }
 
-        source_prs = self.paginate_endpoint(
-            pr_url, action_map=pr_action_map, table=self.pull_requests_table,
-            where_clause=self.pull_requests_table.c.repo_id == self.repo_id
-        )
+        #Use a parent method in order to iterate through pull request pages
+        #Define a method to pass paginate_endpoint so that prs can be inserted incrementally
 
-        self.write_debug_data(source_prs, 'source_prs')
+        def pk_source_increment_insert(inc_source_prs, action_map):
 
-        if len(source_prs['all']) == 0:
-            self.logger.info("There are no prs for this repository.\n")
-            self.register_task_completion(self.task_info, self.repo_id, 'pull_requests')
-            return
+            self.write_debug_data(inc_source_prs, 'source_prs')
 
-        source_prs['insert'] = self.enrich_cntrb_id(
-            source_prs['insert'], 'user.login', action_map_additions={
-                'insert': {
-                    'source': ['user.node_id'],
-                    'augur': ['gh_node_id']
-                }
-            }, prefix='user.'
-        )
+            if len(inc_source_prs['all']) == 0:
+                self.logger.info("There are no prs for this repository.\n")
+                self.register_task_completion(self.task_info, self.repo_id, 'pull_requests')
+                return
 
-        prs_insert = [
+            inc_source_prs['insert'] = self.enrich_cntrb_id(
+                inc_source_prs['insert'], 'user.login', action_map_additions={
+                    'insert': {
+                        'source': ['user.node_id'],
+                        'augur': ['gh_node_id']
+                    }
+                }, prefix='user.'
+            )            
+            
+
+            prs_insert = [
             {
                 'repo_id': self.repo_id,
                 'pr_url': pr['url'],
@@ -451,36 +457,54 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
                 'data_source': 'GitHub API'
-            } for pr in source_prs['insert']
-        ]
+            } for pr in inc_source_prs['insert']
+            ]
 
-        #The b_pr_src_id bug comes from here
-        if len(source_prs['insert']) > 0 or len(source_prs['update']) > 0:
-            pr_insert_result, pr_update_result = self.bulk_insert(
-                self.pull_requests_table,
-                update=source_prs['update'], unique_columns=pr_action_map['insert']['augur'],
-                insert=prs_insert, update_columns=pr_action_map['update']['augur']
-            )
+            #The b_pr_src_id bug comes from here
+            if len(inc_source_prs['insert']) > 0 or len(inc_source_prs['update']) > 0:
+                self.bulk_insert(
+                    self.pull_requests_table,
+                    update=inc_source_prs['update'], unique_columns=action_map['insert']['augur'],
+                    insert=prs_insert, update_columns=action_map['update']['augur']
+                )   
 
-            source_data = source_prs['insert'] + source_prs['update']
+                source_data = inc_source_prs['insert'] + inc_source_prs['update']
 
-        elif not self.deep_collection:
-            self.logger.info(
-                "There are no prs to update, insert, or collect nested information for.\n"
-            )
-            self.register_task_completion(self.task_info, self.repo_id, 'pull_requests')
+            elif not self.deep_collection:
+                self.logger.info(
+                    "There are no prs to update, insert, or collect nested information for.\n"
+                )
+                self.register_task_completion(self.task_info, self.repo_id, 'pull_requests')
+                return
+
+            if self.deep_collection:
+                source_data = inc_source_prs['all']
+
+            # Merge source data to inserted data to have access to inserted primary keys
+
+            gh_merge_fields = ['id']
+            augur_merge_fields = ['pr_src_id']
+
+            self.pk_source_prs += self.enrich_data_primary_keys(source_data, self.pull_requests_table,
+                gh_merge_fields, augur_merge_fields)
             return
+            
 
-        if self.deep_collection:
-            source_data = source_prs['all']
+        #paginate endpoint with stagger enabled so that the above method can insert every 500
+        source_prs = self.paginate_endpoint(
+            pr_url, action_map=pr_action_map, table=self.pull_requests_table,
+            where_clause=self.pull_requests_table.c.repo_id == self.repo_id, stagger=True, insertion_method=pk_source_increment_insert
+        )
 
-        # Merge source data to inserted data to have access to inserted primary keys
+        #Use the increment insert method in order to do the 
+        #remaining pages of the paginated endpoint that weren't inserted inside the paginate_endpoint method
+        pk_source_increment_insert(source_prs,pr_action_map)
+        
+        pk_source_prs = self.pk_source_prs
 
-        gh_merge_fields = ['id']
-        augur_merge_fields = ['pr_src_id']
-
-        pk_source_prs = self.enrich_data_primary_keys(source_data, self.pull_requests_table,
-            gh_merge_fields, augur_merge_fields)
+        #This attribute is only needed because paginate endpoint needs to 
+        #send this data to the child class and this is the easiset way to do that.
+        self.pk_source_prs = []
 
         return pk_source_prs
 

@@ -1168,10 +1168,12 @@ class WorkerGitInterfaceable(Worker):
         return all_data
 
 
+    #insertion_method and stagger are arguments that allow paginate_endpoint to insert at around ~500 pages at a time.
     def paginate_endpoint(
-        self, url, action_map={}, table=None, where_clause=True, platform='github', in_memory=True
+        self, url, action_map={}, table=None, where_clause=True, platform='github', in_memory=True, stagger=False, insertion_method=None, insertion_threshold=500 
     ):
 
+        #Get augur columns using the action map along with the primary key
         table_values = self.db.execute(
             s.sql.select(self.get_relevant_columns(table, action_map)).where(where_clause)
         ).fetchall()
@@ -1180,10 +1182,14 @@ class WorkerGitInterfaceable(Worker):
         multiple_pages = False
         need_insertion = []
         need_update = []
+
+        #Stores sum of page data
         all_data = []
         forward_pagination = True
         backwards_activation = False
         last_page_number = -1
+
+        #Block to handle page queries and retry at least 10 times
         while True:
 
             # Multiple attempts to hit endpoint
@@ -1285,6 +1291,24 @@ class WorkerGitInterfaceable(Worker):
                     (page_number >= last_page_number and forward_pagination):
                 self.logger.info("No more pages to check, breaking from pagination.\n")
                 break
+            
+            #This is probably where we should insert at around ~500 at a time
+            #makes sure that stagger is enabled, we have an insertion method, and the insertion happens every 500 pages or so.
+            if stagger and insertion_method != None and page_number % insertion_threshold == 0:
+                #call insertion method passed as argument.
+                staggered_source_prs = {
+                    'insert' : need_insertion,
+                    'update' : need_update,
+                    'all'    : all_data
+                }
+
+                #Use the method the subclass needs in order to insert the data.
+                insertion_method(staggered_source_prs,action_map)
+
+                #clear the data from memory and avoid duplicate insertions.
+                need_insertion = []
+                need_update = []
+                all_data = []
 
             page_number = page_number + 1 if forward_pagination else page_number - 1
 
