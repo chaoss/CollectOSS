@@ -394,8 +394,6 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         }
 
         #Use a parent method in order to iterate through pull request pages
-        #TODO: Make it do a db insert every ~500 records or so.
-
         #Define a method to pass paginate_endpoint so that prs can be inserted incrementally
 
         def pk_source_increment_insert(inc_source_prs, action_map):

@@ -1296,7 +1296,6 @@ class WorkerGitInterfaceable(Worker):
             #makes sure that stagger is enabled, we have an insertion method, and the insertion happens every 500 pages or so.
             if stagger and insertion_method != None and page_number % insertion_threshold == 0:
                 #call insertion method passed as argument.
-                #clear the data from memory and avoid duplicate insertions.
                 staggered_source_prs = {
                     'insert' : need_insertion,
                     'update' : need_update,
@@ -1306,6 +1305,7 @@ class WorkerGitInterfaceable(Worker):
                 #Use the method the subclass needs in order to insert the data.
                 insertion_method(staggered_source_prs,action_map)
 
+                #clear the data from memory and avoid duplicate insertions.
                 need_insertion = []
                 need_update = []
                 all_data = []
