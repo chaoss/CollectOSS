@@ -108,11 +108,11 @@ class DepsWorker(Worker):
         
         os.environ['GITHUB_AUTH_TOKEN'] = self.config['gh_api_key']
 
-        p= subprocess.run(['./scorecard', command], cwd= path_to_scorecard ,capture_output=True, text=True)
+        p= subprocess.run(['./scorecard', command], cwd= path_to_scorecard ,capture_output=True, text=True, timeout=None)
         self.logger.info('subprocess completed successfully... ')
         output = p.stdout.split('\n')
         required_output = output[4:20]
-        self.logger.info('required output generated..')
+        self.logger.info('required output generated.. {}'.format(required_output))
         # here scorecard becomes a list of lists where it has list of 16 list in which each list is a test and has name, status and score. 
         scorecard_score = dict()
         scorecard_status = dict()
@@ -122,7 +122,8 @@ class DepsWorker(Worker):
             scorecard_status[temp[0]] = temp[1]
             scorecard_score[temp[0]] = temp[2]
 
-        self.logger.info('adding to database')
+        self.logger.info('adding to database...')
+        self.logger.info('checking values {} is {} and {} is {} and {} is {} and {} and {}'.format(scorecard_status.get('CII-Best-Practices:'),scorecard_score.get('CII-Best-Practices:'),scorecard_status.get('Automatic-Dependency-Update:'),scorecard_score.get('Automatic-Dependency-Update:'),scorecard_status.get('Token-Permissions:'),scorecard_score.get('Token-Permissions:'),scorecard_status.get('Active:'),scorecard_status.get('Fuzzing:')))
         repo_deps_scorecard = {
             'repo_id': repo_id,
             "ossf_active_status": scorecard_status.get('Active:'),
