@@ -6,6 +6,9 @@ services:
     build:
       context: .
       dockerfile: ./util/docker/backend/Dockerfile
+    # volumes:
+    #   - ./path/to/your/repo_groups.csv:/repo_groups.csv
+    #   - ./path/to/your/repos.csv:/repos.csv
     restart: unless-stopped
     ports:
       - 5000:5000

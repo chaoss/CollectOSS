@@ -14,10 +14,6 @@ RUN set -x \
         python3-pip \
     && rm -rf /var/lib/apt/lists/*
 
-COPY ./util/docker/backend/entrypoint.sh /
-RUN chmod +x /entrypoint.sh
-ENTRYPOINT /entrypoint.sh
-
 EXPOSE 5000
 
 WORKDIR /augur
@@ -35,3 +31,7 @@ RUN set -x \
     && ./scripts/install/workers.sh \
     && augur config init --rc-config-file /augur/backend.docker.config.json \
     && mkdir -p repos/ logs/
+
+COPY ./util/docker/backend/entrypoint.sh /
+RUN chmod +x /entrypoint.sh
+ENTRYPOINT /entrypoint.sh
