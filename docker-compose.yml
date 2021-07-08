@@ -3,10 +3,14 @@
 version: '3'
 services:
   backend:
-    image: isaacmilarky/augur_backend
+    image: augurlabs/augur:backend
     build: 
       context: .
       dockerfile: ./util/docker/backend/Dockerfile
+    # volumes:
+    #   - ./path/to/your/repo_groups.csv:/repo_groups.csv
+    #   - ./path/to/your/repos.csv:/repos.csv
+    restart: unless-stopped
     restart: always
     #DO NOT declare ports here in the range that the workers use for API calls. It breaks the docker compose
     ports:
