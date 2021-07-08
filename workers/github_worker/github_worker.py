@@ -1,6 +1,7 @@
 #SPDX-License-Identifier: MIT
 from multiprocessing import Process, Queue
 from urllib.parse import urlparse
+from workers.worker_git_integration import WorkerGitInterfaceable
 import pandas as pd
 import sqlalchemy as s
 import requests
@@ -12,7 +13,7 @@ import math
 from datetime import datetime
 from workers.worker_base import Worker
 
-class GitHubWorker(Worker):
+class GitHubWorker(WorkerGitInterfaceable):
     """ Worker that collects data from the Github API and stores it in our database
     task: most recent task the broker added to the worker's queue
     child: current process of the queue being ran
@@ -67,7 +68,7 @@ class GitHubWorker(Worker):
             }
         }
 
-        source_issues = self.new_paginate_endpoint(
+        source_issues = self.paginate_endpoint(
             issues_url, action_map=action_map,
             table=self.issues_table, where_clause=self.issues_table.c.repo_id == self.repo_id
         )
@@ -196,7 +197,7 @@ class GitHubWorker(Worker):
         }
 
         # list to hold contributors needing insertion or update
-        issue_comments = self.new_paginate_endpoint(
+        issue_comments = self.paginate_endpoint(
             comments_url, action_map=comment_action_map, table=self.message_table,
             where_clause=self.message_table.c.msg_id.in_(
                 [
@@ -286,7 +287,7 @@ class GitHubWorker(Worker):
         self.logger.info(pd.DataFrame(pk_source_issues).columns)
         self.logger.info(pd.DataFrame(pk_source_issues))
         #list to hold contributors needing insertion or update
-        issue_events = self.new_paginate_endpoint(
+        issue_events = self.paginate_endpoint(
             events_url, table=self.issue_events_table, action_map=event_action_map,
             where_clause=self.issue_events_table.c.issue_id.in_(
                 set(pd.DataFrame(pk_source_issues)['issue_id'])
@@ -422,9 +423,13 @@ class GitHubWorker(Worker):
                 'augur': ['issue_assignee_src_id']
             }
         }
+        
+        table_values_issue_assignees = self.db.execute(
+            s.sql.select(self.get_relevant_columns(self.issue_assignees_table,assignee_action_map))
+        ).fetchall()
 
-        source_assignees_insert, _ = self.new_organize_needed_data(
-            assignees_all, augur_table=self.issue_assignees_table,
+        source_assignees_insert, _ = self.organize_needed_data(
+            assignees_all, table_values=table_values_issue_assignees,
             action_map=assignee_action_map
         )
 
@@ -460,8 +465,14 @@ class GitHubWorker(Worker):
                 'augur': ['label_src_id']
             }
         }
-        source_labels_insert, _ = self.new_organize_needed_data(
-            labels_all, augur_table=self.issue_labels_table,
+
+        table_values_issue_labels = self.db.execute(
+            s.sql.select(self.get_relevant_columns(self.issue_labels_table,label_action_map))
+        ).fetchall()
+
+
+        source_labels_insert, _ = self.organize_needed_data(
+            labels_all, table_values=table_values_issue_labels,
             action_map=label_action_map
         )
         labels_insert = [

@@ -6,6 +6,7 @@ import tempfile
 from queue import Queue
 from workers.util import read_config
 from workers.worker_base import Worker
+from workers.worker_git_integration import WorkerGitInterfaceable
 from augur.config import AugurConfig, default_config
 from augur import ROOT_AUGUR_DIRECTORY
 

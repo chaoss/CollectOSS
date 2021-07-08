@@ -6,8 +6,11 @@ import sqlalchemy as s
 from workers.worker_base import Worker
 from urllib.parse import urlparse, quote
 
+#This class NEEDS to inherit from here.
+from workers.worker_git_integration import WorkerGitInterfaceable
 
-class GitlabMergeRequestWorker(Worker):
+
+class GitlabMergeRequestWorker(WorkerGitInterfaceable):
     def __init__(self, config={}):
         # Define what this worker can be given and know how to interpret
 
@@ -379,6 +382,8 @@ class GitlabMergeRequestWorker(Worker):
                     AND LOWER(data_source) = '{} api'
                     """.format(pr_src_id, platform))
 
+        self.logger.info("DEV_DEBUG:" + str(pr_src_id))
+        self.logger.info("DEV_DEBUG:" + str(platform))
         self.logger.info(idSQL)
 
         rs = pd.read_sql(idSQL, self.db, params={})
