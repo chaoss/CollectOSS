@@ -22,10 +22,10 @@ class DepsWorker(Worker):
 
         # Define what this worker can be given and know how to interpret
         given = [['git_url']]
-        models = ['deps']
+        models = ['deps', 'ossf_scorecard']
 
         # Define the tables needed to insert, update, or delete on
-        data_tables = ['repo_dependencies']
+        data_tables = ['repo_dependencies', 'repo_deps_scorecard']
         operations_tables = ['worker_history', 'worker_job']
 
 
@@ -37,7 +37,7 @@ class DepsWorker(Worker):
         })
 
         self.tool_source = 'Deps Worker'
-        self.tool_version = '1.0.0'
+        self.tool_version = '2.0.0'
         self.data_source = 'Augur Repository Data'
 
     def deps_model(self, entry_info, repo_id):
@@ -61,6 +61,90 @@ class DepsWorker(Worker):
             self.logger.error(e)
 
         self.register_task_completion(entry_info, repo_id, "deps")
+
+    def ossf_scorecard_model(self, entry_info, repo_id):
+        """ Data collection and storage method
+        """
+        self.logger.info('Scorecard Model called...')
+        self.logger.info(entry_info)
+        self.logger.info(repo_id)
+
+        repo_path_sql = s.sql.text("""
+            SELECT repo_id, repo_git AS path
+            FROM repo
+            WHERE repo_id = :repo_id
+        """)
+
+        scorecard_repo_path = self.db.execute(repo_path_sql, {'repo_id': repo_id}).fetchone()[1]
+        # absolute_repo_path = self.config['repo_directory'] + relative_repo_path
+## TODO: Flesh out generate_scorecard 
+## You can look at the Value worker to see how Go Programs are already called in Augur.
+#  
+        try:
+            self.generate_scorecard(repo_id, scorecard_repo_path)
+        except Exception as e:
+            self.logger.error(e)
+
+        self.register_task_completion(entry_info, repo_id, "deps")
+
+
+    def generate_scorecard(self, repo_id, path): 
+        """Runs scorecard on repo and stores data in database
+        :param repo_id: Repository ID
+        :param path: URL path of the Repostiory
+        """
+        self.logger.info('Generating scorecard data for repo...')
+        self.logger.info(f'Repo ID: {repo_id}, Path: {path}')
+
+        # we convert relative path in the format required by scorecard like github.com/chaoss/augur
+        # raw_path,_ = path.split('-')
+        # scorecard_repo_path = raw_path[2:]
+        path = path[8:]
+        if path[-4:] == '.git':
+            path = path.replace(".git", "")
+        command = '--repo='+ path
+        self.logger.info('command generated..{}'.format(command))
+        #this is path where our scorecard project is located
+        path_to_scorecard = os.environ['HOME'] + '/scorecard'
+
+        #setting the enviror scorecard if it does not exsists alreadyonment variable f 
+        
+        os.environ['GITHUB_AUTH_TOKEN'] = self.config['gh_api_key']
+        self.logger.info("setting variables done {}".format(os.environ.get('GITHUB_AUTH_TOKEN')))
+
+        p= subprocess.run(['./scorecard', command], cwd= path_to_scorecard ,capture_output=True, text=True, timeout=None)
+        self.logger.info('subprocess completed successfully... ')
+        output = p.stdout.split('\n')
+        required_output = output[4:20]
+        self.logger.info('required output generated.. {}'.format(required_output))
+        # here scorecard becomes a list of lists where it has list of 16 list in which each list is a test and has name, status and score. 
+        # scorecard_score = dict()
+        # scorecard_status = dict()
+        # self.logger.info('adding to list...')
+        # for test in required_output:
+        #     temp = test.split()
+        #     scorecard_status[temp[0]] = temp[1]
+        #     scorecard_score[temp[0]] = temp[2]
+
+        self.logger.info('adding to database...')
+        # self.logger.info('checking values {} is {} and {} is {} and {} is {} and {} and {}'.format(scorecard_status.get('CII-Best-Practices:'),scorecard_score.get('CII-Best-Practices:'),scorecard_status.get('Automatic-Dependency-Update:'),scorecard_score.get('Automatic-Dependency-Update:'),scorecard_status.get('Token-Permissions:'),scorecard_score.get('Token-Permissions:'),scorecard_status.get('Active:'),scorecard_status.get('Fuzzing:')))
+        for test in required_output:
+            temp = test.split()
+            repo_deps_scorecard = {
+                'repo_id': repo_id,
+                'name': temp[0],
+                'status': temp[1],
+                'score': temp[2],
+                'tool_source': self.tool_source,
+                'tool_version': self.tool_version,
+                'data_source': self.data_source,
+                'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+
+            }  
+            result = self.db.execute(self.repo_deps_scorecard_table.insert().values(repo_deps_scorecard)) 
+            self.logger.info(f"Added OSSF scorecard data : {result.inserted_primary_key}") 
+
+
 
     def generate_deps_data(self, repo_id, path):
         """Runs scc on repo and stores data in database
