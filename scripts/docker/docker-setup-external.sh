@@ -1,3 +1,4 @@
+#!/bin/bash
 #Ask the user if they want to be prompted or use an existing config file (docker_env.txt)
 read -p "Would you like to be prompted for database credentials? [y/N] " -n 1 -r
 echo 
@@ -16,7 +17,7 @@ then
   echo "AUGUR_GITHUB_API_KEY=$githubAPIKey" >> docker_env.txt
   echo
 
-  echo "Please choose which database hostname to use in the form of an ip or \'localhost\'"
+  echo "Please choose which database hostname to use in the form of an ip or 'localhost'"
   read -p "Plase input database hostname: " dbHostname
 
   #Do a quick translate from 'localhost' to the network alias on lo:0
@@ -29,14 +30,19 @@ then
   else
     echo "AUGUR_DB_SCHEMA_BUILD=0" >> docker_env.txt
   fi
+  
+  echo "What port is Postgresql running on?"
+  read -p "Please input the database port: " dbPort
 
   #docker_env.txt is differant than '.env', '.env' is for the enviroment variables used in the docker-compose.yml file
   echo "AUGUR_DB_HOST=$dbHostname" >> docker_env.txt
   echo "AUGUR_DB_HOST=$dbHostname" >> .env
+  echo "AUGUR_DB_PORT=$dbPort" >> docker_env.txt
 
+  read -p "Plase input database name: " dbName
   #Pretty sure these stay constant among augur databases
-  echo "AUGUR_DB_NAME=augur" >> docker_env.txt
-  echo "AUGUR_DB_PORT=5432" >> docker_env.txt
+  echo "AUGUR_DB_NAME=$dbName" >> docker_env.txt
+  #echo "AUGUR_DB_PORT=5432" >> docker_env.txt
   echo "AUGUR_DB_USER=augur" >> docker_env.txt
 
   #Password is blurred out because thats the standard
@@ -87,10 +93,10 @@ fi
 unset missingEnv
 unset testGithubKey
 unset testSchemaBuild
-unset testPort
+#unset testPort
 
 #Test connection using quick bash database request. $? now holds the exit code.
-psql -d "postgresql://$testUser:$testPassword@$testHost/$testName" -c "select now()" &>/dev/null
+psql -d "postgresql://$testUser:$testPassword@$testHost/$testName" -p $testPort -c "select now()" # &>/dev/null
 if [[ ! "$?" -eq 0 ]]
 then
   echo "Database could not be reached!"
@@ -102,14 +108,14 @@ fi
 #Ask the user if they need augur to build schema or use an existing schema
 #This is important because if it builds schema when it already exists it can cause probems.
 #Its also important because if there is no schema augur throws an error (obviously).
-read -p "Is there no existing schema on the database specified? [y/N] " -n 1 -r
+read -p "Do you want to build schema on the database? WARNING: ONLY ANSWER YES IF THE DATABASE IS WITHOUT SCHEMA [y/N] " -n 1 -r
 echo 
 if [[ $REPLY =~ ^[Yy]$ ]]
 then
   #use some regex to set the schema build in docker_env.txt
-  sed -i -r '/AUGUR_DB_SCHEMA_BUILD/ s/(^.*)(=.*)/\1=1/g' docker_env.txt
+  sed -i -r -E '/AUGUR_DB_SCHEMA_BUILD/ s/(^.*)(=.*)/\1=1/g' docker_env.txt
 else
-  sed -i -r '/AUGUR_DB_SCHEMA_BUILD/ s/(^.*)(=.*)/\1=0/g' docker_env.txt
+  sed -i -r -E '/AUGUR_DB_SCHEMA_BUILD/ s/(^.*)(=.*)/\1=0/g' docker_env.txt
 fi
 
 echo "Tearing down old docker stack..."
