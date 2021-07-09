@@ -103,31 +103,24 @@ class DepsWorker(Worker):
         if path[-4:] == '.git':
             path = path.replace(".git", "")
         command = '--repo='+ path
-        self.logger.info('command generated..{}'.format(command))
+        
         #this is path where our scorecard project is located
         path_to_scorecard = os.environ['HOME'] + '/scorecard'
 
-        #setting the enviror scorecard if it does not exsists alreadyonment variable f 
+        #setting the environmental variable which is required by scorecard  
         
         os.environ['GITHUB_AUTH_TOKEN'] = self.config['gh_api_key']
-        self.logger.info("setting variables done {}".format(os.environ.get('GITHUB_AUTH_TOKEN')))
+        
 
         p= subprocess.run(['./scorecard', command], cwd= path_to_scorecard ,capture_output=True, text=True, timeout=None)
         self.logger.info('subprocess completed successfully... ')
         output = p.stdout.split('\n')
         required_output = output[4:20]
-        self.logger.info('required output generated.. {}'.format(required_output))
-        # here scorecard becomes a list of lists where it has list of 16 list in which each list is a test and has name, status and score. 
-        # scorecard_score = dict()
-        # scorecard_status = dict()
-        # self.logger.info('adding to list...')
-        # for test in required_output:
-        #     temp = test.split()
-        #     scorecard_status[temp[0]] = temp[1]
-        #     scorecard_score[temp[0]] = temp[2]
+        
+       
 
         self.logger.info('adding to database...')
-        # self.logger.info('checking values {} is {} and {} is {} and {} is {} and {} and {}'.format(scorecard_status.get('CII-Best-Practices:'),scorecard_score.get('CII-Best-Practices:'),scorecard_status.get('Automatic-Dependency-Update:'),scorecard_score.get('Automatic-Dependency-Update:'),scorecard_status.get('Token-Permissions:'),scorecard_score.get('Token-Permissions:'),scorecard_status.get('Active:'),scorecard_status.get('Fuzzing:')))
+        
         for test in required_output:
             temp = test.split()
             repo_deps_scorecard = {
