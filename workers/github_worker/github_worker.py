@@ -9,6 +9,7 @@ import time
 import logging
 import json
 import os
+import psycopg2 #really only to catch type errors for database methods
 import math
 from datetime import datetime
 from workers.worker_base import Worker
@@ -488,7 +489,17 @@ class GitHubWorker(WorkerGitInterfaceable):
                 'label_src_node_id': label['node_id']
             } for label in source_labels_insert
         ]
-        self.bulk_insert(
-            self.issue_labels_table, insert=labels_insert,
-            unique_columns=label_action_map['insert']['augur']
-        )
+
+        #Trying to fix an error with creating bigInts using pandas
+        try:
+            self.bulk_insert(
+                self.issue_labels_table, insert=labels_insert,
+                unique_columns=label_action_map['insert']['augur']
+            )
+        except psycopg2.errors.InvalidTextRepresentation:
+            #If there was an error constructing a type try to redo the insert with a conversion.
+            self.bulk_insert(
+                self.issue_labels_table, insert=labels_insert,
+                unique_columns=label_action_map['insert']['augur'],
+                convert_float_int=True
+            )
