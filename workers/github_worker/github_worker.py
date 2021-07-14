@@ -9,6 +9,7 @@ import time
 import logging
 import json
 import os
+import psycopg2 #really only to catch type errors for database methods
 import math
 from datetime import datetime
 from workers.worker_base import Worker
@@ -47,6 +48,9 @@ class GitHubWorker(WorkerGitInterfaceable):
         self.process_count = 1
         self.deep_collection = True
 
+        #Needs to be an attribute of the class for incremental database insert using paginate_endpoint
+        self.pk_source_issues = []
+
         # Run the general worker initialization
         super().__init__(worker_type, config, given, models, data_tables, operations_tables)
 
@@ -68,95 +72,104 @@ class GitHubWorker(WorkerGitInterfaceable):
             }
         }
 
-        source_issues = self.paginate_endpoint(
-            issues_url, action_map=action_map,
-            table=self.issues_table, where_clause=self.issues_table.c.repo_id == self.repo_id
-        )
+        def pk_source_issues_increment_insert(inc_source_issues,action_map):
+            if len(inc_source_issues['all']) == 0:
+                self.logger.info("There are no issues for this repository.\n")
+                self.register_task_completion(self.task_info, self.repo_id, 'issues')
+                return False
+            
+            def is_valid_pr_block(issue):
+                return (
+                    'pull_request' in issue and issue['pull_request']
+                    and isinstance(issue['pull_request'], dict) and 'url' in issue['pull_request']
+                )
+            
+            inc_source_issues['insert'] = self.enrich_cntrb_id(
+                inc_source_issues['insert'], 'user.login', action_map_additions={
+                    'insert': {
+                        'source': ['user.node_id'],
+                        'augur': ['gh_node_id']
+                    }
+                }, prefix='user.'
+            )
+        
+            issues_insert = [
+                {
+                    'repo_id': self.repo_id,
+                    'reporter_id': issue['cntrb_id'],
+                    'pull_request': (
+                        issue['pull_request']['url'].split('/')[-1]
+                        if is_valid_pr_block(issue) else None
+                    ),
+                    'pull_request_id': (
+                        issue['pull_request']['url'].split('/')[-1]
+                        if is_valid_pr_block(issue) else None
+                    ),
+                    'created_at': issue['created_at'],
+                    'issue_title': issue['title'],
+                    'issue_body': issue['body'].replace('0x00', '____') if issue['body'] else None,
+                    'comment_count': issue['comments'],
+                    'updated_at': issue['updated_at'],
+                    'closed_at': issue['closed_at'],
+                    'repository_url': issue['repository_url'],
+                    'issue_url': issue['url'],
+                    'labels_url': issue['labels_url'],
+                    'comments_url': issue['comments_url'],
+                    'events_url': issue['events_url'],
+                    'html_url': issue['html_url'],
+                    'issue_state': issue['state'],
+                    'issue_node_id': issue['node_id'],
+                    'gh_issue_id': issue['id'],
+                    'gh_issue_number': issue['number'],
+                    'gh_user_id': issue['user']['id'],
+                    'tool_source': self.tool_source,
+                    'tool_version': self.tool_version,
+                    'data_source': self.data_source
+                } for issue in inc_source_issues['insert']
+            ]
 
-        if len(source_issues['all']) == 0:
-            self.logger.info("There are no issues for this repository.\n")
-            self.register_task_completion(self.task_info, self.repo_id, 'issues')
-            return False
+            if len(inc_source_issues['insert']) > 0 or len(inc_source_issues['update']) > 0:
+                issues_insert_result, issues_update_result = self.bulk_insert(
+                    self.issues_table, update=inc_source_issues['update'],
+                    unique_columns=action_map['insert']['augur'],
+                    insert=issues_insert, update_columns=action_map['update']['augur']
+                )
 
-        def is_valid_pr_block(issue):
-            return (
-                'pull_request' in issue and issue['pull_request']
-                and isinstance(issue['pull_request'], dict) and 'url' in issue['pull_request']
+                source_data = inc_source_issues['insert'] + inc_source_issues['update']
+            
+            elif not self.deep_collection:
+                self.logger.info(
+                    "There are not issues to update, insert, or collect nested information for.\n"
+                )
+                #This might cause problems if staggered.
+                #self.register_task_completion(entry_info, self.repo_id, 'issues')
+                return
+            
+            if self.deep_collection:
+                source_data = inc_source_issues['all']
+
+            gh_merge_fields = ['id']
+            augur_merge_fields = ['gh_issue_id']
+
+            self.pk_source_issues += self.enrich_data_primary_keys(
+                source_data, self.issues_table, gh_merge_fields, augur_merge_fields
             )
 
-        source_issues['insert'] = self.enrich_cntrb_id(
-            source_issues['insert'], 'user.login', action_map_additions={
-                'insert': {
-                    'source': ['user.node_id'],
-                    'augur': ['gh_node_id']
-                }
-            }, prefix='user.'
-        )
-
-        issues_insert = [
-            {
-                'repo_id': self.repo_id,
-                'reporter_id': issue['cntrb_id'],
-                'pull_request': (
-                    issue['pull_request']['url'].split('/')[-1]
-                    if is_valid_pr_block(issue) else None
-                ),
-                'pull_request_id': (
-                    issue['pull_request']['url'].split('/')[-1]
-                    if is_valid_pr_block(issue) else None
-                ),
-                'created_at': issue['created_at'],
-                'issue_title': issue['title'],
-                'issue_body': issue['body'].replace('0x00', '____') if issue['body'] else None,
-                'comment_count': issue['comments'],
-                'updated_at': issue['updated_at'],
-                'closed_at': issue['closed_at'],
-                'repository_url': issue['repository_url'],
-                'issue_url': issue['url'],
-                'labels_url': issue['labels_url'],
-                'comments_url': issue['comments_url'],
-                'events_url': issue['events_url'],
-                'html_url': issue['html_url'],
-                'issue_state': issue['state'],
-                'issue_node_id': issue['node_id'],
-                'gh_issue_id': issue['id'],
-                'gh_issue_number': issue['number'],
-                'gh_user_id': issue['user']['id'],
-                'tool_source': self.tool_source,
-                'tool_version': self.tool_version,
-                'data_source': self.data_source
-            } for issue in source_issues['insert']
-        ]
-
-        if len(source_issues['insert']) > 0 or len(source_issues['update']) > 0:
-
-            issues_insert_result, issues_update_result = self.bulk_insert(
-                self.issues_table, update=source_issues['update'],
-                unique_columns=action_map['insert']['augur'],
-                insert=issues_insert, update_columns=action_map['update']['augur']
-            )
-
-            source_data = source_issues['insert'] + source_issues['update']
-
-        elif not self.deep_collection:
-            self.logger.info(
-                "There are not issues to update, insert, or collect nested information for.\n"
-            )
-            self.register_task_completion(entry_info, self.repo_id, 'issues')
             return
 
-        if self.deep_collection:
-            source_data = source_issues['all']
-
-        # Merge source data to inserted data to have access to inserted primary keys
-
-        gh_merge_fields = ['id']
-        augur_merge_fields = ['gh_issue_id']
-
-        pk_source_issues = self.enrich_data_primary_keys(
-            source_data, self.issues_table, gh_merge_fields, augur_merge_fields
+        source_issues = self.paginate_endpoint(
+            issues_url, action_map=action_map,
+            table=self.issues_table, where_clause=self.issues_table.c.repo_id == self.repo_id,
+            stagger=True,insertion_method=pk_source_issues_increment_insert
         )
 
+        #Use the increment insert method in order to do the 
+        #remaining pages of the paginated endpoint that weren't inserted inside the paginate_endpoint method
+        pk_source_issues_increment_insert(source_issues,action_map)
+
+        pk_source_issues = self.pk_source_issues
+        self.pk_source_issues = []
+        
         return pk_source_issues
 
     def issues_model(self, entry_info, repo_id):
@@ -488,7 +501,17 @@ class GitHubWorker(WorkerGitInterfaceable):
                 'label_src_node_id': label['node_id']
             } for label in source_labels_insert
         ]
-        self.bulk_insert(
-            self.issue_labels_table, insert=labels_insert,
-            unique_columns=label_action_map['insert']['augur']
-        )
+
+        #Trying to fix an error with creating bigInts using pandas
+        try:
+            self.bulk_insert(
+                self.issue_labels_table, insert=labels_insert,
+                unique_columns=label_action_map['insert']['augur']
+            )
+        except psycopg2.errors.InvalidTextRepresentation:
+            #If there was an error constructing a type try to redo the insert with a conversion.
+            self.bulk_insert(
+                self.issue_labels_table, insert=labels_insert,
+                unique_columns=label_action_map['insert']['augur'],
+                convert_float_int=True
+            )
