@@ -54,7 +54,7 @@ class WorkerGitInterfaceable(Worker):
             try:
                 self.init_oauths(self.platform)
             except AttributeError:
-                self.logger.error("Worker not configured to use API key!")      
+                self.logger.error("Worker not configured to use API key!")
         else:
             self.oauths = [{'oauth_id': 0}]
 
@@ -786,7 +786,7 @@ class WorkerGitInterfaceable(Worker):
             self.headers = {'Authorization': 'token %s' % self.oauths[0]['access_token']}
 
     #TODO: figure out if changing this typo breaks anything
-    def query_gitlab_contribtutors(self, entry_info, repo_id):
+    def query_gitlab_contributors(self, entry_info, repo_id):
 
         gitlab_url = (
             entry_info['given']['gitlab_url'] if 'gitlab_url' in entry_info['given']
@@ -1069,7 +1069,7 @@ class WorkerGitInterfaceable(Worker):
             )
 
 
-    #Indexerror somewhere 
+    #Indexerror somewhere
     def multi_thread_urls(self, all_urls, max_attempts=5, platform='github'):
         """
         :param all_urls: list of tuples
@@ -1170,7 +1170,7 @@ class WorkerGitInterfaceable(Worker):
 
     #insertion_method and stagger are arguments that allow paginate_endpoint to insert at around ~500 pages at a time.
     def paginate_endpoint(
-        self, url, action_map={}, table=None, where_clause=True, platform='github', in_memory=True, stagger=False, insertion_method=None, insertion_threshold=500 
+        self, url, action_map={}, table=None, where_clause=True, platform='github', in_memory=True, stagger=False, insertion_method=None, insertion_threshold=500
     ):
 
         #Get augur columns using the action map along with the primary key
@@ -1255,7 +1255,7 @@ class WorkerGitInterfaceable(Worker):
             all_data += page_data
 
             if not forward_pagination:
-                
+
                 # Checking contents of requests with what we already have in the db
                 page_insertions, page_updates = self.organize_needed_data(
                     page_data, table_values, list(table.primary_key)[0].name,
@@ -1291,7 +1291,7 @@ class WorkerGitInterfaceable(Worker):
                     (page_number >= last_page_number and forward_pagination):
                 self.logger.info("No more pages to check, breaking from pagination.\n")
                 break
-            
+
             #This is probably where we should insert at around ~500 at a time
             #makes sure that stagger is enabled, we have an insertion method, and the insertion happens every 500 pages or so.
             if stagger and insertion_method != None and page_number % insertion_threshold == 0:
@@ -1605,4 +1605,3 @@ class WorkerGitInterfaceable(Worker):
             'update': need_update,
             'all': all_data
         }
-
