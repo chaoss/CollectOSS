@@ -8,6 +8,7 @@ fi
 
 augur config init \
     --db_name "${AUGUR_DB_NAME:-augur}" \
+    --db_host "${AUGUR_DB_HOST:-database}" \
     --db_port "${AUGUR_DB_PORT:-5432}" \
     --db_user "${AUGUR_DB_DB_USER:-augur}" \
     --db_password "$AUGUR_DB_PASSWORD" \
