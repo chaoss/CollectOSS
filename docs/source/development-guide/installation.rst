@@ -1,7 +1,7 @@
 Installing for development
 =============================
 
-Installiing Augur for local development is pretty similar to the normal installation process. This guide will primarily detail the differences between the two instead of regurgitating all the information in the `Getting Started <../getting-started/toc.html>`_ section. If you are completely new to Augur, we recommend following the aforementioned getting started section first; once you feel more comfortable with Augur and how to use it, come back to this document.
+Installing Augur for local development is pretty similar to the normal installation process. This guide will primarily detail the differences between the two instead of regurgitating all the information in the `Getting Started <../getting-started/toc.html>`_ section. If you are completely new to Augur, we recommend following the aforementioned getting started section first; once you feel more comfortable with Augur and how to use it, come back to this document.
 
 Setting up the database
 ------------------------
