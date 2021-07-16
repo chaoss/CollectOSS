@@ -2,7 +2,7 @@
 FROM node:14 as build-stage
 
 LABEL maintainer="outdoors@acm.org"
-LABEL version="0.15.4"
+LABEL version="0.17.0"
 
 WORKDIR /augur/frontend/
 COPY ./util/docker/frontend/frontend.docker.config.json frontend.config.json
@@ -13,8 +13,8 @@ COPY frontend/package.json .
 # RUN npm install
 # RUN npm install @vue/cli
 COPY frontend/ .
-# RUN npm run build
-RUN npm ci --only=production
+RUN npm run build
+# RUN npm ci --only=production
 
 
 # FROM build-stage as augurface
