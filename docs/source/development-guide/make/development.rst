@@ -13,6 +13,8 @@ These commands are used to control Augur's backend and frontend servers simultan
 
 ``make dev``
 -------------
+Note: If the above command doesn't work, try running ``make dev-start`` instead.
+
 Starts the frontend and backend servers together in the background. The output of the backend are in ``logs/augur.log``, and the logs for the frontend are in ``logs/frontend.log``.
 The backend output should like something like this (note that your process IDs and hostname will be different)::
 
