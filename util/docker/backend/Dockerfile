@@ -12,6 +12,7 @@ RUN set -x \
         git \
         gcc \
         python3-pip \
+        postgresql-client 
     && rm -rf /var/lib/apt/lists/*
 
 EXPOSE 5000
