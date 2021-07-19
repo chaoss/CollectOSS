@@ -51,8 +51,8 @@ To contribute to Augur, please follow the guidelines found in our [CONTRIBUTING.
 
 ## License, Copyright, and Funding
 
-Copyright © 2020 University of Nebraska at Omaha, University of Missouri and CHAOSS Project at the Linux Foundation
+Copyright © 2021 University of Nebraska at Omaha, University of Missouri and the CHAOSS Project.
 
 Augur is free software: you can redistribute it and/or modify it under the terms of the MIT License as published by the Open Source Initiative. See the [LICENSE](LICENSE) file for more details.
 
-This work has been funded through the Alfred P. Sloan Foundation, Mozilla, The Reynolds Journalism Institute, and 9 Google Summer of Code Students.
+This work has been funded through the Alfred P. Sloan Foundation, Mozilla, The Reynolds Journalism Institute, contributions from VMWare, Red Hat Software, Grace Hopper's Open Source Day, GitHub, Microsoft, and 12 Google Summer of Code Students.
