@@ -36,12 +36,17 @@ class Worker(Persistant):
         self.config.update(config)
 
 
+        #base
         self.task_info = None
         self.repo_id = None
+        #not sure
         self.owner = None
+        #git interface overrides these
         self.repo = None
         self.given = given
         self.models = models
+
+        #back to base, might be overwritten by git integration subclass?
         self.debug_data = [] if 'debug_data' not in self.config else self.config['debug_data']
         self.specs = {
             'id': self.config['id'], # what the broker knows this worker as
@@ -89,7 +94,6 @@ class Worker(Persistant):
         Adds this task to the queue, and calls method to process queue
         """
         self._results_counter = value
-
 
     @property
     def task(self):
@@ -151,6 +155,8 @@ class Worker(Persistant):
             if message['job_type'] != 'MAINTAIN' and message['job_type'] != 'UPDATE':
                 raise ValueError('{} is not a recognized task type'.format(message['job_type']))
                 pass
+
+            ##base, doesn't use keys
 
             # Query repo_id corresponding to repo url of given task
             repoUrlSQL = s.sql.text("""
@@ -241,11 +247,18 @@ class Worker(Persistant):
             "repo_id": repo_id,
             "worker": self.config['id'],
             "job_model": model,
-            "oauth_id": self.oauths[0]['oauth_id'],
+            #"oauth_id": self.oauths[0]['oauth_id'],
             "timestamp": datetime.datetime.now(),
             "status": "Stopped",
             "total_results": self.results_counter
         }
+        #log oauth if it applies to worker.
+        try:
+            self.oauths
+            task_history['oauth_id'] = self.oauths[0]['oauth_id']
+        except AttributeError:
+            pass
+
         if self.finishing_task:
             result = self.helper_db.execute(self.worker_history_table.update().where(
                 self.worker_history_table.c.history_id==self.history_id).values(task_history))
@@ -281,11 +294,19 @@ class Worker(Persistant):
             'repo_id': repo_id,
             'worker': self.config['id'],
             'job_model': model,
-            'oauth_id': self.oauths[0]['oauth_id'],
+            #'oauth_id': self.oauths[0]['oauth_id'], #messes up with workers that don't have this attribute
             'timestamp': datetime.datetime.now(),
             'status': "Success",
             'total_results': self.results_counter
         }
+
+        #log oauth if it applies to worker.
+        try:
+            self.oauths
+            task_history['oauth_id'] = self.oauths[0]['oauth_id']
+        except AttributeError:
+            pass
+        
         self.helper_db.execute(self.worker_history_table.update().where(
             self.worker_history_table.c.history_id==self.history_id).values(task_history))
 
@@ -360,11 +381,19 @@ class Worker(Persistant):
             "repo_id": repo_id,
             "worker": self.config['id'],
             "job_model": task['models'][0],
-            "oauth_id": self.oauths[0]['oauth_id'],
+            #"oauth_id": self.oauths[0]['oauth_id'],
             "timestamp": datetime.datetime.now(),
             "status": "Error",
             "total_results": self.results_counter
         }
+
+        #log oauth if it applies to worker.
+        try:
+            self.oauths
+            task_history['oauth_id'] = self.oauths[0]['oauth_id']
+        except AttributeError:
+            pass
+
         self.helper_db.execute(
             self.worker_history_table.update().where(
                 self.worker_history_table.c.history_id==self.history_id
