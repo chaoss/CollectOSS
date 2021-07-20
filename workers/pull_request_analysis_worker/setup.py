@@ -35,7 +35,7 @@ setup(
         'emoji==1.2.0',
         'joblib==1.0.1',
         'xgboost==0.90',
-        'scipy==1.7.0'
+        'scipy==1.6.3'
     ],
     entry_points={
         'console_scripts': [

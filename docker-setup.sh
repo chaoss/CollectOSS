@@ -32,6 +32,7 @@ type -P "watch" &>/dev/null && echo "watch found..." || missingModules="${missin
 if [ ! -z "$missingModules" ]
 then
   echo "One or more modules required to run this script is missing or not in your \$PATH:"
+  echo "Note: OSX users will need to install watch with \"brew install watch\""
   echo "Including:$missingModules"
   exit 1
 fi

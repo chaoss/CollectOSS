@@ -1,24 +1,15 @@
 #SPDX-License-Identifier: MIT
-#Something having to do with the workers is preventing it from working.
 version: '3'
 services:
   backend:
-    image: isaacmilarky/augur_backend
-    build: 
+    image: augurlabs/augur:backend
+    build:
       context: .
       dockerfile: ./util/docker/backend/Dockerfile
-    restart: always
-    #DO NOT declare ports here in the range that the workers use for API calls. It breaks the docker compose
+    # volumes:
+    #   - ./path/to/your/repo_groups.csv:/repo_groups.csv
+    #   - ./path/to/your/repos.csv:/repos.csv
+    restart: unless-stopped
     ports:
       - 5000:5000
-    extra_hosts:
-      - "database:${AUGUR_DB_HOST}"
     env_file: docker_env.txt
-#  frontend:
-#    image: augurlabs/augur:frontend
-#    restart: unless-stopped
-#    ports:
-#      - 8080:8080
-#    extra_hosts:
-#      - "localhost:127.0.0.1"
-
