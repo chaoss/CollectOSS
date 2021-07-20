@@ -1,31 +1,38 @@
 #SPDX-License-Identifier: MIT
-FROM python:3.8.9-slim-buster as build-stage
-
-COPY ./util/docker/backend/install_packages.sh .
-RUN ./install_packages.sh
+FROM python:3.8.11-slim-buster
 
 LABEL maintainer="outdoors@acm.org"
-LABEL version="0.2.0"
+LABEL version="0.17.0"
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN set -x \
+    && apt-get update \
+    && apt-get -y install --no-install-recommends \
+        git \
+        gcc \
+        python3-pip \
+        postgresql-client 
+    && rm -rf /var/lib/apt/lists/*
+
+EXPOSE 5000
 
 WORKDIR /augur
-
 COPY ./README.md .
 COPY ./augur/ augur/
 COPY ./metadata.py .
 COPY ./setup.py .
 COPY ./scripts/ scripts/
 COPY ./workers/ workers/
-
-COPY ./schema/ schema/ 
-
-RUN pip install .
-RUN ./scripts/install/workers.sh 
+COPY ./schema/ schema/
 
 COPY ./util/docker/backend/backend.docker.config.json .
+RUN set -x \
+    && pip install . \
+    && ./scripts/install/workers.sh \
+    && augur config init --rc-config-file /augur/backend.docker.config.json \
+    && mkdir -p repos/ logs/
 
-#Needs to be hardcoded or the API doesn't work.
-EXPOSE 5000
-RUN augur config init --rc-config-file backend.docker.config.json; mkdir repos/;
-
-#Load environment variables at runtime.
-CMD bash -c "if [ \"$AUGUR_DB_SCHEMA_BUILD\" == \"1\" ]; then augur db create-schema; fi; augur config init --db_name \"$AUGUR_DB_NAME\" --db_port \"$AUGUR_DB_PORT\" --db_user \"$AUGUR_DB_DB_USER\" --db_password \"$AUGUR_DB_PASSWORD\" --github_api_key \"$AUGUR_GITHUB_API_KEY\"; augur backend start"
+COPY ./util/docker/backend/entrypoint.sh /
+RUN chmod +x /entrypoint.sh
+ENTRYPOINT /entrypoint.sh

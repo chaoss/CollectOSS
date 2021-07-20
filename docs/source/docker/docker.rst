@@ -26,6 +26,10 @@ Running containers
 
 To start a container, use the command below. ``<container_name>`` can be whatever you like, but ``<tag_name>`` should be the same as in the previous step, or the tag of one of the official images.
 
+.. code-block:: bash
+
+    $ docker run -p <host_port>:5432 --name <container_name> -t <tag_name>
+
 .. note::
 
     If you are running the ``backend`` service, then ``<docker_port>`` needs to be ``5000``; for ``frontend`` and ``database`` the ports are ``8080`` and ``5434``. You can set the ``<host_port>`` to any **available** port on your machine for any of the services.
