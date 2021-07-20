@@ -508,8 +508,9 @@ class GitHubWorker(WorkerGitInterfaceable):
                 self.issue_labels_table, insert=labels_insert,
                 unique_columns=label_action_map['insert']['augur']
             )
-        except psycopg2.errors.InvalidTextRepresentation:
+        except psycopg2.errors.InvalidTextRepresentation as e:
             #If there was an error constructing a type try to redo the insert with a conversion.
+            self.logger.warning(f"Type error when attempting to insert data in issue_nested_data_model with the github worker. ERROR: {e} \n")
             self.bulk_insert(
                 self.issue_labels_table, insert=labels_insert,
                 unique_columns=label_action_map['insert']['augur'],

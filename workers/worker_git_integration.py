@@ -1,5 +1,3 @@
-#WORK IN PROGRESS NOT TO BE USED AT ALL IN PRESENT STATE
-
 #Get everything that the base depends on.
 from workers.worker_base import *
 
