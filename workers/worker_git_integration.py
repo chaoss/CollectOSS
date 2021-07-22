@@ -34,11 +34,13 @@ class WorkerGitInterfaceable(Worker):
         if self.config['offline_mode'] is False:
             self.connect_to_broker()
 
+				# Attempts to determine if these attributes exist
+				# If not, it creates them with default values
         try:
             self.tool_source
             self.tool_version
             self.data_source
-        except:
+        except AttributeError:
             self.tool_source = 'Augur Worker Testing'
             self.tool_version = '0.0.0'
             self.data_source = 'Augur Worker Testing'
@@ -82,7 +84,7 @@ class WorkerGitInterfaceable(Worker):
             cntrb_url = ("https://gitlab.com/api/v4/users?username=" + login )
         self.logger.info("Hitting endpoint: {} ...\n".format(cntrb_url))
 
-
+				# Possible infinite loop if this request never succeeds?
         while True:
             try:
                 r = requests.get(url=cntrb_url, headers=self.headers)
@@ -94,7 +96,7 @@ class WorkerGitInterfaceable(Worker):
         self.update_rate_limit(r)
         contributor = r.json()
 
-
+				# Used primarily for the Gitlab block below
         company = None
         location = None
         email = None
@@ -243,7 +245,7 @@ class WorkerGitInterfaceable(Worker):
     ):
 
         if not len(data):
-            return data
+            raise ValueError
 
         self.logger.info(f"Enriching contributor ids for {len(data)} data points...")
 
