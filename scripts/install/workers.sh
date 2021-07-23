@@ -43,7 +43,7 @@ do
 
 done
 
-
+export PATH=$PATH:/usr/local/go/bin
 
 if [ -d "$HOME/scorecard" ]; then
   echo " Scorecard already exists, skipping cloning ..."

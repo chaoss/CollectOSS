@@ -12,7 +12,8 @@ RUN set -x \
         git \
         gcc \
         python3-pip \
-        postgresql-client 
+        wget \
+        postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
 EXPOSE 5000
@@ -27,10 +28,13 @@ COPY ./workers/ workers/
 COPY ./schema/ schema/
 
 COPY ./util/docker/backend/backend.docker.config.json .
+
 RUN set -x \
-    && pip install . \
-    && ./scripts/install/workers.sh \
-    && augur config init --rc-config-file /augur/backend.docker.config.json \
+    && pip install .
+
+RUN ./scripts/docker/install-go.sh
+RUN ./scripts/install/workers.sh 
+RUN augur config init --rc-config-file /augur/backend.docker.config.json \
     && mkdir -p repos/ logs/
 
 COPY ./util/docker/backend/entrypoint.sh /
