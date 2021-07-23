@@ -405,6 +405,10 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 self.register_task_completion(self.task_info, self.repo_id, 'pull_requests')
                 return
 
+
+            self.logger.info(f"inc_source_prs is: {inc_source_prs} and the action map is {action_map}...")
+
+
             inc_source_prs['insert'] = self.enrich_cntrb_id(
                 inc_source_prs['insert'], 'user.login', action_map_additions={
                     'insert': {
@@ -491,10 +495,20 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             
 
         #paginate endpoint with stagger enabled so that the above method can insert every 500
+
+        self.logger.info(
+            f"PR Action map is {pr_action_map}"
+        )
+
         source_prs = self.paginate_endpoint(
             pr_url, action_map=pr_action_map, table=self.pull_requests_table,
             where_clause=self.pull_requests_table.c.repo_id == self.repo_id, 
-            stagger=True, insertion_method=pk_source_increment_insert
+            stagger=True, 
+            insertion_method=pk_source_increment_insert
+        )
+
+        self.logger.info(
+            f"PR Action map is {pr_action_map} after source_prs. The source_prs are {source_prs}."
         )
 
         #Use the increment insert method in order to do the 
