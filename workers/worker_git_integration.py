@@ -245,6 +245,8 @@ class WorkerGitInterfaceable(Worker):
     ):
 
         if not len(data):
+            self.logger.info(f"Enrich contrib data is empty for {len(data)}, for the key {key}.")
+
             raise ValueError
 
         self.logger.info(f"Enriching contributor ids for {len(data)} data points...")
