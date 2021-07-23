@@ -43,16 +43,3 @@ do
 
 done
 
-
-
-if [ -d "$HOME/scorecard" ]; then
-  echo " Scorecard already exists, skipping cloning ..."
-else
-  echo "Cloning OSSF Scorecard to generate scorecard data ..."
-  git clone https://github.com/ossf/scorecard $HOME/scorecard
-  CURRENT_DIR=$PWD;
-  cd $HOME/scorecard;
-  go build;
-  echo "scorecard build done"
-  cd $CURRENT_DIR
-fi
