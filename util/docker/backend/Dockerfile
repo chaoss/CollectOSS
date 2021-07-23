@@ -34,9 +34,10 @@ COPY ./util/docker/backend/backend.docker.config.json .
 
 #Might want to set these up in differant RUN statements.
 RUN set -x \
-    && pip install . \
-    && ./scripts/install/workers.sh \
-    && augur config init --rc-config-file /augur/backend.docker.config.json \
+    && pip install .
+
+RUN ./scripts/install/workers.sh 
+RUN augur config init --rc-config-file /augur/backend.docker.config.json \
     && mkdir -p repos/ logs/
 
 COPY ./util/docker/backend/entrypoint.sh /
