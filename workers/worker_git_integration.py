@@ -1144,7 +1144,13 @@ class WorkerGitInterfaceable(Worker):
                                             2, int(response.links['last']['url'].split('=')[-1]) + 1
                                         )
                                     ]
-                                urls = numpy.delete(urls, numpy.where(urls == url), axis=0)
+                                try: 
+                                    self.logger.info(f"urls boundry issue? for {urls} where they are equal to {url}.")
+
+                                    urls = numpy.delete(urls, numpy.where(urls == url), axis=0)
+                                except: 
+                                    self.logger.info(f"ERROR with axis = 0 - Now attempting without setting axis for numpy.delete for {urls} where they are equal to {url}.")                                    
+                                    urls = numpy.delete(urls, numpy.where(urls == url))
 
                             elif response.status_code == 404:
                                 urls = numpy.delete(urls, numpy.where(urls == url), axis=0)
