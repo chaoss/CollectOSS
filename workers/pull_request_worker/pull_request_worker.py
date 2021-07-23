@@ -503,6 +503,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         source_prs = self.paginate_endpoint(
             pr_url, action_map=pr_action_map, table=self.pull_requests_table,
             where_clause=self.pull_requests_table.c.repo_id == self.repo_id, 
+            stagger=True, 
             insertion_method=pk_source_increment_insert
         )
 
@@ -564,7 +565,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         # TODO: add relational table so we can include a where_clause here
         pr_comments = self.paginate_endpoint(
-            comments_url, action_map=comment_action_map, table=self.message_table, stagger=True
+            comments_url, action_map=comment_action_map, table=self.message_table
         )
 
         self.write_debug_data(pr_comments, 'pr_comments')
