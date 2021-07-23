@@ -12,7 +12,7 @@ RUN set -x \
         git \
         gcc \
         python3-pip \
-        golang \
+        wget \
         postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
@@ -29,13 +29,10 @@ COPY ./schema/ schema/
 
 COPY ./util/docker/backend/backend.docker.config.json .
 
-# TODO: fix install script because currently the go module reqs fail and in turn make the build fail?
-# Could be something else but I don't know what else? 
-
-#Might want to set these up in differant RUN statements.
 RUN set -x \
     && pip install .
 
+RUN ./scripts/docker/install-go.sh
 RUN ./scripts/install/workers.sh 
 RUN augur config init --rc-config-file /augur/backend.docker.config.json \
     && mkdir -p repos/ logs/
