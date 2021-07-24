@@ -811,10 +811,10 @@ class WorkerGitInterfaceable(Worker):
 
         table = 'contributors'
         table_pkey = 'cntrb_id'
-        ### %TODO Remap this to a GitLab Contributor ID like the GitHub Worker.
+        ### Here we are adding gitlab user information from the API
         ### Following Gabe's rework of the contributor worker.
         update_col_map = {'cntrb_email': 'email'}
-        duplicate_col_map = {'cntrb_login': 'email'}
+        duplicate_col_map = {'gl_username': 'username'}
 
         # list to hold contributors needing insertion or update
         contributors = self.paginate("https://gitlab.com/api/v4/projects/" + url_encoded_format + "/repository/contributors?per_page=100&page={}", duplicate_col_map, update_col_map, table, table_pkey, platform='gitlab')
@@ -839,31 +839,37 @@ class WorkerGitInterfaceable(Worker):
                 contributor = r.json()
 
                 cntrb = {
-                    "cntrb_login": contributor.get('username', None),
-                    "cntrb_created_at": contributor.get('created_at', None),
+                    "gl_id": contributor.get('gl_id', None),
+                    "gl_full_name": contributor.get('full_name', None),
+                    "gl_username": contributor.get('username', None),
+                    "gl_state": contributor.get('state', None),
+                    "gl_avatar_url": contributor.get('avatar_url', None),
+                    "gl_web_url": contributor.get('web_url', None)
+                    #"cntrb_login": contributor.get('username', None),
+                    #"cntrb_created_at": contributor.get('created_at', None),
                     "cntrb_email": email,
-                    "cntrb_company": contributor.get('organization', None),
-                    "cntrb_location": contributor.get('location', None),
+                    #"cntrb_company": contributor.get('organization', None),
+                    #"cntrb_location": contributor.get('location', None),
                     # "cntrb_type": , dont have a use for this as of now ... let it default to null
-                    "cntrb_canonical": contributor.get('public_email', None),
-                    "gh_user_id": contributor.get('id', None),
-                    "gh_login": contributor.get('username', None),
-                    "gh_url": contributor.get('web_url', None),
-                    "gh_html_url": contributor.get('web_url', None),
-                    "gh_node_id": None,
-                    "gh_avatar_url": contributor.get('avatar_url', None),
-                    "gh_gravatar_id": None,
-                    "gh_followers_url": None,
-                    "gh_following_url": None,
-                    "gh_gists_url": None,
-                    "gh_starred_url": None,
-                    "gh_subscriptions_url": None,
-                    "gh_organizations_url": None,
-                    "gh_repos_url": None,
-                    "gh_events_url": None,
-                    "gh_received_events_url": None,
-                    "gh_type": None,
-                    "gh_site_admin": None,
+                    #"cntrb_canonical": contributor.get('public_email', None),
+                    #"gh_user_id": contributor.get('id', None),
+                    #"gh_login": contributor.get('username', None),
+                    #"gh_url": contributor.get('web_url', None),
+                    #"gh_html_url": contributor.get('web_url', None),
+                    #"gh_node_id": None,
+                    #"gh_avatar_url": contributor.get('avatar_url', None),
+                    #"gh_gravatar_id": None,
+                    #"gh_followers_url": None,
+                    #"gh_following_url": None,
+                    #"gh_gists_url": None,
+                    #"gh_starred_url": None,
+                    #"gh_subscriptions_url": None,
+                    #"gh_organizations_url": None,
+                    #"gh_repos_url": None,
+                    #"gh_events_url": None,
+                    #"gh_received_events_url": None,
+                    #"gh_type": None,
+                    #"gh_site_admin": None,
                     "tool_source": self.tool_source,
                     "tool_version": self.tool_version,
                     "data_source": self.data_source

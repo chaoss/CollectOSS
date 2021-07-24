@@ -84,14 +84,14 @@ class GitHubWorker(WorkerGitInterfaceable):
                     and isinstance(issue['pull_request'], dict) and 'url' in issue['pull_request']
                 )
             
-            inc_source_issues['insert'] = self.enrich_cntrb_id(
-                inc_source_issues['insert'], 'user.login', action_map_additions={
-                    'insert': {
-                        'source': ['user.node_id'],
-                        'augur': ['gh_node_id']
-                    }
-                }, prefix='user.'
-            )
+            # inc_source_issues['insert'] = self.enrich_cntrb_id(
+            #     inc_source_issues['insert'], 'user.login', action_map_additions={
+            #         'insert': {
+            #             'source': ['user.node_id'],
+            #             'augur': ['gh_node_id']
+            #         }
+            #     }, prefix='user.'
+            # )
         
             issues_insert = [
                 {
@@ -227,14 +227,14 @@ class GitHubWorker(WorkerGitInterfaceable):
             )
         )
 
-        issue_comments['insert'] = self.enrich_cntrb_id(
-            issue_comments['insert'], 'user.login', action_map_additions={
-                'insert': {
-                    'source': ['user.node_id'],
-                    'augur': ['gh_node_id']
-                }
-            }, prefix='user.'
-        )
+        # issue_comments['insert'] = self.enrich_cntrb_id(
+        #     issue_comments['insert'], 'user.login', action_map_additions={
+        #         'insert': {
+        #             'source': ['user.node_id'],
+        #             'augur': ['gh_node_id']
+        #         }
+        #     }, prefix='user.'
+        # )
 
         issue_comments_insert = [
             {
@@ -316,14 +316,14 @@ class GitHubWorker(WorkerGitInterfaceable):
                 ['id', 'issue_id', 'node_id', 'url', 'actor', 'created_at', 'event', 'commit_id']
             ].to_dict(orient='records')
 
-        pk_issue_events = self.enrich_cntrb_id(
-            pk_issue_events, 'actor.login', action_map_additions={
-                'insert': {
-                    'source': ['actor.node_id'],
-                    'augur': ['gh_node_id']
-                }
-            }, prefix='actor.'
-        )
+        # pk_issue_events = self.enrich_cntrb_id(
+        #     pk_issue_events, 'actor.login', action_map_additions={
+        #         'insert': {
+        #             'source': ['actor.node_id'],
+        #             'augur': ['gh_node_id']
+        #         }
+        #     }, prefix='actor.'
+        # )
 
         issue_events_insert = [
             {
@@ -364,16 +364,16 @@ class GitHubWorker(WorkerGitInterfaceable):
             events_df = events_df.loc[events_df.event == 'closed']
 
             if len(events_df):
-                events_df = pd.DataFrame(
-                    self.enrich_cntrb_id(
-                        events_df.to_dict(orient='records'), 'actor.login', action_map_additions={
-                            'insert': {
-                                'source': ['actor.node_id'],
-                                'augur': ['gh_node_id']
-                            }
-                        }, prefix='actor.'
-                    )
-                )
+                # events_df = pd.DataFrame(
+                #     self.enrich_cntrb_id(
+                #         events_df.to_dict(orient='records'), 'actor.login', action_map_additions={
+                #             'insert': {
+                #                 'source': ['actor.node_id'],
+                #                 'augur': ['gh_node_id']
+                #             }
+                #         }, prefix='actor.'
+                #     )
+                # )
                 if not len(events_df):  # no cntrb ids were available
                     skip_closed_issue_update = True
             else:
@@ -446,14 +446,14 @@ class GitHubWorker(WorkerGitInterfaceable):
             action_map=assignee_action_map
         )
 
-        source_assignees_insert = self.enrich_cntrb_id(
-            source_assignees_insert, 'login', action_map_additions={
-                'insert': {
-                    'source': ['node_id'],
-                    'augur': ['gh_node_id']
-                }
-            }
-        )
+        # source_assignees_insert = self.enrich_cntrb_id(
+        #     source_assignees_insert, 'login', action_map_additions={
+        #         'insert': {
+        #             'source': ['node_id'],
+        #             'augur': ['gh_node_id']
+        #         }
+        #     }
+        # )
 
         assignees_insert = [
             {
