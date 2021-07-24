@@ -847,7 +847,7 @@ class WorkerGitInterfaceable(Worker):
                     "gl_web_url": contributor.get('web_url', None)
                     #"cntrb_login": contributor.get('username', None),
                     #"cntrb_created_at": contributor.get('created_at', None),
-                    "cntrb_email": email,
+                    "cntrb_email": contributor.get('email', None)
                     #"cntrb_company": contributor.get('organization', None),
                     #"cntrb_location": contributor.get('location', None),
                     # "cntrb_type": , dont have a use for this as of now ... let it default to null
