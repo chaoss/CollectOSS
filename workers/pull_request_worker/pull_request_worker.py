@@ -409,14 +409,14 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             self.logger.info(f"inc_source_prs is: {inc_source_prs} and the action map is {action_map}...")
 
 
-            # inc_source_prs['insert'] = self.enrich_cntrb_id(
-            #     inc_source_prs['insert'], 'user.login', action_map_additions={
-            #         'insert': {
-            #             'source': ['user.node_id'],
-            #             'augur': ['gh_node_id']
-            #         }
-            #     }, prefix='user.'
-            # )            
+            inc_source_prs['insert'] = self.enrich_cntrb_id(
+                inc_source_prs['insert'], 'user.login', action_map_additions={
+                    'insert': {
+                        'source': ['user.node_id'],
+                        'augur': ['gh_node_id']
+                    }
+                }, prefix='user.'
+            )            
             
             
 
@@ -573,14 +573,14 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         pr_comments['insert'] = self.text_clean(pr_comments['insert'], 'body')
 
-        # pr_comments['insert'] = self.enrich_cntrb_id(
-        #     pr_comments['insert'], 'user.login', action_map_additions={
-        #         'insert': {
-        #             'source': ['user.node_id'],
-        #             'augur': ['gh_node_id']
-        #         }
-        #     }, prefix='user.'
-        # )
+        pr_comments['insert'] = self.enrich_cntrb_id(
+            pr_comments['insert'], 'user.login', action_map_additions={
+                'insert': {
+                    'source': ['user.node_id'],
+                    'augur': ['gh_node_id']
+                }
+            }, prefix='user.'
+        )
 
         pr_comments_insert = [
             {
@@ -657,14 +657,14 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         self.write_debug_data(pk_pr_events, 'pk_pr_events')
 
-        # pk_pr_events = self.enrich_cntrb_id(
-        #     pk_pr_events, 'actor.login', action_map_additions={
-        #         'insert': {
-        #             'source': ['actor.node_id'],
-        #             'augur': ['gh_node_id']
-        #         }
-        #     }, prefix='actor.'
-        # )
+        pk_pr_events = self.enrich_cntrb_id(
+            pk_pr_events, 'actor.login', action_map_additions={
+                'insert': {
+                    'source': ['actor.node_id'],
+                    'augur': ['gh_node_id']
+                }
+            }, prefix='actor.'
+        )
 
         pr_events_insert = [
             {
@@ -726,14 +726,14 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             action_map=review_action_map
         )
 
-        # source_reviews_insert = self.enrich_cntrb_id(
-        #     source_reviews_insert, 'user.login', action_map_additions={
-        #         'insert': {
-        #             'source': ['user.node_id'],
-        #             'augur': ['gh_node_id']
-        #         }
-        #     }, prefix='user.'
-        # )
+        source_reviews_insert = self.enrich_cntrb_id(
+            source_reviews_insert, 'user.login', action_map_additions={
+                'insert': {
+                    'source': ['user.node_id'],
+                    'augur': ['gh_node_id']
+                }
+            }, prefix='user.'
+        )
 
         reviews_insert = [
             {
@@ -805,14 +805,14 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         self.write_debug_data(review_msgs, 'review_msgs')
 
         #Throwing value errors. 'cannot use name of an existing column for indicator column'
-        # review_msgs['insert'] = self.enrich_cntrb_id(
-        #     review_msgs['insert'], 'user.login', action_map_additions={
-        #         'insert': {
-        #             'source': ['user.node_id'],
-        #             'augur': ['gh_node_id']
-        #         }
-        #     }, prefix='user.'
-        # )
+        review_msgs['insert'] = self.enrich_cntrb_id(
+            review_msgs['insert'], 'user.login', action_map_additions={
+                'insert': {
+                    'source': ['user.node_id'],
+                    'augur': ['gh_node_id']
+                }
+            }, prefix='user.'
+        )
 
         review_msg_insert = [
             {
@@ -962,14 +962,14 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             reviewers_all, table_values=table_values_issue_labels,
             action_map=reviewer_action_map
         )
-        # source_reviewers_insert = self.enrich_cntrb_id(
-        #     source_reviewers_insert, 'login', action_map_additions={
-        #         'insert': {
-        #             'source': ['node_id'],
-        #             'augur': ['gh_node_id']
-        #         }
-        #     }
-        # )
+        source_reviewers_insert = self.enrich_cntrb_id(
+            source_reviewers_insert, 'login', action_map_additions={
+                'insert': {
+                    'source': ['node_id'],
+                    'augur': ['gh_node_id']
+                }
+            }
+        )
         reviewers_insert = [
             {
                 'pull_request_id': reviewer['pull_request_id'],
@@ -999,14 +999,14 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             assignees_all, table_values=table_values_assignees_labels,
             action_map=assignee_action_map
         )
-        # source_assignees_insert = self.enrich_cntrb_id(
-        #     source_assignees_insert, 'login', action_map_additions={
-        #         'insert': {
-        #             'source': ['node_id'],
-        #             'augur': ['gh_node_id']
-        #         }
-        #     }
-        # )
+        source_assignees_insert = self.enrich_cntrb_id(
+            source_assignees_insert, 'login', action_map_additions={
+                'insert': {
+                    'source': ['node_id'],
+                    'augur': ['gh_node_id']
+                }
+            }
+        )
         assignees_insert = [
             {
                 'pull_request_id': assignee['pull_request_id'],
@@ -1034,14 +1034,14 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         source_meta_insert, _ = self.organize_needed_data(
             meta_all, table_values=table_values_pull_request_meta, action_map=meta_action_map
         )
-        # source_meta_insert = self.enrich_cntrb_id(
-        #     source_meta_insert, 'user.login', action_map_additions={
-        #         'insert': {
-        #             'source': ['user.node_id'],
-        #             'augur': ['gh_node_id']
-        #         }
-        #     }, prefix='user.'
-        # )
+        source_meta_insert = self.enrich_cntrb_id(
+            source_meta_insert, 'user.login', action_map_additions={
+                'insert': {
+                    'source': ['user.node_id'],
+                    'augur': ['gh_node_id']
+                }
+            }, prefix='user.'
+        )
         meta_insert = [
             {
                 'pull_request_id': meta['pull_request_id'],
