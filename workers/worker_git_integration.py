@@ -844,7 +844,7 @@ class WorkerGitInterfaceable(Worker):
                     "gl_username": contributor.get('username', None),
                     "gl_state": contributor.get('state', None),
                     "gl_avatar_url": contributor.get('avatar_url', None),
-                    "gl_web_url": contributor.get('web_url', None)
+                    "gl_web_url": contributor.get('web_url', None),
                     #"cntrb_login": contributor.get('username', None),
                     #"cntrb_created_at": contributor.get('created_at', None),
                     "cntrb_email": email,
