@@ -196,7 +196,7 @@ class GitHubWorker(WorkerGitInterfaceable):
         self.register_task_completion(entry_info, self.repo_id, 'issues')
 
     def issue_comments_model(self, pk_source_issues):
-
+        # https://api.github.com/repos/chaoss/augur/issues/comments
         comments_url = (
             f"https://api.github.com/repos/{self.owner}/{self.repo}"
             "/issues/comments?per_page=100&page={}"
