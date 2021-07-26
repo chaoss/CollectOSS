@@ -828,7 +828,14 @@ class WorkerGitInterfaceable(Worker):
         table_pkey = 'cntrb_id'
         ### Here we are adding gitlab user information from the API
         ### Following Gabe's rework of the contributor worker.
-        update_col_map = {'cntrb_email': 'email'}
+
+        ### The GitLab API will NEVER give you an email. It will let you 
+        ### Query an email, but never give you one. 
+        ### ## Gitlab email api: https://gitlab.com/api/v4/users?search=s@goggins.com
+        ### We don't need to update right now, so commenting out. 
+        ### TODO: SOLVE LOGIC. 
+        # update_col_map = {'cntrb_email': 'email'}
+        update_col_map = {}
         duplicate_col_map = {'gl_username': 'username'}
 
         # list to hold contributors needing insertion or update
@@ -862,7 +869,7 @@ class WorkerGitInterfaceable(Worker):
                     "gl_web_url": contributor.get('web_url', None),
                     #"cntrb_login": contributor.get('username', None),
                     #"cntrb_created_at": contributor.get('created_at', None),
-                    "cntrb_email": email,
+                    "cntrb_email": ('email', None),
                     #"cntrb_company": contributor.get('organization', None),
                     #"cntrb_location": contributor.get('location', None),
                     # "cntrb_type": , dont have a use for this as of now ... let it default to null
