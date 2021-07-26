@@ -84,15 +84,18 @@ class GitHubWorker(WorkerGitInterfaceable):
                     and isinstance(issue['pull_request'], dict) and 'url' in issue['pull_request']
                 )
             
-            inc_source_issues['insert'] = self.enrich_cntrb_id(
-                inc_source_issues['insert'], 'user.login', action_map_additions={
-                    'insert': {
-                        'source': ['user.node_id'],
-                        'augur': ['gh_node_id']
-                    }
-                }, prefix='user.'
-            )
-        
+            try:
+                inc_source_issues['insert'] = self.enrich_cntrb_id(
+                    inc_source_issues['insert'], 'user.login', action_map_additions={
+                        'insert': {
+                            'source': ['user.node_id'],
+                            'augur': ['gh_node_id']
+                        }
+                    }, prefix='user.'
+                )
+            except ValueError:
+                self.logger.info(f"Enrich contrib data is empty for {inc_source_issues['insert']}, the empty field is the user login.")
+
             issues_insert = [
                 {
                     'repo_id': self.repo_id,
@@ -209,6 +212,62 @@ class GitHubWorker(WorkerGitInterfaceable):
             }
         }
 
+        def issue_comments_insert(inc_issue_comments, comment_action_map):
+            
+            try:
+                inc_issue_comments['insert'] = self.enrich_cntrb_id(
+                    inc_issue_comments['insert'], 'user.login', action_map_additions={
+                        'insert': {
+                            'source': ['user.node_id'],
+                            'augur': ['gh_node_id']
+                        }
+                    }, prefix='user.'
+                )
+            except ValueError:
+                self.logger.info(f"Enrich contrib data is empty for {inc_issue_comments['insert']}, the empty field is the user login.")
+
+            issue_comments_insert = [
+                {
+                    'pltfrm_id': self.platform_id,
+                    'msg_text': comment['body'],
+                    'msg_timestamp': comment['created_at'],
+                    'cntrb_id': comment['cntrb_id'],
+                    'tool_source': self.tool_source,
+                    'tool_version': self.tool_version,
+                    'data_source': self.data_source
+                } for comment in inc_issue_comments['insert']
+            ]
+
+            self.bulk_insert(self.message_table, insert=issue_comments_insert,
+                unique_columns=comment_action_map['insert']['augur'])
+
+            """ ISSUE MESSAGE REF TABLE """
+
+            c_pk_source_comments = self.enrich_data_primary_keys(
+                inc_issue_comments['insert'], self.message_table,
+                comment_action_map['insert']['source'], comment_action_map['insert']['augur']
+            )
+            both_pk_source_comments = self.enrich_data_primary_keys(
+                c_pk_source_comments, self.issues_table, ['issue_url'], ['issue_url']
+            )
+
+            issue_message_ref_insert = [
+                {
+                    'issue_id': comment['issue_id'],
+                    'msg_id': comment['msg_id'],
+                    'tool_source': self.tool_source,
+                    'tool_version': self.tool_version,
+                    'data_source': self.data_source,
+                    'issue_msg_ref_src_comment_id': comment['id'],
+                    'issue_msg_ref_src_node_id': comment['node_id']
+                } for comment in both_pk_source_comments
+            ]
+
+            self.bulk_insert(
+                self.issue_message_ref_table, insert=issue_message_ref_insert,
+                unique_columns=['issue_msg_ref_src_comment_id']
+            )
+
         # list to hold contributors needing insertion or update
         issue_comments = self.paginate_endpoint(
             comments_url, action_map=comment_action_map, table=self.message_table,
@@ -224,59 +283,14 @@ class GitHubWorker(WorkerGitInterfaceable):
                         )
                     ).fetchall()
                 ]
-            )
+            ),
+            stagger=True,
+            insertion_method=issue_comments_insert
         )
 
-        issue_comments['insert'] = self.enrich_cntrb_id(
-            issue_comments['insert'], 'user.login', action_map_additions={
-                'insert': {
-                    'source': ['user.node_id'],
-                    'augur': ['gh_node_id']
-                }
-            }, prefix='user.'
-        )
 
-        issue_comments_insert = [
-            {
-                'pltfrm_id': self.platform_id,
-                'msg_text': comment['body'],
-                'msg_timestamp': comment['created_at'],
-                'cntrb_id': comment['cntrb_id'],
-                'tool_source': self.tool_source,
-                'tool_version': self.tool_version,
-                'data_source': self.data_source
-            } for comment in issue_comments['insert']
-        ]
-
-        self.bulk_insert(self.message_table, insert=issue_comments_insert,
-            unique_columns=comment_action_map['insert']['augur'])
-
-        """ ISSUE MESSAGE REF TABLE """
-
-        c_pk_source_comments = self.enrich_data_primary_keys(
-            issue_comments['insert'], self.message_table,
-            comment_action_map['insert']['source'], comment_action_map['insert']['augur']
-        )
-        both_pk_source_comments = self.enrich_data_primary_keys(
-            c_pk_source_comments, self.issues_table, ['issue_url'], ['issue_url']
-        )
-
-        issue_message_ref_insert = [
-            {
-                'issue_id': comment['issue_id'],
-                'msg_id': comment['msg_id'],
-                'tool_source': self.tool_source,
-                'tool_version': self.tool_version,
-                'data_source': self.data_source,
-                'issue_msg_ref_src_comment_id': comment['id'],
-                'issue_msg_ref_src_node_id': comment['node_id']
-            } for comment in both_pk_source_comments
-        ]
-
-        self.bulk_insert(
-            self.issue_message_ref_table, insert=issue_message_ref_insert,
-            unique_columns=['issue_msg_ref_src_comment_id']
-        )
+        issue_comments_insert(issue_comments,comment_action_map)
+        return
 
     def issue_events_model(self, pk_source_issues):
 
