@@ -214,14 +214,17 @@ class GitHubWorker(WorkerGitInterfaceable):
 
         def issue_comments_insert(inc_issue_comments, comment_action_map):
             
-            inc_issue_comments['insert'] = self.enrich_cntrb_id(
-                inc_issue_comments['insert'], 'user.login', action_map_additions={
-                    'insert': {
-                        'source': ['user.node_id'],
-                        'augur': ['gh_node_id']
-                    }
-                }, prefix='user.'
-            )
+            try:
+                inc_issue_comments['insert'] = self.enrich_cntrb_id(
+                    inc_issue_comments['insert'], 'user.login', action_map_additions={
+                        'insert': {
+                            'source': ['user.node_id'],
+                            'augur': ['gh_node_id']
+                        }
+                    }, prefix='user.'
+                )
+            except ValueError:
+                self.logger.info(f"Enrich contrib data is empty for {inc_issue_comments['insert']}, the empty field is the user login.")
 
             issue_comments_insert = [
                 {
