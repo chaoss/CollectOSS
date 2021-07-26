@@ -458,6 +458,7 @@ class WorkerGitInterfaceable(Worker):
                     "data_source": self.data_source
                 }
                 #dup check
+                #TODO: add additional fields to check if needed.
                 existingMatchingContributors = self.db.execute(
                     self.sql.select(
                         [self.contributors_table.c.gh_node_id]
