@@ -11,8 +11,10 @@ import numpy as np
 import datetime
 
 from workers.worker_base import Worker
+## Gitlab email api: https://gitlab.com/api/v4/users?search=s@goggins.com
+from workers.worker_git_integration import WorkerGitInterfaceable
 
-class ContributorWorker(Worker):
+class ContributorWorker(WorkerGitInterfaceable):
     """ Worker that detects anomalies on a select few of our metrics
     task: most recent task the broker added to the worker's queue
     child: current process of the queue being ran
@@ -49,7 +51,7 @@ class ContributorWorker(Worker):
         # Get and insert all users (emails) found by the facade worker
         self.insert_facade_contributors(entry_info, repo_id)
 
-        # Get and insert all users github considers to be contributors for this repo
+        # Get and insert all users github considered to be contributors for this repo
         self.query_github_contributors(entry_info, repo_id)
 
         self.logger.info("Searching users for commits from the facade worker for repo with entry info: {}\n".format(entry_info))
@@ -553,33 +555,6 @@ class ContributorWorker(Worker):
 
             self.map_new_id(dupe_ids, self.cntrb_id_inc)
 
-        ### Commented out due to cascade delete database issue
-        ### Sean Goggins, February 5, 2021
-
-        #     deleteSQL = """
-        #         DELETE 
-        #             FROM
-        #                 contributors c 
-        #             USING 
-        #                 contributors_aliases
-        #             WHERE
-        #                 c.cntrb_email = '{0}'
-        #             AND
-        #                 c.cntrb_id NOT IN (SELECT cntrb_id FROM contributors_aliases)
-        #             AND
-        #                 c.cntrb_id <> {1};
-        #     """.format(commit_email, self.cntrb_id_inc)
-            
-        #     try:
-        #         # Delete all dupes 
-        #         result = self.db.execute(deleteSQL)
-        #         self.logger.info("Deleted all non-canonical contributors with the email: {}\n".format(commit_email))
-        #     except Exception as e:
-        #         self.logger.info("When trying to delete a duplicate contributor, worker ran into error: {}".format(e))
-        
-        # else: #then there would be exactly 1 existing tuple, so that id is the one we want
-        #     alias_id = existing_tuples[0]['cntrb_id']
-
         self.logger.info('Checking canonicals match.\n')
         alias_sql = s.sql.text("""
             SELECT * 
@@ -704,4 +679,83 @@ class ContributorWorker(Worker):
             self.pull_request_repo_table.c.pr_cntrb_id.in_(dupe_ids)).values(pr_repo_col))
         self.logger.info("Updated cntrb_id column for tuple in the pull_request_repo table with value: {} replaced with new cntrb id: {}".format(new_id, self.cntrb_id_inc))
 
+
+        ## July 12, 2021: Note there are 17 foreign keys for contributors in the Augur database, and ten updates above. Addressing the other 3 of 5 that need to be updated. Specifying 2 to continue to ignore.  
+        ## TODO: Update PR table FK's to RESTRICT on delete and CASCADE on update within PR table ecosystem
+        ## TODO: Update pull_request_commits and commits FK's to have no cascading effects for now, as thier cntrb_id columns are not currently populated. Instead, these tables rely on emails. 
+        ## Missing Tables: 
+        # pull_request_reviews 
+        # pull_requests 
+        # pull_request_commits 
+        # contributor_repo 
+        # commits 
+
+        ## can use update_col when the column name is cntrb_id; otherwise column_name_col for .values(update_col) in row two of each block.
+
+        # column is cntrb_id
+        pr_reviews_result = self.db.execute(self.pull_request_reviews_table.update().where(
+            self.pull_request_reviews_table.c.cntrb_id.in_(dupe_ids)).values(update_col))
+        self.logger.info("Updated cntrb_id column for tuple in the pull_request_reviews table with value: {} replaced with new cntrb id: {}".format(new_id, self.cntrb_id_inc))
+
+        # pr_augur_contributor_id 
+        pr_result = self.db.execute(self.pull_requests_table.update().where(
+            self.pull_requests_table.c.pr_augur_contributor_id.in_(dupe_ids)).values(pr_augur_contributor_id_col))
+        self.logger.info("Updated cntrb_id column for tuple in the pull_requests table with value: {} replaced with new cntrb id: {}".format(new_id, self.cntrb_id_inc))
+
+        # # pr_cmt_author_cntrb_id is not currently populated. Do later
+        # pr_commits_result = self.db.execute(self.commits_table.update().where(
+        #     self.commits_table.c.cntrb_id.in_(dupe_ids)).values(update_col))
+        # self.logger.info("Updated cntrb_id column for tuple in the pull_request_reviewers table with value: {} replaced with new cntrb id: {}".format(new_id, self.cntrb_id_inc))
+
+        # column is cntrb_id
+        contributor_repo_result = self.db.execute(self.contributor_repo_table.update().where(
+            self.contributor_repo_table.c.cntrb_id.in_(dupe_ids)).values(update_col))
+        self.logger.info("Updated cntrb_id column for tuple in the contributor_repo table with value: {} replaced with new cntrb id: {}".format(new_id, self.cntrb_id_inc))
+
+        # # # commits is harder. The cmt_ght_author_id, and cmt_ght_committer_id are all NULL right now. So this will need to be addressed in the future. 
+        # commits_result = self.db.execute(self.pull_request_repo_table.update().where(
+        #     self.pull_request_repo_table.c.pr_cntrb_id.in_(dupe_ids)).values(pr_repo_col))
+        # self.logger.info("Updated cntrb_id column for tuple in the pull_request_repo table with value: {} replaced with new cntrb id: {}".format(new_id, self.cntrb_id_inc))
+
+        # # TABLES not requiring updates
+        # contributors_history 
+        # contributor_aliases 
+
+
+        pr_repo_result = self.db.execute(self.pull_request_repo_table.update().where(
+            self.pull_request_repo_table.c.pr_cntrb_id.in_(dupe_ids)).values(pr_repo_col))
+        self.logger.info("Updated cntrb_id column for tuple in the pull_request_repo table with value: {} replaced with new cntrb id: {}".format(new_id, self.cntrb_id_inc))
+
+
         self.logger.info('Done mapping new id.\n')
+
+
+
+        ### Moved this down to the bottom. This is literally the last thing one would do. 
+
+        ### Commented out due to cascade delete database issue
+        ### Sean Goggins, February 5, 2021
+
+        #     deleteSQL = """
+        #         DELETE 
+        #             FROM
+        #                 contributors c 
+        #             USING 
+        #                 contributors_aliases
+        #             WHERE
+        #                 c.cntrb_email = '{0}'
+        #             AND
+        #                 c.cntrb_id NOT IN (SELECT cntrb_id FROM contributors_aliases)
+        #             AND
+        #                 c.cntrb_id <> {1};
+        #     """.format(commit_email, self.cntrb_id_inc)
+            
+        #     try:
+        #         # Delete all dupes 
+        #         result = self.db.execute(deleteSQL)
+        #         self.logger.info("Deleted all non-canonical contributors with the email: {}\n".format(commit_email))
+        #     except Exception as e:
+        #         self.logger.info("When trying to delete a duplicate contributor, worker ran into error: {}".format(e))
+        
+        # else: #then there would be exactly 1 existing tuple, so that id is the one we want
+        #     alias_id = existing_tuples[0]['cntrb_id']

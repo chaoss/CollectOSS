@@ -418,6 +418,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 }, prefix='user.'
             )            
             
+            
 
             prs_insert = [
             {
@@ -555,6 +556,12 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             f"https://api.github.com/repos/{self.owner}/{self.repo}/issues/comments?per_page=100"
             "&page={}"
         )
+
+        # We should be capturing the following additional data here: 
+        # 1. The Platform message ID : Most efficient way to dup check
+        # 2. The plaform issue ID and/or PR ID so queries are easier
+        # 3. The REPO_ID so queries are easier.
+        ## ALL THIS INFO IS IN THE PLATFOMR JSON AND WE ARe ignoring IT. 
 
         comment_action_map = {
             'insert': {
@@ -773,6 +780,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         self.write_debug_data(both_pr_review_pk_source_reviews, 'both_pr_review_pk_source_reviews')
 
         # Review Comments
+
+       #  https://api.github.com/repos/chaoss/augur/pulls
 
         review_msg_url = (f'https://api.github.com/repos/{self.owner}/{self.repo}/pulls' +
             '/comments?per_page=100&page={}')

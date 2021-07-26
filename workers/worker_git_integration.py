@@ -291,7 +291,7 @@ class WorkerGitInterfaceable(Worker):
                 'gh_login': contributor[f'{prefix}login'],
                 'gh_url': contributor[f'{prefix}url'],
                 'gh_html_url': contributor[f'{prefix}html_url'],
-                'gh_node_id': contributor[f'{prefix}node_id'],
+                'gh_node_id': contributor[f'{prefix}node_id'], #valid for dup check
                 'gh_avatar_url': contributor[f'{prefix}avatar_url'],
                 'gh_gravatar_id': contributor[f'{prefix}gravatar_id'],
                 'gh_followers_url': contributor[f'{prefix}followers_url'],
@@ -379,6 +379,8 @@ class WorkerGitInterfaceable(Worker):
         """
         self.logger.info(f"Querying contributors with given entry info: {entry_info}\n")
 
+        ## It absolutely doesn't matter if the contributor has already contributoed to a repo. it only matters that they exist in our table, and 
+        ## if the DO, then we DO NOT want to insert them again in any GitHub Method.
         github_url = entry_info['given']['github_url'] if 'github_url' in entry_info['given'] else entry_info['given']['git_url']
 
         # Extract owner/repo from the url for the endpoint
@@ -437,7 +439,7 @@ class WorkerGitInterfaceable(Worker):
                     "gh_login": contributor['login'],
                     "gh_url": contributor['url'],
                     "gh_html_url": contributor['html_url'],
-                    "gh_node_id": contributor['node_id'],
+                    "gh_node_id": contributor['node_id'], #This is what we are dup checking
                     "gh_avatar_url": contributor['avatar_url'],
                     "gh_gravatar_id": contributor['gravatar_id'],
                     "gh_followers_url": contributor['followers_url'],
@@ -455,6 +457,19 @@ class WorkerGitInterfaceable(Worker):
                     "tool_version": self.tool_version,
                     "data_source": self.data_source
                 }
+                #dup check
+                #TODO: add additional fields to check if needed.
+                existingMatchingContributors = self.db.execute(
+                    self.sql.select(
+                        [self.contributors_table.c.gh_node_id]
+                    ).where(
+                        self.contributors_table.c.gh_node_id==cntrb["gh_node_id"]
+                    ).fetchall()
+                )
+
+                if len(existingMatchingContributors) > 0:
+                    break #if contributor already exists in table
+
 
                 # Commit insertion to table
                 if repo_contributor['flag'] == 'need_update':
@@ -811,10 +826,17 @@ class WorkerGitInterfaceable(Worker):
 
         table = 'contributors'
         table_pkey = 'cntrb_id'
-        ### %TODO Remap this to a GitLab Contributor ID like the GitHub Worker.
+        ### Here we are adding gitlab user information from the API
         ### Following Gabe's rework of the contributor worker.
-        update_col_map = {'cntrb_email': 'email'}
-        duplicate_col_map = {'cntrb_login': 'email'}
+
+        ### The GitLab API will NEVER give you an email. It will let you 
+        ### Query an email, but never give you one. 
+        ### ## Gitlab email api: https://gitlab.com/api/v4/users?search=s@goggins.com
+        ### We don't need to update right now, so commenting out. 
+        ### TODO: SOLVE LOGIC. 
+        # update_col_map = {'cntrb_email': 'email'}
+        update_col_map = {}
+        duplicate_col_map = {'gl_username': 'username'}
 
         # list to hold contributors needing insertion or update
         contributors = self.paginate("https://gitlab.com/api/v4/projects/" + url_encoded_format + "/repository/contributors?per_page=100&page={}", duplicate_col_map, update_col_map, table, table_pkey, platform='gitlab')
@@ -839,31 +861,37 @@ class WorkerGitInterfaceable(Worker):
                 contributor = r.json()
 
                 cntrb = {
-                    "cntrb_login": contributor.get('username', None),
-                    "cntrb_created_at": contributor.get('created_at', None),
-                    "cntrb_email": email,
-                    "cntrb_company": contributor.get('organization', None),
-                    "cntrb_location": contributor.get('location', None),
+                    "gl_id": contributor.get('gl_id', None),
+                    "gl_full_name": contributor.get('full_name', None),
+                    "gl_username": contributor.get('username', None),
+                    "gl_state": contributor.get('state', None),
+                    "gl_avatar_url": contributor.get('avatar_url', None),
+                    "gl_web_url": contributor.get('web_url', None),
+                    #"cntrb_login": contributor.get('username', None),
+                    #"cntrb_created_at": contributor.get('created_at', None),
+                    "cntrb_email": ('email', None),
+                    #"cntrb_company": contributor.get('organization', None),
+                    #"cntrb_location": contributor.get('location', None),
                     # "cntrb_type": , dont have a use for this as of now ... let it default to null
-                    "cntrb_canonical": contributor.get('public_email', None),
-                    "gh_user_id": contributor.get('id', None),
-                    "gh_login": contributor.get('username', None),
-                    "gh_url": contributor.get('web_url', None),
-                    "gh_html_url": contributor.get('web_url', None),
-                    "gh_node_id": None,
-                    "gh_avatar_url": contributor.get('avatar_url', None),
-                    "gh_gravatar_id": None,
-                    "gh_followers_url": None,
-                    "gh_following_url": None,
-                    "gh_gists_url": None,
-                    "gh_starred_url": None,
-                    "gh_subscriptions_url": None,
-                    "gh_organizations_url": None,
-                    "gh_repos_url": None,
-                    "gh_events_url": None,
-                    "gh_received_events_url": None,
-                    "gh_type": None,
-                    "gh_site_admin": None,
+                    #"cntrb_canonical": contributor.get('public_email', None),
+                    #"gh_user_id": contributor.get('id', None),
+                    #"gh_login": contributor.get('username', None),
+                    #"gh_url": contributor.get('web_url', None),
+                    #"gh_html_url": contributor.get('web_url', None),
+                    #"gh_node_id": None,
+                    #"gh_avatar_url": contributor.get('avatar_url', None),
+                    #"gh_gravatar_id": None,
+                    #"gh_followers_url": None,
+                    #"gh_following_url": None,
+                    #"gh_gists_url": None,
+                    #"gh_starred_url": None,
+                    #"gh_subscriptions_url": None,
+                    #"gh_organizations_url": None,
+                    #"gh_repos_url": None,
+                    #"gh_events_url": None,
+                    #"gh_received_events_url": None,
+                    #"gh_type": None,
+                    #"gh_site_admin": None,
                     "tool_source": self.tool_source,
                     "tool_version": self.tool_version,
                     "data_source": self.data_source
