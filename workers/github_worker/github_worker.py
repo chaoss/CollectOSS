@@ -192,6 +192,7 @@ class GitHubWorker(WorkerGitInterfaceable):
         # Register this task as completed
         self.register_task_completion(entry_info, self.repo_id, 'issues')
 
+    #TODO: stagger
     def issue_comments_model(self, pk_source_issues):
 
         comments_url = (
@@ -208,6 +209,9 @@ class GitHubWorker(WorkerGitInterfaceable):
                 'augur': ['msg_timestamp', 'msg_text']
             }
         }
+
+        def issue_comments_insert(inc_issue_comments, action_map):
+            return
 
         # list to hold contributors needing insertion or update
         issue_comments = self.paginate_endpoint(
