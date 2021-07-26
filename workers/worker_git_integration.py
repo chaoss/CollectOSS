@@ -439,7 +439,7 @@ class WorkerGitInterfaceable(Worker):
                     "gh_login": contributor['login'],
                     "gh_url": contributor['url'],
                     "gh_html_url": contributor['html_url'],
-                    "gh_node_id": contributor['node_id'],
+                    "gh_node_id": contributor['node_id'], #This is what we are dup checking
                     "gh_avatar_url": contributor['avatar_url'],
                     "gh_gravatar_id": contributor['gravatar_id'],
                     "gh_followers_url": contributor['followers_url'],
@@ -457,6 +457,18 @@ class WorkerGitInterfaceable(Worker):
                     "tool_version": self.tool_version,
                     "data_source": self.data_source
                 }
+                #dup check
+                existingMatchingContributors = self.db.execute(
+                    self.sql.select(
+                        [self.contributors_table.c.gh_node_id]
+                    ).where(
+                        self.contributors_table.c.gh_node_id==cntrb["gh_node_id"]
+                    ).fetchall()
+                )
+
+                if len(existingMatchingContributors) > 0:
+                    break #if contributor already exists in table
+
 
                 # Commit insertion to table
                 if repo_contributor['flag'] == 'need_update':
