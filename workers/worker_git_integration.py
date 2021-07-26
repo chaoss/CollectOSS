@@ -291,7 +291,7 @@ class WorkerGitInterfaceable(Worker):
                 'gh_login': contributor[f'{prefix}login'],
                 'gh_url': contributor[f'{prefix}url'],
                 'gh_html_url': contributor[f'{prefix}html_url'],
-                'gh_node_id': contributor[f'{prefix}node_id'],
+                'gh_node_id': contributor[f'{prefix}node_id'], #valid for dup check
                 'gh_avatar_url': contributor[f'{prefix}avatar_url'],
                 'gh_gravatar_id': contributor[f'{prefix}gravatar_id'],
                 'gh_followers_url': contributor[f'{prefix}followers_url'],
@@ -379,6 +379,8 @@ class WorkerGitInterfaceable(Worker):
         """
         self.logger.info(f"Querying contributors with given entry info: {entry_info}\n")
 
+        ## It absolutely doesn't matter if the contributor has already contributoed to a repo. it only matters that they exist in our table, and 
+        ## if the DO, then we DO NOT want to insert them again in any GitHub Method.
         github_url = entry_info['given']['github_url'] if 'github_url' in entry_info['given'] else entry_info['given']['git_url']
 
         # Extract owner/repo from the url for the endpoint

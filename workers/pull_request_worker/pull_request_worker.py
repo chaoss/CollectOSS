@@ -557,6 +557,12 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             "&page={}"
         )
 
+        # We should be capturing the following additional data here: 
+        # 1. The Platform message ID : Most efficient way to dup check
+        # 2. The plaform issue ID and/or PR ID so queries are easier
+        # 3. The REPO_ID so queries are easier.
+        ## ALL THIS INFO IS IN THE PLATFOMR JSON AND WE ARe ignoring IT. 
+
         comment_action_map = {
             'insert': {
                 'source': ['created_at', 'body'],
