@@ -781,6 +781,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         # Review Comments
 
+       #  https://api.github.com/repos/chaoss/augur/pulls
+
         review_msg_url = (f'https://api.github.com/repos/{self.owner}/{self.repo}/pulls' +
             '/comments?per_page=100&page={}')
 
