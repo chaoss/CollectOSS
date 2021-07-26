@@ -84,15 +84,18 @@ class GitHubWorker(WorkerGitInterfaceable):
                     and isinstance(issue['pull_request'], dict) and 'url' in issue['pull_request']
                 )
             
-            inc_source_issues['insert'] = self.enrich_cntrb_id(
-                inc_source_issues['insert'], 'user.login', action_map_additions={
-                    'insert': {
-                        'source': ['user.node_id'],
-                        'augur': ['gh_node_id']
-                    }
-                }, prefix='user.'
-            )
-        
+            try:
+                inc_source_issues['insert'] = self.enrich_cntrb_id(
+                    inc_source_issues['insert'], 'user.login', action_map_additions={
+                        'insert': {
+                            'source': ['user.node_id'],
+                            'augur': ['gh_node_id']
+                        }
+                    }, prefix='user.'
+                )
+            except ValueError:
+                self.logger.info(f"Enrich contrib data is empty for {inc_source_issues['insert']}, the empty field is the user login.")
+
             issues_insert = [
                 {
                     'repo_id': self.repo_id,
