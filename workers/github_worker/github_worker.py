@@ -213,7 +213,9 @@ class GitHubWorker(WorkerGitInterfaceable):
         }
 
         def issue_comments_insert(inc_issue_comments, comment_action_map):
-            
+
+            inc_issue_comments['insert'] = self.text_clean(inc_issue_comments['insert'], 'body')
+
             try:
                 inc_issue_comments['insert'] = self.enrich_cntrb_id(
                     inc_issue_comments['insert'], 'user.login', action_map_additions={
