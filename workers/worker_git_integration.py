@@ -1,6 +1,6 @@
 #Get everything that the base depends on.
 from workers.worker_base import *
-
+import sqlalchemy as s
 
 #This is a worker base subclass that adds the ability to query github/gitlab with the api key
 class WorkerGitInterfaceable(Worker):
@@ -313,7 +313,7 @@ class WorkerGitInterfaceable(Worker):
 
         try:
             self.bulk_insert(self.contributors_table, cntrb_insert)
-        except psycopg2.errors.UniqueViolation:
+        except (psycopg2.errors.UniqueViolation, s.exec.IntegrityError):
             self.logger.info("Unique Violation in contributors table! ")
 
         # Query db for inserted cntrb pkeys and add to shallow level of data
