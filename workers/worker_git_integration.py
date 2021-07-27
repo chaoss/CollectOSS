@@ -311,7 +311,10 @@ class WorkerGitInterfaceable(Worker):
             } for contributor in source_cntrb_insert if contributor[f'{prefix}login']
         ]
 
-        self.bulk_insert(self.contributors_table, cntrb_insert)
+        try:
+            self.bulk_insert(self.contributors_table, cntrb_insert)
+        except psycopg2.errors.UniqueViolation:
+            self.logger.info("Unique Violation in contributors table! ")
 
         # Query db for inserted cntrb pkeys and add to shallow level of data
 
