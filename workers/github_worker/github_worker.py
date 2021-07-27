@@ -330,14 +330,17 @@ class GitHubWorker(WorkerGitInterfaceable):
                 ['id', 'issue_id', 'node_id', 'url', 'actor', 'created_at', 'event', 'commit_id']
             ].to_dict(orient='records')
 
-        pk_issue_events = self.enrich_cntrb_id(
-            pk_issue_events, 'actor.login', action_map_additions={
-                'insert': {
-                    'source': ['actor.node_id'],
-                    'augur': ['gh_node_id']
-                }
-            }, prefix='actor.'
-        )
+        try:
+            pk_issue_events = self.enrich_cntrb_id(
+                pk_issue_events, 'actor.login', action_map_additions={
+                    'insert': {
+                        'source': ['actor.node_id'],
+                        'augur': ['gh_node_id']
+                    }
+                }, prefix='actor.'
+            )
+        except ValueError:
+            self.logger.info(f"Enrich contrib data is empty for {pk_issue_events}, the empty field is the user login.")
 
         issue_events_insert = [
             {
