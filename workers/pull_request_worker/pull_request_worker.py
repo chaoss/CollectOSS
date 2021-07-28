@@ -406,7 +406,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 return
 
 
-            self.logger.info(f"inc_source_prs is: {inc_source_prs} and the action map is {action_map}...")
+            #self.logger.info(f"inc_source_prs is: {inc_source_prs} and the action map is {action_map}...")
 
 
             inc_source_prs['insert'] = self.enrich_cntrb_id(
