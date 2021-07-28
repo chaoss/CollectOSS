@@ -337,6 +337,8 @@ class WorkerGitInterfaceable(Worker):
 
         # Prepare for merge
         source_columns = sorted(list(source_df.columns))
+        self.logger.info(f"source_columns: {source_columns}")
+        self.logger.info(f"source column contents: {source_columns[0]}")
         necessary_columns = sorted(list(set(source_columns + cntrb_action_map['insert']['source'])))
         (source_table, inserted_pks_table), metadata, session = self._setup_postgres_merge(
             [
