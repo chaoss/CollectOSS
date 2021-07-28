@@ -276,7 +276,7 @@ class WorkerGitInterfaceable(Worker):
             action_map=cntrb_action_map
         )
 
-        self.logger.info(f"source_cntrb_insert: {source_cntrb_insert['insert'][0]}")
+        self.logger.info(f"source_cntrb_insert: {source_cntrb_insert[0]}")
 
         cntrb_insert = [
             {
