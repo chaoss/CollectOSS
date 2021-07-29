@@ -277,7 +277,8 @@ class WorkerGitInterfaceable(Worker):
         # self.logger.info(f"source_data type: {type(source_data)}")
         # self.logger.info(f"source_data keys: {source_data[0].keys()}")
 
-        cntrb_id_offset = self.get_max_id(self.contributors_table, 'cntrb_id')
+        #This returns the max id + 1 so we undo that here.
+        cntrb_id_offset = self.get_max_id(self.contributors_table, 'cntrb_id') - 1
         # loop through data to test if it is already in the database
         
         for index, data in enumerate(source_data):
