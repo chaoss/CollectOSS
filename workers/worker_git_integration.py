@@ -315,10 +315,10 @@ class WorkerGitInterfaceable(Worker):
             } for contributor in source_cntrb_insert if contributor[f'{prefix}login']
         ]
 
-        try:
-            self.bulk_insert(self.contributors_table, cntrb_insert)
-        except s.exc.IntegrityError:
-            self.logger.info("Unique Violation in contributors table! ")
+        #try:
+        self.bulk_insert(self.contributors_table, cntrb_insert)
+        #except s.exc.IntegrityError:
+        #    self.logger.info("Unique Violation in contributors table! ")
 
         # Query db for inserted cntrb pkeys and add to shallow level of data
 
@@ -348,6 +348,7 @@ class WorkerGitInterfaceable(Worker):
         )
         final_columns = [cntrb_pk_name] + sorted(list(set(necessary_columns)))
 
+        
         # Merge
         source_pk = pd.DataFrame(
             session.query(
