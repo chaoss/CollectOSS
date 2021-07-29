@@ -283,7 +283,7 @@ class WorkerGitInterfaceable(Worker):
         for index, data in enumerate(source_data):
 
             self.logger.info(f"Enriching {index} of {len(source_data)}")
-            self.logger.info(f"source_data type: {type(source_data)}")
+            #self.logger.info(f"source_data type: {type(source_data)}")
             # may need to use this if there is a possibility the login is not populated
             cntrb_logins = []
             for row in table_values_cntrb:
@@ -293,7 +293,7 @@ class WorkerGitInterfaceable(Worker):
 
 
             # cntrb_logins = [row['cntrb_login'] for row in table_values_cntrb]
-            self.logger.info(f"cntrb logins length: {len(cntrb_logins)}")
+            #self.logger.info(f"cntrb logins length: {len(cntrb_logins)}")
             #if user.login is in the database then there is no need to add the contributor
             if data['user.login'] in cntrb_logins:
 
@@ -379,9 +379,6 @@ class WorkerGitInterfaceable(Worker):
               # so duplicate cntrbs within the same data set aren't added
               #cntrb['cntrb_id'] = cntrb_id_offset
               
-              self.logger.info("Before append")
-              for index, row in enumerate(table_values_cntrb): 
-                self.logger.info("Row {}: {}\n".format(index, row))
               
               cntrb_data = {
                 'cntrb_id': cntrb_id_offset,
@@ -389,10 +386,6 @@ class WorkerGitInterfaceable(Worker):
                 'cntrb_login': cntrb['cntrb_login'],
               }
               table_values_cntrb.append(cntrb_data)
-
-              self.logger.info("After append")   
-              for index, row in enumerate(table_values_cntrb): 
-                self.logger.info("Row {}: {}\n".format(index, row))
               
 
 
