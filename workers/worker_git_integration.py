@@ -269,13 +269,13 @@ class WorkerGitInterfaceable(Worker):
             s.sql.select(self.get_relevant_columns(self.contributors_table,cntrb_action_map))
         ).fetchall()
 
-        self.logger.info(f"table_values_cntrb type: {type(table_values_cntrb)}")
-        self.logger.info(f"table_values_cntrb keys: {table_values_cntrb[0].keys()}")
+        # self.logger.info(f"table_values_cntrb type: {type(table_values_cntrb)}")
+        # self.logger.info(f"table_values_cntrb keys: {table_values_cntrb[0].keys()}")
 
         source_data = expanded_source_df.to_dict(orient='records')
 
-        self.logger.info(f"source_data type: {type(source_data)}")
-        self.logger.info(f"source_data keys: {source_data[0].keys()}")
+        # self.logger.info(f"source_data type: {type(source_data)}")
+        # self.logger.info(f"source_data keys: {source_data[0].keys()}")
 
         cntrb_id_offset = self.get_max_id(self.contributors_table, 'cntrb_id')
         # loop through data to test if it is already in the database
@@ -378,8 +378,11 @@ class WorkerGitInterfaceable(Worker):
               # add cntrb_id to data and append it to table_values_cntrb 
               # so duplicate cntrbs within the same data set aren't added
               cntrb['cntrb_id'] = cntrb_id_offset
-              s
+              self.logger.info(f"table_values_cntrb type before: {type(table_values_cntrb)}")
+              self.logger.info(f"table_values_cntrb keys before: {table_values_cntrb[0].keys()}")
               table_values_cntrb = table_values_cntrb.append(cntrb)
+              self.logger.info(f"table_values_cntrb type after: {type(table_values_cntrb)}")
+              self.logger.info(f"table_values_cntrb keysafter: {table_values_cntrb[0].keys()}")
 
 
         self.logger.info(
