@@ -269,111 +269,216 @@ class WorkerGitInterfaceable(Worker):
             s.sql.select(self.get_relevant_columns(self.contributors_table,cntrb_action_map))
         ).fetchall()
 
-        self.logger.info(f"table_values_cntrb len: {len(table_values_cntrb)}")
+        self.logger.info(f"table_values_cntrb type: {type(table_values_cntrb)}")
+        self.logger.info(f"table_values_cntrb keys: {table_values_cntrb[0].keys()}")
 
-        source_cntrb_insert, _ = self.organize_needed_data(
-            expanded_source_df.to_dict(orient='records'), table_values=table_values_cntrb,
-            action_map=cntrb_action_map
+        source_data = expanded_source_df.to_dict(orient='records')
+
+        self.logger.info(f"source_data type: {type(source_data)}")
+        self.logger.info(f"source_data keys: {source_data[0].keys()}")
+
+        cntrb_id_offset = self.get_max_id(self.contributors_table, 'cntrb_id')
+        # loop through data to test if it is already in the database
+        for data in source_data:
+
+            # may need to use this if there is a possibility the login is not populated
+            # cntrb_logins = [row['cntrb_login'] for row in table_values_cntrb if 'cntrb_login' in row]
+            cntrb_logins = [row['cntrb_login'] for row in table_values_cntrb]
+
+            #if user.login is in the database then there is no need to add the contributor
+            if data['user.login'] in cntrb_logins:
+
+              #gets the dict from the table_values_cntrb that contains data['user.login'] 
+              user_login_row = list(filter(lambda x: x['cntrb_login'] == data['user.login'], table_values_cntrb))[0]
+
+              #assigns the cntrb_id to the source data to be returned to the workers
+              data['cntrb_id'] = user_login_row['cntrb_id']
+
+                # for row in table_values_cntrb:
+                #     if row['cntrb_login'] == data['user.login']:
+                #         cntrb_id = row['cntrb_id']
+
+            #contributor is not in the database
+            else:
+              
+              url = ("https://api.github.com/users/" + data['user.login'])
+
+              attempts = 0
+
+              while attempts < 10:
+                try:
+                  attempts += 1
+                  self.logger.info("Hitting endpoint: " + url + " ...\n")
+                  response = requests.get(url=url , headers=self.headers)
+                  break
+                except TimeoutError:
+                  self.logger.info(f"User data request for enriching contributor data failed with {attempts} attempts! Trying again...")
+                  time.sleep(10)
+                  continue
+              self.update_gh_rate_limit(response)
+
+              try:
+                contributor = response.json()
+              except:
+                contributor = json.loads(json.dumps(response.text))
+
+              cntrb = {
+                  "cntrb_login": contributor['login'],
+                  "cntrb_created_at": contributor['created_at'],
+                  "cntrb_email": contributor['email'] if 'email' in contributor else None,
+                  "cntrb_company": contributor['company'] if 'company' in contributor else None,
+                  "cntrb_location": contributor['location'] if 'location' in contributor else None,
+                  # "cntrb_type": , dont have a use for this as of now ... let it default to null
+                  "cntrb_canonical": contributor['email'] if 'email' in contributor else None,
+                  "gh_user_id": contributor['id'],
+                  "gh_login": contributor['login'],
+                  "gh_url": contributor['url'],
+                  "gh_html_url": contributor['html_url'],
+                  "gh_node_id": contributor['node_id'], 
+                  "gh_avatar_url": contributor['avatar_url'],
+                  "gh_gravatar_id": contributor['gravatar_id'],
+                  "gh_followers_url": contributor['followers_url'],
+                  "gh_following_url": contributor['following_url'],
+                  "gh_gists_url": contributor['gists_url'],
+                  "gh_starred_url": contributor['starred_url'],
+                  "gh_subscriptions_url": contributor['subscriptions_url'],
+                  "gh_organizations_url": contributor['organizations_url'],
+                  "gh_repos_url": contributor['repos_url'],
+                  "gh_events_url": contributor['events_url'],
+                  "gh_received_events_url": contributor['received_events_url'],
+                  "gh_type": contributor['type'],
+                  "gh_site_admin": contributor['site_admin'],
+                  "tool_source": self.tool_source,
+                  "tool_version": self.tool_version,
+                  "data_source": self.data_source
+              }
+
+              #insert new contributor into database
+              self.db.execute(self.contributors_table.insert().values(cntrb))
+
+              # increment cntrb_id offset
+              # keeps track of the next cntrb_id primary key without making extra db queries
+              cntrb_id_offset += 1
+
+              #assigns the cntrb_id to the source data to be returned to the workers
+              data['cntrb_id'] = cntrb_id_offset
+
+              # add cntrb_id to data and append it to table_values_cntrb 
+              # so duplicate cntrbs within the same data set aren't added
+              cntrb['cntrb_id'] = cntrb_id_offset
+              table_values_cntrb = table_values_cntrb.append(cntrb)
+
+
+        self.logger.info(
+          "Contributor id enrichment successful, result has "
+          f"{len(source_data)} data points.\n"
         )
+        return source_data
 
-        self.logger.info(f"source_cntrb_insert: {source_cntrb_insert}")
+            
+                
+                
+                
 
-        cntrb_insert = [
-            {
-                'cntrb_login': contributor[f'{prefix}login'],
-                'cntrb_created_at': None if (
-                    f'{prefix}created_at' not in contributor
-                ) else contributor[f'{prefix}created_at'],
-                'cntrb_email': None if f'{prefix}email' not in contributor else contributor[f'{prefix}email'],
-                'cntrb_company': None if f'{prefix}company' not in contributor else contributor[f'{prefix}company'],
-                'cntrb_location': None if (
-                    f'{prefix}location' not in contributor
-                ) else contributor[f'{prefix}location'],
-                'gh_user_id': None if (
-                    not contributor[f'{prefix}id']
-                ) else int(float(contributor[f'{prefix}id'])),
-                'gh_login': contributor[f'{prefix}login'],
-                'gh_url': contributor[f'{prefix}url'],
-                'gh_html_url': contributor[f'{prefix}html_url'],
-                'gh_node_id': contributor[f'{prefix}node_id'], #valid for dup check
-                'gh_avatar_url': contributor[f'{prefix}avatar_url'],
-                'gh_gravatar_id': contributor[f'{prefix}gravatar_id'],
-                'gh_followers_url': contributor[f'{prefix}followers_url'],
-                'gh_following_url': contributor[f'{prefix}following_url'],
-                'gh_gists_url': contributor[f'{prefix}gists_url'],
-                'gh_starred_url': contributor[f'{prefix}starred_url'],
-                'gh_subscriptions_url': contributor[f'{prefix}subscriptions_url'],
-                'gh_organizations_url': contributor[f'{prefix}organizations_url'],
-                'gh_repos_url': contributor[f'{prefix}repos_url'],
-                'gh_events_url': contributor[f'{prefix}events_url'],
-                'gh_received_events_url': contributor[f'{prefix}received_events_url'],
-                'gh_type': contributor[f'{prefix}type'],
-                'gh_site_admin': contributor[f'{prefix}site_admin'],
-                'tool_source': self.tool_source,
-                'tool_version': self.tool_version,
-                'data_source': self.data_source
-            } for contributor in source_cntrb_insert if contributor[f'{prefix}login']
-        ]
 
-        try:
-            self.bulk_insert(self.contributors_table, cntrb_insert)
-        except s.exc.IntegrityError:
-            self.logger.info("Unique Violation in contributors table! ")
+        # source_cntrb_insert, _ = self.organize_needed_data(
+        #     expanded_source_df.to_dict(orient='records'), table_values=table_values_cntrb,
+        #     action_map=cntrb_action_map
+        # )
 
-        # Query db for inserted cntrb pkeys and add to shallow level of data
-
-        # Query
-        cntrb_pk_name = list(self.contributors_table.primary_key)[0].name
-        session = s.orm.Session(self.db)
-        inserted_pks = pd.DataFrame(
-            session.query(
-                self.contributors_table.c[cntrb_pk_name], self.contributors_table.c.cntrb_login,
-                self.contributors_table.c.gh_node_id
-            ).distinct(self.contributors_table.c.cntrb_login).order_by(
-                self.contributors_table.c.cntrb_login, self.contributors_table.c[cntrb_pk_name]
-            ).all(), columns=[cntrb_pk_name, 'cntrb_login', 'gh_node_id']
-        ).to_dict(orient='records')
-        session.close()
-
-        # Prepare for merge
-        source_columns = sorted(list(source_df.columns))
-        self.logger.info(f"source_columns: {source_columns}")
-        self.logger.info(f"source column contents: {source_columns[0]}")
-        necessary_columns = sorted(list(set(source_columns + cntrb_action_map['insert']['source'])))
-        (source_table, inserted_pks_table), metadata, session = self._setup_postgres_merge(
-            [
-                expanded_source_df[necessary_columns].to_dict(orient='records'),
-                inserted_pks
-            ], sort=True
-        )
-        final_columns = [cntrb_pk_name] + sorted(list(set(necessary_columns)))
-
-        
-        # Merge
-        source_pk = pd.DataFrame(
-            session.query(
-                inserted_pks_table.c.cntrb_id, source_table
-            ).join(
-                source_table,
-                eval(
-                    ' and '.join(
-                        [
-                            (
-                                f"inserted_pks_table.c['{table_column}'] "
-                                f"== source_table.c['{source_column}']"
-                            ) for table_column, source_column in zip(
-                                cntrb_action_map['insert']['augur'],
-                                cntrb_action_map['insert']['source']
-                            )
-                        ]
-                    )
-                )
-            ).all(), columns=final_columns
-        )
-
-        # Cleanup merge
-        source_pk = self._eval_json_columns(source_pk)
-        self._close_postgres_merge(metadata, session)
+        # cntrb_insert = [
+        #     {
+        #         'cntrb_login': contributor[f'{prefix}login'],
+        #         'cntrb_created_at': None if (
+        #             f'{prefix}created_at' not in contributor
+        #         ) else contributor[f'{prefix}created_at'],
+        #         'cntrb_email': None if f'{prefix}email' not in contributor else contributor[f'{prefix}email'],
+        #         'cntrb_company': None if f'{prefix}company' not in contributor else contributor[f'{prefix}company'],
+        #         'cntrb_location': None if (
+        #             f'{prefix}location' not in contributor
+        #         ) else contributor[f'{prefix}location'],
+        #         'gh_user_id': None if (
+        #             not contributor[f'{prefix}id']
+        #         ) else int(float(contributor[f'{prefix}id'])),
+        #         'gh_login': contributor[f'{prefix}login'],
+        #         'gh_url': contributor[f'{prefix}url'],
+        #         'gh_html_url': contributor[f'{prefix}html_url'],
+        #         'gh_node_id': contributor[f'{prefix}node_id'], #valid for dup check
+        #         'gh_avatar_url': contributor[f'{prefix}avatar_url'],
+        #         'gh_gravatar_id': contributor[f'{prefix}gravatar_id'],
+        #         'gh_followers_url': contributor[f'{prefix}followers_url'],
+        #         'gh_following_url': contributor[f'{prefix}following_url'],
+        #         'gh_gists_url': contributor[f'{prefix}gists_url'],
+        #         'gh_starred_url': contributor[f'{prefix}starred_url'],
+        #         'gh_subscriptions_url': contributor[f'{prefix}subscriptions_url'],
+        #         'gh_organizations_url': contributor[f'{prefix}organizations_url'],
+        #         'gh_repos_url': contributor[f'{prefix}repos_url'],
+        #         'gh_events_url': contributor[f'{prefix}events_url'],
+        #         'gh_received_events_url': contributor[f'{prefix}received_events_url'],
+        #         'gh_type': contributor[f'{prefix}type'],
+        #         'gh_site_admin': contributor[f'{prefix}site_admin'],
+        #         'tool_source': self.tool_source,
+        #         'tool_version': self.tool_version,
+        #         'data_source': self.data_source
+        #     } for contributor in source_cntrb_insert if contributor[f'{prefix}login']
+        # ]
+        #
+        # try:
+        #     self.bulk_insert(self.contributors_table, cntrb_insert)
+        # except s.exc.IntegrityError:
+        #     self.logger.info("Unique Violation in contributors table! ")
+        #
+        # # Query db for inserted cntrb pkeys and add to shallow level of data
+        #
+        # # Query
+        # cntrb_pk_name = list(self.contributors_table.primary_key)[0].name
+        # session = s.orm.Session(self.db)
+        # inserted_pks = pd.DataFrame(
+        #     session.query(
+        #         self.contributors_table.c[cntrb_pk_name], self.contributors_table.c.cntrb_login,
+        #         self.contributors_table.c.gh_node_id
+        #     ).distinct(self.contributors_table.c.cntrb_login).order_by(
+        #         self.contributors_table.c.cntrb_login, self.contributors_table.c[cntrb_pk_name]
+        #     ).all(), columns=[cntrb_pk_name, 'cntrb_login', 'gh_node_id']
+        # ).to_dict(orient='records')
+        # session.close()
+        #
+        # # Prepare for merge
+        # source_columns = sorted(list(source_df.columns))
+        # necessary_columns = sorted(list(set(source_columns + cntrb_action_map['insert']['source'])))
+        # (source_table, inserted_pks_table), metadata, session = self._setup_postgres_merge(
+        #     [
+        #         expanded_source_df[necessary_columns].to_dict(orient='records'),
+        #         inserted_pks
+        #     ], sort=True
+        # )
+        # final_columns = [cntrb_pk_name] + sorted(list(set(necessary_columns)))
+        #
+        # # Merge
+        # source_pk = pd.DataFrame(
+        #     session.query(
+        #         inserted_pks_table.c.cntrb_id, source_table
+        #     ).join(
+        #         source_table,
+        #         eval(
+        #             ' and '.join(
+        #                 [
+        #                     (
+        #                         f"inserted_pks_table.c['{table_column}'] "
+        #                         f"== source_table.c['{source_column}']"
+        #                     ) for table_column, source_column in zip(
+        #                         cntrb_action_map['insert']['augur'],
+        #                         cntrb_action_map['insert']['source']
+        #                     )
+        #                 ]
+        #             )
+        #         )
+        #     ).all(), columns=final_columns
+        # )
+        #
+        # # Cleanup merge
+        # source_pk = self._eval_json_columns(source_pk)
+        # self._close_postgres_merge(metadata, session)
 
         self.logger.info(
             "Contributor id enrichment successful, result has "
@@ -389,7 +494,7 @@ class WorkerGitInterfaceable(Worker):
         """
         self.logger.info(f"Querying contributors with given entry info: {entry_info}\n")
 
-        ## It absolutely doesn't matter if the contributor has already contributoed to a repo. it only matters that they exist in our table, and 
+        ## It absolutely doesn't matter if the contributor has already contributoed to a repo. it only matters that they exist in our table, and
         ## if the DO, then we DO NOT want to insert them again in any GitHub Method.
         github_url = entry_info['given']['github_url'] if 'github_url' in entry_info['given'] else entry_info['given']['git_url']
 
@@ -839,11 +944,11 @@ class WorkerGitInterfaceable(Worker):
         ### Here we are adding gitlab user information from the API
         ### Following Gabe's rework of the contributor worker.
 
-        ### The GitLab API will NEVER give you an email. It will let you 
-        ### Query an email, but never give you one. 
+        ### The GitLab API will NEVER give you an email. It will let you
+        ### Query an email, but never give you one.
         ### ## Gitlab email api: https://gitlab.com/api/v4/users?search=s@goggins.com
-        ### We don't need to update right now, so commenting out. 
-        ### TODO: SOLVE LOGIC. 
+        ### We don't need to update right now, so commenting out.
+        ### TODO: SOLVE LOGIC.
         # update_col_map = {'cntrb_email': 'email'}
         update_col_map = {}
         duplicate_col_map = {'gl_username': 'username'}
@@ -1184,12 +1289,12 @@ class WorkerGitInterfaceable(Worker):
                                             2, int(response.links['last']['url'].split('=')[-1]) + 1
                                         )
                                     ]
-                                try: 
+                                try:
                                     self.logger.info(f"urls boundry issue? for {urls} where they are equal to {url}.")
 
                                     urls = numpy.delete(urls, numpy.where(urls == url), axis=0)
-                                except: 
-                                    self.logger.info(f"ERROR with axis = 0 - Now attempting without setting axis for numpy.delete for {urls} where they are equal to {url}.")                                    
+                                except:
+                                    self.logger.info(f"ERROR with axis = 0 - Now attempting without setting axis for numpy.delete for {urls} where they are equal to {url}.")
                                     urls = numpy.delete(urls, numpy.where(urls == url))
 
                             elif response.status_code == 404:
