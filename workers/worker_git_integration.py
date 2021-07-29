@@ -284,7 +284,7 @@ class WorkerGitInterfaceable(Worker):
             # may need to use this if there is a possibility the login is not populated
             # cntrb_logins = [row['cntrb_login'] for row in table_values_cntrb if 'cntrb_login' in row]
             cntrb_logins = [row['cntrb_login'] for row in table_values_cntrb]
-
+            self.logger.info(f"cntrb data keys: {cntrb_logins[0].keys()}")
             #if user.login is in the database then there is no need to add the contributor
             if data['user.login'] in cntrb_logins:
 
@@ -293,6 +293,7 @@ class WorkerGitInterfaceable(Worker):
 
               #assigns the cntrb_id to the source data to be returned to the workers
               data['cntrb_id'] = user_login_row['cntrb_id']
+              self.logger.info(f"cntrb_id {data['cntrb_id']} found in database and assigned to enriched data")
 
                 # for row in table_values_cntrb:
                 #     if row['cntrb_login'] == data['user.login']:
@@ -362,7 +363,7 @@ class WorkerGitInterfaceable(Worker):
 
               #assigns the cntrb_id to the source data to be returned to the workers
               data['cntrb_id'] = cntrb_id_offset
-
+              self.logger.info(f"cntrb_id {data['cntrb_id']} found with api call and assigned to enriched data")
               # add cntrb_id to data and append it to table_values_cntrb 
               # so duplicate cntrbs within the same data set aren't added
               cntrb['cntrb_id'] = cntrb_id_offset
