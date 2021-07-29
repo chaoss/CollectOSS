@@ -377,12 +377,23 @@ class WorkerGitInterfaceable(Worker):
               self.logger.info(f"cntrb_id {data['cntrb_id']} found with api call and assigned to enriched data")
               # add cntrb_id to data and append it to table_values_cntrb 
               # so duplicate cntrbs within the same data set aren't added
-              cntrb['cntrb_id'] = cntrb_id_offset
-              self.logger.info(f"table_values_cntrb type before: {type(table_values_cntrb)}")
-              self.logger.info(f"table_values_cntrb keys before: {table_values_cntrb[0].keys()}")
-              table_values_cntrb = table_values_cntrb.append(cntrb)
-              self.logger.info(f"table_values_cntrb type after: {type(table_values_cntrb)}")
-              self.logger.info(f"table_values_cntrb keysafter: {table_values_cntrb[0].keys()}")
+              #cntrb['cntrb_id'] = cntrb_id_offset
+              
+              self.logger.info("Before append")
+              for index, row in enumerate(table_values_cntrb): 
+                self.logger.info("Row {}: {}\n".format(index, row))
+              
+              cntrb_data = {
+                'cntrb_id': cntrb_id_offset,
+                'gh_node_id': cntrb['node_id'],
+                'cntrb_login': cntrb['login'],
+              }
+              table_values_cntrb = table_values_cntrb.append(cntrb_data)
+
+              self.logger.info("After append")   
+              for index, row in enumerate(table_values_cntrb): 
+                self.logger.info("Row {}: {}\n".format(index, row))
+              
 
 
         self.logger.info(
