@@ -385,8 +385,8 @@ class WorkerGitInterfaceable(Worker):
               
               cntrb_data = {
                 'cntrb_id': cntrb_id_offset,
-                'gh_node_id': cntrb['node_id'],
-                'cntrb_login': cntrb['login'],
+                'gh_node_id': cntrb['gh_node_id'],
+                'cntrb_login': cntrb['cntrb_login'],
               }
               table_values_cntrb = table_values_cntrb.append(cntrb_data)
 
