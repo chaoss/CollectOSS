@@ -279,10 +279,19 @@ class WorkerGitInterfaceable(Worker):
 
         cntrb_id_offset = self.get_max_id(self.contributors_table, 'cntrb_id')
         # loop through data to test if it is already in the database
-        for data in source_data:
+        
+        for index, data in enumerate(source_data):
+
+            self.logger.info(f"Enriching {index} of {len(source_data)}")
 
             # may need to use this if there is a possibility the login is not populated
-            cntrb_logins = [row['cntrb_login'] for row in table_values_cntrb if 'cntrb_login' in row]
+            cntrb_logins = []
+            for row in table_values_cntrb:
+              if row:
+                cntrb_logins.append(row['cntrb_login'])
+
+
+
             # cntrb_logins = [row['cntrb_login'] for row in table_values_cntrb]
             self.logger.info(f"cntrb logins length: {len(cntrb_logins)}")
             #if user.login is in the database then there is no need to add the contributor
