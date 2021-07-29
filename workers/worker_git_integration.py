@@ -282,8 +282,8 @@ class WorkerGitInterfaceable(Worker):
         for data in source_data:
 
             # may need to use this if there is a possibility the login is not populated
-            # cntrb_logins = [row['cntrb_login'] for row in table_values_cntrb if 'cntrb_login' in row]
-            cntrb_logins = [row['cntrb_login'] for row in table_values_cntrb]
+            cntrb_logins = [row['cntrb_login'] for row in table_values_cntrb if 'cntrb_login' in row]
+            # cntrb_logins = [row['cntrb_login'] for row in table_values_cntrb]
             self.logger.info(f"cntrb logins length: {len(cntrb_logins)}")
             #if user.login is in the database then there is no need to add the contributor
             if data['user.login'] in cntrb_logins:
@@ -322,6 +322,8 @@ class WorkerGitInterfaceable(Worker):
                 contributor = response.json()
               except:
                 contributor = json.loads(json.dumps(response.text))
+
+              self.logger.info(f"Organize needed data contributor: {contributor}")
 
               cntrb = {
                   "cntrb_login": contributor['login'],
