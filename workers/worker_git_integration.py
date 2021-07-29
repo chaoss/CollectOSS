@@ -388,7 +388,7 @@ class WorkerGitInterfaceable(Worker):
                 'gh_node_id': cntrb['gh_node_id'],
                 'cntrb_login': cntrb['cntrb_login'],
               }
-              table_values_cntrb = table_values_cntrb.append(cntrb_data)
+              table_values_cntrb.append(cntrb_data)
 
               self.logger.info("After append")   
               for index, row in enumerate(table_values_cntrb): 
