@@ -283,7 +283,7 @@ class WorkerGitInterfaceable(Worker):
         for index, data in enumerate(source_data):
 
             self.logger.info(f"Enriching {index} of {len(source_data)}")
-
+            self.logger.info(f"source_data type: {type(source_data)}")
             # may need to use this if there is a possibility the login is not populated
             cntrb_logins = []
             for row in table_values_cntrb:
@@ -378,6 +378,7 @@ class WorkerGitInterfaceable(Worker):
               # add cntrb_id to data and append it to table_values_cntrb 
               # so duplicate cntrbs within the same data set aren't added
               cntrb['cntrb_id'] = cntrb_id_offset
+              s
               table_values_cntrb = table_values_cntrb.append(cntrb)
 
 
