@@ -260,7 +260,7 @@ class WorkerGitInterfaceable(Worker):
 
         cntrb_action_map = {
             'insert': {
-                'source': [key] + action_map_additions['insert']['source'] + [f'{prefix}.id'],
+                'source': [key] + action_map_additions['insert']['source'] + [f'{prefix}id'],
                 'augur': ['cntrb_login'] + action_map_additions['insert']['augur'] + ['gh_user_id']
             }
         }
@@ -302,12 +302,12 @@ class WorkerGitInterfaceable(Worker):
 
             #self.logger.info(f"cntrb logins length: {len(cntrb_logins)}")
             #if user.id is in the database then there is no need to add the contributor
-            if data[f'{prefix}.id'] in gh_user_ids:
+            if data[f'{prefix}id'] in gh_user_ids:
 
-                self.logger.info("{} found in database".format(data[f'{prefix}.id']))
+                self.logger.info("{} found in database".format(data[f'{prefix}id']))
 
                 #gets the dict from the table_values_cntrb that contains data['user.id']
-                user_id_row = list(filter(lambda x: x['gh_user_id'] == data[f'{prefix}.id'], table_values_cntrb))[0]
+                user_id_row = list(filter(lambda x: x['gh_user_id'] == data[f'{prefix}id'], table_values_cntrb))[0]
 
                 #assigns the cntrb_id to the source data to be returned to the workers
                 data['cntrb_id'] = user_id_row['cntrb_id']
@@ -316,7 +316,7 @@ class WorkerGitInterfaceable(Worker):
             #contributor is not in the database
             else:
 
-              self.logger.info("{} not in database, making api call".format(data[f'{prefix}.id']))
+              self.logger.info("{} not in database, making api call".format(data[f'{prefix}id']))
 
               url = ("https://api.github.com/users/" + data[f'{prefix}.login'])
 
