@@ -398,6 +398,7 @@ class WorkerGitInterfaceable(Worker):
               except Exception as e:
                 self.logger.info(f"Contributor was already added to  database! Getting cntrb_id! Error: {e}")
               
+                
                 cntrb_id_row = self.db.execute(
                     s.sql.select(self.get_relevant_columns(self.contributors_table,cntrb_action_map)).where(
                       self.contributors_table.c.gh_user_id==cntrb["gh_user_id"]
@@ -406,6 +407,7 @@ class WorkerGitInterfaceable(Worker):
 
                 if len(cntrb_id_row) == 1:
                   data['cntrb_id'] = cntrb_id_row[0]['cntrb_id']
+                  self.logger.info(f"cntrb_id {data['cntrb_id']} found in database and assigned to enriched data")
                 elif len(cntrb_id_row) == 0:
                   self.logger.info("Couldn't find contributor in database")
                 else:
