@@ -318,6 +318,7 @@ class WorkerGitInterfaceable(Worker):
             #contributor is not in the database
             else:
 
+              
               self.logger.info("{} not in database, making api call".format(data[f'{prefix}id']))
               self.logger.info("login: {}".format(data[f'{prefix}login']))
 
@@ -383,6 +384,11 @@ class WorkerGitInterfaceable(Worker):
               #insert new contributor into database
               try:
                 self.db.execute(self.contributors_table.insert().values(cntrb))
+
+                #We need to get the proper starting value for the cntrb_id if it is the first insertion into the table.
+                #Otherwise we get nasty foreign key constraints.
+                if len(table_values_cntrb) == 1:
+                  cntrb_id_offset = self.get_max_id(self.contributors_table, 'cntrb_id') - 1
 
                 # increment cntrb_id offset
                 # keeps track of the next cntrb_id primary key without making extra db queries
