@@ -318,7 +318,7 @@ class WorkerGitInterfaceable(Worker):
 
               self.logger.info("{} not in database, making api call".format(data[f'{prefix}id']))
 
-              url = ("https://api.github.com/users/" + data[f'{prefix}.login'])
+              url = ("https://api.github.com/users/" + data[f'{prefix}login'])
 
               attempts = 0
 
