@@ -289,18 +289,18 @@ class WorkerGitInterfaceable(Worker):
             cntrb_logins = []
             for row in table_values_cntrb:
               if row:
-                cntrb_logins.append(row['cntrb_login'])
+                cntrb_logins.append(row['gh_node_id'])
 
 
             try:
-              data['user.login']
+              data['node_id']
             except Exception as e:
               self.logger.info(f"Input data: {data} caused this: {e}")
 
             # cntrb_logins = [row['cntrb_login'] for row in table_values_cntrb]
             #self.logger.info(f"cntrb logins length: {len(cntrb_logins)}")
             #if user.login is in the database then there is no need to add the contributor
-            if data['user.login'] in cntrb_logins:
+            if data['node_id'] in cntrb_logins:
 
               #gets the dict from the table_values_cntrb that contains data['user.login'] 
               user_login_row = list(filter(lambda x: x['cntrb_login'] == data['user.login'], table_values_cntrb))[0]
