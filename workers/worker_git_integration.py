@@ -394,8 +394,9 @@ class WorkerGitInterfaceable(Worker):
                 # add cntrb_id to data and append it to table_values_cntrb
                 # so duplicate cntrbs within the same data set aren't added
                 #cntrb['cntrb_id'] = cntrb_id_offset
-              except s.exc.IntegrityError:
-                self.logger.info("Contributor was already added to  database! Getting cntrb_id")
+                # except s.exc.IntegrityError:
+              except Exception as e:
+                self.logger.info(f"Contributor was already added to  database! Getting cntrb_id! Error: {e}")
               
                 cntrb_id_row = self.db.execute(
                     s.sql.select(self.get_relevant_columns(self.contributors_table,cntrb_action_map)).where(
