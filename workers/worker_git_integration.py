@@ -297,7 +297,7 @@ class WorkerGitInterfaceable(Worker):
             #     in_user_ids = True
             # self.logger.info(f"{data['user.id']} is in gh_user_ids")
 
-            # self.logger.info(f"gh_user_ids len: {len(gh_user_ids)}")
+            self.logger.info(f"gh_user_ids: {gh_user_ids}")
             # self.logger.info(f"table_values_cntrb len: {len(table_values_cntrb)}")
 
             #self.logger.info(f"cntrb logins length: {len(cntrb_logins)}")
