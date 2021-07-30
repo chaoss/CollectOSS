@@ -280,22 +280,19 @@ class WorkerGitInterfaceable(Worker):
         #This returns the max id + 1 so we undo that here.
         cntrb_id_offset = self.get_max_id(self.contributors_table, 'cntrb_id') - 1
 
-        # create an array of gh_user_ids that are in the database
-        gh_user_ids = []
-        for row in table_values_cntrb:
-          try:
-            gh_user_ids.append(row['gh_user_id'])
-          except Exception as e:
-            self.logger.info(f"Error adding gh_user_id: {e}. Row: {row}")
-
-            
-
-        self.logger.info(f"gh_user_ids: {gh_user_ids}")
-
         # loop through data to test if it is already in the database
         for index, data in enumerate(source_data):
 
             self.logger.info(f"Enriching {index} of {len(source_data)}")
+
+            gh_user_ids = []
+            for row in table_values_cntrb:
+              try:
+                gh_user_ids.append(row['gh_user_id'])
+              except Exception as e:
+                self.logger.info(f"Error adding gh_user_id: {e}. Row: {row}")
+
+            self.logger.info(f"gh_user_ids: {gh_user_ids}")
             
             # self.logger.info(f"Users gh_user_id: {data['user.id']}")
             # in_user_ids = False
@@ -385,6 +382,7 @@ class WorkerGitInterfaceable(Worker):
 
               #insert new contributor into database
               self.db.execute(self.contributors_table.insert().values(cntrb))
+              
               gh_user_ids.append(contributor['id'])
               self.logger.info(f"gh_user_id {gh_user_ids[-1]} added to gh_user_ids")
               self.logger.info(f"gh_user_id {contributor['id']} added to gh_user_ids")
