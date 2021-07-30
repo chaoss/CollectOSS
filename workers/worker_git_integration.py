@@ -260,7 +260,7 @@ class WorkerGitInterfaceable(Worker):
 
         cntrb_action_map = {
             'insert': {
-                'source': [key] + action_map_additions['insert']['source'] + ['user.id'],
+                'source': [key] + action_map_additions['insert']['source'] + [f'{prefix}.id'],
                 'augur': ['cntrb_login'] + action_map_additions['insert']['augur'] + ['gh_user_id']
             }
         }
@@ -269,54 +269,56 @@ class WorkerGitInterfaceable(Worker):
             s.sql.select(self.get_relevant_columns(self.contributors_table,cntrb_action_map))
         ).fetchall()
 
-        # self.logger.info(f"table_values_cntrb type: {type(table_values_cntrb)}")
-        # self.logger.info(f"table_values_cntrb keys: {table_values_cntrb[0].keys()}")
+        self.logger.info(f"table_values_cntrb type: {type(table_values_cntrb)}")
+        self.logger.info(f"table_values_cntrb keys: {table_values_cntrb[0].keys()}")
 
         source_data = expanded_source_df.to_dict(orient='records')
 
-        # self.logger.info(f"source_data type: {type(source_data)}")
-        # self.logger.info(f"source_data keys: {source_data[0].keys()}")
+        self.logger.info(f"source_data type: {type(source_data)}")
+        self.logger.info(f"source_data keys: {source_data[0].keys()}")
 
         #This returns the max id + 1 so we undo that here.
         cntrb_id_offset = self.get_max_id(self.contributors_table, 'cntrb_id') - 1
+
         # loop through data to test if it is already in the database
-        
         for index, data in enumerate(source_data):
 
             self.logger.info(f"Enriching {index} of {len(source_data)}")
-            #self.logger.info(f"source_data type: {type(source_data)}")
-            # may need to use this if there is a possibility the login is not populated
-            cntrb_logins = []
+
+            # create an array of gh_user_ids that are in the database
+            gh_user_ids = []
             for row in table_values_cntrb:
               if row:
-                cntrb_logins.append(row['gh_node_id'])
+                gh_user_ids.append(row['gh_user_id'])
+              
+            # self.logger.info(f"Users gh_user_id: {data['user.id']}")
+            # in_user_ids = False
+            # if data['user.id'] in gh_user_ids:
+            #     in_user_ids = True
+            # self.logger.info(f"{data['user.id']} is in gh_user_ids")
 
+            # self.logger.info(f"gh_user_ids len: {len(gh_user_ids)}")
+            # self.logger.info(f"table_values_cntrb len: {len(table_values_cntrb)}")
 
-            try:
-              data['node_id']
-            except Exception as e:
-              self.logger.info(f"Input data: {data} caused this: {e}")
-
-            # cntrb_logins = [row['cntrb_login'] for row in table_values_cntrb]
             #self.logger.info(f"cntrb logins length: {len(cntrb_logins)}")
-            #if user.login is in the database then there is no need to add the contributor
-            if data['node_id'] in cntrb_logins:
+            #if user.id is in the database then there is no need to add the contributor
+            if data[f'{prefix}.id'] in gh_user_ids:
 
-              #gets the dict from the table_values_cntrb that contains data['user.login'] 
-              user_login_row = list(filter(lambda x: x['cntrb_login'] == data['user.login'], table_values_cntrb))[0]
+                self.logger.info("{} found in database".format(data[f'{prefix}.id']))
 
-              #assigns the cntrb_id to the source data to be returned to the workers
-              data['cntrb_id'] = user_login_row['cntrb_id']
-              self.logger.info(f"cntrb_id {data['cntrb_id']} found in database and assigned to enriched data")
+                #gets the dict from the table_values_cntrb that contains data['user.id']
+                user_id_row = list(filter(lambda x: x['gh_user_id'] == data[f'{prefix}.id'], table_values_cntrb))[0]
 
-                # for row in table_values_cntrb:
-                #     if row['cntrb_login'] == data['user.login']:
-                #         cntrb_id = row['cntrb_id']
+                #assigns the cntrb_id to the source data to be returned to the workers
+                data['cntrb_id'] = user_id_row['cntrb_id']
+                self.logger.info(f"cntrb_id {data['cntrb_id']} found in database and assigned to enriched data")
 
             #contributor is not in the database
             else:
-              
-              url = ("https://api.github.com/users/" + data['user.login'])
+
+              self.logger.info("{} not in database, making api call".format(data[f'{prefix}.id']))
+
+              url = ("https://api.github.com/users/" + data[f'{prefix}.login'])
 
               attempts = 0
 
@@ -330,69 +332,74 @@ class WorkerGitInterfaceable(Worker):
                   self.logger.info(f"User data request for enriching contributor data failed with {attempts} attempts! Trying again...")
                   time.sleep(10)
                   continue
-              self.update_gh_rate_limit(response)
-
-              try:
-                contributor = response.json()
-              except:
-                contributor = json.loads(json.dumps(response.text))
-
-              self.logger.info(f"Organize needed data contributor: {contributor}")
-
-              cntrb = {
-                  "cntrb_login": contributor['login'],
-                  "cntrb_created_at": contributor['created_at'],
-                  "cntrb_email": contributor['email'] if 'email' in contributor else None,
-                  "cntrb_company": contributor['company'] if 'company' in contributor else None,
-                  "cntrb_location": contributor['location'] if 'location' in contributor else None,
-                  # "cntrb_type": , dont have a use for this as of now ... let it default to null
-                  "cntrb_canonical": contributor['email'] if 'email' in contributor else None,
-                  "gh_user_id": contributor['id'],
-                  "gh_login": contributor['login'],
-                  "gh_url": contributor['url'],
-                  "gh_html_url": contributor['html_url'],
-                  "gh_node_id": contributor['node_id'], 
-                  "gh_avatar_url": contributor['avatar_url'],
-                  "gh_gravatar_id": contributor['gravatar_id'],
-                  "gh_followers_url": contributor['followers_url'],
-                  "gh_following_url": contributor['following_url'],
-                  "gh_gists_url": contributor['gists_url'],
-                  "gh_starred_url": contributor['starred_url'],
-                  "gh_subscriptions_url": contributor['subscriptions_url'],
-                  "gh_organizations_url": contributor['organizations_url'],
-                  "gh_repos_url": contributor['repos_url'],
-                  "gh_events_url": contributor['events_url'],
-                  "gh_received_events_url": contributor['received_events_url'],
-                  "gh_type": contributor['type'],
-                  "gh_site_admin": contributor['site_admin'],
-                  "tool_source": self.tool_source,
-                  "tool_version": self.tool_version,
-                  "data_source": self.data_source
-              }
-
-              #insert new contributor into database
-              self.db.execute(self.contributors_table.insert().values(cntrb))
-
-              # increment cntrb_id offset
-              # keeps track of the next cntrb_id primary key without making extra db queries
-              cntrb_id_offset += 1
-
-              #assigns the cntrb_id to the source data to be returned to the workers
-              data['cntrb_id'] = cntrb_id_offset
-              self.logger.info(f"cntrb_id {data['cntrb_id']} found with api call and assigned to enriched data")
-              # add cntrb_id to data and append it to table_values_cntrb 
-              # so duplicate cntrbs within the same data set aren't added
-              #cntrb['cntrb_id'] = cntrb_id_offset
               
-              
-              cntrb_data = {
+                try:
+                  self.logger.info("Hitting endpoint: " + url + " ...\n")
+                  response = requests.get(url=url , headers=self.headers)
+                except Exception as e:
+                  self.logger.error(f"Unable to hit the endpoint {url}")
+                  raise e
+
+                try:
+                    contributor = response.json()
+                except:
+                    contributor = json.loads(json.dumps(response.text))
+
+                self.logger.info(f"Contributor data: {contributor}")
+
+                cntrb = {
+                "cntrb_login": contributor['login'],
+                "cntrb_created_at": contributor['created_at'],
+                "cntrb_email": contributor['email'] if 'email' in contributor else None,
+                "cntrb_company": contributor['company'] if 'company' in contributor else None,
+                "cntrb_location": contributor['location'] if 'location' in contributor else None,
+                # "cntrb_type": , dont have a use for this as of now ... let it default to null
+                "cntrb_canonical": contributor['email'] if 'email' in contributor else None,
+                "gh_user_id": contributor['id'],
+                "gh_login": contributor['login'],
+                "gh_url": contributor['url'],
+                "gh_html_url": contributor['html_url'],
+                "gh_node_id": contributor['node_id'],
+                "gh_avatar_url": contributor['avatar_url'],
+                "gh_gravatar_id": contributor['gravatar_id'],
+                "gh_followers_url": contributor['followers_url'],
+                "gh_following_url": contributor['following_url'],
+                "gh_gists_url": contributor['gists_url'],
+                "gh_starred_url": contributor['starred_url'],
+                "gh_subscriptions_url": contributor['subscriptions_url'],
+                "gh_organizations_url": contributor['organizations_url'],
+                "gh_repos_url": contributor['repos_url'],
+                "gh_events_url": contributor['events_url'],
+                "gh_received_events_url": contributor['received_events_url'],
+                "gh_type": contributor['type'],
+                "gh_site_admin": contributor['site_admin'],
+                "tool_source": self.tool_source,
+                "tool_version": self.tool_version,
+                "data_source": self.data_source
+                }
+
+                #insert new contributor into database
+                self.db.execute(self.contributors_table.insert().values(cntrb))
+
+                # increment cntrb_id offset
+                # keeps track of the next cntrb_id primary key without making extra db queries
+                cntrb_id_offset += 1
+
+                #assigns the cntrb_id to the source data to be returned to the workers
+                data['cntrb_id'] = cntrb_id_offset
+                self.logger.info(f"cntrb_id {data['cntrb_id']} found with api call and assigned to enriched data")
+                # add cntrb_id to data and append it to table_values_cntrb
+                # so duplicate cntrbs within the same data set aren't added
+                #cntrb['cntrb_id'] = cntrb_id_offset
+
+
+                cntrb_data = {
                 'cntrb_id': cntrb_id_offset,
                 'gh_node_id': cntrb['gh_node_id'],
                 'cntrb_login': cntrb['cntrb_login'],
-              }
-              table_values_cntrb.append(cntrb_data)
-              
-
+                'gh_user_id': cntrb['gh_user_id']
+                }
+                table_values_cntrb.append(cntrb_data)
 
         self.logger.info(
           "Contributor id enrichment successful, result has "
@@ -400,10 +407,10 @@ class WorkerGitInterfaceable(Worker):
         )
         return source_data
 
-            
-                
-                
-                
+
+
+
+
 
 
         # source_cntrb_insert, _ = self.organize_needed_data(
