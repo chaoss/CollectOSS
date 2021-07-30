@@ -322,84 +322,80 @@ class WorkerGitInterfaceable(Worker):
 
               attempts = 0
 
-              while attempts < 10:
-                try:
+              try:
+                while attempts < 10:
+                  try:
+                    self.logger.info("Hitting endpoint: " + url + " ...\n")
+                    response = requests.get(url=url , headers=self.headers)
+                    break
+                  except TimeoutError:
+                    self.logger.info(f"User data request for enriching contributor data failed with {attempts} attempts! Trying again...")
+                    time.sleep(10)
+
                   attempts += 1
-                  self.logger.info("Hitting endpoint: " + url + " ...\n")
-                  response = requests.get(url=url , headers=self.headers)
-                  break
-                except TimeoutError:
-                  self.logger.info(f"User data request for enriching contributor data failed with {attempts} attempts! Trying again...")
-                  time.sleep(10)
-                  continue
-              
-                try:
-                  self.logger.info("Hitting endpoint: " + url + " ...\n")
-                  response = requests.get(url=url , headers=self.headers)
-                except Exception as e:
-                  self.logger.error(f"Unable to hit the endpoint {url}")
-                  raise e
+              except Exception as e:
+                raise e
 
-                try:
-                    contributor = response.json()
-                except:
-                    contributor = json.loads(json.dumps(response.text))
+              try:
+                  contributor = response.json()
+              except:
+                  contributor = json.loads(json.dumps(response.text))
 
-                self.logger.info(f"Contributor data: {contributor}")
+              self.logger.info(f"Contributor data: {contributor}")
 
-                cntrb = {
-                "cntrb_login": contributor['login'],
-                "cntrb_created_at": contributor['created_at'],
-                "cntrb_email": contributor['email'] if 'email' in contributor else None,
-                "cntrb_company": contributor['company'] if 'company' in contributor else None,
-                "cntrb_location": contributor['location'] if 'location' in contributor else None,
-                # "cntrb_type": , dont have a use for this as of now ... let it default to null
-                "cntrb_canonical": contributor['email'] if 'email' in contributor else None,
-                "gh_user_id": contributor['id'],
-                "gh_login": contributor['login'],
-                "gh_url": contributor['url'],
-                "gh_html_url": contributor['html_url'],
-                "gh_node_id": contributor['node_id'],
-                "gh_avatar_url": contributor['avatar_url'],
-                "gh_gravatar_id": contributor['gravatar_id'],
-                "gh_followers_url": contributor['followers_url'],
-                "gh_following_url": contributor['following_url'],
-                "gh_gists_url": contributor['gists_url'],
-                "gh_starred_url": contributor['starred_url'],
-                "gh_subscriptions_url": contributor['subscriptions_url'],
-                "gh_organizations_url": contributor['organizations_url'],
-                "gh_repos_url": contributor['repos_url'],
-                "gh_events_url": contributor['events_url'],
-                "gh_received_events_url": contributor['received_events_url'],
-                "gh_type": contributor['type'],
-                "gh_site_admin": contributor['site_admin'],
-                "tool_source": self.tool_source,
-                "tool_version": self.tool_version,
-                "data_source": self.data_source
-                }
+              cntrb = {
+              "cntrb_login": contributor['login'],
+              "cntrb_created_at": contributor['created_at'],
+              "cntrb_email": contributor['email'] if 'email' in contributor else None,
+              "cntrb_company": contributor['company'] if 'company' in contributor else None,
+              "cntrb_location": contributor['location'] if 'location' in contributor else None,
+              # "cntrb_type": , dont have a use for this as of now ... let it default to null
+              "cntrb_canonical": contributor['email'] if 'email' in contributor else None,
+              "gh_user_id": contributor['id'],
+              "gh_login": contributor['login'],
+              "gh_url": contributor['url'],
+              "gh_html_url": contributor['html_url'],
+              "gh_node_id": contributor['node_id'],
+              "gh_avatar_url": contributor['avatar_url'],
+              "gh_gravatar_id": contributor['gravatar_id'],
+              "gh_followers_url": contributor['followers_url'],
+              "gh_following_url": contributor['following_url'],
+              "gh_gists_url": contributor['gists_url'],
+              "gh_starred_url": contributor['starred_url'],
+              "gh_subscriptions_url": contributor['subscriptions_url'],
+              "gh_organizations_url": contributor['organizations_url'],
+              "gh_repos_url": contributor['repos_url'],
+              "gh_events_url": contributor['events_url'],
+              "gh_received_events_url": contributor['received_events_url'],
+              "gh_type": contributor['type'],
+              "gh_site_admin": contributor['site_admin'],
+              "tool_source": self.tool_source,
+              "tool_version": self.tool_version,
+              "data_source": self.data_source
+              }
 
-                #insert new contributor into database
-                self.db.execute(self.contributors_table.insert().values(cntrb))
+              #insert new contributor into database
+              self.db.execute(self.contributors_table.insert().values(cntrb))
 
-                # increment cntrb_id offset
-                # keeps track of the next cntrb_id primary key without making extra db queries
-                cntrb_id_offset += 1
+              # increment cntrb_id offset
+              # keeps track of the next cntrb_id primary key without making extra db queries
+              cntrb_id_offset += 1
 
-                #assigns the cntrb_id to the source data to be returned to the workers
-                data['cntrb_id'] = cntrb_id_offset
-                self.logger.info(f"cntrb_id {data['cntrb_id']} found with api call and assigned to enriched data")
-                # add cntrb_id to data and append it to table_values_cntrb
-                # so duplicate cntrbs within the same data set aren't added
-                #cntrb['cntrb_id'] = cntrb_id_offset
+              #assigns the cntrb_id to the source data to be returned to the workers
+              data['cntrb_id'] = cntrb_id_offset
+              self.logger.info(f"cntrb_id {data['cntrb_id']} found with api call and assigned to enriched data")
+              # add cntrb_id to data and append it to table_values_cntrb
+              # so duplicate cntrbs within the same data set aren't added
+              #cntrb['cntrb_id'] = cntrb_id_offset
 
 
-                cntrb_data = {
-                'cntrb_id': cntrb_id_offset,
-                'gh_node_id': cntrb['gh_node_id'],
-                'cntrb_login': cntrb['cntrb_login'],
-                'gh_user_id': cntrb['gh_user_id']
-                }
-                table_values_cntrb.append(cntrb_data)
+              cntrb_data = {
+              'cntrb_id': cntrb_id_offset,
+              'gh_node_id': cntrb['gh_node_id'],
+              'cntrb_login': cntrb['cntrb_login'],
+              'gh_user_id': cntrb['gh_user_id']
+              }
+              table_values_cntrb.append(cntrb_data)
 
         self.logger.info(
           "Contributor id enrichment successful, result has "
