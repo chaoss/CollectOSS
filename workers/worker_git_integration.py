@@ -260,8 +260,8 @@ class WorkerGitInterfaceable(Worker):
 
         cntrb_action_map = {
             'insert': {
-                'source': [key] + action_map_additions['insert']['source'],
-                'augur': ['cntrb_login'] + action_map_additions['insert']['augur']
+                'source': [key] + action_map_additions['insert']['source'] + ['user.id'],
+                'augur': ['cntrb_login'] + action_map_additions['insert']['augur'] + ['gh_user_id']
             }
         }
 
@@ -292,6 +292,10 @@ class WorkerGitInterfaceable(Worker):
                 cntrb_logins.append(row['cntrb_login'])
 
 
+            try:
+              data['user.login']
+            except Exception as e:
+              self.logger.info(f"Input data: {data} caused this: {e}")
 
             # cntrb_logins = [row['cntrb_login'] for row in table_values_cntrb]
             #self.logger.info(f"cntrb logins length: {len(cntrb_logins)}")
