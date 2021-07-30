@@ -291,6 +291,7 @@ class WorkerGitInterfaceable(Worker):
               if row:
                 gh_user_ids.append(row['gh_user_id'])
               
+            self.logger.info(f"gh_user_ids: {gh_user_ids}")
             # self.logger.info(f"Users gh_user_id: {data['user.id']}")
             # in_user_ids = False
             # if data['user.id'] in gh_user_ids:
@@ -317,8 +318,12 @@ class WorkerGitInterfaceable(Worker):
             else:
 
               self.logger.info("{} not in database, making api call".format(data[f'{prefix}id']))
+              self.logger.info("login: {}".format(data[f'{prefix}login']))
 
-              url = ("https://api.github.com/users/" + data[f'{prefix}login'])
+              try:
+                url = ("https://api.github.com/users/" + data[f'{prefix}login'])
+              except Exception as e:
+                self.logger.info(f"Error when creating url: {e}. Data: {data}")
 
               attempts = 0
 
