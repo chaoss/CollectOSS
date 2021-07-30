@@ -387,6 +387,7 @@ class WorkerGitInterfaceable(Worker):
               self.db.execute(self.contributors_table.insert().values(cntrb))
               gh_user_ids.append(contributor['id'])
               self.logger.info(f"gh_user_id {gh_user_ids[-1]} added to gh_user_ids")
+              self.logger.info(f"gh_user_id {contributor['id']} added to gh_user_ids")
               # increment cntrb_id offset
               # keeps track of the next cntrb_id primary key without making extra db queries
               cntrb_id_offset += 1
