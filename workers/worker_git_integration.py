@@ -404,8 +404,10 @@ class WorkerGitInterfaceable(Worker):
                     )
                   ).fetchall()
 
-                self.logger.info(f"cntrb_id_row type: {type(cntrb_id_row)}")
-                self.logger.info(f"cntrb_id_row : {cntrb_id_row}")
+                
+                self.logger.info(f"cntrb_id_row type: {type(cntrb_id_row[0])}")
+                self.logger.info(f"cntrb_id_row keys: {type(cntrb_id_row[0].keys())}")
+                self.logger.info(f"cntrb_id_row cntrb_id: {cntrb_id_row[0]['cntrb_id']}")
                     
 
               cntrb_data = {
