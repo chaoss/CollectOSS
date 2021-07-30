@@ -397,23 +397,23 @@ class WorkerGitInterfaceable(Worker):
               except s.exc.IntegrityError:
                 self.logger.info("Contributor was already added to  database! Getting cntrb_id")
               
-            cntrb_id_row = self.db.execute(
+                cntrb_id_row = self.db.execute(
                     s.sql.select(self.get_relevant_columns(self.contributors_table,cntrb_action_map)).where(
                       self.contributors_table.c.gh_user_id==cntrb["gh_user_id"]
                     )
-            ).fetchall()
+                  ).fetchall()
 
-            self.logger.info("cntrb_id_row type: {type(cntrb_id_row)}")
-            self.logger.info("cntrb_id_row : {cntrb_id_row}")
-                      
+                self.logger.info(f"cntrb_id_row type: {type(cntrb_id_row)}")
+                self.logger.info(f"cntrb_id_row : {cntrb_id_row}")
+                    
 
-            cntrb_data = {
-                'cntrb_id': data['cntrb_id'],
+              cntrb_data = {
+              'cntrb_id': data['cntrb_id'],
               'gh_node_id': cntrb['gh_node_id'],
               'cntrb_login': cntrb['cntrb_login'],
               'gh_user_id': cntrb['gh_user_id']
-            }
-            table_values_cntrb.append(cntrb_data)
+              }
+              table_values_cntrb.append(cntrb_data)
 
         self.logger.info(
           "Contributor id enrichment successful, result has "
