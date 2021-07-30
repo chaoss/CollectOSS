@@ -379,32 +379,41 @@ class WorkerGitInterfaceable(Worker):
               "tool_version": self.tool_version,
               "data_source": self.data_source
               }
-
-              #insert new contributor into database
-              self.db.execute(self.contributors_table.insert().values(cntrb))
               
-              gh_user_ids.append(contributor['id'])
-              self.logger.info(f"gh_user_id {gh_user_ids[-1]} added to gh_user_ids")
-              self.logger.info(f"gh_user_id {contributor['id']} added to gh_user_ids")
-              # increment cntrb_id offset
-              # keeps track of the next cntrb_id primary key without making extra db queries
-              cntrb_id_offset += 1
+              #insert new contributor into database
+              try:
+                self.db.execute(self.contributors_table.insert().values(cntrb))
 
-              #assigns the cntrb_id to the source data to be returned to the workers
-              data['cntrb_id'] = cntrb_id_offset
-              self.logger.info(f"cntrb_id {data['cntrb_id']} found with api call and assigned to enriched data")
-              # add cntrb_id to data and append it to table_values_cntrb
-              # so duplicate cntrbs within the same data set aren't added
-              #cntrb['cntrb_id'] = cntrb_id_offset
+                # increment cntrb_id offset
+                # keeps track of the next cntrb_id primary key without making extra db queries
+                cntrb_id_offset += 1
 
+                #assigns the cntrb_id to the source data to be returned to the workers
+                data['cntrb_id'] = cntrb_id_offset
+                self.logger.info(f"cntrb_id {data['cntrb_id']} found with api call and assigned to enriched data")
+                # add cntrb_id to data and append it to table_values_cntrb
+                # so duplicate cntrbs within the same data set aren't added
+                #cntrb['cntrb_id'] = cntrb_id_offset
+              except s.exc.IntegrityError:
+                self.logger.info("Contributor was already added to  database! Getting cntrb_id")
+              
+            cntrb_id_row = self.db.execute(
+                    s.sql.select(self.get_relevant_columns(self.contributors_table,cntrb_action_map)).where(
+                      self.contributors_table.c.gh_user_id==cntrb["gh_user_id"]
+                    )
+            ).fetchall()
 
-              cntrb_data = {
-              'cntrb_id': cntrb_id_offset,
+            self.logger.info("cntrb_id_row type: {type(cntrb_id_row)}")
+            self.logger.info("cntrb_id_row : {cntrb_id_row}")
+                      
+
+            cntrb_data = {
+                'cntrb_id': data['cntrb_id'],
               'gh_node_id': cntrb['gh_node_id'],
               'cntrb_login': cntrb['cntrb_login'],
               'gh_user_id': cntrb['gh_user_id']
-              }
-              table_values_cntrb.append(cntrb_data)
+            }
+            table_values_cntrb.append(cntrb_data)
 
         self.logger.info(
           "Contributor id enrichment successful, result has "
