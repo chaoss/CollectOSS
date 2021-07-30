@@ -283,8 +283,12 @@ class WorkerGitInterfaceable(Worker):
         # create an array of gh_user_ids that are in the database
         gh_user_ids = []
         for row in table_values_cntrb:
-          if row:
+          try:
             gh_user_ids.append(row['gh_user_id'])
+          except Exception as e:
+            self.logger.info(f"Error adding gh_user_id: {e}. Row: {row}")
+
+            
 
         self.logger.info(f"gh_user_ids: {gh_user_ids}")
 
