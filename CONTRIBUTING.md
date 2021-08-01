@@ -71,3 +71,10 @@ We require all commits to be signed off with a [Developer Certificate of Origin]
 - [Python's official style guide](https://www.python.org/dev/peps/pep-0008/)
 - [Python best practices](https://gist.github.com/sloria/7001839)
 - [The Zen of Python](https://www.python.org/dev/peps/pep-0020/)
+
+### PostgreSQL guides
+- [PostgreSQL installation guide](https://www.postgresql.org/docs/12/tutorial-install.html)
+- [PostgreSQL official tutotial](https://www.postgresql.org/docs/)
+- [PostgreSQL docker official image](https://hub.docker.com/_/postgres)
+- [SQL style guide](https://docs.telemetry.mozilla.org/concepts/sql_style.html)
+
