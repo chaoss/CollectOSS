@@ -409,15 +409,16 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
             #self.logger.info(f"inc_source_prs is: {inc_source_prs} and the action map is {action_map}...")
 
-            #This is sending empty data to enrich_cntrb_id
-            inc_source_prs['insert'] = self.enrich_cntrb_id(
-                inc_source_prs['insert'], 'user.login', action_map_additions={
-                    'insert': {
-                        'source': ['user.node_id'],
-                        'augur': ['gh_node_id']
-                    }
-                }, prefix='user.'
-            )            
+            #This is sending empty data to enrich_cntrb_id, fix with check 
+            if len(inc_source_prs['insert']) > 0:    
+                inc_source_prs['insert'] = self.enrich_cntrb_id(
+                    inc_source_prs['insert'], 'user.login', action_map_additions={
+                        'insert': {
+                            'source': ['user.node_id'],
+                            'augur': ['gh_node_id']
+                        }
+                    }, prefix='user.'
+                )            
             
             
 
