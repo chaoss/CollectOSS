@@ -418,7 +418,9 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                             'augur': ['gh_node_id']
                         }
                     }, prefix='user.'
-                )            
+                )
+            else:
+                self.logger.info("Contributor enrichment is not needed, no inserts in action map.")            
             
             
 
