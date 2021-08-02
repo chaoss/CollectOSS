@@ -277,8 +277,9 @@ class WorkerGitInterfaceable(Worker):
         self.logger.info(f"source_data type: {type(source_data)}")
         self.logger.info(f"source_data keys: {source_data[0].keys()}")
 
-        #This returns the max id + 1 so we undo that here.
-        cntrb_id_offset = self.get_max_id(self.contributors_table, 'cntrb_id') - 1
+        #We can't use this because of worker collisions
+        #TODO: seperate this method into it's own worker.
+        #cntrb_id_offset = self.get_max_id(self.contributors_table, 'cntrb_id') - 1
 
         # loop through data to test if it is already in the database
         for index, data in enumerate(source_data):
@@ -380,44 +381,32 @@ class WorkerGitInterfaceable(Worker):
               "tool_version": self.tool_version,
               "data_source": self.data_source
               }
-              
+
               #insert new contributor into database
+              # TODO: make this method it's own worker. This errors because of collisions between github_worker and pull_request_worker.
+              #We can solve this by making another worker with a queue. It wouldn't have to be too complicated.
               try:
                 self.db.execute(self.contributors_table.insert().values(cntrb))
-
-                #We need to get the proper starting value for the cntrb_id if it is the first insertion into the table.
-                #Otherwise we get nasty foreign key constraints.
-                if len(table_values_cntrb) == 1:
-                  cntrb_id_offset = self.get_max_id(self.contributors_table, 'cntrb_id') - 1
-
-                # increment cntrb_id offset
-                # keeps track of the next cntrb_id primary key without making extra db queries
-                cntrb_id_offset += 1
-
-                #assigns the cntrb_id to the source data to be returned to the workers
-                data['cntrb_id'] = cntrb_id_offset
-                self.logger.info(f"cntrb_id {data['cntrb_id']} found with api call and assigned to enriched data")
-                # add cntrb_id to data and append it to table_values_cntrb
-                # so duplicate cntrbs within the same data set aren't added
-                #cntrb['cntrb_id'] = cntrb_id_offset
-                # except s.exc.IntegrityError:
+              # except s.exc.IntegrityError:
               except Exception as e:
                 self.logger.info(f"Contributor was already added to  database! Getting cntrb_id! Error: {e}")
-              
-                
-                cntrb_id_row = self.db.execute(
-                    s.sql.select(self.get_relevant_columns(self.contributors_table,cntrb_action_map)).where(
-                      self.contributors_table.c.gh_user_id==cntrb["gh_user_id"]
-                    )
-                  ).fetchall()
 
-                if len(cntrb_id_row) == 1:
-                  data['cntrb_id'] = cntrb_id_row[0]['cntrb_id']
-                  self.logger.info(f"cntrb_id {data['cntrb_id']} found in database and assigned to enriched data")
-                elif len(cntrb_id_row) == 0:
-                  self.logger.info("Couldn't find contributor in database")
-                else:
-                  self.logger.info(f"There are more than one contributors in the table with gh_user_id={cntrb['gh_user_id']}")
+              
+              #Get the contributor id from the newly inserted contributor.  
+              cntrb_id_row = self.db.execute(
+                  s.sql.select(self.get_relevant_columns(self.contributors_table,cntrb_action_map)).where(
+                    self.contributors_table.c.gh_user_id==cntrb["gh_user_id"]
+                  )
+                ).fetchall()
+
+              #Handle and log rare failure cases. If this part errors something is very wrong.
+              if len(cntrb_id_row) == 1:
+                data['cntrb_id'] = cntrb_id_row[0]['cntrb_id']
+                self.logger.info(f"cntrb_id {data['cntrb_id']} found in database and assigned to enriched data")
+              elif len(cntrb_id_row) == 0:
+                self.logger.error("Couldn't find contributor in database. Something has gone very wrong. Augur ran into a contributor that is unable to be inserted into the contributors table but is also not present in that table.")
+              else:
+                self.logger.info(f"There are more than one contributors in the table with gh_user_id={cntrb['gh_user_id']}")
 
 
               cntrb_data = {
@@ -426,6 +415,8 @@ class WorkerGitInterfaceable(Worker):
               'cntrb_login': cntrb['cntrb_login'],
               'gh_user_id': cntrb['gh_user_id']
               }
+              #This updates our list of who is already in the database as we iterate to avoid duplicates.
+              #People who make changes tend to make more than one in a row.
               table_values_cntrb.append(cntrb_data)
 
         self.logger.info(
@@ -437,9 +428,8 @@ class WorkerGitInterfaceable(Worker):
 
 
 
-
-
-
+    #old method
+    """
         # source_cntrb_insert, _ = self.organize_needed_data(
         #     expanded_source_df.to_dict(orient='records'), table_values=table_values_cntrb,
         #     action_map=cntrb_action_map
@@ -539,12 +529,12 @@ class WorkerGitInterfaceable(Worker):
         # source_pk = self._eval_json_columns(source_pk)
         # self._close_postgres_merge(metadata, session)
 
-        self.logger.info(
-            "Contributor id enrichment successful, result has "
-            f"{len(source_pk)} data points.\n"
-        )
+        #self.logger.info(
+        #    "Contributor id enrichment successful, result has "
+        #    f"{len(source_pk)} data points.\n"
+        #)
 
-        return source_pk.to_dict(orient='records')
+        #return source_pk.to_dict(orient='records')"""
 
     def query_github_contributors(self, entry_info, repo_id):
 
