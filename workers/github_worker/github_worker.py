@@ -84,7 +84,9 @@ class GitHubWorker(WorkerGitInterfaceable):
                     and isinstance(issue['pull_request'], dict) and 'url' in issue['pull_request']
                 )
             
-            try:
+            #This is sending empty data to enrich_cntrb_id, fix with check.
+            #The problem happens when ['insert'] is empty but ['all'] is not.
+            if len(inc_source_issues['insert']) > 0:  
                 inc_source_issues['insert'] = self.enrich_cntrb_id(
                     inc_source_issues['insert'], 'user.login', action_map_additions={
                         'insert': {
@@ -93,9 +95,9 @@ class GitHubWorker(WorkerGitInterfaceable):
                         }
                     }, prefix='user.'
                 )
-            except ValueError:
-                self.logger.info(f"Enrich contrib data is empty for {inc_source_issues['insert']}, the empty field is the user login.")
-
+            else:
+                self.logger.info("Contributor enrichment is not needed, no inserts in action map.")
+            
             issues_insert = [
                 {
                     'repo_id': self.repo_id,
@@ -168,6 +170,7 @@ class GitHubWorker(WorkerGitInterfaceable):
 
         #Use the increment insert method in order to do the 
         #remaining pages of the paginated endpoint that weren't inserted inside the paginate_endpoint method
+        #empty data is checked for in the method so it's not needed outside of it. 
         pk_source_issues_increment_insert(source_issues,action_map)
 
         pk_source_issues = self.pk_source_issues
