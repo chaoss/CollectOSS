@@ -347,6 +347,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             update_col_map = {}
 
             # Use helper paginate function to iterate the commits url and check for dupes
+            #TODO: figure out why dupes sometimes still happen.q
             pr_commits = self.paginate(
                 commits_url, duplicate_col_map, update_col_map, table, table_pkey,
                 where_clause="where pull_request_id = {}".format(pull_request.pull_request_id)
@@ -406,9 +407,9 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 return
 
 
-            self.logger.info(f"inc_source_prs is: {inc_source_prs} and the action map is {action_map}...")
+            #self.logger.info(f"inc_source_prs is: {inc_source_prs} and the action map is {action_map}...")
 
-
+            #This is sending empty data to enrich_cntrb_id
             inc_source_prs['insert'] = self.enrich_cntrb_id(
                 inc_source_prs['insert'], 'user.login', action_map_additions={
                     'insert': {
