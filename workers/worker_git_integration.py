@@ -293,7 +293,7 @@ class WorkerGitInterfaceable(Worker):
               except Exception as e:
                 self.logger.info(f"Error adding gh_user_id: {e}. Row: {row}")
 
-            self.logger.info(f"gh_user_ids: {gh_user_ids}")
+            #self.logger.info(f"gh_user_ids: {gh_user_ids}")
             
             # self.logger.info(f"Users gh_user_id: {data['user.id']}")
             # in_user_ids = False
@@ -302,6 +302,8 @@ class WorkerGitInterfaceable(Worker):
             # self.logger.info(f"{data['user.id']} is in gh_user_ids")
 
             # self.logger.info(f"table_values_cntrb len: {len(table_values_cntrb)}")
+
+            #Deal with if data 
 
             #self.logger.info(f"cntrb logins length: {len(cntrb_logins)}")
             #if user.id is in the database then there is no need to add the contributor
