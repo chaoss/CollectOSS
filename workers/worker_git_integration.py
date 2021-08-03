@@ -274,6 +274,9 @@ class WorkerGitInterfaceable(Worker):
         self.logger.info(f"table_values_cntrb keys: {table_values_cntrb[0].keys()}")
 
         source_data = expanded_source_df.to_dict(orient='records')
+        
+        #Filter out bad data where we can't even hit the api.
+        source_data = [data for data in source_data if f'{prefix}login' in data]
 
         self.logger.info(f"source_data type: {type(source_data)}")
         self.logger.info(f"source_data keys: {source_data[0].keys()}")
