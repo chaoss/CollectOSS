@@ -286,10 +286,11 @@ class WorkerGitInterfaceable(Worker):
 
             self.logger.info(f"Enriching {index} of {len(source_data)}")
 
-            gh_user_ids = []
+
+            user_unique_ids = []
             for row in table_values_cntrb:
               try:
-                gh_user_ids.append(row['gh_user_id'])
+                user_unique_ids.append(row['gh_user_id'])
               except Exception as e:
                 self.logger.info(f"Error adding gh_user_id: {e}. Row: {row}")
 
@@ -307,7 +308,7 @@ class WorkerGitInterfaceable(Worker):
 
             #self.logger.info(f"cntrb logins length: {len(cntrb_logins)}")
             #if user.id is in the database then there is no need to add the contributor
-            if data[f'{prefix}id'] in gh_user_ids:
+            if data[f'{prefix}id'] in user_unique_ids:
 
                 self.logger.info("{} found in database".format(data[f'{prefix}id']))
 
