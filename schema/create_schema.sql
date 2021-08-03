@@ -60,5 +60,5 @@
 \i schema/generate/55-schema_update_57.sql
 \i schema/generate/56-schema_update_58.sql
 \i schema/generate/57-schema_update_59.sql
-
+\i schema/generate/58-schema_update_60.sql
 
