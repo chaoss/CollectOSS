@@ -219,7 +219,8 @@ class GitHubWorker(WorkerGitInterfaceable):
 
             inc_issue_comments['insert'] = self.text_clean(inc_issue_comments['insert'], 'body')
 
-            try:
+            #This is sending empty data to enrich_cntrb_id, fix with check 
+            if len(inc_issue_comments['insert']) > 0:
                 inc_issue_comments['insert'] = self.enrich_cntrb_id(
                     inc_issue_comments['insert'], 'user.login', action_map_additions={
                         'insert': {
@@ -228,8 +229,8 @@ class GitHubWorker(WorkerGitInterfaceable):
                         }
                     }, prefix='user.'
                 )
-            except ValueError:
-                self.logger.info(f"Enrich contrib data is empty for {inc_issue_comments['insert']}, the empty field is the user login.")
+            else:
+                self.logger.info("Contributor enrichment is not needed, no inserts in action map.")
 
             issue_comments_insert = [
                 {
@@ -335,7 +336,8 @@ class GitHubWorker(WorkerGitInterfaceable):
                 ['id', 'issue_id', 'node_id', 'url', 'actor', 'created_at', 'event', 'commit_id']
             ].to_dict(orient='records')
 
-        try:
+        #This is sending empty data to enrich_cntrb_id, fix with check 
+        if len(pk_issue_events) > 0:  
             pk_issue_events = self.enrich_cntrb_id(
                 pk_issue_events, 'actor.login', action_map_additions={
                     'insert': {
@@ -344,9 +346,9 @@ class GitHubWorker(WorkerGitInterfaceable):
                     }
                 }, prefix='actor.'
             )
-        except ValueError:
-            self.logger.info(f"Enrich contrib data is empty for {pk_issue_events}, the empty field is the user login.")
-
+        else:
+            self.logger.info("Contributor enrichment is not needed, no inserts in action map.")            
+            
         issue_events_insert = [
             {
                 'issue_event_src_id': event['id'],
@@ -467,15 +469,17 @@ class GitHubWorker(WorkerGitInterfaceable):
             assignees_all, table_values=table_values_issue_assignees,
             action_map=assignee_action_map
         )
-
-        source_assignees_insert = self.enrich_cntrb_id(
-            source_assignees_insert, 'login', action_map_additions={
-                'insert': {
-                    'source': ['node_id'],
-                    'augur': ['gh_node_id']
+        if len(source_assignees_insert) > 0:
+            source_assignees_insert = self.enrich_cntrb_id(
+                source_assignees_insert, 'login', action_map_additions={
+                    'insert': {
+                        'source': ['node_id'],
+                        'augur': ['gh_node_id']
+                    }
                 }
-            }
-        )
+            )
+        else:
+            self.logger.info("Contributor enrichment is not needed, no inserts in action map.")
 
         assignees_insert = [
             {

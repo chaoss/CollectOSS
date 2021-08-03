@@ -7,6 +7,7 @@ import os
 import sys
 import time
 import traceback
+from numpy.lib.utils import source
 import requests
 import copy
 from datetime import datetime
@@ -582,15 +583,18 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         self.write_debug_data(pr_comments, 'pr_comments')
 
         pr_comments['insert'] = self.text_clean(pr_comments['insert'], 'body')
-
-        pr_comments['insert'] = self.enrich_cntrb_id(
-            pr_comments['insert'], 'user.login', action_map_additions={
-                'insert': {
-                    'source': ['user.node_id'],
-                    'augur': ['gh_node_id']
-                }
-            }, prefix='user.'
-        )
+        #This is sending empty data to enrich_cntrb_id, fix with check 
+        if len(pr_comments['insert']) > 0:    
+            pr_comments['insert'] = self.enrich_cntrb_id(
+                pr_comments['insert'], 'user.login', action_map_additions={
+                    'insert': {
+                        'source': ['user.node_id'],
+                        'augur': ['gh_node_id']
+                    }
+                }, prefix='user.'
+            )
+        else:
+            self.logger.info("Contributor enrichment is not needed, no inserts in action map.")
 
         pr_comments_insert = [
             {
@@ -667,14 +671,17 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         self.write_debug_data(pk_pr_events, 'pk_pr_events')
 
-        pk_pr_events = self.enrich_cntrb_id(
-            pk_pr_events, 'actor.login', action_map_additions={
-                'insert': {
-                    'source': ['actor.node_id'],
-                    'augur': ['gh_node_id']
-                }
-            }, prefix='actor.'
-        )
+        if len(pk_pr_events) > 0:
+            pk_pr_events = self.enrich_cntrb_id(
+                pk_pr_events, 'actor.login', action_map_additions={
+                    'insert': {
+                        'source': ['actor.node_id'],
+                        'augur': ['gh_node_id']
+                    }
+                }, prefix='actor.'
+            )
+        else:
+            self.logger.info("Contributor enrichment is not needed, no data provided.")
 
         pr_events_insert = [
             {
@@ -736,14 +743,17 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             action_map=review_action_map
         )
 
-        source_reviews_insert = self.enrich_cntrb_id(
-            source_reviews_insert, 'user.login', action_map_additions={
-                'insert': {
-                    'source': ['user.node_id'],
-                    'augur': ['gh_node_id']
-                }
-            }, prefix='user.'
-        )
+        if len(source_reviews_insert) > 0:
+            source_reviews_insert = self.enrich_cntrb_id(
+                source_reviews_insert, 'user.login', action_map_additions={
+                    'insert': {
+                        'source': ['user.node_id'],
+                        'augur': ['gh_node_id']
+                    }
+                }, prefix='user.'
+            )
+        else:
+            self.logger.info("Contributor enrichment is not needed, source_reviews_insert is empty.")
 
         reviews_insert = [
             {
@@ -816,15 +826,17 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         )
         self.write_debug_data(review_msgs, 'review_msgs')
 
-        #Throwing value errors. 'cannot use name of an existing column for indicator column'
-        review_msgs['insert'] = self.enrich_cntrb_id(
-            review_msgs['insert'], 'user.login', action_map_additions={
-                'insert': {
-                    'source': ['user.node_id'],
-                    'augur': ['gh_node_id']
-                }
-            }, prefix='user.'
-        )
+        if len(review_msgs['insert']) > 0:
+            review_msgs['insert'] = self.enrich_cntrb_id(
+                review_msgs['insert'], 'user.login', action_map_additions={
+                    'insert': {
+                        'source': ['user.node_id'],
+                        'augur': ['gh_node_id']
+                    }
+                }, prefix='user.'
+            )
+        else:
+            self.logger.info("Contributor enrichment is not needed, nothing to insert from the action map.")
 
         review_msg_insert = [
             {
@@ -974,14 +986,19 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             reviewers_all, table_values=table_values_issue_labels,
             action_map=reviewer_action_map
         )
-        source_reviewers_insert = self.enrich_cntrb_id(
-            source_reviewers_insert, 'login', action_map_additions={
-                'insert': {
-                    'source': ['node_id'],
-                    'augur': ['gh_node_id']
+
+        if len(source_reviewers_insert) > 0:
+            source_reviewers_insert = self.enrich_cntrb_id(
+                source_reviewers_insert, 'login', action_map_additions={
+                    'insert': {
+                        'source': ['node_id'],
+                        'augur': ['gh_node_id']
+                    }
                 }
-            }
-        )
+            )
+        else:
+            self.logger.info("Contributor enrichment is not needed, no inserts provided.")
+
         reviewers_insert = [
             {
                 'pull_request_id': reviewer['pull_request_id'],
@@ -1011,14 +1028,20 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             assignees_all, table_values=table_values_assignees_labels,
             action_map=assignee_action_map
         )
-        source_assignees_insert = self.enrich_cntrb_id(
-            source_assignees_insert, 'login', action_map_additions={
-                'insert': {
-                    'source': ['node_id'],
-                    'augur': ['gh_node_id']
+
+        if len(source_assignees_insert) > 0:
+            source_assignees_insert = self.enrich_cntrb_id(
+                source_assignees_insert, 'login', action_map_additions={
+                    'insert': {
+                        'source': ['node_id'],
+                        'augur': ['gh_node_id']
+                    }
                 }
-            }
-        )
+            )
+        else:
+            self.logger.info("Contributor enrichment is not needed, no inserts provided.")
+
+
         assignees_insert = [
             {
                 'pull_request_id': assignee['pull_request_id'],
@@ -1046,14 +1069,19 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         source_meta_insert, _ = self.organize_needed_data(
             meta_all, table_values=table_values_pull_request_meta, action_map=meta_action_map
         )
-        source_meta_insert = self.enrich_cntrb_id(
-            source_meta_insert, 'user.login', action_map_additions={
-                'insert': {
-                    'source': ['user.node_id'],
-                    'augur': ['gh_node_id']
-                }
-            }, prefix='user.'
-        )
+
+        if len(source_meta_insert) > 0:
+            source_meta_insert = self.enrich_cntrb_id(
+                source_meta_insert, 'user.login', action_map_additions={
+                    'insert': {
+                        'source': ['user.node_id'],
+                        'augur': ['gh_node_id']
+                    }
+                }, prefix='user.'
+            )
+        else:
+            self.logger.info("Contributor enrichment is not needed, nothing in source_meta_insert.")
+
         meta_insert = [
             {
                 'pull_request_id': meta['pull_request_id'],
