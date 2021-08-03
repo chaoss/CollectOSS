@@ -1070,6 +1070,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             meta_all, table_values=table_values_pull_request_meta, action_map=meta_action_map
         )
 
+        
         if len(source_meta_insert) > 0:
             source_meta_insert = self.enrich_cntrb_id(
                 source_meta_insert, 'user.login', action_map_additions={
