@@ -1,4 +1,5 @@
 #Get everything that the base depends on.
+from numpy.lib.utils import source
 from workers.worker_base import *
 import sqlalchemy as s
 
@@ -269,12 +270,12 @@ class WorkerGitInterfaceable(Worker):
             s.sql.select(self.get_relevant_columns(self.contributors_table,cntrb_action_map))
         ).fetchall()
 
-        self.logger.info(f"table_values_cntrb type: {type(table_values_cntrb)}")
-        self.logger.info(f"table_values_cntrb keys: {table_values_cntrb[0].keys()}")
-
         source_data = expanded_source_df.to_dict(orient='records')
+        
+        #Filter out bad data where we can't even hit the api.
+        source_data = [data for data in source_data if f'{prefix}login' in data]
 
-        self.logger.info(f"source_data type: {type(source_data)}")
+        self.logger.info(f"table_values_cntrb keys: {table_values_cntrb[0].keys()}")
         self.logger.info(f"source_data keys: {source_data[0].keys()}")
 
         #We can't use this because of worker collisions
@@ -286,15 +287,29 @@ class WorkerGitInterfaceable(Worker):
 
             self.logger.info(f"Enriching {index} of {len(source_data)}")
 
-            gh_user_ids = []
-            for row in table_values_cntrb:
-              try:
-                gh_user_ids.append(row['gh_user_id'])
-              except Exception as e:
-                self.logger.info(f"Error adding gh_user_id: {e}. Row: {row}")
+
+            user_unique_ids = []
+
+            #Allow for alt identifiers to be checked if user.id is not present in source_data
+            try:
+                #This will trigger a KeyError if data has alt identifier.
+                data[f'{prefix}id']
+                for row in table_values_cntrb:
+                  try:
+                    user_unique_ids.append(row['gh_user_id'])
+                  except Exception as e:
+                    self.logger.info(f"Error adding gh_user_id: {e}. Row: {row}")
+            except KeyError:
+                self.logger.info("Source data doesn't have user.id. Using node_id instead.")
+                for row in table_values_cntrb:
+                  try:
+                    user_unique_ids.append(row['gh_node_id'])
+                  except Exception as e:
+                    self.logger.info(f"Error adding gh_node_id: {e}. Row: {row}")
+
 
             #self.logger.info(f"gh_user_ids: {gh_user_ids}")
-            
+
             # self.logger.info(f"Users gh_user_id: {data['user.id']}")
             # in_user_ids = False
             # if data['user.id'] in gh_user_ids:
@@ -303,16 +318,30 @@ class WorkerGitInterfaceable(Worker):
 
             # self.logger.info(f"table_values_cntrb len: {len(table_values_cntrb)}")
 
-            #Deal with if data 
+            #Deal with if data
 
-            #self.logger.info(f"cntrb logins length: {len(cntrb_logins)}")
+            #See if we can check using the user.id
+            source_data_id = None
+            try:
+                source_data_id = data[f'{prefix}id']
+            except KeyError:
+                source_data_id = data[f'{prefix}node_id']
+
+
+
             #if user.id is in the database then there is no need to add the contributor
-            if data[f'{prefix}id'] in gh_user_ids:
+            if source_data_id in user_unique_ids:
 
-                self.logger.info("{} found in database".format(data[f'{prefix}id']))
+                self.logger.info("{} found in database".format(source_data_id))
 
-                #gets the dict from the table_values_cntrb that contains data['user.id']
-                user_id_row = list(filter(lambda x: x['gh_user_id'] == data[f'{prefix}id'], table_values_cntrb))[0]
+                user_id_row = []
+                try:
+                    data[f'{prefix}id']
+                    #gets the dict from the table_values_cntrb that contains data['user.id']
+                    user_id_row = list(filter(lambda x: x['gh_user_id'] == source_data_id, table_values_cntrb))[0]
+                except KeyError:
+                    user_id_row = list(filter(lambda x: x['gh_node_id'] == source_data_id, table_values_cntrb))[0]
+
 
                 #assigns the cntrb_id to the source data to be returned to the workers
                 data['cntrb_id'] = user_id_row['cntrb_id']
@@ -321,8 +350,8 @@ class WorkerGitInterfaceable(Worker):
             #contributor is not in the database
             else:
 
-              
-              self.logger.info("{} not in database, making api call".format(data[f'{prefix}id']))
+
+              self.logger.info("{} not in database, making api call".format(source_data_id))
               self.logger.info("login: {}".format(data[f'{prefix}login']))
 
               try:
@@ -393,8 +422,8 @@ class WorkerGitInterfaceable(Worker):
               except Exception as e:
                 self.logger.info(f"Contributor was unable to be added to table! Attempting to get cntrb_id from table anyway because of possible collision. Error: {e}")
 
-              
-              #Get the contributor id from the newly inserted contributor.  
+
+              #Get the contributor id from the newly inserted contributor.
               cntrb_id_row = self.db.execute(
                   s.sql.select(self.get_relevant_columns(self.contributors_table,cntrb_action_map)).where(
                     self.contributors_table.c.gh_user_id==cntrb["gh_user_id"]
