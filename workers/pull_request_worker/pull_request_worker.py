@@ -243,9 +243,9 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             WHERE pull_request_files.pull_request_id = pull_requests.pull_request_id
             AND repo_id = :repo_id
         """)
-        self.logger.info(
-            f'Getting table values with the following PSQL query: \n{table_values_sql}\n'
-        )
+        # self.logger.info(
+        #     f'Getting table values with the following PSQL query: \n{table_values_sql}\n'
+        # )
         table_values = pd.read_sql(table_values_sql, self.db, params={'repo_id': self.repo_id})
 
         # Compare queried values against table values for dupes/updates
@@ -502,9 +502,9 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         #paginate endpoint with stagger enabled so that the above method can insert every 500
 
-        self.logger.info(
-            f"PR Action map is {pr_action_map}"
-        )
+        # self.logger.info(
+        #     f"PR Action map is {pr_action_map}"
+        # )
 
         source_prs = self.paginate_endpoint(
             pr_url, action_map=pr_action_map, table=self.pull_requests_table,
@@ -513,9 +513,9 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             insertion_method=pk_source_increment_insert
         )
 
-        self.logger.info(
-            f"PR Action map is {pr_action_map} after source_prs. The source_prs are {source_prs}."
-        )
+        # self.logger.info(
+        #     f"PR Action map is {pr_action_map} after source_prs. The source_prs are {source_prs}."
+        # )
 
         #Use the increment insert method in order to do the 
         #remaining pages of the paginated endpoint that weren't inserted inside the paginate_endpoint method
