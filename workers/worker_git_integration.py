@@ -294,7 +294,7 @@ class WorkerGitInterfaceable(Worker):
                 self.logger.info(f"Error adding gh_user_id: {e}. Row: {row}")
 
             #self.logger.info(f"gh_user_ids: {gh_user_ids}")
-            
+
             # self.logger.info(f"Users gh_user_id: {data['user.id']}")
             # in_user_ids = False
             # if data['user.id'] in gh_user_ids:
@@ -303,7 +303,7 @@ class WorkerGitInterfaceable(Worker):
 
             # self.logger.info(f"table_values_cntrb len: {len(table_values_cntrb)}")
 
-            #Deal with if data 
+            #Deal with if data
 
             #self.logger.info(f"cntrb logins length: {len(cntrb_logins)}")
             #if user.id is in the database then there is no need to add the contributor
@@ -321,7 +321,7 @@ class WorkerGitInterfaceable(Worker):
             #contributor is not in the database
             else:
 
-              
+
               self.logger.info("{} not in database, making api call".format(data[f'{prefix}id']))
               self.logger.info("login: {}".format(data[f'{prefix}login']))
 
@@ -393,8 +393,8 @@ class WorkerGitInterfaceable(Worker):
               except Exception as e:
                 self.logger.info(f"Contributor was unable to be added to table! Attempting to get cntrb_id from table anyway because of possible collision. Error: {e}")
 
-              
-              #Get the contributor id from the newly inserted contributor.  
+
+              #Get the contributor id from the newly inserted contributor.
               cntrb_id_row = self.db.execute(
                   s.sql.select(self.get_relevant_columns(self.contributors_table,cntrb_action_map)).where(
                     self.contributors_table.c.gh_user_id==cntrb["gh_user_id"]
@@ -1341,7 +1341,7 @@ class WorkerGitInterfaceable(Worker):
                                         )
                                     ]
                                 try:
-                                    self.logger.info(f"urls boundry issue? for {urls} where they are equal to {url}.")
+                                    # self.logger.info(f"urls boundry issue? for {urls} where they are equal to {url}.")
 
                                     urls = numpy.delete(urls, numpy.where(urls == url), axis=0)
                                 except:
