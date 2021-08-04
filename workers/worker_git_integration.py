@@ -271,7 +271,7 @@ class WorkerGitInterfaceable(Worker):
         ).fetchall()
 
         source_data = expanded_source_df.to_dict(orient='records')
-        
+
         #Filter out bad data where we can't even hit the api.
         source_data = [data for data in source_data if f'{prefix}login' in data]
 
@@ -319,9 +319,6 @@ class WorkerGitInterfaceable(Worker):
             # self.logger.info(f"table_values_cntrb len: {len(table_values_cntrb)}")
 
             #Deal with if data
-<<<<<<< HEAD
-=======
-
             #See if we can check using the user.id
             source_data_id = None
             try:
@@ -329,8 +326,6 @@ class WorkerGitInterfaceable(Worker):
             except KeyError:
                 source_data_id = data[f'{prefix}node_id']
 
-
->>>>>>> dev
 
             #if user.id is in the database then there is no need to add the contributor
             if source_data_id in user_unique_ids:
@@ -353,12 +348,8 @@ class WorkerGitInterfaceable(Worker):
             #contributor is not in the database
             else:
 
-
-<<<<<<< HEAD
-              self.logger.info("{} not in database, making api call".format(data[f'{prefix}id']))
-=======
               self.logger.info("{} not in database, making api call".format(source_data_id))
->>>>>>> dev
+
               self.logger.info("login: {}".format(data[f'{prefix}login']))
 
               try:
