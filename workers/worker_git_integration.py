@@ -271,7 +271,7 @@ class WorkerGitInterfaceable(Worker):
         ).fetchall()
 
         source_data = expanded_source_df.to_dict(orient='records')
-        
+
         #Filter out bad data where we can't even hit the api.
         source_data = [data for data in source_data if f'{prefix}login' in data]
 
@@ -319,14 +319,12 @@ class WorkerGitInterfaceable(Worker):
             # self.logger.info(f"table_values_cntrb len: {len(table_values_cntrb)}")
 
             #Deal with if data
-
             #See if we can check using the user.id
             source_data_id = None
             try:
                 source_data_id = data[f'{prefix}id']
             except KeyError:
                 source_data_id = data[f'{prefix}node_id']
-
 
 
             #if user.id is in the database then there is no need to add the contributor
@@ -350,8 +348,8 @@ class WorkerGitInterfaceable(Worker):
             #contributor is not in the database
             else:
 
-
               self.logger.info("{} not in database, making api call".format(source_data_id))
+
               self.logger.info("login: {}".format(data[f'{prefix}login']))
 
               try:
@@ -1370,7 +1368,7 @@ class WorkerGitInterfaceable(Worker):
                                         )
                                     ]
                                 try:
-                                    self.logger.info(f"urls boundry issue? for {urls} where they are equal to {url}.")
+                                    # self.logger.info(f"urls boundry issue? for {urls} where they are equal to {url}.")
 
                                     urls = numpy.delete(urls, numpy.where(urls == url), axis=0)
                                 except:

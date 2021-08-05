@@ -35,7 +35,7 @@ class Persistant():
     ROOT_AUGUR_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
     def __init__(self, worker_type, data_tables=[],operations_tables=[]):
-        
+
         self.worker_type = worker_type
         #For database functionality
         self.data_tables = data_tables
@@ -92,7 +92,7 @@ class Persistant():
             'name_database': self.augur_config.get_value('Database', 'name'),
             'password_database': self.augur_config.get_value('Database', 'password')
         })
-        
+
         # Initialize logging in the main process
         self.initialize_logging()
 
@@ -439,7 +439,7 @@ class Persistant():
                 need_insertion = new_data_df.merge(table_values_df, suffixes=('','_table'),
                         how='outer', indicator=False, left_on=action_map['insert']['source'],
                         right_on=action_map['insert']['augur']).loc[lambda x : x['_merge']=='left_only']
-                
+
 
 
             if 'update' in action_map:
