@@ -1399,10 +1399,9 @@ class WorkerGitInterfaceable(Worker):
 
     #insertion_method and stagger are arguments that allow paginate_endpoint to insert at around ~500 pages at a time.
     def paginate_endpoint(
-        self, url, action_map={}, table=None, where_clause=True, platform='github', in_memory=True, stagger=False, insertion_method=None, insertion_threshold=500
+        self, url, action_map={}, table=None, where_clause=True, platform='github', in_memory=True
     ):
 
-        #Get augur columns using the action map along with the primary key
         table_values = self.db.execute(
             s.sql.select(self.get_relevant_columns(table, action_map)).where(where_clause)
         ).fetchall()
@@ -1411,14 +1410,10 @@ class WorkerGitInterfaceable(Worker):
         multiple_pages = False
         need_insertion = []
         need_update = []
-
-        #Stores sum of page data
         all_data = []
         forward_pagination = True
         backwards_activation = False
         last_page_number = -1
-
-        #Block to handle page queries and retry at least 10 times
         while True:
 
             # Multiple attempts to hit endpoint
@@ -1457,18 +1452,86 @@ class WorkerGitInterfaceable(Worker):
                     if page_data['message'] == "Bad credentials":
                         self.update_rate_limit(response, bad_credentials=True, platform=platform)
                 elif type(page_data) == str:
-                    self.logger.info(f"Warning! page_data was string: {page_data}\n")
-                    if "<!DOCTYPE html>" in page_data:
-                        self.logger.info("HTML was returned, trying again...\n")
-                    elif len(page_data) == 0:
-                        self.logger.warning("Empty string, trying again...\n")
-                    else:
+                    if platform == "gerrit":
+                        #remove first line from response if it is a string from Gerrit
+                        page_data = ''.join(page_data.split('\n')[1:])
+                        url_array = url.split("/")
+
                         try:
                             page_data = json.loads(page_data)
+                            #if hitting the comments endpoint
+                            if 'comments' in url_array:
+                                #get the keys for the json
+                                page_data_keys = list(page_data.keys())
+                                #make page_data one level lower in the json using the all the keys on the top level
+                                if len(page_data_keys) > 0:
+                                    new_page_data = []
+                                    for index in range(0, len(page_data_keys)):
+                                        new_page_data += page_data[page_data_keys[index]]
+                                    page_data = new_page_data
+                            elif url == 'https://gerrit.automotivelinux.org/gerrit/changes/?q=changes&o=LABELS':
+                                new_page_data = []
+                                for data in page_data:
+                                    for label in data['labels']:
+                                        new_data = data.copy()
+                                        del new_data['labels']
+                                        new_data['label'] = label
+                                        new_page_data.append(new_data)
+                                page_data = new_page_data
+                            elif url == 'https://gerrit.automotivelinux.org/gerrit/changes/?q=status:abandoned&o=ALL_REVISIONS&o=ALL_COMMITS&o=ALL_FILES&no-limit':
+                                    new_page_data = []
+                                    i = 0
+                                    for data in page_data:
+                                        for revision_id in data['revisions']:
+                                            revision = data['revisions'][revision_id]
+                                            commit = revision['commit']
+                                            new_data = data.copy()
+                                            del new_data['revisions']
+                                            new_data['cmt_id'] = revision_id
+                                            new_data['cmt_timestamp'] = revision['created']
+                                            new_data['cmt_message'] = commit['message']
+                                            new_page_data.append(new_data)
+                                    page_data = new_page_data
+                            elif 'files' in url:
+                                new_page_data = []
+                                file_names = page_data.keys()
+                                for file_name in file_names:
+                                    new_data = {}
+                                    file_data = page_data[file_name]
+                                    new_data['file_name'] = file_name
+                                    new_data['cr_file_additions'] = file_data['lines_inserted'] if 'lines_inserted' in file_data else None
+                                    new_data['cr_file_deletions'] = file_data['lines_deleted'] if 'lines_deleted' in file_data else None
+                                    new_page_data.append(new_data)
+
+                                    # for data in page_data:
+                                    #     for revision_id in data['revisions']:
+                                    #         revision = data['revisions'][revision_id]
+                                    #         commit = revision['commit']
+                                    #         new_data = data.copy()
+                                    #         del new_data['revisions']
+                                    #         new_data['cmt_id'] = revision_id
+                                    #         new_data['cmt_timestamp'] = revision['created']
+                                    #         new_data['cmt_message'] = commit['message']
+                                    #         new_page_data.append(new_data)
+                                page_data = new_page_data
+                                self.logger.info(f"Page data: {page_data}")
                             success = True
                             break
                         except:
-                            pass
+                            self.logger.info("Error while processing gerrit json data")
+                    else:
+                        self.logger.info(f"Warning! page_data was string: {page_data}\n")
+                        if "<!DOCTYPE html>" in page_data:
+                            self.logger.info("HTML was returned, trying again...\n")
+                        elif len(page_data) == 0:
+                            self.logger.warning("Empty string, trying again...\n")
+                        else:
+                            try:
+                                page_data = json.loads(page_data)
+                                success = True
+                                break
+                            except:
+                                pass
                 num_attempts += 1
             if not success:
                 break
@@ -1520,24 +1583,6 @@ class WorkerGitInterfaceable(Worker):
                     (page_number >= last_page_number and forward_pagination):
                 self.logger.info("No more pages to check, breaking from pagination.\n")
                 break
-
-            #This is probably where we should insert at around ~500 at a time
-            #makes sure that stagger is enabled, we have an insertion method, and the insertion happens every 500 pages or so.
-            if stagger and insertion_method != None and page_number % insertion_threshold == 0:
-                #call insertion method passed as argument.
-                staggered_source_prs = {
-                    'insert' : need_insertion,
-                    'update' : need_update,
-                    'all'    : all_data
-                }
-
-                #Use the method the subclass needs in order to insert the data.
-                insertion_method(staggered_source_prs,action_map)
-
-                #clear the data from memory and avoid duplicate insertions.
-                need_insertion = []
-                need_update = []
-                all_data = []
 
             page_number = page_number + 1 if forward_pagination else page_number - 1
 
