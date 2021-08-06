@@ -1,12 +1,13 @@
 #SPDX-License-Identifier: MIT
 import logging, os, sys, time, requests, json
+from workers.worker_git_integration import WorkerGitInterfaceable
 from datetime import datetime
 from multiprocessing import Process, Queue
 import pandas as pd
 import sqlalchemy as s
 from workers.worker_base import Worker
 
-class ContributorBreadthWorker(Worker):
+class ContributorBreadthWorker(WorkerGitInterfaceable):
     def __init__(self, config={}):
         
     

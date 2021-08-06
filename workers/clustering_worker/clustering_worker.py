@@ -1,4 +1,5 @@
 import logging, os, sys, time, requests, json
+from workers.worker_git_integration import WorkerGitInterfaceable
 from datetime import datetime
 from multiprocessing import Process, Queue
 import pandas as pd
@@ -27,7 +28,7 @@ from collections import Counter
 
 from os import path
 
-class ClusteringWorker(Worker):
+class ClusteringWorker(WorkerGitInterfaceable):
 	def __init__(self, config={}):
 	
 		worker_type = "clustering_worker"
