@@ -219,6 +219,8 @@ class Persistant():
             self.history_id = self.get_max_id('worker_history', 'history_id', operations_table=True) + 1
         except Exception as e:
             self.logger.info(f"Could not find max id. ERROR: {e}")
+        
+        self.logger.info("God passed the max id getter.")
 
     #Make sure the type used to store date is synced with the worker?
     def sync_df_types(self, subject, source, subject_columns, source_columns):
