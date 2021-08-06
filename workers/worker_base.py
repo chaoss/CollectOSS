@@ -135,8 +135,8 @@ class Worker(Persistant):
         self.initialize_logging() # need to initialize logging again in child process cause multiprocessing
         self.logger.info("Starting data collection process\n")
         self.initialize_database_connections()
-        self.logger.info("Got to this point.")
-        self.logger.info(f"This is the oauths 0 index {self.oauths}")
+        #self.logger.info("Got to this point.")
+        #self.logger.info(f"This is the oauths 0 index {self.oauths}")
         while True:
             if not self._queue.empty():
                 message = self._queue.get() # Get the task off our MP queue
