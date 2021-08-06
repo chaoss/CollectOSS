@@ -165,7 +165,7 @@ class Config:
 
         cursor = db.cursor()#pymysql.cursors.DictCursor)
 
-## TODO: Does this need a block for if the database connection IS multithreaded? I think so, @gabe-heim
+## TODO: Does this need a block for if the database connection IS multithreaded? I think so, @sgoggins
 
         if people and not multi_threaded_connection:
             self.cursor_people = cursor

@@ -7,6 +7,7 @@ import os
 import sys
 import time
 import traceback
+from numpy.lib.utils import source
 import requests
 import copy
 from datetime import datetime
@@ -51,6 +52,9 @@ class GitHubPullRequestWorker(Worker):
         self.tool_version = '1.0.0'
         self.data_source = 'GitHub API'
 
+        #Needs to be an attribute of the class for incremental database insert using paginate_endpoint
+        self.pk_source_prs = []
+
     def graphql_paginate(self, query, data_subjects, before_parameters=None):
         """ Paginate a GitHub GraphQL query backwards
 
@@ -80,7 +84,7 @@ class GitHubPullRequestWorker(Worker):
         tuples = []
 
         def find_root_of_subject(data, key_subject):
-            self.logger.info(f'Finding {key_subject} root of {data}')
+            # self.logger.info(f'Finding {key_subject} root of {data}')
             key_nest = None
             for subject, nest in data.items():
                 if key_subject in nest:
@@ -94,8 +98,8 @@ class GitHubPullRequestWorker(Worker):
 
         for data_subject, nest in data_subjects.items():
 
-            self.logger.info(f'Beginning paginate process for field {data_subject} '
-                f'for query: {query}')
+            # self.logger.info(f'Beginning paginate process for field {data_subject} '
+            #     f'for query: {query}')
 
             page_count = 0
             while has_previous_page:
@@ -124,7 +128,7 @@ class GitHubPullRequestWorker(Worker):
                         if data['errors'][0]['type'] == 'NOT_FOUND':
                             self.logger.warning(
                                 "Github repo was not found or does not exist for "
-                                f"endpoint: {url}\n"
+                                f"endpoint: {base_url}\n"
                             )
                             break
                         if data['errors'][0]['type'] == 'RATE_LIMITED':
@@ -236,9 +240,9 @@ class GitHubPullRequestWorker(Worker):
             WHERE pull_request_files.pull_request_id = pull_requests.pull_request_id
             AND repo_id = :repo_id
         """)
-        self.logger.info(
-            f'Getting table values with the following PSQL query: \n{table_values_sql}\n'
-        )
+        # self.logger.info(
+        #     f'Getting table values with the following PSQL query: \n{table_values_sql}\n'
+        # )
         table_values = pd.read_sql(table_values_sql, self.db, params={'repo_id': self.repo_id})
 
         # Compare queried values against table values for dupes/updates
@@ -341,6 +345,7 @@ class GitHubPullRequestWorker(Worker):
             update_col_map = {}
 
             # Use helper paginate function to iterate the commits url and check for dupes
+            #TODO: figure out why dupes sometimes still happen.q
             pr_commits = self.paginate(
                 commits_url, duplicate_col_map, update_col_map, table, table_pkey,
                 where_clause="where pull_request_id = {}".format(pull_request.pull_request_id)
@@ -369,11 +374,13 @@ class GitHubPullRequestWorker(Worker):
 
     def _get_pk_source_prs(self):
 
+        #self.owner and self.repo are both defined in the worker base's collect method using the url of the github repo.
         pr_url = (
             f"https://api.github.com/repos/{self.owner}/{self.repo}/pulls?state=all&"
             "direction=asc&per_page=100&page={}"
         )
 
+        #Database action map is essential in order to avoid duplicates messing up the data
         pr_action_map = {
             'insert': {
                 'source': ['id'],
@@ -385,28 +392,37 @@ class GitHubPullRequestWorker(Worker):
             }
         }
 
-        source_prs = self.new_paginate_endpoint(
-            pr_url, action_map=pr_action_map, table=self.pull_requests_table,
-            where_clause=self.pull_requests_table.c.repo_id == self.repo_id
-        )
+        #Use a parent method in order to iterate through pull request pages
+        #Define a method to pass paginate_endpoint so that prs can be inserted incrementally
 
-        self.write_debug_data(source_prs, 'source_prs')
+        def pk_source_increment_insert(inc_source_prs, action_map):
 
-        if len(source_prs['all']) == 0:
-            self.logger.info("There are no prs for this repository.\n")
-            self.register_task_completion(self.task_info, self.repo_id, 'pull_requests')
-            return
+            self.write_debug_data(inc_source_prs, 'source_prs')
 
-        source_prs['insert'] = self.enrich_cntrb_id(
-            source_prs['insert'], 'user.login', action_map_additions={
-                'insert': {
-                    'source': ['user.node_id'],
-                    'augur': ['gh_node_id']
-                }
-            }, prefix='user.'
-        )
+            if len(inc_source_prs['all']) == 0:
+                self.logger.info("There are no prs for this repository.\n")
+                self.register_task_completion(self.task_info, self.repo_id, 'pull_requests')
+                return
 
-        prs_insert = [
+
+            #self.logger.info(f"inc_source_prs is: {inc_source_prs} and the action map is {action_map}...")
+
+            #This is sending empty data to enrich_cntrb_id, fix with check
+            if len(inc_source_prs['insert']) > 0:
+                inc_source_prs['insert'] = self.enrich_cntrb_id(
+                    inc_source_prs['insert'], 'user.login', action_map_additions={
+                        'insert': {
+                            'source': ['user.node_id'],
+                            'augur': ['gh_node_id']
+                        }
+                    }, prefix='user.'
+                )
+            else:
+                self.logger.info("Contributor enrichment is not needed, no inserts in action map.")
+
+
+
+            prs_insert = [
             {
                 'repo_id': self.repo_id,
                 'pr_url': pr['url'],
@@ -448,35 +464,65 @@ class GitHubPullRequestWorker(Worker):
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
                 'data_source': 'GitHub API'
-            } for pr in source_prs['insert']
-        ]
+            } for pr in inc_source_prs['insert']
+            ]
 
-        if len(source_prs['insert']) > 0 or len(source_prs['update']) > 0:
-            pr_insert_result, pr_update_result = self.bulk_insert(
-                self.pull_requests_table,
-                update=source_prs['update'], unique_columns=pr_action_map['insert']['augur'],
-                insert=prs_insert, update_columns=pr_action_map['update']['augur']
-            )
+            #The b_pr_src_id bug comes from here
+            if len(inc_source_prs['insert']) > 0 or len(inc_source_prs['update']) > 0:
+                self.bulk_insert(
+                    self.pull_requests_table,
+                    update=inc_source_prs['update'], unique_columns=action_map['insert']['augur'],
+                    insert=prs_insert, update_columns=action_map['update']['augur']
+                )
 
-            source_data = source_prs['insert'] + source_prs['update']
+                source_data = inc_source_prs['insert'] + inc_source_prs['update']
 
-        elif not self.deep_collection:
-            self.logger.info(
-                "There are no prs to update, insert, or collect nested information for.\n"
-            )
-            self.register_task_completion(self.task_info, self.repo_id, 'pull_requests')
+            elif not self.deep_collection:
+                self.logger.info(
+                    "There are no prs to update, insert, or collect nested information for.\n"
+                )
+                self.register_task_completion(self.task_info, self.repo_id, 'pull_requests')
+                return
+
+            if self.deep_collection:
+                source_data = inc_source_prs['all']
+
+            # Merge source data to inserted data to have access to inserted primary keys
+
+            gh_merge_fields = ['id']
+            augur_merge_fields = ['pr_src_id']
+
+            self.pk_source_prs += self.enrich_data_primary_keys(source_data, self.pull_requests_table,
+                gh_merge_fields, augur_merge_fields)
             return
 
-        if self.deep_collection:
-            source_data = source_prs['all']
 
-        # Merge source data to inserted data to have access to inserted primary keys
+        #paginate endpoint with stagger enabled so that the above method can insert every 500
 
-        gh_merge_fields = ['id']
-        augur_merge_fields = ['pr_src_id']
+        # self.logger.info(
+        #     f"PR Action map is {pr_action_map}"
+        # )
 
-        pk_source_prs = self.enrich_data_primary_keys(source_data, self.pull_requests_table,
-            gh_merge_fields, augur_merge_fields)
+        source_prs = self.paginate_endpoint(
+            pr_url, action_map=pr_action_map, table=self.pull_requests_table,
+            where_clause=self.pull_requests_table.c.repo_id == self.repo_id,
+            stagger=True,
+            insertion_method=pk_source_increment_insert
+        )
+
+        # self.logger.info(
+        #     f"PR Action map is {pr_action_map} after source_prs. The source_prs are {source_prs}."
+        # )
+
+        #Use the increment insert method in order to do the
+        #remaining pages of the paginated endpoint that weren't inserted inside the paginate_endpoint method
+        pk_source_increment_insert(source_prs,pr_action_map)
+
+        pk_source_prs = self.pk_source_prs
+
+        #This attribute is only needed because paginate endpoint needs to
+        #send this data to the child class and this is the easiset way to do that.
+        self.pk_source_prs = []
 
         return pk_source_prs
 
@@ -513,6 +559,12 @@ class GitHubPullRequestWorker(Worker):
             "&page={}"
         )
 
+        # We should be capturing the following additional data here:
+        # 1. The Platform message ID : Most efficient way to dup check
+        # 2. The plaform issue ID and/or PR ID so queries are easier
+        # 3. The REPO_ID so queries are easier.
+        ## ALL THIS INFO IS IN THE PLATFOMR JSON AND WE ARe ignoring IT.
+
         comment_action_map = {
             'insert': {
                 'source': ['created_at', 'body'],
@@ -528,15 +580,18 @@ class GitHubPullRequestWorker(Worker):
         self.write_debug_data(pr_comments, 'pr_comments')
 
         pr_comments['insert'] = self.text_clean(pr_comments['insert'], 'body')
-
-        pr_comments['insert'] = self.enrich_cntrb_id(
-            pr_comments['insert'], 'user.login', action_map_additions={
-                'insert': {
-                    'source': ['user.node_id'],
-                    'augur': ['gh_node_id']
-                }
-            }, prefix='user.'
-        )
+        #This is sending empty data to enrich_cntrb_id, fix with check
+        if len(pr_comments['insert']) > 0:
+            pr_comments['insert'] = self.enrich_cntrb_id(
+                pr_comments['insert'], 'user.login', action_map_additions={
+                    'insert': {
+                        'source': ['user.node_id'],
+                        'augur': ['gh_node_id']
+                    }
+                }, prefix='user.'
+            )
+        else:
+            self.logger.info("Contributor enrichment is not needed, no inserts in action map.")
 
         pr_comments_insert = [
             {
@@ -613,14 +668,17 @@ class GitHubPullRequestWorker(Worker):
 
         self.write_debug_data(pk_pr_events, 'pk_pr_events')
 
-        pk_pr_events = self.enrich_cntrb_id(
-            pk_pr_events, 'actor.login', action_map_additions={
-                'insert': {
-                    'source': ['actor.node_id'],
-                    'augur': ['gh_node_id']
-                }
-            }, prefix='actor.'
-        )
+        if len(pk_pr_events) > 0:
+            pk_pr_events = self.enrich_cntrb_id(
+                pk_pr_events, 'actor.login', action_map_additions={
+                    'insert': {
+                        'source': ['actor.node_id'],
+                        'augur': ['gh_node_id']
+                    }
+                }, prefix='actor.'
+            )
+        else:
+            self.logger.info("Contributor enrichment is not needed, no data provided.")
 
         pr_events_insert = [
             {
@@ -671,24 +729,28 @@ class GitHubPullRequestWorker(Worker):
             self.pull_request_reviews_table, review_action_map
         )
 
+        #I don't know what else this could be used for so I'm using it for the function call
         table_values = self.db.execute(s.sql.select(cols_to_query).where(
             self.pull_request_reviews_table.c.pull_request_id.in_(
                     set(pd.DataFrame(pk_source_prs)['pull_request_id'])
                 ))).fetchall()
 
-        source_reviews_insert, source_reviews_update = self.new_organize_needed_data(
-            pr_pk_source_reviews, augur_table=self.pull_request_reviews_table,
+        source_reviews_insert, source_reviews_update = self.organize_needed_data(
+            pr_pk_source_reviews, table_values=table_values,
             action_map=review_action_map
         )
 
-        source_reviews_insert = self.enrich_cntrb_id(
-            source_reviews_insert, 'user.login', action_map_additions={
-                'insert': {
-                    'source': ['user.node_id'],
-                    'augur': ['gh_node_id']
-                }
-            }, prefix='user.'
-        )
+        if len(source_reviews_insert) > 0:
+            source_reviews_insert = self.enrich_cntrb_id(
+                source_reviews_insert, 'user.login', action_map_additions={
+                    'insert': {
+                        'source': ['user.node_id'],
+                        'augur': ['gh_node_id']
+                    }
+                }, prefix='user.'
+            )
+        else:
+            self.logger.info("Contributor enrichment is not needed, source_reviews_insert is empty.")
 
         reviews_insert = [
             {
@@ -730,6 +792,8 @@ class GitHubPullRequestWorker(Worker):
 
         # Review Comments
 
+       #  https://api.github.com/repos/chaoss/augur/pulls
+
         review_msg_url = (f'https://api.github.com/repos/{self.owner}/{self.repo}/pulls' +
             '/comments?per_page=100&page={}')
 
@@ -743,7 +807,7 @@ class GitHubPullRequestWorker(Worker):
         in_clause = [] if len(both_pr_review_pk_source_reviews) == 0 else \
             set(pd.DataFrame(both_pr_review_pk_source_reviews)['pr_review_id'])
 
-        review_msgs = self.new_paginate_endpoint(
+        review_msgs = self.paginate_endpoint(
             review_msg_url, action_map=review_msg_action_map, table=self.message_table,
             where_clause=self.message_table.c.msg_id.in_(
                 [
@@ -759,14 +823,17 @@ class GitHubPullRequestWorker(Worker):
         )
         self.write_debug_data(review_msgs, 'review_msgs')
 
-        review_msgs['insert'] = self.enrich_cntrb_id(
-            review_msgs['insert'], 'user.login', action_map_additions={
-                'insert': {
-                    'source': ['user.node_id'],
-                    'augur': ['gh_node_id']
-                }
-            }, prefix='user.'
-        )
+        if len(review_msgs['insert']) > 0:
+            review_msgs['insert'] = self.enrich_cntrb_id(
+                review_msgs['insert'], 'user.login', action_map_additions={
+                    'insert': {
+                        'source': ['user.node_id'],
+                        'augur': ['gh_node_id']
+                    }
+                }, prefix='user.'
+            )
+        else:
+            self.logger.info("Contributor enrichment is not needed, nothing to insert from the action map.")
 
         review_msg_insert = [
             {
@@ -875,8 +942,14 @@ class GitHubPullRequestWorker(Worker):
                 'augur': ['pull_request_id', 'pr_src_id']
             }
         }
-        source_labels_insert, _ = self.new_organize_needed_data(
-            labels_all, augur_table=self.pull_request_labels_table, action_map=label_action_map
+
+
+        table_values_pr_labels = self.db.execute(
+            s.sql.select(self.get_relevant_columns(self.pull_request_labels_table,label_action_map))
+        ).fetchall()
+
+        source_labels_insert, _ = self.organize_needed_data(
+            labels_all, table_values=table_values_pr_labels, action_map=label_action_map
         )
         labels_insert = [
             {
@@ -901,18 +974,28 @@ class GitHubPullRequestWorker(Worker):
                 'augur': ['pull_request_id', 'pr_reviewer_src_id']
             }
         }
-        source_reviewers_insert, _ = self.new_organize_needed_data(
-            reviewers_all, augur_table=self.pull_request_reviewers_table,
+
+        table_values_issue_labels = self.db.execute(
+            s.sql.select(self.get_relevant_columns(self.pull_request_reviewers_table,reviewer_action_map))
+        ).fetchall()
+
+        source_reviewers_insert, _ = self.organize_needed_data(
+            reviewers_all, table_values=table_values_issue_labels,
             action_map=reviewer_action_map
         )
-        source_reviewers_insert = self.enrich_cntrb_id(
-            source_reviewers_insert, 'login', action_map_additions={
-                'insert': {
-                    'source': ['node_id'],
-                    'augur': ['gh_node_id']
+
+        if len(source_reviewers_insert) > 0:
+            source_reviewers_insert = self.enrich_cntrb_id(
+                source_reviewers_insert, 'login', action_map_additions={
+                    'insert': {
+                        'source': ['node_id'],
+                        'augur': ['gh_node_id']
+                    }
                 }
-            }
-        )
+            )
+        else:
+            self.logger.info("Contributor enrichment is not needed, no inserts provided.")
+
         reviewers_insert = [
             {
                 'pull_request_id': reviewer['pull_request_id'],
@@ -932,18 +1015,30 @@ class GitHubPullRequestWorker(Worker):
                 'augur': ['pull_request_id', 'pr_assignee_src_id']
             }
         }
-        source_assignees_insert, _ = self.new_organize_needed_data(
-            assignees_all, augur_table=self.pull_request_assignees_table,
+
+
+        table_values_assignees_labels = self.db.execute(
+            s.sql.select(self.get_relevant_columns(self.pull_request_assignees_table,assignee_action_map))
+        ).fetchall()
+
+        source_assignees_insert, _ = self.organize_needed_data(
+            assignees_all, table_values=table_values_assignees_labels,
             action_map=assignee_action_map
         )
-        source_assignees_insert = self.enrich_cntrb_id(
-            source_assignees_insert, 'login', action_map_additions={
-                'insert': {
-                    'source': ['node_id'],
-                    'augur': ['gh_node_id']
+
+        if len(source_assignees_insert) > 0:
+            source_assignees_insert = self.enrich_cntrb_id(
+                source_assignees_insert, 'login', action_map_additions={
+                    'insert': {
+                        'source': ['node_id'],
+                        'augur': ['gh_node_id']
+                    }
                 }
-            }
-        )
+            )
+        else:
+            self.logger.info("Contributor enrichment is not needed, no inserts provided.")
+
+
         assignees_insert = [
             {
                 'pull_request_id': assignee['pull_request_id'],
@@ -964,17 +1059,27 @@ class GitHubPullRequestWorker(Worker):
             }
         }
 
-        source_meta_insert, _ = self.new_organize_needed_data(
-            meta_all, augur_table=self.pull_request_meta_table, action_map=meta_action_map
+        table_values_pull_request_meta = self.db.execute(
+            s.sql.select(self.get_relevant_columns(self.pull_request_meta_table,meta_action_map))
+        ).fetchall()
+
+        source_meta_insert, _ = self.organize_needed_data(
+            meta_all, table_values=table_values_pull_request_meta, action_map=meta_action_map
         )
-        source_meta_insert = self.enrich_cntrb_id(
-            source_meta_insert, 'user.login', action_map_additions={
-                'insert': {
-                    'source': ['user.node_id'],
-                    'augur': ['gh_node_id']
-                }
-            }, prefix='user.'
-        )
+
+
+        if len(source_meta_insert) > 0:
+            source_meta_insert = self.enrich_cntrb_id(
+                source_meta_insert, 'user.login', action_map_additions={
+                    'insert': {
+                        'source': ['user.node_id'],
+                        'augur': ['gh_node_id']
+                    }
+                }, prefix='user.'
+            )
+        else:
+            self.logger.info("Contributor enrichment is not needed, nothing in source_meta_insert.")
+
         meta_insert = [
             {
                 'pull_request_id': meta['pull_request_id'],
