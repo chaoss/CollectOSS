@@ -220,6 +220,7 @@ class Persistant():
         except Exception as e:
             self.logger.info(f"Could not find max id. ERROR: {e}")
         
+        #25151
         self.logger.info(f"Good, passed the max id getter. Max id: {self.history_id}")
 
     #Make sure the type used to store date is synced with the worker?
