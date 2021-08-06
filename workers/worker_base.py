@@ -160,6 +160,7 @@ class Worker(Persistant):
             # Call method corresponding to model sent in task
             try:
                 model_method = getattr(self, '{}_model'.format(message['models'][0]))
+                self.logger.info("Made it passed getting the attribute!")
                 self.record_model_process(repo_id, 'repo_info')
             except Exception as e:
                 self.logger.error('Error: {}.\nNo defined method for model: {}, '.format(e, message['models'][0]) +
