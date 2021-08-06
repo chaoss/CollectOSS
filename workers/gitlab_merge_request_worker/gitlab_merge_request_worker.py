@@ -1,4 +1,5 @@
 import logging, os, sys, time, requests, json
+from workers.worker_git_integration import WorkerGitInterfaceable
 from datetime import datetime
 from multiprocessing import Process, Queue
 import pandas as pd
@@ -7,7 +8,7 @@ from workers.worker_base import Worker
 from urllib.parse import urlparse, quote
 
 
-class GitlabMergeRequestWorker(Worker):
+class GitlabMergeRequestWorker(WorkerGitInterfaceable):
     def __init__(self, config={}):
         # Define what this worker can be given and know how to interpret
 
