@@ -7,6 +7,7 @@ import os
 import sys
 import time
 import traceback
+from workers.worker_git_integration import WorkerGitInterfaceable
 from numpy.lib.utils import source
 import requests
 import copy
@@ -17,7 +18,7 @@ import sqlalchemy as s
 from sqlalchemy.sql.expression import bindparam
 from workers.worker_base import Worker
 
-class GitHubPullRequestWorker(Worker):
+class GitHubPullRequestWorker(WorkerGitInterfaceable):
     """
     Worker that collects Pull Request related data from the
     Github API and stores it in our database.
