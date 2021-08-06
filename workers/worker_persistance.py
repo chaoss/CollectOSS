@@ -214,7 +214,14 @@ class Persistant():
                 self.logger.error("Error setting attribute for table: {} : {}".format(table, e))
 
         # Increment so we are ready to insert the 'next one' of each of these most recent ids
-        self.history_id = self.get_max_id('worker_history', 'history_id', operations_table=True) + 1
+        self.logger.info("Trying to find max id of table...")
+        try:
+            self.history_id = self.get_max_id('worker_history', 'history_id', operations_table=True) + 1
+        except Exception as e:
+            self.logger.info(f"Could not find max id. ERROR: {e}")
+        
+        #25151
+        #self.logger.info(f"Good, passed the max id getter. Max id: {self.history_id}")
 
     #Make sure the type used to store date is synced with the worker?
     def sync_df_types(self, subject, source, subject_columns, source_columns):

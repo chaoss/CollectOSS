@@ -275,7 +275,7 @@ class GitHubWorker(WorkerGitInterfaceable):
             )
 
         # list to hold contributors needing insertion or update
-        issue_comments = self.new_paginate_endpoint(
+        issue_comments = self.paginate_endpoint(
             comments_url, action_map=comment_action_map, table=self.message_table,
             where_clause=self.message_table.c.msg_id.in_(
                 [

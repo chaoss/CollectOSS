@@ -135,6 +135,8 @@ class Worker(Persistant):
         self.initialize_logging() # need to initialize logging again in child process cause multiprocessing
         self.logger.info("Starting data collection process\n")
         self.initialize_database_connections()
+        #self.logger.info("Got to this point.")
+        #self.logger.info(f"This is the oauths 0 index {self.oauths}")
         while True:
             if not self._queue.empty():
                 message = self._queue.get() # Get the task off our MP queue
@@ -160,6 +162,7 @@ class Worker(Persistant):
             # Call method corresponding to model sent in task
             try:
                 model_method = getattr(self, '{}_model'.format(message['models'][0]))
+                #TODO: set this to record exceptions seperatly. This errored and it took a while to figure that ^ wasn't the line that was erroring.
                 self.record_model_process(repo_id, 'repo_info')
             except Exception as e:
                 self.logger.error('Error: {}.\nNo defined method for model: {}, '.format(e, message['models'][0]) +
@@ -349,6 +352,7 @@ class Worker(Persistant):
 
     def record_model_process(self, repo_id, model):
 
+        self.logger.info(f"This is the oauths 0 index {self.oauths[0]}")
         task_history = {
             "repo_id": repo_id,
             "worker": self.config['id'],
