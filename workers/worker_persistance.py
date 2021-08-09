@@ -801,12 +801,35 @@ class Persistant():
             :returns: Same data list with each element's field updated with NUL characters
                 removed
         """
+        #self.logger.info(f"Original data point{field:datapoint[field]}")
+
         return [
             {
                 **data_point,
-                field: data_point[field].replace("\x00", "\uFFFD")
+                #field: data_point[field].replace("\x00", "\uFFFD")
+                #self.logger.info(f"Null replaced data point{field:datapoint[field]}")
+                ## trying to use standard python3 method for text cleaning here. 
+                field: bytes(data_point[field], "utf-8").decode("utf-8", "replace") 
+                #0x00
             } for data_point in data
         ]
+
+    # def text_clean(self, data, field):
+    #     """ "Cleans" the provided field of each dict in the list of dicts provided
+    #         by removing NUL (C text termination) characters
+    #         Example: "\u0000"
+
+    #         :param data: List of dicts
+    #         :param field: String
+    #         :returns: Same data list with each element's field updated with NUL characters
+    #             removed
+    #     """
+    #     return [
+    #         {
+    #             **data_point,
+    #             field: data_point[field].replace("\x00", "\uFFFD")
+    #         } for data_point in data
+    #     ]
 
     def _add_nested_columns(self, df, column_names):
         # todo: support deeper nests (>1) and only expand necessary columns
