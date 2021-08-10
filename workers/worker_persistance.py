@@ -37,6 +37,8 @@ class Persistant():
 
     def __init__(self, worker_type, data_tables=[],operations_tables=[]):
 
+        self.db_schema = None 
+        self.helper_schema = None 
         self.worker_type = worker_type
         #For database functionality
         self.data_tables = data_tables
@@ -178,13 +180,13 @@ class Persistant():
         # Create an sqlalchemy engine for both database schemas
         self.logger.info("Making database connections")
 
-        db_schema = 'augur_data'
+        self.db_schema = 'augur_data'
         self.db = s.create_engine(DB_STR,  poolclass=s.pool.NullPool,
-            connect_args={'options': '-csearch_path={}'.format(db_schema), 'client_encoding': 'utf8'})
+            connect_args={'options': '-csearch_path={}'.format(self.db_schema), 'client_encoding': 'utf8'})
 
-        helper_schema = 'augur_operations'
+        self.helper_schema = 'augur_operations'
         self.helper_db = s.create_engine(DB_STR, poolclass=s.pool.NullPool,
-            connect_args={'options': '-csearch_path={}'.format(helper_schema), 'client_encoding': 'utf8'})
+            connect_args={'options': '-csearch_path={}'.format(self.helper_schema), 'client_encoding': 'utf8'})
 
         metadata = s.MetaData()
         helper_metadata = s.MetaData()
