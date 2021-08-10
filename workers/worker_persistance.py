@@ -773,7 +773,7 @@ class Persistant():
                     #This causes the github worker to throw an error with pandas
                     #cur.copy_expert(sql=sql, file=self.text_clean(s_buf))
                     s_buf_encoded = s_buf.read().encode("UTF-8") 
-                    self.logger.info(f"this is the sbuf_encdoded {s_buf_encoded}")
+                    #self.logger.info(f"this is the sbuf_encdoded {s_buf_encoded}")
                     cur.copy_expert(sql=sql, file=s_buf)
 
 
