@@ -14,6 +14,7 @@ import copy
 import concurrent
 import multiprocessing
 import psycopg2
+import psycopg2.extensions
 import csv
 import io
 from logging import FileHandler, Formatter, StreamHandler
@@ -755,6 +756,7 @@ class Persistant():
                 # gets a DBAPI connection that can provide a cursor
                 dbapi_conn = conn.connection
                 with dbapi_conn.cursor() as cur:
+                    psycopg2.extensions.register_type(psycopg2.extensions.UNICODE, cur)
                     s_buf = io.StringIO()
                     writer = csv.writer(s_buf)
                     writer.writerows(data_iter)
@@ -769,7 +771,11 @@ class Persistant():
                     sql = 'COPY {} ({}) FROM STDIN WITH CSV'.format(
                         table_name, columns)
                     #This causes the github worker to throw an error with pandas
+                    #cur.copy_expert(sql=sql, file=self.text_clean(s_buf))
+                    s_buf_encoded = s_buf.read().encode("UTF-8") 
+                    self.logger.info(f"this is the sbuf_encdoded {s_buf_encoded}")
                     cur.copy_expert(sql=sql, file=s_buf)
+
 
             df = pd.DataFrame(insert)
             if convert_float_int:
@@ -801,12 +807,35 @@ class Persistant():
             :returns: Same data list with each element's field updated with NUL characters
                 removed
         """
+        #self.logger.info(f"Original data point{field:datapoint[field]}")
+
         return [
             {
                 **data_point,
-                field: data_point[field].replace("\x00", "\uFFFD")
+                #field: data_point[field].replace("\x00", "\uFFFD")
+                #self.logger.info(f"Null replaced data point{field:datapoint[field]}")
+                ## trying to use standard python3 method for text cleaning here. 
+                field: bytes(data_point[field], "utf-8").decode("utf-8", "ignore").replace("\x00", "\uFFFD") 
+                #0x00
             } for data_point in data
         ]
+
+    # def text_clean(self, data, field):
+    #     """ "Cleans" the provided field of each dict in the list of dicts provided
+    #         by removing NUL (C text termination) characters
+    #         Example: "\u0000"
+
+    #         :param data: List of dicts
+    #         :param field: String
+    #         :returns: Same data list with each element's field updated with NUL characters
+    #             removed
+    #     """
+    #     return [
+    #         {
+    #             **data_point,
+    #             field: data_point[field].replace("\x00", "\uFFFD")
+    #         } for data_point in data
+    #     ]
 
     def _add_nested_columns(self, df, column_names):
         # todo: support deeper nests (>1) and only expand necessary columns

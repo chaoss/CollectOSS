@@ -49,7 +49,7 @@ setup(
         "psycopg2-binary==2.8.6",
         "click<8.0,>=5.1",
         "psutil==5.8.0",
-        "gunicorn==20.0.4",
+        "gunicorn==20.1.0",
         "six==1.15.0",
         "bokeh==2.0.2",
         "selenium==3.141.0",

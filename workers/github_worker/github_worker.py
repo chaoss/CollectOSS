@@ -443,8 +443,8 @@ class GitHubWorker(WorkerGitInterfaceable):
                     continue
 
                 closed_issue_updates.append({
-                    'b_issue_id': issue['issue_id'],
-                    'cntrb_id': closed_event['cntrb_id']
+                    'b_issue_id'.item(): issue['issue_id'],
+                    'cntrb_id'.item(): closed_event['cntrb_id']
                 })
 
         # Closed issues, update with closer id
