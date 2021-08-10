@@ -171,7 +171,7 @@ class Persistant():
 
     #database interface, the git interfaceable adds additional function to the super method.
     def initialize_database_connections(self):
-        DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(
+        DB_STR = 'postgresql://{}:{}@{}:{}/{}?charset=utf8'.format(
             self.config['user_database'], self.config['password_database'], self.config['host_database'], self.config['port_database'], self.config['name_database']
         )
 
@@ -755,7 +755,7 @@ class Persistant():
                 """
                 # gets a DBAPI connection that can provide a cursor
                 dbapi_conn = conn.connection
-                psycopg2.extensions.register_type(psycopg2.extensions.UNICODE)
+                #psycopg2.extensions.register_type(psycopg2.extensions.UNICODE)
 
                 with dbapi_conn.cursor() as cur:
 #                    psycopg2.extensions.register_type(psycopg2.extensions.UNICODE, cur)
