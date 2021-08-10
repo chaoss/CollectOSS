@@ -34,4 +34,3 @@ Before you get off to such a quick start, go ahead and
 
     sudo ./docker-setup.sh
 
-**Detailed Instructions that explain each step, and alternative, are available on the next page**

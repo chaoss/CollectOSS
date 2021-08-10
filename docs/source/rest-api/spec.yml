@@ -74,7 +74,7 @@ paths:
             type: array
       tags:
       - utility
-  /repo-groups/:repo_group_id/Committers:
+  /repo-groups/:repo_group_id/committers:
     get:
       description: 'Number of persons opening an issue for the first time. '
       externalDocs:

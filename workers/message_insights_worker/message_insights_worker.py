@@ -5,6 +5,7 @@ import os
 import sys
 import warnings
 from multiprocessing import Process, Queue
+from workers.worker_git_integration import WorkerGitInterfaceable
 
 import numpy as np
 import pandas as pd
@@ -20,7 +21,7 @@ from workers.worker_base import Worker
 
 warnings.filterwarnings('ignore')
 
-class MessageInsightsWorker(Worker):
+class MessageInsightsWorker(WorkerGitInterfaceable):
     def __init__(self, config={}):
 
         # Define the worker's type, which will be used for self identification.
