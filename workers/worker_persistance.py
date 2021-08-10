@@ -14,6 +14,7 @@ import copy
 import concurrent
 import multiprocessing
 import psycopg2
+import psycopg2.extensions
 import csv
 import io
 from logging import FileHandler, Formatter, StreamHandler
@@ -755,6 +756,7 @@ class Persistant():
                 # gets a DBAPI connection that can provide a cursor
                 dbapi_conn = conn.connection
                 with dbapi_conn.cursor() as cur:
+                    psycopg2.extensions.register_type(psycopg2.extensions.UNICODE, cur)
                     s_buf = io.StringIO()
                     writer = csv.writer(s_buf)
                     writer.writerows(data_iter)
@@ -769,10 +771,11 @@ class Persistant():
                     sql = 'COPY {} ({}) FROM STDIN WITH CSV'.format(
                         table_name, columns)
                     #This causes the github worker to throw an error with pandas
+                    #cur.copy_expert(sql=sql, file=self.text_clean(s_buf))
+                    s_buf_encoded = s_buf.read().encode("UTF-8") 
+                    self.logger.info(f"this is the sbuf_encdoded {s_buf_encoded}")
+                    cur.copy_expert(sql=sql, file=s_buf)
 
-                    self.logger.info(f"this is the sbuf {s_buf}")
-                    cur.copy_expert(sql=sql, file=self.text_clean(s_buf,))
-                    
 
             df = pd.DataFrame(insert)
             if convert_float_int:
