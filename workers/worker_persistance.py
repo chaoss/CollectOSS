@@ -769,7 +769,7 @@ class Persistant():
                     sql = 'COPY {} ({}) FROM STDIN WITH CSV'.format(
                         table_name, columns)
                     #This causes the github worker to throw an error with pandas
-                    cur.copy_expert(sql=sql, file=s_buf)
+                    cur.copy_expert(sql=sql, file=text_clean(s_buf))
 
             df = pd.DataFrame(insert)
             if convert_float_int:
