@@ -784,6 +784,7 @@ class Persistant():
             if convert_float_int:
                 df = self._convert_float_nan_to_int(df)
             df.to_sql(
+                schema = self.db_schema,
                 name=table.name,
                 con=self.db,
                 if_exists="append",
