@@ -755,7 +755,7 @@ class Persistant():
                 """
                 # gets a DBAPI connection that can provide a cursor
                 dbapi_conn = conn.connection
-                psycopg2.extensions.register_type(psycopg2.extensions.UNICODE, dbapi_conn)
+                psycopg2.extensions.register_type(psycopg2.extensions.UNICODE)
 
                 with dbapi_conn.cursor() as cur:
 #                    psycopg2.extensions.register_type(psycopg2.extensions.UNICODE, cur)
