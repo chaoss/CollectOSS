@@ -171,7 +171,7 @@ class Persistant():
 
     #database interface, the git interfaceable adds additional function to the super method.
     def initialize_database_connections(self):
-        DB_STR = 'postgresql://{}:{}@{}:{}/{}?charset=utf8'.format(
+        DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(
             self.config['user_database'], self.config['password_database'], self.config['host_database'], self.config['port_database'], self.config['name_database']
         )
 
@@ -180,11 +180,11 @@ class Persistant():
 
         db_schema = 'augur_data'
         self.db = s.create_engine(DB_STR,  poolclass=s.pool.NullPool,
-            connect_args={'options': '-csearch_path={}'.format(db_schema)})
+            connect_args={'options': '-csearch_path={}'.format(db_schema), 'client_encoding': 'utf8'})
 
         helper_schema = 'augur_operations'
         self.helper_db = s.create_engine(DB_STR, poolclass=s.pool.NullPool,
-            connect_args={'options': '-csearch_path={}'.format(helper_schema)})
+            connect_args={'options': '-csearch_path={}'.format(helper_schema), 'client_encoding': 'utf8'})
 
         metadata = s.MetaData()
         helper_metadata = s.MetaData()
