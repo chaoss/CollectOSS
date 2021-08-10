@@ -772,6 +772,7 @@ class Persistant():
 
                     self.logger.info(f"this is the sbuf {s_buf}")
                     cur.copy_expert(sql=sql, file=self.text_clean(s_buf,))
+                    
 
             df = pd.DataFrame(insert)
             if convert_float_int:
