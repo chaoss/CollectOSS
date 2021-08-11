@@ -757,8 +757,7 @@ class Persistant():
                 """
                 # gets a DBAPI connection that can provide a cursor
                 dbapi_conn = conn.connection
-
-                with dbapi_conn.cursor() as cur:
+                with dbapi_conn.cursor() as curs:
                     s_buf = io.StringIO()
                     writer = csv.writer(s_buf)
                     writer.writerows(data_iter)
@@ -774,10 +773,10 @@ class Persistant():
                         table_name, columns)
                     #This causes the github worker to throw an error with pandas
                     #cur.copy_expert(sql=sql, file=self.text_clean(s_buf))
-                    s_buf_encoded = s_buf.read().encode("UTF-8") 
+                    # s_buf_encoded = s_buf.read().encode("UTF-8") 
                     #self.logger.info(f"this is the sbuf_encdoded {s_buf_encoded}")
                     try: 
-                        cur.copy_expert(sql=sql, file=s_buf)
+                        curs.copy_expert(sql=sql, file=s_buf)
                     except Exception as e: 
                         self.logger.info(f"this is the error: {e}.")
 
@@ -823,8 +822,8 @@ class Persistant():
                 ## trying to use standard python3 method for text cleaning here. 
                 # This was after `data_point[field]` for a while as `, "utf-8"` and did not work
                 # Nay, it cause silent errors without insert; or was part of that hot mess. 
-                # field: bytes(data_point[field]).decode("utf-8", "ignore").replace("\x00", "\uFFFD") 
-                field: bytes(data_point[field]).decode("utf-8", "ignore")
+                # field: bytes(data_point[field]).decode("utf-8", "ignore") decode("utf-8", "ignore") 
+                field: bytes(data_point[field]).replace("\x00", "\uFFFD")
                 #0x00
             } for data_point in data
         ]
