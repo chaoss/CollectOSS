@@ -52,4 +52,25 @@ def map_dependencies_pipfile(packages, type):
     for name, info in packages.items():
         Dict = {'name': name, 'requirement': map_dependencies(info), 'type': type, 'package': 'PYPI'}
         deps.append(Dict)
-    return deps         
+    return deps 
+
+
+def parse_pipfile(file_handle):
+    manifest = toml.load(file_handle)
+    return map_dependencies_pipfile(manifest['packages'],'runtime') + map_dependencies_pipfile(manifest['dev-packages'], 'develop')
+
+
+def parse_pipfile_lock(file_object):
+    manifest = json.load(file_object)
+    deps = list()
+    for group,dependencies in manifest.items():
+        # print(group)
+        if group == "_meta":
+            continue
+        if group == 'default':
+            group = 'runtime'
+        for name,info in dependencies.items():
+            # print(info)
+            Dict = {'name': name, 'requirement': map_dependencies(info), 'type': group, 'package': 'PYPI'}
+            deps.append(Dict)
+    return deps            
