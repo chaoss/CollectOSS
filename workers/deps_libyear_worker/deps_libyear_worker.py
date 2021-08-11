@@ -15,17 +15,17 @@ from workers.worker_base import Worker
 
 from workers.deps_worker import dependancy_calculator as dep_calc
 
-class DepsWorker(Worker):
+class DepsLibyearWorker(Worker):
     def __init__(self, config={}):
 
-        worker_type = "deps_worker"
+        worker_type = "deps_libyear_worker"
 
         # Define what this worker can be given and know how to interpret
         given = [['git_url']]
-        models = ['deps']
+        models = ['deps_libyear']
 
         # Define the tables needed to insert, update, or delete on
-        data_tables = ['repo_dependencies']
+        data_tables = ['repo_deps_libyear']
         operations_tables = ['worker_history', 'worker_job']
 
 
@@ -36,11 +36,11 @@ class DepsWorker(Worker):
             'repo_directory': self.augur_config.get_value('Workers', 'facade_worker')['repo_directory']
         })
 
-        self.tool_source = 'Deps Worker'
+        self.tool_source = 'Deps Libyear Worker'
         self.tool_version = '1.0.0'
         self.data_source = 'Augur Repository Data'
 
-    def deps_model(self, entry_info, repo_id):
+    def deps_libyear_model(self, entry_info, repo_id):
         """ Data collection and storage method
         """
         self.logger.info(entry_info)
@@ -56,13 +56,13 @@ class DepsWorker(Worker):
         absolute_repo_path = self.config['repo_directory'] + relative_repo_path
 
         try:
-            self.generate_deps_data(repo_id, absolute_repo_path)
+            self.generate_deps_libyear_data(repo_id, absolute_repo_path)
         except Exception as e:
             self.logger.error(e)
 
-        self.register_task_completion(entry_info, repo_id, "deps")
+        self.register_task_completion(entry_info, repo_id, "deps_libyear")
 
-    def generate_deps_data(self, repo_id, path):
+    def generate_deps_libyear_data(self, repo_id, path):
         """Runs scc on repo and stores data in database
 
         :param repo_id: Repository ID
@@ -85,5 +85,5 @@ class DepsWorker(Worker):
                     'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
                 }
 
-                result = self.db.execute(self.repo_dependencies_table.insert().values(repo_deps))
+                result = self.db.execute(self.repo_deps_libyear_table.insert().values(repo_deps))
                 self.logger.info(f"Added dep: {result.inserted_primary_key}")
