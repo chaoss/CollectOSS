@@ -73,4 +73,31 @@ def parse_pipfile_lock(file_object):
             # print(info)
             Dict = {'name': name, 'requirement': map_dependencies(info), 'type': group, 'package': 'PYPI'}
             deps.append(Dict)
-    return deps            
+    return deps         
+
+
+def parse_setup_py(file_handle):
+    manifest= file_handle.read()
+
+    deps = list()
+
+    # for single_line in manifest:
+    # matchh = re.match(INSTALL_REGEXP, manifest)
+    matchh = install_regrex.search(manifest)
+    # print(matchh[1])
+    if not matchh:
+        return "doesn't work"
+    # print(matchh[1])
+    
+    for line in re.sub(r"',(\s)?'", r"\n", matchh[1]).split("\n"):
+        # print(line)
+        if re.search(r'^#', line):
+            continue
+        matchhh = re.search(REQUIRE_REGEXP,line)
+        # print(matchhh)
+        if not matchhh:
+            continue
+        # print(matchh[1])
+        Dict = {'name': matchhh[1], 'requirement': matchhh[2], 'type': 'runtime', 'package': 'PYPI'}
+        deps.append(Dict)
+    return deps        
