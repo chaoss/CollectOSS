@@ -66,6 +66,7 @@ setup(
         "protobuf > 3.6.0",
         "slack==0.0.2",
         "boto3==1.17.57"
+        "toml"
     ],
     extras_require={
         "dev": [
