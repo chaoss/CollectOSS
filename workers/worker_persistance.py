@@ -823,7 +823,8 @@ class Persistant():
                 ## trying to use standard python3 method for text cleaning here. 
                 # This was after `data_point[field]` for a while as `, "utf-8"` and did not work
                 # Nay, it cause silent errors without insert; or was part of that hot mess. 
-                field: bytes(data_point[field]).replace("\x00", "\uFFFD").decode("utf-8", "ignore") 
+                # field: bytes(data_point[field]).decode("utf-8", "ignore").replace("\x00", "\uFFFD") 
+                field: bytes(data_point[field]).decode("utf-8", "ignore")
                 #0x00
             } for data_point in data
         ]
