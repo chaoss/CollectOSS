@@ -32,3 +32,24 @@ def parse_requirement_txt(manifest):
         Dict = {'name': matches[1], 'requirement': matches[2], 'type': 'runtime', 'package': 'PYPI'}
         deps.append(Dict)  
     return deps
+
+
+def map_dependencies(info):
+    if type(info) is dict:
+        # print('true')
+        if "version" in info:
+            return info['version']
+        elif 'git' in info:
+            return info['git']+'#'+info['ref']
+    else:            
+        return info
+
+
+def map_dependencies_pipfile(packages, type):
+    deps = list()
+    if not packages:
+        return []
+    for name, info in packages.items():
+        Dict = {'name': name, 'requirement': map_dependencies(info), 'type': type, 'package': 'PYPI'}
+        deps.append(Dict)
+    return deps         
