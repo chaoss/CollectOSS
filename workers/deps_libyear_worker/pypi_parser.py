@@ -7,6 +7,12 @@ from pypi_libyear_util import sort_dependency_requirement,get_pypi_data,get_late
 from pypi_libyear_util import get_libyear
 
 
+def find(name, path):
+    for root, dirs, files in os.walk(path):
+        if name in files:
+            return os.path.join(root, name)
+
+
 INSTALL_REGEXP = r'install_requires\s*=\s*\[([\s\S]*?)\]'
 REQUIRE_REGEXP = r'([a-zA-Z0-9]+[a-zA-Z0-9\-_\.]+)([><=\w\.,]+)?'
 REQUIREMENTS_REGEXP = '^#{REQUIRE_REGEXP}'
