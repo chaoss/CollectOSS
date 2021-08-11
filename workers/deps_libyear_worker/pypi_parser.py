@@ -100,4 +100,11 @@ def parse_setup_py(file_handle):
         # print(matchh[1])
         Dict = {'name': matchhh[1], 'requirement': matchhh[2], 'type': 'runtime', 'package': 'PYPI'}
         deps.append(Dict)
-    return deps        
+    return deps
+
+
+def parse_poetry(file_handle):
+    manifest = toml.load(file_handle)
+    print(manifest)
+    # manifest = toml.load(file_handle)['tool']['poetry']
+    # return map_dependencies_pipfile(manifest['dependencies'], 'runtime') + map_dependencies_pipfile(manifest['dev-dependencies'], 'develop')
