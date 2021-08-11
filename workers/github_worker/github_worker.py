@@ -191,9 +191,18 @@ class GitHubWorker(WorkerGitInterfaceable):
 
         pk_source_issues = self._get_pk_source_issues()
         if pk_source_issues:
-            self.issue_comments_model(pk_source_issues)
-            issue_events_all = self.issue_events_model(pk_source_issues)
-            self.issue_nested_data_model(pk_source_issues, issue_events_all)
+            try: 
+                self.issue_comments_model(pk_source_issues)
+            except Exception as e: 
+                self.logger.info(f"issue comments model failed on {e}.")
+            try: 
+                issue_events_all = self.issue_events_model(pk_source_issues)
+            except Exception as e: 
+                self.logger.info(f"issue events model failed on {e}")
+            try:
+                self.issue_nested_data_model(pk_source_issues, issue_events_all)
+            except Exception as e: 
+                self.logger.info("issue nested model failed on {e}.")
 
         # Register this task as completed
         self.register_task_completion(entry_info, self.repo_id, 'issues')

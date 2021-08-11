@@ -37,6 +37,8 @@ class Persistant():
 
     def __init__(self, worker_type, data_tables=[],operations_tables=[]):
 
+        self.db_schema = None 
+        self.helper_schema = None 
         self.worker_type = worker_type
         #For database functionality
         self.data_tables = data_tables
@@ -178,13 +180,13 @@ class Persistant():
         # Create an sqlalchemy engine for both database schemas
         self.logger.info("Making database connections")
 
-        db_schema = 'augur_data'
+        self.db_schema = 'augur_data'
         self.db = s.create_engine(DB_STR,  poolclass=s.pool.NullPool,
-            connect_args={'options': '-csearch_path={}'.format(db_schema)})
-
-        helper_schema = 'augur_operations'
+            connect_args={'options': '-csearch_path={}'.format(self.db_schema)})
+        # , 'client_encoding': 'utf8'
+        self.helper_schema = 'augur_operations'
         self.helper_db = s.create_engine(DB_STR, poolclass=s.pool.NullPool,
-            connect_args={'options': '-csearch_path={}'.format(helper_schema)})
+            connect_args={'options': '-csearch_path={}'.format(self.helper_schema)})
 
         metadata = s.MetaData()
         helper_metadata = s.MetaData()
@@ -755,8 +757,7 @@ class Persistant():
                 """
                 # gets a DBAPI connection that can provide a cursor
                 dbapi_conn = conn.connection
-                with dbapi_conn.cursor() as cur:
-                    psycopg2.extensions.register_type(psycopg2.extensions.UNICODE, cur)
+                with dbapi_conn.cursor() as curs:
                     s_buf = io.StringIO()
                     writer = csv.writer(s_buf)
                     writer.writerows(data_iter)
@@ -772,15 +773,19 @@ class Persistant():
                         table_name, columns)
                     #This causes the github worker to throw an error with pandas
                     #cur.copy_expert(sql=sql, file=self.text_clean(s_buf))
-                    s_buf_encoded = s_buf.read().encode("UTF-8") 
-                    self.logger.info(f"this is the sbuf_encdoded {s_buf_encoded}")
-                    cur.copy_expert(sql=sql, file=s_buf)
+                    # s_buf_encoded = s_buf.read().encode("UTF-8") 
+                    #self.logger.info(f"this is the sbuf_encdoded {s_buf_encoded}")
+                    try: 
+                        curs.copy_expert(sql=sql, file=s_buf)
+                    except Exception as e: 
+                        self.logger.info(f"this is the error: {e}.")
 
 
             df = pd.DataFrame(insert)
             if convert_float_int:
                 df = self._convert_float_nan_to_int(df)
             df.to_sql(
+                schema = self.db_schema,
                 name=table.name,
                 con=self.db,
                 if_exists="append",
@@ -815,7 +820,10 @@ class Persistant():
                 #field: data_point[field].replace("\x00", "\uFFFD")
                 #self.logger.info(f"Null replaced data point{field:datapoint[field]}")
                 ## trying to use standard python3 method for text cleaning here. 
-                field: bytes(data_point[field], "utf-8").decode("utf-8", "ignore").replace("\x00", "\uFFFD") 
+                # This was after `data_point[field]` for a while as `, "utf-8"` and did not work
+                # Nay, it cause silent errors without insert; or was part of that hot mess. 
+                # field: bytes(data_point[field]).decode("utf-8", "ignore")  
+                field: bytes(data_point[field], "utf-8").decode("utf-8", "ignore").replace("\x00", "\uFFFD")
                 #0x00
             } for data_point in data
         ]
