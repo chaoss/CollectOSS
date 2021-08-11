@@ -182,11 +182,11 @@ class Persistant():
 
         self.db_schema = 'augur_data'
         self.db = s.create_engine(DB_STR,  poolclass=s.pool.NullPool,
-            connect_args={'options': '-csearch_path={}'.format(self.db_schema), 'client_encoding': 'utf8'})
-
+            connect_args={'options': '-csearch_path={}'.format(self.db_schema)})
+        # , 'client_encoding': 'utf8'
         self.helper_schema = 'augur_operations'
         self.helper_db = s.create_engine(DB_STR, poolclass=s.pool.NullPool,
-            connect_args={'options': '-csearch_path={}'.format(self.helper_schema), 'client_encoding': 'utf8'})
+            connect_args={'options': '-csearch_path={}'.format(self.helper_schema)})
 
         metadata = s.MetaData()
         helper_metadata = s.MetaData()
