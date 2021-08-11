@@ -21,3 +21,14 @@ MANIFEST_REGEXP = r'.*require[^\/]*(\/)?[^\/]*\.(txt|pip)$'
 install_regrex = re.compile(INSTALL_REGEXP)
 require_regrex = re.compile(REQUIRE_REGEXP)
 requirement_regrex = re.compile(REQUIREMENTS_REGEXP)
+
+
+def parse_requirement_txt(manifest):
+    deps=list()
+    for line in manifest.split('\n'):
+        matches = require_regrex.search(line.replace("'",""))
+        if not matches:
+            continue
+        Dict = {'name': matches[1], 'requirement': matches[2], 'type': 'runtime', 'package': 'PYPI'}
+        deps.append(Dict)  
+    return deps
