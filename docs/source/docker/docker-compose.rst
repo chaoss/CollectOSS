@@ -50,6 +50,8 @@ Stopping the containers
 
 To stop the containers, do a keyboard inturrupt while the script is running ``Ctrl+C``. The script will then ask if you want to generate log files to look at later.
 
+If not using the script, the standard method of stopping the containers that you started should work such as ``docker stop`` or ``docker-compose down``
+
 Once you've got your container up and running, checkout out `how to use them <usage.html>`_ 
 
 
@@ -58,6 +60,21 @@ Docker Compose without a script
 
 This section of the documentation details how to use Augur's Docker Compose configuration to get the full stack up and running as fast as possible without the recommended helper script. 
 
+.. warning::
+
+    Don't forget to provide your external database credentials in the ``docker_env.txt`` file. Additionally an ``.env`` file is needed for the ``*.yml`` files' environment variables. Don't forget to set the variables specified specified in these files namely ``AUGUR_DB_TYPE`` and ``AUGUR_DB_HOST``.
+
+    Example docker_env.txt:
+    .. code:: 
+
+        AUGUR_GITHUB_API_KEY=your_key_here
+        AUGUR_DB_SCHEMA_BUILD=0
+        AUGUR_DB_HOST=xx.xxx.xxx.xxx
+        AUGUR_DB_NAME=augur
+        AUGUR_DB_PORT=5432
+        AUGUR_DB_USER=augur
+        AUGUR_DB_PASSWORD=somePassword
+
 
 To run Augur **without** the database container:
 
@@ -65,17 +82,13 @@ To run Augur **without** the database container:
 
     docker-compose -f docker-compose.yml up
 
-.. warning::
-
-    Don't forget to provide your external database credentials in the ``docker_env.txt`` file. Additionally the ``.env`` file is needed for the ``*.yml`` files' environment variables. Don't forget to set the variables specified specified in these files namely ``AUGUR_DB_TYPE`` and ``AUGUR_DB_HOST``.
-
 To run Augur **with** the database container:
 
 .. code-block:: bash
 
     docker-compose -f docker-compose.yml -f database-compose.yml up
 
-If you want to use the ``test_data`` image with the data preloaded, change the ``image`` line of ``database-compose.yml`` to\:
+If you want to use the ``test_data`` image with the data preloaded, change the ``image`` line of ``database-compose.yml`` to:
 
 .. code::
 
