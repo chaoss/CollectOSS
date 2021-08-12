@@ -13,7 +13,8 @@ from sqlalchemy.ext.automap import automap_base
 from sqlalchemy import MetaData
 from workers.worker_base import Worker
 
-from workers.deps_worker import dependancy_calculator as dep_calc
+# from workers.deps_worker import dependancy_calculator as dep_calc
+from pypi_parser import get_deps_libyear_data
 
 class DepsLibyearWorker(Worker):
     def __init__(self, config={}):
@@ -63,7 +64,7 @@ class DepsLibyearWorker(Worker):
         self.register_task_completion(entry_info, repo_id, "deps_libyear")
 
     def generate_deps_libyear_data(self, repo_id, path):
-        """Runs scc on repo and stores data in database
+        """Scans for package files and calculates libyear 
 
         :param repo_id: Repository ID
         :param path: Absolute path of the Repostiory
@@ -71,14 +72,20 @@ class DepsLibyearWorker(Worker):
         self.logger.info('Searching for deps in repo')
         self.logger.info(f'Repo ID: {repo_id}, Path: {path}')
 
-        deps = dep_calc.get_deps(path)
+        deps = get_deps_libyear_data(path)
 
         for dep in deps:
                 repo_deps = {
                     'repo_id': repo_id,
-                    'dep_name' : dep.name,
-	                'dep_count' : dep.count,
-	                'dep_language' : dep.language,
+                    'name' : dep['name'],
+	                'requirement' : dep['requirement'],
+	                'type' : dep['type'],
+                    'package_manager' : dep['package'],
+                    'current_verion' : dep['current_version'],
+                    'latest_version' : dep['latest_version'],
+                    'current_release_date' : dep['current_release_date'],
+                    'latest_release_date' : dep['latest_release_date'],
+                    'libyear' : dep['libyear'],
                     'tool_source': self.tool_source,
                     'tool_version': self.tool_version,
                     'data_source': self.data_source,
