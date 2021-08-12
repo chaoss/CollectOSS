@@ -367,7 +367,7 @@ default_config = {
                     "switch": 0,
                     "workers": 1
                 },
-                "deps_worker": {
+                "deps_libyear_worker": {
                     "port": deps_libyear_worker_p,
                     "switch": 0,
                     "workers": 1
