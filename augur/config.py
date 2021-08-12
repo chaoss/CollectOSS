@@ -240,6 +240,14 @@ default_config = {
                     ],
                     "model": "deps",
                     "repo_group_id": 0
+                },
+                {
+                    "delay": 150000,
+                    "given": [
+                        "git_url"
+                    ],
+                    "model": "deps_libyear",
+                    "repo_group_id": 0
                 }
             ]
             },
