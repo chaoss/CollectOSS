@@ -1405,7 +1405,7 @@ class WorkerGitInterfaceable(Worker):
                             pass
                 num_attempts += 1
             if not success:
-                break
+              break
 
             # Success
 
