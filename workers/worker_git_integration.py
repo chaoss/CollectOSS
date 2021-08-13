@@ -400,6 +400,8 @@ class WorkerGitInterfaceable(Worker):
                     except:
                       pass
                 attempts += 1
+              if not success:
+                break
               
 
               
