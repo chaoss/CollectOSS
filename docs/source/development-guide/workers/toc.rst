@@ -43,7 +43,7 @@ Models & Tables they populate-
 
     1.9.  message: Stores the messages on the MR thread.
 
-    1.10: contributors: Stores the information related to each contributor of the project. It's implementation is in the base worker class. `query_gitlab_contribtutors`
+    1.10: contributors: Stores the information related to each contributor of the project. It's implementation is in the base worker class. `query_gitlab_contributors`
 
 2. merge_request_commits:  This model deals with the commit data of each MR-
 

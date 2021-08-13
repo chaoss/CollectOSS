@@ -2,6 +2,7 @@
 import os
 from datetime import datetime
 import logging
+from workers.worker_git_integration import WorkerGitInterfaceable
 import requests
 import json
 from urllib.parse import quote
@@ -13,7 +14,7 @@ from sqlalchemy.ext.automap import automap_base
 from sqlalchemy import MetaData
 from workers.worker_base import Worker
 
-class LinuxBadgeWorker(Worker):
+class LinuxBadgeWorker(WorkerGitInterfaceable):
     """ Worker that collects repo badging data from CII
     config: database credentials, broker information, and ID
     """

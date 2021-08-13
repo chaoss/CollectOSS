@@ -1,6 +1,7 @@
 #SPDX-License-Identifier: MIT
 from multiprocessing import Process, Queue
 from urllib.parse import urlparse
+from workers.worker_git_integration import WorkerGitInterfaceable
 import requests, sys
 import pandas as pd
 import sqlalchemy as s
@@ -15,7 +16,7 @@ from workers.worker_base import Worker
 import warnings
 warnings.filterwarnings('ignore')
 
-class InsightWorker(Worker):
+class InsightWorker(WorkerGitInterfaceable):
     """ Worker that detects anomalies on a select few of our metrics
     task: most recent task the broker added to the worker's queue
     child: current process of the queue being ran
