@@ -7,10 +7,10 @@ For the Docker Saavy Who Want to Understand How the Sausage is Made:
 Augur provides several Docker images designed to get you started with our software as quickly as possible. They are:
 
 - ``augurlabs/augur:backend``, our backend data collection and metrics API
-- ``augurlabs/augur:frontend``, our metrics visualization frontend
+- ``augurlabs/augur:frontend``, our metrics visualization frontend (Experimental, will be replaced in the future)
 
 .. warning::
-   The frontend is very out of date and will likely not work with the backend very well. It is still available however.
+   The frontend is very out of date and will likely not work. It is still available however it is in the process of being replaced with an entirely new frontend so the old frontend is not being actively fixed.
 
 - ``augurlabs/augur:database``, an empty PostgreSQL database with the Augur schema installed
 - ``augurlabs/augur:test_data``, a PostgreSQL database loaded with the data used in our testing environment
@@ -34,7 +34,7 @@ Before you get started with Docker, you'll need to set up a PostgreSQL instance 
       # TYPE  DATABASE        USER            ADDRESS                 METHOD
       host	all  		all 		0.0.0.0/0 		md5
 
-If you're interested solely in data collection and do not care if your data is not persisted, we recommend using our Docker Compose script. This will start up the backend and frontend containers simultaneously, well as an optional database container; however, if you are looking to collect data long term, we **strongly suggest setting up a persistent database instance**; you can find instructions for doing so `here <../getting-started/database.html>`_. Remember to save off the credentials for your newly minted database; you'll need them shortly. 
+If you're interested solely in data collection, we recommend using our test data with the Docker Compose script. This will start up the backend and frontend containers simultaneously, well as an optional database container; however, if you are looking to collect data long term, we **strongly suggest setting up a persistent database instance**; you can find instructions for doing so `here <../getting-started/database.html>`_. Remember to save off the credentials for your newly minted database; you'll need them shortly. 
 
 If you don't care if your data doesn't get persisted or are doing local development, you can use the database containers we provide. 
 
