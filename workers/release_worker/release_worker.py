@@ -1,5 +1,6 @@
 #SPDX-License-Identifier: MIT
 import logging, os, sys, time, requests, json
+from workers.worker_git_integration import WorkerGitInterfaceable
 from datetime import datetime
 from multiprocessing import Process, Queue
 from urllib.parse import urlparse
@@ -10,7 +11,7 @@ from sqlalchemy.ext.automap import automap_base
 from workers.worker_base import Worker
 
 #TODO - fully edit to match releases
-class ReleaseWorker(Worker):
+class ReleaseWorker(WorkerGitInterfaceable):
     """
     Worker that collects Repository Releases data from the Github API
     and stores it in our database.

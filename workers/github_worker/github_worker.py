@@ -1,6 +1,7 @@
 #SPDX-License-Identifier: MIT
 from multiprocessing import Process, Queue
 from urllib.parse import urlparse
+from workers.worker_git_integration import WorkerGitInterfaceable
 import pandas as pd
 import sqlalchemy as s
 import requests
@@ -8,11 +9,12 @@ import time
 import logging
 import json
 import os
+import psycopg2 #really only to catch type errors for database methods
 import math
 from datetime import datetime
 from workers.worker_base import Worker
 
-class GitHubWorker(Worker):
+class GitHubWorker(WorkerGitInterfaceable):
     """ Worker that collects data from the Github API and stores it in our database
     task: most recent task the broker added to the worker's queue
     child: current process of the queue being ran
@@ -46,6 +48,9 @@ class GitHubWorker(Worker):
         self.process_count = 1
         self.deep_collection = True
 
+        #Needs to be an attribute of the class for incremental database insert using paginate_endpoint
+        self.pk_source_issues = []
+
         # Run the general worker initialization
         super().__init__(worker_type, config, given, models, data_tables, operations_tables)
 
@@ -67,95 +72,110 @@ class GitHubWorker(Worker):
             }
         }
 
-        source_issues = self.new_paginate_endpoint(
-            issues_url, action_map=action_map,
-            table=self.issues_table, where_clause=self.issues_table.c.repo_id == self.repo_id
-        )
+        def pk_source_issues_increment_insert(inc_source_issues,action_map):
+            if len(inc_source_issues['all']) == 0:
+                self.logger.info("There are no issues for this repository.\n")
+                self.register_task_completion(self.task_info, self.repo_id, 'issues')
+                return False
+            
+            def is_valid_pr_block(issue):
+                return (
+                    'pull_request' in issue and issue['pull_request']
+                    and isinstance(issue['pull_request'], dict) and 'url' in issue['pull_request']
+                )
+            
+            #This is sending empty data to enrich_cntrb_id, fix with check.
+            #The problem happens when ['insert'] is empty but ['all'] is not.
+            if len(inc_source_issues['insert']) > 0:  
+                inc_source_issues['insert'] = self.enrich_cntrb_id(
+                    inc_source_issues['insert'], 'user.login', action_map_additions={
+                        'insert': {
+                            'source': ['user.node_id'],
+                            'augur': ['gh_node_id']
+                        }
+                    }, prefix='user.'
+                )
+            else:
+                self.logger.info("Contributor enrichment is not needed, no inserts in action map.")
+            
+            issues_insert = [
+                {
+                    'repo_id': self.repo_id,
+                    'reporter_id': issue['cntrb_id'],
+                    'pull_request': (
+                        issue['pull_request']['url'].split('/')[-1]
+                        if is_valid_pr_block(issue) else None
+                    ),
+                    'pull_request_id': (
+                        issue['pull_request']['url'].split('/')[-1]
+                        if is_valid_pr_block(issue) else None
+                    ),
+                    'created_at': issue['created_at'],
+                    'issue_title': issue['title'],
+                    'issue_body': issue['body'].replace('0x00', '____') if issue['body'] else None,
+                    'comment_count': issue['comments'],
+                    'updated_at': issue['updated_at'],
+                    'closed_at': issue['closed_at'],
+                    'repository_url': issue['repository_url'],
+                    'issue_url': issue['url'],
+                    'labels_url': issue['labels_url'],
+                    'comments_url': issue['comments_url'],
+                    'events_url': issue['events_url'],
+                    'html_url': issue['html_url'],
+                    'issue_state': issue['state'],
+                    'issue_node_id': issue['node_id'],
+                    'gh_issue_id': issue['id'],
+                    'gh_issue_number': issue['number'],
+                    'gh_user_id': issue['user']['id'],
+                    'tool_source': self.tool_source,
+                    'tool_version': self.tool_version,
+                    'data_source': self.data_source
+                } for issue in inc_source_issues['insert']
+            ]
 
-        if len(source_issues['all']) == 0:
-            self.logger.info("There are no issues for this repository.\n")
-            self.register_task_completion(self.task_info, self.repo_id, 'issues')
-            return False
+            if len(inc_source_issues['insert']) > 0 or len(inc_source_issues['update']) > 0:
+                issues_insert_result, issues_update_result = self.bulk_insert(
+                    self.issues_table, update=inc_source_issues['update'],
+                    unique_columns=action_map['insert']['augur'],
+                    insert=issues_insert, update_columns=action_map['update']['augur']
+                )
 
-        def is_valid_pr_block(issue):
-            return (
-                'pull_request' in issue and issue['pull_request']
-                and isinstance(issue['pull_request'], dict) and 'url' in issue['pull_request']
+                source_data = inc_source_issues['insert'] + inc_source_issues['update']
+            
+            elif not self.deep_collection:
+                self.logger.info(
+                    "There are not issues to update, insert, or collect nested information for.\n"
+                )
+                #This might cause problems if staggered.
+                #self.register_task_completion(entry_info, self.repo_id, 'issues')
+                return
+            
+            if self.deep_collection:
+                source_data = inc_source_issues['all']
+
+            gh_merge_fields = ['id']
+            augur_merge_fields = ['gh_issue_id']
+
+            self.pk_source_issues += self.enrich_data_primary_keys(
+                source_data, self.issues_table, gh_merge_fields, augur_merge_fields
             )
 
-        source_issues['insert'] = self.enrich_cntrb_id(
-            source_issues['insert'], 'user.login', action_map_additions={
-                'insert': {
-                    'source': ['user.node_id'],
-                    'augur': ['gh_node_id']
-                }
-            }, prefix='user.'
-        )
-
-        issues_insert = [
-            {
-                'repo_id': self.repo_id,
-                'reporter_id': issue['cntrb_id'],
-                'pull_request': (
-                    issue['pull_request']['url'].split('/')[-1]
-                    if is_valid_pr_block(issue) else None
-                ),
-                'pull_request_id': (
-                    issue['pull_request']['url'].split('/')[-1]
-                    if is_valid_pr_block(issue) else None
-                ),
-                'created_at': issue['created_at'],
-                'issue_title': issue['title'],
-                'issue_body': issue['body'].replace('0x00', '____') if issue['body'] else None,
-                'comment_count': issue['comments'],
-                'updated_at': issue['updated_at'],
-                'closed_at': issue['closed_at'],
-                'repository_url': issue['repository_url'],
-                'issue_url': issue['url'],
-                'labels_url': issue['labels_url'],
-                'comments_url': issue['comments_url'],
-                'events_url': issue['events_url'],
-                'html_url': issue['html_url'],
-                'issue_state': issue['state'],
-                'issue_node_id': issue['node_id'],
-                'gh_issue_id': issue['id'],
-                'gh_issue_number': issue['number'],
-                'gh_user_id': issue['user']['id'],
-                'tool_source': self.tool_source,
-                'tool_version': self.tool_version,
-                'data_source': self.data_source
-            } for issue in source_issues['insert']
-        ]
-
-        if len(source_issues['insert']) > 0 or len(source_issues['update']) > 0:
-
-            issues_insert_result, issues_update_result = self.bulk_insert(
-                self.issues_table, update=source_issues['update'],
-                unique_columns=action_map['insert']['augur'],
-                insert=issues_insert, update_columns=action_map['update']['augur']
-            )
-
-            source_data = source_issues['insert'] + source_issues['update']
-
-        elif not self.deep_collection:
-            self.logger.info(
-                "There are not issues to update, insert, or collect nested information for.\n"
-            )
-            self.register_task_completion(entry_info, self.repo_id, 'issues')
             return
 
-        if self.deep_collection:
-            source_data = source_issues['all']
-
-        # Merge source data to inserted data to have access to inserted primary keys
-
-        gh_merge_fields = ['id']
-        augur_merge_fields = ['gh_issue_id']
-
-        pk_source_issues = self.enrich_data_primary_keys(
-            source_data, self.issues_table, gh_merge_fields, augur_merge_fields
+        source_issues = self.paginate_endpoint(
+            issues_url, action_map=action_map,
+            table=self.issues_table, where_clause=self.issues_table.c.repo_id == self.repo_id,
+            stagger=True,insertion_method=pk_source_issues_increment_insert
         )
 
+        #Use the increment insert method in order to do the 
+        #remaining pages of the paginated endpoint that weren't inserted inside the paginate_endpoint method
+        #empty data is checked for in the method so it's not needed outside of it. 
+        pk_source_issues_increment_insert(source_issues,action_map)
+
+        pk_source_issues = self.pk_source_issues
+        self.pk_source_issues = []
+        
         return pk_source_issues
 
     def issues_model(self, entry_info, repo_id):
@@ -171,15 +191,24 @@ class GitHubWorker(Worker):
 
         pk_source_issues = self._get_pk_source_issues()
         if pk_source_issues:
-            self.issue_comments_model(pk_source_issues)
-            issue_events_all = self.issue_events_model(pk_source_issues)
-            self.issue_nested_data_model(pk_source_issues, issue_events_all)
+            try: 
+                self.issue_comments_model(pk_source_issues)
+            except Exception as e: 
+                self.logger.info(f"issue comments model failed on {e}.")
+            try: 
+                issue_events_all = self.issue_events_model(pk_source_issues)
+            except Exception as e: 
+                self.logger.info(f"issue events model failed on {e}")
+            try:
+                self.issue_nested_data_model(pk_source_issues, issue_events_all)
+            except Exception as e: 
+                self.logger.info("issue nested model failed on {e}.")
 
         # Register this task as completed
         self.register_task_completion(entry_info, self.repo_id, 'issues')
 
     def issue_comments_model(self, pk_source_issues):
-
+        # https://api.github.com/repos/chaoss/augur/issues/comments
         comments_url = (
             f"https://api.github.com/repos/{self.owner}/{self.repo}"
             "/issues/comments?per_page=100&page={}"
@@ -195,8 +224,67 @@ class GitHubWorker(Worker):
             }
         }
 
+        def issue_comments_insert(inc_issue_comments, comment_action_map):
+
+            inc_issue_comments['insert'] = self.text_clean(inc_issue_comments['insert'], 'body')
+
+            #This is sending empty data to enrich_cntrb_id, fix with check 
+            if len(inc_issue_comments['insert']) > 0:
+                inc_issue_comments['insert'] = self.enrich_cntrb_id(
+                    inc_issue_comments['insert'], 'user.login', action_map_additions={
+                        'insert': {
+                            'source': ['user.node_id'],
+                            'augur': ['gh_node_id']
+                        }
+                    }, prefix='user.'
+                )
+            else:
+                self.logger.info("Contributor enrichment is not needed, no inserts in action map.")
+
+            issue_comments_insert = [
+                {
+                    'pltfrm_id': self.platform_id,
+                    'msg_text': comment['body'],
+                    'msg_timestamp': comment['created_at'],
+                    'cntrb_id': comment['cntrb_id'],
+                    'tool_source': self.tool_source,
+                    'tool_version': self.tool_version,
+                    'data_source': self.data_source
+                } for comment in inc_issue_comments['insert']
+            ]
+
+            self.bulk_insert(self.message_table, insert=issue_comments_insert,
+                unique_columns=comment_action_map['insert']['augur'])
+
+            """ ISSUE MESSAGE REF TABLE """
+
+            c_pk_source_comments = self.enrich_data_primary_keys(
+                inc_issue_comments['insert'], self.message_table,
+                comment_action_map['insert']['source'], comment_action_map['insert']['augur']
+            )
+            both_pk_source_comments = self.enrich_data_primary_keys(
+                c_pk_source_comments, self.issues_table, ['issue_url'], ['issue_url']
+            )
+
+            issue_message_ref_insert = [
+                {
+                    'issue_id': comment['issue_id'],
+                    'msg_id': comment['msg_id'],
+                    'tool_source': self.tool_source,
+                    'tool_version': self.tool_version,
+                    'data_source': self.data_source,
+                    'issue_msg_ref_src_comment_id': comment['id'],
+                    'issue_msg_ref_src_node_id': comment['node_id']
+                } for comment in both_pk_source_comments
+            ]
+
+            self.bulk_insert(
+                self.issue_message_ref_table, insert=issue_message_ref_insert,
+                unique_columns=['issue_msg_ref_src_comment_id']
+            )
+
         # list to hold contributors needing insertion or update
-        issue_comments = self.new_paginate_endpoint(
+        issue_comments = self.paginate_endpoint(
             comments_url, action_map=comment_action_map, table=self.message_table,
             where_clause=self.message_table.c.msg_id.in_(
                 [
@@ -210,59 +298,14 @@ class GitHubWorker(Worker):
                         )
                     ).fetchall()
                 ]
-            )
+            ),
+            stagger=True,
+            insertion_method=issue_comments_insert
         )
 
-        issue_comments['insert'] = self.enrich_cntrb_id(
-            issue_comments['insert'], 'user.login', action_map_additions={
-                'insert': {
-                    'source': ['user.node_id'],
-                    'augur': ['gh_node_id']
-                }
-            }, prefix='user.'
-        )
 
-        issue_comments_insert = [
-            {
-                'pltfrm_id': self.platform_id,
-                'msg_text': comment['body'],
-                'msg_timestamp': comment['created_at'],
-                'cntrb_id': comment['cntrb_id'],
-                'tool_source': self.tool_source,
-                'tool_version': self.tool_version,
-                'data_source': self.data_source
-            } for comment in issue_comments['insert']
-        ]
-
-        self.bulk_insert(self.message_table, insert=issue_comments_insert,
-            unique_columns=comment_action_map['insert']['augur'])
-
-        """ ISSUE MESSAGE REF TABLE """
-
-        c_pk_source_comments = self.enrich_data_primary_keys(
-            issue_comments['insert'], self.message_table,
-            comment_action_map['insert']['source'], comment_action_map['insert']['augur']
-        )
-        both_pk_source_comments = self.enrich_data_primary_keys(
-            c_pk_source_comments, self.issues_table, ['issue_url'], ['issue_url']
-        )
-
-        issue_message_ref_insert = [
-            {
-                'issue_id': comment['issue_id'],
-                'msg_id': comment['msg_id'],
-                'tool_source': self.tool_source,
-                'tool_version': self.tool_version,
-                'data_source': self.data_source,
-                'issue_msg_ref_src_comment_id': comment['id'],
-                'issue_msg_ref_src_node_id': comment['node_id']
-            } for comment in both_pk_source_comments
-        ]
-
-        self.bulk_insert(
-            self.issue_message_ref_table, insert=issue_message_ref_insert,
-            unique_columns=['issue_msg_ref_src_comment_id']
-        )
+        issue_comments_insert(issue_comments,comment_action_map)
+        return
 
     def issue_events_model(self, pk_source_issues):
 
@@ -302,15 +345,19 @@ class GitHubWorker(Worker):
                 ['id', 'issue_id', 'node_id', 'url', 'actor', 'created_at', 'event', 'commit_id']
             ].to_dict(orient='records')
 
-        pk_issue_events = self.enrich_cntrb_id(
-            pk_issue_events, 'actor.login', action_map_additions={
-                'insert': {
-                    'source': ['actor.node_id'],
-                    'augur': ['gh_node_id']
-                }
-            }, prefix='actor.'
-        )
-
+        #This is sending empty data to enrich_cntrb_id, fix with check 
+        if len(pk_issue_events) > 0:  
+            pk_issue_events = self.enrich_cntrb_id(
+                pk_issue_events, 'actor.login', action_map_additions={
+                    'insert': {
+                        'source': ['actor.node_id'],
+                        'augur': ['gh_node_id']
+                    }
+                }, prefix='actor.'
+            )
+        else:
+            self.logger.info("Contributor enrichment is not needed, no inserts in action map.")            
+            
         issue_events_insert = [
             {
                 'issue_event_src_id': event['id'],
@@ -405,8 +452,8 @@ class GitHubWorker(Worker):
                     continue
 
                 closed_issue_updates.append({
-                    'b_issue_id': issue['issue_id'],
-                    'cntrb_id': closed_event['cntrb_id']
+                    'b_issue_id'.item(): issue['issue_id'],
+                    'cntrb_id'.item(): closed_event['cntrb_id']
                 })
 
         # Closed issues, update with closer id
@@ -422,20 +469,26 @@ class GitHubWorker(Worker):
                 'augur': ['issue_assignee_src_id']
             }
         }
+        
+        table_values_issue_assignees = self.db.execute(
+            s.sql.select(self.get_relevant_columns(self.issue_assignees_table,assignee_action_map))
+        ).fetchall()
 
-        source_assignees_insert, _ = self.new_organize_needed_data(
-            assignees_all, augur_table=self.issue_assignees_table,
+        source_assignees_insert, _ = self.organize_needed_data(
+            assignees_all, table_values=table_values_issue_assignees,
             action_map=assignee_action_map
         )
-
-        source_assignees_insert = self.enrich_cntrb_id(
-            source_assignees_insert, 'login', action_map_additions={
-                'insert': {
-                    'source': ['node_id'],
-                    'augur': ['gh_node_id']
+        if len(source_assignees_insert) > 0:
+            source_assignees_insert = self.enrich_cntrb_id(
+                source_assignees_insert, 'login', action_map_additions={
+                    'insert': {
+                        'source': ['node_id'],
+                        'augur': ['gh_node_id']
+                    }
                 }
-            }
-        )
+            )
+        else:
+            self.logger.info("Contributor enrichment is not needed, no inserts in action map.")
 
         assignees_insert = [
             {
@@ -460,8 +513,14 @@ class GitHubWorker(Worker):
                 'augur': ['label_src_id']
             }
         }
-        source_labels_insert, _ = self.new_organize_needed_data(
-            labels_all, augur_table=self.issue_labels_table,
+
+        table_values_issue_labels = self.db.execute(
+            s.sql.select(self.get_relevant_columns(self.issue_labels_table,label_action_map))
+        ).fetchall()
+
+
+        source_labels_insert, _ = self.organize_needed_data(
+            labels_all, table_values=table_values_issue_labels,
             action_map=label_action_map
         )
         labels_insert = [
@@ -477,7 +536,18 @@ class GitHubWorker(Worker):
                 'label_src_node_id': label['node_id']
             } for label in source_labels_insert
         ]
-        self.bulk_insert(
-            self.issue_labels_table, insert=labels_insert,
-            unique_columns=label_action_map['insert']['augur']
-        )
+
+        #Trying to fix an error with creating bigInts using pandas
+        try:
+            self.bulk_insert(
+                self.issue_labels_table, insert=labels_insert,
+                unique_columns=label_action_map['insert']['augur']
+            )
+        except psycopg2.errors.InvalidTextRepresentation as e:
+            #If there was an error constructing a type try to redo the insert with a conversion.
+            self.logger.warning(f"Type error when attempting to insert data in issue_nested_data_model with the github worker. Trying again with type conversion on. ERROR: {e} \n")
+            self.bulk_insert(
+                self.issue_labels_table, insert=labels_insert,
+                unique_columns=label_action_map['insert']['augur'],
+                convert_float_int=True
+            )

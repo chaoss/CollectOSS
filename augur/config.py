@@ -70,6 +70,14 @@ default_config = {
                 {
                     "delay": 150000,
                     "given": [
+                        "git_url"
+                    ],
+                    "model": "ossf_scorecard",
+                    "repo_group_id": 0
+                },
+                {
+                    "delay": 150000,
+                    "given": [
                         "github_url"
                     ],
                     "model": "contributor_breadth",

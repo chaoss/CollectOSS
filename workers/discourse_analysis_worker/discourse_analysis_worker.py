@@ -1,4 +1,5 @@
 import logging, os, sys, time, requests, json
+from workers.worker_git_integration import WorkerGitInterfaceable
 from datetime import datetime
 from multiprocessing import Process, Queue
 import pandas as pd
@@ -29,7 +30,7 @@ from collections import Counter
 
 from os import path
 
-class DiscourseAnalysisWorker(Worker):
+class DiscourseAnalysisWorker(WorkerGitInterfaceable):
 	def __init__(self, config={}):
 	
 		worker_type = "discourse_analysis_worker"

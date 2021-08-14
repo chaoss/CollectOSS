@@ -5,6 +5,7 @@ import sys
 import time
 import datetime
 from multiprocessing import Process, Queue
+from workers.worker_git_integration import WorkerGitInterfaceable
 
 import joblib
 import numpy as np
@@ -22,7 +23,7 @@ from workers.worker_base import Worker
 from augur import ROOT_AUGUR_DIRECTORY
 from augur.config import AugurConfig
 
-class PullRequestAnalysisWorker(Worker):
+class PullRequestAnalysisWorker(WorkerGitInterfaceable):
     def __init__(self, config={}):
         
         # Define the worker's type, which will be used for self identification.

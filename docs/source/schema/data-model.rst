@@ -1,14 +1,14 @@
 Data Model
 ===========
 
-The latest version of Augur includes a schema_ that brings together data from : 
+The latest version of Augur includes a schema_ that brings together data from :
 
 1. git repositories, including GitHub
 2. issue trackers
 3. mailing lists
 4. library dependency trees
 5. the Linux Foundation's badging program
-6. code complexity and contribution counting ... and MUCH MUCH MORE. 
+6. code complexity and contribution counting ... and MUCH MUCH MORE.
 
 This document details how to create the schema as well as some information on its contents and design.
 
@@ -72,8 +72,16 @@ the DoSOCSv2 project: https://github.com/Nebrethar/DoSOCSv2
 .. _schema:
 
 --------------------
-Complete Data Model
+Complete Data Model, With Key Table Types Highlighted
 --------------------
 .. image:: schema.png
   :width: 1200
-  :alt: Augur Unified Schema 
+  :alt: Augur Unified Schema
+
+
+--------------------
+Complete Data Model, For Current Release
+--------------------
+.. image:: 20210811-augur-0.2.1-release.png
+  :width: 1200
+  :alt: Augur Unified Schema

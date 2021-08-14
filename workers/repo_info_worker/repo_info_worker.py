@@ -1,5 +1,6 @@
 #SPDX-License-Identifier: MIT
 import logging, os, sys, time, requests, json
+from workers.worker_git_integration import WorkerGitInterfaceable
 from datetime import datetime
 from multiprocessing import Process, Queue
 import pandas as pd
@@ -14,7 +15,7 @@ from workers.worker_base import Worker
 # 1. Recognizing when a repository is a forked repository by updating the "forked_from" field and 
 # 2. Recognizing when a repository is archived, and recording the data we observed the change in status. 
 
-class RepoInfoWorker(Worker):
+class RepoInfoWorker(WorkerGitInterfaceable):
     def __init__(self, config={}):
 
         worker_type = "repo_info_worker"
