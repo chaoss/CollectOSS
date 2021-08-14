@@ -99,7 +99,7 @@ def parse_setup_py(file_handle):
     matchh = install_regrex.search(manifest)
     # print(matchh[1])
     if not matchh:
-        return "doesn't work"
+        return deps
     # print(matchh[1])
     
     for line in re.sub(r"',(\s)?'", r"\n", matchh[1]).split("\n"):
