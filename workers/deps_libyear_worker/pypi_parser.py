@@ -154,6 +154,7 @@ def get_parsed_deps(path):
         return dependency_list
 
 
+
 def get_deps_libyear_data(path):
     current_release_date = None
     libyear = None
