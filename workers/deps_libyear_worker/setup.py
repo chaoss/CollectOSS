@@ -27,7 +27,8 @@ setup(
         'Flask-Login==0.5.0',
         'Flask-WTF==0.14.3',
         'requests==2.22.0',
-        'psycopg2-binary==2.8.6'
+        'psycopg2-binary==2.8.6',
+        'toml'
     ],
     entry_points={
         'console_scripts': [
