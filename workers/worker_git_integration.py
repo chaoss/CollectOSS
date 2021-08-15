@@ -358,25 +358,53 @@ class WorkerGitInterfaceable(Worker):
                 self.logger.info(f"Error when creating url: {e}. Data: {data}")
 
               attempts = 0
+              contributor = None
+              success = False
+              
+              while attempts < 10:
+                self.logger.info("Hitting endpoint: " + url + " ...\n")
+                try:
+                  response = requests.get(url=url , headers=self.headers)
+                except TimeoutError:
+                  self.logger.info(f"User data request for enriching contributor data failed with {attempts} attempts! Trying again...")
+                  time.sleep(10)
+                  continue
+                
+                self.update_rate_limit(response,platform=platform)
 
-              try:
-                while attempts < 10:
-                  try:
-                    self.logger.info("Hitting endpoint: " + url + " ...\n")
-                    response = requests.get(url=url , headers=self.headers)
-                    break
-                  except TimeoutError:
-                    self.logger.info(f"User data request for enriching contributor data failed with {attempts} attempts! Trying again...")
-                    time.sleep(10)
-
-                  attempts += 1
-              except Exception as e:
-                raise e
-
-              try:
+                try:
                   contributor = response.json()
-              except:
+                except:
                   contributor = json.loads(json.dumps(response.text))
+                
+
+                if type(contributor) == dict:
+                  self.logger.info("Request returned a dict!")
+                  self.logger.info(f"Contributor data: {contributor}")
+                  success = True
+                  break
+                elif type(contributor) == list:
+                  self.logger.warning("Wrong type returned trying again...")
+                  self.logger.info(f"Contributor data: {contributor}")
+                elif type(contributor) == str:
+                  self.logger.info(f"Warning! page_data was string: {contributor}\n")
+                  if "<!DOCTYPE html>" in contributor:
+                    self.logger.info("HTML was returned, trying again...\n")
+                  elif len(contributor) == 0:
+                    self.logger.warning("Empty string, trying again...\n")
+                  else:
+                    try:
+                      contributor = json.loads(contributor)
+                      success = True
+                      break
+                    except:
+                      pass
+                attempts += 1
+              if not success:
+                break
+              
+
+              
 
               self.logger.info(f"Contributor data: {contributor}")
 
@@ -1185,100 +1213,6 @@ class WorkerGitInterfaceable(Worker):
             # Change headers to be using the new oauth's key
             self.headers = {"PRIVATE-TOKEN" : self.oauths[0]['access_token']}
 
-
-    def update_gh_rate_limit(self, response, bad_credentials=False, temporarily_disable=False):
-        # Try to get rate limit from request headers, sometimes it does not work (GH's issue)
-        #   In that case we just decrement from last recieved header count
-        if bad_credentials and len(self.oauths) > 1:
-            self.logger.warning(
-                f"Removing oauth with bad credentials from consideration: {self.oauths[0]}"
-            )
-            del self.oauths[0]
-
-        if temporarily_disable:
-            self.logger.debug(
-                "Github thinks we are abusing their api. Preventing use "
-                "of this key until its rate limit resets..."
-            )
-            self.oauths[0]['rate_limit'] = 0
-        else:
-            try:
-                self.oauths[0]['rate_limit'] = int(response.headers['X-RateLimit-Remaining'])
-                # self.logger.info("Recieved rate limit from headers\n")
-            except:
-                self.oauths[0]['rate_limit'] -= 1
-                self.logger.info("Headers did not work, had to decrement")
-        self.logger.info(
-            f"Updated rate limit, you have: {self.oauths[0]['rate_limit']} requests remaining."
-        )
-        if self.oauths[0]['rate_limit'] <= 0:
-            try:
-                reset_time = response.headers['X-RateLimit-Reset']
-            except Exception as e:
-                self.logger.error(f"Could not get reset time from headers because of error: {e}")
-                reset_time = 3600
-            time_diff = datetime.datetime.fromtimestamp(int(reset_time)) - datetime.datetime.now()
-            self.logger.info("Rate limit exceeded, checking for other available keys to use.")
-
-            # We will be finding oauth with the highest rate limit left out of our list of oauths
-            new_oauth = self.oauths[0]
-            # Endpoint to hit solely to retrieve rate limit information from headers of the response
-            url = "https://api.github.com/users/gabe-heim"
-
-            other_oauths = self.oauths[0:] if len(self.oauths) > 1 else []
-            for oauth in other_oauths:
-                # self.logger.info("Inspecting rate limit info for oauth: {}\n".format(oauth))
-                self.headers = {'Authorization': 'token %s' % oauth['access_token']}
-
-                attempts = 3
-                success = False
-                while attempts > 0 and not success:
-                    response = requests.get(url=url, headers=self.headers)
-                    try:
-                        oauth['rate_limit'] = int(response.headers['X-RateLimit-Remaining'])
-                        oauth['seconds_to_reset'] = (
-                            datetime.datetime.fromtimestamp(
-                                int(response.headers['X-RateLimit-Reset'])
-                            ) - datetime.datetime.now()
-                        ).total_seconds()
-                        success = True
-                    except Exception as e:
-                        self.logger.info(
-                            f"oath method ran into error getting info from headers: {e}\n"
-                        )
-                        self.logger.info(f"{self.headers}\n{url}\n")
-                    attempts -= 1
-                if not success:
-                    continue
-
-                # Update oauth to switch to if a higher limit is found
-                if oauth['rate_limit'] > new_oauth['rate_limit']:
-                    self.logger.info("Higher rate limit found in oauth: {}\n".format(oauth))
-                    new_oauth = oauth
-                elif (
-                    oauth['rate_limit'] == new_oauth['rate_limit']
-                    and oauth['seconds_to_reset'] < new_oauth['seconds_to_reset']
-                ):
-                    self.logger.info(
-                        f"Lower wait time found in oauth with same rate limit: {oauth}\n"
-                    )
-                    new_oauth = oauth
-
-            if new_oauth['rate_limit'] <= 0 and new_oauth['seconds_to_reset'] > 0:
-                self.logger.info(
-                    "No oauths with >0 rate limit were found, waiting for oauth with "
-                    f"smallest wait time: {new_oauth}\n"
-                )
-                time.sleep(new_oauth['seconds_to_reset'])
-
-            # Make new oauth the 0th element in self.oauths so we know which one is in use
-            index = self.oauths.index(new_oauth)
-            self.oauths[0], self.oauths[index] = self.oauths[index], self.oauths[0]
-            self.logger.info("Using oauth: {}\n".format(self.oauths[0]))
-
-            # Change headers to be using the new oauth's key
-            self.headers = {'Authorization': 'token %s' % self.oauths[0]['access_token']}
-
     def update_rate_limit(
         self, response, bad_credentials=False, temporarily_disable=False, platform="gitlab"
     ):
@@ -1471,7 +1405,7 @@ class WorkerGitInterfaceable(Worker):
                             pass
                 num_attempts += 1
             if not success:
-                break
+              break
 
             # Success
 
