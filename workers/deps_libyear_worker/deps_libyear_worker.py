@@ -2,6 +2,7 @@
 import os, subprocess
 from datetime import datetime
 import logging
+from workers.worker_git_integration import WorkerGitInterfaceable
 import requests
 import json
 from urllib.parse import quote
@@ -16,7 +17,7 @@ from workers.worker_base import Worker
 # from workers.deps_worker import dependancy_calculator as dep_calc
 from pypi_parser import get_deps_libyear_data
 
-class DepsLibyearWorker(Worker):
+class DepsLibyearWorker(WorkerGitInterfaceable):
     def __init__(self, config={}):
 
         worker_type = "deps_libyear_worker"
