@@ -5,6 +5,7 @@ import toml
 import dateutil.parser
 from pypi_libyear_util import sort_dependency_requirement,get_pypi_data,get_latest_version,get_release_date
 from pypi_libyear_util import get_libyear
+import logging
 
 
 #Files that would be parsed should be added here.
@@ -120,7 +121,11 @@ def parse_poetry(file_handle):
     manifest = toml.load(file_handle)
     # print(manifest)
     # manifest = toml.load(file_handle)['tool']['poetry']
-    return map_dependencies_pipfile(manifest['dependencies'], 'runtime') + map_dependencies_pipfile(manifest['dev-dependencies'], 'develop')
+    try:
+        return map_dependencies_pipfile(manifest['dependencies'], 'runtime') + map_dependencies_pipfile(manifest['dev-dependencies'], 'develop')
+    except Exception as e:
+        logging.error(e)
+        return []
 
 
 def get_parsed_deps(path):
