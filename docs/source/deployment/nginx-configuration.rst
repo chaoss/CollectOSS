@@ -24,7 +24,7 @@ Your Augur instance must be compiled with publicly accessible domain that the fr
 	{
 	    "Server": {
 	        "cache_expire": 3600,
-	        "host": "you.domain.tld",
+	        "host": "subdomain.domain.tld",
 	        "port": "5000",
 	        "workers": 8
 	    }
@@ -123,11 +123,11 @@ This file will be located in your `/etc/nginx/sites-enabled` directory on most l
 		        listen 80;
 		        server_name  <<your server subdomain.domain.tld>>;
 
-		        root /home/sean/github/<<augur-instance-home>>/frontend/dist;
+		        root /home/user/.../<<augur-instance-home>>/frontend/dist;
 		        index index.html index.htm;
 
 		        location / {
-		        root /home/sean/github/augur-census/frontend/dist;
+		        root /home/user/.../<<augur-instance-home>>/frontend/dist;
 		        try_files $uri $uri/ /index.html;
 		        }
 
@@ -137,7 +137,7 @@ This file will be located in your `/etc/nginx/sites-enabled` directory on most l
 		#        }
 
 		        location /api_docs/ {
-		        root /home/sean/github/augur-census/frontend/public;
+		        root /home/user/.../<<augur-instance-home>>/frontend/dist;
 		        index index.html;
 		        }
 
