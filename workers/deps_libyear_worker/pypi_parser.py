@@ -128,6 +128,26 @@ def parse_poetry(file_handle):
         return []
 
 
+def parse_poetry_lock(file_handle):
+    manifest = toml.load(file_handle)
+    deps = list()
+    group = 'runtime'
+    for package in manifest['package']:
+        req = None
+        if package['category'] == 'main':
+            group = 'runtime'
+        if package['category'] == 'dev':
+            group = 'develop'
+        if 'version' in package:
+            req = package['version']
+        elif 'git' in package:
+            req = package['git']+'#'+package['ref']
+        Dict = {'name': package['name'], 'requirement': req, 'type': group, 'package': 'PYPI'}
+
+        deps.append(Dict)
+    return deps 
+
+
 def get_parsed_deps(path):
 
     deps_file = None
@@ -154,8 +174,8 @@ def get_parsed_deps(path):
         elif f == 'pyproject.toml':
             dependency_list = parse_poetry(file_handle)
 
-        # elif f == 'poetry.lock':
-        #     pass
+        elif f == 'poetry.lock':
+            dependency_list = parse_poetry_lock(file_handle)
         return dependency_list
 
 
