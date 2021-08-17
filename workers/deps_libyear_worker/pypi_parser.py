@@ -119,7 +119,7 @@ def parse_setup_py(file_handle):
 def parse_poetry(file_handle):
     manifest = toml.load(file_handle)
     # print(manifest)
-    manifest = toml.load(file_handle)['tool']['poetry']
+    # manifest = toml.load(file_handle)['tool']['poetry']
     return map_dependencies_pipfile(manifest['dependencies'], 'runtime') + map_dependencies_pipfile(manifest['dev-dependencies'], 'develop')
 
 
@@ -146,8 +146,8 @@ def get_parsed_deps(path):
         elif f == 'Pipfile.lock':
             dependency_list = parse_pipfile_lock(file_handle)
 
-        # elif f == 'pyproject.toml':
-        #     dependency_list = parse_poetry(file_handle)
+        elif f == 'pyproject.toml':
+            dependency_list = parse_poetry(file_handle)
 
         # elif f == 'poetry.lock':
         #     pass
