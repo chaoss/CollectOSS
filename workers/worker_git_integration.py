@@ -406,6 +406,8 @@ class WorkerGitInterfaceable(Worker):
               "gh_received_events_url": contributor['received_events_url'],
               "gh_type": contributor['type'],
               "gh_site_admin": contributor['site_admin'],
+              "cntrb_last_used" : None if 'updated_at' not in contributor else contributor['updated_at'],
+              "cntrb_full_name" : None if 'name' not in contributor else contributor['name'],
               "tool_source": self.tool_source,
               "tool_version": self.tool_version,
               "data_source": self.data_source
@@ -646,6 +648,8 @@ class WorkerGitInterfaceable(Worker):
                     "gh_received_events_url": contributor['received_events_url'],
                     "gh_type": contributor['type'],
                     "gh_site_admin": contributor['site_admin'],
+                    "cntrb_last_used" : None if 'updated_at' not in contributor else contributor['updated_at'],
+                    "cntrb_full_name" : None if 'name' not in contributor else contributor['name'],
                     "tool_source": self.tool_source,
                     "tool_version": self.tool_version,
                     "data_source": self.data_source
