@@ -50,7 +50,7 @@ def parse_requirement_txt(file_handle):
 
 def map_dependencies(info):
     if type(info) is dict:
-        # print('true')
+
         if "version" in info:
             return info['version']
         elif 'git' in info:
@@ -78,13 +78,13 @@ def parse_pipfile_lock(file_object):
     manifest = json.load(file_object)
     deps = list()
     for group,dependencies in manifest.items():
-        # print(group)
+        
         if group == "_meta":
             continue
         if group == 'default':
             group = 'runtime'
         for name,info in dependencies.items():
-            # print(info)
+            
             Dict = {'name': name, 'requirement': map_dependencies(info), 'type': group, 'package': 'PYPI'}
             deps.append(Dict)
     return deps         
@@ -98,20 +98,20 @@ def parse_setup_py(file_handle):
     # for single_line in manifest:
     # matchh = re.match(INSTALL_REGEXP, manifest)
     matchh = install_regrex.search(manifest)
-    # print(matchh[1])
+
     if not matchh:
         return deps
-    # print(matchh[1])
+
     
     for line in re.sub(r"',(\s)?'", r"\n", matchh[1]).split("\n"):
-        # print(line)
+        
         if re.search(r'^#', line):
             continue
         matchhh = re.search(REQUIRE_REGEXP,line)
-        # print(matchhh)
+    
         if not matchhh:
             continue
-        # print(matchh[1])
+        
         Dict = {'name': matchhh[1], 'requirement': matchhh[2], 'type': 'runtime', 'package': 'PYPI'}
         deps.append(Dict)
     return deps
@@ -119,7 +119,7 @@ def parse_setup_py(file_handle):
 
 def parse_poetry(file_handle):
     manifest = toml.load(file_handle)
-    # print(manifest)
+    
     # manifest = toml.load(file_handle)['tool']['poetry']
     try:
         return map_dependencies_pipfile(manifest['dependencies'], 'runtime') + map_dependencies_pipfile(manifest['dev-dependencies'], 'develop')
