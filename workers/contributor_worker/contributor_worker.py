@@ -349,223 +349,233 @@ class ContributorWorker(WorkerGitInterfaceable):
         self.register_task_completion(entry_info, repo_id, "contributors")
 
     def insert_facade_contributors(self, entry_info, repo_id):
-        self.logger.info("Beginning process to insert contributors from facade commits for repo w entry info: {}\n".format(entry_info))
+      self.logger.info("Beginning process to insert contributors from facade commits for repo w entry info: {}\n".format(entry_info))
 
-        # Get all distinct combinations of emails and names by querying the repo's commits
-        userSQL = s.sql.text("""
-            SELECT
-                commits.cmt_author_email AS email,
-                commits.cmt_author_date AS DATE,
-                commits.cmt_author_name AS NAME
-            FROM
-                commits
-            WHERE
-                commits.repo_id = :repo_id
-                AND NOT EXISTS (
-                    SELECT
-                        contributors.cntrb_email
-                    FROM
-                        contributors
-                    WHERE
-                        contributors.cntrb_email = commits.cmt_author_email
-                )
-                AND (
-                    commits.cmt_author_date, commits.cmt_author_name
-                ) IN (
-                    SELECT
-                        MAX(C.cmt_author_date) AS DATE,
-                        C.cmt_author_name
-                    FROM
-                        commits AS C
-                    WHERE
-                        C.repo_id = :repo_id
-                        AND C.cmt_author_email = commits.cmt_author_email
-                    GROUP BY
-                        C.cmt_author_name,
-                        C.cmt_author_date LIMIT 1
-                )
-            GROUP BY
-                commits.cmt_author_email,
-                commits.cmt_author_date,
-                commits.cmt_author_name
-            UNION
-            SELECT
-                commits.cmt_committer_email AS email,
-                commits.cmt_committer_date AS DATE,
-                commits.cmt_committer_name AS NAME
-            FROM
-                augur_data.commits
-            WHERE
-                commits.repo_id = :repo_id
-                AND NOT EXISTS (
-                    SELECT
-                        contributors.cntrb_email
-                    FROM
-                        augur_data.contributors
-                    WHERE
-                        contributors.cntrb_email = commits.cmt_committer_email
-                )
-                AND (
-                    commits.cmt_committer_date, commits.cmt_committer_name
-                ) IN (
-                    SELECT
-                        MAX(C.cmt_committer_date) AS DATE,
-                        C.cmt_committer_name
-                    FROM
-                        augur_data.commits AS C
-                    WHERE
-                        C.repo_id = :repo_id
-                        AND C.cmt_committer_email = commits.cmt_committer_email
-                    GROUP BY
-                        C.cmt_committer_name,
-                        C.cmt_author_date LIMIT 1
-                )
-            GROUP BY
-                commits.cmt_committer_email,
-                commits.cmt_committer_date,
-                commits.cmt_committer_name
-
+      # Get all distinct combinations of emails and names by querying the repo's commits
+      userSQL = s.sql.text("""
+        SELECT
+            commits.cmt_author_email AS email,
+            commits.cmt_author_date AS DATE,
+            commits.cmt_author_name AS NAME
+        FROM
+            commits
+        WHERE
+            commits.repo_id = :repo_id
+            AND NOT EXISTS (
+                SELECT
+                    contributors.cntrb_email
+                FROM
+                    contributors
+                WHERE
+                    contributors.cntrb_email = commits.cmt_author_email
+            )
+            AND (
+                commits.cmt_author_date, commits.cmt_author_name
+            ) IN (
+                SELECT
+                    MAX(C.cmt_author_date) AS DATE,
+                    C.cmt_author_name
+                FROM
+                    commits AS C
+                WHERE
+                    C.repo_id = :repo_id
+                    AND C.cmt_author_email = commits.cmt_author_email
+                GROUP BY
+                    C.cmt_author_name,
+                    C.cmt_author_date LIMIT 1
+            )
+        GROUP BY
+            commits.cmt_author_email,
+            commits.cmt_author_date,
+            commits.cmt_author_name
+        UNION
+        SELECT
+            commits.cmt_committer_email AS email,
+            commits.cmt_committer_date AS DATE,
+            commits.cmt_committer_name AS NAME
+        FROM
+            augur_data.commits
+        WHERE
+            commits.repo_id = :repo_id
+            AND NOT EXISTS (
+                SELECT
+                    contributors.cntrb_email
+                FROM
+                    augur_data.contributors
+                WHERE
+                    contributors.cntrb_email = commits.cmt_committer_email
+            )
+            AND (
+                commits.cmt_committer_date, commits.cmt_committer_name
+            ) IN (
+                SELECT
+                    MAX(C.cmt_committer_date) AS DATE,
+                    C.cmt_committer_name
+                FROM
+                    augur_data.commits AS C
+                WHERE
+                    C.repo_id = :repo_id
+                    AND C.cmt_committer_email = commits.cmt_committer_email
+                GROUP BY
+                    C.cmt_committer_name,
+                    C.cmt_author_date LIMIT 1
+            )
+        GROUP BY
+            commits.cmt_committer_email,
+            commits.cmt_committer_date,
+            commits.cmt_committer_name
         """)
 
-        commit_cntrbs = json.loads(pd.read_sql(userSQL, self.db, params={'repo_id': repo_id}).to_json(orient="records"))
-        self.logger.info("We found {} distinct contributors needing insertion (repo_id = {})".format(
-            len(commit_cntrbs), repo_id))
+      #sql query used as a function to update the cntrb_id for the commits table entry from the email found in the contributor table.
+      update_cntrb_id = s.sql.text("""
+        UPDATE commits
+        SET commits.cmt_ght_author_id = :cntrb_id
+        SET commits.cmt_ght_committer_id = :cntrb_id
+        WHERE commits.cmt_author_raw_email = :email OR commits.cmt_committer_raw_email = :email
+      """)
+        
 
-        existing_cntrb_emails = []
+      commit_cntrbs = json.loads(pd.read_sql(userSQL, self.db, params={'repo_id': repo_id}).to_json(orient="records"))
+      self.logger.info("We found {} distinct contributors needing insertion (repo_id = {})".format(
+        len(commit_cntrbs), repo_id))
 
-        for cntrb_email in existing_cntrb_emails:
+      existing_cntrb_emails = []
 
-            #query database with 'cntrb_email' and get the 'cntb_id'
-            #find all commits in commits table with 'cntrb_email'
-            #update 'cntrb_id' to each commit
+      for cntrb_email in existing_cntrb_emails:
+          pass
+          #query database with 'cntrb_email' and get the 'cntb_id'
+          #find all commits in commits table with 'cntrb_email'
+          #update 'cntrb_id' to each commit
 
-        new_contrib_sql = s.sql.text("""
-          select distinct contributors.cntrb_email, commits.cmt_author_raw_email
-          from 
-              contributors, commits
-          where 
-              contributors.cntrb_email = commits.cmt_author_raw_email
-              AND commits.repo_id = :repo_id
-          union 
-          select distinct contributors.cntrb_email, commits.cmt_committer_raw_email
-          from 
-              contributors, commits
-          where 
-              contributors.cntrb_email = commits.cmt_committer_raw_email
-              AND commits.repo_id = :repo_id
-          """)
+      new_contrib_sql = s.sql.text("""
+        select distinct contributors.cntrb_email, commits.cmt_author_raw_email
+        from 
+            contributors, commits
+        where 
+            contributors.cntrb_email = commits.cmt_author_raw_email
+            AND commits.repo_id = :repo_id
+        union 
+        select distinct contributors.cntrb_email, commits.cmt_committer_raw_email
+        from 
+            contributors, commits
+        where 
+            contributors.cntrb_email = commits.cmt_committer_raw_email
+            AND commits.repo_id = :repo_id
+      """)
 
 
 
-        new_contribs = json.loads(pd.read_sql(new_contrib_sql, self.db, params={'repo_id': repo_id}).to_json(orient="records"))
+      new_contribs = json.loads(pd.read_sql(new_contrib_sql, self.db, params={'repo_id': repo_id}).to_json(orient="records"))
 
-        for contributor in new_contribs:
+      for contributor in new_contribs:
+        try:
+            cmt_cntrb = {
+                'fname': contributor['commit_name'].split()[0],
+                'lname': contributor['commit_name'].split()[1],
+                'email': contributor['commit_email']
+            }
+            url = 'https://api.github.com/search/users?q={}+in:email+fullname:{}+{}'.format(
+                cmt_cntrb['email'],cmt_cntrb['fname'],cmt_cntrb['lname'])
+        except:
             try:
                 cmt_cntrb = {
                     'fname': contributor['commit_name'].split()[0],
-                    'lname': contributor['commit_name'].split()[1],
                     'email': contributor['commit_email']
                 }
-                url = 'https://api.github.com/search/users?q={}+in:email+fullname:{}+{}'.format(
-                    cmt_cntrb['email'],cmt_cntrb['fname'],cmt_cntrb['lname'])
+                url = 'https://api.github.com/search/users?q={}+in:email+fullname:{}'.format(
+                    cmt_cntrb['email'],cmt_cntrb['fname'])
             except:
-                try:
-                    cmt_cntrb = {
-                        'fname': contributor['commit_name'].split()[0],
-                        'email': contributor['commit_email']
-                    }
-                    url = 'https://api.github.com/search/users?q={}+in:email+fullname:{}'.format(
-                        cmt_cntrb['email'],cmt_cntrb['fname'])
-                except:
-                    cmt_cntrb = {
-                        'email': contributor['commit_email']
-                    }
-                    url = 'https://api.github.com/search/users?q={}+in:email'.format(
-                        cmt_cntrb['email'])
+                cmt_cntrb = {
+                    'email': contributor['commit_email']
+                }
+                url = 'https://api.github.com/search/users?q={}+in:email'.format(
+                    cmt_cntrb['email'])
 
-             attempts = 0
+        attempts = 0
 
-             try:
-               while attempts < 10:
-                 try:
-                   self.logger.info("Hitting endpoint: " + url + " ...\n")
-                   response = requests.get(url=url , headers=self.headers)
-                   break
-                 except TimeoutError:
-                   self.logger.info(f"Data request to get user login by email failed with {attempts} attempts! Trying again...")
-                   time.sleep(10)
-
-                 attempts += 1
-             except Exception as e:
-               raise e
-
-             try:
-                 login_json = response.json()
-             except:
-                 login_json = json.loads(json.dumps(response.text))
-
-            if 'total_count' not in login_json:
-                self.logger.info("Search query returned an empty response, moving on...\n")
-                continue
-            if login_json['total_count'] == 0:
-                self.logger.info("Search query did not return any results, adding 1's to commits table...\n")
-                #find all commits in commits table with 'cntrb_email'
-                #update 'cntrb_id' to each commit
-                continue
-
-            self.logger.info("When searching for a contributor with info {}, we found the following users: {}\n".format(
-                cmt_cntrb, login_json))
-
-            # Grab first result and make sure it has the highest match score
-            mathch = login_json['items'][0]
-            for item in login_json['items']:
-                if item['score'] > mathch['score']:
-                    mathch = item
-
-            url = ("https://api.github.com/users/" + mathch['login'])
-
-            attempts = 0
-
+        try:
+          while attempts < 10:
+            self.logger.info("Hitting endpoint: " + url + " ...\n")
             try:
-                while attempts < 10:
-                  try:
-                    self.logger.info("Hitting endpoint: " + url + " ...\n")
-                    response = requests.get(url=url , headers=self.headers)
-                    break
-                  except TimeoutError:
-                    self.logger.info(f"User data request for enriching contributor data failed with {attempts} attempts! Trying again...")
-                    time.sleep(10)
+              response = requests.get(url=url , headers=self.headers)
+            except TimeoutError:
+              self.logger.info(f"Data request to get user login by email failed with {attempts} attempts! Trying again...")
+              time.sleep(10)
+              continue
+                 
+                  
 
-                  attempts += 1
-            except Exception as e:
-                raise e
+            attempts += 1
+        except Exception as e:
+          raise e
 
-            try:
-              contributor = response.json()
-            except:
-              contributor = json.loads(json.dumps(response.text))
-            # try to add contributor to database
-            # expcpetion: log that the user was already THERE
+        try:
+          login_json = response.json()
+        except:
+          login_json = json.loads(json.dumps(response.text))
 
-            # get the cntrb_id based on the logging
+        if 'total_count' not in login_json:
+            self.logger.info("Search query returned an empty response, moving on...\n")
+            continue
+        if login_json['total_count'] == 0:
+            self.logger.info("Search query did not return any results, adding 1's to commits table...\n")
             #find all commits in commits table with 'cntrb_email'
             #update 'cntrb_id' to each commit
+            continue
+
+        self.logger.info("When searching for a contributor with info {}, we found the following users: {}\n".format(
+            cmt_cntrb, login_json))
+
+          # Grab first result and make sure it has the highest match score
+        mathch = login_json['items'][0]
+        for item in login_json['items']:
+          if item['score'] > mathch['score']:
+              mathch = item
+
+        url = ("https://api.github.com/users/" + mathch['login'])
+
+        attempts = 0
+
+        try:
+          while attempts < 10:
+            try:
+              self.logger.info("Hitting endpoint: " + url + " ...\n")
+              response = requests.get(url=url , headers=self.headers)
+              break
+            except TimeoutError:
+              self.logger.info(f"User data request for enriching contributor data failed with {attempts} attempts! Trying again...")
+              time.sleep(10)
+
+              attempts += 1
+        except Exception as e:
+          raise e
+
+        try:
+          contributor = response.json()
+        except:
+          contributor = json.loads(json.dumps(response.text))
+          # try to add contributor to database
+          # expcpetion: log that the user was already THERE
+
+          # get the cntrb_id based on the logging
+          #find all commits in commits table with 'cntrb_email'
+          #update 'cntrb_id' to each commit
+            
 
 
-        for cntrb in commit_cntrbs:
-            cntrb_tuple = {
-                    "cntrb_email": cntrb['email'],
-                    "cntrb_canonical": cntrb['email'],
-                    "tool_source": self.tool_source,
-                    "tool_version": self.tool_version,
-                    "data_source": self.data_source,
-                    'cntrb_full_name': cntrb['name']
-                }
-            result = self.db.execute(self.contributors_table.insert().values(cntrb_tuple))
-            self.logger.info("Primary key inserted into the contributors table: {}".format(result.inserted_primary_key))
-            self.results_counter += 1
-
-            self.logger.info("Inserted contributor: {}\n".format(cntrb['email']))
+      for cntrb in commit_cntrbs:
+          cntrb_tuple = {
+                  "cntrb_email": cntrb['email'],
+                  "cntrb_canonical": cntrb['email'],
+                  "tool_source": self.tool_source,
+                  "tool_version": self.tool_version,
+                  "data_source": self.data_source,
+                  'cntrb_full_name': cntrb['name']
+              }
+          result = self.db.execute(self.contributors_table.insert().values(cntrb_tuple))
+          self.logger.info("Primary key inserted into the contributors table: {}".format(result.inserted_primary_key))
+          self.results_counter += 1
+          self.logger.info("Inserted contributor: {}\n".format(cntrb['email']))
 
     def handle_alias(self, tuple):
         cntrb_email = tuple['cntrb_email'] # canonical
