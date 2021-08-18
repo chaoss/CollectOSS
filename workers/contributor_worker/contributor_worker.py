@@ -351,80 +351,6 @@ class ContributorWorker(WorkerGitInterfaceable):
     def insert_facade_contributors(self, entry_info, repo_id):
       self.logger.info("Beginning process to insert contributors from facade commits for repo w entry info: {}\n".format(entry_info))
 
-      # Get all distinct combinations of emails and names by querying the repo's commits
-      userSQL = s.sql.text("""
-        SELECT
-            commits.cmt_author_email AS email,
-            commits.cmt_author_date AS DATE,
-            commits.cmt_author_name AS NAME
-        FROM
-            commits
-        WHERE
-            commits.repo_id = :repo_id
-            AND NOT EXISTS (
-                SELECT
-                    contributors.cntrb_email
-                FROM
-                    contributors
-                WHERE
-                    contributors.cntrb_email = commits.cmt_author_email
-            )
-            AND (
-                commits.cmt_author_date, commits.cmt_author_name
-            ) IN (
-                SELECT
-                    MAX(C.cmt_author_date) AS DATE,
-                    C.cmt_author_name
-                FROM
-                    commits AS C
-                WHERE
-                    C.repo_id = :repo_id
-                    AND C.cmt_author_email = commits.cmt_author_email
-                GROUP BY
-                    C.cmt_author_name,
-                    C.cmt_author_date LIMIT 1
-            )
-        GROUP BY
-            commits.cmt_author_email,
-            commits.cmt_author_date,
-            commits.cmt_author_name
-        UNION
-        SELECT
-            commits.cmt_committer_email AS email,
-            commits.cmt_committer_date AS DATE,
-            commits.cmt_committer_name AS NAME
-        FROM
-            augur_data.commits
-        WHERE
-            commits.repo_id = :repo_id
-            AND NOT EXISTS (
-                SELECT
-                    contributors.cntrb_email
-                FROM
-                    augur_data.contributors
-                WHERE
-                    contributors.cntrb_email = commits.cmt_committer_email
-            )
-            AND (
-                commits.cmt_committer_date, commits.cmt_committer_name
-            ) IN (
-                SELECT
-                    MAX(C.cmt_committer_date) AS DATE,
-                    C.cmt_committer_name
-                FROM
-                    augur_data.commits AS C
-                WHERE
-                    C.repo_id = :repo_id
-                    AND C.cmt_committer_email = commits.cmt_committer_email
-                GROUP BY
-                    C.cmt_committer_name,
-                    C.cmt_author_date LIMIT 1
-            )
-        GROUP BY
-            commits.cmt_committer_email,
-            commits.cmt_committer_date,
-            commits.cmt_committer_name
-        """)
 
       #sql query used as a function to update the cntrb_id for the commits table entry from the email found in the contributor table.
       update_cntrb_id = s.sql.text("""
@@ -435,11 +361,24 @@ class ContributorWorker(WorkerGitInterfaceable):
       """)
         
 
-      commit_cntrbs = json.loads(pd.read_sql(userSQL, self.db, params={'repo_id': repo_id}).to_json(orient="records"))
-      self.logger.info("We found {} distinct contributors needing insertion (repo_id = {})".format(
-        len(commit_cntrbs), repo_id))
+      
+      existing_contrib_sql = s.sql.text("""
+          select distinct contributors.cntrb_email, commits.cmt_author_raw_email
+          from 
+              contributors, commits
+          where 
+              contributors.cntrb_email = commits.cmt_author_raw_email
+              AND commits.repo_id =:repo_id
+          union 
+          select distinct contributors.cntrb_email, commits.cmt_committer_raw_email
+          from 
+              contributors, commits
+          where 
+              contributors.cntrb_email = commits.cmt_committer_raw_email
+              AND commits.repo_id =:repo_id
+      """)
 
-      existing_cntrb_emails = []
+      existing_cntrb_emails = json.loads(pd.read_sql(existing_contrib_sql, self.db, params={'repo_id': repo_id}).to_json(orient="records"))
 
       for cntrb_email in existing_cntrb_emails:
           pass
@@ -448,19 +387,77 @@ class ContributorWorker(WorkerGitInterfaceable):
           #update 'cntrb_id' to each commit
 
       new_contrib_sql = s.sql.text("""
-        select distinct contributors.cntrb_email, commits.cmt_author_raw_email
-        from 
-            contributors, commits
-        where 
-            contributors.cntrb_email = commits.cmt_author_raw_email
-            AND commits.repo_id = :repo_id
-        union 
-        select distinct contributors.cntrb_email, commits.cmt_committer_raw_email
-        from 
-            contributors, commits
-        where 
-            contributors.cntrb_email = commits.cmt_committer_raw_email
-            AND commits.repo_id = :repo_id
+            SELECT distinct 
+                commits.cmt_author_email AS email,
+                commits.cmt_author_date AS DATE,
+                commits.cmt_author_name AS NAME
+            FROM
+                commits
+            WHERE
+                commits.repo_id =:repo_id
+                AND NOT EXISTS (
+                    SELECT
+                        contributors.cntrb_email
+                    FROM
+                        contributors
+                    WHERE
+                        contributors.cntrb_email = commits.cmt_author_email
+                )
+                AND (
+                    commits.cmt_author_date, commits.cmt_author_name
+                ) IN (
+                    SELECT
+                        MAX(C.cmt_author_date) AS DATE,
+                        C.cmt_author_name
+                    FROM
+                        commits AS C
+                    WHERE
+                        C.repo_id =:repo_id
+                        AND C.cmt_author_email = commits.cmt_author_email
+                    GROUP BY
+                        C.cmt_author_name,
+                        C.cmt_author_date LIMIT 1
+                )
+            GROUP BY
+                commits.cmt_author_email,
+                commits.cmt_author_date,
+                commits.cmt_author_name
+            UNION
+            SELECT
+                commits.cmt_committer_email AS email,
+                commits.cmt_committer_date AS DATE,
+                commits.cmt_committer_name AS NAME
+            FROM
+                augur_data.commits
+            WHERE
+                commits.repo_id =:repo_id
+                AND NOT EXISTS (
+                    SELECT
+                        contributors.cntrb_email
+                    FROM
+                        augur_data.contributors
+                    WHERE
+                        contributors.cntrb_email = commits.cmt_committer_email
+                )
+                AND (
+                    commits.cmt_committer_date, commits.cmt_committer_name
+                ) IN (
+                    SELECT
+                        MAX(C.cmt_committer_date) AS DATE,
+                        C.cmt_committer_name
+                    FROM
+                        augur_data.commits AS C
+                    WHERE
+                        C.repo_id = :repo_id
+                        AND C.cmt_committer_email = commits.cmt_committer_email
+                    GROUP BY
+                        C.cmt_committer_name,
+                        C.cmt_author_date LIMIT 1
+                )
+            GROUP BY
+                commits.cmt_committer_email,
+                commits.cmt_committer_date,
+                commits.cmt_committer_name
       """)
 
 
@@ -562,7 +559,13 @@ class ContributorWorker(WorkerGitInterfaceable):
           #update 'cntrb_id' to each commit
             
 
-
+      
+      return
+      #old method
+      """
+      commit_cntrbs = json.loads(pd.read_sql(userSQL, self.db, params={'repo_id': repo_id}).to_json(orient="records"))
+      self.logger.info("We found {} distinct contributors needing insertion (repo_id = {})".format(
+        len(commit_cntrbs), repo_id))
       for cntrb in commit_cntrbs:
           cntrb_tuple = {
                   "cntrb_email": cntrb['email'],
@@ -576,6 +579,7 @@ class ContributorWorker(WorkerGitInterfaceable):
           self.logger.info("Primary key inserted into the contributors table: {}".format(result.inserted_primary_key))
           self.results_counter += 1
           self.logger.info("Inserted contributor: {}\n".format(cntrb['email']))
+      """
 
     def handle_alias(self, tuple):
         cntrb_email = tuple['cntrb_email'] # canonical
