@@ -58,45 +58,45 @@ class ContributorWorker(WorkerGitInterfaceable):
 
         # Get all distinct combinations of emails and names by querying the repo's commits
         userSQL = s.sql.text("""
-            SELECT cmt_author_name AS commit_name, cntrb_id, cmt_author_raw_email AS commit_email, cntrb_email, 
-                cntrb_full_name, cntrb_login, cntrb_canonical, 
-                cntrb_company, cntrb_created_at::timestamp, cntrb_type, cntrb_fake, cntrb_deleted, cntrb_long, 
-                cntrb_lat, cntrb_country_code, cntrb_state, cntrb_city, cntrb_location, gh_user_id, 
-                gh_login, gh_url, gh_html_url, gh_node_id, gh_avatar_url, gh_gravatar_id, gh_followers_url, 
-                gh_following_url, gh_gists_url, gh_starred_url, gh_subscriptions_url, gh_organizations_url, 
+            SELECT cmt_author_name AS commit_name, cntrb_id, cmt_author_raw_email AS commit_email, cntrb_email,
+                cntrb_full_name, cntrb_login, cntrb_canonical,
+                cntrb_company, cntrb_created_at::timestamp, cntrb_type, cntrb_fake, cntrb_deleted, cntrb_long,
+                cntrb_lat, cntrb_country_code, cntrb_state, cntrb_city, cntrb_location, gh_user_id,
+                gh_login, gh_url, gh_html_url, gh_node_id, gh_avatar_url, gh_gravatar_id, gh_followers_url,
+                gh_following_url, gh_gists_url, gh_starred_url, gh_subscriptions_url, gh_organizations_url,
                 gh_repos_url, gh_events_url, gh_received_events_url, gh_type, gh_site_admin, cntrb_last_used
             FROM commits, contributors
             WHERE repo_id = :repo_id
             AND contributors.cntrb_full_name = cmt_author_name
                 UNION
-            SELECT cmt_author_name AS commit_name, cntrb_id, cmt_author_raw_email AS commit_email, cntrb_email, 
-                cntrb_full_name, cntrb_login, cntrb_canonical, 
-                cntrb_company, cntrb_created_at::timestamp, cntrb_type, cntrb_fake, cntrb_deleted, cntrb_long, 
-                cntrb_lat, cntrb_country_code, cntrb_state, cntrb_city, cntrb_location, gh_user_id, 
-                gh_login, gh_url, gh_html_url, gh_node_id, gh_avatar_url, gh_gravatar_id, gh_followers_url, 
-                gh_following_url, gh_gists_url, gh_starred_url, gh_subscriptions_url, gh_organizations_url, 
+            SELECT cmt_author_name AS commit_name, cntrb_id, cmt_author_raw_email AS commit_email, cntrb_email,
+                cntrb_full_name, cntrb_login, cntrb_canonical,
+                cntrb_company, cntrb_created_at::timestamp, cntrb_type, cntrb_fake, cntrb_deleted, cntrb_long,
+                cntrb_lat, cntrb_country_code, cntrb_state, cntrb_city, cntrb_location, gh_user_id,
+                gh_login, gh_url, gh_html_url, gh_node_id, gh_avatar_url, gh_gravatar_id, gh_followers_url,
+                gh_following_url, gh_gists_url, gh_starred_url, gh_subscriptions_url, gh_organizations_url,
                 gh_repos_url, gh_events_url, gh_received_events_url, gh_type, gh_site_admin, cntrb_last_used
             FROM commits, contributors
             WHERE repo_id = :repo_id
             AND contributors.cntrb_email = cmt_author_raw_email
                 UNION
-            SELECT cmt_committer_name AS commit_name, cntrb_id, cmt_committer_raw_email AS commit_email, 
-                cntrb_email, cntrb_full_name, cntrb_login, cntrb_canonical, 
-                cntrb_company, cntrb_created_at::timestamp, cntrb_type, cntrb_fake, cntrb_deleted, cntrb_long, 
-                cntrb_lat, cntrb_country_code, cntrb_state, cntrb_city, cntrb_location, gh_user_id, 
-                gh_login, gh_url, gh_html_url, gh_node_id, gh_avatar_url, gh_gravatar_id, gh_followers_url, 
-                gh_following_url, gh_gists_url, gh_starred_url, gh_subscriptions_url, gh_organizations_url, 
+            SELECT cmt_committer_name AS commit_name, cntrb_id, cmt_committer_raw_email AS commit_email,
+                cntrb_email, cntrb_full_name, cntrb_login, cntrb_canonical,
+                cntrb_company, cntrb_created_at::timestamp, cntrb_type, cntrb_fake, cntrb_deleted, cntrb_long,
+                cntrb_lat, cntrb_country_code, cntrb_state, cntrb_city, cntrb_location, gh_user_id,
+                gh_login, gh_url, gh_html_url, gh_node_id, gh_avatar_url, gh_gravatar_id, gh_followers_url,
+                gh_following_url, gh_gists_url, gh_starred_url, gh_subscriptions_url, gh_organizations_url,
                 gh_repos_url, gh_events_url, gh_received_events_url, gh_type, gh_site_admin, cntrb_last_used
             FROM commits, contributors
             WHERE repo_id = :repo_id
             AND contributors.cntrb_full_name = cmt_committer_name
                 UNION
-            SELECT cmt_committer_name AS commit_name, cntrb_id, cmt_committer_raw_email AS commit_email, 
-                cntrb_email, cntrb_full_name, cntrb_login, cntrb_canonical, 
-                cntrb_company, cntrb_created_at::timestamp, cntrb_type, cntrb_fake, cntrb_deleted, cntrb_long, 
-                cntrb_lat, cntrb_country_code, cntrb_state, cntrb_city, cntrb_location, gh_user_id, 
-                gh_login, gh_url, gh_html_url, gh_node_id, gh_avatar_url, gh_gravatar_id, gh_followers_url, 
-                gh_following_url, gh_gists_url, gh_starred_url, gh_subscriptions_url, gh_organizations_url, 
+            SELECT cmt_committer_name AS commit_name, cntrb_id, cmt_committer_raw_email AS commit_email,
+                cntrb_email, cntrb_full_name, cntrb_login, cntrb_canonical,
+                cntrb_company, cntrb_created_at::timestamp, cntrb_type, cntrb_fake, cntrb_deleted, cntrb_long,
+                cntrb_lat, cntrb_country_code, cntrb_state, cntrb_city, cntrb_location, gh_user_id,
+                gh_login, gh_url, gh_html_url, gh_node_id, gh_avatar_url, gh_gravatar_id, gh_followers_url,
+                gh_following_url, gh_gists_url, gh_starred_url, gh_subscriptions_url, gh_organizations_url,
                 gh_repos_url, gh_events_url, gh_received_events_url, gh_type, gh_site_admin, cntrb_last_used
             FROM commits, contributors
             WHERE repo_id = :repo_id
@@ -131,7 +131,7 @@ class ContributorWorker(WorkerGitInterfaceable):
                 commit_times_sql = s.sql.text("""
                         SELECT min(cmt_author_date) as min_author, max(cmt_author_date) as max_author,
                             min(cmt_committer_date) as min_committer, max(cmt_committer_date) as max_committer
-                        FROM commits 
+                        FROM commits
                         WHERE cmt_author_raw_email = :commit_email
                         OR cmt_committer_raw_email = :commit_email
                     """)
@@ -164,7 +164,7 @@ class ContributorWorker(WorkerGitInterfaceable):
                 self.logger.info("Inserted cntrb_full_name column for existing tuple in the contributors "
                     "table with email: {}\n".format(contributor['cntrb_email']))
 
-            # If cntrb_canonical column is not filled, go ahead and fill it w main email bc 
+            # If cntrb_canonical column is not filled, go ahead and fill it w main email bc
             #   an old version of the worker did not
             if not contributor['cntrb_canonical'] and contributor['cntrb_email']:
                 canonical_col = {
@@ -180,7 +180,7 @@ class ContributorWorker(WorkerGitInterfaceable):
                     "table with email: {}\n".format(contributor['cntrb_email']))
 
 
-            """ Attempt to fill cntrb_login (github login) column by performing a github api search of the 
+            """ Attempt to fill cntrb_login (github login) column by performing a github api search of the
                 user's name and email """
 
             # If the contributor already has a login, there is no use in performing the github search
@@ -190,8 +190,8 @@ class ContributorWorker(WorkerGitInterfaceable):
                 # try/except to handle case of a first/last split or just first name
                 try:
                     cmt_cntrb = {
-                        'fname': contributor['commit_name'].split()[0], 
-                        'lname': contributor['commit_name'].split()[1], 
+                        'fname': contributor['commit_name'].split()[0],
+                        'lname': contributor['commit_name'].split()[1],
                         'email': contributor['commit_email']
                     }
                     url = 'https://api.github.com/search/users?q={}+in:email+fullname:{}+{}'.format(
@@ -199,7 +199,7 @@ class ContributorWorker(WorkerGitInterfaceable):
                 except:
                     try:
                         cmt_cntrb = {
-                            'fname': contributor['commit_name'].split()[0], 
+                            'fname': contributor['commit_name'].split()[0],
                             'email': contributor['commit_email']
                         }
                         url = 'https://api.github.com/search/users?q={}+in:email+fullname:{}'.format(
@@ -281,7 +281,7 @@ class ContributorWorker(WorkerGitInterfaceable):
             SELECT contributors.*
             FROM contributors inner join (
                 SELECT MIN(cntrb_id) as cntrb_id
-                FROM contributors 
+                FROM contributors
                 GROUP BY cntrb_email HAVING COUNT(*) > 1
                 ORDER BY cntrb_email
             ) a on contributors.cntrb_id = a.cntrb_id
@@ -305,13 +305,13 @@ class ContributorWorker(WorkerGitInterfaceable):
             del cntrb_new['cntrb_id']
             del cntrb_new['data_collection_date']
             cntrb_new = cntrb_new.to_dict()
-            
+
             result = self.db.execute(self.contributors_table.insert().values(cntrb_new))
             pk = int(result.inserted_primary_key[0])
             sg = int(result.inserted_primary_key[0])
-            
+
             dupe_ids_sql = s.sql.text("""
-                SELECT cntrb_id 
+                SELECT cntrb_id
                 FROM contributors
                 WHERE
                     cntrb_id <> :pk
@@ -325,14 +325,14 @@ class ContributorWorker(WorkerGitInterfaceable):
 
             ### Commented out deletion because cascading foreign key
             ### then goes and removes the pull requests, and related objects
-            ### The mapping of the new ID is not working as expected. 
+            ### The mapping of the new ID is not working as expected.
             ### Sean Goggins, February 5, 2021
 
             # delete_dupe_ids_sql = s.sql.text("""
             #     DELETE FROM contributors
-            #     WHERE cntrb_id IN (SELECT cntrb_id 
-            #     FROM contributors  WHERE (cntrb_id > {} 
-            #     OR cntrb_id < {}) 
+            #     WHERE cntrb_id IN (SELECT cntrb_id
+            #     FROM contributors  WHERE (cntrb_id > {}
+            #     OR cntrb_id < {})
             #     AND cntrb_email = '{}');
             # """.format(pk, sg, cntrb_new['cntrb_email']))
 
@@ -356,70 +356,70 @@ class ContributorWorker(WorkerGitInterfaceable):
             SELECT
                 commits.cmt_author_email AS email,
                 commits.cmt_author_date AS DATE,
-                commits.cmt_author_name AS NAME 
+                commits.cmt_author_name AS NAME
             FROM
-                commits 
+                commits
             WHERE
-                commits.repo_id = :repo_id 
+                commits.repo_id = :repo_id
                 AND NOT EXISTS (
                     SELECT
-                        contributors.cntrb_email 
+                        contributors.cntrb_email
                     FROM
-                        contributors 
+                        contributors
                     WHERE
                         contributors.cntrb_email = commits.cmt_author_email
-                ) 
+                )
                 AND (
                     commits.cmt_author_date, commits.cmt_author_name
                 ) IN (
                     SELECT
                         MAX(C.cmt_author_date) AS DATE,
-                        C.cmt_author_name 
+                        C.cmt_author_name
                     FROM
-                        commits AS C 
+                        commits AS C
                     WHERE
-                        C.repo_id = :repo_id 
-                        AND C.cmt_author_email = commits.cmt_author_email 
+                        C.repo_id = :repo_id
+                        AND C.cmt_author_email = commits.cmt_author_email
                     GROUP BY
                         C.cmt_author_name,
                         C.cmt_author_date LIMIT 1
-                ) 
+                )
             GROUP BY
                 commits.cmt_author_email,
                 commits.cmt_author_date,
-                commits.cmt_author_name 
+                commits.cmt_author_name
             UNION
             SELECT
                 commits.cmt_committer_email AS email,
                 commits.cmt_committer_date AS DATE,
-                commits.cmt_committer_name AS NAME 
+                commits.cmt_committer_name AS NAME
             FROM
-                augur_data.commits 
+                augur_data.commits
             WHERE
-                commits.repo_id = :repo_id 
+                commits.repo_id = :repo_id
                 AND NOT EXISTS (
                     SELECT
-                        contributors.cntrb_email 
+                        contributors.cntrb_email
                     FROM
-                        augur_data.contributors 
+                        augur_data.contributors
                     WHERE
                         contributors.cntrb_email = commits.cmt_committer_email
-                ) 
+                )
                 AND (
                     commits.cmt_committer_date, commits.cmt_committer_name
                 ) IN (
                     SELECT
                         MAX(C.cmt_committer_date) AS DATE,
-                        C.cmt_committer_name 
+                        C.cmt_committer_name
                     FROM
-                        augur_data.commits AS C 
+                        augur_data.commits AS C
                     WHERE
-                        C.repo_id = :repo_id 
-                        AND C.cmt_committer_email = commits.cmt_committer_email 
+                        C.repo_id = :repo_id
+                        AND C.cmt_committer_email = commits.cmt_committer_email
                     GROUP BY
                         C.cmt_committer_name,
                         C.cmt_author_date LIMIT 1
-                ) 
+                )
             GROUP BY
                 commits.cmt_committer_email,
                 commits.cmt_committer_date,
@@ -428,12 +428,12 @@ class ContributorWorker(WorkerGitInterfaceable):
 /*
 
             SELECT cmt_author_email as email, cmt_author_date as date, cmt_author_name as name
-            FROM commits 
+            FROM commits
             WHERE repo_id = :repo_id
             AND not exists (SELECT cntrb_email FROM contributors where cntrb_email = cmt_author_email)
             and (cmt_author_date, cmt_author_name) in (
                 select Max(cmt_author_date) as date, cmt_author_name
-                from commits as c 
+                from commits as c
                 where c.cmt_author_email = commits.cmt_author_email
                 and repo_id = :repo_id
                 group by cmt_author_name
@@ -448,7 +448,7 @@ class ContributorWorker(WorkerGitInterfaceable):
             AND not exists (SELECT cntrb_email FROM augur_data.contributors where cntrb_email = cmt_committer_email)
             and (cmt_committer_date, cmt_committer_name) in (
                 select Max(cmt_committer_date) as date, cmt_committer_name
-                from augur_data.commits as c 
+                from augur_data.commits as c
                 where c.cmt_committer_email = commits.cmt_committer_email
                 and repo_id = :repo_id
                 group by cmt_committer_name
@@ -456,12 +456,117 @@ class ContributorWorker(WorkerGitInterfaceable):
                 limit 1
             )
             group by cmt_committer_email, cmt_committer_date, cmt_committer_name*/
-            
+
         """)
 
         commit_cntrbs = json.loads(pd.read_sql(userSQL, self.db, params={'repo_id': repo_id}).to_json(orient="records"))
         self.logger.info("We found {} distinct contributors needing insertion (repo_id = {})".format(
             len(commit_cntrbs), repo_id))
+
+        existing_cntrb_emails = []
+
+        for cntrb_email in existing_cntrb_emails:
+
+            #query database with 'cntrb_email' and get the 'cntb_id'
+            #find all commits in commits table with 'cntrb_email'
+            #update 'cntrb_id' to each commit
+
+
+        new_contribs = []
+
+        for contributor in new_contribs:
+
+            try:
+                cmt_cntrb = {
+                    'fname': contributor['commit_name'].split()[0],
+                    'lname': contributor['commit_name'].split()[1],
+                    'email': contributor['commit_email']
+                }
+                url = 'https://api.github.com/search/users?q={}+in:email+fullname:{}+{}'.format(
+                    cmt_cntrb['email'],cmt_cntrb['fname'],cmt_cntrb['lname'])
+            except:
+                try:
+                    cmt_cntrb = {
+                        'fname': contributor['commit_name'].split()[0],
+                        'email': contributor['commit_email']
+                    }
+                    url = 'https://api.github.com/search/users?q={}+in:email+fullname:{}'.format(
+                        cmt_cntrb['email'],cmt_cntrb['fname'])
+                except:
+                    cmt_cntrb = {
+                        'email': contributor['commit_email']
+                    }
+                    url = 'https://api.github.com/search/users?q={}+in:email'.format(
+                        cmt_cntrb['email'])
+
+             attempts = 0
+
+             try:
+               while attempts < 10:
+                 try:
+                   self.logger.info("Hitting endpoint: " + url + " ...\n")
+                   response = requests.get(url=url , headers=self.headers)
+                   break
+                 except TimeoutError:
+                   self.logger.info(f"Data request to get user login by email failed with {attempts} attempts! Trying again...")
+                   time.sleep(10)
+
+                 attempts += 1
+             except Exception as e:
+               raise e
+
+             try:
+                 login_json = response.json()
+             except:
+                 login_json = json.loads(json.dumps(response.text))
+
+            if 'total_count' not in login_json:
+                self.logger.info("Search query returned an empty response, moving on...\n")
+                continue
+            if login_json['total_count'] == 0:
+                self.logger.info("Search query did not return any results, adding 1's to commits table...\n")
+                #find all commits in commits table with 'cntrb_email'
+                #update 'cntrb_id' to each commit
+                continue
+
+            self.logger.info("When searching for a contributor with info {}, we found the following users: {}\n".format(
+                cmt_cntrb, login_json))
+
+            # Grab first result and make sure it has the highest match score
+            mathch = login_json['items'][0]
+            for item in login_json['items']:
+                if item['score'] > mathch['score']:
+                    mathch = item
+
+            url = ("https://api.github.com/users/" + mathch['login'])
+
+            attempts = 0
+
+            try:
+                while attempts < 10:
+                  try:
+                    self.logger.info("Hitting endpoint: " + url + " ...\n")
+                    response = requests.get(url=url , headers=self.headers)
+                    break
+                  except TimeoutError:
+                    self.logger.info(f"User data request for enriching contributor data failed with {attempts} attempts! Trying again...")
+                    time.sleep(10)
+
+                  attempts += 1
+            except Exception as e:
+                raise e
+
+            try:
+              contributor = response.json()
+            except:
+              contributor = json.loads(json.dumps(response.text))
+            # try to add contributor to database
+            # expcpetion: log that the user was already THERE
+
+            # get the cntrb_id based on the logging
+            #find all commits in commits table with 'cntrb_email'
+            #update 'cntrb_id' to each commit
+
 
         for cntrb in commit_cntrbs:
             cntrb_tuple = {
@@ -503,7 +608,7 @@ class ContributorWorker(WorkerGitInterfaceable):
             del cntrb['commit_name']
             del cntrb['commit_email']
             del cntrb['cntrb_id']
-            
+
             result = self.db.execute(self.contributors_table.insert().values(cntrb))
             self.logger.info("Inserted alias into the contributors table with email: {}\n".format(cntrb['cntrb_email']))
             self.results_counter += 1
@@ -511,10 +616,10 @@ class ContributorWorker(WorkerGitInterfaceable):
             alias_id = self.cntrb_id_inc
 
         elif len(existing_tuples) > 1:
-            # fix all dupe references to dupe cntrb ids before we delete them 
+            # fix all dupe references to dupe cntrb ids before we delete them
             self.logger.info("THERE IS A CASE FOR A DUPLICATE CONTRIBUTOR in the contributors table, we will delete all tuples with this cntrb_email and re-insert only 1\n")
             self.logger.info("For cntrb_email: {}".format(tuple['commit_email']))
-            
+
             """ Insert alias tuple into the contributor table """
 
             # Prepare tuple for insertion to contributor table (build it off of the tuple queried)
@@ -536,7 +641,7 @@ class ContributorWorker(WorkerGitInterfaceable):
             del cntrb['commit_name']
             del cntrb['commit_email']
             del cntrb['cntrb_id']
-            
+
             result = self.db.execute(self.contributors_table.insert().values(cntrb))
             self.logger.info("Inserted alias into the contributors table with email: {}\n".format(cntrb['cntrb_email']))
             self.results_counter += 1
@@ -557,7 +662,7 @@ class ContributorWorker(WorkerGitInterfaceable):
 
         self.logger.info('Checking canonicals match.\n')
         alias_sql = s.sql.text("""
-            SELECT * 
+            SELECT *
             FROM contributors
             WHERE cntrb_id = :alias_id
         """)
@@ -583,7 +688,7 @@ class ContributorWorker(WorkerGitInterfaceable):
         if len(existing_tuples) == 0:
             self.logger.info("Finding cntrb_id for canonical email: {}".format(cntrb_email))
             canonical_id_sql = s.sql.text("""
-                SELECT cntrb_id as canonical_id 
+                SELECT cntrb_id as canonical_id
                 from contributors
                 where cntrb_email = :email
             """)
@@ -621,8 +726,8 @@ class ContributorWorker(WorkerGitInterfaceable):
         # def delete_fk(table, column):
 
         # tables_with_fk = {
-        #         'contributors_aliases_table': ['cntrb_a_id', alias_update_col], 
-        #         'issue_events_table':, 
+        #         'contributors_aliases_table': ['cntrb_a_id', alias_update_col],
+        #         'issue_events_table':,
         #         'pull_request_events_table',
         #         'issues_table',
         #         'issues_table'
@@ -680,15 +785,15 @@ class ContributorWorker(WorkerGitInterfaceable):
         self.logger.info("Updated cntrb_id column for tuple in the pull_request_repo table with value: {} replaced with new cntrb id: {}".format(new_id, self.cntrb_id_inc))
 
 
-        ## July 12, 2021: Note there are 17 foreign keys for contributors in the Augur database, and ten updates above. Addressing the other 3 of 5 that need to be updated. Specifying 2 to continue to ignore.  
+        ## July 12, 2021: Note there are 17 foreign keys for contributors in the Augur database, and ten updates above. Addressing the other 3 of 5 that need to be updated. Specifying 2 to continue to ignore.
         ## TODO: Update PR table FK's to RESTRICT on delete and CASCADE on update within PR table ecosystem
-        ## TODO: Update pull_request_commits and commits FK's to have no cascading effects for now, as thier cntrb_id columns are not currently populated. Instead, these tables rely on emails. 
-        ## Missing Tables: 
-        # pull_request_reviews 
-        # pull_requests 
-        # pull_request_commits 
-        # contributor_repo 
-        # commits 
+        ## TODO: Update pull_request_commits and commits FK's to have no cascading effects for now, as thier cntrb_id columns are not currently populated. Instead, these tables rely on emails.
+        ## Missing Tables:
+        # pull_request_reviews
+        # pull_requests
+        # pull_request_commits
+        # contributor_repo
+        # commits
 
         ## can use update_col when the column name is cntrb_id; otherwise column_name_col for .values(update_col) in row two of each block.
 
@@ -697,7 +802,7 @@ class ContributorWorker(WorkerGitInterfaceable):
             self.pull_request_reviews_table.c.cntrb_id.in_(dupe_ids)).values(update_col))
         self.logger.info("Updated cntrb_id column for tuple in the pull_request_reviews table with value: {} replaced with new cntrb id: {}".format(new_id, self.cntrb_id_inc))
 
-        # pr_augur_contributor_id 
+        # pr_augur_contributor_id
         pr_result = self.db.execute(self.pull_requests_table.update().where(
             self.pull_requests_table.c.pr_augur_contributor_id.in_(dupe_ids)).values(pr_augur_contributor_id_col))
         self.logger.info("Updated cntrb_id column for tuple in the pull_requests table with value: {} replaced with new cntrb id: {}".format(new_id, self.cntrb_id_inc))
@@ -712,14 +817,14 @@ class ContributorWorker(WorkerGitInterfaceable):
             self.contributor_repo_table.c.cntrb_id.in_(dupe_ids)).values(update_col))
         self.logger.info("Updated cntrb_id column for tuple in the contributor_repo table with value: {} replaced with new cntrb id: {}".format(new_id, self.cntrb_id_inc))
 
-        # # # commits is harder. The cmt_ght_author_id, and cmt_ght_committer_id are all NULL right now. So this will need to be addressed in the future. 
+        # # # commits is harder. The cmt_ght_author_id, and cmt_ght_committer_id are all NULL right now. So this will need to be addressed in the future.
         # commits_result = self.db.execute(self.pull_request_repo_table.update().where(
         #     self.pull_request_repo_table.c.pr_cntrb_id.in_(dupe_ids)).values(pr_repo_col))
         # self.logger.info("Updated cntrb_id column for tuple in the pull_request_repo table with value: {} replaced with new cntrb id: {}".format(new_id, self.cntrb_id_inc))
 
         # # TABLES not requiring updates
-        # contributors_history 
-        # contributor_aliases 
+        # contributors_history
+        # contributor_aliases
 
 
         pr_repo_result = self.db.execute(self.pull_request_repo_table.update().where(
@@ -731,16 +836,16 @@ class ContributorWorker(WorkerGitInterfaceable):
 
 
 
-        ### Moved this down to the bottom. This is literally the last thing one would do. 
+        ### Moved this down to the bottom. This is literally the last thing one would do.
 
         ### Commented out due to cascade delete database issue
         ### Sean Goggins, February 5, 2021
 
         #     deleteSQL = """
-        #         DELETE 
+        #         DELETE
         #             FROM
-        #                 contributors c 
-        #             USING 
+        #                 contributors c
+        #             USING
         #                 contributors_aliases
         #             WHERE
         #                 c.cntrb_email = '{0}'
@@ -749,13 +854,13 @@ class ContributorWorker(WorkerGitInterfaceable):
         #             AND
         #                 c.cntrb_id <> {1};
         #     """.format(commit_email, self.cntrb_id_inc)
-            
+
         #     try:
-        #         # Delete all dupes 
+        #         # Delete all dupes
         #         result = self.db.execute(deleteSQL)
         #         self.logger.info("Deleted all non-canonical contributors with the email: {}\n".format(commit_email))
         #     except Exception as e:
         #         self.logger.info("When trying to delete a duplicate contributor, worker ran into error: {}".format(e))
-        
+
         # else: #then there would be exactly 1 existing tuple, so that id is the one we want
         #     alias_id = existing_tuples[0]['cntrb_id']
