@@ -15,8 +15,8 @@ worker and table.
 #TODO : Make this borrow everything that it can from the facade worker.
 #i.e. port, logging, etc
 class ContributorInterfaceable(WorkerGitInterfaceable):
-    def __init__(self, config={}):
-        self.db_schema = None
+    def __init__(self, db, logger, config={}):
+        #self.db_schema = None
         # Get config passed from the facade worker.
         self.config = read_config("Workers", "facade_worker", None, None)
 
@@ -33,7 +33,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         while True:
             try:
                 r = requests.get('http://{}:{}/AUGWOP/heartbeat'.format(
-                    self.config['host'], worker_port)).json()
+                    self.augur_config.get_value('Server', 'host'), worker_port)).json()
                 if 'status' in r:
                     if r['status'] == 'alive':
                         worker_port += 1
@@ -57,13 +57,40 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             'password_database': self.augur_config.get_value('Database', 'password')
         })
 
-        self.initialize_logging()
+        self.logger = logger
+        #Take logger from facade.
+        #self.initialize_logging()
+        # Organize different api keys/oauths available
+        self.logger.info("Initializing API key.")
+        if 'gh_api_key' in self.config or 'gitlab_api_key' in self.config:
+            try:
+                self.init_oauths(self.platform)
+            except AttributeError:
+                self.logger.error("Worker not configured to use API key!")
+        else:
+            self.oauths = [{'oauth_id': 0}]
 
-
-        self.logger = logging.getLogger(self.config["id"])
+        
 
         #This method also calls oauth_init
-        self.initialize_database_connections()
+        #self.initialize_database_connections()
+        self.db = db
+
+        metadata = s.MetaData()
+
+        # Reflect only the tables we will use for each schema's metadata object
+        metadata.reflect(self.db, only=self.data_tables)
+        #helper_metadata.reflect(self.helper_db, only=self.operations_tables)
+
+        Base = automap_base(metadata=metadata)
+        #HelperBase = automap_base(metadata=helper_metadata)
+
+        Base.prepare()
+
+        # So we can access all our tables when inserting, updating, etc
+        for table in self.data_tables:
+            setattr(self, '{}_table'.format(table), Base.classes[table].__table__)
+
         self.logger.info(
             'Worker (PID: {}) initializing...'.format(str(os.getpid())))
 
