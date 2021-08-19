@@ -12,7 +12,7 @@ paths:
   /owner/:owner/repo/:repo:
     get:
       description: Get the repo_group_id and repo_id of a particular repo.
-      operationId: Get Repo
+      operationId: Get Repo by Owner and Repo
       responses:
         '200':
           description: OK
@@ -31,7 +31,7 @@ paths:
   /repo-groups:
     get:
       description: Get all the downloaded repo groups.
-      operationId: Repo Groups
+      operationId: Get All Repo Groups
       responses:
         '200':
           description: OK
@@ -80,7 +80,7 @@ paths:
       externalDocs:
         description: CHAOSS Metric Definition
         url: https://github.com/chaoss/wg-risk/blob/master/metrics/Committers.md
-      operationId: (Repo Group)
+      operationId: Committers (Repo Group)
       parameters:
       - description: Repository Group ID
         in: path
@@ -124,7 +124,7 @@ paths:
             type: array
       tags:
       - risk
-  /repo-groups/:repo_group_id/abandoned_issues:
+  /repo-groups/:repo_group_id/abandoned-issues:
     get:
       description: List of abandoned issues (last updated &gt;= 1 year ago)
       operationId: Abandoned Issues (Repo)
@@ -215,7 +215,7 @@ paths:
     get:
       description: 'This is an Augur-specific metric. We are currently working to
         define these more formally. '
-      operationId: Annual Commit Count Ranked by New Repo in Repo Group(Repo)
+      operationId: Annual Commit Count Ranked by New Repo in Repo Group (Repo)
       parameters:
       - description: Repository Group ID.
         in: path
@@ -275,7 +275,7 @@ paths:
     get:
       description: 'This is an Augur-specific metric. We are currently working to
         define these more formally. '
-      operationId: Annual Commit Count Ranked by Repo in Repo Group(Repo)
+      operationId: Annual Commit Count Ranked by Repo in Repo Group (Repo)
       parameters:
       - description: Base64 version of the URL of the GitHub repository as it appears
           in the Facade DB
@@ -309,7 +309,7 @@ paths:
     get:
       description: 'This is an Augur-specific metric. We are currently working to
         define these more formally. '
-      operationId: Annual Lines of Code Ranked by New Repo in Repo Group(Repo)
+      operationId: Annual Lines of Code Ranked by New Repo in Repo Group (Repo)
       parameters:
       - description: Base64 version of the URL of the GitHub repository as it appears
           in the Facade DB
@@ -343,7 +343,7 @@ paths:
     get:
       description: 'This is an Augur-specific metric. We are currently working to
         define these more formally. '
-      operationId: Annual Lines of Code Ranked by Repo in Repo Group(Repo)
+      operationId: Annual Lines of Code Ranked by Repo in Repo Group (Repo)
       parameters:
       - description: Base64 version of the URL of the GitHub repository as it appears
           in the Facade DB
@@ -373,7 +373,7 @@ paths:
             type: array
       tags:
       - experimental
-  /repo-groups/:repo_group_id/avgerage-issue-resolution-time:
+  /repo-groups/:repo_group_id/average-issue-resolution-time:
     get:
       description: 'The average issue resolution time. '
       externalDocs:
@@ -1465,7 +1465,7 @@ paths:
       externalDocs:
         description: CHAOSS Metric Definition
         url: https://github.com/chaoss/wg-risk/blob/master/metrics/License_Coverage.md
-      operationId: License Coverage(Repo Group)
+      operationId: License Coverage (Repo Group)
       parameters:
       - description: Repository Group ID
         in: path
@@ -1500,7 +1500,7 @@ paths:
       externalDocs:
         description: CHAOSS Metric Definition
         url: https://github.com/chaoss/wg-risk/blob/master/metrics/License_Coverage.md
-      operationId: License Declared(Repo Group)
+      operationId: License Declared (Repo Group)
       parameters:
       - description: Repository Group ID
         in: path
@@ -1532,7 +1532,7 @@ paths:
       externalDocs:
         description: CHAOSS Metric Definition
         url: https://github.com/chaoss/wg-evolution/blob/master/metrics/contributors-new.md
-      operationId: Lines Changed by Author(Repo)
+      operationId: Lines Changed by Author (Repo)
       parameters:
       - description: Repository Group ID
         in: path
@@ -1652,10 +1652,10 @@ paths:
             type: array
       tags:
       - experimental
-  /repo-groups/:repo_group_id/pull-request-closed-no-merge:
+  /repo-groups/:repo_group_id/pull-requests-closed-no-merge:
     get:
       description: Timeseries of pull request which were closed but not merged
-      operationId: Pull Request Closed but not merged(Repo)
+      operationId: Pull Request Closed but Not Merged (Repo)
       parameters:
       - description: Repository Group ID.
         in: path
@@ -1747,7 +1747,7 @@ paths:
   /repo-groups/:repo_group_id/repos:
     get:
       description: Get all the repos in a repo group.
-      operationId: Repos in Repo Group
+      operationId: Get Repos in Repo Group
       responses:
         '200':
           description: OK
@@ -2202,7 +2202,7 @@ paths:
   /repos:
     get:
       description: Get all the downloaded repos.
-      operationId: Repos
+      operationId: Get All Repos
       responses:
         '200':
           description: OK
@@ -2521,7 +2521,7 @@ paths:
       externalDocs:
         description: CHAOSS Metric Definition
         url: https://github.com/chaoss/wg-risk/blob/master/metrics/Committers.md
-      operationId: Committers(Repo)
+      operationId: Committers (Repo)
       parameters:
       - description: Repository Group ID.
         in: path
@@ -3420,7 +3420,7 @@ paths:
       externalDocs:
         description: CHAOSS Metric Definition
         url: https://github.com/chaoss/wg-risk/blob/master/metrics/License_Coverage.md
-      operationId: License Coverage(Repo)
+      operationId: License Coverage (Repo)
       parameters:
       - description: Repository Group ID.
         in: path
@@ -3462,7 +3462,7 @@ paths:
       externalDocs:
         description: CHAOSS Metric Definition
         url: https://github.com/chaoss/wg-risk/blob/master/metrics/License_Coverage.md
-      operationId: License Declared(Repo)
+      operationId: License Declared (Repo)
       parameters:
       - description: Repository Group ID.
         in: path
@@ -3540,10 +3540,10 @@ paths:
             type: array
       tags:
       - experimental
-  /repos/:repo_id/pull-request-closed-no-merge:
+  /repos/:repo_id/pull-requests-closed-no-merge:
     get:
       description: ''
-      operationId: Pull Request Closed but not merged(Repo)
+      operationId: Pull Request Closed but Not Merged (Repo)
       parameters:
       - description: Repository ID.
         in: path
@@ -3683,7 +3683,7 @@ paths:
       externalDocs:
         description: CHAOSS Metric Definition
         url: https://github.com/chaoss/wg-evolution/blob/master/metrics/Reviews_Duration.md
-      operationId: review Duration (Repo)
+      operationId: Review Duration (Repo)
       parameters:
       - description: Repository Group ID.
         in: path
@@ -4105,7 +4105,7 @@ paths:
   /repos/:repo_id/watchers-count:
     get:
       description: Watchers count.
-      operationId: watchers Count (Repo)
+      operationId: Watchers Count (Repo)
       parameters:
       - description: Repository Group ID.
         in: path
@@ -4137,7 +4137,7 @@ paths:
   /rg-name/:rg_name/repo-name/:repo_name:
     get:
       description: Get the repo_group_id and repo_id of a particular repo.
-      operationId: Get Repo
+      operationId: Get Repo by Repo Group Name and Repo Name
       responses:
         '200':
           description: OK
@@ -4156,10 +4156,10 @@ paths:
             type: array
       tags:
       - utility
-  /rg-names/:rg_name:
+  /rg-name/:rg_name:
     get:
       description: Get the repo_id of a particular repo group.
-      operationId: Get Repo
+      operationId: Get Repo by Repo Name
       responses:
         '200':
           description: OK
@@ -4175,10 +4175,10 @@ paths:
             type: array
       tags:
       - utility
-  /top-insights:
+  /repo-groups/:repo_group_id/top-insights:
     get:
       description: Get all the downloaded repo groups.
-      operationId: Top Insights
+      operationId: Get Top Insights
       responses:
         '200':
           description: OK
