@@ -9,6 +9,92 @@ info:
   version: 0.12.0
 openapi: 3.0.0
 paths:
+  /repo-groups:
+    get:
+      description: Get all the downloaded repo groups.
+      operationId: Get All Repo Groups
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                data_collection_date:
+                  description: 'Example: 2019-06-05T13:36:25.000Z'
+                  type: string
+                data_source:
+                  description: 'Example: git'
+                  type: string
+                repo_group_id:
+                  description: 'Example: 20'
+                  type: integer
+                rg_description:
+                  description: 'Example: Rails Ecosystem.'
+                  type: string
+                rg_last_modified:
+                  description: 'Example: 2019-06-03T15:55:20.000Z'
+                  type: string
+                rg_name:
+                  description: 'Example: Rails'
+                  type: string
+                rg_recache:
+                  description: 'Example: 0'
+                  type: integer
+                rg_type:
+                  description: 'Example: GitHub Organization'
+                  type: string
+                rg_website:
+                  description: 'Example: '
+                  type: string
+                tool_source:
+                  description: 'Example: load'
+                  type: string
+                tool_version:
+                  description: 'Example: one'
+                  type: string
+            type: array
+      tags:
+      - utility
+  /repos:
+    get:
+      description: Get all the downloaded repos.
+      operationId: Get All Repos
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                base64_url:
+                  description: 'Example: Z2l0aHViLmNvbS9hcGFjaGUvaW5jdWJhdG9yLWFyZ3VzLmdpdA=='
+                  type: string
+                commits_all_time:
+                  description: 'Example: None'
+                  type: string
+                description:
+                  description: 'Example: None'
+                  type: string
+                issues_all_time:
+                  description: 'Example: None'
+                  type: string
+                repo_id:
+                  description: 'Example: 21996'
+                  type: integer
+                repo_name:
+                  description: 'Example: incubator-argus'
+                  type: string
+                repo_status:
+                  description: 'Example: Update'
+                  type: string
+                rg_name:
+                  description: 'Example: Apache'
+                  type: string
+                url:
+                  description: 'Example: github.com/apache/incubator-argus.git'
+                  type: string
+            type: array
+      tags:
+      - utility
   /owner/:owner/repo/:repo:
     get:
       description: Get the repo_group_id and repo_id of a particular repo.
@@ -28,10 +114,85 @@ paths:
             type: array
       tags:
       - utility
-  /repo-groups:
+  /rg-name/:rg_name/repo-name/:repo_name:
+    get:
+      description: Get the repo_group_id and repo_id of a particular repo.
+      operationId: Get Repo by Repo Group Name and Repo Name
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                repo_git:
+                  description: 'Example: https://github.com/rails/rails.git'
+                  type: string
+                repo_group_id:
+                  description: 'Example: 20'
+                  type: integer
+                repo_id:
+                  description: 'Example: 21000'
+                  type: integer
+            type: array
+      tags:
+      - utility
+  /rg-name/:rg_name:
+    get:
+      description: Get the repo_id of a particular repo group.
+      operationId: Get Repo by Repo Name
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                repo_group_id:
+                  description: 'Example: 20'
+                  type: integer
+                rg_name:
+                  description: 'Example: Rails'
+                  type: string
+            type: array
+      tags:
+      - utility
+  /repo-groups/:repo_group_id/repos:
+    get:
+      description: Get all the repos in a repo group.
+      operationId: Get Repos in Repo Group
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                commits_all_time:
+                  description: 'Example: 6874'
+                  type: integer
+                description:
+                  description: 'Example: None'
+                  type: string
+                issues_all_time:
+                  description: 'Example: 81'
+                  type: integer
+                repo_id:
+                  description: 'Example: 21326'
+                  type: integer
+                repo_name:
+                  description: 'Example: graphql-js'
+                  type: string
+                repo_status:
+                  description: 'Example: Complete'
+                  type: string
+                url:
+                  description: 'Example: https://github.com/graphql/graphql-js.git'
+                  type: string
+            type: array
+      tags:
+      - utility
+  /repo-groups/:repo_group_id/top-insights:
     get:
       description: Get all the downloaded repo groups.
-      operationId: Get All Repo Groups
+      operationId: Get Top Insights
       responses:
         '200':
           description: OK
@@ -1744,40 +1905,6 @@ paths:
             type: array
       tags:
       - evolution
-  /repo-groups/:repo_group_id/repos:
-    get:
-      description: Get all the repos in a repo group.
-      operationId: Get Repos in Repo Group
-      responses:
-        '200':
-          description: OK
-          schema:
-            items:
-              properties:
-                commits_all_time:
-                  description: 'Example: 6874'
-                  type: integer
-                description:
-                  description: 'Example: None'
-                  type: string
-                issues_all_time:
-                  description: 'Example: 81'
-                  type: integer
-                repo_id:
-                  description: 'Example: 21326'
-                  type: integer
-                repo_name:
-                  description: 'Example: graphql-js'
-                  type: string
-                repo_status:
-                  description: 'Example: Complete'
-                  type: string
-                url:
-                  description: 'Example: https://github.com/graphql/graphql-js.git'
-                  type: string
-            type: array
-      tags:
-      - utility
   /repo-groups/:repo_group_id/review-duration:
     get:
       description: 'Time since an review/pull request is proposed until it is accepted. '
@@ -2199,46 +2326,6 @@ paths:
             type: array
       tags:
       - value
-  /repos:
-    get:
-      description: Get all the downloaded repos.
-      operationId: Get All Repos
-      responses:
-        '200':
-          description: OK
-          schema:
-            items:
-              properties:
-                base64_url:
-                  description: 'Example: Z2l0aHViLmNvbS9hcGFjaGUvaW5jdWJhdG9yLWFyZ3VzLmdpdA=='
-                  type: string
-                commits_all_time:
-                  description: 'Example: None'
-                  type: string
-                description:
-                  description: 'Example: None'
-                  type: string
-                issues_all_time:
-                  description: 'Example: None'
-                  type: string
-                repo_id:
-                  description: 'Example: 21996'
-                  type: integer
-                repo_name:
-                  description: 'Example: incubator-argus'
-                  type: string
-                repo_status:
-                  description: 'Example: Update'
-                  type: string
-                rg_name:
-                  description: 'Example: Apache'
-                  type: string
-                url:
-                  description: 'Example: github.com/apache/incubator-argus.git'
-                  type: string
-            type: array
-      tags:
-      - utility
   /repos/:repo_id/aggregate-summary:
     get:
       description: Returns the current count of watchers, stars, and forks and the
@@ -4134,93 +4221,6 @@ paths:
             type: array
       tags:
       - value
-  /rg-name/:rg_name/repo-name/:repo_name:
-    get:
-      description: Get the repo_group_id and repo_id of a particular repo.
-      operationId: Get Repo by Repo Group Name and Repo Name
-      responses:
-        '200':
-          description: OK
-          schema:
-            items:
-              properties:
-                repo_git:
-                  description: 'Example: https://github.com/rails/rails.git'
-                  type: string
-                repo_group_id:
-                  description: 'Example: 20'
-                  type: integer
-                repo_id:
-                  description: 'Example: 21000'
-                  type: integer
-            type: array
-      tags:
-      - utility
-  /rg-name/:rg_name:
-    get:
-      description: Get the repo_id of a particular repo group.
-      operationId: Get Repo by Repo Name
-      responses:
-        '200':
-          description: OK
-          schema:
-            items:
-              properties:
-                repo_group_id:
-                  description: 'Example: 20'
-                  type: integer
-                rg_name:
-                  description: 'Example: Rails'
-                  type: string
-            type: array
-      tags:
-      - utility
-  /repo-groups/:repo_group_id/top-insights:
-    get:
-      description: Get all the downloaded repo groups.
-      operationId: Get Top Insights
-      responses:
-        '200':
-          description: OK
-          schema:
-            items:
-              properties:
-                data_collection_date:
-                  description: 'Example: 2019-06-05T13:36:25.000Z'
-                  type: string
-                data_source:
-                  description: 'Example: git'
-                  type: string
-                repo_group_id:
-                  description: 'Example: 20'
-                  type: integer
-                rg_description:
-                  description: 'Example: Rails Ecosystem.'
-                  type: string
-                rg_last_modified:
-                  description: 'Example: 2019-06-03T15:55:20.000Z'
-                  type: string
-                rg_name:
-                  description: 'Example: Rails'
-                  type: string
-                rg_recache:
-                  description: 'Example: 0'
-                  type: integer
-                rg_type:
-                  description: 'Example: GitHub Organization'
-                  type: string
-                rg_website:
-                  description: 'Example: '
-                  type: string
-                tool_source:
-                  description: 'Example: load'
-                  type: string
-                tool_version:
-                  description: 'Example: one'
-                  type: string
-            type: array
-      tags:
-      - utility
   /contributor_reports/new_contributors_bar/:
     get:
       description: Get bar chart of new contributor counts.
