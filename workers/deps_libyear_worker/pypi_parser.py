@@ -6,6 +6,7 @@ import dateutil.parser
 from pypi_libyear_util import sort_dependency_requirement,get_pypi_data,get_latest_version,get_release_date
 from pypi_libyear_util import get_libyear
 import logging
+import yaml
 
 
 #Files that would be parsed should be added here.
@@ -147,7 +148,7 @@ def parse_poetry_lock(file_handle):
         deps.append(Dict)
     return deps 
 
-
+# Pip dependencies can be embedded in conda environment files
 def parse_conda(file_handle):
     contents = yaml.safe_load(file_handle)
     deps = list()

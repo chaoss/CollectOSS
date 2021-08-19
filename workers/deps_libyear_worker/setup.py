@@ -28,7 +28,8 @@ setup(
         'Flask-WTF==0.14.3',
         'requests==2.22.0',
         'psycopg2-binary==2.8.6',
-        'toml'
+        'toml',
+        'pyYaml'
     ],
     entry_points={
         'console_scripts': [
