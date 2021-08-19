@@ -2,7 +2,7 @@ from requests.api import head
 from workers.worker_base import *
 
 from workers.worker_git_integration import WorkerGitInterfaceable
-
+from workers.util import read_config
 """
 This class serves as an extension for the facade worker to allow it to make api calls and interface with GitHub.
 The motivation for doing it this way is because the functionality needed to interface with Github and/or GitLab 
@@ -18,7 +18,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
     def __init__(self, config={}):
         self.db_schema = None
         # Get config passed from the facade worker.
-        self.config = config
+        self.config = read_config("Workers", "facade_worker", None, None)
 
         self.data_tables = ['contributors', 'contributors_aliases', 'contributor_affiliations',
                             'issue_events', 'pull_request_events', 'issues', 'message', 'issue_assignees', 'commits',
@@ -40,12 +40,14 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             except:
                 break
 
+        # Update config with options that are general and not specific to any worker
+        self.augur_config = AugurConfig(self._root_augur_dir)
         # add credentials to db config. Goes to databaseable
         self.config.update({
             'port': worker_port,
-            #'id': "workers.{}.{}".format("contributor_interface", worker_port), This should be the same as the facade worker
+            'id': "workers.{}.{}".format(self.worker_type, worker_port),
             'capture_output': False,
-            'location': 'http://{}:{}'.format(self.config['host'], worker_port),
+            'location': 'http://{}:{}'.format(self.augur_config.get_value('Server', 'host'), worker_port),
             'port_broker': self.augur_config.get_value('Server', 'port'),
             'host_broker': self.augur_config.get_value('Server', 'host'),
             'host_database': self.augur_config.get_value('Database', 'host'),
@@ -153,12 +155,12 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
 
     #Update the contributors table from the data facade has gathered.
-    def insert_facade_contributors(self, entry_info, repo_id):
+    def insert_facade_contributors(self, repo_id):
         self.logger.info(
-            "Beginning process to insert contributors from facade commits for repo w entry info: {}\n".format(entry_info))
+            "Beginning process to insert contributors from facade commits for repo w entry info: {}\n".format(repo_id))
 
         
-
+        #Get all of the commit data's emails and names from the commit table that do not appear in the contributors table
         new_contrib_sql = s.sql.text("""
           SELECT distinct 
               commits.cmt_author_email AS email,
@@ -232,16 +234,18 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
               commits.cmt_committer_date,
               commits.cmt_committer_name
         """)
-
         new_contribs = json.loads(pd.read_sql(new_contrib_sql, self.db, params={
                                   'repo_id': repo_id}).to_json(orient="records"))
 
+        #Try to get GitHub API user data from each unique commit email.
         for contributor in new_contribs:
+            #Get best combonation of firstname lastname and email to try and get a GitHub username match.
             url = self.resolve_user_url_from_email(contributor)
 
             login_json = self.request_dict_from_endpoint(url)
 
-            if 'total_count' not in login_json:
+            #total_count is the count of username's found by the endpoint.
+            if login_json == None or 'total_count' not in login_json:
                 self.logger.info(
                     "Search query returned an empty response, moving on...\n")
                 continue

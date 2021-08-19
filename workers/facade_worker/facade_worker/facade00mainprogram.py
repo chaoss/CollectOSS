@@ -36,6 +36,8 @@ from facade_worker.facade05repofetch import git_repo_initialize, check_for_repo_
 from facade_worker.facade06analyze import analysis
 from facade_worker.facade07rebuildcache import nuke_affiliations, fill_empty_affiliations, invalidate_caches, rebuild_unknown_affiliation_and_web_caches
 
+from contributor_interfaceable.facade08contributorinterfaceable import ContributorInterfaceable
+
 from workers.util import read_config
 from workers.worker_base import Worker
 
@@ -63,6 +65,11 @@ class FacadeWorker(Worker):
         # self.tool_source = 'Facade Worker'
         # self.tool_version = '1.0.0'
         # self.data_source = 'Git Log'
+
+        #Define interface to GitHub as an attribute
+        self.github_interface = ContributorInterfaceable({
+          'worker_type' : worker_type
+        })
 
         self.tool_source = '\'Facade Worker\''
         self.tool_version = '\'1.0.1\''
@@ -269,7 +276,7 @@ class FacadeWorker(Worker):
             force_repo_updates(self.cfg)
 
         if not limited_run or (limited_run and pull_repos):
-            git_repo_updates(self.cfg)
+            git_repo_updates(self.cfg,github_interface=self.github_interface)
 
         if force_analysis:
             force_repo_analysis(self.cfg)

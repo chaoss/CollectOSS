@@ -48,8 +48,8 @@ class ContributorWorker(WorkerGitInterfaceable):
 
         self.cntrb_id_inc = self.get_max_id('contributors', 'cntrb_id')
 
-        # Get and insert all users (emails) found by the facade worker
-        self.insert_facade_contributors(entry_info, repo_id)
+        # Get and insert all users (emails) found by the facade worker, (now done by the facade worker)
+        #self.insert_facade_contributors(entry_info, repo_id)
 
         # Get and insert all users github considered to be contributors for this repo
         self.query_github_contributors(entry_info, repo_id)

@@ -275,7 +275,7 @@ def force_repo_analysis(cfg):
 
     cfg.log_activity('Info','Forcing repos to be analyzed (complete)')
 
-def git_repo_updates(cfg):
+def git_repo_updates(cfg, github_interface=None):
 
 # Update existing repos
 
@@ -345,5 +345,7 @@ def git_repo_updates(cfg):
         else:
             update_repo_log(cfg, row[0],'Failed (%s)' % return_code)
             cfg.log_activity('Error','Could not update %s' % row[2])
+        if github_interface != None:
+          github_interface.insert_facade_contributors(row[0])
 
     cfg.log_activity('Info','Updating existing repos (complete)')
