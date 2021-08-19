@@ -1628,67 +1628,6 @@ paths:
             type: array
       tags:
       - evolution
-  /repo-groups/:repo_group_id/watchers:
-    get:
-      description: A time series of watchers count.
-      operationId: Watchers (Repo Group)
-      parameters:
-      - description: Repository Group ID
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
-      responses:
-        '200':
-          description: OK
-          schema:
-            items:
-              properties:
-                date:
-                  description: 'Example: 2019-07-03T23:26:42.000Z'
-                  type: string
-                repo_id:
-                  description: 'Example: 21036'
-                  type: integer
-                repo_name:
-                  description: 'Example: jquery-ujs'
-                  type: string
-                watchers:
-                  description: 'Example: 60'
-                  type: integer
-            type: array
-      tags:
-      - value
-  /repo-groups/:repo_group_id/watchers-count:
-    get:
-      description: Watchers count.
-      operationId: Watchers Count (Repo Group)
-      parameters:
-      - description: Repository Group ID
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
-      responses:
-        '200':
-          description: OK
-          schema:
-            items:
-              properties:
-                repo_id:
-                  description: 'Example: 21039'
-                  type: integer
-                repo_name:
-                  description: 'Example: rails_xss'
-                  type: string
-                watchers:
-                  description: 'Example: 20'
-                  type: integer
-            type: array
-      tags:
-      - value
   /repo-groups/:repo_group_id/closed-issues-count:
     get:
       description: 'Count of closed issues. '
@@ -2779,67 +2718,6 @@ paths:
             type: array
       tags:
       - evolution
-  /repo-groups/:repo_group_id/stars:
-    get:
-      description: A time series of stars count.
-      operationId: Stars (Repo Group)
-      parameters:
-      - description: Repository Group ID
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
-      responses:
-        '200':
-          description: OK
-          schema:
-            items:
-              properties:
-                date:
-                  description: 'Example: 2019-07-03T23:23:36.000Z'
-                  type: string
-                repo_id:
-                  description: 'Example: 21491'
-                  type: integer
-                repo_name:
-                  description: 'Example: commons-io'
-                  type: string
-                stars:
-                  description: 'Example: 600'
-                  type: integer
-            type: array
-      tags:
-      - value
-  /repo-groups/:repo_group_id/stars-count:
-    get:
-      description: Stars count.
-      operationId: Stars Count (Repo Group)
-      parameters:
-      - description: Repository Group ID
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
-      responses:
-        '200':
-          description: OK
-          schema:
-            items:
-              properties:
-                repo_id:
-                  description: 'Example: 21364'
-                  type: integer
-                repo_name:
-                  description: 'Example: irs_process_scripts'
-                  type: string
-                stars:
-                  description: 'Example: 20'
-                  type: integer
-            type: array
-      tags:
-      - value
   /repo-groups/:repo_group_id/sub-projects:
     get:
       description: 'Number of sub-projects. '
@@ -4043,6 +3921,172 @@ paths:
             type: array
       tags:
       - evolution
+  /repos/:repo_id/sub-projects:
+    get:
+      description: 'Number of sub-projects. '
+      externalDocs:
+        description: CHAOSS Metric Definition
+        url: https://github.com/chaoss/wg-evolution/blob/master/metrics/sub-projects.md
+      operationId: Sub-Projects (Repo)
+      parameters:
+      - description: Repository Group ID.
+        in: path
+        name: repo_group_id
+        schema:
+          type: string
+        type: string
+      - description: Repository ID.
+        in: path
+        name: repo_id
+        schema:
+          type: string
+        type: string
+      - description: 'Beginning date specification. E.g. values: 2018, 2018-05, 2019-05-01'
+        in: path
+        name: begin_date
+        schema:
+          type: string
+        type: string
+      - description: 'Ending date specification. E.g. values: 2018, 2018-05, 2019-05-01'
+        in: path
+        name: end_date
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                sub_protject_count:
+                  description: 'Example: 2'
+                  type: integer
+            type: array
+      tags:
+      - evolution
+  /repo-groups/:repo_group_id/watchers:
+    get:
+      description: A time series of watchers count.
+      operationId: Watchers (Repo Group)
+      parameters:
+      - description: Repository Group ID
+        in: path
+        name: repo_group_id
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                date:
+                  description: 'Example: 2019-07-03T23:26:42.000Z'
+                  type: string
+                repo_id:
+                  description: 'Example: 21036'
+                  type: integer
+                repo_name:
+                  description: 'Example: jquery-ujs'
+                  type: string
+                watchers:
+                  description: 'Example: 60'
+                  type: integer
+            type: array
+      tags:
+      - value
+  /repo-groups/:repo_group_id/watchers-count:
+    get:
+      description: Watchers count.
+      operationId: Watchers Count (Repo Group)
+      parameters:
+      - description: Repository Group ID
+        in: path
+        name: repo_group_id
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                repo_id:
+                  description: 'Example: 21039'
+                  type: integer
+                repo_name:
+                  description: 'Example: rails_xss'
+                  type: string
+                watchers:
+                  description: 'Example: 20'
+                  type: integer
+            type: array
+      tags:
+      - value
+  /repo-groups/:repo_group_id/stars:
+    get:
+      description: A time series of stars count.
+      operationId: Stars (Repo Group)
+      parameters:
+      - description: Repository Group ID
+        in: path
+        name: repo_group_id
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                date:
+                  description: 'Example: 2019-07-03T23:23:36.000Z'
+                  type: string
+                repo_id:
+                  description: 'Example: 21491'
+                  type: integer
+                repo_name:
+                  description: 'Example: commons-io'
+                  type: string
+                stars:
+                  description: 'Example: 600'
+                  type: integer
+            type: array
+      tags:
+      - value
+  /repo-groups/:repo_group_id/stars-count:
+    get:
+      description: Stars count.
+      operationId: Stars Count (Repo Group)
+      parameters:
+      - description: Repository Group ID
+        in: path
+        name: repo_group_id
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                repo_id:
+                  description: 'Example: 21364'
+                  type: integer
+                repo_name:
+                  description: 'Example: irs_process_scripts'
+                  type: string
+                stars:
+                  description: 'Example: 20'
+                  type: integer
+            type: array
+      tags:
+      - value
   /repos/:repo_id/stars:
     get:
       description: A time series of stars count.
@@ -4110,50 +4154,6 @@ paths:
             type: array
       tags:
       - value
-  /repos/:repo_id/sub-projects:
-    get:
-      description: 'Number of sub-projects. '
-      externalDocs:
-        description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/master/metrics/sub-projects.md
-      operationId: Sub-Projects (Repo)
-      parameters:
-      - description: Repository Group ID.
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
-      - description: Repository ID.
-        in: path
-        name: repo_id
-        schema:
-          type: string
-        type: string
-      - description: 'Beginning date specification. E.g. values: 2018, 2018-05, 2019-05-01'
-        in: path
-        name: begin_date
-        schema:
-          type: string
-        type: string
-      - description: 'Ending date specification. E.g. values: 2018, 2018-05, 2019-05-01'
-        in: path
-        name: end_date
-        schema:
-          type: string
-        type: string
-      responses:
-        '200':
-          description: OK
-          schema:
-            items:
-              properties:
-                sub_protject_count:
-                  description: 'Example: 2'
-                  type: integer
-            type: array
-      tags:
-      - evolution
   /repos/:repo_id/watchers:
     get:
       description: A time series of watchers count.
