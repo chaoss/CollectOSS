@@ -16,7 +16,11 @@ file_list = [
     'Pipfile',
     'Pipfile.lock',
     'pyproject.toml',
-    'poetry.lock'
+    'poetry.lock',
+    'environment.yml',
+    'environment.yaml',
+    'environment.yml.lock',
+    'environment.yaml.lock'
 ]
 
 
