@@ -204,6 +204,18 @@ def get_parsed_deps(path):
 
         elif f == 'poetry.lock':
             dependency_list = parse_poetry_lock(file_handle)
+
+        elif f == 'environment.yml':
+            dependency_list = parse_conda(file_handle)
+
+        elif f == 'environment.yaml':
+            dependency_list = parse_conda(file_handle)
+
+        elif f == 'environment.yml.lock':
+            dependency_list = parse_conda(file_handle)
+
+        elif f == 'environment.yaml.lock':
+            dependency_list = parse_conda(file_handle)                
         return dependency_list
 
 
