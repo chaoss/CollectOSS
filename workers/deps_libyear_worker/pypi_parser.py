@@ -148,6 +148,29 @@ def parse_poetry_lock(file_handle):
     return deps 
 
 
+def parse_conda(file_handle):
+    contents = yaml.safe_load(file_handle)
+    deps = list()
+    pip = None
+    if not contents:
+        return []
+    dependencies = contents['dependencies']
+    for dep in dependencies:
+        if (type(dep) is dict) and dep['pip']:
+            pip = dep
+    if not pip:
+        return []
+    # parse_requirement_txt(pip["pip"].join("\n"))
+    # requirement_txt_parsable = ''  
+    for pip_dependency in pip['pip']:
+        matches = require_regrex.search(pip_dependency.replace("'",""))
+        if not matches:
+            continue
+        Dict = {'name': matches[1], 'requirement': matches[2], 'type': 'runtime', 'package': 'PYPI'}
+        deps.append(Dict)  
+    return deps    
+
+
 def get_parsed_deps(path):
 
     deps_file = None
