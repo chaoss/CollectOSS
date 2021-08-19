@@ -285,6 +285,550 @@ paths:
             type: array
       tags:
       - risk
+  /repo-groups/:repo_group_id/average-issue-resolution-time:
+    get:
+      description: 'The average issue resolution time. '
+      externalDocs:
+        description: CHAOSS Metric Definition
+        url: https://github.com/chaoss/wg-risk/blob/master/focus-areas/business-risk.md
+      operationId: Average Issue Resolution Time (Repo Group)
+      parameters:
+      - description: Repository Group ID
+        in: path
+        name: repo_group_id
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                avg_issue_resolution_time:
+                  description: 'Example: 1413 days 15:39:48'
+                  type: string
+                repo_id:
+                  description: 'Example: 21353'
+                  type: integer
+                repo_name:
+                  description: 'Example: open_id_authentication'
+                  type: string
+            type: array
+      tags:
+      - risk
+  /repo-groups/:repo_group_id/cii-best-practices-badge:
+    get:
+      description: 'The CII Best Practices Badge level. '
+      externalDocs:
+        description: CHAOSS Metric Definition
+        url: https://github.com/chaoss/wg-risk/blob/master/focus-areas/security.md
+      operationId: CII Best Practices Badge (Repo Group)
+      parameters:
+      - description: Repository Group ID
+        in: path
+        name: repo_group_id
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                badge_level:
+                  description: 'Example: in_progress'
+                  type: string
+                repo_id:
+                  description: 'Example: 21252'
+                  type: integer
+                repo_name:
+                  description: 'Example: php-legal-licenses'
+                  type: string
+            type: array
+      tags:
+      - risk
+  /repo-groups/:repo_group_id/fork-count:
+    get:
+      description: 'Fork count. '
+      externalDocs:
+        description: CHAOSS Metric Definition
+        url: https://github.com/chaoss/wg-risk/blob/master/focus-areas/business-risk.md
+      operationId: Fork Count (Repo Group)
+      parameters:
+      - description: Repository Group ID
+        in: path
+        name: repo_group_id
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                forks:
+                  description: 'Example: 4'
+                  type: integer
+                repo_id:
+                  description: 'Example: 21364'
+                  type: integer
+                repo_name:
+                  description: 'Example: irs_process_scripts'
+                  type: string
+            type: array
+      tags:
+      - risk
+  /repo-groups/:repo_group_id/forks:
+    get:
+      description: 'A time series of fork count. '
+      externalDocs:
+        description: CHAOSS Metric Definition
+        url: https://github.com/chaoss/wg-risk/blob/master/focus-areas/business-risk.md
+      operationId: Forks (Repo Group)
+      parameters:
+      - description: Repository Group ID
+        in: path
+        name: repo_group_id
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                date:
+                  description: 'Example: 2019-07-03T23:26:42.000Z'
+                  type: string
+                forks:
+                  description: 'Example: 519'
+                  type: integer
+                repo_id:
+                  description: 'Example: 21036'
+                  type: integer
+                repo_name:
+                  description: 'Example: jquery-ujs'
+                  type: string
+            type: array
+      tags:
+      - risk
+  /repo-groups/:repo_group_id/languages:
+    get:
+      description: 'The primary language of the repository. '
+      externalDocs:
+        description: CHAOSS Metric Definition
+        url: https://github.com/chaoss/wg-risk/blob/master/focus-areas/security.md
+      operationId: Languages (Repo Group)
+      parameters:
+      - description: Repository Group ID
+        in: path
+        name: repo_group_id
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                primary_language:
+                  description: 'Example: Go'
+                  type: string
+                repo_id:
+                  description: 'Example: 21277'
+                  type: integer
+            type: array
+      tags:
+      - risk
+  /repo-groups/:repo_group_id/license-count:
+    get:
+      description: 'The declared software package license (fetched from CII Best Practices
+        badging data). '
+      externalDocs:
+        description: CHAOSS Metric Definition
+        url: https://github.com/chaoss/wg-risk/blob/master/focus-areas/licensing.md
+      operationId: License Count (Repo Group)
+      parameters:
+      - description: Repository Group ID
+        in: path
+        name: repo_group_id
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                file_without_licenses:
+                  description: 'Example: True'
+                  type: string
+                name:
+                  description: 'Example: ActorServiceRegistry'
+                  type: string
+                number_of_license:
+                  description: 'Example: 2'
+                  type: integer
+            type: array
+      tags:
+      - risk
+  /repo-groups/:repo_group_id/license-coverage:
+    get:
+      description: 'Number of persons opening an issue for the first time. '
+      externalDocs:
+        description: CHAOSS Metric Definition
+        url: https://github.com/chaoss/wg-risk/blob/master/metrics/License_Coverage.md
+      operationId: License Coverage (Repo Group)
+      parameters:
+      - description: Repository Group ID
+        in: path
+        name: repo_group_id
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                coverage:
+                  description: 'Example: 0.373'
+                  type: string
+                license_declared_files:
+                  description: 'Example: 19'
+                  type: integer
+                name:
+                  description: 'Example: ActorServiceRegistry'
+                  type: string
+                total_files:
+                  description: 'Example: 51'
+                  type: integer
+            type: array
+      tags:
+      - risk
+  /repo-groups/:repo_group_id/license-declared:
+    get:
+      description: 'Number of persons opening an issue for the first time. '
+      externalDocs:
+        description: CHAOSS Metric Definition
+        url: https://github.com/chaoss/wg-risk/blob/master/metrics/License_Coverage.md
+      operationId: License Declared (Repo Group)
+      parameters:
+      - description: Repository Group ID
+        in: path
+        name: repo_group_id
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                name:
+                  description: 'Example: trickster'
+                  type: string
+                note:
+                  description: 'Example: '
+                  type: string
+                short_name:
+                  description: 'Example: Apache-2.0'
+                  type: string
+            type: array
+      tags:
+      - risk
+  /repos/:repo_id/average-issue-resolution-time:
+    get:
+      description: 'The average issue resolution time. '
+      externalDocs:
+        description: CHAOSS Metric Definition
+        url: https://github.com/chaoss/wg-risk/blob/master/focus-areas/business-risk.md
+      operationId: Average Issue Resolution Time (Repo)
+      parameters:
+      - description: Repository Group ID.
+        in: path
+        name: repo_group_id
+        schema:
+          type: string
+        type: string
+      - description: Repository ID.
+        in: path
+        name: repo_id
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                avg_issue_resolution_time:
+                  description: 'Example: 276 days 13:54:13.2'
+                  type: string
+                repo_name:
+                  description: 'Example: maven-release'
+                  type: string
+            type: array
+      tags:
+      - risk
+  /repos/:repo_id/cii-best-practices-badge:
+    get:
+      description: 'The CII Best Practices Badge level. '
+      externalDocs:
+        description: CHAOSS Metric Definition
+        url: https://github.com/chaoss/wg-risk/blob/master/focus-areas/security.md
+      operationId: CII Best Practices Badge (Repo)
+      parameters:
+      - description: Repository Group ID.
+        in: path
+        name: repo_group_id
+        schema:
+          type: string
+        type: string
+      - description: Repository ID.
+        in: path
+        name: repo_id
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                badge_level:
+                  description: 'Example: passing'
+                  type: string
+                repo_name:
+                  description: 'Example: trickster'
+                  type: string
+            type: array
+      tags:
+      - risk
+  /repos/:repo_id/committers:
+    get:
+      description: 'Number of persons contributing with an accepted commit for the
+        first time. '
+      externalDocs:
+        description: CHAOSS Metric Definition
+        url: https://github.com/chaoss/wg-risk/blob/master/metrics/Committers.md
+      operationId: Committers (Repo)
+      parameters:
+      - description: Repository Group ID.
+        in: path
+        name: repo_group_id
+        schema:
+          type: string
+        type: string
+      - description: Repository ID.
+        in: path
+        name: repo_id
+        schema:
+          type: string
+        type: string
+      - description: Periodicity specification.
+        in: path
+        name: period
+        schema:
+          type: string
+        type: string
+      - description: 'Beginning date specification. E.g. values: 2018, 2018-05, 2019-05-01'
+        in: path
+        name: begin_date
+        schema:
+          type: string
+        type: string
+      - description: 'Ending date specification. E.g. values: 2018, 2018-05, 2019-05-01'
+        in: path
+        name: end_date
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                count:
+                  description: 'Example: 1'
+                  type: integer
+                date:
+                  description: 'Example: 2018-10-25T00:00:00.000Z'
+                  type: string
+                repo_name:
+                  description: 'Example: weasel'
+                  type: string
+                rg_name:
+                  description: 'Example: Comcast'
+                  type: string
+            type: array
+      tags:
+      - risk
+  /repos/:repo_id/fork-count:
+    get:
+      description: 'Fork count. '
+      externalDocs:
+        description: CHAOSS Metric Definition
+        url: https://github.com/chaoss/wg-risk/blob/master/focus-areas/business-risk.md
+      operationId: Fork Count (Repo)
+      parameters:
+      - description: Repository Group ID.
+        in: path
+        name: repo_group_id
+        schema:
+          type: string
+        type: string
+      - description: Repository ID.
+        in: path
+        name: repo_id
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                forks:
+                  description: 'Example: 844'
+                  type: integer
+                repo_name:
+                  description: 'Example: graphiql'
+                  type: string
+            type: array
+      tags:
+      - risk
+  /repos/:repo_id/forks:
+    get:
+      description: 'A time series of fork count. '
+      externalDocs:
+        description: CHAOSS Metric Definition
+        url: https://github.com/chaoss/wg-risk/blob/master/focus-areas/business-risk.md
+      operationId: Forks (Repo)
+      parameters:
+      - description: Repository Group ID.
+        in: path
+        name: repo_group_id
+        schema:
+          type: string
+        type: string
+      - description: Repository ID.
+        in: path
+        name: repo_id
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                date:
+                  description: 'Example: 2019-07-03T23:27:42.000Z'
+                  type: string
+                forks:
+                  description: 'Example: 843'
+                  type: integer
+                repo_name:
+                  description: 'Example: graphiql'
+                  type: string
+            type: array
+      tags:
+      - risk
+  /repos/:repo_id/license-coverage:
+    get:
+      description: 'Number of persons contributing with an accepted commit for the
+        first time. '
+      externalDocs:
+        description: CHAOSS Metric Definition
+        url: https://github.com/chaoss/wg-risk/blob/master/metrics/License_Coverage.md
+      operationId: License Coverage (Repo)
+      parameters:
+      - description: Repository Group ID.
+        in: path
+        name: repo_group_id
+        schema:
+          type: string
+        type: string
+      - description: Repository ID.
+        in: path
+        name: repo_id
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                coverage:
+                  description: 'Example: 0.347'
+                  type: string
+                license_declared_file:
+                  description: 'Example: 33'
+                  type: integer
+                repo_name:
+                  description: 'Example: zucchini'
+                  type: string
+                total_files:
+                  description: 'Example: 95'
+                  type: integer
+            type: array
+      tags:
+      - risk
+  /repos/:repo_id/license-declared:
+    get:
+      description: 'Number of persons contributing with an accepted commit for the
+        first time. '
+      externalDocs:
+        description: CHAOSS Metric Definition
+        url: https://github.com/chaoss/wg-risk/blob/master/metrics/License_Coverage.md
+      operationId: License Declared (Repo)
+      parameters:
+      - description: Repository Group ID.
+        in: path
+        name: repo_group_id
+        schema:
+          type: string
+        type: string
+      - description: Repository ID.
+        in: path
+        name: repo_id
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                name:
+                  description: 'Example: trickster'
+                  type: string
+                note:
+                  description: 'Example: '
+                  type: string
+                short_name:
+                  description: 'Example: Apache-2.0'
+                  type: string
+            type: array
+      tags:
+      - risk
   /repo-groups/:repo_group_id/abandoned-issues:
     get:
       description: List of abandoned issues (last updated &gt;= 1 year ago)
@@ -534,70 +1078,6 @@ paths:
             type: array
       tags:
       - experimental
-  /repo-groups/:repo_group_id/average-issue-resolution-time:
-    get:
-      description: 'The average issue resolution time. '
-      externalDocs:
-        description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-risk/blob/master/focus-areas/business-risk.md
-      operationId: Average Issue Resolution Time (Repo Group)
-      parameters:
-      - description: Repository Group ID
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
-      responses:
-        '200':
-          description: OK
-          schema:
-            items:
-              properties:
-                avg_issue_resolution_time:
-                  description: 'Example: 1413 days 15:39:48'
-                  type: string
-                repo_id:
-                  description: 'Example: 21353'
-                  type: integer
-                repo_name:
-                  description: 'Example: open_id_authentication'
-                  type: string
-            type: array
-      tags:
-      - risk
-  /repo-groups/:repo_group_id/cii-best-practices-badge:
-    get:
-      description: 'The CII Best Practices Badge level. '
-      externalDocs:
-        description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-risk/blob/master/focus-areas/security.md
-      operationId: CII Best Practices Badge (Repo Group)
-      parameters:
-      - description: Repository Group ID
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
-      responses:
-        '200':
-          description: OK
-          schema:
-            items:
-              properties:
-                badge_level:
-                  description: 'Example: in_progress'
-                  type: string
-                repo_id:
-                  description: 'Example: 21252'
-                  type: integer
-                repo_name:
-                  description: 'Example: php-legal-licenses'
-                  type: string
-            type: array
-      tags:
-      - risk
   /repo-groups/:repo_group_id/closed-issues-count:
     get:
       description: 'Count of closed issues. '
@@ -863,73 +1343,6 @@ paths:
             type: array
       tags:
       - evolution
-  /repo-groups/:repo_group_id/fork-count:
-    get:
-      description: 'Fork count. '
-      externalDocs:
-        description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-risk/blob/master/focus-areas/business-risk.md
-      operationId: Fork Count (Repo Group)
-      parameters:
-      - description: Repository Group ID
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
-      responses:
-        '200':
-          description: OK
-          schema:
-            items:
-              properties:
-                forks:
-                  description: 'Example: 4'
-                  type: integer
-                repo_id:
-                  description: 'Example: 21364'
-                  type: integer
-                repo_name:
-                  description: 'Example: irs_process_scripts'
-                  type: string
-            type: array
-      tags:
-      - risk
-  /repo-groups/:repo_group_id/forks:
-    get:
-      description: 'A time series of fork count. '
-      externalDocs:
-        description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-risk/blob/master/focus-areas/business-risk.md
-      operationId: Forks (Repo Group)
-      parameters:
-      - description: Repository Group ID
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
-      responses:
-        '200':
-          description: OK
-          schema:
-            items:
-              properties:
-                date:
-                  description: 'Example: 2019-07-03T23:26:42.000Z'
-                  type: string
-                forks:
-                  description: 'Example: 519'
-                  type: integer
-                repo_id:
-                  description: 'Example: 21036'
-                  type: integer
-                repo_name:
-                  description: 'Example: jquery-ujs'
-                  type: string
-            type: array
-      tags:
-      - risk
   /repo-groups/:repo_group_id/issue-backlog:
     get:
       description: 'Number of issues currently open. '
@@ -1558,135 +1971,6 @@ paths:
             type: array
       tags:
       - evolution
-  /repo-groups/:repo_group_id/languages:
-    get:
-      description: 'The primary language of the repository. '
-      externalDocs:
-        description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-risk/blob/master/focus-areas/security.md
-      operationId: Languages (Repo Group)
-      parameters:
-      - description: Repository Group ID
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
-      responses:
-        '200':
-          description: OK
-          schema:
-            items:
-              properties:
-                primary_language:
-                  description: 'Example: Go'
-                  type: string
-                repo_id:
-                  description: 'Example: 21277'
-                  type: integer
-            type: array
-      tags:
-      - risk
-  /repo-groups/:repo_group_id/license-count:
-    get:
-      description: 'The declared software package license (fetched from CII Best Practices
-        badging data). '
-      externalDocs:
-        description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-risk/blob/master/focus-areas/licensing.md
-      operationId: License Count (Repo Group)
-      parameters:
-      - description: Repository Group ID
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
-      responses:
-        '200':
-          description: OK
-          schema:
-            items:
-              properties:
-                file_without_licenses:
-                  description: 'Example: True'
-                  type: string
-                name:
-                  description: 'Example: ActorServiceRegistry'
-                  type: string
-                number_of_license:
-                  description: 'Example: 2'
-                  type: integer
-            type: array
-      tags:
-      - risk
-  /repo-groups/:repo_group_id/license-coverage:
-    get:
-      description: 'Number of persons opening an issue for the first time. '
-      externalDocs:
-        description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-risk/blob/master/metrics/License_Coverage.md
-      operationId: License Coverage (Repo Group)
-      parameters:
-      - description: Repository Group ID
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
-      responses:
-        '200':
-          description: OK
-          schema:
-            items:
-              properties:
-                coverage:
-                  description: 'Example: 0.373'
-                  type: string
-                license_declared_files:
-                  description: 'Example: 19'
-                  type: integer
-                name:
-                  description: 'Example: ActorServiceRegistry'
-                  type: string
-                total_files:
-                  description: 'Example: 51'
-                  type: integer
-            type: array
-      tags:
-      - risk
-  /repo-groups/:repo_group_id/license-declared:
-    get:
-      description: 'Number of persons opening an issue for the first time. '
-      externalDocs:
-        description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-risk/blob/master/metrics/License_Coverage.md
-      operationId: License Declared (Repo Group)
-      parameters:
-      - description: Repository Group ID
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
-      responses:
-        '200':
-          description: OK
-          schema:
-            items:
-              properties:
-                name:
-                  description: 'Example: trickster'
-                  type: string
-                note:
-                  description: 'Example: '
-                  type: string
-                short_name:
-                  description: 'Example: Apache-2.0'
-                  type: string
-            type: array
-      tags:
-      - risk
   /repo-groups/:repo_group_id/lines-changed-by-author:
     get:
       description: 'Count of closed issues. '
@@ -2384,76 +2668,6 @@ paths:
             type: array
       tags:
       - experimental
-  /repos/:repo_id/average-issue-resolution-time:
-    get:
-      description: 'The average issue resolution time. '
-      externalDocs:
-        description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-risk/blob/master/focus-areas/business-risk.md
-      operationId: Average Issue Resolution Time (Repo)
-      parameters:
-      - description: Repository Group ID.
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
-      - description: Repository ID.
-        in: path
-        name: repo_id
-        schema:
-          type: string
-        type: string
-      responses:
-        '200':
-          description: OK
-          schema:
-            items:
-              properties:
-                avg_issue_resolution_time:
-                  description: 'Example: 276 days 13:54:13.2'
-                  type: string
-                repo_name:
-                  description: 'Example: maven-release'
-                  type: string
-            type: array
-      tags:
-      - risk
-  /repos/:repo_id/cii-best-practices-badge:
-    get:
-      description: 'The CII Best Practices Badge level. '
-      externalDocs:
-        description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-risk/blob/master/focus-areas/security.md
-      operationId: CII Best Practices Badge (Repo)
-      parameters:
-      - description: Repository Group ID.
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
-      - description: Repository ID.
-        in: path
-        name: repo_id
-        schema:
-          type: string
-        type: string
-      responses:
-        '200':
-          description: OK
-          schema:
-            items:
-              properties:
-                badge_level:
-                  description: 'Example: passing'
-                  type: string
-                repo_name:
-                  description: 'Example: trickster'
-                  type: string
-            type: array
-      tags:
-      - risk
   /repos/:repo_id/closed-issues-count:
     get:
       description: 'Count of closed issues. '
@@ -2601,66 +2815,6 @@ paths:
             type: array
       tags:
       - evolution
-  /repos/:repo_id/committers:
-    get:
-      description: 'Number of persons contributing with an accepted commit for the
-        first time. '
-      externalDocs:
-        description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-risk/blob/master/metrics/Committers.md
-      operationId: Committers (Repo)
-      parameters:
-      - description: Repository Group ID.
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
-      - description: Repository ID.
-        in: path
-        name: repo_id
-        schema:
-          type: string
-        type: string
-      - description: Periodicity specification.
-        in: path
-        name: period
-        schema:
-          type: string
-        type: string
-      - description: 'Beginning date specification. E.g. values: 2018, 2018-05, 2019-05-01'
-        in: path
-        name: begin_date
-        schema:
-          type: string
-        type: string
-      - description: 'Ending date specification. E.g. values: 2018, 2018-05, 2019-05-01'
-        in: path
-        name: end_date
-        schema:
-          type: string
-        type: string
-      responses:
-        '200':
-          description: OK
-          schema:
-            items:
-              properties:
-                count:
-                  description: 'Example: 1'
-                  type: integer
-                date:
-                  description: 'Example: 2018-10-25T00:00:00.000Z'
-                  type: string
-                repo_name:
-                  description: 'Example: weasel'
-                  type: string
-                rg_name:
-                  description: 'Example: Comcast'
-                  type: string
-            type: array
-      tags:
-      - risk
   /repos/:repo_id/contributors:
     get:
       description: 'List of contributors and their contributions. '
@@ -2785,79 +2939,6 @@ paths:
             type: array
       tags:
       - evolution
-  /repos/:repo_id/fork-count:
-    get:
-      description: 'Fork count. '
-      externalDocs:
-        description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-risk/blob/master/focus-areas/business-risk.md
-      operationId: Fork Count (Repo)
-      parameters:
-      - description: Repository Group ID.
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
-      - description: Repository ID.
-        in: path
-        name: repo_id
-        schema:
-          type: string
-        type: string
-      responses:
-        '200':
-          description: OK
-          schema:
-            items:
-              properties:
-                forks:
-                  description: 'Example: 844'
-                  type: integer
-                repo_name:
-                  description: 'Example: graphiql'
-                  type: string
-            type: array
-      tags:
-      - risk
-  /repos/:repo_id/forks:
-    get:
-      description: 'A time series of fork count. '
-      externalDocs:
-        description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-risk/blob/master/focus-areas/business-risk.md
-      operationId: Forks (Repo)
-      parameters:
-      - description: Repository Group ID.
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
-      - description: Repository ID.
-        in: path
-        name: repo_id
-        schema:
-          type: string
-        type: string
-      responses:
-        '200':
-          description: OK
-          schema:
-            items:
-              properties:
-                date:
-                  description: 'Example: 2019-07-03T23:27:42.000Z'
-                  type: string
-                forks:
-                  description: 'Example: 843'
-                  type: integer
-                repo_name:
-                  description: 'Example: graphiql'
-                  type: string
-            type: array
-      tags:
-      - risk
   /repos/:repo_id/issue-backlog:
     get:
       description: 'Time since an issue is proposed until it is closed. '
@@ -3500,87 +3581,6 @@ paths:
             type: array
       tags:
       - evolution
-  /repos/:repo_id/license-coverage:
-    get:
-      description: 'Number of persons contributing with an accepted commit for the
-        first time. '
-      externalDocs:
-        description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-risk/blob/master/metrics/License_Coverage.md
-      operationId: License Coverage (Repo)
-      parameters:
-      - description: Repository Group ID.
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
-      - description: Repository ID.
-        in: path
-        name: repo_id
-        schema:
-          type: string
-        type: string
-      responses:
-        '200':
-          description: OK
-          schema:
-            items:
-              properties:
-                coverage:
-                  description: 'Example: 0.347'
-                  type: string
-                license_declared_file:
-                  description: 'Example: 33'
-                  type: integer
-                repo_name:
-                  description: 'Example: zucchini'
-                  type: string
-                total_files:
-                  description: 'Example: 95'
-                  type: integer
-            type: array
-      tags:
-      - risk
-  /repos/:repo_id/license-declared:
-    get:
-      description: 'Number of persons contributing with an accepted commit for the
-        first time. '
-      externalDocs:
-        description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-risk/blob/master/metrics/License_Coverage.md
-      operationId: License Declared (Repo)
-      parameters:
-      - description: Repository Group ID.
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
-      - description: Repository ID.
-        in: path
-        name: repo_id
-        schema:
-          type: string
-        type: string
-      responses:
-        '200':
-          description: OK
-          schema:
-            items:
-              properties:
-                name:
-                  description: 'Example: trickster'
-                  type: string
-                note:
-                  description: 'Example: '
-                  type: string
-                short_name:
-                  description: 'Example: Apache-2.0'
-                  type: string
-            type: array
-      tags:
-      - risk
   /repos/:repo_id/pull-request-acceptance-rate:
     get:
       description: Timeseries of pull request acceptance rate (expressed as the ratio
