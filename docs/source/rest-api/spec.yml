@@ -3997,6 +3997,41 @@ paths:
             type: array
       tags:
       - value
+  /repos/:repo_id/watchers:
+    get:
+      description: A time series of watchers count.
+      operationId: Watchers (Repo)
+      parameters:
+      - description: Repository Group ID.
+        in: path
+        name: repo_group_id
+        schema:
+          type: string
+        type: string
+      - description: Repository ID.
+        in: path
+        name: repo_id
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                date:
+                  description: 'Example: 2019-07-03T23:22:26.000Z'
+                  type: string
+                repo_name:
+                  description: 'Example: airflow'
+                  type: string
+                watchers:
+                  description: 'Example: 649'
+                  type: integer
+            type: array
+      tags:
+      - value
   /repo-groups/:repo_group_id/watchers-count:
     get:
       description: Watchers count.
@@ -4022,6 +4057,38 @@ paths:
                   type: string
                 watchers:
                   description: 'Example: 20'
+                  type: integer
+            type: array
+      tags:
+      - value
+  /repos/:repo_id/watchers-count:
+    get:
+      description: Watchers count.
+      operationId: Watchers Count (Repo)
+      parameters:
+      - description: Repository Group ID.
+        in: path
+        name: repo_group_id
+        schema:
+          type: string
+        type: string
+      - description: Repository ID.
+        in: path
+        name: repo_id
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                repo_name:
+                  description: 'Example: airflow'
+                  type: string
+                watchers:
+                  description: 'Example: 649'
                   type: integer
             type: array
       tags:
@@ -4054,35 +4121,6 @@ paths:
                   type: string
                 stars:
                   description: 'Example: 600'
-                  type: integer
-            type: array
-      tags:
-      - value
-  /repo-groups/:repo_group_id/stars-count:
-    get:
-      description: Stars count.
-      operationId: Stars Count (Repo Group)
-      parameters:
-      - description: Repository Group ID
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
-      responses:
-        '200':
-          description: OK
-          schema:
-            items:
-              properties:
-                repo_id:
-                  description: 'Example: 21364'
-                  type: integer
-                repo_name:
-                  description: 'Example: irs_process_scripts'
-                  type: string
-                stars:
-                  description: 'Example: 20'
                   type: integer
             type: array
       tags:
@@ -4122,6 +4160,35 @@ paths:
             type: array
       tags:
       - value
+  /repo-groups/:repo_group_id/stars-count:
+    get:
+      description: Stars count.
+      operationId: Stars Count (Repo Group)
+      parameters:
+      - description: Repository Group ID
+        in: path
+        name: repo_group_id
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                repo_id:
+                  description: 'Example: 21364'
+                  type: integer
+                repo_name:
+                  description: 'Example: irs_process_scripts'
+                  type: string
+                stars:
+                  description: 'Example: 20'
+                  type: integer
+            type: array
+      tags:
+      - value
   /repos/:repo_id/stars-count:
     get:
       description: Stars count.
@@ -4150,73 +4217,6 @@ paths:
                   type: string
                 stars:
                   description: 'Example: 8653'
-                  type: integer
-            type: array
-      tags:
-      - value
-  /repos/:repo_id/watchers:
-    get:
-      description: A time series of watchers count.
-      operationId: Watchers (Repo)
-      parameters:
-      - description: Repository Group ID.
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
-      - description: Repository ID.
-        in: path
-        name: repo_id
-        schema:
-          type: string
-        type: string
-      responses:
-        '200':
-          description: OK
-          schema:
-            items:
-              properties:
-                date:
-                  description: 'Example: 2019-07-03T23:22:26.000Z'
-                  type: string
-                repo_name:
-                  description: 'Example: airflow'
-                  type: string
-                watchers:
-                  description: 'Example: 649'
-                  type: integer
-            type: array
-      tags:
-      - value
-  /repos/:repo_id/watchers-count:
-    get:
-      description: Watchers count.
-      operationId: Watchers Count (Repo)
-      parameters:
-      - description: Repository Group ID.
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
-      - description: Repository ID.
-        in: path
-        name: repo_id
-        schema:
-          type: string
-        type: string
-      responses:
-        '200':
-          description: OK
-          schema:
-            items:
-              properties:
-                repo_name:
-                  description: 'Example: airflow'
-                  type: string
-                watchers:
-                  description: 'Example: 649'
                   type: integer
             type: array
       tags:
