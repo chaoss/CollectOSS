@@ -829,41 +829,6 @@ paths:
             type: array
       tags:
       - risk
-  /repo-groups/:repo_group_id/abandoned-issues:
-    get:
-      description: List of abandoned issues (last updated &gt;= 1 year ago)
-      operationId: Abandoned Issues (Repo)
-      parameters:
-      - description: Repository Group ID
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
-      - description: Repository ID.
-        in: path
-        name: repo_id
-        schema:
-          type: string
-        type: string
-      responses:
-        '200':
-          description: OK
-          schema:
-            items:
-              properties:
-                issue_id:
-                  description: 'Example: 125071'
-                  type: integer
-                repo_id:
-                  description: 'Example: 22004'
-                  type: integer
-                updated_at:
-                  description: 'Example: 2017-10-30T06:52:19.000Z'
-                  type: string
-            type: array
-      tags:
-      - experimental
   /repo-groups/:repo_group_id/aggregate-summary:
     get:
       description: Returns the current count of watchers, stars, and forks and the
@@ -912,6 +877,64 @@ paths:
                   type: integer
                 watcher_count:
                   description: 'Example: 69106'
+                  type: integer
+            type: array
+      tags:
+      - experimental
+  /repos/:repo_id/aggregate-summary:
+    get:
+      description: Returns the current count of watchers, stars, and forks and the
+        counts of all commits, committers, and pull requests merged between a given
+        beginning and end date (default between now and 365 days ago).
+      operationId: Aggregate Summary (Repo)
+      parameters:
+      - description: Repository Group ID.
+        in: path
+        name: repo_group_id
+        schema:
+          type: string
+        type: string
+      - description: Repository ID.
+        in: path
+        name: repo_id
+        schema:
+          type: string
+        type: string
+      - description: 'Beginning date specification. E.g. values: 2018, 2018-05, 2019-05-01'
+        in: path
+        name: begin_date
+        schema:
+          type: string
+        type: string
+      - description: 'Ending date specification. E.g. values: 2018, 2018-05, 2019-05-01'
+        in: path
+        name: end_date
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                commit_count:
+                  description: 'Example: 133'
+                  type: integer
+                committer_count:
+                  description: 'Example: 5'
+                  type: integer
+                fork_count:
+                  description: 'Example: 449'
+                  type: integer
+                merged_count:
+                  description: 'Example: 0'
+                  type: integer
+                star_count:
+                  description: 'Example: 581'
+                  type: integer
+                watcher_count:
+                  description: 'Example: 83'
                   type: integer
             type: array
       tags:
@@ -1114,6 +1137,41 @@ paths:
             type: array
       tags:
       - experimental
+  /repos/:repo_id/issue-comments-mean:
+    get:
+      description: Mean(Average) of issue comments per day.
+      operationId: Issue Comments Mean (Repo)
+      parameters:
+      - description: Repository Group ID.
+        in: path
+        name: repo_group_id
+        schema:
+          type: string
+        type: string
+      - description: Repository ID.
+        in: path
+        name: repo_id
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                date:
+                  description: 'Example: 2018-01-01T00:00:00.000Z'
+                  type: string
+                mean:
+                  description: 'Example: 0.6191780822'
+                  type: string
+                repo_id:
+                  description: 'Example: 21326'
+                  type: integer
+            type: array
+      tags:
+      - experimental
   /repo-groups/:repo_group_id/issue-comments-mean-std:
     get:
       description: Mean(Average) and Standard Deviation of issue comments per day.
@@ -1150,15 +1208,12 @@ paths:
             type: array
       tags:
       - experimental
-  /repo-groups/:repo_group_id/lines-changed-by-author:
+  /repos/:repo_id/issue-comments-mean-std:
     get:
-      description: 'Count of closed issues. '
-      externalDocs:
-        description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/master/metrics/contributors-new.md
-      operationId: Lines Changed by Author (Repo)
+      description: Mean(Average) and Standard Deviation of issue comments per day.
+      operationId: Issue Comments Mean Std (Repo)
       parameters:
-      - description: Repository Group ID
+      - description: Repository Group ID.
         in: path
         name: repo_group_id
         schema:
@@ -1176,24 +1231,18 @@ paths:
           schema:
             items:
               properties:
-                additions:
-                  description: 'Example: 25611'
-                  type: integer
-                affiliation:
-                  description: 'Example: NULL'
+                average:
+                  description: 'Example: 2.5'
                   type: string
-                cmt_author_date:
-                  description: 'Example: 2004-11-24'
+                date:
+                  description: 'Example: 2011-01-01T00:00:00.000Z'
                   type: string
-                cmt_author_email:
-                  description: 'Example: david@loudthinking.com'
+                repo_id:
+                  description: 'Example: 21000'
+                  type: integer
+                standard_deviation:
+                  description: 'Example: 1.7159383568'
                   type: string
-                deletions:
-                  description: 'Example: 296'
-                  type: integer
-                whitespace:
-                  description: 'Example: 5279'
-                  type: integer
             type: array
       tags:
       - experimental
@@ -1244,6 +1293,52 @@ paths:
             type: array
       tags:
       - experimental
+  /repos/:repo_id/pull-request-acceptance-rate:
+    get:
+      description: Timeseries of pull request acceptance rate (expressed as the ratio
+        of pull requests merged on a date to the count of pull requests opened on
+        a date)
+      operationId: Pull Request Acceptance Rate (Repo)
+      parameters:
+      - description: Repository Group ID.
+        in: path
+        name: repo_group_id
+        schema:
+          type: string
+        type: string
+      - description: Repository ID.
+        in: path
+        name: repo_id
+        schema:
+          type: string
+        type: string
+      - description: 'Beginning date specification. E.g. values: 2018, 2018-05, 2019-05-01'
+        in: path
+        name: begin_date
+        schema:
+          type: string
+        type: string
+      - description: 'Ending date specification. E.g. values: 2018, 2018-05, 2019-05-01'
+        in: path
+        name: end_date
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                date:
+                  description: 'Example: 2019-01-01T00:00:00.000Z'
+                  type: string
+                rate:
+                  description: 'Example: 5.3333333333'
+                  type: string
+            type: array
+      tags:
+      - experimental
   /repo-groups/:repo_group_id/pull-requests-closed-no-merge:
     get:
       description: Timeseries of pull request which were closed but not merged
@@ -1262,6 +1357,45 @@ paths:
           type: string
         type: string
       - description: 'Ending date specification. E.g. values: 2018, 2018-05, 2019-05-01'
+        in: path
+        name: end_date
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                date:
+                  description: 'Example: 2019-01-01T00:00:00.000Z'
+                  type: string
+                pr_count:
+                  description: 'Example: 3'
+                  type: integer
+            type: array
+      tags:
+      - experimental
+  /repos/:repo_id/pull-requests-closed-no-merge:
+    get:
+      description: ''
+      operationId: Pull Request Closed but Not Merged (Repo)
+      parameters:
+      - description: Repository ID.
+        in: path
+        name: repo_id
+        schema:
+          type: string
+        type: string
+      - description: 'Beginning date specification. E.g. values: 2018, 2018-05, 2019-05-01'
+        in: path
+        name: begin_date
+        schema:
+          type: string
+        type: string
+      - description: 'Ending date specification. E.g. values: 2018, 2018-05, 2019-05-01
+          ___'
         in: path
         name: end_date
         schema:
@@ -1328,222 +1462,6 @@ paths:
             type: array
       tags:
       - experimental
-  /repos/:repo_id/aggregate-summary:
-    get:
-      description: Returns the current count of watchers, stars, and forks and the
-        counts of all commits, committers, and pull requests merged between a given
-        beginning and end date (default between now and 365 days ago).
-      operationId: Aggregate Summary (Repo)
-      parameters:
-      - description: Repository Group ID.
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
-      - description: Repository ID.
-        in: path
-        name: repo_id
-        schema:
-          type: string
-        type: string
-      - description: 'Beginning date specification. E.g. values: 2018, 2018-05, 2019-05-01'
-        in: path
-        name: begin_date
-        schema:
-          type: string
-        type: string
-      - description: 'Ending date specification. E.g. values: 2018, 2018-05, 2019-05-01'
-        in: path
-        name: end_date
-        schema:
-          type: string
-        type: string
-      responses:
-        '200':
-          description: OK
-          schema:
-            items:
-              properties:
-                commit_count:
-                  description: 'Example: 133'
-                  type: integer
-                committer_count:
-                  description: 'Example: 5'
-                  type: integer
-                fork_count:
-                  description: 'Example: 449'
-                  type: integer
-                merged_count:
-                  description: 'Example: 0'
-                  type: integer
-                star_count:
-                  description: 'Example: 581'
-                  type: integer
-                watcher_count:
-                  description: 'Example: 83'
-                  type: integer
-            type: array
-      tags:
-      - experimental
-  /repos/:repo_id/issue-comments-mean:
-    get:
-      description: Mean(Average) of issue comments per day.
-      operationId: Issue Comments Mean (Repo)
-      parameters:
-      - description: Repository Group ID.
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
-      - description: Repository ID.
-        in: path
-        name: repo_id
-        schema:
-          type: string
-        type: string
-      responses:
-        '200':
-          description: OK
-          schema:
-            items:
-              properties:
-                date:
-                  description: 'Example: 2018-01-01T00:00:00.000Z'
-                  type: string
-                mean:
-                  description: 'Example: 0.6191780822'
-                  type: string
-                repo_id:
-                  description: 'Example: 21326'
-                  type: integer
-            type: array
-      tags:
-      - experimental
-  /repos/:repo_id/issue-comments-mean-std:
-    get:
-      description: Mean(Average) and Standard Deviation of issue comments per day.
-      operationId: Issue Comments Mean Std (Repo)
-      parameters:
-      - description: Repository Group ID.
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
-      - description: Repository ID.
-        in: path
-        name: repo_id
-        schema:
-          type: string
-        type: string
-      responses:
-        '200':
-          description: OK
-          schema:
-            items:
-              properties:
-                average:
-                  description: 'Example: 2.5'
-                  type: string
-                date:
-                  description: 'Example: 2011-01-01T00:00:00.000Z'
-                  type: string
-                repo_id:
-                  description: 'Example: 21000'
-                  type: integer
-                standard_deviation:
-                  description: 'Example: 1.7159383568'
-                  type: string
-            type: array
-      tags:
-      - experimental
-  /repos/:repo_id/pull-request-acceptance-rate:
-    get:
-      description: Timeseries of pull request acceptance rate (expressed as the ratio
-        of pull requests merged on a date to the count of pull requests opened on
-        a date)
-      operationId: Pull Request Acceptance Rate (Repo)
-      parameters:
-      - description: Repository Group ID.
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
-      - description: Repository ID.
-        in: path
-        name: repo_id
-        schema:
-          type: string
-        type: string
-      - description: 'Beginning date specification. E.g. values: 2018, 2018-05, 2019-05-01'
-        in: path
-        name: begin_date
-        schema:
-          type: string
-        type: string
-      - description: 'Ending date specification. E.g. values: 2018, 2018-05, 2019-05-01'
-        in: path
-        name: end_date
-        schema:
-          type: string
-        type: string
-      responses:
-        '200':
-          description: OK
-          schema:
-            items:
-              properties:
-                date:
-                  description: 'Example: 2019-01-01T00:00:00.000Z'
-                  type: string
-                rate:
-                  description: 'Example: 5.3333333333'
-                  type: string
-            type: array
-      tags:
-      - experimental
-  /repos/:repo_id/pull-requests-closed-no-merge:
-    get:
-      description: ''
-      operationId: Pull Request Closed but Not Merged (Repo)
-      parameters:
-      - description: Repository ID.
-        in: path
-        name: repo_id
-        schema:
-          type: string
-        type: string
-      - description: 'Beginning date specification. E.g. values: 2018, 2018-05, 2019-05-01'
-        in: path
-        name: begin_date
-        schema:
-          type: string
-        type: string
-      - description: 'Ending date specification. E.g. values: 2018, 2018-05, 2019-05-01
-          ___'
-        in: path
-        name: end_date
-        schema:
-          type: string
-        type: string
-      responses:
-        '200':
-          description: OK
-          schema:
-            items:
-              properties:
-                date:
-                  description: 'Example: 2019-01-01T00:00:00.000Z'
-                  type: string
-                pr_count:
-                  description: 'Example: 3'
-                  type: integer
-            type: array
-      tags:
-      - experimental
   /repos/:repo_id/top-committers:
     get:
       description: Returns a list of contributors contributing N% of all commits.
@@ -1593,6 +1511,88 @@ paths:
                 repo_name:
                   description: 'Example: graphql'
                   type: string
+            type: array
+      tags:
+      - experimental
+  /repo-groups/:repo_group_id/abandoned-issues:
+    get:
+      description: List of abandoned issues (last updated &gt;= 1 year ago)
+      operationId: Abandoned Issues (Repo)
+      parameters:
+      - description: Repository Group ID
+        in: path
+        name: repo_group_id
+        schema:
+          type: string
+        type: string
+      - description: Repository ID.
+        in: path
+        name: repo_id
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                issue_id:
+                  description: 'Example: 125071'
+                  type: integer
+                repo_id:
+                  description: 'Example: 22004'
+                  type: integer
+                updated_at:
+                  description: 'Example: 2017-10-30T06:52:19.000Z'
+                  type: string
+            type: array
+      tags:
+      - experimental
+  /repo-groups/:repo_group_id/lines-changed-by-author:
+    get:
+      description: 'Count of closed issues. '
+      externalDocs:
+        description: CHAOSS Metric Definition
+        url: https://github.com/chaoss/wg-evolution/blob/master/metrics/contributors-new.md
+      operationId: Lines Changed by Author (Repo)
+      parameters:
+      - description: Repository Group ID
+        in: path
+        name: repo_group_id
+        schema:
+          type: string
+        type: string
+      - description: Repository ID.
+        in: path
+        name: repo_id
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                additions:
+                  description: 'Example: 25611'
+                  type: integer
+                affiliation:
+                  description: 'Example: NULL'
+                  type: string
+                cmt_author_date:
+                  description: 'Example: 2004-11-24'
+                  type: string
+                cmt_author_email:
+                  description: 'Example: david@loudthinking.com'
+                  type: string
+                deletions:
+                  description: 'Example: 296'
+                  type: integer
+                whitespace:
+                  description: 'Example: 5279'
+                  type: integer
             type: array
       tags:
       - experimental
