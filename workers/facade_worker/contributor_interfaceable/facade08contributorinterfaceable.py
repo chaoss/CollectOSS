@@ -18,90 +18,10 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
     def __init__(self, db, logger, config={}):
         #self.db_schema = None
         # Get config passed from the facade worker.
-        self.logger = logger
-        self.config = config#read_config("Workers", "facade_worker", None, None)
-        self.logger.info(f"Config is : {self.config}")
-
-        self.data_tables = ['contributors', 'contributors_aliases', 'contributor_affiliations',
-                            'issue_events', 'pull_request_events', 'issues', 'message', 'issue_assignees', 'commits',
-                            'pull_request_assignees', 'pull_request_reviewers', 'pull_request_meta', 'pull_request_repo']
-
-        self._root_augur_dir = Persistant.ROOT_AUGUR_DIR
-        
-        self.worker_type = self.config['worker_type'] 
-
-        #This is the same as the facade port, Needs to be incremented like done below.
-        worker_port = self.config['port']
-
-        logger.info("Getting valid port")
-        while True:
-            try:
-                r = requests.get('http://{}:{}/AUGWOP/heartbeat'.format(
-                    self.augur_config.get_value('Server', 'host'), worker_port)).json()
-                if 'status' in r:
-                    if r['status'] == 'alive':
-                        worker_port += 1
-            except:
-                break
-        logger.info("Got a valid port")
-
-        # Update config with options that are general and not specific to any worker
-        self.augur_config = AugurConfig(self._root_augur_dir)
-        # add credentials to db config. Goes to databaseable
-        self.config.update({
-            'port': worker_port,
-            'id': "workers.{}.{}".format(self.worker_type, worker_port),
-            'capture_output': False,
-            'location': 'http://{}:{}'.format(self.augur_config.get_value('Server', 'host'), worker_port),
-            'port_broker': self.augur_config.get_value('Server', 'port'),
-            'host_broker': self.augur_config.get_value('Server', 'host'),
-            'host_database': self.augur_config.get_value('Database', 'host'),
-            'port_database': self.augur_config.get_value('Database', 'port'),
-            'user_database': self.augur_config.get_value('Database', 'user'),
-            'name_database': self.augur_config.get_value('Database', 'name'),
-            'password_database': self.augur_config.get_value('Database', 'password')
-        })
-
-        self.logger = logger
-        #Take logger from facade.
-        #self.initialize_logging()
-        # Organize different api keys/oauths available
-        self.logger.info("Initializing API key.")
-        if 'gh_api_key' in self.config or 'gitlab_api_key' in self.config:
-            try:
-                self.init_oauths(self.platform)
-            except AttributeError:
-                self.logger.error("Worker not configured to use API key!")
-        else:
-            self.oauths = [{'oauth_id': 0}]
-
-        
-
-        #This method also calls oauth_init
-        #self.initialize_database_connections()
         self.db = db
-
-        metadata = s.MetaData()
-
-        # Reflect only the tables we will use for each schema's metadata object
-        metadata.reflect(self.db, only=self.data_tables)
-        #helper_metadata.reflect(self.helper_db, only=self.operations_tables)
-
-        Base = automap_base(metadata=metadata)
-        #HelperBase = automap_base(metadata=helper_metadata)
-
-        Base.prepare()
-
-        # So we can access all our tables when inserting, updating, etc
-        for table in self.data_tables:
-            setattr(self, '{}_table'.format(table), Base.classes[table].__table__)
-
-        self.logger.info(
-            'Worker (PID: {}) initializing...'.format(str(os.getpid())))
-
-        self.tool_source = "contributor_interface"
-        self.tool_version = "0.1"
-        self.data_source = "contributor_interface"
+        self.logger = logger
+        self.logger.info("Facade worker git interface logging set up correctly")
+        return
 
     #Try to construct the best url to ping GitHub's API for a username given a full name and a email.
     def resolve_user_url_from_email(self,contributor):
