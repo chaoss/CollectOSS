@@ -971,7 +971,7 @@ class WorkerGitInterfaceable(Worker):
             # We will be finding oauth with the highest rate limit left out of our list of oauths
             new_oauth = self.oauths[0]
             # Endpoint to hit solely to retrieve rate limit information from headers of the response
-            url = "https://api.github.com/users/gabe-heim"
+            url = "https://api.github.com/users/sgoggins"
 
             other_oauths = self.oauths[0:] if len(self.oauths) > 1 else []
             for oauth in other_oauths:

@@ -16,11 +16,40 @@ worker and table.
 #TODO : Make this borrow everything that it can from the facade worker.
 #i.e. port, logging, etc
 class ContributorInterfaceable(WorkerGitInterfaceable):
-    def __init__(self, db, logger):
+    def __init__(self, config={}):
         #self.db_schema = None
         # Get config passed from the facade worker.
+        db_user = config['user_database']
+        db_pass = config['password_database']
+        db_name = config['name_database']
+        db_host = config['host_database']
+        db_port = config['port_database']
+
+        DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(
+            db_user, db_pass, db_host, db_port, db_name
+        )
+
+        #Use a differant database connection 
+        db = s.create_engine(DB_STR, poolclass=s.pool.NullPool,
+          connect_args={'options': '-csearch_path={}'.format('augur_data')})
+  
         self.db = db
-        self.logger = logger
+
+
+        self.config = {
+            'gh_api_key': self.augur_config.get_value('Database', 'key'),
+            'gitlab_api_key': self.augur_config.get_value('Database', 'gitlab_api_key')
+        }
+
+        self.logger.info("Initializing API key.")
+        if 'gh_api_key' in self.config or 'gitlab_api_key' in self.config:
+            try:
+                self.init_oauths(self.platform)
+            except AttributeError:
+                self.logger.error("Worker not configured to use API key!")
+        else:
+            self.oauths = [{'oauth_id': 0}]
+        
         self.logger.info("Facade worker git interface logging set up correctly")
         return
 
@@ -53,7 +82,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
     #Hit the endpoint specified by the url and return the json that it returns if it returns a dict.
     #Returns None on failure.
-    def request_dict_from_endpoint(self,url):
+    def request_dict_from_endpoint(self,url,timeout_wait=10):
       self.logger.info(f"Hitting endpoint: {url}")
 
       attempts = 0
@@ -66,7 +95,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
           response = requests.get(url=url, headers=self.headers)
         except TimeoutError:
           self.logger.info(f"User data request for enriching contributor data failed with {attempts} attempts! Trying again...")
-          time.sleep(10)
+          time.sleep(timeout_wait)
           continue
         
         #Make sure we know how many requests our api tokens have.
@@ -195,7 +224,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             #Get best combonation of firstname lastname and email to try and get a GitHub username match.
             url = self.resolve_user_url_from_email(contributor)
 
-            login_json = self.request_dict_from_endpoint(url)
+            login_json = self.request_dict_from_endpoint(url,timeout_wait=30)
 
             #total_count is the count of username's found by the endpoint.
             if login_json == None or 'total_count' not in login_json:
