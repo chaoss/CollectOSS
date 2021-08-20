@@ -6,6 +6,7 @@ import dateutil.parser
 from pypi_libyear_util import sort_dependency_requirement,get_pypi_data,get_latest_version,get_release_date
 from pypi_libyear_util import get_libyear
 import logging
+import yaml
 
 
 #Files that would be parsed should be added here.
@@ -15,7 +16,11 @@ file_list = [
     'Pipfile',
     'Pipfile.lock',
     'pyproject.toml',
-    'poetry.lock'
+    'poetry.lock',
+    'environment.yml',
+    'environment.yaml',
+    'environment.yml.lock',
+    'environment.yaml.lock'
 ]
 
 
@@ -147,6 +152,29 @@ def parse_poetry_lock(file_handle):
         deps.append(Dict)
     return deps 
 
+# Pip dependencies can be embedded in conda environment files
+def parse_conda(file_handle):
+    contents = yaml.safe_load(file_handle)
+    deps = list()
+    pip = None
+    if not contents:
+        return []
+    dependencies = contents['dependencies']
+    for dep in dependencies:
+        if (type(dep) is dict) and dep['pip']:
+            pip = dep
+    if not pip:
+        return []
+    # parse_requirement_txt(pip["pip"].join("\n"))
+    # requirement_txt_parsable = ''  
+    for pip_dependency in pip['pip']:
+        matches = require_regrex.search(pip_dependency.replace("'",""))
+        if not matches:
+            continue
+        Dict = {'name': matches[1], 'requirement': matches[2], 'type': 'runtime', 'package': 'PYPI'}
+        deps.append(Dict)  
+    return deps    
+
 
 def get_parsed_deps(path):
 
@@ -176,6 +204,18 @@ def get_parsed_deps(path):
 
         elif f == 'poetry.lock':
             dependency_list = parse_poetry_lock(file_handle)
+
+        elif f == 'environment.yml':
+            dependency_list = parse_conda(file_handle)
+
+        elif f == 'environment.yaml':
+            dependency_list = parse_conda(file_handle)
+
+        elif f == 'environment.yml.lock':
+            dependency_list = parse_conda(file_handle)
+
+        elif f == 'environment.yaml.lock':
+            dependency_list = parse_conda(file_handle)                
         return dependency_list
 
 
