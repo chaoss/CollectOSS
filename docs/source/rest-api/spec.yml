@@ -1600,6 +1600,35 @@ paths:
   /repo-groups/:repo_group_id/abandoned-issues:
     get:
       description: List of abandoned issues (last updated &gt;= 1 year ago)
+      operationId: Abandoned Issues (Repo Group)
+      parameters:
+      - description: Repository Group ID
+        in: path
+        name: repo_group_id
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                issue_id:
+                  description: 'Example: 125071'
+                  type: integer
+                repo_id:
+                  description: 'Example: 22004'
+                  type: integer
+                updated_at:
+                  description: 'Example: 2017-10-30T06:52:19.000Z'
+                  type: string
+            type: array
+      tags:
+      - experimental
+  /repo-groups/:repo_id/abandoned-issues:
+    get:
+      description: List of abandoned issues (last updated &gt;= 1 year ago)
       operationId: Abandoned Issues (Repo)
       parameters:
       - description: Repository Group ID
@@ -1633,6 +1662,47 @@ paths:
       tags:
       - experimental
   /repo-groups/:repo_group_id/lines-changed-by-author:
+    get:
+      description: 'Count of closed issues. '
+      externalDocs:
+        description: CHAOSS Metric Definition
+        url: https://github.com/chaoss/wg-evolution/blob/master/metrics/contributors-new.md
+      operationId: Lines Changed by Author (Repo Group)
+      parameters:
+      - description: Repository Group ID
+        in: path
+        name: repo_group_id
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                additions:
+                  description: 'Example: 25611'
+                  type: integer
+                affiliation:
+                  description: 'Example: NULL'
+                  type: string
+                cmt_author_date:
+                  description: 'Example: 2004-11-24'
+                  type: string
+                cmt_author_email:
+                  description: 'Example: david@loudthinking.com'
+                  type: string
+                deletions:
+                  description: 'Example: 296'
+                  type: integer
+                whitespace:
+                  description: 'Example: 5279'
+                  type: integer
+            type: array
+      tags:
+      - experimental
+  /repo-groups/:repo_id/lines-changed-by-author:
     get:
       description: 'Count of closed issues. '
       externalDocs:
