@@ -280,12 +280,6 @@ paths:
         url: https://github.com/chaoss/wg-risk/blob/master/focus-areas/business-risk.md
       operationId: Average Issue Resolution Time (Repo)
       parameters:
-      - description: Repository Group ID.
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
       - description: Repository ID.
         in: path
         name: repo_id
@@ -347,12 +341,6 @@ paths:
         url: https://github.com/chaoss/wg-risk/blob/master/focus-areas/security.md
       operationId: CII Best Practices Badge (Repo)
       parameters:
-      - description: Repository Group ID.
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
       - description: Repository ID.
         in: path
         name: repo_id
@@ -433,12 +421,6 @@ paths:
         url: https://github.com/chaoss/wg-risk/blob/master/metrics/Committers.md
       operationId: Committers (Repo)
       parameters:
-      - description: Repository Group ID.
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
       - description: Repository ID.
         in: path
         name: repo_id
@@ -524,12 +506,6 @@ paths:
         url: https://github.com/chaoss/wg-risk/blob/master/focus-areas/business-risk.md
       operationId: Fork Count (Repo)
       parameters:
-      - description: Repository Group ID.
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
       - description: Repository ID.
         in: path
         name: repo_id
@@ -594,12 +570,6 @@ paths:
         url: https://github.com/chaoss/wg-risk/blob/master/focus-areas/business-risk.md
       operationId: Forks (Repo)
       parameters:
-      - description: Repository Group ID.
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
       - description: Repository ID.
         in: path
         name: repo_id
@@ -668,12 +638,6 @@ paths:
         url: https://github.com/chaoss/wg-risk/blob/master/metrics/License_Coverage.md
       operationId: License Coverage (Repo)
       parameters:
-      - description: Repository Group ID.
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
       - description: Repository ID.
         in: path
         name: repo_id
@@ -742,12 +706,6 @@ paths:
         url: https://github.com/chaoss/wg-risk/blob/master/metrics/License_Coverage.md
       operationId: License Declared (Repo)
       parameters:
-      - description: Repository Group ID.
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
       - description: Repository ID.
         in: path
         name: repo_id
@@ -809,12 +767,6 @@ paths:
         url: https://github.com/chaoss/wg-risk/blob/master/focus-areas/security.md
       operationId: Languages (Repo)
       parameters:
-      - description: Repository Group ID
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
       - description: Repository ID.
         in: path
         name: repo_id
@@ -878,12 +830,6 @@ paths:
         url: https://github.com/chaoss/wg-risk/blob/master/focus-areas/licensing.md
       operationId: License Count (Repo)
       parameters:
-      - description: Repository Group ID
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
       - description: Repository ID.
         in: path
         name: repo_id
