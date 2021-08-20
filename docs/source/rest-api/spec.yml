@@ -9,6 +9,7 @@ info:
   version: 0.12.0
 openapi: 3.0.0
 paths:
+  #utility endpoints
   /repo-groups:
     get:
       description: Get all the downloaded repo groups.
@@ -235,6 +236,10 @@ paths:
             type: array
       tags:
       - utility
+
+
+
+  #risk endpoints
   /repo-groups/:repo_group_id/average-issue-resolution-time:
     get:
       description: 'The average issue resolution time. '
@@ -829,6 +834,10 @@ paths:
             type: array
       tags:
       - risk
+
+
+
+  #experimental endpoints
   /repo-groups/:repo_group_id/aggregate-summary:
     get:
       description: Returns the current count of watchers, stars, and forks and the
@@ -1596,6 +1605,10 @@ paths:
             type: array
       tags:
       - experimental
+
+
+
+  #evolution endpoints
   /repo-groups/:repo_group_id/code-changes:
     get:
       description: 'Time series of number of commits during a certain period. '
@@ -3965,6 +3978,10 @@ paths:
             type: array
       tags:
       - evolution
+
+
+
+  #value endpoints
   /repo-groups/:repo_group_id/watchers:
     get:
       description: A time series of watchers count.
@@ -4221,6 +4238,10 @@ paths:
             type: array
       tags:
       - value
+
+
+      
+  #visualization endpoints
   /contributor_reports/new_contributors_bar/:
     get:
       description: Get bar chart of new contributor counts.
