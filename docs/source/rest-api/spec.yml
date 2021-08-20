@@ -4163,12 +4163,6 @@ paths:
       description: A time series of watchers count.
       operationId: Watchers (Repo)
       parameters:
-      - description: Repository Group ID.
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
       - description: Repository ID.
         in: path
         name: repo_id
@@ -4227,12 +4221,6 @@ paths:
       description: Watchers count.
       operationId: Watchers Count (Repo)
       parameters:
-      - description: Repository Group ID.
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
       - description: Repository ID.
         in: path
         name: repo_id
@@ -4291,12 +4279,6 @@ paths:
       description: A time series of stars count.
       operationId: Stars (Repo)
       parameters:
-      - description: Repository Group ID.
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
       - description: Repository ID.
         in: path
         name: repo_id
@@ -4355,12 +4337,6 @@ paths:
       description: Stars count.
       operationId: Stars Count (Repo)
       parameters:
-      - description: Repository Group ID.
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
       - description: Repository ID.
         in: path
         name: repo_id
