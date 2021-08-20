@@ -20,7 +20,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         # Get config passed from the facade worker.
         self.db = db
         self.logger = logger
-        self.logger.info("Facade worker git interface logging set up correctly")
+        #self.logger.info("Facade worker git interface logging set up correctly")
         return
 
     #Try to construct the best url to ping GitHub's API for a username given a full name and a email.
