@@ -1718,12 +1718,6 @@ paths:
         url: https://github.com/chaoss/wg-evolution/blob/master/metrics/Code_Changes.md
       operationId: Code Changes (Repo)
       parameters:
-      - description: Repository Group ID.
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
       - description: Repository ID.
         in: path
         name: repo_id
@@ -1830,12 +1824,6 @@ paths:
         url: https://github.com/chaoss/wg-evolution/blob/master/metrics/Code_Changes_Lines.md
       operationId: Code Changes Lines (Repo)
       parameters:
-      - description: Repository Group ID.
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
       - description: Repository ID.
         in: path
         name: repo_id
@@ -1954,12 +1942,6 @@ paths:
         url: https://github.com/chaoss/wg-evolution/blob/master/metrics/contributors.md
       operationId: Contributors (Repo)
       parameters:
-      - description: Repository Group ID.
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
       - description: Repository ID.
         in: path
         name: repo_id
@@ -2072,12 +2054,6 @@ paths:
         url: https://github.com/chaoss/wg-evolution/blob/master/metrics/contributors-new.md
       operationId: New Contributors (Repo)
       parameters:
-      - description: Repository Group ID.
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
       - description: Repository ID.
         in: path
         name: repo_id
@@ -2163,12 +2139,6 @@ paths:
         url: https://github.com/chaoss/wg-evolution/blob/master/focus_areas/code_development.md
       operationId: Issue Duration (Repo)
       parameters:
-      - description: Repository Group ID.
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
       - description: Repository ID.
         in: path
         name: repo_id
@@ -2269,12 +2239,6 @@ paths:
         url: https://github.com/chaoss/wg-evolution/blob/master/focus_areas/code_development.md
       operationId: Issue Participants (Repo)
       parameters:
-      - description: Repository Group ID.
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
       - description: Repository ID.
         in: path
         name: repo_id
@@ -2354,12 +2318,6 @@ paths:
         url: https://github.com/chaoss/wg-evolution/blob/master/focus_areas/code_development.md
       operationId: Issue Throughput (Repo)
       parameters:
-      - description: Repository Group ID.
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
       - description: Repository ID.
         in: path
         name: repo_id
@@ -2444,12 +2402,6 @@ paths:
         url: https://github.com/chaoss/wg-evolution/blob/master/metrics/Issues_Active.md
       operationId: Issues Active (Repo)
       parameters:
-      - description: Repository Group ID.
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
       - description: Repository ID.
         in: path
         name: repo_id
@@ -2553,12 +2505,6 @@ paths:
         url: https://github.com/chaoss/wg-evolution/blob/master/metrics/Issues_New.md
       operationId: Issues Closed (Repo)
       parameters:
-      - description: Repository Group ID.
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
       - description: Repository ID.
         in: path
         name: repo_id
@@ -2650,12 +2596,6 @@ paths:
         url: https://github.com/chaoss/wg-evolution/blob/master/metrics/issues-closed-resolution-duration.md
       operationId: Closed Issue Resolution Duration (Repo)
       parameters:
-      - description: Repository Group ID.
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
       - description: Repository ID.
         in: path
         name: repo_id
@@ -2753,12 +2693,6 @@ paths:
         url: https://github.com/chaoss/wg-evolution/blob/master/metrics/issues-first-time-closed.md
       operationId: Closed Issues New Contributors (Repo)
       parameters:
-      - description: Repository Group ID.
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
       - description: Repository ID.
         in: path
         name: repo_id
@@ -2862,12 +2796,6 @@ paths:
         url: https://github.com/chaoss/wg-evolution/blob/master/metrics/issues-first-time-opened.md
       operationId: New Contributors of Issues (Repo)
       parameters:
-      - description: Repository Group ID.
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
       - description: Repository ID.
         in: path
         name: repo_id
@@ -2962,12 +2890,6 @@ paths:
         url: https://github.com/chaoss/wg-evolution/blob/master/metrics/issues-maintainer-response-duration.md
       operationId: Issue Response Time (Repo)
       parameters:
-      - description: Repository Group ID
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
       - description: Repository ID.
         in: path
         name: repo_id
@@ -3065,12 +2987,6 @@ paths:
         url: https://github.com/chaoss/wg-evolution/blob/master/metrics/Issues_New.md
       operationId: Issues New (Repo)
       parameters:
-      - description: Repository Group ID.
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
       - description: Repository ID.
         in: path
         name: repo_id
@@ -3159,12 +3075,6 @@ paths:
         url: https://github.com/chaoss/wg-evolution/blob/master/metrics/issues-open-age.md
       operationId: Open Issue Age (Repo)
       parameters:
-      - description: Repository Group ID.
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
       - description: Repository ID.
         in: path
         name: repo_id
@@ -3258,12 +3168,6 @@ paths:
         url: https://github.com/chaoss/wg-evolution/blob/master/metrics/pull-requests-merge-contributor-new.md
       operationId: New Contributors of Commits (Repo)
       parameters:
-      - description: Repository Group ID.
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
       - description: Repository ID.
         in: path
         name: repo_id
@@ -3367,12 +3271,6 @@ paths:
         url: https://github.com/chaoss/wg-evolution/blob/master/metrics/Reviews_Duration.md
       operationId: Review Duration (Repo)
       parameters:
-      - description: Repository Group ID.
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
       - description: Repository ID.
         in: path
         name: repo_id
@@ -3478,12 +3376,6 @@ paths:
         url: https://github.com/chaoss/wg-evolution/blob/master/metrics/reviews.md
       operationId: Reviews (Repo)
       parameters:
-      - description: Repository Group ID.
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
       - description: Repository ID.
         in: path
         name: repo_id
@@ -3589,12 +3481,6 @@ paths:
         url: https://github.com/chaoss/wg-evolution/blob/master/metrics/Reviews_Accepted.md
       operationId: Reviews Accepted (Repo)
       parameters:
-      - description: Repository Group ID.
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
       - description: Repository ID.
         in: path
         name: repo_id
@@ -3700,12 +3586,6 @@ paths:
         url: https://github.com/chaoss/wg-evolution/blob/master/metrics/Reviews_Accepted.md
       operationId: Reviews Declined (Repo)
       parameters:
-      - description: Repository Group ID.
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
       - description: Repository ID.
         in: path
         name: repo_id
@@ -3794,12 +3674,6 @@ paths:
         url: https://github.com/chaoss/wg-evolution/blob/master/metrics/sub-projects.md
       operationId: Sub-Projects (Repo)
       parameters:
-      - description: Repository Group ID.
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
       - description: Repository ID.
         in: path
         name: repo_id
@@ -3876,9 +3750,9 @@ paths:
         url: https://github.com/chaoss/wg-evolution/blob/master/metrics/contributors-new.md
       operationId: Closed Issues Count (Repo)
       parameters:
-      - description: Repository Group ID
+      - description: Repository ID
         in: path
-        name: repo_group_id
+        name: repo_id
         schema:
           type: string
         type: string
@@ -3961,12 +3835,6 @@ paths:
         url: https://github.com/chaoss/wg-evolution/blob/master/metrics/Reviews_Duration.md
       operationId: Number of releases (Repo)
       parameters:
-      - description: Repository Group ID.
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
       - description: Repository ID.
         in: path
         name: repo_id
