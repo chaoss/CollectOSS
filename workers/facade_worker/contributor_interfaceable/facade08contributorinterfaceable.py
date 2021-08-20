@@ -1,6 +1,7 @@
 from requests.api import head
 from workers.worker_base import *
-
+import logging
+from logging import FileHandler, Formatter, StreamHandler
 from workers.worker_git_integration import WorkerGitInterfaceable
 from workers.util import read_config
 """
