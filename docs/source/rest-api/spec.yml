@@ -801,6 +801,41 @@ paths:
             type: array
       tags:
       - risk
+  /repo-groups/:repo_id/languages:
+    get:
+      description: 'The primary language of the repository. '
+      externalDocs:
+        description: CHAOSS Metric Definition
+        url: https://github.com/chaoss/wg-risk/blob/master/focus-areas/security.md
+      operationId: Languages (Repo)
+      parameters:
+      - description: Repository Group ID
+        in: path
+        name: repo_group_id
+        schema:
+          type: string
+        type: string
+      - description: Repository ID.
+        in: path
+        name: repo_id
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                primary_language:
+                  description: 'Example: Go'
+                  type: string
+                repo_id:
+                  description: 'Example: 21277'
+                  type: integer
+            type: array
+      tags:
+      - risk
   /repo-groups/:repo_group_id/license-count:
     get:
       description: 'The declared software package license (fetched from CII Best Practices
