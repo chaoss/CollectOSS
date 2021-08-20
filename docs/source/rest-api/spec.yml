@@ -917,12 +917,6 @@ paths:
         beginning and end date (default between now and 365 days ago).
       operationId: Aggregate Summary (Repo)
       parameters:
-      - description: Repository Group ID.
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
       - description: Repository ID.
         in: path
         name: repo_id
@@ -972,7 +966,7 @@ paths:
     get:
       description: 'This is an Augur-specific metric. We are currently working to
         define these more formally. '
-      operationId: Annual Commit Count Ranked by New Repo in Repo Group (Repo)
+      operationId: Annual Commit Count Ranked by New Repo in Repo Group (Repo Group)
       parameters:
       - description: Repository Group ID.
         in: path
@@ -1032,7 +1026,7 @@ paths:
     get:
       description: 'This is an Augur-specific metric. We are currently working to
         define these more formally. '
-      operationId: Annual Commit Count Ranked by Repo in Repo Group (Repo)
+      operationId: Annual Commit Count Ranked by Repo in Repo Group (Repo Group)
       parameters:
       - description: Base64 version of the URL of the GitHub repository as it appears
           in the Facade DB
@@ -1066,7 +1060,7 @@ paths:
     get:
       description: 'This is an Augur-specific metric. We are currently working to
         define these more formally. '
-      operationId: Annual Lines of Code Ranked by New Repo in Repo Group (Repo)
+      operationId: Annual Lines of Code Ranked by New Repo in Repo Group (Repo Group)
       parameters:
       - description: Base64 version of the URL of the GitHub repository as it appears
           in the Facade DB
@@ -1100,7 +1094,7 @@ paths:
     get:
       description: 'This is an Augur-specific metric. We are currently working to
         define these more formally. '
-      operationId: Annual Lines of Code Ranked by Repo in Repo Group (Repo)
+      operationId: Annual Lines of Code Ranked by Repo in Repo Group (Repo Group)
       parameters:
       - description: Base64 version of the URL of the GitHub repository as it appears
           in the Facade DB
@@ -1171,12 +1165,6 @@ paths:
       description: Mean(Average) of issue comments per day.
       operationId: Issue Comments Mean (Repo)
       parameters:
-      - description: Repository Group ID.
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
       - description: Repository ID.
         in: path
         name: repo_id
@@ -1242,12 +1230,6 @@ paths:
       description: Mean(Average) and Standard Deviation of issue comments per day.
       operationId: Issue Comments Mean Std (Repo)
       parameters:
-      - description: Repository Group ID.
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
       - description: Repository ID.
         in: path
         name: repo_id
@@ -1329,12 +1311,6 @@ paths:
         a date)
       operationId: Pull Request Acceptance Rate (Repo)
       parameters:
-      - description: Repository Group ID.
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
       - description: Repository ID.
         in: path
         name: repo_id
@@ -1371,7 +1347,7 @@ paths:
   /repo-groups/:repo_group_id/pull-requests-closed-no-merge:
     get:
       description: Timeseries of pull request which were closed but not merged
-      operationId: Pull Request Closed but Not Merged (Repo)
+      operationId: Pull Request Closed but Not Merged (Repo Group)
       parameters:
       - description: Repository Group ID.
         in: path
@@ -1496,12 +1472,6 @@ paths:
       description: Returns a list of contributors contributing N% of all commits.
       operationId: Top Committers (Repo)
       parameters:
-      - description: Repository Group ID.
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
       - description: Repository ID.
         in: path
         name: repo_id
@@ -1577,12 +1547,6 @@ paths:
       description: List of abandoned issues (last updated &gt;= 1 year ago)
       operationId: Abandoned Issues (Repo)
       parameters:
-      - description: Repository Group ID
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
       - description: Repository ID.
         in: path
         name: repo_id
@@ -1656,12 +1620,6 @@ paths:
         url: https://github.com/chaoss/wg-evolution/blob/master/metrics/contributors-new.md
       operationId: Lines Changed by Author (Repo)
       parameters:
-      - description: Repository Group ID
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
       - description: Repository ID.
         in: path
         name: repo_id
