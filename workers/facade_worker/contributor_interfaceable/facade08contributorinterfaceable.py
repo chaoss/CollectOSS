@@ -18,7 +18,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
     def __init__(self, db, logger, config={}):
         #self.db_schema = None
         # Get config passed from the facade worker.
-        logger.info("getting config")
+        print("getting config")
         self.config = read_config("Workers", "facade_worker", None, None)
         logger.info(f"Config is : {self.config}")
 
