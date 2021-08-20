@@ -18,7 +18,9 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
     def __init__(self, db, logger, config={}):
         #self.db_schema = None
         # Get config passed from the facade worker.
+        logger.info("getting config")
         self.config = read_config("Workers", "facade_worker", None, None)
+        logger.info(f"Config is : {self.config}")
 
         self.data_tables = ['contributors', 'contributors_aliases', 'contributor_affiliations',
                             'issue_events', 'pull_request_events', 'issues', 'message', 'issue_assignees', 'commits',
@@ -31,7 +33,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         #This is the same as the facade port, Needs to be incremented like done below.
         worker_port = self.config['port']
 
-        self.logger.info("Getting valid port")
+        logger.info("Getting valid port")
         while True:
             try:
                 r = requests.get('http://{}:{}/AUGWOP/heartbeat'.format(
@@ -41,7 +43,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                         worker_port += 1
             except:
                 break
-        self.logger.info("Got a valid port")
+        logger.info("Got a valid port")
 
         # Update config with options that are general and not specific to any worker
         self.augur_config = AugurConfig(self._root_augur_dir)
