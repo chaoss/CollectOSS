@@ -30,6 +30,8 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         #This is the same as the facade port, Needs to be incremented like done below.
         worker_port = self.config['port']
+
+        self.logger.info("Getting valid port")
         while True:
             try:
                 r = requests.get('http://{}:{}/AUGWOP/heartbeat'.format(
@@ -39,6 +41,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                         worker_port += 1
             except:
                 break
+        self.logger.info("Got a valid port")
 
         # Update config with options that are general and not specific to any worker
         self.augur_config = AugurConfig(self._root_augur_dir)
