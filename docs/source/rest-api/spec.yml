@@ -99,7 +99,7 @@ paths:
   /owner/:owner/repo/:repo:
     get:
       description: Get the repo_group_id and repo_id of a particular repo.
-      operationId: Get Repo by Owner and Repo
+      operationId: Get Repo by Owner and Repo Name
       responses:
         '200':
           description: OK
@@ -813,6 +813,45 @@ paths:
       - description: Repository Group ID
         in: path
         name: repo_group_id
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                file_without_licenses:
+                  description: 'Example: True'
+                  type: string
+                name:
+                  description: 'Example: ActorServiceRegistry'
+                  type: string
+                number_of_license:
+                  description: 'Example: 2'
+                  type: integer
+            type: array
+      tags:
+      - risk
+  /repo-groups/:repo_id/license-count:
+    get:
+      description: 'The declared software package license (fetched from CII Best Practices
+        badging data). '
+      externalDocs:
+        description: CHAOSS Metric Definition
+        url: https://github.com/chaoss/wg-risk/blob/master/focus-areas/licensing.md
+      operationId: License Count (Repo)
+      parameters:
+      - description: Repository Group ID
+        in: path
+        name: repo_group_id
+        schema:
+          type: string
+        type: string
+      - description: Repository ID.
+        in: path
+        name: repo_id
         schema:
           type: string
         type: string
@@ -4240,7 +4279,7 @@ paths:
       - value
 
 
-      
+
   #visualization endpoints
   /contributor_reports/new_contributors_bar/:
     get:
