@@ -18,8 +18,8 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
     def __init__(self, db, logger, config={}):
         #self.db_schema = None
         # Get config passed from the facade worker.
-        print("getting config")
-        self.config = read_config("Workers", "facade_worker", None, None)
+        
+        self.config = config#read_config("Workers", "facade_worker", None, None)
         logger.info(f"Config is : {self.config}")
 
         self.data_tables = ['contributors', 'contributors_aliases', 'contributor_affiliations',
