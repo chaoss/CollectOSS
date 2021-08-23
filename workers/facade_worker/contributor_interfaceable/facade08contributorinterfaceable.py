@@ -17,13 +17,29 @@ worker and table.
 #i.e. port, logging, etc
 class ContributorInterfaceable(WorkerGitInterfaceable):
     def __init__(self, config={}):
+        #first set up logging.
+        self._root_augur_dir = Persistant.ROOT_AUGUR_DIR
+        self.augur_config = AugurConfig(self._root_augur_dir)
+
+        #Get default logging settings
+        self.config = config
+        self.config.update(self.augur_config.get_section("Logging"))
+        
+        #Get the same logging dir as the facade worker.
+        self.config.update({
+            'id': "workers.{}.{}".format("facade_worker", self.config['port_database'])
+        })
+
+        self.initialize_logging()
+        #Test logging after init.
+        self.logger.info("Facade worker git interface logging set up correctly")
         #self.db_schema = None
         # Get config passed from the facade worker.
-        db_user = config['user_database']
-        db_pass = config['password_database']
-        db_name = config['name_database']
-        db_host = config['host_database']
-        db_port = config['port_database']
+        db_user = self.config['user_database']
+        db_pass = self.config['password_database']
+        db_name = self.config['name_database']
+        db_host = self.config['host_database']
+        db_port = self.config['port_database']
 
         DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(
             db_user, db_pass, db_host, db_port, db_name
@@ -50,9 +66,68 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         else:
             self.oauths = [{'oauth_id': 0}]
         
-        self.logger.info("Facade worker git interface logging set up correctly")
+        
         return
 
+    def initialize_logging(self):
+        #Get the log level in upper case from the augur config's logging section.
+        self.config['log_level'] = self.config['log_level'].upper()
+        if self.config['debug']:
+            self.config['log_level'] = 'DEBUG'
+
+        if self.config['verbose']:
+            format_string = AugurLogging.verbose_format_string
+        else:
+            format_string = AugurLogging.simple_format_string
+
+        #Use stock python formatter for stdout
+        formatter = Formatter(fmt=format_string)
+        #User custom for stderr, Gives more info than verbose_format_string
+        error_formatter = Formatter(fmt=AugurLogging.error_format_string)
+
+        worker_dir = AugurLogging.get_log_directories(self.augur_config, reset_logfiles=False) + "/workers/"
+        Path(worker_dir).mkdir(exist_ok=True)
+        logfile_dir = worker_dir + f"/{self.worker_type}/"
+        Path(logfile_dir).mkdir(exist_ok=True)
+
+        #Create more complex sublogs in the logfile directory determined by the AugurLogging class
+        server_logfile = logfile_dir + '{}_{}_server.log'.format(self.worker_type, self.config['port_database'])
+        collection_logfile = logfile_dir + '{}_{}_collection.log'.format(self.worker_type, self.config['port_database'])
+        collection_errorfile = logfile_dir + '{}_{}_collection.err'.format(self.worker_type, self.config['port_database'])
+        self.config.update({
+            'logfile_dir': logfile_dir,
+            'server_logfile': server_logfile,
+            'collection_logfile': collection_logfile,
+            'collection_errorfile': collection_errorfile
+        })
+
+        collection_file_handler = FileHandler(filename=self.config['collection_logfile'], mode="a")
+        collection_file_handler.setFormatter(formatter)
+        collection_file_handler.setLevel(self.config['log_level'])
+
+        collection_errorfile_handler = FileHandler(filename=self.config['collection_errorfile'], mode="a")
+        collection_errorfile_handler.setFormatter(error_formatter)
+        collection_errorfile_handler.setLevel(logging.WARNING)
+
+        logger = logging.getLogger(self.config['id'])
+        logger.handlers = []
+        logger.addHandler(collection_file_handler)
+        logger.addHandler(collection_errorfile_handler)
+        logger.setLevel(self.config['log_level'])
+        logger.propagate = False
+
+        if self.config['debug']:
+            self.config['log_level'] = 'DEBUG'
+            console_handler = StreamHandler()
+            console_handler.setFormatter(formatter)
+            console_handler.setLevel(self.config['log_level'])
+            logger.addHandler(console_handler)
+
+        if self.config['quiet']:
+            logger.disabled = True
+
+        self.logger = logger
+    
     #Try to construct the best url to ping GitHub's API for a username given a full name and a email.
     def resolve_user_url_from_email(self,contributor):
       try:
