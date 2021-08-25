@@ -39,22 +39,8 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         self.logger.info("Facade worker git interface logging set up correctly")
         #self.db_schema = None
         # Get config passed from the facade worker.
-        db_user = self.config['user_database']
-        db_pass = self.config['password_database']
-        db_name = self.config['name_database']
-        db_host = self.config['host_database']
-        db_port = self.config['port_database']
-
-        DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(
-            db_user, db_pass, db_host, db_port, db_name
-        )
-
-        #Use a differant database connection 
-        db = s.create_engine(DB_STR, poolclass=s.pool.NullPool,
-          connect_args={'options': '-csearch_path={}'.format('augur_data')})
-  
-        self.db = db
-
+        self.initialize_database_connections()
+        self.logger.info("Facade worker git interface database set up")
 
         self.config = {
             'gh_api_key': self.augur_config.get_value('Database', 'key'),
