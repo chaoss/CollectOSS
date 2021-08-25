@@ -18,6 +18,7 @@ worker and table.
 class ContributorInterfaceable(WorkerGitInterfaceable):
     def __init__(self, config={}):
         #first set up logging.
+        logger = logging.getLogger("augur")
         logging.info("Stepped into contructor")
         self._root_augur_dir = Persistant.ROOT_AUGUR_DIR
         self.augur_config = AugurConfig(self._root_augur_dir)
