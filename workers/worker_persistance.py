@@ -188,7 +188,7 @@ class Persistant():
         self.helper_db = s.create_engine(DB_STR, poolclass=s.pool.NullPool,
             connect_args={'options': '-csearch_path={}'.format(self.helper_schema)})
 
-        self.logger.info("Created database objects")
+        self.logger.info(f"Created database objects. Data tables are: {self.data_tables}")
         metadata = s.MetaData()
         helper_metadata = s.MetaData()
 
