@@ -19,14 +19,14 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
     def __init__(self, config={}):
         #first set up logging.
         logger = logging.getLogger("augur")
-        logging.info("Stepped into contructor")
+        logger.info("Stepped into contructor")
         self._root_augur_dir = Persistant.ROOT_AUGUR_DIR
         self.augur_config = AugurConfig(self._root_augur_dir)
-        logging.info("Basic settings reached")
+        logger.info("Basic settings reached")
         #Get default logging settings
         self.config = config
         self.config.update(self.augur_config.get_section("Logging"))
-        logging.info(f"Created contrb interface with config: {self.config}")
+        logger.info(f"Created contrb interface with config: {self.config}")
         #Get the same logging dir as the facade worker.
         self.config.update({
             'id': "workers.{}.{}".format("facade_worker", self.config['port_database'])
