@@ -188,6 +188,7 @@ class Persistant():
         self.helper_db = s.create_engine(DB_STR, poolclass=s.pool.NullPool,
             connect_args={'options': '-csearch_path={}'.format(self.helper_schema)})
 
+        self.logger.info("Created database objects")
         metadata = s.MetaData()
         helper_metadata = s.MetaData()
 
@@ -224,7 +225,7 @@ class Persistant():
             self.logger.info(f"Could not find max id. ERROR: {e}")
         
         #25151
-        #self.logger.info(f"Good, passed the max id getter. Max id: {self.history_id}")
+        self.logger.info(f"Good, passed the max id getter. Max id: {self.history_id}")
 
     #Make sure the type used to store date is synced with the worker?
     def sync_df_types(self, subject, source, subject_columns, source_columns):
