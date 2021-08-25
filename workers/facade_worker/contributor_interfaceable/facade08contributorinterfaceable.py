@@ -26,11 +26,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             'pull_request_files', 'pull_request_reviews', 'pull_request_review_message_ref']
         self.operations_tables = ['worker_history', 'worker_job']
 
-
-
         #first set up logging.
-        
-        
         self._root_augur_dir = Persistant.ROOT_AUGUR_DIR
         self.augur_config = AugurConfig(self._root_augur_dir)
         
@@ -49,26 +45,16 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         #Test logging after init.
         self.logger.info("Facade worker git interface logging set up correctly")
         #self.db_schema = None
+        self.config.update({
+            'gh_api_key': self.augur_config.get_value('Database', 'key'),
+            'gitlab_api_key': self.augur_config.get_value('Database', 'gitlab_api_key')
+        })
+
         # Get config passed from the facade worker.
         self.initialize_database_connections()
         self.logger.info("Facade worker git interface database set up")
-
-        self.config = {
-            'gh_api_key': self.augur_config.get_value('Database', 'key'),
-            'gitlab_api_key': self.augur_config.get_value('Database', 'gitlab_api_key')
-        }
-
-        self.logger.info("Initializing API key.")
-        if 'gh_api_key' in self.config:
-            try:
-                self.init_oauths()
-            except AttributeError as e:
-                self.logger.error(f"Worker not configured to use API key! Error: {e}")
-        else:
-            self.oauths = [{'oauth_id': 0}]
         
-        
-        return
+        self.logger.info("Facade now has contributor interface.")
 
     def initialize_logging(self):
         #Get the log level in upper case from the augur config's logging section.

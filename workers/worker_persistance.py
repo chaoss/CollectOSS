@@ -178,7 +178,7 @@ class Persistant():
         )
 
         # Create an sqlalchemy engine for both database schemas
-        self.logger.info(f"Making database connections with: {DB_STR}")
+        #self.logger.info(f"Making database connections with: {DB_STR}")
 
         self.db_schema = 'augur_data'
         self.db = s.create_engine(DB_STR,  poolclass=s.pool.NullPool,
@@ -188,32 +188,29 @@ class Persistant():
         self.helper_db = s.create_engine(DB_STR, poolclass=s.pool.NullPool,
             connect_args={'options': '-csearch_path={}'.format(self.helper_schema)})
 
-        self.logger.info(f"Created database objects. Data tables are: {self.data_tables}")
         metadata = s.MetaData()
         helper_metadata = s.MetaData()
 
         # Reflect only the tables we will use for each schema's metadata object
         metadata.reflect(self.db, only=self.data_tables)
         helper_metadata.reflect(self.helper_db, only=self.operations_tables)
-        self.logger.info("Reflect passed")
+
         Base = automap_base(metadata=metadata)
         HelperBase = automap_base(metadata=helper_metadata)
 
         Base.prepare()
         HelperBase.prepare()
-        self.logger.info("got here")
+
         # So we can access all our tables when inserting, updating, etc
         for table in self.data_tables:
             setattr(self, '{}_table'.format(table), Base.classes[table].__table__)
-        
-        self.logger.info("Set attrs")
+
         try:
             self.logger.info(HelperBase.classes.keys())
         except:
             pass
         
 
-        self.logger.info("Set tables")
         for table in self.operations_tables:
             try:
                 setattr(self, '{}_table'.format(table), HelperBase.classes[table].__table__)
@@ -228,7 +225,7 @@ class Persistant():
             self.logger.info(f"Could not find max id. ERROR: {e}")
         
         #25151
-        self.logger.info(f"Good, passed the max id getter. Max id: {self.history_id}")
+        #self.logger.info(f"Good, passed the max id getter. Max id: {self.history_id}")
 
     #Make sure the type used to store date is synced with the worker?
     def sync_df_types(self, subject, source, subject_columns, source_columns):
