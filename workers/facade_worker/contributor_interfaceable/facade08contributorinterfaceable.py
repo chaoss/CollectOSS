@@ -29,10 +29,11 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         #Get the same logging dir as the facade worker.
         self.config.update({
-            'id': "workers.{}.{}".format("facade_worker", self.config['port_database'])
+            'id': "workers.{}.{}".format("contributor_interface", self.config['port_database'])
         })
 
-        #self.initialize_logging()
+        #Getting stuck here.
+        self.initialize_logging()
         self.logger = logging.getLogger(self.config["id"])
         #Test logging after init.
         self.logger.info("Facade worker git interface logging set up correctly")
