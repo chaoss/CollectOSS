@@ -195,22 +195,25 @@ class Persistant():
         # Reflect only the tables we will use for each schema's metadata object
         metadata.reflect(self.db, only=self.data_tables)
         helper_metadata.reflect(self.helper_db, only=self.operations_tables)
-
+        self.logger.info("Reflect passed")
         Base = automap_base(metadata=metadata)
         HelperBase = automap_base(metadata=helper_metadata)
 
         Base.prepare()
         HelperBase.prepare()
-
+        self.logger.info("got here")
         # So we can access all our tables when inserting, updating, etc
         for table in self.data_tables:
             setattr(self, '{}_table'.format(table), Base.classes[table].__table__)
-
+        
+        self.logger.info("Set attrs")
         try:
             self.logger.info(HelperBase.classes.keys())
         except:
             pass
+        
 
+        self.logger.info("Set tables")
         for table in self.operations_tables:
             try:
                 setattr(self, '{}_table'.format(table), HelperBase.classes[table].__table__)
