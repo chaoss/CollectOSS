@@ -65,8 +65,8 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         if 'gh_api_key' in self.config or 'gitlab_api_key' in self.config:
             try:
                 self.init_oauths(self.platform)
-            except AttributeError:
-                self.logger.error("Worker not configured to use API key!")
+            except AttributeError as e:
+                self.logger.error(f"Worker not configured to use API key! Error: {e}")
         else:
             self.oauths = [{'oauth_id': 0}]
         
