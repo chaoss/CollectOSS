@@ -34,7 +34,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         #Getting stuck here.
         self.initialize_logging()
-        self.logger = logging.getLogger(self.config["id"])
+        #self.logger = logging.getLogger(self.config["id"])
         #Test logging after init.
         self.logger.info("Facade worker git interface logging set up correctly")
         #self.db_schema = None
@@ -91,7 +91,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         worker_dir = AugurLogging.get_log_directories(self.augur_config, reset_logfiles=False) + "/workers/"
         Path(worker_dir).mkdir(exist_ok=True)
-        logfile_dir = worker_dir + f"/{self.worker_type}/"
+        logfile_dir = worker_dir + "/contributor_interface/"
         Path(logfile_dir).mkdir(exist_ok=True)
 
         #Create more complex sublogs in the logfile directory determined by the AugurLogging class
