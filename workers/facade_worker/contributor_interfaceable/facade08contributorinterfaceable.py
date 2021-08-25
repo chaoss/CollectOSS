@@ -17,6 +17,17 @@ worker and table.
 #i.e. port, logging, etc
 class ContributorInterfaceable(WorkerGitInterfaceable):
     def __init__(self, config={}):
+        #Define the data tables that we are needing
+        # Define the tables needed to insert, update, or delete on
+        self.data_tables = ['contributors', 'pull_requests',
+            'pull_request_assignees', 'pull_request_events', 'pull_request_labels',
+            'pull_request_message_ref', 'pull_request_meta', 'pull_request_repo',
+            'pull_request_reviewers', 'pull_request_teams', 'message', 'pull_request_commits',
+            'pull_request_files', 'pull_request_reviews', 'pull_request_review_message_ref']
+        self.operations_tables = ['worker_history', 'worker_job']
+
+
+
         #first set up logging.
         
         
