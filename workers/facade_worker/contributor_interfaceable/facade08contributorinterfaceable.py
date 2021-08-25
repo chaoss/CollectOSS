@@ -26,6 +26,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             'pull_request_files', 'pull_request_reviews', 'pull_request_review_message_ref']
         self.operations_tables = ['worker_history', 'worker_job']
 
+        self.platform = "github"
         #first set up logging.
         self._root_augur_dir = Persistant.ROOT_AUGUR_DIR
         self.augur_config = AugurConfig(self._root_augur_dir)
