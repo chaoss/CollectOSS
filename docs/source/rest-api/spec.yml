@@ -3967,6 +3967,38 @@ paths:
             type: array
       tags:
       - evolution
+  /repo-groups/:repo_id/open-issues-count:
+    get:
+      description: 'Count of open issues. '
+      externalDocs:
+        description: CHAOSS Metric Definition
+        url: https://github.com/chaoss/wg-evolution/blob/master/metrics/Issues_New.md
+      operationId: Open Issues Count (Repo Group)
+      parameters:
+      - description: Repository ID
+        in: path
+        name: repo_id
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                date:
+                  description: 'Example: 2017-09-11T00:00:00.000Z'
+                  type: string
+                open_count:
+                  description: 'Example: 1'
+                  type: integer
+                rg_name:
+                  description: 'Example: Netflix'
+                  type: string
+            type: array
+      tags:
+      - evolution
 
 
 
