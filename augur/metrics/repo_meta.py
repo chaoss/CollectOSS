@@ -200,13 +200,22 @@ def cii_best_practices_badge(self, repo_group_id, repo_id=None):
     :param repo_id: The repository's repo_id, defaults to None
     :return: CII best parctices badge level
     """
-    cii_best_practices_badge_SQL = s.sql.text("""
-        SELECT data
-        FROM augur_data.repo_badging
-        WHERE repo_id = :repo_id
-        ORDER BY created_at DESC
-        LIMIT 1
-    """)
+    if not repo_id:
+        cii_best_practices_badge_SQL = s.sql.text("""
+            SELECT data
+            FROM augur_data.repo_badging
+            WHERE repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
+            ORDER BY created_at DESC
+            LIMIT 1
+        """)
+    else:
+        cii_best_practices_badge_SQL = s.sql.text("""
+            SELECT data
+            FROM augur_data.repo_badging
+            WHERE repo_id = :repo_id
+            ORDER BY created_at DESC
+            LIMIT 1
+        """)
 
     raw_df = pd.read_sql(cii_best_practices_badge_SQL, self.database, params={'repo_id': repo_id})
 
