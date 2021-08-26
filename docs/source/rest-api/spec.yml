@@ -3865,6 +3865,41 @@ paths:
             type: array
       tags:
       - evolution
+  /repos/:repo_group_id/releases:
+    get:
+      description: 'Time since an review/pull request is proposed until it is accepted. '
+      externalDocs:
+        description: CHAOSS Metric Definition
+        url: https://github.com/chaoss/wg-evolution/blob/master/metrics/Reviews_Duration.md
+      operationId: Number of Releases (Repo)
+      parameters:
+      - description: Repository Group ID.
+        in: path
+        name: repo_id
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                latest:
+                  description: 'Example: 2019-11-02T11:02:08.000Z'
+                  type: string
+                total_count:
+                  description: 'Example: 35'
+                  type: integer
+                latest_patch_release:
+                  description: 'Example: 2019-01-02T15:20:07.000Z'
+                  type: string
+                total_patch_count:
+                  description: 'Example: 21'
+                  type: integer
+            type: array
+      tags:
+      - evolution
   /repos/:repo_id/releases:
     get:
       description: 'Time since an review/pull request is proposed until it is accepted. '
