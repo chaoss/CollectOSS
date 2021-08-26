@@ -100,6 +100,19 @@ paths:
     get:
       description: Get the repo_group_id and repo_id of a particular repo.
       operationId: Get Repo by Owner and Repo Name
+      parameters:
+      - description: Repo Owner
+        in: path
+        name: owner
+        schema:
+          type: string
+        type: string
+      - description: Repo Name
+        in: path
+        name: repo
+        schema:
+          type: string
+        type: string
       responses:
         '200':
           description: OK
@@ -119,6 +132,19 @@ paths:
     get:
       description: Get the repo_group_id and repo_id of a particular repo.
       operationId: Get Repo by Repo Group Name and Repo Name
+      parameters:
+      - description: Repo Group Name
+        in: path
+        name: rg_name
+        schema:
+          type: string
+        type: string
+      - description: Repo Name
+        in: path
+        name: repo_name
+        schema:
+          type: string
+        type: string
       responses:
         '200':
           description: OK
@@ -141,6 +167,13 @@ paths:
     get:
       description: Get the repo_id of a particular repo group.
       operationId: Get Repo by Repo Name
+      parameters:
+      - description: Repo Group Name
+        in: path
+        name: rg_name
+        schema:
+          type: string
+        type: string
       responses:
         '200':
           description: OK
@@ -160,6 +193,13 @@ paths:
     get:
       description: Get all the repos in a repo group.
       operationId: Get Repos in Repo Group
+      parameters:
+      - description: Repository Group ID
+        in: path
+        name: repo_group_id
+        schema:
+          type: string
+        type: string
       responses:
         '200':
           description: OK
@@ -194,6 +234,13 @@ paths:
     get:
       description: Get all the downloaded repo groups.
       operationId: Get Top Insights
+      parameters:
+      - description: Repository Group ID
+        in: path
+        name: repo_group_id
+        schema:
+          type: string
+        type: string
       responses:
         '200':
           description: OK
