@@ -2137,23 +2137,11 @@ paths:
       externalDocs:
         description: CHAOSS Metric Definition
         url: https://github.com/chaoss/wg-evolution/blob/master/focus_areas/code_development.md
-      operationId: Issue Duration (Repo)
+      operationId: Issue Backlog (Repo)
       parameters:
       - description: Repository ID.
         in: path
         name: repo_id
-        schema:
-          type: string
-        type: string
-      - description: 'Beginning date specification. E.g. values: 2018, 2018-05, 2019-05-01'
-        in: path
-        name: begin_date
-        schema:
-          type: string
-        type: string
-      - description: 'Ending date specification. E.g. values: 2018, 2018-05, 2019-05-01'
-        in: path
-        name: end_date
         schema:
           type: string
         type: string
@@ -3827,13 +3815,63 @@ paths:
             type: array
       tags:
       - evolution
+  /repo-groups/:repo_id/issue-duration:
+    get:
+      description: 'Time since an issue is proposed until it is closed. '
+      externalDocs:
+        description: CHAOSS Metric Definition
+        url: https://github.com/chaoss/wg-evolution/blob/master/focus_areas/code_development.md
+      operationId: Issue Duration (Repo)
+      parameters:
+      - description: Repository ID
+        in: path
+        name: repo_group_id
+        schema:
+          type: string
+        type: string
+      - description: 'Beginning date specification. E.g. values: 2018, 2018-05, 2019-05-01'
+        in: path
+        name: begin_date
+        schema:
+          type: string
+        type: string
+      - description: 'Ending date specification. E.g. values: 2018, 2018-05, 2019-05-01'
+        in: path
+        name: end_date
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                closed_at:
+                  description: 'Example: 2011-05-06T20:21:47.000Z'
+                  type: string
+                created_at:
+                  description: 'Example: 2011-05-06T20:20:05.000Z'
+                  type: string
+                duration:
+                  description: 'Example: 0 days 00:01:42.000000000'
+                  type: string
+                issue_id:
+                  description: 'Example: 50320'
+                  type: integer
+                repo_name:
+                  description: 'Example: ssl_requirement'
+                  type: string
+            type: array
+      tags:
+      - evolution
   /repos/:repo_id/releases:
     get:
       description: 'Time since an review/pull request is proposed until it is accepted. '
       externalDocs:
         description: CHAOSS Metric Definition
         url: https://github.com/chaoss/wg-evolution/blob/master/metrics/Reviews_Duration.md
-      operationId: Number of releases (Repo)
+      operationId: Number of Releases (Repo)
       parameters:
       - description: Repository ID.
         in: path
