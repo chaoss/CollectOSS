@@ -1063,6 +1063,60 @@ paths:
             type: array
       tags:
       - experimental
+  /repo-groups/:repo_id/annual-commit-count-ranked-by-new-repo-in-repo-group:
+    get:
+      description: 'This is an Augur-specific metric. We are currently working to
+        define these more formally. '
+      operationId: Annual Commit Count Ranked by New Repo in Repo Group (Repo)
+      parameters:
+      - description: Repository ID.
+        in: path
+        name: repo_id
+        schema:
+          type: string
+        type: string
+      - description: Periodicity specification.
+        in: path
+        name: period
+        schema:
+          type: string
+        type: string
+      - description: 'Beginning date specification. E.g. values: 2018, 2018-05, 2019-05-01'
+        in: path
+        name: begin_date
+        schema:
+          type: string
+        type: string
+      - description: 'Ending date specification. E.g. values: 2018, 2018-05, 2019-05-01'
+        in: path
+        name: end_date
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                commits:
+                  description: 'Example: 289'
+                  type: integer
+                net:
+                  description: 'Example: 21996'
+                  type: integer
+                repo_id:
+                  description: 'Example: 21000'
+                  type: integer
+                repo_name:
+                  description: 'Example: rails'
+                  type: string
+                year:
+                  description: 'Example: 2004'
+                  type: integer
+            type: array
+      tags:
+      - experimental
   /repo-groups/:repo_group_id/annual-commit-count-ranked-by-repo-in-repo-group:
     get:
       description: 'This is an Augur-specific metric. We are currently working to
@@ -1072,6 +1126,46 @@ paths:
       - description: Repository Group ID.
         in: path
         name: repo_group_id
+        schema:
+          type: string
+        type: string
+      - description: Base64 version of the URL of the GitHub repository as it appears
+          in the Facade DB
+        in: path
+        name: repo_url_base
+        schema:
+          type: String
+        type: String
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                name:
+                  description: 'Example: twemoji'
+                  type: string
+                net:
+                  description: 'Example: 2479124'
+                  type: integer
+                patches:
+                  description: 'Example: 1'
+                  type: integer
+                repos_id:
+                  description: 'Example: 1'
+                  type: integer
+            type: array
+      tags:
+      - experimental
+  /repo-groups/:repo_id/annual-commit-count-ranked-by-repo-in-repo-group:
+    get:
+      description: 'This is an Augur-specific metric. We are currently working to
+        define these more formally. '
+      operationId: Annual Commit Count Ranked by Repo in Repo Group (Repo)
+      parameters:
+      - description: Repository ID.
+        in: path
+        name: repo_id
         schema:
           type: string
         type: string
@@ -1143,6 +1237,46 @@ paths:
             type: array
       tags:
       - experimental
+  /repo-groups/:repo_id/annual-lines-of-code-count-ranked-by-new-repo-in-repo-group:
+    get:
+      description: 'This is an Augur-specific metric. We are currently working to
+        define these more formally. '
+      operationId: Annual Lines of Code Ranked by New Repo in Repo Group (Repo)
+      parameters:
+      - description: Repository ID.
+        in: path
+        name: repo_id
+        schema:
+          type: string
+        type: string
+      - description: Base64 version of the URL of the GitHub repository as it appears
+          in the Facade DB
+        in: path
+        name: repo_url_base
+        schema:
+          type: String
+        type: String
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                net:
+                  description: 'Example: 2479124'
+                  type: integer
+                patches:
+                  description: 'Example: 1'
+                  type: integer
+                repo_name:
+                  description: 'Example: twemoji'
+                  type: string
+                repos_id:
+                  description: 'Example: 1'
+                  type: integer
+            type: array
+      tags:
+      - experimental
   /repo-groups/:repo_group_id/annual-lines-of-code-count-ranked-by-repo-in-repo-group:
     get:
       description: 'This is an Augur-specific metric. We are currently working to
@@ -1152,6 +1286,46 @@ paths:
       - description: Repository Group ID.
         in: path
         name: repo_group_id
+        schema:
+          type: string
+        type: string
+      - description: Base64 version of the URL of the GitHub repository as it appears
+          in the Facade DB
+        in: path
+        name: repo_url_base
+        schema:
+          type: String
+        type: String
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                name:
+                  description: 'Example: twemoji'
+                  type: string
+                net:
+                  description: 'Example: 2479124'
+                  type: integer
+                patches:
+                  description: 'Example: 1'
+                  type: integer
+                repos_id:
+                  description: 'Example: 1'
+                  type: integer
+            type: array
+      tags:
+      - experimental
+  /repo-groups/:repo_id/annual-lines-of-code-count-ranked-by-repo-in-repo-group:
+    get:
+      description: 'This is an Augur-specific metric. We are currently working to
+        define these more formally. '
+      operationId: Annual Lines of Code Ranked by Repo in Repo Group (Repo)
+      parameters:
+      - description: Repository ID.
+        in: path
+        name: repo_id
         schema:
           type: string
         type: string
