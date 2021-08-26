@@ -1021,12 +1021,6 @@ paths:
         schema:
           type: string
         type: string
-      - description: Repository ID.
-        in: path
-        name: repo_id
-        schema:
-          type: string
-        type: string
       - description: Periodicity specification.
         in: path
         name: period
@@ -1075,6 +1069,12 @@ paths:
         define these more formally. '
       operationId: Annual Commit Count Ranked by Repo in Repo Group (Repo Group)
       parameters:
+      - description: Repository Group ID.
+        in: path
+        name: repo_group_id
+        schema:
+          type: string
+        type: string
       - description: Base64 version of the URL of the GitHub repository as it appears
           in the Facade DB
         in: path
@@ -1109,6 +1109,12 @@ paths:
         define these more formally. '
       operationId: Annual Lines of Code Ranked by New Repo in Repo Group (Repo Group)
       parameters:
+      - description: Repository Group ID.
+        in: path
+        name: repo_group_id
+        schema:
+          type: string
+        type: string
       - description: Base64 version of the URL of the GitHub repository as it appears
           in the Facade DB
         in: path
@@ -1143,6 +1149,12 @@ paths:
         define these more formally. '
       operationId: Annual Lines of Code Ranked by Repo in Repo Group (Repo Group)
       parameters:
+      - description: Repository Group ID.
+        in: path
+        name: repo_group_id
+        schema:
+          type: string
+        type: string
       - description: Base64 version of the URL of the GitHub repository as it appears
           in the Facade DB
         in: path
