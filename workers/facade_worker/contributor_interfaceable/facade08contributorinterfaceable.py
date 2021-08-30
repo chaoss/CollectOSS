@@ -285,7 +285,11 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         #Try to get GitHub API user data from each unique commit email.
         for contributor in new_contribs:
             #Get best combonation of firstname lastname and email to try and get a GitHub username match.
-            url = self.resolve_user_url_from_email(contributor)
+            try:
+              url = self.resolve_user_url_from_email(contributor)
+            except Exception as e:
+              self.logger.info(f"Couldn't resolve url with given data. Reason: {e}")
+              continue #If the method throws an error it means that we can't hit the endpoint so we can't really do much
 
             login_json = self.request_dict_from_endpoint(url,timeout_wait=30)
 
