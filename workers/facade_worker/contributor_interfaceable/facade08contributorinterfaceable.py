@@ -16,7 +16,7 @@ worker and table.
 #TODO : Make this borrow everything that it can from the facade worker.
 #i.e. port, logging, etc
 class ContributorInterfaceable(WorkerGitInterfaceable):
-    def __init__(self, config={}):
+    def __init__(self, config={}, special_rate_limit=10):
         #Define the data tables that we are needing
         # Define the tables needed to insert, update, or delete on
         self.data_tables = ['contributors', 'pull_requests', 'commits',
@@ -55,6 +55,10 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         self.initialize_database_connections()
         self.logger.info("Facade worker git interface database set up")
         
+        #set up the max amount of requests this interface is allowed to make before sleeping for 2 minutes
+        self.special_rate_limit = special_rate_limit
+        self.recent_requests_made = 0
+
         self.logger.info("Facade now has contributor interface.")
 
     def initialize_logging(self):
@@ -169,6 +173,14 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         
         #Make sure we know how many requests our api tokens have.
         self.update_rate_limit(response,platform="github")
+
+        #Update the special rate limit
+        self.recent_requests_made += 1
+
+        #Sleep if we have made a lot of requests recently
+        if self.recent_requests_made == self.special_rate_limit:
+          self.recent_requests_made = 0
+          time.sleep(120) #Sleep for two minutes before making a new request.
 
         try:
           response_data = response.json()
@@ -376,7 +388,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             try:
               self.db.execute(self.contributors_table.insert().values(cntrb))
             except Exception as e:
-              self.logger.info("Ran into likely database collision. Assuming contributor exists in database. Error: {e}")
+              self.logger.info(f"Ran into likely database collision. Assuming contributor exists in database. Error: {e}")
         
 
         # sql query used to find corresponding cntrb_id's of emails found in the contributor's table
