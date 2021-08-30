@@ -118,6 +118,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
     
     #Try to construct the best url to ping GitHub's API for a username given a full name and a email.
     def resolve_user_url_from_email(self,contributor):
+      self.logger.info(f"Trying to resolve contributor: {contributor}")
       try:
         cmt_cntrb = {
             'fname': contributor['commit_name'].split()[0],
