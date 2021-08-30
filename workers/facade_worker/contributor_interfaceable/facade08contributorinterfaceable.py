@@ -115,6 +115,10 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             logger.disabled = True
 
         self.logger = logger
+
+        self.tool_source = '\'Facade Worker\'s Contributor Interface\''
+        self.tool_version = '\'0.1.0\''
+        self.data_source = '\'Git Log\'' 
     
     #Try to construct the best url to ping GitHub's API for a username given a full name and a email.
     def resolve_user_url_from_email(self,contributor):
