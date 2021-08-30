@@ -180,6 +180,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         #Sleep if we have made a lot of requests recently
         if self.recent_requests_made == self.special_rate_limit:
           self.recent_requests_made = 0
+          self.logger.info(f"Special rate limit of {self.special_rate_limit} reached! Sleeping for two minutes.")
           time.sleep(120) #Sleep for two minutes before making a new request.
 
         try:
