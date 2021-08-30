@@ -276,7 +276,7 @@ class FacadeWorker(Worker):
             force_repo_updates(self.cfg)
 
         if not limited_run or (limited_run and pull_repos):
-            git_repo_updates(self.cfg,github_interface=self.github_interface)
+            git_repo_updates(self.cfg)
 
         if force_analysis:
             force_repo_analysis(self.cfg)
@@ -305,12 +305,23 @@ class FacadeWorker(Worker):
             self.cfg.log_activity('Info','Creating summary Excel files (complete)')
 
 
+        #Interface with the contributor worker and inserts relevant data by repo
+        self.cfg.update_status('Updating Contributors')
+        self.cfg.log_activity('Info', 'Updating Contributors with commits')
+        query = ("SELECT repo_id FROM repo");
+
+        self.cfg.cursor.execute(query)
+
+        all_repos = list(self.cfg.cursor)
+
+        for repo in all_repos:
+          self.github_interface.logger.info(f"Processing repo {repo}")
+          self.github_interface.insert_facade_contributors(repo)
 
         # All done
-
         self.cfg.update_status('Idle')
         self.cfg.log_activity('Quiet','facade-worker.py completed')
-
+        
         elapsed_time = time.time() - start_time
 
         print('\nCompleted in %s\n' % datetime.timedelta(seconds=int(elapsed_time)))
