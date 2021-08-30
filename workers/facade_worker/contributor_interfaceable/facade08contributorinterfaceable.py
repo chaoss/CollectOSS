@@ -123,7 +123,8 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         cmt_cntrb = {
             'fname': contributor['commit_name'].split()[0],
             'lname': contributor['commit_name'].split()[1],
-            'email': contributor['commit_email']
+            #Some entries are weird and have an 'email' instead of 'commit_email'
+            'email': contributor['commit_email'] if 'commit_email' in contributor else contributor['email']
         }
         url = 'https://api.github.com/search/users?q={}+in:email+fullname:{}+{}'.format(
             cmt_cntrb['email'], cmt_cntrb['fname'], cmt_cntrb['lname'])
@@ -131,13 +132,13 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
           try:
             cmt_cntrb = {
                 'fname': contributor['commit_name'].split()[0],
-                'email': contributor['commit_email']
+                'email': contributor['commit_email'] if 'commit_email' in contributor else contributor['email']
             }
             url = 'https://api.github.com/search/users?q={}+in:email+fullname:{}'.format(
                 cmt_cntrb['email'], cmt_cntrb['fname'])
           except:
             cmt_cntrb = {
-                'email': contributor['commit_email']
+                'email': contributor['commit_email'] if 'commit_email' in contributor else contributor['email']
             }
             url = 'https://api.github.com/search/users?q={}+in:email'.format(
                 cmt_cntrb['email'])
