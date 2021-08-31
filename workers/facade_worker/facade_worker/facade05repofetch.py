@@ -335,7 +335,7 @@ def git_repo_updates(cfg):
 
                 cmd_update_default_branch = subprocess.Popen([cmd_checkout_default],shell=True).wait()
 
-                attempt += 1
+            attempt += 1
 
         if return_code == 0:
 
