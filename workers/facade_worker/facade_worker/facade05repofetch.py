@@ -324,7 +324,7 @@ def git_repo_updates(cfg):
 
                 return_code_clean = subprocess.Popen([cmd_clean],shell=True).wait()
 
-            elif attempt == 1 or (return_code == 0 and attempt < 3):
+            elif attempt == 1 or (return_code == 0 and attempt < 2):
                 cmd_default_branch_change = ("git -C %s%s/%s%s remote show origin | sed -n '/HEAD branch/s/.*: //p'"
                     % (cfg.repo_base_directory,row[1],row[4],row[3]))
                 
