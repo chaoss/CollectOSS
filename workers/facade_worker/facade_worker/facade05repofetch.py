@@ -319,16 +319,6 @@ def git_repo_updates(cfg):
 
                 return_code_reset = subprocess.Popen([cmd_reset],shell=True).wait()
 
-                cmd_default_branch_change = ("git -C %s%s/%s%s remote show origin | sed -n '/HEAD branch/s/.*: //p'"
-                    % (cfg.repo_base_directory,row[1],row[4],row[3]))
-                
-                return_code_default_change = subprocess.Popen([cmd_default_branch_change],shell=True).wait()
-
-                cmd_checkout_default = ("git -C %s%s/%s%s checkout {return_code_default_change}" 
-                    % (cfg.repo_base_directory,row[1],row[4],row[3]))
-
-                return_code_default_branch = subprocess.Popen([cmd_checkout_default],shell=True).wait()
-
                 cmd_clean = ("git -C %s%s/%s%s clean -df"
                     % (cfg.repo_base_directory,row[1],row[4],row[3]))
 
@@ -346,6 +336,27 @@ def git_repo_updates(cfg):
             cfg.log_activity('Verbose','Updated %s' % row[2])
 
         else:
+            cmd_default_branch_change = ("git -C %s%s/%s%s remote show origin | sed -n '/HEAD branch/s/.*: //p'"
+                % (cfg.repo_base_directory,row[1],row[4],row[3]))
+            
+            return_code_default_change = subprocess.Popen([cmd_default_branch_change],shell=True).wait()
+
+            cmd_checkout_default = ("git -C %s%s/%s%s checkout {return_code_default_change}" 
+                % (cfg.repo_base_directory,row[1],row[4],row[3]))
+
+            cmd_update_default_branch = subprocess.Popen([cmd_checkout_default],shell=True).wait()
+
+        elif return_code == 0:
+
+            set_to_analyze = "UPDATE repo SET repo_status='Analyze' WHERE repo_id=%s and repo_status != 'Empty'"
+            cfg.cursor.execute(set_to_analyze, (row[0], ))
+            cfg.db.commit()
+
+            update_repo_log(cfg, row[0],'Up-to-date')
+            cfg.log_activity('Verbose','Updated %s' % row[2])
+
+        elif: 
+
             update_repo_log(cfg, row[0],'Failed (%s)' % return_code)
             cfg.log_activity('Error','Could not update %s' % row[2])
 
