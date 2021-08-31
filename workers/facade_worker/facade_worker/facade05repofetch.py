@@ -346,18 +346,18 @@ def git_repo_updates(cfg):
 
             cmd_update_default_branch = subprocess.Popen([cmd_checkout_default],shell=True).wait()
 
-        elif return_code == 0:
+            elif return_code == 0:
 
-            set_to_analyze = "UPDATE repo SET repo_status='Analyze' WHERE repo_id=%s and repo_status != 'Empty'"
-            cfg.cursor.execute(set_to_analyze, (row[0], ))
-            cfg.db.commit()
+                set_to_analyze = "UPDATE repo SET repo_status='Analyze' WHERE repo_id=%s and repo_status != 'Empty'"
+                cfg.cursor.execute(set_to_analyze, (row[0], ))
+                cfg.db.commit()
 
-            update_repo_log(cfg, row[0],'Up-to-date')
-            cfg.log_activity('Verbose','Updated %s' % row[2])
+                update_repo_log(cfg, row[0],'Up-to-date')
+                cfg.log_activity('Verbose','Updated %s' % row[2])
 
-        elif: 
+            elif: 
 
-            update_repo_log(cfg, row[0],'Failed (%s)' % return_code)
-            cfg.log_activity('Error','Could not update %s' % row[2])
+                update_repo_log(cfg, row[0],'Failed (%s)' % return_code)
+                cfg.log_activity('Error','Could not update %s' % row[2])
 
     cfg.log_activity('Info','Updating existing repos (complete)')
