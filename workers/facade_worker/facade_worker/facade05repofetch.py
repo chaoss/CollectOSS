@@ -325,24 +325,34 @@ def git_repo_updates(cfg):
                 return_code_clean = subprocess.Popen([cmd_clean],shell=True).wait()
 
             elif attempt == 1:
-                cmd_default_branch_change = ("git -C %s%s/%s%s remote show origin | sed -n '/HEAD branch/s/.*: //p'"
-                    % (cfg.repo_base_directory,row[1],row[4],row[3]))
 
-                cfg.log_activity('Verbose','finding default branch '
-                    ' for %s' % row[2])
-                
-                return_code_default_change = subprocess.Popen([cmd_default_branch_change],shell=True).wait()
+                try: 
 
-                cfg.log_activity('Verbose', f'default branch is {return_code_default_change} '
-                    ' for %s' % row[2])
+                    cmd_default_branch_change = ("git -C %s%s/%s%s remote show origin | sed -n '/HEAD branch/s/.*: //p'"
+                        % (cfg.repo_base_directory,row[1],row[4],row[3]))
 
-                cmd_checkout_default = ("git -C %s%s/%s%s checkout {return_code_default_change}" 
-                    % (cfg.repo_base_directory,row[1],row[4],row[3]))
+                    cfg.log_activity('Verbose','finding default branch '
+                        ' for %s' % row[2])
 
-                cfg.log_activity('Verbose','attempting to checkout default branch '
-                    ' for %s' % row[2])                
+                    cfg.log_activity('Verbose','finding default branch '
+                        ' for %s' % row[2])
+                    
+                    return_code_default_change = subprocess.Popen([cmd_default_branch_change],shell=True).wait()
 
-                cmd_update_default_branch = subprocess.Popen([cmd_checkout_default],shell=True).wait()
+                    cfg.log_activity('Verbose', f'default branch is {return_code_default_change} '
+                        ' for %s' % row[2])
+
+                    cmd_checkout_default = ("git -C %s%s/%s%s checkout {return_code_default_change}" 
+                        % (cfg.repo_base_directory,row[1],row[4],row[3]))
+
+                    cfg.log_activity('Verbose','attempting to checkout default branch '
+                        ' for %s' % row[2])                
+
+                    cmd_update_default_branch = subprocess.Popen([cmd_checkout_default],shell=True).wait()
+
+                except Exception as e: 
+
+                    cfg.log_activity('Verbose', f'Error code on branch change is {e}.')
 
             attempt += 1
 
