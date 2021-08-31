@@ -298,7 +298,7 @@ def git_repo_updates(cfg):
         # as somebody may have done a rebase. No work is being done in the local
         # repo, so there shouldn't be legit local changes to worry about.
 
-        while attempt < 2:
+        while attempt < 3:
 
             cmd = ("git -C %s%s/%s%s pull"
                 % (cfg.repo_base_directory,row[1],row[4],row[3]))#['projects_id'],row['path'],row['name']))
@@ -307,7 +307,7 @@ def git_repo_updates(cfg):
 
             # If the attempt succeeded, then don't try any further fixes. If
             # the attempt to fix things failed, give up and try next time.
-            if return_code == 0 or attempt == 1:
+            if return_code == 0 or attempt == 2:
                 break
 
             elif attempt == 0:
@@ -324,16 +324,7 @@ def git_repo_updates(cfg):
 
                 return_code_clean = subprocess.Popen([cmd_clean],shell=True).wait()
 
-            if return_code == 0:
-
-                set_to_analyze = "UPDATE repo SET repo_status='Analyze' WHERE repo_id=%s and repo_status != 'Empty'"
-                cfg.cursor.execute(set_to_analyze, (row[0], ))
-                cfg.db.commit()
-
-                update_repo_log(cfg, row[0],'Up-to-date')
-                cfg.log_activity('Verbose','Updated %s' % row[2])
-
-            else:
+            elif attempt == 1:
                 cmd_default_branch_change = ("git -C %s%s/%s%s remote show origin | sed -n '/HEAD branch/s/.*: //p'"
                     % (cfg.repo_base_directory,row[1],row[4],row[3]))
                 
@@ -344,20 +335,20 @@ def git_repo_updates(cfg):
 
                 cmd_update_default_branch = subprocess.Popen([cmd_checkout_default],shell=True).wait()
 
-            elif return_code == 0:
+                attempt += 1
 
-                set_to_analyze = "UPDATE repo SET repo_status='Analyze' WHERE repo_id=%s and repo_status != 'Empty'"
-                cfg.cursor.execute(set_to_analyze, (row[0], ))
-                cfg.db.commit()
+        if return_code == 0:
 
-                update_repo_log(cfg, row[0],'Up-to-date')
-                cfg.log_activity('Verbose','Updated %s' % row[2])
+            set_to_analyze = "UPDATE repo SET repo_status='Analyze' WHERE repo_id=%s and repo_status != 'Empty'"
+            cfg.cursor.execute(set_to_analyze, (row[0], ))
+            cfg.db.commit()
 
-            attempt += 1
+            update_repo_log(cfg, row[0],'Up-to-date')
+            cfg.log_activity('Verbose','Updated %s' % row[2])
 
-            elif: 
+        else: 
 
-                update_repo_log(cfg, row[0],'Failed (%s)' % return_code)
-                cfg.log_activity('Error','Could not update %s' % row[2])
+            update_repo_log(cfg, row[0],'Failed (%s)' % return_code)
+            cfg.log_activity('Error','Could not update %s' % row[2])
 
     cfg.log_activity('Info','Updating existing repos (complete)')
