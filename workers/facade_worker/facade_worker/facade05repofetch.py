@@ -326,23 +326,23 @@ def git_repo_updates(cfg):
 
             attempt += 1
 
-        if return_code == 0:
+            if return_code == 0:
 
-            set_to_analyze = "UPDATE repo SET repo_status='Analyze' WHERE repo_id=%s and repo_status != 'Empty'"
-            cfg.cursor.execute(set_to_analyze, (row[0], ))
-            cfg.db.commit()
+                set_to_analyze = "UPDATE repo SET repo_status='Analyze' WHERE repo_id=%s and repo_status != 'Empty'"
+                cfg.cursor.execute(set_to_analyze, (row[0], ))
+                cfg.db.commit()
 
-            update_repo_log(cfg, row[0],'Up-to-date')
-            cfg.log_activity('Verbose','Updated %s' % row[2])
+                update_repo_log(cfg, row[0],'Up-to-date')
+                cfg.log_activity('Verbose','Updated %s' % row[2])
 
-        else:
-            cmd_default_branch_change = ("git -C %s%s/%s%s remote show origin | sed -n '/HEAD branch/s/.*: //p'"
-                % (cfg.repo_base_directory,row[1],row[4],row[3]))
-            
-            return_code_default_change = subprocess.Popen([cmd_default_branch_change],shell=True).wait()
+            else:
+                cmd_default_branch_change = ("git -C %s%s/%s%s remote show origin | sed -n '/HEAD branch/s/.*: //p'"
+                    % (cfg.repo_base_directory,row[1],row[4],row[3]))
+                
+                return_code_default_change = subprocess.Popen([cmd_default_branch_change],shell=True).wait()
 
-            cmd_checkout_default = ("git -C %s%s/%s%s checkout {return_code_default_change}" 
-                % (cfg.repo_base_directory,row[1],row[4],row[3]))
+                cmd_checkout_default = ("git -C %s%s/%s%s checkout {return_code_default_change}" 
+                    % (cfg.repo_base_directory,row[1],row[4],row[3]))
 
             cmd_update_default_branch = subprocess.Popen([cmd_checkout_default],shell=True).wait()
 
