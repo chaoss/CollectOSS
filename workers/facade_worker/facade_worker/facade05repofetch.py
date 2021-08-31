@@ -324,8 +324,6 @@ def git_repo_updates(cfg):
 
                 return_code_clean = subprocess.Popen([cmd_clean],shell=True).wait()
 
-            attempt += 1
-
             if return_code == 0:
 
                 set_to_analyze = "UPDATE repo SET repo_status='Analyze' WHERE repo_id=%s and repo_status != 'Empty'"
@@ -354,6 +352,8 @@ def git_repo_updates(cfg):
 
                 update_repo_log(cfg, row[0],'Up-to-date')
                 cfg.log_activity('Verbose','Updated %s' % row[2])
+
+            attempt += 1
 
             elif: 
 
