@@ -344,7 +344,7 @@ def git_repo_updates(cfg):
                 cmd_checkout_default = ("git -C %s%s/%s%s checkout {return_code_default_change}" 
                     % (cfg.repo_base_directory,row[1],row[4],row[3]))
 
-            cmd_update_default_branch = subprocess.Popen([cmd_checkout_default],shell=True).wait()
+                cmd_update_default_branch = subprocess.Popen([cmd_checkout_default],shell=True).wait()
 
             elif return_code == 0:
 
