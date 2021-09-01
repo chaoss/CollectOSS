@@ -432,6 +432,7 @@ def git_repo_updates(cfg):
                     cfg.log_activity('Verbose', f'Error code on branch change is {e}.')
 
             attempt += 1
+            default_branch = ''
 
         if return_code == 0:
 
