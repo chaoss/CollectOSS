@@ -298,7 +298,7 @@ def git_repo_updates(cfg):
         # as somebody may have done a rebase. No work is being done in the local
         # repo, so there shouldn't be legit local changes to worry about.
 
-        while attempt < 2:
+        while attempt < 3:
 
             cmd = ("git -C %s%s/%s%s pull"
                 % (cfg.repo_base_directory,row[1],row[4],row[3]))#['projects_id'],row['path'],row['name']))
@@ -307,7 +307,7 @@ def git_repo_updates(cfg):
 
             # If the attempt succeeded, then don't try any further fixes. If
             # the attempt to fix things failed, give up and try next time.
-            if return_code == 0 or attempt == 2:
+            if return_code == 0 or attempt == 3:
                 break
 
             elif attempt == 0:
@@ -324,7 +324,7 @@ def git_repo_updates(cfg):
 
                 return_code_clean = subprocess.Popen([cmd_clean],shell=True).wait()
 
-            elif attempt == 1:
+            elif attempt == 1 or attempt == 2:
 
                 try: 
 
