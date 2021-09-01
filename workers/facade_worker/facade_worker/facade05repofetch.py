@@ -298,6 +298,8 @@ def git_repo_updates(cfg):
         # as somebody may have done a rebase. No work is being done in the local
         # repo, so there shouldn't be legit local changes to worry about.
 
+        default_branch = ''
+
         while attempt < 3:
 
             try:
@@ -366,8 +368,10 @@ def git_repo_updates(cfg):
                 cfg.log_activity('Verbose','git pull failed, attempting reset and '
                     'clean for %s' % row[2])
 
-                cmd_reset = ("git -C %s%s/%s%s reset --hard origin/master"
+                cmd_reset = (f"git -C %s%s/%s%s reset --hard origin/{default_branch}"
                     % (cfg.repo_base_directory,row[1],row[4],row[3]))
+
+                cfg.log_activity('Verbose', f'reset --hard origin/<branch> command executed is: {cmd_reset}.')
 
                 return_code_reset = subprocess.Popen([cmd_reset],shell=True).wait()
 
