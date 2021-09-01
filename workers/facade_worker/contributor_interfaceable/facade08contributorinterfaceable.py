@@ -197,7 +197,8 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
               assert 'API rate limit exceeded' not in response_data['message']
             except AssertionError as e:
               self.logger.info(f"Detected error in response data from gitHub. Trying again... Error: {e}")
-              break
+              attempts += 1
+              continue
 
           self.logger.info(f"Returned dict: {response_data}")
           success = True
