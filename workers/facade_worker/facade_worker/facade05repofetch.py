@@ -334,22 +334,27 @@ def git_repo_updates(cfg):
                     cfg.log_activity('Verbose','finding default branch '
                         ' for %s' % row[2])
                     
-                    return_code_default_change = subprocess.Popen([cmd_default_branch_change],stdout=subprocess.PIPE,shell=True)#.wait()
+                    return_code_default_change = subprocess.Popen([cmd_default_branch_change],stdout=subprocess.PIPE,shell=True).wait()
 
-                    cfg.log_activity('Verbose', f'default branch is {return_code_default_change} '
+                    cfg.log_activity('Verbose', f'default branch encoded return is {return_code_default_change} '
+                        ' for %s' % row[2])                    
+
+                    default_branch = return_code_default_change.decode()
+
+                    cfg.log_activity('Verbose', f'default branch is {default_branch} '
                         ' for %s' % row[2])                    
 
                     #default_branch = cmd_default_branch_change.communicate()[0]
 
-                    default_branch = return_code_default_change
+                    #default_branch = return_code_default_change
 
-                    cfg.log_activity('Verbose', f'default branch is {return_code_default_change} '
+                    cfg.log_activity('Verbose', f'default branch is {default_branch} '
                         ' for %s' % row[2])
 
                     cmd_checkout_default = ("git -C %s%s/%s%s checkout [default_branch]" 
                         % (cfg.repo_base_directory,row[1],row[4],row[3]))
 
-                    cfg.log_activity('Verbose','attempting to checkout default branch '
+                    cfg.log_activity('Verbose',f'attempting to checkout default branch {default_branch} '
                         ' for %s' % row[2])                
 
                     cmd_update_default_branch = subprocess.Popen([cmd_checkout_default],shell=True).wait()
