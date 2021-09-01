@@ -339,7 +339,7 @@ def git_repo_updates(cfg):
                     cfg.log_activity('Verbose', f'default branch encoded return is {return_code_default_change} '
                         ' for %s' % row[2])                    
 
-                    default_branch = return_code_default_change.communicate()[0]
+                    default_branch = cmd_default_branch_change.communicate()[0]
 
                     cfg.log_activity('Verbose', f'default branch is {default_branch} '
                         ' for %s' % row[2])                    
