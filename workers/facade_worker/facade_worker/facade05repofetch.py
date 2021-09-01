@@ -358,7 +358,7 @@ def git_repo_updates(cfg):
                     cfg.log_activity('Verbose', f'default branch is {default_branch} '
                         ' for %s' % row[2])
 
-                    cmd_checkout_default = ("git -C %s%s/%s%s checkout {default_branch}" 
+                    cmd_checkout_default = (f"git -C %s%s/%s%s checkout {default_branch}" 
                         % (cfg.repo_base_directory,row[1],row[4],row[3]))
 
                     cfg.log_activity('Verbose', f'checkout command is {cmd_checkout_default}.')
