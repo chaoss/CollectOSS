@@ -322,6 +322,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
             login_json = self.request_dict_from_endpoint(url,timeout_wait=30)
 
+
             #total_count is the count of username's found by the endpoint.
             if login_json == None or 'total_count' not in login_json:
                 self.logger.info(
@@ -352,6 +353,8 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             for item in login_json['items']:
                 if item['score'] > match['score']:
                     match = item
+
+            #Check if gh_login exists in contributors table TODO 
 
             url = ("https://api.github.com/users/" + match['login'])
 
@@ -450,22 +453,15 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
               'cmt_ght_author_id' : cntrb_email['cntrb_id']
             }))
         return
-        # old method
-        """
-    commit_cntrbs = json.loads(pd.read_sql(userSQL, self.db, params={'repo_id': repo_id}).to_json(orient="records"))
-    self.logger.info("We found {} distinct contributors needing insertion (repo_id = {})".format(
-      len(commit_cntrbs), repo_id))
-    for cntrb in commit_cntrbs:
-        cntrb_tuple = {
-                "cntrb_email": cntrb['email'],
-                "cntrb_canonical": cntrb['email'],
-                "tool_source": self.tool_source,
-                "tool_version": self.tool_version,
-                "data_source": self.data_source,
-                'cntrb_full_name': cntrb['name']
-            }
-        result = self.db.execute(self.contributors_table.insert().values(cntrb_tuple))
-        self.logger.info("Primary key inserted into the contributors table: {}".format(result.inserted_primary_key))
-        self.results_counter += 1
-        self.logger.info("Inserted contributor: {}\n".format(cntrb['email']))
-    """
+
+    def resolve_login_alias(gh_login):
+      #check if login exists in contributors table
+
+      #if yes 
+      #   Insert cntrb_id and email of the corresponding record into the alias table
+      return
+
+    def addAlias(cntrb_data):
+      #Add cntrb_data to aliases table for all contributors
+      #Need to know fields of new table for this
+      return
