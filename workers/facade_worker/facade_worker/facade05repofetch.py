@@ -333,13 +333,10 @@ def git_repo_updates(cfg):
 
                     cfg.log_activity('Verbose','finding default branch '
                         ' for %s' % row[2])
-
-                    cfg.log_activity('Verbose','finding default branch '
-                        ' for %s' % row[2])
                     
-                    return_code_default_change = subprocess.Popen([cmd_default_branch_change],shell=True).wait()
+                    return_code_default_change = subprocess.Popen([cmd_default_branch_change],stdout=subprocess.PIPE).wait()
 
-                    default_branch = return_code_default_change.communicate()[0]
+                    default_branch = cmd_default_branch_change.communicate()[0]
 
                     cfg.log_activity('Verbose', f'default branch is {default_branch} '
                         ' for %s' % row[2])
