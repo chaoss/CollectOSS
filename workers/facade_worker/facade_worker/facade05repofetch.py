@@ -361,6 +361,8 @@ def git_repo_updates(cfg):
                     cmd_checkout_default = ("git -C %s%s/%s%s checkout {default_branch}" 
                         % (cfg.repo_base_directory,row[1],row[4],row[3]))
 
+                    cfg.log_activity(f'checkout command is {cmd_checkout_default}.')
+
                     cfg.log_activity('Verbose',f'attempting to checkout default branch {default_branch} '
                         ' for %s' % row[2])                
 
