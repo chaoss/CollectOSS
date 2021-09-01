@@ -358,13 +358,16 @@ def git_repo_updates(cfg):
                     cfg.log_activity('Verbose', f'default branch is {default_branch} '
                         ' for %s' % row[2])
 
-                    cmd_checkout_default = ("git -C %s%s/%s%s checkout [default_branch]" 
+                    cmd_checkout_default = ("git -C %s%s/%s%s checkout {default_branch}" 
                         % (cfg.repo_base_directory,row[1],row[4],row[3]))
 
                     cfg.log_activity('Verbose',f'attempting to checkout default branch {default_branch} '
                         ' for %s' % row[2])                
 
-                    cmd_update_default_branch = subprocess.Popen([cmd_checkout_default],shell=True).wait()
+                    return_code_default_change = subprocess.Popen([cmd_checkout_default],shell=True).wait()
+
+                    cfg.log_activity('Verbose',f'return code  from default branch change is: {return_code_default_change} '
+                        ' for %s' % row[2])                       
 
                 except Exception as e: 
 
