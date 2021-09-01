@@ -190,6 +190,15 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         
 
         if type(response_data) == dict:
+          #Sometimes GitHub Sends us an error message in a dict instead of a string.
+          #While a bit annoying, it is easy to work around
+          if 'message' in response_data:
+            try:
+              assert 'API rate limit exceeded' not in response_data['message']
+            except AssertionError as e:
+              self.logger.info(f"Detected error in response data from gitHub. Trying again... Error: {e}")
+              break
+
           self.logger.info(f"Returned dict: {response_data}")
           success = True
           break
