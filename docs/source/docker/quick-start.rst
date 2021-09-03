@@ -10,7 +10,7 @@ Before you get off to such a quick start, go ahead and
      git checkout dev 
   
   4. Usually, we'll have you checkout the `dev` branch.
-  5. Make sure to install all the pre-requisites here: https://oss-augur.readthedocs.io/en/master/getting-started/installation.html#dependencies
+  5. Make sure to install all the pre-requisites here: https://oss-augur.readthedocs.io/en/main/getting-started/installation.html#dependencies
 
 
 .. note::
