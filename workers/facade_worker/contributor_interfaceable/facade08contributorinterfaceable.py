@@ -35,9 +35,33 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         self.config = config
         self.config.update(self.augur_config.get_section("Logging"))
 
+        self.config['worker_type'] = "contributor_interface"
+
+        try:
+            worker_defaults = self.augur_config.get_default_config()['Workers'][self.config['worker_type']]
+            self.config.update(worker_defaults)
+        except KeyError as e:
+            logging.warn('Could not get default configuration for {}'.format(self.config['worker_type']))
+
+        worker_info = self.augur_config.get_value('Workers', self.config['worker_type'])
+        self.config.update(worker_info)
+
+        """
+        worker_port = self.config['port']
+        while True:
+            try:
+                r = requests.get('http://{}:{}/AUGWOP/heartbeat'.format(
+                    self.config['host'], worker_port)).json()
+                if 'status' in r:
+                    if r['status'] == 'alive':
+                        worker_port += 1
+            except:
+                break
+        """
+          
         #Get the same logging dir as the facade worker.
         self.config.update({
-            'id': "workers.{}.{}".format("contributor_interface", self.config['port_database'])
+            'id': "workers.{}.{}".format(self.config['worker_type'], self.config['port'])
         })
 
         #Getting stuck here.
@@ -76,16 +100,16 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         formatter = Formatter(fmt=format_string)
         #User custom for stderr, Gives more info than verbose_format_string
         error_formatter = Formatter(fmt=AugurLogging.error_format_string)
-        worker_type = "contributor_interface"
+        worker_type = self.config['worker_type']
         worker_dir = AugurLogging.get_log_directories(self.augur_config, reset_logfiles=False) + "/workers/"
         Path(worker_dir).mkdir(exist_ok=True)
         logfile_dir = worker_dir + f"/{worker_type}/"
         Path(logfile_dir).mkdir(exist_ok=True)
 
         #Create more complex sublogs in the logfile directory determined by the AugurLogging class
-        server_logfile = logfile_dir + '{}_{}_server.log'.format(worker_type, self.config['port_database'])
-        collection_logfile = logfile_dir + '{}_{}_collection.log'.format(worker_type, self.config['port_database'])
-        collection_errorfile = logfile_dir + '{}_{}_collection.err'.format(worker_type, self.config['port_database'])
+        server_logfile = logfile_dir + '{}_{}_server.log'.format(worker_type, self.config['port'])
+        collection_logfile = logfile_dir + '{}_{}_collection.log'.format(worker_type, self.config['port'])
+        collection_errorfile = logfile_dir + '{}_{}_collection.err'.format(worker_type, self.config['port'])
         self.config.update({
             'logfile_dir': logfile_dir,
             'server_logfile': server_logfile,
