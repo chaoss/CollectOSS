@@ -94,7 +94,7 @@ def create_routes(server):
                         status=200,
                         mimetype="application/json")
 
-    @server.app.route('/{}/owner/<owner>/repo/<repo>'.format(server.api_version))
+    @server.app.route('/{}/owner/<owner>/name/<repo>'.format(server.api_version))
     def get_repo_by_git_name(owner, repo):
 
         get_repo_by_git_name_sql = s.sql.text("""
@@ -191,7 +191,7 @@ def create_routes(server):
                     repo_name
                 FROM issues JOIN repo ON issues.repo_id = repo.repo_id, issue_events
                 WHERE issues.repo_id = :repo_id
-                AND issues.pull_request IS NULL
+                AND issues.pull_request IS NULL 
                 AND issues.issue_id = issue_events.issue_id
                 GROUP BY issues.issue_id, repo_name
                 ORDER by OPEN_DAY DESC

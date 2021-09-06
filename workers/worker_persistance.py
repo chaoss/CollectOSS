@@ -178,7 +178,7 @@ class Persistant():
         )
 
         # Create an sqlalchemy engine for both database schemas
-        self.logger.info("Making database connections")
+        #self.logger.info(f"Making database connections with: {DB_STR}")
 
         self.db_schema = 'augur_data'
         self.db = s.create_engine(DB_STR,  poolclass=s.pool.NullPool,
@@ -209,6 +209,7 @@ class Persistant():
             self.logger.info(HelperBase.classes.keys())
         except:
             pass
+        
 
         for table in self.operations_tables:
             try:
