@@ -62,4 +62,5 @@
 \i schema/generate/57-schema_update_59.sql
 \i schema/generate/58-schema_update_60.sql
 \i schema/generate/59-schema_update_61.sql
+\i schema/generate/60-schema_update_62.sql
 

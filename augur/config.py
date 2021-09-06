@@ -30,6 +30,7 @@ release_worker_p = randint(56000, 56499)
 gitlab_merge_request_worker_p = randint(56500, 56999)
 deps_worker_p = randint(58001, 58499)
 contributor_interface_p = randint(58500,58999)
+deps_libyear_worker_p = randint(58500, 58999) 
 main_port = 5000 #randint(5001,5300) 
 
 
@@ -248,6 +249,14 @@ default_config = {
                     ],
                     "model": "deps",
                     "repo_group_id": 0
+                },
+                {
+                    "delay": 150000,
+                    "given": [
+                        "git_url"
+                    ],
+                    "model": "deps_libyear",
+                    "repo_group_id": 0
                 }
             ]
             },
@@ -376,6 +385,11 @@ default_config = {
                 },
                 "deps_worker": {
                     "port": deps_worker_p,
+                    "switch": 0,
+                    "workers": 1
+                },
+                "deps_libyear_worker": {
+                    "port": deps_libyear_worker_p,
                     "switch": 0,
                     "workers": 1
                 }
