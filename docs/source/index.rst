@@ -40,12 +40,8 @@ Current maintainers
 --------------------
 - `Derek Howard <https://github.com/howderek>`_
 - `Sean P. Goggins <http://www.seangoggins.net>`_
-- `Matt Germonprez <https://goo.gl/E87KdK>`_
-- `Gabe Heim <https://github.com/gabe-heim>`_
 - `Matt Snell <https://github.com/Nebrethar>`_
 - `Andrew Brain <https://github.com/ABrain7710>`_
-- `Ryland Dohm <https://github.com/rcdohm>`_
-- `Carter Landis <https://github.com/ccarterlandis>`_
 
 
 Former maintainers
