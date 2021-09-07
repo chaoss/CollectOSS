@@ -29,7 +29,8 @@ gitlab_issues_worker_p = randint(47500,47999)
 release_worker_p = randint(56000, 56499)
 gitlab_merge_request_worker_p = randint(56500, 56999)
 deps_worker_p = randint(58001, 58499)
-deps_libyear_worker_p = randint(58500, 58999) 
+deps_libyear_worker_p = randint(58500, 58999)
+contributor_interface_p = randint(47000,47499) 
 main_port = 5000 #randint(5001,5300) 
 
 
@@ -275,6 +276,10 @@ default_config = {
                     "port": github_worker_p,
                     "switch": 1,
                     "workers": 1
+                },
+                "contributor_interface":
+                {
+                  "port": contributor_interface_p
                 },
                 "insight_worker": {
                     "port": insight_worker_p,
