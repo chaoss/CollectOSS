@@ -134,7 +134,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
       try:
         cmt_cntrb = {
             'fname': contributor[name_field].split()[0],
-            'lname': contributor[name_field].split()[1],
+            'lname': contributor[name_field].split()[-1], #Pythonic way to get the end of a list so that we truely get the last name.
             #Some entries are weird and have an 'email' instead of 'commit_email'
             'email': contributor['commit_email'] if 'commit_email' in contributor else contributor['email']
         }
@@ -401,12 +401,16 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
               "tool_version": self.tool_version,
               "data_source": self.data_source
             }
-            # expcpetion: log that the user was already THERE
-
+            # Check if the github login exists in the contributors table and add to alias' if it does.
+            
             try:
-              self.db.execute(self.contributors_table.insert().values(cntrb))
-            except Exception as e:
-              self.logger.info(f"Ran into likely database collision. Assuming contributor exists in database. Error: {e}")
+              if not self.resolve_if_login_existing(cntrb):
+                try:
+                  self.db.execute(self.contributors_table.insert().values(cntrb))
+                except Exception as e:
+                  self.logger.info(f"Ran into likely database collision. Assuming contributor exists in database. Error: {e}")
+            except LookupError as e:
+              self.logger.info(f"Contributor id not able to be found in database despite the user_id existing. Something very wrong is happening. Error: {e}")
         
 
         # sql query used to find corresponding cntrb_id's of emails found in the contributor's table
@@ -458,14 +462,62 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             }))
         return
 
-    def resolve_login_alias(gh_login):
+    #Takes the user data from the endpoint as arg
+    #Updates the alias table if the login is already in the contributor's table with the new email.
+    #Returns whether the login was found in the contributors table
+    def resolve_if_login_existing(self, contributor):
       #check if login exists in contributors table
+      select_cntrbs_query = s.sql.text("""
+            SELECT cntrb_id from contributors
+            WHERE cntrb_login = :gh_login_value
+        """)
+
+      #Bind parameter
+      select_cntrbs_query = select_cntrbs_query.bindparams(gh_login_value = contributor['cntrb_login'])
+      result = self.db.execute(select_cntrbs_query)
 
       #if yes 
-      #   Insert cntrb_id and email of the corresponding record into the alias table
-      return
+      if len(result.fetchall()) >= 1:
+        #   Insert cntrb_id and email of the corresponding record into the alias table
+        #Another database call to get the contributor id is needed because its an autokeyincrement that is accessed by multiple workers
+        #Same principle as enrich_cntrb_id method.
+        contributor_table_data = self.db.execute(
+          s.sql.select(['cntrb_id','cntrb_canonical']).where(
+            self.contributors_table.c.gh_user_id==contributor["gh_user_id"]
+          )
+        ).fetchall()
 
-    def addAlias(cntrb_data):
+        #Handle potential failures
+        if len(contributor_table_data) == 1:
+          self.logger.info(f"cntrb_id {contributor_table_data[0]['cntrb_id']} found in database and assigned to enriched data")
+        elif len(contributor_table_data) == 0:
+          self.logger.error("Couldn't find contributor in database. Something has gone very wrong. Augur ran into a contributor whose login can be found in the contributor's table, but cannot be retrieved via the user_id that was gotten using the same login.")
+          raise LookupError
+        else:
+          self.logger.info(f"There are more than one contributors in the table with gh_user_id={contributor['gh_user_id']}")
+
+
+        alias = {
+              "cntrb_id": contributor_table_data[0]['cntrb_id'],
+              "alias_email": contributor['cntrb_email'],
+              "canonical_email": contributor['cntrb_canonical'] if 'cntrb_canonical' in contributor else None,
+              "tool_source": self.tool_source,
+              "tool_version": self.tool_version,
+              "data_source": self.data_source
+            }
+
+        #Insert new alias
+        try:
+          self.db.execute(self.contributors_aliases_table.insert().values(alias))
+        except Exception as e:
+          self.logger.info(f"Ran into likely database collision. Assuming contributor exists in database. Error: {e}")
+
+        return True
+
+      #If not found, return false  
+      return False
+
+    def addAlias(self, cntrb_data):
       #Add cntrb_data to aliases table for all contributors
       #Need to know fields of new table for this
       return
