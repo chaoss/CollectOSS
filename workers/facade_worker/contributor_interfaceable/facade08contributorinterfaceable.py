@@ -127,10 +127,14 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
     #Try to construct the best url to ping GitHub's API for a username given a full name and a email.
     def resolve_user_url_from_email(self,contributor):
       self.logger.info(f"Trying to resolve contributor: {contributor}")
+
+      #Try to get the 'names' field if 'commit_name' field is not present in contributor data.
+      name_field = 'commit_name' if 'commit_name' in contributor else 'name'
+
       try:
         cmt_cntrb = {
-            'fname': contributor['commit_name'].split()[0],
-            'lname': contributor['commit_name'].split()[1],
+            'fname': contributor[name_field].split()[0],
+            'lname': contributor[name_field].split()[1],
             #Some entries are weird and have an 'email' instead of 'commit_email'
             'email': contributor['commit_email'] if 'commit_email' in contributor else contributor['email']
         }
@@ -139,7 +143,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
       except:
           try:
             cmt_cntrb = {
-                'fname': contributor['commit_name'].split()[0],
+                'fname': contributor[name_field].split()[0],
                 'email': contributor['commit_email'] if 'commit_email' in contributor else contributor['email']
             }
             url = 'https://api.github.com/search/users?q={}+in:email+fullname:{}'.format(
