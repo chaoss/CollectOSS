@@ -75,6 +75,8 @@ class FacadeWorker(Worker):
         self.tool_version = '\'1.0.1\''
         self.data_source = '\'Git Log\''
 
+        self.logger.info("Finished  Init")
+
     def initialize_database_connections(self):
 
         # Set up the database
@@ -106,6 +108,8 @@ class FacadeWorker(Worker):
         except:
             # Catch databases which existed before database versioning
             self.current_db = -1
+
+        self.logger.info("initialed database.")
 
     def collect(self):
         """ Function to process each entry in the worker's task queue
