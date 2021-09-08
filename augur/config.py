@@ -65,14 +65,6 @@ default_config = {
                     "given": [
                         "git_url"
                     ],
-                    "model": "deps",
-                    "repo_group_id": 0
-                },
-                {
-                    "delay": 150000,
-                    "given": [
-                        "git_url"
-                    ],
                     "model": "ossf_scorecard",
                     "repo_group_id": 0
                 },
@@ -279,7 +271,9 @@ default_config = {
                 },
                 "contributor_interface":
                 {
-                  "port": contributor_interface_p
+                  "port": contributor_interface_p,
+                  "switch": 0,
+                  "workers": 1
                 },
                 "insight_worker": {
                     "port": insight_worker_p,
