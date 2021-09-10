@@ -23,7 +23,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             'pull_request_assignees', 'pull_request_events', 'pull_request_labels',
             'pull_request_message_ref', 'pull_request_meta', 'pull_request_repo',
             'pull_request_reviewers', 'pull_request_teams', 'message', 'pull_request_commits',
-            'pull_request_files', 'pull_request_reviews', 'pull_request_review_message_ref', 'contributors_aliases_table']
+            'pull_request_files', 'pull_request_reviews', 'pull_request_review_message_ref', 'contributors_aliases']
         self.operations_tables = ['worker_history', 'worker_job']
 
         self.platform = "github"
