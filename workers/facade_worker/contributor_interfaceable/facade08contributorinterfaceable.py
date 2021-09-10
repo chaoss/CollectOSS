@@ -482,7 +482,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         #Another database call to get the contributor id is needed because its an autokeyincrement that is accessed by multiple workers
         #Same principle as enrich_cntrb_id method.
         contributor_table_data = self.db.execute(
-          s.sql.select(['cntrb_id','cntrb_canonical']).where(
+          s.sql.select([s.column('cntrb_id'), s.column('cntrb_canonical')]).where(
             self.contributors_table.c.gh_user_id==contributor["gh_user_id"]
           )
         ).fetchall()
