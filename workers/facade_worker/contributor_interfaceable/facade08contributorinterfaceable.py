@@ -124,36 +124,42 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         self.tool_version = '\'0.1.0\''
         self.data_source = '\'Git Log\'' 
     
-    #Try to construct the best url to ping GitHub's API for a username given a full name and a email.
+    #Try to construct the best url to ping GitHub's API for a username given an email.
     def resolve_user_url_from_email(self,contributor):
+      self.logger.info(f"Trying to resolve contributor: {contributor}")
+
+      cmt_cntrb = {
+          'email': contributor['commit_email'] if 'commit_email' in contributor else contributor['email']
+      }
+      url = 'https://api.github.com/search/users?q={}+in:email'.format(
+          cmt_cntrb['email'])
+      
+      return url
+    
+    #Try to construct the best url to ping GitHub's API for a username given a full name.
+    def resolve_user_url_from_name(self,contributor):
       self.logger.info(f"Trying to resolve contributor: {contributor}")
 
       #Try to get the 'names' field if 'commit_name' field is not present in contributor data.
       name_field = 'commit_name' if 'commit_name' in contributor else 'name'
 
       try:
+        #Deal with case where name is not two words
+        if len(contributor[name_field].split()) != 2:
+          raise ValueError
+
         cmt_cntrb = {
             'fname': contributor[name_field].split()[0],
-            'lname': contributor[name_field].split()[-1], #Pythonic way to get the end of a list so that we truely get the last name.
-            #Some entries are weird and have an 'email' instead of 'commit_email'
-            'email': contributor['commit_email'] if 'commit_email' in contributor else contributor['email']
+            'lname': contributor[name_field].split()[-1] #Pythonic way to get the end of a list so that we truely get the last name.
         }
-        url = 'https://api.github.com/search/users?q={}+in:email+fullname:{}+{}'.format(
-            cmt_cntrb['email'], cmt_cntrb['fname'], cmt_cntrb['lname'])
-      except:
-          try:
-            cmt_cntrb = {
-                'fname': contributor[name_field].split()[0],
-                'email': contributor['commit_email'] if 'commit_email' in contributor else contributor['email']
-            }
-            url = 'https://api.github.com/search/users?q={}+in:email+fullname:{}'.format(
-                cmt_cntrb['email'], cmt_cntrb['fname'])
-          except:
-            cmt_cntrb = {
-                'email': contributor['commit_email'] if 'commit_email' in contributor else contributor['email']
-            }
-            url = 'https://api.github.com/search/users?q={}+in:email'.format(
-                cmt_cntrb['email'])
+        url = 'https://api.github.com/search/users?q=fullname:{}+{}'.format(
+          cmt_cntrb['fname'], cmt_cntrb['lname'])
+      except:          
+        cmt_cntrb = {
+            'fname': contributor[name_field].split()[0]
+        }
+        url = 'https://api.github.com/search/users?q=fullname:{}'.format(
+            cmt_cntrb['fname'])
       
       return url
 
@@ -321,11 +327,22 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             try:
               url = self.resolve_user_url_from_email(contributor)
             except Exception as e:
-              self.logger.info(f"Couldn't resolve url with given data. Reason: {e}")
+              self.logger.info(f"Couldn't resolve email url with given data. Reason: {e}")
               continue #If the method throws an error it means that we can't hit the endpoint so we can't really do much
 
             login_json = self.request_dict_from_endpoint(url,timeout_wait=30)
 
+            #Check if the email result got anything, if it failed try a name search.
+            if login_json == None or 'total_count' not in login_json or login_json['total_count'] == 0:
+              self.logger.info("Could not resolve the username from the email. Trying a name only search...")
+
+              try:
+                url = self.resolve_user_url_from_name(contributor)
+              except Exception as e:
+                self.logger.info(f"Couldn't resolve name url with given data. Reason: {e}")
+                continue
+              
+              login_json = self.request_dict_from_endpoint(url, timeout_wait=30)
 
             #total_count is the count of username's found by the endpoint.
             if login_json == None or 'total_count' not in login_json:
