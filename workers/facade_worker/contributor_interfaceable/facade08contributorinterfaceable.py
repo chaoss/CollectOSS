@@ -379,12 +379,14 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
             url = ("https://api.github.com/users/" + match['login'])
 
+            self.logger.info(f"Debug user_data api call: {url}")
             user_data = self.request_dict_from_endpoint(url)
 
             if user_data == None:
               self.logger.warning(f"user_data was unable to be reached. Skipping...")
               continue
-
+            
+            
             # try to add contributor to database
             cntrb = {
               "cntrb_login": user_data['login'],
