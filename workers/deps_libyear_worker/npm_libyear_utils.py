@@ -46,3 +46,14 @@ def get_lastest_minor(version, data):
             if v.split('.')[1]>minor:
                     consider_version = v
     return consider_version 
+
+
+def get_release_date(data, version):
+    release_time = data['time']['version']
+    if release_time:
+        return release_time
+    return None
+
+
+def get_latest_version(data):
+    return data['dist-tags']['latest']
