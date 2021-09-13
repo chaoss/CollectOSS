@@ -1077,12 +1077,12 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         else:
             self.logger.info("Contributor enrichment is not needed, no inserts provided.")
 
-
+        self.logger.info(f"Howdy. Assignee source id is: {type(assignee['id'])}.")
         assignees_insert = [
             {
                 'pull_request_id': assignee['pull_request_id'],
                 'contrib_id': assignee['cntrb_id'],
-                'pr_assignee_src_id': assignee['id'],
+                'pr_assignee_src_id': int(assignee['id']),
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
                 'data_source': self.data_source
