@@ -447,7 +447,8 @@ class WorkerGitInterfaceable(Worker):
               #We can solve this by making another worker with a queue. It wouldn't have to be too complicated.
               try:
                 self.db.execute(self.contributors_table.insert().values(cntrb))
-              # except s.exc.IntegrityError:
+              except s.exc.IntegrityError as e:
+                self.logger.info(f"there was a collision caught with: {e}.")
               except Exception as e:
                 self.logger.info(f"Contributor was unable to be added to table! Attempting to get cntrb_id from table anyway because of possible collision. Error: {e}")
 
