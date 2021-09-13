@@ -441,10 +441,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                 except Exception as e:
                   self.logger.info(f"Ran into likely database collision. Assuming contributor exists in database. Error: {e}")
               else:
-                try:
-                  self.db.execute(self.contributors_table.update().values(cntrb))
-                except Exception as e:
-                  self.logger.info(f"Ran into exception updating contributor with data: {cntrb}. Error: {e}")
+                self.update_contributor(cntrb)
             except LookupError as e:
               self.logger.info(f"Contributor id not able to be found in database despite the user_id existing. Something very wrong is happening. Error: {e}")
         
@@ -554,3 +551,17 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
       #If not found, return false  
       return False
+    
+    def update_contributor(self, cntrb, max_attempts=15):
+
+      attempts = 0
+
+      while attempts < max_attempts:
+        try:
+          self.db.execute(self.contributors_table.update().values(cntrb))
+          break #break if success.
+        except Exception as e:
+          self.logger.info(f"Ran into exception updating contributor with data: {cntrb}. Error: {e}")
+          time.sleep(1) #give a delay so that we have a greater chance of success.
+        
+        attempts += 1
