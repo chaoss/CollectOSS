@@ -5,6 +5,7 @@ import os
 from pypi_parser import parse_conda, parse_pipfile,parse_pipfile_lock,parse_poetry,parse_poetry_lock,parse_requirement_txt,parse_setup_py
 from npm_parser import parse_package_json
 from pypi_libyear_util import sort_dependency_requirement,get_pypi_data,get_latest_version,get_release_date
+from npm_libyear_utils import get_NPM_data, get_release_date
 
 #Files That would be parsed should be added here
 file_list = [
@@ -97,12 +98,17 @@ def get_deps_libyear_data(path):
     dependencies = get_parsed_deps(path)
     if dependencies:
         for dependency in dependencies:
-            data = get_pypi_data(dependency['name'])
-            current_version = sort_dependency_requirement(dependency,data)
-            latest_version = get_latest_version(data)
-            latest_release_date = get_release_date(data, latest_version)
-            if current_version:
-                current_release_date = get_release_date(data, current_version)
+            #NOTE: Add new if for new package parser
+            if dependency['package'] == 'PYPI':
+                data = get_pypi_data(dependency['name'])
+                current_version = sort_dependency_requirement(dependency,data)
+                latest_version = get_latest_version(data)
+                latest_release_date = get_release_date(data, latest_version)
+                if current_version:
+                    current_release_date = get_release_date(data, current_version)
+            if dependency['package'] == 'NPM':
+                data = get_NPM_data(dependency['name'])
+                
             libyear = get_libyear(current_version, current_release_date, latest_version, latest_release_date)
             if not latest_release_date:
                 latest_release_date = dateutil.parser.parse('1970-01-01 00:00:00')

@@ -57,3 +57,7 @@ def get_release_date(data, version):
 
 def get_latest_version(data):
     return data['dist-tags']['latest']
+
+
+def get_current_version(requirement):
+    pass
