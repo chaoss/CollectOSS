@@ -877,6 +877,11 @@ class Persistant():
         self, source_data, table, gh_merge_fields, augur_merge_fields, in_memory=False
     ):
 
+        ''' the gh_merge_fields are almost always direct from the source in the action map.
+            the augur_merge fields are the fieldnames where augur perists the source values.
+            These are almost never (never) the primary keys on our table. They are the natural
+            keys at the source, I think, with some probability close to 1 (SPG 9/13/2021).'''
+
         self.logger.info("Preparing to enrich data.\n")
 
         if len(source_data) == 0:
