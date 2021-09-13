@@ -40,7 +40,7 @@ def get_lastest_minor(version, data):
         #NOTE: Add error logging here
         pass
     major,minor,patch = version.split('.')
-    consider_version = version
+    consider_version = get_latest_patch(version, data)
     for v in list(versions.keys())[index:]:
         if v.split('.')[0]==major:
             if v.split('.')[1]>minor:
@@ -59,5 +59,10 @@ def get_npm_latest_version(data):
     return data['dist-tags']['latest']
 
 #add code here
-def get_npm_current_version(requirement):
-    pass
+def get_npm_current_version(data, requirement):
+    if requirement[0]=='~':
+        return get_latest_patch(clean_version(requirement), data)
+    elif requirement[0]=='^':
+        return get_lastest_minor(clean_version(requirement), data)
+    else:
+        return requirement
