@@ -631,7 +631,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         # PR MESSAGE REF TABLE
 
         c_pk_source_comments = self.enrich_data_primary_keys(pr_comments['insert'],
-            self.message_table, ['created_at', 'body'], ['msg_timestamp', 'msg_text'])
+            self.message_table, comment_action_map['insert']['source'], comment_action_map['insert']['augur'])
 
         self.write_debug_data(c_pk_source_comments, 'c_pk_source_comments')
 
@@ -656,7 +656,13 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             } for comment in both_pk_source_comments
         ]
 
-        self.bulk_insert(self.pull_request_message_ref_table, insert=pr_message_ref_insert)
+        try: 
+
+            self.bulk_insert(self.pull_request_message_ref_table, insert=pr_message_ref_insert)
+
+        except Exception as e:
+
+            self.logger.info(f"bulk insert failed with: {e}.")
 
     def pull_request_events_model(self, pk_source_prs=[]):
 
@@ -827,8 +833,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         review_msg_action_map = {
             'insert': {
-                'source': ['created_at', 'body'],
-                'augur': ['msg_timestamp', 'msg_text']
+                'source': ['id'],
+                'augur': ['pr_review_msg_src_id']
             }
         }
 
