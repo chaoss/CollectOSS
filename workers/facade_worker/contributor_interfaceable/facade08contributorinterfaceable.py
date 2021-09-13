@@ -562,13 +562,15 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         ).fetchall()
 
       #add primary key to data that we want to update.
-      cntrb['cntrb_id'] = contributor_table_data[0]['cntrb_id']
+      #cntrb['cntrb_id'] = contributor_table_data[0]['cntrb_id']
       attempts = 0
 
       while attempts < max_attempts:
         try:
           with self.db.connect() as connection:
-            connection.execute(self.contributors_table.update().values(cntrb))
+            connection.execute(self.contributors_table.update().where(
+              self.contributors_table.c.cntrb_id==contributor_table_data[0]['cntrb_id']
+            ).values(cntrb))
           break #break if success.
         except Exception as e:
           self.logger.info(f"Ran into exception updating contributor with data: {cntrb}. Error: {e}")
