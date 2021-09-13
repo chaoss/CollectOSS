@@ -525,7 +525,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         alias = {
               "cntrb_id": contributor_table_data[0]['cntrb_id'],
               "alias_email": commit_email,
-              "canonical_email": contributor['cntrb_canonical'] if 'cntrb_canonical' in contributor else commit_email,
+              "canonical_email": contributor['cntrb_canonical'] if 'cntrb_canonical' in contributor and contributor['cntrb_canonical'] is not None else commit_email,
               "tool_source": self.tool_source,
               "tool_version": self.tool_version,
               "data_source": self.data_source
