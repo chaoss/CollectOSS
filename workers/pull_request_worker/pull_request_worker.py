@@ -651,7 +651,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'pr_message_ref_src_node_id': comment['node_id'],
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
-                'data_source': self.data_source
+                'data_source': self.data_source,
+                'repo_id': self.repo_id
             } for comment in both_pk_source_comments
         ]
 

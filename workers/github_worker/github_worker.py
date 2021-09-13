@@ -281,7 +281,8 @@ class GitHubWorker(WorkerGitInterfaceable):
                     'tool_version': self.tool_version,
                     'data_source': self.data_source,
                     'issue_msg_ref_src_comment_id': comment['id'],
-                    'issue_msg_ref_src_node_id': comment['node_id']
+                    'issue_msg_ref_src_node_id': comment['node_id'],
+                    'repo_id': self.repo_id
                 } for comment in both_pk_source_comments
             ]
 
