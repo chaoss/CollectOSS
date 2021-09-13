@@ -450,7 +450,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
           from 
               contributors, commits
           where 
-              contributors.cntrb_email = commits.cmt_author_raw_emailNULL
+              contributors.cntrb_email = commits.cmt_author_raw_email
           union 
           select distinct cntrb_id, contributors.cntrb_email, commits.cmt_committer_raw_email
           from 
