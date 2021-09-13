@@ -210,7 +210,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
               attempts += 1
               continue
 
-          self.logger.info(f"Returned dict: {response_data}")
+          #self.logger.info(f"Returned dict: {response_data}")
           success = True
           break
         elif type(response_data) == list:
@@ -385,7 +385,6 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
             url = ("https://api.github.com/users/" + match['login'])
 
-            self.logger.info(f"Debug user_data api call: {url}")
             user_data = self.request_dict_from_endpoint(url)
 
             if user_data == None:
