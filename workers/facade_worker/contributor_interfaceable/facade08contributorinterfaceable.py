@@ -386,7 +386,12 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
               self.logger.warning(f"user_data was unable to be reached. Skipping...")
               continue
             
-            
+            #Use the email found in the commit data if api data is NULL
+            emailFromCommitData = contributor['commit_email'] if 'commit_email' in contributor else contributor['email']
+
+            #Get name from commit if not found by GitHub
+            name_field = contributor['commit_name'] if 'commit_name' in contributor else contributor['name']
+
             # try to add contributor to database
             cntrb = {
               "cntrb_login": user_data['login'],
@@ -395,7 +400,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
               "cntrb_company": user_data['company'] if 'company' in user_data else None,
               "cntrb_location": user_data['location'] if 'location' in user_data else None,
               # "cntrb_type": , dont have a use for this as of now ... let it default to null
-              "cntrb_canonical": user_data['email'] if 'email' in user_data else None,
+              "cntrb_canonical": user_data['email'] if 'email' in user_data else emailFromCommitData,
               "gh_user_id": user_data['id'],
               "gh_login": user_data['login'],
               "gh_url": user_data['url'],
@@ -415,15 +420,12 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
               "gh_type": user_data['type'],
               "gh_site_admin": user_data['site_admin'],
               "cntrb_last_used" : None if 'updated_at' not in user_data else user_data['updated_at'],
-              "cntrb_full_name" : None if 'name' not in user_data else user_data['name'],
+              "cntrb_full_name" : name_field if 'name' not in user_data else user_data['name'], #Get name from commit if api doesn't get it.
               "tool_source": self.tool_source,
               "tool_version": self.tool_version,
               "data_source": self.data_source
             }
             # Check if the github login exists in the contributors table and add to alias' if it does.
-            
-            #Use the email found in the commit data if api data is NULL
-            emailFromCommitData = contributor['commit_email'] if 'commit_email' in contributor else contributor['email']
 
             try:
               if not self.resolve_if_login_existing(cntrb, emailFromCommitData):
