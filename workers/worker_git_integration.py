@@ -356,13 +356,14 @@ class WorkerGitInterfaceable(Worker):
                 url = ("https://api.github.com/users/" + data[f'{prefix}login'])
               except Exception as e:
                 self.logger.info(f"Error when creating url: {e}. Data: {data}")
+                continue
 
               attempts = 0
               contributor = None
               success = False
               
               while attempts < 10:
-                self.logger.info("Hitting endpoint: " + url + " ...\n")
+                self.logger.info(f"Hitting endpoint: {url} ...\n")
                 try:
                   response = requests.get(url=url , headers=self.headers)
                 except TimeoutError:
