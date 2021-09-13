@@ -516,10 +516,13 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
           self.logger.info(f"There are more than one contributors in the table with gh_user_id={contributor['gh_user_id']}")
 
 
+        #Insert a new alias that corresponds to where the contributor was found
+        #use the email of the new alias for canonical_email if the api returns NULL
+        # TODO: It might be better to have the canonical_email allowed to be NUll because right now it has a null constraint.
         alias = {
               "cntrb_id": contributor_table_data[0]['cntrb_id'],
               "alias_email": contributor['cntrb_email'],
-              "canonical_email": contributor['cntrb_canonical'] if 'cntrb_canonical' in contributor else None,
+              "canonical_email": contributor['cntrb_canonical'] if 'cntrb_canonical' in contributor else contributor['cntrb_email'],
               "tool_source": self.tool_source,
               "tool_version": self.tool_version,
               "data_source": self.data_source
