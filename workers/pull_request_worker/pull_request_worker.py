@@ -586,8 +586,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         comment_action_map = {
             'insert': {
-                'source': ['created_at', 'body'],
-                'augur': ['msg_timestamp', 'msg_text']
+                'source': ['id'],
+                'augur': ['platform_msg_id']
             }
         }
 
