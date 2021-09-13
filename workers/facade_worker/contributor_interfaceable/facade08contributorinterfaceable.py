@@ -210,7 +210,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
               attempts += 1
               continue
 
-          self.logger.info(f"Returned dict: {response_data}")
+          #self.logger.info(f"Returned dict: {response_data}")
           success = True
           break
         elif type(response_data) == list:
@@ -385,7 +385,6 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
             url = ("https://api.github.com/users/" + match['login'])
 
-            self.logger.info(f"Debug user_data api call: {url}")
             user_data = self.request_dict_from_endpoint(url)
 
             if user_data == None:
@@ -442,10 +441,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                 except Exception as e:
                   self.logger.info(f"Ran into likely database collision. Assuming contributor exists in database. Error: {e}")
               else:
-                try:
-                  self.db.execute(self.contributors_table.update().values(cntrb))
-                except Exception as e:
-                  self.logger.info(f"Ran into exception updating contributor with data: {cntrb}. Error: {e}")
+                self.update_contributor(cntrb)
             except LookupError as e:
               self.logger.info(f"Contributor id not able to be found in database despite the user_id existing. Something very wrong is happening. Error: {e}")
         
@@ -555,3 +551,17 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
       #If not found, return false  
       return False
+    
+    def update_contributor(self, cntrb, max_attempts=15):
+
+      attempts = 0
+
+      while attempts < max_attempts:
+        try:
+          self.db.execute(self.contributors_table.update().values(cntrb))
+          break #break if success.
+        except Exception as e:
+          self.logger.info(f"Ran into exception updating contributor with data: {cntrb}. Error: {e}")
+          time.sleep(1) #give a delay so that we have a greater chance of success.
+        
+        attempts += 1
