@@ -400,7 +400,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
               "cntrb_company": user_data['company'] if 'company' in user_data else None,
               "cntrb_location": user_data['location'] if 'location' in user_data else None,
               # "cntrb_type": , dont have a use for this as of now ... let it default to null
-              "cntrb_canonical": user_data['email'] if 'email' in user_data else emailFromCommitData,
+              "cntrb_canonical": user_data['email'] if 'email' in user_data and user_data['email'] is not None else emailFromCommitData,
               "gh_user_id": user_data['id'],
               "gh_login": user_data['login'],
               "gh_url": user_data['url'],
