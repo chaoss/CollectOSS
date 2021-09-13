@@ -330,7 +330,13 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
               self.logger.info(f"Couldn't resolve email url with given data. Reason: {e}")
               continue #If the method throws an error it means that we can't hit the endpoint so we can't really do much
 
-            login_json = self.request_dict_from_endpoint(url,timeout_wait=30)
+            email = contributor['commit_email'] if 'commit_email' in contributor else contributor['email']
+
+            #Disallow api requests where the email is blank. 
+            if email != "":
+              login_json = self.request_dict_from_endpoint(url,timeout_wait=30)
+            else:
+              login_json = None
 
             #Check if the email result got anything, if it failed try a name search.
             if login_json == None or 'total_count' not in login_json or login_json['total_count'] == 0:
