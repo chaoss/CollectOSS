@@ -554,11 +554,23 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
     
     def update_contributor(self, cntrb, max_attempts=15):
 
+      #Get primary key so that we can update
+      contributor_table_data = self.db.execute(
+          s.sql.select([s.column('cntrb_id'), s.column('cntrb_canonical')]).where(
+            self.contributors_table.c.gh_user_id==cntrb["gh_user_id"]
+          )
+        ).fetchall()
+
+      #add primary key to data that we want to update.
+      #cntrb['cntrb_id'] = contributor_table_data[0]['cntrb_id']
       attempts = 0
 
       while attempts < max_attempts:
         try:
-          self.db.execute(self.contributors_table.update().values(cntrb))
+          with self.db.connect() as connection:
+            connection.execute(self.contributors_table.update().where(
+              self.contributors_table.c.cntrb_id==contributor_table_data[0]['cntrb_id']
+            ).values(cntrb))
           break #break if success.
         except Exception as e:
           self.logger.info(f"Ran into exception updating contributor with data: {cntrb}. Error: {e}")
