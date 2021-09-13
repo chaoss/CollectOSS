@@ -31,6 +31,10 @@ ALTER TABLE "augur_data"."repo_deps_libyear" ADD CONSTRAINT "repo_deps_libyear_p
 ALTER TABLE "augur_data"."repo_deps_libyear" ADD CONSTRAINT "repo_id" FOREIGN KEY ("repo_id") REFERENCES "augur_data"."repo" ("repo_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 
+ALTER TABLE "augur_data"."repo_deps_libyear" 
+  ALTER COLUMN "libyear" TYPE float8 USING "libyear"::float8;
+
+
 update "augur_operations"."augur_settings" set value = 62 
   where setting = 'augur_data_version'; 
 
