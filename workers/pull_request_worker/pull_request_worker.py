@@ -753,7 +753,11 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             for pr in pk_source_prs
         ]
 
-        pr_pk_source_reviews = self.multi_thread_urls(reviews_urls)
+        '''  9/13/2021: Removed multithreading due to errors. '''
+
+        pr_pk_source_reviews = reviews_urls
+
+        # pr_pk_source_reviews = self.multi_thread_urls(reviews_urls)
         self.write_debug_data(pr_pk_source_reviews, 'pr_pk_source_reviews')
 
         cols_to_query = self.get_relevant_columns(
