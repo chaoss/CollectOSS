@@ -422,8 +422,11 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             }
             # Check if the github login exists in the contributors table and add to alias' if it does.
             
+            #Use the email found in the commit data if api data is NULL
+            emailFromCommitData = contributor['commit_email'] if 'commit_email' in contributor else contributor['email']
+
             try:
-              if not self.resolve_if_login_existing(cntrb):
+              if not self.resolve_if_login_existing(cntrb, emailFromCommitData):
                 try:
                   self.db.execute(self.contributors_table.insert().values(cntrb))
                 except Exception as e:
@@ -484,7 +487,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
     #Takes the user data from the endpoint as arg
     #Updates the alias table if the login is already in the contributor's table with the new email.
     #Returns whether the login was found in the contributors table
-    def resolve_if_login_existing(self, contributor):
+    def resolve_if_login_existing(self, contributor, commit_email):
       #check if login exists in contributors table
       select_cntrbs_query = s.sql.text("""
             SELECT cntrb_id from contributors
@@ -521,8 +524,8 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         # TODO: It might be better to have the canonical_email allowed to be NUll because right now it has a null constraint.
         alias = {
               "cntrb_id": contributor_table_data[0]['cntrb_id'],
-              "alias_email": contributor['cntrb_email'],
-              "canonical_email": contributor['cntrb_canonical'] if 'cntrb_canonical' in contributor else contributor['cntrb_email'],
+              "alias_email": commit_email,
+              "canonical_email": contributor['cntrb_canonical'] if 'cntrb_canonical' in contributor else commit_email,
               "tool_source": self.tool_source,
               "tool_version": self.tool_version,
               "data_source": self.data_source
