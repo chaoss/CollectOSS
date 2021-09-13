@@ -1,4 +1,5 @@
-BEGIN;
+BEGIN; 
+
 DROP TABLE IF EXISTS "augur_data"."repo_deps_libyear";
 CREATE TABLE "augur_data"."repo_deps_libyear" (
   "repo_deps_libyear_id" serial8 NOT NULL,
