@@ -153,11 +153,13 @@ class GitHubWorker(WorkerGitInterfaceable):
             if self.deep_collection:
                 source_data = inc_source_issues['all']
 
-            gh_merge_fields = ['id']
-            augur_merge_fields = ['gh_issue_id']
+            '''Commented these fields out because they are already defined in the action_map. '''
+
+#            gh_merge_fields = ['id']
+#            augur_merge_fields = ['gh_issue_id']
 
             self.pk_source_issues += self.enrich_data_primary_keys(
-                source_data, self.issues_table, gh_merge_fields, augur_merge_fields
+                source_data, self.issues_table, action_map['insert']['source'], action_map['insert']['augur']
             )
 
             return
@@ -408,14 +410,14 @@ class GitHubWorker(WorkerGitInterfaceable):
                     )
                 )
                 if not len(events_df):  # no cntrb ids were available
-                    self.logger.info("USED TO BE: Skipping issue update: No cntrb id's available.")
-                    #skip_closed_issue_update = True
+                    self.logger.info("Skipping issue update: No cntrb id's available.")
+                    skip_closed_issue_update = True
             else:
-                self.logger.info("USED TO BE: skipping issue update: Second else.")
-                #skip_closed_issue_update = True
+                self.logger.info("Skipping issue update: Second else.")
+                skip_closed_issue_update = True
         else:
-            self.logger.info("USED TO BE: skipping issue update: Second else.")
-            #skip_closed_issue_update = True
+            self.logger.info("Skipping issue update: Second else.")
+            skip_closed_issue_update = True
 
         assignees_all = []
         labels_all = []

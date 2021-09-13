@@ -490,11 +490,13 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
             # Merge source data to inserted data to have access to inserted primary keys
 
-            gh_merge_fields = ['id']
-            augur_merge_fields = ['pr_src_id']
+           # gh_merge_fields = ['id']
+           # augur_merge_fields = ['pr_src_id']
+
+            '''Commented these fields out because they are already defined in the action_map. '''
 
             self.pk_source_prs += self.enrich_data_primary_keys(source_data, self.pull_requests_table,
-                gh_merge_fields, augur_merge_fields)
+                pr_action_map['insert']['source'], pr_action_map['insert']['augur'])
             return
 
 
