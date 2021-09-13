@@ -10,6 +10,7 @@ from npm_libyear_utils import get_NPM_data, get_npm_release_date, get_npm_latest
 #Files That would be parsed should be added here
 file_list = [
     'Requirement.txt',
+    'requirements.txt',
     'setup.py',
     'Pipfile',
     'Pipfile.lock',
@@ -41,6 +42,9 @@ def get_parsed_deps(path):
         file_handle= open(deps_file)
 
         if f == 'Requirement.txt':
+            dependency_list = parse_requirement_txt(file_handle)
+        
+        elif f == 'requirements.txt':
             dependency_list = parse_requirement_txt(file_handle)
 
         elif f == 'setup.py':
