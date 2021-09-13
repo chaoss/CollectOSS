@@ -532,7 +532,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         try:
           self.db.execute(self.contributors_aliases_table.insert().values(alias))
         except Exception as e:
-          self.logger.info(f"Ran into likely database collision. Assuming contributor exists in database. Error: {e}")
+          self.logger.info(f"Ran into likely database collision with alias: {alias}. Assuming contributor exists in database. Error: {e}")
 
         return True
 
