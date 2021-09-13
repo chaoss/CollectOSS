@@ -465,6 +465,8 @@ class GitHubWorker(WorkerGitInterfaceable):
             update_columns=['cntrb_id']
         )
 
+        ''' Action maps are used to determine uniqueness based on the natural key at the source. '''
+
         # Issue assignees insertion
         assignee_action_map = {
             'insert': {
@@ -516,6 +518,7 @@ class GitHubWorker(WorkerGitInterfaceable):
             #     'source': ['pull_request_id', 'id'],
             #     'augur': ['pull_request_id', 'pr_src_id']
             # }
+        ''' Action maps are used to determine uniqueness based on the natural key at the source. '''
 
         label_action_map = {
             'insert': {
