@@ -132,7 +132,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
           'email': contributor['commit_email'] if 'commit_email' in contributor else contributor['email']
       }
       url = 'https://api.github.com/search/users?q={}+in:email&&{}+in:email'.format(
-          cmt_cntrb['email'].split(seperator='@')[0], cmt_cntrb['email'].split(seperator='@')[-1])
+          cmt_cntrb['email'].split('@')[0], cmt_cntrb['email'].split('@')[-1])
       
       return url
     
