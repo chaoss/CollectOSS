@@ -48,16 +48,16 @@ def get_lastest_minor(version, data):
     return consider_version 
 
 
-def get_release_date(data, version):
+def get_npm_release_date(data, version):
     release_time = data['time']['version']
     if release_time:
         return release_time
     return None
 
 
-def get_latest_version(data):
+def get_npm_latest_version(data):
     return data['dist-tags']['latest']
 
-
-def get_current_version(requirement):
+#add code here
+def get_npm_current_version(requirement):
     pass
