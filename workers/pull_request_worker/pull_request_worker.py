@@ -631,6 +631,9 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         self.write_debug_data(c_pk_source_comments, 'c_pk_source_comments')
 
+        self.logger.info(f"log of the length of c_pk_source_comments {len(c_pk_source_comments)}.")
+
+
         both_pk_source_comments = self.enrich_data_primary_keys(c_pk_source_comments,
             self.pull_requests_table, ['issue_url'], ['pr_issue_url'])
 

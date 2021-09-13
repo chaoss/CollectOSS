@@ -264,6 +264,9 @@ class GitHubWorker(WorkerGitInterfaceable):
                 inc_issue_comments['insert'], self.message_table,
                 comment_action_map['insert']['source'], comment_action_map['insert']['augur']
             )
+
+            self.logger.info(f"log of the length of c_pk_source_comments {len(c_pk_source_comments)}.")
+
             both_pk_source_comments = self.enrich_data_primary_keys(
                 c_pk_source_comments, self.issues_table, ['issue_url'], ['issue_url']
             )
