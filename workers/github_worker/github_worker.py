@@ -420,13 +420,13 @@ class GitHubWorker(WorkerGitInterfaceable):
                 )
                 if not len(events_df):  # no cntrb ids were available
                     self.logger.info("Skipping issue update: No cntrb id's available.")
-                    skip_closed_issue_update = True
+                    #skip_closed_issue_update = True
             else:
                 self.logger.info("Skipping issue update: Second else.")
-                skip_closed_issue_update = True
+                #skip_closed_issue_update = True
         else:
             self.logger.info("Skipping issue update: Second else.")
-            skip_closed_issue_update = True
+            #kip_closed_issue_update = True
 
         assignees_all = []
         labels_all = []
