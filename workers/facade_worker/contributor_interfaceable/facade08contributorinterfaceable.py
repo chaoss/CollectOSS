@@ -558,7 +558,8 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
       while attempts < max_attempts:
         try:
-          self.db.execute(self.contributors_table.update().values(cntrb))
+          with self.db.connect() as connection:
+            connection.execute(self.contributors_table.update().values(cntrb))
           break #break if success.
         except Exception as e:
           self.logger.info(f"Ran into exception updating contributor with data: {cntrb}. Error: {e}")
