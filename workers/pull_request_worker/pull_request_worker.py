@@ -994,10 +994,13 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         source_labels_insert, _ = self.organize_needed_data(
             labels_all, table_values=table_values_pr_labels, action_map=label_action_map
         )
+
+        self.logger.info(f"Howdy. Lets check the label id datatype: {type(label['id'])}.")
+
         labels_insert = [
             {
                 'pull_request_id': label['pull_request_id'],
-                'pr_src_id': label['id'],
+                'pr_src_id': int(label['id']),
                 'pr_src_node_id': label['node_id'],
                 'pr_src_url': label['url'],
                 'pr_src_description': label['name'],
