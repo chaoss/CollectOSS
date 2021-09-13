@@ -18,7 +18,8 @@ file_list = [
     'environment.yml',
     'environment.yaml',
     'environment.yml.lock',
-    'environment.yaml.lock'
+    'environment.yaml.lock',
+    'package.json'
 ]
 
 
@@ -67,7 +68,11 @@ def get_parsed_deps(path):
             dependency_list = parse_conda(file_handle)
 
         elif f == 'environment.yaml.lock':
-            dependency_list = parse_conda(file_handle)                
+            dependency_list = parse_conda(file_handle) 
+            
+        elif f == 'package.json':
+            dependency_list = parse_package_json(file_handle)
+        
         return dependency_list
 
 
@@ -98,6 +103,7 @@ def get_deps_libyear_data(path):
     dependencies = get_parsed_deps(path)
     if dependencies:
         for dependency in dependencies:
+
             #NOTE: Add new if for new package parser
             if dependency['package'] == 'PYPI':
                 data = get_pypi_data(dependency['name'])
@@ -106,6 +112,7 @@ def get_deps_libyear_data(path):
                 latest_release_date = get_release_date(data, latest_version)
                 if current_version:
                     current_release_date = get_release_date(data, current_version)
+
             elif dependency['package'] == 'NPM':
                 data = get_NPM_data(dependency['name'])
                 current_version = get_npm_current_version(data, dependency['requirement'])
