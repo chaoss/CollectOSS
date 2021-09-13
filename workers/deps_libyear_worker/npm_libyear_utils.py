@@ -49,7 +49,7 @@ def get_lastest_minor(version, data):
 
 
 def get_npm_release_date(data, version):
-    release_time = data['time']['version']
+    release_time = data['time'][version]
     if release_time:
         return release_time
     return None
