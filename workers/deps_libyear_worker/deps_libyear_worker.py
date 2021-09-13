@@ -15,7 +15,7 @@ from sqlalchemy import MetaData
 from workers.worker_base import Worker
 
 # from workers.deps_worker import dependancy_calculator as dep_calc
-from pypi_parser import get_deps_libyear_data
+from libyear_utils import get_deps_libyear_data
 
 class DepsLibyearWorker(WorkerGitInterfaceable):
     def __init__(self, config={}):
