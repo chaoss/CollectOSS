@@ -871,10 +871,15 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         # PR REVIEW MESSAGE REF TABLE
 
         c_pk_source_comments = self.enrich_data_primary_keys(
-            review_msgs['insert'], self.message_table, ['created_at', 'body'],
-            ['msg_timestamp', 'msg_text']
+            review_msgs['insert'], self.message_table, review_msg_action_map['insert']['source'],
+            review_msg_action_map['insert']['augur']
         )
+
         self.write_debug_data(c_pk_source_comments, 'c_pk_source_comments')
+
+        ''' The action map does not apply here because this is a reference to the parent 
+        table.  '''
+
 
         both_pk_source_comments = self.enrich_data_primary_keys(
             c_pk_source_comments, self.pull_request_reviews_table, ['pull_request_review_id'],
