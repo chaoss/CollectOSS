@@ -144,8 +144,8 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
       name_field = 'commit_name' if 'commit_name' in contributor else 'name'
 
       try:
-        #Deal with case where name is not two words
-        if len(contributor[name_field].split()) != 2:
+        #Deal with case where name is one word or none.
+        if len(contributor[name_field].split()) < 2:
           raise ValueError
 
         cmt_cntrb = {
@@ -427,12 +427,19 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             }
             # Check if the github login exists in the contributors table and add to alias' if it does.
 
+            #Also update the contributor record with commit data if we can.
+
             try:
               if not self.resolve_if_login_existing(cntrb, emailFromCommitData):
                 try:
                   self.db.execute(self.contributors_table.insert().values(cntrb))
                 except Exception as e:
                   self.logger.info(f"Ran into likely database collision. Assuming contributor exists in database. Error: {e}")
+              else:
+                try:
+                  self.db.execute(self.contributors_table.update().values(cntrb))
+                except Exception as e:
+                  self.logger.info(f"Ran into exception updating contributor with data: {cntrb}. Error: {e}")
             except LookupError as e:
               self.logger.info(f"Contributor id not able to be found in database despite the user_id existing. Something very wrong is happening. Error: {e}")
         
@@ -443,8 +450,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
           from 
               contributors, commits
           where 
-              contributors.cntrb_email = commits.cmt_author_raw_email
-              AND commits.repo_id =:repo_id
+              contributors.cntrb_email = commits.cmt_author_raw_emailNULL
           union 
           select distinct cntrb_id, contributors.cntrb_email, commits.cmt_committer_raw_email
           from 
@@ -543,8 +549,3 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
       #If not found, return false  
       return False
-
-    def addAlias(self, cntrb_data):
-      #Add cntrb_data to aliases table for all contributors
-      #Need to know fields of new table for this
-      return
