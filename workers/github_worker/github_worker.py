@@ -338,6 +338,9 @@ class GitHubWorker(WorkerGitInterfaceable):
             )
         )
 
+        '''This works, but its a little confusing. The keys mapped here are the identity keys for the 
+        issues table, which are used to let us know if we need to insert them here. '''
+
         pk_issue_events = self.enrich_data_primary_keys(
             issue_events['insert'], self.issues_table, ['issue.id'], ['gh_issue_id']
         )

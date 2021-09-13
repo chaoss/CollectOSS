@@ -1,4 +1,3 @@
-
 #SPDX-License-Identifier: MIT
 import ast
 import json
@@ -802,10 +801,13 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         gh_merge_fields = ['id']
         augur_merge_fields = ['pr_review_src_id']
 
+        ''' This is now using the action map. One place to maintain as needed. '''
+
         both_pr_review_pk_source_reviews = self.enrich_data_primary_keys(
-            pr_pk_source_reviews, self.pull_request_reviews_table, gh_merge_fields,
-            augur_merge_fields
+            pr_pk_source_reviews, self.pull_request_reviews_table, review_action_map['insert']['source'],
+            review_action_map['insert']['augur']
         )
+ 
         self.write_debug_data(both_pr_review_pk_source_reviews, 'both_pr_review_pk_source_reviews')
 
         # Review Comments
