@@ -468,8 +468,8 @@ class GitHubWorker(WorkerGitInterfaceable):
         # Issue assignees insertion
         assignee_action_map = {
             'insert': {
-                'source': ['node_id'],
-                'augur': ['gh_node_id']
+                'source': ['issue_id','id'],
+                'augur': ['issue_id','label_src_id']
             }
         }
         
@@ -519,8 +519,8 @@ class GitHubWorker(WorkerGitInterfaceable):
 
         label_action_map = {
             'insert': {
-                'source': ['id'],
-                'augur': ['label_src_id']
+                'source': ['issue_id', 'id'],
+                'augur': ['issue_id', 'label_src_id']
             }
         }
 
