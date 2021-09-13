@@ -23,7 +23,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             'pull_request_assignees', 'pull_request_events', 'pull_request_labels',
             'pull_request_message_ref', 'pull_request_meta', 'pull_request_repo',
             'pull_request_reviewers', 'pull_request_teams', 'message', 'pull_request_commits',
-            'pull_request_files', 'pull_request_reviews', 'pull_request_review_message_ref']
+            'pull_request_files', 'pull_request_reviews', 'pull_request_review_message_ref', 'contributors_aliases']
         self.operations_tables = ['worker_history', 'worker_job']
 
         self.platform = "github"
@@ -124,36 +124,42 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         self.tool_version = '\'0.1.0\''
         self.data_source = '\'Git Log\'' 
     
-    #Try to construct the best url to ping GitHub's API for a username given a full name and a email.
+    #Try to construct the best url to ping GitHub's API for a username given an email.
     def resolve_user_url_from_email(self,contributor):
+      self.logger.info(f"Trying to resolve contributor: {contributor}")
+
+      cmt_cntrb = {
+          'email': contributor['commit_email'] if 'commit_email' in contributor else contributor['email']
+      }
+      url = 'https://api.github.com/search/users?q={}+in:email&&{}+in:email'.format(
+          cmt_cntrb['email'].split('@')[0], cmt_cntrb['email'].split('@')[-1])
+      
+      return url
+    
+    #Try to construct the best url to ping GitHub's API for a username given a full name.
+    def resolve_user_url_from_name(self,contributor):
       self.logger.info(f"Trying to resolve contributor: {contributor}")
 
       #Try to get the 'names' field if 'commit_name' field is not present in contributor data.
       name_field = 'commit_name' if 'commit_name' in contributor else 'name'
 
       try:
+        #Deal with case where name is one word or none.
+        if len(contributor[name_field].split()) < 2:
+          raise ValueError
+
         cmt_cntrb = {
             'fname': contributor[name_field].split()[0],
-            'lname': contributor[name_field].split()[1],
-            #Some entries are weird and have an 'email' instead of 'commit_email'
-            'email': contributor['commit_email'] if 'commit_email' in contributor else contributor['email']
+            'lname': contributor[name_field].split()[-1] #Pythonic way to get the end of a list so that we truely get the last name.
         }
-        url = 'https://api.github.com/search/users?q={}+in:email+fullname:{}+{}'.format(
-            cmt_cntrb['email'], cmt_cntrb['fname'], cmt_cntrb['lname'])
-      except:
-          try:
-            cmt_cntrb = {
-                'fname': contributor[name_field].split()[0],
-                'email': contributor['commit_email'] if 'commit_email' in contributor else contributor['email']
-            }
-            url = 'https://api.github.com/search/users?q={}+in:email+fullname:{}'.format(
-                cmt_cntrb['email'], cmt_cntrb['fname'])
-          except:
-            cmt_cntrb = {
-                'email': contributor['commit_email'] if 'commit_email' in contributor else contributor['email']
-            }
-            url = 'https://api.github.com/search/users?q={}+in:email'.format(
-                cmt_cntrb['email'])
+        url = 'https://api.github.com/search/users?q=fullname:{}+{}'.format(
+          cmt_cntrb['fname'], cmt_cntrb['lname'])
+      except:          
+        cmt_cntrb = {
+            'fname': contributor[name_field].split()[0]
+        }
+        url = 'https://api.github.com/search/users?q=fullname:{}'.format(
+            cmt_cntrb['fname'])
       
       return url
 
@@ -321,11 +327,28 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             try:
               url = self.resolve_user_url_from_email(contributor)
             except Exception as e:
-              self.logger.info(f"Couldn't resolve url with given data. Reason: {e}")
+              self.logger.info(f"Couldn't resolve email url with given data. Reason: {e}")
               continue #If the method throws an error it means that we can't hit the endpoint so we can't really do much
 
-            login_json = self.request_dict_from_endpoint(url,timeout_wait=30)
+            email = contributor['commit_email'] if 'commit_email' in contributor else contributor['email']
 
+            #Disallow api requests where the email is blank. 
+            if email != "":
+              login_json = self.request_dict_from_endpoint(url,timeout_wait=30)
+            else:
+              login_json = None
+
+            #Check if the email result got anything, if it failed try a name search.
+            if login_json == None or 'total_count' not in login_json or login_json['total_count'] == 0:
+              self.logger.info("Could not resolve the username from the email. Trying a name only search...")
+
+              try:
+                url = self.resolve_user_url_from_name(contributor)
+              except Exception as e:
+                self.logger.info(f"Couldn't resolve name url with given data. Reason: {e}")
+                continue
+              
+              login_json = self.request_dict_from_endpoint(url, timeout_wait=30)
 
             #total_count is the count of username's found by the endpoint.
             if login_json == None or 'total_count' not in login_json:
@@ -362,11 +385,18 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
             url = ("https://api.github.com/users/" + match['login'])
 
+            self.logger.info(f"Debug user_data api call: {url}")
             user_data = self.request_dict_from_endpoint(url)
 
             if user_data == None:
               self.logger.warning(f"user_data was unable to be reached. Skipping...")
               continue
+            
+            #Use the email found in the commit data if api data is NULL
+            emailFromCommitData = contributor['commit_email'] if 'commit_email' in contributor else contributor['email']
+
+            #Get name from commit if not found by GitHub
+            name_field = contributor['commit_name'] if 'commit_name' in contributor else contributor['name']
 
             # try to add contributor to database
             cntrb = {
@@ -376,7 +406,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
               "cntrb_company": user_data['company'] if 'company' in user_data else None,
               "cntrb_location": user_data['location'] if 'location' in user_data else None,
               # "cntrb_type": , dont have a use for this as of now ... let it default to null
-              "cntrb_canonical": user_data['email'] if 'email' in user_data else None,
+              "cntrb_canonical": user_data['email'] if 'email' in user_data and user_data['email'] is not None else emailFromCommitData,
               "gh_user_id": user_data['id'],
               "gh_login": user_data['login'],
               "gh_url": user_data['url'],
@@ -396,17 +426,28 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
               "gh_type": user_data['type'],
               "gh_site_admin": user_data['site_admin'],
               "cntrb_last_used" : None if 'updated_at' not in user_data else user_data['updated_at'],
-              "cntrb_full_name" : None if 'name' not in user_data else user_data['name'],
+              "cntrb_full_name" : name_field if 'name' not in user_data else user_data['name'], #Get name from commit if api doesn't get it.
               "tool_source": self.tool_source,
               "tool_version": self.tool_version,
               "data_source": self.data_source
             }
-            # expcpetion: log that the user was already THERE
+            # Check if the github login exists in the contributors table and add to alias' if it does.
+
+            #Also update the contributor record with commit data if we can.
 
             try:
-              self.db.execute(self.contributors_table.insert().values(cntrb))
-            except Exception as e:
-              self.logger.info(f"Ran into likely database collision. Assuming contributor exists in database. Error: {e}")
+              if not self.resolve_if_login_existing(cntrb, emailFromCommitData):
+                try:
+                  self.db.execute(self.contributors_table.insert().values(cntrb))
+                except Exception as e:
+                  self.logger.info(f"Ran into likely database collision. Assuming contributor exists in database. Error: {e}")
+              else:
+                try:
+                  self.db.execute(self.contributors_table.update().values(cntrb))
+                except Exception as e:
+                  self.logger.info(f"Ran into exception updating contributor with data: {cntrb}. Error: {e}")
+            except LookupError as e:
+              self.logger.info(f"Contributor id not able to be found in database despite the user_id existing. Something very wrong is happening. Error: {e}")
         
 
         # sql query used to find corresponding cntrb_id's of emails found in the contributor's table
@@ -416,7 +457,6 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
               contributors, commits
           where 
               contributors.cntrb_email = commits.cmt_author_raw_email
-              AND commits.repo_id =:repo_id
           union 
           select distinct cntrb_id, contributors.cntrb_email, commits.cmt_committer_raw_email
           from 
@@ -458,14 +498,60 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             }))
         return
 
-    def resolve_login_alias(gh_login):
+    #Takes the user data from the endpoint as arg
+    #Updates the alias table if the login is already in the contributor's table with the new email.
+    #Returns whether the login was found in the contributors table
+    def resolve_if_login_existing(self, contributor, commit_email):
       #check if login exists in contributors table
+      select_cntrbs_query = s.sql.text("""
+            SELECT cntrb_id from contributors
+            WHERE cntrb_login = :gh_login_value
+        """)
+
+      #Bind parameter
+      select_cntrbs_query = select_cntrbs_query.bindparams(gh_login_value = contributor['cntrb_login'])
+      result = self.db.execute(select_cntrbs_query)
 
       #if yes 
-      #   Insert cntrb_id and email of the corresponding record into the alias table
-      return
+      if len(result.fetchall()) >= 1:
+        #   Insert cntrb_id and email of the corresponding record into the alias table
+        #Another database call to get the contributor id is needed because its an autokeyincrement that is accessed by multiple workers
+        #Same principle as enrich_cntrb_id method.
+        contributor_table_data = self.db.execute(
+          s.sql.select([s.column('cntrb_id'), s.column('cntrb_canonical')]).where(
+            self.contributors_table.c.gh_user_id==contributor["gh_user_id"]
+          )
+        ).fetchall()
 
-    def addAlias(cntrb_data):
-      #Add cntrb_data to aliases table for all contributors
-      #Need to know fields of new table for this
-      return
+        #Handle potential failures
+        if len(contributor_table_data) == 1:
+          self.logger.info(f"cntrb_id {contributor_table_data[0]['cntrb_id']} found in database and assigned to enriched data")
+        elif len(contributor_table_data) == 0:
+          self.logger.error("Couldn't find contributor in database. Something has gone very wrong. Augur ran into a contributor whose login can be found in the contributor's table, but cannot be retrieved via the user_id that was gotten using the same login.")
+          raise LookupError
+        else:
+          self.logger.info(f"There are more than one contributors in the table with gh_user_id={contributor['gh_user_id']}")
+
+
+        #Insert a new alias that corresponds to where the contributor was found
+        #use the email of the new alias for canonical_email if the api returns NULL
+        # TODO: It might be better to have the canonical_email allowed to be NUll because right now it has a null constraint.
+        alias = {
+              "cntrb_id": contributor_table_data[0]['cntrb_id'],
+              "alias_email": commit_email,
+              "canonical_email": contributor['cntrb_canonical'] if 'cntrb_canonical' in contributor and contributor['cntrb_canonical'] is not None else commit_email,
+              "tool_source": self.tool_source,
+              "tool_version": self.tool_version,
+              "data_source": self.data_source
+            }
+
+        #Insert new alias
+        try:
+          self.db.execute(self.contributors_aliases_table.insert().values(alias))
+        except Exception as e:
+          self.logger.info(f"Ran into likely database collision with alias: {alias}. Assuming contributor exists in database. Error: {e}")
+
+        return True
+
+      #If not found, return false  
+      return False
