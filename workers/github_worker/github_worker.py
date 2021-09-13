@@ -510,6 +510,13 @@ class GitHubWorker(WorkerGitInterfaceable):
         )
 
         # Issue labels insertion
+
+            ## Probably need to do the map like PRs again. 
+            # 'insert': {
+            #     'source': ['pull_request_id', 'id'],
+            #     'augur': ['pull_request_id', 'pr_src_id']
+            # }
+
         label_action_map = {
             'insert': {
                 'source': ['id'],
