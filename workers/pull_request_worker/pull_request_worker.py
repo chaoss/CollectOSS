@@ -1022,14 +1022,12 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 } for label in source_labels_insert
             ]
         except Exception as e: 
-            self.logger.info(f"failed at assignment of labels_insert with: {e}.")
-            continue 
+            self.logger.info(f"failed at assignment of labels_insert with: {e}.") 
 
         try:  
             self.bulk_insert(self.pull_request_labels_table, insert=labels_insert)
         except Exception as e: 
             self.logger.info(f"label bulk insert failed with {e}.")
-            continue 
 
         # PR reviewers insertion
         reviewer_action_map = {
@@ -1045,7 +1043,6 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             ).fetchall()
         except Exception as e: 
             self.logger.info(f"getting label values failed at: {e}.")
-            continue 
 
         try: 
             source_reviewers_insert, _ = self.organize_needed_data(
@@ -1054,7 +1051,6 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             )
         except Exception as e: 
             self.logger.info(f"Organize needed data for source_reviewers_insert failed with: {e}.")
-            continue 
 
         if len(source_reviewers_insert) > 0:
             source_reviewers_insert = self.enrich_cntrb_id(
@@ -1082,7 +1078,6 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             self.bulk_insert(self.pull_request_reviewers_table, insert=reviewers_insert)
         except Exception as e: 
             self.logger.info(f"Bulk insert or reviewers assignment failed with {e}.")
-            continue 
 
         # PR assignees insertion
         assignee_action_map = {
@@ -1098,7 +1093,6 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             ).fetchall()
         except Exception as e: 
             self.logger.info(f"Failed to retrieve assignee labels with error {e}.")
-            continue 
 
         try: 
             source_assignees_insert, _ = self.organize_needed_data(
@@ -1107,7 +1101,6 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             )
         except Exception as e: 
             self.logger.info(f"Organize needed data for source_assignees_insert failed with: {e}.")
-            continue 
 
         if len(source_assignees_insert) > 0:
             source_assignees_insert = self.enrich_cntrb_id(
@@ -1137,7 +1130,6 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             self.bulk_insert(self.pull_request_assignees_table, insert=assignees_insert)
         except Exception as e: 
             self.logger.info(f"assignees_insert assignment or bulk insert for pull_request_assignees_table failed with: {e}.")
-            continue 
 
         # PR meta insertion
         meta_action_map = {
@@ -1153,7 +1145,6 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             ).fetchall()
         except Exception as e: 
             self.logger.info(f"getting table_values_pull_request_meta failed with {e}.")
-            continue 
 
         try: 
             source_meta_insert, _ = self.organize_needed_data(
@@ -1161,7 +1152,6 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             )
         except Exception as e: 
             self.logger.info(f"Organize needed data for source_meta_insert failed with: {e}.")
-            continue 
 
         try: 
             if len(source_meta_insert) > 0:
@@ -1192,7 +1182,6 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             self.bulk_insert(self.pull_request_meta_table, insert=meta_insert)
         except Exception as e: 
             self.logger.info(f"Meta insert failed with: {e}.")
-            continue 
 
     def query_pr_repo(self, pr_repo, pr_repo_type, pr_meta_id):
         """ TODO: insert this data as extra columns in the meta table """

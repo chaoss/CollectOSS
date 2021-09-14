@@ -506,8 +506,7 @@ class GitHubWorker(WorkerGitInterfaceable):
                 update_columns=['cntrb_id']
             )
         except Exception as e: 
-            self.logger.info(f"Bulk insert failed on {e}.")
-            continue 
+            self.logger.info(f"Bulk insert failed on {e}.") 
 
         ''' Action maps are used to determine uniqueness based on the natural key at the source. '''
 
@@ -561,7 +560,6 @@ class GitHubWorker(WorkerGitInterfaceable):
             )
         except Exception as e: 
             self.logger.info(f"assignees failed on {e}.")
-            continue 
 
         # Issue labels insertion
 
@@ -585,7 +583,6 @@ class GitHubWorker(WorkerGitInterfaceable):
             ).fetchall()
         except Exception as e: 
             self.logger.info(f"Exception in label insert for PRs: {e}.")
-            continue 
 
 
         source_labels_insert, _ = self.organize_needed_data(
