@@ -1006,21 +1006,30 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         self.logger.info(f"Howdy. Lets check the label id datatype: {type(label['id'])}.")
 
-        labels_insert = [
-            {
-                'pull_request_id': label['pull_request_id'],
-                'pr_src_id': int(label['id']),
-                'pr_src_node_id': label['node_id'],
-                'pr_src_url': label['url'],
-                'pr_src_description': label['name'],
-                'pr_src_color': label['color'],
-                'pr_src_default_bool': label['default'],
-                'tool_source': self.tool_source,
-                'tool_version': self.tool_version,
-                'data_source': self.data_source
-            } for label in source_labels_insert
-        ]
-        self.bulk_insert(self.pull_request_labels_table, insert=labels_insert)
+        try: 
+            labels_insert = [
+                {
+                    'pull_request_id': label['pull_request_id'],
+                    'pr_src_id': int(label['id']),
+                    'pr_src_node_id': label['node_id'],
+                    'pr_src_url': label['url'],
+                    'pr_src_description': label['name'],
+                    'pr_src_color': label['color'],
+                    'pr_src_default_bool': label['default'],
+                    'tool_source': self.tool_source,
+                    'tool_version': self.tool_version,
+                    'data_source': self.data_source
+                } for label in source_labels_insert
+            ]
+        except Exception as e: 
+            self.logger.info(f"failed at assignment of labels_insert with: {e}.")
+            continue 
+
+        try:  
+            self.bulk_insert(self.pull_request_labels_table, insert=labels_insert)
+        except Exception as e: 
+            self.logger.info(f"label bulk insert failed with {e}.")
+            continue 
 
         # PR reviewers insertion
         reviewer_action_map = {
@@ -1030,14 +1039,22 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             }
         }
 
-        table_values_issue_labels = self.db.execute(
-            s.sql.select(self.get_relevant_columns(self.pull_request_reviewers_table,reviewer_action_map))
-        ).fetchall()
+        try:         
+            table_values_issue_labels = self.db.execute(
+                s.sql.select(self.get_relevant_columns(self.pull_request_reviewers_table,reviewer_action_map))
+            ).fetchall()
+        except Exception as e: 
+            self.logger.info(f"getting label values failed at: {e}.")
+            continue 
 
-        source_reviewers_insert, _ = self.organize_needed_data(
-            reviewers_all, table_values=table_values_issue_labels,
-            action_map=reviewer_action_map
-        )
+        try: 
+            source_reviewers_insert, _ = self.organize_needed_data(
+                reviewers_all, table_values=table_values_issue_labels,
+                action_map=reviewer_action_map
+            )
+        except Exception as e: 
+            self.logger.info(f"Organize needed data for source_reviewers_insert failed with: {e}.")
+            continue 
 
         if len(source_reviewers_insert) > 0:
             source_reviewers_insert = self.enrich_cntrb_id(
@@ -1051,17 +1068,21 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         else:
             self.logger.info("Contributor enrichment is not needed, no inserts provided.")
 
-        reviewers_insert = [
-            {
-                'pull_request_id': reviewer['pull_request_id'],
-                'cntrb_id': reviewer['cntrb_id'],
-                'pr_reviewer_src_id': int(float(reviewer['id'])),
-                'tool_source': self.tool_source,
-                'tool_version': self.tool_version,
-                'data_source': self.data_source
-            } for reviewer in source_reviewers_insert if 'login' in reviewer
-        ]
-        self.bulk_insert(self.pull_request_reviewers_table, insert=reviewers_insert)
+        try: 
+            reviewers_insert = [
+                {
+                    'pull_request_id': reviewer['pull_request_id'],
+                    'cntrb_id': reviewer['cntrb_id'],
+                    'pr_reviewer_src_id': int(float(reviewer['id'])),
+                    'tool_source': self.tool_source,
+                    'tool_version': self.tool_version,
+                    'data_source': self.data_source
+                } for reviewer in source_reviewers_insert if 'login' in reviewer
+            ]
+            self.bulk_insert(self.pull_request_reviewers_table, insert=reviewers_insert)
+        except Exception as e: 
+            self.logger.info(f"Bulk insert or reviewers assignment failed with {e}.")
+            continue 
 
         # PR assignees insertion
         assignee_action_map = {
@@ -1071,15 +1092,22 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             }
         }
 
+        try: 
+            table_values_assignees_labels = self.db.execute(
+                s.sql.select(self.get_relevant_columns(self.pull_request_assignees_table,assignee_action_map))
+            ).fetchall()
+        except Exception as e: 
+            self.logger.info(f"Failed to retrieve assignee labels with error {e}.")
+            continue 
 
-        table_values_assignees_labels = self.db.execute(
-            s.sql.select(self.get_relevant_columns(self.pull_request_assignees_table,assignee_action_map))
-        ).fetchall()
-
-        source_assignees_insert, _ = self.organize_needed_data(
-            assignees_all, table_values=table_values_assignees_labels,
-            action_map=assignee_action_map
-        )
+        try: 
+            source_assignees_insert, _ = self.organize_needed_data(
+                assignees_all, table_values=table_values_assignees_labels,
+                action_map=assignee_action_map
+            )
+        except Exception as e: 
+            self.logger.info(f"Organize needed data for source_assignees_insert failed with: {e}.")
+            continue 
 
         if len(source_assignees_insert) > 0:
             source_assignees_insert = self.enrich_cntrb_id(
@@ -1094,17 +1122,22 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             self.logger.info("Contributor enrichment is not needed, no inserts provided.")
 
         self.logger.info(f"Howdy. Assignee source id is: {type(assignee['id'])}.")
-        assignees_insert = [
-            {
-                'pull_request_id': assignee['pull_request_id'],
-                'contrib_id': assignee['cntrb_id'],
-                'pr_assignee_src_id': int(assignee['id']),
-                'tool_source': self.tool_source,
-                'tool_version': self.tool_version,
-                'data_source': self.data_source
-            } for assignee in source_assignees_insert if 'login' in assignee
-        ]
-        self.bulk_insert(self.pull_request_assignees_table, insert=assignees_insert)
+
+        try: 
+            assignees_insert = [
+                {
+                    'pull_request_id': assignee['pull_request_id'],
+                    'contrib_id': assignee['cntrb_id'],
+                    'pr_assignee_src_id': int(assignee['id']),
+                    'tool_source': self.tool_source,
+                    'tool_version': self.tool_version,
+                    'data_source': self.data_source
+                } for assignee in source_assignees_insert if 'login' in assignee
+            ]
+            self.bulk_insert(self.pull_request_assignees_table, insert=assignees_insert)
+        except Exception as e: 
+            self.logger.info(f"assignees_insert assignment or bulk insert for pull_request_assignees_table failed with: {e}.")
+            continue 
 
         # PR meta insertion
         meta_action_map = {
@@ -1114,41 +1147,52 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             }
         }
 
-        table_values_pull_request_meta = self.db.execute(
-            s.sql.select(self.get_relevant_columns(self.pull_request_meta_table,meta_action_map))
-        ).fetchall()
+        try: 
+            table_values_pull_request_meta = self.db.execute(
+                s.sql.select(self.get_relevant_columns(self.pull_request_meta_table,meta_action_map))
+            ).fetchall()
+        except Exception as e: 
+            self.logger.info(f"getting table_values_pull_request_meta failed with {e}.")
+            continue 
 
-        source_meta_insert, _ = self.organize_needed_data(
-            meta_all, table_values=table_values_pull_request_meta, action_map=meta_action_map
-        )
-
-
-        if len(source_meta_insert) > 0:
-            source_meta_insert = self.enrich_cntrb_id(
-                source_meta_insert, 'user.login', action_map_additions={
-                    'insert': {
-                        'source': ['user.node_id'],
-                        'augur': ['gh_node_id']
-                    }
-                }, prefix='user.'
+        try: 
+            source_meta_insert, _ = self.organize_needed_data(
+                meta_all, table_values=table_values_pull_request_meta, action_map=meta_action_map
             )
-        else:
-            self.logger.info("Contributor enrichment is not needed, nothing in source_meta_insert.")
+        except Exception as e: 
+            self.logger.info(f"Organize needed data for source_meta_insert failed with: {e}.")
+            continue 
 
-        meta_insert = [
-            {
-                'pull_request_id': meta['pull_request_id'],
-                'pr_head_or_base': meta['pr_head_or_base'],
-                'pr_src_meta_label': meta['label'],
-                'pr_src_meta_ref': meta['ref'],
-                'pr_sha': meta['sha'],
-                'cntrb_id': meta['cntrb_id'],
-                'tool_source': self.tool_source,
-                'tool_version': self.tool_version,
-                'data_source': self.data_source
-            } for meta in source_meta_insert if meta['user'] and 'login' in meta['user']
-        ]
-        self.bulk_insert(self.pull_request_meta_table, insert=meta_insert)
+        try: 
+            if len(source_meta_insert) > 0:
+                source_meta_insert = self.enrich_cntrb_id(
+                    source_meta_insert, 'user.login', action_map_additions={
+                        'insert': {
+                            'source': ['user.node_id'],
+                            'augur': ['gh_node_id']
+                        }
+                    }, prefix='user.'
+                )
+            else:
+                self.logger.info("Contributor enrichment is not needed, nothing in source_meta_insert.")
+
+            meta_insert = [
+                {
+                    'pull_request_id': meta['pull_request_id'],
+                    'pr_head_or_base': meta['pr_head_or_base'],
+                    'pr_src_meta_label': meta['label'],
+                    'pr_src_meta_ref': meta['ref'],
+                    'pr_sha': meta['sha'],
+                    'cntrb_id': meta['cntrb_id'],
+                    'tool_source': self.tool_source,
+                    'tool_version': self.tool_version,
+                    'data_source': self.data_source
+                } for meta in source_meta_insert if meta['user'] and 'login' in meta['user']
+            ]
+            self.bulk_insert(self.pull_request_meta_table, insert=meta_insert)
+        except Exception as e: 
+            self.logger.info(f"Meta insert failed with: {e}.")
+            continue 
 
     def query_pr_repo(self, pr_repo, pr_repo_type, pr_meta_id):
         """ TODO: insert this data as extra columns in the meta table """
