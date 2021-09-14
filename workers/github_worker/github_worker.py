@@ -401,10 +401,13 @@ class GitHubWorker(WorkerGitInterfaceable):
 
     def issue_nested_data_model(self, pk_source_issues, issue_events_all):
 
+        self.logger.info("In the issue nested model.")
+
         closed_issue_updates = []
 
         skip_closed_issue_update = False
         if len(issue_events_all):
+            self.logger.info("entering events df.")
             events_df = pd.DataFrame(
                 self._get_data_set_columns(
                     issue_events_all, [
@@ -414,8 +417,11 @@ class GitHubWorker(WorkerGitInterfaceable):
             )
             events_df = events_df.loc[events_df.event == 'closed']
 
+            self.logger.info(f"Events dataframe is: {events_df}.")
+
             if len(events_df):
                 events_df = pd.DataFrame(
+                    self.logger.info("inside processing the events dataframe.")
                     self.enrich_cntrb_id(
                         events_df.to_dict(orient='records'), 'actor.login', action_map_additions={
                             'insert': {
@@ -435,6 +441,8 @@ class GitHubWorker(WorkerGitInterfaceable):
             self.logger.info("Skipping issue update: Second else.")
             #kip_closed_issue_update = True
 
+        self.logger.info("Entering Assignees.")
+
         assignees_all = []
         labels_all = []
 
@@ -442,6 +450,8 @@ class GitHubWorker(WorkerGitInterfaceable):
             return type(value) == float and math.isnan(value)
 
         for issue in pk_source_issues:
+
+            self.logger.info(f"on issue: {issue} within {len(pk_source_issues)} total. Editing assingees next.")
 
             # Issue Assignees
             source_assignees = [
@@ -453,7 +463,9 @@ class GitHubWorker(WorkerGitInterfaceable):
                 and not is_nan(issue['assignee'])
             ):
                 source_assignees.append(issue['assignee'])
-            assignees_all += source_assignees
+                assignees_all += source_assignees
+
+            self.logger.info(f"Total of assignees is: {assignees_all}. Labels are next.")
 
             # Issue Labels
             labels_all += issue['labels']
@@ -465,25 +477,41 @@ class GitHubWorker(WorkerGitInterfaceable):
                     closed_event = events_df.loc[
                         events_df['issue.number'] == issue['number']
                     ].iloc[-1]
+
+                    self.logger.info(f"In the closed events section.")
+
                 except IndexError:
                     self.logger.info(
                         "Warning! We do not have the closing event of this issue stored. "
                         f"Pk: {issue['issue_id']}"
                     )
                     continue
+                except Exception e: 
+                    self.logger.info(f"exception is {e} and not an IndexError.")
+                    continue 
 
                 closed_issue_updates.append({
                     'b_issue_id'.item(): issue['issue_id'],
                     'cntrb_id'.item(): closed_event['cntrb_id']
                 })
 
+                self.logger.info(f"Current closed issue count is {len(closed_issue_updates)}.")
+
         # Closed issues, update with closer id
-        self.bulk_insert(
-            self.issues_table, update=closed_issue_updates, unique_columns=['issue_id'],
-            update_columns=['cntrb_id']
-        )
+        ''' TODO: Right here I am not sure if the update columns are right, and will catch the state changes. '''
+
+        try: 
+            self.bulk_insert(
+                self.issues_table, update=closed_issue_updates, unique_columns=['issue_id'],
+                update_columns=['cntrb_id']
+            )
+        except Exception as e: 
+            self.logger.info(f"Bulk insert failed on {e}.")
+            continue 
 
         ''' Action maps are used to determine uniqueness based on the natural key at the source. '''
+
+        self.logger.info("Entering assignee insertion.")
 
         # Issue assignees insertion
         assignee_action_map = {
@@ -496,6 +524,8 @@ class GitHubWorker(WorkerGitInterfaceable):
         table_values_issue_assignees = self.db.execute(
             s.sql.select(self.get_relevant_columns(self.issue_assignees_table,assignee_action_map))
         ).fetchall()
+
+        self.logger.info(f"Issue assignees retrieved total: {len(table_values_issue_assignees)}.")
 
         source_assignees_insert, _ = self.organize_needed_data(
             assignees_all, table_values=table_values_issue_assignees,
@@ -524,10 +554,14 @@ class GitHubWorker(WorkerGitInterfaceable):
                 'issue_assignee_src_node': assignee['node_id']
             } for assignee in source_assignees_insert
         ]
-        self.bulk_insert(
-            self.issue_assignees_table, insert=assignees_insert,
-            unique_columns=assignee_action_map['insert']['augur']
-        )
+        try: 
+            self.bulk_insert(
+                self.issue_assignees_table, insert=assignees_insert,
+                unique_columns=assignee_action_map['insert']['augur']
+            )
+        except Exception as e: 
+            self.logger.info(f"assignees failed on {e}.")
+            continue 
 
         # Issue labels insertion
 
@@ -545,9 +579,13 @@ class GitHubWorker(WorkerGitInterfaceable):
             }
         }
 
-        table_values_issue_labels = self.db.execute(
-            s.sql.select(self.get_relevant_columns(self.issue_labels_table,label_action_map))
-        ).fetchall()
+        try: 
+            table_values_issue_labels = self.db.execute(
+                s.sql.select(self.get_relevant_columns(self.issue_labels_table,label_action_map))
+            ).fetchall()
+        except Exception as e: 
+            self.logger.info(f"Exception in label insert for PRs: {e}.")
+            continue 
 
 
         source_labels_insert, _ = self.organize_needed_data(
@@ -563,7 +601,7 @@ class GitHubWorker(WorkerGitInterfaceable):
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
                 'data_source': self.data_source,
-                'label_src_id': label['id'],
+                'label_src_id': int(label['id']),
                 'label_src_node_id': label['node_id']
             } for label in source_labels_insert
         ]
