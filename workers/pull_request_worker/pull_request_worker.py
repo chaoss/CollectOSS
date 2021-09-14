@@ -438,7 +438,9 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'pr_src_locked': pr['locked'],
                 'pr_src_title': pr['title'],
                 'pr_augur_contributor_id': pr['cntrb_id'],
-                'pr_body': pr['body'],
+                'pr_body': pr['body'].encode(encoding='UTF-8',errors='backslashreplace').decode(encoding='UTF-8',errors='ignore') if (
+                    pr['body']
+                ) else None,           
                 'pr_created_at': pr['created_at'],
                 'pr_updated_at': pr['updated_at'],
                 'pr_closed_at': pr['closed_at'],
@@ -615,7 +617,9 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         pr_comments_insert = [
             {
                 'pltfrm_id': self.platform_id,
-                'msg_text': comment['body'].replace("\x00", "\uFFFD"),
+                'msg_text': comment['body'].encode(encoding='UTF-8',errors='backslashreplace').decode(encoding='UTF-8',errors='ignore') if (
+                    comment['body']
+                ) else None,
                 'msg_timestamp': comment['created_at'],
                 'cntrb_id': comment['cntrb_id'],
                 'tool_source': self.tool_source,
