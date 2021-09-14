@@ -419,9 +419,11 @@ class GitHubWorker(WorkerGitInterfaceable):
 
             self.logger.info(f"Events dataframe is: {events_df}.")
 
+            self.logger.info("Entering the processing of the events dataframe.")
+
+
             if len(events_df):
                 events_df = pd.DataFrame(
-                    self.logger.info("inside processing the events dataframe.")
                     self.enrich_cntrb_id(
                         events_df.to_dict(orient='records'), 'actor.login', action_map_additions={
                             'insert': {
