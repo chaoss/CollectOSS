@@ -254,8 +254,12 @@ class GitHubWorker(WorkerGitInterfaceable):
                     'msg_text': comment['body'].encode(encoding='UTF-8',errors='backslashreplace').decode(encoding='UTF-8',errors='ignore') if (
                         comment['body']
                     ) else None,
-                    'msg_timestamp': comment['created_at'],
-                    'cntrb_id': comment['cntrb_id'],
+                    'msg_timestamp': comment['created_at'] if (
+                        comment['created_at']
+                    ) else None,
+                    'cntrb_id': comment['cntrb_id'] if (
+                        comment['cntrb_id']
+                    ) else None,
                     'tool_source': self.tool_source,
                     'tool_version': self.tool_version,
                     'data_source': self.data_source,
@@ -263,22 +267,29 @@ class GitHubWorker(WorkerGitInterfaceable):
                     'platform_node_id': comment['node_id']
                 } for comment in inc_issue_comments['insert']
             ]
-
-            self.bulk_insert(self.message_table, insert=issue_comments_insert,
-                unique_columns=comment_action_map['insert']['augur'])
+            try: 
+                self.bulk_insert(self.message_table, insert=issue_comments_insert,
+                    unique_columns=comment_action_map['insert']['augur'])
+            except Exception as e: 
+                self.logger.info(f"bulk insert of comments failed on {e}. exception registerred")
 
             """ ISSUE MESSAGE REF TABLE """
-
-            c_pk_source_comments = self.enrich_data_primary_keys(
-                inc_issue_comments['insert'], self.message_table,
-                comment_action_map['insert']['source'], comment_action_map['insert']['augur']
-            )
+            try: 
+                c_pk_source_comments = self.enrich_data_primary_keys(
+                    inc_issue_comments['insert'], self.message_table,
+                    comment_action_map['insert']['source'], comment_action_map['insert']['augur']
+                )
+            except Exception as e: 
+                self.logger.info(f"exception registerred in enrich_data_primary_keys for message_ref issues table: {e}.")
 
             self.logger.info(f"log of the length of c_pk_source_comments {len(c_pk_source_comments)}.")
 
-            both_pk_source_comments = self.enrich_data_primary_keys(
-                c_pk_source_comments, self.issues_table, ['issue_url'], ['issue_url']
-            )
+            try: 
+                both_pk_source_comments = self.enrich_data_primary_keys(
+                    c_pk_source_comments, self.issues_table, ['issue_url'], ['issue_url']
+                )
+            except Exception as e: 
+                self.logger.info(f"exception registerred in enrich_data_primary_keys for message_ref issues table: {e}.")            
 
             issue_message_ref_insert = [
                 {
@@ -292,35 +303,39 @@ class GitHubWorker(WorkerGitInterfaceable):
                     'repo_id': self.repo_id
                 } for comment in both_pk_source_comments
             ]
-
-            self.bulk_insert(
-                self.issue_message_ref_table, insert=issue_message_ref_insert,
-                unique_columns=['issue_msg_ref_src_comment_id']
-            )
+            try: 
+                self.bulk_insert(
+                    self.issue_message_ref_table, insert=issue_message_ref_insert,
+                    unique_columns=['issue_msg_ref_src_comment_id']
+                )
+            except Exception as e: 
+                self.logger.info(f"exception registerred in bulk insert for issue_msg_ref_table: {e}.")
 
         # list to hold contributors needing insertion or update
-        issue_comments = self.paginate_endpoint(
-            comments_url, action_map=comment_action_map, table=self.message_table,
-            where_clause=self.message_table.c.msg_id.in_(
-                [
-                    msg_row[0] for msg_row in self.db.execute(
-                        s.sql.select(
-                            [self.issue_message_ref_table.c.msg_id]
-                        ).where(
-                            self.issue_message_ref_table.c.issue_id.in_(
-                                set(pd.DataFrame(pk_source_issues)['issue_id'])
+        try: 
+            issue_comments = self.paginate_endpoint(
+                comments_url, action_map=comment_action_map, table=self.message_table,
+                where_clause=self.message_table.c.msg_id.in_(
+                    [
+                        msg_row[0] for msg_row in self.db.execute(
+                            s.sql.select(
+                                [self.issue_message_ref_table.c.msg_id]
+                            ).where(
+                                self.issue_message_ref_table.c.issue_id.in_(
+                                    set(pd.DataFrame(pk_source_issues)['issue_id'])
+                                )
                             )
-                        )
-                    ).fetchall()
-                ]
-            ),
-            stagger=True,
-            insertion_method=issue_comments_insert
-        )
+                        ).fetchall()
+                    ]
+                ),
+                stagger=True,
+                insertion_method=issue_comments_insert
+            )
 
-
-        issue_comments_insert(issue_comments,comment_action_map)
-        return
+            issue_comments_insert(issue_comments,comment_action_map)
+            return
+        except Exception as e: 
+            self.logger.info(f"issue_comments_insert failed at {e}.")
 
     def issue_events_model(self, pk_source_issues):
 
