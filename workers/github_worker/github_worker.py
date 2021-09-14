@@ -485,10 +485,10 @@ class GitHubWorker(WorkerGitInterfaceable):
                 except IndexError:
                     self.logger.info(
                         "Warning! We do not have the closing event of this issue stored. "
-                        f"Pk: {issue['issue_id']}"
+                        f"Pk: {issue['issue_id']}. exception registerred."
                     )
                     continue
-                except Exception e: 
+                except Exception as e: 
                     self.logger.info(f"exception is {e} and not an IndexError.")
                     continue 
 
@@ -508,7 +508,7 @@ class GitHubWorker(WorkerGitInterfaceable):
                 update_columns=['cntrb_id']
             )
         except Exception as e: 
-            self.logger.info(f"Bulk insert failed on {e}.") 
+            self.logger.info(f"Bulk insert failed on {e}. exception registerred.") 
 
         ''' Action maps are used to determine uniqueness based on the natural key at the source. '''
 
@@ -561,7 +561,7 @@ class GitHubWorker(WorkerGitInterfaceable):
                 unique_columns=assignee_action_map['insert']['augur']
             )
         except Exception as e: 
-            self.logger.info(f"assignees failed on {e}.")
+            self.logger.info(f"assignees failed on {e}. exception registerred.")
 
         # Issue labels insertion
 
