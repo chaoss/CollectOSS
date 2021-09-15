@@ -923,9 +923,23 @@ class Persistant():
             source_pk_columns.insert(0, list(table.primary_key)[0].name)
 
             (source_table, ), metadata, session = self._setup_postgres_merge(
-                #''' This next line was commented out, which seems like it might be problematic
-                #    Wouldn't we *want* to have all of this mapping included? '''
-                [self._get_data_set_columns(source_data, gh_merge_fields)]
+                #This next line was commented out, which seems like it might be problematic
+                #    Wouldn't we *want* to have all of this mapping included? 
+                #    [self._get_data_set_columns(source_data, gh_merge_fields)]
+                #   However, it does turn out that this line creates the error: 
+                    #      2021-09-15 21:44:59,261,261ms [PID: 1942874] workers.github_worker.57631 [ERROR] Traceback (most recent call last):
+                    #   File "/home/sean/github/release-test/workers/worker_base.py", line 180, in collect
+                    #     model_method(message, repo_id)
+                    #   File "/home/sean/github/release-test/workers/github_worker/github_worker.py", line 199, in issues_model
+                    #     pk_source_issues = self._get_pk_source_issues()
+                    #   File "/home/sean/github/release-test/workers/github_worker/github_worker.py", line 181, in _get_pk_source_issues
+                    #     pk_source_issues_increment_insert(source_issues,action_map)
+                    #   File "/home/sean/github/release-test/workers/github_worker/github_worker.py", line 166, in pk_source_issues_increment_insert
+                    #     self.pk_source_issues += self.enrich_data_primary_keys(
+                    #   File "/home/sean/github/release-test/workers/worker_persistance.py", line 928, in enrich_data_primary_keys
+                    #     [self._get_data_set_columns(source_data, gh_merge_fields)]
+                    # TypeError: list indices must be integers or slices, not list
+
                 [source_df.to_dict(orient='records')]
             )
 
