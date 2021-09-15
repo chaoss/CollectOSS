@@ -336,6 +336,8 @@ class GitHubWorker(WorkerGitInterfaceable):
             return
         except Exception as e: 
             self.logger.info(f"issue_comments_insert failed at {e}.. exception registerred")
+            stacker = sys.exc_info()[2]
+            self.logger.info(f"{stacker}")
 
     def issue_events_model(self, pk_source_issues):
 
