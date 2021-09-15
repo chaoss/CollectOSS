@@ -299,7 +299,7 @@ class GitHubWorker(WorkerGitInterfaceable):
             issue_message_ref_insert = [
                 {
                     'issue_id': comment['issue_id'],
-                    'msg_id': int(comment['msg_id']),
+                    'msg_id': comment['msg_id'],
                     'tool_source': self.tool_source,
                     'tool_version': self.tool_version,
                     'data_source': self.data_source,
