@@ -30,11 +30,11 @@ setup(
         'sklearn==0.0',
         'numpy==1.19.5',
         'nltk==3.5',
-        'pandas==1.1.3',
+        'pandas==1.3.2',
         'gensim==3.8.3',
         'emoji==1.2.0',
         'joblib==1.0.1',
-        'xgboost==0.90',
+        'xgboost==1.4.2',
         'scipy==1.6.3'
     ],
     entry_points={
