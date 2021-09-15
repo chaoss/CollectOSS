@@ -201,15 +201,15 @@ class GitHubWorker(WorkerGitInterfaceable):
             try: 
                 self.issue_comments_model(pk_source_issues)
             except Exception as e: 
-                self.logger.info(f"issue comments model failed on {e}.")
+                self.logger.info(f"issue comments model failed on {e}. exception registerred")
             try: 
                 issue_events_all = self.issue_events_model(pk_source_issues)
             except Exception as e: 
-                self.logger.info(f"issue events model failed on {e}")
+                self.logger.info(f"issue events model failed on {e}. exception registerred")
             try:
                 self.issue_nested_data_model(pk_source_issues, issue_events_all)
             except Exception as e: 
-                self.logger.info(f"issue nested model failed on {e}.")
+                self.logger.info(f"issue nested model failed on {e}. exception registerred")
 
         # Register this task as completed
         self.register_task_completion(entry_info, self.repo_id, 'issues')
@@ -280,7 +280,7 @@ class GitHubWorker(WorkerGitInterfaceable):
                     comment_action_map['insert']['source'], comment_action_map['insert']['augur']
                 )
             except Exception as e: 
-                self.logger.info(f"exception registerred in enrich_data_primary_keys for message_ref issues table: {e}.")
+                self.logger.info(f"exception registerred in enrich_data_primary_keys for message_ref issues table: {e}.. exception registerred")
 
             self.logger.info(f"log of the length of c_pk_source_comments {len(c_pk_source_comments)}.")
 
@@ -289,7 +289,7 @@ class GitHubWorker(WorkerGitInterfaceable):
                     c_pk_source_comments, self.issues_table, ['issue_url'], ['issue_url']
                 )
             except Exception as e: 
-                self.logger.info(f"exception registerred in enrich_data_primary_keys for message_ref issues table: {e}.")            
+                self.logger.info(f"exception registerred in enrich_data_primary_keys for message_ref issues table: {e}.. exception registerred")            
 
             issue_message_ref_insert = [
                 {
@@ -335,7 +335,7 @@ class GitHubWorker(WorkerGitInterfaceable):
             issue_comments_insert(issue_comments,comment_action_map)
             return
         except Exception as e: 
-            self.logger.info(f"issue_comments_insert failed at {e}.")
+            self.logger.info(f"issue_comments_insert failed at {e}.. exception registerred")
 
     def issue_events_model(self, pk_source_issues):
 
@@ -504,7 +504,7 @@ class GitHubWorker(WorkerGitInterfaceable):
                     )
                     continue
                 except Exception as e: 
-                    self.logger.info(f"exception is {e} and not an IndexError.")
+                    self.logger.info(f"exception is {e} and not an IndexError.. exception registerred")
                     continue 
 
                 closed_issue_updates.append({
@@ -599,7 +599,7 @@ class GitHubWorker(WorkerGitInterfaceable):
                 s.sql.select(self.get_relevant_columns(self.issue_labels_table,label_action_map))
             ).fetchall()
         except Exception as e: 
-            self.logger.info(f"Exception in label insert for PRs: {e}.")
+            self.logger.info(f"Exception in label insert for PRs: {e}.. exception registerred")
 
 
         source_labels_insert, _ = self.organize_needed_data(
@@ -628,7 +628,7 @@ class GitHubWorker(WorkerGitInterfaceable):
             )
         except psycopg2.errors.InvalidTextRepresentation as e:
             #If there was an error constructing a type try to redo the insert with a conversion.
-            self.logger.warning(f"Type error when attempting to insert data in issue_nested_data_model with the github worker. Trying again with type conversion on. ERROR: {e} \n")
+            self.logger.warning(f"Type error when attempting to insert data in issue_nested_data_model with the github worker. Trying again with type conversion on. ERROR: {e}. exception registerred \n")
             self.bulk_insert(
                 self.issue_labels_table, insert=labels_insert,
                 unique_columns=label_action_map['insert']['augur'],
