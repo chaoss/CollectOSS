@@ -233,8 +233,8 @@ class Persistant():
 
         ## Getting rid of nan's and NoneTypes across the dataframe to start:
 
-        subject = subject.fillna(value=np.nan)
-        source = source.fillna(value=np.nan)
+        subject = subject.fillna(value=numpy.nan)
+        source = source.fillna(value=numpy.nan)
 
         for index in range(len(source_columns)):
             if type(source[source_columns[index]].values[0]) == numpy.datetime64:
