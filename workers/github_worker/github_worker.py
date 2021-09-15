@@ -277,6 +277,8 @@ class GitHubWorker(WorkerGitInterfaceable):
                     unique_columns=['platform_msg_id', 'tool_source'])
             except Exception as e: 
                 self.logger.info(f"bulk insert of comments failed on {e}. exception registerred")
+                stacker = traceback.format_exc()
+                self.logger.debug(f"{stacker}")
 
             """ ISSUE MESSAGE REF TABLE """
             try: 
