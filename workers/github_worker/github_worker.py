@@ -332,11 +332,12 @@ class GitHubWorker(WorkerGitInterfaceable):
                 stagger=True,
                 insertion_method=issue_comments_insert
             )
+            self.logger.debug(f"Contents of issue_comments: {issue_comments}.")
+
         except Exception as e:
             self.logger.info(f"exception registerred in paginate endpoint for issue comments: {e}")
-            self.logger.info(f"Contents of issue_comments: {issue_comments}.")
             stacker = traceback.format_exc()
-            self.logger.info(f"{stacker}")
+            self.logger.debug(f"{stacker}")
 
         try: 
             issue_comments_insert(issue_comments,comment_action_map)
