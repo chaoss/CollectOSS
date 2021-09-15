@@ -253,13 +253,13 @@ class GitHubWorker(WorkerGitInterfaceable):
                     'pltfrm_id': self.platform_id,
                     'msg_text': comment['body'].encode(encoding='UTF-8',errors='backslashreplace').decode(encoding='UTF-8',errors='ignore') if (
                         comment['body']
-                    ) else None,
+                    ) else ' ',
                     'msg_timestamp': comment['created_at'] if (
                         comment['created_at']
-                    ) else None,
+                    ),
                     'cntrb_id': comment['cntrb_id'] if (
                         comment['cntrb_id']
-                    ) else None,
+                    ),
                     'tool_source': self.tool_source,
                     'tool_version': self.tool_version,
                     'data_source': self.data_source,
