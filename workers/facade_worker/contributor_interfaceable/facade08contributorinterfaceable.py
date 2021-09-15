@@ -267,7 +267,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
               commits.cmt_author_email AS email,
               commits.cmt_author_date AS DATE,
               commits.cmt_author_name AS NAME,
-              commits.cmt_commit_hash AS hash
+              commits.cmt_id AS id
           FROM
               commits
           WHERE
@@ -334,7 +334,8 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
           GROUP BY
               commits.cmt_committer_email,
               commits.cmt_committer_date,
-              commits.cmt_committer_name
+              commits.cmt_committer_name,
+              commits.cmt_id
         """)
         new_contribs = json.loads(pd.read_sql(new_contrib_sql, self.db, params={
                                   'repo_id': repo_id}).to_json(orient="records"))
@@ -393,19 +394,9 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                     }))
 
                     #Add the email that couldn't be resolved to a garbage table.
-                     # Get primary key so that we can update
-                     
-                    commit_table_data = self.db.execute(
-                        s.sql.select([s.column('cmt_id')]).where(
-                            self.commits_table.c.cmt_author_email == contributor["hash"]
-                        )
-                    ).fetchall()
-                    
-                    self.logger.info(
-                        f"cntrb_id {commit_table_data[0]['cmt_id']} found in database and assigned to enriched data")
 
                     unresolved = {
-                        "cmt_id": commit_table_data[0]['cmt_id'],
+                        "cmt_id": contributor['id'],
                         "email": emailToInsert,
                         "tool_source": self.tool_source,
                         "tool_version": self.tool_version,
