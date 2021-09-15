@@ -264,10 +264,10 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         # Get all of the commit data's emails and names from the commit table that do not appear in the contributors table
         new_contrib_sql = s.sql.text("""
           SELECT distinct
-              commits.cmt_id AS id,
               commits.cmt_author_email AS email,
               commits.cmt_author_date AS DATE,
-              commits.cmt_author_name AS NAME
+              commits.cmt_author_name AS NAME,
+              commits.cmt_commit_hash AS hash
           FROM
               commits
           WHERE
@@ -393,17 +393,30 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                     }))
 
                     #Add the email that couldn't be resolved to a garbage table.
+                     # Get primary key so that we can update
+                     
+                    commit_table_data = self.db.execute(
+                        s.sql.select([s.column('cmt_id')]).where(
+                            self.commits_table.c.cmt_author_email == contributor["hash"]
+                        )
+                    ).fetchall()
+                    
+                    self.logger.info(
+                        f"cntrb_id {commit_table_data[0]['cmt_id']} found in database and assigned to enriched data")
 
                     unresolved = {
-                        "cmt_id": contributor['id'],
+                        "cmt_id": commit_table_data[0]['cmt_id'],
                         "email": emailToInsert,
                         "tool_source": self.tool_source,
                         "tool_version": self.tool_version,
                         "data_source": self.data_source
                     }
 
+                    self.logger.info(f"Inserting data to unresolved: {unresolved}")
+
                     self.db.execute(
                             self.unresolved_commit_emails_table.insert().values(unresolved))
+                    
                 except Exception as e:
                     self.logger.info(
                         f"Could not enrich unresolvable email address with dummy data. Error: {e}")
