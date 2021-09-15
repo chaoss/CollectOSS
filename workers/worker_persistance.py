@@ -239,6 +239,14 @@ class Persistant():
                     source[source_columns[index]], utc=True
                 )
                 continue
+            ## Dealing with an error coming from paginate endpoint and the GitHub issue worker
+            ### For a release in mid september, 2021. #SPG
+            if type(source[source_columns[index]].values[0]).isnull(): 
+                subject[subject_columns[index]] = pd.fillna(value=np.nan)
+                source[source_columns[index]] = pd.fillna(value=np.nan)
+                continue                
+
+
             type_dict[subject_columns[index]] = type(source[source_columns[index]].values[0])
 
         subject = subject.astype(type_dict)
