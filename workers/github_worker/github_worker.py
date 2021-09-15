@@ -9,6 +9,7 @@ import time
 import logging
 import json
 import os
+import traceback
 import psycopg2 #really only to catch type errors for database methods
 import math
 from datetime import datetime
@@ -336,7 +337,7 @@ class GitHubWorker(WorkerGitInterfaceable):
             return
         except Exception as e: 
             self.logger.info(f"issue_comments_insert failed at {e}.. exception registerred")
-            stacker = sys.exc_info()[2]
+            stacker = traceback.format_exc()
             self.logger.info(f"{stacker}")
 
     def issue_events_model(self, pk_source_issues):
