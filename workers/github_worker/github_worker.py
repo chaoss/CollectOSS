@@ -202,14 +202,20 @@ class GitHubWorker(WorkerGitInterfaceable):
                 self.issue_comments_model(pk_source_issues)
             except Exception as e: 
                 self.logger.info(f"issue comments model failed on {e}. exception registerred")
+                stacker = traceback.format_exc()
+                self.logger.debug(f"{stacker}")
             try: 
                 issue_events_all = self.issue_events_model(pk_source_issues)
             except Exception as e: 
                 self.logger.info(f"issue events model failed on {e}. exception registerred")
+                stacker = traceback.format_exc()
+                self.logger.debug(f"{stacker}")
             try:
                 self.issue_nested_data_model(pk_source_issues, issue_events_all)
             except Exception as e: 
                 self.logger.info(f"issue nested model failed on {e}. exception registerred")
+                stacker = traceback.format_exc()
+                self.logger.debug(f"{stacker}")
 
         # Register this task as completed
         self.register_task_completion(entry_info, self.repo_id, 'issues')
