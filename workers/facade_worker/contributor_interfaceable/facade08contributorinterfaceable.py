@@ -25,7 +25,8 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                             'pull_request_assignees', 'pull_request_events', 'pull_request_labels',
                             'pull_request_message_ref', 'pull_request_meta', 'pull_request_repo',
                             'pull_request_reviewers', 'pull_request_teams', 'message', 'pull_request_commits',
-                            'pull_request_files', 'pull_request_reviews', 'pull_request_review_message_ref', 'contributors_aliases']
+                            'pull_request_files', 'pull_request_reviews', 'pull_request_review_message_ref',
+                            'contributors_aliases', 'unresolved_commit_emails']
         self.operations_tables = ['worker_history', 'worker_job']
 
         self.platform = "github"
@@ -263,6 +264,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         # Get all of the commit data's emails and names from the commit table that do not appear in the contributors table
         new_contrib_sql = s.sql.text("""
           SELECT distinct
+              commits.cmt_id AS id,
               commits.cmt_author_email AS email,
               commits.cmt_author_date AS DATE,
               commits.cmt_author_name AS NAME
@@ -389,6 +391,19 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                     ).values({
                         'cmt_ght_author_id': 1
                     }))
+
+                    #Add the email that couldn't be resolved to a garbage table.
+
+                    unresolved = {
+                        "cmt_id": contributor['id'],
+                        "email": emailToInsert,
+                        "tool_source": self.tool_source,
+                        "tool_version": self.tool_version,
+                        "data_source": self.data_source
+                    }
+
+                    self.db.execute(
+                            self.unresolved_commit_emails_table.insert().values(unresolved))
                 except Exception as e:
                     self.logger.info(
                         f"Could not enrich unresolvable email address with dummy data. Error: {e}")
