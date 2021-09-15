@@ -298,12 +298,14 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
           GROUP BY
               commits.cmt_author_email,
               commits.cmt_author_date,
-              commits.cmt_author_name
+              commits.cmt_author_name,
+              commits.cmt_id
           UNION
           SELECT
               commits.cmt_committer_email AS email,
               commits.cmt_committer_date AS DATE,
-              commits.cmt_committer_name AS NAME
+              commits.cmt_committer_name AS NAME,
+              commits.cmt_id AS id
           FROM
               augur_data.commits
           WHERE
