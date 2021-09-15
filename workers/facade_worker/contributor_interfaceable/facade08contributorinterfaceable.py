@@ -6,15 +6,15 @@ from workers.worker_git_integration import WorkerGitInterfaceable
 from workers.util import read_config
 """
 This class serves as an extension for the facade worker to allow it to make api calls and interface with GitHub.
-The motivation for doing it this way is because the functionality needed to interface with Github and/or GitLab 
-is contained within WorkerGitInterfaceable. This is a problem because facade was migrated into augur from its own 
+The motivation for doing it this way is because the functionality needed to interface with Github and/or GitLab
+is contained within WorkerGitInterfaceable. This is a problem because facade was migrated into augur from its own
 project and just making it inherit from a new class could have unintended consequences and moreover, the facade worker
 doesn't even really need the WorkerGitInterfaceable for too much. This is mainly just to have better parity with the contributor
-worker and table. 
+worker and table.
 """
 
 # TODO : Make this borrow everything that it can from the facade worker.
-#i.e. port, logging, etc
+# i.e. port, logging, etc
 
 
 class ContributorInterfaceable(WorkerGitInterfaceable):
@@ -45,11 +45,11 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         # Getting stuck here.
         self.initialize_logging()
-        #self.logger = logging.getLogger(self.config["id"])
+        # self.logger = logging.getLogger(self.config["id"])
         # Test logging after init.
         self.logger.info(
             "Facade worker git interface logging set up correctly")
-        #self.db_schema = None
+        # self.db_schema = None
         self.config.update({
             'gh_api_key': self.augur_config.get_value('Database', 'key'),
             'gitlab_api_key': self.augur_config.get_value('Database', 'gitlab_api_key')
@@ -227,7 +227,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                         attempts += 1
                         continue
 
-                #self.logger.info(f"Returned dict: {response_data}")
+                # self.logger.info(f"Returned dict: {response_data}")
                 success = True
                 break
             elif type(response_data) == list:
@@ -262,7 +262,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         # Get all of the commit data's emails and names from the commit table that do not appear in the contributors table
         new_contrib_sql = s.sql.text("""
-          SELECT distinct 
+          SELECT distinct
               commits.cmt_author_email AS email,
               commits.cmt_author_date AS DATE,
               commits.cmt_author_name AS NAME
@@ -463,6 +463,9 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                     try:
                         self.db.execute(
                             self.contributors_table.insert().values(cntrb))
+                        
+                        #Update alias after insertion. Insertion needs to happen first so we can get the autoincrementkey
+                        self.insert_alias(cntrb,emailFromCommitData)
                     except Exception as e:
                         self.logger.info(
                             f"Ran into likely database collision. Assuming contributor exists in database. Error: {e}")
@@ -475,15 +478,15 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         # sql query used to find corresponding cntrb_id's of emails found in the contributor's table
         resolve_email_to_cntrb_id_sql = s.sql.text("""
           select distinct cntrb_id, contributors.cntrb_email, commits.cmt_author_raw_email
-          from 
+          from
               contributors, commits
-          where 
+          where
               contributors.cntrb_email = commits.cmt_author_raw_email
-          union 
+          union
           select distinct cntrb_id, contributors.cntrb_email, commits.cmt_committer_raw_email
-          from 
+          from
               contributors, commits
-          where 
+          where
               contributors.cntrb_email = commits.cmt_committer_raw_email
               AND commits.repo_id =:repo_id
         """)
@@ -523,7 +526,46 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         return
 
     def insert_alias(self, contributor, commit_email):
-        print("Hell")
+        # Insert cntrb_id and email of the corresponding record into the alias table
+        # Another database call to get the contributor id is needed because its an autokeyincrement that is accessed by multiple workers
+        # Same principle as enrich_cntrb_id method.
+        contributor_table_data = self.db.execute(
+            s.sql.select([s.column('cntrb_id'), s.column('cntrb_canonical')]).where(
+                self.contributors_table.c.gh_user_id == contributor["gh_user_id"]
+            )
+        ).fetchall()
+
+        # Handle potential failures
+        if len(contributor_table_data) == 1:
+            self.logger.info(
+                f"cntrb_id {contributor_table_data[0]['cntrb_id']} found in database and assigned to enriched data")
+        elif len(contributor_table_data) == 0:
+            self.logger.error("Couldn't find contributor in database. Something has gone very wrong. Augur ran into a contributor whose login can be found in the contributor's table, but cannot be retrieved via the user_id that was gotten using the same login.")
+            raise LookupError
+        else:
+            self.logger.info(
+                f"There are more than one contributors in the table with gh_user_id={contributor['gh_user_id']}")
+
+        # Insert a new alias that corresponds to where the contributor was found
+        # use the email of the new alias for canonical_email if the api returns NULL
+        # TODO: It might be better to have the canonical_email allowed to be NUll because right now it has a null constraint.
+        alias = {
+            "cntrb_id": contributor_table_data[0]['cntrb_id'],
+            "alias_email": commit_email,
+            "canonical_email": contributor['cntrb_canonical'] if 'cntrb_canonical' in contributor and contributor['cntrb_canonical'] is not None else commit_email,
+            "tool_source": self.tool_source,
+            "tool_version": self.tool_version,
+            "data_source": self.data_source
+        }
+
+        # Insert new alias
+        try:
+            self.db.execute(
+                self.contributors_aliases_table.insert().values(alias))
+        except Exception as e:
+            self.logger.info(
+                f"Ran into likely database collision with alias: {alias}. Assuming contributor exists in database. Error: {e}")
+
         return
 
     # Takes the user data from the endpoint as arg
@@ -543,46 +585,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         # if yes
         if len(result.fetchall()) >= 1:
-            #   Insert cntrb_id and email of the corresponding record into the alias table
-            # Another database call to get the contributor id is needed because its an autokeyincrement that is accessed by multiple workers
-            # Same principle as enrich_cntrb_id method.
-            contributor_table_data = self.db.execute(
-                s.sql.select([s.column('cntrb_id'), s.column('cntrb_canonical')]).where(
-                    self.contributors_table.c.gh_user_id == contributor["gh_user_id"]
-                )
-            ).fetchall()
-
-            # Handle potential failures
-            if len(contributor_table_data) == 1:
-                self.logger.info(
-                    f"cntrb_id {contributor_table_data[0]['cntrb_id']} found in database and assigned to enriched data")
-            elif len(contributor_table_data) == 0:
-                self.logger.error("Couldn't find contributor in database. Something has gone very wrong. Augur ran into a contributor whose login can be found in the contributor's table, but cannot be retrieved via the user_id that was gotten using the same login.")
-                raise LookupError
-            else:
-                self.logger.info(
-                    f"There are more than one contributors in the table with gh_user_id={contributor['gh_user_id']}")
-
-            # Insert a new alias that corresponds to where the contributor was found
-            # use the email of the new alias for canonical_email if the api returns NULL
-            # TODO: It might be better to have the canonical_email allowed to be NUll because right now it has a null constraint.
-            alias = {
-                "cntrb_id": contributor_table_data[0]['cntrb_id'],
-                "alias_email": commit_email,
-                "canonical_email": contributor['cntrb_canonical'] if 'cntrb_canonical' in contributor and contributor['cntrb_canonical'] is not None else commit_email,
-                "tool_source": self.tool_source,
-                "tool_version": self.tool_version,
-                "data_source": self.data_source
-            }
-
-            # Insert new alias
-            try:
-                self.db.execute(
-                    self.contributors_aliases_table.insert().values(alias))
-            except Exception as e:
-                self.logger.info(
-                    f"Ran into likely database collision with alias: {alias}. Assuming contributor exists in database. Error: {e}")
-
+            self.insert_alias(contributor, commit_email)
             return True
 
         # If not found, return false
