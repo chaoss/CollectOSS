@@ -792,7 +792,7 @@ class Persistant():
                     try: 
                         curs.copy_expert(sql=sql, file=s_buf)
                     except Exception as e: 
-                        self.logger.info(f"this is the error: {e}.")
+                        self.logger.info(f"this is the error: {e}. exception registerred")
 
 
             df = pd.DataFrame(insert)

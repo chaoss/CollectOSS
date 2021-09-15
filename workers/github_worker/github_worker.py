@@ -286,6 +286,9 @@ class GitHubWorker(WorkerGitInterfaceable):
             self.logger.info(f"log of the length of c_pk_source_comments {len(c_pk_source_comments)}.")
 
             try: 
+                # source data, tables, gh_merge fields, augur merge fields are the parameters for enrich_data_primary_keys method
+                # This one does not make a lot of sense to SPG on 9/15/2021. Why is the issues table getting updated here? we have
+                # Comment source data, the issues table, and issue table merge info. Not following this at all. TODO
                 both_pk_source_comments = self.enrich_data_primary_keys(
                     c_pk_source_comments, self.issues_table, ['issue_url'], ['issue_url']
                 )
@@ -305,9 +308,10 @@ class GitHubWorker(WorkerGitInterfaceable):
                 } for comment in both_pk_source_comments
             ]
             try: 
+                self.logger.debug(f"inserting into {self.issue_message_ref_table}.")
                 self.bulk_insert(
                     self.issue_message_ref_table, insert=issue_message_ref_insert,
-                    unique_columns=['issue_msg_ref_src_comment_id']
+                    unique_columns=['issue_msg_ref_src_comment_id', 'tool_source']
                 )
             except Exception as e: 
                 self.logger.info(f"exception registerred in bulk insert for issue_msg_ref_table: {e}.")
@@ -523,9 +527,10 @@ class GitHubWorker(WorkerGitInterfaceable):
         ''' TODO: Right here I am not sure if the update columns are right, and will catch the state changes. '''
 
         try: 
+
             self.bulk_insert(
                 self.issues_table, update=closed_issue_updates, unique_columns=['issue_id'],
-                update_columns=['cntrb_id']
+                update_columns=['cntrb_id', 'issue_state', 'closed_at']
             )
         except Exception as e: 
             self.logger.info(f"Bulk insert failed on {e}. exception registerred.") 
