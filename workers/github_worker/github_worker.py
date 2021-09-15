@@ -332,9 +332,9 @@ class GitHubWorker(WorkerGitInterfaceable):
                 stagger=True,
                 insertion_method=issue_comments_insert
             )
-            self.logger.debug(f"Contents of issue_comments: {issue_comments}.")
 
             issue_comments_insert(issue_comments,comment_action_map)
+            self.logger.debug(f"Contents of issue_comments: {issue_comments}.")
             return
 
         except Exception as e:
