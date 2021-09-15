@@ -264,7 +264,7 @@ class GitHubWorker(WorkerGitInterfaceable):
                     'tool_source': self.tool_source,
                     'tool_version': self.tool_version,
                     'data_source': self.data_source,
-                    'platform_msg_id': comment['id'],
+                    'platform_msg_id': int(comment['id']),
                     'platform_node_id': comment['node_id']
                 } for comment in inc_issue_comments['insert']
             ]
@@ -289,6 +289,7 @@ class GitHubWorker(WorkerGitInterfaceable):
                 # source data, tables, gh_merge fields, augur merge fields are the parameters for enrich_data_primary_keys method
                 # This one does not make a lot of sense to SPG on 9/15/2021. Why is the issues table getting updated here? we have
                 # Comment source data, the issues table, and issue table merge info. Not following this at all. TODO
+
                 both_pk_source_comments = self.enrich_data_primary_keys(
                     c_pk_source_comments, self.issues_table, ['issue_url'], ['issue_url']
                 )
@@ -298,11 +299,11 @@ class GitHubWorker(WorkerGitInterfaceable):
             issue_message_ref_insert = [
                 {
                     'issue_id': comment['issue_id'],
-                    'msg_id': comment['msg_id'],
+                    'msg_id': int(comment['msg_id']),
                     'tool_source': self.tool_source,
                     'tool_version': self.tool_version,
                     'data_source': self.data_source,
-                    'issue_msg_ref_src_comment_id': comment['id'],
+                    'issue_msg_ref_src_comment_id': int(comment['id']),
                     'issue_msg_ref_src_node_id': comment['node_id'],
                     'repo_id': self.repo_id
                 } for comment in both_pk_source_comments
