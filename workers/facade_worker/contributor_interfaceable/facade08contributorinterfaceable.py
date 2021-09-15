@@ -324,7 +324,10 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
               commits.cmt_author_email AS email,
               commits.cmt_author_date AS DATE,
               commits.cmt_author_name AS NAME,
-              commits.cmt_id AS id
+              commits.cmt_id AS id,
+              commits.cmt_author_raw_email AS email_raw,
+              commits.cmt_committer_email AS committer_email,
+              commits.cmt_committer_raw_email AS committer_email_raw
           FROM
               commits
           WHERE
@@ -356,13 +359,19 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
               commits.cmt_author_email,
               commits.cmt_author_date,
               commits.cmt_author_name,
-              commits.cmt_id
+              commits.cmt_id,
+              commits.cmt_author_raw_email,
+              commits.cmt_committer_email,
+              commits.cmt_committer_raw_email
           UNION
           SELECT
               commits.cmt_committer_email AS email,
               commits.cmt_committer_date AS DATE,
               commits.cmt_committer_name AS NAME,
-              commits.cmt_id AS id
+              commits.cmt_id AS id,
+              commits.cmt_author_raw_email AS email_raw,
+              commits.cmt_committer_email AS committer_email,
+              commits.cmt_committer_raw_email AS committer_email_raw
           FROM
               augur_data.commits
           WHERE
@@ -394,7 +403,10 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
               commits.cmt_committer_email,
               commits.cmt_committer_date,
               commits.cmt_committer_name,
-              commits.cmt_id
+              commits.cmt_id,
+              commits.cmt_author_raw_email,
+              commits.cmt_committer_email,
+              commits.cmt_committer_raw_email
         """)
         new_contribs = json.loads(pd.read_sql(new_contrib_sql, self.db, params={
                                   'repo_id': repo_id}).to_json(orient="records"))
