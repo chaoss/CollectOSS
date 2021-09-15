@@ -255,8 +255,25 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
     #Try every distinct email found within a commit for possible username resolution.
     #Add email to garbage table if can't be resolved.
     #   \param contributor is the raw database entry
-    #   \param emails is a list of email strings
-    def resolve_contributor_from_email(self, contributor, emails):
+    #   \return A dictionary of response data from github with potential logins on success.
+    #           None on failure
+    def resolve_contributor_from_email(self, contributor):
+
+        #Get list of all emails in the commit data.
+        #Start with the fields we know that we can start with
+        emails = [contributor['commit_email'] if 'commit_email' in contributor else contributor['email']]
+
+        #Check if other emails match the previous, if they don't then add them
+        if contributor['email_raw'] not in emails:
+          emails.append(contributor['email_raw'])
+        
+        if contributor['committer_email'] not in emails:
+          emails.append(contributor['committer_email'])
+        
+        if contributor['committer_email_raw'] not in emails:
+          emails.append(contributor['committer_email_raw'])
+        
+        self.logger.info(f"DEBUG: here is the email array: {emails}")
 
         #Default to failed state
         login_json = None
@@ -295,8 +312,11 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
                 self.logger.info(f"Inserting data to unresolved: {unresolved}")
 
-                self.db.execute(
-                        self.unresolved_commit_emails_table.insert().values(unresolved))
+                try:
+                    self.db.execute(
+                            self.unresolved_commit_emails_table.insert().values(unresolved))
+                except Exception as e:
+                    self.logger.info(f"Could not create new alias with email {unresolved['email']}. Error: {e}")
                 continue
             else:
                 return login_json #Return endpoint dictionary if email found it.
@@ -413,22 +433,10 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         # Try to get GitHub API user data from each unique commit email.
         for contributor in new_contribs:
-            # Get best combonation of firstname lastname and email to try and get a GitHub username match.
-            try:
-                url = self.resolve_user_url_from_email(contributor)
-            except Exception as e:
-                self.logger.info(
-                    f"Couldn't resolve email url with given data. Reason: {e}")
-                continue  # If the method throws an error it means that we can't hit the endpoint so we can't really do much
 
-            email = contributor['commit_email'] if 'commit_email' in contributor else contributor['email']
-
-            # Disallow api requests where the email is blank.
-            if email != "":
-                login_json = self.request_dict_from_endpoint(
-                    url, timeout_wait=30)
-            else:
-                login_json = None
+            #Try to get login from all possible emails
+            #Is None upon failure.
+            login_json = self.resolve_contributor_from_email(contributor)
 
             # Check if the email result got anything, if it failed try a name search.
             if login_json == None or 'total_count' not in login_json or login_json['total_count'] == 0:
