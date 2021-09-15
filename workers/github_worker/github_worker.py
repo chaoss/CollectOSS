@@ -269,8 +269,12 @@ class GitHubWorker(WorkerGitInterfaceable):
                 } for comment in inc_issue_comments['insert']
             ]
             try: 
+                # self.bulk_insert(self.message_table, insert=issue_comments_insert,
+                #     unique_columns=comment_action_map['insert']['augur'])
+                # Using the action map resulted consistently in a duplicate key error
+                # Which really should not be possible ... ?? Trying hard coding the map.
                 self.bulk_insert(self.message_table, insert=issue_comments_insert,
-                    unique_columns=comment_action_map['insert']['augur'])
+                    unique_columns=['platform_msg_id', 'tool_source'])
             except Exception as e: 
                 self.logger.info(f"bulk insert of comments failed on {e}. exception registerred")
 
