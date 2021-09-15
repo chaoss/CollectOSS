@@ -552,22 +552,24 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
       #If not found, return false  
       return False
     
-    def update_contributor(self, cntrb, max_attempts=15):
+    def update_contributor(self, cntrb, max_attempts=3):
 
       #Get primary key so that we can update
       contributor_table_data = self.db.execute(
-          s.sql.select([s.column('cntrb_id'), s.column('cntrb_canonical')]).where(
+          s.sql.select([s.column('cntrb_id')]).where(
             self.contributors_table.c.gh_user_id==cntrb["gh_user_id"]
           )
         ).fetchall()
 
-      #add primary key to data that we want to update.
-      #cntrb['cntrb_id'] = contributor_table_data[0]['cntrb_id']
+      
       attempts = 0
 
       while attempts < max_attempts:
         try:
+          #Using with on a sqlalchemy connection prevents 'Connection refused' error
+          #Ensures all database requests use the same connection
           with self.db.connect() as connection:
+            #Use primary key to update the correct data.
             connection.execute(self.contributors_table.update().where(
               self.contributors_table.c.cntrb_id==contributor_table_data[0]['cntrb_id']
             ).values(cntrb))
