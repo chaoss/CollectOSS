@@ -139,14 +139,11 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         self.data_source = '\'Git Log\''
 
     # Try to construct the best url to ping GitHub's API for a username given an email.
-    def resolve_user_url_from_email(self, contributor):
-        self.logger.info(f"Trying to resolve contributor: {contributor}")
+    def resolve_user_url_from_email(self, email):
+        self.logger.info(f"Trying to resolve contributor from email: {email}")
 
-        cmt_cntrb = {
-            'email': contributor['commit_email'] if 'commit_email' in contributor else contributor['email']
-        }
         url = 'https://api.github.com/search/users?q={}+in:email&&{}+in:email'.format(
-            cmt_cntrb['email'].split('@')[0], cmt_cntrb['email'].split('@')[-1])
+            email.split('@')[0], email.split('@')[-1])
 
         return url
 
@@ -254,6 +251,66 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             return None
 
         return response_data
+
+    #Try every distinct email found within a commit for possible username resolution.
+    #Add email to garbage table if can't be resolved.
+    #   \param contributor is the raw database entry
+    #   \param emails is a list of email strings
+    def resolve_contributor_from_email(self, contributor, emails):
+
+        #Default to failed state
+        login_json = None
+
+        for email in emails:
+            if len(email) <= 2:
+                continue #Don't bother with emails that are blank or less than 2 characters
+
+            try:
+                url = self.resolve_user_url_from_email(email)
+            except Exception as e:
+                self.logger.info(
+                    f"Couldn't resolve email url with given data. Reason: {e}")
+                continue  # If the method throws an error it means that we can't hit the endpoint so we can't really do much
+
+            login_json = self.request_dict_from_endpoint(
+                    url, timeout_wait=30)
+            
+             # Check if the email result got anything, if it failed try a name search.
+            if login_json == None or 'total_count' not in login_json or login_json['total_count'] == 0:
+                self.logger.info(
+                    f"Could not resolve the username from {email}")
+
+                #Go back to failure condition
+                login_json = None
+
+                #Add the email that couldn't be resolved to a garbage table.
+
+                unresolved = {
+                    "cmt_id": contributor['id'],
+                    "email": email,
+                    "tool_source": self.tool_source,
+                    "tool_version": self.tool_version,
+                    "data_source": self.data_source
+                }
+
+                self.logger.info(f"Inserting data to unresolved: {unresolved}")
+
+                self.db.execute(
+                        self.unresolved_commit_emails_table.insert().values(unresolved))
+                continue
+            else:
+                return login_json #Return endpoint dictionary if email found it.
+
+        #failure condition returns None
+        return login_json
+
+
+
+       
+
+
+       
+
 
     # Update the contributors table from the data facade has gathered.
 
@@ -394,21 +451,6 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                     ).values({
                         'cmt_ght_author_id': 1
                     }))
-
-                    #Add the email that couldn't be resolved to a garbage table.
-
-                    unresolved = {
-                        "cmt_id": contributor['id'],
-                        "email": emailToInsert,
-                        "tool_source": self.tool_source,
-                        "tool_version": self.tool_version,
-                        "data_source": self.data_source
-                    }
-
-                    self.logger.info(f"Inserting data to unresolved: {unresolved}")
-
-                    self.db.execute(
-                            self.unresolved_commit_emails_table.insert().values(unresolved))
                     
                 except Exception as e:
                     self.logger.info(
