@@ -235,7 +235,6 @@ class GitHubWorker(WorkerGitInterfaceable):
         def issue_comments_insert(inc_issue_comments, comment_action_map):
 
             inc_issue_comments['insert'] = self.text_clean(inc_issue_comments['insert'], 'body')
-            issue_comments = []
 
             #This is sending empty data to enrich_cntrb_id, fix with check 
             if len(inc_issue_comments['insert']) > 0:
@@ -335,18 +334,13 @@ class GitHubWorker(WorkerGitInterfaceable):
             )
             self.logger.debug(f"Contents of issue_comments: {issue_comments}.")
 
+            issue_comments_insert(issue_comments,comment_action_map)
+            return
+
         except Exception as e:
             self.logger.info(f"exception registerred in paginate endpoint for issue comments: {e}")
             stacker = traceback.format_exc()
             self.logger.debug(f"{stacker}")
-
-        try: 
-            issue_comments_insert(issue_comments,comment_action_map)
-            return
-        except Exception as e: 
-            self.logger.info(f"issue_comments_insert failed at {e}.. exception registerred")
-            stacker = traceback.format_exc()
-            self.logger.info(f"{stacker}")
 
     def issue_events_model(self, pk_source_issues):
 
