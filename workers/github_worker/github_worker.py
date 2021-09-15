@@ -8,6 +8,7 @@ import requests
 import time
 import logging
 import json
+import traceback
 import os
 import psycopg2 #really only to catch type errors for database methods
 import math

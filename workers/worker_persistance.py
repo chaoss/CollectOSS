@@ -17,7 +17,6 @@ import psycopg2
 import psycopg2.extensions
 import csv
 import io
-import traceback
 from logging import FileHandler, Formatter, StreamHandler
 from multiprocessing import Process, Queue, Pool, Value
 from os import getpid
