@@ -17,6 +17,7 @@ import psycopg2
 import psycopg2.extensions
 import csv
 import io
+import traceback
 from logging import FileHandler, Formatter, StreamHandler
 from multiprocessing import Process, Queue, Pool, Value
 from os import getpid
@@ -510,6 +511,7 @@ class Persistant():
 
     def assign_tuple_action(self, new_data, table_values, update_col_map, duplicate_col_map, table_pkey, value_update_col_map={}):
         """ DEPRECATED
+        SPG 9/15/2021 TODO -- Why is this deprecated? 
             Include an extra key-value pair on each element of new_data that represents
             the action that should be taken with this element (i.e. 'need_insertion')
 
@@ -580,6 +582,9 @@ class Persistant():
                 continue
 
             # If we need to check the values of the existing tuple to determine if an update is needed
+            '''  This "value_check" is really really what I think we want to be doing for the update to issue status 
+                 TODO SPG 9/15/2021. '''   
+
             for augur_col, value_check in value_update_col_map.items():
                 not_nan_check = not (math.isnan(value_check) and math.isnan(existing_tuple[augur_col])) if value_check is not None else True
                 if existing_tuple[augur_col] != value_check and not_nan_check:
@@ -793,6 +798,8 @@ class Persistant():
                         curs.copy_expert(sql=sql, file=s_buf)
                     except Exception as e: 
                         self.logger.info(f"this is the error: {e}. exception registerred")
+                        stacker = traceback.format_exc()
+                        self.logger.debug(f"{stacker}")
 
 
             df = pd.DataFrame(insert)
@@ -896,6 +903,10 @@ class Persistant():
             These are almost never (never) the primary keys on our table. They are the natural
             keys at the source, I think, with some probability close to 1 (SPG 9/13/2021).'''
 
+        ''' SPG 9/15/2021: This seems method may be the source of duplicate inserts that seem like
+            they should not actually get run because we are specifying the natural key in the insert map.
+            I really don't completely understand what we are doing here.  '''
+
         self.logger.info("Preparing to enrich data.\n")
 
         if len(source_data) == 0:
@@ -907,10 +918,14 @@ class Persistant():
         if not in_memory:
 
             source_pk_columns = list(source_df.columns)
+            ## This seems to be the biggest issue. The primary keys do not actually
+            ## represent the natural key we are mapping for inserts. 
             source_pk_columns.insert(0, list(table.primary_key)[0].name)
 
             (source_table, ), metadata, session = self._setup_postgres_merge(
-                # [self._get_data_set_columns(source_data, gh_merge_fields)]
+                #''' This next line was commented out, which seems like it might be problematic
+                #    Wouldn't we *want* to have all of this mapping included? '''
+                [self._get_data_set_columns(source_data, gh_merge_fields)]
                 [source_df.to_dict(orient='records')]
             )
 

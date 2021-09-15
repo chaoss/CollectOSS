@@ -9,7 +9,6 @@ import time
 import logging
 import json
 import os
-import traceback
 import psycopg2 #really only to catch type errors for database methods
 import math
 from datetime import datetime
