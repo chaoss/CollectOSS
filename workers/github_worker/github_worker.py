@@ -256,10 +256,10 @@ class GitHubWorker(WorkerGitInterfaceable):
                     ) else ' ',
                     'msg_timestamp': comment['created_at'] if (
                         comment['created_at']
-                    ),
+                    ) else is_nan(comment['created_at']),
                     'cntrb_id': comment['cntrb_id'] if (
                         comment['cntrb_id']
-                    ),
+                    ) else is_na(comment['cntrb_id']),
                     'tool_source': self.tool_source,
                     'tool_version': self.tool_version,
                     'data_source': self.data_source,
