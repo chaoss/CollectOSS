@@ -303,7 +303,6 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                 #Add the email that couldn't be resolved to a garbage table.
 
                 unresolved = {
-                    "cmt_id": contributor['id'],
                     "email": email,
                     "tool_source": self.tool_source,
                     "tool_version": self.tool_version,
