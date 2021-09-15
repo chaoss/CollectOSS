@@ -230,6 +230,12 @@ class Persistant():
     def sync_df_types(self, subject, source, subject_columns, source_columns):
 
         type_dict = {}
+
+        ## Getting rid of nan's and NoneTypes across the dataframe to start:
+
+        subject = subject.fillna(value=np.nan)
+        source = source.fillna(value=np.nan)
+
         for index in range(len(source_columns)):
             if type(source[source_columns[index]].values[0]) == numpy.datetime64:
                 subject[subject_columns[index]] = pd.to_datetime(
@@ -240,11 +246,11 @@ class Persistant():
                 )
                 continue
             ## Dealing with an error coming from paginate endpoint and the GitHub issue worker
-            ### For a release in mid september, 2021. #SPG
-            if type(source[source_columns[index]].values[0]).isnull(): 
-                subject[subject_columns[index]] = pd.fillna(value=np.nan)
-                source[source_columns[index]] = pd.fillna(value=np.nan)
-                continue                
+            ### For a release in mid september, 2021. #SPG  This did not work on Ints or Floats
+            # if type(source[source_columns[index]].values[0]).isnull(): 
+            #     subject[subject_columns[index]] = pd.fillna(value=np.nan)
+            #     source[source_columns[index]] = pd.fillna(value=np.nan)
+            #     continue                
 
 
             type_dict[subject_columns[index]] = type(source[source_columns[index]].values[0])
