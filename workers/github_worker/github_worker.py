@@ -235,6 +235,7 @@ class GitHubWorker(WorkerGitInterfaceable):
         def issue_comments_insert(inc_issue_comments, comment_action_map):
 
             inc_issue_comments['insert'] = self.text_clean(inc_issue_comments['insert'], 'body')
+            issue_comments = []
 
             #This is sending empty data to enrich_cntrb_id, fix with check 
             if len(inc_issue_comments['insert']) > 0:
