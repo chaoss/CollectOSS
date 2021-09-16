@@ -252,35 +252,36 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         return response_data
 
-    #Try every distinct email found within a commit for possible username resolution.
-    #Add email to garbage table if can't be resolved.
+    # Try every distinct email found within a commit for possible username resolution.
+    # Add email to garbage table if can't be resolved.
     #   \param contributor is the raw database entry
     #   \return A dictionary of response data from github with potential logins on success.
     #           None on failure
     def resolve_contributor_from_email(self, contributor):
 
-        #Get list of all emails in the commit data.
-        #Start with the fields we know that we can start with
-        emails = [contributor['commit_email'] if 'commit_email' in contributor else contributor['email']]
+        # Get list of all emails in the commit data.
+        # Start with the fields we know that we can start with
+        emails = [contributor['commit_email']
+                  if 'commit_email' in contributor else contributor['email']]
 
-        #Check if other emails match the previous, if they don't then add them
+        # Check if other emails match the previous, if they don't then add them
         if contributor['email_raw'] not in emails:
-          emails.append(contributor['email_raw'])
-        
+            emails.append(contributor['email_raw'])
+
         if contributor['committer_email'] not in emails:
-          emails.append(contributor['committer_email'])
-        
+            emails.append(contributor['committer_email'])
+
         if contributor['committer_email_raw'] not in emails:
-          emails.append(contributor['committer_email_raw'])
-        
+            emails.append(contributor['committer_email_raw'])
+
         self.logger.info(f"DEBUG: here is the email array: {emails}")
 
-        #Default to failed state
+        # Default to failed state
         login_json = None
 
         for email in emails:
             if len(email) <= 2:
-                continue #Don't bother with emails that are blank or less than 2 characters
+                continue  # Don't bother with emails that are blank or less than 2 characters
 
             try:
                 url = self.resolve_user_url_from_email(email)
@@ -290,17 +291,17 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                 continue  # If the method throws an error it means that we can't hit the endpoint so we can't really do much
 
             login_json = self.request_dict_from_endpoint(
-                    url, timeout_wait=30)
-            
-             # Check if the email result got anything, if it failed try a name search.
+                url, timeout_wait=30)
+
+            # Check if the email result got anything, if it failed try a name search.
             if login_json == None or 'total_count' not in login_json or login_json['total_count'] == 0:
                 self.logger.info(
                     f"Could not resolve the username from {email}")
 
-                #Go back to failure condition
+                # Go back to failure condition
                 login_json = None
 
-                #Add the email that couldn't be resolved to a garbage table.
+                # Add the email that couldn't be resolved to a garbage table.
 
                 unresolved = {
                     "email": email,
@@ -313,23 +314,17 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
                 try:
                     self.db.execute(
-                            self.unresolved_commit_emails_table.insert().values(unresolved))
+                        self.unresolved_commit_emails_table.insert().values(unresolved))
                 except Exception as e:
-                    self.logger.info(f"Could not create new alias with email {unresolved['email']}. Error: {e}")
+                    self.logger.info(
+                        f"Could not create new alias with email {unresolved['email']}. Error: {e}")
                 continue
             else:
-                return login_json #Return endpoint dictionary if email found it.
+                # Return endpoint dictionary if email found it.
+                return login_json
 
-        #failure condition returns None
+        # failure condition returns None
         return login_json
-
-
-
-       
-
-
-       
-
 
     # Update the contributors table from the data facade has gathered.
 
@@ -433,8 +428,8 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         # Try to get GitHub API user data from each unique commit email.
         for contributor in new_contribs:
 
-            #Try to get login from all possible emails
-            #Is None upon failure.
+            # Try to get login from all possible emails
+            # Is None upon failure.
             login_json = self.resolve_contributor_from_email(contributor)
 
             # Check if the email result got anything, if it failed try a name search.
@@ -470,7 +465,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                     ).values({
                         'cmt_ght_author_id': 1
                     }))
-                    
+
                 except Exception as e:
                     self.logger.info(
                         f"Could not enrich unresolvable email address with dummy data. Error: {e}")
@@ -545,9 +540,9 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                     try:
                         self.db.execute(
                             self.contributors_table.insert().values(cntrb))
-                        
-                        #Update alias after insertion. Insertion needs to happen first so we can get the autoincrementkey
-                        self.insert_alias(cntrb,emailFromCommitData)
+
+                        # Update alias after insertion. Insertion needs to happen first so we can get the autoincrementkey
+                        self.insert_alias(cntrb, emailFromCommitData)
                     except Exception as e:
                         self.logger.info(
                             f"Ran into likely database collision. Assuming contributor exists in database. Error: {e}")
@@ -644,9 +639,11 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         try:
             self.db.execute(
                 self.contributors_aliases_table.insert().values(alias))
+        except s.exc.IntegrityError:
+            pass #It's expected to catch duplicates this way so no output is logged.
         except Exception as e:
             self.logger.info(
-                f"Ran into likely database collision with alias: {alias}. Assuming contributor exists in database. Error: {e}")
+                f"Ran into issue with alias: {alias}. Error: {e}")
 
         return
 
