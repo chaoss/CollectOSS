@@ -834,7 +834,7 @@ class Persistant():
                     index=False,
                     method=None,
                     #method=psql_insert_copy
-                    dtype=dict,
+                    #dtype=dict,
                     chunksize=1
                 )
                 if increment_counter:
