@@ -440,7 +440,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'pr_augur_contributor_id': pr['cntrb_id'],
                 'pr_body': pr['body'].encode(encoding='UTF-8',errors='backslashreplace').decode(encoding='UTF-8',errors='ignore') if (
                     pr['body']
-                ) else None,           
+                ) else None,
                 'pr_created_at': pr['created_at'],
                 'pr_updated_at': pr['updated_at'],
                 'pr_closed_at': pr['closed_at'],
@@ -544,29 +544,29 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         self.logger.info("Beginning collection of Pull Requests...\n")
         self.logger.info(f"Repo ID: {self.repo_id}, Git URL: {github_url}\n")
 
-        try: 
+        try:
             pk_source_prs = self._get_pk_source_prs()
-        except Exception as e: 
+        except Exception as e:
             self.logger.info(f"Pull Requests model failed with {e}.")
 
         self.write_debug_data(pk_source_prs, 'pk_source_prs')
 
         if pk_source_prs:
-            try: 
+            try:
                 self.pull_request_comments_model()
-            except Exception as e: 
+            except Exception as e:
                 self.logger.info(f"Comments model failed with {e}.")
-            try: 
+            try:
                 self.pull_request_events_model(pk_source_prs)
-            except Exception as e: 
+            except Exception as e:
                 self.logger.info(f"PR Events model failed with {e}.")
             try:
                 self.pull_request_reviews_model(pk_source_prs)
-            except Exception as e: 
+            except Exception as e:
                 self.logger.info(f"PR Reviews model failed with {e}.")
-            try: 
+            try:
                 self.pull_request_nested_data_model(pk_source_prs)
-            except Exception as e: 
+            except Exception as e:
                 self.logger.info(f"PR Nested Data model failed with {e}.")
 
         self.register_task_completion(self.task_info, self.repo_id, 'pull_requests')
@@ -587,13 +587,13 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         comment_action_map = {
             'insert': {
                 'source': ['id'],
-                'augur': ['platform_msg_id', 'tool_source']
+                'augur': ['platform_msg_id']
             }
         }
         comment_ref_action_map = {
             'insert': {
                 'source': ['id'],
-                'augur': ['pr_message_ref_src_comment_id', 'tool_source']
+                'augur': ['pr_message_ref_src_comment_id']
             }
         }
 
@@ -634,7 +634,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             } for comment in pr_comments['insert']
         ]
 
-        self.bulk_insert(self.message_table, insert=pr_comments_insert, 
+        self.bulk_insert(self.message_table, insert=pr_comments_insert,
             unique_columns = comment_action_map['insert']['augur'] )
 
         # PR MESSAGE REF TABLE
@@ -665,7 +665,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             } for comment in both_pk_source_comments
         ]
 
-        try: 
+        try:
 
             self.bulk_insert(self.pull_request_message_ref_table, insert=pr_message_ref_insert
                 unique_columns=comment_ref_action_map['insert']['augur'])
@@ -837,7 +837,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             pr_pk_source_reviews, self.pull_request_reviews_table, review_action_map['insert']['source'],
             review_action_map['insert']['augur']
         )
- 
+
         self.write_debug_data(both_pr_review_pk_source_reviews, 'both_pr_review_pk_source_reviews')
 
         # Review Comments
@@ -848,18 +848,18 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             '/comments?per_page=100&page={}')
 
         '''This includes the two columns that are in the natural key for messages
-            Its important to note the inclusion of tool_source on the augur side. 
+            Its important to note the inclusion of tool_source on the augur side.
             That exists because of an anomaly in the GitHub API, where the messages
-            API for Issues and the issues API will return all the messages related to 
-            pull requests. 
+            API for Issues and the issues API will return all the messages related to
+            pull requests.
 
             Logically, the only way to tell the difference is, in the case of issues, the
-            pull_request_id in the issues table is null. 
+            pull_request_id in the issues table is null.
 
-            The pull_request_id in the pull_requests table is never null. 
+            The pull_request_id in the pull_requests table is never null.
 
-            So, issues has the full set issues. Pull requests has the full set of pull requests. 
-            there are no issues in the pull requests table. 
+            So, issues has the full set issues. Pull requests has the full set of pull requests.
+            there are no issues in the pull requests table.
         '''
 
         review_msg_action_map = {
@@ -869,7 +869,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             }
         }
 
-        ''' This maps to the two unique columns that constitute the natural key in the table. 
+        ''' This maps to the two unique columns that constitute the natural key in the table.
         '''
 
         review_msg_ref_action_map = {
@@ -921,12 +921,12 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
                 'data_source': self.data_source,
-                'repo_id': self.repo_id 
+                'repo_id': self.repo_id
             } for comment in review_msgs['insert']
             if comment['user'] and 'login' in comment['user']
         ]
 
-        self.bulk_insert(self.message_table, insert=review_msg_insert, 
+        self.bulk_insert(self.message_table, insert=review_msg_insert,
             unique_columns = review_msg_action_map['insert']['augur'])
 
         # PR REVIEW MESSAGE REF TABLE
@@ -938,7 +938,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         self.write_debug_data(c_pk_source_comments, 'c_pk_source_comments')
 
-        ''' The action map does not apply here because this is a reference to the parent 
+        ''' The action map does not apply here because this is a reference to the parent
         table.  '''
 
 
@@ -1038,7 +1038,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         self.logger.info(f"Howdy. Lets check the label id datatype: {type(label['id'])}.")
 
-        try: 
+        try:
             labels_insert = [
                 {
                     'pull_request_id': label['pull_request_id'],
@@ -1053,12 +1053,12 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                     'data_source': self.data_source
                 } for label in source_labels_insert
             ]
-        except Exception as e: 
-            self.logger.info(f"failed at assignment of labels_insert with: {e}.") 
+        except Exception as e:
+            self.logger.info(f"failed at assignment of labels_insert with: {e}.")
 
-        try:  
+        try:
             self.bulk_insert(self.pull_request_labels_table, insert=labels_insert)
-        except Exception as e: 
+        except Exception as e:
             self.logger.info(f"label bulk insert failed with {e}.")
 
         # PR reviewers insertion
@@ -1069,19 +1069,19 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             }
         }
 
-        try:         
+        try:
             table_values_issue_labels = self.db.execute(
                 s.sql.select(self.get_relevant_columns(self.pull_request_reviewers_table,reviewer_action_map))
             ).fetchall()
-        except Exception as e: 
+        except Exception as e:
             self.logger.info(f"getting label values failed at: {e}.")
 
-        try: 
+        try:
             source_reviewers_insert, _ = self.organize_needed_data(
                 reviewers_all, table_values=table_values_issue_labels,
                 action_map=reviewer_action_map
             )
-        except Exception as e: 
+        except Exception as e:
             self.logger.info(f"Organize needed data for source_reviewers_insert failed with: {e}.")
 
         if len(source_reviewers_insert) > 0:
@@ -1096,7 +1096,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         else:
             self.logger.info("Contributor enrichment is not needed, no inserts provided.")
 
-        try: 
+        try:
             reviewers_insert = [
                 {
                     'pull_request_id': reviewer['pull_request_id'],
@@ -1108,7 +1108,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 } for reviewer in source_reviewers_insert if 'login' in reviewer
             ]
             self.bulk_insert(self.pull_request_reviewers_table, insert=reviewers_insert)
-        except Exception as e: 
+        except Exception as e:
             self.logger.info(f"Bulk insert or reviewers assignment failed with {e}.")
 
         # PR assignees insertion
@@ -1119,19 +1119,19 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             }
         }
 
-        try: 
+        try:
             table_values_assignees_labels = self.db.execute(
                 s.sql.select(self.get_relevant_columns(self.pull_request_assignees_table,assignee_action_map))
             ).fetchall()
-        except Exception as e: 
+        except Exception as e:
             self.logger.info(f"Failed to retrieve assignee labels with error {e}.")
 
-        try: 
+        try:
             source_assignees_insert, _ = self.organize_needed_data(
                 assignees_all, table_values=table_values_assignees_labels,
                 action_map=assignee_action_map
             )
-        except Exception as e: 
+        except Exception as e:
             self.logger.info(f"Organize needed data for source_assignees_insert failed with: {e}.")
 
         if len(source_assignees_insert) > 0:
@@ -1148,7 +1148,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         self.logger.info(f"Howdy. Assignee source id is: {type(assignee['id'])}.")
 
-        try: 
+        try:
             assignees_insert = [
                 {
                     'pull_request_id': assignee['pull_request_id'],
@@ -1160,7 +1160,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 } for assignee in source_assignees_insert if 'login' in assignee
             ]
             self.bulk_insert(self.pull_request_assignees_table, insert=assignees_insert)
-        except Exception as e: 
+        except Exception as e:
             self.logger.info(f"assignees_insert assignment or bulk insert for pull_request_assignees_table failed with: {e}.")
 
         # PR meta insertion
@@ -1171,21 +1171,21 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             }
         }
 
-        try: 
+        try:
             table_values_pull_request_meta = self.db.execute(
                 s.sql.select(self.get_relevant_columns(self.pull_request_meta_table,meta_action_map))
             ).fetchall()
-        except Exception as e: 
+        except Exception as e:
             self.logger.info(f"getting table_values_pull_request_meta failed with {e}.")
 
-        try: 
+        try:
             source_meta_insert, _ = self.organize_needed_data(
                 meta_all, table_values=table_values_pull_request_meta, action_map=meta_action_map
             )
-        except Exception as e: 
+        except Exception as e:
             self.logger.info(f"Organize needed data for source_meta_insert failed with: {e}.")
 
-        try: 
+        try:
             if len(source_meta_insert) > 0:
                 source_meta_insert = self.enrich_cntrb_id(
                     source_meta_insert, 'user.login', action_map_additions={
@@ -1212,7 +1212,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 } for meta in source_meta_insert if meta['user'] and 'login' in meta['user']
             ]
             self.bulk_insert(self.pull_request_meta_table, insert=meta_insert)
-        except Exception as e: 
+        except Exception as e:
             self.logger.info(f"Meta insert failed with: {e}.")
 
     def query_pr_repo(self, pr_repo, pr_repo_type, pr_meta_id):
