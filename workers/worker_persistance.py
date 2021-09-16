@@ -824,12 +824,12 @@ class Persistant():
                         curs.copy_expert(sql=sql, file=s_buf)
                         #session.commit()
                         #self.logger.info("message committed")
-                        curs.commit()
+                        dbapi_conn.commit()
                     except Exception as e:
                         self.logger.debug(f"Bulk insert error: {e}. exception registered")
                         stacker = traceback.format_exc()
                         self.logger.debug(f"{stacker}")
-                        curs.rollback()
+                        dbapi_conn.rollback()
 
             try: 
                 df = pd.DataFrame(insert)
