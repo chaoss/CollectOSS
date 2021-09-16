@@ -667,7 +667,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         try:
 
-            self.bulk_insert(self.pull_request_message_ref_table, insert=pr_message_ref_insert
+            self.bulk_insert(self.pull_request_message_ref_table, insert=pr_message_ref_insert,
                 unique_columns=comment_ref_action_map['insert']['augur'])
 
         except Exception as e:
