@@ -501,7 +501,7 @@ class GitHubWorker(WorkerGitInterfaceable):
 
         for issue in pk_source_issues:
 
-            self.logger.info(f"on issue: {issue} within {len(pk_source_issues)} total. Editing assingees next.")
+            self.logger.debug(f"on issue: there are {len(pk_source_issues)} issues total. Editing assingees next.")
 
             # Issue Assignees
             source_assignees = [
