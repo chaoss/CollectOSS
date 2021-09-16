@@ -252,10 +252,10 @@ class Persistant():
             #     source[source_columns[index]] = pd.fillna(value=np.nan)
             #     continue
             source_index = source_columns[index]
-            try: 
+            try:
                 source_index = source_columns[index]
                 type_dict[subject_columns[index]] = type(source[source_index].values[0])
-            except Exception as e: 
+            except Exception as e:
                 self.logger.info(f"Source data registered exception: {source[source_index]}")
                 stacker = traceback.format_exc()
                 self.logger.debug(f"{stacker}")
@@ -459,19 +459,19 @@ class Persistant():
 
 
             '''
-                This is how uniqueness, or whether a piece of data needs to be inserted, or 
+                This is how uniqueness, or whether a piece of data needs to be inserted, or
                 if that data already exists.
 
                 With regards to the comment_action_map (for insertion of issue_comments and pull_request_comments
-                we need to recognize the following: 
+                we need to recognize the following:
 
                     paginate_endpoint() then gets a dataframe of all the data that needs to be inserted.
-                    Earlier, we added 'tool_source' to the augur side of the action map, and left 
+                    Earlier, we added 'tool_source' to the augur side of the action map, and left
                     'id' alone on the source side (since tool_source) is our variable, and part of our
-                    natural key. 
+                    natural key.
 
-                    --Andrew Brain and Sean Goggins 9/16/2021. Debugging duplicate insert errors for 
-                    comments after initial collection. 
+                    --Andrew Brain and Sean Goggins 9/16/2021. Debugging duplicate insert errors for
+                    comments after initial collection.
             '''
 
             try:
@@ -818,7 +818,7 @@ class Persistant():
                     try:
                         curs.copy_expert(sql=sql, file=s_buf)
                     except Exception as e:
-                        self.logger.info(f"this is the error: {e}. exception registerred")
+                        self.logger.info(f"Bulk insert error: {e}. exception registerred")
                         stacker = traceback.format_exc()
                         self.logger.debug(f"{stacker}")
 
@@ -1223,10 +1223,10 @@ class Persistant():
         columns = copy.deepcopy(action_map['update']['augur']) if 'update' in action_map else []
         columns += action_map['value_update']['augur'] if 'value_update' in action_map else []
         columns += action_map['insert']['augur'] if 'insert' in action_map else []
-        try: 
+        try:
             relevant_columns_return = [table.c[column] for column in columns + [list(table.primary_key)[0].name]]
             return relevant_columns_return
-        except Exception as e: 
+        except Exception as e:
             self.logger.info(f"Column may not exist in the database -- registered exception: {e}.")
             stacker = traceback.format_exc()
             self.logger.debug(f"{stacker}")
