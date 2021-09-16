@@ -366,7 +366,7 @@ class GitHubWorker(WorkerGitInterfaceable):
             return
 
         except Exception as e:
-            self.logger.info(f"exception registerred in paginate endpoint for issue comments: {e}")
+            self.logger.info(f"exception registered in paginate endpoint for issue comments: {e}")
             stacker = traceback.format_exc()
             self.logger.debug(f"{stacker}")
 
