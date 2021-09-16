@@ -251,9 +251,14 @@ class Persistant():
             #     subject[subject_columns[index]] = pd.fillna(value=np.nan)
             #     source[source_columns[index]] = pd.fillna(value=np.nan)
             #     continue
-
             source_index = source_columns[index]
-            type_dict[subject_columns[index]] = type(source[source_index].values[0])
+            try: 
+                source_index = source_columns[index]
+                type_dict[subject_columns[index]] = type(source[source_index].values[0])
+            except Exception as e: 
+                self.logginer.info{f"Source data registered exception: {source[source_index]}"}
+                stacker = traceback.format_exc()
+                self.logger.debug(f"{stacker}")
 
         subject = subject.astype(type_dict)
 
