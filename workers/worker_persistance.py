@@ -15,6 +15,7 @@ import concurrent
 import multiprocessing
 import psycopg2
 import psycopg2.extensions
+import sqlalchemy.orm.session
 import csv
 import io
 from logging import FileHandler, Formatter, StreamHandler
