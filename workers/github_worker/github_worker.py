@@ -362,7 +362,7 @@ class GitHubWorker(WorkerGitInterfaceable):
             )
 
             issue_comments_insert(issue_comments,comment_action_map)
-            self.logger.debug(f"Contents of issue_comments: {issue_comments}.")
+            #self.logger.debug(f"Contents of issue_comments: {issue_comments}.")
             return
 
         except Exception as e:

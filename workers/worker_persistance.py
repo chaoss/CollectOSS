@@ -15,6 +15,7 @@ import concurrent
 import multiprocessing
 import psycopg2
 import psycopg2.extensions
+import sqlalchemy.orm.session as sessy
 import csv
 import io
 from logging import FileHandler, Formatter, StreamHandler
@@ -811,36 +812,49 @@ class Persistant():
 
                     sql = 'COPY {} ({}) FROM STDIN WITH CSV'.format(
                         table_name, columns)
+
                     #This causes the github worker to throw an error with pandas
                     #cur.copy_expert(sql=sql, file=self.text_clean(s_buf))
                     # s_buf_encoded = s_buf.read().encode("UTF-8")
                     #self.logger.info(f"this is the sbuf_encdoded {s_buf_encoded}")
                     try:
+                        sessy.Session=sessy.sessionmaker(bind=dbapi_conn)
+                        session=Session()
+                        # session.copy_expert(sql=sql, file=s_buf)
+                        #copy_expert(sql=sql, file=s_buf)
                         curs.copy_expert(sql=sql, file=s_buf)
+                        session.commit()
+                        self.logger.info("message committed")
                     except Exception as e:
-                        self.logger.info(f"Bulk insert error: {e}. exception registerred")
+                        self.logger.debug(f"Bulk insert error: {e}. exception registered")
                         stacker = traceback.format_exc()
                         self.logger.debug(f"{stacker}")
+                        session.rollback()
 
+            try: 
+                df = pd.DataFrame(insert)
+                if convert_float_int:
+                    df = self._convert_float_nan_to_int(df)
+                df.to_sql(
+                    schema = self.db_schema,
+                    name=table.name,
+                    con=self.db,
+                    if_exists="append",
+                    index=False,
+                    #method=None,
+                    method=psql_insert_copy,
+                    #dtype=dict,
+                    chunksize=1
+                )
+                if increment_counter:
+                    self.insert_counter += len(insert)
 
-            df = pd.DataFrame(insert)
-            if convert_float_int:
-                df = self._convert_float_nan_to_int(df)
-            df.to_sql(
-                schema = self.db_schema,
-                name=table.name,
-                con=self.db,
-                if_exists="append",
-                index=False,
-                method=psql_insert_copy
-            )
-            if increment_counter:
-                self.insert_counter += len(insert)
-
-            self.logger.info(
-                f"Inserted {len(insert)} rows in {time.time() - insert_start_time} seconds "
-                "thanks to postgresql's COPY FROM CSV! :)"
-            )
+                self.logger.info(
+                    f"Inserted {len(insert)} rows in {time.time() - insert_start_time} seconds "
+                    "thanks to postgresql's COPY FROM CSV! :)"
+                )
+            except Exception as e: 
+                self.logger.info(f"Bulk insert error 2: {e}. exception registered.")
 
         return insert_result, update_result
 
