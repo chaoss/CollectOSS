@@ -1218,8 +1218,14 @@ class Persistant():
         columns = copy.deepcopy(action_map['update']['augur']) if 'update' in action_map else []
         columns += action_map['value_update']['augur'] if 'value_update' in action_map else []
         columns += action_map['insert']['augur'] if 'insert' in action_map else []
-        return [table.c[column] for column in
-            columns + [list(table.primary_key)[0].name]]
+        try: 
+            relevant_columns_return = [table.c[column] for column in columns + [list(table.primary_key)[0].name]]
+            return relevant_columns_return
+        except Exception as e: 
+            self.logger.info(f"Column may not exist in the database -- registered exception: {e}.")
+            stacker = traceback.format_exc()
+            self.logger.debug(f"{stacker}")
+
 
     def retrieve_tuple(self, key_values, tables):
         table_str = tables[0]

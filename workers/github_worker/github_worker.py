@@ -567,7 +567,7 @@ class GitHubWorker(WorkerGitInterfaceable):
         assignee_action_map = {
             'insert': {
                 'source': ['issue_id','id'],
-                'augur': ['issue_id','label_src_id']
+                'augur': ['issue_id','issue_assignee_src_id']
             }
         }
         
@@ -575,7 +575,7 @@ class GitHubWorker(WorkerGitInterfaceable):
             s.sql.select(self.get_relevant_columns(self.issue_assignees_table,assignee_action_map))
         ).fetchall()
 
-        self.logger.info(f"Issue assignees retrieved total: {len(table_values_issue_assignees)}.")
+        self.logger.info(f"Issue assignee retrieved total: {len(table_values_issue_assignees)}.")
 
         source_assignees_insert, _ = self.organize_needed_data(
             assignees_all, table_values=table_values_issue_assignees,
