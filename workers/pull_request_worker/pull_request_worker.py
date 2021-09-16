@@ -584,12 +584,16 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         # 3. The REPO_ID so queries are easier.
         ## ALL THIS INFO IS IN THE PLATFOMR JSON AND WE ARe ignoring IT.
 
-
-
         comment_action_map = {
             'insert': {
                 'source': ['id'],
-                'augur': ['platform_msg_id']
+                'augur': ['platform_msg_id', 'tool_source']
+            }
+        }
+        comment_ref_action_map = {
+            'insert': {
+                'source': ['id'],
+                'augur': ['pr_message_ref_src_comment_id', 'tool_source']
             }
         }
 
@@ -630,7 +634,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             } for comment in pr_comments['insert']
         ]
 
-        self.bulk_insert(self.message_table, insert=pr_comments_insert)
+        self.bulk_insert(self.message_table, insert=pr_comments_insert, 
+            unique_columns = comment_action_map['insert']['augur'] )
 
         # PR MESSAGE REF TABLE
 
@@ -662,7 +667,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         try: 
 
-            self.bulk_insert(self.pull_request_message_ref_table, insert=pr_message_ref_insert)
+            self.bulk_insert(self.pull_request_message_ref_table, insert=pr_message_ref_insert
+                unique_columns=comment_ref_action_map['insert']['augur'])
 
         except Exception as e:
 
@@ -841,10 +847,35 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         review_msg_url = (f'https://api.github.com/repos/{self.owner}/{self.repo}/pulls' +
             '/comments?per_page=100&page={}')
 
+        '''This includes the two columns that are in the natural key for messages
+            Its important to note the inclusion of tool_source on the augur side. 
+            That exists because of an anomaly in the GitHub API, where the messages
+            API for Issues and the issues API will return all the messages related to 
+            pull requests. 
+
+            Logically, the only way to tell the difference is, in the case of issues, the
+            pull_request_id in the issues table is null. 
+
+            The pull_request_id in the pull_requests table is never null. 
+
+            So, issues has the full set issues. Pull requests has the full set of pull requests. 
+            there are no issues in the pull requests table. 
+        '''
+
         review_msg_action_map = {
             'insert': {
                 'source': ['id'],
-                'augur': ['pr_review_msg_src_id']
+                'augur': ['platform_msg_id', 'tool_source']
+            }
+        }
+
+        ''' This maps to the two unique columns that constitute the natural key in the table. 
+        '''
+
+        review_msg_ref_action_map = {
+            'insert': {
+                'source': ['id'],
+                'augur': ['pr_review_msg_src_id', 'tool_source']
             }
         }
 
@@ -895,7 +926,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             if comment['user'] and 'login' in comment['user']
         ]
 
-        self.bulk_insert(self.message_table, insert=review_msg_insert)
+        self.bulk_insert(self.message_table, insert=review_msg_insert, 
+            unique_columns = review_msg_action_map['insert']['augur'])
 
         # PR REVIEW MESSAGE REF TABLE
 
@@ -948,7 +980,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         self.bulk_insert(
             self.pull_request_review_message_ref_table,
-            insert=pr_review_msg_ref_insert
+            insert=pr_review_msg_ref_insert, unique_columns = review_msg_ref_action_map['insert']['augur']
         )
 
     def pull_request_nested_data_model(self, pk_source_prs=[]):

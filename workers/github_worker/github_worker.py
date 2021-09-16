@@ -7,6 +7,7 @@ import sqlalchemy as s
 import requests
 import time
 import logging
+import traceback
 import json
 import traceback
 import os
@@ -231,12 +232,22 @@ class GitHubWorker(WorkerGitInterfaceable):
         # Get contributors that we already have stored
         #   Set our duplicate and update column map keys (something other than PK) to
         #   check dupicates/needed column updates with
+
+        ''' Consistent action maps require them to be consistent with what is passed to 
+            paginate_endpoint. '''
         comment_action_map = {
             'insert': {
                 'source': ['id'],
-                'augur': ['platform_msg_id']
+                'augur': ['platform_msg_id', 'tool_source']
             }
         }
+
+        comment_ref_action_map = {
+            'insert': {
+                'source': ['id'],
+                'augur': ['issue_msg_ref_src_comment_id', 'tool_source']
+            }
+        }       
 
         def issue_comments_insert(inc_issue_comments, comment_action_map):
 
@@ -280,7 +291,7 @@ class GitHubWorker(WorkerGitInterfaceable):
                 # Using the action map resulted consistently in a duplicate key error
                 # Which really should not be possible ... ?? Trying hard coding the map.
                 self.bulk_insert(self.message_table, insert=issue_comments_insert,
-                    unique_columns=['platform_msg_id', 'tool_source'])
+                    unique_columns=comment_action_map['insert']['augur'])
             except Exception as e: 
                 self.logger.info(f"bulk insert of comments failed on {e}. exception registerred")
                 stacker = traceback.format_exc()
@@ -293,7 +304,7 @@ class GitHubWorker(WorkerGitInterfaceable):
                     comment_action_map['insert']['source'], comment_action_map['insert']['augur']
                 )
             except Exception as e: 
-                self.logger.info(f"exception registerred in enrich_data_primary_keys for message_ref issues table: {e}.. exception registerred")
+                self.logger.info(f"exception registered in enrich_data_primary_keys for message_ref issues table: {e}.. exception registered")
 
             self.logger.info(f"log of the length of c_pk_source_comments {len(c_pk_source_comments)}.")
 
@@ -306,7 +317,7 @@ class GitHubWorker(WorkerGitInterfaceable):
                     c_pk_source_comments, self.issues_table, ['issue_url'], ['issue_url']
                 )
             except Exception as e: 
-                self.logger.info(f"exception registerred in enrich_data_primary_keys for message_ref issues table: {e}.. exception registerred")            
+                self.logger.info(f"exception registered in enrich_data_primary_keys for message_ref issues table: {e}.. exception registered")            
 
             issue_message_ref_insert = [
                 {
@@ -324,10 +335,10 @@ class GitHubWorker(WorkerGitInterfaceable):
                 self.logger.debug(f"inserting into {self.issue_message_ref_table}.")
                 self.bulk_insert(
                     self.issue_message_ref_table, insert=issue_message_ref_insert,
-                    unique_columns=['issue_msg_ref_src_comment_id', 'tool_source']
+                    unique_columns=comment_ref_action_map['insert']['augur']
                 )
             except Exception as e: 
-                self.logger.info(f"exception registerred in bulk insert for issue_msg_ref_table: {e}.")
+                self.logger.info(f"exception registered in bulk insert for issue_msg_ref_table: {e}.")
 
         # list to hold contributors needing insertion or update
         try: 
@@ -355,7 +366,7 @@ class GitHubWorker(WorkerGitInterfaceable):
             return
 
         except Exception as e:
-            self.logger.info(f"exception registerred in paginate endpoint for issue comments: {e}")
+            self.logger.info(f"exception registered in paginate endpoint for issue comments: {e}")
             stacker = traceback.format_exc()
             self.logger.debug(f"{stacker}")
 
@@ -522,16 +533,16 @@ class GitHubWorker(WorkerGitInterfaceable):
                 except IndexError:
                     self.logger.info(
                         "Warning! We do not have the closing event of this issue stored. "
-                        f"Pk: {issue['issue_id']}. exception registerred."
+                        f"Pk: {issue['issue_id']}. exception registered."
                     )
                     continue
                 except Exception as e: 
-                    self.logger.info(f"exception is {e} and not an IndexError.. exception registerred")
+                    self.logger.info(f"exception is {e} and not an IndexError.. exception registered")
                     continue 
 
                 closed_issue_updates.append({
-                    'b_issue_id'.item(): issue['issue_id'],
-                    'cntrb_id'.item(): closed_event['cntrb_id']
+                    'b_issue_id': issue['issue_id'],
+                    'cntrb_id': closed_event['cntrb_id']
                 })
 
                 self.logger.info(f"Current closed issue count is {len(closed_issue_updates)}.")
