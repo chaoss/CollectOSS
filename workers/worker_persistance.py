@@ -15,7 +15,7 @@ import concurrent
 import multiprocessing
 import psycopg2
 import psycopg2.extensions
-import sqlalchemy.orm.session
+import sqlalchemy.orm.session as sessy
 import csv
 import io
 from logging import FileHandler, Formatter, StreamHandler
@@ -818,7 +818,7 @@ class Persistant():
                     # s_buf_encoded = s_buf.read().encode("UTF-8")
                     #self.logger.info(f"this is the sbuf_encdoded {s_buf_encoded}")
                     try:
-                        Session=sessionmaker(bind=dbapi_conn)
+                        Session=sessy.sessionmaker(bind=dbapi_conn)
                         session=Session()
                         session.copy_expert(sql=sql, file=s_buf)
                         #curs.copy_expert(sql=sql, file=s_buf)
