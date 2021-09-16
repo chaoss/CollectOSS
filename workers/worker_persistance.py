@@ -820,7 +820,8 @@ class Persistant():
                     try:
                         Session=sessy.sessionmaker(bind=dbapi_conn)
                         session=Session()
-                        session.copy_expert(sql=sql, file=s_buf)
+                        # session.copy_expert(sql=sql, file=s_buf)
+                        copy_expert(sql=sql, file=s_buf)
                         #curs.copy_expert(sql=sql, file=s_buf)
                         session.commit()
                         self.logger.info("message committed")
