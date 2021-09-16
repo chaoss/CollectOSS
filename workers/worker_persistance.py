@@ -825,6 +825,7 @@ class Persistant():
                         #session.commit()
                         #self.logger.info("message committed")
                         dbapi_conn.commit()
+                        self.logger.debug("exception not registered: record committed! Watson, come quick!!!")
                     except Exception as e:
                         self.logger.debug(f"Bulk insert error: {e}. exception registered")
                         stacker = traceback.format_exc()
