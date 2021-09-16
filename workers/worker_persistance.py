@@ -811,6 +811,7 @@ class Persistant():
 
                     sql = 'COPY {} ({}) FROM STDIN WITH CSV'.format(
                         table_name, columns)
+
                     #This causes the github worker to throw an error with pandas
                     #cur.copy_expert(sql=sql, file=self.text_clean(s_buf))
                     # s_buf_encoded = s_buf.read().encode("UTF-8")
@@ -833,7 +834,7 @@ class Persistant():
                     if_exists="append",
                     index=False,
                     method=None,
-                    #method=psql_insert_copy
+                    method=psql_insert_copy,
                     #dtype=dict,
                     chunksize=1
                 )
