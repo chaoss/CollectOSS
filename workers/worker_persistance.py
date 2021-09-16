@@ -817,14 +817,17 @@ class Persistant():
                     # s_buf_encoded = s_buf.read().encode("UTF-8")
                     #self.logger.info(f"this is the sbuf_encdoded {s_buf_encoded}")
                     try:
+                        Session=sessionmake(bind=dbapi_conn)
+                        session=Session()
+                        session.copy_expert(sql=sql, file=s_buf)
                         curs.copy_expert(sql=sql, file=s_buf)
-                        curs.commit()
+                        session.commit()
                         self.logger.info("message committed")
                     except Exception as e:
-                        self.logger.info(f"Bulk insert error: {e}. exception registered")
+                        self.logger.debug(f"Bulk insert error: {e}. exception registered")
                         stacker = traceback.format_exc()
                         self.logger.debug(f"{stacker}")
-                        curs.rollback()
+                        session.rollback()
 
             try: 
                 df = pd.DataFrame(insert)
