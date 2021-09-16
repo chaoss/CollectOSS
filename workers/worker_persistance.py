@@ -818,7 +818,7 @@ class Persistant():
                     # s_buf_encoded = s_buf.read().encode("UTF-8")
                     #self.logger.info(f"this is the sbuf_encdoded {s_buf_encoded}")
                     try:
-                        Session=sessy.sessionmaker(bind=dbapi_conn)
+                        sessy.Session=sessy.sessionmaker(bind=dbapi_conn)
                         session=Session()
                         # session.copy_expert(sql=sql, file=s_buf)
                         #copy_expert(sql=sql, file=s_buf)
