@@ -822,6 +822,7 @@ class Persistant():
                         self.logger.info(f"Bulk insert error: {e}. exception registered")
                         stacker = traceback.format_exc()
                         self.logger.debug(f"{stacker}")
+                        dbapi_conn.close()
 
             try: 
                 df = pd.DataFrame(insert)
