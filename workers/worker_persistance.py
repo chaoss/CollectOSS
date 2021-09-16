@@ -452,6 +452,23 @@ class Persistant():
 
             #Throwing value errors. 'cannot use name of an existing column for indicator column'
 
+
+            '''
+                This is how uniqueness, or whether a piece of data needs to be inserted, or 
+                if that data already exists.
+
+                With regards to the comment_action_map (for insertion of issue_comments and pull_request_comments
+                we need to recognize the following: 
+
+                    paginate_endpoint() then gets a dataframe of all the data that needs to be inserted.
+                    Earlier, we added 'tool_source' to the augur side of the action map, and left 
+                    'id' alone on the source side (since tool_source) is our variable, and part of our
+                    natural key. 
+
+                    --Andrew Brain and Sean Goggins 9/16/2021. Debugging duplicate insert errors for 
+                    comments after initial collection. 
+            '''
+
             try:
                 need_insertion = new_data_df.merge(table_values_df, suffixes=('','_table'),
                         how='outer', indicator=True, left_on=action_map['insert']['source'],

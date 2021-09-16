@@ -584,12 +584,16 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         # 3. The REPO_ID so queries are easier.
         ## ALL THIS INFO IS IN THE PLATFOMR JSON AND WE ARe ignoring IT.
 
-
-
         comment_action_map = {
             'insert': {
                 'source': ['id'],
-                'augur': ['platform_msg_id']
+                'augur': ['platform_msg_id', 'tool_source']
+            }
+        }
+        comment_ref_action_map = {
+            'insert': {
+                'source': ['id'],
+                'augur': ['pr_message_ref_src_comment_id', 'tool_source']
             }
         }
 
@@ -630,7 +634,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             } for comment in pr_comments['insert']
         ]
 
-        self.bulk_insert(self.message_table, insert=pr_comments_insert)
+        self.bulk_insert(self.message_table, insert=pr_comments_insert, 
+            unique_columns = comment_action_map['insert']['augur'] )
 
         # PR MESSAGE REF TABLE
 
@@ -662,7 +667,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         try: 
 
-            self.bulk_insert(self.pull_request_message_ref_table, insert=pr_message_ref_insert)
+            self.bulk_insert(self.pull_request_message_ref_table, insert=pr_message_ref_insert
+                unique_columns=comment_ref_action_map['insert']['augur'])
 
         except Exception as e:
 
@@ -844,7 +850,14 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         review_msg_action_map = {
             'insert': {
                 'source': ['id'],
-                'augur': ['pr_review_msg_src_id']
+                'augur': ['platform_msg_id', 'tool_source']
+            }
+        }
+
+        review_msg_ref_action_map = {
+            'insert': {
+                'source': ['id'],
+                'augur': ['pr_review_msg_src_id', 'tool_source']
             }
         }
 
@@ -895,7 +908,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             if comment['user'] and 'login' in comment['user']
         ]
 
-        self.bulk_insert(self.message_table, insert=review_msg_insert)
+        self.bulk_insert(self.message_table, insert=review_msg_insert, 
+            unique_columns = review_msg_action_map['insert']['augur'])
 
         # PR REVIEW MESSAGE REF TABLE
 
@@ -948,7 +962,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         self.bulk_insert(
             self.pull_request_review_message_ref_table,
-            insert=pr_review_msg_ref_insert
+            insert=pr_review_msg_ref_insert, unique_columns = review_msg_ref_action_map['insert']['augur']
         )
 
     def pull_request_nested_data_model(self, pk_source_prs=[]):
