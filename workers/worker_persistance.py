@@ -832,8 +832,9 @@ class Persistant():
                     con=self.db,
                     if_exists="append",
                     index=False,
-                    method=None
+                    method=None,
                     #method=psql_insert_copy
+                    dtype=dict
                 )
                 if increment_counter:
                     self.insert_counter += len(insert)
