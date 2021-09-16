@@ -4,6 +4,7 @@ import logging
 from logging import FileHandler, Formatter, StreamHandler
 from workers.worker_git_integration import WorkerGitInterfaceable
 from workers.util import read_config
+from psycopg2.errors import UniqueViolation
 """
 This class serves as an extension for the facade worker to allow it to make api calls and interface with GitHub.
 The motivation for doing it this way is because the functionality needed to interface with Github and/or GitLab
@@ -139,7 +140,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         self.data_source = '\'Git Log\''
 
     # Try to construct the best url to ping GitHub's API for a username given an email.
-    def resolve_user_url_from_email(self, email):
+    def create_endpoint_from_email(self, email):
         self.logger.info(f"Trying to resolve contributor from email: {email}")
 
         url = 'https://api.github.com/search/users?q={}+in:email&&{}+in:email'.format(
@@ -148,7 +149,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         return url
 
     # Try to construct the best url to ping GitHub's API for a username given a full name.
-    def resolve_user_url_from_name(self, contributor):
+    def create_endpoint_from_name(self, contributor):
         self.logger.info(f"Trying to resolve contributor: {contributor}")
 
         # Try to get the 'names' field if 'commit_name' field is not present in contributor data.
@@ -252,12 +253,111 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         return response_data
 
+    def insert_alias(self, contributor, commit_email):
+        # Insert cntrb_id and email of the corresponding record into the alias table
+        # Another database call to get the contributor id is needed because its an autokeyincrement that is accessed by multiple workers
+        # Same principle as enrich_cntrb_id method.
+        contributor_table_data = self.db.execute(
+            s.sql.select([s.column('cntrb_id'), s.column('cntrb_canonical')]).where(
+                self.contributors_table.c.gh_user_id == contributor["gh_user_id"]
+            )
+        ).fetchall()
+
+        # Handle potential failures
+        if len(contributor_table_data) == 1:
+            self.logger.info(
+                f"cntrb_id {contributor_table_data[0]['cntrb_id']} found in database and assigned to enriched data")
+        elif len(contributor_table_data) == 0:
+            self.logger.error("Couldn't find contributor in database. Something has gone very wrong. Augur ran into a contributor whose login can be found in the contributor's table, but cannot be retrieved via the user_id that was gotten using the same login.")
+            raise LookupError
+        else:
+            self.logger.info(
+                f"There are more than one contributors in the table with gh_user_id={contributor['gh_user_id']}")
+
+        # Insert a new alias that corresponds to where the contributor was found
+        # use the email of the new alias for canonical_email if the api returns NULL
+        # TODO: It might be better to have the canonical_email allowed to be NUll because right now it has a null constraint.
+        alias = {
+            "cntrb_id": contributor_table_data[0]['cntrb_id'],
+            "alias_email": commit_email,
+            "canonical_email": contributor['cntrb_canonical'] if 'cntrb_canonical' in contributor and contributor['cntrb_canonical'] is not None else commit_email,
+            "tool_source": self.tool_source,
+            "tool_version": self.tool_version,
+            "data_source": self.data_source
+        }
+
+        # Insert new alias
+        try:
+            self.db.execute(
+                self.contributors_aliases_table.insert().values(alias))
+        except s.exc.IntegrityError:
+            # It's expected to catch duplicates this way so no output is logged.
+            pass
+        except Exception as e:
+            self.logger.info(
+                f"Ran into issue with alias: {alias}. Error: {e}")
+
+        return
+
+    # Takes the user data from the endpoint as arg
+    # Updates the alias table if the login is already in the contributor's table with the new email.
+    # Returns whether the login was found in the contributors table
+    def resolve_if_login_existing(self, contributor, commit_email):
+        # check if login exists in contributors table
+        select_cntrbs_query = s.sql.text("""
+            SELECT cntrb_id from contributors
+            WHERE cntrb_login = :gh_login_value
+        """)
+
+        # Bind parameter
+        select_cntrbs_query = select_cntrbs_query.bindparams(
+            gh_login_value=contributor['cntrb_login'])
+        result = self.db.execute(select_cntrbs_query)
+
+        # if yes
+        if len(result.fetchall()) >= 1:
+            self.insert_alias(contributor, commit_email)
+            return True
+
+        # If not found, return false
+        return False
+
+    def update_contributor(self, cntrb, max_attempts=3):
+
+        # Get primary key so that we can update
+        contributor_table_data = self.db.execute(
+            s.sql.select([s.column('cntrb_id')]).where(
+                self.contributors_table.c.gh_user_id == cntrb["gh_user_id"]
+            )
+        ).fetchall()
+
+        attempts = 0
+
+        while attempts < max_attempts:
+            try:
+                # Using with on a sqlalchemy connection prevents 'Connection refused' error
+                # Ensures all database requests use the same connection
+                with self.db.connect() as connection:
+                    # Use primary key to update the correct data.
+                    connection.execute(self.contributors_table.update().where(
+                        self.contributors_table.c.cntrb_id == contributor_table_data[0]['cntrb_id']
+                    ).values(cntrb))
+                break  # break if success.
+            except Exception as e:
+                self.logger.info(
+                    f"Ran into exception updating contributor with data: {cntrb}. Error: {e}")
+                # give a delay so that we have a greater chance of success.
+                time.sleep(1)
+
+            attempts += 1
+
     # Try every distinct email found within a commit for possible username resolution.
     # Add email to garbage table if can't be resolved.
     #   \param contributor is the raw database entry
     #   \return A dictionary of response data from github with potential logins on success.
     #           None on failure
-    def resolve_contributor_from_email(self, contributor):
+
+    def fetch_username_from_email(self, contributor):
 
         # Get list of all emails in the commit data.
         # Start with the fields we know that we can start with
@@ -284,11 +384,12 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                 continue  # Don't bother with emails that are blank or less than 2 characters
 
             try:
-                url = self.resolve_user_url_from_email(email)
+                url = self.create_endpoint_from_email(email)
             except Exception as e:
                 self.logger.info(
                     f"Couldn't resolve email url with given data. Reason: {e}")
-                continue  # If the method throws an error it means that we can't hit the endpoint so we can't really do much
+        # If the method throws an error it means that we can't hit the endpoint so we can't really do much
+                continue
 
             login_json = self.request_dict_from_endpoint(
                 url, timeout_wait=30)
@@ -315,9 +416,11 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                 try:
                     self.db.execute(
                         self.unresolved_commit_emails_table.insert().values(unresolved))
+                except s.exc.IntegrityError:
+                    pass #Pass because duplicate checking is expected
                 except Exception as e:
                     self.logger.info(
-                        f"Could not create new alias with email {unresolved['email']}. Error: {e}")
+                        f"Could not create new unresolved email {unresolved['email']}. Error: {e}")
                 continue
             else:
                 # Return endpoint dictionary if email found it.
@@ -326,7 +429,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         # failure condition returns None
         return login_json
 
-    # Update the contributors table from the data facade has gathered.
+  # Update the contributors table from the data facade has gathered.
 
     def insert_facade_contributors(self, repo_id):
         self.logger.info(
@@ -430,7 +533,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
             # Try to get login from all possible emails
             # Is None upon failure.
-            login_json = self.resolve_contributor_from_email(contributor)
+            login_json = self.fetch_username_from_email(contributor)
 
             # Check if the email result got anything, if it failed try a name search.
             if login_json == None or 'total_count' not in login_json or login_json['total_count'] == 0:
@@ -438,7 +541,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                     "Could not resolve the username from the email. Trying a name only search...")
 
                 try:
-                    url = self.resolve_user_url_from_name(contributor)
+                    url = self.create_endpoint_from_name(contributor)
                 except Exception as e:
                     self.logger.info(
                         f"Couldn't resolve name url with given data. Reason: {e}")
@@ -601,100 +704,3 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             }))
 
         return
-
-    def insert_alias(self, contributor, commit_email):
-        # Insert cntrb_id and email of the corresponding record into the alias table
-        # Another database call to get the contributor id is needed because its an autokeyincrement that is accessed by multiple workers
-        # Same principle as enrich_cntrb_id method.
-        contributor_table_data = self.db.execute(
-            s.sql.select([s.column('cntrb_id'), s.column('cntrb_canonical')]).where(
-                self.contributors_table.c.gh_user_id == contributor["gh_user_id"]
-            )
-        ).fetchall()
-
-        # Handle potential failures
-        if len(contributor_table_data) == 1:
-            self.logger.info(
-                f"cntrb_id {contributor_table_data[0]['cntrb_id']} found in database and assigned to enriched data")
-        elif len(contributor_table_data) == 0:
-            self.logger.error("Couldn't find contributor in database. Something has gone very wrong. Augur ran into a contributor whose login can be found in the contributor's table, but cannot be retrieved via the user_id that was gotten using the same login.")
-            raise LookupError
-        else:
-            self.logger.info(
-                f"There are more than one contributors in the table with gh_user_id={contributor['gh_user_id']}")
-
-        # Insert a new alias that corresponds to where the contributor was found
-        # use the email of the new alias for canonical_email if the api returns NULL
-        # TODO: It might be better to have the canonical_email allowed to be NUll because right now it has a null constraint.
-        alias = {
-            "cntrb_id": contributor_table_data[0]['cntrb_id'],
-            "alias_email": commit_email,
-            "canonical_email": contributor['cntrb_canonical'] if 'cntrb_canonical' in contributor and contributor['cntrb_canonical'] is not None else commit_email,
-            "tool_source": self.tool_source,
-            "tool_version": self.tool_version,
-            "data_source": self.data_source
-        }
-
-        # Insert new alias
-        try:
-            self.db.execute(
-                self.contributors_aliases_table.insert().values(alias))
-        except s.exc.IntegrityError:
-            pass #It's expected to catch duplicates this way so no output is logged.
-        except Exception as e:
-            self.logger.info(
-                f"Ran into issue with alias: {alias}. Error: {e}")
-
-        return
-
-    # Takes the user data from the endpoint as arg
-    # Updates the alias table if the login is already in the contributor's table with the new email.
-    # Returns whether the login was found in the contributors table
-    def resolve_if_login_existing(self, contributor, commit_email):
-        # check if login exists in contributors table
-        select_cntrbs_query = s.sql.text("""
-            SELECT cntrb_id from contributors
-            WHERE cntrb_login = :gh_login_value
-        """)
-
-        # Bind parameter
-        select_cntrbs_query = select_cntrbs_query.bindparams(
-            gh_login_value=contributor['cntrb_login'])
-        result = self.db.execute(select_cntrbs_query)
-
-        # if yes
-        if len(result.fetchall()) >= 1:
-            self.insert_alias(contributor, commit_email)
-            return True
-
-        # If not found, return false
-        return False
-
-    def update_contributor(self, cntrb, max_attempts=3):
-
-        # Get primary key so that we can update
-        contributor_table_data = self.db.execute(
-            s.sql.select([s.column('cntrb_id')]).where(
-                self.contributors_table.c.gh_user_id == cntrb["gh_user_id"]
-            )
-        ).fetchall()
-
-        attempts = 0
-
-        while attempts < max_attempts:
-            try:
-                # Using with on a sqlalchemy connection prevents 'Connection refused' error
-                # Ensures all database requests use the same connection
-                with self.db.connect() as connection:
-                    # Use primary key to update the correct data.
-                    connection.execute(self.contributors_table.update().where(
-                        self.contributors_table.c.cntrb_id == contributor_table_data[0]['cntrb_id']
-                    ).values(cntrb))
-                break  # break if success.
-            except Exception as e:
-                self.logger.info(
-                    f"Ran into exception updating contributor with data: {cntrb}. Error: {e}")
-                # give a delay so that we have a greater chance of success.
-                time.sleep(1)
-
-            attempts += 1
