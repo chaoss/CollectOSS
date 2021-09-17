@@ -12,7 +12,7 @@ CREATE TABLE "augur_data"."unresolved_commit_emails" (
 )
 ;
 
-ALTER TABLE "augur_data"."contributors_aliases" ADD CONSTRAINT "only-email-once" UNIQUE ("alias_email");
+ALTER TABLE "augur_data"."contributors_aliases" ADD CONSTRAINT "only-email-once" UNIQUE ("alias_email") DEFERRABLE INITIALLY DEFERRED;
 
 
 
