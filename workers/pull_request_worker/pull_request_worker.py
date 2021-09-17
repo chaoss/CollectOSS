@@ -546,7 +546,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         try:
             pk_source_prs = self._get_pk_source_prs()
-            self.write_debug_data(pk_source_prs, 'pk_source_prs')
+            #self.write_debug_data(pk_source_prs, 'pk_source_prs')
+            self.logger.debug(f"source pk_source_prs: {pk_source_prs}.")
             if pk_source_prs:
                 try:
                     self.pull_request_comments_model()
