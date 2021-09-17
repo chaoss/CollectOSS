@@ -540,7 +540,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                     #Look up email to see if resolved
                     alias_table_data = self.db.execute(
                         s.sql.select([s.column('alias_email')]).where(
-                            self.contributors_aliases.c.alias_email == email
+                            self.contributors_aliases_table.c.alias_email == email
                         )
                     ).fetchall()
 
