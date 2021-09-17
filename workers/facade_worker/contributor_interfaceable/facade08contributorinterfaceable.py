@@ -531,7 +531,27 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             if contributor['committer_email_raw'] not in emails:
                 emails.append(contributor['committer_email_raw'])
 
-            #self.logger.info(f"DEBUG: here is the email array: {emails}")
+            self.logger.info(f"DEBUG: here is the email array: {emails}")
+
+            #check each email to see if it already exists in contributor_aliases
+            #The [:] is a python thing that lets us iterate over a copy of the list instead of the real thing, allowing deletion to take place in place.
+            for email in emails[:]: 
+                #Look up email to see if resolved
+                alias_table_data = self.db.execute(
+                    s.sql.select([s.column('alias_email')]).where(
+                        self.contributors_table.c.alias_email == email
+                    )
+                ).fetchall()
+
+                if len(alias_table_data) >= 1:
+                    #delete from list if found.
+                    emails.remove(email)
+
+            self.logger.info(f"DEBUG: here is the email array after deletion: {emails}")
+
+            #If all emails have been resolved. No need to hit any api's
+            if len(emails) == 0:
+                continue
 
             # Try to get login from all possible emails
             # Is None upon failure.
