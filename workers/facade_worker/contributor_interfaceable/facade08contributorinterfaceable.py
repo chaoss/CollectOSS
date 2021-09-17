@@ -535,13 +535,16 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
             #check each email to see if it already exists in contributor_aliases
             #The [:] is a python thing that lets us iterate over a copy of the list instead of the real thing, allowing deletion to take place in place.
-            for email in emails[:]: 
-                #Look up email to see if resolved
-                alias_table_data = self.db.execute(
-                    s.sql.select([s.column('alias_email')]).where(
-                        self.contributors_table.c.alias_email == email
-                    )
-                ).fetchall()
+            for email in emails[:]:
+                try: 
+                    #Look up email to see if resolved
+                    alias_table_data = self.db.execute(
+                        s.sql.select([s.column('alias_email')]).where(
+                            self.contributors_table.c.alias_email == email
+                        )
+                    ).fetchall()
+                except Exception as e:
+                    self.logger.info(f"alias table query failed with error: {e}")
 
                 if len(alias_table_data) >= 1:
                     #delete from list if found.
