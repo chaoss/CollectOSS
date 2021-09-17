@@ -531,7 +531,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             if contributor['committer_email_raw'] not in emails:
                 emails.append(contributor['committer_email_raw'])
 
-            self.logger.info(f"DEBUG: here is the email array: {emails}")
+            #self.logger.info(f"DEBUG: here is the email array: {emails}")
 
             # Try to get login from all possible emails
             # Is None upon failure.
@@ -591,14 +591,15 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                 except Exception as e:
                     self.logger.info(f"Deleting now resolved email failed with error: {e}")
 
-            self.logger.info("When searching for a contributor with info {}, we found the following users: {}\n".format(
-                contributor, login_json))
 
             # Grab first result and make sure it has the highest match score
             match = login_json['items'][0]
             for item in login_json['items']:
                 if item['score'] > match['score']:
                     match = item
+            
+            self.logger.info("When searching for a contributor with info {}, we found the following users: {}\n".format(
+                contributor, match))
 
             # Check if gh_login exists in contributors table TODO
 
