@@ -549,7 +549,7 @@ class GitHubWorker(WorkerGitInterfaceable):
                 closed_issue_updates.append({
                     'b_issue_id': issue['issue_id'],
                     'cntrb_id': closed_event['cntrb_id'],
-                    'issue_state': issue['issue_state'],
+                    'issue_state': issue['state'],
                     'closed_at': issue['closed_at']
                 })
 
