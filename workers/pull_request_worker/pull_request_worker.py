@@ -547,23 +547,23 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         try:
             pk_source_prs = self._get_pk_source_prs()
             self.write_debug_data(pk_source_prs, 'pk_source_prs')
-        if pk_source_prs:
-            try:
-                self.pull_request_comments_model()
-            except Exception as e:
-                self.logger.info(f"Comments model failed with {e}.")
-            try:
-                self.pull_request_events_model(pk_source_prs)
-            except Exception as e:
-                self.logger.info(f"PR Events model failed with {e}.")
-            try:
-                self.pull_request_reviews_model(pk_source_prs)
-            except Exception as e:
-                self.logger.info(f"PR Reviews model failed with {e}.")
-            try:
-                self.pull_request_nested_data_model(pk_source_prs)
-            except Exception as e:
-                self.logger.info(f"PR Nested Data model failed with {e}.")
+            if pk_source_prs:
+                try:
+                    self.pull_request_comments_model()
+                except Exception as e:
+                    self.logger.info(f"Comments model failed with {e}.")
+                try:
+                    self.pull_request_events_model(pk_source_prs)
+                except Exception as e:
+                    self.logger.info(f"PR Events model failed with {e}.")
+                try:
+                    self.pull_request_reviews_model(pk_source_prs)
+                except Exception as e:
+                    self.logger.info(f"PR Reviews model failed with {e}.")
+                try:
+                    self.pull_request_nested_data_model(pk_source_prs)
+                except Exception as e:
+                    self.logger.info(f"PR Nested Data model failed with {e}.")
         except Exception as e:
             self.logger.info(f"Pull Requests model failed with {e}.")
 
