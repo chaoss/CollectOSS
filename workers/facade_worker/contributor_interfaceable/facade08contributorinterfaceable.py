@@ -554,6 +554,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
             #If all emails have been resolved. No need to hit any api's
             if len(emails) == 0:
+                self.logger.info("Commit emails all found to be resolved. Continuing...")
                 continue
 
             # Try to get login from all possible emails
