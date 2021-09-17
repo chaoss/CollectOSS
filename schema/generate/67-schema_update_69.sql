@@ -18,6 +18,6 @@ COMMIT;
 
 BEGIN;
 
-ALTER TABLE "augur_data"."contributors_aliases" ADD CONSTRAINT "only-email-once" UNIQUE ("alias_email") DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE "augur_data"."contributors_aliases" ADD CONSTRAINT "only-email-once" UNIQUE ("alias_email", "canonical_email") DEFERRABLE INITIALLY DEFERRED;
 
 COMMIT; 
