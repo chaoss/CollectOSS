@@ -581,7 +581,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             for email in emails:
                 query = s.sql.text("""
                     DELETE FROM unresolved_commit_emails
-                    WHERE email = {}
+                    WHERE email='{}'
                 """.format(email))
 
                 self.logger.info(f"Updating now resolved email {email}")
