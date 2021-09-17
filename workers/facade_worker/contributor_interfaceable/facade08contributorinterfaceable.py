@@ -414,7 +414,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         # failure condition returns None
         return login_json
 
-  # Update the contributors table from the data facade has gathered.
+    # Update the contributors table from the data facade has gathered.
 
     def insert_facade_contributors(self, repo_id):
         self.logger.info(
