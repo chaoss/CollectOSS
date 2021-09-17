@@ -253,7 +253,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         return response_data
 
-    def insert_alias(self, contributor, commit_email):
+    def insert_alias(self, contributor, commit_emails):
         # Insert cntrb_id and email of the corresponding record into the alias table
         # Another database call to get the contributor id is needed because its an autokeyincrement that is accessed by multiple workers
         # Same principle as enrich_cntrb_id method.
@@ -274,35 +274,37 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             self.logger.info(
                 f"There are more than one contributors in the table with gh_user_id={contributor['gh_user_id']}")
 
-        # Insert a new alias that corresponds to where the contributor was found
-        # use the email of the new alias for canonical_email if the api returns NULL
-        # TODO: It might be better to have the canonical_email allowed to be NUll because right now it has a null constraint.
-        alias = {
-            "cntrb_id": contributor_table_data[0]['cntrb_id'],
-            "alias_email": commit_email,
-            "canonical_email": contributor['cntrb_canonical'] if 'cntrb_canonical' in contributor and contributor['cntrb_canonical'] is not None else commit_email,
-            "tool_source": self.tool_source,
-            "tool_version": self.tool_version,
-            "data_source": self.data_source
-        }
 
-        # Insert new alias
-        try:
-            self.db.execute(
-                self.contributors_aliases_table.insert().values(alias))
-        except s.exc.IntegrityError:
-            # It's expected to catch duplicates this way so no output is logged.
-            pass
-        except Exception as e:
-            self.logger.info(
-                f"Ran into issue with alias: {alias}. Error: {e}")
+        for email in commit_emails:
+            # Insert a new alias that corresponds to where the contributor was found
+            # use the email of the new alias for canonical_email if the api returns NULL
+            # TODO: It might be better to have the canonical_email allowed to be NUll because right now it has a null constraint.
+            alias = {
+                "cntrb_id": contributor_table_data[0]['cntrb_id'],
+                "alias_email": email,
+                "canonical_email": contributor['cntrb_canonical'] if 'cntrb_canonical' in contributor and contributor['cntrb_canonical'] is not None else email,
+                "tool_source": self.tool_source,
+                "tool_version": self.tool_version,
+                "data_source": self.data_source
+            }
+
+            # Insert new alias
+            try:
+                self.db.execute(
+                    self.contributors_aliases_table.insert().values(alias))
+            except s.exc.IntegrityError:
+                # It's expected to catch duplicates this way so no output is logged.
+                pass
+            except Exception as e:
+                self.logger.info(
+                    f"Ran into issue with alias: {alias}. Error: {e}")
 
         return
 
     # Takes the user data from the endpoint as arg
     # Updates the alias table if the login is already in the contributor's table with the new email.
     # Returns whether the login was found in the contributors table
-    def resolve_if_login_existing(self, contributor, commit_email):
+    def resolve_if_login_existing(self, contributor, commit_emails):
         # check if login exists in contributors table
         select_cntrbs_query = s.sql.text("""
             SELECT cntrb_id from contributors
@@ -316,7 +318,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         # if yes
         if len(result.fetchall()) >= 1:
-            self.insert_alias(contributor, commit_email)
+            self.insert_alias(contributor, commit_emails)
             return True
 
         # If not found, return false
@@ -357,24 +359,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
     #   \return A dictionary of response data from github with potential logins on success.
     #           None on failure
 
-    def fetch_username_from_email(self, contributor):
-
-        # Get list of all emails in the commit data.
-        # Start with the fields we know that we can start with
-        emails = [contributor['commit_email']
-                  if 'commit_email' in contributor else contributor['email']]
-
-        # Check if other emails match the previous, if they don't then add them
-        if contributor['email_raw'] not in emails:
-            emails.append(contributor['email_raw'])
-
-        if contributor['committer_email'] not in emails:
-            emails.append(contributor['committer_email'])
-
-        if contributor['committer_email_raw'] not in emails:
-            emails.append(contributor['committer_email_raw'])
-
-        self.logger.info(f"DEBUG: here is the email array: {emails}")
+    def fetch_username_from_email(self, emails):
 
         # Default to failed state
         login_json = None
@@ -417,7 +402,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                     self.db.execute(
                         self.unresolved_commit_emails_table.insert().values(unresolved))
                 except s.exc.IntegrityError:
-                    pass #Pass because duplicate checking is expected
+                    pass  # Pass because duplicate checking is expected
                 except Exception as e:
                     self.logger.info(
                         f"Could not create new unresolved email {unresolved['email']}. Error: {e}")
@@ -531,9 +516,26 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         # Try to get GitHub API user data from each unique commit email.
         for contributor in new_contribs:
 
+            # Get list of all emails in the commit data.
+            # Start with the fields we know that we can start with
+            emails = [contributor['commit_email']
+                      if 'commit_email' in contributor else contributor['email']]
+
+            # Check if other emails match the previous, if they don't then add them
+            if contributor['email_raw'] not in emails:
+                emails.append(contributor['email_raw'])
+
+            if contributor['committer_email'] not in emails:
+                emails.append(contributor['committer_email'])
+
+            if contributor['committer_email_raw'] not in emails:
+                emails.append(contributor['committer_email_raw'])
+
+            self.logger.info(f"DEBUG: here is the email array: {emails}")
+
             # Try to get login from all possible emails
             # Is None upon failure.
-            login_json = self.fetch_username_from_email(contributor)
+            login_json = self.fetch_username_from_email(emails)
 
             # Check if the email result got anything, if it failed try a name search.
             if login_json == None or 'total_count' not in login_json or login_json['total_count'] == 0:
@@ -562,7 +564,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                 emailToInsert = contributor['commit_email'] if 'commit_email' in contributor else contributor['email']
 
                 try:
-                    # At this point we know we can't do anything with the email so we make the cntrb_id foreign key 1
+                    # At this point we know we can't do anything with the emails or the names provided so we make the cntrb_id foreign key 1
                     self.db.execute(self.commits_table.update().where(
                         self.commits_table.c.cmt_committer_email == emailToInsert
                     ).values({
@@ -573,6 +575,21 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                     self.logger.info(
                         f"Could not enrich unresolvable email address with dummy data. Error: {e}")
                 continue
+
+            # Resolve any unresolved emails if we get to this point.
+            #They will get added to the alias table later
+            for email in emails:
+                query = s.sql.text("""
+                    DELETE FROM unresolved_commit_emails
+                    WHERE email = {}
+                """.format(email))
+
+                self.logger.info(f"Updating now resolved email {email}")
+
+                try:
+                    self.db.execute(query)
+                except Exception as e:
+                    self.logger.info(f"Deleting now resolved email failed with error: {e}")
 
             self.logger.info("When searching for a contributor with info {}, we found the following users: {}\n".format(
                 contributor, login_json))
@@ -634,18 +651,18 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                 "tool_version": self.tool_version,
                 "data_source": self.data_source
             }
-            # Check if the github login exists in the contributors table and add to alias' if it does.
+            # Check if the github login exists in the contributors table and add the emails to alias' if it does.
 
             # Also update the contributor record with commit data if we can.
 
             try:
-                if not self.resolve_if_login_existing(cntrb, emailFromCommitData):
+                if not self.resolve_if_login_existing(cntrb, emails):
                     try:
                         self.db.execute(
                             self.contributors_table.insert().values(cntrb))
 
                         # Update alias after insertion. Insertion needs to happen first so we can get the autoincrementkey
-                        self.insert_alias(cntrb, emailFromCommitData)
+                        self.insert_alias(cntrb, emails)
                     except Exception as e:
                         self.logger.info(
                             f"Ran into likely database collision. Assuming contributor exists in database. Error: {e}")
