@@ -553,18 +553,26 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                     self.pull_request_comments_model()
                 except Exception as e:
                     self.logger.info(f"Comments model failed with {e}.")
+                    stacker = traceback.format_exc()
+                    self.logger.debug(f"{stacker}")
                 try:
                     self.pull_request_events_model(pk_source_prs)
                 except Exception as e:
                     self.logger.info(f"PR Events model failed with {e}.")
+                    stacker = traceback.format_exc()
+                    self.logger.debug(f"{stacker}")
                 try:
                     self.pull_request_reviews_model(pk_source_prs)
                 except Exception as e:
                     self.logger.info(f"PR Reviews model failed with {e}.")
+                    stacker = traceback.format_exc()
+                    self.logger.debug(f"{stacker}")
                 try:
                     self.pull_request_nested_data_model(pk_source_prs)
                 except Exception as e:
                     self.logger.info(f"PR Nested Data model failed with {e}.")
+                    stacker = traceback.format_exc()
+                    self.logger.debug(f"{stacker}")
         except Exception as e:
             self.logger.info(f"Pull Requests model failed with {e}.")
 
