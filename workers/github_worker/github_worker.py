@@ -539,10 +539,18 @@ class GitHubWorker(WorkerGitInterfaceable):
                 except Exception as e:
                     self.logger.info(f"exception is {e} and not an IndexError.. exception registered")
                     continue
-
+                ### Updated this on 9/17/2021 due to error: 
+                '''
+                        2021-09-17 15:55:10,377,377ms [PID: 2078591] workers.github_worker.57631 [INFO] Warning! Error bulk updating data: (psycopg2.ProgrammingError) can't adapt type 'numpy.int64'
+                        [SQL: UPDATE issues SET cntrb_id=%(cntrb_id)s, closed_at=%(closed_at)s, issue_state=%(issue_state)s WHERE issues.issue_id = %(b_issue_id)s]
+                        [parameters: ({'cntrb_id': 277403, 'closed_at': 'closed_at', 'issue_state': 'issue_state', 'b_issue_id': 345071}, {'cntrb_id': 277403, 'closed_at': 'closed_at', 'issue_state': 'issue_state', 'b_issue_id': 345072}, {'cntrb_id': 277403, 'closed_at': 'closed_at', 'issue_state': 'issue_state', 'b_issue_id': 345073}, {'cntrb_id': 277403, 'closed_at': 'closed_at', 'issue_state': 'issue_state', 'b_issue_id': 345074}, {'cntrb_id': 277403, 'closed_at': 'closed_at', 'issue_state': 'issue_state', 'b_issue_id': 345075}, {'cntrb_id': 277762, 'closed_at': 'closed_at', 'issue_state': 'issue_state', 'b_issue_id': 345077}, {'cntrb_id': 277762, 'closed_at': 'closed_at', 'issue_state': 'issue_state', 'b_issue_id': 345078})]
+                        (Background on this error at: http://sqlalche.me/e/13/f405)
+                '''
                 closed_issue_updates.append({
                     'b_issue_id': issue['issue_id'],
-                    'cntrb_id': closed_event['cntrb_id']
+                    'cntrb_id': closed_event['cntrb_id'],
+                    'issue_state': closed_event['issue_state'],
+                    'closed_at': issue['closed_at']
                 })
 
                 self.logger.info(f"Current closed issue count is {len(closed_issue_updates)}.")
