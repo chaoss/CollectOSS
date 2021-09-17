@@ -12,6 +12,9 @@ CREATE TABLE "augur_data"."unresolved_commit_emails" (
 )
 ;
 
+ALTER TABLE "augur_data"."contributors_aliases" ADD CONSTRAINT "only-email-once" UNIQUE ("alias_email");
+
+
 
 update "augur_operations"."augur_settings" set value = 69 where setting = 'augur_data_version'; 
 
