@@ -540,15 +540,15 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                     #Look up email to see if resolved
                     alias_table_data = self.db.execute(
                         s.sql.select([s.column('alias_email')]).where(
-                            self.contributors_table.c.alias_email == email
+                            self.contributors_aliases.c.alias_email == email
                         )
                     ).fetchall()
+
+                    if len(alias_table_data) >= 1:
+                        #delete from list if found.
+                        emails.remove(email)
                 except Exception as e:
                     self.logger.info(f"alias table query failed with error: {e}")
-
-                if len(alias_table_data) >= 1:
-                    #delete from list if found.
-                    emails.remove(email)
 
             self.logger.info(f"DEBUG: here is the email array after deletion: {emails}")
 
