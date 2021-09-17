@@ -422,93 +422,31 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         # Get all of the commit data's emails and names from the commit table that do not appear in the contributors table
         new_contrib_sql = s.sql.text("""
-          SELECT distinct
-              commits.cmt_author_email AS email,
-              commits.cmt_author_date AS DATE,
-              commits.cmt_author_name AS NAME,
-              commits.cmt_id AS id,
-              commits.cmt_author_raw_email AS email_raw,
-              commits.cmt_committer_email AS committer_email,
-              commits.cmt_committer_raw_email AS committer_email_raw
-          FROM
-              commits
-          WHERE
-              commits.repo_id =:repo_id
-              AND NOT EXISTS (
-                  SELECT
-                      contributors.cntrb_email
-                  FROM
-                      contributors
-                  WHERE
-                      contributors.cntrb_email = commits.cmt_author_email
-              )
-              AND (
-                  commits.cmt_author_date, commits.cmt_author_name
-              ) IN (
-                  SELECT
-                      MAX(C.cmt_author_date) AS DATE,
-                      C.cmt_author_name
-                  FROM
-                      commits AS C
-                  WHERE
-                      C.repo_id =:repo_id
-                      AND C.cmt_author_email = commits.cmt_author_email
-                  GROUP BY
-                      C.cmt_author_name,
-                      C.cmt_author_date LIMIT 1
-              )
-          GROUP BY
-              commits.cmt_author_email,
-              commits.cmt_author_date,
-              commits.cmt_author_name,
-              commits.cmt_id,
-              commits.cmt_author_raw_email,
-              commits.cmt_committer_email,
-              commits.cmt_committer_raw_email
-          UNION
-          SELECT
-              commits.cmt_committer_email AS email,
-              commits.cmt_committer_date AS DATE,
-              commits.cmt_committer_name AS NAME,
-              commits.cmt_id AS id,
-              commits.cmt_author_raw_email AS email_raw,
-              commits.cmt_committer_email AS committer_email,
-              commits.cmt_committer_raw_email AS committer_email_raw
-          FROM
-              augur_data.commits
-          WHERE
-              commits.repo_id =:repo_id
-              AND NOT EXISTS (
-                  SELECT
-                      contributors.cntrb_email
-                  FROM
-                      augur_data.contributors
-                  WHERE
-                      contributors.cntrb_email = commits.cmt_committer_email
-              )
-              AND (
-                  commits.cmt_committer_date, commits.cmt_committer_name
-              ) IN (
-                  SELECT
-                      MAX(C.cmt_committer_date) AS DATE,
-                      C.cmt_committer_name
-                  FROM
-                      augur_data.commits AS C
-                  WHERE
-                      C.repo_id = :repo_id
-                      AND C.cmt_committer_email = commits.cmt_committer_email
-                  GROUP BY
-                      C.cmt_committer_name,
-                      C.cmt_author_date LIMIT 1
-              )
-          GROUP BY
-              commits.cmt_committer_email,
-              commits.cmt_committer_date,
-              commits.cmt_committer_name,
-              commits.cmt_id,
-              commits.cmt_author_raw_email,
-              commits.cmt_committer_email,
-              commits.cmt_committer_raw_email
+                SELECT DISTINCT
+                    commits.cmt_author_name AS NAME,--commits.cmt_id AS id,
+                    commits.cmt_author_raw_email AS email_raw
+                FROM
+                    commits 
+                WHERE
+                    commits.repo_id = :repo_id
+                    AND NOT EXISTS ( SELECT contributors.cntrb_email FROM contributors WHERE contributors.cntrb_email = commits.cmt_author_email ) 
+                    AND (
+                        commits.cmt_author_name 
+                        ) IN (
+                        SELECT 
+                        C.cmt_author_name 
+                    FROM
+                        commits AS C 
+                    WHERE
+                        C.repo_id = :repo_id
+                        AND C.cmt_author_email = commits.cmt_author_email 
+                    GROUP BY
+                        C.cmt_author_name
+                    ) 
+                GROUP BY
+                    commits.cmt_author_name,
+                    commits.cmt_author_raw_email
+                order by name; 
         """)
         new_contribs = json.loads(pd.read_sql(new_contrib_sql, self.db, params={
                                   'repo_id': repo_id}).to_json(orient="records"))
