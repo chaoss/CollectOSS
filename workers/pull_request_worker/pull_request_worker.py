@@ -1090,6 +1090,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 self.logger.debug(f"PR Meta failed with {e}.")
                 stacker = traceback.format_exc()
                 self.logger.debug(f"{stacker}")
+                continue 
 
         # PR labels insertion
 
@@ -1136,7 +1137,6 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             self.logger.debug(f"PR Meta failed with {e}.")
             stacker = traceback.format_exc()
             self.logger.debug(f"{stacker}")
-            continue
 
         # PR reviewers insertion
         try:
