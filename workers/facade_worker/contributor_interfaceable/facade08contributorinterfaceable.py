@@ -157,7 +157,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         #Also stopped splitting per note above. 
         self.logger.info(f"Trying to resolve contributor from email: {email}")
 
-        url = 'https://api.github.com/search/users?q={}+in:email&&{}+in:email'.format(email)
+        url = 'https://api.github.com/search/users?q={}+in:email+type:user'.format(email)
         #url = 'https://api.github.com/search/users?q={}+in:email+type:user'.format(cmt_cntrb['email'])
         self.logger.info(f"url is: {url}")
         #(
