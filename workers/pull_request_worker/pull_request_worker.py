@@ -96,13 +96,13 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 raise KeyError
             return key_nest
             '''We removed .items() in the issue worker. I assume that's the issue
-               here as well. 9/18/2021 -SPG ''' 
+               here as well. 9/18/2021 -SPG '''
         for data_subject, nest in data_subjects:      #.items():
 
             # self.logger.info(f'Beginning paginate process for field {data_subject} '
             #     f'for query: {query}')
 
-            try: 
+            try:
 
                 page_count = 0
                 while has_previous_page:
@@ -127,7 +127,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                             data = json.loads(json.dumps(response.text))
                             stacker = traceback.format_exc()
                             self.logger.debug(f"{stacker}")
-                            continue 
+                            continue
 
                         if 'errors' in data:
                             self.logger.info("Error!: {}".format(data['errors']))
@@ -185,7 +185,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
                 return tuples + self.graphql_paginate(query, data_subjects[subject],
                     before_parameters=before_parameters)
-            except Exception as e: 
+            except Exception as e:
                 self.logger.debug(f"exception registered in find root of subject: {e}.")
                 stacker = traceback.format_exc()
                 self.logger.debug(f"{stacker}")
@@ -350,47 +350,47 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         """.format(self.repo_id))
         urls = pd.read_sql(pr_url_sql, self.db, params={})
 
-            for pull_request in urls.itertuples(): # for each url of PRs we have inserted
-                try: 
-                    commits_url = pull_request.pr_url + '/commits?page={}'
-                    table = 'pull_request_commits'
-                    table_pkey = 'pr_cmt_id'
-                    duplicate_col_map = {'pr_cmt_sha': 'sha'}
-                    update_col_map = {}
+        for pull_request in urls.itertuples(): # for each url of PRs we have inserted
+            try:
+                commits_url = pull_request.pr_url + '/commits?page={}'
+                table = 'pull_request_commits'
+                table_pkey = 'pr_cmt_id'
+                duplicate_col_map = {'pr_cmt_sha': 'sha'}
+                update_col_map = {}
 
-                    # Use helper paginate function to iterate the commits url and check for dupes
-                    #TODO: figure out why dupes sometimes still happen.q
-                    pr_commits = self.paginate(
-                        commits_url, duplicate_col_map, update_col_map, table, table_pkey,
-                        where_clause="where pull_request_id = {}".format(pull_request.pull_request_id)
-                    )
+                # Use helper paginate function to iterate the commits url and check for dupes
+                #TODO: figure out why dupes sometimes still happen.q
+                pr_commits = self.paginate(
+                    commits_url, duplicate_col_map, update_col_map, table, table_pkey,
+                    where_clause="where pull_request_id = {}".format(pull_request.pull_request_id)
+                )
 
-                    for pr_commit in pr_commits: # post-pagination, iterate results
-                        if pr_commit['flag'] == 'need_insertion': # if non-dupe
-                            pr_commit_row = {
-                                'pull_request_id': pull_request.pull_request_id,
-                                'pr_cmt_sha': pr_commit['sha'],
-                                'pr_cmt_node_id': pr_commit['node_id'],
-                                'pr_cmt_message': pr_commit['commit']['message'],
-                                # 'pr_cmt_comments_url': pr_commit['comments_url'],
-                                'tool_source': self.tool_source,
-                                'tool_version': self.tool_version,
-                                'data_source': 'GitHub API',
-                            }
-                            result = self.db.execute(
-                                self.pull_request_commits_table.insert().values(pr_commit_row)
-                            )
-                            self.logger.info(
-                                f"Inserted Pull Request Commit: {result.inserted_primary_key}\n"
-                            )
+                for pr_commit in pr_commits: # post-pagination, iterate results
+                    if pr_commit['flag'] == 'need_insertion': # if non-dupe
+                        pr_commit_row = {
+                            'pull_request_id': pull_request.pull_request_id,
+                            'pr_cmt_sha': pr_commit['sha'],
+                            'pr_cmt_node_id': pr_commit['node_id'],
+                            'pr_cmt_message': pr_commit['commit']['message'],
+                            # 'pr_cmt_comments_url': pr_commit['comments_url'],
+                            'tool_source': self.tool_source,
+                            'tool_version': self.tool_version,
+                            'data_source': 'GitHub API',
+                        }
+                        result = self.db.execute(
+                            self.pull_request_commits_table.insert().values(pr_commit_row)
+                        )
+                        self.logger.info(
+                            f"Inserted Pull Request Commit: {result.inserted_primary_key}\n"
+                        )
 
-                except Exception as e: 
-                    self.logger.debug(f"exception registered in pull request commits: {e}. ")
-                    stacker = traceback.format_exc()
-                    self.logger.debug(f"{stacker}")
-                    continue
+            except Exception as e:
+                self.logger.debug(f"exception registered in pull request commits: {e}. ")
+                stacker = traceback.format_exc()
+                self.logger.debug(f"{stacker}")
+                continue
 
-            self.register_task_completion(self.task_info, self.repo_id, 'pull_request_commits')
+        self.register_task_completion(self.task_info, self.repo_id, 'pull_request_commits')
 
     def _get_pk_source_prs(self):
 
@@ -419,7 +419,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
             self.write_debug_data(inc_source_prs, 'source_prs')
 
-            try: 
+            try:
 
                 if len(inc_source_prs['all']) == 0:
                     self.logger.info("There are no prs for this repository.\n")
@@ -548,7 +548,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 self.pk_source_prs = []
 
                 return pk_source_prs
-            except Exception as e: 
+            except Exception as e:
                 self.logger.debug(f"exception registered in pk source increment insert: {e}. ")
                 stacker = traceback.format_exc()
                 self.logger.debug(f"{stacker}")
@@ -772,7 +772,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
     def pull_request_reviews_model(self, pk_source_prs=[]):
         ''' Added try except block here for debugging error. '''
-        try: 
+        try:
 
             if not pk_source_prs:
                 pk_source_prs = self._get_pk_source_prs()
@@ -868,7 +868,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
             both_pr_review_pk_source_reviews = self.enrich_data_primary_keys(
                 #pr_pk_source_reviews, self.pull_request_reviews_table, gh_merge_fields,
-                #augur_merge_fields            
+                #augur_merge_fields
                 pr_pk_source_reviews, self.pull_request_reviews_table, review_action_map['insert']['source'],
                 review_action_map['insert']['augur']
             )
@@ -964,7 +964,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             self.bulk_insert(self.message_table, insert=review_msg_insert,
                 unique_columns = review_msg_action_map['insert']['augur'])
 
-        except Exception as e: 
+        except Exception as e:
             self.logger.debug(f"exception registerred in PR reviews: {e}")
             stacker = traceback.format_exc()
             self.logger.debug(f"{stacker}")
@@ -974,7 +974,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         ''' Try except block around messages for reviews 9/26/2021 '''
 
-        try:  
+        try:
             c_pk_source_comments = self.enrich_data_primary_keys(
                 review_msgs['insert'], self.message_table, review_msg_action_map['insert']['source'],
                 review_msg_action_map['insert']['augur']
@@ -1026,7 +1026,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 self.pull_request_review_message_ref_table,
                 insert=pr_review_msg_ref_insert, unique_columns = review_msg_ref_action_map['insert']['augur']
             )
-        except Exception as e: 
+        except Exception as e:
             self.logger.debug(f"Review message insert failed on {e}.")
             stacker = traceback.format_exc()
             self.logger.debug(f"{stacker}")
@@ -1045,22 +1045,22 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         for index, pr in enumerate(pk_source_prs):
 
             # PR Labels
-            try: 
+            try:
                 source_labels = pd.DataFrame(pr['labels'])
                 source_labels['pull_request_id'] = pr['pull_request_id']
                 labels_all += source_labels.to_dict(orient='records')
-            except Exception as e: 
+            except Exception as e:
                 self.logger.debug(f"PR Labels failed with {e}. exception registered")
                 stacker = traceback.format_exc()
                 self.logger.debug(f"{stacker}")
                 continue
 
             # Reviewers
-            try: 
+            try:
                 source_reviewers = pd.DataFrame(pr['requested_reviewers'])
                 source_reviewers['pull_request_id'] = pr['pull_request_id']
                 reviewers_all += source_reviewers.to_dict(orient='records')
-            except Exception as e: 
+            except Exception as e:
                 self.logger.debug(f"PR Reviewers failed with {e}. exception registered")
                 stacker = traceback.format_exc()
                 self.logger.debug(f"{stacker}")
@@ -1071,14 +1071,14 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 source_assignees = pd.DataFrame(pr['assignees'])
                 source_assignees['pull_request_id'] = pr['pull_request_id']
                 assignees_all += source_assignees.to_dict(orient='records')
-            except Exception as e: 
+            except Exception as e:
                 self.logger.debug(f"PR Assignees failed with {e}. exception registered")
                 stacker = traceback.format_exc()
                 self.logger.debug(f"{stacker}")
                 continue
 
             # Meta
-            try: 
+            try:
                 pr['head'].update(
                     {'pr_head_or_base': 'head', 'pull_request_id': pr['pull_request_id']}
                 )
@@ -1086,11 +1086,11 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                     {'pr_head_or_base': 'base', 'pull_request_id': pr['pull_request_id']}
                 )
                 meta_all += [pr['head'], pr['base']]
-            except Exception as e: 
+            except Exception as e:
                 self.logger.debug(f"PR Meta failed with {e}.")
                 stacker = traceback.format_exc()
                 self.logger.debug(f"{stacker}")
-                
+
         # PR labels insertion
 
         try:
@@ -1109,7 +1109,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             source_labels_insert, _ = self.organize_needed_data(
                 labels_all, table_values=table_values_pr_labels, action_map=label_action_map
             )
-            ## This may have caused an error by referencing the label variable too soon. 
+            ## This may have caused an error by referencing the label variable too soon.
             ## Doesn't totally make sense, but that's what the error is. SPG 9/18/2021
             #self.logger.info(f"Howdy. Lets check the label id datatype: {type(label['id'])}.")
 
@@ -1199,12 +1199,12 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             table_values_assignees_labels = self.db.execute(
                 s.sql.select(self.get_relevant_columns(self.pull_request_assignees_table,assignee_action_map))
             ).fetchall()
- 
+
             source_assignees_insert, _ = self.organize_needed_data(
                 assignees_all, table_values=table_values_assignees_labels,
                 action_map=assignee_action_map
             )
- 
+
             if len(source_assignees_insert) > 0:
                 source_assignees_insert = self.enrich_cntrb_id(
                     source_assignees_insert, 'login', action_map_additions={
