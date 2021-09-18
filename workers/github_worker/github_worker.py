@@ -500,8 +500,8 @@ class GitHubWorker(WorkerGitInterfaceable):
 
         self.logger.info("Entering Assignee's.")
 
-        assignees_all = []
-        labels_all = []
+        # assignees_all = []
+        # labels_all = []
 
         def is_nan(value):
             return type(value) == float and math.isnan(value)
@@ -520,12 +520,12 @@ class GitHubWorker(WorkerGitInterfaceable):
                 and not is_nan(issue['assignee'])
             ):
                 source_assignees.append(issue['assignee'])
-                assignees_all += source_assignees
+                # assignees_all += source_assignees
 
-            self.logger.info(f"Total of assignee's is: {assignees_all}. Labels are next.")
+            # self.logger.info(f"Total of assignee's is: {assignees_all}. Labels are next.")
 
             # Issue Labels
-            labels_all += issue['labels']
+            # labels_all += issue['labels']
 
             # If the issue is closed, then we search for the closing event and store the user's id
             if 'closed_at' in issue and not skip_closed_issue_update:
@@ -560,7 +560,7 @@ class GitHubWorker(WorkerGitInterfaceable):
                     'b_issue_id': int(issue['issue_id']),
                     'cntrb_id': int(closed_event['cntrb_id']),
                     'issue_state': issue['state'],
-                    'closed_at': issue['closed_at'] if not pd.isnull(issue['closed_at']) else None, 
+                    'closed_at': issue['closed_at'] if not pd.isnull(issue['closed_at']) else None,
                 })
 
                 self.logger.info(f"Current closed issue count is {len(closed_issue_updates)}.")
@@ -584,8 +584,8 @@ class GitHubWorker(WorkerGitInterfaceable):
             # Issue assignees insertion
             assignee_action_map = {
                 'insert': {
-                    'source': ['issue_id','id'],
-                    'augur': ['issue_id','issue_assignee_src_id']
+                    'source': ['id'],
+                    'augur': ['issue_assignee_src_id']
                 }
             }
 
@@ -596,7 +596,7 @@ class GitHubWorker(WorkerGitInterfaceable):
             self.logger.info(f"Issue assignee retrieved total: {len(table_values_issue_assignees)}.")
 
             source_assignees_insert, _ = self.organize_needed_data(
-                assignees_all, table_values=table_values_issue_assignees,
+                source_assignees, table_values=table_values_issue_assignees,
                 action_map=assignee_action_map
             )
             if len(source_assignees_insert) > 0:
@@ -625,7 +625,7 @@ class GitHubWorker(WorkerGitInterfaceable):
             try:
                 self.bulk_insert(
                     self.issue_assignees_table, insert=assignees_insert,
-                    unique_columns=assignee_action_map['insert']['augur']
+                    unique_columns=['issue_id', 'issue_assignee_src_id']
                 )
             except Exception as e:
                 self.logger.info(f"assignees failed on {e}. exception registerred.")
@@ -641,8 +641,8 @@ class GitHubWorker(WorkerGitInterfaceable):
 
             label_action_map = {
                 'insert': {
-                    'source': ['issue_id', 'id'],
-                    'augur': ['issue_id', 'label_src_id']
+                    'source': ['id'],
+                    'augur': ['label_src_id']
                 }
             }
 
@@ -654,10 +654,10 @@ class GitHubWorker(WorkerGitInterfaceable):
                 self.logger.info(f"Exception in label insert for PRs: {e}.. exception registerred")
 
 
-            self.logger.info(f"Exception registered. labels_all[0]: {labels_all[0]}")
+            # self.logger.info(f"Exception registered. labels_all[0]: {labels_all[0]}")
 
             source_labels_insert, _ = self.organize_needed_data(
-                labels_all, table_values=table_values_issue_labels,
+                issue['labels'], table_values=table_values_issue_labels,
                 action_map=label_action_map
             )
             labels_insert = [
@@ -678,13 +678,13 @@ class GitHubWorker(WorkerGitInterfaceable):
             try:
                 self.bulk_insert(
                     self.issue_labels_table, insert=labels_insert,
-                    unique_columns=['issue_id', 'label_src_id']
+                    unique_columns=['label_src_id']
                 )
             except psycopg2.errors.InvalidTextRepresentation as e:
                 #If there was an error constructing a type try to redo the insert with a conversion.
                 self.logger.warning(f"Type error when attempting to insert data in issue_nested_data_model with the github worker. Trying again with type conversion on. ERROR: {e}. exception registerred \n")
                 self.bulk_insert(
                     self.issue_labels_table, insert=labels_insert,
-                    unique_columns=label_action_map['insert']['augur'],
+                    unique_columns=['label_src_id'],
                     convert_float_int=True
                 )
