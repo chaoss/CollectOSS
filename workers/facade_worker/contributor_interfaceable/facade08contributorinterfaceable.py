@@ -162,6 +162,8 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         self.logger.info(f"url is: {url}")
         #(
         #    email.split('@')[0], email.split('@')[-1])
+        ## TODO: We can use an event stream once we have a username, to get other aliased emails
+        ###  curl https://api.github.com/users/sgoggins/events&page=2
 
         return url
 
