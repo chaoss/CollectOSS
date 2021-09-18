@@ -519,38 +519,38 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 return
 
 
-            #paginate endpoint with stagger enabled so that the above method can insert every 500
+                #paginate endpoint with stagger enabled so that the above method can insert every 500
 
-            # self.logger.info(
-            #     f"PR Action map is {pr_action_map}"
-            # )
+                # self.logger.info(
+                #     f"PR Action map is {pr_action_map}"
+                # )
 
-            source_prs = self.paginate_endpoint(
-                pr_url, action_map=pr_action_map, table=self.pull_requests_table,
-                where_clause=self.pull_requests_table.c.repo_id == self.repo_id,
-                stagger=True,
-                insertion_method=pk_source_increment_insert
-            )
+                source_prs = self.paginate_endpoint(
+                    pr_url, action_map=pr_action_map, table=self.pull_requests_table,
+                    where_clause=self.pull_requests_table.c.repo_id == self.repo_id,
+                    stagger=True,
+                    insertion_method=pk_source_increment_insert
+                )
 
-            # self.logger.info(
-            #     f"PR Action map is {pr_action_map} after source_prs. The source_prs are {source_prs}."
-            # )
+                # self.logger.info(
+                #     f"PR Action map is {pr_action_map} after source_prs. The source_prs are {source_prs}."
+                # )
 
-            #Use the increment insert method in order to do the
-            #remaining pages of the paginated endpoint that weren't inserted inside the paginate_endpoint method
-            pk_source_increment_insert(source_prs,pr_action_map)
+                #Use the increment insert method in order to do the
+                #remaining pages of the paginated endpoint that weren't inserted inside the paginate_endpoint method
+                pk_source_increment_insert(source_prs,pr_action_map)
 
-            pk_source_prs = self.pk_source_prs
+                pk_source_prs = self.pk_source_prs
 
-            #This attribute is only needed because paginate endpoint needs to
-            #send this data to the child class and this is the easiset way to do that.
-            self.pk_source_prs = []
+                #This attribute is only needed because paginate endpoint needs to
+                #send this data to the child class and this is the easiset way to do that.
+                self.pk_source_prs = []
 
-            return pk_source_prs
-        except Exception as e: 
-            self.logger.debug(f"exception registered in pk source increment insert: {e}. ")
-            stacker = traceback.format_exc()
-            self.logger.debug(f"{stacker}")
+                return pk_source_prs
+            except Exception as e: 
+                self.logger.debug(f"exception registered in pk source increment insert: {e}. ")
+                stacker = traceback.format_exc()
+                self.logger.debug(f"{stacker}")
 
     def pull_requests_model(self, entry_info, repo_id):
         """Pull Request data collection function. Query GitHub API for PhubRs.
