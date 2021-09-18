@@ -14,6 +14,11 @@ doesn't even really need the WorkerGitInterfaceable for too much. This is mainly
 worker and table.
 """
 
+"""
+A few interesting ideas: Maybe get the top committers from each repo first? curl https://api.github.com/repos/chaoss/augur/contributors
+
+"""
+
 # TODO : Make this borrow everything that it can from the facade worker.
 # i.e. port, logging, etc
 
@@ -140,11 +145,20 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         self.data_source = '\'Git Log\''
 
     # Try to construct the best url to ping GitHub's API for a username given an email.
+    """
+    I changed this because of the following note on the API site: With the in qualifier you can restrict your search to the username (login), full name, public email, or any combination of these. When you omit this qualifier, only the username and email address are searched. For privacy reasons, you cannot search by email domain name.
+
+    https://docs.github.com/en/github/searching-for-information-on-github/searching-on-github/searching-users#search-only-users-or-organizations
+
+    """
     def create_endpoint_from_email(self, email):
         self.logger.info(f"Trying to resolve contributor from email: {email}")
-
-        url = 'https://api.github.com/search/users?q={}+in:email&&{}+in:email'.format(
-            email.split('@')[0], email.split('@')[-1])
+        #Note: I added "+type:user" to avoid having user owned organizations be returned
+        #Also stopped splitting per note above. 
+        url = 'https://api.github.com/search/users?q={}+in:email+type:user'.format(cmt_cntrb['email'])
+        self.logger.info(f"url is: {url}")
+        #(
+        #    email.split('@')[0], email.split('@')[-1])
 
         return url
 
@@ -159,14 +173,13 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             # Deal with case where name is one word or none.
             if len(contributor[name_field].split()) < 2:
                 raise ValueError
-
             cmt_cntrb = {
                 'fname': contributor[name_field].split()[0],
                 # Pythonic way to get the end of a list so that we truely get the last name.
                 'lname': contributor[name_field].split()[-1]
             }
             url = 'https://api.github.com/search/users?q=fullname:{}+{}'.format(
-                cmt_cntrb['fname'], cmt_cntrb['lname'])
+                cmt_cntrb['fname'], cmt_cntrb['lname'])             
         except:
             cmt_cntrb = {
                 'fname': contributor[name_field].split()[0]
@@ -207,7 +220,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                 self.logger.info(
                     f"Special rate limit of {self.special_rate_limit} reached! Sleeping for thirty seconds.")
                 # Sleep for thirty seconds before making a new request.
-                time.sleep(30)
+                time.sleep(20)
 
             try:
                 response_data = response.json()
@@ -295,6 +308,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             except s.exc.IntegrityError:
                 # It's expected to catch duplicates this way so no output is logged.
                 pass
+                self.logger.info(f"aliase {alias} already exists")
             except Exception as e:
                 self.logger.info(
                     f"Ran into issue with alias: {alias}. Error: {e}")
@@ -456,18 +470,18 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
             # Get list of all emails in the commit data.
             # Start with the fields we know that we can start with
-            emails = [contributor['commit_email']
-                      if 'commit_email' in contributor else contributor['email']]
+            emails = [contributor['email_raw']
+                      if 'email_raw' in contributor else contributor['email']]
 
-            # Check if other emails match the previous, if they don't then add them
-            if contributor['email_raw'] not in emails:
-                emails.append(contributor['email_raw'])
+            # # Check if other emails match the previous, if they don't then add them
+            # if contributor['email_raw'] not in emails:
+            #     emails.append(contributor['email_raw'])
 
-            if contributor['committer_email'] not in emails:
-                emails.append(contributor['committer_email'])
+            # if contributor['committer_email'] not in emails:
+            #     emails.append(contributor['committer_email'])
 
-            if contributor['committer_email_raw'] not in emails:
-                emails.append(contributor['committer_email_raw'])
+            # if contributor['committer_email_raw'] not in emails:
+            #     emails.append(contributor['committer_email_raw'])
 
             self.logger.info(f"DEBUG: here is the email array: {emails}")
 
