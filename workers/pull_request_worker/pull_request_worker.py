@@ -350,46 +350,47 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         """.format(self.repo_id))
         urls = pd.read_sql(pr_url_sql, self.db, params={})
 
-        try: 
             for pull_request in urls.itertuples(): # for each url of PRs we have inserted
-                commits_url = pull_request.pr_url + '/commits?page={}'
-                table = 'pull_request_commits'
-                table_pkey = 'pr_cmt_id'
-                duplicate_col_map = {'pr_cmt_sha': 'sha'}
-                update_col_map = {}
+                try: 
+                    commits_url = pull_request.pr_url + '/commits?page={}'
+                    table = 'pull_request_commits'
+                    table_pkey = 'pr_cmt_id'
+                    duplicate_col_map = {'pr_cmt_sha': 'sha'}
+                    update_col_map = {}
 
-                # Use helper paginate function to iterate the commits url and check for dupes
-                #TODO: figure out why dupes sometimes still happen.q
-                pr_commits = self.paginate(
-                    commits_url, duplicate_col_map, update_col_map, table, table_pkey,
-                    where_clause="where pull_request_id = {}".format(pull_request.pull_request_id)
-                )
+                    # Use helper paginate function to iterate the commits url and check for dupes
+                    #TODO: figure out why dupes sometimes still happen.q
+                    pr_commits = self.paginate(
+                        commits_url, duplicate_col_map, update_col_map, table, table_pkey,
+                        where_clause="where pull_request_id = {}".format(pull_request.pull_request_id)
+                    )
 
-                for pr_commit in pr_commits: # post-pagination, iterate results
-                    if pr_commit['flag'] == 'need_insertion': # if non-dupe
-                        pr_commit_row = {
-                            'pull_request_id': pull_request.pull_request_id,
-                            'pr_cmt_sha': pr_commit['sha'],
-                            'pr_cmt_node_id': pr_commit['node_id'],
-                            'pr_cmt_message': pr_commit['commit']['message'],
-                            # 'pr_cmt_comments_url': pr_commit['comments_url'],
-                            'tool_source': self.tool_source,
-                            'tool_version': self.tool_version,
-                            'data_source': 'GitHub API',
-                        }
-                        result = self.db.execute(
-                            self.pull_request_commits_table.insert().values(pr_commit_row)
-                        )
-                        self.logger.info(
-                            f"Inserted Pull Request Commit: {result.inserted_primary_key}\n"
-                        )
+                    for pr_commit in pr_commits: # post-pagination, iterate results
+                        if pr_commit['flag'] == 'need_insertion': # if non-dupe
+                            pr_commit_row = {
+                                'pull_request_id': pull_request.pull_request_id,
+                                'pr_cmt_sha': pr_commit['sha'],
+                                'pr_cmt_node_id': pr_commit['node_id'],
+                                'pr_cmt_message': pr_commit['commit']['message'],
+                                # 'pr_cmt_comments_url': pr_commit['comments_url'],
+                                'tool_source': self.tool_source,
+                                'tool_version': self.tool_version,
+                                'data_source': 'GitHub API',
+                            }
+                            result = self.db.execute(
+                                self.pull_request_commits_table.insert().values(pr_commit_row)
+                            )
+                            self.logger.info(
+                                f"Inserted Pull Request Commit: {result.inserted_primary_key}\n"
+                            )
+
+                except Exception as e: 
+                    self.logger.debug(f"exception registered in pull request commits: {e}. ")
+                    stacker = traceback.format_exc()
+                    self.logger.debug(f"{stacker}")
+                    continue
 
             self.register_task_completion(self.task_info, self.repo_id, 'pull_request_commits')
-        except Exception as e: 
-            self.logger.debug(f"exception registered in pull request commits: {e}. ")
-            stacker = traceback.format_exc()
-            self.logger.debug(f"{stacker}")
-            continue
 
     def _get_pk_source_prs(self):
 
