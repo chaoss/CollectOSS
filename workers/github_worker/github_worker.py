@@ -79,16 +79,16 @@ class GitHubWorker(WorkerGitInterfaceable):
                 self.logger.info("There are no issues for this repository.\n")
                 self.register_task_completion(self.task_info, self.repo_id, 'issues')
                 return False
-            
+
             def is_valid_pr_block(issue):
                 return (
                     'pull_request' in issue and issue['pull_request']
                     and isinstance(issue['pull_request'], dict) and 'url' in issue['pull_request']
                 )
-            
+
             #This is sending empty data to enrich_cntrb_id, fix with check.
             #The problem happens when ['insert'] is empty but ['all'] is not.
-            if len(inc_source_issues['insert']) > 0:  
+            if len(inc_source_issues['insert']) > 0:
                 inc_source_issues['insert'] = self.enrich_cntrb_id(
                     inc_source_issues['insert'], 'user.login', action_map_additions={
                         'insert': {
@@ -99,7 +99,7 @@ class GitHubWorker(WorkerGitInterfaceable):
                 )
             else:
                 self.logger.info("Contributor enrichment is not needed, no inserts in action map.")
-            
+
             issues_insert = [
                 {
                     'repo_id': self.repo_id,
@@ -148,7 +148,7 @@ class GitHubWorker(WorkerGitInterfaceable):
                 )
 
                 source_data = inc_source_issues['insert'] + inc_source_issues['update']
-            
+
             elif not self.deep_collection:
                 self.logger.info(
                     "There are not issues to update, insert, or collect nested information for.\n"
@@ -156,7 +156,7 @@ class GitHubWorker(WorkerGitInterfaceable):
                 #This might cause problems if staggered.
                 #self.register_task_completion(entry_info, self.repo_id, 'issues')
                 return
-            
+
             if self.deep_collection:
                 source_data = inc_source_issues['all']
 
@@ -177,14 +177,14 @@ class GitHubWorker(WorkerGitInterfaceable):
             stagger=True,insertion_method=pk_source_issues_increment_insert
         )
 
-        #Use the increment insert method in order to do the 
+        #Use the increment insert method in order to do the
         #remaining pages of the paginated endpoint that weren't inserted inside the paginate_endpoint method
-        #empty data is checked for in the method so it's not needed outside of it. 
+        #empty data is checked for in the method so it's not needed outside of it.
         pk_source_issues_increment_insert(source_issues,action_map)
 
         pk_source_issues = self.pk_source_issues
         self.pk_source_issues = []
-        
+
         return pk_source_issues
 
     def issues_model(self, entry_info, repo_id):
@@ -200,22 +200,22 @@ class GitHubWorker(WorkerGitInterfaceable):
 
         pk_source_issues = self._get_pk_source_issues()
         if pk_source_issues:
-            try: 
+            try:
                 self.issue_comments_model(pk_source_issues)
-            except Exception as e: 
-                self.logger.info(f"issue comments model failed on {e}. exception registerred")
+            except Exception as e:
+                self.logger.info(f"issue comments model failed on {e}. exception registered")
                 stacker = traceback.format_exc()
                 self.logger.debug(f"{stacker}")
-            try: 
+            try:
                 issue_events_all = self.issue_events_model(pk_source_issues)
-            except Exception as e: 
-                self.logger.info(f"issue events model failed on {e}. exception registerred")
+            except Exception as e:
+                self.logger.info(f"issue events model failed on {e}. exception registered")
                 stacker = traceback.format_exc()
                 self.logger.debug(f"{stacker}")
             try:
                 self.issue_nested_data_model(pk_source_issues, issue_events_all)
-            except Exception as e: 
-                self.logger.info(f"issue nested model failed on {e}. exception registerred")
+            except Exception as e:
+                self.logger.info(f"issue nested model failed on {e}. exception registered")
                 stacker = traceback.format_exc()
                 self.logger.debug(f"{stacker}")
 
@@ -232,6 +232,9 @@ class GitHubWorker(WorkerGitInterfaceable):
         # Get contributors that we already have stored
         #   Set our duplicate and update column map keys (something other than PK) to
         #   check dupicates/needed column updates with
+
+        ''' Consistent action maps require them to be consistent with what is passed to
+            paginate_endpoint. '''
         comment_action_map = {
             'insert': {
                 'source': ['id'],
@@ -239,11 +242,18 @@ class GitHubWorker(WorkerGitInterfaceable):
             }
         }
 
+        comment_ref_action_map = {
+            'insert': {
+                'source': ['id'],
+                'augur': ['issue_msg_ref_src_comment_id']
+            }
+        }
+
         def issue_comments_insert(inc_issue_comments, comment_action_map):
 
             inc_issue_comments['insert'] = self.text_clean(inc_issue_comments['insert'], 'body')
 
-            #This is sending empty data to enrich_cntrb_id, fix with check 
+            #This is sending empty data to enrich_cntrb_id, fix with check
             if len(inc_issue_comments['insert']) > 0:
                 inc_issue_comments['insert'] = self.enrich_cntrb_id(
                     inc_issue_comments['insert'], 'user.login', action_map_additions={
@@ -275,30 +285,30 @@ class GitHubWorker(WorkerGitInterfaceable):
                     'platform_node_id': comment['node_id']
                 } for comment in inc_issue_comments['insert']
             ]
-            try: 
+            try:
                 # self.bulk_insert(self.message_table, insert=issue_comments_insert,
                 #     unique_columns=comment_action_map['insert']['augur'])
                 # Using the action map resulted consistently in a duplicate key error
                 # Which really should not be possible ... ?? Trying hard coding the map.
                 self.bulk_insert(self.message_table, insert=issue_comments_insert,
-                    unique_columns=['platform_msg_id', 'tool_source'])
-            except Exception as e: 
+                    unique_columns=comment_action_map['insert']['augur'])
+            except Exception as e:
                 self.logger.info(f"bulk insert of comments failed on {e}. exception registerred")
                 stacker = traceback.format_exc()
                 self.logger.debug(f"{stacker}")
 
             """ ISSUE MESSAGE REF TABLE """
-            try: 
+            try:
                 c_pk_source_comments = self.enrich_data_primary_keys(
                     inc_issue_comments['insert'], self.message_table,
                     comment_action_map['insert']['source'], comment_action_map['insert']['augur']
                 )
-            except Exception as e: 
-                self.logger.info(f"exception registerred in enrich_data_primary_keys for message_ref issues table: {e}.. exception registerred")
+            except Exception as e:
+                self.logger.info(f"exception registered in enrich_data_primary_keys for message_ref issues table: {e}.. exception registered")
 
             self.logger.info(f"log of the length of c_pk_source_comments {len(c_pk_source_comments)}.")
 
-            try: 
+            try:
                 # source data, tables, gh_merge fields, augur merge fields are the parameters for enrich_data_primary_keys method
                 # This one does not make a lot of sense to SPG on 9/15/2021. Why is the issues table getting updated here? we have
                 # Comment source data, the issues table, and issue table merge info. Not following this at all. TODO
@@ -306,8 +316,8 @@ class GitHubWorker(WorkerGitInterfaceable):
                 both_pk_source_comments = self.enrich_data_primary_keys(
                     c_pk_source_comments, self.issues_table, ['issue_url'], ['issue_url']
                 )
-            except Exception as e: 
-                self.logger.info(f"exception registerred in enrich_data_primary_keys for message_ref issues table: {e}.. exception registerred")            
+            except Exception as e:
+                self.logger.info(f"exception registered in enrich_data_primary_keys for message_ref issues table: {e}.. exception registered")
 
             issue_message_ref_insert = [
                 {
@@ -321,17 +331,17 @@ class GitHubWorker(WorkerGitInterfaceable):
                     'repo_id': self.repo_id
                 } for comment in both_pk_source_comments
             ]
-            try: 
+            try:
                 self.logger.debug(f"inserting into {self.issue_message_ref_table}.")
                 self.bulk_insert(
                     self.issue_message_ref_table, insert=issue_message_ref_insert,
-                    unique_columns=['issue_msg_ref_src_comment_id', 'tool_source']
+                    unique_columns=comment_ref_action_map['insert']['augur']
                 )
-            except Exception as e: 
-                self.logger.info(f"exception registerred in bulk insert for issue_msg_ref_table: {e}.")
+            except Exception as e:
+                self.logger.info(f"exception registered in bulk insert for issue_msg_ref_table: {e}.")
 
         # list to hold contributors needing insertion or update
-        try: 
+        try:
             issue_comments = self.paginate_endpoint(
                 comments_url, action_map=comment_action_map, table=self.message_table,
                 where_clause=self.message_table.c.msg_id.in_(
@@ -352,11 +362,11 @@ class GitHubWorker(WorkerGitInterfaceable):
             )
 
             issue_comments_insert(issue_comments,comment_action_map)
-            self.logger.debug(f"Contents of issue_comments: {issue_comments}.")
+            #self.logger.debug(f"Contents of issue_comments: {issue_comments}.")
             return
 
         except Exception as e:
-            self.logger.info(f"exception registerred in paginate endpoint for issue comments: {e}")
+            self.logger.info(f"exception registered in paginate endpoint for issue comments: {e}")
             stacker = traceback.format_exc()
             self.logger.debug(f"{stacker}")
 
@@ -389,7 +399,7 @@ class GitHubWorker(WorkerGitInterfaceable):
             )
         )
 
-        '''This works, but its a little confusing. The keys mapped here are the identity keys for the 
+        '''This works, but its a little confusing. The keys mapped here are the identity keys for the
         issues table, which are used to let us know if we need to insert them here. '''
 
         pk_issue_events = self.enrich_data_primary_keys(
@@ -401,8 +411,8 @@ class GitHubWorker(WorkerGitInterfaceable):
                 ['id', 'issue_id', 'node_id', 'url', 'actor', 'created_at', 'event', 'commit_id']
             ].to_dict(orient='records')
 
-        #This is sending empty data to enrich_cntrb_id, fix with check 
-        if len(pk_issue_events) > 0:  
+        #This is sending empty data to enrich_cntrb_id, fix with check
+        if len(pk_issue_events) > 0:
             pk_issue_events = self.enrich_cntrb_id(
                 pk_issue_events, 'actor.login', action_map_additions={
                     'insert': {
@@ -412,16 +422,21 @@ class GitHubWorker(WorkerGitInterfaceable):
                 }, prefix='actor.'
             )
         else:
-            self.logger.info("Contributor enrichment is not needed, no inserts in action map.")            
-            
+            self.logger.info("Contributor enrichment is not needed, no inserts in action map.")
+
+        for issue, index in enumerate(pk_issue_events):
+
+            if issue['cntrb_id'] is None:
+                self.logger.debug(f"Exception registered. Dict has null cntrb_id: {issue}")
+
         issue_events_insert = [
             {
-                'issue_event_src_id': event['id'],
-                'issue_id': event['issue_id'],
-                'node_id': event['node_id'],
+                'issue_event_src_id': get_sqlalchemy_type(event['id']),
+                'issue_id': get_sqlalchemy_type(event['issue_id']),
+                'node_id': get_sqlalchemy_type(event['node_id']),
                 'node_url': event['url'],
-                'cntrb_id': event['cntrb_id'],
-                'created_at': event['created_at'],
+                'cntrb_id': get_sqlalchemy_type(event['cntrb_id']),
+                'created_at': get_sqlalchemy_type(event['created_at']),
                 'action': event['event'],
                 'action_commit_hash': event['commit_id'],
                 'tool_source': self.tool_source,
@@ -481,7 +496,7 @@ class GitHubWorker(WorkerGitInterfaceable):
             self.logger.info("Skipping issue update: Second else.")
             #kip_closed_issue_update = True
 
-        self.logger.info("Entering Assignees.")
+        self.logger.info("Entering Assignee's.")
 
         assignees_all = []
         labels_all = []
@@ -491,7 +506,7 @@ class GitHubWorker(WorkerGitInterfaceable):
 
         for issue in pk_source_issues:
 
-            self.logger.info(f"on issue: {issue} within {len(pk_source_issues)} total. Editing assingees next.")
+            self.logger.debug(f"on issue: there are {len(pk_source_issues)} issues total. Editing assingees next.")
 
             # Issue Assignees
             source_assignees = [
@@ -505,7 +520,7 @@ class GitHubWorker(WorkerGitInterfaceable):
                 source_assignees.append(issue['assignee'])
                 assignees_all += source_assignees
 
-            self.logger.info(f"Total of assignees is: {assignees_all}. Labels are next.")
+            self.logger.info(f"Total of assignee's is: {assignees_all}. Labels are next.")
 
             # Issue Labels
             labels_all += issue['labels']
@@ -523,16 +538,26 @@ class GitHubWorker(WorkerGitInterfaceable):
                 except IndexError:
                     self.logger.info(
                         "Warning! We do not have the closing event of this issue stored. "
-                        f"Pk: {issue['issue_id']}. exception registerred."
+                        f"Pk: {issue['issue_id']}. exception registered."
                     )
                     continue
-                except Exception as e: 
-                    self.logger.info(f"exception is {e} and not an IndexError.. exception registerred")
-                    continue 
+                except Exception as e:
+                    self.logger.info(f"exception is {e} and not an IndexError.. exception registered")
+                    continue
+                ### Updated this on 9/17/2021 due to error:
+                '''
+                        2021-09-17 15:55:10,377,377ms [PID: 2078591] workers.github_worker.57631 [INFO] Warning! Error bulk updating data: (psycopg2.ProgrammingError) can't adapt type 'numpy.int64'
+                        [SQL: UPDATE issues SET cntrb_id=%(cntrb_id)s, closed_at=%(closed_at)s, issue_state=%(issue_state)s WHERE issues.issue_id = %(b_issue_id)s]
+                        [parameters: ({'cntrb_id': 277403, 'closed_at': 'closed_at', 'issue_state': 'issue_state', 'b_issue_id': 345071}, {'cntrb_id': 277403, 'closed_at': 'closed_at', 'issue_state': 'issue_state', 'b_issue_id': 345072}, {'cntrb_id': 277403, 'closed_at': 'closed_at', 'issue_state': 'issue_state', 'b_issue_id': 345073}, {'cntrb_id': 277403, 'closed_at': 'closed_at', 'issue_state': 'issue_state', 'b_issue_id': 345074}, {'cntrb_id': 277403, 'closed_at': 'closed_at', 'issue_state': 'issue_state', 'b_issue_id': 345075}, {'cntrb_id': 277762, 'closed_at': 'closed_at', 'issue_state': 'issue_state', 'b_issue_id': 345077}, {'cntrb_id': 277762, 'closed_at': 'closed_at', 'issue_state': 'issue_state', 'b_issue_id': 345078})]
+                        (Background on this error at: http://sqlalche.me/e/13/f405)
+                '''
 
+                ## Cast the numerics as ints, as prior update on 9/17 did not eliminate the error noted above. SPG, 9/18/2021
                 closed_issue_updates.append({
-                    'b_issue_id'.item(): issue['issue_id'],
-                    'cntrb_id'.item(): closed_event['cntrb_id']
+                    'b_issue_id': get_sqlalchemy_type(issue['issue_id']),
+                    'cntrb_id': get_sqlalchemy_type(closed_event['cntrb_id']),
+                    'issue_state': issue['state'],
+                    'closed_at': get_sqlalchemy_type(issue['closed_at'])
                 })
 
                 self.logger.info(f"Current closed issue count is {len(closed_issue_updates)}.")
@@ -540,14 +565,14 @@ class GitHubWorker(WorkerGitInterfaceable):
         # Closed issues, update with closer id
         ''' TODO: Right here I am not sure if the update columns are right, and will catch the state changes. '''
 
-        try: 
+        try:
 
             self.bulk_insert(
                 self.issues_table, update=closed_issue_updates, unique_columns=['issue_id'],
                 update_columns=['cntrb_id', 'issue_state', 'closed_at']
             )
-        except Exception as e: 
-            self.logger.info(f"Bulk insert failed on {e}. exception registerred.") 
+        except Exception as e:
+            self.logger.info(f"Bulk insert failed on {e}. exception registerred.")
 
         ''' Action maps are used to determine uniqueness based on the natural key at the source. '''
 
@@ -557,15 +582,15 @@ class GitHubWorker(WorkerGitInterfaceable):
         assignee_action_map = {
             'insert': {
                 'source': ['issue_id','id'],
-                'augur': ['issue_id','label_src_id']
+                'augur': ['issue_id','issue_assignee_src_id']
             }
         }
-        
+
         table_values_issue_assignees = self.db.execute(
             s.sql.select(self.get_relevant_columns(self.issue_assignees_table,assignee_action_map))
         ).fetchall()
 
-        self.logger.info(f"Issue assignees retrieved total: {len(table_values_issue_assignees)}.")
+        self.logger.info(f"Issue assignee retrieved total: {len(table_values_issue_assignees)}.")
 
         source_assignees_insert, _ = self.organize_needed_data(
             assignees_all, table_values=table_values_issue_assignees,
@@ -594,17 +619,17 @@ class GitHubWorker(WorkerGitInterfaceable):
                 'issue_assignee_src_node': assignee['node_id']
             } for assignee in source_assignees_insert
         ]
-        try: 
+        try:
             self.bulk_insert(
                 self.issue_assignees_table, insert=assignees_insert,
                 unique_columns=assignee_action_map['insert']['augur']
             )
-        except Exception as e: 
+        except Exception as e:
             self.logger.info(f"assignees failed on {e}. exception registerred.")
 
         # Issue labels insertion
 
-            ## Probably need to do the map like PRs again. 
+            ## Probably need to do the map like PRs again.
             # 'insert': {
             #     'source': ['pull_request_id', 'id'],
             #     'augur': ['pull_request_id', 'pr_src_id']
@@ -618,11 +643,11 @@ class GitHubWorker(WorkerGitInterfaceable):
             }
         }
 
-        try: 
+        try:
             table_values_issue_labels = self.db.execute(
                 s.sql.select(self.get_relevant_columns(self.issue_labels_table,label_action_map))
             ).fetchall()
-        except Exception as e: 
+        except Exception as e:
             self.logger.info(f"Exception in label insert for PRs: {e}.. exception registerred")
 
 

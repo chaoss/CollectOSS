@@ -7,7 +7,7 @@ import requests
 import json
 from urllib.parse import quote
 from multiprocessing import Process, Queue
-
+import traceback
 import pandas as pd
 import sqlalchemy as s
 from sqlalchemy.ext.automap import automap_base
@@ -44,8 +44,8 @@ class DepsWorker(WorkerGitInterfaceable):
     def deps_model(self, entry_info, repo_id):
         """ Data collection and storage method
         """
-        self.logger.info(entry_info)
-        self.logger.info(repo_id)
+        self.logger.info(f"This is the deps model entry info: {entry_info}.")
+        self.logger.info(f"This is the deps model repo: {repo_id}.")
 
         repo_path_sql = s.sql.text("""
             SELECT repo_id, CONCAT(repo_group_id || chr(47) || repo_path || repo_name) AS path
@@ -59,7 +59,9 @@ class DepsWorker(WorkerGitInterfaceable):
         try:
             self.generate_deps_data(repo_id, absolute_repo_path)
         except Exception as e:
-            self.logger.error(e)
+            self.logger.debug(f"This is the error generated: {e}.")
+            stacker = traceback.format_exc()
+            self.logger.debug(f"{stacker}")
 
         self.register_task_completion(entry_info, repo_id, "deps")
 
@@ -67,8 +69,8 @@ class DepsWorker(WorkerGitInterfaceable):
         """ Data collection and storage method
         """
         self.logger.info('Scorecard Model called...')
-        self.logger.info(entry_info)
-        self.logger.info(repo_id)
+        self.logger.info(f"The entry info: {entry_info}.")
+        self.logger.info(f"The repo id: {repo_id}.")
 
         repo_path_sql = s.sql.text("""
             SELECT repo_id, repo_git AS path
@@ -84,7 +86,9 @@ class DepsWorker(WorkerGitInterfaceable):
         try:
             self.generate_scorecard(repo_id, scorecard_repo_path)
         except Exception as e:
-            self.logger.error(e)
+            self.logger.debug(f"This is the error for scorecard generation: {e}.")
+            stacker = traceback.format_exc()
+            self.logger.debug(f"{stacker}")
 
         self.register_task_completion(entry_info, repo_id, "deps")
 
@@ -122,22 +126,26 @@ class DepsWorker(WorkerGitInterfaceable):
 
         self.logger.info('adding to database...')
         
-        for test in required_output:
-            temp = test.split()
-            repo_deps_scorecard = {
-                'repo_id': repo_id,
-                'name': temp[0],
-                'status': temp[1],
-                'score': temp[2],
-                'tool_source': self.tool_source,
-                'tool_version': self.tool_version,
-                'data_source': self.data_source,
-                'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+        try: 
+            for test in required_output:
+                temp = test.split()
+                repo_deps_scorecard = {
+                    'repo_id': repo_id,
+                    'name': temp[0],
+                    'status': temp[1],
+                    'score': temp[2],
+                    'tool_source': self.tool_source,
+                    'tool_version': self.tool_version,
+                    'data_source': self.data_source,
+                    'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
 
-            }  
-            result = self.db.execute(self.repo_deps_scorecard_table.insert().values(repo_deps_scorecard)) 
-            self.logger.info(f"Added OSSF scorecard data : {result.inserted_primary_key}") 
-
+                }  
+                result = self.db.execute(self.repo_deps_scorecard_table.insert().values(repo_deps_scorecard)) 
+                self.logger.info(f"Added OSSF scorecard data : {result.inserted_primary_key}") 
+        except Exception as e: 
+            self.logger.debug(f"Encountered trouble and exception registered inserting scorecard info: {e}.")
+            stacker = traceback.format_exc()
+            self.logger.debug(f"{stacker}")
 
 
     def generate_deps_data(self, repo_id, path):
@@ -150,18 +158,23 @@ class DepsWorker(WorkerGitInterfaceable):
         self.logger.info(f'Repo ID: {repo_id}, Path: {path}')
 
         deps = dep_calc.get_deps(path)
+        try: 
+            for dep in deps:
+                    repo_deps = {
+                        'repo_id': repo_id,
+                        'dep_name' : dep.name,
+    	                'dep_count' : dep.count,
+    	                'dep_language' : dep.language,
+                        'tool_source': self.tool_source,
+                        'tool_version': self.tool_version,
+                        'data_source': self.data_source,
+                        'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+                    }
 
-        for dep in deps:
-                repo_deps = {
-                    'repo_id': repo_id,
-                    'dep_name' : dep.name,
-	                'dep_count' : dep.count,
-	                'dep_language' : dep.language,
-                    'tool_source': self.tool_source,
-                    'tool_version': self.tool_version,
-                    'data_source': self.data_source,
-                    'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
-                }
-
-                result = self.db.execute(self.repo_dependencies_table.insert().values(repo_deps))
-                self.logger.info(f"Added dep: {result.inserted_primary_key}")
+                    result = self.db.execute(self.repo_dependencies_table.insert().values(repo_deps))
+                    self.logger.info(f"Added dep: {result.inserted_primary_key}")
+        except Exception as e: 
+            self.logger.debug(f"generate deps data failed on {e}.")
+            stacker = traceback.format_exc()
+            self.logger.debug(f"{stacker}")
+            continue 
