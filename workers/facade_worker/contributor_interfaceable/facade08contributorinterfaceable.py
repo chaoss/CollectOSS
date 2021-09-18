@@ -568,8 +568,12 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             # Use the email found in the commit data if api data is NULL
             emailFromCommitData = contributor['commit_email'] if 'commit_email' in contributor else contributor['email']
 
+            self.logger.info(f"Email from commit data: {emailFromCommitData}")
+
             # Get name from commit if not found by GitHub
             name_field = contributor['commit_name'] if 'commit_name' in contributor else contributor['name']
+
+            self.logger.info(f"Name field is : {name_field}")
 
             # try to add contributor to database
             cntrb = {
