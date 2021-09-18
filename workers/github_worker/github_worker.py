@@ -203,19 +203,19 @@ class GitHubWorker(WorkerGitInterfaceable):
             try:
                 self.issue_comments_model(pk_source_issues)
             except Exception as e:
-                self.logger.info(f"issue comments model failed on {e}. exception registerred")
+                self.logger.info(f"issue comments model failed on {e}. exception registered")
                 stacker = traceback.format_exc()
                 self.logger.debug(f"{stacker}")
             try:
                 issue_events_all = self.issue_events_model(pk_source_issues)
             except Exception as e:
-                self.logger.info(f"issue events model failed on {e}. exception registerred")
+                self.logger.info(f"issue events model failed on {e}. exception registered")
                 stacker = traceback.format_exc()
                 self.logger.debug(f"{stacker}")
             try:
                 self.issue_nested_data_model(pk_source_issues, issue_events_all)
             except Exception as e:
-                self.logger.info(f"issue nested model failed on {e}. exception registerred")
+                self.logger.info(f"issue nested model failed on {e}. exception registered")
                 stacker = traceback.format_exc()
                 self.logger.debug(f"{stacker}")
 
@@ -491,7 +491,7 @@ class GitHubWorker(WorkerGitInterfaceable):
             self.logger.info("Skipping issue update: Second else.")
             #kip_closed_issue_update = True
 
-        self.logger.info("Entering Assignees.")
+        self.logger.info("Entering Assignee's.")
 
         assignees_all = []
         labels_all = []
@@ -515,7 +515,7 @@ class GitHubWorker(WorkerGitInterfaceable):
                 source_assignees.append(issue['assignee'])
                 assignees_all += source_assignees
 
-            self.logger.info(f"Total of assignees is: {assignees_all}. Labels are next.")
+            self.logger.info(f"Total of assignee's is: {assignees_all}. Labels are next.")
 
             # Issue Labels
             labels_all += issue['labels']
@@ -549,10 +549,10 @@ class GitHubWorker(WorkerGitInterfaceable):
 
                 ## Cast the numerics as ints, as prior update on 9/17 did not eliminate the error noted above. SPG, 9/18/2021
                 closed_issue_updates.append({
-                    'b_issue_id': int(issue['issue_id']),
-                    'cntrb_id': int(closed_event['cntrb_id']),
+                    'b_issue_id': get_sqlalchemy_type(issue['issue_id']),
+                    'cntrb_id': get_sqlalchemy_type(closed_event['cntrb_id']),
                     'issue_state': issue['state'],
-                    'closed_at': issue['closed_at']
+                    'closed_at': get_sqlalchemy_type(issue['closed_at'])
                 })
 
                 self.logger.info(f"Current closed issue count is {len(closed_issue_updates)}.")
