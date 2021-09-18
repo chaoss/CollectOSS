@@ -424,6 +424,11 @@ class GitHubWorker(WorkerGitInterfaceable):
         else:
             self.logger.info("Contributor enrichment is not needed, no inserts in action map.")
 
+        for issue, index in enumerate(pk_issue_events):
+
+            if issue['cntrb_id'] is None:
+                self.logger.debug(f"Exception registered. Dict has null cntrb_id: {issue}")
+
         issue_events_insert = [
             {
                 'issue_event_src_id': event['id'],
@@ -539,7 +544,7 @@ class GitHubWorker(WorkerGitInterfaceable):
                 except Exception as e:
                     self.logger.info(f"exception is {e} and not an IndexError.. exception registered")
                     continue
-                ### Updated this on 9/17/2021 due to error: 
+                ### Updated this on 9/17/2021 due to error:
                 '''
                         2021-09-17 15:55:10,377,377ms [PID: 2078591] workers.github_worker.57631 [INFO] Warning! Error bulk updating data: (psycopg2.ProgrammingError) can't adapt type 'numpy.int64'
                         [SQL: UPDATE issues SET cntrb_id=%(cntrb_id)s, closed_at=%(closed_at)s, issue_state=%(issue_state)s WHERE issues.issue_id = %(b_issue_id)s]
