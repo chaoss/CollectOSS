@@ -125,6 +125,9 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                             data = response.json()
                         except:
                             data = json.loads(json.dumps(response.text))
+                            stacker = traceback.format_exc()
+                            self.logger.debug(f"{stacker}")
+                            continue 
 
                         if 'errors' in data:
                             self.logger.info("Error!: {}".format(data['errors']))
@@ -305,6 +308,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                     success = True
                 except Exception as e:
                     self.logger.info('error: {}'.format(e))
+                    stacker = traceback.format_exc()
+                    self.logger.debug(f"{stacker}")
                 time.sleep(5)
 
         if len(pr_file_insert_rows) > 0:
@@ -318,6 +323,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                     success = True
                 except Exception as e:
                     self.logger.info('error: {}'.format(e))
+                    stacker = traceback.format_exc()
+                    self.logger.debug(f"{stacker}")
                 time.sleep(5)
 
         self.register_task_completion(task_info, self.repo_id, 'pull_request_files')
@@ -343,40 +350,46 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         """.format(self.repo_id))
         urls = pd.read_sql(pr_url_sql, self.db, params={})
 
-        for pull_request in urls.itertuples(): # for each url of PRs we have inserted
-            commits_url = pull_request.pr_url + '/commits?page={}'
-            table = 'pull_request_commits'
-            table_pkey = 'pr_cmt_id'
-            duplicate_col_map = {'pr_cmt_sha': 'sha'}
-            update_col_map = {}
+        try: 
+            for pull_request in urls.itertuples(): # for each url of PRs we have inserted
+                commits_url = pull_request.pr_url + '/commits?page={}'
+                table = 'pull_request_commits'
+                table_pkey = 'pr_cmt_id'
+                duplicate_col_map = {'pr_cmt_sha': 'sha'}
+                update_col_map = {}
 
-            # Use helper paginate function to iterate the commits url and check for dupes
-            #TODO: figure out why dupes sometimes still happen.q
-            pr_commits = self.paginate(
-                commits_url, duplicate_col_map, update_col_map, table, table_pkey,
-                where_clause="where pull_request_id = {}".format(pull_request.pull_request_id)
-            )
+                # Use helper paginate function to iterate the commits url and check for dupes
+                #TODO: figure out why dupes sometimes still happen.q
+                pr_commits = self.paginate(
+                    commits_url, duplicate_col_map, update_col_map, table, table_pkey,
+                    where_clause="where pull_request_id = {}".format(pull_request.pull_request_id)
+                )
 
-            for pr_commit in pr_commits: # post-pagination, iterate results
-                if pr_commit['flag'] == 'need_insertion': # if non-dupe
-                    pr_commit_row = {
-                        'pull_request_id': pull_request.pull_request_id,
-                        'pr_cmt_sha': pr_commit['sha'],
-                        'pr_cmt_node_id': pr_commit['node_id'],
-                        'pr_cmt_message': pr_commit['commit']['message'],
-                        # 'pr_cmt_comments_url': pr_commit['comments_url'],
-                        'tool_source': self.tool_source,
-                        'tool_version': self.tool_version,
-                        'data_source': 'GitHub API',
-                    }
-                    result = self.db.execute(
-                        self.pull_request_commits_table.insert().values(pr_commit_row)
-                    )
-                    self.logger.info(
-                        f"Inserted Pull Request Commit: {result.inserted_primary_key}\n"
-                    )
+                for pr_commit in pr_commits: # post-pagination, iterate results
+                    if pr_commit['flag'] == 'need_insertion': # if non-dupe
+                        pr_commit_row = {
+                            'pull_request_id': pull_request.pull_request_id,
+                            'pr_cmt_sha': pr_commit['sha'],
+                            'pr_cmt_node_id': pr_commit['node_id'],
+                            'pr_cmt_message': pr_commit['commit']['message'],
+                            # 'pr_cmt_comments_url': pr_commit['comments_url'],
+                            'tool_source': self.tool_source,
+                            'tool_version': self.tool_version,
+                            'data_source': 'GitHub API',
+                        }
+                        result = self.db.execute(
+                            self.pull_request_commits_table.insert().values(pr_commit_row)
+                        )
+                        self.logger.info(
+                            f"Inserted Pull Request Commit: {result.inserted_primary_key}\n"
+                        )
 
-        self.register_task_completion(self.task_info, self.repo_id, 'pull_request_commits')
+            self.register_task_completion(self.task_info, self.repo_id, 'pull_request_commits')
+        except Exception as e: 
+            self.logger.debug(f"exception registered in pull request commits: {e}. ")
+            stacker = traceback.format_exc()
+            self.logger.debug(f"{stacker}")
+            continue
 
     def _get_pk_source_prs(self):
 
@@ -405,136 +418,139 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
             self.write_debug_data(inc_source_prs, 'source_prs')
 
-            if len(inc_source_prs['all']) == 0:
-                self.logger.info("There are no prs for this repository.\n")
-                self.register_task_completion(self.task_info, self.repo_id, 'pull_requests')
+            try: 
+
+                if len(inc_source_prs['all']) == 0:
+                    self.logger.info("There are no prs for this repository.\n")
+                    self.register_task_completion(self.task_info, self.repo_id, 'pull_requests')
+                    return
+
+                #self.logger.info(f"inc_source_prs is: {inc_source_prs} and the action map is {action_map}...")
+
+                #This is sending empty data to enrich_cntrb_id, fix with check
+                if len(inc_source_prs['insert']) > 0:
+                    inc_source_prs['insert'] = self.enrich_cntrb_id(
+                        inc_source_prs['insert'], 'user.login', action_map_additions={
+                            'insert': {
+                                'source': ['user.node_id'],
+                                'augur': ['gh_node_id']
+                            }
+                        }, prefix='user.'
+                    )
+                else:
+                    self.logger.info("Contributor enrichment is not needed, no inserts in action map.")
+
+                prs_insert = [
+                {
+                    'repo_id': self.repo_id,
+                    'pr_url': pr['url'],
+                    'pr_src_id': pr['id'],
+                    'pr_src_node_id': None,
+                    'pr_html_url': pr['html_url'],
+                    'pr_diff_url': pr['diff_url'],
+                    'pr_patch_url': pr['patch_url'],
+                    'pr_issue_url': pr['issue_url'],
+                    'pr_augur_issue_id': None,
+                    'pr_src_number': pr['number'],
+                    'pr_src_state': pr['state'],
+                    'pr_src_locked': pr['locked'],
+                    'pr_src_title': pr['title'],
+                    'pr_augur_contributor_id': pr['cntrb_id'],
+                    'pr_body': pr['body'].encode(encoding='UTF-8',errors='backslashreplace').decode(encoding='UTF-8',errors='ignore') if (
+                        pr['body']
+                    ) else None,
+                    'pr_created_at': pr['created_at'],
+                    'pr_updated_at': pr['updated_at'],
+                    'pr_closed_at': pr['closed_at'],
+                    'pr_merged_at': pr['merged_at'],
+                    'pr_merge_commit_sha': pr['merge_commit_sha'],
+                    'pr_teams': None,
+                    'pr_milestone': None if not (
+                        pr['milestone'] and 'title' in pr['milestone']
+                    ) else pr['milestone']['title'],
+                    'pr_commits_url': pr['commits_url'],
+                    'pr_review_comments_url': pr['review_comments_url'],
+                    'pr_review_comment_url': pr['review_comment_url'],
+                    'pr_comments_url': pr['comments_url'],
+                    'pr_statuses_url': pr['statuses_url'],
+                    'pr_meta_head_id': None,
+                    'pr_meta_base_id': None,
+                    'pr_src_issue_url': pr['issue_url'],
+                    'pr_src_comments_url': pr['comments_url'], # NOTE: this seems redundant
+                    'pr_src_review_comments_url': pr['review_comments_url'], # this too
+                    'pr_src_commits_url': pr['commits_url'], # this one also seems redundant
+                    'pr_src_statuses_url': pr['statuses_url'],
+                    'pr_src_author_association': pr['author_association'],
+                    'tool_source': self.tool_source,
+                    'tool_version': self.tool_version,
+                    'data_source': 'GitHub API'
+                } for pr in inc_source_prs['insert']
+                ]
+
+                #The b_pr_src_id bug comes from here
+                if len(inc_source_prs['insert']) > 0 or len(inc_source_prs['update']) > 0:
+                    self.bulk_insert(
+                        self.pull_requests_table,
+                        update=inc_source_prs['update'], unique_columns=action_map['insert']['augur'],
+                        insert=prs_insert, update_columns=action_map['update']['augur']
+                    )
+
+                    source_data = inc_source_prs['insert'] + inc_source_prs['update']
+
+                elif not self.deep_collection:
+                    self.logger.info(
+                        "There are no prs to update, insert, or collect nested information for.\n"
+                    )
+                    self.register_task_completion(self.task_info, self.repo_id, 'pull_requests')
+                    return
+
+                if self.deep_collection:
+                    source_data = inc_source_prs['all']
+
+                # Merge source data to inserted data to have access to inserted primary keys
+
+               # gh_merge_fields = ['id']
+               # augur_merge_fields = ['pr_src_id']
+
+                '''Commented these fields out because they are already defined in the action_map. '''
+
+                self.pk_source_prs += self.enrich_data_primary_keys(source_data, self.pull_requests_table,
+                    pr_action_map['insert']['source'], pr_action_map['insert']['augur'])
                 return
 
 
-            #self.logger.info(f"inc_source_prs is: {inc_source_prs} and the action map is {action_map}...")
+            #paginate endpoint with stagger enabled so that the above method can insert every 500
 
-            #This is sending empty data to enrich_cntrb_id, fix with check
-            if len(inc_source_prs['insert']) > 0:
-                inc_source_prs['insert'] = self.enrich_cntrb_id(
-                    inc_source_prs['insert'], 'user.login', action_map_additions={
-                        'insert': {
-                            'source': ['user.node_id'],
-                            'augur': ['gh_node_id']
-                        }
-                    }, prefix='user.'
-                )
-            else:
-                self.logger.info("Contributor enrichment is not needed, no inserts in action map.")
+            # self.logger.info(
+            #     f"PR Action map is {pr_action_map}"
+            # )
 
+            source_prs = self.paginate_endpoint(
+                pr_url, action_map=pr_action_map, table=self.pull_requests_table,
+                where_clause=self.pull_requests_table.c.repo_id == self.repo_id,
+                stagger=True,
+                insertion_method=pk_source_increment_insert
+            )
 
+            # self.logger.info(
+            #     f"PR Action map is {pr_action_map} after source_prs. The source_prs are {source_prs}."
+            # )
 
-            prs_insert = [
-            {
-                'repo_id': self.repo_id,
-                'pr_url': pr['url'],
-                'pr_src_id': pr['id'],
-                'pr_src_node_id': None,
-                'pr_html_url': pr['html_url'],
-                'pr_diff_url': pr['diff_url'],
-                'pr_patch_url': pr['patch_url'],
-                'pr_issue_url': pr['issue_url'],
-                'pr_augur_issue_id': None,
-                'pr_src_number': pr['number'],
-                'pr_src_state': pr['state'],
-                'pr_src_locked': pr['locked'],
-                'pr_src_title': pr['title'],
-                'pr_augur_contributor_id': pr['cntrb_id'],
-                'pr_body': pr['body'].encode(encoding='UTF-8',errors='backslashreplace').decode(encoding='UTF-8',errors='ignore') if (
-                    pr['body']
-                ) else None,
-                'pr_created_at': pr['created_at'],
-                'pr_updated_at': pr['updated_at'],
-                'pr_closed_at': pr['closed_at'],
-                'pr_merged_at': pr['merged_at'],
-                'pr_merge_commit_sha': pr['merge_commit_sha'],
-                'pr_teams': None,
-                'pr_milestone': None if not (
-                    pr['milestone'] and 'title' in pr['milestone']
-                ) else pr['milestone']['title'],
-                'pr_commits_url': pr['commits_url'],
-                'pr_review_comments_url': pr['review_comments_url'],
-                'pr_review_comment_url': pr['review_comment_url'],
-                'pr_comments_url': pr['comments_url'],
-                'pr_statuses_url': pr['statuses_url'],
-                'pr_meta_head_id': None,
-                'pr_meta_base_id': None,
-                'pr_src_issue_url': pr['issue_url'],
-                'pr_src_comments_url': pr['comments_url'], # NOTE: this seems redundant
-                'pr_src_review_comments_url': pr['review_comments_url'], # this too
-                'pr_src_commits_url': pr['commits_url'], # this one also seems redundant
-                'pr_src_statuses_url': pr['statuses_url'],
-                'pr_src_author_association': pr['author_association'],
-                'tool_source': self.tool_source,
-                'tool_version': self.tool_version,
-                'data_source': 'GitHub API'
-            } for pr in inc_source_prs['insert']
-            ]
+            #Use the increment insert method in order to do the
+            #remaining pages of the paginated endpoint that weren't inserted inside the paginate_endpoint method
+            pk_source_increment_insert(source_prs,pr_action_map)
 
-            #The b_pr_src_id bug comes from here
-            if len(inc_source_prs['insert']) > 0 or len(inc_source_prs['update']) > 0:
-                self.bulk_insert(
-                    self.pull_requests_table,
-                    update=inc_source_prs['update'], unique_columns=action_map['insert']['augur'],
-                    insert=prs_insert, update_columns=action_map['update']['augur']
-                )
+            pk_source_prs = self.pk_source_prs
 
-                source_data = inc_source_prs['insert'] + inc_source_prs['update']
+            #This attribute is only needed because paginate endpoint needs to
+            #send this data to the child class and this is the easiset way to do that.
+            self.pk_source_prs = []
 
-            elif not self.deep_collection:
-                self.logger.info(
-                    "There are no prs to update, insert, or collect nested information for.\n"
-                )
-                self.register_task_completion(self.task_info, self.repo_id, 'pull_requests')
-                return
-
-            if self.deep_collection:
-                source_data = inc_source_prs['all']
-
-            # Merge source data to inserted data to have access to inserted primary keys
-
-           # gh_merge_fields = ['id']
-           # augur_merge_fields = ['pr_src_id']
-
-            '''Commented these fields out because they are already defined in the action_map. '''
-
-            self.pk_source_prs += self.enrich_data_primary_keys(source_data, self.pull_requests_table,
-                pr_action_map['insert']['source'], pr_action_map['insert']['augur'])
-            return
-
-
-        #paginate endpoint with stagger enabled so that the above method can insert every 500
-
-        # self.logger.info(
-        #     f"PR Action map is {pr_action_map}"
-        # )
-
-        source_prs = self.paginate_endpoint(
-            pr_url, action_map=pr_action_map, table=self.pull_requests_table,
-            where_clause=self.pull_requests_table.c.repo_id == self.repo_id,
-            stagger=True,
-            insertion_method=pk_source_increment_insert
-        )
-
-        # self.logger.info(
-        #     f"PR Action map is {pr_action_map} after source_prs. The source_prs are {source_prs}."
-        # )
-
-        #Use the increment insert method in order to do the
-        #remaining pages of the paginated endpoint that weren't inserted inside the paginate_endpoint method
-        pk_source_increment_insert(source_prs,pr_action_map)
-
-        pk_source_prs = self.pk_source_prs
-
-        #This attribute is only needed because paginate endpoint needs to
-        #send this data to the child class and this is the easiset way to do that.
-        self.pk_source_prs = []
-
-        return pk_source_prs
+            return pk_source_prs
+        except Exception as e: 
+            self.logger.debug(f"exception registered in pk source increment insert: {e}. ")
+            stacker = traceback.format_exc()
+            self.logger.debug(f"{stacker}")
 
     def pull_requests_model(self, entry_info, repo_id):
         """Pull Request data collection function. Query GitHub API for PhubRs.
