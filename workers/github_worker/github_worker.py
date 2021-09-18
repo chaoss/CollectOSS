@@ -653,6 +653,8 @@ class GitHubWorker(WorkerGitInterfaceable):
             self.logger.info(f"Exception in label insert for PRs: {e}.. exception registerred")
 
 
+        self.logger.info(f"Exception registered. labels_all[0]: {labels_all[0]}")
+
         source_labels_insert, _ = self.organize_needed_data(
             labels_all, table_values=table_values_issue_labels,
             action_map=label_action_map
