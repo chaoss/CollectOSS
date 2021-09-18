@@ -566,7 +566,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             self.logger.info("DEBUG: got passed deletion")
 
             # Use the email found in the commit data if api data is NULL
-            emailFromCommitData = contributor['commit_email'] if 'commit_email' in contributor else contributor['email']
+            emailFromCommitData = contributor['email_raw'] if 'commit_email' in contributor else contributor['email']
 
             self.logger.info(f"Email from commit data: {emailFromCommitData}")
 
