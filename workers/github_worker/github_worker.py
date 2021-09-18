@@ -565,126 +565,126 @@ class GitHubWorker(WorkerGitInterfaceable):
 
                 self.logger.info(f"Current closed issue count is {len(closed_issue_updates)}.")
 
-        # Closed issues, update with closer id
-        ''' TODO: Right here I am not sure if the update columns are right, and will catch the state changes. '''
+            # Closed issues, update with closer id
+            ''' TODO: Right here I am not sure if the update columns are right, and will catch the state changes. '''
 
-        try:
+            try:
 
-            self.bulk_insert(
-                self.issues_table, update=closed_issue_updates, unique_columns=['issue_id'],
-                update_columns=['cntrb_id', 'issue_state', 'closed_at']
-            )
-        except Exception as e:
-            self.logger.info(f"Bulk insert failed on {e}. exception registerred.")
+                self.bulk_insert(
+                    self.issues_table, update=closed_issue_updates, unique_columns=['issue_id'],
+                    update_columns=['cntrb_id', 'issue_state', 'closed_at']
+                )
+            except Exception as e:
+                self.logger.info(f"Bulk insert failed on {e}. exception registerred.")
 
-        ''' Action maps are used to determine uniqueness based on the natural key at the source. '''
+            ''' Action maps are used to determine uniqueness based on the natural key at the source. '''
 
-        self.logger.info("Entering assignee insertion.")
+            self.logger.info("Entering assignee insertion.")
 
-        # Issue assignees insertion
-        assignee_action_map = {
-            'insert': {
-                'source': ['issue_id','id'],
-                'augur': ['issue_id','issue_assignee_src_id']
-            }
-        }
-
-        table_values_issue_assignees = self.db.execute(
-            s.sql.select(self.get_relevant_columns(self.issue_assignees_table,assignee_action_map))
-        ).fetchall()
-
-        self.logger.info(f"Issue assignee retrieved total: {len(table_values_issue_assignees)}.")
-
-        source_assignees_insert, _ = self.organize_needed_data(
-            assignees_all, table_values=table_values_issue_assignees,
-            action_map=assignee_action_map
-        )
-        if len(source_assignees_insert) > 0:
-            source_assignees_insert = self.enrich_cntrb_id(
-                source_assignees_insert, 'login', action_map_additions={
-                    'insert': {
-                        'source': ['node_id'],
-                        'augur': ['gh_node_id']
-                    }
+            # Issue assignees insertion
+            assignee_action_map = {
+                'insert': {
+                    'source': ['issue_id','id'],
+                    'augur': ['issue_id','issue_assignee_src_id']
                 }
-            )
-        else:
-            self.logger.info("Contributor enrichment is not needed, no inserts in action map.")
-
-        assignees_insert = [
-            {
-                'issue_id': issue['issue_id'],
-                'cntrb_id': assignee['cntrb_id'],
-                'tool_source': self.tool_source,
-                'tool_version': self.tool_version,
-                'data_source': self.data_source,
-                'issue_assignee_src_id': assignee['id'],
-                'issue_assignee_src_node': assignee['node_id']
-            } for assignee in source_assignees_insert
-        ]
-        try:
-            self.bulk_insert(
-                self.issue_assignees_table, insert=assignees_insert,
-                unique_columns=assignee_action_map['insert']['augur']
-            )
-        except Exception as e:
-            self.logger.info(f"assignees failed on {e}. exception registerred.")
-
-        # Issue labels insertion
-
-            ## Probably need to do the map like PRs again.
-            # 'insert': {
-            #     'source': ['pull_request_id', 'id'],
-            #     'augur': ['pull_request_id', 'pr_src_id']
-            # }
-        ''' Action maps are used to determine uniqueness based on the natural key at the source. '''
-
-        label_action_map = {
-            'insert': {
-                'source': ['issue_id', 'id'],
-                'augur': ['issue_id', 'label_src_id']
             }
-        }
 
-        try:
-            table_values_issue_labels = self.db.execute(
-                s.sql.select(self.get_relevant_columns(self.issue_labels_table,label_action_map))
+            table_values_issue_assignees = self.db.execute(
+                s.sql.select(self.get_relevant_columns(self.issue_assignees_table,assignee_action_map))
             ).fetchall()
-        except Exception as e:
-            self.logger.info(f"Exception in label insert for PRs: {e}.. exception registerred")
 
+            self.logger.info(f"Issue assignee retrieved total: {len(table_values_issue_assignees)}.")
 
-        self.logger.info(f"Exception registered. labels_all[0]: {labels_all[0]}")
-
-        source_labels_insert, _ = self.organize_needed_data(
-            labels_all, table_values=table_values_issue_labels,
-            action_map=label_action_map
-        )
-        labels_insert = [
-            {
-                'issue_id': issue['issue_id'],
-                'label_text': label['name'],
-                'label_description': label['description'] if 'description' in label else None,
-                'label_color': label['color'],
-                'tool_source': self.tool_source,
-                'tool_version': self.tool_version,
-                'data_source': self.data_source,
-                'label_src_id': int(label['id']),
-                'label_src_node_id': label['node_id']
-            } for label in source_labels_insert
-        ]
-
-        #Trying to fix an error with creating bigInts using pandas
-        try:
-            self.bulk_insert(
-                self.issue_labels_table, insert=labels_insert,
-                unique_columns=['issue_id', 'label_src_id']
+            source_assignees_insert, _ = self.organize_needed_data(
+                assignees_all, table_values=table_values_issue_assignees,
+                action_map=assignee_action_map
             )
-        except psycopg2.errors.InvalidTextRepresentation as e:
-            #If there was an error constructing a type try to redo the insert with a conversion.
-            self.logger.warning(f"Type error when attempting to insert data in issue_nested_data_model with the github worker. Trying again with type conversion on. ERROR: {e}. exception registerred \n")
-            self.bulk_insert(
-                self.issue_labels_table, insert=labels_insert,
-                unique_columns=label_action_map['insert']['augur'],
-                convert_float_int=True
+            if len(source_assignees_insert) > 0:
+                source_assignees_insert = self.enrich_cntrb_id(
+                    source_assignees_insert, 'login', action_map_additions={
+                        'insert': {
+                            'source': ['node_id'],
+                            'augur': ['gh_node_id']
+                        }
+                    }
+                )
+            else:
+                self.logger.info("Contributor enrichment is not needed, no inserts in action map.")
+
+            assignees_insert = [
+                {
+                    'issue_id': issue['issue_id'],
+                    'cntrb_id': assignee['cntrb_id'],
+                    'tool_source': self.tool_source,
+                    'tool_version': self.tool_version,
+                    'data_source': self.data_source,
+                    'issue_assignee_src_id': assignee['id'],
+                    'issue_assignee_src_node': assignee['node_id']
+                } for assignee in source_assignees_insert
+            ]
+            try:
+                self.bulk_insert(
+                    self.issue_assignees_table, insert=assignees_insert,
+                    unique_columns=assignee_action_map['insert']['augur']
+                )
+            except Exception as e:
+                self.logger.info(f"assignees failed on {e}. exception registerred.")
+
+            # Issue labels insertion
+
+                ## Probably need to do the map like PRs again.
+                # 'insert': {
+                #     'source': ['pull_request_id', 'id'],
+                #     'augur': ['pull_request_id', 'pr_src_id']
+                # }
+            ''' Action maps are used to determine uniqueness based on the natural key at the source. '''
+
+            label_action_map = {
+                'insert': {
+                    'source': ['issue_id', 'id'],
+                    'augur': ['issue_id', 'label_src_id']
+                }
+            }
+
+            try:
+                table_values_issue_labels = self.db.execute(
+                    s.sql.select(self.get_relevant_columns(self.issue_labels_table,label_action_map))
+                ).fetchall()
+            except Exception as e:
+                self.logger.info(f"Exception in label insert for PRs: {e}.. exception registerred")
+
+
+            self.logger.info(f"Exception registered. labels_all[0]: {labels_all[0]}")
+
+            source_labels_insert, _ = self.organize_needed_data(
+                labels_all, table_values=table_values_issue_labels,
+                action_map=label_action_map
             )
+            labels_insert = [
+                {
+                    'issue_id': issue['issue_id'],
+                    'label_text': label['name'],
+                    'label_description': label['description'] if 'description' in label else None,
+                    'label_color': label['color'],
+                    'tool_source': self.tool_source,
+                    'tool_version': self.tool_version,
+                    'data_source': self.data_source,
+                    'label_src_id': int(label['id']),
+                    'label_src_node_id': label['node_id']
+                } for label in source_labels_insert
+            ]
+
+            #Trying to fix an error with creating bigInts using pandas
+            try:
+                self.bulk_insert(
+                    self.issue_labels_table, insert=labels_insert,
+                    unique_columns=['issue_id', 'label_src_id']
+                )
+            except psycopg2.errors.InvalidTextRepresentation as e:
+                #If there was an error constructing a type try to redo the insert with a conversion.
+                self.logger.warning(f"Type error when attempting to insert data in issue_nested_data_model with the github worker. Trying again with type conversion on. ERROR: {e}. exception registerred \n")
+                self.bulk_insert(
+                    self.issue_labels_table, insert=labels_insert,
+                    unique_columns=label_action_map['insert']['augur'],
+                    convert_float_int=True
+                )
