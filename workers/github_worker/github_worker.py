@@ -595,7 +595,7 @@ class GitHubWorker(WorkerGitInterfaceable):
 
             self.logger.info(f"Issue assignee retrieved total: {len(table_values_issue_assignees)}.")
 
-            self.logger.info(f"source_assigneess before organize_needed_data: {source_assigneess}")
+            self.logger.info(f"source_assigneess before organize_needed_data: {source_assignees}")
             source_assignees_insert, _ = self.organize_needed_data(
                 source_assignees, table_values=table_values_issue_assignees,
                 action_map=assignee_action_map
