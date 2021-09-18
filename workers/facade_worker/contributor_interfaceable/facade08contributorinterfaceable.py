@@ -563,12 +563,17 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                 self.logger.info(
                     f"Deleting now resolved email failed with error: {e}")
             
+            self.logger.info("DEBUG: got passed deletion")
 
             # Use the email found in the commit data if api data is NULL
             emailFromCommitData = contributor['commit_email'] if 'commit_email' in contributor else contributor['email']
 
+            self.logger.info(f"Email from commit data: {emailFromCommitData}")
+
             # Get name from commit if not found by GitHub
             name_field = contributor['commit_name'] if 'commit_name' in contributor else contributor['name']
+
+            self.logger.info(f"Name field is : {name_field}")
 
             # try to add contributor to database
             cntrb = {
@@ -607,7 +612,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             # Check if the github login exists in the contributors table and add the emails to alias' if it does.
 
             # Also update the contributor record with commit data if we can.
-
+            self.loggger.info("Got here.")
             try:
                 if not self.resolve_if_login_existing(cntrb):
                     try:
