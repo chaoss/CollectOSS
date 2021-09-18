@@ -556,10 +556,10 @@ class GitHubWorker(WorkerGitInterfaceable):
 
                 ## Cast the numerics as ints, as prior update on 9/17 did not eliminate the error noted above. SPG, 9/18/2021
                 closed_issue_updates.append({
-                    'b_issue_id': self.get_sqlalchemy_type(issue['issue_id']),
-                    'cntrb_id': self.get_sqlalchemy_type(closed_event['cntrb_id']),
+                    'b_issue_id': self.int(issue['issue_id']),
+                    'cntrb_id': self.int(closed_event['cntrb_id']),
                     'issue_state': issue['state'],
-                    'closed_at': self.get_sqlalchemy_type(issue['closed_at'])
+                    'closed_at': s.to_datetime(issue['closed_at'])
                 })
 
                 self.logger.info(f"Current closed issue count is {len(closed_issue_updates)}.")
