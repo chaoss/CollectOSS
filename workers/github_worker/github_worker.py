@@ -556,8 +556,8 @@ class GitHubWorker(WorkerGitInterfaceable):
 
                 ## Cast the numerics as ints, as prior update on 9/17 did not eliminate the error noted above. SPG, 9/18/2021
                 closed_issue_updates.append({
-                    'b_issue_id': self.int(issue['issue_id']),
-                    'cntrb_id': self.int(closed_event['cntrb_id']),
+                    'b_issue_id': int(issue['issue_id']),
+                    'cntrb_id': int(closed_event['cntrb_id']),
                     'issue_state': issue['state'],
                     'closed_at': s.to_datetime(issue['closed_at'])
                 })
