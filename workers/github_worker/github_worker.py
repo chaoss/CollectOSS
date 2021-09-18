@@ -426,7 +426,7 @@ class GitHubWorker(WorkerGitInterfaceable):
 
         for index, issue in enumerate(pk_issue_events):
 
-            if issue['cntrb_id'] is None:
+            if 'cntrb_id' not in issue:
                 self.logger.debug(f"Exception registered. Dict has null cntrb_id: {issue}")
 
         issue_events_insert = [
@@ -437,7 +437,7 @@ class GitHubWorker(WorkerGitInterfaceable):
                 'node_url': event['url'],
                 'cntrb_id': int(event['cntrb_id']),
                 'created_at': event['created_at'] if (
-                    event['created_at'] 
+                    event['created_at']
                     ) else None,
                 'action': event['event'],
                 'action_commit_hash': event['commit_id'],
