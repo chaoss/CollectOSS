@@ -1,5 +1,6 @@
-BEGIN; 
+BEGIN;
 
+DROP TABLE IF EXISTS "augur_data"."unresolved_commit_emails";
 CREATE TABLE "augur_data"."unresolved_commit_emails" (
   "email_unresolved_id" serial8,
   "email" varchar COLLATE "pg_catalog"."default" NOT NULL,
@@ -12,12 +13,12 @@ CREATE TABLE "augur_data"."unresolved_commit_emails" (
 )
 ;
 
-update "augur_operations"."augur_settings" set value = 69 where setting = 'augur_data_version'; 
+update "augur_operations"."augur_settings" set value = 69 where setting = 'augur_data_version';
 
-COMMIT; 
+COMMIT;
 
 BEGIN;
 
 ALTER TABLE "augur_data"."contributors_aliases" ADD CONSTRAINT "only-email-once" UNIQUE ("alias_email", "canonical_email") DEFERRABLE INITIALLY DEFERRED;
 
-COMMIT; 
+COMMIT;
