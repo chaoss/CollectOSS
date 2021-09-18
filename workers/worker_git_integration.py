@@ -276,7 +276,7 @@ class WorkerGitInterfaceable(Worker):
         source_data = [data for data in source_data if f'{prefix}login' in data and data[f'{prefix}login'] != None]
 
         self.logger.info(f"table_values_cntrb keys: {table_values_cntrb[0].keys()}")
-        self.logger.info(f"source_data keys: {source_data[0].keys()}")
+        # self.logger.info(f"source_data keys: {source_data[0].keys()}")
 
         #We can't use this because of worker collisions
         #TODO: seperate this method into it's own worker.
@@ -361,7 +361,7 @@ class WorkerGitInterfaceable(Worker):
               attempts = 0
               contributor = None
               success = False
-              
+
               while attempts < 10:
                 self.logger.info(f"Hitting endpoint: {url} ...\n")
                 try:
@@ -370,14 +370,14 @@ class WorkerGitInterfaceable(Worker):
                   self.logger.info(f"User data request for enriching contributor data failed with {attempts} attempts! Trying again...")
                   time.sleep(10)
                   continue
-                
+
                 self.update_rate_limit(response,platform=platform)
 
                 try:
                   contributor = response.json()
                 except:
                   contributor = json.loads(json.dumps(response.text))
-                
+
 
                 if type(contributor) == dict:
                   self.logger.info("Request returned a dict!")
@@ -403,9 +403,9 @@ class WorkerGitInterfaceable(Worker):
                 attempts += 1
               if not success:
                 break
-              
 
-              
+
+
 
               self.logger.info(f"Contributor data: {contributor}")
 
