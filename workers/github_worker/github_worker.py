@@ -424,19 +424,21 @@ class GitHubWorker(WorkerGitInterfaceable):
         else:
             self.logger.info("Contributor enrichment is not needed, no inserts in action map.")
 
-        for issue, index in enumerate(pk_issue_events):
+        for index, issue in enumerate(pk_issue_events):
 
             if issue['cntrb_id'] is None:
                 self.logger.debug(f"Exception registered. Dict has null cntrb_id: {issue}")
 
         issue_events_insert = [
             {
-                'issue_event_src_id': get_sqlalchemy_type(event['id']),
-                'issue_id': get_sqlalchemy_type(event['issue_id']),
-                'node_id': get_sqlalchemy_type(event['node_id']),
+                'issue_event_src_id': int(event['id']),
+                'issue_id': int(event['issue_id']),
+                'node_id': sevent['node_id'],
                 'node_url': event['url'],
-                'cntrb_id': get_sqlalchemy_type(event['cntrb_id']),
-                'created_at': get_sqlalchemy_type(event['created_at']),
+                'cntrb_id': int(event['cntrb_id']),
+                'created_at': event['created_at'] if (
+                    event['created_at'] 
+                    ) else None,
                 'action': event['event'],
                 'action_commit_hash': event['commit_id'],
                 'tool_source': self.tool_source,
@@ -554,10 +556,10 @@ class GitHubWorker(WorkerGitInterfaceable):
 
                 ## Cast the numerics as ints, as prior update on 9/17 did not eliminate the error noted above. SPG, 9/18/2021
                 closed_issue_updates.append({
-                    'b_issue_id': get_sqlalchemy_type(issue['issue_id']),
-                    'cntrb_id': get_sqlalchemy_type(closed_event['cntrb_id']),
+                    'b_issue_id': self.get_sqlalchemy_type(issue['issue_id']),
+                    'cntrb_id': self.get_sqlalchemy_type(closed_event['cntrb_id']),
                     'issue_state': issue['state'],
-                    'closed_at': get_sqlalchemy_type(issue['closed_at'])
+                    'closed_at': self.get_sqlalchemy_type(issue['closed_at'])
                 })
 
                 self.logger.info(f"Current closed issue count is {len(closed_issue_updates)}.")
