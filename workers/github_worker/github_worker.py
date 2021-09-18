@@ -508,11 +508,11 @@ class GitHubWorker(WorkerGitInterfaceable):
 
         for issue in pk_source_issues:
 
-            self.logger.debug(f"on issue: there are {len(pk_source_issues)} issues total. Editing assingees next.")
+            self.logger.debug(f"on issue: there are {len(pk_source_issues)} issues total. Editing assignee next.")
 
             # Issue Assignees
             source_assignees = [
-                assignee for assignee in issue['assignees'] if assignee
+                assignee for assignee in issue['assignee'] if assignee
                 and not is_nan(assignee)
             ]
             if (
@@ -678,7 +678,7 @@ class GitHubWorker(WorkerGitInterfaceable):
         try:
             self.bulk_insert(
                 self.issue_labels_table, insert=labels_insert,
-                unique_columns=label_action_map['insert']['augur']
+                unique_columns=['issue_id', 'label_src_id']
             )
         except psycopg2.errors.InvalidTextRepresentation as e:
             #If there was an error constructing a type try to redo the insert with a conversion.
