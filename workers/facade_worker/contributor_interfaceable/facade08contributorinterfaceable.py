@@ -155,7 +155,10 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         self.logger.info(f"Trying to resolve contributor from email: {email}")
         #Note: I added "+type:user" to avoid having user owned organizations be returned
         #Also stopped splitting per note above. 
-        url = 'https://api.github.com/search/users?q={}+in:email+type:user'.format(cmt_cntrb['email'])
+        self.logger.info(f"Trying to resolve contributor from email: {email}")
+
+        url = 'https://api.github.com/search/users?q={}+in:email&&{}+in:email'.format(email)
+        #url = 'https://api.github.com/search/users?q={}+in:email+type:user'.format(cmt_cntrb['email'])
         self.logger.info(f"url is: {url}")
         #(
         #    email.split('@')[0], email.split('@')[-1])
