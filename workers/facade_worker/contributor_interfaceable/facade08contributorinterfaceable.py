@@ -1,7 +1,7 @@
 from requests.api import head
 from workers.worker_base import *
 import logging
-from logging import FileHandler, Formatter, StreamHandler
+from logging import FileHandler, Formatter, StreamHandler, log
 from workers.worker_git_integration import WorkerGitInterfaceable
 from workers.util import read_config
 from psycopg2.errors import UniqueViolation
@@ -151,19 +151,16 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
     https://docs.github.com/en/github/searching-for-information-on-github/searching-on-github/searching-users#search-only-users-or-organizations
 
     """
+
     def create_endpoint_from_email(self, email):
         self.logger.info(f"Trying to resolve contributor from email: {email}")
-        #Note: I added "+type:user" to avoid having user owned organizations be returned
-        #Also stopped splitting per note above. 
-        self.logger.info(f"Trying to resolve contributor from email: {email}")
-
-        url = 'https://api.github.com/search/users?q={}+in:email+type:user'.format(email)
-        #url = 'https://api.github.com/search/users?q={}+in:email+type:user'.format(cmt_cntrb['email'])
+        # Note: I added "+type:user" to avoid having user owned organizations be returned
+        # Also stopped splitting per note above.
+        url = 'https://api.github.com/search/users?q={}+in:email+type:user'.format(
+            email)
         self.logger.info(f"url is: {url}")
-        #(
+        # (
         #    email.split('@')[0], email.split('@')[-1])
-        ## TODO: We can use an event stream once we have a username, to get other aliased emails
-        ###  curl https://api.github.com/users/sgoggins/events&page=2
 
         return url
 
@@ -174,24 +171,17 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         # Try to get the 'names' field if 'commit_name' field is not present in contributor data.
         name_field = 'commit_name' if 'commit_name' in contributor else 'name'
 
-        try:
-            # Deal with case where name is one word or none.
-            if len(contributor[name_field].split()) < 2:
-                raise ValueError
-            cmt_cntrb = {
-                'fname': contributor[name_field].split()[0],
-                # Pythonic way to get the end of a list so that we truely get the last name.
-                'lname': contributor[name_field].split()[-1]
-            }
-            url = 'https://api.github.com/search/users?q=fullname:{}+{}'.format(
-                cmt_cntrb['fname'], cmt_cntrb['lname'])             
-        except:
-            cmt_cntrb = {
-                'fname': contributor[name_field].split()[0]
-            }
-            url = 'https://api.github.com/search/users?q=fullname:{}'.format(
-                cmt_cntrb['fname'])
-
+        # Deal with case where name is one word or none.
+        if len(contributor[name_field].split()) < 2:
+            raise ValueError
+        cmt_cntrb = {
+            'fname': contributor[name_field].split()[0],
+            # Pythonic way to get the end of a list so that we truely get the last name.
+            'lname': contributor[name_field].split()[-1]
+        }
+        url = 'https://api.github.com/search/users?q=fullname:{}+{}'.format(
+            cmt_cntrb['fname'], cmt_cntrb['lname'])
+        
         return url
 
     # Hit the endpoint specified by the url and return the json that it returns if it returns a dict.
@@ -271,7 +261,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         return response_data
 
-    def insert_alias(self, contributor, commit_emails):
+    def insert_alias(self, contributor):
         # Insert cntrb_id and email of the corresponding record into the alias table
         # Another database call to get the contributor id is needed because its an autokeyincrement that is accessed by multiple workers
         # Same principle as enrich_cntrb_id method.
@@ -293,37 +283,38 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                 f"There are more than one contributors in the table with gh_user_id={contributor['gh_user_id']}")
 
 
-        for email in commit_emails:
-            # Insert a new alias that corresponds to where the contributor was found
-            # use the email of the new alias for canonical_email if the api returns NULL
-            # TODO: It might be better to have the canonical_email allowed to be NUll because right now it has a null constraint.
-            alias = {
-                "cntrb_id": contributor_table_data[0]['cntrb_id'],
-                "alias_email": email,
-                "canonical_email": contributor['cntrb_canonical'] if 'cntrb_canonical' in contributor and contributor['cntrb_canonical'] is not None else email,
-                "tool_source": self.tool_source,
-                "tool_version": self.tool_version,
-                "data_source": self.data_source
-            }
+        email = contributor['email_raw'] if 'email_raw' in contributor else contributor['email']
 
-            # Insert new alias
-            try:
-                self.db.execute(
-                    self.contributors_aliases_table.insert().values(alias))
-            except s.exc.IntegrityError:
-                # It's expected to catch duplicates this way so no output is logged.
-                pass
-                self.logger.info(f"aliase {alias} already exists")
-            except Exception as e:
-                self.logger.info(
-                    f"Ran into issue with alias: {alias}. Error: {e}")
+        # Insert a new alias that corresponds to where the contributor was found
+        # use the email of the new alias for canonical_email if the api returns NULL
+        # TODO: It might be better to have the canonical_email allowed to be NUll because right now it has a null constraint.
+        alias = {
+            "cntrb_id": contributor_table_data[0]['cntrb_id'],
+            "alias_email": email,
+            "canonical_email": contributor['cntrb_canonical'] if 'cntrb_canonical' in contributor and contributor['cntrb_canonical'] is not None else email,
+            "tool_source": self.tool_source,
+            "tool_version": self.tool_version,
+            "data_source": self.data_source
+        }
+
+        # Insert new alias
+        try:
+            self.db.execute(
+                self.contributors_aliases_table.insert().values(alias))
+        except s.exc.IntegrityError:
+            # It's expected to catch duplicates this way so no output is logged.
+            pass
+            self.logger.info(f"alias {alias} already exists")
+        except Exception as e:
+            self.logger.info(
+                f"Ran into issue with alias: {alias}. Error: {e}")
 
         return
 
     # Takes the user data from the endpoint as arg
     # Updates the alias table if the login is already in the contributor's table with the new email.
     # Returns whether the login was found in the contributors table
-    def resolve_if_login_existing(self, contributor, commit_emails):
+    def resolve_if_login_existing(self, contributor):
         # check if login exists in contributors table
         select_cntrbs_query = s.sql.text("""
             SELECT cntrb_id from contributors
@@ -337,7 +328,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         # if yes
         if len(result.fetchall()) >= 1:
-            self.insert_alias(contributor, commit_emails)
+            self.insert_alias(contributor)
             return True
 
         # If not found, return false
@@ -378,57 +369,55 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
     #   \return A dictionary of response data from github with potential logins on success.
     #           None on failure
 
-    def fetch_username_from_email(self, emails):
+    def fetch_username_from_email(self, email):
 
         # Default to failed state
         login_json = None
 
-        for email in emails:
-            if len(email) <= 2:
-                continue  # Don't bother with emails that are blank or less than 2 characters
+        if len(email) <= 2:
+            return login_json  # Don't bother with emails that are blank or less than 2 characters
+
+        try:
+            url = self.create_endpoint_from_email(email)
+        except Exception as e:
+            self.logger.info(
+                f"Couldn't resolve email url with given data. Reason: {e}")
+            # If the method throws an error it means that we can't hit the endpoint so we can't really do much
+            return login_json
+
+        login_json = self.request_dict_from_endpoint(
+            url, timeout_wait=30)
+
+        # Check if the email result got anything, if it failed try a name search.
+        if login_json == None or 'total_count' not in login_json or login_json['total_count'] == 0:
+            self.logger.info(
+                f"Could not resolve the username from {email}")
+
+            # Go back to failure condition
+            login_json = None
+
+            # Add the email that couldn't be resolved to a garbage table.
+
+            unresolved = {
+                "email": email,
+                "tool_source": self.tool_source,
+                "tool_version": self.tool_version,
+                "data_source": self.data_source
+            }
+
+            self.logger.info(f"Inserting data to unresolved: {unresolved}")
 
             try:
-                url = self.create_endpoint_from_email(email)
+                self.db.execute(
+                    self.unresolved_commit_emails_table.insert().values(unresolved))
+            except s.exc.IntegrityError:
+                pass  # Pass because duplicate checking is expected
             except Exception as e:
                 self.logger.info(
-                    f"Couldn't resolve email url with given data. Reason: {e}")
-        # If the method throws an error it means that we can't hit the endpoint so we can't really do much
-                continue
-
-            login_json = self.request_dict_from_endpoint(
-                url, timeout_wait=30)
-
-            # Check if the email result got anything, if it failed try a name search.
-            if login_json == None or 'total_count' not in login_json or login_json['total_count'] == 0:
-                self.logger.info(
-                    f"Could not resolve the username from {email}")
-
-                # Go back to failure condition
-                login_json = None
-
-                # Add the email that couldn't be resolved to a garbage table.
-
-                unresolved = {
-                    "email": email,
-                    "tool_source": self.tool_source,
-                    "tool_version": self.tool_version,
-                    "data_source": self.data_source
-                }
-
-                self.logger.info(f"Inserting data to unresolved: {unresolved}")
-
-                try:
-                    self.db.execute(
-                        self.unresolved_commit_emails_table.insert().values(unresolved))
-                except s.exc.IntegrityError:
-                    pass  # Pass because duplicate checking is expected
-                except Exception as e:
-                    self.logger.info(
-                        f"Could not create new unresolved email {unresolved['email']}. Error: {e}")
-                continue
-            else:
-                # Return endpoint dictionary if email found it.
-                return login_json
+                    f"Could not create new unresolved email {unresolved['email']}. Error: {e}")
+        else:
+            # Return endpoint dictionary if email found it.
+            return login_json
 
         # failure condition returns None
         return login_json
@@ -445,27 +434,27 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                     commits.cmt_author_name AS NAME,--commits.cmt_id AS id,
                     commits.cmt_author_raw_email AS email_raw
                 FROM
-                    commits 
+                    commits
                 WHERE
                     commits.repo_id = :repo_id
-                    AND NOT EXISTS ( SELECT contributors.cntrb_email FROM contributors WHERE contributors.cntrb_email = commits.cmt_author_email ) 
+                    AND NOT EXISTS ( SELECT contributors.cntrb_email FROM contributors WHERE contributors.cntrb_email = commits.cmt_author_email )
                     AND (
-                        commits.cmt_author_name 
+                        commits.cmt_author_name
                         ) IN (
-                        SELECT 
-                        C.cmt_author_name 
+                        SELECT
+                        C.cmt_author_name
                     FROM
-                        commits AS C 
+                        commits AS C
                     WHERE
                         C.repo_id = :repo_id
-                        AND C.cmt_author_email = commits.cmt_author_email 
+                        AND C.cmt_author_email = commits.cmt_author_email
                     GROUP BY
                         C.cmt_author_name
-                    ) 
+                    )
                 GROUP BY
                     commits.cmt_author_name,
                     commits.cmt_author_raw_email
-                order by name; 
+                order by name;
         """)
         new_contribs = json.loads(pd.read_sql(new_contrib_sql, self.db, params={
                                   'repo_id': repo_id}).to_json(orient="records"))
@@ -475,48 +464,29 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
             # Get list of all emails in the commit data.
             # Start with the fields we know that we can start with
-            emails = [contributor['email_raw']
-                      if 'email_raw' in contributor else contributor['email']]
+            email = contributor['email_raw'] if 'email_raw' in contributor else contributor['email']
 
-            # # Check if other emails match the previous, if they don't then add them
-            # if contributor['email_raw'] not in emails:
-            #     emails.append(contributor['email_raw'])
+            self.logger.info(f"DEBUG: here is the email: {email}")
 
-            # if contributor['committer_email'] not in emails:
-            #     emails.append(contributor['committer_email'])
-
-            # if contributor['committer_email_raw'] not in emails:
-            #     emails.append(contributor['committer_email_raw'])
-
-            self.logger.info(f"DEBUG: here is the email array: {emails}")
-
-            #check each email to see if it already exists in contributor_aliases
-            #The [:] is a python thing that lets us iterate over a copy of the list instead of the real thing, allowing deletion to take place in place.
-            for email in emails[:]:
-                try: 
-                    #Look up email to see if resolved
-                    alias_table_data = self.db.execute(
-                        s.sql.select([s.column('alias_email')]).where(
-                            self.contributors_aliases_table.c.alias_email == email
-                        )
-                    ).fetchall()
-
-                    if len(alias_table_data) >= 1:
-                        #delete from list if found.
-                        emails.remove(email)
-                except Exception as e:
-                    self.logger.info(f"alias table query failed with error: {e}")
-
-            self.logger.info(f"DEBUG: here is the email array after deletion: {emails}")
-
-            #If all emails have been resolved. No need to hit any api's
-            if len(emails) == 0:
-                self.logger.info("Commit emails all found to be resolved. Continuing...")
-                continue
+            # check the email to see if it already exists in contributor_aliases
+            try:
+                # Look up email to see if resolved
+                alias_table_data = self.db.execute(
+                    s.sql.select([s.column('alias_email')]).where(
+                        self.contributors_aliases_table.c.alias_email == email
+                    )
+                ).fetchall()
+                if len(alias_table_data) >= 1:
+                    # Move on if email resolved
+                    self.logger.info(f"Email {email} has been resolved earlier.")
+                    continue
+            except Exception as e:
+                self.logger.info(
+                    f"alias table query failed with error: {e}")
 
             # Try to get login from all possible emails
             # Is None upon failure.
-            login_json = self.fetch_username_from_email(emails)
+            login_json = self.fetch_username_from_email(email)
 
             # Check if the email result got anything, if it failed try a name search.
             if login_json == None or 'total_count' not in login_json or login_json['total_count'] == 0:
@@ -557,28 +527,13 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                         f"Could not enrich unresolvable email address with dummy data. Error: {e}")
                 continue
 
-            # Resolve any unresolved emails if we get to this point.
-            #They will get added to the alias table later
-            for email in emails:
-                query = s.sql.text("""
-                    DELETE FROM unresolved_commit_emails
-                    WHERE email='{}'
-                """.format(email))
-
-                self.logger.info(f"Updating now resolved email {email}")
-
-                try:
-                    self.db.execute(query)
-                except Exception as e:
-                    self.logger.info(f"Deleting now resolved email failed with error: {e}")
-
 
             # Grab first result and make sure it has the highest match score
             match = login_json['items'][0]
             for item in login_json['items']:
                 if item['score'] > match['score']:
                     match = item
-            
+
             self.logger.info("When searching for a contributor with info {}, we found the following users: {}\n".format(
                 contributor, match))
 
@@ -592,6 +547,22 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                 self.logger.warning(
                     f"user_data was unable to be reached. Skipping...")
                 continue
+
+            # Resolve any unresolved emails if we get to this point.
+            # They will get added to the alias table later
+            query = s.sql.text("""
+                DELETE FROM unresolved_commit_emails
+                WHERE email='{}'
+            """.format(email))
+
+            self.logger.info(f"Updating now resolved email {email}")
+
+            try:
+                self.db.execute(query)
+            except Exception as e:
+                self.logger.info(
+                    f"Deleting now resolved email failed with error: {e}")
+            
 
             # Use the email found in the commit data if api data is NULL
             emailFromCommitData = contributor['commit_email'] if 'commit_email' in contributor else contributor['email']
@@ -638,13 +609,13 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             # Also update the contributor record with commit data if we can.
 
             try:
-                if not self.resolve_if_login_existing(cntrb, emails):
+                if not self.resolve_if_login_existing(cntrb):
                     try:
                         self.db.execute(
                             self.contributors_table.insert().values(cntrb))
 
                         # Update alias after insertion. Insertion needs to happen first so we can get the autoincrementkey
-                        self.insert_alias(cntrb, emails)
+                        self.insert_alias(cntrb)
                     except Exception as e:
                         self.logger.info(
                             f"Ran into likely database collision. Assuming contributor exists in database. Error: {e}")
