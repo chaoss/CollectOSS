@@ -560,7 +560,7 @@ class GitHubWorker(WorkerGitInterfaceable):
                     'b_issue_id': int(issue['issue_id']),
                     'cntrb_id': int(closed_event['cntrb_id']),
                     'issue_state': issue['state'],
-                    'closed_at': issue['closed_at'] if issue['closed_at'] else None, 
+                    'closed_at': issue['closed_at'] if not pd.isnull(issue['closed_at']) else None, 
                 })
 
                 self.logger.info(f"Current closed issue count is {len(closed_issue_updates)}.")
