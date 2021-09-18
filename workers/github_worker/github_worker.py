@@ -599,7 +599,7 @@ class GitHubWorker(WorkerGitInterfaceable):
                 source_assignees, table_values=table_values_issue_assignees,
                 action_map=assignee_action_map
             )
-            self.logger.info("Exception registered. source_assignees_insert after organize_needed_data: {source_assignees_insert}")
+            self.logger.info(f"source_assignees_insert after organize_needed_data: {source_assignees_insert}")
             if len(source_assignees_insert) > 0:
                 source_assignees_insert = self.enrich_cntrb_id(
                     source_assignees_insert, 'login', action_map_additions={
@@ -661,7 +661,7 @@ class GitHubWorker(WorkerGitInterfaceable):
                 issue['labels'], table_values=table_values_issue_labels,
                 action_map=label_action_map
             )
-            self.logger.info("Exception registered. source_labels_insert after organize_needed_data: {source_labels_insert}")
+            self.logger.info(f"source_labels_insert after organize_needed_data: {source_labels_insert}")
             labels_insert = [
                 {
                     'issue_id': issue['issue_id'],
