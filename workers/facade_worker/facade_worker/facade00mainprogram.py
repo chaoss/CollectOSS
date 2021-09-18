@@ -25,7 +25,7 @@
 # and checks for any parents of HEAD that aren't already accounted for in the
 # repos. It also rebuilds analysis data, checks any changed affiliations and
 # aliases, and caches data for display.
-
+import traceback
 import sys, platform, imp, time, datetime, html.parser, subprocess, os, getopt, xlsxwriter, configparser, logging
 from multiprocessing import Process, Queue
 from facade_worker.facade01config import Config#increment_db, update_db, migrate_database_config, database_connection, get_setting, update_status, log_activity          
@@ -136,7 +136,9 @@ class FacadeWorker(Worker):
             try:
                 self.commits_model(message)
             except Exception as e:
-                self.logger.error(e)
+                self.logger.debug(f"The error is: {e}. exception registered.")
+                stacker = traceback.format_exc()
+                self.logger.debug(f"{stacker}")
                 raise(e)
                 break
 
