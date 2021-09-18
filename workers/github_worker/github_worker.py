@@ -555,7 +555,7 @@ class GitHubWorker(WorkerGitInterfaceable):
                 '''
 
                 ## Cast the numerics as ints, as prior update on 9/17 did not eliminate the error noted above. SPG, 9/18/2021
-                self.logger.info(f"issue close_at is: {issue['closed_at']}")
+                self.logger.info(f"issue closed_at is: {issue['closed_at']}")
                 closed_issue_updates.append({
                     'b_issue_id': int(issue['issue_id']),
                     'cntrb_id': int(closed_event['cntrb_id']),
