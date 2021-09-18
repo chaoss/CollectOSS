@@ -546,9 +546,11 @@ class GitHubWorker(WorkerGitInterfaceable):
                         [parameters: ({'cntrb_id': 277403, 'closed_at': 'closed_at', 'issue_state': 'issue_state', 'b_issue_id': 345071}, {'cntrb_id': 277403, 'closed_at': 'closed_at', 'issue_state': 'issue_state', 'b_issue_id': 345072}, {'cntrb_id': 277403, 'closed_at': 'closed_at', 'issue_state': 'issue_state', 'b_issue_id': 345073}, {'cntrb_id': 277403, 'closed_at': 'closed_at', 'issue_state': 'issue_state', 'b_issue_id': 345074}, {'cntrb_id': 277403, 'closed_at': 'closed_at', 'issue_state': 'issue_state', 'b_issue_id': 345075}, {'cntrb_id': 277762, 'closed_at': 'closed_at', 'issue_state': 'issue_state', 'b_issue_id': 345077}, {'cntrb_id': 277762, 'closed_at': 'closed_at', 'issue_state': 'issue_state', 'b_issue_id': 345078})]
                         (Background on this error at: http://sqlalche.me/e/13/f405)
                 '''
+
+                ## Cast the numerics as ints, as prior update on 9/17 did not eliminate the error noted above. SPG, 9/18/2021
                 closed_issue_updates.append({
-                    'b_issue_id': issue['issue_id'],
-                    'cntrb_id': closed_event['cntrb_id'],
+                    'b_issue_id': int(issue['issue_id']),
+                    'cntrb_id': int(closed_event['cntrb_id']),
                     'issue_state': issue['state'],
                     'closed_at': issue['closed_at']
                 })
