@@ -86,7 +86,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         def find_root_of_subject(data, key_subject):
             # self.logger.info(f'Finding {key_subject} root of {data}')
             key_nest = None
-            for subject, nest in data#.items():
+            for subject, nest in data:        #.items():
                 if key_subject in nest:
                     key_nest = nest[key_subject]
                     break
@@ -97,7 +97,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             return key_nest
             '''We removed .items() in the issue worker. I assume that's the issue
                here as well. 9/18/2021 -SPG ''' 
-        for data_subject, nest in data_subjects#.items():
+        for data_subject, nest in data_subjects:      #.items():
 
             # self.logger.info(f'Beginning paginate process for field {data_subject} '
             #     f'for query: {query}')

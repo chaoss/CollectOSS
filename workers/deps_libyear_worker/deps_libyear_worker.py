@@ -45,8 +45,8 @@ class DepsLibyearWorker(WorkerGitInterfaceable):
     def deps_libyear_model(self, entry_info, repo_id):
         """ Data collection and storage method
         """
-        self.logger.info(entry_info)
-        self.logger.info(repo_id)
+        self.logger.info(f"This is the entry info: {entry_info}.")
+        self.logger.info(f"This is the repo id: {repo_id}")
 
         repo_path_sql = s.sql.text("""
             SELECT repo_id, CONCAT(repo_group_id || chr(47) || repo_path || repo_name) AS path
@@ -60,7 +60,9 @@ class DepsLibyearWorker(WorkerGitInterfaceable):
         try:
             self.generate_deps_libyear_data(repo_id, absolute_repo_path)
         except Exception as e:
-            self.logger.error(e)
+            self.logger.debug(f"This is the exception from generate_deps_libyear_data exception registered {e}.")
+            stacker = traceback.format_exc()
+            self.logger.debug(f"{stacker}")
 
         self.register_task_completion(entry_info, repo_id, "deps_libyear")
 
@@ -75,23 +77,30 @@ class DepsLibyearWorker(WorkerGitInterfaceable):
 
         deps = get_deps_libyear_data(path)
 
-        for dep in deps:
-                repo_deps = {
-                    'repo_id': repo_id,
-                    'name' : dep['name'],
-	                'requirement' : dep['requirement'],
-	                'type' : dep['type'],
-                    'package_manager' : dep['package'],
-                    'current_verion' : dep['current_version'],
-                    'latest_version' : dep['latest_version'],
-                    'current_release_date' : dep['current_release_date'],
-                    'latest_release_date' : dep['latest_release_date'],
-                    'libyear' : dep['libyear'],
-                    'tool_source': self.tool_source,
-                    'tool_version': self.tool_version,
-                    'data_source': self.data_source,
-                    'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
-                }
+        try: 
 
-                result = self.db.execute(self.repo_deps_libyear_table.insert().values(repo_deps))
-                self.logger.info(f"Added dep: {result.inserted_primary_key}")
+            for dep in deps:
+                    repo_deps = {
+                        'repo_id': repo_id,
+                        'name' : dep['name'],
+    	                'requirement' : dep['requirement'],
+    	                'type' : dep['type'],
+                        'package_manager' : dep['package'],
+                        'current_verion' : dep['current_version'],
+                        'latest_version' : dep['latest_version'],
+                        'current_release_date' : dep['current_release_date'],
+                        'latest_release_date' : dep['latest_release_date'],
+                        'libyear' : dep['libyear'],
+                        'tool_source': self.tool_source,
+                        'tool_version': self.tool_version,
+                        'data_source': self.data_source,
+                        'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+                    }
+
+                    result = self.db.execute(self.repo_deps_libyear_table.insert().values(repo_deps))
+                    self.logger.info(f"Added dep: {result.inserted_primary_key}")
+        except Exception as e: 
+            self.logger.debug(f"error generating libyear data, exception registered: {e}.")
+            stacker = traceback.format_exc()
+            self.logger.debug(f"{stacker}")
+            continue 
