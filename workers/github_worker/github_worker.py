@@ -595,6 +595,7 @@ class GitHubWorker(WorkerGitInterfaceable):
 
             self.logger.info(f"Issue assignee retrieved total: {len(table_values_issue_assignees)}.")
 
+            self.logger.info(f"source_assigneess before organize_needed_data: {source_assigneess}")
             source_assignees_insert, _ = self.organize_needed_data(
                 source_assignees, table_values=table_values_issue_assignees,
                 action_map=assignee_action_map
@@ -656,6 +657,7 @@ class GitHubWorker(WorkerGitInterfaceable):
 
 
             # self.logger.info(f"Exception registered. labels_all[0]: {labels_all[0]}")
+            self.logger.info(f"issue['labels'] before organize_needed_data: {issue['labels']}")
 
             source_labels_insert, _ = self.organize_needed_data(
                 issue['labels'], table_values=table_values_issue_labels,
