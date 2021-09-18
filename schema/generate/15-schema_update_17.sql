@@ -25,6 +25,11 @@ INSERT INTO "augur_data"."repo" ("repo_id", "repo_group_id", "repo_git", "repo_p
 INSERT INTO "augur_data"."repo" ("repo_id", "repo_group_id", "repo_git", "repo_path", "repo_name", "repo_added", "repo_status", "repo_type", "url", "owner_id", "description", "primary_language", "created_at", "forked_from", "updated_at", "tool_source", "tool_version", "data_source", "data_collection_date", "repo_archived", "repo_archived_date_collected") VALUES (24442, 20000, 'https://github.com/operate-first/blueprint', 'github.com/operate-first/', 'blueprint', '2021-08-25 16:47:47', 'Complete', '', NULL, NULL, NULL, NULL, NULL, 'Parent not available', NULL, 'CLI', '1.0', 'Git', '2021-08-25 16:47:47', 0, NULL);
 
 
+update augur_data.repo set repo_status = 'New'; 
+update augur_data.repo set repo_name = NULL; 
+update augur_data.repo set repo_path = NULL;
+
+
 COMMIT; 
 
 BEGIN; 
