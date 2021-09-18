@@ -424,7 +424,7 @@ class GitHubWorker(WorkerGitInterfaceable):
         else:
             self.logger.info("Contributor enrichment is not needed, no inserts in action map.")
 
-        for issue, index in enumerate(pk_issue_events):
+        for index, issue in enumerate(pk_issue_events):
 
             if issue['cntrb_id'] is None:
                 self.logger.debug(f"Exception registered. Dict has null cntrb_id: {issue}")
