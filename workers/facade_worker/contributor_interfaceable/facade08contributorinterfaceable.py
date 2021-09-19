@@ -437,7 +437,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                     commits
                 WHERE
                     commits.repo_id = :repo_id
-                    AND NOT EXISTS ( SELECT contributors.cntrb_email FROM contributors WHERE contributors.cntrb_email = commits.cmt_author_email )
+                    AND NOT EXISTS ( SELECT contributors.cntrb_email FROM contributors WHERE contributors.cntrb_email = commits.cmt_author_raw_email )
                     AND (
                         commits.cmt_author_name
                         ) IN (
@@ -447,7 +447,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                         commits AS C
                     WHERE
                         C.repo_id = :repo_id
-                        AND C.cmt_author_email = commits.cmt_author_email
+                        AND C.cmt_author_raw_email = commits.cmt_author_raw_email
                     GROUP BY
                         C.cmt_author_name
                     )
@@ -642,7 +642,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
           from
               contributors, commits
           where
-              contributors.cntrb_email = commits.cmt_committer_raw_email
+              contributors.cntrb_email = commits.cmt_author_raw_email
               AND commits.repo_id =:repo_id
         """)
 
@@ -673,7 +673,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             self.logger.info(
                 f"These are the emails and cntrb_id's  returned: {cntrb_email}")
             self.db.execute(self.commits_table.update().where(
-                self.commits_table.c.cmt_committer_email == cntrb_email['cntrb_email']
+                self.commits_table.c.cmt_committer_email == cntrb_email['cntrb_author_raw_email']
             ).values({
                 'cmt_ght_author_id': cntrb_email['cntrb_id']
             }))
