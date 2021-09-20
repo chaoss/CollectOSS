@@ -672,10 +672,14 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         for cntrb_email in existing_cntrb_emails:
             self.logger.info(
                 f"These are the emails and cntrb_id's  returned: {cntrb_email}")
-            self.db.execute(self.commits_table.update().where(
-                self.commits_table.c.cmt_committer_email == cntrb_email['cntrb_author_raw_email']
-            ).values({
-                'cmt_ght_author_id': cntrb_email['cntrb_id']
-            }))
+            
+            try:
+                self.db.execute(self.commits_table.update().where(
+                    self.commits_table.c.cmt_committer_email == cntrb_email['cntrb_author_raw_email']
+                ).values({
+                    'cmt_ght_author_id': cntrb_email['cntrb_id']
+                }))
+            except Exception as e:
+                self.logger.info(f"Ran into problem when enriching commit data. Error: {e}")
 
         return
