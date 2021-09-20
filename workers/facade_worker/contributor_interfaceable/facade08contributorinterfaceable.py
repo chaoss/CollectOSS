@@ -647,7 +647,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                 else:
                     self.update_contributor(cntrb)
             except LookupError as e:
-                traceback.print_exc()
+                traceback.print_exception(type(e),e,e.__traceback__)
                 self.logger.info(
                     f"Contributor id not able to be found in database despite the user_id existing. Something very wrong is happening. Error: {e}")
 
