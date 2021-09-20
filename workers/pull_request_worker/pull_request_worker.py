@@ -84,7 +84,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         tuples = []
 
         def find_root_of_subject(data, key_subject):
-            # self.logger.info(f'Finding {key_subject} root of {data}')
+            self.logger.debug(f'Finding {key_subject} root of {data}')
             key_nest = None
             for subject, nest in data.items():
                 if key_subject in nest:
@@ -98,8 +98,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         for data_subject, nest in data_subjects.items():
 
-            # self.logger.info(f'Beginning paginate process for field {data_subject} '
-            #     f'for query: {query}')
+             self.logger.debug(f'Beginning paginate process for field {data_subject} '
+                 f'for query: {query}')
 
             page_count = 0
             while has_previous_page:
@@ -240,9 +240,9 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             WHERE pull_request_files.pull_request_id = pull_requests.pull_request_id
             AND repo_id = :repo_id
         """)
-        # self.logger.info(
-        #     f'Getting table values with the following PSQL query: \n{table_values_sql}\n'
-        # )
+        self.logger.debug(
+            f'Getting table values with the following PSQL query: \n{table_values_sql}\n'
+        )
         table_values = pd.read_sql(table_values_sql, self.db, params={'repo_id': self.repo_id})
 
         # Compare queried values against table values for dupes/updates
@@ -352,23 +352,29 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             )
 
             for pr_commit in pr_commits: # post-pagination, iterate results
-                if pr_commit['flag'] == 'need_insertion': # if non-dupe
-                    pr_commit_row = {
-                        'pull_request_id': pull_request.pull_request_id,
-                        'pr_cmt_sha': pr_commit['sha'],
-                        'pr_cmt_node_id': pr_commit['node_id'],
-                        'pr_cmt_message': pr_commit['commit']['message'],
-                        # 'pr_cmt_comments_url': pr_commit['comments_url'],
-                        'tool_source': self.tool_source,
-                        'tool_version': self.tool_version,
-                        'data_source': 'GitHub API',
-                    }
-                    result = self.db.execute(
-                        self.pull_request_commits_table.insert().values(pr_commit_row)
-                    )
-                    self.logger.info(
-                        f"Inserted Pull Request Commit: {result.inserted_primary_key}\n"
-                    )
+                try:
+                    if pr_commit['flag'] == 'need_insertion': # if non-dupe
+                        pr_commit_row = {
+                            'pull_request_id': pull_request.pull_request_id,
+                            'pr_cmt_sha': pr_commit['sha'],
+                            'pr_cmt_node_id': pr_commit['node_id'],
+                            'pr_cmt_message': pr_commit['commit']['message'],
+                            # 'pr_cmt_comments_url': pr_commit['comments_url'],
+                            'tool_source': self.tool_source,
+                            'tool_version': self.tool_version,
+                            'data_source': 'GitHub API',
+                        }
+                        result = self.db.execute(
+                            self.pull_request_commits_table.insert().values(pr_commit_row)
+                        )
+                        self.logger.info(
+                            f"Inserted Pull Request Commit: {result.inserted_primary_key}\n"
+                        )
+                    except Exception as e:
+                        self.logger.debug(f"pr_commit exception registered: {e}.")
+                        stacker = traceback.format_exc()
+                        self.logger.debug(f"{stacker}")
+                        continue
 
         self.register_task_completion(self.task_info, self.repo_id, 'pull_request_commits')
 
@@ -381,14 +387,15 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         )
 
         #Database action map is essential in order to avoid duplicates messing up the data
+        ## 9/20/2021: SPG added closed_at, updated_at, and merged_at to the update map. 
         pr_action_map = {
             'insert': {
                 'source': ['id'],
                 'augur': ['pr_src_id']
             },
             'update': {
-                'source': ['state'],
-                'augur': ['pr_src_state']
+                'source': ['state', 'closed_at', 'updated_at', 'merged_at'],
+                'augur': ['pr_src_state', 'pr_closed_at', 'pr_updated_at', 'pr_merged_at']
             }
         }
 
@@ -405,7 +412,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 return
 
 
-            #self.logger.info(f"inc_source_prs is: {inc_source_prs} and the action map is {action_map}...")
+            self.logger.debug(f"inc_source_prs is: {inc_source_prs} and the action map is {action_map}...")
 
             #This is sending empty data to enrich_cntrb_id, fix with check
             if len(inc_source_prs['insert']) > 0:
@@ -419,6 +426,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 )
             else:
                 self.logger.info("Contributor enrichment is not needed, no inserts in action map.")
+                stacker = traceback.format_exc()
+                self.logger.debug(f"{stacker}")
 
 
 
@@ -427,7 +436,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'repo_id': self.repo_id,
                 'pr_url': pr['url'],
                 'pr_src_id': pr['id'],
-                'pr_src_node_id': None,
+                'pr_src_node_id': pr['node_id'],  ## 9/20/2021 - This was null. No idea why.
                 'pr_html_url': pr['html_url'],
                 'pr_diff_url': pr['diff_url'],
                 'pr_patch_url': pr['patch_url'],
@@ -458,9 +467,9 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'pr_meta_head_id': None,
                 'pr_meta_base_id': None,
                 'pr_src_issue_url': pr['issue_url'],
-                'pr_src_comments_url': pr['comments_url'], # NOTE: this seems redundant
-                'pr_src_review_comments_url': pr['review_comments_url'], # this too
-                'pr_src_commits_url': pr['commits_url'], # this one also seems redundant
+                'pr_src_comments_url': pr['comments_url'],
+                'pr_src_review_comments_url': pr['review_comments_url'],
+                'pr_src_commits_url': pr['commits_url'], 
                 'pr_src_statuses_url': pr['statuses_url'],
                 'pr_src_author_association': pr['author_association'],
                 'tool_source': self.tool_source,
@@ -470,6 +479,30 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             ]
 
             #The b_pr_src_id bug comes from here
+            '''
+            9/20/2021: Put the method definition for bulk insert here for reference. The method 
+            is found in $AUGUR_HOME/workers/worker_persistence.py
+              def bulk_insert(
+                    self, table, insert=[], update=[], unique_columns=[], update_columns=[],
+                    max_attempts=3, attempt_delay=3, increment_counter=True, convert_float_int=False
+                ):
+                    """ Performs bulk inserts/updates of the given data to the given table
+
+                        :param table: String, name of the table that we are inserting/updating rows
+                        :param insert: List of dicts, data points to insert
+                        :param update: List of dicts, data points to update, only needs key/value
+                            pairs of the update_columns and the unique_columns
+                        :param unique_columns: List of strings, column names that would uniquely identify any
+                            given data point
+                        :param update_columns: List of strings, names of columns that are being updated
+                        :param max_attempts: Integer, number of attempts to perform on inserting/updating
+                            before moving on
+                        :param attempt_delay: Integer, number of seconds to wait in between attempts
+                        :returns: SQLAlchemy database execution response object(s), contains metadata
+                            about number of rows inserted etc. This data is not often used.
+
+            '''
+
             if len(inc_source_prs['insert']) > 0 or len(inc_source_prs['update']) > 0:
                 self.bulk_insert(
                     self.pull_requests_table,
@@ -490,7 +523,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 source_data = inc_source_prs['all']
 
             # Merge source data to inserted data to have access to inserted primary keys
-
+            # I don't see why we need these. The action map should work. SPG 9/20/2021
             gh_merge_fields = ['id']
             augur_merge_fields = ['pr_src_id']
 
@@ -542,30 +575,31 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         self.logger.info("Beginning collection of Pull Requests...\n")
         self.logger.info(f"Repo ID: {self.repo_id}, Git URL: {github_url}\n")
 
+        pk_source_prs = []
+
         try: 
             pk_source_prs = self._get_pk_source_prs()
         except Exception as e: 
             self.logger.debug(f"Pull Requests model failed with {e}.")
+            stacker = traceback.format_exc()
+            self.logger.debug(f"{stacker}")
 
-        self.write_debug_data(pk_source_prs, 'pk_source_prs')
+
+        #self.write_debug_data(pk_source_prs, 'pk_source_prs')
 
         if pk_source_prs:
-            try: 
-                self.pull_request_comments_model()
-            except Exception as e: 
-                self.logger.debug(f"Comments model failed with {e}.")
-            try: 
-                self.pull_request_events_model(pk_source_prs)
-            except Exception as e: 
-                self.logger.debug(f"PR Events model failed with {e}.")
-            try:
-                self.pull_request_reviews_model(pk_source_prs)
-            except Exception as e: 
-                self.logger.debug(f"PR Reviews model failed with {e}.")
-            try: 
-                self.pull_request_nested_data_model(pk_source_prs)
-            except Exception as e: 
-                self.logger.debug(f"PR Nested Data model failed with {e}.")
+            while pr_steps < 5: 
+                try: 
+                    self.pull_request_comments_model()
+                    self.pull_request_events_model(pk_source_prs)
+                    self.pull_request_reviews_model(pk_source_prs)
+                    self.pull_request_nested_data_model(pk_source_prs)
+                    pr_steps += pr_steps+1 
+                except Exception as e: 
+                    self.logger.debug(f"PR comments, events, reviews, or nested data model failed on {e}. exception registered for pr_step {pr_steps}.")
+                    stacker = traceback.format_exc()
+                    self.logger.debug(f"{stacker}")
+                    continue 
 
         self.register_task_completion(self.task_info, self.repo_id, 'pull_requests')
 
@@ -600,7 +634,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             comments_url, action_map=comment_action_map, table=self.message_table
         )
 
-        self.write_debug_data(pr_comments, 'pr_comments')
+        #self.write_debug_data(pr_comments, 'pr_comments')
 
         pr_comments['insert'] = self.text_clean(pr_comments['insert'], 'body')
         #This is sending empty data to enrich_cntrb_id, fix with check
@@ -619,14 +653,21 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         pr_comments_insert = [
             {
                 'pltfrm_id': self.platform_id,
-                'msg_text': comment['body'].replace("\x00", "\uFFFD"),
+                'msg_text': comment['body'].encode(encoding='UTF-8',errors='backslashreplace').decode(encoding='UTF-8',errors='ignore') if (
+                    review['body']
+                ) else None,
                 'msg_timestamp': comment['created_at'],
                 'cntrb_id': comment['cntrb_id'],
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
-                'data_source': self.data_source
+                'data_source': self.data_source, 
+                'repo_id': self.repo_id,
+                'platform_msg_id': comment['id']
+                'platform_node_id': comment['node_id']
             } for comment in pr_comments['insert']
         ]
+
+        ##### stopped here. 
 
         self.bulk_insert(self.message_table, insert=pr_comments_insert)
 
