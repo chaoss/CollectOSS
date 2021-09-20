@@ -693,7 +693,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             
             try:
                 self.db.execute(self.commits_table.update().where(
-                    self.commits_table.c.cmt_committer_email == cntrb_email['cntrb_author_raw_email']
+                    self.commits_table.c.cmt_committer_email == cntrb_email['cntrb_email']
                 ).values({
                     'cmt_ght_author_id': cntrb_email['cntrb_id']
                 }))
