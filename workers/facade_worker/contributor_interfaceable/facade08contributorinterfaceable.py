@@ -631,7 +631,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             # Check if the github login exists in the contributors table and add the emails to alias' if it does.
 
             # Also update the contributor record with commit data if we can.
-            self.loggger.info("Got here.")
+            self.logger.info("Got here.")
             try:
                 if not self.resolve_if_login_existing(cntrb):
                     try:
