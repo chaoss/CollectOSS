@@ -577,7 +577,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             name_field = contributor['commit_name'] if 'commit_name' in contributor else contributor['name']
 
             #Try to break into a debugger.
-            pdb.set_trace()
+            #pdb.set_trace()
 
             self.logger.info(f"Name field is : {name_field}")
 
