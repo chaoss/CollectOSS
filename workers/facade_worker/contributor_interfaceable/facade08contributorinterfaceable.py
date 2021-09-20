@@ -5,6 +5,9 @@ from logging import FileHandler, Formatter, StreamHandler, log
 from workers.worker_git_integration import WorkerGitInterfaceable
 from workers.util import read_config
 from psycopg2.errors import UniqueViolation
+
+#Debugger
+import pdb
 """
 This class serves as an extension for the facade worker to allow it to make api calls and interface with GitHub.
 The motivation for doing it this way is because the functionality needed to interface with Github and/or GitLab
@@ -573,9 +576,17 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             # Get name from commit if not found by GitHub
             name_field = contributor['commit_name'] if 'commit_name' in contributor else contributor['name']
 
+            #Try to break into a debugger.
+            pdb.set_trace()
+
             self.logger.info(f"Name field is : {name_field}")
 
             self.logger.info(f"User data is : {user_data}")
+
+            self.logger.info(f"Tool data is : {self.tool_source}")
+            self.logger.info(f"Tool data is : {self.tool_version}")
+
+            self.logger.info(f"Tool data is : {self.data_source}")
 
             try:
 
@@ -613,6 +624,8 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                     "tool_version": self.tool_version,
                     "data_source": self.data_source
                 }
+
+                self.logger.info(f"{cntrb}")
             except Exception as e:
                 self.logger.info(f"Error: {e}")
             # Check if the github login exists in the contributors table and add the emails to alias' if it does.
