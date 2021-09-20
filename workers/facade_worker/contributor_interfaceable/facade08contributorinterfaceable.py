@@ -264,7 +264,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         return response_data
 
-    def insert_alias(self, contributor):
+    def insert_alias(self, contributor,email):
         # Insert cntrb_id and email of the corresponding record into the alias table
         # Another database call to get the contributor id is needed because its an autokeyincrement that is accessed by multiple workers
         # Same principle as enrich_cntrb_id method.
@@ -287,8 +287,6 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             self.logger.info(
                 f"There are more than one contributors in the table with gh_user_id={contributor['gh_user_id']}")
 
-
-        email = contributor['email_raw']
 
         self.logger.info(f"Here is the alias email: {email}")
 
@@ -321,7 +319,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
     # Takes the user data from the endpoint as arg
     # Updates the alias table if the login is already in the contributor's table with the new email.
     # Returns whether the login was found in the contributors table
-    def resolve_if_login_existing(self, contributor):
+    def resolve_if_login_existing(self, contributor, email):
         # check if login exists in contributors table
         select_cntrbs_query = s.sql.text("""
             SELECT cntrb_id from contributors
@@ -335,7 +333,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         # if yes
         if len(result.fetchall()) >= 1:
-            self.insert_alias(contributor)
+            self.insert_alias(contributor, email)
             return True
 
         # If not found, return false
@@ -636,13 +634,13 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
             # Also update the contributor record with commit data if we can.
             try:
-                if not self.resolve_if_login_existing(cntrb):
+                if not self.resolve_if_login_existing(cntrb, emailFromCommitData):
                     try:
                         self.db.execute(
                             self.contributors_table.insert().values(cntrb))
 
                         # Update alias after insertion. Insertion needs to happen first so we can get the autoincrementkey
-                        self.insert_alias(cntrb)
+                        self.insert_alias(cntrb, emailFromCommitData)
                     except Exception as e:
                         self.logger.info(
                             f"Ran into likely database collision. Assuming contributor exists in database. Error: {e}")
