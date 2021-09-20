@@ -579,14 +579,14 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             #Try to break into a debugger.
             #pdb.set_trace()
 
-            self.logger.info(f"Name field is : {name_field}")
+            #self.logger.info(f"Name field is : {name_field}")
 
-            self.logger.info(f"User data is : {user_data}")
+            #self.logger.info(f"User data is : {user_data}")
 
-            self.logger.info(f"Tool data is : {self.tool_source}")
-            self.logger.info(f"Tool data is : {self.tool_version}")
+            #self.logger.info(f"Tool data is : {self.tool_source}")
+            #self.logger.info(f"Tool data is : {self.tool_version}")
 
-            self.logger.info(f"Tool data is : {self.data_source}")
+            #self.logger.info(f"Tool data is : {self.data_source}")
 
             try:
 
@@ -625,13 +625,12 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                     "data_source": self.data_source
                 }
 
-                self.logger.info(f"{cntrb}")
+                #self.logger.info(f"{cntrb}")
             except Exception as e:
                 self.logger.info(f"Error: {e}")
             # Check if the github login exists in the contributors table and add the emails to alias' if it does.
 
             # Also update the contributor record with commit data if we can.
-            self.logger.info("Got here.")
             try:
                 if not self.resolve_if_login_existing(cntrb):
                     try:
