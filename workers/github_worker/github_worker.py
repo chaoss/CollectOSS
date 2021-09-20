@@ -13,7 +13,7 @@ import traceback
 import os
 import psycopg2 #really only to catch type errors for database methods
 import math
-from datetime import datetime
+from datetime import datetime   
 from workers.worker_base import Worker
 
 class GitHubWorker(WorkerGitInterfaceable):
