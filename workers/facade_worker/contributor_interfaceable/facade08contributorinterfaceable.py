@@ -515,7 +515,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                 self.logger.info(
                     "Search query did not return any results, adding 1's to commits table...\n")
 
-                emailToInsert = contributor['commit_email'] if 'commit_email' in contributor else contributor['email']
+                emailToInsert = contributor['email_raw'] if 'email_raw' in contributor else contributor['email']
 
                 try:
                     # At this point we know we can't do anything with the emails or the names provided so we make the cntrb_id foreign key 1
