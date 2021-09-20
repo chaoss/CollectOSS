@@ -575,40 +575,44 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
             self.logger.info(f"Name field is : {name_field}")
 
-            # try to add contributor to database
-            cntrb = {
-                "cntrb_login": user_data['login'],
-                "cntrb_created_at": user_data['created_at'],
-                "cntrb_email": user_data['email'] if 'email' in user_data else None,
-                "cntrb_company": user_data['company'] if 'company' in user_data else None,
-                "cntrb_location": user_data['location'] if 'location' in user_data else None,
-                # "cntrb_type": , dont have a use for this as of now ... let it default to null
-                "cntrb_canonical": user_data['email'] if 'email' in user_data and user_data['email'] is not None else emailFromCommitData,
-                "gh_user_id": user_data['id'],
-                "gh_login": user_data['login'],
-                "gh_url": user_data['url'],
-                "gh_html_url": user_data['html_url'],
-                "gh_node_id": user_data['node_id'],
-                "gh_avatar_url": user_data['avatar_url'],
-                "gh_gravatar_id": user_data['gravatar_id'],
-                "gh_followers_url": user_data['followers_url'],
-                "gh_following_url": user_data['following_url'],
-                "gh_gists_url": user_data['gists_url'],
-                "gh_starred_url": user_data['starred_url'],
-                "gh_subscriptions_url": user_data['subscriptions_url'],
-                "gh_organizations_url": user_data['organizations_url'],
-                "gh_repos_url": user_data['repos_url'],
-                "gh_events_url": user_data['events_url'],
-                "gh_received_events_url": user_data['received_events_url'],
-                "gh_type": user_data['type'],
-                "gh_site_admin": user_data['site_admin'],
-                "cntrb_last_used": None if 'updated_at' not in user_data else user_data['updated_at'],
-                # Get name from commit if api doesn't get it.
-                "cntrb_full_name": name_field if 'name' not in user_data else user_data['name'],
-                "tool_source": self.tool_source,
-                "tool_version": self.tool_version,
-                "data_source": self.data_source
-            }
+            try:
+
+                # try to add contributor to database
+                cntrb = {
+                    "cntrb_login": user_data['login'],
+                    "cntrb_created_at": user_data['created_at'],
+                    "cntrb_email": user_data['email'] if 'email' in user_data else None,
+                    "cntrb_company": user_data['company'] if 'company' in user_data else None,
+                    "cntrb_location": user_data['location'] if 'location' in user_data else None,
+                    # "cntrb_type": , dont have a use for this as of now ... let it default to null
+                    "cntrb_canonical": user_data['email'] if 'email' in user_data and user_data['email'] is not None else emailFromCommitData,
+                    "gh_user_id": user_data['id'],
+                    "gh_login": user_data['login'],
+                    "gh_url": user_data['url'],
+                    "gh_html_url": user_data['html_url'],
+                    "gh_node_id": user_data['node_id'],
+                    "gh_avatar_url": user_data['avatar_url'],
+                    "gh_gravatar_id": user_data['gravatar_id'],
+                    "gh_followers_url": user_data['followers_url'],
+                    "gh_following_url": user_data['following_url'],
+                    "gh_gists_url": user_data['gists_url'],
+                    "gh_starred_url": user_data['starred_url'],
+                    "gh_subscriptions_url": user_data['subscriptions_url'],
+                    "gh_organizations_url": user_data['organizations_url'],
+                    "gh_repos_url": user_data['repos_url'],
+                    "gh_events_url": user_data['events_url'],
+                    "gh_received_events_url": user_data['received_events_url'],
+                    "gh_type": user_data['type'],
+                    "gh_site_admin": user_data['site_admin'],
+                    "cntrb_last_used": None if 'updated_at' not in user_data else user_data['updated_at'],
+                    # Get name from commit if api doesn't get it.
+                    "cntrb_full_name": name_field if 'name' not in user_data else user_data['name'],
+                    "tool_source": self.tool_source,
+                    "tool_version": self.tool_version,
+                    "data_source": self.data_source
+                }
+            except Exception as e:
+                self.logger.info(f"Error: {e}")
             # Check if the github login exists in the contributors table and add the emails to alias' if it does.
 
             # Also update the contributor record with commit data if we can.
