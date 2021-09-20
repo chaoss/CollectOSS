@@ -575,6 +575,8 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
             self.logger.info(f"Name field is : {name_field}")
 
+            self.logger.info(f"User data is : {user_data}")
+
             try:
 
                 # try to add contributor to database
