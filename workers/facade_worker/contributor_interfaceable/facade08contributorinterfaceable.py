@@ -270,7 +270,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         # Same principle as enrich_cntrb_id method.
         contributor_table_data = self.db.execute(
             s.sql.select([s.column('cntrb_id'), s.column('cntrb_canonical')]).where(
-                self.contributors_table.c.cntrb_login == contributor['cntrb_login']
+                self.contributors_table.c.gh_user_id == contributor["gh_user_id"]
             )
         ).fetchall()
 
@@ -434,6 +434,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             "Beginning process to insert contributors from facade commits for repo w entry info: {}\n".format(repo_id))
 
         # Get all of the commit data's emails and names from the commit table that do not appear in the contributors table
+        # TODO: Make this query also check over the alias table.
         new_contrib_sql = s.sql.text("""
                 SELECT DISTINCT
                     commits.cmt_author_name AS NAME,--commits.cmt_id AS id,
@@ -471,7 +472,6 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             # Start with the fields we know that we can start with
             email = contributor['email_raw'] if 'email_raw' in contributor else contributor['email']
 
-            self.logger.info(f"DEBUG: here is the email: {email}")
 
             # check the email to see if it already exists in contributor_aliases
             try:
@@ -568,7 +568,6 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                 self.logger.info(
                     f"Deleting now resolved email failed with error: {e}")
             
-            self.logger.info("DEBUG: got passed deletion")
 
             # Use the email found in the commit data if api data is NULL
             emailFromCommitData = contributor['email_raw'] if 'email_raw' in contributor else contributor['email']
@@ -652,6 +651,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                     f"Contributor id not able to be found in database despite the user_id existing. Something very wrong is happening. Error: {e}")
 
         # sql query used to find corresponding cntrb_id's of emails found in the contributor's table
+        # TODO: Make this query also check over the alias table.
         resolve_email_to_cntrb_id_sql = s.sql.text("""
           select distinct cntrb_id, contributors.cntrb_email, commits.cmt_author_raw_email
           from
