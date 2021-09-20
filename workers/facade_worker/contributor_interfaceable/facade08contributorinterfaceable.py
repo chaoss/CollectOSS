@@ -7,7 +7,7 @@ from workers.util import read_config
 from psycopg2.errors import UniqueViolation
 
 #Debugger
-import pdb
+import traceback
 """
 This class serves as an extension for the facade worker to allow it to make api calls and interface with GitHub.
 The motivation for doing it this way is because the functionality needed to interface with Github and/or GitLab
@@ -647,6 +647,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                 else:
                     self.update_contributor(cntrb)
             except LookupError as e:
+                traceback.print_exc()
                 self.logger.info(
                     f"Contributor id not able to be found in database despite the user_id existing. Something very wrong is happening. Error: {e}")
 
