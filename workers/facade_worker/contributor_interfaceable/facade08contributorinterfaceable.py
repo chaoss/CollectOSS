@@ -270,9 +270,11 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         # Same principle as enrich_cntrb_id method.
         contributor_table_data = self.db.execute(
             s.sql.select([s.column('cntrb_id'), s.column('cntrb_canonical')]).where(
-                self.contributors_table.c.gh_user_id == contributor["gh_user_id"]
+                self.contributors_table.c.cntrb_login == contributor['cntrb_login']
             )
         ).fetchall()
+
+        self.logger.info(f"Contributor query: {contributor_table_data}")
 
         # Handle potential failures
         if len(contributor_table_data) == 1:
