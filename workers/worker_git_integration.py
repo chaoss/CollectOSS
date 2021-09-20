@@ -1248,7 +1248,7 @@ class WorkerGitInterfaceable(Worker):
                 html = requests.get(url, stream=True, headers=self.headers)
                 return html, extra_data
             except requests.exceptions.RequestException as e:
-                self.logger.info(e, url)
+                self.logger.debug(f"load_url inside multi_thread_urls failed with {e}, for usl {url}. exception registerred.registered")
 
         self.logger.info("Beginning to multithread API endpoints.")
 
@@ -1285,7 +1285,7 @@ class WorkerGitInterfaceable(Worker):
                             response, extra_data = future.result()
 
                             if response.status_code != 200:
-                                self.logger.info(
+                                self.logger.debug(
                                     f"Url: {url[0]} ; Status code: {response.status_code}"
                                 )
 
@@ -1298,23 +1298,25 @@ class WorkerGitInterfaceable(Worker):
                                     page_data = response.json()
                                 except:
                                     page_data = json.loads(json.dumps(response.text))
+                                    continue
 
                                 page_data = [{**data, **extra_data} for data in page_data]
                                 all_data += page_data
 
-                                if 'last' in response.links and "&page=" not in url[0]:
-                                    urls += [
-                                        (url[0] + f"&page={page}", extra_data) for page in range(
-                                            2, int(response.links['last']['url'].split('=')[-1]) + 1
-                                        )
-                                    ]
                                 try:
-                                    # self.logger.info(f"urls boundry issue? for {urls} where they are equal to {url}.")
+                                    if 'last' in response.links and "&page=" not in url[0]:
+                                        urls += [
+                                            (url[0] + f"&page={page}", extra_data) for page in range(
+                                                2, int(response.links['last']['url'].split('=')[-1]) + 1
+                                            )
+                                        ]
+                                        # self.logger.info(f"urls boundry issue? for {urls} where they are equal to {url}.")
 
-                                    urls = numpy.delete(urls, numpy.where(urls == url), axis=0)
+                                        urls = numpy.delete(urls, numpy.where(urls == url), axis=0)
                                 except:
                                     self.logger.info(f"ERROR with axis = 0 - Now attempting without setting axis for numpy.delete for {urls} where they are equal to {url}.")
                                     urls = numpy.delete(urls, numpy.where(urls == url))
+                                    continue
 
                             elif response.status_code == 404:
                                 urls = numpy.delete(urls, numpy.where(urls == url), axis=0)
@@ -1325,13 +1327,13 @@ class WorkerGitInterfaceable(Worker):
                                 )
 
                         except Exception as e:
-                            self.logger.info(
+                            self.logger.debug(
                                 f"{url} generated an exception: {traceback.format_exc()}\n"
                             )
 
                 attempts += 1
 
-        self.logger.info(
+        self.logger.debug(
             f"Processed {valid_url_count} urls and got {len(all_data)} data points "
             f"in {time.time() - start} seconds thanks to multithreading!\n"
         )

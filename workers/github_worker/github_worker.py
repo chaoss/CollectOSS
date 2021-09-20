@@ -433,7 +433,7 @@ class GitHubWorker(WorkerGitInterfaceable):
             {
                 'issue_event_src_id': int(event['id']),
                 'issue_id': int(event['issue_id']),
-                'node_id': sevent['node_id'],
+                'node_id': event['node_id'],
                 'node_url': event['url'],
                 'cntrb_id': int(event['cntrb_id']),
                 'created_at': event['created_at'] if (
