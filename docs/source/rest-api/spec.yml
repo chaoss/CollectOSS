@@ -100,6 +100,19 @@ paths:
     get:
       description: Get the repo_group_id and repo_id of a particular repo.
       operationId: Get Repo by Owner and Repo Name
+      parameters:
+      - description: Repo Owner
+        in: path
+        name: owner
+        schema:
+          type: string
+        type: string
+      - description: Repo Name
+        in: path
+        name: repo
+        schema:
+          type: string
+        type: string
       responses:
         '200':
           description: OK
@@ -119,6 +132,19 @@ paths:
     get:
       description: Get the repo_group_id and repo_id of a particular repo.
       operationId: Get Repo by Repo Group Name and Repo Name
+      parameters:
+      - description: Repo Group Name
+        in: path
+        name: rg_name
+        schema:
+          type: string
+        type: string
+      - description: Repo Name
+        in: path
+        name: repo_name
+        schema:
+          type: string
+        type: string
       responses:
         '200':
           description: OK
@@ -141,6 +167,13 @@ paths:
     get:
       description: Get the repo_id of a particular repo group.
       operationId: Get Repo by Repo Name
+      parameters:
+      - description: Repo Group Name
+        in: path
+        name: rg_name
+        schema:
+          type: string
+        type: string
       responses:
         '200':
           description: OK
@@ -160,6 +193,13 @@ paths:
     get:
       description: Get all the repos in a repo group.
       operationId: Get Repos in Repo Group
+      parameters:
+      - description: Repository Group ID
+        in: path
+        name: repo_group_id
+        schema:
+          type: string
+        type: string
       responses:
         '200':
           description: OK
@@ -194,6 +234,13 @@ paths:
     get:
       description: Get all the downloaded repo groups.
       operationId: Get Top Insights
+      parameters:
+      - description: Repository Group ID
+        in: path
+        name: repo_group_id
+        schema:
+          type: string
+        type: string
       responses:
         '200':
           description: OK
@@ -974,6 +1021,54 @@ paths:
         schema:
           type: string
         type: string
+      - description: Periodicity specification.
+        in: path
+        name: period
+        schema:
+          type: string
+        type: string
+      - description: 'Beginning date specification. E.g. values: 2018, 2018-05, 2019-05-01'
+        in: path
+        name: begin_date
+        schema:
+          type: string
+        type: string
+      - description: 'Ending date specification. E.g. values: 2018, 2018-05, 2019-05-01'
+        in: path
+        name: end_date
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                commits:
+                  description: 'Example: 289'
+                  type: integer
+                net:
+                  description: 'Example: 21996'
+                  type: integer
+                repo_id:
+                  description: 'Example: 21000'
+                  type: integer
+                repo_name:
+                  description: 'Example: rails'
+                  type: string
+                year:
+                  description: 'Example: 2004'
+                  type: integer
+            type: array
+      tags:
+      - experimental
+  /repo-groups/:repo_id/annual-commit-count-ranked-by-new-repo-in-repo-group:
+    get:
+      description: 'This is an Augur-specific metric. We are currently working to
+        define these more formally. '
+      operationId: Annual Commit Count Ranked by New Repo in Repo Group (Repo)
+      parameters:
       - description: Repository ID.
         in: path
         name: repo_id
@@ -1028,6 +1123,52 @@ paths:
         define these more formally. '
       operationId: Annual Commit Count Ranked by Repo in Repo Group (Repo Group)
       parameters:
+      - description: Repository Group ID.
+        in: path
+        name: repo_group_id
+        schema:
+          type: string
+        type: string
+      - description: Base64 version of the URL of the GitHub repository as it appears
+          in the Facade DB
+        in: path
+        name: repo_url_base
+        schema:
+          type: String
+        type: String
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                name:
+                  description: 'Example: twemoji'
+                  type: string
+                net:
+                  description: 'Example: 2479124'
+                  type: integer
+                patches:
+                  description: 'Example: 1'
+                  type: integer
+                repos_id:
+                  description: 'Example: 1'
+                  type: integer
+            type: array
+      tags:
+      - experimental
+  /repo-groups/:repo_id/annual-commit-count-ranked-by-repo-in-repo-group:
+    get:
+      description: 'This is an Augur-specific metric. We are currently working to
+        define these more formally. '
+      operationId: Annual Commit Count Ranked by Repo in Repo Group (Repo)
+      parameters:
+      - description: Repository ID.
+        in: path
+        name: repo_id
+        schema:
+          type: string
+        type: string
       - description: Base64 version of the URL of the GitHub repository as it appears
           in the Facade DB
         in: path
@@ -1062,6 +1203,52 @@ paths:
         define these more formally. '
       operationId: Annual Lines of Code Ranked by New Repo in Repo Group (Repo Group)
       parameters:
+      - description: Repository Group ID.
+        in: path
+        name: repo_group_id
+        schema:
+          type: string
+        type: string
+      - description: Base64 version of the URL of the GitHub repository as it appears
+          in the Facade DB
+        in: path
+        name: repo_url_base
+        schema:
+          type: String
+        type: String
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                net:
+                  description: 'Example: 2479124'
+                  type: integer
+                patches:
+                  description: 'Example: 1'
+                  type: integer
+                repo_name:
+                  description: 'Example: twemoji'
+                  type: string
+                repos_id:
+                  description: 'Example: 1'
+                  type: integer
+            type: array
+      tags:
+      - experimental
+  /repo-groups/:repo_id/annual-lines-of-code-count-ranked-by-new-repo-in-repo-group:
+    get:
+      description: 'This is an Augur-specific metric. We are currently working to
+        define these more formally. '
+      operationId: Annual Lines of Code Ranked by New Repo in Repo Group (Repo)
+      parameters:
+      - description: Repository ID.
+        in: path
+        name: repo_id
+        schema:
+          type: string
+        type: string
       - description: Base64 version of the URL of the GitHub repository as it appears
           in the Facade DB
         in: path
@@ -1096,6 +1283,52 @@ paths:
         define these more formally. '
       operationId: Annual Lines of Code Ranked by Repo in Repo Group (Repo Group)
       parameters:
+      - description: Repository Group ID.
+        in: path
+        name: repo_group_id
+        schema:
+          type: string
+        type: string
+      - description: Base64 version of the URL of the GitHub repository as it appears
+          in the Facade DB
+        in: path
+        name: repo_url_base
+        schema:
+          type: String
+        type: String
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                name:
+                  description: 'Example: twemoji'
+                  type: string
+                net:
+                  description: 'Example: 2479124'
+                  type: integer
+                patches:
+                  description: 'Example: 1'
+                  type: integer
+                repos_id:
+                  description: 'Example: 1'
+                  type: integer
+            type: array
+      tags:
+      - experimental
+  /repo-groups/:repo_id/annual-lines-of-code-count-ranked-by-repo-in-repo-group:
+    get:
+      description: 'This is an Augur-specific metric. We are currently working to
+        define these more formally. '
+      operationId: Annual Lines of Code Ranked by Repo in Repo Group (Repo)
+      parameters:
+      - description: Repository ID.
+        in: path
+        name: repo_id
+        schema:
+          type: string
+        type: string
       - description: Base64 version of the URL of the GitHub repository as it appears
           in the Facade DB
         in: path
@@ -2137,23 +2370,11 @@ paths:
       externalDocs:
         description: CHAOSS Metric Definition
         url: https://github.com/chaoss/wg-evolution/blob/master/focus_areas/code_development.md
-      operationId: Issue Duration (Repo)
+      operationId: Issue Backlog (Repo)
       parameters:
       - description: Repository ID.
         in: path
         name: repo_id
-        schema:
-          type: string
-        type: string
-      - description: 'Beginning date specification. E.g. values: 2018, 2018-05, 2019-05-01'
-        in: path
-        name: begin_date
-        schema:
-          type: string
-        type: string
-      - description: 'Ending date specification. E.g. values: 2018, 2018-05, 2019-05-01'
-        in: path
-        name: end_date
         schema:
           type: string
         type: string
@@ -3827,13 +4048,98 @@ paths:
             type: array
       tags:
       - evolution
+  /repo-groups/:repo_id/issue-duration:
+    get:
+      description: 'Time since an issue is proposed until it is closed. '
+      externalDocs:
+        description: CHAOSS Metric Definition
+        url: https://github.com/chaoss/wg-evolution/blob/master/focus_areas/code_development.md
+      operationId: Issue Duration (Repo)
+      parameters:
+      - description: Repository ID
+        in: path
+        name: repo_group_id
+        schema:
+          type: string
+        type: string
+      - description: 'Beginning date specification. E.g. values: 2018, 2018-05, 2019-05-01'
+        in: path
+        name: begin_date
+        schema:
+          type: string
+        type: string
+      - description: 'Ending date specification. E.g. values: 2018, 2018-05, 2019-05-01'
+        in: path
+        name: end_date
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                closed_at:
+                  description: 'Example: 2011-05-06T20:21:47.000Z'
+                  type: string
+                created_at:
+                  description: 'Example: 2011-05-06T20:20:05.000Z'
+                  type: string
+                duration:
+                  description: 'Example: 0 days 00:01:42.000000000'
+                  type: string
+                issue_id:
+                  description: 'Example: 50320'
+                  type: integer
+                repo_name:
+                  description: 'Example: ssl_requirement'
+                  type: string
+            type: array
+      tags:
+      - evolution
+  /repos/:repo_group_id/releases:
+    get:
+      description: 'Time since an review/pull request is proposed until it is accepted. '
+      externalDocs:
+        description: CHAOSS Metric Definition
+        url: https://github.com/chaoss/wg-evolution/blob/master/metrics/Reviews_Duration.md
+      operationId: Number of Releases (Repo)
+      parameters:
+      - description: Repository Group ID.
+        in: path
+        name: repo_id
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                latest:
+                  description: 'Example: 2019-11-02T11:02:08.000Z'
+                  type: string
+                total_count:
+                  description: 'Example: 35'
+                  type: integer
+                latest_patch_release:
+                  description: 'Example: 2019-01-02T15:20:07.000Z'
+                  type: string
+                total_patch_count:
+                  description: 'Example: 21'
+                  type: integer
+            type: array
+      tags:
+      - evolution
   /repos/:repo_id/releases:
     get:
       description: 'Time since an review/pull request is proposed until it is accepted. '
       externalDocs:
         description: CHAOSS Metric Definition
         url: https://github.com/chaoss/wg-evolution/blob/master/metrics/Reviews_Duration.md
-      operationId: Number of releases (Repo)
+      operationId: Number of Releases (Repo)
       parameters:
       - description: Repository ID.
         in: path
@@ -3873,6 +4179,38 @@ paths:
       - description: Repository Group ID
         in: path
         name: repo_group_id
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                date:
+                  description: 'Example: 2017-09-11T00:00:00.000Z'
+                  type: string
+                open_count:
+                  description: 'Example: 1'
+                  type: integer
+                rg_name:
+                  description: 'Example: Netflix'
+                  type: string
+            type: array
+      tags:
+      - evolution
+  /repo-groups/:repo_id/open-issues-count:
+    get:
+      description: 'Count of open issues. '
+      externalDocs:
+        description: CHAOSS Metric Definition
+        url: https://github.com/chaoss/wg-evolution/blob/master/metrics/Issues_New.md
+      operationId: Open Issues Count (Repo Group)
+      parameters:
+      - description: Repository ID
+        in: path
+        name: repo_id
         schema:
           type: string
         type: string
