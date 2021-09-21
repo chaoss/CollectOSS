@@ -1064,48 +1064,48 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
     def pull_request_nested_data_model(self, pk_source_prs=[]):
 
-        pr_nested_loop = 1
-        
+        if not pk_source_prs:
+            pk_source_prs = self._get_pk_source_prs()
+
+        labels_all = []
+        reviewers_all = []
+        assignees_all = []
+        meta_all = []
+
+        for index, pr in enumerate(pk_source_prs):
+
+            # PR Labels
+            source_labels = pd.DataFrame(pr['labels'])
+            source_labels['pull_request_id'] = pr['pull_request_id']
+            labels_all += source_labels.to_dict(orient='records')
+
+            # Reviewers
+            source_reviewers = pd.DataFrame(pr['requested_reviewers'])
+            source_reviewers['pull_request_id'] = pr['pull_request_id']
+            reviewers_all += source_reviewers.to_dict(orient='records')
+
+            # Assignees
+            source_assignees = pd.DataFrame(pr['assignees'])
+            source_assignees['pull_request_id'] = pr['pull_request_id']
+            assignees_all += source_assignees.to_dict(orient='records')
+
+            # Meta
+            pr['head'].update(
+                {'pr_head_or_base': 'head', 'pull_request_id': pr['pull_request_id']}
+            )
+            pr['base'].update(
+                {'pr_head_or_base': 'base', 'pull_request_id': pr['pull_request_id']}
+            )
+            meta_all += [pr['head'], pr['base']]
+
         while pr_nested_loop <5:
 
+        pr_nested_loop = 1
+        
             try:   
+
                 if pr_nested_loop = 1: 
-                    pr_nested_loop +=1
             
-                    if not pk_source_prs:
-                        pk_source_prs = self._get_pk_source_prs()
-
-                    labels_all = []
-                    reviewers_all = []
-                    assignees_all = []
-                    meta_all = []
-
-                    for index, pr in enumerate(pk_source_prs):
-
-                        # PR Labels
-                        source_labels = pd.DataFrame(pr['labels'])
-                        source_labels['pull_request_id'] = pr['pull_request_id']
-                        labels_all += source_labels.to_dict(orient='records')
-
-                        # Reviewers
-                        source_reviewers = pd.DataFrame(pr['requested_reviewers'])
-                        source_reviewers['pull_request_id'] = pr['pull_request_id']
-                        reviewers_all += source_reviewers.to_dict(orient='records')
-
-                        # Assignees
-                        source_assignees = pd.DataFrame(pr['assignees'])
-                        source_assignees['pull_request_id'] = pr['pull_request_id']
-                        assignees_all += source_assignees.to_dict(orient='records')
-
-                        # Meta
-                        pr['head'].update(
-                            {'pr_head_or_base': 'head', 'pull_request_id': pr['pull_request_id']}
-                        )
-                        pr['base'].update(
-                            {'pr_head_or_base': 'base', 'pull_request_id': pr['pull_request_id']}
-                        )
-                        meta_all += [pr['head'], pr['base']]
-
                     # PR labels insertion
                     label_action_map = {
                         'insert': {
@@ -1139,11 +1139,9 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                         } for label in source_labels_insert
                     ]
 
-                    try:
-                        self.bulk_insert(self.pull_request_labels_table, insert=labels_insert)
-                    except Exception as e:
-                        self.logger.info(f"label bulk insert failed with {e}.")
-                        continue
+                    self.bulk_insert(self.pull_request_labels_table, insert=labels_insert)
+
+                elif pr_nested_loop = 2: 
 
                     # PR reviewers insertion
                     reviewer_action_map = {
@@ -1152,17 +1150,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                             'augur': ['pull_request_id', 'pr_reviewer_src_id']
                         }
                     }
-            except Exception as e: 
-                self.logger.debug(f"Reviewers insert encountered an error, exception registered, : {e}.")
-                stacker = traceback.format_exc()
-                self.logger.debug(f"{stacker}") 
-                continue 
-
-            try:
-
-                if pr_nested_loop = 2: 
-                    pr_nested_loop +=1
-
+           
                     table_values_issue_labels = self.db.execute(
                         s.sql.select(self.get_relevant_columns(self.pull_request_reviewers_table,reviewer_action_map))
                     ).fetchall()
@@ -1194,18 +1182,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                         } for reviewer in source_reviewers_insert if 'login' in reviewer
                     ]
                     self.bulk_insert(self.pull_request_reviewers_table, insert=reviewers_insert)
-                    
-            except Exception as e: 
-                self.logger.debug(f"Reviewers insert encountered an error, exception registered, : {e}.")
-                stacker = traceback.format_exc()
-                self.logger.debug(f"{stacker}") 
-                continue 
 
-
-            try:
-
-                if pr_nested_loop = 3: 
-                    pr_nested_loop +=1
+                elif pr_nested_loop = 3: 
                     # PR assignees insertion
                     assignee_action_map = {
                         'insert': {
@@ -1248,17 +1226,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                         } for assignee in source_assignees_insert if 'login' in assignee
                     ]
                     self.bulk_insert(self.pull_request_assignees_table, insert=assignees_insert)
-                    
-            except Exception as e: 
-                self.logger.debug(f"PR  assignees insert encountered an error, exception registered, : {e}.")
-                stacker = traceback.format_exc()
-                self.logger.debug(f"{stacker}") 
-                continue 
 
-            try:
-
-                if pr_nested_loop = 4: 
-                    pr_nested_loop +=1
+                elif pr_nested_loop = 4: 
                     # PR meta insertion
                     meta_action_map = {
                         'insert': {
@@ -1302,9 +1271,9 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                         } for meta in source_meta_insert if meta['user'] and 'login' in meta['user']
                     ]
                     self.bulk_insert(self.pull_request_meta_table, insert=meta_insert)
-                    pr_nested_loop += 1
+                pr_nested_loop += 1
             except Exception as e: 
-                self.logger.debug(f"PR head and base insert encountered an error, exception registered, : {e}.")
+                self.logger.debug(f"Nested Model error at loop {pr_nested_loop} : {e}.")
                 stacker = traceback.format_exc()
                 self.logger.debug(f"{stacker}")   
                 continue   
