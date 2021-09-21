@@ -675,7 +675,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'tool_version': self.tool_version,
                 'data_source': self.data_source, 
                 'repo_id': self.repo_id,
-                'platform_msg_id': comment['id']
+                'platform_msg_id': comment['id'],
                 'platform_node_id': comment['node_id']
             } for comment in pr_comments['insert']
         ]
