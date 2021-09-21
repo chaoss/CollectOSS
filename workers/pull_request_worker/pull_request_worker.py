@@ -98,7 +98,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         for data_subject, nest in data_subjects.items():
 
-             self.logger.debug(f'Beginning paginate process for field {data_subject} '
+            self.logger.debug(f'Beginning paginate process for field {data_subject} '
                  f'for query: {query}')
 
             page_count = 0
