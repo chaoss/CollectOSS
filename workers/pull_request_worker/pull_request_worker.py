@@ -688,17 +688,17 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         # PR MESSAGE REF TABLE
 
-    ''' FROM WORKER PERSISTENCE for REFERENCE
-        def enrich_data_primary_keys(
-        self, source_data, table, gh_merge_fields, augur_merge_fields, in_memory=False
-    ): '''
+        ''' FROM WORKER PERSISTENCE for REFERENCE
+            def enrich_data_primary_keys(
+            self, source_data, table, gh_merge_fields, augur_merge_fields, in_memory=False
+        ): 
 
-        ''' the gh_merge_fields are almost always direct from the source in the action map.
+        the gh_merge_fields are almost always direct from the source in the action map.
             the augur_merge fields are the field names where augur persists the source values.
             These are almost never (never) the primary keys on our table. They are the natural
-            keys at the source, I think, with some probability close to 1 (SPG 9/13/2021).'''
+            keys at the source, I think, with some probability close to 1 (SPG 9/13/2021).
 
-        ''' SPG 9/15/2021: This seems method may be the source of duplicate inserts that seem like
+        SPG 9/15/2021: This seems method may be the source of duplicate inserts that seem like
             they should not actually get run because we are specifying the natural key in the insert map.
             I really don't completely understand what we are doing here.  '''
 
