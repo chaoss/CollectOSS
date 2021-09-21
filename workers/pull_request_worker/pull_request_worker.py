@@ -590,7 +590,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         if pk_source_prs:
             pr_steps = 1
                 try:
-                    while pr_steps < 5: 
+                    while (pr_steps < 5): 
                         if pr_steps = 1:  
                             pr_steps += pr_steps+1 
                             self.pull_request_comments_model()
@@ -1098,10 +1098,10 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             )
             meta_all += [pr['head'], pr['base']]
 
-        while pr_nested_loop <5:
-
         pr_nested_loop = 1
-        
+
+        while (pr_nested_loop <5):
+
             try:   
 
                 if pr_nested_loop = 1: 
