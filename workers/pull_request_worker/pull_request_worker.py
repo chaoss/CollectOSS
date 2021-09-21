@@ -675,7 +675,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'tool_version': self.tool_version,
                 'data_source': self.data_source, 
                 'repo_id': self.repo_id,
-                'platform_msg_id': comment['id'],
+                'platform_msg_id': int(comment['id']),
                 'platform_node_id': comment['node_id']
             } for comment in pr_comments['insert']
         ]
@@ -720,7 +720,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             {
                 'pull_request_id': comment['pull_request_id'],
                 'msg_id': comment['msg_id'],
-                'pr_message_ref_src_comment_id': comment['id'],
+                'pr_message_ref_src_comment_id': int(comment['id']),
                 'pr_message_ref_src_node_id': comment['node_id'],
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
@@ -792,13 +792,13 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'action': event['event'],
                 'action_commit_hash': None,
                 'created_at': event['created_at'],
-                'issue_event_src_id': event['id'],
+                'issue_event_src_id': int(event['id']),
                 'node_id': event['node_id'],
                 'node_url': event['url'],
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
                 'data_source': self.data_source,
-                'pr_platform_event_id': event['id'],
+                'pr_platform_event_id': int(event['id']),
                 'platform_id': self.platform_id,
                 'repo_id:': self.repo_id 
             } for event in pk_pr_events if event['actor'] is not None
@@ -993,7 +993,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'tool_version': self.tool_version,
                 'data_source': self.data_source,
                 'repo_id': self.repo_id,
-                'platform_msg_id': comment['id'],
+                'platform_msg_id': int(comment['id']),
                 'platform_node_id': comment['node_id']
             } for comment in review_msgs['insert']
             if comment['user'] and 'login' in comment['user']
@@ -1027,7 +1027,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'msg_id': comment['msg_id'],
                 'pr_review_msg_url': comment['url'],
                 'pr_review_src_id': comment['pull_request_review_id'],
-                'pr_review_msg_src_id': comment['id'],
+                'pr_review_msg_src_id': int(comment['id']),
                 'pr_review_msg_node_id': comment['node_id'],
                 'pr_review_msg_diff_hunk': comment['diff_hunk'],
                 'pr_review_msg_path': comment['path'],
@@ -1219,7 +1219,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                             {
                                 'pull_request_id': assignee['pull_request_id'],
                                 'contrib_id': assignee['cntrb_id'],
-                                'pr_assignee_src_id': assignee['id'],
+                                'pr_assignee_src_id': int(assignee['id']),
                                 'tool_source': self.tool_source,
                                 'tool_version': self.tool_version,
                                 'data_source': self.data_source
@@ -1281,48 +1281,54 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
     def query_pr_repo(self, pr_repo, pr_repo_type, pr_meta_id):
         """ TODO: insert this data as extra columns in the meta table """
-        self.logger.info(f'Querying PR {pr_repo_type} repo')
+        try: 
+            self.logger.info(f'Querying PR {pr_repo_type} repo')
 
-        table = 'pull_request_repo'
-        duplicate_col_map = {'pr_src_repo_id': 'id'}
-        update_col_map = {}
-        table_pkey = 'pr_repo_id'
+            table = 'pull_request_repo'
+            duplicate_col_map = {'pr_src_repo_id': 'id'}
+            update_col_map = {}
+            table_pkey = 'pr_repo_id'
 
-        update_keys = list(update_col_map.keys()) if update_col_map else []
-        cols_query = list(duplicate_col_map.keys()) + update_keys + [table_pkey]
+            update_keys = list(update_col_map.keys()) if update_col_map else []
+            cols_query = list(duplicate_col_map.keys()) + update_keys + [table_pkey]
 
-        pr_repo_table_values = self.get_table_values(cols_query, [table])
+            pr_repo_table_values = self.get_table_values(cols_query, [table])
 
-        new_pr_repo = self.assign_tuple_action(
-            [pr_repo], pr_repo_table_values, update_col_map, duplicate_col_map, table_pkey
-        )[0]
+            new_pr_repo = self.assign_tuple_action(
+                [pr_repo], pr_repo_table_values, update_col_map, duplicate_col_map, table_pkey
+            )[0]
 
-        if new_pr_repo['owner'] and 'login' in new_pr_repo['owner']:
-            cntrb_id = self.find_id_from_login(new_pr_repo['owner']['login'])
-        else:
-            cntrb_id = 1
+            if new_pr_repo['owner'] and 'login' in new_pr_repo['owner']:
+                cntrb_id = self.find_id_from_login(new_pr_repo['owner']['login'])
+            else:
+                cntrb_id = 1
 
-        pr_repo = {
-            'pr_repo_meta_id': pr_meta_id,
-            'pr_repo_head_or_base': pr_repo_type,
-            'pr_src_repo_id': new_pr_repo['id'],
-            # 'pr_src_node_id': new_pr_repo[0]['node_id'],
-            'pr_src_node_id': None,
-            'pr_repo_name': new_pr_repo['name'],
-            'pr_repo_full_name': new_pr_repo['full_name'],
-            'pr_repo_private_bool': new_pr_repo['private'],
-            'pr_cntrb_id': cntrb_id,
-            'tool_source': self.tool_source,
-            'tool_version': self.tool_version,
-            'data_source': self.data_source
-        }
+            pr_repo = {
+                'pr_repo_meta_id': pr_meta_id,
+                'pr_repo_head_or_base': pr_repo_type,
+                'pr_src_repo_id': new_pr_repo['id'],
+                # 'pr_src_node_id': new_pr_repo[0]['node_id'],
+                'pr_src_node_id': None,
+                'pr_repo_name': new_pr_repo['name'],
+                'pr_repo_full_name': new_pr_repo['full_name'],
+                'pr_repo_private_bool': new_pr_repo['private'],
+                'pr_cntrb_id': cntrb_id,
+                'tool_source': self.tool_source,
+                'tool_version': self.tool_version,
+                'data_source': self.data_source
+            }
 
-        if new_pr_repo['flag'] == 'need_insertion':
-            result = self.db.execute(self.pull_request_repo_table.insert().values(pr_repo))
-            self.logger.info(f"Added PR {pr_repo_type} repo {result.inserted_primary_key}")
+            if new_pr_repo['flag'] == 'need_insertion':
+                result = self.db.execute(self.pull_request_repo_table.insert().values(pr_repo))
+                self.logger.info(f"Added PR {pr_repo_type} repo {result.inserted_primary_key}")
 
-            self.results_counter += 1
+                self.results_counter += 1
 
-            self.logger.info(
-                f"Finished adding PR {pr_repo_type} Repo data for PR with id {self.pr_id_inc}"
-            )
+                self.logger.info(
+                    f"Finished adding PR {pr_repo_type} Repo data for PR with id {self.pr_id_inc}"
+                )
+        except Exception as e: 
+            self.logger.debug(f"repo exception registerred for PRs: {e}")
+            self.logger.debug(f"Nested Model error at loop {pr_nested_loop} : {e}.")
+            stacker = traceback.format_exc()
+            self.logger.debug(f"{stacker}")  
