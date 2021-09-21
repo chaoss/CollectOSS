@@ -370,11 +370,11 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                         self.logger.info(
                             f"Inserted Pull Request Commit: {result.inserted_primary_key}\n"
                         )
-                    except Exception as e:
-                        self.logger.debug(f"pr_commit exception registered: {e}.")
-                        stacker = traceback.format_exc()
-                        self.logger.debug(f"{stacker}")
-                        continue
+                except Exception as e:
+                    self.logger.debug(f"pr_commit exception registered: {e}.")
+                    stacker = traceback.format_exc()
+                    self.logger.debug(f"{stacker}")
+                    continue
 
         self.register_task_completion(self.task_info, self.repo_id, 'pull_request_commits')
 
