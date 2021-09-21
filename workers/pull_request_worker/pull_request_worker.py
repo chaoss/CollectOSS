@@ -680,7 +680,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             } for comment in pr_comments['insert']
         ]
         try:
-            self.bulk_insert(self.message_table, insert=pr_comments_insert, unique_columns=action_map['insert']['augur'])
+            self.bulk_insert(self.message_table, insert=pr_comments_insert, unique_columns=comment_action_map['insert']['augur'])
         except Exception as e: 
             self.logger.debug(f"PR comments data model failed on {e}. exception registered.")
             stacker = traceback.format_exc()
