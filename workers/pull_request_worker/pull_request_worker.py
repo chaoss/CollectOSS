@@ -1273,11 +1273,11 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                         ]
                         self.bulk_insert(self.pull_request_meta_table, insert=meta_insert)
 
-            except Exception as e: 
-                self.logger.debug(f"Nested Model error at loop {pr_nested_loop} : {e}.")
-                stacker = traceback.format_exc()
-                self.logger.debug(f"{stacker}")   
-                continue   
+                except Exception as e: 
+                    self.logger.debug(f"Nested Model error at loop {pr_nested_loop} : {e}.")
+                    stacker = traceback.format_exc()
+                    self.logger.debug(f"{stacker}")   
+                    continue   
 
     def query_pr_repo(self, pr_repo, pr_repo_type, pr_meta_id):
         """ TODO: insert this data as extra columns in the meta table """
