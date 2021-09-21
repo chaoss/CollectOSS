@@ -1,7 +1,7 @@
 BEGIN;
 
 ALTER TABLE "augur_data"."pull_request_events" 
-  ADD COLUMN "platform_id" varchar DEFAULT 25150,
+  ADD COLUMN "platform_id" int8 DEFAULT 25150,
   ADD COLUMN "pr_platform_event_id" int8,
   ADD COLUMN "repo_id" int8,
   ADD CONSTRAINT "fkpr_platform" FOREIGN KEY ("platform_id") REFERENCES "augur_data"."platform" ("pltfrm_id") ON DELETE RESTRICT ON UPDATE RESTRICT DEFERRABLE INITIALLY DEFERRED,
