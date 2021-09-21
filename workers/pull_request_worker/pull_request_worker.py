@@ -588,13 +588,25 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         #self.write_debug_data(pk_source_prs, 'pk_source_prs')
 
         if pk_source_prs:
+            pr_steps = 1
             while pr_steps < 5: 
-                try: 
-                    self.pull_request_comments_model()
-                    self.pull_request_events_model(pk_source_prs)
-                    self.pull_request_reviews_model(pk_source_prs)
-                    self.pull_request_nested_data_model(pk_source_prs)
-                    pr_steps += pr_steps+1 
+                try:
+                    if pr_steps = 1:  
+                        pr_steps += pr_steps+1 
+                        self.pull_request_comments_model()
+                        self.logger.info(f"Pull request comments model, step {pr_steps}.")
+                    elif pr_steps = 2: 
+                        pr_steps += pr_steps+1 
+                        self.pull_request_events_model(pk_source_prs)
+                        self.logger.info(f"Pull request events model, step {pr_steps}.")
+                    elif pr_steps = 3: 
+                        pr_steps += pr_steps+1 
+                        self.pull_request_reviews_model(pk_source_prs)
+                        self.logger.info(f"Pull request reviews model, step {pr_steps}.")
+                    elif pr_steps = 4:
+                        pr_steps += pr_steps+1 
+                        self.pull_request_nested_data_model(pk_source_prs)
+                        self.logger.info(f"Pull request nested data model, step {pr_steps}.")
                 except Exception as e: 
                     self.logger.debug(f"PR comments, events, reviews, or nested data model failed on {e}. exception registered for pr_step {pr_steps}.")
                     stacker = traceback.format_exc()
@@ -630,7 +642,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         }
 
         # TODO: add relational table so we can include a where_clause here
-        pr_comments = self.new_paginate_endpoint(
+        pr_comments = self.paginate_endpoint(
             comments_url, action_map=comment_action_map, table=self.message_table
         )
 
@@ -666,12 +678,29 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'platform_node_id': comment['node_id']
             } for comment in pr_comments['insert']
         ]
-
-        ##### stopped here. 
-
-        self.bulk_insert(self.message_table, insert=pr_comments_insert)
+        try:
+            self.bulk_insert(self.message_table, insert=pr_comments_insert, unique_columns=action_map['insert']['augur'])
+        except Exception as e: 
+            self.logger.debug(f"PR comments data model failed on {e}. exception registered.")
+            stacker = traceback.format_exc()
+            self.logger.debug(f"{stacker}")
 
         # PR MESSAGE REF TABLE
+
+    ''' FROM WORKER PERSISTENCE for REFERENCE
+        def enrich_data_primary_keys(
+        self, source_data, table, gh_merge_fields, augur_merge_fields, in_memory=False
+    ): '''
+
+        ''' the gh_merge_fields are almost always direct from the source in the action map.
+            the augur_merge fields are the field names where augur persists the source values.
+            These are almost never (never) the primary keys on our table. They are the natural
+            keys at the source, I think, with some probability close to 1 (SPG 9/13/2021).'''
+
+        ''' SPG 9/15/2021: This seems method may be the source of duplicate inserts that seem like
+            they should not actually get run because we are specifying the natural key in the insert map.
+            I really don't completely understand what we are doing here.  '''
+
 
         c_pk_source_comments = self.enrich_data_primary_keys(pr_comments['insert'],
             self.message_table, comment_action_map['insert']['source'], comment_action_map['insert']['augur'])
@@ -720,23 +749,23 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         # Get events that we already have stored
         #   Set pseudo key (something other than PK) to
-        #   check dupicates with
+        #   check duplicates with
         event_action_map = {
             'insert': {
-                'source': ['url'],
-                'augur': ['node_url']
+                'source': ['id'],
+                'augur': ['pr_platform_event_id']
             }
         }
 
         #list to hold contributors needing insertion or update
-        pr_events = self.new_paginate_endpoint(
+        pr_events = self.paginate_endpoint(
             events_url, table=self.pull_request_events_table, action_map=event_action_map,
             where_clause=self.pull_request_events_table.c.pull_request_id.in_(
                 set(pd.DataFrame(pk_source_prs)['pull_request_id'])
             )
         )
 
-        self.write_debug_data(pr_events, 'pr_events')
+        #self.write_debug_data(pr_events, 'pr_events')
 
         pk_pr_events = self.enrich_data_primary_keys(pr_events['insert'],
             self.pull_requests_table, ['issue.url'], ['pr_issue_url'])
@@ -767,11 +796,18 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'node_url': event['url'],
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
-                'data_source': self.data_source
+                'data_source': self.data_source,
+                'pr_platform_event_id': event['id'],
+                'platform_id': self.platform_id,
+                'repo_id:': self.repo_id 
             } for event in pk_pr_events if event['actor'] is not None
         ]
-
-        self.bulk_insert(self.pull_request_events_table, insert=pr_events_insert)
+        try: 
+            self.bulk_insert(self.pull_request_events_table, insert=pr_events_insert, unique_columns=event_action_map['insert']['augur'])
+        except Exception as e: 
+            self.logger.debug(f"PR events data model failed on {e}. exception registered.")
+            stacker = traceback.format_exc()
+            self.logger.debug(f"{stacker}")           
 
     def pull_request_reviews_model(self, pk_source_prs=[]):
 
@@ -846,15 +882,22 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'pr_review_commit_id': review['commit_id'],
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
-                'data_source': self.data_source
+                'data_source': self.data_source,
+                'repo_id': self.repo_id,
+                'platform_id': self.platform_id 
             } for review in source_reviews_insert if review['user'] and 'login' in review['user']
         ]
 
-        self.bulk_insert(
-            self.pull_request_reviews_table, insert=reviews_insert, update=source_reviews_update,
-            unique_columns=review_action_map['insert']['augur'],
-            update_columns=review_action_map['update']['augur']
-        )
+        try:
+            self.bulk_insert(
+                self.pull_request_reviews_table, insert=reviews_insert, update=source_reviews_update,
+                unique_columns=review_action_map['insert']['augur'],
+                update_columns=review_action_map['update']['augur']
+            )
+        except Exception as e: 
+            self.logger.debug(f"PR reviews data model failed on {e}. exception registered.")
+            stacker = traceback.format_exc()
+            self.logger.debug(f"{stacker}")             
 
         # Merge source data to inserted data to have access to inserted primary keys
 
@@ -892,7 +935,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         review_msg_action_map = {
             'insert': {
                 'source': ['id'],
-                'augur': ['platform_msg_id', 'tool_source']
+                'augur': ['platform_msg_id']
             }
         }
 
@@ -902,7 +945,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         review_msg_ref_action_map = {
             'insert': {
                 'source': ['id'],
-                'augur': ['pr_review_msg_src_id', 'tool_source']
+                'augur': ['pr_review_msg_src_id']
             }
         }
 
@@ -948,7 +991,9 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
                 'data_source': self.data_source,
-                'repo_id': self.repo_id
+                'repo_id': self.repo_id,
+                'platform_msg_id': comment['id'],
+                'platform_node_id': comment['node_id']
             } for comment in review_msgs['insert']
             if comment['user'] and 'login' in comment['user']
         ]
@@ -1000,227 +1045,269 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'pr_review_msg_original_line': comment['original_line'],
                 'pr_review_msg_side': comment['side'],
                 'tool_source': self.tool_source,
-                'tool_version': self.tool_version,
-                'data_source': self.data_source
+                'tool_version': self.toosl_version,
+                'data_source': self.data_source,
+                'repo_id': self.repo_id
             } for comment in both_pk_source_comments
         ]
 
-        self.bulk_insert(
-            self.pull_request_review_message_ref_table,
-            insert=pr_review_msg_ref_insert, unique_columns = review_msg_ref_action_map['insert']['augur']
-        )
+        try: 
+
+            self.bulk_insert(
+                self.pull_request_review_message_ref_table,
+                insert=pr_review_msg_ref_insert, unique_columns = review_msg_ref_action_map['insert']['augur']
+            )
+        except Exception as e: 
+            self.logger.debug(f"bulk insert for review message ref failed on : {e}")
+            stacker = traceback.format_exc()
+            self.logger.debug(f"{stacker}")                
 
     def pull_request_nested_data_model(self, pk_source_prs=[]):
 
-        if not pk_source_prs:
-            pk_source_prs = self._get_pk_source_prs()
+        pr_nested_loop = 1
+        
+        while pr_nested_loop <5:
 
-        labels_all = []
-        reviewers_all = []
-        assignees_all = []
-        meta_all = []
+            try:   
+                if pr_nested_loop = 1: 
+                    pr_nested_loop +=1
+            
+                    if not pk_source_prs:
+                        pk_source_prs = self._get_pk_source_prs()
 
-        for index, pr in enumerate(pk_source_prs):
+                    labels_all = []
+                    reviewers_all = []
+                    assignees_all = []
+                    meta_all = []
 
-            # PR Labels
-            source_labels = pd.DataFrame(pr['labels'])
-            source_labels['pull_request_id'] = pr['pull_request_id']
-            labels_all += source_labels.to_dict(orient='records')
+                    for index, pr in enumerate(pk_source_prs):
 
-            # Reviewers
-            source_reviewers = pd.DataFrame(pr['requested_reviewers'])
-            source_reviewers['pull_request_id'] = pr['pull_request_id']
-            reviewers_all += source_reviewers.to_dict(orient='records')
+                        # PR Labels
+                        source_labels = pd.DataFrame(pr['labels'])
+                        source_labels['pull_request_id'] = pr['pull_request_id']
+                        labels_all += source_labels.to_dict(orient='records')
 
-            # Assignees
-            source_assignees = pd.DataFrame(pr['assignees'])
-            source_assignees['pull_request_id'] = pr['pull_request_id']
-            assignees_all += source_assignees.to_dict(orient='records')
+                        # Reviewers
+                        source_reviewers = pd.DataFrame(pr['requested_reviewers'])
+                        source_reviewers['pull_request_id'] = pr['pull_request_id']
+                        reviewers_all += source_reviewers.to_dict(orient='records')
 
-            # Meta
-            pr['head'].update(
-                {'pr_head_or_base': 'head', 'pull_request_id': pr['pull_request_id']}
-            )
-            pr['base'].update(
-                {'pr_head_or_base': 'base', 'pull_request_id': pr['pull_request_id']}
-            )
-            meta_all += [pr['head'], pr['base']]
+                        # Assignees
+                        source_assignees = pd.DataFrame(pr['assignees'])
+                        source_assignees['pull_request_id'] = pr['pull_request_id']
+                        assignees_all += source_assignees.to_dict(orient='records')
 
-        # PR labels insertion
-        label_action_map = {
-            'insert': {
-                'source': ['pull_request_id', 'id'],
-                'augur': ['pull_request_id', 'pr_src_id']
-            }
-        }
+                        # Meta
+                        pr['head'].update(
+                            {'pr_head_or_base': 'head', 'pull_request_id': pr['pull_request_id']}
+                        )
+                        pr['base'].update(
+                            {'pr_head_or_base': 'base', 'pull_request_id': pr['pull_request_id']}
+                        )
+                        meta_all += [pr['head'], pr['base']]
 
-
-        table_values_pr_labels = self.db.execute(
-            s.sql.select(self.get_relevant_columns(self.pull_request_labels_table,label_action_map))
-        ).fetchall()
-
-        source_labels_insert, _ = self.organize_needed_data(
-            labels_all, table_values=table_values_pr_labels, action_map=label_action_map
-        )
-
-        self.logger.info(f"Howdy. Lets check the label id datatype: {type(label['id'])}.")
-
-        try:
-            labels_insert = [
-                {
-                    'pull_request_id': label['pull_request_id'],
-                    'pr_src_id': int(label['id']),
-                    'pr_src_node_id': label['node_id'],
-                    'pr_src_url': label['url'],
-                    'pr_src_description': label['name'],
-                    'pr_src_color': label['color'],
-                    'pr_src_default_bool': label['default'],
-                    'tool_source': self.tool_source,
-                    'tool_version': self.tool_version,
-                    'data_source': self.data_source
-                } for label in source_labels_insert
-            ]
-        except Exception as e:
-            self.logger.info(f"failed at assignment of labels_insert with: {e}.")
-
-        try:
-            self.bulk_insert(self.pull_request_labels_table, insert=labels_insert)
-        except Exception as e:
-            self.logger.info(f"label bulk insert failed with {e}.")
-
-        # PR reviewers insertion
-        reviewer_action_map = {
-            'insert': {
-                'source': ['pull_request_id', 'id'],
-                'augur': ['pull_request_id', 'pr_reviewer_src_id']
-            }
-        }
-
-        try:
-            table_values_issue_labels = self.db.execute(
-                s.sql.select(self.get_relevant_columns(self.pull_request_reviewers_table,reviewer_action_map))
-            ).fetchall()
-        except Exception as e:
-            self.logger.info(f"getting label values failed at: {e}.")
-
-        try:
-            source_reviewers_insert, _ = self.organize_needed_data(
-                reviewers_all, table_values=table_values_issue_labels,
-                action_map=reviewer_action_map
-            )
-        except Exception as e:
-            self.logger.info(f"Organize needed data for source_reviewers_insert failed with: {e}.")
-
-        if len(source_reviewers_insert) > 0:
-            source_reviewers_insert = self.enrich_cntrb_id(
-                source_reviewers_insert, 'login', action_map_additions={
-                    'insert': {
-                        'source': ['node_id'],
-                        'augur': ['gh_node_id']
+                    # PR labels insertion
+                    label_action_map = {
+                        'insert': {
+                            'source': ['pull_request_id', 'id'],
+                            'augur': ['pull_request_id', 'pr_src_id']
+                        }
                     }
-                }
-            )
-        else:
-            self.logger.info("Contributor enrichment is not needed, no inserts provided.")
-
-        reviewers_insert = [
-            {
-                'pull_request_id': reviewer['pull_request_id'],
-                'cntrb_id': reviewer['cntrb_id'],
-                'pr_reviewer_src_id': int(float(reviewer['id'])),
-                'tool_source': self.tool_source,
-                'tool_version': self.tool_version,
-                'data_source': self.data_source
-            } for reviewer in source_reviewers_insert if 'login' in reviewer
-        ]
-        self.bulk_insert(self.pull_request_reviewers_table, insert=reviewers_insert)
-
-        # PR assignees insertion
-        assignee_action_map = {
-            'insert': {
-                'source': ['pull_request_id', 'id'],
-                'augur': ['pull_request_id', 'pr_assignee_src_id']
-            }
-        }
 
 
-        table_values_assignees_labels = self.db.execute(
-            s.sql.select(self.get_relevant_columns(self.pull_request_assignees_table,assignee_action_map))
-        ).fetchall()
+                    table_values_pr_labels = self.db.execute(
+                        s.sql.select(self.get_relevant_columns(self.pull_request_labels_table,label_action_map))
+                    ).fetchall()
 
-        source_assignees_insert, _ = self.organize_needed_data(
-            assignees_all, table_values=table_values_assignees_labels,
-            action_map=assignee_action_map
-        )
+                    source_labels_insert, _ = self.organize_needed_data(
+                        labels_all, table_values=table_values_pr_labels, action_map=label_action_map
+                    )
 
-        if len(source_assignees_insert) > 0:
-            source_assignees_insert = self.enrich_cntrb_id(
-                source_assignees_insert, 'login', action_map_additions={
-                    'insert': {
-                        'source': ['node_id'],
-                        'augur': ['gh_node_id']
+
+                    labels_insert = [
+                        {
+                            'pull_request_id': label['pull_request_id'],
+                            'pr_src_id': int(label['id']),
+                            'pr_src_node_id': label['node_id'],
+                            'pr_src_url': label['url'],
+                            'pr_src_description': label['name'],
+                            'pr_src_color': label['color'],
+                            'pr_src_default_bool': label['default'],
+                            'tool_source': self.tool_source,
+                            'tool_version': self.tool_version,
+                            'data_source': self.data_source
+                        } for label in source_labels_insert
+                    ]
+
+                    try:
+                        self.bulk_insert(self.pull_request_labels_table, insert=labels_insert)
+                    except Exception as e:
+                        self.logger.info(f"label bulk insert failed with {e}.")
+                        continue
+
+                    # PR reviewers insertion
+                    reviewer_action_map = {
+                        'insert': {
+                            'source': ['pull_request_id', 'id'],
+                            'augur': ['pull_request_id', 'pr_reviewer_src_id']
+                        }
                     }
-                }
-            )
-        else:
-            self.logger.info("Contributor enrichment is not needed, no inserts provided.")
+            except Exception as e: 
+                self.logger.debug(f"Reviewers insert encountered an error, exception registered, : {e}.")
+                stacker = traceback.format_exc()
+                self.logger.debug(f"{stacker}") 
+                continue 
+
+            try:
+
+                if pr_nested_loop = 2: 
+                    pr_nested_loop +=1
+
+                    table_values_issue_labels = self.db.execute(
+                        s.sql.select(self.get_relevant_columns(self.pull_request_reviewers_table,reviewer_action_map))
+                    ).fetchall()
+                    source_reviewers_insert, _ = self.organize_needed_data(
+                        reviewers_all, table_values=table_values_issue_labels,
+                        action_map=reviewer_action_map
+                    )
+
+                    if len(source_reviewers_insert) > 0:
+                        source_reviewers_insert = self.enrich_cntrb_id(
+                            source_reviewers_insert, 'login', action_map_additions={
+                                'insert': {
+                                    'source': ['node_id'],
+                                    'augur': ['gh_node_id']
+                                }
+                            }
+                        )
+                    else:
+                        self.logger.info("Contributor enrichment is not needed, no inserts provided.")
+
+                    reviewers_insert = [
+                        {
+                            'pull_request_id': reviewer['pull_request_id'],
+                            'cntrb_id': reviewer['cntrb_id'],
+                            'pr_reviewer_src_id': int(float(reviewer['id'])),
+                            'tool_source': self.tool_source,
+                            'tool_version': self.tool_version,
+                            'data_source': self.data_source
+                        } for reviewer in source_reviewers_insert if 'login' in reviewer
+                    ]
+                    self.bulk_insert(self.pull_request_reviewers_table, insert=reviewers_insert)
+                    
+            except Exception as e: 
+                self.logger.debug(f"Reviewers insert encountered an error, exception registered, : {e}.")
+                stacker = traceback.format_exc()
+                self.logger.debug(f"{stacker}") 
+                continue 
 
 
-        assignees_insert = [
-            {
-                'pull_request_id': assignee['pull_request_id'],
-                'contrib_id': assignee['cntrb_id'],
-                'pr_assignee_src_id': assignee['id'],
-                'tool_source': self.tool_source,
-                'tool_version': self.tool_version,
-                'data_source': self.data_source
-            } for assignee in source_assignees_insert if 'login' in assignee
-        ]
-        self.bulk_insert(self.pull_request_assignees_table, insert=assignees_insert)
+            try:
 
-        # PR meta insertion
-        meta_action_map = {
-            'insert': {
-                'source': ['pull_request_id', 'sha', 'pr_head_or_base'],
-                'augur': ['pull_request_id', 'pr_sha', 'pr_head_or_base']
-            }
-        }
-
-        table_values_pull_request_meta = self.db.execute(
-            s.sql.select(self.get_relevant_columns(self.pull_request_meta_table,meta_action_map))
-        ).fetchall()
-
-        source_meta_insert, _ = self.organize_needed_data(
-            meta_all, table_values=table_values_pull_request_meta, action_map=meta_action_map
-        )
-
-
-        if len(source_meta_insert) > 0:
-            source_meta_insert = self.enrich_cntrb_id(
-                source_meta_insert, 'user.login', action_map_additions={
-                    'insert': {
-                        'source': ['user.node_id'],
-                        'augur': ['gh_node_id']
+                if pr_nested_loop = 3: 
+                    pr_nested_loop +=1
+                    # PR assignees insertion
+                    assignee_action_map = {
+                        'insert': {
+                            'source': ['pull_request_id', 'id'],
+                            'augur': ['pull_request_id', 'pr_assignee_src_id']
+                        }
                     }
-                }, prefix='user.'
-            )
-        else:
-            self.logger.info("Contributor enrichment is not needed, nothing in source_meta_insert.")
 
-        meta_insert = [
-            {
-                'pull_request_id': meta['pull_request_id'],
-                'pr_head_or_base': meta['pr_head_or_base'],
-                'pr_src_meta_label': meta['label'],
-                'pr_src_meta_ref': meta['ref'],
-                'pr_sha': meta['sha'],
-                'cntrb_id': meta['cntrb_id'],
-                'tool_source': self.tool_source,
-                'tool_version': self.tool_version,
-                'data_source': self.data_source
-            } for meta in source_meta_insert if meta['user'] and 'login' in meta['user']
-        ]
-        self.bulk_insert(self.pull_request_meta_table, insert=meta_insert)
+
+                    table_values_assignees_labels = self.db.execute(
+                        s.sql.select(self.get_relevant_columns(self.pull_request_assignees_table,assignee_action_map))
+                    ).fetchall()
+
+                    source_assignees_insert, _ = self.organize_needed_data(
+                        assignees_all, table_values=table_values_assignees_labels,
+                        action_map=assignee_action_map
+                    )
+
+                    if len(source_assignees_insert) > 0:
+                        source_assignees_insert = self.enrich_cntrb_id(
+                            source_assignees_insert, 'login', action_map_additions={
+                                'insert': {
+                                    'source': ['node_id'],
+                                    'augur': ['gh_node_id']
+                                }
+                            }
+                        )
+                    else:
+                        self.logger.info("Contributor enrichment is not needed, no inserts provided.")
+
+
+                    assignees_insert = [
+                        {
+                            'pull_request_id': assignee['pull_request_id'],
+                            'contrib_id': assignee['cntrb_id'],
+                            'pr_assignee_src_id': assignee['id'],
+                            'tool_source': self.tool_source,
+                            'tool_version': self.tool_version,
+                            'data_source': self.data_source
+                        } for assignee in source_assignees_insert if 'login' in assignee
+                    ]
+                    self.bulk_insert(self.pull_request_assignees_table, insert=assignees_insert)
+                    
+            except Exception as e: 
+                self.logger.debug(f"PR  assignees insert encountered an error, exception registered, : {e}.")
+                stacker = traceback.format_exc()
+                self.logger.debug(f"{stacker}") 
+                continue 
+
+            try:
+
+                if pr_nested_loop = 4: 
+                    pr_nested_loop +=1
+                    # PR meta insertion
+                    meta_action_map = {
+                        'insert': {
+                            'source': ['pull_request_id', 'sha', 'pr_head_or_base'],
+                            'augur': ['pull_request_id', 'pr_sha', 'pr_head_or_base']
+                        }
+                    }
+
+                    table_values_pull_request_meta = self.db.execute(
+                        s.sql.select(self.get_relevant_columns(self.pull_request_meta_table,meta_action_map))
+                    ).fetchall()
+
+                    source_meta_insert, _ = self.organize_needed_data(
+                        meta_all, table_values=table_values_pull_request_meta, action_map=meta_action_map
+                    )
+
+
+                    if len(source_meta_insert) > 0:
+                        source_meta_insert = self.enrich_cntrb_id(
+                            source_meta_insert, 'user.login', action_map_additions={
+                                'insert': {
+                                    'source': ['user.node_id'],
+                                    'augur': ['gh_node_id']
+                                }
+                            }, prefix='user.'
+                        )
+                    else:
+                        self.logger.info("Contributor enrichment is not needed, nothing in source_meta_insert.")
+
+                    meta_insert = [
+                        {
+                            'pull_request_id': meta['pull_request_id'],
+                            'pr_head_or_base': meta['pr_head_or_base'],
+                            'pr_src_meta_label': meta['label'],
+                            'pr_src_meta_ref': meta['ref'],
+                            'pr_sha': meta['sha'],
+                            'cntrb_id': meta['cntrb_id'],
+                            'tool_source': self.tool_source,
+                            'tool_version': self.tool_version,
+                            'data_source': self.data_source
+                        } for meta in source_meta_insert if meta['user'] and 'login' in meta['user']
+                    ]
+                    self.bulk_insert(self.pull_request_meta_table, insert=meta_insert)
+                    pr_nested_loop += 1
+            except Exception as e: 
+                self.logger.debug(f"PR head and base insert encountered an error, exception registered, : {e}.")
+                stacker = traceback.format_exc()
+                self.logger.debug(f"{stacker}")   
+                continue   
 
     def query_pr_repo(self, pr_repo, pr_repo_type, pr_meta_id):
         """ TODO: insert this data as extra columns in the meta table """
