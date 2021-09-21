@@ -1046,7 +1046,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'pr_review_msg_original_line': comment['original_line'],
                 'pr_review_msg_side': comment['side'],
                 'tool_source': self.tool_source,
-                'tool_version': self.toosl_version,
+                'tool_version': self.tool_version,
                 'data_source': self.data_source,
                 'repo_id': self.repo_id
             } for comment in both_pk_source_comments
