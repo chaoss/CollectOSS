@@ -667,7 +667,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             {
                 'pltfrm_id': self.platform_id,
                 'msg_text': comment['body'].encode(encoding='UTF-8',errors='backslashreplace').decode(encoding='UTF-8',errors='ignore') if (
-                    comments['body']
+                    comment['body']
                 ) else None,
                 'msg_timestamp': comment['created_at'],
                 'cntrb_id': comment['cntrb_id'],
