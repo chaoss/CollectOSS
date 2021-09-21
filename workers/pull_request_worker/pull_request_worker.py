@@ -592,19 +592,19 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             try:
                 pr_steps = 1
                 while (pr_steps < 5): 
-                    if pr_steps = 1:  
+                    if pr_steps == 1:  
                         pr_steps += pr_steps+1 
                         self.pull_request_comments_model()
                         self.logger.info(f"Pull request comments model, step {pr_steps}.")
-                    elif pr_steps = 2: 
+                    elif pr_steps == 2: 
                         pr_steps += pr_steps+1 
                         self.pull_request_events_model(pk_source_prs)
                         self.logger.info(f"Pull request events model, step {pr_steps}.")
-                    elif pr_steps = 3: 
+                    elif pr_steps == 3: 
                         pr_steps += pr_steps+1 
                         self.pull_request_reviews_model(pk_source_prs)
                         self.logger.info(f"Pull request reviews model, step {pr_steps}.")
-                    elif pr_steps = 4:
+                    elif pr_steps == 4:
                         pr_steps += pr_steps+1 
                         self.pull_request_nested_data_model(pk_source_prs)
                         self.logger.info(f"Pull request nested data model, step {pr_steps}.")
@@ -1104,7 +1104,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             pr_nested_loop = 1
             while (pr_nested_loop <5):
 
-                if pr_nested_loop = 1: 
+                if pr_nested_loop == 1: 
             
                     # PR labels insertion
                     label_action_map = {
@@ -1141,7 +1141,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
                     self.bulk_insert(self.pull_request_labels_table, insert=labels_insert)
 
-                elif pr_nested_loop = 2: 
+                elif pr_nested_loop == 2: 
 
                     # PR reviewers insertion
                     reviewer_action_map = {
@@ -1183,7 +1183,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                     ]
                     self.bulk_insert(self.pull_request_reviewers_table, insert=reviewers_insert)
 
-                elif pr_nested_loop = 3: 
+                elif pr_nested_loop ==3: 
                     # PR assignees insertion
                     assignee_action_map = {
                         'insert': {
@@ -1227,7 +1227,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                     ]
                     self.bulk_insert(self.pull_request_assignees_table, insert=assignees_insert)
 
-                elif pr_nested_loop = 4: 
+                elif pr_nested_loop == 4: 
                     # PR meta insertion
                     meta_action_map = {
                         'insert': {
