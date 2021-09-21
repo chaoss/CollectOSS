@@ -588,8 +588,9 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         #self.write_debug_data(pk_source_prs, 'pk_source_prs')
 
         if pk_source_prs:
-            pr_steps = 1
+
             try:
+                pr_steps = 1
                 while (pr_steps < 5): 
                     if pr_steps = 1:  
                         pr_steps += pr_steps+1 
@@ -1098,180 +1099,179 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             )
             meta_all += [pr['head'], pr['base']]
 
-        pr_nested_loop = 1
+        try:
 
-        while (pr_nested_loop <5):
+            pr_nested_loop = 1
+            while (pr_nested_loop <5):
 
-        try:   
-
-            if pr_nested_loop = 1: 
-        
-                # PR labels insertion
-                label_action_map = {
-                    'insert': {
-                        'source': ['pull_request_id', 'id'],
-                        'augur': ['pull_request_id', 'pr_src_id']
-                    }
-                }
-
-
-                table_values_pr_labels = self.db.execute(
-                    s.sql.select(self.get_relevant_columns(self.pull_request_labels_table,label_action_map))
-                ).fetchall()
-
-                source_labels_insert, _ = self.organize_needed_data(
-                    labels_all, table_values=table_values_pr_labels, action_map=label_action_map
-                )
-
-
-                labels_insert = [
-                    {
-                        'pull_request_id': label['pull_request_id'],
-                        'pr_src_id': int(label['id']),
-                        'pr_src_node_id': label['node_id'],
-                        'pr_src_url': label['url'],
-                        'pr_src_description': label['name'],
-                        'pr_src_color': label['color'],
-                        'pr_src_default_bool': label['default'],
-                        'tool_source': self.tool_source,
-                        'tool_version': self.tool_version,
-                        'data_source': self.data_source
-                    } for label in source_labels_insert
-                ]
-
-                self.bulk_insert(self.pull_request_labels_table, insert=labels_insert)
-
-            elif pr_nested_loop = 2: 
-
-                # PR reviewers insertion
-                reviewer_action_map = {
-                    'insert': {
-                        'source': ['pull_request_id', 'id'],
-                        'augur': ['pull_request_id', 'pr_reviewer_src_id']
-                    }
-                }
-       
-                table_values_issue_labels = self.db.execute(
-                    s.sql.select(self.get_relevant_columns(self.pull_request_reviewers_table,reviewer_action_map))
-                ).fetchall()
-                source_reviewers_insert, _ = self.organize_needed_data(
-                    reviewers_all, table_values=table_values_issue_labels,
-                    action_map=reviewer_action_map
-                )
-
-                if len(source_reviewers_insert) > 0:
-                    source_reviewers_insert = self.enrich_cntrb_id(
-                        source_reviewers_insert, 'login', action_map_additions={
-                            'insert': {
-                                'source': ['node_id'],
-                                'augur': ['gh_node_id']
-                            }
+                if pr_nested_loop = 1: 
+            
+                    # PR labels insertion
+                    label_action_map = {
+                        'insert': {
+                            'source': ['pull_request_id', 'id'],
+                            'augur': ['pull_request_id', 'pr_src_id']
                         }
-                    )
-                else:
-                    self.logger.info("Contributor enrichment is not needed, no inserts provided.")
-
-                reviewers_insert = [
-                    {
-                        'pull_request_id': reviewer['pull_request_id'],
-                        'cntrb_id': reviewer['cntrb_id'],
-                        'pr_reviewer_src_id': int(float(reviewer['id'])),
-                        'tool_source': self.tool_source,
-                        'tool_version': self.tool_version,
-                        'data_source': self.data_source
-                    } for reviewer in source_reviewers_insert if 'login' in reviewer
-                ]
-                self.bulk_insert(self.pull_request_reviewers_table, insert=reviewers_insert)
-
-            elif pr_nested_loop = 3: 
-                # PR assignees insertion
-                assignee_action_map = {
-                    'insert': {
-                        'source': ['pull_request_id', 'id'],
-                        'augur': ['pull_request_id', 'pr_assignee_src_id']
                     }
-                }
 
 
-                table_values_assignees_labels = self.db.execute(
-                    s.sql.select(self.get_relevant_columns(self.pull_request_assignees_table,assignee_action_map))
-                ).fetchall()
+                    table_values_pr_labels = self.db.execute(
+                        s.sql.select(self.get_relevant_columns(self.pull_request_labels_table,label_action_map))
+                    ).fetchall()
 
-                source_assignees_insert, _ = self.organize_needed_data(
-                    assignees_all, table_values=table_values_assignees_labels,
-                    action_map=assignee_action_map
-                )
+                    source_labels_insert, _ = self.organize_needed_data(
+                        labels_all, table_values=table_values_pr_labels, action_map=label_action_map
+                    )
 
-                if len(source_assignees_insert) > 0:
-                    source_assignees_insert = self.enrich_cntrb_id(
-                        source_assignees_insert, 'login', action_map_additions={
-                            'insert': {
-                                'source': ['node_id'],
-                                'augur': ['gh_node_id']
-                            }
+
+                    labels_insert = [
+                        {
+                            'pull_request_id': label['pull_request_id'],
+                            'pr_src_id': int(label['id']),
+                            'pr_src_node_id': label['node_id'],
+                            'pr_src_url': label['url'],
+                            'pr_src_description': label['name'],
+                            'pr_src_color': label['color'],
+                            'pr_src_default_bool': label['default'],
+                            'tool_source': self.tool_source,
+                            'tool_version': self.tool_version,
+                            'data_source': self.data_source
+                        } for label in source_labels_insert
+                    ]
+
+                    self.bulk_insert(self.pull_request_labels_table, insert=labels_insert)
+
+                elif pr_nested_loop = 2: 
+
+                    # PR reviewers insertion
+                    reviewer_action_map = {
+                        'insert': {
+                            'source': ['pull_request_id', 'id'],
+                            'augur': ['pull_request_id', 'pr_reviewer_src_id']
                         }
-                    )
-                else:
-                    self.logger.info("Contributor enrichment is not needed, no inserts provided.")
-
-
-                assignees_insert = [
-                    {
-                        'pull_request_id': assignee['pull_request_id'],
-                        'contrib_id': assignee['cntrb_id'],
-                        'pr_assignee_src_id': assignee['id'],
-                        'tool_source': self.tool_source,
-                        'tool_version': self.tool_version,
-                        'data_source': self.data_source
-                    } for assignee in source_assignees_insert if 'login' in assignee
-                ]
-                self.bulk_insert(self.pull_request_assignees_table, insert=assignees_insert)
-
-            elif pr_nested_loop = 4: 
-                # PR meta insertion
-                meta_action_map = {
-                    'insert': {
-                        'source': ['pull_request_id', 'sha', 'pr_head_or_base'],
-                        'augur': ['pull_request_id', 'pr_sha', 'pr_head_or_base']
                     }
-                }
-
-                table_values_pull_request_meta = self.db.execute(
-                    s.sql.select(self.get_relevant_columns(self.pull_request_meta_table,meta_action_map))
-                ).fetchall()
-
-                source_meta_insert, _ = self.organize_needed_data(
-                    meta_all, table_values=table_values_pull_request_meta, action_map=meta_action_map
-                )
-
-
-                if len(source_meta_insert) > 0:
-                    source_meta_insert = self.enrich_cntrb_id(
-                        source_meta_insert, 'user.login', action_map_additions={
-                            'insert': {
-                                'source': ['user.node_id'],
-                                'augur': ['gh_node_id']
-                            }
-                        }, prefix='user.'
+           
+                    table_values_issue_labels = self.db.execute(
+                        s.sql.select(self.get_relevant_columns(self.pull_request_reviewers_table,reviewer_action_map))
+                    ).fetchall()
+                    source_reviewers_insert, _ = self.organize_needed_data(
+                        reviewers_all, table_values=table_values_issue_labels,
+                        action_map=reviewer_action_map
                     )
-                else:
-                    self.logger.info("Contributor enrichment is not needed, nothing in source_meta_insert.")
 
-                meta_insert = [
-                    {
-                        'pull_request_id': meta['pull_request_id'],
-                        'pr_head_or_base': meta['pr_head_or_base'],
-                        'pr_src_meta_label': meta['label'],
-                        'pr_src_meta_ref': meta['ref'],
-                        'pr_sha': meta['sha'],
-                        'cntrb_id': meta['cntrb_id'],
-                        'tool_source': self.tool_source,
-                        'tool_version': self.tool_version,
-                        'data_source': self.data_source
-                    } for meta in source_meta_insert if meta['user'] and 'login' in meta['user']
-                ]
-                self.bulk_insert(self.pull_request_meta_table, insert=meta_insert)
-            pr_nested_loop += 1
+                    if len(source_reviewers_insert) > 0:
+                        source_reviewers_insert = self.enrich_cntrb_id(
+                            source_reviewers_insert, 'login', action_map_additions={
+                                'insert': {
+                                    'source': ['node_id'],
+                                    'augur': ['gh_node_id']
+                                }
+                            }
+                        )
+                    else:
+                        self.logger.info("Contributor enrichment is not needed, no inserts provided.")
+
+                    reviewers_insert = [
+                        {
+                            'pull_request_id': reviewer['pull_request_id'],
+                            'cntrb_id': reviewer['cntrb_id'],
+                            'pr_reviewer_src_id': int(float(reviewer['id'])),
+                            'tool_source': self.tool_source,
+                            'tool_version': self.tool_version,
+                            'data_source': self.data_source
+                        } for reviewer in source_reviewers_insert if 'login' in reviewer
+                    ]
+                    self.bulk_insert(self.pull_request_reviewers_table, insert=reviewers_insert)
+
+                elif pr_nested_loop = 3: 
+                    # PR assignees insertion
+                    assignee_action_map = {
+                        'insert': {
+                            'source': ['pull_request_id', 'id'],
+                            'augur': ['pull_request_id', 'pr_assignee_src_id']
+                        }
+                    }
+
+
+                    table_values_assignees_labels = self.db.execute(
+                        s.sql.select(self.get_relevant_columns(self.pull_request_assignees_table,assignee_action_map))
+                    ).fetchall()
+
+                    source_assignees_insert, _ = self.organize_needed_data(
+                        assignees_all, table_values=table_values_assignees_labels,
+                        action_map=assignee_action_map
+                    )
+
+                    if len(source_assignees_insert) > 0:
+                        source_assignees_insert = self.enrich_cntrb_id(
+                            source_assignees_insert, 'login', action_map_additions={
+                                'insert': {
+                                    'source': ['node_id'],
+                                    'augur': ['gh_node_id']
+                                }
+                            }
+                        )
+                    else:
+                        self.logger.info("Contributor enrichment is not needed, no inserts provided.")
+
+
+                    assignees_insert = [
+                        {
+                            'pull_request_id': assignee['pull_request_id'],
+                            'contrib_id': assignee['cntrb_id'],
+                            'pr_assignee_src_id': assignee['id'],
+                            'tool_source': self.tool_source,
+                            'tool_version': self.tool_version,
+                            'data_source': self.data_source
+                        } for assignee in source_assignees_insert if 'login' in assignee
+                    ]
+                    self.bulk_insert(self.pull_request_assignees_table, insert=assignees_insert)
+
+                elif pr_nested_loop = 4: 
+                    # PR meta insertion
+                    meta_action_map = {
+                        'insert': {
+                            'source': ['pull_request_id', 'sha', 'pr_head_or_base'],
+                            'augur': ['pull_request_id', 'pr_sha', 'pr_head_or_base']
+                        }
+                    }
+
+                    table_values_pull_request_meta = self.db.execute(
+                        s.sql.select(self.get_relevant_columns(self.pull_request_meta_table,meta_action_map))
+                    ).fetchall()
+
+                    source_meta_insert, _ = self.organize_needed_data(
+                        meta_all, table_values=table_values_pull_request_meta, action_map=meta_action_map
+                    )
+
+
+                    if len(source_meta_insert) > 0:
+                        source_meta_insert = self.enrich_cntrb_id(
+                            source_meta_insert, 'user.login', action_map_additions={
+                                'insert': {
+                                    'source': ['user.node_id'],
+                                    'augur': ['gh_node_id']
+                                }
+                            }, prefix='user.'
+                        )
+                    else:
+                        self.logger.info("Contributor enrichment is not needed, nothing in source_meta_insert.")
+
+                    meta_insert = [
+                        {
+                            'pull_request_id': meta['pull_request_id'],
+                            'pr_head_or_base': meta['pr_head_or_base'],
+                            'pr_src_meta_label': meta['label'],
+                            'pr_src_meta_ref': meta['ref'],
+                            'pr_sha': meta['sha'],
+                            'cntrb_id': meta['cntrb_id'],
+                            'tool_source': self.tool_source,
+                            'tool_version': self.tool_version,
+                            'data_source': self.data_source
+                        } for meta in source_meta_insert if meta['user'] and 'login' in meta['user']
+                    ]
+                    self.bulk_insert(self.pull_request_meta_table, insert=meta_insert)
+                pr_nested_loop += 1
         except Exception as e: 
             self.logger.debug(f"Nested Model error at loop {pr_nested_loop} : {e}.")
             stacker = traceback.format_exc()
