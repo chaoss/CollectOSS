@@ -589,24 +589,24 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         if pk_source_prs:
             pr_steps = 1
-            while pr_steps < 5: 
                 try:
-                    if pr_steps = 1:  
-                        pr_steps += pr_steps+1 
-                        self.pull_request_comments_model()
-                        self.logger.info(f"Pull request comments model, step {pr_steps}.")
-                    elif pr_steps = 2: 
-                        pr_steps += pr_steps+1 
-                        self.pull_request_events_model(pk_source_prs)
-                        self.logger.info(f"Pull request events model, step {pr_steps}.")
-                    elif pr_steps = 3: 
-                        pr_steps += pr_steps+1 
-                        self.pull_request_reviews_model(pk_source_prs)
-                        self.logger.info(f"Pull request reviews model, step {pr_steps}.")
-                    elif pr_steps = 4:
-                        pr_steps += pr_steps+1 
-                        self.pull_request_nested_data_model(pk_source_prs)
-                        self.logger.info(f"Pull request nested data model, step {pr_steps}.")
+                    while pr_steps < 5: 
+                        if pr_steps = 1:  
+                            pr_steps += pr_steps+1 
+                            self.pull_request_comments_model()
+                            self.logger.info(f"Pull request comments model, step {pr_steps}.")
+                        elif pr_steps = 2: 
+                            pr_steps += pr_steps+1 
+                            self.pull_request_events_model(pk_source_prs)
+                            self.logger.info(f"Pull request events model, step {pr_steps}.")
+                        elif pr_steps = 3: 
+                            pr_steps += pr_steps+1 
+                            self.pull_request_reviews_model(pk_source_prs)
+                            self.logger.info(f"Pull request reviews model, step {pr_steps}.")
+                        elif pr_steps = 4:
+                            pr_steps += pr_steps+1 
+                            self.pull_request_nested_data_model(pk_source_prs)
+                            self.logger.info(f"Pull request nested data model, step {pr_steps}.")
                 except Exception as e: 
                     self.logger.debug(f"PR comments, events, reviews, or nested data model failed on {e}. exception registered for pr_step {pr_steps}.")
                     stacker = traceback.format_exc()
