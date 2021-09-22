@@ -298,61 +298,7 @@ def git_repo_updates(cfg):
         # as somebody may have done a rebase. No work is being done in the local
         # repo, so there shouldn't be legit local changes to worry about.
 
-        default_branch = ''
-
-        while attempt < 3:
-
-            try:
-
-                cmd_default_branch_change = ("git -C %s%s/%s%s remote show origin | sed -n '/HEAD branch/s/.*: //p'"
-                    % (cfg.repo_base_directory,row[1],row[4],row[3]))
-
-                cmd_default_branch_change = ("git -C %s%s/%s%s remote show origin | sed -n '/HEAD branch/s/.*: //p'"
-                    % (cfg.repo_base_directory,row[1],row[4],row[3]))
-
-                cfg.log_activity('Verbose','finding default branch '
-                    ' for %s' % row[2])
-                
-                return_code_default_change = subprocess.Popen([cmd_default_branch_change],stdout=subprocess.PIPE,shell=True).wait()
-
-                branch_test = subprocess.Popen([cmd_default_branch_change],stdout=subprocess.PIPE,shell=True).communicate()[0]
-
-                cfg.log_activity('Verbose', f'default branch encoded return is {return_code_default_change} '
-                    ' for %s' % row[2])                    
-
-                cfg.log_activity('Verbose', f'default branch communicate return is {branch_test} '
-                    ' for %s' % row[2])   
-
-                default_branch = branch_test.decode()
-
-                #default_branch = cmd_default_branch_change.communicate()[0]
-
-                cfg.log_activity('Verbose', f'default branch is {default_branch} '
-                    ' for %s' % row[2])                    
-
-                #default_branch = cmd_default_branch_change.communicate()[0]
-
-                #default_branch = return_code_default_change
-
-                cfg.log_activity('Verbose', f'default branch is {default_branch} '
-                    ' for %s' % row[2])
-
-                cmd_checkout_default = (f"git -C %s%s/%s%s checkout {default_branch}" 
-                    % (cfg.repo_base_directory,row[1],row[4],row[3]))
-
-                cfg.log_activity('Verbose', f'checkout command is {cmd_checkout_default}.')
-
-                cfg.log_activity('Verbose',f'attempting to checkout default branch {default_branch} '
-                    ' for %s' % row[2])                
-
-                return_code_default_change = subprocess.Popen([cmd_checkout_default],shell=True).wait()
-
-                cfg.log_activity('Verbose',f'return code  from default branch change is: {return_code_default_change} '
-                    ' for %s' % row[2])   
-
-            except Exception as e: 
-                cfg.log_activity('Verbose', f'Error code on branch change is {e}.')
-
+        while attempt < 2:
 
             cmd = ("git -C %s%s/%s%s pull"
                 % (cfg.repo_base_directory,row[1],row[4],row[3]))#['projects_id'],row['path'],row['name']))
@@ -361,17 +307,15 @@ def git_repo_updates(cfg):
 
             # If the attempt succeeded, then don't try any further fixes. If
             # the attempt to fix things failed, give up and try next time.
-            if return_code == 0 or attempt == 3:
+            if return_code == 0 or attempt == 1:
                 break
 
             elif attempt == 0:
                 cfg.log_activity('Verbose','git pull failed, attempting reset and '
                     'clean for %s' % row[2])
 
-                cmd_reset = (f"git -C %s%s/%s%s reset --hard origin/{default_branch}"
+                cmd_reset = ("git -C %s%s/%s%s reset --hard origin/master"
                     % (cfg.repo_base_directory,row[1],row[4],row[3]))
-
-                cfg.log_activity('Verbose', f'reset --hard origin/<branch> command executed is: {cmd_reset}.')
 
                 return_code_reset = subprocess.Popen([cmd_reset],shell=True).wait()
 
@@ -380,59 +324,14 @@ def git_repo_updates(cfg):
 
                 return_code_clean = subprocess.Popen([cmd_clean],shell=True).wait()
 
-            elif attempt == 1 or attempt == 2:
+                ## patch for primary branch changes to main
 
-                try: 
+                cmd_main_branch = ("git -C %s%s/%s%s checkout main"
+                    % (cfg.repo_base_directory,row[1],row[4],row[3]))
 
-                    cmd_default_branch_change = ("git -C %s%s/%s%s remote show origin | sed -n '/HEAD branch/s/.*: //p'"
-                        % (cfg.repo_base_directory,row[1],row[4],row[3]))
-
-                    cfg.log_activity('Verbose','finding default branch '
-                        ' for %s' % row[2])
-                    
-                    return_code_default_change = subprocess.Popen([cmd_default_branch_change],stdout=subprocess.PIPE,shell=True).wait()
-
-                    branch_test = subprocess.Popen([cmd_default_branch_change],stdout=subprocess.PIPE,shell=True).communicate()[0]
-
-                    cfg.log_activity('Verbose', f'default branch encoded return is {return_code_default_change} '
-                        ' for %s' % row[2])                    
-
-                    cfg.log_activity('Verbose', f'default branch communicate return is {branch_test} '
-                        ' for %s' % row[2])   
-
-                    default_branch = branch_test.decode()
-
-                    #default_branch = cmd_default_branch_change.communicate()[0]
-
-                    cfg.log_activity('Verbose', f'default branch is {default_branch} '
-                        ' for %s' % row[2])                    
-
-                    #default_branch = cmd_default_branch_change.communicate()[0]
-
-                    #default_branch = return_code_default_change
-
-                    cfg.log_activity('Verbose', f'default branch is {default_branch} '
-                        ' for %s' % row[2])
-
-                    cmd_checkout_default = (f"git -C %s%s/%s%s checkout {default_branch}" 
-                        % (cfg.repo_base_directory,row[1],row[4],row[3]))
-
-                    cfg.log_activity('Verbose', f'checkout command is {cmd_checkout_default}.')
-
-                    cfg.log_activity('Verbose',f'attempting to checkout default branch {default_branch} '
-                        ' for %s' % row[2])                
-
-                    return_code_default_change = subprocess.Popen([cmd_checkout_default],shell=True).wait()
-
-                    cfg.log_activity('Verbose',f'return code  from default branch change is: {return_code_default_change} '
-                        ' for %s' % row[2])                       
-
-                except Exception as e: 
-
-                    cfg.log_activity('Verbose', f'Error code on branch change is {e}.')
+                return_code_main_branch = subprocess.Popen([cmd_main_branch],shell=True).wait()
 
             attempt += 1
-            default_branch = ''
 
         if return_code == 0:
 
@@ -443,10 +342,8 @@ def git_repo_updates(cfg):
             update_repo_log(cfg, row[0],'Up-to-date')
             cfg.log_activity('Verbose','Updated %s' % row[2])
 
-        else: 
-
+        else:
             update_repo_log(cfg, row[0],'Failed (%s)' % return_code)
             cfg.log_activity('Error','Could not update %s' % row[2])
-
 
     cfg.log_activity('Info','Updating existing repos (complete)')
