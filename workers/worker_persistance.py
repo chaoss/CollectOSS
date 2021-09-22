@@ -826,6 +826,9 @@ class Persistant():
                         #self.logger.info("message committed")
                         dbapi_conn.commit()
                         # self.logger.debug("good dog. record committed! Watson, come quick!!!")
+                    except psycopg2.errors.UniqueViolation as e: 
+                        self.logger.info(f"{e}")
+                        dbapi_conn.rollback()                        
                     except Exception as e:
                         self.logger.debug(f"Bulk insert error: {e}. exception registered")
                         stacker = traceback.format_exc()
@@ -1045,6 +1048,7 @@ class Persistant():
 
             #                 list(source_df[gh_merge_fields].itertuples(index=False))
             #             ))).fetchall()
+            # except psycopg2.errors.UniqueViolation as e: 
             # except psycopg2.errors.StatementTooComplex as e:
             self.logger.info("Retrieve pk statement too complex, querying all instead " +
                 "and performing partitioned merge.\n")
