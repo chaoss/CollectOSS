@@ -546,20 +546,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                     f"user_data was unable to be reached. Skipping...")
                 continue
 
-            # Resolve any unresolved emails if we get to this point.
-            # They will get added to the alias table later
-            query = s.sql.text("""
-                DELETE FROM unresolved_commit_emails
-                WHERE email='{}'
-            """.format(email))
-
-            self.logger.info(f"Updating now resolved email {email}")
-
-            try:
-                self.db.execute(query)
-            except Exception as e:
-                self.logger.info(
-                    f"Deleting now resolved email failed with error: {e}")
+            
             
 
             # Use the email found in the commit data if api data is NULL
@@ -570,17 +557,6 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             # Get name from commit if not found by GitHub
             name_field = contributor['commit_name'] if 'commit_name' in contributor else contributor['name']
 
-            #Try to break into a debugger.
-            #pdb.set_trace()
-
-            #self.logger.info(f"Name field is : {name_field}")
-
-            #self.logger.info(f"User data is : {user_data}")
-
-            #self.logger.info(f"Tool data is : {self.tool_source}")
-            #self.logger.info(f"Tool data is : {self.tool_version}")
-
-            #self.logger.info(f"Tool data is : {self.data_source}")
 
             try:
 
@@ -642,6 +618,22 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                 self.logger.info(''.join(traceback.format_exception(None, e, e.__traceback__)))
                 self.logger.info(
                     f"Contributor id not able to be found in database despite the user_id existing. Something very wrong is happening. Error: {e}")
+            
+            # Resolve any unresolved emails if we get to this point.
+            # They will get added to the alias table later
+            # Do this last to absolutely make sure that the email was resolved before we remove it from the unresolved table.
+            query = s.sql.text("""
+                DELETE FROM unresolved_commit_emails
+                WHERE email='{}'
+            """.format(email))
+
+            self.logger.info(f"Updating now resolved email {email}")
+
+            try:
+                self.db.execute(query)
+            except Exception as e:
+                self.logger.info(
+                    f"Deleting now resolved email failed with error: {e}")
 
         # sql query used to find corresponding cntrb_id's of emails found in the contributor's table
         # i.e., if a contributor already exists, we use it!
