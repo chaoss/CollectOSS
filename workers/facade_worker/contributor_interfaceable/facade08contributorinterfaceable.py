@@ -436,7 +436,6 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         # Get all of the commit data's emails and names from the commit table that do not appear 
         # in the contributors table or the contributors_aliases table.
-        # TODO: Make this query also check over the alias table.
         new_contrib_sql = s.sql.text("""
                 SELECT DISTINCT
                     commits.cmt_author_name AS NAME,--commits.cmt_id AS id,
@@ -536,7 +535,6 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             self.logger.info("When searching for a contributor with info {}, we found the following users: {}\n".format(
                 contributor, match))
 
-            # Check if gh_login exists in contributors table TODO
 
             url = ("https://api.github.com/users/" + match['login'])
 
@@ -638,7 +636,6 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         # sql query used to find corresponding cntrb_id's of emails found in the contributor's table
         # i.e., if a contributor already exists, we use it!
-        # TODO: Make this query also check over the alias table.
         resolve_email_to_cntrb_id_sql = s.sql.text("""
             SELECT DISTINCT
                 cntrb_id,
@@ -663,23 +660,6 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                 AND commits.repo_id = :repo_id
         """)
 
-        # sql query to get emails from current repo that already exist in the contributor's table.
-
-        # existing_contrib_sql = s.sql.text("""
-        #  select distinct contributors.cntrb_email, commits.cmt_author_raw_email
-        #  from
-        #      contributors, commits
-        #  where
-        #      contributors.cntrb_email = commits.cmt_author_raw_email
-        #      AND commits.repo_id =:repo_id
-        #  union
-        #  select distinct contributors.cntrb_email, commits.cmt_committer_raw_email
-        #  from
-        #      contributors, commits
-        #  where
-        #      contributors.cntrb_email = commits.cmt_committer_raw_email
-        #      AND commits.repo_id =:repo_id
-        # """)
 
         # Get a list of dicts that contain the emails and cntrb_id's of commits that appear in the contributor's table.
         existing_cntrb_emails = json.loads(pd.read_sql(resolve_email_to_cntrb_id_sql, self.db, params={
