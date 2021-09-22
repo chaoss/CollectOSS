@@ -521,21 +521,8 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                 continue
             if login_json['total_count'] == 0:
                 self.logger.info(
-                    "Search query did not return any results, adding 1's to commits table...\n")
+                    "Search query did not return any results, adding commit's table remains null...\n")
 
-                emailToInsert = contributor['email_raw'] if 'email_raw' in contributor else contributor['email']
-
-                try:
-                    # At this point we know we can't do anything with the emails or the names provided so we make the cntrb_id foreign key 1
-                    self.db.execute(self.commits_table.update().where(
-                        self.commits_table.c.cmt_committer_email == emailToInsert
-                    ).values({
-                        'cmt_ght_author_id': 1
-                    }))
-
-                except Exception as e:
-                    self.logger.info(
-                        f"Could not enrich unresolvable email address with dummy data. Error: {e}")
                 continue
 
 
