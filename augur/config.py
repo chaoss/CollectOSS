@@ -269,12 +269,6 @@ default_config = {
                     "switch": 1,
                     "workers": 1
                 },
-                "contributor_interface":
-                {
-                  "port": contributor_interface_p,
-                  "switch": 0,
-                  "workers": 1
-                },
                 "insight_worker": {
                     "port": insight_worker_p,
                     "metrics": {"issues-new": "issues", "code-changes": "commit_count", "code-changes-lines": "added",
