@@ -161,7 +161,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         # Also stopped splitting per note above.
         url = 'https://api.github.com/search/users?q={}+in:email+type:user'.format(
             email)
-        self.logger.info(f"url is: {url}")
+        #self.logger.info(f"url is: {url}") redundant log statement.
         # (
         #    email.split('@')[0], email.split('@')[-1])
 
@@ -169,7 +169,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
     # Try to construct the best url to ping GitHub's API for a username given a full name.
     def create_endpoint_from_name(self, contributor):
-        self.logger.info(f"Trying to resolve contributor: {contributor}")
+        self.logger.info(f"Trying to resolve contributor from name: {contributor}")
 
         # Try to get the 'names' field if 'commit_name' field is not present in contributor data.
         name_field = 'cmt_author_name' if 'commit_name' in contributor else 'name'
@@ -274,7 +274,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             )
         ).fetchall()
 
-        self.logger.info(f"Contributor query: {contributor_table_data}")
+        #self.logger.info(f"Contributor query: {contributor_table_data}")
 
         # Handle potential failures
         if len(contributor_table_data) == 1:
@@ -288,7 +288,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                 f"There are more than one contributors in the table with gh_user_id={contributor['gh_user_id']}")
 
 
-        self.logger.info(f"Here is the alias email: {email}")
+        self.logger.info(f"Creating alias for email: {email}")
 
         # Insert a new alias that corresponds to where the contributor was found
         # use the email of the new alias for canonical_email if the api returns NULL
@@ -337,6 +337,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             return True
 
         # If not found, return false
+        self.logger.info(f"Contributor with email {email} not found in contributors table but can be added. Adding...")
         return False
 
     def update_contributor(self, cntrb, max_attempts=3):
@@ -552,7 +553,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             # Use the email found in the commit data if api data is NULL
             emailFromCommitData = contributor['email_raw'] if 'email_raw' in contributor else contributor['email']
 
-            self.logger.info(f"Email from commit data: {emailFromCommitData}")
+            self.logger.info(f"Successfully retrieved data from github for email: {emailFromCommitData}")
 
             # Get name from commit if not found by GitHub
             name_field = contributor['commit_name'] if 'commit_name' in contributor else contributor['name']
