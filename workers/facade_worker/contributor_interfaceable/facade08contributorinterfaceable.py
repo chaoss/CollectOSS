@@ -172,7 +172,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         self.logger.info(f"Trying to resolve contributor: {contributor}")
 
         # Try to get the 'names' field if 'commit_name' field is not present in contributor data.
-        name_field = 'commit_name' if 'commit_name' in contributor else 'name'
+        name_field = 'cmt_author_name' if 'commit_name' in contributor else 'name'
 
         # Deal with case where name is one word or none.
         if len(contributor[name_field].split()) < 2:
@@ -433,34 +433,40 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         self.logger.info(
             "Beginning process to insert contributors from facade commits for repo w entry info: {}\n".format(repo_id))
 
-        # Get all of the commit data's emails and names from the commit table that do not appear in the contributors table
+        # Get all of the commit data's emails and names from the commit table that do not appear 
+        # in the contributors table or the contributors_aliases table.
         # TODO: Make this query also check over the alias table.
         new_contrib_sql = s.sql.text("""
                 SELECT DISTINCT
                     commits.cmt_author_name AS NAME,--commits.cmt_id AS id,
-                    commits.cmt_author_raw_email AS email_raw
+                    commits.cmt_author_raw_email AS email_raw,
+                    'not_unresolved' as resolution_status
                 FROM
-                    commits
+                    commits 
                 WHERE
-                    commits.repo_id = :repo_id
-                    AND NOT EXISTS ( SELECT contributors.cntrb_email FROM contributors WHERE contributors.cntrb_email = commits.cmt_author_raw_email )
-                    AND (
-                        commits.cmt_author_name
-                        ) IN (
-                        SELECT
-                        C.cmt_author_name
-                    FROM
-                        commits AS C
-                    WHERE
-                        C.repo_id = :repo_id
-                        AND C.cmt_author_raw_email = commits.cmt_author_raw_email
-                    GROUP BY
-                        C.cmt_author_name
-                    )
+                    commits.repo_id = :repo_id 
+                    AND (NOT EXISTS ( SELECT contributors.cntrb_canonical FROM contributors WHERE contributors.cntrb_canonical = commits.cmt_author_raw_email ) 
+                    or NOT EXISTS ( SELECT contributors_aliases.alias_email from contributors_aliases where contributors_aliases.alias_email = commits.cmt_author_raw_email)
+                    AND ( commits.cmt_author_name ) IN ( SELECT C.cmt_author_name FROM commits AS C WHERE C.repo_id = 25440 GROUP BY C.cmt_author_name ))
                 GROUP BY
                     commits.cmt_author_name,
-                    commits.cmt_author_raw_email
-                order by name;
+                    commits.cmt_author_raw_email 
+                UNION
+                SELECT DISTINCT
+                    commits.cmt_author_name AS NAME,--commits.cmt_id AS id,
+                    commits.cmt_author_raw_email AS email_raw,
+                    'unresolved' as resolution_status
+                FROM
+                    commits 
+                WHERE
+                    commits.repo_id = :repo_id 
+                    AND EXISTS ( SELECT unresolved_commit_emails.email FROM unresolved_commit_emails WHERE unresolved_commit_emails.email = commits.cmt_author_raw_email ) 
+                    AND ( commits.cmt_author_name ) IN ( SELECT C.cmt_author_name FROM commits AS C WHERE C.repo_id = 25440 GROUP BY C.cmt_author_name )
+                GROUP BY
+                    commits.cmt_author_name,
+                    commits.cmt_author_raw_email 
+                ORDER BY
+                NAME
         """)
         new_contribs = json.loads(pd.read_sql(new_contrib_sql, self.db, params={
                                   'repo_id': repo_id}).to_json(orient="records"))
@@ -651,20 +657,30 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                     f"Contributor id not able to be found in database despite the user_id existing. Something very wrong is happening. Error: {e}")
 
         # sql query used to find corresponding cntrb_id's of emails found in the contributor's table
+        # i.e., if a contributor already exists, we use it!
         # TODO: Make this query also check over the alias table.
         resolve_email_to_cntrb_id_sql = s.sql.text("""
-          select distinct cntrb_id, contributors.cntrb_email, commits.cmt_author_raw_email
-          from
-              contributors, commits
-          where
-              contributors.cntrb_email = commits.cmt_author_raw_email
-          union
-          select distinct cntrb_id, contributors.cntrb_email, commits.cmt_committer_raw_email
-          from
-              contributors, commits
-          where
-              contributors.cntrb_email = commits.cmt_author_raw_email
-              AND commits.repo_id =:repo_id
+            SELECT DISTINCT
+                cntrb_id,
+                contributors.cntrb_canonical AS email,
+                commits.cmt_author_raw_email 
+            FROM
+                contributors,
+                commits 
+            WHERE
+                contributors.cntrb_canonical = commits.cmt_author_raw_email 
+                AND commits.repo_id = :repo_id 
+            UNION
+            SELECT DISTINCT
+                cntrb_id,
+                contributors_aliases.alias_email AS email,
+                commits.cmt_author_raw_email 
+            FROM
+                contributors_aliases,
+                commits 
+            WHERE
+                contributors_aliases.alias_email = commits.cmt_author_raw_email 
+                AND commits.repo_id = :repo_id
         """)
 
         # sql query to get emails from current repo that already exist in the contributor's table.
@@ -704,3 +720,18 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                 self.logger.info(f"Ran into problem when enriching commit data. Error: {e}")
 
         return
+    ''' Future method to try and get additional info for partially populated users. 
+    def get_information_from_commits(self, repo_id):
+
+        get_cntrb_info_from_commits = s.sql.text("""
+            SELECT DISTINCT
+                contributors.cntrb_login 
+            FROM
+                contributors 
+            WHERE
+                cntrb_canonical IS NULL
+        """)
+
+        Call the Github API for each of these people and fill in 
+            any missing information '''
+
