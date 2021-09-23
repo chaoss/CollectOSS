@@ -48,10 +48,10 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         self.config.update(self.augur_config.get_section("Logging"))
 
         # Get the same logging dir as the facade worker.
-        self.config.update({
-            # self.config['port_database'])
-            'id': "workers.{}.{}".format("contributor_interface", "226")
-        })
+        # self.config.update({
+        #     # self.config['port_database'])
+        #     'id': "workers.{}.{}".format("contributor_interface", "226")
+        # })
 
         # Getting stuck here.
         self.initialize_logging()
@@ -100,13 +100,13 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         # Create more complex sublogs in the logfile directory determined by the AugurLogging class
         server_logfile = logfile_dir + \
             '{}_{}_server.log'.format(
-                worker_type, self.config['port_database'])
+                worker_type, self.config['contributor_interface'])
         collection_logfile = logfile_dir + \
             '{}_{}_collection.log'.format(
-                worker_type, self.config['port_database'])
+                worker_type, self.config['contributor_interface'])
         collection_errorfile = logfile_dir + \
             '{}_{}_collection.err'.format(
-                worker_type, self.config['port_database'])
+                worker_type, self.config['contributor_interface'])
         self.config.update({
             'logfile_dir': logfile_dir,
             'server_logfile': server_logfile,
