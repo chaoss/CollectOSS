@@ -621,7 +621,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                         except Exception as e: 
                             self.logger.debug(f"PR comments, events, reviews, or nested data model failed on {e}. exception registered for pr_step {pr_steps}.")
                             stacker = traceback.format_exc()
-                            self.logger.debug(f"{stacker}") 
+                            self.logger.debug(f"{stacker}")
+                            pass  
                         finally: 
                             self.logger.debug("finished running through four models.")
 
