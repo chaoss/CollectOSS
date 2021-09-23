@@ -382,7 +382,7 @@ default_config = {
                     "workers": 1
                 },
                 "contributor_interface": {
-                    "port": contrib_interface_p 
+                    "port": contrib_interface_p,
                     "switch": 0,
                     "workers": 1
                 }
