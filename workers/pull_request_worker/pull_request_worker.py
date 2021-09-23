@@ -697,58 +697,66 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             self.logger.debug(f"PR comments data model failed on {e}. exception registered.")
             stacker = traceback.format_exc()
             self.logger.debug(f"{stacker}")
+            pass
+        finally:
+            try:
 
-        # PR MESSAGE REF TABLE
+                # PR MESSAGE REF TABLE
 
-        ''' FROM WORKER PERSISTENCE for REFERENCE
-            def enrich_data_primary_keys(
-            self, source_data, table, gh_merge_fields, augur_merge_fields, in_memory=False
-        ): 
+                ''' FROM WORKER PERSISTENCE for REFERENCE
+                    def enrich_data_primary_keys(
+                    self, source_data, table, gh_merge_fields, augur_merge_fields, in_memory=False
+                ): 
 
-        the gh_merge_fields are almost always direct from the source in the action map.
-            the augur_merge fields are the field names where augur persists the source values.
-            These are almost never (never) the primary keys on our table. They are the natural
-            keys at the source, I think, with some probability close to 1 (SPG 9/13/2021).
+                the gh_merge_fields are almost always direct from the source in the action map.
+                    the augur_merge fields are the field names where augur persists the source values.
+                    These are almost never (never) the primary keys on our table. They are the natural
+                    keys at the source, I think, with some probability close to 1 (SPG 9/13/2021).
 
-        SPG 9/15/2021: This seems method may be the source of duplicate inserts that seem like
-            they should not actually get run because we are specifying the natural key in the insert map.
-            I really don't completely understand what we are doing here.  '''
-
-
-        c_pk_source_comments = self.enrich_data_primary_keys(pr_comments['insert'],
-            self.message_table, comment_action_map['insert']['source'], comment_action_map['insert']['augur'])
-
-        self.write_debug_data(c_pk_source_comments, 'c_pk_source_comments')
-
-        self.logger.info(f"log of the length of c_pk_source_comments {len(c_pk_source_comments)}.")
+                SPG 9/15/2021: This seems method may be the source of duplicate inserts that seem like
+                    they should not actually get run because we are specifying the natural key in the insert map.
+                    I really don't completely understand what we are doing here.  '''
 
 
-        both_pk_source_comments = self.enrich_data_primary_keys(c_pk_source_comments,
-            self.pull_requests_table, ['issue_url'], ['pr_issue_url'])
+                c_pk_source_comments = self.enrich_data_primary_keys(pr_comments['insert'],
+                    self.message_table, comment_action_map['insert']['source'], comment_action_map['insert']['augur'])
 
-        self.write_debug_data(both_pk_source_comments, 'both_pk_source_comments')
+                self.write_debug_data(c_pk_source_comments, 'c_pk_source_comments')
 
-        pr_message_ref_insert = [
-            {
-                'pull_request_id': comment['pull_request_id'],
-                'msg_id': comment['msg_id'],
-                'pr_message_ref_src_comment_id': int(comment['id']),
-                'pr_message_ref_src_node_id': comment['node_id'],
-                'tool_source': self.tool_source,
-                'tool_version': self.tool_version,
-                'data_source': self.data_source,
-                'repo_id': self.repo_id
-            } for comment in both_pk_source_comments
-        ]
+                self.logger.info(f"log of the length of c_pk_source_comments {len(c_pk_source_comments)}.")
 
-        try:
 
-            self.bulk_insert(self.pull_request_message_ref_table, insert=pr_message_ref_insert,
-                unique_columns=comment_ref_action_map['insert']['augur'])
+                both_pk_source_comments = self.enrich_data_primary_keys(c_pk_source_comments,
+                    self.pull_requests_table, ['issue_url'], ['pr_issue_url'])
 
-        except Exception as e:
+                self.write_debug_data(both_pk_source_comments, 'both_pk_source_comments')
 
-            self.logger.info(f"bulk insert failed with: {e}.")
+                pr_message_ref_insert = [
+                    {
+                        'pull_request_id': comment['pull_request_id'],
+                        'msg_id': comment['msg_id'],
+                        'pr_message_ref_src_comment_id': int(comment['id']),
+                        'pr_message_ref_src_node_id': comment['node_id'],
+                        'tool_source': self.tool_source,
+                        'tool_version': self.tool_version,
+                        'data_source': self.data_source,
+                        'repo_id': self.repo_id
+                    } for comment in both_pk_source_comments
+                ]
+
+                self.bulk_insert(self.pull_request_message_ref_table, insert=pr_message_ref_insert,
+                    unique_columns=comment_ref_action_map['insert']['augur'])
+
+            except Exception as e:
+
+                self.logger.info(f"message inserts failed with: {e}.")
+                stacker = traceback.format_exc()
+                self.logger.debug(f"{stacker}")
+                pass
+
+            finally:
+
+                self.logger.info("Finished message insert section.")
 
     def pull_request_events_model(self, pk_source_prs=[]):
 
