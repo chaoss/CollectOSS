@@ -48,10 +48,14 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         self.config.update(self.augur_config.get_section("Logging"))
 
         # Get the same logging dir as the facade worker.
-        # self.config.update({
-        #     # self.config['port_database'])
-        #     'id': "workers.{}.{}".format("contributor_interface", "226")
-        # })
+
+        ci_port = self.augur_config.get_default_config()["Workers"]["contributor_interface"]["port"]
+
+        self.config.update({
+            # self.config['port_database'])
+            'id': "workers.{}.{}".format("contributor_interface", ci_port)
+        })
+
 
         # Getting stuck here.
         self.initialize_logging()
