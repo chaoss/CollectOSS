@@ -655,7 +655,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             }
         }
 
-        def pr_comments_insert(inc_pr_comments, comment_action_map)
+        def pr_comments_insert(inc_pr_comments, comment_action_map):
             #self.write_debug_data(pr_comments, 'pr_comments')
 
             inc_pr_comments['insert'] = self.text_clean(inc_pr_comments['insert'], 'body')
