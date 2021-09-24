@@ -318,6 +318,9 @@ class GitHubWorker(WorkerGitInterfaceable):
                 )
             except Exception as e:
                 self.logger.info(f"exception registered in enrich_data_primary_keys for message_ref issues table: {e}.. exception registered")
+                stacker = traceback.format_exc()
+                self.logger.debug(f"{stacker}")
+                pass 
 
             issue_message_ref_insert = [
                 {
@@ -339,6 +342,9 @@ class GitHubWorker(WorkerGitInterfaceable):
                 )
             except Exception as e:
                 self.logger.info(f"exception registered in bulk insert for issue_msg_ref_table: {e}.")
+                stacker = traceback.format_exc()
+                self.logger.debug(f"{stacker}")
+                pass
 
         # list to hold contributors needing insertion or update
         try:
@@ -369,6 +375,7 @@ class GitHubWorker(WorkerGitInterfaceable):
             self.logger.info(f"exception registered in paginate endpoint for issue comments: {e}")
             stacker = traceback.format_exc()
             self.logger.debug(f"{stacker}")
+            pass 
 
     def issue_events_model(self, pk_source_issues):
 
