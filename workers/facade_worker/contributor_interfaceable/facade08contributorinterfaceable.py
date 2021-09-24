@@ -47,10 +47,14 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         self.config = config
         self.config.update(self.augur_config.get_section("Logging"))
 
+        # create a random port instead of 226 
+        # SPG 9/24/2021
+        self.facade_com = randint(47000,47555)
+
         # Get the same logging dir as the facade worker.
         self.config.update({
             # self.config['port_database'])
-            'id': "workers.{}.{}".format("contributor_interface", "226")
+            'id': "workers.{}.{}".format("contributor_interface", self.facade_com)
         })
 
         # Getting stuck here.
@@ -100,13 +104,13 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         # Create more complex sublogs in the logfile directory determined by the AugurLogging class
         server_logfile = logfile_dir + \
             '{}_{}_server.log'.format(
-                worker_type, self.config['port_database'])
+                worker_type, self.facade_com)
         collection_logfile = logfile_dir + \
             '{}_{}_collection.log'.format(
-                worker_type, self.config['port_database'])
+                worker_type, self.facade_com)
         collection_errorfile = logfile_dir + \
             '{}_{}_collection.err'.format(
-                worker_type, self.config['port_database'])
+                worker_type, self.facade_com)
         self.config.update({
             'logfile_dir': logfile_dir,
             'server_logfile': server_logfile,
