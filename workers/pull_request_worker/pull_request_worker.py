@@ -709,7 +709,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
                         both_pk_source_comments = self.enrich_data_primary_keys(
                             c_pk_source_comments, self.pull_requests_table,
-                            comment_action_map['insert']['source'], comment_action_map['insert']['augur'])
+                            ['issue_url'], ['pr_issue_url'])
 
                         #self.write_debug_data(both_pk_source_comments, 'both_pk_source_comments')
                         self.logger.debug(f"length of both_pk_source_comments: {len(both_pk_source_comments)}")
