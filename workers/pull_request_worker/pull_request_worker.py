@@ -590,7 +590,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         if pk_source_prs:
             try:
-                self.pull_request_comments_model()
+                self.pull_request_comments_model(pk_source_prs)
                 self.logger.info(f"Pull request comments model.")
             except Exception as e: 
                 self.logger.debug(f"PR comments, events, reviews, or nested data model failed on {e}. exception registered for pr_step {pr_steps}.")
@@ -629,7 +629,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         self.register_task_completion(self.task_info, self.repo_id, 'pull_requests')
 
-    def pull_request_comments_model(self):
+    def pull_request_comments_model(self, pk_source_prs):
 
         comments_url = (
             f"https://api.github.com/repos/{self.owner}/{self.repo}/issues/comments?per_page=100"
@@ -655,7 +655,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             }
         }
 
-        def pr_comments_insert(inc_pr_comments, comment_action_map):
+        def pr_comments_insert(inc_pr_comments, comment_action_map, comment_ref_action_map):
             #self.write_debug_data(pr_comments, 'pr_comments')
 
             inc_pr_comments['insert'] = self.text_clean(inc_pr_comments['insert'], 'body')
@@ -761,7 +761,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 insertion_method=pr_comments_insert
             )
 
-            pr_comments_insert(pr_comments,comment_action_map)
+            pr_comments_insert(pr_comments,comment_action_map,comment_ref_action_map)
             self.logger.info(f"comments inserted for repo_id: {self.repo_id}")
             return 
         except Exception as e:
