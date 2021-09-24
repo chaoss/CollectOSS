@@ -730,7 +730,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                     self.pull_requests_table, ['issue_url'], ['pr_issue_url'])
 
                 self.write_debug_data(both_pk_source_comments, 'both_pk_source_comments')
-
+                self.logger.debug(f"length of both_pk_source_comments: {len(both_pk_source_comments)}")
                 pr_message_ref_insert = [
                     {
                         'pull_request_id': comment['pull_request_id'],
@@ -820,7 +820,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'data_source': self.data_source,
                 'pr_platform_event_id': int(event['id']),
                 'platform_id': self.platform_id,
-                'repo_id:': self.repo_id 
+                'repo_id': self.repo_id 
             } for event in pk_pr_events if event['actor'] is not None
         ]
         try: 
