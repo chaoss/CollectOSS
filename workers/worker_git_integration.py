@@ -286,7 +286,9 @@ class WorkerGitInterfaceable(Worker):
         # loop through data to test if it is already in the database
         for index, data in enumerate(source_data):
 
-            self.logger.info(f"Enriching {index} of {len(source_data)}")
+            #removed this log because it was generating a lot of data.
+            #self.logger.info(f"Enriching {index} of {len(source_data)}")
+            self.logger.debug(f"Enriching {len(source_data)} contributors.")
 
 
             user_unique_ids = []
@@ -300,13 +302,21 @@ class WorkerGitInterfaceable(Worker):
                     user_unique_ids.append(row['gh_user_id'])
                   except Exception as e:
                     self.logger.info(f"Error adding gh_user_id: {e}. Row: {row}")
+                    stacker = traceback.format_exc()
+                    self.logger.debug(f"{stacker}")
             except KeyError:
                 self.logger.info("Source data doesn't have user.id. Using node_id instead.")
+                stacker = traceback.format_exc()
+                self.logger.debug(f"{stacker}")
+                pass 
+            finally: 
                 for row in table_values_cntrb:
                   try:
                     user_unique_ids.append(row['gh_node_id'])
                   except Exception as e:
                     self.logger.info(f"Error adding gh_node_id: {e}. Row: {row}")
+                    stacker = traceback.format_exc()
+                    self.logger.debug(f"{stacker}")
 
 
             #self.logger.info(f"gh_user_ids: {gh_user_ids}")
