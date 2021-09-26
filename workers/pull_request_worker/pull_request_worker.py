@@ -593,7 +593,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 self.pull_request_comments_model(pk_source_prs)
                 self.logger.info(f"Pull request comments model.")
             except Exception as e: 
-                self.logger.debug(f"PR comments, events, reviews, or nested data model failed on {e}. exception registered for pr_step {pr_steps}.")
+                self.logger.debug(f"PR comments model failed on {e}. exception registered.")
                 stacker = traceback.format_exc()
                 self.logger.debug(f"{stacker}") 
                 pass
@@ -602,7 +602,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                     self.pull_request_events_model(pk_source_prs)
                     self.logger.info(f"Pull request events model.")
                 except Exception as e: 
-                    self.logger.debug(f"PR comments, events, reviews, or nested data model failed on {e}. exception registered for pr_step {pr_steps}.")
+                    self.logger.debug(f"PR events model failed on {e}. exception registered for pr_step.")
                     stacker = traceback.format_exc()
                     self.logger.debug(f"{stacker}")  
                     pass 
@@ -611,7 +611,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                         self.pull_request_reviews_model(pk_source_prs)
                         self.logger.info(f"Pull request reviews model.")
                     except Exception as e: 
-                        self.logger.debug(f"PR comments, events, reviews, or nested data model failed on {e}. exception registered for pr_step {pr_steps}.")
+                        self.logger.debug(f"PR reviews model failed on {e}. exception registered for pr_step.")
                         stacker = traceback.format_exc()
                         self.logger.debug(f"{stacker}")  
                         pass 
@@ -620,7 +620,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                             self.pull_request_nested_data_model(pk_source_prs)
                             self.logger.info(f"Pull request nested data model.")
                         except Exception as e: 
-                            self.logger.debug(f"PR comments, events, reviews, or nested data model failed on {e}. exception registered for pr_step {pr_steps}.")
+                            self.logger.debug(f"PR nested model failed on {e}. exception registered for pr_step.")
                             stacker = traceback.format_exc()
                             self.logger.debug(f"{stacker}")
                             pass  

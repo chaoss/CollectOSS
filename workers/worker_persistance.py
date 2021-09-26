@@ -928,7 +928,17 @@ class Persistant():
             except ValueError:
                 # columns already added (happens if trying to expand the same column twice)
                 # TODO: Catch this before by only looping unique prefixs?
+                stacker = traceback.format_exc()
+                self.logger.debug(f"{stacker}")
                 pass
+            except Exception as e:
+                self.logger.debug(f"Looking for nan user error: {e}.") 
+                stacker = traceback.format_exc()
+                self.logger.debug(f"{stacker}")
+                pass 
+            finally: 
+                self.logger.debug(f"exception registered in _add_nested_columns.")
+
 
         return df
 
