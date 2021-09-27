@@ -71,13 +71,8 @@ class FacadeWorker(Worker):
         self.logger.info("Trying to create the ContributorInterface...")
         #Define interface to GitHub as an attribute
         self.logger.info(f"Config passed is: {str(self.config)}")
-        try:
+        self.github_interface = ContributorInterfaceable(config=self.config)
 
-            self.github_interface = ContributorInterfaceable(config=self.config)
-
-        except Exception as e: 
-            self.logger.debug(f"contributor interface failed with {e}")
-        
         self.logger.info("created interface")
 
         self.tool_source = '\'Facade Worker\''
