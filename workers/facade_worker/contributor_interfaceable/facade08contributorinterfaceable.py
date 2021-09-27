@@ -51,10 +51,14 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         # SPG 9/24/2021
         self.facade_com = randint(47000,47555)
 
+        contrib_port = self.facade_com
+
+        self.logger.debug(f"Contributor port is {contrib_port}.")
+
         # Get the same logging dir as the facade worker.
         self.config.update({
             # self.config['port_database'])
-            'id': "workers.{}.{}".format("contributor_interface", self.facade_com)
+            'id': "workers.{}.{}".format("contributor_interface", contrib_port)
         })
 
         # Getting stuck here.
@@ -89,6 +93,8 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             format_string = AugurLogging.verbose_format_string
         else:
             format_string = AugurLogging.simple_format_string
+
+        format_string = AugurLogging.verbose_format_string 
 
         # Use stock python formatter for stdout
         formatter = Formatter(fmt=format_string)
