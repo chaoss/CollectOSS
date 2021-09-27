@@ -321,7 +321,7 @@ def git_repo_updates(cfg):
 
                 remotedefault = remotedefault.decode()
 
-                getcurrentbranch = ("git -C %s%s/%s%s branch"
+                getcurrentbranch = ("git -C %s%s/%s%s branch | sed -n '/HEAD branch/s/.*: //p'"
                     % (cfg.repo_base_directory,row[1],row[4],row[3]))
 
                 return_code_local = subprocess.Popen([getcurrentbranch],stdout=subprocess.PIPE,shell=True).wait()
