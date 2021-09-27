@@ -123,6 +123,7 @@ class FacadeWorker(Worker):
         """
         try: 
             # self.initialize_logging() # need to initialize logging again in child process cause multiprocessing
+            pass 
         except Exception as e: 
             self.logger.debug(f"{e}. logging failed.")
 
