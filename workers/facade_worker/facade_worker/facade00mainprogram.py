@@ -73,7 +73,7 @@ class FacadeWorker(Worker):
         self.logger.info(f"Config passed is: {str(self.config)}")
         try:
 
-            self.github_interface = ContributorInterfaceable(self.config)
+            self.github_interface = ContributorInterfaceable(config=self.config)
 
         except Exception as e: 
             self.logger.debug(f"contributor interface failed with {e}")
