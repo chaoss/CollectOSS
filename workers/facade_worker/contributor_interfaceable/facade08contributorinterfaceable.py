@@ -33,6 +33,8 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         # Define the data tables that we are needing
         # Define the tables needed to insert, update, or delete on
 
+        worker_type = "contributor_interface"
+
         self.data_tables = ['contributors', 'pull_requests', 'commits',
                             'pull_request_assignees', 'pull_request_events', 'pull_request_labels',
                             'pull_request_message_ref', 'pull_request_meta', 'pull_request_repo',
@@ -61,6 +63,8 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         #     # self.config['port_database'])
         #     'id': "workers.{}.{}".format("contributor_interface", contrib_port)
         # })
+
+        #self.config.update(self.augur_config.get_section(["Workers"]["contributor_interface"])
 
         # Getting stuck here.
         self.initialize_logging()
