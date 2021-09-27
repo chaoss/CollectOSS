@@ -38,7 +38,7 @@ from facade_worker.facade07rebuildcache import nuke_affiliations, fill_empty_aff
 
 #from contributor_interfaceable.facade08contributorinterfaceable import ContributorInterfaceable
 
-import contributor_interfaceable.facade08contributorinterfaceable as ContributorInterfaceable
+import contributor_interfaceable.contributor_interface as ContributorInterfaceable
 
 from workers.util import read_config
 from workers.worker_base import Worker
