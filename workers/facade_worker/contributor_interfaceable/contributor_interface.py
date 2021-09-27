@@ -65,7 +65,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         # })
         try: 
 
-            self.config.update(self.augur_config.get_section(["Workers"]["contributor_interface"]))
+            self.config.update(self.augur_config.get_section(["Workers"],["contributor_interface"]))
 
         except Exception as e:
 
