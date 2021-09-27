@@ -51,15 +51,15 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         # create a random port instead of 226 
         # SPG 9/24/2021
-        self.facade_com = randint(47000,47555)
+        # self.facade_com = randint(47000,47555)
 
-        contrib_port = self.facade_com
+        # contrib_port = self.facade_com
 
         # Get the same logging dir as the facade worker.
-        self.config.update({
-            # self.config['port_database'])
-            'id': "workers.{}.{}".format("contributor_interface", contrib_port)
-        })
+        # self.config.update({
+        #     # self.config['port_database'])
+        #     'id': "workers.{}.{}".format("contributor_interface", contrib_port)
+        # })
 
         # Getting stuck here.
         self.initialize_logging()
