@@ -1025,7 +1025,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'cntrb_id': comment['cntrb_id'],
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
-                'data_source': self.data_source,
+                'data_source': 'pull_request_reviews model',
                 'repo_id': self.repo_id,
                 'platform_msg_id': int(comment['id']),
                 'platform_node_id': comment['node_id']
@@ -1079,7 +1079,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'pr_review_msg_line': comment['line'],
                 'pr_review_msg_original_line': comment['original_line'],
                 'pr_review_msg_side': comment['side'],
-                'tool_source': self.tool_source,
+                'tool_source': 'pull_request_reviews model',
                 'tool_version': self.tool_version,
                 'data_source': self.data_source,
                 'repo_id': self.repo_id
