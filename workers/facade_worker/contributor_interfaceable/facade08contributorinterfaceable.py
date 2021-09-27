@@ -5,6 +5,8 @@ from logging import FileHandler, Formatter, StreamHandler, log
 from workers.worker_git_integration import WorkerGitInterfaceable
 from workers.util import read_config
 from psycopg2.errors import UniqueViolation
+from random import randint
+
 
 #Debugger
 import traceback
