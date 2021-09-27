@@ -65,8 +65,6 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         # Getting stuck here.
         self.initialize_logging()
 
-        self.logger.debug(f"Contributor port is {contrib_port}.")
-
         # self.logger = logging.getLogger(self.config["id"])
         # Test logging after init.
         self.logger.info(
@@ -80,6 +78,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         # Get config passed from the facade worker.
         self.initialize_database_connections()
         self.logger.info("Facade worker git interface database set up")
+        self.logger.info(f"configuration passed is: {str(self.config)}.")
 
         # set up the max amount of requests this interface is allowed to make before sleeping for 2 minutes
         self.special_rate_limit = special_rate_limit
