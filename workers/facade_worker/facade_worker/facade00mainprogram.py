@@ -115,15 +115,14 @@ class FacadeWorker(Worker):
             # Catch databases which existed before database versioning
             self.current_db = -1
 
-        self.logger.info("initialed database.")
+        self.logger.info("initialized database.")
 
     def collect(self):
         """ Function to process each entry in the worker's task queue
         Determines what action to take based off the message type
         """
         try: 
-            # self.initialize_logging() # need to initialize logging again in child process cause multiprocessing
-            pass 
+            self.initialize_logging() # need to initialize logging again in child process cause multiprocessing
         except Exception as e: 
             self.logger.debug(f"{e}. logging failed.")
 
