@@ -115,13 +115,13 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         # Create more complex sublogs in the logfile directory determined by the AugurLogging class
         server_logfile = logfile_dir + \
             '{}_{}_server.log'.format(
-                worker_type, str(log_port))
+                worker_type, self.config['port_database'])
         collection_logfile = logfile_dir + \
             '{}_{}_collection.log'.format(
-                worker_type, str(log_port))
+                worker_type, self.config['port_database'])
         collection_errorfile = logfile_dir + \
             '{}_{}_collection.err'.format(
-                worker_type, str(log_port))
+                worker_type, self.config['port_database'])
         self.config.update({
             'logfile_dir': logfile_dir,
             'server_logfile': server_logfile,
