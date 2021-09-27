@@ -583,16 +583,17 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             self.logger.debug(f"Pull Requests model failed with {e}.")
             stacker = traceback.format_exc()
             self.logger.debug(f"{stacker}")
+            pass 
 
 
         #self.write_debug_data(pk_source_prs, 'pk_source_prs')
 
         if pk_source_prs:
             try:
-                self.pull_request_comments_model()
+                self.pull_request_comments_model(pk_source_prs)
                 self.logger.info(f"Pull request comments model.")
             except Exception as e: 
-                self.logger.debug(f"PR comments, events, reviews, or nested data model failed on {e}. exception registered for pr_step {pr_steps}.")
+                self.logger.debug(f"PR comments model failed on {e}. exception registered.")
                 stacker = traceback.format_exc()
                 self.logger.debug(f"{stacker}") 
                 pass
@@ -601,7 +602,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                     self.pull_request_events_model(pk_source_prs)
                     self.logger.info(f"Pull request events model.")
                 except Exception as e: 
-                    self.logger.debug(f"PR comments, events, reviews, or nested data model failed on {e}. exception registered for pr_step {pr_steps}.")
+                    self.logger.debug(f"PR events model failed on {e}. exception registered for pr_step.")
                     stacker = traceback.format_exc()
                     self.logger.debug(f"{stacker}")  
                     pass 
@@ -610,7 +611,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                         self.pull_request_reviews_model(pk_source_prs)
                         self.logger.info(f"Pull request reviews model.")
                     except Exception as e: 
-                        self.logger.debug(f"PR comments, events, reviews, or nested data model failed on {e}. exception registered for pr_step {pr_steps}.")
+                        self.logger.debug(f"PR reviews model failed on {e}. exception registered for pr_step.")
                         stacker = traceback.format_exc()
                         self.logger.debug(f"{stacker}")  
                         pass 
@@ -619,7 +620,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                             self.pull_request_nested_data_model(pk_source_prs)
                             self.logger.info(f"Pull request nested data model.")
                         except Exception as e: 
-                            self.logger.debug(f"PR comments, events, reviews, or nested data model failed on {e}. exception registered for pr_step {pr_steps}.")
+                            self.logger.debug(f"PR nested model failed on {e}. exception registered for pr_step.")
                             stacker = traceback.format_exc()
                             self.logger.debug(f"{stacker}")
                             pass  
@@ -628,7 +629,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         self.register_task_completion(self.task_info, self.repo_id, 'pull_requests')
 
-    def pull_request_comments_model(self):
+    def pull_request_comments_model(self, pk_source_prs):
 
         comments_url = (
             f"https://api.github.com/repos/{self.owner}/{self.repo}/issues/comments?per_page=100"
@@ -654,109 +655,122 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             }
         }
 
-        # TODO: add relational table so we can include a where_clause here
-        pr_comments = self.paginate_endpoint(
-            comments_url, action_map=comment_action_map, table=self.message_table
-        )
+        def pr_comments_insert(inc_pr_comments, comment_action_map, comment_ref_action_map):
+            #self.write_debug_data(pr_comments, 'pr_comments')
 
-        #self.write_debug_data(pr_comments, 'pr_comments')
+            inc_pr_comments['insert'] = self.text_clean(inc_pr_comments['insert'], 'body')
+            #This is sending empty data to enrich_cntrb_id, fix with check
+            if len(inc_pr_comments['insert']) > 0:
+                inc_pr_comments['insert'] = self.enrich_cntrb_id(
+                    inc_pr_comments['insert'], 'user.login', action_map_additions={
+                        'insert': {
+                            'source': ['user.node_id'],
+                            'augur': ['gh_node_id']
+                        }
+                    }, prefix='user.'
+                )
+            else:
+                self.logger.info("Contributor enrichment is not needed, no inserts in action map.")
 
-        pr_comments['insert'] = self.text_clean(pr_comments['insert'], 'body')
-        #This is sending empty data to enrich_cntrb_id, fix with check
-        if len(pr_comments['insert']) > 0:
-            pr_comments['insert'] = self.enrich_cntrb_id(
-                pr_comments['insert'], 'user.login', action_map_additions={
-                    'insert': {
-                        'source': ['user.node_id'],
-                        'augur': ['gh_node_id']
-                    }
-                }, prefix='user.'
-            )
-        else:
-            self.logger.info("Contributor enrichment is not needed, no inserts in action map.")
-
-        pr_comments_insert = [
-            {
-                'pltfrm_id': self.platform_id,
-                'msg_text': comment['body'].encode(encoding='UTF-8',errors='backslashreplace').decode(encoding='UTF-8',errors='ignore') if (
-                    comment['body']
-                ) else None,
-                'msg_timestamp': comment['created_at'],
-                'cntrb_id': comment['cntrb_id'],
-                'tool_source': self.tool_source,
-                'tool_version': self.tool_version,
-                'data_source': self.data_source, 
-                'repo_id': self.repo_id,
-                'platform_msg_id': int(comment['id']),
-                'platform_node_id': comment['node_id']
-            } for comment in pr_comments['insert']
-        ]
-        try:
-            self.bulk_insert(self.message_table, insert=pr_comments_insert, unique_columns=comment_action_map['insert']['augur'])
-        except Exception as e: 
-            self.logger.debug(f"PR comments data model failed on {e}. exception registered.")
-            stacker = traceback.format_exc()
-            self.logger.debug(f"{stacker}")
-            pass
-        finally:
+            pr_comments_insert = [
+                {
+                    'pltfrm_id': self.platform_id,
+                    'msg_text': comment['body'].encode(encoding='UTF-8',errors='backslashreplace').decode(encoding='UTF-8',errors='ignore') if (
+                        comment['body']
+                    ) else None,
+                    'msg_timestamp': comment['created_at'],
+                    'cntrb_id': comment['cntrb_id'],
+                    'tool_source': self.tool_source,
+                    'tool_version': self.tool_version,
+                    'data_source': self.data_source, 
+                    'repo_id': self.repo_id,
+                    'platform_msg_id': int(comment['id']),
+                    'platform_node_id': comment['node_id']
+                } for comment in inc_pr_comments['insert']
+            ]
             try:
-
-                # PR MESSAGE REF TABLE
-
-                ''' FROM WORKER PERSISTENCE for REFERENCE
-                    def enrich_data_primary_keys(
-                    self, source_data, table, gh_merge_fields, augur_merge_fields, in_memory=False
-                ): 
-
-                the gh_merge_fields are almost always direct from the source in the action map.
-                    the augur_merge fields are the field names where augur persists the source values.
-                    These are almost never (never) the primary keys on our table. They are the natural
-                    keys at the source, I think, with some probability close to 1 (SPG 9/13/2021).
-
-                SPG 9/15/2021: This seems method may be the source of duplicate inserts that seem like
-                    they should not actually get run because we are specifying the natural key in the insert map.
-                    I really don't completely understand what we are doing here.  '''
-
-
-                c_pk_source_comments = self.enrich_data_primary_keys(pr_comments['insert'],
-                    self.message_table, comment_action_map['insert']['source'], comment_action_map['insert']['augur'])
-
-                self.write_debug_data(c_pk_source_comments, 'c_pk_source_comments')
-
-                self.logger.info(f"log of the length of c_pk_source_comments {len(c_pk_source_comments)}.")
-
-
-                both_pk_source_comments = self.enrich_data_primary_keys(c_pk_source_comments,
-                    self.pull_requests_table, ['issue_url'], ['pr_issue_url'])
-
-                self.write_debug_data(both_pk_source_comments, 'both_pk_source_comments')
-                self.logger.debug(f"length of both_pk_source_comments: {len(both_pk_source_comments)}")
-                pr_message_ref_insert = [
-                    {
-                        'pull_request_id': comment['pull_request_id'],
-                        'msg_id': comment['msg_id'],
-                        'pr_message_ref_src_comment_id': int(comment['id']),
-                        'pr_message_ref_src_node_id': comment['node_id'],
-                        'tool_source': self.tool_source,
-                        'tool_version': self.tool_version,
-                        'data_source': self.data_source,
-                        'repo_id': self.repo_id
-                    } for comment in both_pk_source_comments
-                ]
-
-                self.bulk_insert(self.pull_request_message_ref_table, insert=pr_message_ref_insert,
-                    unique_columns=comment_ref_action_map['insert']['augur'])
-
-            except Exception as e:
-
-                self.logger.info(f"message inserts failed with: {e}.")
+                self.bulk_insert(self.message_table, insert=pr_comments_insert, 
+                    unique_columns=comment_action_map['insert']['augur'])
+            except Exception as e: 
+                self.logger.debug(f"PR comments data model failed on {e}. exception registered.")
                 stacker = traceback.format_exc()
                 self.logger.debug(f"{stacker}")
                 pass
-
             finally:
+                    try:
+                        c_pk_source_comments = self.enrich_data_primary_keys(
+                            inc_pr_comments['insert'], self.message_table, 
+                            comment_action_map['insert']['source'], 
+                            comment_action_map['insert']['augur'])
 
-                self.logger.info("Finished message insert section.")
+                        self.write_debug_data(c_pk_source_comments, 'c_pk_source_comments')
+
+                        self.logger.info(f"log of the length of c_pk_source_comments {len(c_pk_source_comments)}.")
+
+                        both_pk_source_comments = self.enrich_data_primary_keys(
+                            c_pk_source_comments, self.pull_requests_table,
+                            ['issue_url'], ['pr_issue_url'])
+
+                        #self.write_debug_data(both_pk_source_comments, 'both_pk_source_comments')
+                        self.logger.debug(f"length of both_pk_source_comments: {len(both_pk_source_comments)}")
+                        pr_message_ref_insert = [
+                            {
+                                'pull_request_id': comment['pull_request_id'],
+                                'msg_id': comment['msg_id'],
+                                'pr_message_ref_src_comment_id': int(comment['id']),
+                                'pr_message_ref_src_node_id': comment['node_id'],
+                                'tool_source': self.tool_source,
+                                'tool_version': self.tool_version,
+                                'data_source': self.data_source,
+                                'repo_id': self.repo_id
+                            } for comment in both_pk_source_comments
+                        ]
+
+                        self.bulk_insert(self.pull_request_message_ref_table, insert=pr_message_ref_insert,
+                            unique_columns=comment_ref_action_map['insert']['augur'])
+
+                    except Exception as e:
+
+                        self.logger.info(f"message inserts failed with: {e}.")
+                        stacker = traceback.format_exc()
+                        self.logger.debug(f"{stacker}")
+                        pass
+
+                    finally:
+
+                        self.logger.info("Finished message insert section.")
+
+        # TODO: add relational table so we can include a where_clause here
+        try: 
+            pr_comments = self.paginate_endpoint(
+                comments_url, action_map=comment_action_map, table=self.message_table,
+                where_clause=self.message_table.c.msg_id.in_(
+                    [
+                        msg_row[0] for msg_row in self.db.execute(
+                            s.sql.select(
+                                [self.pull_request_message_ref_table.c.msg_id]
+                            ).where(
+                                self.pull_request_message_ref_table.c.pull_request_id.in_(
+                                    set(pd.DataFrame(pk_source_prs)['pull_request_id'])
+                                )
+                            )
+                        ).fetchall()
+                    ]
+                ),
+                stagger=True,
+                insertion_method=pr_comments_insert
+            )
+
+            pr_comments_insert(pr_comments,comment_action_map,comment_ref_action_map)
+            self.logger.info(f"comments inserted for repo_id: {self.repo_id}")
+            return 
+        except Exception as e:
+            self.logger.info(f"exception registered in paginate endpoint for issue comments: {e}")
+            stacker = traceback.format_exc()
+            self.logger.debug(f"{stacker}")
+            pass 
+        finally: 
+            self.logger.debug(f"Pull request messages and message refs exception registered for {self.repo_id}")
 
     def pull_request_events_model(self, pk_source_prs=[]):
 

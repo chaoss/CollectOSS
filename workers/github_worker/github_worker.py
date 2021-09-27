@@ -206,18 +206,23 @@ class GitHubWorker(WorkerGitInterfaceable):
                 self.logger.info(f"issue comments model failed on {e}. exception registered")
                 stacker = traceback.format_exc()
                 self.logger.debug(f"{stacker}")
-            try:
-                issue_events_all = self.issue_events_model(pk_source_issues)
-            except Exception as e:
-                self.logger.info(f"issue events model failed on {e}. exception registered")
-                stacker = traceback.format_exc()
-                self.logger.debug(f"{stacker}")
-            try:
-                self.issue_nested_data_model(pk_source_issues, issue_events_all)
-            except Exception as e:
-                self.logger.info(f"issue nested model failed on {e}. exception registered")
-                stacker = traceback.format_exc()
-                self.logger.debug(f"{stacker}")
+                pass
+            finally: 
+                    try:
+                        issue_events_all = self.issue_events_model(pk_source_issues)
+                    except Exception as e:
+                        self.logger.info(f"issue events model failed on {e}. exception registered")
+                        stacker = traceback.format_exc()
+                        self.logger.debug(f"{stacker}")
+                        pass
+                    finally: 
+                            try:
+                                self.issue_nested_data_model(pk_source_issues, issue_events_all)
+                            except Exception as e:
+                                self.logger.info(f"issue nested model failed on {e}. exception registered")
+                                stacker = traceback.format_exc()
+                                self.logger.debug(f"{stacker}")
+                                pass 
 
         # Register this task as completed
         self.register_task_completion(entry_info, self.repo_id, 'issues')
@@ -368,6 +373,7 @@ class GitHubWorker(WorkerGitInterfaceable):
             )
 
             issue_comments_insert(issue_comments,comment_action_map)
+            self.logger.info(f"comments inserted for repo_id: {self.repo_id}")
             #self.logger.debug(f"Contents of issue_comments: {issue_comments}.")
             return
 

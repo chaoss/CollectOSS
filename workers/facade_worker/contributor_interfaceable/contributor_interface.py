@@ -5,6 +5,8 @@ from logging import FileHandler, Formatter, StreamHandler, log
 from workers.worker_git_integration import WorkerGitInterfaceable
 from workers.util import read_config
 from psycopg2.errors import UniqueViolation
+from random import randint
+
 
 #Debugger
 import traceback
@@ -30,6 +32,9 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
     def __init__(self, config={}, special_rate_limit=10):
         # Define the data tables that we are needing
         # Define the tables needed to insert, update, or delete on
+
+        worker_type = "contributor_interface"
+
         self.data_tables = ['contributors', 'pull_requests', 'commits',
                             'pull_request_assignees', 'pull_request_events', 'pull_request_labels',
                             'pull_request_message_ref', 'pull_request_meta', 'pull_request_repo',
@@ -47,14 +52,29 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         self.config = config
         self.config.update(self.augur_config.get_section("Logging"))
 
+        # create a random port instead of 226 
+        # SPG 9/24/2021
+        # self.facade_com = randint(47000,47555)
+
+        # contrib_port = self.facade_com
+
         # Get the same logging dir as the facade worker.
-        self.config.update({
-            # self.config['port_database'])
-            'id': "workers.{}.{}".format("contributor_interface", "226")
-        })
+        # self.config.update({
+        #     # self.config['port_database'])
+        #     'id': "workers.{}.{}".format("contributor_interface", contrib_port)
+        # })
+        try: 
+
+            self.config.update(self.augur_config.get_section(["Workers"],["contributor_interface"]))
+
+        except Exception as e:
+
+            self.logger.debug(f"Exception in initialization is: {e}.")
+
 
         # Getting stuck here.
         self.initialize_logging()
+
         # self.logger = logging.getLogger(self.config["id"])
         # Test logging after init.
         self.logger.info(
@@ -68,12 +88,15 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         # Get config passed from the facade worker.
         self.initialize_database_connections()
         self.logger.info("Facade worker git interface database set up")
+        self.logger.info(f"configuration passed is: {str(self.config)}.")
 
         # set up the max amount of requests this interface is allowed to make before sleeping for 2 minutes
         self.special_rate_limit = special_rate_limit
         self.recent_requests_made = 0
 
         self.logger.info("Facade now has contributor interface.")
+
+        return self 
 
     def initialize_logging(self):
         # Get the log level in upper case from the augur config's logging section.
@@ -85,6 +108,10 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             format_string = AugurLogging.verbose_format_string
         else:
             format_string = AugurLogging.simple_format_string
+
+        format_string = AugurLogging.verbose_format_string 
+
+        log_port = self.facade_com
 
         # Use stock python formatter for stdout
         formatter = Formatter(fmt=format_string)
@@ -144,7 +171,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         self.logger = logger
 
         self.tool_source = '\'Facade Worker\'s Contributor Interface\''
-        self.tool_version = '\'0.1.0\''
+        self.tool_version = '\'0.2.0\''
         self.data_source = '\'Git Log\''
 
     # Try to construct the best url to ping GitHub's API for a username given an email.

@@ -108,31 +108,32 @@ class WorkerGitInterfaceable(Worker):
         if 'email' in contributor:
             email = contributor['email']
 
-
+        ''' Because a user name nan exists, we needed to cast any string where their 
+            user name appears as a string, because otherwise python was casting it as a float '''
         if platform == 'github':
             cntrb = {
-                'cntrb_login': contributor['login'] if 'login' in contributor else None,
-                'cntrb_email': contributor['email'] if 'email' in contributor else None,
-                'cntrb_company': contributor['company'] if 'company' in contributor else None,
-                'cntrb_location': contributor['location'] if 'location' in contributor else None,
+                'cntrb_login': str(contributor['login']) if 'login' in contributor else None,
+                'cntrb_email': str(contributor['email']) if 'email' in contributor else None,
+                'cntrb_company': str(contributor['company']) if 'company' in contributor else None,
+                'cntrb_location': str(contributor['location']) if 'location' in contributor else None,
                 'cntrb_created_at': contributor['created_at'] if 'created_at' in contributor else None,
                 'cntrb_canonical': None,
                 'gh_user_id': contributor['id'] if 'id' in contributor else None,
-                'gh_login': contributor['login'] if 'login' in contributor else None,
-                'gh_url': contributor['url'] if 'url' in contributor else None,
-                'gh_html_url': contributor['html_url'] if 'html_url' in contributor else None,
+                'gh_login': str(contributor['login']) if 'login' in contributor else None,
+                'gh_url': str(contributor['url']) if 'url' in contributor else None,
+                'gh_html_url': str(contributor['html_url']) if 'html_url' in contributor else None,
                 'gh_node_id': contributor['node_id'] if 'node_id' in contributor else None,
-                'gh_avatar_url': contributor['avatar_url'] if 'avatar_url' in contributor else None,
-                'gh_gravatar_id': contributor['gravatar_id'] if 'gravatar_id' in contributor else None,
-                'gh_followers_url': contributor['followers_url'] if 'followers_url' in contributor else None,
-                'gh_following_url': contributor['following_url'] if 'following_url' in contributor else None,
-                'gh_gists_url': contributor['gists_url'] if 'gists_url' in contributor else None,
-                'gh_starred_url': contributor['starred_url'] if 'starred_url' in contributor else None,
-                'gh_subscriptions_url': contributor['subscriptions_url'] if 'subscriptions_url' in contributor else None,
-                'gh_organizations_url': contributor['organizations_url'] if 'organizations_url' in contributor else None,
-                'gh_repos_url': contributor['repos_url'] if 'repos_url' in contributor else None,
-                'gh_events_url': contributor['events_url'] if 'events_url' in contributor else None,
-                'gh_received_events_url': contributor['received_events_url'] if 'received_events_url' in contributor else None,
+                'gh_avatar_url': str(contributor['avatar_url']) if 'avatar_url' in contributor else None,
+                'gh_gravatar_id': str(contributor['gravatar_id']) if 'gravatar_id' in contributor else None,
+                'gh_followers_url': str(contributor['followers_url']) if 'followers_url' in contributor else None,
+                'gh_following_url': str(contributor['following_url']) if 'following_url' in contributor else None,
+                'gh_gists_url': str(contributor['gists_url']) if 'gists_url' in contributor else None,
+                'gh_starred_url': str(contributor['starred_url']) if 'starred_url' in contributor else None,
+                'gh_subscriptions_url': str(contributor['subscriptions_url']) if 'subscriptions_url' in contributor else None,
+                'gh_organizations_url': str(contributor['organizations_url']) if 'organizations_url' in contributor else None,
+                'gh_repos_url': str(contributor['repos_url']) if 'repos_url' in contributor else None,
+                'gh_events_url': str(contributor['events_url']) if 'events_url' in contributor else None,
+                'gh_received_events_url': str(contributor['received_events_url']) if 'received_events_url' in contributor else None,
                 'gh_type': contributor['type'] if 'type' in contributor else None,
                 'gh_site_admin': contributor['site_admin'] if 'site_admin' in contributor else None,
                 'tool_source': self.tool_source,
@@ -285,7 +286,9 @@ class WorkerGitInterfaceable(Worker):
         # loop through data to test if it is already in the database
         for index, data in enumerate(source_data):
 
-            self.logger.info(f"Enriching {index} of {len(source_data)}")
+            #removed this log because it was generating a lot of data.
+            #self.logger.info(f"Enriching {index} of {len(source_data)}")
+            self.logger.debug(f"Enriching {len(source_data)} contributors.")
 
 
             user_unique_ids = []
@@ -299,13 +302,21 @@ class WorkerGitInterfaceable(Worker):
                     user_unique_ids.append(row['gh_user_id'])
                   except Exception as e:
                     self.logger.info(f"Error adding gh_user_id: {e}. Row: {row}")
+                    stacker = traceback.format_exc()
+                    self.logger.debug(f"{stacker}")
             except KeyError:
                 self.logger.info("Source data doesn't have user.id. Using node_id instead.")
+                stacker = traceback.format_exc()
+                self.logger.debug(f"{stacker}")
+                pass 
+            finally: 
                 for row in table_values_cntrb:
                   try:
                     user_unique_ids.append(row['gh_node_id'])
                   except Exception as e:
                     self.logger.info(f"Error adding gh_node_id: {e}. Row: {row}")
+                    stacker = traceback.format_exc()
+                    self.logger.debug(f"{stacker}")
 
 
             #self.logger.info(f"gh_user_ids: {gh_user_ids}")
