@@ -32,6 +32,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
     def __init__(self, config={}, special_rate_limit=10):
         # Define the data tables that we are needing
         # Define the tables needed to insert, update, or delete on
+
         self.data_tables = ['contributors', 'pull_requests', 'commits',
                             'pull_request_assignees', 'pull_request_events', 'pull_request_labels',
                             'pull_request_message_ref', 'pull_request_meta', 'pull_request_repo',
