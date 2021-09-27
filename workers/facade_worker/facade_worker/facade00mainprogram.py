@@ -121,7 +121,8 @@ class FacadeWorker(Worker):
         """ Function to process each entry in the worker's task queue
         Determines what action to take based off the message type
         """
-        self.initialize_logging() # need to initialize logging again in child process cause multiprocessing
+        #self.initialize_logging() # need to initialize logging again in child process cause multiprocessing
+
         self.logger.info("Starting data collection process\n")
         self.initialize_database_connections() 
         while True:
