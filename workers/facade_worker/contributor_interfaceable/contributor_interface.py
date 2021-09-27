@@ -171,7 +171,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         self.logger = logger
 
         self.tool_source = '\'Facade Worker\'s Contributor Interface\''
-        self.tool_version = '\'0.1.0\''
+        self.tool_version = '\'0.2.0\''
         self.data_source = '\'Git Log\''
 
     # Try to construct the best url to ping GitHub's API for a username given an email.

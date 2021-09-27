@@ -65,7 +65,7 @@ class FacadeWorker(Worker):
 
         # Define data collection info
         # self.tool_source = 'Facade Worker'
-        # self.tool_version = '1.0.0'
+        # self.tool_version = '1.1.0'
         # self.data_source = 'Git Log'
 
         self.logger.info("Trying to create the ContributorInterface...")
