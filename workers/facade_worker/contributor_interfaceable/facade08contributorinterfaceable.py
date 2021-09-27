@@ -55,8 +55,6 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         contrib_port = self.facade_com
 
-        self.logger.debug(f"Contributor port is {contrib_port}.")
-
         # Get the same logging dir as the facade worker.
         self.config.update({
             # self.config['port_database'])
@@ -65,6 +63,9 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         # Getting stuck here.
         self.initialize_logging()
+
+        self.logger.debug(f"Contributor port is {contrib_port}.")
+
         # self.logger = logging.getLogger(self.config["id"])
         # Test logging after init.
         self.logger.info(
