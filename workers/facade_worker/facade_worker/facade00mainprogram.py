@@ -36,7 +36,9 @@ from facade_worker.facade05repofetch import git_repo_initialize, check_for_repo_
 from facade_worker.facade06analyze import analysis
 from facade_worker.facade07rebuildcache import nuke_affiliations, fill_empty_affiliations, invalidate_caches, rebuild_unknown_affiliation_and_web_caches
 
-from contributor_interfaceable.facade08contributorinterfaceable import ContributorInterfaceable
+#from contributor_interfaceable.facade08contributorinterfaceable import ContributorInterfaceable
+
+import contributor_interfacable.facade08contributorinterfaceable as ContributorInterfaceable
 
 from workers.util import read_config
 from workers.worker_base import Worker
