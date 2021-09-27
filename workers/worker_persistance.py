@@ -910,6 +910,7 @@ class Persistant():
         # todo: merge with _get_data_set_columns
 
         for column in column_names:
+            self.logger.debug(f"column included: {column}.")
             if '.' not in column:
                 continue
             root = column.split('.')[0]
