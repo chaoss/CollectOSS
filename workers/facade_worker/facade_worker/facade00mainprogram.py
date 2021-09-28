@@ -38,7 +38,7 @@ from facade_worker.facade07rebuildcache import nuke_affiliations, fill_empty_aff
 
 #from contributor_interfaceable.facade08contributorinterfaceable import ContributorInterfaceable
 
-from contributor_interfaceable.contributor_interface import ContributorInterfaceable
+from contributor_interfaceable.contributor_interface import ContributorInterfaceable as ContribInterface 
 
 from workers.util import read_config
 from workers.worker_base import Worker
@@ -73,7 +73,7 @@ class FacadeWorker(Worker):
         self.logger.info(f"Config passed is: {str(self.config)}")
 
         try: 
-            self.github_interface = ContributorInterfaceable(config=self.config)
+            self.github_interface = ContribInterface(config=self.config)
         except Exception as e: 
             self.logger.debug(f"Error is {e}")
             stacker = traceback.format_exc()
