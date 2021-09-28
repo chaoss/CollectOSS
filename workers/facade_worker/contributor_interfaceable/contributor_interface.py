@@ -67,15 +67,15 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         # Getting stuck here.
         self.initialize_logging()
 
-        try: 
+        # try: 
 
-            theConfig = self.augur_config.get_section(["contributor_interface"])
-            jsonConfig = json.loads(theConfig)
-            self.logger.debug(f"The config for workers is: {json.dumps(jsonConfig, indent=2, sort_keys=True)}.")
+        #     theConfig = self.augur_config.get_section(["contributor_interface"])
+        #     jsonConfig = json.loads(theConfig)
+        #     self.logger.debug(f"The config for workers is: {json.dumps(jsonConfig, indent=2, sort_keys=True)}.")
 
-        except Exception as e:
+        # except Exception as e:
 
-            self.logger.debug(f"Exception in initialization is: {e}.")
+        #     self.logger.debug(f"Exception in initialization is: {e}.")
 
         # self.logger = logging.getLogger(self.config["id"])
         # Test logging after init.
@@ -85,6 +85,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         self.config.update({
             'gh_api_key': self.augur_config.get_value('Database', 'key'),
             'gitlab_api_key': self.augur_config.get_value('Database', 'gitlab_api_key')
+            'port': self.augur_config.get_value('contributor_interface', 'port')
         })
 
         # Get config passed from the facade worker.
