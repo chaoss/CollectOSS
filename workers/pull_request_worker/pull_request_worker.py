@@ -701,7 +701,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                         c_pk_source_comments = self.enrich_data_primary_keys(
                             inc_pr_comments['insert'], self.message_table, 
                             comment_action_map['insert']['source'], 
-                            comment_action_map['insert']['augur'])
+                            comment_action_map['insert']['augur'], in_memory=True)
 
                         self.write_debug_data(c_pk_source_comments, 'c_pk_source_comments')
 
@@ -709,7 +709,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
                         both_pk_source_comments = self.enrich_data_primary_keys(
                             c_pk_source_comments, self.pull_requests_table,
-                            ['issue_url'], ['pr_issue_url'])
+                            ['issue_url'], ['pr_issue_url'], in_memory=True)
 
                         #self.write_debug_data(both_pk_source_comments, 'both_pk_source_comments')
                         self.logger.debug(f"length of both_pk_source_comments: {len(both_pk_source_comments)}")
@@ -1025,7 +1025,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'cntrb_id': comment['cntrb_id'],
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
-                'data_source': self.data_source,
+                'data_source': 'pull_request_reviews model',
                 'repo_id': self.repo_id,
                 'platform_msg_id': int(comment['id']),
                 'platform_node_id': comment['node_id']
@@ -1079,7 +1079,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'pr_review_msg_line': comment['line'],
                 'pr_review_msg_original_line': comment['original_line'],
                 'pr_review_msg_side': comment['side'],
-                'tool_source': self.tool_source,
+                'tool_source': 'pull_request_reviews model',
                 'tool_version': self.tool_version,
                 'data_source': self.data_source,
                 'repo_id': self.repo_id

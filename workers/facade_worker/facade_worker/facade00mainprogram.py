@@ -38,7 +38,7 @@ from facade_worker.facade07rebuildcache import nuke_affiliations, fill_empty_aff
 
 #from contributor_interfaceable.facade08contributorinterfaceable import ContributorInterfaceable
 
-import contributor_interfaceable.contributor_interface as ContributorInterfaceable
+from contributor_interfaceable.contributor_interface import ContributorInterfaceable as ContribInterface 
 
 from workers.util import read_config
 from workers.worker_base import Worker
@@ -71,13 +71,15 @@ class FacadeWorker(Worker):
         self.logger.info("Trying to create the ContributorInterface...")
         #Define interface to GitHub as an attribute
         self.logger.info(f"Config passed is: {str(self.config)}")
-        try:
 
-            self.github_interface = ContributorInterfaceable(config=self.config)
-
+        try: 
+            self.github_interface = ContribInterface(config=self.config)
         except Exception as e: 
-            self.logger.debug(f"contributor interface failed with {e}")
-        
+            self.logger.debug(f"Error is {e}")
+            stacker = traceback.format_exc()
+            self.logger.debug(f"{stacker}")
+            pass            
+
         self.logger.info("created interface")
 
         self.tool_source = '\'Facade Worker\''
@@ -332,7 +334,7 @@ class FacadeWorker(Worker):
         all_repos = list(self.cfg.cursor)
 
         for repo in all_repos:
-          self.github_interface.logger.info(f"Processing repo {repo}")
+          self.logger.info(f"Processing repo {repo}")
           self.github_interface.insert_facade_contributors(repo[0])
 
         # All done

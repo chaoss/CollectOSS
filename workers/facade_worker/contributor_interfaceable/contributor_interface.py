@@ -6,7 +6,7 @@ from workers.worker_git_integration import WorkerGitInterfaceable
 from workers.util import read_config
 from psycopg2.errors import UniqueViolation
 from random import randint
-
+import json 
 
 #Debugger
 import traceback
@@ -63,17 +63,19 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         #     # self.config['port_database'])
         #     'id': "workers.{}.{}".format("contributor_interface", contrib_port)
         # })
-        try: 
-
-            self.config.update(self.augur_config.get_section(["Workers"],["contributor_interface"]))
-
-        except Exception as e:
-
-            self.logger.debug(f"Exception in initialization is: {e}.")
-
 
         # Getting stuck here.
         self.initialize_logging()
+
+        # try: 
+
+        #     theConfig = self.augur_config.get_section(["contributor_interface"])
+        #     jsonConfig = json.loads(theConfig)
+        #     self.logger.debug(f"The config for workers is: {json.dumps(jsonConfig, indent=2, sort_keys=True)}.")
+
+        # except Exception as e:
+
+        #     self.logger.debug(f"Exception in initialization is: {e}.")
 
         # self.logger = logging.getLogger(self.config["id"])
         # Test logging after init.
@@ -82,7 +84,8 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         # self.db_schema = None
         self.config.update({
             'gh_api_key': self.augur_config.get_value('Database', 'key'),
-            'gitlab_api_key': self.augur_config.get_value('Database', 'gitlab_api_key')
+            'gitlab_api_key': self.augur_config.get_value('Database', 'gitlab_api_key'),
+            'port': self.augur_config.get_value('Workers', 'contributor_interface')
         })
 
         # Get config passed from the facade worker.
@@ -96,7 +99,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         self.logger.info("Facade now has contributor interface.")
 
-        return self 
+        return None  
 
     def initialize_logging(self):
         # Get the log level in upper case from the augur config's logging section.
@@ -111,7 +114,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         format_string = AugurLogging.verbose_format_string 
 
-        log_port = self.facade_com
+        #log_port = self.facade_com
 
         # Use stock python formatter for stdout
         formatter = Formatter(fmt=format_string)
