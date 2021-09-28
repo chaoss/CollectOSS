@@ -75,8 +75,6 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
             self.logger.debug(f"Exception in initialization is: {e}.")
 
-        
-
         # self.logger = logging.getLogger(self.config["id"])
         # Test logging after init.
         self.logger.info(
@@ -98,7 +96,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         self.logger.info("Facade now has contributor interface.")
 
-        return self 
+        return None  
 
     def initialize_logging(self):
         # Get the log level in upper case from the augur config's logging section.
