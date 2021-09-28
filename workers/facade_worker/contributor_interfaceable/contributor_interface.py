@@ -69,7 +69,8 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         try: 
 
-            self.config.update(self.augur_config.get_section(["Workers"]))
+            theConfig = self.augur_config.get_section(["Workers"])
+            self.logger.debug(f"The config for workers is: {theConfig}.")
 
         except Exception as e:
 
