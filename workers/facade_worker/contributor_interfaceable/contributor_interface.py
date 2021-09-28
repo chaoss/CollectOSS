@@ -415,11 +415,16 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         # Default to failed state
         login_json = None
 
-        if len(commit['email']) <= 2:
+        self.logger.info(f"Here is the commit: {commit}")
+
+        
+        #email = commit['email_raw'] if 'email_raw' in commit else commit['email_raw']
+
+        if len(commit['email_raw']) <= 2:
             return login_json  # Don't bother with emails that are blank or less than 2 characters
 
         try:
-            url = self.create_endpoint_from_email(commit['email'])
+            url = self.create_endpoint_from_email(commit['email_raw'])
         except Exception as e:
             self.logger.info(
                 f"Couldn't resolve email url with given data. Reason: {e}")
@@ -432,7 +437,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         # Check if the email result got anything, if it failed try a name search.
         if login_json == None or 'total_count' not in login_json or login_json['total_count'] == 0:
             self.logger.info(
-                f"Could not resolve the username from {commit['email']}")
+                f"Could not resolve the username from {commit['email_raw']}")
 
             # Go back to failure condition
             login_json = None
@@ -440,7 +445,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             # Add the email that couldn't be resolved to a garbage table.
 
             unresolved = {
-                "email": commit['email'],
+                "email": commit['email_raw'],
                 "name": commit['name'],
                 "tool_source": self.tool_source,
                 "tool_version": self.tool_version,
