@@ -63,13 +63,13 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         #     # self.config['port_database'])
         #     'id': "workers.{}.{}".format("contributor_interface", contrib_port)
         # })
-        try: 
+        # try: 
 
-            self.config.update(self.augur_config.get_section(["Workers"],["contributor_interface"]))
+        #     self.config.update(self.augur_config.get_section(["Workers"]))
 
-        except Exception as e:
+        # except Exception as e:
 
-            self.logger.debug(f"Exception in initialization is: {e}.")
+        #     self.logger.debug(f"Exception in initialization is: {e}.")
 
 
         # Getting stuck here.
