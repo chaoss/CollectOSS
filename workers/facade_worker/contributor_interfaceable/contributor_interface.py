@@ -623,7 +623,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                     "gh_site_admin": user_data['site_admin'],
                     "cntrb_last_used": None if 'updated_at' not in user_data else user_data['updated_at'],
                     # Get name from commit if api doesn't get it.
-                    "cntrb_full_name": name_field if 'name' not in user_data else user_data['name'],
+                    "cntrb_full_name": name_field if 'name' not in user_data or user_data['name'] is None else user_data['name'],
                     "tool_source": self.tool_source,
                     "tool_version": self.tool_version,
                     "data_source": self.data_source
