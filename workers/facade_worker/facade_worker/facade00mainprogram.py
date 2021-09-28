@@ -43,6 +43,8 @@ from contributor_interfaceable.contributor_interface import ContributorInterface
 from workers.util import read_config
 from workers.worker_base import Worker
 
+import pdb
+
 html = html.parser.HTMLParser()
 
 class FacadeWorker(Worker):
@@ -334,7 +336,7 @@ class FacadeWorker(Worker):
 
         all_repos = list(self.cfg.cursor)
 
-        breakpoint()
+        pdb.set_trace()
         for repo in all_repos:
           self.logger.info(f"Processing repo {repo}")
           self.github_interface.insert_facade_contributors(repo[0])
