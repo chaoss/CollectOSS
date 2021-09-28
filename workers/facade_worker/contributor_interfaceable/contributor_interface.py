@@ -69,9 +69,9 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         try: 
 
-            theConfig = self.augur_config.get_section(["Workers"])
+            theConfig = self.augur_config.get_section(["contributor_interface"])
             jsonConfig = json.loads(theConfig)
-            self.logger.debug(f"The config for workers is: {json.dumps(jsonConfig, indent=4, sort_keys=True)}.")
+            self.logger.debug(f"The config for workers is: {json.dumps(jsonConfig, indent=2, sort_keys=True)}.")
 
         except Exception as e:
 
