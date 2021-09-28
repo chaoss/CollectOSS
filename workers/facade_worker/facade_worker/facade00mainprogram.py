@@ -336,7 +336,7 @@ class FacadeWorker(Worker):
 
         all_repos = list(self.cfg.cursor)
 
-        pdb.set_trace()
+        #pdb.set_trace()
         for repo in all_repos:
           self.logger.info(f"Processing repo {repo}")
           self.github_interface.insert_facade_contributors(repo[0])
