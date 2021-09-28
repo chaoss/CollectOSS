@@ -6,7 +6,7 @@ from workers.worker_git_integration import WorkerGitInterfaceable
 from workers.util import read_config
 from psycopg2.errors import UniqueViolation
 from random import randint
-
+import json 
 
 #Debugger
 import traceback
@@ -70,7 +70,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         try: 
 
             theConfig = self.augur_config.get_section(["Workers"])
-            self.logger.debug(f"The config for workers is: {str(theConfig)}.")
+            self.logger.debug(f"The config for workers is: {json.dumps(theConfig)}.")
 
         except Exception as e:
 
