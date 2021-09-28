@@ -4,6 +4,7 @@ DROP TABLE IF EXISTS "augur_data"."unresolved_commit_emails";
 CREATE TABLE "augur_data"."unresolved_commit_emails" (
   "email_unresolved_id" serial8,
   "email" varchar COLLATE "pg_catalog"."default" NOT NULL,
+  "name" varchar COLLATE "pg_catalog"."default",
   "tool_source" varchar(255) COLLATE "pg_catalog"."default",
   "tool_version" varchar(255) COLLATE "pg_catalog"."default",
   "data_source" varchar(255) COLLATE "pg_catalog"."default",

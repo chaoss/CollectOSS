@@ -410,16 +410,16 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
     #   \return A dictionary of response data from github with potential logins on success.
     #           None on failure
 
-    def fetch_username_from_email(self, email):
+    def fetch_username_from_email(self, commit):
 
         # Default to failed state
         login_json = None
 
-        if len(email) <= 2:
+        if len(commit['email']) <= 2:
             return login_json  # Don't bother with emails that are blank or less than 2 characters
 
         try:
-            url = self.create_endpoint_from_email(email)
+            url = self.create_endpoint_from_email(commit['email'])
         except Exception as e:
             self.logger.info(
                 f"Couldn't resolve email url with given data. Reason: {e}")
@@ -432,7 +432,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         # Check if the email result got anything, if it failed try a name search.
         if login_json == None or 'total_count' not in login_json or login_json['total_count'] == 0:
             self.logger.info(
-                f"Could not resolve the username from {email}")
+                f"Could not resolve the username from {commit['email']}")
 
             # Go back to failure condition
             login_json = None
@@ -440,7 +440,8 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             # Add the email that couldn't be resolved to a garbage table.
 
             unresolved = {
-                "email": email,
+                "email": commit['email'],
+                "name": commit['name'],
                 "tool_source": self.tool_source,
                 "tool_version": self.tool_version,
                 "data_source": self.data_source
@@ -532,7 +533,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
             # Try to get login from all possible emails
             # Is None upon failure.
-            login_json = self.fetch_username_from_email(email)
+            login_json = self.fetch_username_from_email(contributor)
 
             # Check if the email result got anything, if it failed try a name search.
             if login_json == None or 'total_count' not in login_json or login_json['total_count'] == 0:
