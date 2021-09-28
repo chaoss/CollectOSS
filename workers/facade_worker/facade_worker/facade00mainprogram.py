@@ -43,7 +43,6 @@ from contributor_interfaceable.contributor_interface import ContributorInterface
 from workers.util import read_config
 from workers.worker_base import Worker
 
-import pdb
 
 html = html.parser.HTMLParser()
 
@@ -82,6 +81,7 @@ class FacadeWorker(Worker):
             self.logger.debug(f"{stacker}")
             pass            
 
+        breakpoint()
         self.logger.info("created interface")
 
         self.tool_source = '\'Facade Worker\''
