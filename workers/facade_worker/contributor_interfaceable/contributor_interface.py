@@ -111,7 +111,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         format_string = AugurLogging.verbose_format_string 
 
-        log_port = self.facade_com
+        #log_port = self.facade_com
 
         # Use stock python formatter for stdout
         formatter = Formatter(fmt=format_string)
