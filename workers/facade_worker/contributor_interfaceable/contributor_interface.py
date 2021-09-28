@@ -99,7 +99,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         self.logger.info("Facade now has contributor interface.")
 
-        #return None  
+        return None  
 
     def initialize_logging(self):
         # Get the log level in upper case from the augur config's logging section.
