@@ -73,13 +73,8 @@ class FacadeWorker(Worker):
         #Define interface to GitHub as an attribute
         self.logger.info(f"Config passed is: {str(self.config)}")
 
-        try: 
-            self.github_interface = ContribInterface(config=self.config, logger=self.logger)
-        except Exception as e: 
-            self.logger.debug(f"Error is {e}")
-            stacker = traceback.format_exc()
-            self.logger.debug(f"{stacker}")
-            pass            
+
+        self.github_interface = ContribInterface(config=self.config, logger=self.logger)         
 
         breakpoint()
         self.logger.info("created interface")
