@@ -76,7 +76,7 @@ class FacadeWorker(Worker):
 
         self.github_interface = ContribInterface(config=self.config, logger=self.logger)         
 
-        breakpoint()
+        #breakpoint()
         self.logger.info("created interface")
 
         self.tool_source = '\'Facade Worker\''
