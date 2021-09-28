@@ -85,8 +85,8 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         # self.db_schema = None
         self.config.update({
             'gh_api_key': self.augur_config.get_value('Database', 'key'),
-            'gitlab_api_key': self.augur_config.get_value('Database', 'gitlab_api_key'),
-            'port': self.augur_config.get_value('Workers', 'contributor_interface')
+            'gitlab_api_key': self.augur_config.get_value('Database', 'gitlab_api_key')
+            #'port': self.augur_config.get_value('Workers', 'contributor_interface')
         })
 
         # Get config passed from the facade worker.
