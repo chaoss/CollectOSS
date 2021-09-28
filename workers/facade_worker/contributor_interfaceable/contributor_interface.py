@@ -29,7 +29,7 @@ A few interesting ideas: Maybe get the top committers from each repo first? curl
 
 
 class ContributorInterfaceable(WorkerGitInterfaceable):
-    def __init__(self, config={}, special_rate_limit=10):
+    def __init__(self, config={},logger=None, special_rate_limit=10):
         # Define the data tables that we are needing
         # Define the tables needed to insert, update, or delete on
 
@@ -50,7 +50,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         # Get default logging settings
         self.config = config
-        self.config.update(self.augur_config.get_section("Logging"))
+        #self.config.update(self.augur_config.get_section("Logging"))
 
         # create a random port instead of 226 
         # SPG 9/24/2021
@@ -65,7 +65,8 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         # })
 
         # Getting stuck here.
-        self.initialize_logging()
+        #self.initialize_logging()
+        self.logger = logger
 
         # try: 
 

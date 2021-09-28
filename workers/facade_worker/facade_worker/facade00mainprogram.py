@@ -73,7 +73,7 @@ class FacadeWorker(Worker):
         self.logger.info(f"Config passed is: {str(self.config)}")
 
         try: 
-            self.github_interface = ContribInterface(config=self.config)
+            self.github_interface = ContribInterface(config=self.config, logger=self.logger)
         except Exception as e: 
             self.logger.debug(f"Error is {e}")
             stacker = traceback.format_exc()
