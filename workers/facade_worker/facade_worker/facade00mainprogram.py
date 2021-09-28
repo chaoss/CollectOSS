@@ -87,6 +87,7 @@ class FacadeWorker(Worker):
         self.data_source = '\'Git Log\''
 
         self.logger.info("Finished  Init")
+        breakpoint() #What is going on after this
 
     def initialize_database_connections(self):
 
