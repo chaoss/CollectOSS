@@ -253,7 +253,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                 self.logger.info(
                     f"Special rate limit of {self.special_rate_limit} reached! Sleeping for thirty seconds.")
                 # Sleep for thirty seconds before making a new request.
-                time.sleep(20)
+                time.sleep(60)
 
             try:
                 response_data = response.json()
