@@ -190,7 +190,7 @@ class WorkerGitInterfaceable(Worker):
         #   information from headers of the response
         # Adjust header keys needed to fetch rate limit information from the API responses
         if platform == 'github':
-            url = "https://api.github.com/users/gabe-heim"
+            url = "https://api.github.com/users/sgoggins"
             oauthSQL = s.sql.text("""
                 SELECT * FROM worker_oauth WHERE access_token <> '{}' and platform = 'github'
                 """.format(self.config['gh_api_key']))
