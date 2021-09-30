@@ -74,4 +74,5 @@
 \i schema/generate/69-schema_update_71.sql
 \i schema/generate/70-schema_update_72.sql
 \i schema/generate/71-schema_update_73.sql
+\i schema/generate/72-schema_update_74.sql
 
