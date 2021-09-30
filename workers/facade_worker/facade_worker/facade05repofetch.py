@@ -378,6 +378,42 @@ def git_repo_updates(cfg):
                 cfg.log_activity('Verbose','git pull failed, attempting reset and '
                     'clean for %s' % row[2])
 
+                logremotedefault = ("git -C %s%s/%s%s remote set-head origin -a"
+                    % (cfg.repo_base_directory,row[1],row[4],row[3]))
+
+                return_code_remote = subprocess.Popen([logremotedefault],stdout=subprocess.PIPE,shell=True).wait()
+
+                cfg.log_activity('Verbose', f'remote default is {logremotedefault}.')
+
+                getremotedefault = ("git -C %s%s/%s%s remote show origin | sed -n '/HEAD branch/s/.*: //p'"
+                    % (cfg.repo_base_directory,row[1],row[4],row[3]))
+
+                return_code_remote = subprocess.Popen([getremotedefault],stdout=subprocess.PIPE,shell=True).wait()
+
+                remotedefault = subprocess.Popen([getremotedefault],stdout=subprocess.PIPE,shell=True).communicate()[0]
+
+                remotedefault = remotedefault.decode()
+
+                getremotedefault = (f"git -C %s%s/%s%s checkout {remotedefault}"
+                    % (cfg.repo_base_directory,row[1],row[4],row[3]))
+
+                return_code_remote_default = subprocess.Popen([getremotedefault],stdout=subprocess.PIPE,shell=True).wait()
+
+                return_message_getremotedefault = subprocess.Popen([getremotedefault],stdout=subprocess.PIPE,shell=True).communicate()[0]
+
+                cfg.log_activity('Verbose', f'get remote default result: {return_message_getremotedefault}')
+
+                getcurrentbranch = ("git -C %s%s/%s%s branch"
+                    % (cfg.repo_base_directory,row[1],row[4],row[3]))
+
+                return_code_local = subprocess.Popen([getcurrentbranch],stdout=subprocess.PIPE,shell=True).wait()
+
+                localdefault = subprocess.Popen([getcurrentbranch],stdout=subprocess.PIPE,shell=True).communicate()[0]  
+
+                localdefault = localdefault.decode()
+
+                cfg.log_activity('Verbose', f'remote default is: {remotedefault}, and localdefault is {localdefault}.') 
+
                 cmd_checkout_default =  (f"git -C %s%s/%s%s checkout {remote_default}" 
                 % (cfg.repo_base_directory,row[1],row[4],row[3]))
 
