@@ -325,8 +325,8 @@ def git_repo_updates(cfg):
 
                 remotedefault = remotedefault.decode()
 
-                getremotedefault = (f"git -C %s%s/%s%s checkout {remotedefault}")
-                    % (cfg.repo_base_directory,row[1],row[4],row[3])
+                getremotedefault = (f"git -C %s%s/%s%s checkout {remotedefault}"
+                    % (cfg.repo_base_directory,row[1],row[4],row[3]))
 
                 return_code_remote_default = subprocess.Popen([getremotedefault],stdout=subprocess.PIPE,shell=True).wait()
 
