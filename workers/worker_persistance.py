@@ -913,6 +913,10 @@ class Persistant():
             self.logger.debug(f"column included: {column}.")
             if '.' not in column:
                 continue
+            # if the column is already present then we
+            # dont' need to try to add it again
+            if column in df.columns:
+                continue
             root = column.split('.')[0]
             if root not in df.columns:
                 df[root] = None
