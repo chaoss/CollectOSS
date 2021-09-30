@@ -378,6 +378,8 @@ def git_repo_updates(cfg):
                 cfg.log_activity('Verbose','git pull failed, attempting reset and '
                     'clean for %s' % row[2])
 
+                remotedefault = ''
+
                 logremotedefault = ("git -C %s%s/%s%s remote set-head origin -a"
                     % (cfg.repo_base_directory,row[1],row[4],row[3]))
 
