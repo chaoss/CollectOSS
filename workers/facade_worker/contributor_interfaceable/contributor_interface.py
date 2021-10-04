@@ -488,7 +488,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                     commits.repo_id = :repo_id 
                     AND (NOT EXISTS ( SELECT contributors.cntrb_canonical FROM contributors WHERE contributors.cntrb_canonical = commits.cmt_author_raw_email ) 
                     or NOT EXISTS ( SELECT contributors_aliases.alias_email from contributors_aliases where contributors_aliases.alias_email = commits.cmt_author_raw_email)
-                    AND ( commits.cmt_author_name ) IN ( SELECT C.cmt_author_name FROM commits AS C WHERE C.repo_id = 25440 GROUP BY C.cmt_author_name ))
+                    AND ( commits.cmt_author_name ) IN ( SELECT C.cmt_author_name FROM commits AS C WHERE C.repo_id = :repo_id GROUP BY C.cmt_author_name ))
                 GROUP BY
                     commits.cmt_author_name,
                     commits.cmt_author_raw_email 
@@ -502,7 +502,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                 WHERE
                     commits.repo_id = :repo_id 
                     AND EXISTS ( SELECT unresolved_commit_emails.email FROM unresolved_commit_emails WHERE unresolved_commit_emails.email = commits.cmt_author_raw_email ) 
-                    AND ( commits.cmt_author_name ) IN ( SELECT C.cmt_author_name FROM commits AS C WHERE C.repo_id = 25440 GROUP BY C.cmt_author_name )
+                    AND ( commits.cmt_author_name ) IN ( SELECT C.cmt_author_name FROM commits AS C WHERE C.repo_id = :repo_id GROUP BY C.cmt_author_name )
                 GROUP BY
                     commits.cmt_author_name,
                     commits.cmt_author_raw_email 
