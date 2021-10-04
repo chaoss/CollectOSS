@@ -52,13 +52,13 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 Get list of contributors from platform: 
 
 If GitHub: 
-	1. Get list of contributors (paginate)
-	2. Check to see if contributors already exist based on login
+	1. Get list of contributors (paginate) from platform
+	2. Check to see if contributors already exist in DB based on login
 	3. Insert into contributors table if they did not already exist
 	4. If there is an email returned, check if its a canonical or an alias (Phase 2)
 
 elif GitLab: 
-	1. Get list of contributors (paginate)
+	1. Get list of contributors (paginate) from platform
 	2. Check to see if contributors already exist based on login
 	3. Insert into contributors table if they did not already exist
 	4. If there is an email returned, check if its a canonical or an alias (Phase 2)
