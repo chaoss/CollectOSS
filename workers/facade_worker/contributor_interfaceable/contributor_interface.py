@@ -722,6 +722,43 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                 self.logger.info(f"Ran into problem when enriching commit data. Error: {e}")
 
         return
+    
+    def create_endpoint_from_repo_id(self, repo_id):
+        select_repo_path_query = s.sql.text("""
+            SELECT repo_path, repo_name from repo
+            WHERE cntrb_login = :repo_id_bind
+        """)
+
+        # Bind parameter
+        select_repo_path_query = select_repo_path_query.bindparams(
+            repo_id_bind=repo_id)
+        result = self.db.execute(select_repo_path_query)
+
+        # if not found
+        if not len(result.fetchall()) >= 1:
+            raise LookupError
+        
+        #Else put into a more readable local var
+        self.logger.info(f"Result: {result}")
+        repo_path = result[0]['repo_path'].split("/")[1] + "/" + result[0]['repo_name']
+
+        #Create endpoint for committers in a repo.
+        url = "https://api.github.com/repos/" + repo_path + "/contributors"
+
+        self.logger.info(f"Url: {url}")
+
+        return url
+
+
+    #Get all the committer data for a repo.
+    #Used by facade in facade03analyzecommit
+    def grab_committer_list(self, repo_id, platform="github"):
+
+        #Create API endpoint from repo_id
+        try:
+            endpoint = self.create_endpoint_from_repo_id(repo_id)
+
+    
     ''' Future method to try and get additional info for partially populated users. 
     def get_information_from_commits(self, repo_id):
 

@@ -40,7 +40,7 @@ import traceback
 
 from workers.util import read_config
 
-def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
+def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded, interface=None):
 
 # This function analyzes a given commit, counting the additions, removals, and
 # whitespace changes. It collects all of the metadata about the commit, and

@@ -44,7 +44,7 @@ from facade_worker.facade03analyzecommit import analyze_commit
 # else:
 #   import MySQLdb
 
-def analysis(cfg, multithreaded):
+def analysis(cfg, multithreaded, interface=None):
 
 # Run the analysis by looping over all active repos. For each repo, we retrieve
 # the list of commits which lead to HEAD. If any are missing from the database,
@@ -158,14 +158,14 @@ def analysis(cfg, multithreaded):
 
             for commit in missing_commits:
 
-                result = pool.apply_async(analyze_commit(cfg, repo[0], repo_loc, commit, multithreaded))
+                result = pool.apply_async(analyze_commit(cfg, repo[0], repo_loc, commit, multithreaded, interface=interface))
 
             pool.close()
             pool.join()
 
         else:
             for commit in missing_commits:
-                analyze_commit(cfg, repo[0], repo_loc, commit, multithreaded)
+                analyze_commit(cfg, repo[0], repo_loc, commit, multithreaded, interface=interface)
 
         update_analysis_log(repo[0],'Data collection complete')
 
