@@ -764,6 +764,13 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         committer_json = self.request_dict_from_endpoint(
             endpoint, timeout_wait=0)
 
+        #Prepare for pagination and insertion into the contributor's table with an action map
+        committer_action_map = {
+                'insert': {
+                        'source': ['id'],
+                        'augur': ['platform_msg_id']
+            }
+        }
 
     
     ''' Future method to try and get additional info for partially populated users. 
