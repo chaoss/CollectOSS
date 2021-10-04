@@ -240,6 +240,11 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 		db_people_local = cfg.db_people
 		cursor_people_local = cfg.cursor_people
 
+	# Go get the contributors (committers) for this repo here: 
+	# curl https://api.github.com/repos/chaoss/augur/contributors
+	# Load the contributors
+	
+
 	# Read the git log
 
 	git_log = subprocess.Popen(["git --git-dir %s log -p -M %s -n1 "
