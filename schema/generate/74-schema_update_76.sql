@@ -13,7 +13,7 @@ ALTER TABLE "augur_data"."commits"
   ADD CONSTRAINT "fk_commits_repo_2" FOREIGN KEY ("repo_id") REFERENCES "augur_data"."repo" ("repo_id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
   
-update "augur_operations"."augur_settings" set value = 75 where setting = 'augur_data_version'; 
+update "augur_operations"."augur_settings" set value = 76 where setting = 'augur_data_version'; 
 
 
 COMMIT; 
