@@ -1104,11 +1104,11 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
             if not pk_source_prs:
                 pk_source_prs = self._get_pk_source_prs()
-                prdata = json.loads(json.dumps(pk_source_prs))
-                self.logger.debug(f"nested data model pk_source_prs structure is: {prdata}.")
+                #prdata = json.loads(json.dumps(pk_source_prs))
+                #self.logger.debug(f"nested data model pk_source_prs structure is: {prdata}.")
             else: 
-                prdata = json.loads(json.dumps(pk_source_prs))
-                self.logger.debug(f"nested data model pk_source_prs structure is: {prdata}.") 
+                #prdata = json.loads(json.dumps(pk_source_prs))
+                self.logger.debug("nested model loaded.") 
 
         except Exception as e: 
 
