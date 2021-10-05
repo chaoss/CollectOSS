@@ -48,7 +48,23 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 # case we are running in multithreaded mode, since MySQL cursors are not
 # currently threadsafe.
 
-### Local helper functions ###
+
+# If GitHub: 
+# 	1. Get list of contributors (paginate) from platform
+# 	2. Check to see if contributors already exist in DB based on login
+# 	3. Insert into contributors table if they did not already exist
+# 	4. If there is an email returned, check if its a canonical or an alias (Phase 2)
+
+# elif GitLab: 
+# 	1. Get list of contributors (paginate) from platform
+# 	2. Check to see if contributors already exist based on login
+# 	3. Insert into contributors table if they did not already exist
+# 	4. If there is an email returned, check if its a canonical or an alias (Phase 2)
+
+# elif ... 
+
+
+	### Local helper functions ###
 
 	def check_swapped_emails(name,email):
 
@@ -239,6 +255,11 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 
 		db_people_local = cfg.db_people
 		cursor_people_local = cfg.cursor_people
+
+	# Go get the contributors (committers) for this repo here: 
+	# curl https://api.github.com/repos/chaoss/augur/contributors
+	# Load the contributors
+
 
 	# Read the git log
 

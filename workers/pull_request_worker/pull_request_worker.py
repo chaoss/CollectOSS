@@ -230,6 +230,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
                 'data_source': 'GitHub API',
+                'repo_id': self.repo_id, 
             } for pr_file in self.graphql_paginate(query, {'files': None})]
 
 
@@ -238,7 +239,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             SELECT pull_request_files.*
             FROM pull_request_files, pull_requests
             WHERE pull_request_files.pull_request_id = pull_requests.pull_request_id
-            AND repo_id = :repo_id
+            AND pull_requests.repo_id = :repo_id
         """)
         self.logger.debug(
             f'Getting table values with the following PSQL query: \n{table_values_sql}\n'
@@ -363,6 +364,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                             'tool_source': self.tool_source,
                             'tool_version': self.tool_version,
                             'data_source': 'GitHub API',
+                            'repo_id': self.repo_id,
                         }
                         result = self.db.execute(
                             self.pull_request_commits_table.insert().values(pr_commit_row)
@@ -1168,7 +1170,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                                 'pr_src_default_bool': label['default'],
                                 'tool_source': self.tool_source,
                                 'tool_version': self.tool_version,
-                                'data_source': self.data_source
+                                'data_source': self.data_source,
+                                'repo_id': self.repo_id 
                             } for label in source_labels_insert
                         ]
 
@@ -1256,7 +1259,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                                 'pr_assignee_src_id': int(assignee['id']),
                                 'tool_source': self.tool_source,
                                 'tool_version': self.tool_version,
-                                'data_source': self.data_source
+                                'data_source': self.data_source,
+                                'repo_id': self.repo_id 
                             } for assignee in source_assignees_insert if 'login' in assignee
                         ]
                         self.bulk_insert(self.pull_request_assignees_table, insert=assignees_insert)
@@ -1302,7 +1306,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                                 'cntrb_id': meta['cntrb_id'],
                                 'tool_source': self.tool_source,
                                 'tool_version': self.tool_version,
-                                'data_source': self.data_source
+                                'data_source': self.data_source,
+                                'repo_id': self.repo_id 
                             } for meta in source_meta_insert if meta['user'] and 'login' in meta['user']
                         ]
                         self.bulk_insert(self.pull_request_meta_table, insert=meta_insert)
