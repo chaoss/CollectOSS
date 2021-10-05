@@ -48,8 +48,7 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 # case we are running in multithreaded mode, since MySQL cursors are not
 # currently threadsafe.
 
-'''
-Get list of contributors from platform: 
+''' Get list of contributors from platform: 
 
 If GitHub: 
 	1. Get list of contributors (paginate) from platform
@@ -63,10 +62,9 @@ elif GitLab:
 	3. Insert into contributors table if they did not already exist
 	4. If there is an email returned, check if its a canonical or an alias (Phase 2)
 
-elif ... 	
-'''
+elif ... '''
 
-### Local helper functions ###
+	### Local helper functions ###
 
 	def check_swapped_emails(name,email):
 
