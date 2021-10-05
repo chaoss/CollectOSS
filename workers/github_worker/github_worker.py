@@ -456,7 +456,8 @@ class GitHubWorker(WorkerGitInterfaceable):
                 'action_commit_hash': event['commit_id'],
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
-                'data_source': self.data_source
+                'data_source': self.data_source,
+                'repo_id': self.repo_id
             } for event in pk_issue_events if event['actor'] is not None
         ]
 
@@ -634,7 +635,8 @@ class GitHubWorker(WorkerGitInterfaceable):
                     'tool_version': self.tool_version,
                     'data_source': self.data_source,
                     'issue_assignee_src_id': assignee['id'],
-                    'issue_assignee_src_node': assignee['node_id']
+                    'issue_assignee_src_node': assignee['node_id'],
+                    'repo_id': self.repo_id 
                 } for assignee in source_assignees_insert
             ]
             try:
@@ -687,7 +689,8 @@ class GitHubWorker(WorkerGitInterfaceable):
                     'tool_version': self.tool_version,
                     'data_source': self.data_source,
                     'label_src_id': int(label['id']),
-                    'label_src_node_id': label['node_id']
+                    'label_src_node_id': label['node_id'],
+                    'repo_id': self.repo_id 
                 } for label in source_labels_insert
             ]
 
