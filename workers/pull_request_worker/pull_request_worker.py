@@ -1103,6 +1103,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         if not pk_source_prs:
             pk_source_prs = self._get_pk_source_prs()
+            self.logger.debug(f"nested data model pk_source_prs structure is: {pk_source_prs}.")
 
         labels_all = []
         reviewers_all = []
@@ -1214,7 +1215,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                                 'pr_reviewer_src_id': int(float(reviewer['id'])),
                                 'tool_source': self.tool_source,
                                 'tool_version': self.tool_version,
-                                'data_source': self.data_source
+                                'data_source': self.data_source,
+                                'repo_id': self.repo_id 
                             } for reviewer in source_reviewers_insert if 'login' in reviewer
                         ]
                         self.bulk_insert(self.pull_request_reviewers_table, insert=reviewers_insert)
