@@ -239,7 +239,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             SELECT pull_request_files.*
             FROM pull_request_files, pull_requests
             WHERE pull_request_files.pull_request_id = pull_requests.pull_request_id
-            AND repo_id = :repo_id
+            AND pull_requests.repo_id = :repo_id
         """)
         self.logger.debug(
             f'Getting table values with the following PSQL query: \n{table_values_sql}\n'
