@@ -392,7 +392,8 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                 # Ensures all database requests use the same connection
                 with self.db.connect() as connection:
                     # Use primary key to update the correct data.
-                    connection.execute(self.contributors_table.update().where(
+                    #It is important that non null data is not overwritten.
+                    connection.execute(self.contributors_table.update(overwrite=False).where(
                         self.contributors_table.c.cntrb_id == contributor_table_data[0]['cntrb_id']
                     ).values(cntrb))
                 break  # break if success.
