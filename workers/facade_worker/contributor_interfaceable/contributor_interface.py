@@ -98,6 +98,9 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         self.special_rate_limit = special_rate_limit
         self.recent_requests_made = 0
 
+        #Needs to be an attribute of the class for incremental database insert using paginate_endpoint
+        self.pk_source_prs = []
+
         self.logger.info("Facade now has contributor interface.")
 
         self.tool_source = '\'Facade Worker\''
@@ -740,7 +743,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             "/")[1] + "/" + result[0]['repo_name']
 
         # Create endpoint for committers in a repo.
-        url = "https://api.github.com/repos/" + repo_path + "/contributors"
+        url = "https://api.github.com/repos/" + repo_path + "/contributors?state=all&direction=asc&per_page=100&page={}"
 
         self.logger.info(f"Url: {url}")
 
@@ -761,16 +764,83 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             return
 
         # HIt the endpoint if we can and put it in a dict
-        committer_json = self.request_dict_from_endpoint(
-            endpoint, timeout_wait=0)
+        #committer_json = self.request_dict_from_endpoint(
+        #    endpoint, timeout_wait=0)
 
         #Prepare for pagination and insertion into the contributor's table with an action map
+        # TODO: this might be github specific
         committer_action_map = {
-                'insert': {
-                        'source': ['id'],
-                        'augur': ['platform_msg_id']
+            'insert': {
+                'source': ['login'],
+                'augur': ['cntrb_login']
+            },
+            'update': {
+                'source': ['type', 'site_admin'],
+                'augur': ['gh_type', 'gh_site_admin']
             }
         }
+
+        #Create a method so that paginate_endpoint knows how our records need to be inserted
+        def committer_insert(inc_source_comitters, action_map):
+
+            if len(inc_source_comitters['all']) == 0:
+                self.logger.info("There are no committers for this repository.\n")
+                #self.register_task_completion(self.task_info, self.repo_id, 'pull_requests')
+                return
+            
+
+            self.logger.debug(f"inc_source_committers is: {inc_source_comitters} and the action map is {action_map}...")
+
+            cntrbs_insert = [
+            {
+                "cntrb_login": cntrb['login'],
+                "cntrb_company": cntrb['company'] if 'company' in cntrb else None,
+                # "cntrb_type": , dont have a use for this as of now ... let it default to null
+                "gh_user_id": cntrb['id'],
+                "gh_login": cntrb['login'],
+                "gh_url": cntrb['url'],
+                "gh_html_url": cntrb['html_url'],
+                "gh_node_id": cntrb['node_id'],
+                "gh_avatar_url": cntrb['avatar_url'],
+                "gh_gravatar_id": cntrb['gravatar_id'],
+                "gh_followers_url": cntrb['followers_url'],
+                "gh_following_url": cntrb['following_url'],
+                "gh_gists_url": cntrb['gists_url'],
+                "gh_starred_url": cntrb['starred_url'],
+                "gh_subscriptions_url": cntrb['subscriptions_url'],
+                "gh_organizations_url": cntrb['organizations_url'],
+                "gh_repos_url": cntrb['repos_url'],
+                "gh_events_url": cntrb['events_url'],
+                "gh_received_events_url": cntrb['received_events_url'],
+                "gh_type": cntrb['type'],
+                "gh_site_admin": cntrb['site_admin'],
+                "cntrb_last_used" : None if 'updated_at' not in cntrb else cntrb['updated_at'],
+                "cntrb_full_name" : None if 'name' not in cntrb else cntrb['name'],
+                "tool_source": self.tool_source,
+                "tool_version": self.tool_version,
+                "data_source": self.data_source
+
+            } for cntrb in inc_source_comitters['all'] 
+            ]
+
+            #Try to insert all committers
+            for committer in cntrbs_insert:
+                try:
+                    self.db.execute(
+                                self.contributors_table.insert().values(committer))
+                except Exception as e:
+                    self.logger.info(f"Could not insert new committer ERROR: {e}")
+            
+            return
+
+        source_committers = self.paginate_endpoint(
+            endpoint, action_map=committer_action_map, table=self.contributors_table,
+            where_clause=True,
+            stagger=True,
+            insertion_method=committer_insert
+        )
+
+        committer_insert(source_committers, committer_action_map)
 
     
     ''' Future method to try and get additional info for partially populated users. 

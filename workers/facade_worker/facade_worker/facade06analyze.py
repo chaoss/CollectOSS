@@ -83,6 +83,11 @@ def analysis(cfg, multithreaded, interface=None):
 
 
     for repo in repos:
+
+        #Add committers for repo if interface
+        if interface != None:
+            interface.grab_committer_list(repo[0])
+
         update_analysis_log(repo[0],'Beginning analysis')
         cfg.log_activity('Verbose','Analyzing repo: %s (%s)' % (repo[0],repo[3]))
 
