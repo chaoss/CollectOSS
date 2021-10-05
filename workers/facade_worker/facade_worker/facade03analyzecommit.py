@@ -64,6 +64,7 @@ elif GitLab:
 	4. If there is an email returned, check if its a canonical or an alias (Phase 2)
 
 elif ... 	
+'''
 
 ### Local helper functions ###
 
