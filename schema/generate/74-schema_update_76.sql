@@ -1,12 +1,12 @@
 BEGIN; 
 
 ALTER TABLE "augur_data"."contributors" 
-  DROP CONSTRAINT "GH-UNIQUE-B";
+  DROP CONSTRAINT IF EXISTS "GH-UNIQUE-B";
 
 ALTER TABLE "augur_data"."commits" 
-  DROP CONSTRAINT "fk_commits_contributors_1",
-  DROP CONSTRAINT "fk_commits_contributors_2",
-  DROP CONSTRAINT "fk_commits_repo_1",
+  DROP CONSTRAINT IF EXISTS  "fk_commits_contributors_1",
+  DROP CONSTRAINT IF EXISTS "fk_commits_contributors_2",
+  DROP CONSTRAINT IF EXISTS "fk_commits_repo_1",
   ADD COLUMN "cmt_author_platform_username" varchar,
   ADD CONSTRAINT "fk_commits_contributors_3" FOREIGN KEY ("cmt_author_platform_username") REFERENCES "augur_data"."contributors" ("cntrb_login") ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT "fk_commits_contributors_4" FOREIGN KEY ("cmt_author_platform_username") REFERENCES "augur_data"."contributors" ("cntrb_login") ON DELETE CASCADE ON UPDATE CASCADE,
