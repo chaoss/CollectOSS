@@ -321,7 +321,7 @@ def git_repo_updates(cfg):
                     getremotedefault = ("git -C %s%s/%s%s remote show origin | sed -n '/HEAD branch/s/.*: //p'"
                         % (cfg.repo_base_directory,row[1],row[4],row[3]))
 
-                    return_code_remote = subprocess.Popen([getremotedefault],stdout=subprocess.PIPE,shell=True).wait()
+                    return_code_remote = subprocess.Popen([getremotedefault],shell=True).wait()
 
                     remotedefault = subprocess.Popen([getremotedefault],stdout=subprocess.PIPE,shell=True).communicate()[0]
 
