@@ -1100,10 +1100,21 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             self.logger.debug(f"{stacker}")                
 
     def pull_request_nested_data_model(self, pk_source_prs=[]):
+        try: 
 
-        if not pk_source_prs:
-            pk_source_prs = self._get_pk_source_prs()
-            self.logger.debug(f"nested data model pk_source_prs structure is: {pk_source_prs}.")
+            if not pk_source_prs:
+                pk_source_prs = self._get_pk_source_prs()
+                prdata = json.loads(json.dumps(pk_source_prs))
+                self.logger.debug(f"nested data model pk_source_prs structure is: {prdata}.")
+            else: 
+                prdata = json.loads(json.dumps(pk_source_prs))
+                self.logger.debug(f"nested data model pk_source_prs structure is: {prdata}.") 
+
+        except Exception as e: 
+
+            self.logger.debug(f'gettign source prs failed for nested model on {e}.')
+            pass 
+
 
         labels_all = []
         reviewers_all = []
