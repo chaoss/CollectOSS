@@ -390,6 +390,9 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         attempts = 0
 
+        #make sure not to overwrite canonical email
+        del cntrb["cntrb_canonical"]
+
         while attempts < max_attempts:
             try:
                 # Using with on a sqlalchemy connection prevents 'Connection refused' error
