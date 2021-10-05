@@ -523,64 +523,78 @@ class GitHubWorker(WorkerGitInterfaceable):
         for issue in pk_source_issues:
 
             self.logger.debug(f"on issue: there are {len(pk_source_issues)} issues total. Editing assignee next.")
+            try: 
+                # Issue Assignees
+                source_assignees = [
+                    assignee for assignee in issue['assignee'] if assignee
+                    and not is_nan(assignee)
+                ]
+                if (
+                    issue['assignee'] not in source_assignees and issue['assignee']
+                    and not is_nan(issue['assignee'])
+                ):
+                    source_assignees.append(issue['assignee'])
+                    # assignees_all += source_assignees
 
-            # Issue Assignees
-            source_assignees = [
-                assignee for assignee in issue['assignee'] if assignee
-                and not is_nan(assignee)
-            ]
-            if (
-                issue['assignee'] not in source_assignees and issue['assignee']
-                and not is_nan(issue['assignee'])
-            ):
-                source_assignees.append(issue['assignee'])
-                # assignees_all += source_assignees
+                # self.logger.info(f"Total of assignee's is: {assignees_all}. Labels are next.")
+            except Exception as e: 
+                self.logger(f'assignee exception: {e}.')
+                stacker = traceback.format_exc()
+                self.logger.debug(f"{stacker}")
+                pass 
+                
+            finally: 
 
-            # self.logger.info(f"Total of assignee's is: {assignees_all}. Labels are next.")
+                try: 
+                    # Issue Labels
+                    # labels_all += issue['labels']
 
-            # Issue Labels
-            # labels_all += issue['labels']
+                    # If the issue is closed, then we search for the closing event and store the user's id
+                    if 'closed_at' in issue and not skip_closed_issue_update:
 
-            # If the issue is closed, then we search for the closing event and store the user's id
-            if 'closed_at' in issue and not skip_closed_issue_update:
+                        try:
+                            closed_event = events_df.loc[
+                                events_df['issue.number'] == issue['number']
+                            ].iloc[-1]
 
-                try:
-                    closed_event = events_df.loc[
-                        events_df['issue.number'] == issue['number']
-                    ].iloc[-1]
+                            self.logger.info(f"In the closed events section.")
 
-                    self.logger.info(f"In the closed events section.")
+                        except IndexError:
+                            self.logger.info(
+                                "Warning! We do not have the closing event of this issue stored. "
+                                f"Pk: {issue['issue_id']}. exception registered."
+                            )
+                            continue
+                        except Exception as e:
+                            self.logger.info(f"exception is {e} and not an IndexError.. exception registered")
+                            continue
+                        ### Updated this on 9/17/2021 due to error:
+                        '''
+                                2021-09-17 15:55:10,377,377ms [PID: 2078591] workers.github_worker.57631 [INFO] Warning! Error bulk updating data: (psycopg2.ProgrammingError) can't adapt type 'numpy.int64'
+                                [SQL: UPDATE issues SET cntrb_id=%(cntrb_id)s, closed_at=%(closed_at)s, issue_state=%(issue_state)s WHERE issues.issue_id = %(b_issue_id)s]
+                                [parameters: ({'cntrb_id': 277403, 'closed_at': 'closed_at', 'issue_state': 'issue_state', 'b_issue_id': 345071}, {'cntrb_id': 277403, 'closed_at': 'closed_at', 'issue_state': 'issue_state', 'b_issue_id': 345072}, {'cntrb_id': 277403, 'closed_at': 'closed_at', 'issue_state': 'issue_state', 'b_issue_id': 345073}, {'cntrb_id': 277403, 'closed_at': 'closed_at', 'issue_state': 'issue_state', 'b_issue_id': 345074}, {'cntrb_id': 277403, 'closed_at': 'closed_at', 'issue_state': 'issue_state', 'b_issue_id': 345075}, {'cntrb_id': 277762, 'closed_at': 'closed_at', 'issue_state': 'issue_state', 'b_issue_id': 345077}, {'cntrb_id': 277762, 'closed_at': 'closed_at', 'issue_state': 'issue_state', 'b_issue_id': 345078})]
+                                (Background on this error at: http://sqlalche.me/e/13/f405)
+                        '''
 
-                except IndexError:
-                    self.logger.info(
-                        "Warning! We do not have the closing event of this issue stored. "
-                        f"Pk: {issue['issue_id']}. exception registered."
-                    )
-                    continue
-                except Exception as e:
-                    self.logger.info(f"exception is {e} and not an IndexError.. exception registered")
-                    continue
-                ### Updated this on 9/17/2021 due to error:
-                '''
-                        2021-09-17 15:55:10,377,377ms [PID: 2078591] workers.github_worker.57631 [INFO] Warning! Error bulk updating data: (psycopg2.ProgrammingError) can't adapt type 'numpy.int64'
-                        [SQL: UPDATE issues SET cntrb_id=%(cntrb_id)s, closed_at=%(closed_at)s, issue_state=%(issue_state)s WHERE issues.issue_id = %(b_issue_id)s]
-                        [parameters: ({'cntrb_id': 277403, 'closed_at': 'closed_at', 'issue_state': 'issue_state', 'b_issue_id': 345071}, {'cntrb_id': 277403, 'closed_at': 'closed_at', 'issue_state': 'issue_state', 'b_issue_id': 345072}, {'cntrb_id': 277403, 'closed_at': 'closed_at', 'issue_state': 'issue_state', 'b_issue_id': 345073}, {'cntrb_id': 277403, 'closed_at': 'closed_at', 'issue_state': 'issue_state', 'b_issue_id': 345074}, {'cntrb_id': 277403, 'closed_at': 'closed_at', 'issue_state': 'issue_state', 'b_issue_id': 345075}, {'cntrb_id': 277762, 'closed_at': 'closed_at', 'issue_state': 'issue_state', 'b_issue_id': 345077}, {'cntrb_id': 277762, 'closed_at': 'closed_at', 'issue_state': 'issue_state', 'b_issue_id': 345078})]
-                        (Background on this error at: http://sqlalche.me/e/13/f405)
-                '''
+                        ## Cast the numerics as ints, as prior update on 9/17 did not eliminate the error noted above. SPG, 9/18/2021
+                        self.logger.info(f"issue closed_at is: {issue['closed_at']}")
+                        closed_issue_updates.append({
+                            'b_issue_id': int(issue['issue_id']),
+                            'cntrb_id': int(closed_event['cntrb_id']),
+                            'issue_state': issue['state'],
+                            'closed_at': issue['closed_at'] if not pd.isnull(issue['closed_at']) else None,
+                        })
 
-                ## Cast the numerics as ints, as prior update on 9/17 did not eliminate the error noted above. SPG, 9/18/2021
-                self.logger.info(f"issue closed_at is: {issue['closed_at']}")
-                closed_issue_updates.append({
-                    'b_issue_id': int(issue['issue_id']),
-                    'cntrb_id': int(closed_event['cntrb_id']),
-                    'issue_state': issue['state'],
-                    'closed_at': issue['closed_at'] if not pd.isnull(issue['closed_at']) else None,
-                })
+                        self.logger.info(f"Current closed issue count is {len(closed_issue_updates)}.")
 
-                self.logger.info(f"Current closed issue count is {len(closed_issue_updates)}.")
+                    # Closed issues, update with closer id
+                    ''' TODO: Right here I am not sure if the update columns are right, and will catch the state changes. '''
+                except Exception as e: 
+                    self.logger(f'assignee exception: {e}.')
+                    stacker = traceback.format_exc()
+                    self.logger.debug(f"{stacker}")
+                    pass 
 
-            # Closed issues, update with closer id
-            ''' TODO: Right here I am not sure if the update columns are right, and will catch the state changes. '''
 
             try:
 
