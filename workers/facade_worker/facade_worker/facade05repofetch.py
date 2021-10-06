@@ -332,7 +332,7 @@ def git_repo_updates(cfg):
                     getremotedefault = (f"git -C %s%s/%s%s checkout {remotedefault}"
                         % (cfg.repo_base_directory,row[1],row[4],row[3]))
 
-                    return_code_remote_default_again = subprocess.Popen([getremotedefault],stdout=subprocess.PIPE,shell=True).wait()
+                    return_code_remote_default_again = subprocess.Popen([getremotedefault],shell=True).wait()
 
                     if return_code_remote_default_again == 0: 
                         cfg.log_activity("local checkout worked.")
