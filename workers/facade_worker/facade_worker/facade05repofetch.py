@@ -346,24 +346,9 @@ def git_repo_updates(cfg):
                 else: 
                     break  
 
-                #cfg.log_activity('Verbose', f'default branch is {default_branch} '
-                #    ' for %s' % row[2])                    
-
-                # cmd_checkout_default = (f"git -C %s%s/%s%s checkout {default_branch}" 
-                #    % (cfg.repo_base_directory,row[1],row[4],row[3]))
-
-                #cfg.log_activity('Verbose', f'checkout command is {cmd_checkout_default}.')
-
-                # cfg.log_activity('Verbose',f'attempting to checkout default branch {default_branch} '
-                #    ' for %s' % row[2])                
-
-                #return_code_default_change = subprocess.Popen([cmd_checkout_default],shell=True).wait()
-
-                #cfg.log_activity('Verbose',f'return code  from default branch change is: {return_code_default_change} '
-                #    ' for %s' % row[2])   
-
             except Exception as e: 
                 cfg.log_activity('Verbose', f'Error code on branch change is {e}.')
+                pass
 
             cmd = ("git -C %s%s/%s%s pull"
                 % (cfg.repo_base_directory,row[1],row[4],row[3]))#['projects_id'],row['path'],row['name']))
@@ -441,7 +426,7 @@ def git_repo_updates(cfg):
                     cmdpull2 = ("git -C %s%s/%s%s pull"
                         % (cfg.repo_base_directory,row[1],row[4],row[3]))
 
-                    return_code = subprocess.Popen([cmdpull2],stdout=subprocess.PIPE,shell=True).wait()
+                    return_code = subprocess.Popen([cmdpull2],shell=True).wait()
 
                 except Exception as e: 
 
