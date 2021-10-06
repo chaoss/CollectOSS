@@ -734,10 +734,10 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         # Bind parameter
         select_repo_path_query = select_repo_path_query.bindparams(
             repo_id_bind=repo_id)
-        result = self.db.execute(select_repo_path_query)
+        result = self.db.execute(select_repo_path_query).fetchall()
 
         # if not found
-        if not len(result.fetchall()) >= 1:
+        if not len(result) >= 1:
             raise LookupError
 
         # Else put into a more readable local var
