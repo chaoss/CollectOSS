@@ -184,6 +184,8 @@ class ReleaseWorker(WorkerGitInterfaceable):
                 }
             """ % (owner, repo, 10)
 
+        self.logger.debug(f"query is: {query}")
+
         return query
 
     def fetch_data(self, task, repo_id, tag_only = False):
