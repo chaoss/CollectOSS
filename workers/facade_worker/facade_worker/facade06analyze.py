@@ -73,7 +73,7 @@ def analysis(cfg, multithreaded, interface=None):
 ### The real function starts here ###
 
     cfg.update_status('Running analysis')
-    cfg.log_activity('Info','Beginning analysis')
+    cfg.log_activity('Info',f"Beginning analysis. Interface={interface}")
 
     start_date = cfg.get_setting('start_date')
 
@@ -88,7 +88,7 @@ def analysis(cfg, multithreaded, interface=None):
         if interface != None:
             interface.grab_committer_list(repo[0])
 
-        update_analysis_log(repo[0],f"Beginning analysis. Interface: {interface}")
+        update_analysis_log(repo[0],"Beginning analysis.")
         cfg.log_activity('Verbose','Analyzing repo: %s (%s)' % (repo[0],repo[3]))
 
         cfg.inc_repos_processed()
