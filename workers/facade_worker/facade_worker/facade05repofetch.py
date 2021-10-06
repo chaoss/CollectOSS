@@ -307,62 +307,48 @@ def git_repo_updates(cfg):
                 firstpull = ("git -C %s%s/%s%s pull"
                     % (cfg.repo_base_directory,row[1],row[4],row[3]))
 
-                return_code_remote = subprocess.Popen([firstpull],stdout=subprocess.PIPE,shell=True).wait()
+                return_code_remote = subprocess.Popen([firstpull],shell=True).wait()
 
-                logremotedefault = ("git -C %s%s/%s%s remote set-head origin -a"
-                    % (cfg.repo_base_directory,row[1],row[4],row[3]))
+                if return_code_remote == 0: 
 
-                return_code_remote = subprocess.Popen([logremotedefault],stdout=subprocess.PIPE,shell=True).wait()
+                    logremotedefault = ("git -C %s%s/%s%s remote set-head origin -a"
+                        % (cfg.repo_base_directory,row[1],row[4],row[3]))
 
-                cfg.log_activity('Verbose', f'remote default is {logremotedefault}.')
+                    return_code_remote_default = subprocess.Popen([logremotedefault],stdout=subprocess.PIPE,shell=True).wait()
 
-                getremotedefault = ("git -C %s%s/%s%s remote show origin | sed -n '/HEAD branch/s/.*: //p'"
-                    % (cfg.repo_base_directory,row[1],row[4],row[3]))
+                    cfg.log_activity('Verbose', f'remote default is {logremotedefault}.')
 
-                return_code_remote = subprocess.Popen([getremotedefault],stdout=subprocess.PIPE,shell=True).wait()
+                    getremotedefault = ("git -C %s%s/%s%s remote show origin | sed -n '/HEAD branch/s/.*: //p'"
+                        % (cfg.repo_base_directory,row[1],row[4],row[3]))
 
-                remotedefault = subprocess.Popen([getremotedefault],stdout=subprocess.PIPE,shell=True).communicate()[0]
+                    return_code_remote = subprocess.Popen([getremotedefault],shell=True).wait()
 
-                remotedefault = remotedefault.decode()
+                    remotedefault = subprocess.Popen([getremotedefault],stdout=subprocess.PIPE,shell=True).communicate()[0]
 
-                getremotedefault = (f"git -C %s%s/%s%s checkout {remotedefault}"
-                    % (cfg.repo_base_directory,row[1],row[4],row[3]))
+                    remotedefault = remotedefault.decode()
 
-                return_code_remote_default = subprocess.Popen([getremotedefault],stdout=subprocess.PIPE,shell=True).wait()
+                    cfg.log_activity('Verbose', f'remote default getting checked out is: {remotedefault}.')
 
-                return_message_getremotedefault = subprocess.Popen([getremotedefault],stdout=subprocess.PIPE,shell=True).communicate()[0]
+                    getremotedefault = (f"git -C %s%s/%s%s checkout {remotedefault}"
+                        % (cfg.repo_base_directory,row[1],row[4],row[3]))
 
-                cfg.log_activity('Verbose', f'get remote default result: {return_message_getremotedefault}')
+                    return_code_remote_default_again = subprocess.Popen([getremotedefault],shell=True).wait()
 
-                getcurrentbranch = ("git -C %s%s/%s%s branch"
-                    % (cfg.repo_base_directory,row[1],row[4],row[3]))
+                    if return_code_remote_default_again == 0: 
+                        cfg.log_activity("local checkout worked.")
+                        cmd = ("git -C %s%s/%s%s pull"
+                            % (cfg.repo_base_directory,row[1],row[4],row[3]))#['projects_id'],row['path'],row['name']))
 
-                return_code_local = subprocess.Popen([getcurrentbranch],stdout=subprocess.PIPE,shell=True).wait()
+                        return_code = subprocess.Popen([cmd],shell=True).wait()
+                    else: 
+                        break 
 
-                localdefault = subprocess.Popen([getcurrentbranch],stdout=subprocess.PIPE,shell=True).communicate()[0]  
-
-                localdefault = localdefault.decode()
-
-                cfg.log_activity('Verbose', f'remote default is: {remotedefault}, and localdefault is {localdefault}.')   
-
-                #cfg.log_activity('Verbose', f'default branch is {default_branch} '
-                #    ' for %s' % row[2])                    
-
-                # cmd_checkout_default = (f"git -C %s%s/%s%s checkout {default_branch}" 
-                #    % (cfg.repo_base_directory,row[1],row[4],row[3]))
-
-                #cfg.log_activity('Verbose', f'checkout command is {cmd_checkout_default}.')
-
-                # cfg.log_activity('Verbose',f'attempting to checkout default branch {default_branch} '
-                #    ' for %s' % row[2])                
-
-                #return_code_default_change = subprocess.Popen([cmd_checkout_default],shell=True).wait()
-
-                #cfg.log_activity('Verbose',f'return code  from default branch change is: {return_code_default_change} '
-                #    ' for %s' % row[2])   
+                else: 
+                    break  
 
             except Exception as e: 
                 cfg.log_activity('Verbose', f'Error code on branch change is {e}.')
+                pass
 
             cmd = ("git -C %s%s/%s%s pull"
                 % (cfg.repo_base_directory,row[1],row[4],row[3]))#['projects_id'],row['path'],row['name']))
@@ -440,11 +426,12 @@ def git_repo_updates(cfg):
                     cmdpull2 = ("git -C %s%s/%s%s pull"
                         % (cfg.repo_base_directory,row[1],row[4],row[3]))
 
-                    return_code = subprocess.Popen([cmdpull2],stdout=subprocess.PIPE,shell=True).wait()
+                    return_code = subprocess.Popen([cmdpull2],shell=True).wait()
 
                 except Exception as e: 
 
                     cfg.log_activity('Verbose', f'Second pass failed: {e}.')
+                    pass 
 
             attempt += 1
             #default_branch = ''
