@@ -728,7 +728,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
     def create_endpoint_from_repo_id(self, repo_id):
         select_repo_path_query = s.sql.text("""
             SELECT repo_path, repo_name from repo
-            WHERE cntrb_login = :repo_id_bind
+            WHERE repo_id = :repo_id_bind
         """)
 
         # Bind parameter
