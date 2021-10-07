@@ -520,11 +520,11 @@ ALTER SEQUENCE "augur_data"."utility_log_id_seq1" OWNER TO "augur";
 -- ----------------------------
 DROP TABLE IF EXISTS "augur_data"."_git_census";
 CREATE TABLE "augur_data"."_git_census" (
-  "rank" varchar(255) COLLATE "pg_catalog"."default",
-  "zscore" varchar(255) COLLATE "pg_catalog"."default",
-  "name" varchar(255) COLLATE "pg_catalog"."default",
-  "source" varchar(255) COLLATE "pg_catalog"."default",
-  "git_url" varchar(255) COLLATE "pg_catalog"."default"
+  "rank" varchar COLLATE "pg_catalog"."default",
+  "zscore" varchar COLLATE "pg_catalog"."default",
+  "name" varchar COLLATE "pg_catalog"."default",
+  "source" varchar COLLATE "pg_catalog"."default",
+  "git_url" varchar COLLATE "pg_catalog"."default"
 )
 ;
 ALTER TABLE "augur_data"."_git_census" OWNER TO "augur";
@@ -580,9 +580,9 @@ CREATE TABLE "augur_data"."commit_comment_ref" (
   "line" int8,
   "position" int8,
   "created_at" timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "tool_source" varchar(255) COLLATE "pg_catalog"."default",
-  "tool_version" varchar(255) COLLATE "pg_catalog"."default",
-  "data_source" varchar(255) COLLATE "pg_catalog"."default",
+  "tool_source" varchar COLLATE "pg_catalog"."default",
+  "tool_version" varchar COLLATE "pg_catalog"."default",
+  "data_source" varchar COLLATE "pg_catalog"."default",
   "data_collection_date" timestamp(0) DEFAULT CURRENT_TIMESTAMP,
   "cmt_comment_src_id" int8 NOT NULL,
   "commit_comment_src_node_id" varchar COLLATE "pg_catalog"."default"
@@ -599,9 +599,9 @@ DROP TABLE IF EXISTS "augur_data"."commit_parents";
 CREATE TABLE "augur_data"."commit_parents" (
   "cmt_id" int8 NOT NULL,
   "parent_id" int8 NOT NULL DEFAULT nextval('"augur_data".commit_parents_parent_id_seq'::regclass),
-  "tool_source" varchar(255) COLLATE "pg_catalog"."default",
-  "tool_version" varchar(255) COLLATE "pg_catalog"."default",
-  "data_source" varchar(255) COLLATE "pg_catalog"."default",
+  "tool_source" varchar COLLATE "pg_catalog"."default",
+  "tool_version" varchar COLLATE "pg_catalog"."default",
+  "data_source" varchar COLLATE "pg_catalog"."default",
   "data_collection_date" timestamp(0) DEFAULT CURRENT_TIMESTAMP
 )
 ;
@@ -633,9 +633,9 @@ CREATE TABLE "augur_data"."commits" (
   "cmt_ght_author_id" int4,
   "cmt_ght_committer_id" int4,
   "cmt_ght_committed_at" timestamp(0),
-  "tool_source" varchar(255) COLLATE "pg_catalog"."default",
-  "tool_version" varchar(255) COLLATE "pg_catalog"."default",
-  "data_source" varchar(255) COLLATE "pg_catalog"."default",
+  "tool_source" varchar COLLATE "pg_catalog"."default",
+  "tool_version" varchar COLLATE "pg_catalog"."default",
+  "data_source" varchar COLLATE "pg_catalog"."default",
   "data_collection_date" timestamp(0) DEFAULT CURRENT_TIMESTAMP,
   "cmt_author_timestamp" timestamp(0),
   "cmt_committer_timestamp" timestamp(0)
@@ -658,9 +658,9 @@ CREATE TABLE "augur_data"."contributor_affiliations" (
   "ca_start_date" date NOT NULL DEFAULT CURRENT_DATE,
   "ca_active" int2 NOT NULL DEFAULT 1,
   "ca_last_modified" timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "tool_source" varchar(255) COLLATE "pg_catalog"."default",
-  "tool_version" varchar(255) COLLATE "pg_catalog"."default",
-  "data_source" varchar(255) COLLATE "pg_catalog"."default",
+  "tool_source" varchar COLLATE "pg_catalog"."default",
+  "tool_version" varchar COLLATE "pg_catalog"."default",
+  "data_source" varchar COLLATE "pg_catalog"."default",
   "data_collection_date" timestamp(0) DEFAULT CURRENT_TIMESTAMP
 )
 ;
@@ -672,27 +672,27 @@ ALTER TABLE "augur_data"."contributor_affiliations" OWNER TO "augur";
 DROP TABLE IF EXISTS "augur_data"."contributors";
 CREATE TABLE "augur_data"."contributors" (
   "cntrb_id" int8 NOT NULL DEFAULT nextval('"augur_data".contributors_cntrb_id_seq'::regclass),
-  "cntrb_login" varchar(255) COLLATE "pg_catalog"."default",
-  "cntrb_email" varchar(255) COLLATE "pg_catalog"."default",
-  "cntrb_company" varchar(255) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+  "cntrb_login" varchar COLLATE "pg_catalog"."default",
+  "cntrb_email" varchar COLLATE "pg_catalog"."default",
+  "cntrb_company" varchar COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
   "cntrb_created_at" timestamp(0),
-  "cntrb_type" varchar(255) COLLATE "pg_catalog"."default",
+  "cntrb_type" varchar COLLATE "pg_catalog"."default",
   "cntrb_fake" int2 DEFAULT 0,
   "cntrb_deleted" int2 DEFAULT 0,
   "cntrb_long" numeric(11,8) DEFAULT NULL::numeric,
   "cntrb_lat" numeric(10,8) DEFAULT NULL::numeric,
   "cntrb_country_code" char(3) COLLATE "pg_catalog"."default" DEFAULT NULL::bpchar,
-  "cntrb_state" varchar(255) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
-  "cntrb_city" varchar(255) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
-  "cntrb_location" varchar(255) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+  "cntrb_state" varchar COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+  "cntrb_city" varchar COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+  "cntrb_location" varchar COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
   "cntrb_canonical" varchar(128) COLLATE "pg_catalog"."default",
   "gh_user_id" int8,
-  "gh_login" varchar(255) COLLATE "pg_catalog"."default",
-  "gh_url" varchar(255) COLLATE "pg_catalog"."default",
-  "gh_html_url" varchar(255) COLLATE "pg_catalog"."default",
-  "gh_node_id" varchar(255) COLLATE "pg_catalog"."default",
+  "gh_login" varchar COLLATE "pg_catalog"."default",
+  "gh_url" varchar COLLATE "pg_catalog"."default",
+  "gh_html_url" varchar COLLATE "pg_catalog"."default",
+  "gh_node_id" varchar COLLATE "pg_catalog"."default",
   "gh_avatar_url" varchar(4000) COLLATE "pg_catalog"."default",
-  "gh_gravatar_id" varchar(255) COLLATE "pg_catalog"."default",
+  "gh_gravatar_id" varchar COLLATE "pg_catalog"."default",
   "gh_followers_url" varchar(4000) COLLATE "pg_catalog"."default",
   "gh_following_url" varchar(4000) COLLATE "pg_catalog"."default",
   "gh_gists_url" varchar(4000) COLLATE "pg_catalog"."default",
@@ -702,11 +702,11 @@ CREATE TABLE "augur_data"."contributors" (
   "gh_repos_url" varchar(4000) COLLATE "pg_catalog"."default",
   "gh_events_url" varchar(4000) COLLATE "pg_catalog"."default",
   "gh_received_events_url" varchar(4000) COLLATE "pg_catalog"."default",
-  "gh_type" varchar(255) COLLATE "pg_catalog"."default",
-  "gh_site_admin" varchar(255) COLLATE "pg_catalog"."default",
-  "tool_source" varchar(255) COLLATE "pg_catalog"."default",
-  "tool_version" varchar(255) COLLATE "pg_catalog"."default",
-  "data_source" varchar(255) COLLATE "pg_catalog"."default",
+  "gh_type" varchar COLLATE "pg_catalog"."default",
+  "gh_site_admin" varchar COLLATE "pg_catalog"."default",
+  "tool_source" varchar COLLATE "pg_catalog"."default",
+  "tool_version" varchar COLLATE "pg_catalog"."default",
+  "data_source" varchar COLLATE "pg_catalog"."default",
   "data_collection_date" timestamp(0) DEFAULT CURRENT_TIMESTAMP,
   "cntrb_full_name" varchar COLLATE "pg_catalog"."default"
 )
@@ -729,9 +729,9 @@ CREATE TABLE "augur_data"."contributors_aliases" (
   "alias_email" varchar(128) COLLATE "pg_catalog"."default" NOT NULL,
   "cntrb_active" int2 NOT NULL DEFAULT 1,
   "cntrb_last_modified" timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "tool_source" varchar(255) COLLATE "pg_catalog"."default",
-  "tool_version" varchar(255) COLLATE "pg_catalog"."default",
-  "data_source" varchar(255) COLLATE "pg_catalog"."default",
+  "tool_source" varchar COLLATE "pg_catalog"."default",
+  "tool_version" varchar COLLATE "pg_catalog"."default",
+  "data_source" varchar COLLATE "pg_catalog"."default",
   "data_collection_date" timestamp(0)
 )
 ;
@@ -752,27 +752,27 @@ CREATE TABLE "augur_data"."contributors_history" (
   "cntrb_starred_count" int8,
   "cntrb_following_count" int8,
   "cntrb_follower_count" int8,
-  "cntrb_login" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
-  "cntrb_email" varchar(255) COLLATE "pg_catalog"."default",
-  "cntrb_company" varchar(255) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+  "cntrb_login" varchar COLLATE "pg_catalog"."default" NOT NULL,
+  "cntrb_email" varchar COLLATE "pg_catalog"."default",
+  "cntrb_company" varchar COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
   "cntrb_created_at" timestamp(0) NOT NULL,
-  "cntrb_type" varchar(255) COLLATE "pg_catalog"."default",
+  "cntrb_type" varchar COLLATE "pg_catalog"."default",
   "cntrb_fake" int2 NOT NULL DEFAULT 0,
   "cntrb_deleted" int2 NOT NULL DEFAULT 0,
   "cntrb_long" numeric(11,8) DEFAULT NULL::numeric,
   "cntrb_lat" numeric(10,8) DEFAULT NULL::numeric,
   "cntrb_country_code" char(3) COLLATE "pg_catalog"."default" DEFAULT NULL::bpchar,
-  "cntrb_state" varchar(255) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
-  "cntrb_city" varchar(255) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
-  "cntrb_location" varchar(255) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+  "cntrb_state" varchar COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+  "cntrb_city" varchar COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+  "cntrb_location" varchar COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
   "cntrb_canonical" varchar(128) COLLATE "pg_catalog"."default",
   "gh_user_id" int8,
-  "gh_login" varchar(255) COLLATE "pg_catalog"."default",
-  "gh_url" varchar(255) COLLATE "pg_catalog"."default",
-  "gh_html_url" varchar(255) COLLATE "pg_catalog"."default",
-  "gh_node_id" varchar(255) COLLATE "pg_catalog"."default",
+  "gh_login" varchar COLLATE "pg_catalog"."default",
+  "gh_url" varchar COLLATE "pg_catalog"."default",
+  "gh_html_url" varchar COLLATE "pg_catalog"."default",
+  "gh_node_id" varchar COLLATE "pg_catalog"."default",
   "gh_avatar_url" varchar(4000) COLLATE "pg_catalog"."default",
-  "gh_gravatar_id" varchar(255) COLLATE "pg_catalog"."default",
+  "gh_gravatar_id" varchar COLLATE "pg_catalog"."default",
   "gh_followers_url" varchar(4000) COLLATE "pg_catalog"."default",
   "gh_following_url" varchar(4000) COLLATE "pg_catalog"."default",
   "gh_gists_url" varchar(4000) COLLATE "pg_catalog"."default",
@@ -782,11 +782,11 @@ CREATE TABLE "augur_data"."contributors_history" (
   "gh_repos_url" varchar(4000) COLLATE "pg_catalog"."default",
   "gh_events_url" varchar(4000) COLLATE "pg_catalog"."default",
   "gh_received_events_url" varchar(4000) COLLATE "pg_catalog"."default",
-  "gh_type" varchar(255) COLLATE "pg_catalog"."default",
-  "gh_site_admin" varchar(255) COLLATE "pg_catalog"."default",
-  "tool_source" varchar(255) COLLATE "pg_catalog"."default",
-  "tool_version" varchar(255) COLLATE "pg_catalog"."default",
-  "data_source" varchar(255) COLLATE "pg_catalog"."default",
+  "gh_type" varchar COLLATE "pg_catalog"."default",
+  "gh_site_admin" varchar COLLATE "pg_catalog"."default",
+  "tool_source" varchar COLLATE "pg_catalog"."default",
+  "tool_version" varchar COLLATE "pg_catalog"."default",
+  "data_source" varchar COLLATE "pg_catalog"."default",
   "data_collection_date" timestamp(0) DEFAULT CURRENT_TIMESTAMP
 )
 ;
@@ -812,9 +812,9 @@ CREATE TABLE "augur_data"."dm_repo_annual" (
   "whitespace" int8 NOT NULL,
   "files" int8 NOT NULL,
   "patches" int8 NOT NULL,
-  "tool_source" varchar(255) COLLATE "pg_catalog"."default",
-  "tool_version" varchar(255) COLLATE "pg_catalog"."default",
-  "data_source" varchar(255) COLLATE "pg_catalog"."default",
+  "tool_source" varchar COLLATE "pg_catalog"."default",
+  "tool_version" varchar COLLATE "pg_catalog"."default",
+  "data_source" varchar COLLATE "pg_catalog"."default",
   "data_collection_date" timestamp(0) DEFAULT CURRENT_TIMESTAMP
 )
 ;
@@ -834,9 +834,9 @@ CREATE TABLE "augur_data"."dm_repo_group_annual" (
   "whitespace" int8 NOT NULL,
   "files" int8 NOT NULL,
   "patches" int8 NOT NULL,
-  "tool_source" varchar(255) COLLATE "pg_catalog"."default",
-  "tool_version" varchar(255) COLLATE "pg_catalog"."default",
-  "data_source" varchar(255) COLLATE "pg_catalog"."default",
+  "tool_source" varchar COLLATE "pg_catalog"."default",
+  "tool_version" varchar COLLATE "pg_catalog"."default",
+  "data_source" varchar COLLATE "pg_catalog"."default",
   "data_collection_date" timestamp(0) DEFAULT CURRENT_TIMESTAMP
 )
 ;
@@ -857,9 +857,9 @@ CREATE TABLE "augur_data"."dm_repo_group_monthly" (
   "whitespace" int8 NOT NULL,
   "files" int8 NOT NULL,
   "patches" int8 NOT NULL,
-  "tool_source" varchar(255) COLLATE "pg_catalog"."default",
-  "tool_version" varchar(255) COLLATE "pg_catalog"."default",
-  "data_source" varchar(255) COLLATE "pg_catalog"."default",
+  "tool_source" varchar COLLATE "pg_catalog"."default",
+  "tool_version" varchar COLLATE "pg_catalog"."default",
+  "data_source" varchar COLLATE "pg_catalog"."default",
   "data_collection_date" timestamp(0) DEFAULT CURRENT_TIMESTAMP
 )
 ;
@@ -880,9 +880,9 @@ CREATE TABLE "augur_data"."dm_repo_group_weekly" (
   "whitespace" int8 NOT NULL,
   "files" int8 NOT NULL,
   "patches" int8 NOT NULL,
-  "tool_source" varchar(255) COLLATE "pg_catalog"."default",
-  "tool_version" varchar(255) COLLATE "pg_catalog"."default",
-  "data_source" varchar(255) COLLATE "pg_catalog"."default",
+  "tool_source" varchar COLLATE "pg_catalog"."default",
+  "tool_version" varchar COLLATE "pg_catalog"."default",
+  "data_source" varchar COLLATE "pg_catalog"."default",
   "data_collection_date" timestamp(0) DEFAULT CURRENT_TIMESTAMP
 )
 ;
@@ -903,9 +903,9 @@ CREATE TABLE "augur_data"."dm_repo_monthly" (
   "whitespace" int8 NOT NULL,
   "files" int8 NOT NULL,
   "patches" int8 NOT NULL,
-  "tool_source" varchar(255) COLLATE "pg_catalog"."default",
-  "tool_version" varchar(255) COLLATE "pg_catalog"."default",
-  "data_source" varchar(255) COLLATE "pg_catalog"."default",
+  "tool_source" varchar COLLATE "pg_catalog"."default",
+  "tool_version" varchar COLLATE "pg_catalog"."default",
+  "data_source" varchar COLLATE "pg_catalog"."default",
   "data_collection_date" timestamp(0) DEFAULT CURRENT_TIMESTAMP
 )
 ;
@@ -926,9 +926,9 @@ CREATE TABLE "augur_data"."dm_repo_weekly" (
   "whitespace" int8 NOT NULL,
   "files" int8 NOT NULL,
   "patches" int8 NOT NULL,
-  "tool_source" varchar(255) COLLATE "pg_catalog"."default",
-  "tool_version" varchar(255) COLLATE "pg_catalog"."default",
-  "data_source" varchar(255) COLLATE "pg_catalog"."default",
+  "tool_source" varchar COLLATE "pg_catalog"."default",
+  "tool_version" varchar COLLATE "pg_catalog"."default",
+  "data_source" varchar COLLATE "pg_catalog"."default",
   "data_collection_date" timestamp(0) DEFAULT CURRENT_TIMESTAMP
 )
 ;
@@ -975,14 +975,14 @@ CREATE TABLE "augur_data"."issue_events" (
   "event_id" int8 NOT NULL DEFAULT nextval('"augur_data".issue_events_event_id_seq'::regclass),
   "issue_id" int8 NOT NULL,
   "cntrb_id" int8 NOT NULL,
-  "action" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
+  "action" varchar COLLATE "pg_catalog"."default" NOT NULL,
   "action_commit_hash" varchar COLLATE "pg_catalog"."default",
   "created_at" timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "node_id" varchar COLLATE "pg_catalog"."default",
   "node_url" varchar COLLATE "pg_catalog"."default",
-  "tool_source" varchar(255) COLLATE "pg_catalog"."default",
-  "tool_version" varchar(255) COLLATE "pg_catalog"."default",
-  "data_source" varchar(255) COLLATE "pg_catalog"."default",
+  "tool_source" varchar COLLATE "pg_catalog"."default",
+  "tool_version" varchar COLLATE "pg_catalog"."default",
+  "data_source" varchar COLLATE "pg_catalog"."default",
   "data_collection_date" timestamp(0) DEFAULT CURRENT_TIMESTAMP,
   "issue_event_src_id" int8
 )
@@ -1001,9 +1001,9 @@ CREATE TABLE "augur_data"."issue_labels" (
   "label_text" varchar COLLATE "pg_catalog"."default",
   "label_description" varchar COLLATE "pg_catalog"."default",
   "label_color" varchar COLLATE "pg_catalog"."default",
-  "tool_source" varchar(255) COLLATE "pg_catalog"."default",
-  "tool_version" varchar(255) COLLATE "pg_catalog"."default",
-  "data_source" varchar(255) COLLATE "pg_catalog"."default",
+  "tool_source" varchar COLLATE "pg_catalog"."default",
+  "tool_version" varchar COLLATE "pg_catalog"."default",
+  "data_source" varchar COLLATE "pg_catalog"."default",
   "data_collection_date" timestamp(0) DEFAULT CURRENT_TIMESTAMP,
   "label_src_id" int8,
   "label_src_node_id" varchar COLLATE "pg_catalog"."default"
@@ -1020,9 +1020,9 @@ CREATE TABLE "augur_data"."issue_message_ref" (
   "issue_msg_ref_id" int8 NOT NULL DEFAULT nextval('"augur_data".issue_message_ref_issue_msg_ref_id_seq'::regclass),
   "issue_id" int8,
   "msg_id" int8,
-  "tool_source" varchar(255) COLLATE "pg_catalog"."default",
-  "tool_version" varchar(255) COLLATE "pg_catalog"."default",
-  "data_source" varchar(255) COLLATE "pg_catalog"."default",
+  "tool_source" varchar COLLATE "pg_catalog"."default",
+  "tool_version" varchar COLLATE "pg_catalog"."default",
+  "data_source" varchar COLLATE "pg_catalog"."default",
   "data_collection_date" timestamp(0) DEFAULT CURRENT_TIMESTAMP,
   "issue_msg_ref_src_comment_id" int8,
   "issue_msg_ref_src_node_id" varchar COLLATE "pg_catalog"."default"
@@ -1056,13 +1056,13 @@ CREATE TABLE "augur_data"."issues" (
   "comments_url" varchar(4000) COLLATE "pg_catalog"."default",
   "events_url" varchar(4000) COLLATE "pg_catalog"."default",
   "html_url" varchar(4000) COLLATE "pg_catalog"."default",
-  "issue_state" varchar(255) COLLATE "pg_catalog"."default",
+  "issue_state" varchar COLLATE "pg_catalog"."default",
   "issue_node_id" varchar COLLATE "pg_catalog"."default",
   "gh_issue_id" int8,
   "gh_user_id" int8,
-  "tool_source" varchar(255) COLLATE "pg_catalog"."default",
-  "tool_version" varchar(255) COLLATE "pg_catalog"."default",
-  "data_source" varchar(255) COLLATE "pg_catalog"."default",
+  "tool_source" varchar COLLATE "pg_catalog"."default",
+  "tool_version" varchar COLLATE "pg_catalog"."default",
+  "data_source" varchar COLLATE "pg_catalog"."default",
   "data_collection_date" timestamp(0) DEFAULT CURRENT_TIMESTAMP,
   "gh_issue_number" int8
 )
@@ -1078,24 +1078,24 @@ DROP TABLE IF EXISTS "augur_data"."libraries";
 CREATE TABLE "augur_data"."libraries" (
   "library_id" int8 NOT NULL DEFAULT nextval('"augur_data".libraries_library_id_seq'::regclass),
   "repo_id" int8,
-  "platform" varchar(255) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
-  "name" varchar(255) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+  "platform" varchar COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+  "name" varchar COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
   "created_timestamp" timestamp(0) DEFAULT NULL::timestamp without time zone,
   "updated_timestamp" timestamp(0) DEFAULT NULL::timestamp without time zone,
   "library_description" varchar(2000) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
-  "keywords" varchar(255) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+  "keywords" varchar COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
   "library_homepage" varchar(1000) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
-  "license" varchar(255) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+  "license" varchar COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
   "version_count" int4,
-  "latest_release_timestamp" varchar(255) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
-  "latest_release_number" varchar(255) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
-  "package_manager_id" varchar(255) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+  "latest_release_timestamp" varchar COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+  "latest_release_number" varchar COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+  "package_manager_id" varchar COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
   "dependency_count" int4,
   "dependent_library_count" int4,
-  "primary_language" varchar(255) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
-  "tool_source" varchar(255) COLLATE "pg_catalog"."default",
-  "tool_version" varchar(255) COLLATE "pg_catalog"."default",
-  "data_source" varchar(255) COLLATE "pg_catalog"."default",
+  "primary_language" varchar COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+  "tool_source" varchar COLLATE "pg_catalog"."default",
+  "tool_version" varchar COLLATE "pg_catalog"."default",
+  "data_source" varchar COLLATE "pg_catalog"."default",
   "data_collection_date" timestamp(0)
 )
 ;
@@ -1108,13 +1108,13 @@ DROP TABLE IF EXISTS "augur_data"."library_dependencies";
 CREATE TABLE "augur_data"."library_dependencies" (
   "lib_dependency_id" int8 NOT NULL DEFAULT nextval('"augur_data".library_dependencies_lib_dependency_id_seq'::regclass),
   "library_id" int8,
-  "manifest_platform" varchar(255) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+  "manifest_platform" varchar COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
   "manifest_filepath" varchar(1000) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
-  "manifest_kind" varchar(255) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
-  "repo_id_branch" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
-  "tool_source" varchar(255) COLLATE "pg_catalog"."default",
-  "tool_version" varchar(255) COLLATE "pg_catalog"."default",
-  "data_source" varchar(255) COLLATE "pg_catalog"."default",
+  "manifest_kind" varchar COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+  "repo_id_branch" varchar COLLATE "pg_catalog"."default" NOT NULL,
+  "tool_source" varchar COLLATE "pg_catalog"."default",
+  "tool_version" varchar COLLATE "pg_catalog"."default",
+  "data_source" varchar COLLATE "pg_catalog"."default",
   "data_collection_date" timestamp(0)
 )
 ;
@@ -1127,12 +1127,12 @@ DROP TABLE IF EXISTS "augur_data"."library_version";
 CREATE TABLE "augur_data"."library_version" (
   "library_version_id" int8 NOT NULL DEFAULT nextval('"augur_data".library_version_library_version_id_seq'::regclass),
   "library_id" int8,
-  "library_platform" varchar(255) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
-  "version_number" varchar(255) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+  "library_platform" varchar COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+  "version_number" varchar COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
   "version_release_date" timestamp(0) DEFAULT NULL::timestamp without time zone,
-  "tool_source" varchar(255) COLLATE "pg_catalog"."default",
-  "tool_version" varchar(255) COLLATE "pg_catalog"."default",
-  "data_source" varchar(255) COLLATE "pg_catalog"."default",
+  "tool_source" varchar COLLATE "pg_catalog"."default",
+  "tool_version" varchar COLLATE "pg_catalog"."default",
+  "data_source" varchar COLLATE "pg_catalog"."default",
   "data_collection_date" timestamp(0)
 )
 ;
@@ -1147,12 +1147,12 @@ CREATE TABLE "augur_data"."message" (
   "rgls_id" int8,
   "msg_text" text COLLATE "pg_catalog"."default",
   "msg_timestamp" timestamp(0),
-  "msg_sender_email" varchar(255) COLLATE "pg_catalog"."default",
+  "msg_sender_email" varchar COLLATE "pg_catalog"."default",
   "msg_header" varchar(4000) COLLATE "pg_catalog"."default",
   "pltfrm_id" int8 NOT NULL,
-  "tool_source" varchar(255) COLLATE "pg_catalog"."default",
-  "tool_version" varchar(255) COLLATE "pg_catalog"."default",
-  "data_source" varchar(255) COLLATE "pg_catalog"."default",
+  "tool_source" varchar COLLATE "pg_catalog"."default",
+  "tool_version" varchar COLLATE "pg_catalog"."default",
+  "data_source" varchar COLLATE "pg_catalog"."default",
   "data_collection_date" timestamp(0),
   "cntrb_id" int8
 )
@@ -1166,12 +1166,12 @@ COMMENT ON COLUMN "augur_data"."message"."cntrb_id" IS 'Not populated for mailin
 DROP TABLE IF EXISTS "augur_data"."platform";
 CREATE TABLE "augur_data"."platform" (
   "pltfrm_id" int8 NOT NULL DEFAULT nextval('"augur_data".platform_pltfrm_id_seq'::regclass),
-  "pltfrm_name" varchar(255) COLLATE "pg_catalog"."default",
-  "pltfrm_version" varchar(255) COLLATE "pg_catalog"."default",
+  "pltfrm_name" varchar COLLATE "pg_catalog"."default",
+  "pltfrm_version" varchar COLLATE "pg_catalog"."default",
   "pltfrm_release_date" date,
-  "tool_source" varchar(255) COLLATE "pg_catalog"."default",
-  "tool_version" varchar(255) COLLATE "pg_catalog"."default",
-  "data_source" varchar(255) COLLATE "pg_catalog"."default",
+  "tool_source" varchar COLLATE "pg_catalog"."default",
+  "tool_version" varchar COLLATE "pg_catalog"."default",
+  "data_source" varchar COLLATE "pg_catalog"."default",
   "data_collection_date" timestamp(0)
 )
 ;
@@ -1185,9 +1185,9 @@ CREATE TABLE "augur_data"."pull_request_assignees" (
   "pr_assignee_map_id" int8 NOT NULL DEFAULT nextval('"augur_data".pull_request_assignees_pr_assignee_map_id_seq'::regclass),
   "pull_request_id" int8,
   "contrib_id" int8,
-  "tool_source" varchar(255) COLLATE "pg_catalog"."default",
-  "tool_version" varchar(255) COLLATE "pg_catalog"."default",
-  "data_source" varchar(255) COLLATE "pg_catalog"."default",
+  "tool_source" varchar COLLATE "pg_catalog"."default",
+  "tool_version" varchar COLLATE "pg_catalog"."default",
+  "data_source" varchar COLLATE "pg_catalog"."default",
   "data_collection_date" timestamp(0) DEFAULT CURRENT_TIMESTAMP
 )
 ;
@@ -1201,15 +1201,15 @@ CREATE TABLE "augur_data"."pull_request_events" (
   "pr_event_id" int8 NOT NULL DEFAULT nextval('"augur_data".pull_request_events_pr_event_id_seq'::regclass),
   "pull_request_id" int8 NOT NULL,
   "cntrb_id" int8 NOT NULL,
-  "action" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
+  "action" varchar COLLATE "pg_catalog"."default" NOT NULL,
   "action_commit_hash" varchar COLLATE "pg_catalog"."default",
   "created_at" timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "issue_event_src_id" int8,
   "node_id" varchar COLLATE "pg_catalog"."default",
   "node_url" varchar COLLATE "pg_catalog"."default",
-  "tool_source" varchar(255) COLLATE "pg_catalog"."default",
-  "tool_version" varchar(255) COLLATE "pg_catalog"."default",
-  "data_source" varchar(255) COLLATE "pg_catalog"."default",
+  "tool_source" varchar COLLATE "pg_catalog"."default",
+  "tool_version" varchar COLLATE "pg_catalog"."default",
+  "data_source" varchar COLLATE "pg_catalog"."default",
   "data_collection_date" timestamp(0) DEFAULT CURRENT_TIMESTAMP
 )
 ;
@@ -1230,9 +1230,9 @@ CREATE TABLE "augur_data"."pull_request_labels" (
   "pr_src_description" varchar COLLATE "pg_catalog"."default",
   "pr_src_color" varchar COLLATE "pg_catalog"."default",
   "pr_src_default_bool" bool,
-  "tool_source" varchar(255) COLLATE "pg_catalog"."default",
-  "tool_version" varchar(255) COLLATE "pg_catalog"."default",
-  "data_source" varchar(255) COLLATE "pg_catalog"."default",
+  "tool_source" varchar COLLATE "pg_catalog"."default",
+  "tool_version" varchar COLLATE "pg_catalog"."default",
+  "data_source" varchar COLLATE "pg_catalog"."default",
   "data_collection_date" timestamp(0) DEFAULT CURRENT_TIMESTAMP
 )
 ;
@@ -1248,9 +1248,9 @@ CREATE TABLE "augur_data"."pull_request_message_ref" (
   "msg_id" int8,
   "pr_message_ref_src_comment_id" int8,
   "pr_message_ref_src_node_id" varchar COLLATE "pg_catalog"."default",
-  "tool_source" varchar(255) COLLATE "pg_catalog"."default",
-  "tool_version" varchar(255) COLLATE "pg_catalog"."default",
-  "data_source" varchar(255) COLLATE "pg_catalog"."default",
+  "tool_source" varchar COLLATE "pg_catalog"."default",
+  "tool_version" varchar COLLATE "pg_catalog"."default",
+  "data_source" varchar COLLATE "pg_catalog"."default",
   "data_collection_date" timestamp(0) DEFAULT CURRENT_TIMESTAMP
 )
 ;
@@ -1268,9 +1268,9 @@ CREATE TABLE "augur_data"."pull_request_meta" (
   "pr_src_meta_ref" varchar COLLATE "pg_catalog"."default",
   "pr_sha" varchar COLLATE "pg_catalog"."default",
   "cntrb_id" int8,
-  "tool_source" varchar(255) COLLATE "pg_catalog"."default",
-  "tool_version" varchar(255) COLLATE "pg_catalog"."default",
-  "data_source" varchar(255) COLLATE "pg_catalog"."default",
+  "tool_source" varchar COLLATE "pg_catalog"."default",
+  "tool_version" varchar COLLATE "pg_catalog"."default",
+  "data_source" varchar COLLATE "pg_catalog"."default",
   "data_collection_date" timestamp(0) DEFAULT CURRENT_TIMESTAMP
 )
 ;
@@ -1292,9 +1292,9 @@ CREATE TABLE "augur_data"."pull_request_repo" (
   "pr_repo_full_name" varchar COLLATE "pg_catalog"."default",
   "pr_repo_private_bool" bool,
   "pr_cntrb_id" int8,
-  "tool_source" varchar(255) COLLATE "pg_catalog"."default",
-  "tool_version" varchar(255) COLLATE "pg_catalog"."default",
-  "data_source" varchar(255) COLLATE "pg_catalog"."default",
+  "tool_source" varchar COLLATE "pg_catalog"."default",
+  "tool_version" varchar COLLATE "pg_catalog"."default",
+  "data_source" varchar COLLATE "pg_catalog"."default",
   "data_collection_date" timestamp(0) DEFAULT CURRENT_TIMESTAMP
 )
 ;
@@ -1310,9 +1310,9 @@ CREATE TABLE "augur_data"."pull_request_reviewers" (
   "pr_reviewer_map_id" int8 NOT NULL DEFAULT nextval('"augur_data".pull_request_reviewers_pr_reviewer_map_id_seq'::regclass),
   "pull_request_id" int8,
   "cntrb_id" int8,
-  "tool_source" varchar(255) COLLATE "pg_catalog"."default",
-  "tool_version" varchar(255) COLLATE "pg_catalog"."default",
-  "data_source" varchar(255) COLLATE "pg_catalog"."default",
+  "tool_source" varchar COLLATE "pg_catalog"."default",
+  "tool_version" varchar COLLATE "pg_catalog"."default",
+  "data_source" varchar COLLATE "pg_catalog"."default",
   "data_collection_date" timestamp(0) DEFAULT CURRENT_TIMESTAMP
 )
 ;
@@ -1336,9 +1336,9 @@ CREATE TABLE "augur_data"."pull_request_teams" (
   "pr_team_src_members_url" varchar COLLATE "pg_catalog"."default",
   "pr_team_src_repositories_url" varchar COLLATE "pg_catalog"."default",
   "pr_team_parent_id" int8,
-  "tool_source" varchar(255) COLLATE "pg_catalog"."default",
-  "tool_version" varchar(255) COLLATE "pg_catalog"."default",
-  "data_source" varchar(255) COLLATE "pg_catalog"."default",
+  "tool_source" varchar COLLATE "pg_catalog"."default",
+  "tool_version" varchar COLLATE "pg_catalog"."default",
+  "data_source" varchar COLLATE "pg_catalog"."default",
   "data_collection_date" timestamp(0) DEFAULT CURRENT_TIMESTAMP
 )
 ;
@@ -1384,9 +1384,9 @@ CREATE TABLE "augur_data"."pull_requests" (
   "pr_src_commits_url" varchar COLLATE "pg_catalog"."default",
   "pr_src_statuses_url" varchar COLLATE "pg_catalog"."default",
   "pr_src_author_association" varchar COLLATE "pg_catalog"."default",
-  "tool_source" varchar(255) COLLATE "pg_catalog"."default",
-  "tool_version" varchar(255) COLLATE "pg_catalog"."default",
-  "data_source" varchar(255) COLLATE "pg_catalog"."default",
+  "tool_source" varchar COLLATE "pg_catalog"."default",
+  "tool_version" varchar COLLATE "pg_catalog"."default",
+  "data_source" varchar COLLATE "pg_catalog"."default",
   "data_collection_date" timestamp(0) DEFAULT CURRENT_TIMESTAMP,
   "repo_id" int8
 )
@@ -1412,16 +1412,16 @@ CREATE TABLE "augur_data"."repo" (
   "repo_added" timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "repo_status" varchar(32) COLLATE "pg_catalog"."default" NOT NULL,
   "repo_type" varchar COLLATE "pg_catalog"."default" DEFAULT ''::character varying,
-  "url" varchar(255) COLLATE "pg_catalog"."default",
+  "url" varchar COLLATE "pg_catalog"."default",
   "owner_id" int4,
   "description" varchar COLLATE "pg_catalog"."default",
-  "primary_language" varchar(255) COLLATE "pg_catalog"."default",
-  "created_at" varchar(255) COLLATE "pg_catalog"."default",
+  "primary_language" varchar COLLATE "pg_catalog"."default",
+  "created_at" varchar COLLATE "pg_catalog"."default",
   "forked_from" int8,
   "updated_at" timestamp(0),
-  "tool_source" varchar(255) COLLATE "pg_catalog"."default",
-  "tool_version" varchar(255) COLLATE "pg_catalog"."default",
-  "data_source" varchar(255) COLLATE "pg_catalog"."default",
+  "tool_source" varchar COLLATE "pg_catalog"."default",
+  "tool_version" varchar COLLATE "pg_catalog"."default",
+  "data_source" varchar COLLATE "pg_catalog"."default",
   "data_collection_date" timestamp(0)
 )
 ;
@@ -1721,9 +1721,9 @@ CREATE TABLE "augur_data"."repo_badging" (
   "additional_rights" int4[],
   "project_entry_license" varchar(4000) COLLATE "pg_catalog"."default",
   "project_entry_attribution" varchar(4000) COLLATE "pg_catalog"."default",
-  "tool_source" varchar(255) COLLATE "pg_catalog"."default",
-  "tool_version" varchar(255) COLLATE "pg_catalog"."default",
-  "data_source" varchar(255) COLLATE "pg_catalog"."default",
+  "tool_source" varchar COLLATE "pg_catalog"."default",
+  "tool_version" varchar COLLATE "pg_catalog"."default",
+  "data_source" varchar COLLATE "pg_catalog"."default",
   "data_collection_date" timestamp(0) DEFAULT CURRENT_TIMESTAMP
 )
 ;
@@ -1739,9 +1739,9 @@ DROP TABLE IF EXISTS "augur_data"."repo_ghtorrent_map";
 CREATE TABLE "augur_data"."repo_ghtorrent_map" (
   "repo_url" varchar(1000) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
   "repo_owner" varchar(400) COLLATE "pg_catalog"."default",
-  "tool_source" varchar(255) COLLATE "pg_catalog"."default",
-  "tool_version" varchar(255) COLLATE "pg_catalog"."default",
-  "data_source" varchar(255) COLLATE "pg_catalog"."default",
+  "tool_source" varchar COLLATE "pg_catalog"."default",
+  "tool_version" varchar COLLATE "pg_catalog"."default",
+  "data_source" varchar COLLATE "pg_catalog"."default",
   "data_collection_date" timestamp(0)
 )
 ;
@@ -1782,9 +1782,9 @@ CREATE TABLE "augur_data"."repo_groups" (
   "rg_recache" int2 DEFAULT 1,
   "rg_last_modified" timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "rg_type" varchar COLLATE "pg_catalog"."default",
-  "tool_source" varchar(255) COLLATE "pg_catalog"."default",
-  "tool_version" varchar(255) COLLATE "pg_catalog"."default",
-  "data_source" varchar(255) COLLATE "pg_catalog"."default",
+  "tool_source" varchar COLLATE "pg_catalog"."default",
+  "tool_version" varchar COLLATE "pg_catalog"."default",
+  "data_source" varchar COLLATE "pg_catalog"."default",
   "data_collection_date" timestamp(0)
 )
 ;
@@ -1798,13 +1798,13 @@ DROP TABLE IF EXISTS "augur_data"."repo_groups_list_serve";
 CREATE TABLE "augur_data"."repo_groups_list_serve" (
   "rgls_id" int8 NOT NULL DEFAULT nextval('"augur_data".repo_groups_list_serve_rgls_id_seq'::regclass),
   "repo_group_id" int8 NOT NULL,
-  "rgls_name" varchar(255) COLLATE "pg_catalog"."default",
+  "rgls_name" varchar COLLATE "pg_catalog"."default",
   "rgls_description" varchar(3000) COLLATE "pg_catalog"."default",
-  "rgls_sponsor" varchar(255) COLLATE "pg_catalog"."default",
-  "rgls_email" varchar(255) COLLATE "pg_catalog"."default",
-  "tool_source" varchar(255) COLLATE "pg_catalog"."default",
-  "tool_version" varchar(255) COLLATE "pg_catalog"."default",
-  "data_source" varchar(255) COLLATE "pg_catalog"."default",
+  "rgls_sponsor" varchar COLLATE "pg_catalog"."default",
+  "rgls_email" varchar COLLATE "pg_catalog"."default",
+  "tool_source" varchar COLLATE "pg_catalog"."default",
+  "tool_version" varchar COLLATE "pg_catalog"."default",
+  "data_source" varchar COLLATE "pg_catalog"."default",
   "data_collection_date" timestamp(0)
 )
 ;
@@ -1818,30 +1818,30 @@ CREATE TABLE "augur_data"."repo_info" (
   "repo_info_id" int8 NOT NULL DEFAULT nextval('"augur_data".repo_info_repo_info_id_seq'::regclass),
   "repo_id" int8 NOT NULL,
   "last_updated" timestamp(0) DEFAULT NULL::timestamp without time zone,
-  "issues_enabled" varchar(255) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+  "issues_enabled" varchar COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
   "open_issues" int4,
-  "pull_requests_enabled" varchar(255) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
-  "wiki_enabled" varchar(255) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
-  "pages_enabled" varchar(255) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+  "pull_requests_enabled" varchar COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+  "wiki_enabled" varchar COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+  "pages_enabled" varchar COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
   "fork_count" int4,
-  "default_branch" varchar(255) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+  "default_branch" varchar COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
   "watchers_count" int4,
   "UUID" int4,
-  "license" varchar(255) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+  "license" varchar COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
   "stars_count" int4,
   "committers_count" int4,
-  "issue_contributors_count" varchar(255) COLLATE "pg_catalog"."default",
-  "changelog_file" varchar(255) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
-  "contributing_file" varchar(255) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
-  "license_file" varchar(255) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
-  "code_of_conduct_file" varchar(255) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
-  "security_issue_file" varchar(255) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
-  "security_audit_file" varchar(255) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
-  "status" varchar(255) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
-  "keywords" varchar(255) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
-  "tool_source" varchar(255) COLLATE "pg_catalog"."default",
-  "tool_version" varchar(255) COLLATE "pg_catalog"."default",
-  "data_source" varchar(255) COLLATE "pg_catalog"."default",
+  "issue_contributors_count" varchar COLLATE "pg_catalog"."default",
+  "changelog_file" varchar COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+  "contributing_file" varchar COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+  "license_file" varchar COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+  "code_of_conduct_file" varchar COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+  "security_issue_file" varchar COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+  "security_audit_file" varchar COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+  "status" varchar COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+  "keywords" varchar COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+  "tool_source" varchar COLLATE "pg_catalog"."default",
+  "tool_version" varchar COLLATE "pg_catalog"."default",
+  "data_source" varchar COLLATE "pg_catalog"."default",
   "data_collection_date" timestamp(0),
   "commit_count" int8,
   "issues_count" int8,
@@ -1862,7 +1862,7 @@ CREATE TABLE "augur_data"."repo_insights" (
   "ri_id" int8 NOT NULL DEFAULT nextval('"augur_data".repo_insights_ri_id_seq'::regclass),
   "repo_id" int8,
   "ri_metric" varchar COLLATE "pg_catalog"."default",
-  "ri_value" varchar(255) COLLATE "pg_catalog"."default",
+  "ri_value" varchar COLLATE "pg_catalog"."default",
   "ri_date" timestamp(0),
   "ri_fresh" bool,
   "tool_source" varchar COLLATE "pg_catalog"."default",
@@ -1870,8 +1870,8 @@ CREATE TABLE "augur_data"."repo_insights" (
   "data_source" varchar COLLATE "pg_catalog"."default",
   "data_collection_date" timestamp(0) DEFAULT CURRENT_TIMESTAMP,
   "ri_score" numeric,
-  "ri_field" varchar(255) COLLATE "pg_catalog"."default",
-  "ri_detection_method" varchar(255) COLLATE "pg_catalog"."default"
+  "ri_field" varchar COLLATE "pg_catalog"."default",
+  "ri_detection_method" varchar COLLATE "pg_catalog"."default"
 )
 ;
 ALTER TABLE "augur_data"."repo_insights" OWNER TO "augur";
@@ -1922,18 +1922,18 @@ CREATE TABLE "augur_data"."repo_labor" (
   "repo_id" int8,
   "repo_clone_date" timestamp(0),
   "rl_analysis_date" timestamp(0),
-  "programming_language" varchar(255) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+  "programming_language" varchar COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
   "file_path" varchar(500) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
-  "file_name" varchar(255) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+  "file_name" varchar COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
   "total_lines" int4,
   "code_lines" int4,
   "comment_lines" int4,
   "blank_lines" int4,
   "code_complexity" int4,
   "repo_url" varchar(500) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
-  "tool_source" varchar(255) COLLATE "pg_catalog"."default",
-  "tool_version" varchar(255) COLLATE "pg_catalog"."default",
-  "data_source" varchar(255) COLLATE "pg_catalog"."default",
+  "tool_source" varchar COLLATE "pg_catalog"."default",
+  "tool_version" varchar COLLATE "pg_catalog"."default",
+  "data_source" varchar COLLATE "pg_catalog"."default",
   "data_collection_date" timestamp(0)
 )
 ;
@@ -1948,11 +1948,11 @@ DROP TABLE IF EXISTS "augur_data"."repo_meta";
 CREATE TABLE "augur_data"."repo_meta" (
   "repo_id" int8 NOT NULL,
   "rmeta_id" int8 NOT NULL DEFAULT nextval('"augur_data".repo_meta_rmeta_id_seq'::regclass),
-  "rmeta_name" varchar(255) COLLATE "pg_catalog"."default",
-  "rmeta_value" varchar(255) COLLATE "pg_catalog"."default" DEFAULT 0,
-  "tool_source" varchar(255) COLLATE "pg_catalog"."default",
-  "tool_version" varchar(255) COLLATE "pg_catalog"."default",
-  "data_source" varchar(255) COLLATE "pg_catalog"."default",
+  "rmeta_name" varchar COLLATE "pg_catalog"."default",
+  "rmeta_value" varchar COLLATE "pg_catalog"."default" DEFAULT 0,
+  "tool_source" varchar COLLATE "pg_catalog"."default",
+  "tool_version" varchar COLLATE "pg_catalog"."default",
+  "data_source" varchar COLLATE "pg_catalog"."default",
   "data_collection_date" timestamp(0)
 )
 ;
@@ -1980,9 +1980,9 @@ CREATE TABLE "augur_data"."repo_stats" (
   "rstat_id" int8 NOT NULL DEFAULT nextval('"augur_data".repo_stats_rstat_id_seq'::regclass),
   "rstat_name" varchar(400) COLLATE "pg_catalog"."default",
   "rstat_value" int8,
-  "tool_source" varchar(255) COLLATE "pg_catalog"."default",
-  "tool_version" varchar(255) COLLATE "pg_catalog"."default",
-  "data_source" varchar(255) COLLATE "pg_catalog"."default",
+  "tool_source" varchar COLLATE "pg_catalog"."default",
+  "tool_version" varchar COLLATE "pg_catalog"."default",
+  "data_source" varchar COLLATE "pg_catalog"."default",
   "data_collection_date" timestamp(0)
 )
 ;
@@ -2048,9 +2048,9 @@ CREATE TABLE "augur_data"."unknown_cache" (
   "email" varchar(128) COLLATE "pg_catalog"."default" NOT NULL,
   "domain" varchar(128) COLLATE "pg_catalog"."default" DEFAULT 'NULL'::character varying,
   "added" int8 NOT NULL,
-  "tool_source" varchar(255) COLLATE "pg_catalog"."default",
-  "tool_version" varchar(255) COLLATE "pg_catalog"."default",
-  "data_source" varchar(255) COLLATE "pg_catalog"."default",
+  "tool_source" varchar COLLATE "pg_catalog"."default",
+  "tool_version" varchar COLLATE "pg_catalog"."default",
+  "data_source" varchar COLLATE "pg_catalog"."default",
   "data_collection_date" timestamp(0) DEFAULT CURRENT_TIMESTAMP
 )
 ;
