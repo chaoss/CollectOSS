@@ -794,7 +794,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                 return
             
 
-            self.logger.debug(f"inc_source_committers is: {inc_source_comitters} and the action map is {action_map}...")
+            #self.logger.debug(f"inc_source_committers is: {inc_source_comitters} and the action map is {action_map}...")
 
             cntrbs_insert = [
             {
@@ -828,6 +828,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             } for cntrb in inc_source_comitters['all'] 
             ]
 
+            inserted = len(inc_source_comitters['all'])
             #Try to insert all committers
             for committer in cntrbs_insert:
                 try:
@@ -835,6 +836,9 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                                 self.contributors_table.insert().values(committer))
                 except Exception as e:
                     self.logger.info(f"Could not insert new committer ERROR: {e}")
+                    inserted -= 1 #Decrement the insertion cound
+            
+            self.logger.info(f"Inserted {inserted} new contributors.")
             
             return
 
