@@ -357,7 +357,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
     # Takes the user data from the endpoint as arg
     # Updates the alias table if the login is already in the contributor's table with the new email.
     # Returns whether the login was found in the contributors table
-    def resolve_if_login_existing(self, contributor, email):
+    def resolve_if_login_existing(self, contributor):
         # check if login exists in contributors table
         select_cntrbs_query = s.sql.text("""
             SELECT cntrb_id from contributors
@@ -371,27 +371,33 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         # if yes
         if len(result.fetchall()) >= 1:
-            self.insert_alias(contributor, email)
+            #self.insert_alias(contributor, email) Functions should do one thing ideally.
             return True
 
         # If not found, return false
         self.logger.info(
-            f"Contributor with email {email} not found in contributors table but can be added. Adding...")
+            f"Contributor not found in contributors table but can be added. Adding...")
         return False
 
     def update_contributor(self, cntrb, max_attempts=3):
 
         # Get primary key so that we can update
         contributor_table_data = self.db.execute(
-            s.sql.select([s.column('cntrb_id')]).where(
+            s.sql.select([s.column('cntrb_id'), s.column('cntrb_canonical') ]).where(
                 self.contributors_table.c.gh_user_id == cntrb["gh_user_id"]
             )
         ).fetchall()
 
         attempts = 0
 
-        #make sure not to overwrite canonical email
-        del cntrb["cntrb_canonical"]
+        #make sure not to overwrite canonical email if it isn't NULL
+
+        canonical_email = contributor_table_data[0]['cntrb_canonical']
+        #check if the contributor has a NULL canonical email or not
+        self.logger.info(f"The value of the canonical email is : {canonical_email}")
+
+        if canonical_email is not None:
+            del cntrb["cntrb_canonical"]
 
         while attempts < max_attempts:
             try:
@@ -644,7 +650,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
             # Also update the contributor record with commit data if we can.
             try:
-                if not self.resolve_if_login_existing(cntrb, emailFromCommitData):
+                if not self.resolve_if_login_existing(cntrb):
                     try:
                         self.db.execute(
                             self.contributors_table.insert().values(cntrb))
@@ -656,6 +662,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                             f"Ran into likely database collision. Assuming contributor exists in database. Error: {e}")
                 else:
                     self.update_contributor(cntrb)
+                    self.insert_alias(cntrb, emailFromCommitData)
             except LookupError as e:
                 self.logger.info(
                     ''.join(traceback.format_exception(None, e, e.__traceback__)))
