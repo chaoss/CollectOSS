@@ -423,15 +423,14 @@ def git_repo_updates(cfg):
 
                     return_code_clean = subprocess.Popen([cmd_clean],shell=True).wait()
 
-                    cmdpull2 = ("git -C %s%s/%s%s pull"
-                        % (cfg.repo_base_directory,row[1],row[4],row[3]))
-
-                    return_code = subprocess.Popen([cmdpull2],shell=True).wait()
-
                 except Exception as e: 
 
                     cfg.log_activity('Verbose', f'Second pass failed: {e}.')
                     pass 
+            cmdpull2 = ("git -C %s%s/%s%s pull"
+                % (cfg.repo_base_directory,row[1],row[4],row[3]))
+
+            return_code = subprocess.Popen([cmdpull2],shell=True).wait()
 
             attempt += 1
             #default_branch = ''
