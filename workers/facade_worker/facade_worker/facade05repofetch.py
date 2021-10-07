@@ -313,26 +313,28 @@ def git_repo_updates(cfg):
 
                 if return_code_remote == 0: 
 
-                    logremotedefault = ("git -C %s%s/%s%s remote set-head origin -a"
+#                    logremotedefault = ("git -C %s%s/%s%s remote set-head origin -a"
                         % (cfg.repo_base_directory,row[1],row[4],row[3]))
 
-                    return_code_remote_default = subprocess.Popen([logremotedefault],stdout=subprocess.PIPE,shell=True).wait()
+#                    return_code_remote_default = subprocess.Popen([logremotedefault],stdout=subprocess.PIPE,shell=True).wait()
 
-                    cfg.log_activity('Verbose', f'remote default is {logremotedefault}.')
+#                    cfg.log_activity('Verbose', f'remote default is {logremotedefault}.')
 
                     getremotedefault = ("git -C %s%s/%s%s remote show origin | sed -n '/HEAD branch/s/.*: //p'"
                         % (cfg.repo_base_directory,row[1],row[4],row[3]))
 
-                    return_code_remote = subprocess.Popen([getremotedefault],shell=True).wait()
+                    return_code_remote = subprocess.Popen([getremotedefault],stdout=subprocess.PIPE, shell=True).wait()
 
                     remotedefault = subprocess.Popen([getremotedefault],stdout=subprocess.PIPE,shell=True).communicate()[0]
 
-                    remotedefault = remotedefault.decode()
+#                    remotedefault = remotedefault.decode()
 
                     cfg.log_activity('Verbose', f'remote default getting checked out is: {remotedefault}.')
 
                     getremotedefault = (f"git -C %s%s/%s%s checkout {remotedefault}"
                         % (cfg.repo_base_directory,row[1],row[4],row[3]))
+
+                    cfg.log_activity('Verbose', f'get remote default command is: \n \n {getremotedefault} \n \n ')
 
                     return_code_remote_default_again = subprocess.Popen([getremotedefault],shell=True).wait()
 
