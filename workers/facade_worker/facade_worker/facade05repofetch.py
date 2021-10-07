@@ -339,7 +339,7 @@ def git_repo_updates(cfg):
                     return_code_remote_default_again = subprocess.Popen([getremotedefault],shell=True).wait()
 
                     if return_code_remote_default_again == 0: 
-                        cfg.log_activity("local checkout worked.")
+                        cfg.log_activity('Verbose', "local checkout worked.")
                         cmd = ("git -C %s%s/%s%s pull"
                             % (cfg.repo_base_directory,row[1],row[4],row[3]))#['projects_id'],row['path'],row['name']))
 
@@ -367,8 +367,8 @@ def git_repo_updates(cfg):
                 break
 
             elif attempt == 0:
-#                cfg.log_activity('Verbose','git pull failed, attempting reset and '
-#                    'clean for %s' % row[2])
+                cfg.log_activity('Verbose','git pull failed, attempting reset and '
+                    'clean for %s' % row[2])
 
 #                remotedefault = 'main'
 
