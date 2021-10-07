@@ -1,3 +1,4 @@
+#SPDX-License-Identifier: MIT
 import io
 import os
 import re
@@ -12,14 +13,14 @@ def read(filename):
         return re.sub(text_type(r':[a-z]+:`~?(.*?)`'), text_type(r'``\1``'), fd.read())
 
 setup(
-    name="pull_request_analysis_worker",
-    version="0.0.0",
+    name="deps_libyear_worker",
+    version="1.0.0",
     url="https://github.com/chaoss/augur",
     license='MIT',
-    author="Augur Team",
-    author_email="akshblr555@gmail.com",
-    description="Pull Request Analysis worker that predicts acceptance of a PR",
-    packages=find_packages(),
+    author="Dhruv Sachdev",
+    author_email="dhruvhsachdev@gmail.com",
+    description="Augur Worker that gathers deps data from package files and calculates libyear",
+    packages=find_packages(exclude=('tests',)),
     install_requires=[
         'Flask==1.1.4',
         'Flask-Cors==3.0.10',
@@ -27,21 +28,15 @@ setup(
         'Flask-WTF==0.14.3',
         'requests==2.22.0',
         'psycopg2-binary==2.8.6',
-        'sklearn==0.0',
-        'numpy==1.19.5',
-        'nltk==3.5',
-        'pandas==1.3.2',
-        'gensim==3.8.3',
-        'emoji==1.2.0',
-        'joblib==1.0.1',
-        'xgboost==1.4.2',
-        'scipy==1.6.3'
+        'toml',
+        'pyYaml'
     ],
     entry_points={
         'console_scripts': [
-            'pull_request_analysis_worker_start=workers.pull_request_analysis_worker.runtime:main',
+            'deps_libyear_worker_start=workers.deps_libyear_worker.runtime:main',
         ],
     },
+
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'License :: OSI Approved :: MIT License',
@@ -49,5 +44,4 @@ setup(
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.7',
     ]
-    
 )

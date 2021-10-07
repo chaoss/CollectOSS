@@ -30,7 +30,7 @@ setup(
         'click==7.1.2', 
         'scipy==1.6.3',
         'nltk==3.5',
-        'pandas==1.1.3',
+        'pandas==1.3.2',
         'scikit-learn==0.24.1',
         'textblob==0.15.3',
         'sklearn-crfsuite==0.3.6'

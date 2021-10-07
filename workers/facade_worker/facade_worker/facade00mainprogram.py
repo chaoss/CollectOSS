@@ -25,7 +25,7 @@
 # and checks for any parents of HEAD that aren't already accounted for in the
 # repos. It also rebuilds analysis data, checks any changed affiliations and
 # aliases, and caches data for display.
-
+import traceback
 import sys, platform, imp, time, datetime, html.parser, subprocess, os, getopt, xlsxwriter, configparser, logging
 from multiprocessing import Process, Queue
 from facade_worker.facade01config import Config#increment_db, update_db, migrate_database_config, database_connection, get_setting, update_status, log_activity          
@@ -36,8 +36,13 @@ from facade_worker.facade05repofetch import git_repo_initialize, check_for_repo_
 from facade_worker.facade06analyze import analysis
 from facade_worker.facade07rebuildcache import nuke_affiliations, fill_empty_affiliations, invalidate_caches, rebuild_unknown_affiliation_and_web_caches
 
+#from contributor_interfaceable.facade08contributorinterfaceable import ContributorInterfaceable
+
+from contributor_interfaceable.contributor_interface import ContributorInterfaceable as ContribInterface 
+
 from workers.util import read_config
 from workers.worker_base import Worker
+
 
 html = html.parser.HTMLParser()
 
@@ -61,12 +66,25 @@ class FacadeWorker(Worker):
 
         # Define data collection info
         # self.tool_source = 'Facade Worker'
-        # self.tool_version = '1.0.0'
+        # self.tool_version = '1.1.0'
         # self.data_source = 'Git Log'
+
+        self.logger.info("Trying to create the ContributorInterface...")
+        #Define interface to GitHub as an attribute
+        self.logger.info(f"Config passed is: {str(self.config)}")
+
+
+        self.github_interface = ContribInterface(config=self.config, logger=self.logger)         
+
+        #breakpoint()
+        self.logger.info("created interface")
 
         self.tool_source = '\'Facade Worker\''
         self.tool_version = '\'1.0.1\''
         self.data_source = '\'Git Log\''
+
+        self.logger.info("Finished  Init")
+        #breakpoint() #What is going on after this
 
     def initialize_database_connections(self):
 
@@ -100,11 +118,15 @@ class FacadeWorker(Worker):
             # Catch databases which existed before database versioning
             self.current_db = -1
 
+        self.logger.info("initialized database.")
+
     def collect(self):
         """ Function to process each entry in the worker's task queue
         Determines what action to take based off the message type
         """
+         
         self.initialize_logging() # need to initialize logging again in child process cause multiprocessing
+
         self.logger.info("Starting data collection process\n")
         self.initialize_database_connections() 
         while True:
@@ -125,7 +147,9 @@ class FacadeWorker(Worker):
             try:
                 self.commits_model(message)
             except Exception as e:
-                self.logger.error(e)
+                self.logger.debug(f"The error is: {e}. exception registered.")
+                stacker = traceback.format_exc()
+                self.logger.debug(f"{stacker}")
                 raise(e)
                 break
 
@@ -298,12 +322,25 @@ class FacadeWorker(Worker):
             self.cfg.log_activity('Info','Creating summary Excel files (complete)')
 
 
+        #Interface with the contributor worker and inserts relevant data by repo
+        self.cfg.update_status('Updating Contributors')
+        self.cfg.log_activity('Info', 'Updating Contributors with commits')
+        query = ("SELECT repo_id FROM repo");
+
+        self.cfg.cursor.execute(query)
+
+        all_repos = list(self.cfg.cursor)
+
+        #pdb.set_trace()
+        #breakpoint()
+        for repo in all_repos:
+          self.logger.info(f"Processing repo {repo}")
+          self.github_interface.insert_facade_contributors(repo[0])
 
         # All done
-
         self.cfg.update_status('Idle')
         self.cfg.log_activity('Quiet','facade-worker.py completed')
-
+        
         elapsed_time = time.time() - start_time
 
         print('\nCompleted in %s\n' % datetime.timedelta(seconds=int(elapsed_time)))

@@ -32,7 +32,7 @@ setup(
         'sklearn==0.0',
         'numpy==1.19.5',
         'nltk==3.5',
-        'pandas==1.1.3',
+        'pandas==1.3.2',
         'gensim==3.8.3',
         'emoji==1.2.0',
         'Keras==2.4.3',

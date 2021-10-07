@@ -62,4 +62,22 @@
 \i schema/generate/57-schema_update_59.sql
 \i schema/generate/58-schema_update_60.sql
 \i schema/generate/59-schema_update_61.sql
-
+\i schema/generate/60-schema_update_62.sql
+\i schema/generate/61-schema_update_63.sql
+\i schema/generate/62-schema_update_64.sql
+\i schema/generate/63-schema_update_65.sql
+\i schema/generate/64-schema_update_66.sql
+\i schema/generate/65-schema_update_67.sql
+\i schema/generate/66-schema_update_68.sql
+\i schema/generate/67-schema_update_69.sql
+\i schema/generate/68-schema_update_70.sql
+\i schema/generate/69-schema_update_71.sql
+\i schema/generate/70-schema_update_72.sql
+\i schema/generate/71-schema_update_73.sql
+\i schema/generate/72-schema_update_74.sql
+\i schema/generate/72-schema_update_74.sql
+\i schema/generate/73-schema_update_75.sql
+\i schema/generate/74-schema_update_76.sql
+\i schema/generate/75-schema_update_77.sql
+\i schema/generate/76-schema_update_78.sql
+\i schema/generate/77-schema_update_79.sql

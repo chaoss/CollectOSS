@@ -157,7 +157,7 @@ class ReleaseWorker(WorkerGitInterfaceable):
                         }
                     }
                 }
-            """ % (owner, repo, 10)
+            """ % (owner, repo, 100)
         else:
             query = """
                 {
@@ -182,7 +182,9 @@ class ReleaseWorker(WorkerGitInterfaceable):
                         }
                     }
                 }
-            """ % (owner, repo, 10)
+            """ % (owner, repo, 100)
+
+        self.logger.debug(f"query is: {query}")
 
         return query
 

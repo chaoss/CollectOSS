@@ -108,31 +108,32 @@ class WorkerGitInterfaceable(Worker):
         if 'email' in contributor:
             email = contributor['email']
 
-
+        ''' Because a user name nan exists, we needed to cast any string where their 
+            user name appears as a string, because otherwise python was casting it as a float '''
         if platform == 'github':
             cntrb = {
-                'cntrb_login': contributor['login'] if 'login' in contributor else None,
-                'cntrb_email': contributor['email'] if 'email' in contributor else None,
-                'cntrb_company': contributor['company'] if 'company' in contributor else None,
-                'cntrb_location': contributor['location'] if 'location' in contributor else None,
+                'cntrb_login': str(contributor['login']) if 'login' in contributor else None,
+                'cntrb_email': str(contributor['email']) if 'email' in contributor else None,
+                'cntrb_company': str(contributor['company']) if 'company' in contributor else None,
+                'cntrb_location': str(contributor['location']) if 'location' in contributor else None,
                 'cntrb_created_at': contributor['created_at'] if 'created_at' in contributor else None,
                 'cntrb_canonical': None,
                 'gh_user_id': contributor['id'] if 'id' in contributor else None,
-                'gh_login': contributor['login'] if 'login' in contributor else None,
-                'gh_url': contributor['url'] if 'url' in contributor else None,
-                'gh_html_url': contributor['html_url'] if 'html_url' in contributor else None,
+                'gh_login': str(contributor['login']) if 'login' in contributor else None,
+                'gh_url': str(contributor['url']) if 'url' in contributor else None,
+                'gh_html_url': str(contributor['html_url']) if 'html_url' in contributor else None,
                 'gh_node_id': contributor['node_id'] if 'node_id' in contributor else None,
-                'gh_avatar_url': contributor['avatar_url'] if 'avatar_url' in contributor else None,
-                'gh_gravatar_id': contributor['gravatar_id'] if 'gravatar_id' in contributor else None,
-                'gh_followers_url': contributor['followers_url'] if 'followers_url' in contributor else None,
-                'gh_following_url': contributor['following_url'] if 'following_url' in contributor else None,
-                'gh_gists_url': contributor['gists_url'] if 'gists_url' in contributor else None,
-                'gh_starred_url': contributor['starred_url'] if 'starred_url' in contributor else None,
-                'gh_subscriptions_url': contributor['subscriptions_url'] if 'subscriptions_url' in contributor else None,
-                'gh_organizations_url': contributor['organizations_url'] if 'organizations_url' in contributor else None,
-                'gh_repos_url': contributor['repos_url'] if 'repos_url' in contributor else None,
-                'gh_events_url': contributor['events_url'] if 'events_url' in contributor else None,
-                'gh_received_events_url': contributor['received_events_url'] if 'received_events_url' in contributor else None,
+                'gh_avatar_url': str(contributor['avatar_url']) if 'avatar_url' in contributor else None,
+                'gh_gravatar_id': str(contributor['gravatar_id']) if 'gravatar_id' in contributor else None,
+                'gh_followers_url': str(contributor['followers_url']) if 'followers_url' in contributor else None,
+                'gh_following_url': str(contributor['following_url']) if 'following_url' in contributor else None,
+                'gh_gists_url': str(contributor['gists_url']) if 'gists_url' in contributor else None,
+                'gh_starred_url': str(contributor['starred_url']) if 'starred_url' in contributor else None,
+                'gh_subscriptions_url': str(contributor['subscriptions_url']) if 'subscriptions_url' in contributor else None,
+                'gh_organizations_url': str(contributor['organizations_url']) if 'organizations_url' in contributor else None,
+                'gh_repos_url': str(contributor['repos_url']) if 'repos_url' in contributor else None,
+                'gh_events_url': str(contributor['events_url']) if 'events_url' in contributor else None,
+                'gh_received_events_url': str(contributor['received_events_url']) if 'received_events_url' in contributor else None,
                 'gh_type': contributor['type'] if 'type' in contributor else None,
                 'gh_site_admin': contributor['site_admin'] if 'site_admin' in contributor else None,
                 'tool_source': self.tool_source,
@@ -189,7 +190,7 @@ class WorkerGitInterfaceable(Worker):
         #   information from headers of the response
         # Adjust header keys needed to fetch rate limit information from the API responses
         if platform == 'github':
-            url = "https://api.github.com/users/gabe-heim"
+            url = "https://api.github.com/users/sgoggins"
             oauthSQL = s.sql.text("""
                 SELECT * FROM worker_oauth WHERE access_token <> '{}' and platform = 'github'
                 """.format(self.config['gh_api_key']))
@@ -276,7 +277,7 @@ class WorkerGitInterfaceable(Worker):
         source_data = [data for data in source_data if f'{prefix}login' in data and data[f'{prefix}login'] != None]
 
         self.logger.info(f"table_values_cntrb keys: {table_values_cntrb[0].keys()}")
-        self.logger.info(f"source_data keys: {source_data[0].keys()}")
+        # self.logger.info(f"source_data keys: {source_data[0].keys()}")
 
         #We can't use this because of worker collisions
         #TODO: seperate this method into it's own worker.
@@ -285,7 +286,9 @@ class WorkerGitInterfaceable(Worker):
         # loop through data to test if it is already in the database
         for index, data in enumerate(source_data):
 
-            self.logger.info(f"Enriching {index} of {len(source_data)}")
+            #removed this log because it was generating a lot of data.
+            #self.logger.info(f"Enriching {index} of {len(source_data)}")
+            self.logger.debug(f"Enriching {len(source_data)} contributors.")
 
 
             user_unique_ids = []
@@ -299,13 +302,21 @@ class WorkerGitInterfaceable(Worker):
                     user_unique_ids.append(row['gh_user_id'])
                   except Exception as e:
                     self.logger.info(f"Error adding gh_user_id: {e}. Row: {row}")
+                    stacker = traceback.format_exc()
+                    self.logger.debug(f"{stacker}")
             except KeyError:
                 self.logger.info("Source data doesn't have user.id. Using node_id instead.")
+                stacker = traceback.format_exc()
+                self.logger.debug(f"{stacker}")
+                pass 
+            finally: 
                 for row in table_values_cntrb:
                   try:
                     user_unique_ids.append(row['gh_node_id'])
                   except Exception as e:
                     self.logger.info(f"Error adding gh_node_id: {e}. Row: {row}")
+                    stacker = traceback.format_exc()
+                    self.logger.debug(f"{stacker}")
 
 
             #self.logger.info(f"gh_user_ids: {gh_user_ids}")
@@ -356,27 +367,28 @@ class WorkerGitInterfaceable(Worker):
                 url = ("https://api.github.com/users/" + data[f'{prefix}login'])
               except Exception as e:
                 self.logger.info(f"Error when creating url: {e}. Data: {data}")
+                continue
 
               attempts = 0
               contributor = None
               success = False
-              
+
               while attempts < 10:
-                self.logger.info("Hitting endpoint: " + url + " ...\n")
+                self.logger.info(f"Hitting endpoint: {url} ...\n")
                 try:
                   response = requests.get(url=url , headers=self.headers)
                 except TimeoutError:
                   self.logger.info(f"User data request for enriching contributor data failed with {attempts} attempts! Trying again...")
                   time.sleep(10)
                   continue
-                
+
                 self.update_rate_limit(response,platform=platform)
 
                 try:
                   contributor = response.json()
                 except:
                   contributor = json.loads(json.dumps(response.text))
-                
+
 
                 if type(contributor) == dict:
                   self.logger.info("Request returned a dict!")
@@ -402,9 +414,9 @@ class WorkerGitInterfaceable(Worker):
                 attempts += 1
               if not success:
                 break
-              
 
-              
+
+
 
               self.logger.info(f"Contributor data: {contributor}")
 
@@ -446,7 +458,9 @@ class WorkerGitInterfaceable(Worker):
               #We can solve this by making another worker with a queue. It wouldn't have to be too complicated.
               try:
                 self.db.execute(self.contributors_table.insert().values(cntrb))
-              # except s.exc.IntegrityError:
+              except s.exc.IntegrityError:
+                self.logger.info(f"there was a collision caught ....")
+                self.logger.info(traceback.format_exc())
               except Exception as e:
                 self.logger.info(f"Contributor was unable to be added to table! Attempting to get cntrb_id from table anyway because of possible collision. Error: {e}")
 
@@ -971,7 +985,7 @@ class WorkerGitInterfaceable(Worker):
             # We will be finding oauth with the highest rate limit left out of our list of oauths
             new_oauth = self.oauths[0]
             # Endpoint to hit solely to retrieve rate limit information from headers of the response
-            url = "https://api.github.com/users/gabe-heim"
+            url = "https://api.github.com/users/sgoggins"
 
             other_oauths = self.oauths[0:] if len(self.oauths) > 1 else []
             for oauth in other_oauths:
@@ -1245,7 +1259,7 @@ class WorkerGitInterfaceable(Worker):
                 html = requests.get(url, stream=True, headers=self.headers)
                 return html, extra_data
             except requests.exceptions.RequestException as e:
-                self.logger.info(e, url)
+                self.logger.debug(f"load_url inside multi_thread_urls failed with {e}, for usl {url}. exception registerred.registered")
 
         self.logger.info("Beginning to multithread API endpoints.")
 
@@ -1282,7 +1296,7 @@ class WorkerGitInterfaceable(Worker):
                             response, extra_data = future.result()
 
                             if response.status_code != 200:
-                                self.logger.info(
+                                self.logger.debug(
                                     f"Url: {url[0]} ; Status code: {response.status_code}"
                                 )
 
@@ -1295,23 +1309,25 @@ class WorkerGitInterfaceable(Worker):
                                     page_data = response.json()
                                 except:
                                     page_data = json.loads(json.dumps(response.text))
+                                    continue
 
                                 page_data = [{**data, **extra_data} for data in page_data]
                                 all_data += page_data
 
-                                if 'last' in response.links and "&page=" not in url[0]:
-                                    urls += [
-                                        (url[0] + f"&page={page}", extra_data) for page in range(
-                                            2, int(response.links['last']['url'].split('=')[-1]) + 1
-                                        )
-                                    ]
                                 try:
-                                    # self.logger.info(f"urls boundry issue? for {urls} where they are equal to {url}.")
+                                    if 'last' in response.links and "&page=" not in url[0]:
+                                        urls += [
+                                            (url[0] + f"&page={page}", extra_data) for page in range(
+                                                2, int(response.links['last']['url'].split('=')[-1]) + 1
+                                            )
+                                        ]
+                                        # self.logger.info(f"urls boundry issue? for {urls} where they are equal to {url}.")
 
-                                    urls = numpy.delete(urls, numpy.where(urls == url), axis=0)
+                                        urls = numpy.delete(urls, numpy.where(urls == url), axis=0)
                                 except:
                                     self.logger.info(f"ERROR with axis = 0 - Now attempting without setting axis for numpy.delete for {urls} where they are equal to {url}.")
                                     urls = numpy.delete(urls, numpy.where(urls == url))
+                                    continue
 
                             elif response.status_code == 404:
                                 urls = numpy.delete(urls, numpy.where(urls == url), axis=0)
@@ -1322,13 +1338,13 @@ class WorkerGitInterfaceable(Worker):
                                 )
 
                         except Exception as e:
-                            self.logger.info(
+                            self.logger.debug(
                                 f"{url} generated an exception: {traceback.format_exc()}\n"
                             )
 
                 attempts += 1
 
-        self.logger.info(
+        self.logger.debug(
             f"Processed {valid_url_count} urls and got {len(all_data)} data points "
             f"in {time.time() - start} seconds thanks to multithreading!\n"
         )

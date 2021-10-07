@@ -1,4 +1,6 @@
 -- #SPDX-License-Identifier: MIT
+-- ----------------------------
+
 BEGIN;
 INSERT INTO "augur_data"."platform" VALUES (25150, 'GitHub', '3', '2019-06-05', 'Manual Entry', 'Sean Goggins', 'GitHub', '2019-06-05 17:23:42');
 COMMIT;

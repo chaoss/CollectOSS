@@ -43,7 +43,7 @@ setup(
         "Flask-Cors==3.0.10",
         "Flask-Login==0.5.0",
         "Flask-WTF==0.14.3",
-        "pandas==1.1.3",
+        "pandas==1.3.2",
         "numpy==1.19.5",
         "requests==2.22.0",
         "psycopg2-binary==2.8.6",
@@ -65,7 +65,9 @@ setup(
         "blinker==1.4",
         "protobuf > 3.6.0",
         "slack==0.0.2",
-        "boto3==1.17.57"
+        "boto3==1.17.57",
+        "toml",
+        "pyYaml"
     ],
     extras_require={
         "dev": [

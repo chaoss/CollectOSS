@@ -37,8 +37,8 @@ class Persistant():
 
     def __init__(self, worker_type, data_tables=[],operations_tables=[]):
 
-        self.db_schema = None 
-        self.helper_schema = None 
+        self.db_schema = None
+        self.helper_schema = None
         self.worker_type = worker_type
         #For database functionality
         self.data_tables = data_tables
@@ -222,7 +222,7 @@ class Persistant():
             self.history_id = self.get_max_id('worker_history', 'history_id', operations_table=True) + 1
         except Exception as e:
             self.logger.info(f"Could not find max id. ERROR: {e}")
-        
+
         #25151
         #self.logger.info(f"Good, passed the max id getter. Max id: {self.history_id}")
 
@@ -230,6 +230,12 @@ class Persistant():
     def sync_df_types(self, subject, source, subject_columns, source_columns):
 
         type_dict = {}
+
+        ## Getting rid of nan's and NoneTypes across the dataframe to start:
+
+        subject = subject.fillna(value=numpy.nan)
+        source = source.fillna(value=numpy.nan)
+
         for index in range(len(source_columns)):
             if type(source[source_columns[index]].values[0]) == numpy.datetime64:
                 subject[subject_columns[index]] = pd.to_datetime(
@@ -239,7 +245,20 @@ class Persistant():
                     source[source_columns[index]], utc=True
                 )
                 continue
-            type_dict[subject_columns[index]] = type(source[source_columns[index]].values[0])
+            ## Dealing with an error coming from paginate endpoint and the GitHub issue worker
+            ### For a release in mid september, 2021. #SPG  This did not work on Ints or Floats
+            # if type(source[source_columns[index]].values[0]).isnull():
+            #     subject[subject_columns[index]] = pd.fillna(value=np.nan)
+            #     source[source_columns[index]] = pd.fillna(value=np.nan)
+            #     continue
+            source_index = source_columns[index]
+            try:
+                source_index = source_columns[index]
+                type_dict[subject_columns[index]] = type(source[source_index].values[0])
+            except Exception as e:
+                self.logger.info(f"Source data registered exception: {source[source_index]}")
+                stacker = traceback.format_exc()
+                self.logger.debug(f"{stacker}")
 
         subject = subject.astype(type_dict)
 
@@ -438,6 +457,23 @@ class Persistant():
 
             #Throwing value errors. 'cannot use name of an existing column for indicator column'
 
+
+            '''
+                This is how uniqueness, or whether a piece of data needs to be inserted, or
+                if that data already exists.
+
+                With regards to the comment_action_map (for insertion of issue_comments and pull_request_comments
+                we need to recognize the following:
+
+                    paginate_endpoint() then gets a dataframe of all the data that needs to be inserted.
+                    Earlier, we added 'tool_source' to the augur side of the action map, and left
+                    'id' alone on the source side (since tool_source) is our variable, and part of our
+                    natural key.
+
+                    --Andrew Brain and Sean Goggins 9/16/2021. Debugging duplicate insert errors for
+                    comments after initial collection.
+            '''
+
             try:
                 need_insertion = new_data_df.merge(table_values_df, suffixes=('','_table'),
                         how='outer', indicator=True, left_on=action_map['insert']['source'],
@@ -496,6 +532,7 @@ class Persistant():
 
     def assign_tuple_action(self, new_data, table_values, update_col_map, duplicate_col_map, table_pkey, value_update_col_map={}):
         """ DEPRECATED
+        SPG 9/15/2021 TODO -- Why is this deprecated?
             Include an extra key-value pair on each element of new_data that represents
             the action that should be taken with this element (i.e. 'need_insertion')
 
@@ -566,6 +603,9 @@ class Persistant():
                 continue
 
             # If we need to check the values of the existing tuple to determine if an update is needed
+            '''  This "value_check" is really really what I think we want to be doing for the update to issue status
+                 TODO SPG 9/15/2021. '''
+
             for augur_col, value_check in value_update_col_map.items():
                 not_nan_check = not (math.isnan(value_check) and math.isnan(existing_tuple[augur_col])) if value_check is not None else True
                 if existing_tuple[augur_col] != value_check and not_nan_check:
@@ -771,34 +811,54 @@ class Persistant():
 
                     sql = 'COPY {} ({}) FROM STDIN WITH CSV'.format(
                         table_name, columns)
+
                     #This causes the github worker to throw an error with pandas
                     #cur.copy_expert(sql=sql, file=self.text_clean(s_buf))
-                    # s_buf_encoded = s_buf.read().encode("UTF-8") 
+                    # s_buf_encoded = s_buf.read().encode("UTF-8")
                     #self.logger.info(f"this is the sbuf_encdoded {s_buf_encoded}")
-                    try: 
+                    try:
+                        #Session=sessy.sessionmaker(bind=curs)
+                        #session=Session()
+                        #session.copy_expert(sql=sql, file=s_buf)
+                        #copy_expert(sql=sql, file=s_buf)
                         curs.copy_expert(sql=sql, file=s_buf)
-                    except Exception as e: 
-                        self.logger.info(f"this is the error: {e}.")
+                        #session.commit()
+                        #self.logger.info("message committed")
+                        dbapi_conn.commit()
+                        # self.logger.debug("good dog. record committed! Watson, come quick!!!")
+                    except psycopg2.errors.UniqueViolation as e: 
+                        self.logger.info(f"{e}")
+                        dbapi_conn.rollback()                        
+                    except Exception as e:
+                        self.logger.debug(f"Bulk insert error: {e}. exception registered")
+                        stacker = traceback.format_exc()
+                        self.logger.debug(f"{stacker}")
+                        dbapi_conn.rollback()
 
+            try: 
+                df = pd.DataFrame(insert)
+                if convert_float_int:
+                    df = self._convert_float_nan_to_int(df)
+                df.to_sql(
+                    schema = self.db_schema,
+                    name=table.name,
+                    con=self.db,
+                    if_exists="append",
+                    index=False,
+                    #method=None,
+                    method=psql_insert_copy,
+                    #dtype=dict,
+                    chunksize=1
+                )
+                if increment_counter:
+                    self.insert_counter += len(insert)
 
-            df = pd.DataFrame(insert)
-            if convert_float_int:
-                df = self._convert_float_nan_to_int(df)
-            df.to_sql(
-                schema = self.db_schema,
-                name=table.name,
-                con=self.db,
-                if_exists="append",
-                index=False,
-                method=psql_insert_copy
-            )
-            if increment_counter:
-                self.insert_counter += len(insert)
-
-            self.logger.info(
-                f"Inserted {len(insert)} rows in {time.time() - insert_start_time} seconds "
-                "thanks to postgresql's COPY FROM CSV! :)"
-            )
+                self.logger.info(
+                    f"Inserted {len(insert)} rows in {time.time() - insert_start_time} seconds "
+                    "thanks to postgresql's COPY FROM CSV! :)"
+                )
+            except Exception as e: 
+                self.logger.info(f"Bulk insert error 2: {e}. exception registered.")
 
         return insert_result, update_result
 
@@ -819,10 +879,10 @@ class Persistant():
                 **data_point,
                 #field: data_point[field].replace("\x00", "\uFFFD")
                 #self.logger.info(f"Null replaced data point{field:datapoint[field]}")
-                ## trying to use standard python3 method for text cleaning here. 
+                ## trying to use standard python3 method for text cleaning here.
                 # This was after `data_point[field]` for a while as `, "utf-8"` and did not work
-                # Nay, it cause silent errors without insert; or was part of that hot mess. 
-                # field: bytes(data_point[field]).decode("utf-8", "ignore")  
+                # Nay, it cause silent errors without insert; or was part of that hot mess.
+                # field: bytes(data_point[field]).decode("utf-8", "ignore")
                 field: bytes(data_point[field], "utf-8").decode("utf-8", "ignore").replace("\x00", "\uFFFD")
                 #0x00
             } for data_point in data
@@ -850,7 +910,12 @@ class Persistant():
         # todo: merge with _get_data_set_columns
 
         for column in column_names:
+            self.logger.debug(f"column included: {column}.")
             if '.' not in column:
+                continue
+            # if the column is already present then we
+            # dont' need to try to add it again
+            if column in df.columns:
                 continue
             root = column.split('.')[0]
             if root not in df.columns:
@@ -868,7 +933,17 @@ class Persistant():
             except ValueError:
                 # columns already added (happens if trying to expand the same column twice)
                 # TODO: Catch this before by only looping unique prefixs?
+                stacker = traceback.format_exc()
+                self.logger.debug(f"{stacker}")
                 pass
+            except Exception as e:
+                self.logger.debug(f"Looking for nan user error: {e}.") 
+                stacker = traceback.format_exc()
+                self.logger.debug(f"{stacker}")
+                pass 
+            finally: 
+                self.logger.debug(f"exception registered in _add_nested_columns.")
+
 
         return df
 
@@ -876,6 +951,15 @@ class Persistant():
     def enrich_data_primary_keys(
         self, source_data, table, gh_merge_fields, augur_merge_fields, in_memory=False
     ):
+
+        ''' the gh_merge_fields are almost always direct from the source in the action map.
+            the augur_merge fields are the fieldnames where augur perists the source values.
+            These are almost never (never) the primary keys on our table. They are the natural
+            keys at the source, I think, with some probability close to 1 (SPG 9/13/2021).'''
+
+        ''' SPG 9/15/2021: This seems method may be the source of duplicate inserts that seem like
+            they should not actually get run because we are specifying the natural key in the insert map.
+            I really don't completely understand what we are doing here.  '''
 
         self.logger.info("Preparing to enrich data.\n")
 
@@ -888,10 +972,28 @@ class Persistant():
         if not in_memory:
 
             source_pk_columns = list(source_df.columns)
+            ## This seems to be the biggest issue. The primary keys do not actually
+            ## represent the natural key we are mapping for inserts.
             source_pk_columns.insert(0, list(table.primary_key)[0].name)
 
             (source_table, ), metadata, session = self._setup_postgres_merge(
-                # [self._get_data_set_columns(source_data, gh_merge_fields)]
+                #This next line was commented out, which seems like it might be problematic
+                #    Wouldn't we *want* to have all of this mapping included?
+                #    [self._get_data_set_columns(source_data, gh_merge_fields)]
+                #   However, it does turn out that this line creates the error:
+                    #      2021-09-15 21:44:59,261,261ms [PID: 1942874] workers.github_worker.57631 [ERROR] Traceback (most recent call last):
+                    #   File "/home/sean/github/release-test/workers/worker_base.py", line 180, in collect
+                    #     model_method(message, repo_id)
+                    #   File "/home/sean/github/release-test/workers/github_worker/github_worker.py", line 199, in issues_model
+                    #     pk_source_issues = self._get_pk_source_issues()
+                    #   File "/home/sean/github/release-test/workers/github_worker/github_worker.py", line 181, in _get_pk_source_issues
+                    #     pk_source_issues_increment_insert(source_issues,action_map)
+                    #   File "/home/sean/github/release-test/workers/github_worker/github_worker.py", line 166, in pk_source_issues_increment_insert
+                    #     self.pk_source_issues += self.enrich_data_primary_keys(
+                    #   File "/home/sean/github/release-test/workers/worker_persistance.py", line 928, in enrich_data_primary_keys
+                    #     [self._get_data_set_columns(source_data, gh_merge_fields)]
+                    # TypeError: list indices must be integers or slices, not list
+
                 [source_df.to_dict(orient='records')]
             )
 
@@ -961,6 +1063,7 @@ class Persistant():
 
             #                 list(source_df[gh_merge_fields].itertuples(index=False))
             #             ))).fetchall()
+            # except psycopg2.errors.UniqueViolation as e: 
             # except psycopg2.errors.StatementTooComplex as e:
             self.logger.info("Retrieve pk statement too complex, querying all instead " +
                 "and performing partitioned merge.\n")
@@ -1154,8 +1257,14 @@ class Persistant():
         columns = copy.deepcopy(action_map['update']['augur']) if 'update' in action_map else []
         columns += action_map['value_update']['augur'] if 'value_update' in action_map else []
         columns += action_map['insert']['augur'] if 'insert' in action_map else []
-        return [table.c[column] for column in
-            columns + [list(table.primary_key)[0].name]]
+        try:
+            relevant_columns_return = [table.c[column] for column in columns + [list(table.primary_key)[0].name]]
+            return relevant_columns_return
+        except Exception as e:
+            self.logger.info(f"Column may not exist in the database -- registered exception: {e}.")
+            stacker = traceback.format_exc()
+            self.logger.debug(f"{stacker}")
+
 
     def retrieve_tuple(self, key_values, tables):
         table_str = tables[0]
