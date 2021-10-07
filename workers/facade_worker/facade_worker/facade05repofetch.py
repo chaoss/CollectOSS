@@ -314,7 +314,7 @@ def git_repo_updates(cfg):
                 if return_code_remote == 0: 
 
 #                    logremotedefault = ("git -C %s%s/%s%s remote set-head origin -a"
-                        % (cfg.repo_base_directory,row[1],row[4],row[3]))
+#                        % (cfg.repo_base_directory,row[1],row[4],row[3]))
 
 #                    return_code_remote_default = subprocess.Popen([logremotedefault],stdout=subprocess.PIPE,shell=True).wait()
 
