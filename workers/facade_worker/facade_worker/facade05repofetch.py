@@ -307,7 +307,9 @@ def git_repo_updates(cfg):
                 firstpull = ("git -C %s%s/%s%s pull"
                     % (cfg.repo_base_directory,row[1],row[4],row[3]))
 
-                return_code_remote = subprocess.Popen([firstpull],shell=True).wait()
+                return_code_remote = subprocess.Popen([firstpull],stdout=subprocess.PIPE,shell=True).wait()
+
+                cfg.log_activity('Verbose', 'Got to here. 1.')
 
                 if return_code_remote == 0: 
 
