@@ -336,7 +336,7 @@ def git_repo_updates(cfg):
 
                     cfg.log_activity('Verbose', f'get remote default command is: \n \n {getremotedefault} \n \n ')
 
-                    return_code_remote_default_again = subprocess.Popen([getremotedefault],shell=True).wait()
+                    return_code_remote_default_again = subprocess.Popen([getremotedefault],stdout=subprocess.PIPE,shell=True).wait()
 
                     if return_code_remote_default_again == 0: 
                         cfg.log_activity('Verbose', "local checkout worked.")
@@ -344,11 +344,6 @@ def git_repo_updates(cfg):
                             % (cfg.repo_base_directory,row[1],row[4],row[3]))#['projects_id'],row['path'],row['name']))
 
                         return_code = subprocess.Popen([cmd],shell=True).wait()
-                    else: 
-                        break 
-
-                else: 
-                    break  
 
             except Exception as e: 
                 cfg.log_activity('Verbose', f'Error code on branch change is {e}.')
