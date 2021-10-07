@@ -8,6 +8,8 @@ import json
 from urllib.parse import quote
 from multiprocessing import Process, Queue
 
+import traceback
+
 import pandas as pd
 import sqlalchemy as s
 from sqlalchemy.ext.automap import automap_base
