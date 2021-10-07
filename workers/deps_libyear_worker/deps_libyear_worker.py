@@ -103,4 +103,4 @@ class DepsLibyearWorker(WorkerGitInterfaceable):
             self.logger.debug(f"error generating libyear data, exception registered: {e}.")
             stacker = traceback.format_exc()
             self.logger.debug(f"{stacker}")
-            continue 
+            pass  

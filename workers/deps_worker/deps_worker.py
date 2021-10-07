@@ -177,4 +177,4 @@ class DepsWorker(WorkerGitInterfaceable):
             self.logger.debug(f"generate deps data failed on {e}.")
             stacker = traceback.format_exc()
             self.logger.debug(f"{stacker}")
-            continue 
+            pass  
