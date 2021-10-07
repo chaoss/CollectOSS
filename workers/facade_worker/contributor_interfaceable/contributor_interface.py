@@ -849,7 +849,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             insertion_method=committer_insert
         )
         
-        self.logger.info(f"source committers: {source_committers}")
+        #self.logger.info(f"source committers: {source_committers}")
         committer_insert(source_committers, committer_action_map)
 
     
