@@ -776,10 +776,6 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             'insert': {
                 'source': ['login'],
                 'augur': ['cntrb_login']
-            },
-            'update': {
-                'source': ['type', 'site_admin'],
-                'augur': ['gh_type', 'gh_site_admin']
             }
         }
 
