@@ -80,4 +80,4 @@
 \i schema/generate/74-schema_update_76.sql
 \i schema/generate/75-schema_update_77.sql
 \i schema/generate/76-schema_update_78.sql
-
+\i schema/generate/77-schema_update_79.sql
