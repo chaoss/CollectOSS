@@ -367,8 +367,8 @@ def git_repo_updates(cfg):
                 break
 
             elif attempt == 0:
-                cfg.log_activity('Verbose','git pull failed, attempting reset and '
-                    'clean for %s' % row[2])
+#                cfg.log_activity('Verbose','git pull failed, attempting reset and '
+#                    'clean for %s' % row[2])
 
 #                remotedefault = 'main'
 
