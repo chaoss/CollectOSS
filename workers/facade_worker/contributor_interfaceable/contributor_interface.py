@@ -654,15 +654,14 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                     try:
                         self.db.execute(
                             self.contributors_table.insert().values(cntrb))
-
-                        # Update alias after insertion. Insertion needs to happen first so we can get the autoincrementkey
-                        self.insert_alias(cntrb, emailFromCommitData)
                     except Exception as e:
                         self.logger.info(
                             f"Ran into likely database collision. Assuming contributor exists in database. Error: {e}")
                 else:
                     self.update_contributor(cntrb)
-                    self.insert_alias(cntrb, emailFromCommitData)
+                
+                # Update alias after insertion. Insertion needs to happen first so we can get the autoincrementkey
+                self.insert_alias(cntrb, emailFromCommitData)
             except LookupError as e:
                 self.logger.info(
                     ''.join(traceback.format_exception(None, e, e.__traceback__)))
