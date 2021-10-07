@@ -8,43 +8,7 @@ ALTER TABLE "augur_data"."commit_comment_ref"
   ADD CONSTRAINT "fk_commit_comment_ref_commits_1" FOREIGN KEY ("cmt_id") REFERENCES "augur_data"."commits" ("cmt_id") ON DELETE RESTRICT ON UPDATE CASCADE,
   ADD CONSTRAINT "fk_commit_comment_ref_message_1" FOREIGN KEY ("msg_id") REFERENCES "augur_data"."message" ("msg_id") ON DELETE RESTRICT ON UPDATE CASCADE,
   ADD CONSTRAINT "commitcomment" UNIQUE ("cmt_comment_src_id");
-
-
-DROP INDEX IF EXISTS "augur_data"."committer_affiliation";
-
-DROP INDEX IF EXISTS "augur_data"."author_cntrb_id";
-
-DROP INDEX IF EXISTS "augur_data"."author_email,author_affiliation,author_date";
-
-DROP INDEX IF EXISTS "augur_data"."cmt_author_contrib_worker";
-
-DROP INDEX IF EXISTS "augur_data"."cmt_commiter_contrib_worker";
-
-DROP INDEX IF EXISTS "augur_data"."commited";
-
-DROP INDEX IF EXISTS "augur_data"."commits_idx_cmt_email_cmt_date_cmt_name";
-
-DROP INDEX IF EXISTS "augur_data"."commits_idx_cmt_email_cmt_date_cmt_name2";
-
-DROP INDEX IF EXISTS "augur_data"."commits_idx_cmt_name_cmt_date2";
-
-DROP INDEX IF EXISTS "augur_data"."commits_idx_cmt_name_cmt_date_cmt_date3";
-
-DROP INDEX IF EXISTS "augur_data"."commits_idx_repo_id_cmt_ema_cmt_dat_cmt_nam";
-
-DROP INDEX IF EXISTS "augur_data"."commits_idx_repo_id_cmt_ema_cmt_dat_cmt_nam2";
-
-DROP INDEX IF EXISTS "augur_data"."commits_idx_repo_id_cmt_ema_cmt_nam_cmt_dat2";
-
-DROP INDEX IF EXISTS "augur_data"."commits_idx_repo_id_cmt_ema_cmt_nam_cmt_dat3";
-
-DROP INDEX IF EXISTS "augur_data"."committer_cntrb_id";
-
-DROP INDEX IF EXISTS "augur_data"."committer_email,committer_affiliation,committer_date";
-
-CREATE INDEX "committer_affiliation" ON "augur_data"."commits" USING hash (
-  "cmt_committer_affiliation" COLLATE "pg_catalog"."default" "pg_catalog"."text_ops"
-);
+  
 
 COMMENT ON TABLE "augur_data"."contributor_affiliations" IS 'This table exists outside of relations with other tables. The purpose is to provide a dynamic, owner maintained (and augur augmented) list of affiliations. This table is processed in affiliation information in the DM_ tables generated when Augur is finished counting commits using the Facade Worker. ';
 
