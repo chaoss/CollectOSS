@@ -298,8 +298,9 @@ class FacadeWorker(Worker):
         if force_analysis:
             force_repo_analysis(self.cfg)
 
+        #Give analysis the github interface so that it can make API calls
         if not limited_run or (limited_run and run_analysis):
-            analysis(self.cfg, multithreaded)
+            analysis(self.cfg, multithreaded, interface=self.github_interface)
 
         if nuke_stored_affiliations:
             nuke_affiliations(self.cfg)
