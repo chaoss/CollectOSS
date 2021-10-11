@@ -6,10 +6,12 @@ Welcome to the Augur project's official documentation. Below is a brief primer o
 .. toctree::
    :maxdepth: 2
 
+   quick-start
    getting-started/toc
    development-guide/toc
    rest-api/api
    docker/toc
+   schema/toc
 .. 
   library-documentation/toc
 .. 
@@ -22,19 +24,11 @@ Welcome to the Augur project's official documentation. Below is a brief primer o
 What is Augur?
 ~~~~~~~~~~~~~~~~
 
-Augur is a software suite for collecting and analyzing structured data about free and open source software (`FOSS <https://en.wikipedia.org/wiki/Free_and_open-source_software>`_) communities. We gather trace data for groups of repositories, normalize it into our data model, and provide a variety of metrics about this data. The structure of our data model enables us to synthesize data across various platforms to provide meaningful context for meaningful questions about the way these communities evolve.
+Augur is a software suite for collecting and measuring structured data about free and open source software (FOSS) communities.
 
-We are a `CHAOSS <https://chaoss.community>`_ project, and many of our metrics are implementations of the metrics defined by our community. You can find more information about how to get involved in our community `here <https://chaoss.community/participate/>`_.
+Augur’s main focus is to measure the overall health and sustainability of open source projects, as these types of projects are system critical for nearly every software organization or company. We do this by gathering data about a project's repositories, normalizing that into our data model to provide useful metrics about your project’s health. For example, one of our metrics is Burstiness (How are short timeframes of intense activity, followed by a corresponding return to a typical pattern of activity, observed in a project?), which can paint a picture about a project’s focus as well as gain insight as to the potential stability of a project, and how its typical cycle of updates occurs. There are many more useful metrics, and you can find a full list of them here.
 
-Augur is focused on making sense of data using
-four key **human centered data science** strategies:
-
-1. **Enable comparisons**. People navigate complex unknowns analogically. Let folks see how their project compares with others they are familiar with. This is not ranking - if you start thinking about "metrics" like "rankings," you are probably going to create suboptimal metrics.
-2. Make **time a fundamental dimension in all metrics** from the start. "Point in time scores" are useful. They are more useful if we can see how they compare historically and can be used to anticipate a trajectory.
-3. All **data** driving visualizations **should be downloadable** as ``.csv`` or some other data exchange format. People trust metrics when they can see the underlying data, and proving traceability back to the CHAOSS Project's metrics standards requires easy transparency.
-4. Make **all the visualizations downloadable as ``.svg's``**. People want to put your visualizations in reports to explain things they care about. And ask for money. Give them the tools. That's what makes folks care about metrics.
-
-Our core team has a long standing interest in social computing, software engineering measurement and the ethical instrumentation of online human behavior.
+This software is developed as part of the CHAOSS (Community Health Analytics Open Source Software) project, and many of our metrics are implementations of the metrics defined by our awesome community. You can find more information about how to get involved on the CHAOSS website. If you want to see augur in action, you can view CHAOSS’s own augur instance. 
 
 Current maintainers
 --------------------
