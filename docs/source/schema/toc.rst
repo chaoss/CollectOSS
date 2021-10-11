@@ -1,5 +1,5 @@
-Database Schema
-=======
+Schema
+====================
 
    overview
    issues
