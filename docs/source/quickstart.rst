@@ -44,6 +44,22 @@ Then, once you've connected to your PostgreSQL instance\:
 - Clone and install Augur as a regular user. 
 
 .. code-block:: bash
+
+	su - ubuntu
+	git clone https://github.com/chaoss/augur.git
+	cd augur/
+	sudo apt make
+	sudo add-apt-repository ppa:deadsnakes/ppa
+	sudo apt-get install python3-venv 
+	python3 -m venv $HOME/.virtualenvs/augur_env
+	source $HOME/.virtualenvs/augur_env/bin/activate
+	sudo apt install python3-pip
+	sudo apt install pythonpy
+	python -m pip install --upgrade pip
+	pip install tensorflow==2.5.0  
+	#if previous line does not work try
+	$ pip install tensorflow==2.5.0 --no-cache-dir
+	#then:
 	make install-dev {Follow prompts. You will need database credentials, a file location for cloned repositories, a GitHub Token, and a GitLab token.}
 
 - Load a sample set of repositories. This can be accomplished through the Augur Command Line Interface (CLI). You can see available commands using 

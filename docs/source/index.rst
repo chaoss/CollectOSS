@@ -6,6 +6,7 @@ Welcome to the Augur project's official documentation. Below is a brief primer o
 .. toctree::
    :maxdepth: 2
 
+   quick-start
    getting-started/toc
    development-guide/toc
    rest-api/api
