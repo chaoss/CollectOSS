@@ -7,6 +7,7 @@ Welcome to the Augur project's official documentation. Below is a brief primer o
    :maxdepth: 2
 
    quick-start
+   deployment/toc
    getting-started/toc
    development-guide/toc
    rest-api/api

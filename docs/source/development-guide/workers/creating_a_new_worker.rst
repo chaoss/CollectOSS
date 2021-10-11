@@ -9,7 +9,7 @@ Worker Setup
 2. If you are analyzing Augur data, the `value_worker` provides a good example. 
 
 What are the key sections? 
-------------------------
+-----------------------------------
 
 The key sections you can copy from any worker are illustrated in this example from the Pull Request Worker:  
 
@@ -69,10 +69,12 @@ The key sections you can copy from any worker are illustrated in this example fr
             self.data_source = 'GitHub API'
 
 Getting Your Worker to Talk to Augur
-------------------------------------
+----------------------------------------
 
 In the house keeper block, you need to add something following this pattern, inside the "jobs" section: 
-```
+
+.. code-block:: python  
+
     "Housekeeper": {
         "update_redirects": {
             "switch": 0,
@@ -104,10 +106,11 @@ In the house keeper block, you need to add something following this pattern, ins
                 "model": "<model specified in your worker>",
                 "repo_group_id": 0
             },
-```
 
 In the Worker block you need to add something like this: 
-```
+
+.. code-block:: python 
+
     "Workers": {
         "contributor_breadth_worker": {
             "port": 48234,
@@ -125,7 +128,7 @@ In the Worker block you need to add something like this:
             "switch": 1,
             "workers": 1
         },
-```
+
 
 There should NOT be a comma after the final entry in each block. 
 
@@ -133,13 +136,15 @@ ALSO, if you wanted to have those blocks installed with auger itself when you do
 
 You can copy the housekeeper block verbatim from what you added to your own `augur.config.json`. For the worker block, in the `config.py` it would look like this: 
 
-```
-                "your_worker": {
-                    "port": your_worker_p ,
-                    "switch": 1,
-                    "workers": 1
-                },
-```
+.. code-block:: python 
+
+    "your_worker": {
+        "port": your_worker_p ,
+        "switch": 1,
+        "workers": 1
+    },
+
+
 
 The `switch` variable tells Augur to run your worker. The `worker` variable tells Augur how many to run. We recommend you begin with the number `1`.
 
