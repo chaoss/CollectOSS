@@ -48,20 +48,22 @@ Like standard worker configuration, we need to define delay, given, model and re
 
 Further, in workers configuration block, we need to define port, switch and number of workers.
 
-"clustering_worker":{
-	    "port" : 51500,
+.. code-block:: json
 
-	    "switch": 1,
+    "clustering_worker":{
+    	    "port" : 51500,
+    	    "switch": 1,
+    	    "workers": 1,
+            "max_df" : 0.9,
+            "max_features" : 1000,
+            "min_df" : 0.1,
+            "num_clusters" : 4
+    }
 
-	    "workers": 1,
-      "max_df" : 0.9,
-      "max_features" : 1000,
-      "min_df" : 0.1,
-      "num_clusters" : 4
-	
-	}
-  
-  In addition to standard worker parameters, clustering worker requires some worker-specific parameters which are described below:
+Additional Worker Parameters in `augur.config.json`: 
+------------------------------------------------------
+
+In addition to standard worker parameters, clustering worker requires some worker-specific parameters which are described below:
   
  - **max_df** :sets the threshold which filters out terms that have higher document frequency (corpus specific stop words)
  - **min_df** : filters out uncommon words

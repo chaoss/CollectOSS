@@ -65,6 +65,7 @@ Then, once you've connected to your PostgreSQL instance\:
 - Load a sample set of repositories. This can be accomplished through the Augur Command Line Interface (CLI). You can see available commands using 
 
 .. code-block:: bash
+
 	augur --help
 	augur db --help
 	augur backend --help
@@ -72,6 +73,7 @@ Then, once you've connected to your PostgreSQL instance\:
 The commands for loading repos are: 
 
 .. code-block:: bash
+
 	augur db add-github-org
 	augur db add-repo-groups
 	augur db add-repos

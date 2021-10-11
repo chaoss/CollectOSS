@@ -1,8 +1,8 @@
 Steps to Create a Metric API Endpoint
-=============================
+==========================================
 
 There are many paths, but we usually follow something along these lines: 
----------------------------------------------------------------------
+---------------------------------------------------------------------------
 
 1. What is the CHAOSS metric we want to develop? 
 2. Sometimes, there are metrics endpoints that integrate, or visualize several metrics.
@@ -12,7 +12,7 @@ There are many paths, but we usually follow something along these lines:
 
 
 Example Query to Get Us Started on a Labor Effort and Cost Endpoint? 
-----------------------------------------------------------
+---------------------------------------------------------------------
 
 1. What tables? 
 
@@ -25,7 +25,7 @@ If we look at the Augur Schema, we can see that effort and cost are contained in
 
 2. What might our initial query to explore building the endpoint be? 
 
-.. code-block:: python 
+.. code-block:: sql 
 
    SELECT C.repo_id,
 	C.repo_name,
