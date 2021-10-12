@@ -255,6 +255,9 @@ class Persistant():
             try:
                 source_index = source_columns[index]
                 type_dict[subject_columns[index]] = type(source[source_index].values[0])
+                
+                #self.logger.info(f"Source data column is {source[source_index].values[0]}")
+                #self.logger.info(f"Type dict at {subject_columns[index]} is : {type(source[source_index].values[0])}")
             except Exception as e:
                 self.logger.info(f"Source data registered exception: {source[source_index]}")
                 stacker = traceback.format_exc()
@@ -933,6 +936,7 @@ class Persistant():
             except ValueError:
                 # columns already added (happens if trying to expand the same column twice)
                 # TODO: Catch this before by only looping unique prefixs?
+                self.logger.debug(f"value error: {e}.") 
                 stacker = traceback.format_exc()
                 self.logger.debug(f"{stacker}")
                 pass
@@ -942,7 +946,9 @@ class Persistant():
                 self.logger.debug(f"{stacker}")
                 pass 
             finally: 
-                self.logger.debug(f"exception registered in _add_nested_columns.")
+                self.logger.debug(f"finished _add_nested_columns.")
+
+
 
 
         return df

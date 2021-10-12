@@ -1,11 +1,11 @@
 Parts of an Augur API Endpoint
-=============================
+=====================================
 
 1. Developing the query that will produce data needed to deliver the endpoint, usually parameterized by a `repo_id`.
 2. Determining if the endpoint will be a "standard endpoint", or a custom endpoint. 
 
 Where Are the Endpoints? 
-------------------------
+---------------------------
 
 JSON Metrics are here: 
 
@@ -21,7 +21,7 @@ Visualization Metrics are here:
 
 
 Existing metrics files (JSON Metric) "Standard Metrics": 
---------------------------------------------------
+---------------------------------------------------------
 
 1. commit.py
 2. contributor.py
@@ -134,10 +134,24 @@ There is also, generally, a block in a standard metric for pulling data by a rep
     return results
 
 Existing Visualization Metrics Files: 
-------------------------------
+--------------------------------------------
+1. augur/routes/contributor_reports.py
+2. augur/routes/pull_request_reports.py
 
-1. contributor_reports.py
-2. pull_request_reports.py
+Existing Metrics Files: 
+--------------------------------------------
+
+1. augur/metrics/commit.py
+2. augur/metrics/contributor.py
+3. augur/metrics/deps.py
+4. augur/metrics/experimental.py
+5. augur/metrics/insight.py
+6. augur/metrics/issue.py
+7. augur/metrics/message.py
+8. augur/metrics/platform.py
+9. augur/metrics/pull_request.py
+10. augur/metrics/release.py
+11. augur/metrics/repo_meta.py 
 
 
 These files are not intended to be all inclusive. Rather, they are what we have developed, or imagined, based on existing CHAOSS metrics to date. New CHAOSS metrics are likely to result in the inclusion of new files under metrics, or routes, depending if they are standard metrics or not. 
