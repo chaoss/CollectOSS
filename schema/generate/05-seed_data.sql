@@ -1070,8 +1070,6 @@ INSERT INTO "augur_data"."contributor_affiliations"("ca_id", "ca_domain", "tool_
 INSERT INTO "augur_data"."contributor_affiliations"("ca_id", "ca_domain", "tool_source", "tool_version", "data_source", "data_collection_date", "ca_last_used", "ca_affiliation", "ca_start_date", "ca_active") VALUES (520, 'outdoors@acm.org', 'load', '1.0', 'load', '2013-07-15 00:00:00', '2018-09-12 02:32:53', 'University of Missouri', '1970-01-01', 1);
 INSERT INTO "augur_data"."contributor_affiliations"("ca_id", "ca_domain", "tool_source", "tool_version", "data_source", "data_collection_date", "ca_last_used", "ca_affiliation", "ca_start_date", "ca_active") VALUES (521, 'freebsd.org', 'load', '1.0', 'load', '1970-01-01 00:00:00', '2018-09-13 21:15:22', 'Free BSD', '1970-01-01', 1);
 
-
-
 INSERT INTO "augur_data"."repo_groups"("repo_group_id", "rg_name", "rg_description", "rg_website", "rg_recache", "rg_last_modified", "rg_type", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (10, 'Default Repo Group', 'The default repo group created by the schema generation script', '', 0, '2021-06-03 15:55:20', 'GitHub Organization', 'load', 'one', 'git', '2019-06-05 13:36:25');
 
 INSERT INTO "augur_data"."repo" ("repo_id", "repo_group_id", "repo_git", "repo_path", "repo_name", "repo_added", "repo_status", "repo_type", "url", "owner_id", "description", "primary_language", "created_at", "forked_from", "updated_at", "tool_source", "tool_version", "data_source", "data_collection_date", "repo_archived", "repo_archived_date_collected") VALUES (25452, 10, 'https://github.com/chaoss/whitepaper', 'github.com/chaoss/', 'whitepaper', '2021-04-17 21:40:42', 'Complete', '', NULL, NULL, NULL, NULL, NULL, 'Parent not available', NULL, 'CLI', '1.0', 'Git', '2021-04-17 21:40:42', 0, NULL);
@@ -1083,7 +1081,5 @@ INSERT INTO "augur_data"."repo" ("repo_id", "repo_group_id", "repo_git", "repo_p
 INSERT INTO "augur_data"."repo" ("repo_id", "repo_group_id", "repo_git", "repo_path", "repo_name", "repo_added", "repo_status", "repo_type", "url", "owner_id", "description", "primary_language", "created_at", "forked_from", "updated_at", "tool_source", "tool_version", "data_source", "data_collection_date", "repo_archived", "repo_archived_date_collected") VALUES (25450, 10, 'https://github.com/chaoss/grimoirelab-hatstall', 'github.com/chaoss/', 'grimoirelab-hatstall', '2021-04-17 21:40:42', 'Complete', '', NULL, NULL, NULL, NULL, NULL, 'Parent not available', NULL, 'CLI', '1.0', 'Git', '2021-04-17 21:40:42', 0, NULL);
 
 UPDATE "augur_data"."repo" set repo_name = NULL, repo_path = NULL, repo_status = 'New'; 
-
-
 
 
