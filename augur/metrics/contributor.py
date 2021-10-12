@@ -86,15 +86,15 @@ def contributors(self, repo_group_id, repo_id=None, period='day', begin_date=Non
                             0        AS issue_comments,
                             0        AS pull_requests,
                             0        AS pull_request_comments,
-                            repo_id
+                            commits.repo_id as repo_id
                     FROM commit_comment_ref,
                         commits,
                         message
                     WHERE commit_comment_ref.cmt_id = commit_comment_ref.cmt_id
                         AND message.msg_id = commit_comment_ref.msg_id
-                        AND repo_id = :repo_id
+                        AND commits.repo_id = :repo_id
                         AND created_at BETWEEN :begin_date AND :end_date
-                    GROUP BY id, repo_id)
+                    GROUP BY id, commits.repo_id)
                     UNION ALL
                     (
                         SELECT message.cntrb_id AS id,
@@ -104,17 +104,17 @@ def contributors(self, repo_group_id, repo_id=None, period='day', begin_date=Non
                                 count(*)         AS issue_comments,
                                 0                AS pull_requests,
                                 0                AS pull_request_comments,
-                            repo_id
+                            issues.repo_id as repo_id
                         FROM issues,
                             issue_message_ref,
                             message
-                        WHERE repo_id = :repo_id
+                        WHERE issues.repo_id = :repo_id
                         AND gh_user_id IS NOT NULL
                         AND issues.issue_id = issue_message_ref.issue_id
                         AND issue_message_ref.msg_id = message.msg_id
                         AND issues.pull_request IS NULL
                         AND created_at BETWEEN :begin_date AND :end_date
-                        GROUP BY id, repo_id
+                        GROUP BY id, issues.repo_id
                     )
                 ) a, repo
             WHERE a.repo_id = repo.repo_id
@@ -149,7 +149,7 @@ def contributors(self, repo_group_id, repo_id=None, period='day', begin_date=Non
                         AND created_at BETWEEN :begin_date AND :end_date
                         AND gh_user_id IS NOT NULL
                         AND pull_request IS NULL
-                    GROUP BY gh_user_id, repo_id)
+                    GROUP BY gh_user_id, issues.repo_id)
                     UNION ALL
                     (SELECT cmt_ght_author_id AS id,
                             repo_id,
@@ -166,7 +166,7 @@ def contributors(self, repo_group_id, repo_id=None, period='day', begin_date=Non
                     GROUP BY cmt_ght_author_id, repo_id)
                     UNION ALL
                     (SELECT cntrb_id AS id,
-                            repo_id,
+                            commits.repo_id as repo_id,
                             0        AS commits,
                             0        AS issues,
                             COUNT(*) AS commit_comments,
@@ -178,13 +178,13 @@ def contributors(self, repo_group_id, repo_id=None, period='day', begin_date=Non
                         message
                     WHERE commit_comment_ref.cmt_id = commit_comment_ref.cmt_id
                         AND message.msg_id = commit_comment_ref.msg_id
-                        AND repo_id in (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id)
+                        AND commits.repo_id in (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id)
                         AND created_at BETWEEN :begin_date AND :end_date
-                    GROUP BY id, repo_id)
+                    GROUP BY id, commits.repo_id)
                     UNION ALL
                     (
                         SELECT message.cntrb_id AS id,
-                                repo_id,
+                                issues.repo_id as repo_id,
                                 0                AS commits,
                                 0                AS issues,
                                 0                AS commit_comments,
@@ -194,13 +194,13 @@ def contributors(self, repo_group_id, repo_id=None, period='day', begin_date=Non
                         FROM issues,
                             issue_message_ref,
                             message
-                        WHERE repo_id in (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id)
+                        WHERE issues.repo_id in (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id)
                         AND gh_user_id IS NOT NULL
                         AND issues.issue_id = issue_message_ref.issue_id
                         AND issue_message_ref.msg_id = message.msg_id
                         AND issues.pull_request IS NULL
                         AND created_at BETWEEN :begin_date AND :end_date
-                        GROUP BY id, repo_id
+                        GROUP BY id, issues.repo_id
                     )
                 ) a, repo
             WHERE a.repo_id = repo.repo_id
@@ -263,7 +263,7 @@ def contributors_new(self, repo_group_id, repo_id=None, period='day', begin_date
                                 and commit_comment_ref.msg_id = message.msg_id
                             group by id, commits.repo_id)
                             UNION ALL
-                            (SELECT issue_events.cntrb_id AS id, MIN(issue_events.created_at) AS created_at, repo_id
+                            (SELECT issue_events.cntrb_id AS id, MIN(issue_events.created_at) AS created_at, issues.repo_id
                             FROM issue_events, issues
                             WHERE issues.repo_id = :repo_id
                                 AND issues.issue_id = issue_events.issue_id
@@ -271,7 +271,7 @@ def contributors_new(self, repo_group_id, repo_id=None, period='day', begin_date
                                 AND issue_events.created_at BETWEEN :begin_date AND :end_date
                                 AND issue_events.cntrb_id IS NOT NULL
                                 AND action = 'closed'
-                            GROUP BY issue_events.cntrb_id, repo_id)
+                            GROUP BY issue_events.cntrb_id, issues.repo_id)
                         ) a
                     GROUP BY a.id, a.repo_id) b, repo
             WHERE repo.repo_id = b.repo_id

@@ -1,29 +1,39 @@
-Data Model
-===========
+Complete Data Model on a Page
+=================================
 
-The latest version of Augur includes a schema_ that brings together data from :
-
-1. git repositories, including GitHub
-2. issue trackers
-3. mailing lists
-4. library dependency trees
-5. the Linux Foundation's badging program
-6. code complexity and contribution counting ... and MUCH MUCH MORE.
+The latest version of Augur includes a schema_ that brings together data around key artifacts of open source software development.
 
 This document details how to create the schema as well as some information on its contents and design.
 
------------------------
+-------------------------------------------------------
+Complete Data Model, With Key Table Types Highlighted
+-------------------------------------------------------
+
+.. image:: schema.png
+  :width: 1200
+  :alt: Augur Unified Schema
+
+
+-------------------------------------------------------
+Complete Data Model, For Current Release
+-------------------------------------------------------
+
+.. image:: images/20211011-augur-schema-v0.21.1.png
+  :width: 1200
+  :alt: Augur Unified Schema
+
+-------------------------------------------------------
 Creating the schema
------------------------
+-------------------------------------------------------
 
 The process for creating the schema is detailed in the  `database section <../getting-started/database.html>`_ of the Getting Started guide.
 
-----------------
+-------------------------------------------------------
 Schema Overview
-----------------
+-------------------------------------------------------
 
 Augur Data
-----------
+-------------------------------------------------------
 
 The ``augur_data`` schema contains *most* of the information analyzed
 and constructed by Augur. The origin’s of the data inside of augur are:
@@ -54,7 +64,7 @@ https://github.com/boyter/scc project. “SCC” required Go to be installed on 
 6. ``workers/pull_request_worker``: Collects Pull Request related data such as commits, contributors,assignees, etc. from the Github API and stores it in the Augur database.
 
 Augur Operations
-----------------
+-------------------------------------------------------
 
 The ``augur_operations`` tables are where most of the operations tables
 are going to exist. There are a few, like ``settings`` that remain in
@@ -63,25 +73,10 @@ analytical history and data provenance for data in the schema. They also
 store information including API keys.
 
 SPDX
-----
+-------------------------------------------------------
 
 The ``spdx`` schema serves the storage for software bill of materials
 and license declarations scans on projects, conducted using this fork of
 the DoSOCSv2 project: https://github.com/Nebrethar/DoSOCSv2
 
 .. _schema:
-
---------------------
-Complete Data Model, With Key Table Types Highlighted
---------------------
-.. image:: schema.png
-  :width: 1200
-  :alt: Augur Unified Schema
-
-
---------------------
-Complete Data Model, For Current Release
---------------------
-.. image:: 20210811-augur-0.2.1-release.png
-  :width: 1200
-  :alt: Augur Unified Schema

@@ -462,13 +462,13 @@ def license_coverage(self, repo_group_id, repo_id=None):
                 packages_files,
                 repo
             WHERE packages.name = repo.repo_name
-            and repo_id = :repo_id
+            and repo.repo_id = :repo_id
             and packages.package_id = packages_files.package_id
             and packages_files.file_id = files_licenses.file_id
             GROUP BY packages.name) a, (SELECT packages.name as name, count(packages_files.file_id) as total
             FROm packages, repo, packages_files
             WHERE packages.name = repo.repo_name
-            and repo_id = :repo_id
+            and repo.repo_id = :repo_id
             AND packages.package_id = packages_files.package_id
             GROUP BY packages.name
             )b
@@ -523,13 +523,13 @@ def license_count(self, repo_group_id, repo_id=None):
                 packages_files,
                 repo
             WHERE packages.name = repo.repo_name
-            and repo_id = :repo_id
+            and repo.repo_id = :repo_id
             and packages.package_id = packages_files.package_id
             and packages_files.file_id = files_licenses.file_id
             GROUP BY packages.name) a, (SELECT packages.name as name, count(packages_files.file_id) as total
             FROm packages, repo, packages_files
             WHERE packages.name = repo.repo_name
-            and repo_id = :repo_id
+            and repo.repo_id = :repo_id
             AND packages.package_id = packages_files.package_id
             GROUP BY packages.name
             )b
@@ -1061,7 +1061,7 @@ def aggregate_summary(self, repo_group_id, repo_id=None, begin_date=None, end_da
                     SELECT DISTINCT issue_events.issue_id
                     FROM issue_events JOIN issues ON issues.issue_id = issue_events.issue_id
                     WHERE action = 'merged'
-                    AND repo_id = :repo_id
+                    AND issues.repo_id = :repo_id
                     AND issue_events.created_at BETWEEN :begin_date AND :end_date
                 ) a
             ) AS merged_count,
