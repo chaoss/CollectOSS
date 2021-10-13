@@ -140,7 +140,7 @@ def create_routes(server):
                         SELECT
                             issue_events.cntrb_id AS ID,
                             issue_events.created_at AS created_at,
-                            repo_id,
+                            issues.repo_id,
                             'issue_closed' AS ACTION,
                             contributors.cntrb_full_name AS full_name,
                             contributors.cntrb_login AS login 
@@ -159,7 +159,7 @@ def create_routes(server):
                             AND ACTION = 'closed' 
                         GROUP BY
                             issue_events.cntrb_id,
-                            repo_id,
+                            issues.repo_id,
                             issue_events.created_at,
                             contributors.cntrb_full_name,
                             contributors.cntrb_login 
@@ -168,7 +168,7 @@ def create_routes(server):
                         SELECT
                             pr_augur_contributor_id AS ID,
                             pr_created_at AS created_at,
-                            repo_id,
+                            pull_requests.repo_id,
                             'open_pull_request' AS ACTION,
                             contributors.cntrb_full_name AS full_name,
                             contributors.cntrb_login AS login 
@@ -191,7 +191,7 @@ def create_routes(server):
                         SELECT
                             message.cntrb_id AS ID,
                             msg_timestamp AS created_at,
-                            repo_id,
+                            pull_requests.repo_id as repo_id,
                             'pull_request_comment' AS ACTION,
                             contributors.cntrb_full_name AS full_name,
                             contributors.cntrb_login AS login 
@@ -218,7 +218,7 @@ def create_routes(server):
                         SELECT
                             issues.reporter_id AS ID,
                             msg_timestamp AS created_at,
-                            repo_id,
+                            issues.repo_id as repo_id,
                             'issue_comment' AS ACTION,
                             contributors.cntrb_full_name AS full_name,
                             contributors.cntrb_login AS login 
