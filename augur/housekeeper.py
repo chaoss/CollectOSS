@@ -240,6 +240,8 @@ class Housekeeper:
                         {}
                         group by repo.repo_id ORDER BY commit_count {}
                     """.format(where_condition, job['order']))
+
+                    logger.debug(f'repo url sql is: {repo_url_sql}.')
                 
                 reorganized_repos = pd.read_sql(repo_url_sql, self.db, params={})
                 if len(reorganized_repos) == 0:
@@ -303,7 +305,7 @@ class Housekeeper:
                 if finishing_task:
                     reorganized_repos[0]['focused_task'] = 1
 
-                logger.debug(f'reorganized repos == {reorganized_repos}.')
+                #logger.debug(f'reorganized repos == {reorganized_repos}.')
                 
                 job['repos'] = reorganized_repos
 
