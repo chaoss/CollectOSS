@@ -28,7 +28,7 @@ setup(
         'Flask-WTF==0.15.1',
         'requests==2.22.0',
         'psycopg2-binary==2.8.6',
-        'click==7.1.2', 
+        'click==8.0.3', 
         'XlsxWriter==1.3.7'
     ],
     entry_points={
