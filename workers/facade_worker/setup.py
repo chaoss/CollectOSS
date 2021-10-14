@@ -22,10 +22,10 @@ setup(
     description="Augur Worker that parses and collects git log data",
     packages=find_packages(exclude=('tests',)),
     install_requires=[
-        'Flask==1.1.4',
+        'Flask==2.0.2',
         'Flask-Cors==3.0.10',
         'Flask-Login==0.5.0',
-        'Flask-WTF==0.14.3',
+        'Flask-WTF==0.15.1',
         'requests==2.22.0',
         'psycopg2-binary==2.8.6',
         'click==7.1.2', 
