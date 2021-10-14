@@ -144,6 +144,8 @@ class Housekeeper:
                                 broker_host,broker_port), json=task, timeout=10)
                         except Exception as e:
                             logger.error("Error encountered: {}".format(e))
+                            
+                        logger.debug(task)
 
                     logger.info("Housekeeper finished sending {} tasks to the broker for it to distribute to your worker(s)".format(len(job['repos'])))
                     time.sleep(job['delay'])
