@@ -48,6 +48,6 @@ def create_routes(server):
         results = pd.read_sql(repo_info_sql, server.augur_app.database)
         data = results.to_json(orient="columns", date_format='iso', date_unit='ms')
         parsed_data = json.loads(data)
-        return Response(response=parsed_data,
+        return Response(response=data,
                     status=200,
                     mimetype="application/json")
