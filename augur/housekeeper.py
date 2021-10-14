@@ -107,6 +107,7 @@ class Housekeeper:
                         job['model'], job['given'][0]))
                     
                     if job['given'][0] == 'git_url' or job['given'][0] == 'github_url':
+                        logger.debug(f'job array is: {job}')
                         for repo in job['repos']:
                             if job['given'][0] == 'github_url' and 'github.com' not in repo['repo_git']:
                                 continue
