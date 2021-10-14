@@ -61,6 +61,8 @@ class FacadeWorker(Worker):
         # Run the general worker initialization
         super().__init__(worker_type, config, given, models, data_tables, operations_tables)
 
+        time.sleep(10)
+
         # Facade-specific config
         self.cfg = Config(self.logger)
 
@@ -73,8 +75,11 @@ class FacadeWorker(Worker):
         #Define interface to GitHub as an attribute
         self.logger.info(f"Config passed is: {str(self.config)}")
 
+        time.sleep(20)   
+        
+        self.github_interface = ContribInterface(config=self.config, logger=self.logger)    
 
-        self.github_interface = ContribInterface(config=self.config, logger=self.logger)         
+        time.sleep(20)   
 
         #breakpoint()
         self.logger.info("created interface")
