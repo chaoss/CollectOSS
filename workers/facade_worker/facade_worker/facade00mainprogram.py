@@ -59,7 +59,7 @@ class FacadeWorker(Worker):
         operations_tables = ['worker_history', 'worker_job']
 
         # Run the general worker initialization
-        super().__init__(worker_type, config, given, models, data_tables, operations_tables)
+        #super().__init__(worker_type, config, given, models, data_tables, operations_tables)
 
         time.sleep(10)
 
@@ -76,7 +76,7 @@ class FacadeWorker(Worker):
         self.logger.info(f"Config passed is: {str(self.config)}")
 
         time.sleep(20)   
-        
+
         self.github_interface = ContribInterface(config=self.config, logger=self.logger)    
 
         time.sleep(20)   
@@ -90,6 +90,10 @@ class FacadeWorker(Worker):
 
         self.logger.info("Finished  Init")
         #breakpoint() #What is going on after this
+
+        # Run the general worker initialization
+        super().__init__(worker_type, config, given, models, data_tables, operations_tables)
+
 
     def initialize_database_connections(self):
 
