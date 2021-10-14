@@ -64,6 +64,7 @@ class Housekeeper:
         logger.info("Scheduling update processes")
         for job in self.jobs:
             process = Process(target=self.updater_process, name=job["model"], args=(self.broker_host, self.broker_port, self.broker, job, (self.augur_logging.housekeeper_job_config, self.augur_logging.get_config())))
+            logger.debug(f'starting process {process}')
             self._processes.append(process)
             process.start()
 
