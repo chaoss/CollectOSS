@@ -302,6 +302,8 @@ class Housekeeper:
             
                 if finishing_task:
                     reorganized_repos[0]['focused_task'] = 1
+
+                logger.debug(f'reorganized repos == {reorganized_repos}.')
                 
                 job['repos'] = reorganized_repos
 
