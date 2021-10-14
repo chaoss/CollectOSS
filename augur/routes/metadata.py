@@ -14,7 +14,7 @@ import requests
 
 def create_routes(server):
 
-    @server.app.route('/{}/metadata/repo_info'.format(server.api_version))
+    @server.app.route('/{}/metadata/repo_info'.format(server.api_version), methods=["GET"])
     def get_repo_info():
         repo_info_sql = s.sql.text("""
             SELECT
