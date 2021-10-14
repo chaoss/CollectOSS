@@ -46,7 +46,7 @@ def create_routes(server):
                 repo.repo_name;
         """)
         results = pd.read_sql(repo_info_sql, server.augur_app.database)
-        data = results.to_json()
+        data = results.to_json(orient="columns", date_format='iso', date_unit='ms')
         parsed_data = json.loads(data)
         return Response(response=parsed_data,
                     status=200,
