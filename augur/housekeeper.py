@@ -240,8 +240,7 @@ class Housekeeper:
                         {}
                         group by repo.repo_id ORDER BY commit_count {}
                     """.format(where_condition, job['order']))
-
-                    logger.debug(f'repo url sql is: {repo_url_sql}.')
+                logger.debug(f'repo url sql is: {repo_url_sql}.')
                 
                 reorganized_repos = pd.read_sql(repo_url_sql, self.db, params={})
                 if len(reorganized_repos) == 0:
