@@ -14,7 +14,7 @@ import requests
 
 def create_routes(server):
 
-    @server.app.route(f"/{server.api_version}/metadata/repo_info")
+    @server.app.route('/{}/metadata/repo_info'.format(server.api_version))
     def get_repo_info():
         repo_info_sql = s.sql.text("""
             SELECT
@@ -46,6 +46,8 @@ def create_routes(server):
                 repo.repo_name
     """)
     results = pd.read_sql(repo_info_sql, server.augur_app.database)
-    data = results.to_json(orient="columns")
-    parsed_data = json.loads(data)
-    return Response(response=parsed_data, status=200, mimetype="application/json")
+        data = results.to_json(orient="columns", date_format='iso', date_unit='ms')
+        parsed_data = json.loads(data)
+        return Response(response=parsed_data,
+                        status=200,
+                        mimetype="application/json")
