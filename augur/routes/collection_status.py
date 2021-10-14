@@ -92,8 +92,9 @@ def create_routes(server):
             WHERE d.issues_enabled = 'true';
         """)
         results = pd.read_sql(issue_collection_sql, server.augur_app.database)
-        data = results.to_json(orient="records", date_format='iso', date_unit='ms')
-        return Response(response=data,
+        data = results.to_json(orient="columns", date_format='iso', date_unit='ms')
+        parsed_data = json.loads(data)
+        return Response(response=parsed_data,
                         status=200,
                         mimetype="application/json")
 
@@ -160,7 +161,8 @@ def create_routes(server):
                 ratio_abs;
         """)
         results = pd.read_sql(pull_request_collection_sql, server.augur_app.database)
-        data = results.to_json(orient="records", date_format='iso', date_unit='ms')
-        return Response(response=data,
+        data = results.to_json(orient="columns", date_format='iso', date_unit='ms')
+        parsed_data = json.loads(data)
+        return Response(response=parsed_data,
                         status=200,
                         mimetype="application/json")
