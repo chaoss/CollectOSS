@@ -59,7 +59,7 @@ setup(
         "toolz >= 0.8.2",
         "partd >= 0.3.10",
         "distributed >= 2021.03.0",
-        "nltk==3.5",
+        "nltk==3.6.5",
         "h5py~=3.1.0",
         "scipy==1.6.3",
         "blinker==1.4",
