@@ -29,7 +29,7 @@ setup(
         'psycopg2-binary==2.8.6',
         'click==8.0.3', 
         'scipy==1.6.3',
-        'nltk==3.5',
+        'nltk==3.6.5',
         'pandas==1.3.2',
         'scikit-learn==0.24.1',
         'textblob==0.15.3',
