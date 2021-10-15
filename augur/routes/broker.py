@@ -16,6 +16,38 @@ logger = logging.getLogger(__name__)
 def worker_start(worker_name=None):
     process = subprocess.Popen("cd workers/{} && {}_start".format(worker_name,worker_name), shell=True)
 
+def get_compatible_workers(server, model, given):
+    """ Returns dictionary of compatible workers, key is worker type (ie pull_request_worker), value
+        is task load and worker id
+    """    
+    compatible_workers = {}
+
+    # For every worker the broker is aware of that can fill the task's given and model
+    for worker_id in [id for id in list(server.broker._getvalue().keys()) if model in server.broker[id]['models'] and given in server.broker[id]['given']]:
+        if type(server.broker[worker_id]._getvalue()) != dict:
+            continue
+
+        logger.debug(f"Considering compatible worker: {worker_id}\n")
+
+        # Group workers by type (all gh workers grouped together etc)
+        worker_type = worker_id.split('.')[len(worker_id.split('.')) - 2]
+        compatible_workers[worker_type] = compatible_workers[worker_type] if worker_type in \
+            compatible_workers else {'task_load': len(server.broker[worker_id]['user_queue']) + \
+            len(server.broker[worker_id]['maintain_queue']), 'worker_id': worker_id}
+
+        # Make worker that is prioritized the one with the smallest sum of task queues
+        if ( len(server.broker[worker_id]['user_queue']) + len(server.broker[worker_id]['maintain_queue']) ) \
+                < min( [compatible_workers[w]['task_load'] for w in compatible_workers.keys() if worker_type == w] ):
+            logger.debug(f"Worker id: {worker_id} has the smallest task load encountered so far: {len(server.broker[worker_id]['user_queue']) + len(server.broker[worker_id]['maintain_queue'])}\n")
+            compatible_workers[worker_type]['task_load'] = len(server.broker[worker_id]['user_queue']) + len(server.broker[worker_id]['maintain_queue'])
+            compatible_workers[worker_type]['worker_id'] = worker_id
+
+    logger.debug(f"Compatible workers found: {compatible_workers}\n")
+    return compatible_workers
+
+# def check_model_queues(worker_proxy):
+#     compatible_workers = get_compatible_workers(model, given)
+
 def send_task(worker_proxy):
 
     # Defining local variables for convenience/readability
@@ -49,6 +81,7 @@ def send_task(worker_proxy):
     else:
         logger.debug("Both queues are empty for worker {}\n".format(worker_id))
         worker_proxy['status'] = 'Idle'
+        # check_model_queues(worker_proxy)
         return
 
     logger.info("Worker {} is idle, preparing to send the {} task to {}\n".format(worker_id, new_task['display_name'], task_endpoint))
@@ -78,26 +111,11 @@ def create_routes(server):
         logger.info("Broker received a new user task ... checking for compatible workers for given: " + str(given) + " and model(s): " + str(model) + "\n")
 
         logger.debug("Broker's list of all workers: {}\n".format(server.broker._getvalue().keys()))
-
         worker_found = False
-        compatible_workers = {}
-
-        # For every worker the broker is aware of that can fill the task's given and model
-        for worker_id in [id for id in list(server.broker._getvalue().keys()) if model in server.broker[id]['models'] and given in server.broker[id]['given']]:
-            if type(server.broker[worker_id]._getvalue()) != dict:
-                continue
-
-            logger.debug("Considering compatible worker: {}\n".format(worker_id))
-
-            # Group workers by type (all gh workers grouped together etc)
-            worker_type = worker_id.split('.')[len(worker_id.split('.'))-2]
-            compatible_workers[worker_type] = compatible_workers[worker_type] if worker_type in compatible_workers else {'task_load': len(server.broker[worker_id]['user_queue']) + len(server.broker[worker_id]['maintain_queue']), 'worker_id': worker_id}
-
-            # Make worker that is prioritized the one with the smallest sum of task queues
-            if (len(server.broker[worker_id]['user_queue']) + len(server.broker[worker_id]['maintain_queue'])) < min([compatible_workers[w]['task_load'] for w in compatible_workers.keys() if worker_type == w]):
-                logger.debug("Worker id: {} has the smallest task load encountered so far: {}\n".format(worker_id, len(server.broker[worker_id]['user_queue']) + len(server.broker[worker_id]['maintain_queue'])))
-                compatible_workers[worker_type]['task_load'] = len(server.broker[worker_id]['user_queue']) + len(server.broker[worker_id]['maintain_queue'])
-                compatible_workers[worker_type]['worker_id'] = worker_id
+        try:
+            compatible_workers = get_compatible_workers(server, model, given)
+        except Exception as e:
+            logger.debug(f"Error occurred when retrieving compatible workers: {e}")
 
         for worker_type in compatible_workers.keys():
             worker_id = compatible_workers[worker_type]['worker_id']
@@ -111,7 +129,7 @@ def create_routes(server):
                 worker['maintain_queue'].append(task)
                 logger.info("Added task for model: {}. New length of worker {}'s maintain queue: {}\n".format(model, worker_id, str(len(server.broker[worker_id]['maintain_queue']))))
 
-            if worker['status'] == 'Idle':
+            if worker['status'] == "Idle":
                 send_task(worker)
             worker_found = True
         # Otherwise, let the frontend know that the request can't be served
