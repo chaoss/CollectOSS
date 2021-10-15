@@ -130,7 +130,7 @@ default_config = {
                     "repo_group_id": 0
                 },
                 {
-                    "delay": 150000,
+                    "delay": 86400,
                     "given": [
                         "repo_group"
                     ],

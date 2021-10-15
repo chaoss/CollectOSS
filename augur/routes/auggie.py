@@ -1,3 +1,5 @@
+#SPDX-License-Identifier: MIT
+
 from flask import Response
 from flask import request
 import datetime

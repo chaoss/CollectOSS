@@ -93,6 +93,7 @@ def create_routes(server):
         """)
         results = pd.read_sql(issue_collection_sql, server.augur_app.database)
         data = results.to_json(orient="records", date_format='iso', date_unit='ms')
+        parsed_data = json.loads(data)
         return Response(response=data,
                         status=200,
                         mimetype="application/json")
@@ -161,6 +162,7 @@ def create_routes(server):
         """)
         results = pd.read_sql(pull_request_collection_sql, server.augur_app.database)
         data = results.to_json(orient="records", date_format='iso', date_unit='ms')
+        parsed_data = json.loads(data)
         return Response(response=data,
                         status=200,
                         mimetype="application/json")
