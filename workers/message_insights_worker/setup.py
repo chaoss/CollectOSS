@@ -31,7 +31,7 @@ setup(
         'scipy==1.6.3',
         'sklearn==0.0',
         'numpy==1.19.5',
-        'nltk==3.5',
+        'nltk==3.6.5',
         'pandas==1.3.2',
         'gensim==3.8.3',
         'emoji==1.2.0',
