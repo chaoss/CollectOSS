@@ -234,7 +234,11 @@ def update_api_key(augur_app, api_key):
     Update the API key in the database to the given key
     """
     update_api_key_sql = s.sql.text("""
-        UPDATE augur_operations.augur_settings SET VALUE = :api_key WHERE setting='augur_api_key';
+        INSERT INTO augur_operations.augur_settings (setting,VALUE) VALUES ('augur_api_key','HudMhTyPW7wiaWopUKgRoGCxlIUulw4g') ON CONFLICT (setting) 
+        DO 
+        UPDATE 
+        SET VALUE='HudMhTyPW7wiaWopUKgRoGCxlIUulw4g';
+        --UPDATE augur_operations.augur_settings SET VALUE = :api_key WHERE setting='augur_api_key';
     """)
 
     augur_app.database.execute(update_api_key_sql, api_key=api_key)
