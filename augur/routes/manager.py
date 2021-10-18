@@ -12,7 +12,8 @@ from flask import request, Response
 import json
 from augur.config import AugurConfig
 import os 
-
+import traceback 
+from augur.logging import AugurLogging
 
 def create_routes(server):
 
@@ -170,6 +171,7 @@ class Repo_insertion_manager():
     ROOT_AUGUR_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
     def __init__(self, organization_name, database_connection):
+        #self.initialize_logging()
         self.org = organization_name
         self.db = database_connection
         ## added for keys
@@ -267,6 +269,7 @@ class Repo_insertion_manager():
         page = 1
         url = self.paginate(page)
         res = requests.get(url, headers=self.headers).json()
+        server.logger.debug(f'self.headers are {self.headers} and url is: {url}.')
         while res:
             for repo in res:
                 repos.append(repo['name'])
