@@ -13,7 +13,8 @@ import json
 from augur.config import AugurConfig
 import os 
 import traceback 
-from augur.logging import AugurLogging
+
+logger = logging.getLogger(__name__)
 
 def create_routes(server):
 
@@ -147,6 +148,9 @@ def create_routes(server):
                             summary['repo_records_created'].append(get_inserted_repo(group_id, repo_id, repo, group, repo_manager.github_urlify(group, repo)))
                 except requests.ConnectionError:
                     summary['group_errors'] = "failed to find the group's child repos"
+                    logger.debug(f'Error is: {e}.')
+                except Exception as e: 
+                    logger.debug(f'Error is: {e}.')
 
             status_code = 200
             summary = json.dumps(summary)
@@ -177,7 +181,6 @@ class Repo_insertion_manager():
         ## added for keys
         self._root_augur_dir = Repo_insertion_manager.ROOT_AUGUR_DIR
         self.augur_config = AugurConfig(self._root_augur_dir)
-
         ##########
 
 
@@ -269,7 +272,6 @@ class Repo_insertion_manager():
         page = 1
         url = self.paginate(page)
         res = requests.get(url, headers=self.headers).json()
-        server.logger.debug(f'self.headers are {self.headers} and url is: {url}.')
         while res:
             for repo in res:
                 repos.append(repo['name'])
