@@ -51,3 +51,31 @@ def create_routes(server):
         return Response(response=data,
                     status=200,
                     mimetype="application/json")
+
+    @server.app.route('/{}/metadata/contributions_count'.format(server.api_version), methods=["GET"])
+    def get_repo_info():
+        repo_info_sql = s.sql.text("""
+            select repo_git, count(*) as contributions from contributor_repo
+            group by repo_git 
+            order by contributions desc;
+        """)
+        results = pd.read_sql(repo_info_sql, server.augur_app.database)
+        data = results.to_json(orient="records", date_format='iso', date_unit='ms')
+        parsed_data = json.loads(data)
+        return Response(response=data,
+                    status=200,
+                    mimetype="application/json")
+
+    @server.app.route('/{}/metadata/contributors_count'.format(server.api_version), methods=["GET"])
+    def get_repo_info():
+        repo_info_sql = s.sql.text("""
+            select repo_git, count(distinct(cntrb_id)) as contributors from contributor_repo
+            group by repo_git 
+            order by contributors desc;  
+        """)
+        results = pd.read_sql(repo_info_sql, server.augur_app.database)
+        data = results.to_json(orient="records", date_format='iso', date_unit='ms')
+        parsed_data = json.loads(data)
+        return Response(response=data,
+                    status=200,
+                    mimetype="application/json")
