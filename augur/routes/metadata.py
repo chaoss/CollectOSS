@@ -53,7 +53,7 @@ def create_routes(server):
                     mimetype="application/json")
 
     @server.app.route('/{}/metadata/contributions_count'.format(server.api_version), methods=["GET"])
-    def get_repo_info():
+    def contributions_count():
         repo_info_sql = s.sql.text("""
             select repo_git, count(*) as contributions from contributor_repo
             group by repo_git 
@@ -67,7 +67,7 @@ def create_routes(server):
                     mimetype="application/json")
 
     @server.app.route('/{}/metadata/contributors_count'.format(server.api_version), methods=["GET"])
-    def get_repo_info():
+    def contributors_count():
         repo_info_sql = s.sql.text("""
             select repo_git, count(distinct(cntrb_id)) as contributors from contributor_repo
             group by repo_git 
