@@ -163,7 +163,7 @@ class Server(object):
         def generated_function(*args, **kwargs):
             kwargs.update(request.args.to_dict())
 
-            if 'repo_group_id' not in kwargs:
+            if 'repo_group_id' not in kwargs and func.metadata["type"] != "toss":
                 kwargs['repo_group_id'] = 1
 
             data = self.transform(func, args, kwargs)
@@ -180,3 +180,7 @@ class Server(object):
         self.app.route(repo_endpoint)(self.routify(function, 'repo'))
         self.app.route(repo_group_endpoint)(self.routify(function, 'repo_group'))
         self.app.route(deprecated_repo_endpoint )(self.routify(function, 'deprecated_repo'))
+
+    def add_toss_metric(self, function, endpoint, **kwargs):
+        repo_endpoint = f'/{self.api_version}/repos/<repo_id>/{endpoint}'
+        self.app.route(repo_endpoint)(self.routify(function, 'repo'))

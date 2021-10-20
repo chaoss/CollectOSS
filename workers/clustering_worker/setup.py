@@ -29,7 +29,7 @@ setup(
         'psycopg2-binary==2.8.6',
         'sklearn==0.0',
         'numpy==1.19.5',
-        'nltk==3.5',
+        'nltk==3.6.5',
         'seaborn==0.11.1',
         'pandas==1.3.2',
         'matplotlib==3.3.4'
