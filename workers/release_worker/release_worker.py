@@ -277,6 +277,3 @@ class ReleaseWorker(WorkerGitInterfaceable):
                 self.logger.info("There are no releases to insert for current repository: {}\n".format(data))
         else:
             self.logger.info("Graphql response does not contain repository: {}\n".format(data))
-
-        self.register_task_completion(self.task, repo_id, "releases")
-
