@@ -7,19 +7,19 @@ import pandas as pd
 import sqlalchemy as s
 from workers.worker_base import Worker
 
-# NOTE: This worker primarily inserts rows into the REPO_INFO table, which serves the primary purposes of
-# 1. Displaying discrete metadata like "number of forks" and how they change over time
+# NOTE: This worker primarily inserts rows into the REPO_INFO table, which serves the primary purposes of 
+# 1. Displaying discrete metadata like "number of forks" and how they change over time 
 # 2. Validating other workers, like those related to pull requests, issues, and commits. Our totals should be at or very near the totals in the repo_info table.
 
-# This table also updates the REPO table in 2 cases:
-# 1. Recognizing when a repository is a forked repository by updating the "forked_from" field and
-# 2. Recognizing when a repository is archived, and recording the data we observed the change in status.
+# This table also updates the REPO table in 2 cases: 
+# 1. Recognizing when a repository is a forked repository by updating the "forked_from" field and 
+# 2. Recognizing when a repository is archived, and recording the data we observed the change in status. 
 
 class RepoInfoWorker(WorkerGitInterfaceable):
     def __init__(self, config={}):
 
         worker_type = "repo_info_worker"
-
+        
         # Define what this worker can be given and know how to interpret
         given = [['github_url']]
         models = ['repo_info']
@@ -37,6 +37,7 @@ class RepoInfoWorker(WorkerGitInterfaceable):
         self.data_source = 'GitHub API'
 
     def repo_info_model(self, task, repo_id):
+
         github_url = task['given']['github_url']
 
         self.logger.info("Beginning filling the repo_info model for repo: " + github_url + "\n")
@@ -72,15 +73,6 @@ class RepoInfoWorker(WorkerGitInterfaceable):
                     codeOfConduct {
                         name
                         url
-                    }
-                    repositoryTopics(first: 50) {
-                      edges {
-                        node {
-                          topic {
-                            name
-                          }
-                        }
-                      }
                     }
                     issue_count: issues {
                         totalCount
@@ -190,7 +182,7 @@ class RepoInfoWorker(WorkerGitInterfaceable):
             'security_issue_file': None,
             'security_audit_file': None,
             'status': None,
-            'keywords': self.parse_topic_data(data['repositoryTopics']),
+            'keywords': None,
             'commit_count': data['ref']['target']['history']['totalCount'] if data['ref'] else None,
             'issues_count': data['issue_count']['totalCount'] if data['issue_count'] else None,
             'issues_closed': data['issues_closed']['totalCount'] if data['issues_closed'] else None,
@@ -229,12 +221,6 @@ class RepoInfoWorker(WorkerGitInterfaceable):
 
         # Register this task as completed
         self.register_task_completion(self.task, repo_id, "repo_info")
-
-    def parse_topic_data(self, topic_data):
-        if len(topic_data['edges']) == 0:
-            return []
-        else:
-            return [edge['node']['topic']['name'] for edge in topic_data['edges']]
 
     def query_committers_count(self, owner, repo):
         self.logger.info('Querying committers count\n')
