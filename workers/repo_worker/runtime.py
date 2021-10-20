@@ -1,15 +1,14 @@
 #SPDX-License-Identifier: MIT
 from flask import Flask, jsonify, request, Response
 import click, os, json, requests, logging
-from workers.repo_worker.repo_worker import RepoWorker
+from workers.repo_info_worker.repo_info_worker import RepoInfoWorker
 from workers.util import create_server, WorkerGunicornApplication
 
 def main():
-    """
-    Creates the Flask app and data collection worker, then starts the Gunicorn server
+    """ Declares singular worker and creates the server and flask app that it will be running on
     """
     app = Flask(__name__)
-    app.worker = RepoWorker()
+    app.worker = RepoInfoWorker()
 
     create_server(app)
     WorkerGunicornApplication(app).run()

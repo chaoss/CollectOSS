@@ -13,22 +13,25 @@ def read(filename):
         return re.sub(text_type(r':[a-z]+:`~?(.*?)`'), text_type(r'``\1``'), fd.read())
 
 setup(
-    name="repo_worker", 
-    version="0.0.0",
+    name="repo_info_worker",
+    version="1.0.0",
     url="https://github.com/chaoss/augur",
-    license="MIT",
-    author="Augur Team",
-    author_email="gabe@gabehe.im",
-    description="Repo worker to insert repos and repo groups",
+    license='MIT',
+    author="Augurlabs",
+    author_email="s@goggins.com",
+    description="Augur Worker that collects general data about a repo on GitHub",
     packages=find_packages(),
     install_requires=[
-        'flask',
-        'requests',
-        'psycopg2-binary'
+        'Flask==2.0.2',
+        'Flask-Cors==3.0.10',
+        'Flask-Login==0.5.0',
+        'Flask-WTF==0.15.1',
+        'requests==2.22.0',
+        'psycopg2-binary==2.8.6'
     ],
     entry_points={
         'console_scripts': [
-            'repo_worker_start=workers.repo_worker.runtime:main',
+            'repo_info_worker_start=workers.repo_info_worker.runtime:main',
         ],
     },
     classifiers=[

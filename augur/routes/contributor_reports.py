@@ -278,13 +278,7 @@ def create_routes(server):
 
         #add quarters to contributor dataframe
         df['month'] = df['month'].astype(int)
-## <<<<<<< toss
-        df['quarter'] = df.apply(lambda x: quarters(x['month'], x['year']), axis=1)
-## =======
-
-### Would like a clearer understanding of the effects of this change.  SPG #TODO @CCARTERLANDIS & @GABEHEIM
-       ## df['quarter'] = df.apply(lambda x: quarters(x['month'], x['year']), axis=1, result_type='reduce')
-## >>>>>>> dev-toss
+        df['quarter'] = df.apply(lambda x: quarters(x['month'], x['year']), axis=1, result_type='reduce')
         df['quarter'] = pd.to_datetime(df['quarter'])
 
         return df
@@ -343,7 +337,6 @@ def create_routes(server):
 
         input_df = new_contibutor_data_collection(repo_id=repo_id, required_contributions=required_contributions)
         months_df = months_data_collection(start_date=start_date, end_date=end_date)
-
 
         if len(input_df) == 0:
             return Response(response="There is no data for this repo, in the database you are accessing",
@@ -583,7 +576,6 @@ def create_routes(server):
 
         input_df = new_contibutor_data_collection(repo_id=repo_id, required_contributions=required_contributions)
         months_df = months_data_collection(start_date=start_date, end_date=end_date)
-
 
         if len(input_df) == 0:
             return Response(response="There is no data for this repo, in the database you are accessing",
@@ -846,7 +838,6 @@ def create_routes(server):
 
         input_df = new_contibutor_data_collection(repo_id=repo_id, required_contributions=required_contributions)
 
-
         if len(input_df) == 0:
             return Response(response="There is no data for this repo, in the database you are accessing",
                 mimetype='application/json',
@@ -1024,11 +1015,11 @@ def create_routes(server):
         input_df = new_contibutor_data_collection(repo_id=repo_id, required_contributions=required_contributions)
         months_df = months_data_collection(start_date=start_date, end_date=end_date)
 
-
         if len(input_df) == 0:
             return Response(response="There is no data for this repo, in the database you are accessing",
                 mimetype='application/json',
                 status=200)
+
         repo_dict = {repo_id : input_df.loc[input_df['repo_id'] == repo_id].iloc[0]['repo_name']}    
 
         #create a copy of contributor dataframe
