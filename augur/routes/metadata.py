@@ -26,6 +26,7 @@ def create_routes(server):
                 repo_info.fork_count,
                 repo_info.watchers_count,
                 repo_info.stars_count,
+                repo_info.commit_count, 
                 repo_info.committers_count,
                 repo_info.open_issues,
                 repo_info.issues_count,
