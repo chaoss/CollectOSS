@@ -71,15 +71,15 @@ setup(
     ],
     extras_require={
         "dev": [
-            "tox==3.23.0",
-            "pytest==6.2.2",
+            "tox==3.24.4",
+            "pytest==6.2.5",
             "toml >= 0.10.2",
-            "ipdb==0.13.6",
-            "sphinx==3.5.2",
-            "sphinx_rtd_theme==0.5.1",
+            "ipdb==0.13.9",
+            "sphinx==4.2.0",
+            "sphinx_rtd_theme==1.0.0",
             "sphinxcontrib-openapi==0.7.0",
             "sphinxcontrib-redoc==1.6.0",
-            "docutils==0.15"
+            "docutils==0.17.1"
         ]
     },
     entry_points={
