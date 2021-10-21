@@ -290,7 +290,7 @@ paths:
       externalDocs:
         description: CHAOSS Metric Definition
         url: https://github.com/chaoss/wg-risk/blob/main/focus-areas/business-risk.md  
-      operationId: Repository Metadata (Repo)
+      operationId: Activity Metadata (Repo)
       responses:
         '200':
           description: OK
@@ -345,7 +345,7 @@ paths:
                 pull_requests_merged: 
                   description: 'Example: 17473'
                   type: integer
-              type: array
+            type: array
       tags:
       - risk
   /metadata/contributions_count: 
@@ -354,7 +354,7 @@ paths:
       externalDocs:
         description: CHAOSS Metric Definition
         url: https://github.com/chaoss/wg-risk/blob/main/focus-areas/business-risk.md
-      operationId: Repository Metadata (Repo)
+      operationId: Contributions Count (Repo)
       responses:
         '200':
           description: OK
@@ -367,7 +367,7 @@ paths:
                 contributions:
                   description: 'Example: 43301'
                   type: integer
-              type: array
+            type: array
       tags:
       - risk
   /metadata/contributors_count: 
@@ -376,7 +376,7 @@ paths:
       externalDocs:
         description: CHAOSS Metric Definition
         url: https://github.com/chaoss/wg-risk/blob/main/focus-areas/business-risk.md
-      operationId: Repository Metadata (Repo)
+      operationId: Contributors Count (Repo)
       responses:
         '200':
           description: OK
@@ -386,10 +386,10 @@ paths:
                 repo_git:
                   description: 'Example: https://github.com/chaoss/augur'
                   type: string
-                contributions:
-                  description: 'Example: 43301'
+                contributors:
+                  description: 'Example: 77'
                   type: integer
-              type: array
+            type: array
       tags:
       - risk
   /repo-groups/:repo_group_id/average-issue-resolution-time:
