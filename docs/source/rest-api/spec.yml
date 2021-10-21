@@ -283,21 +283,14 @@ paths:
             type: array
       tags:
       - utility
-
-
-
   #risk endpoints
   /metadata/repo_info: 
     get: 
-      description: 'Returns the metadata about all repositories in an Augur instance, 
-      using information from a git platform (GitHub, GitLab, etc.)
-      Each record includes the default branch name, repository license file, forks, 
-      stars, watchers, and committers. 
-      Also includes metadata about current repository issue and pull request status and 
-      counts.' 
+      description: 'Returns the metadata about all repositories in an Augur instance, using information from a git platform (GitHub, GitLab, etc.). Each record includes the default branch name, repository license file, forks, stars, watchers, and committers. Also includes metadata about current repository issue and pull request status and counts.' 
+      externalDocs:
+        description: CHAOSS Metric Definition
+        url: https://github.com/chaoss/wg-risk/blob/main/focus-areas/business-risk.md  
       operationId: Repository Metadata (Repo)
-      parameters:
-        - description: none
       responses:
         '200':
           description: OK
@@ -357,11 +350,11 @@ paths:
       - risk
   /metadata/contributions_count: 
     get: 
-      description: 'Returns a list of repositories contributed to by all the contributors in 
-      an Augur Instance: INCLUDING all repositories on a platform, *not* merely those repositories in the Augur Instance. Numerical totals represent total CONTRIBUTIONS.' 
+      description: 'Returns a list of repositories contributed to by all the contributors in an Augur Instance: INCLUDING all repositories on a platform, *not* merely those repositories in the Augur Instance. Numerical totals represent total CONTRIBUTIONS.' 
+      externalDocs:
+        description: CHAOSS Metric Definition
+        url: https://github.com/chaoss/wg-risk/blob/main/focus-areas/business-risk.md
       operationId: Repository Metadata (Repo)
-      parameters:
-        - description: none
       responses:
         '200':
           description: OK
@@ -379,11 +372,11 @@ paths:
       - risk
   /metadata/contributors_count: 
     get: 
-      description: 'Returns a list of repositories contributed to by all the contributors in 
-      an Augur Instance: INCLUDING all repositories on a platform, *not* merely those repositories in the Augur Instance. Numerical totals represent total CONTRIBUTORS.' 
+      description: 'Returns a list of repositories contributed to by all the contributors in an Augur Instance: INCLUDING all repositories on a platform, *not* merely those repositories in the Augur Instance. Numerical totals represent total CONTRIBUTORS.' 
+      externalDocs:
+        description: CHAOSS Metric Definition
+        url: https://github.com/chaoss/wg-risk/blob/main/focus-areas/business-risk.md
       operationId: Repository Metadata (Repo)
-      parameters:
-        - description: none
       responses:
         '200':
           description: OK
