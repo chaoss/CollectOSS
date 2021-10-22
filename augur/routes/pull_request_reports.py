@@ -1509,13 +1509,25 @@ def create_routes(server):
         x_max = 1100
         y_axis = 'repo_name'
         description = 'All Closed'
+        optional_comments = ['comment_count'] if include_comments else []
 
         df_type = get_df_tuple_locations()
 
         df_tuple = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date)
 
         pr_closed = df_tuple[df_type["pr_closed"]]
-        needed_columns = ['repo_id', 'repo_name', x_axis, group_by, y_axis]
+        needed_columns = ['repo_id', 'repo_name', x_axis, 'assigned_count',
+                          'review_requested_count',
+                          'labeled_count',
+                          'subscribed_count',
+                          'mentioned_count',
+                          'referenced_count',
+                          'closed_count',
+                          'head_ref_force_pushed_count',
+                          'merged_count',
+                          'milestoned_count',
+                          'unlabeled_count',
+                          'head_ref_deleted_count', facet] + optional_comments
         not_null_columns = needed_columns
         pr_closed = get_needed_columns(pr_closed, needed_columns)
         pr_closed = remove_rows_with_null_values(pr_closed, not_null_columns)
@@ -1535,19 +1547,6 @@ def create_routes(server):
         if facet == 'closed_year' or y_axis == 'closed_year':
             driver_df['closed_year'] = driver_df['closed_year'].astype(int).astype(str)
 
-        optional_comments = ['comment_count'] if include_comments else []
-        driver_df = driver_df[['repo_id', 'repo_name', x_axis, 'assigned_count',
-                               'review_requested_count',
-                               'labeled_count',
-                               'subscribed_count',
-                               'mentioned_count',
-                               'referenced_count',
-                               'closed_count',
-                               'head_ref_force_pushed_count',
-                               'merged_count',
-                               'milestoned_count',
-                               'unlabeled_count',
-                               'head_ref_deleted_count', facet] + optional_comments]
         y_groups = [
                        'review_requested_count',
                        'labeled_count',
