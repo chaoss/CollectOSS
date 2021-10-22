@@ -319,10 +319,30 @@ def create_routes(server):
 
         return months_df
 
-    def remove_rows_with_null_values(df, list_of_columns):
+
+    def remove_rows_with_null_values(df, not_null_columns=[]):
+        """Remove null data from pandas df
+
+        Parameters
+        -- df
+            description: the dataframe that will be modified
+            type: Pandas Dataframe
+
+        -- list_of_columns
+            description: columns that are searched for NULL values
+            type: list
+            default: [] (means all columns will be checked for NULL values)
+            IMPORTANT: if an empty list is passed or nothing is passed it will check all columns for NULL values
+
+        Return Value
+            -- Modified Pandas Dataframe
+        """
+
+        if len(not_null_columns) == 0:
+            not_null_columns = df.columns.to_list()
 
         total_rows_removed = 0
-        for col in list_of_columns:
+        for col in not_null_columns:
             rows_removed = len(df.loc[df[col].isnull() == True])
 
             if rows_removed > 0:
@@ -337,20 +357,6 @@ def create_routes(server):
             print("No null data found")
 
         return df
-
-    def get_needed_columns(df, list_of_columns):
-        return df[list_of_columns]
-
-    def filter_data(df, needed_columns, not_null_columns):
-
-        if all(x in needed_columns for x in not_null_columns):
-            df = get_needed_columns(df, needed_columns)
-            df = remove_rows_with_null_values(df, not_null_columns)
-
-            return df
-        else:
-            print("Developer error, not null columns should be a subset of needed columns")
-            return df
 
     @server.app.route('/{}/contributor_reports/new_contributors_bar/'.format(server.api_version), methods=["GET"])
     def new_contributors_bar():

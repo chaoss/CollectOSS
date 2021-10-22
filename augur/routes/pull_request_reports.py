@@ -335,26 +335,84 @@ def create_routes(server):
 
         return caption_plot
 
-    def remove_rows_with_null_values(df, list_of_columns):
+    def remove_rows_with_null_values(df, not_null_columns=[]):
+        """Remove null data from pandas df
 
-        rows_removed = 0
-        for col in list_of_columns:
-            rows_removed += len(df.loc[df[col].isnull() == True])
+        Parameters
+        -- df
+            description: the dataframe that will be modified
+            type: Pandas Dataframe
+
+        -- list_of_columns
+            description: columns that are searched for NULL values
+            type: list
+            default: [] (means all columns will be checked for NULL values)
+            IMPORTANT: if an empty list is passed or nothing is passed it will check all columns for NULL values
+
+        Return Value
+            -- Modified Pandas Dataframe
+        """
+
+        if len(not_null_columns) == 0:
+            not_null_columns = df.columns.to_list()
+
+        total_rows_removed = 0
+        for col in not_null_columns:
+            rows_removed = len(df.loc[df[col].isnull() == True])
+
+            if rows_removed > 0:
+                print(f"{rows_removed} rows have been removed because of null values in column {col}")
+                total_rows_removed += rows_removed
+
             df = df.loc[df[col].isnull() == False]
 
-        if rows_removed > 0:
-            print(f"{rows_removed} rows removed because of null data");
+        if total_rows_removed > 0:
+            print(f"\nTotal rows removed because of null data: {total_rows_removed}");
         else:
             print("No null data found")
 
         return df
 
     def get_needed_columns(df, list_of_columns):
+        """Get only a specific list of columns from a Pandas Dataframe
+
+        Parameters
+        -- df
+            description: the dataframe that will be modified
+            type: Pandas Dataframe
+
+        -- list_of_columns
+            description: columns that will be kept in dataframe
+            type: list
+
+        Return Value
+            -- Modified Pandas Dataframe
+        """
         return df[list_of_columns]
 
-    def filter_data(df, needed_columns, not_null_columns):
+    def filter_data(df, needed_columns, not_null_columns=[]):
+        """Filters out the unneeded rows in the df, and removed NULL data from df
+
+        Parameters
+        -- df
+            description: the dataframe that will be modified
+            type: Pandas Dataframe
+
+        -- needed_columns
+            description: the columns to keep in the dataframe
+
+        -- not_null_columns
+            description: columns that will be searched for NULL data,
+                         if NULL values are found those rows will be removed
+            default: [] (means all columns in needed_columns list will be checked for NULL values)
+            IMPORTANT: if an empty list is passed or nothing is passed it will check
+                        all columns in needed_columns list for NULL values
+        Return Value
+            -- Modified Pandas Dataframe
+        """
 
         if all(x in needed_columns for x in not_null_columns):
+
             df = get_needed_columns(df, needed_columns)
             df = remove_rows_with_null_values(df, not_null_columns)
 
@@ -362,10 +420,6 @@ def create_routes(server):
         else:
             print("Developer error, not null columns should be a subset of needed columns")
             return df
-
-
-
-
 
     @server.app.route('/{}/pull_request_reports/average_commits_per_PR/'.format(server.api_version), methods=["GET"])
     def average_commits_per_PR():
@@ -377,8 +431,6 @@ def create_routes(server):
         end_date = str(request.args.get('end_date', "{}-{}-{}".format(now.year, now.month, now.day)))
         group_by = str(request.args.get('group_by', "month"))
         return_json = request.args.get('return_json', "false")
-
-        print("Running average commits per pr report")
 
         df_type = get_df_tuple_locations()
 
@@ -393,8 +445,7 @@ def create_routes(server):
         # removes columns that cannot be NULL (pr_closed_not_null_columns)
         input_df = df_tuple[df_type["pr_all"]]
         needed_columns = ['repo_id', 'repo_name', 'closed_year', 'closed_yearmonth', group_by_bars, 'commit_count']
-        not_null_columns = needed_columns
-        input_df = filter_data(input_df, needed_columns, not_null_columns)
+        input_df = filter_data(input_df, needed_columns)
 
         if len(input_df) == 0:
             return Response(response="There is no data for this repo, in the database you are accessing",
@@ -402,7 +453,6 @@ def create_routes(server):
                             status=200)
 
         # print(input_df.to_string())
-        print(input_df.to_string())
 
         repo_dict = {repo_id: input_df.loc[input_df['repo_id'] == repo_id].iloc[0]['repo_name']}
 
@@ -418,9 +468,6 @@ def create_routes(server):
         if group_by == 'month':
             x_axis = "closed_yearmonth"
             x_groups = np.unique(np.datetime_as_string(input_df[x_axis], unit='M'))
-
-        print(x_axis)
-        print(x_groups)
 
         # inner groups on x_axis they are merged and not_merged
         groups = list(driver_df[group_by_bars].unique())
@@ -527,8 +574,6 @@ def create_routes(server):
         end_date = str(request.args.get('end_date', "{}-{}-{}".format(now.year, now.month, now.day)))
         return_json = request.args.get('return_json', "false")
 
-        print("Running average comments per pr report")
-
         df_type = get_df_tuple_locations()
 
         df_tuple = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date)
@@ -544,7 +589,7 @@ def create_routes(server):
         input_df = df_tuple[df_type["pr_closed"]]
         needed_columns = ['repo_id', 'repo_name', y_axis, group_by, x_axis]
         not_null_columns = needed_columns
-        input_df = filter_data(input_df, needed_columns, not_null_columns)
+        input_df = filter_data(input_df, needed_columns)
 
         if len(input_df) == 0:
             return Response(response="There is no data for this repo, in the database you are accessing",
@@ -721,24 +766,21 @@ def create_routes(server):
         # removes columns that cannot be NULL (pr_closed_not_null_columns)
         pr_closed = df_tuple[df_type["pr_closed"]]
         pr_closed_needed_columns = ['repo_id', 'repo_name', x_axis, 'merged_flag']
-        pr_closed_not_null_columns = pr_closed_needed_columns
-        pr_closed = filter_data(pr_closed, pr_closed_needed_columns, pr_closed_not_null_columns)
+        pr_closed = filter_data(pr_closed, pr_closed_needed_columns)
 
         # gets pr_slow20_not_merged data
         # selects only need columns (pr_slow20_not_merged_needed_columns)
         # removes columns that cannot be NULL (pr_slow20_not_merged_not_null_columns)
         pr_slow20_not_merged = df_tuple[df_type["pr_slow20_not_merged"]]
         pr_slow20_not_merged_needed_columns = ['repo_id', 'repo_name', x_axis, 'merged_flag']
-        pr_slow20_not_merged_not_null_columns = pr_slow20_not_merged_needed_columns
-        pr_slow20_not_merged = filter_data(pr_slow20_not_merged, pr_slow20_not_merged_needed_columns, pr_slow20_not_merged_not_null_columns)
+        pr_slow20_not_merged = filter_data(pr_slow20_not_merged, pr_slow20_not_merged_needed_columns,)
 
         # gets pr_slow20_merged data
         # selects only need columns (pr_slow20_not_merged_needed_columns)
         # removes columns that cannot be NULL (pr_slow20_not_merged_not_null_columns)
         pr_slow20_merged = df_tuple[df_type["pr_slow20_merged"]]
         pr_slow20_merged_needed_columns = ['repo_id', 'repo_name', x_axis, 'merged_flag']
-        pr_slow20_merged_not_null_columns = pr_slow20_merged_needed_columns
-        pr_slow20_merged = filter_data(pr_slow20_merged, pr_slow20_merged_needed_columns, pr_slow20_merged_not_null_columns)
+        pr_slow20_merged = filter_data(pr_slow20_merged, pr_slow20_merged_needed_columns)
 
         if len(pr_closed) == 0 or len(pr_slow20_not_merged) == 0 or len(pr_slow20_merged) == 0:
             return Response(response="There is no data for this repo, in the database you are accessing",
@@ -918,8 +960,7 @@ def create_routes(server):
         input_df = df_tuple[df_type["pr_closed"]]
         needed_columns = ['repo_id', 'repo_name', y_axis, 'merged_flag', time_unit + '_to_first_response',
                           time_unit + '_to_last_response', time_unit + '_to_close']
-        not_null_columns = needed_columns
-        input_df = filter_data(input_df, needed_columns, not_null_columns)
+        input_df = filter_data(input_df, needed_columns)
 
         if len(input_df) == 0:
             return Response(response="There is no data for this repo, in the database you are accessing",
@@ -1215,26 +1256,22 @@ def create_routes(server):
         # selects only need columns (pr_closed_needed_columns)
         # removes columns that cannot be NULL (pr_closed_not_null_columns)
         pr_closed = df_tuple[df_type["pr_closed"]]
-        print(pr_closed.columns)
         pr_closed_needed_columns = ['repo_id', 'repo_name', x_axis, 'average_time_between_responses', line_group]
-        pr_closed_not_null_columns = pr_closed_needed_columns
-        pr_closed = filter_data(pr_closed, pr_closed_needed_columns, pr_closed_not_null_columns)
+        pr_closed = filter_data(pr_closed, pr_closed_needed_columns)
 
         # gets pr_slow20_not_merged data
         # selects only need columns (pr_slow20_not_merged_needed_columns)
         # removes columns that cannot be NULL (pr_slow20_not_merged_not_null_columns)
         pr_slow20_not_merged = df_tuple[df_type["pr_slow20_not_merged"]]
         pr_slow20_not_merged_needed_columns = ['repo_id', 'repo_name', x_axis, 'average_time_between_responses', line_group]
-        pr_slow20_not_merged_not_null_columns = pr_slow20_not_merged_needed_columns
-        pr_slow20_not_merged = filter_data(pr_slow20_not_merged, pr_slow20_not_merged_needed_columns, pr_slow20_not_merged_not_null_columns)
+        pr_slow20_not_merged = filter_data(pr_slow20_not_merged, pr_slow20_not_merged_needed_columns)
 
         # gets pr_slow20_merged data
         # selects only need columns (pr_slow20_not_merged_needed_columns)
         # removes columns that cannot be NULL (pr_slow20_not_merged_not_null_columns)
         pr_slow20_merged = df_tuple[df_type["pr_slow20_merged"]]
         pr_slow20_merged_needed_columns = ['repo_id', 'repo_name', x_axis, 'average_time_between_responses', line_group]
-        pr_slow20_merged_not_null_columns = pr_slow20_merged_needed_columns
-        pr_slow20_merged = filter_data(pr_slow20_merged, pr_slow20_merged_needed_columns, pr_slow20_merged_not_null_columns)
+        pr_slow20_merged = filter_data(pr_slow20_merged, pr_slow20_merged_needed_columns)
 
         if len(pr_closed) == 0 or len(pr_slow20_not_merged) == 0 or len(pr_slow20_merged) == 0:
             return Response(response="There is no data for this repo, in the database you are accessing",
@@ -1382,8 +1419,7 @@ def create_routes(server):
 
         pr_closed = df_tuple[df_type["pr_closed"]]
         needed_columns = ['repo_id', 'repo_name', x_axis, group_by, y_axis]
-        not_null_columns = needed_columns
-        pr_closed = filter_data(pr_closed, needed_columns, not_null_columns)
+        pr_closed = filter_data(pr_closed, needed_columns)
 
         if len(pr_closed) == 0:
             return Response(response="There is no data for this repo, in the database you are accessing",
@@ -1530,8 +1566,7 @@ def create_routes(server):
                           'milestoned_count',
                           'unlabeled_count',
                           'head_ref_deleted_count', facet] + optional_comments
-        not_null_columns = needed_columns
-        pr_closed = filter_data(pr_closed, needed_columns, not_null_columns)
+        pr_closed = filter_data(pr_closed, needed_columns)
 
         if len(pr_closed) == 0:
             return Response(response="There is no data for this repo, in the database you are accessing",
@@ -1706,8 +1741,7 @@ def create_routes(server):
 
         pr_closed = df_tuple[df_type["pr_closed"]]
         needed_columns = ['repo_id', y_axis, group_by, x_axis, 'pr_closed_at', 'pr_created_at']
-        not_null_columns = needed_columns
-        pr_closed = filter_data(pr_closed, needed_columns, not_null_columns)
+        pr_closed = filter_data(pr_closed, needed_columns)
 
         if len(pr_closed) == 0:
             return Response(response="There is no data for this repo, in the database you are accessing",
