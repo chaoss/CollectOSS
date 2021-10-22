@@ -38,8 +38,6 @@ def create_routes(server):
             rank_list.append(num)
         rank_tuple = tuple(rank_list)
 
-        df = pd.DataFrame()
-
         contributor_query = salc.sql.text(f"""        
         
             SELECT * FROM (
@@ -70,9 +68,14 @@ def create_routes(server):
                         FROM
                             augur_data.issues
                             LEFT OUTER JOIN augur_data.contributors ON contributors.cntrb_id = issues.reporter_id
-                            LEFT OUTER JOIN ( SELECT DISTINCT ON ( cntrb_canonical ) cntrb_full_name, cntrb_canonical AS canonical_email, data_collection_date, cntrb_id AS canonical_id 
-                            FROM augur_data.contributors WHERE cntrb_canonical = cntrb_email ORDER BY cntrb_canonical 
-                            ) canonical_full_names ON canonical_full_names.canonical_email = contributors.cntrb_canonical 
+                            LEFT OUTER JOIN ( 
+                                SELECT DISTINCT ON ( cntrb_canonical ) cntrb_full_name, 
+                                cntrb_canonical AS canonical_email, 
+                                data_collection_date, 
+                                cntrb_id AS canonical_id 
+                                FROM augur_data.contributors 
+                                WHERE cntrb_canonical = cntrb_email ORDER BY cntrb_canonical 
+                            ) canonical_full_names ON canonical_full_names.canonical_email =contributors.cntrb_canonical 
                         WHERE
                             repo_id = {repo_id}
                             AND pull_request IS NULL 
@@ -94,9 +97,13 @@ def create_routes(server):
                         FROM
                             augur_data.commits
                             LEFT OUTER JOIN augur_data.contributors ON cntrb_email = cmt_author_email
-                            LEFT OUTER JOIN ( SELECT DISTINCT ON ( cntrb_canonical ) cntrb_full_name, cntrb_canonical AS canonical_email, data_collection_date, cntrb_id AS canonical_id 
-                            FROM augur_data.contributors WHERE cntrb_canonical = cntrb_email ORDER BY cntrb_canonical 
-                            ) canonical_full_names ON canonical_full_names.canonical_email = contributors.cntrb_canonical 
+                            LEFT OUTER JOIN ( 
+                                SELECT DISTINCT ON ( cntrb_canonical ) cntrb_full_name, 
+                                cntrb_canonical AS canonical_email, 
+                                data_collection_date, cntrb_id AS canonical_id 
+                                FROM augur_data.contributors 
+                                WHERE cntrb_canonical = cntrb_email ORDER BY cntrb_canonical 
+                            ) canonical_full_names ON canonical_full_names.canonical_email =contributors.cntrb_canonical 
                         WHERE
                             repo_id = {repo_id} 
                         GROUP BY
@@ -121,9 +128,13 @@ def create_routes(server):
                             augur_data.commits,
                             augur_data.message
                             LEFT OUTER JOIN augur_data.contributors ON contributors.cntrb_id = message.cntrb_id
-                            LEFT OUTER JOIN ( SELECT DISTINCT ON ( cntrb_canonical ) cntrb_full_name, cntrb_canonical AS canonical_email, data_collection_date, cntrb_id AS canonical_id 
-                            FROM augur_data.contributors WHERE cntrb_canonical = cntrb_email ORDER BY cntrb_canonical 
-                            ) canonical_full_names ON canonical_full_names.canonical_email = contributors.cntrb_canonical 
+                            LEFT OUTER JOIN ( 
+                                SELECT DISTINCT ON ( cntrb_canonical ) cntrb_full_name, 
+                                cntrb_canonical AS canonical_email, 
+                                data_collection_date, cntrb_id AS canonical_id 
+                                FROM augur_data.contributors 
+                                WHERE cntrb_canonical = cntrb_email ORDER BY cntrb_canonical 
+                            ) canonical_full_names ON canonical_full_names.canonical_email =contributors.cntrb_canonical 
                         WHERE
                             commits.cmt_id = commit_comment_ref.cmt_id 
                             AND commits.repo_id = {repo_id} 
@@ -148,9 +159,14 @@ def create_routes(server):
                             augur_data.issues,
                             augur_data.issue_events
                             LEFT OUTER JOIN augur_data.contributors ON contributors.cntrb_id = issue_events.cntrb_id
-                            LEFT OUTER JOIN ( SELECT DISTINCT ON ( cntrb_canonical ) cntrb_full_name, cntrb_canonical AS canonical_email, data_collection_date, cntrb_id AS canonical_id 
-                            FROM augur_data.contributors WHERE cntrb_canonical = cntrb_email ORDER BY cntrb_canonical 
-                            ) canonical_full_names ON canonical_full_names.canonical_email = contributors.cntrb_canonical 
+                            LEFT OUTER JOIN ( 
+                            SELECT DISTINCT ON ( cntrb_canonical ) cntrb_full_name, 
+                            cntrb_canonical AS canonical_email, 
+                            data_collection_date, 
+                            cntrb_id AS canonical_id 
+                            FROM augur_data.contributors 
+                            WHERE cntrb_canonical = cntrb_email ORDER BY cntrb_canonical 
+                            ) canonical_full_names ON canonical_full_names.canonical_email =contributors.cntrb_canonical 
                         WHERE
                             issues.repo_id = {repo_id} 
                             AND issues.issue_id = issue_events.issue_id 
@@ -175,9 +191,14 @@ def create_routes(server):
                         FROM
                             augur_data.pull_requests
                             LEFT OUTER JOIN augur_data.contributors ON pull_requests.pr_augur_contributor_id = contributors.cntrb_id
-                            LEFT OUTER JOIN ( SELECT DISTINCT ON ( cntrb_canonical ) cntrb_full_name, cntrb_canonical AS canonical_email, data_collection_date, cntrb_id AS canonical_id 
-                            FROM augur_data.contributors WHERE cntrb_canonical = cntrb_email ORDER BY cntrb_canonical 
-                            ) canonical_full_names ON canonical_full_names.canonical_email = contributors.cntrb_canonical 
+                            LEFT OUTER JOIN ( 
+                                SELECT DISTINCT ON ( cntrb_canonical ) cntrb_full_name, 
+                                cntrb_canonical AS canonical_email, 
+                                data_collection_date, 
+                                cntrb_id AS canonical_id 
+                                FROM augur_data.contributors 
+                                WHERE cntrb_canonical = cntrb_email ORDER BY cntrb_canonical 
+                            ) canonical_full_names ON canonical_full_names.canonical_email =contributors.cntrb_canonical 
                         WHERE
                             pull_requests.repo_id = {repo_id} 
                         GROUP BY
@@ -200,9 +221,14 @@ def create_routes(server):
                             augur_data.pull_request_message_ref,
                             augur_data.message
                             LEFT OUTER JOIN augur_data.contributors ON contributors.cntrb_id = message.cntrb_id
-                            LEFT OUTER JOIN ( SELECT DISTINCT ON ( cntrb_canonical ) cntrb_full_name, cntrb_canonical AS canonical_email, data_collection_date, cntrb_id AS canonical_id 
-                            FROM augur_data.contributors WHERE cntrb_canonical = cntrb_email ORDER BY cntrb_canonical 
-                            ) canonical_full_names ON canonical_full_names.canonical_email = contributors.cntrb_canonical 
+                            LEFT OUTER JOIN ( 
+                                SELECT DISTINCT ON ( cntrb_canonical ) cntrb_full_name, 
+                                cntrb_canonical AS canonical_email, 
+                                data_collection_date, 
+                                cntrb_id AS canonical_id 
+                                FROM augur_data.contributors 
+                                WHERE cntrb_canonical = cntrb_email ORDER BY cntrb_canonical 
+                            ) canonical_full_names ON canonical_full_names.canonical_email =contributors.cntrb_canonical 
                         WHERE
                             pull_requests.repo_id = {repo_id}
                             AND pull_request_message_ref.pull_request_id = pull_requests.pull_request_id 
@@ -227,9 +253,14 @@ def create_routes(server):
                             issue_message_ref,
                             message
                             LEFT OUTER JOIN augur_data.contributors ON contributors.cntrb_id = message.cntrb_id
-                            LEFT OUTER JOIN ( SELECT DISTINCT ON ( cntrb_canonical ) cntrb_full_name, cntrb_canonical AS canonical_email, data_collection_date, cntrb_id AS canonical_id 
-                            FROM augur_data.contributors WHERE cntrb_canonical = cntrb_email ORDER BY cntrb_canonical 
-                            ) canonical_full_names ON canonical_full_names.canonical_email = contributors.cntrb_canonical 
+                            LEFT OUTER JOIN ( 
+                                SELECT DISTINCT ON ( cntrb_canonical ) cntrb_full_name, 
+                                cntrb_canonical AS canonical_email, 
+                                data_collection_date, 
+                                cntrb_id AS canonical_id 
+                                FROM augur_data.contributors 
+                                WHERE cntrb_canonical = cntrb_email ORDER BY cntrb_canonical 
+                            ) canonical_full_names ON canonical_full_names.canonical_email =contributors.cntrb_canonical 
                         WHERE
                             issues.repo_id = {repo_id}
                             AND issue_message_ref.msg_id = message.msg_id 
@@ -286,20 +317,21 @@ def create_routes(server):
 
     def months_data_collection(start_date, end_date):
 
-        months_df = pd.DataFrame()
-
-        # months_query makes a df of years and months, this is used to fill the months with no data in the visualizaitons
+        # months_query makes a df of years and months, this is used to fill
+        # the months with no data in the visualizaitons
         months_query = salc.sql.text(f"""        
-              SELECT
-                        *
-                    FROM
-                    (
-                    SELECT
-                        date_part( 'year', created_month :: DATE ) AS year,
-                        date_part( 'month', created_month :: DATE ) AS MONTH
-                    FROM
-                        (SELECT * FROM ( SELECT created_month :: DATE FROM generate_series (TIMESTAMP '{start_date}', TIMESTAMP '{end_date}', INTERVAL '1 month' ) created_month ) d ) x 
-                    ) y
+            SELECT *
+            FROM
+            (
+                SELECT
+                date_part( 'year', created_month :: DATE ) AS year,
+                date_part( 'month', created_month :: DATE ) AS MONTH
+                FROM
+                    (SELECT * 
+                    FROM ( 
+                        SELECT created_month :: DATE 
+                        FROM generate_series (TIMESTAMP '{start_date}', TIMESTAMP '{end_date}', INTERVAL '1 month' ) created_month ) d ) x 
+            ) y
         """)
         months_df = pd.read_sql(months_query, server.augur_app.database)
 
@@ -318,7 +350,6 @@ def create_routes(server):
         months_df['quarter'] = pd.to_datetime(months_df['quarter'])
 
         return months_df
-
 
     def remove_rows_with_null_values(df, not_null_columns=[]):
         """Remove null data from pandas df
@@ -352,20 +383,27 @@ def create_routes(server):
             df = df.loc[df[col].isnull() == False]
 
         if total_rows_removed > 0:
-            print(f"\nTotal rows removed because of null data: {total_rows_removed}");
+            print(f"\nTotal rows removed because of null data: {total_rows_removed}")
         else:
             print("No null data found")
 
         return df
 
-    @server.app.route('/{}/contributor_reports/new_contributors_bar/'.format(server.api_version), methods=["GET"])
-    def new_contributors_bar():
+    def get_repo_id_start_date_and_end_date():
 
         now = datetime.datetime.now()
 
         repo_id = int(request.args.get('repo_id'))
         start_date = str(request.args.get('start_date', "{}-01-01".format(now.year - 1)))
         end_date = str(request.args.get('end_date', "{}-{}-{}".format(now.year, now.month, now.day)))
+
+        return repo_id, start_date, end_date
+
+
+    @server.app.route('/{}/contributor_reports/new_contributors_bar/'.format(server.api_version), methods=["GET"])
+    def new_contributors_bar():
+
+        repo_id, start_date, end_date = get_repo_id_start_date_and_end_date()
 
         group_by = str(request.args.get('group_by', "quarter"))
         required_contributions = int(request.args.get('required_contributions', 4))
@@ -396,7 +434,8 @@ def create_routes(server):
         for rank in ranks:
             for contributor_type in contributor_types:
 
-                # do not display these visualizations since drive-by's do not have second contributions, and the second contribution of a repeat contributor is the same thing as the all the second time contributors
+                # do not display these visualizations since drive-by's do not have second contributions, and the
+                # second contribution of a repeat contributor is the same thing as the all the second time contributors
                 if (rank == 2 and contributor_type == 'drive_by') or (rank == 2 and contributor_type == 'repeat'):
                     continue
 
@@ -427,7 +466,8 @@ def create_routes(server):
                     # only keep first time contributions, since those are the dates needed for visualization
                     repeats_df = repeats_df.loc[driver_df['rank'] == 1]
 
-                    # create list of time differences between the final required contribution and the first contribution, and add it to the df
+                    # create list of time differences between the final required contribution
+                    # and the first contribution, and add it to the df
                     differences = []
                     for i in range(0, len(repeat_list)):
                         time_difference = repeat_list[i] - first_list[i]
@@ -441,9 +481,10 @@ def create_routes(server):
                 if contributor_type == 'repeat':
                     driver_df = repeats_df
 
-                    caption = """This graph shows repeat contributors in the specified time period. Repeat contributors are contributors who have 
-                    made {} or more contributions in {} days and their first contribution is in the specified time period. New contributors 
-                    are individuals who make their first contribution in the specified time period."""
+                    caption = """This graph shows repeat contributors in the specified time period. Repeat contributors
+                     are contributors who have made {} or more contributions in {} days and their first contribution is 
+                     in the specified time period. New contributors are individuals who make their first contribution 
+                     in the specified time period."""
 
                 elif contributor_type == 'drive_by':
 
@@ -456,24 +497,26 @@ def create_routes(server):
                     # filter df so it only includes the first contribution
                     driver_df = driver_df.loc[driver_df['rank'] == 1]
 
-                    caption = """This graph shows fly by contributors in the specified time period. Fly by contributors are contributors who 
-                    make less than the required {} contributions in {} days. New contributors are individuals who make their first contribution 
-                    in the specified time period. Of course, then, “All fly-by’s are by definition first time contributors”. However, not all 
-                    first time contributors are fly-by’s."""
+                    caption = """This graph shows fly by contributors in the specified time period. Fly by contributors 
+                    are contributors who make less than the required {} contributions in {} days. New contributors are 
+                    individuals who make their first contribution in the specified time period. Of course, then, “All 
+                    fly-by’s are by definition first time contributors”. However, not all first time contributors are 
+                    fly-by’s."""
 
                 elif contributor_type == 'All':
                     if rank == 1:
                         # makes df with all first time contributors
                         driver_df = driver_df.loc[driver_df['rank'] == 1]
-                        caption = """This graph shows all the first time contributors, whether they contribute once, or contribute multiple times. 
-                        New contributors are individuals who make their first contribution in the specified time period."""
+                        caption = """This graph shows all the first time contributors, whether they contribute once, or 
+                        contribute multiple times. New contributors are individuals who make their first contribution 
+                        in the specified time period."""
 
                     if rank == 2:
                         # creates df with all second time contributors
                         driver_df = driver_df.loc[driver_df['rank'] == 2]
                         caption = """This graph shows the second contribution of all
                                 first time contributors in the specified time period."""
-                        y_axis_label = 'Second Time Contributors'
+                        # y_axis_label = 'Second Time Contributors'
 
                 # filter by end_date, this is not done with the begin date filtering because a repeat contributor
                 # will look like drive-by if the second contribution is removed by end_date filtering
@@ -506,14 +549,16 @@ def create_routes(server):
                         date_column = 'yearmonth'
                         group_by_format_string = "Month"
 
-                    # modifies the driver_df[date_column] to be a string with year and month, then finds all the unique values
+                    # modifies the driver_df[date_column] to be a string with year and month,
+                    # then finds all the unique values
                     data['dates'] = np.unique(np.datetime_as_string(driver_df[date_column], unit='M'))
 
                     # new contributor counts for y-axis
                     data['new_contributor_counts'] = driver_df.groupby([date_column]).sum().reset_index()[
                         'new_contributors']
 
-                # if the data set is large enough it will dynamically assign the width, if the data set is too small it will by default set to 870 pixel so the title fits
+                # if the data set is large enough it will dynamically assign the width, if the data set is
+                # too small it will by default set to 870 pixel so the title fits
                 if len(data['new_contributor_counts']) >= 15:
                     plot_width = 46 * len(data['new_contributor_counts'])
                 else:
@@ -609,11 +654,7 @@ def create_routes(server):
                       methods=["GET"])
     def new_contributors_stacked_bar():
 
-        now = datetime.datetime.now()
-
-        repo_id = int(request.args.get('repo_id'))
-        start_date = str(request.args.get('start_date', "{}-01-01".format(now.year - 1)))
-        end_date = str(request.args.get('end_date', "{}-{}-{}".format(now.year, now.month, now.day)))
+        repo_id, start_date, end_date = get_repo_id_start_date_and_end_date()
 
         group_by = str(request.args.get('group_by', "quarter"))
         required_contributions = int(request.args.get('required_contributions', 4))
@@ -725,7 +766,7 @@ def create_routes(server):
                         driver_df = driver_df.loc[driver_df['rank'] == 2]
                         caption = """This graph shows the second contribution of all first time 
                         contributors in the specified time period."""
-                        y_axis_label = 'Second Time Contributors'
+                        # y_axis_label = 'Second Time Contributors'
 
                 # filter by end_date, this is not done with the begin date filtering because a repeat contributor will
                 # look like drive-by if the second contribution is removed by end_date filtering
@@ -746,8 +787,8 @@ def create_routes(server):
 
                     for contribution_type in actions:
                         data[contribution_type] = \
-                        pd.concat([driver_df.loc[driver_df['action'] == contribution_type], months_df]).groupby(
-                            group_by).sum().reset_index()[y_axis]
+                            pd.concat([driver_df.loc[driver_df['action'] == contribution_type], months_df]).groupby(
+                            group_by).sum().reset_index()['new_contributors']
 
                     # new contributor counts for all actions
                     data['new_contributor_counts'] = driver_df.groupby([group_by]).sum().reset_index()[
@@ -774,8 +815,10 @@ def create_routes(server):
                     # new_contributor counts for each type of action
                     for contribution_type in actions:
                         data[contribution_type] = \
-                        pd.concat([driver_df.loc[driver_df['action'] == contribution_type], months_df]).groupby(
+                            pd.concat([driver_df.loc[driver_df['action'] == contribution_type], months_df]).groupby(
                             date_column).sum().reset_index()['new_contributors']
+
+                    print(data.to_string())
 
                     # new contributor counts for all actions
                     data['new_contributor_counts'] = driver_df.groupby([date_column]).sum().reset_index()[
@@ -897,11 +940,8 @@ def create_routes(server):
                       methods=["GET"])
     def returning_contributor_pie_chart():
 
-        now = datetime.datetime.now()
+        repo_id, start_date, end_date = get_repo_id_start_date_and_end_date()
 
-        repo_id = int(request.args.get('repo_id'))
-        start_date = str(request.args.get('start_date', "{}-01-01".format(now.year - 1)))
-        end_date = str(request.args.get('end_date', "{}-{}-{}".format(now.year, now.month, now.day)))
 
         required_contributions = int(request.args.get('required_contributions', 4))
         required_time = int(request.args.get('required_time', 365))
@@ -993,16 +1033,16 @@ def create_routes(server):
         if len(title) * title_text_font_size / 2 > plot_width:
             plot_width = int(len(title) * title_text_font_size / 2)
 
-        source = ColumnDataSource(data)
+        # source = ColumnDataSource(data)
 
         # creates plot for chart
         p = figure(plot_height=450, plot_width=plot_width, title=title,
                    toolbar_location=None, x_range=(-0.5, 1.3), tools='hover', tooltips="@contributor_type",
                    margin=(0, 0, 0, 0))
 
-        wedge = p.wedge(x=0.87, y=1, radius=0.4, start_angle=cumsum('angle', include_zero=True),
-                        end_angle=cumsum('angle'),
-                        line_color=None, fill_color='color', legend_field='contributor_type', source=data)
+        # wedge = p.wedge(x=0.87, y=1, radius=0.4, start_angle=cumsum('angle', include_zero=True),
+        #                 end_angle=cumsum('angle'),
+        #                 line_color=None, fill_color='color', legend_field='contributor_type', source=data)
 
         start_point = 0.88
         for i in range(0, len(data['percentage'])):
@@ -1048,9 +1088,11 @@ def create_routes(server):
         # creates plot for caption
         p = figure(width=850, height=200, margin=(0, 0, 0, 0))
 
-        caption = """This pie chart shows the percentage of new contributors who were fly-by or repeat contributors. Fly by contributors are contributors who make less than the required {0} contributions in {1} days. New contributors are 
-                    individuals who make their first contribution in the specified time period. Repeat contributors are contributors who have made {0} or more contributions in {1} days and their first 
-                        contribution is in the specified time period."""
+        caption = """This pie chart shows the percentage of new contributors who were fly-by or repeat contributors. 
+                    Fly by contributors are contributors who make less than the required {0} contributions in {1} days. 
+                    New contributors are individuals who make their first contribution in the specified time period. 
+                    Repeat contributors are contributors who have made {0} or more contributions in {1} days and their 
+                    first contribution is in the specified time period."""
 
         p.add_layout(Label(
             x=0,
@@ -1086,11 +1128,7 @@ def create_routes(server):
                       methods=["GET"])
     def returning_contributor_stacked_bar():
 
-        now = datetime.datetime.now()
-
-        repo_id = int(request.args.get('repo_id'))
-        start_date = str(request.args.get('start_date', "{}-01-01".format(now.year - 1)))
-        end_date = str(request.args.get('end_date', "{}-{}-{}".format(now.year, now.month, now.day)))
+        repo_id, start_date, end_date = get_repo_id_start_date_and_end_date()
 
         group_by = str(request.args.get('group_by', "quarter"))
         required_contributions = int(request.args.get('required_contributions', 4))
@@ -1100,7 +1138,7 @@ def create_routes(server):
         input_df = new_contributor_data_collection(repo_id=repo_id, required_contributions=required_contributions)
         months_df = months_data_collection(start_date=start_date, end_date=end_date)
 
-        not_null_columns = ['cntrb_id', 'created_at', 'month', 'year', 'repo_id', 'repo_name','login', 'action',
+        not_null_columns = ['cntrb_id', 'created_at', 'month', 'year', 'repo_id', 'repo_name', 'login', 'action',
                             'rank', 'yearmonth', 'new_contributors', 'quarter']
 
         input_df = remove_rows_with_null_values(input_df, not_null_columns)
