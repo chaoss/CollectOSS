@@ -371,25 +371,20 @@ def create_routes(server):
 
         df_type = get_df_tuple_locations()
 
-
         df_tuple = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date)
-
-        input_df = df_tuple[df_type["pr_all"]]
-
-        print(f"Data received, the length is {len(input_df)}")
-
-
 
         y_axis = 'num_commits'
         group_by_bars = 'merged_flag'
         description = 'All'
 
-
-        # filter out unneeded columns for easier debugging
-        input_df = get_needed_columns(input_df, ['repo_id', 'repo_name', 'closed_year', 'closed_yearmonth', group_by_bars, 'commit_count'])
-
-        # remove rows with null values
-        input_df = remove_rows_with_null_values(input_df, ['repo_id', 'repo_name', 'closed_year', 'closed_yearmonth', group_by_bars, 'commit_count'])
+        # gets pr_all data
+        # selects only need columns (pr_closed_needed_columns)
+        # removes columns that cannot be NULL (pr_closed_not_null_columns)
+        input_df = df_tuple[df_type["pr_all"]]
+        needed_columns = ['repo_id', 'repo_name', 'closed_year', 'closed_yearmonth', group_by_bars, 'commit_count']
+        not_null_columns = needed_columns
+        input_df = get_needed_columns(input_df, needed_columns)
+        input_df = remove_rows_with_null_values(input_df, not_null_columns)
 
         if len(input_df) == 0:
             return Response(response="There is no data for this repo, in the database you are accessing",
@@ -522,23 +517,30 @@ def create_routes(server):
         end_date = str(request.args.get('end_date', "{}-{}-{}".format(now.year, now.month, now.day)))
         return_json = request.args.get('return_json', "false")
 
+        print("Running average comments per pr report")
+
         df_type = get_df_tuple_locations()
 
         df_tuple = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date)
-
-        input_df = df_tuple[df_type["pr_closed"]]
-
-        if len(input_df) == 0:
-            return Response(response="There is no data for this repo, in the database you are accessing",
-                            mimetype='application/json',
-                            status=200)
 
         group_by = 'merged_flag'
         x_axis = 'comment_count'
         description = "All Closed"
         y_axis = 'closed_year'
 
-        input_df = input_df[['repo_id', 'repo_name', y_axis, group_by, x_axis]]
+        # gets pr_closed data
+        # selects only need columns (pr_closed_needed_columns)
+        # removes columns that cannot be NULL (pr_closed_not_null_columns)
+        input_df = df_tuple[df_type["pr_closed"]]
+        needed_columns = ['repo_id', 'repo_name', y_axis, group_by, x_axis]
+        not_null_columns = needed_columns
+        input_df = get_needed_columns(input_df, needed_columns)
+        input_df = remove_rows_with_null_values(input_df, not_null_columns)
+
+        if len(input_df) == 0:
+            return Response(response="There is no data for this repo, in the database you are accessing",
+                            mimetype='application/json',
+                            status=200)
 
         repo_dict = {repo_id: input_df.loc[input_df['repo_id'] == repo_id].iloc[0]['repo_name']}
 
@@ -589,7 +591,7 @@ def create_routes(server):
             if len(y_not_merged_data) > 0:
                 y_not_merged_data_mean = y_not_merged_data[x_axis].mean()
 
-                if (math.isnan(y_not_merged_data_mean)):
+                if math.isnan(y_not_merged_data_mean):
                     return Response(
                         response="There is no message data for this repo, in the database you are accessing",
                         mimetype='application/json', status=200)
@@ -698,26 +700,44 @@ def create_routes(server):
         end_date = str(request.args.get('end_date', "{}-{}-{}".format(now.year, now.month, now.day)))
         return_json = request.args.get('return_json', "false")
 
+        x_axis = 'closed_year'
+        description = 'All Closed'
+
         df_type = get_df_tuple_locations()
 
         df_tuple = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date)
 
+        # gets pr_closed data
+        # selects only need columns (pr_closed_needed_columns)
+        # removes columns that cannot be NULL (pr_closed_not_null_columns)
         pr_closed = df_tuple[df_type["pr_closed"]]
+        pr_closed_needed_columns = ['repo_id', 'repo_name', x_axis, 'merged_flag']
+        pr_closed_not_null_columns = pr_closed_needed_columns
+        pr_closed = get_needed_columns(pr_closed, pr_closed_needed_columns)
+        pr_closed = remove_rows_with_null_values(pr_closed, pr_closed_not_null_columns)
+
+        # gets pr_slow20_not_merged data
+        # selects only need columns (pr_slow20_not_merged_needed_columns)
+        # removes columns that cannot be NULL (pr_slow20_not_merged_not_null_columns)
         pr_slow20_not_merged = df_tuple[df_type["pr_slow20_not_merged"]]
+        pr_slow20_not_merged_needed_columns = ['repo_id', 'repo_name', x_axis, 'merged_flag']
+        pr_slow20_not_merged_not_null_columns = pr_slow20_not_merged_needed_columns
+        pr_slow20_not_merged = get_needed_columns(pr_slow20_not_merged, pr_slow20_not_merged_needed_columns)
+        pr_slow20_not_merged = remove_rows_with_null_values(pr_slow20_not_merged, pr_slow20_not_merged_not_null_columns)
+
+        # gets pr_slow20_merged data
+        # selects only need columns (pr_slow20_not_merged_needed_columns)
+        # removes columns that cannot be NULL (pr_slow20_not_merged_not_null_columns)
         pr_slow20_merged = df_tuple[df_type["pr_slow20_merged"]]
+        pr_slow20_merged_needed_columns = ['repo_id', 'repo_name', x_axis, 'merged_flag']
+        pr_slow20_merged_not_null_columns = pr_slow20_merged_needed_columns
+        pr_slow20_merged = get_needed_columns(pr_slow20_merged, pr_slow20_merged_needed_columns)
+        pr_slow20_merged = remove_rows_with_null_values(pr_slow20_merged, pr_slow20_merged_not_null_columns)
 
         if len(pr_closed) == 0 or len(pr_slow20_not_merged) == 0 or len(pr_slow20_merged) == 0:
             return Response(response="There is no data for this repo, in the database you are accessing",
                             mimetype='application/json',
                             status=200)
-
-        x_axis = 'closed_year'
-        description = 'All Closed'
-
-        # filter out unneeded rows for easier debugging
-        pr_closed = pr_closed[['repo_id', 'repo_name', x_axis, 'merged_flag']]
-        pr_slow20_not_merged = pr_slow20_not_merged[['repo_id', 'repo_name', x_axis, 'merged_flag']]
-        pr_slow20_merged = pr_slow20_merged[['repo_id', 'repo_name', x_axis, 'merged_flag']]
 
         repo_dict = {repo_id: pr_closed.loc[pr_closed['repo_id'] == repo_id].iloc[0]['repo_name']}
 
@@ -880,22 +900,26 @@ def create_routes(server):
 
         df_tuple = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date)
 
-        input_df = df_tuple[df_type["pr_closed"]]
-
-        if len(input_df) == 0:
-            return Response(response="There is no data for this repo, in the database you are accessing",
-                            mimetype='application/json',
-                            status=200)
-
         time_unit = 'days'
         x_max = 95
         y_axis = 'closed_year'
         description = "All Closed"
         legend_position = (410, 10)
 
-        # filter out unneeded empty rows for easier debugging
-        input_df = input_df[['repo_id', 'repo_name', y_axis, 'merged_flag', time_unit + '_to_first_response',
-                             time_unit + '_to_last_response', time_unit + '_to_close']]
+        # gets pr_closed data
+        # selects only need columns (pr_closed_needed_columns)
+        # removes columns that cannot be NULL (pr_closed_not_null_columns)
+        input_df = df_tuple[df_type["pr_closed"]]
+        needed_columns = ['repo_id', 'repo_name', y_axis, 'merged_flag', time_unit + '_to_first_response',
+                          time_unit + '_to_last_response', time_unit + '_to_close']
+        not_null_columns = needed_columns
+        input_df = get_needed_columns(input_df, needed_columns)
+        input_df = remove_rows_with_null_values(input_df, not_null_columns)
+
+        if len(input_df) == 0:
+            return Response(response="There is no data for this repo, in the database you are accessing",
+                            mimetype='application/json',
+                            status=200)
 
         repo_dict = {repo_id: input_df.loc[input_df['repo_id'] == repo_id].iloc[0]['repo_name']}
 
@@ -1135,7 +1159,9 @@ def create_routes(server):
         plot = p
 
         p = figure(width=plot_width, height=200, margin=(0, 0, 0, 0))
-        caption = "This graph shows the average number of days between comments for all closed pull requests per month in four categories. These four categories are All Merged, All Not Merged, Slowest 20% Merged, and Slowest 20% Not Merged."
+        caption = "This graph shows the average number of days between comments for all closed pull requests per month " \
+                  "in four categories. These four categories are All Merged, All Not Merged, Slowest 20% Merged, " \
+                  "and Slowest 20% Not Merged."
         p = add_caption_to_plot(p, caption)
 
         caption_plot = p
@@ -1169,16 +1195,48 @@ def create_routes(server):
         end_date = str(request.args.get('end_date', "{}-{}-{}".format(now.year, now.month, now.day)))
         return_json = request.args.get('return_json', "false")
 
+        time_unit = 'Days'
+        x_axis = 'closed_yearmonth'
+        y_axis = 'average_days_between_responses'
+        description = "All Closed"
+        line_group = 'merged_flag'
+        num_outliers_repo_map = {}
+
         df_type = get_df_tuple_locations()
 
         df_tuple = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date)
 
+        # gets pr_closed data
+        # selects only need columns (pr_closed_needed_columns)
+        # removes columns that cannot be NULL (pr_closed_not_null_columns)
         pr_closed = df_tuple[df_type["pr_closed"]]
-        pr_slow20_not_merged = df_tuple[df_type["pr_slow20_not_merged"]]
-        pr_slow20_merged = df_tuple[df_type["pr_slow20_merged"]]
+        pr_closed_needed_columns = ['repo_id', 'repo_name', x_axis, y_axis, line_group]
+        pr_closed_not_null_columns = pr_closed_needed_columns
+        pr_closed = get_needed_columns(pr_closed, pr_closed_needed_columns)
+        pr_closed = remove_rows_with_null_values(pr_closed, pr_closed_not_null_columns)
 
-        # only getting pr_all to test lenght of data
-        pr_all = df_tuple[df_type["pr_all"]]
+        # gets pr_slow20_not_merged data
+        # selects only need columns (pr_slow20_not_merged_needed_columns)
+        # removes columns that cannot be NULL (pr_slow20_not_merged_not_null_columns)
+        pr_slow20_not_merged = df_tuple[df_type["pr_slow20_not_merged"]]
+        pr_slow20_not_merged_needed_columns = ['repo_id', 'repo_name', x_axis, y_axis, line_group]
+        pr_slow20_not_merged_not_null_columns = pr_slow20_not_merged_needed_columns
+        pr_slow20_not_merged = get_needed_columns(pr_slow20_not_merged, pr_slow20_not_merged_needed_columns)
+        pr_slow20_not_merged = remove_rows_with_null_values(pr_slow20_not_merged, pr_slow20_not_merged_not_null_columns)
+
+        # gets pr_slow20_merged data
+        # selects only need columns (pr_slow20_not_merged_needed_columns)
+        # removes columns that cannot be NULL (pr_slow20_not_merged_not_null_columns)
+        pr_slow20_merged = df_tuple[df_type["pr_slow20_merged"]]
+        pr_slow20_merged_needed_columns = ['repo_id', 'repo_name', x_axis, y_axis, line_group]
+        pr_slow20_merged_not_null_columns = pr_slow20_merged_needed_columns
+        pr_slow20_merged = get_needed_columns(pr_slow20_merged, pr_slow20_merged_needed_columns)
+        pr_slow20_merged = remove_rows_with_null_values(pr_slow20_merged, pr_slow20_merged_not_null_columns)
+
+        if len(pr_closed) == 0 or len(pr_slow20_not_merged) == 0 or len(pr_slow20_merged) == 0:
+            return Response(response="There is no data for this repo, in the database you are accessing",
+                            mimetype='application/json',
+                            status=200)
 
         try:
             pr_closed['average_days_between_responses'] = pr_closed['average_time_between_responses'].map(
@@ -1192,25 +1250,7 @@ def create_routes(server):
                             mimetype='application/json',
                             status=200)
 
-        # only test pr_all because it encompasses the other dfs
-        if len(pr_all) == 0:
-            return Response(response="There is no data for this repo, in the database you are accessing",
-                            mimetype='application/json',
-                            status=200)
-
         repo_dict = {repo_id: pr_closed.loc[pr_closed['repo_id'] == repo_id].iloc[0]['repo_name']}
-
-        time_unit = 'Days'
-        x_axis = 'closed_yearmonth'
-        y_axis = 'average_days_between_responses'
-        description = "All Closed"
-        line_group = 'merged_flag'
-        num_outliers_repo_map = {}
-
-        # filter out unneeded columns for easier debugging
-        pr_closed = pr_closed[['repo_id', 'repo_name', x_axis, y_axis, line_group]]
-        pr_slow20_not_merged = pr_slow20_not_merged[['repo_id', 'repo_name', x_axis, y_axis, line_group]]
-        pr_slow20_merged = pr_slow20_merged[['repo_id', 'repo_name', x_axis, y_axis, line_group]]
 
         data_dict = {'All': pr_closed, 'Slowest 20%': pr_slow20_not_merged.append(pr_slow20_merged, ignore_index=True)}
 
@@ -1327,11 +1367,21 @@ def create_routes(server):
         return_json = request.args.get('return_json', "false")
         remove_outliers = str(request.args.get('remove_outliers', "true"))
 
+        x_axis = 'pr_closed_at'
+        y_axis = 'days_to_first_response'
+        description = 'All'
+        group_by = 'merged_flag'
+        legend_position = 'top_right'
+
         df_type = get_df_tuple_locations()
 
         df_tuple = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date)
 
         pr_closed = df_tuple[df_type["pr_closed"]]
+        needed_columns = ['repo_id', 'repo_name', x_axis, group_by, y_axis]
+        not_null_columns = needed_columns
+        pr_closed = get_needed_columns(pr_closed, needed_columns)
+        pr_closed = remove_rows_with_null_values(pr_closed, not_null_columns)
 
         if len(pr_closed) == 0:
             return Response(response="There is no data for this repo, in the database you are accessing",
@@ -1339,16 +1389,6 @@ def create_routes(server):
                             status=200)
 
         repo_dict = {repo_id: pr_closed.loc[pr_closed['repo_id'] == repo_id].iloc[0]['repo_name']}
-
-        x_axis = 'pr_closed_at'
-        y_axis = 'days_to_first_response'
-        description = 'All'
-        group_by = 'merged_flag'
-        legend_position = 'top_right'
-
-        pr_closed = pr_closed[['repo_id', 'repo_name', x_axis, group_by, y_axis]]
-
-        print(pr_closed)
 
         driver_df = pr_closed.copy()
 
@@ -1463,11 +1503,22 @@ def create_routes(server):
         return_json = request.args.get('return_json', "false")
         include_comments = str(request.args.get('include_comments', True))
 
+        x_axis = 'closed_year'
+        facet = 'merged_flag'
+        columns = 2
+        x_max = 1100
+        y_axis = 'repo_name'
+        description = 'All Closed'
+
         df_type = get_df_tuple_locations()
 
         df_tuple = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date)
 
         pr_closed = df_tuple[df_type["pr_closed"]]
+        needed_columns = ['repo_id', 'repo_name', x_axis, group_by, y_axis]
+        not_null_columns = needed_columns
+        pr_closed = get_needed_columns(pr_closed, needed_columns)
+        pr_closed = remove_rows_with_null_values(pr_closed, not_null_columns)
 
         if len(pr_closed) == 0:
             return Response(response="There is no data for this repo, in the database you are accessing",
@@ -1475,13 +1526,6 @@ def create_routes(server):
                             status=200)
 
         repo_dict = {repo_id: pr_closed.loc[pr_closed['repo_id'] == repo_id].iloc[0]['repo_name']}
-
-        x_axis = 'closed_year'
-        facet = 'merged_flag'
-        columns = 2
-        x_max = 1100
-        y_axis = 'repo_name'
-        description = 'All Closed'
 
         colors = linear_gradient('#f5f5dc', '#fff44f', 150)['hex']
 
