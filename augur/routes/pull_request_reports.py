@@ -357,8 +357,6 @@ def create_routes(server):
     @server.app.route('/{}/pull_request_reports/average_commits_per_PR/'.format(server.api_version), methods=["GET"])
     def average_commits_per_PR():
 
-
-
         now = datetime.datetime.now()
 
         repo_id = int(request.args.get('repo_id'))
@@ -1210,7 +1208,8 @@ def create_routes(server):
         # selects only need columns (pr_closed_needed_columns)
         # removes columns that cannot be NULL (pr_closed_not_null_columns)
         pr_closed = df_tuple[df_type["pr_closed"]]
-        pr_closed_needed_columns = ['repo_id', 'repo_name', x_axis, y_axis, line_group]
+        print(pr_closed.columns)
+        pr_closed_needed_columns = ['repo_id', 'repo_name', x_axis, 'average_time_between_responses', line_group]
         pr_closed_not_null_columns = pr_closed_needed_columns
         pr_closed = get_needed_columns(pr_closed, pr_closed_needed_columns)
         pr_closed = remove_rows_with_null_values(pr_closed, pr_closed_not_null_columns)
@@ -1219,7 +1218,7 @@ def create_routes(server):
         # selects only need columns (pr_slow20_not_merged_needed_columns)
         # removes columns that cannot be NULL (pr_slow20_not_merged_not_null_columns)
         pr_slow20_not_merged = df_tuple[df_type["pr_slow20_not_merged"]]
-        pr_slow20_not_merged_needed_columns = ['repo_id', 'repo_name', x_axis, y_axis, line_group]
+        pr_slow20_not_merged_needed_columns = ['repo_id', 'repo_name', x_axis, 'average_time_between_responses', line_group]
         pr_slow20_not_merged_not_null_columns = pr_slow20_not_merged_needed_columns
         pr_slow20_not_merged = get_needed_columns(pr_slow20_not_merged, pr_slow20_not_merged_needed_columns)
         pr_slow20_not_merged = remove_rows_with_null_values(pr_slow20_not_merged, pr_slow20_not_merged_not_null_columns)
@@ -1228,7 +1227,7 @@ def create_routes(server):
         # selects only need columns (pr_slow20_not_merged_needed_columns)
         # removes columns that cannot be NULL (pr_slow20_not_merged_not_null_columns)
         pr_slow20_merged = df_tuple[df_type["pr_slow20_merged"]]
-        pr_slow20_merged_needed_columns = ['repo_id', 'repo_name', x_axis, y_axis, line_group]
+        pr_slow20_merged_needed_columns = ['repo_id', 'repo_name', x_axis, 'average_time_between_responses', line_group]
         pr_slow20_merged_not_null_columns = pr_slow20_merged_needed_columns
         pr_slow20_merged = get_needed_columns(pr_slow20_merged, pr_slow20_merged_needed_columns)
         pr_slow20_merged = remove_rows_with_null_values(pr_slow20_merged, pr_slow20_merged_not_null_columns)
@@ -1704,7 +1703,7 @@ def create_routes(server):
         df_tuple = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date)
 
         pr_closed = df_tuple[df_type["pr_closed"]]
-        needed_columns = ['repo_id', y_axis, group_by, x_axis, heat_field]
+        needed_columns = ['repo_id', y_axis, group_by, x_axis, 'pr_closed_at', 'pr_created_at']
         not_null_columns = needed_columns
         pr_closed = get_needed_columns(pr_closed, needed_columns)
         pr_closed = remove_rows_with_null_values(pr_closed, not_null_columns)
