@@ -319,6 +319,39 @@ def create_routes(server):
 
         return months_df
 
+    def remove_rows_with_null_values(df, list_of_columns):
+
+        total_rows_removed = 0
+        for col in list_of_columns:
+            rows_removed = len(df.loc[df[col].isnull() == True])
+
+            if rows_removed > 0:
+                print(f"f{rows_removed} rows have been removed because of null values in column {col}")
+                total_rows_removed += rows_removed
+
+            df = df.loc[df[col].isnull() == False]
+
+        if total_rows_removed > 0:
+            print(f"\nTotal rows removed because of null data: {total_rows_removed}");
+        else:
+            print("No null data found")
+
+        return df
+
+    def get_needed_columns(df, list_of_columns):
+        return df[list_of_columns]
+
+    def filter_data(df, needed_columns, not_null_columns):
+
+        if all(x in needed_columns for x in not_null_columns):
+            df = get_needed_columns(df, needed_columns)
+            df = remove_rows_with_null_values(df, not_null_columns)
+
+            return df
+        else:
+            print("Developer error, not null columns should be a subset of needed columns")
+            return df
+
     @server.app.route('/{}/contributor_reports/new_contributors_bar/'.format(server.api_version), methods=["GET"])
     def new_contributors_bar():
 
@@ -335,6 +368,12 @@ def create_routes(server):
 
         input_df = new_contributor_data_collection(repo_id=repo_id, required_contributions=required_contributions)
         months_df = months_data_collection(start_date=start_date, end_date=end_date)
+
+        # TODO remove full_name from data for all charts since it is not needed in vis generation
+        not_null_columns = ['cntrb_id', 'created_at', 'month', 'year', 'repo_id', 'repo_name', 'login', 'action',
+                            'rank', 'yearmonth', 'new_contributors', 'quarter']
+
+        input_df = remove_rows_with_null_values(input_df, not_null_columns)
 
         if len(input_df) == 0:
             return Response(response="There is no data for this repo, in the database you are accessing",
@@ -578,6 +617,11 @@ def create_routes(server):
         input_df = new_contributor_data_collection(repo_id=repo_id, required_contributions=required_contributions)
         months_df = months_data_collection(start_date=start_date, end_date=end_date)
 
+        not_null_columns = ['cntrb_id', 'created_at', 'month', 'year', 'repo_id', 'repo_name', 'login', 'action',
+                            'rank', 'yearmonth', 'new_contributors', 'quarter']
+
+        input_df = remove_rows_with_null_values(input_df, not_null_columns)
+
         if len(input_df) == 0:
             return Response(response="There is no data for this repo, in the database you are accessing",
                             mimetype='application/json',
@@ -625,7 +669,8 @@ def create_routes(server):
                     # only keep first time contributions, since those are the dates needed for visualization
                     repeats_df = repeats_df.loc[driver_df['rank'] == 1]
 
-                    # create list of time differences between the final required contribution and the first contribution, and add it to the df
+                    # create list of time differences between the final required contribution
+                    # and the first contribution, and add it to the df
                     differences = []
                     for i in range(0, len(repeat_list)):
                         time_difference = repeat_list[i] - first_list[i]
@@ -858,6 +903,11 @@ def create_routes(server):
 
         input_df = new_contributor_data_collection(repo_id=repo_id, required_contributions=required_contributions)
 
+        not_null_columns = ['cntrb_id', 'created_at', 'month', 'year', 'repo_id', 'repo_name', 'login', 'action',
+                            'rank', 'yearmonth', 'new_contributors', 'quarter']
+
+        input_df = remove_rows_with_null_values(input_df, not_null_columns)
+
         if len(input_df) == 0:
             return Response(response="There is no data for this repo, in the database you are accessing",
                             mimetype='application/json',
@@ -1043,6 +1093,11 @@ def create_routes(server):
 
         input_df = new_contributor_data_collection(repo_id=repo_id, required_contributions=required_contributions)
         months_df = months_data_collection(start_date=start_date, end_date=end_date)
+
+        not_null_columns = ['cntrb_id', 'created_at', 'month', 'year', 'repo_id', 'repo_name','login', 'action',
+                            'rank', 'yearmonth', 'new_contributors', 'quarter']
+
+        input_df = remove_rows_with_null_values(input_df, not_null_columns)
 
         if len(input_df) == 0:
             return Response(response="There is no data for this repo, in the database you are accessing",
