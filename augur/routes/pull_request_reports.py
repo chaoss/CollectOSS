@@ -1692,11 +1692,22 @@ def create_routes(server):
         return_json = request.args.get('return_json', "false")
         remove_outliers = str(request.args.get('remove_outliers', "true"))
 
+        x_axis = 'repo_name'
+        group_by = 'merged_flag'
+        y_axis = 'closed_yearmonth'
+        description = "All Closed"
+        heat_field = 'pr_duration_days'
+        columns = 2
+
         df_type = get_df_tuple_locations()
 
         df_tuple = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date)
 
         pr_closed = df_tuple[df_type["pr_closed"]]
+        needed_columns = ['repo_id', y_axis, group_by, x_axis, heat_field]
+        not_null_columns = needed_columns
+        pr_closed = get_needed_columns(pr_closed, needed_columns)
+        pr_closed = remove_rows_with_null_values(pr_closed, not_null_columns)
 
         if len(pr_closed) == 0:
             return Response(response="There is no data for this repo, in the database you are accessing",
@@ -1708,16 +1719,6 @@ def create_routes(server):
             pr_duration_days=(pr_duration_frame['pr_duration'] / datetime.timedelta(minutes=1)) / 60 / 24)
 
         repo_dict = {repo_id: pr_duration_frame.loc[pr_duration_frame['repo_id'] == repo_id].iloc[0]['repo_name']}
-
-        x_axis = 'repo_name'
-        group_by = 'merged_flag'
-        y_axis = 'closed_yearmonth'
-        description = "All Closed"
-        heat_field = 'pr_duration_days'
-        columns = 2
-
-        # filter unneeded columns for easier debugging
-        pr_duration_frame = pr_duration_frame[['repo_id', y_axis, group_by, x_axis, heat_field]]
 
         red_green_gradient = linear_gradient('#0080FF', '#DC143C', 150)['hex']  # 32CD32
 
