@@ -335,8 +335,29 @@ def create_routes(server):
 
         return caption_plot
 
+    def remove_rows_with_null_values(df, list_of_columns):
+
+        rows_removed = 0
+        for col in list_of_columns:
+            rows_removed += len(df.loc[df[col].isnull() == True])
+            df = df.loc[df[col].isnull() == False]
+
+        if rows_removed > 0:
+            print(f"{rows_removed} rows removed because of null data");
+        else:
+            print("No null data found")
+
+        return df
+
+    def get_needed_columns(df, list_of_columns):
+        return df[list_of_columns]
+
+
+
     @server.app.route('/{}/pull_request_reports/average_commits_per_PR/'.format(server.api_version), methods=["GET"])
     def average_commits_per_PR():
+
+
 
         now = datetime.datetime.now()
 
@@ -346,25 +367,37 @@ def create_routes(server):
         group_by = str(request.args.get('group_by', "month"))
         return_json = request.args.get('return_json', "false")
 
+        print("Running average commits per pr report")
+
         df_type = get_df_tuple_locations()
+
 
         df_tuple = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date)
 
         input_df = df_tuple[df_type["pr_all"]]
+
+        print(f"Data received, the length is {len(input_df)}")
+
+
+
+        y_axis = 'num_commits'
+        group_by_bars = 'merged_flag'
+        description = 'All'
+
+
+        # filter out unneeded columns for easier debugging
+        input_df = get_needed_columns(input_df, ['repo_id', 'repo_name', 'closed_year', 'closed_yearmonth', group_by_bars, 'commit_count'])
+
+        # remove rows with null values
+        input_df = remove_rows_with_null_values(input_df, ['repo_id', 'repo_name', 'closed_year', 'closed_yearmonth', group_by_bars, 'commit_count'])
 
         if len(input_df) == 0:
             return Response(response="There is no data for this repo, in the database you are accessing",
                             mimetype='application/json',
                             status=200)
 
-        y_axis = 'num_commits'
-        group_by_bars = 'merged_flag'
-        description = 'All'
-
-        # filter out unneeded columns for easier debugging
-        input_df = input_df[['repo_id', 'repo_name', 'closed_year', 'closed_yearmonth', group_by_bars, 'commit_count']]
-
         # print(input_df.to_string())
+        print(input_df.to_string())
 
         repo_dict = {repo_id: input_df.loc[input_df['repo_id'] == repo_id].iloc[0]['repo_name']}
 
