@@ -399,6 +399,47 @@ def create_routes(server):
 
         return repo_id, start_date, end_date
 
+    def compute_fly_by_and_returning_contributors_dfs(input_df, required_contributions, required_time, start_date):
+
+        # create a copy of contributor dataframe
+        driver_df = input_df.copy()
+
+        # remove first time contributors before begin date, along with their second contribution
+        mask = (driver_df['yearmonth'] < start_date)
+        driver_df = driver_df[~driver_df['cntrb_id'].isin(driver_df.loc[mask]['cntrb_id'])]
+
+        # determine if contributor is a drive by by finding all the cntrb_id's that do not have a second contribution
+        repeats_df = driver_df.copy()
+
+        repeats_df = repeats_df.loc[repeats_df['rank'].isin([1, required_contributions])]
+
+        # removes all the contributors that only have a first contirbution
+        repeats_df = repeats_df[
+            repeats_df['cntrb_id'].isin(repeats_df.loc[driver_df['rank'] == required_contributions]['cntrb_id'])]
+
+        repeat_list = repeats_df.loc[driver_df['rank'] == required_contributions]['created_at'].tolist()
+        first_list = repeats_df.loc[driver_df['rank'] == 1]['created_at'].tolist()
+
+        repeats_df = repeats_df.loc[driver_df['rank'] == 1]
+        repeats_df['type'] = 'repeat'
+
+        differences = []
+        for i in range(0, len(repeat_list)):
+            time_difference = repeat_list[i] - first_list[i]
+            total = time_difference.days * 86400 + time_difference.seconds
+            differences.append(total)
+        repeats_df['differences'] = differences
+
+        repeats_df = repeats_df.loc[repeats_df['differences'] <= required_time * 86400]
+
+        repeat_cntrb_ids = repeats_df['cntrb_id'].to_list()
+
+        drive_by_df = driver_df.loc[~driver_df['cntrb_id'].isin(repeat_cntrb_ids)]
+
+        drive_by_df = drive_by_df.loc[driver_df['rank'] == 1]
+        drive_by_df['type'] = 'drive_by'
+
+        return drive_by_df, repeats_df
 
     @server.app.route('/{}/contributor_reports/new_contributors_bar/'.format(server.api_version), methods=["GET"])
     def new_contributors_bar():
@@ -940,8 +981,11 @@ def create_routes(server):
                       methods=["GET"])
     def returning_contributor_pie_chart():
 
-        repo_id, start_date, end_date = get_repo_id_start_date_and_end_date()
+        now = datetime.datetime.now()
 
+        repo_id = int(request.args.get('repo_id'))
+        start_date = str(request.args.get('start_date', "{}-01-01".format(now.year - 1)))
+        end_date = str(request.args.get('end_date', "{}-{}-{}".format(now.year, now.month, now.day)))
 
         required_contributions = int(request.args.get('required_contributions', 4))
         required_time = int(request.args.get('required_time', 365))
@@ -961,43 +1005,8 @@ def create_routes(server):
 
         repo_dict = {repo_id: input_df.loc[input_df['repo_id'] == repo_id].iloc[0]['repo_name']}
 
-        # create a copy of contributor dataframe
-        driver_df = input_df.copy()
-
-        # remove first time contributors before begin date, along with their second contribution
-        mask = (driver_df['yearmonth'] < start_date)
-        driver_df = driver_df[~driver_df['cntrb_id'].isin(driver_df.loc[mask]['cntrb_id'])]
-
-        # determine if contributor is a drive by by finding all the cntrb_id's that do not have a second contribution
-        repeats_df = driver_df.copy()
-
-        repeats_df = repeats_df.loc[repeats_df['rank'].isin([1, required_contributions])]
-
-        # removes all the contributors that only have a first contirbution
-        repeats_df = repeats_df[
-            repeats_df['cntrb_id'].isin(repeats_df.loc[driver_df['rank'] == required_contributions]['cntrb_id'])]
-
-        repeat_list = repeats_df.loc[driver_df['rank'] == required_contributions]['created_at'].tolist()
-        first_list = repeats_df.loc[driver_df['rank'] == 1]['created_at'].tolist()
-
-        repeats_df = repeats_df.loc[driver_df['rank'] == 1]
-        repeats_df['type'] = 'repeat'
-
-        differences = []
-        for i in range(0, len(repeat_list)):
-            time_difference = repeat_list[i] - first_list[i]
-            total = time_difference.days * 86400 + time_difference.seconds
-            differences.append(total)
-        repeats_df['differences'] = differences
-
-        repeats_df = repeats_df.loc[repeats_df['differences'] <= required_time * 86400]
-
-        repeat_cntrb_ids = repeats_df['cntrb_id'].to_list()
-
-        drive_by_df = driver_df.loc[~driver_df['cntrb_id'].isin(repeat_cntrb_ids)]
-
-        drive_by_df = drive_by_df.loc[driver_df['rank'] == 1]
-        drive_by_df['type'] = 'drive_by'
+        drive_by_df, repeats_df = compute_fly_by_and_returning_contributors_dfs(input_df, required_contributions,
+                                                                                required_time, start_date)
 
         driver_df = pd.concat([drive_by_df, repeats_df])
 
@@ -1008,6 +1017,9 @@ def create_routes(server):
         # first and second time contributor counts
         drive_by_contributors = driver_df.loc[driver_df['type'] == 'drive_by'].count()['new_contributors']
         repeat_contributors = driver_df.loc[driver_df['type'] == 'repeat'].count()['new_contributors']
+
+        print(drive_by_contributors)
+        print(repeat_contributors)
 
         # create a dict with the # of drive-by and repeat contributors
         x = {'Drive_By': drive_by_contributors,
@@ -1033,16 +1045,14 @@ def create_routes(server):
         if len(title) * title_text_font_size / 2 > plot_width:
             plot_width = int(len(title) * title_text_font_size / 2)
 
-        # source = ColumnDataSource(data)
-
         # creates plot for chart
         p = figure(plot_height=450, plot_width=plot_width, title=title,
                    toolbar_location=None, x_range=(-0.5, 1.3), tools='hover', tooltips="@contributor_type",
                    margin=(0, 0, 0, 0))
 
-        # wedge = p.wedge(x=0.87, y=1, radius=0.4, start_angle=cumsum('angle', include_zero=True),
-        #                 end_angle=cumsum('angle'),
-        #                 line_color=None, fill_color='color', legend_field='contributor_type', source=data)
+        p.wedge(x=0.87, y=1, radius=0.4, start_angle=cumsum('angle', include_zero=True),
+                        end_angle=cumsum('angle'),
+                        line_color=None, fill_color='color', legend_field='contributor_type', source=data)
 
         start_point = 0.88
         for i in range(0, len(data['percentage'])):
@@ -1150,52 +1160,8 @@ def create_routes(server):
 
         repo_dict = {repo_id: input_df.loc[input_df['repo_id'] == repo_id].iloc[0]['repo_name']}
 
-        # create a copy of contributor dataframe
-        driver_df = input_df.copy()
-
-        # remove first time contributors before begin date, along with their second contribution
-        mask = (driver_df['yearmonth'] < start_date)
-        driver_df = driver_df[~driver_df['cntrb_id'].isin(driver_df.loc[mask]['cntrb_id'])]
-
-        # determine if contributor is a drive by by finding all the cntrb_id's that do not have a second contribution
-        repeats_df = driver_df.copy()
-
-        # discards rows other than the first and the row required to be a repeat contributor
-        repeats_df = repeats_df.loc[repeats_df['rank'].isin([1, required_contributions])]
-
-        # removes all the contributors that only have a first contirbution
-        repeats_df = repeats_df[
-            repeats_df['cntrb_id'].isin(repeats_df.loc[driver_df['rank'] == required_contributions]['cntrb_id'])]
-
-        # create lists of 'created_at' times for the final required contribution and the first contribution
-        repeat_list = repeats_df.loc[driver_df['rank'] == required_contributions]['created_at'].tolist()
-        first_list = repeats_df.loc[driver_df['rank'] == 1]['created_at'].tolist()
-
-        # only keep first time contributions, since there only needs to be one instance of each 'cntrb_id' in df
-        repeats_df = repeats_df.loc[driver_df['rank'] == 1]
-        repeats_df['type'] = 'repeat'
-
-        # create list of time differences between the final required contribution
-        # and the first contribution, and add it to the df
-        differences = []
-        for i in range(0, len(repeat_list)):
-            time_difference = repeat_list[i] - first_list[i]
-            total = time_difference.days * 86400 + time_difference.seconds
-            differences.append(total)
-        repeats_df['differences'] = differences
-
-        # remove contributions who made enough contributions, but not in a short enough time
-        repeats_df = repeats_df.loc[repeats_df['differences'] <= required_time * 86400]
-
-        # create list of 'cntrb_ids' for repeat contributors
-        repeat_cntrb_ids = repeats_df['cntrb_id'].to_list()
-
-        # create df with all contributors other than the ones in the repeats_df
-        drive_by_df = driver_df.loc[~driver_df['cntrb_id'].isin(repeat_cntrb_ids)]
-
-        # filter df so it only includes the first contribution
-        drive_by_df = drive_by_df.loc[driver_df['rank'] == 1]
-        drive_by_df['type'] = 'drive_by'
+        drive_by_df, repeats_df = compute_fly_by_and_returning_contributors_dfs(input_df, required_contributions,
+                                                                                required_time, start_date)
 
         driver_df = pd.concat([drive_by_df, repeats_df, months_df])
 
