@@ -351,44 +351,6 @@ def create_routes(server):
 
         return months_df
 
-    def remove_rows_with_null_values(df, not_null_columns=[]):
-        """Remove null data from pandas df
-
-        Parameters
-        -- df
-            description: the dataframe that will be modified
-            type: Pandas Dataframe
-
-        -- list_of_columns
-            description: columns that are searched for NULL values
-            type: list
-            default: [] (means all columns will be checked for NULL values)
-            IMPORTANT: if an empty list is passed or nothing is passed it will check all columns for NULL values
-
-        Return Value
-            -- Modified Pandas Dataframe
-        """
-
-        if len(not_null_columns) == 0:
-            not_null_columns = df.columns.to_list()
-
-        total_rows_removed = 0
-        for col in not_null_columns:
-            rows_removed = len(df.loc[df[col].isnull() == True])
-
-            if rows_removed > 0:
-                print(f"f{rows_removed} rows have been removed because of null values in column {col}")
-                total_rows_removed += rows_removed
-
-            df = df.loc[df[col].isnull() == False]
-
-        if total_rows_removed > 0:
-            print(f"\nTotal rows removed because of null data: {total_rows_removed}")
-        else:
-            print("No null data found")
-
-        return df
-
     def get_repo_id_start_date_and_end_date():
 
         now = datetime.datetime.now()
@@ -452,45 +414,11 @@ def create_routes(server):
 
         return drive_by_df, repeats_df
 
-    def compute_repeats_df(input_df, required_contributions, required_time, start_date, contributor_type):
+    def add_caption_to_visualizations(caption, required_contributions, required_time, plot_width):
 
-        # create a copy of contributor dataframe
-        driver_df = input_df.copy()
+        caption_plot = figure(width=plot_width, height=200, margin=(0, 0, 0, 0))
 
-        # remove first time contributors before begin date, along with their second contribution
-        mask = (driver_df['yearmonth'] < start_date)
-        driver_df = driver_df[~driver_df['cntrb_id'].isin(driver_df.loc[mask]['cntrb_id'])]
-
-        if contributor_type == 'drive_by' or 'repeat':
-            # create separate repeat_df that includes all repeat contributors
-            # then any contributor that is not in the repeat_df is a drive-by contributor
-            repeats_df = driver_df.copy()
-
-            # discards rows other than the first and the row required to be a repeat contributor
-            repeats_df = repeats_df.loc[repeats_df['rank'].isin([1, required_contributions])]
-
-            # removes all the contributors that only have a first contirbution
-            repeats_df = repeats_df[repeats_df['cntrb_id'].isin(
-                repeats_df.loc[driver_df['rank'] == required_contributions]['cntrb_id'])]
-
-            # create lists of 'created_at' times for the final required contribution and the first contribution
-            repeat_list = repeats_df.loc[driver_df['rank'] == required_contributions]['created_at'].tolist()
-            first_list = repeats_df.loc[driver_df['rank'] == 1]['created_at'].tolist()
-
-            # only keep first time contributions, since those are the dates needed for visualization
-            repeats_df = repeats_df.loc[driver_df['rank'] == 1]
-            repeats_df['type'] = 'repeat'
-
-            # create list of time differences between the final required contribution
-            # and the first contribution, and add it to the df
-            repeats_df = filter_out_repeats_without_required_contributions_in_required_time(repeat_list, repeats_df,
-                                                                                            required_time, first_list)
-
-            return driver_df, repeats_df
-
-    def add_caption_to_visualizations(plot, caption, required_contributions, required_time):
-
-        plot.add_layout(Label(
+        caption_plot.add_layout(Label(
             x=0,
             y=160,
             x_units='screen',
@@ -500,9 +428,9 @@ def create_routes(server):
             text_font_size='15pt',
             render_mode='css'
         ))
-        plot.outline_line_color = None
+        caption_plot.outline_line_color = None
 
-        return plot
+        return caption_plot
 
     def format_new_cntrb_bar_charts(plot, rank, group_by_format_string):
 
@@ -545,6 +473,99 @@ def create_routes(server):
 
         return group_by, required_contributions, required_time
 
+    def remove_rows_before_start_date(df, start_date):
+
+        mask = (df['yearmonth'] < start_date)
+        result_df = df[~df['cntrb_id'].isin(df.loc[mask]['cntrb_id'])]
+
+        return result_df
+
+    def remove_rows_with_null_values(df, not_null_columns=[]):
+        """Remove null data from pandas df
+
+        Parameters
+        -- df
+            description: the dataframe that will be modified
+            type: Pandas Dataframe
+
+        -- list_of_columns
+            description: columns that are searched for NULL values
+            type: list
+            default: [] (means all columns will be checked for NULL values)
+            IMPORTANT: if an empty list is passed or nothing is passed it will check all columns for NULL values
+
+        Return Value
+            -- Modified Pandas Dataframe
+        """
+
+        if len(not_null_columns) == 0:
+            not_null_columns = df.columns.to_list()
+
+        total_rows_removed = 0
+        for col in not_null_columns:
+            rows_removed = len(df.loc[df[col].isnull() == True])
+
+            if rows_removed > 0:
+                print(f"{rows_removed} rows have been removed because of null values in column {col}")
+                total_rows_removed += rows_removed
+
+            df = df.loc[df[col].isnull() == False]
+
+        if total_rows_removed > 0:
+            print(f"\nTotal rows removed because of null data: {total_rows_removed}");
+        else:
+            print("No null data found")
+
+        return df
+
+    def get_needed_columns(df, list_of_columns):
+        """Get only a specific list of columns from a Pandas Dataframe
+
+        Parameters
+        -- df
+            description: the dataframe that will be modified
+            type: Pandas Dataframe
+
+        -- list_of_columns
+            description: columns that will be kept in dataframe
+            type: list
+
+        Return Value
+            -- Modified Pandas Dataframe
+        """
+        return df[list_of_columns]
+
+    def filter_data(df, needed_columns, not_null_columns=[]):
+        """Filters out the unneeded rows in the df, and removed NULL data from df
+
+        Parameters
+        -- df
+            description: the dataframe that will be modified
+            type: Pandas Dataframe
+
+        -- needed_columns
+            description: the columns to keep in the dataframe
+
+        -- not_null_columns
+            description: columns that will be searched for NULL data,
+                         if NULL values are found those rows will be removed
+            default: [] (means all columns in needed_columns list will be checked for NULL values)
+            IMPORTANT: if an empty list is passed or nothing is passed it will check
+                        all columns in needed_columns list for NULL values
+        Return Value
+            -- Modified Pandas Dataframe
+        """
+
+        if all(x in needed_columns for x in not_null_columns):
+
+            df = get_needed_columns(df, needed_columns)
+            df = remove_rows_with_null_values(df, not_null_columns)
+
+            return df
+        else:
+            print("Developer error, not null columns should be a subset of needed columns")
+            return df
+
     @server.app.route('/{}/contributor_reports/new_contributors_bar/'.format(server.api_version), methods=["GET"])
     def new_contributors_bar():
 
@@ -573,6 +594,11 @@ def create_routes(server):
 
         row_1, row_2, row_3, row_4 = [], [], [], []
 
+        all_df = remove_rows_before_start_date(input_df, start_date)
+
+        drive_by_df, repeats_df = compute_fly_by_and_returning_contributors_dfs(input_df, required_contributions,
+                                                                                required_time, start_date)
+
         for rank in ranks:
             for contributor_type in contributor_types:
 
@@ -580,10 +606,6 @@ def create_routes(server):
                 # second contribution of a repeat contributor is the same thing as the all the second time contributors
                 if (rank == 2 and contributor_type == 'drive_by') or (rank == 2 and contributor_type == 'repeat'):
                     continue
-
-                driver_df, repeats_df = compute_repeats_df(input_df, required_contributions,
-                                                           required_time, start_date, contributor_type)
-                print(repeats_df.to_string())
 
                 if contributor_type == 'repeat':
                     driver_df = repeats_df
@@ -595,14 +617,7 @@ def create_routes(server):
 
                 elif contributor_type == 'drive_by':
 
-                    # create list of 'cntrb_ids' for repeat contributors
-                    repeat_cntrb_ids = repeats_df['cntrb_id'].to_list()
-
-                    # create df with all contributors other than the ones in the repeats_df
-                    driver_df = driver_df.loc[~driver_df['cntrb_id'].isin(repeat_cntrb_ids)]
-
-                    # filter df so it only includes the first contribution
-                    driver_df = driver_df.loc[driver_df['rank'] == 1]
+                    driver_df = drive_by_df
 
                     caption = """This graph shows fly by contributors in the specified time period. Fly by contributors 
                     are contributors who make less than the required {} contributions in {} days. New contributors are 
@@ -611,7 +626,9 @@ def create_routes(server):
                     fly-by’s."""
 
                 elif contributor_type == 'All':
+
                     if rank == 1:
+                        driver_df = all_df
                         # makes df with all first time contributors
                         driver_df = driver_df.loc[driver_df['rank'] == 1]
                         caption = """This graph shows all the first time contributors, whether they contribute once, or 
@@ -619,6 +636,9 @@ def create_routes(server):
                         in the specified time period."""
 
                     if rank == 2:
+
+                        driver_df = all_df
+
                         # creates df with all second time contributors
                         driver_df = driver_df.loc[driver_df['rank'] == 2]
                         caption = """This graph shows the second contribution of all
@@ -696,16 +716,9 @@ def create_routes(server):
                                       text_font_size="13pt", text_color="black",
                                       source=source, text_align='center'))
 
-                p = format_new_cntrb_bar_charts(p, rank, group_by_format_string)
+                plot = format_new_cntrb_bar_charts(p, rank, group_by_format_string)
 
-                plot = p
-
-                # creates plot to hold caption
-                p = figure(width=plot_width, height=200, margin=(0, 0, 0, 0))
-
-                p = add_caption_to_visualizations(p, caption, required_contributions, required_time)
-
-                caption_plot = p
+                caption_plot = add_caption_to_visualizations(caption, required_contributions, required_time, plot_width)
 
                 add_charts_and_captions_to_correct_positions(plot, caption_plot, rank, contributor_type, row_1,
                                                              row_2, row_3, row_4)
@@ -728,10 +741,10 @@ def create_routes(server):
         input_df = new_contributor_data_collection(repo_id=repo_id, required_contributions=required_contributions)
         months_df = months_data_collection(start_date=start_date, end_date=end_date)
 
-        not_null_columns = ['cntrb_id', 'created_at', 'month', 'year', 'repo_id', 'repo_name', 'login', 'action',
-                            'rank', 'yearmonth', 'new_contributors', 'quarter']
+        needed_columns = ['cntrb_id', 'created_at', 'month', 'year', 'repo_id', 'repo_name', 'login', 'action',
+                          'rank', 'yearmonth', 'new_contributors', 'quarter']
 
-        input_df = remove_rows_with_null_values(input_df, not_null_columns)
+        input_df = filter_data(input_df, needed_columns)
 
         if len(input_df) == 0:
             return Response(response="There is no data for this repo, in the database you are accessing",
@@ -745,6 +758,11 @@ def create_routes(server):
 
         row_1, row_2, row_3, row_4 = [], [], [], []
 
+        all_df = remove_rows_before_start_date(input_df, start_date)
+
+        drive_by_df, repeats_df = compute_fly_by_and_returning_contributors_dfs(input_df, required_contributions,
+                                                                                required_time, start_date)
+
         for rank in ranks:
             for contributor_type in contributor_types:
                 # do not display these visualizations since drive-by's do not have second contributions,
@@ -752,9 +770,6 @@ def create_routes(server):
                 # second time contributors
                 if (rank == 2 and contributor_type == 'drive_by') or (rank == 2 and contributor_type == 'repeat'):
                     continue
-
-                driver_df, repeats_df = compute_repeats_df(input_df, required_contributions,
-                                                           required_time, start_date, contributor_type)
 
                 if contributor_type == 'repeat':
                     driver_df = repeats_df
@@ -766,14 +781,7 @@ def create_routes(server):
 
                 elif contributor_type == 'drive_by':
 
-                    # create list of 'cntrb_ids' for repeat contributors
-                    repeat_cntrb_ids = repeats_df['cntrb_id'].to_list()
-
-                    # create df with all contributors other than the ones in the repeats_df (drive-by df)
-                    driver_df = driver_df.loc[~driver_df['cntrb_id'].isin(repeat_cntrb_ids)]
-
-                    # filter df so it only includes the first contribution
-                    driver_df = driver_df.loc[driver_df['rank'] == 1]
+                    driver_df = drive_by_df
 
                     caption = """This graph shows fly by contributors in the specified time period. Fly by contributors
                      are contributors who make less than the required {} contributions in {} days. New contributors are 
@@ -783,13 +791,18 @@ def create_routes(server):
 
                 elif contributor_type == 'All':
                     if rank == 1:
+                        driver_df = all_df
+
                         # makes df with all first time contributors
                         driver_df = driver_df.loc[driver_df['rank'] == 1]
+
                         caption = """This graph shows all the first time contributors, whether they contribute once, or 
                         contribute multiple times. New contributors are individuals who make their first contribution in 
                         the specified time period."""
 
                     if rank == 2:
+                        driver_df = all_df
+
                         # creates df with all second time contributor
                         driver_df = driver_df.loc[driver_df['rank'] == 2]
                         caption = """This graph shows the second contribution of all first time 
@@ -901,16 +914,9 @@ def create_routes(server):
                                 label_text_font_size="16px")
                 p.add_layout(legend, 'right')
 
-                p = format_new_cntrb_bar_charts(p, rank, group_by_format_string)
+                plot = format_new_cntrb_bar_charts(p, rank, group_by_format_string)
 
-                plot = p
-
-                # creates plot to hold caption
-                p = figure(width=plot_width, height=200, margin=(0, 0, 0, 0))
-
-                p = add_caption_to_visualizations(p, caption, required_contributions, required_time)
-
-                caption_plot = p
+                caption_plot = add_caption_to_visualizations(caption, required_contributions, required_time, plot_width)
 
                 add_charts_and_captions_to_correct_positions(plot, caption_plot, rank, contributor_type, row_1,
                                                              row_2, row_3, row_4)
@@ -933,10 +939,10 @@ def create_routes(server):
 
         input_df = new_contributor_data_collection(repo_id=repo_id, required_contributions=required_contributions)
 
-        not_null_columns = ['cntrb_id', 'created_at', 'month', 'year', 'repo_id', 'repo_name', 'login', 'action',
-                            'rank', 'yearmonth', 'new_contributors', 'quarter']
+        needed_columns = ['cntrb_id', 'created_at', 'month', 'year', 'repo_id', 'repo_name', 'login', 'action',
+                          'rank', 'yearmonth', 'new_contributors', 'quarter']
 
-        input_df = remove_rows_with_null_values(input_df, not_null_columns)
+        input_df = filter_data(input_df, needed_columns)
 
         if len(input_df) == 0:
             return Response(response="There is no data for this repo, in the database you are accessing",
@@ -1034,18 +1040,13 @@ def create_routes(server):
 
         plot = p
 
-        # creates plot for caption
-        p = figure(width=850, height=200, margin=(0, 0, 0, 0))
-
         caption = """This pie chart shows the percentage of new contributors who were fly-by or repeat contributors. 
                     Fly by contributors are contributors who make less than the required {0} contributions in {1} days. 
                     New contributors are individuals who make their first contribution in the specified time period. 
                     Repeat contributors are contributors who have made {0} or more contributions in {1} days and their 
                     first contribution is in the specified time period."""
 
-        p = add_caption_to_visualizations(p, caption, required_contributions, required_time)
-
-        caption_plot = p
+        caption_plot = add_caption_to_visualizations(caption, required_contributions, required_time, plot_width)
 
         # put graph and caption plot together into one grid
         grid = gridplot([[plot], [caption_plot]])
@@ -1067,10 +1068,10 @@ def create_routes(server):
         input_df = new_contributor_data_collection(repo_id=repo_id, required_contributions=required_contributions)
         months_df = months_data_collection(start_date=start_date, end_date=end_date)
 
-        not_null_columns = ['cntrb_id', 'created_at', 'month', 'year', 'repo_id', 'repo_name', 'login', 'action',
-                            'rank', 'yearmonth', 'new_contributors', 'quarter']
+        needed_columns = ['cntrb_id', 'created_at', 'month', 'year', 'repo_id', 'repo_name', 'login', 'action',
+                          'rank', 'yearmonth', 'new_contributors', 'quarter']
 
-        input_df = remove_rows_with_null_values(input_df, not_null_columns)
+        input_df = filter_data(input_df, needed_columns)
 
         if len(input_df) == 0:
             return Response(response="There is no data for this repo, in the database you are accessing",
@@ -1208,18 +1209,13 @@ def create_routes(server):
 
         plot = p
 
-        # add plot to hold caption
-        p = figure(width=plot_width, height=200, margin=(0, 0, 0, 0))
-
         caption = """This graph shows the number of new contributors in the specified time period, and indicates how 
         many were fly-by and repeat contributors. Fly by contributors are contributors who make less than the required 
         {0} contributions in {1} days. New contributors are individuals who make their first contribution in the 
         specified time period. Repeat contributors are contributors who have made {0} or more contributions in {1} 
         days and their first contribution is in the specified time period."""
 
-        p = add_caption_to_visualizations(p, caption, required_contributions, required_time)
-
-        caption_plot = p
+        caption_plot = add_caption_to_visualizations(caption, required_contributions, required_time, plot_width)
 
         # put graph and caption plot together into one grid
         grid = gridplot([[plot], [caption_plot]])
