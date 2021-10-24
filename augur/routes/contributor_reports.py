@@ -479,6 +479,7 @@ def create_routes(server):
 
             # only keep first time contributions, since those are the dates needed for visualization
             repeats_df = repeats_df.loc[driver_df['rank'] == 1]
+            repeats_df['type'] = 'repeat'
 
             # create list of time differences between the final required contribution
             # and the first contribution, and add it to the df
@@ -536,20 +537,20 @@ def create_routes(server):
             row_3.append(chart_plot)
             row_4.append(caption_plot)
 
-    def test_df_len(df):
-        if len(df) == 0:
-            return Response(response="There is no data for this repo, in the database you are accessing",
-                            mimetype='application/json',
-                            status=200)
+    def get_new_cntrb_bar_chart_query_params():
+
+        group_by = str(request.args.get('group_by', "quarter"))
+        required_contributions = int(request.args.get('required_contributions', 4))
+        required_time = int(request.args.get('required_time', 365))
+
+        return group_by, required_contributions, required_time
 
     @server.app.route('/{}/contributor_reports/new_contributors_bar/'.format(server.api_version), methods=["GET"])
     def new_contributors_bar():
 
         repo_id, start_date, end_date = get_repo_id_start_date_and_end_date()
 
-        group_by = str(request.args.get('group_by', "quarter"))
-        required_contributions = int(request.args.get('required_contributions', 4))
-        required_time = int(request.args.get('required_time', 365))
+        group_by, required_contributions, required_time = get_new_cntrb_bar_chart_query_params()
 
         input_df = new_contributor_data_collection(repo_id=repo_id, required_contributions=required_contributions)
         months_df = months_data_collection(start_date=start_date, end_date=end_date)
@@ -560,8 +561,10 @@ def create_routes(server):
 
         input_df = remove_rows_with_null_values(input_df, not_null_columns)
 
-        input_df = pd.DataFrame()
-        test_df_len(input_df)
+        if len(input_df) == 0:
+            return Response(response="There is no data for this repo, in the database you are accessing",
+                            mimetype='application/json',
+                            status=200)
 
         repo_dict = {repo_id: input_df.loc[input_df['repo_id'] == repo_id].iloc[0]['repo_name']}
 
@@ -580,6 +583,7 @@ def create_routes(server):
 
                 driver_df, repeats_df = compute_repeats_df(input_df, required_contributions,
                                                            required_time, start_date, contributor_type)
+                print(repeats_df.to_string())
 
                 if contributor_type == 'repeat':
                     driver_df = repeats_df
@@ -719,9 +723,7 @@ def create_routes(server):
 
         repo_id, start_date, end_date = get_repo_id_start_date_and_end_date()
 
-        group_by = str(request.args.get('group_by', "quarter"))
-        required_contributions = int(request.args.get('required_contributions', 4))
-        required_time = int(request.args.get('required_time', 365))
+        group_by, required_contributions, required_time = get_new_cntrb_bar_chart_query_params()
 
         input_df = new_contributor_data_collection(repo_id=repo_id, required_contributions=required_contributions)
         months_df = months_data_collection(start_date=start_date, end_date=end_date)
@@ -946,6 +948,8 @@ def create_routes(server):
         drive_by_df, repeats_df = compute_fly_by_and_returning_contributors_dfs(input_df, required_contributions,
                                                                                 required_time, start_date)
 
+        print(repeats_df.to_string())
+
         driver_df = pd.concat([drive_by_df, repeats_df])
 
         # filter df by end date
@@ -955,9 +959,6 @@ def create_routes(server):
         # first and second time contributor counts
         drive_by_contributors = driver_df.loc[driver_df['type'] == 'drive_by'].count()['new_contributors']
         repeat_contributors = driver_df.loc[driver_df['type'] == 'repeat'].count()['new_contributors']
-
-        print(drive_by_contributors)
-        print(repeat_contributors)
 
         # create a dict with the # of drive-by and repeat contributors
         x = {'Drive_By': drive_by_contributors,
