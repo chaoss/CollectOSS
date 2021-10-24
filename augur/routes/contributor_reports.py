@@ -526,7 +526,8 @@ def create_routes(server):
 
         return plot
 
-    def add_charts_and_captions_to_correct_positions(chart_plot, caption_plot, rank, contributor_type, row_1, row_2, row_3, row_4):
+    def add_charts_and_captions_to_correct_positions(chart_plot, caption_plot, rank, contributor_type,
+                                                     row_1, row_2, row_3, row_4):
 
         if rank == 1 and (contributor_type == 'All' or contributor_type == 'repeat'):
             row_1.append(chart_plot)
@@ -535,6 +536,11 @@ def create_routes(server):
             row_3.append(chart_plot)
             row_4.append(caption_plot)
 
+    def test_df_len(df):
+        if len(df) == 0:
+            return Response(response="There is no data for this repo, in the database you are accessing",
+                            mimetype='application/json',
+                            status=200)
 
     @server.app.route('/{}/contributor_reports/new_contributors_bar/'.format(server.api_version), methods=["GET"])
     def new_contributors_bar():
@@ -544,7 +550,6 @@ def create_routes(server):
         group_by = str(request.args.get('group_by', "quarter"))
         required_contributions = int(request.args.get('required_contributions', 4))
         required_time = int(request.args.get('required_time', 365))
-        return_json = request.args.get('return_json', "false")
 
         input_df = new_contributor_data_collection(repo_id=repo_id, required_contributions=required_contributions)
         months_df = months_data_collection(start_date=start_date, end_date=end_date)
@@ -555,10 +560,8 @@ def create_routes(server):
 
         input_df = remove_rows_with_null_values(input_df, not_null_columns)
 
-        if len(input_df) == 0:
-            return Response(response="There is no data for this repo, in the database you are accessing",
-                            mimetype='application/json',
-                            status=200)
+        input_df = pd.DataFrame()
+        test_df_len(input_df)
 
         repo_dict = {repo_id: input_df.loc[input_df['repo_id'] == repo_id].iloc[0]['repo_name']}
 
@@ -719,7 +722,6 @@ def create_routes(server):
         group_by = str(request.args.get('group_by', "quarter"))
         required_contributions = int(request.args.get('required_contributions', 4))
         required_time = int(request.args.get('required_time', 365))
-        return_json = request.args.get('return_json', "false")
 
         input_df = new_contributor_data_collection(repo_id=repo_id, required_contributions=required_contributions)
         months_df = months_data_collection(start_date=start_date, end_date=end_date)
@@ -926,7 +928,6 @@ def create_routes(server):
 
         required_contributions = int(request.args.get('required_contributions', 4))
         required_time = int(request.args.get('required_time', 365))
-        return_json = request.args.get('return_json', "false")
 
         input_df = new_contributor_data_collection(repo_id=repo_id, required_contributions=required_contributions)
 
@@ -1061,7 +1062,6 @@ def create_routes(server):
         group_by = str(request.args.get('group_by', "quarter"))
         required_contributions = int(request.args.get('required_contributions', 4))
         required_time = int(request.args.get('required_time', 365))
-        return_json = request.args.get('return_json', "false")
 
         input_df = new_contributor_data_collection(repo_id=repo_id, required_contributions=required_contributions)
         months_df = months_data_collection(start_date=start_date, end_date=end_date)
