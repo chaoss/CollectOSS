@@ -318,7 +318,7 @@ def create_routes(server):
     def months_data_collection(start_date, end_date):
 
         # months_query makes a df of years and months, this is used to fill
-        # the months with no data in the visualizaitons
+        # the months with no data in the visualizations
         months_query = salc.sql.text(f"""        
             SELECT *
             FROM
@@ -399,7 +399,8 @@ def create_routes(server):
 
         return repo_id, start_date, end_date
 
-    def filter_out_repeats_without_required_contributions_in_required_time(repeat_list, repeats_df, required_time, first_list):
+    def filter_out_repeats_without_required_contributions_in_required_time(repeat_list, repeats_df, required_time,
+                                                                           first_list):
 
         differences = []
         for i in range(0, len(repeat_list)):
@@ -461,7 +462,6 @@ def create_routes(server):
         driver_df = driver_df[~driver_df['cntrb_id'].isin(driver_df.loc[mask]['cntrb_id'])]
 
         if contributor_type == 'drive_by' or 'repeat':
-
             # create separate repeat_df that includes all repeat contributors
             # then any contributor that is not in the repeat_df is a drive-by contributor
             repeats_df = driver_df.copy()
@@ -486,6 +486,23 @@ def create_routes(server):
                                                                                             required_time, first_list)
 
             return driver_df, repeats_df
+
+    def add_caption_to_returning_cntrb_visualizations(plot, caption, required_contributions, required_time):
+
+        plot.add_layout(Label(
+            x=0,
+            y=160,
+            x_units='screen',
+            y_units='screen',
+            text='{}'.format(caption.format(required_contributions, required_time)),
+            text_font='times',
+            text_font_size='15pt',
+            render_mode='css'
+        ))
+        plot.outline_line_color = None
+
+        return plot
+
 
     @server.app.route('/{}/contributor_reports/new_contributors_bar/'.format(server.api_version), methods=["GET"])
     def new_contributors_bar():
@@ -803,7 +820,7 @@ def create_routes(server):
                     for contribution_type in actions:
                         data[contribution_type] = \
                             pd.concat([driver_df.loc[driver_df['action'] == contribution_type], months_df]).groupby(
-                            group_by).sum().reset_index()['new_contributors']
+                                group_by).sum().reset_index()['new_contributors']
 
                     # new contributor counts for all actions
                     data['new_contributor_counts'] = driver_df.groupby([group_by]).sum().reset_index()[
@@ -831,7 +848,7 @@ def create_routes(server):
                     for contribution_type in actions:
                         data[contribution_type] = \
                             pd.concat([driver_df.loc[driver_df['action'] == contribution_type], months_df]).groupby(
-                            date_column).sum().reset_index()['new_contributors']
+                                date_column).sum().reset_index()['new_contributors']
 
                     print(data.to_string())
 
@@ -1004,8 +1021,8 @@ def create_routes(server):
 
         # format title
         title = "{}: Number of Returning " \
-                "Contributors out of {} from {} to {}"\
-                .format(repo_dict[repo_id], drive_by_contributors + repeat_contributors, start_date, end_date)
+                "Contributors out of {} from {} to {}" \
+            .format(repo_dict[repo_id], drive_by_contributors + repeat_contributors, start_date, end_date)
 
         title_text_font_size = 18
 
@@ -1074,17 +1091,7 @@ def create_routes(server):
                     Repeat contributors are contributors who have made {0} or more contributions in {1} days and their 
                     first contribution is in the specified time period."""
 
-        p.add_layout(Label(
-            x=0,
-            y=160,
-            x_units='screen',
-            y_units='screen',
-            text='{}'.format(caption.format(required_contributions, required_time)),
-            text_font='times',
-            text_font_size='15pt',
-            render_mode='css'
-        ))
-        p.outline_line_color = None
+        p = add_caption_to_returning_cntrb_visualizations(p, caption, required_contributions, required_time)
 
         caption_plot = p
 
@@ -1149,7 +1156,8 @@ def create_routes(server):
             data['repeat_counts'] = \
                 driver_df.loc[driver_df['type'] == 'repeat'].groupby(group_by).count().reset_index()['new_contributors']
             data['drive_by_counts'] = \
-                driver_df.loc[driver_df['type'] == 'drive_by'].groupby(group_by).count().reset_index()['new_contributors']
+                driver_df.loc[driver_df['type'] == 'drive_by'].groupby(group_by).count().reset_index()[
+                    'new_contributors']
 
             # new contributor counts for all contributor counts
             total_counts = []
@@ -1267,17 +1275,7 @@ def create_routes(server):
         specified time period. Repeat contributors are contributors who have made {0} or more contributions in {1} 
         days and their first contribution is in the specified time period."""
 
-        p.add_layout(Label(
-            x=0,
-            y=160,
-            x_units='screen',
-            y_units='screen',
-            text='{}'.format(caption.format(required_contributions, required_time)),
-            text_font='times',
-            text_font_size='15pt',
-            render_mode='css'
-        ))
-        p.outline_line_color = None
+        p = add_caption_to_returning_cntrb_visualizations(p, caption, required_contributions, required_time)
 
         caption_plot = p
 
