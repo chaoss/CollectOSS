@@ -487,7 +487,7 @@ def create_routes(server):
 
             return driver_df, repeats_df
 
-    def add_caption_to_returning_cntrb_visualizations(plot, caption, required_contributions, required_time):
+    def add_caption_to_visualizations(plot, caption, required_contributions, required_time):
 
         plot.add_layout(Label(
             x=0,
@@ -526,6 +526,14 @@ def create_routes(server):
 
         return plot
 
+    def add_charts_and_captions_to_correct_positions(chart_plot, caption_plot, rank, contributor_type, row_1, row_2, row_3, row_4):
+
+        if rank == 1 and (contributor_type == 'All' or contributor_type == 'repeat'):
+            row_1.append(chart_plot)
+            row_2.append(caption_plot)
+        elif rank == 2 or contributor_type == 'drive_by':
+            row_3.append(chart_plot)
+            row_4.append(caption_plot)
 
 
     @server.app.route('/{}/contributor_reports/new_contributors_bar/'.format(server.api_version), methods=["GET"])
@@ -683,50 +691,17 @@ def create_routes(server):
 
                 p = format_new_cntrb_bar_charts(p, rank, group_by_format_string)
 
-                # p.xgrid.grid_line_color = None
-                # p.y_range.start = 0
-                # p.axis.minor_tick_line_color = None
-                # p.outline_line_color = None
-                #
-                # p.title.align = "center"
-                # p.title.text_font_size = "18px"
-                #
-                # p.yaxis.axis_label = 'Second Time Contributors' if rank == 2 else 'New Contributors'
-                # p.xaxis.axis_label = group_by_format_string
-                #
-                # p.xaxis.axis_label_text_font_size = "18px"
-                # p.yaxis.axis_label_text_font_size = "16px"
-                #
-                # p.xaxis.major_label_text_font_size = "16px"
-                # p.xaxis.major_label_orientation = 45.0
-                #
-                # p.yaxis.major_label_text_font_size = "16px"
-
                 plot = p
 
                 # creates plot to hold caption
                 p = figure(width=plot_width, height=200, margin=(0, 0, 0, 0))
 
-                p.add_layout(Label(
-                    x=0,  # Change to shift caption left or right
-                    y=160,
-                    x_units='screen',
-                    y_units='screen',
-                    text='{}'.format(caption.format(required_contributions, required_time)),
-                    text_font='times',  # Use same font as paper
-                    text_font_size='15pt',
-                    render_mode='css'
-                ))
-                p.outline_line_color = None
+                p = add_caption_to_visualizations(p, caption, required_contributions, required_time)
 
                 caption_plot = p
 
-                if rank == 1 and (contributor_type == 'All' or contributor_type == 'repeat'):
-                    row_1.append(plot)
-                    row_2.append(caption_plot)
-                elif rank == 2 or contributor_type == 'drive_by':
-                    row_3.append(plot)
-                    row_4.append(caption_plot)
+                add_charts_and_captions_to_correct_positions(plot, caption_plot, rank, contributor_type, row_1,
+                                                             row_2, row_3, row_4)
 
         # puts plots together into a grid
         grid = gridplot([row_1, row_2, row_3, row_4])
@@ -924,33 +899,17 @@ def create_routes(server):
 
                 p = format_new_cntrb_bar_charts(p, rank, group_by_format_string)
 
-
-
                 plot = p
 
                 # creates plot to hold caption
                 p = figure(width=plot_width, height=200, margin=(0, 0, 0, 0))
 
-                p.add_layout(Label(
-                    x=0,  # Change to shift caption left or right
-                    y=160,
-                    x_units='screen',
-                    y_units='screen',
-                    text='{}'.format(caption.format(required_contributions, required_time)),
-                    text_font='times',  # Use same font as paper
-                    text_font_size='15pt',
-                    render_mode='css'
-                ))
-                p.outline_line_color = None
+                p = add_caption_to_visualizations(p, caption, required_contributions, required_time)
 
                 caption_plot = p
 
-                if rank == 1 and (contributor_type == 'All' or contributor_type == 'repeat'):
-                    row_1.append(plot)
-                    row_2.append(caption_plot)
-                elif rank == 2 or contributor_type == 'drive_by':
-                    row_3.append(plot)
-                    row_4.append(caption_plot)
+                add_charts_and_captions_to_correct_positions(plot, caption_plot, rank, contributor_type, row_1,
+                                                             row_2, row_3, row_4)
 
         # puts plots together into a grid
         grid = gridplot([row_1, row_2, row_3, row_4])
@@ -1082,7 +1041,7 @@ def create_routes(server):
                     Repeat contributors are contributors who have made {0} or more contributions in {1} days and their 
                     first contribution is in the specified time period."""
 
-        p = add_caption_to_returning_cntrb_visualizations(p, caption, required_contributions, required_time)
+        p = add_caption_to_visualizations(p, caption, required_contributions, required_time)
 
         caption_plot = p
 
@@ -1257,7 +1216,7 @@ def create_routes(server):
         specified time period. Repeat contributors are contributors who have made {0} or more contributions in {1} 
         days and their first contribution is in the specified time period."""
 
-        p = add_caption_to_returning_cntrb_visualizations(p, caption, required_contributions, required_time)
+        p = add_caption_to_visualizations(p, caption, required_contributions, required_time)
 
         caption_plot = p
 
