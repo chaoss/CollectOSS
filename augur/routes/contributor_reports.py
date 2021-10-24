@@ -503,6 +503,30 @@ def create_routes(server):
 
         return plot
 
+    def format_new_cntrb_bar_charts(plot, rank, group_by_format_string):
+
+        plot.xgrid.grid_line_color = None
+        plot.y_range.start = 0
+        plot.axis.minor_tick_line_color = None
+        plot.outline_line_color = None
+
+        plot.title.align = "center"
+        plot.title.text_font_size = "18px"
+
+        plot.yaxis.axis_label = 'Second Time Contributors' if rank == 2 else 'New Contributors'
+        plot.xaxis.axis_label = group_by_format_string
+
+        plot.xaxis.axis_label_text_font_size = "18px"
+        plot.yaxis.axis_label_text_font_size = "16px"
+
+        plot.xaxis.major_label_text_font_size = "16px"
+        plot.xaxis.major_label_orientation = 45.0
+
+        plot.yaxis.major_label_text_font_size = "16px"
+
+        return plot
+
+
 
     @server.app.route('/{}/contributor_reports/new_contributors_bar/'.format(server.api_version), methods=["GET"])
     def new_contributors_bar():
@@ -657,24 +681,26 @@ def create_routes(server):
                                       text_font_size="13pt", text_color="black",
                                       source=source, text_align='center'))
 
-                p.xgrid.grid_line_color = None
-                p.y_range.start = 0
-                p.axis.minor_tick_line_color = None
-                p.outline_line_color = None
+                p = format_new_cntrb_bar_charts(p, rank, group_by_format_string)
 
-                p.title.align = "center"
-                p.title.text_font_size = "18px"
-
-                p.yaxis.axis_label = 'Second Time Contributors' if rank == 2 else 'New Contributors'
-                p.xaxis.axis_label = group_by_format_string
-
-                p.xaxis.axis_label_text_font_size = "18px"
-                p.yaxis.axis_label_text_font_size = "16px"
-
-                p.xaxis.major_label_text_font_size = "16px"
-                p.xaxis.major_label_orientation = 45.0
-
-                p.yaxis.major_label_text_font_size = "16px"
+                # p.xgrid.grid_line_color = None
+                # p.y_range.start = 0
+                # p.axis.minor_tick_line_color = None
+                # p.outline_line_color = None
+                #
+                # p.title.align = "center"
+                # p.title.text_font_size = "18px"
+                #
+                # p.yaxis.axis_label = 'Second Time Contributors' if rank == 2 else 'New Contributors'
+                # p.xaxis.axis_label = group_by_format_string
+                #
+                # p.xaxis.axis_label_text_font_size = "18px"
+                # p.yaxis.axis_label_text_font_size = "16px"
+                #
+                # p.xaxis.major_label_text_font_size = "16px"
+                # p.xaxis.major_label_orientation = 45.0
+                #
+                # p.yaxis.major_label_text_font_size = "16px"
 
                 plot = p
 
@@ -704,15 +730,6 @@ def create_routes(server):
 
         # puts plots together into a grid
         grid = gridplot([row_1, row_2, row_3, row_4])
-
-        if return_json == "true":
-            var = Response(response=json.dumps(json_item(grid, "new_contributors_bar")),
-                           mimetype='application/json',
-                           status=200)
-
-            var.headers["Access-Control-Allow-Orgin"] = "*"
-
-            return var
 
         filename = export_png(grid)
 
@@ -905,24 +922,9 @@ def create_routes(server):
                                 label_text_font_size="16px")
                 p.add_layout(legend, 'right')
 
-                p.xgrid.grid_line_color = None
-                p.y_range.start = 0
-                p.axis.minor_tick_line_color = None
-                p.outline_line_color = None
+                p = format_new_cntrb_bar_charts(p, rank, group_by_format_string)
 
-                p.title.align = "center"
-                p.title.text_font_size = "18px"
 
-                p.yaxis.axis_label = 'Second Time Contributors' if rank == 2 else 'New Contributors'
-                p.xaxis.axis_label = group_by_format_string
-
-                p.xaxis.axis_label_text_font_size = "18px"
-                p.yaxis.axis_label_text_font_size = "16px"
-
-                p.xaxis.major_label_text_font_size = "16px"
-                p.xaxis.major_label_orientation = 45.0
-
-                p.yaxis.major_label_text_font_size = "16px"
 
                 plot = p
 
@@ -952,17 +954,6 @@ def create_routes(server):
 
         # puts plots together into a grid
         grid = gridplot([row_1, row_2, row_3, row_4])
-
-        if return_json == "true":
-            print("Made it")
-
-            var = Response(response=json.dumps(json_item(grid, "new_contributors_stacked_bar")),
-                           mimetype='application/json',
-                           status=200)
-
-            var.headers["Access-Control-Allow-Orgin"] = "*"
-
-            return var
 
         filename = export_png(grid)
 
@@ -1097,15 +1088,6 @@ def create_routes(server):
 
         # put graph and caption plot together into one grid
         grid = gridplot([[plot], [caption_plot]])
-
-        if return_json == "true":
-            var = Response(response=json.dumps(json_item(grid, "returning_contributors_pie_chart")),
-                           mimetype='application/json',
-                           status=200)
-
-            var.headers["Access-Control-Allow-Orgin"] = "*"
-
-            return var
 
         filename = export_png(grid)
 
@@ -1281,15 +1263,6 @@ def create_routes(server):
 
         # put graph and caption plot together into one grid
         grid = gridplot([[plot], [caption_plot]])
-
-        if return_json == "true":
-            var = Response(response=json.dumps(json_item(grid, "returning_contributors_stacked_bar")),
-                           mimetype='application/json',
-                           status=200)
-
-            var.headers["Access-Control-Allow-Orgin"] = "*"
-
-            return var
 
         filename = export_png(grid)
 
