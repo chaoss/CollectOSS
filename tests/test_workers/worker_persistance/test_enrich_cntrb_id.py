@@ -1,5 +1,6 @@
 #SPDX-License-Identifier: MIT
 import pytest
+import docker
 from workers.worker_peristance import *
 from tests.test_workers.test_data import *
 
