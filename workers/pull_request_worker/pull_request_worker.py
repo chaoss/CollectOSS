@@ -447,9 +447,9 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'pr_src_number': pr['number'],
                 'pr_src_state': pr['state'],
                 'pr_src_locked': pr['locked'],
-                'pr_src_title': pr['title'],
+                'pr_src_title': str(pr['title']),
                 'pr_augur_contributor_id': pr['cntrb_id'],
-                'pr_body': pr['body'].encode(encoding='UTF-8',errors='backslashreplace').decode(encoding='UTF-8',errors='ignore') if (
+                'pr_body': str(pr['body']).encode(encoding='UTF-8',errors='backslashreplace').decode(encoding='UTF-8',errors='ignore') if (
                     pr['body']
                 ) else None,
                 'pr_created_at': pr['created_at'],
@@ -677,7 +677,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             pr_comments_insert = [
                 {
                     'pltfrm_id': self.platform_id,
-                    'msg_text': comment['body'].encode(encoding='UTF-8',errors='backslashreplace').decode(encoding='UTF-8',errors='ignore') if (
+                    'msg_text': str(comment['body']).encode(encoding='UTF-8',errors='backslashreplace').decode(encoding='UTF-8',errors='ignore') if (
                         comment['body']
                     ) else None,
                     'msg_timestamp': comment['created_at'],
@@ -906,7 +906,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'cntrb_id': review['cntrb_id'],
                 'pr_review_author_association': review['author_association'],
                 'pr_review_state': review['state'],
-                'pr_review_body': review['body'].encode(encoding='UTF-8',errors='backslashreplace').decode(encoding='UTF-8',errors='ignore') if (
+                'pr_review_body': str(review['body']).encode(encoding='UTF-8',errors='backslashreplace').decode(encoding='UTF-8',errors='ignore') if (
                     review['body']
                 ) else None,
                 'pr_review_submitted_at': review['submitted_at'] if (
@@ -1020,7 +1020,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         review_msg_insert = [
             {
                 'pltfrm_id': self.platform_id,
-                'msg_text': comment['body'].encode(encoding='UTF-8',errors='backslashreplace').decode(encoding='UTF-8',errors='ignore') if (
+                'msg_text': str(comment['body']).encode(encoding='UTF-8',errors='backslashreplace').decode(encoding='UTF-8',errors='ignore') if (
                     comment['body']
                 ) else None,
                 'msg_timestamp': comment['created_at'],
