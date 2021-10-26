@@ -405,7 +405,7 @@ def pull_request_acceptance_rate(self, repo_group_id, repo_id=None, begin_date=N
                     FROM issue_events JOIN issues ON issues.issue_id = issue_events.issue_id
                     WHERE action = 'merged'
                     AND issues.pull_request IS NOT NULL
-                    AND repo_id = :repo_id
+                    AND issue_events.repo_id = :repo_id
                     AND issue_events.created_at BETWEEN :begin_date AND :end_date
                     GROUP BY accepted_on
                     ORDER BY accepted_on
@@ -417,7 +417,7 @@ def pull_request_acceptance_rate(self, repo_group_id, repo_id=None, begin_date=N
                     FROM issue_events JOIN issues ON issues.issue_id = issue_events.issue_id
                     WHERE action = 'ready_for_review'
                     AND issues.pull_request IS NOT NULL 
-                    AND repo_id = :repo_id
+                    AND issue_events.repo_id = :repo_id
                     AND issue_events.created_at BETWEEN :begin_date AND :end_date
                     GROUP BY date_created
                     ORDER BY date_created
