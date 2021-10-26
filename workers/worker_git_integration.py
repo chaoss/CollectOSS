@@ -263,7 +263,7 @@ class WorkerGitInterfaceable(Worker):
         cntrb_action_map = {
             'insert': {
                 'source': [key] + action_map_additions['insert']['source'] + [f'{prefix}id'],
-                'augur': [str('cntrb_login')] + action_map_additions['insert']['augur'] + ['gh_user_id']
+                'augur': ['cntrb_login'] + action_map_additions['insert']['augur'] + ['gh_user_id']
             }
         }
 

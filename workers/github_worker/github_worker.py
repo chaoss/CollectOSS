@@ -113,11 +113,11 @@ class GitHubWorker(WorkerGitInterfaceable):
                         if is_valid_pr_block(issue) else None
                     ),
                     'created_at': issue['created_at'],
-                    'issue_title': str(issue['title'].encode(encoding='UTF-8',errors='backslashreplace').decode(encoding='UTF-8',errors='ignore')) if (
+                    'issue_title': issue['title'].encode(encoding='UTF-8',errors='backslashreplace').decode(encoding='UTF-8',errors='ignore') if (
                         issue['title']
                     ) else None,
                    # 'issue_body': issue['body'].replace('0x00', '____') if issue['body'] else None,
-                    'issue_body': str(issue['body'].encode(encoding='UTF-8',errors='backslashreplace').decode(encoding='UTF-8',errors='ignore')) if (
+                    'issue_body': issue['body'].encode(encoding='UTF-8',errors='backslashreplace').decode(encoding='UTF-8',errors='ignore') if (
                         issue['body']
                     ) else None,
                     'comment_count': issue['comments'],
