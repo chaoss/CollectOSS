@@ -2,10 +2,11 @@
 import pytest
 import docker
 import subprocess
+import json
 from workers.worker_peristance import *
 from tests.test_workers.test_data import *
 
-
+#utility functions
 def poll_database_connection(database_string):
     print("Attempting to create db engine")
     
@@ -15,7 +16,7 @@ def poll_database_connection(database_string):
     return db
     
 
-
+#database connection 
 @pytest.fixture
 def set_up_database():
     #Create client to docker daemon
@@ -56,10 +57,26 @@ def set_up_database():
     #Cleanup the docker container by killing it.
     databaseContainer.kill()
     
+#Sample source data generation that pulls json data that has contributions listed
+@pytest.fixture
+def sample_source_data_enriched():
+    jsonFile = open("contributors.json")
 
-@py
+    source_data = jsonFile.load(jsonFile)
 
+    jsonFile.close()
+    return source_data
 
+#Sample source data generation that opens json data that doesn't have contributions listed
+@pytest.fixture
+def sample_source_data_unenriched():
+    jsonFile = open("contributors_un_enriched.json")
 
-def test_enrich_data_primary_keys():
+    source_data = jsonFile.load(jsonFile)
+
+    jsonFile.close()
+    return source_data
+
+def test_enrich_data_primary_keys(set_up_database):
+    
     pass
