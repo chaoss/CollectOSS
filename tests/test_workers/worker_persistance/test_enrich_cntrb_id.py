@@ -1,11 +1,9 @@
 #SPDX-License-Identifier: MIT
-import sys
-sys.path.append('../')
 import pytest
 import docker
 import subprocess
 import json
-from workers.worker_peristance import *
+from workers.worker_persistance import *
 from tests.test_workers.test_data import *
 
 #utility functions
