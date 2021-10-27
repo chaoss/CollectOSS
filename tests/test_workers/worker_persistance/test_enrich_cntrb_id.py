@@ -77,6 +77,32 @@ def sample_source_data_unenriched():
     jsonFile.close()
     return source_data
 
-def test_enrich_data_primary_keys(set_up_database):
+
+def test_enrich_data_primary_keys(set_up_database, sample_source_data_enriched, sample_source_data_unenriched):
     
-    pass
+    print(sample_source_data_enriched)
+    print(sample_source_data_unenriched)
+    
+    data_tables = ['contributors', 'pull_requests', 'commits',
+                            'pull_request_assignees', 'pull_request_events', 'pull_request_labels',
+                            'pull_request_message_ref', 'pull_request_meta', 'pull_request_repo',
+                            'pull_request_reviewers', 'pull_request_teams', 'message', 'pull_request_commits',
+                            'pull_request_files', 'pull_request_reviews', 'pull_request_review_message_ref',
+                            'contributors_aliases', 'unresolved_commit_emails']
+    operations_tables = ['worker_history', 'worker_job']
+    
+    metadata = s.MetaData()
+    # Reflect only the tables we will use for each schema's metadata object
+    metadata.reflect(set_up_database,data_tables)
+    Base = automap_base(metadata=metadata)
+    Base.prepare()
+    
+    tableDict = {}
+    
+    for table in data_tables:
+        tableDict['{}_table'.format(table)] = Base.classes[table].__table__
+    
+    
+    set_up_database.execute(tableDict['contributors_table'].insert().values(committer))
+    
+    return
