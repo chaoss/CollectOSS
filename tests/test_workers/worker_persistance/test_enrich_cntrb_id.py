@@ -4,7 +4,7 @@ import docker
 import subprocess
 import json
 from workers.worker_persistance import *
-from tests.test_workers.test_data import *
+#from tests.test_workers.test_data import *
 
 #utility functions
 def poll_database_connection(database_string):
