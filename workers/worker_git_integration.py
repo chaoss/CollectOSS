@@ -364,7 +364,7 @@ class WorkerGitInterfaceable(Worker):
               self.logger.info("login: {}".format(data[f'{prefix}login']))
 
               try:
-                url = ("https://api.github.com/users/" + data[f'{prefix}login'])
+                url = ("https://api.github.com/users/" + str(data[f'{prefix}login']))
               except Exception as e:
                 self.logger.info(f"Error when creating url: {e}. Data: {data}")
                 continue
