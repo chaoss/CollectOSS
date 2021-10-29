@@ -54,7 +54,7 @@ def set_up_database():
     attempts = 0
     
     while attempts < 15:
-        result = subprocess.Popen(f"psql -d {DB_STR} -c \"select now()\"")
+        result = subprocess.Popen(f"/usr/bin/psql -d {DB_STR} -c \"select now()\"")
         text = result.communicate()[0]
         connectionStatus = result.returncode
         print(connectionStatus)
