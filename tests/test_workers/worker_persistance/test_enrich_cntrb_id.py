@@ -57,7 +57,7 @@ def set_up_database():
     yield db
     
     #Cleanup the docker container by killing it.
-    databaseContainer.kill()
+    #databaseContainer.kill()
     
 #Sample source data generation that pulls json data that has contributions listed
 @pytest.fixture
