@@ -429,7 +429,7 @@ class GitHubWorker(WorkerGitInterfaceable):
         #This is sending empty data to enrich_cntrb_id, fix with check
         if len(pk_issue_events) > 0:
             pk_issue_events = self.enrich_cntrb_id(
-                pk_issue_events, 'actor.login', action_map_additions={
+                pk_issue_events, str('actor.login'), action_map_additions={
                     'insert': {
                         'source': ['actor.node_id'],
                         'augur': ['gh_node_id']
