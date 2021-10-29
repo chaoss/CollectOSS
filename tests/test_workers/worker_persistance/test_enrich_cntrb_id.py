@@ -42,7 +42,7 @@ def set_up_database():
     
     #Start a container and detatch
     #Wait until the database is ready to accept connections
-    databaseContainer = client.containers.run(image, command=None, ports={'5432/tcp': 5432}, detatch=True)
+    databaseContainer = client.containers.run(image, command=None, ports={'5432/tcp': 5432}, detach=True)
     
     DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(
             "augur", "augur", "172.17.0.1", 5432, "test"
