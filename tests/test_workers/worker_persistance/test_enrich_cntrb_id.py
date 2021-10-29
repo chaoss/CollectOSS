@@ -107,6 +107,6 @@ def test_enrich_data_primary_keys(set_up_database, sample_source_data_enriched, 
         tableDict['{}_table'.format(table)] = Base.classes[table].__table__
     
     
-    set_up_database.execute(tableDict['contributors_table'].insert().values(committer))
+    set_up_database.execute(tableDict['contributors_table'].insert().values(sample_source_data_unenriched))
     
     return
