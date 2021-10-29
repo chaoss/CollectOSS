@@ -3,6 +3,7 @@ import pytest
 import docker
 import subprocess
 import json
+import os
 from workers.worker_persistance import *
 #from tests.test_workers.test_data import *
 
@@ -23,10 +24,15 @@ def set_up_database():
     client = docker.from_env()
     
     print("Building a container")
+    
+    cwd = os.getcwd()
     #Build the test database from the dockerfile and download
     #Postgres docker image if it doesn't exist.
     ROOT_AUGUR_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
     buildString = str(ROOT_AUGUR_DIR).replace("/tests/test_workers", "/util/docker/database/")
+    
+    #change to root augur directory
+    os.chdir(str(ROOT_AUGUR_DIR).replace("/tests/test_workers","/"))
     
     image = client.images.build(path=buildString, pull=True)
     
