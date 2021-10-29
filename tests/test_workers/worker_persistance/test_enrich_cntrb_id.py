@@ -64,7 +64,7 @@ def set_up_database():
 def sample_source_data_enriched():
     jsonFile = open("tests/test_workers/worker_persistance/contributors.json")
 
-    source_data = jsonFile.load(jsonFile)
+    source_data = json.load(jsonFile)
 
     jsonFile.close()
     return source_data
@@ -74,7 +74,7 @@ def sample_source_data_enriched():
 def sample_source_data_unenriched():
     jsonFile = open("tests/test_workers/worker_persistance/contributors_un_enriched.json")
 
-    source_data = jsonFile.load(jsonFile)
+    source_data = json.load(jsonFile)
 
     jsonFile.close()
     return source_data
