@@ -62,7 +62,7 @@ def set_up_database():
 #Sample source data generation that pulls json data that has contributions listed
 @pytest.fixture
 def sample_source_data_enriched():
-    jsonFile = open("contributors.json")
+    jsonFile = open("tests/test_workers/worker_persistance/contributors.json")
 
     source_data = jsonFile.load(jsonFile)
 
@@ -72,7 +72,7 @@ def sample_source_data_enriched():
 #Sample source data generation that opens json data that doesn't have contributions listed
 @pytest.fixture
 def sample_source_data_unenriched():
-    jsonFile = open("contributors_un_enriched.json")
+    jsonFile = open("tests/test_workers/worker_persistance/contributors_un_enriched.json")
 
     source_data = jsonFile.load(jsonFile)
 
