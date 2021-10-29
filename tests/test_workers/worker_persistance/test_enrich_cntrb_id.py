@@ -51,7 +51,7 @@ def set_up_database():
     #Get a database connection object from postgres to test connection and pass to test when ready
     db = poll_database_connection(DB_STR)
     
-    time.sleep(300)
+    time.sleep(5)
         
     #Setup complete, return the database object
     yield db
