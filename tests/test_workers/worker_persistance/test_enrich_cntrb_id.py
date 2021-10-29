@@ -34,6 +34,8 @@ def set_up_database():
     #change to root augur directory
     os.chdir(str(ROOT_AUGUR_DIR).replace("/tests/test_workers","/"))
     
+    print(os.getcwd())
+    
     image = client.images.build(path=buildString, pull=True)
     
     #Start a container and detatch
