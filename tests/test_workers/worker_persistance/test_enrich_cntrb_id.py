@@ -51,17 +51,7 @@ def set_up_database():
     #Get a database connection object from postgres to test connection and pass to test when ready
     db = poll_database_connection(DB_STR)
     
-    attempts = 0
-    
-    while attempts < 15:
-        result = subprocess.Popen(f"/usr/bin/psql -d {DB_STR} -c \"select now()\"")
-        text = result.communicate()[0]
-        connectionStatus = result.returncode
-        print(connectionStatus)
-        if connectionStatus == 0:
-            break
-        
-        attempts += 1
+    time.sleep(300)
         
     #Setup complete, return the database object
     yield db
