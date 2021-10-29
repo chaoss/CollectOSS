@@ -29,14 +29,16 @@ def set_up_database():
     #Build the test database from the dockerfile and download
     #Postgres docker image if it doesn't exist.
     ROOT_AUGUR_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-    buildString = str(ROOT_AUGUR_DIR).replace("/tests/test_workers", "/util/docker/database/")
+    ROOT_AUGUR_DIR = str(ROOT_AUGUR_DIR).replace("/tests/test_workers","/")
+    
+    buildString = ROOT_AUGUR_DIR
     
     #change to root augur directory
-    os.chdir(str(ROOT_AUGUR_DIR).replace("/tests/test_workers","/"))
+    os.chdir(ROOT_AUGUR_DIR)
     
     print(os.getcwd())
     
-    image = client.images.build(path=buildString, pull=True)
+    image = client.images.build(path=buildString,dockerfile="util/docker/database/Dockerfile", pull=True)
     
     #Start a container and detatch
     #Wait until the database is ready to accept connections
