@@ -419,7 +419,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             #This is sending empty data to enrich_cntrb_id, fix with check
             if len(inc_source_prs['insert']) > 0:
                 inc_source_prs['insert'] = self.enrich_cntrb_id(
-                    inc_source_prs['insert'], 'user.login', action_map_additions={
+                    inc_source_prs['insert'], str('user.login'), action_map_additions={
                         'insert': {
                             'source': ['user.node_id'],
                             'augur': ['gh_node_id']
@@ -664,7 +664,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             #This is sending empty data to enrich_cntrb_id, fix with check
             if len(inc_pr_comments['insert']) > 0:
                 inc_pr_comments['insert'] = self.enrich_cntrb_id(
-                    inc_pr_comments['insert'], 'user.login', action_map_additions={
+                    inc_pr_comments['insert'], str('user.login'), action_map_additions={
                         'insert': {
                             'source': ['user.node_id'],
                             'augur': ['gh_node_id']
@@ -811,7 +811,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         if len(pk_pr_events) > 0:
             pk_pr_events = self.enrich_cntrb_id(
-                pk_pr_events, 'actor.login', action_map_additions={
+                pk_pr_events, str('actor.login'), action_map_additions={
                     'insert': {
                         'source': ['actor.node_id'],
                         'augur': ['gh_node_id']
@@ -890,7 +890,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         if len(source_reviews_insert) > 0:
             source_reviews_insert = self.enrich_cntrb_id(
-                source_reviews_insert, 'user.login', action_map_additions={
+                source_reviews_insert, str('user.login'), action_map_additions={
                     'insert': {
                         'source': ['user.node_id'],
                         'augur': ['gh_node_id']
@@ -1007,7 +1007,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         if len(review_msgs['insert']) > 0:
             review_msgs['insert'] = self.enrich_cntrb_id(
-                review_msgs['insert'], 'user.login', action_map_additions={
+                review_msgs['insert'], str('user.login'), action_map_additions={
                     'insert': {
                         'source': ['user.node_id'],
                         'augur': ['gh_node_id']
@@ -1209,7 +1209,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
                         if len(source_reviewers_insert) > 0:
                             source_reviewers_insert = self.enrich_cntrb_id(
-                                source_reviewers_insert, 'login', action_map_additions={
+                                source_reviewers_insert, str('login'), action_map_additions={
                                     'insert': {
                                         'source': ['node_id'],
                                         'augur': ['gh_node_id']
@@ -1254,7 +1254,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
                         if len(source_assignees_insert) > 0:
                             source_assignees_insert = self.enrich_cntrb_id(
-                                source_assignees_insert, 'login', action_map_additions={
+                                source_assignees_insert, str('login'), action_map_additions={
                                     'insert': {
                                         'source': ['node_id'],
                                         'augur': ['gh_node_id']
@@ -1299,7 +1299,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
                         if len(source_meta_insert) > 0:
                             source_meta_insert = self.enrich_cntrb_id(
-                                source_meta_insert, 'user.login', action_map_additions={
+                                source_meta_insert, str('user.login'), action_map_additions={
                                     'insert': {
                                         'source': ['user.node_id'],
                                         'augur': ['gh_node_id']

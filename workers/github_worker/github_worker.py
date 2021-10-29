@@ -90,7 +90,7 @@ class GitHubWorker(WorkerGitInterfaceable):
             #The problem happens when ['insert'] is empty but ['all'] is not.
             if len(inc_source_issues['insert']) > 0:
                 inc_source_issues['insert'] = self.enrich_cntrb_id(
-                    inc_source_issues['insert'], 'user.login', action_map_additions={
+                    inc_source_issues['insert'], str('user.login'), action_map_additions={
                         'insert': {
                             'source': ['user.node_id'],
                             'augur': ['gh_node_id']
@@ -263,7 +263,7 @@ class GitHubWorker(WorkerGitInterfaceable):
             #This is sending empty data to enrich_cntrb_id, fix with check
             if len(inc_issue_comments['insert']) > 0:
                 inc_issue_comments['insert'] = self.enrich_cntrb_id(
-                    inc_issue_comments['insert'], 'user.login', action_map_additions={
+                    inc_issue_comments['insert'], str('user.login'), action_map_additions={
                         'insert': {
                             'source': ['user.node_id'],
                             'augur': ['gh_node_id']
@@ -496,7 +496,7 @@ class GitHubWorker(WorkerGitInterfaceable):
             if len(events_df):
                 events_df = pd.DataFrame(
                     self.enrich_cntrb_id(
-                        events_df.to_dict(orient='records'), 'actor.login', action_map_additions={
+                        events_df.to_dict(orient='records'), str('actor.login'), action_map_additions={
                             'insert': {
                                 'source': ['actor.node_id'],
                                 'augur': ['gh_node_id']
@@ -633,7 +633,7 @@ class GitHubWorker(WorkerGitInterfaceable):
             self.logger.info(f"source_assignees_insert after organize_needed_data: {source_assignees_insert}")
             if len(source_assignees_insert) > 0:
                 source_assignees_insert = self.enrich_cntrb_id(
-                    source_assignees_insert, 'login', action_map_additions={
+                    source_assignees_insert, str('login'), action_map_additions={
                         'insert': {
                             'source': ['node_id'],
                             'augur': ['gh_node_id']
