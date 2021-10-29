@@ -59,7 +59,7 @@ def set_up_database():
     yield db
     
     #Cleanup the docker container by killing it.
-    #databaseContainer.kill()
+    databaseContainer.kill()
     
 #Sample source data generation that pulls json data that has contributions listed
 @pytest.fixture
@@ -97,7 +97,7 @@ def test_enrich_data_primary_keys(set_up_database, sample_source_data_enriched, 
     
     metadata = s.MetaData()
     # Reflect only the tables we will use for each schema's metadata object
-    metadata.reflect(set_up_database,data_tables)
+    metadata.reflect(set_up_database,only=data_tables)
     Base = automap_base(metadata=metadata)
     Base.prepare()
     
