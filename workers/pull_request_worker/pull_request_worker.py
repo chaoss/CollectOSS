@@ -1338,6 +1338,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
             table = 'pull_request_repo'
             duplicate_col_map = {'pr_src_repo_id': 'id'}
+            ##TODO Need to add pull request closed here.
             update_col_map = {}
             table_pkey = 'pr_repo_id'
 
