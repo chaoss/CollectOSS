@@ -5,7 +5,7 @@
 \i schema/generate/05-seed_data.sql
 \i schema/generate/79-schema_update_81.sql
 \i schema/generate/80-schema_update_82.sql
-\i schema/generate/83-schema_update_84.sql
+\i schema/generate/81-schema_update_84.sql
 
 
 
