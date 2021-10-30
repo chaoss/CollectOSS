@@ -22,7 +22,7 @@ COMMIT;
 
 BEGIN; 
 
-DELETE FROM pull_request_files a
+DELETE FROM augur_data.pull_request_files a
 USING pull_request_files b
 WHERE a.pr_file_id < b.pr_file_id
 AND a.pull_request_id = b.pull_request_id
