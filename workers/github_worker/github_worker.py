@@ -90,7 +90,7 @@ class GitHubWorker(WorkerGitInterfaceable):
             #The problem happens when ['insert'] is empty but ['all'] is not.
             if len(inc_source_issues['insert']) > 0:
                 inc_source_issues['insert'] = self.enrich_cntrb_id(
-                    inc_source_issues['insert'], 'user.login', action_map_additions={
+                    inc_source_issues['insert'], str('user.login'), action_map_additions={
                         'insert': {
                             'source': ['user.node_id'],
                             'augur': ['gh_node_id']
@@ -113,11 +113,11 @@ class GitHubWorker(WorkerGitInterfaceable):
                         if is_valid_pr_block(issue) else None
                     ),
                     'created_at': issue['created_at'],
-                    'issue_title': issue['title'].encode(encoding='UTF-8',errors='backslashreplace').decode(encoding='UTF-8',errors='ignore') if (
+                    'issue_title': str(issue['title']).encode(encoding='UTF-8',errors='backslashreplace').decode(encoding='UTF-8',errors='ignore') if (
                         issue['title']
                     ) else None,
                    # 'issue_body': issue['body'].replace('0x00', '____') if issue['body'] else None,
-                    'issue_body': issue['body'].encode(encoding='UTF-8',errors='backslashreplace').decode(encoding='UTF-8',errors='ignore') if (
+                    'issue_body': str(issue['body']).encode(encoding='UTF-8',errors='backslashreplace').decode(encoding='UTF-8',errors='ignore') if (
                         issue['body']
                     ) else None,
                     'comment_count': issue['comments'],
@@ -202,6 +202,8 @@ class GitHubWorker(WorkerGitInterfaceable):
         if pk_source_issues:
             try:
                 self.issue_comments_model(pk_source_issues)
+                issue_events_all = self.issue_events_model(pk_source_issues)
+                self.issue_nested_data_model(pk_source_issues, issue_events_all)
             except Exception as e:
                 self.logger.info(f"issue comments model failed on {e}. exception registered")
                 stacker = traceback.format_exc()
@@ -261,7 +263,7 @@ class GitHubWorker(WorkerGitInterfaceable):
             #This is sending empty data to enrich_cntrb_id, fix with check
             if len(inc_issue_comments['insert']) > 0:
                 inc_issue_comments['insert'] = self.enrich_cntrb_id(
-                    inc_issue_comments['insert'], 'user.login', action_map_additions={
+                    inc_issue_comments['insert'], str('user.login'), action_map_additions={
                         'insert': {
                             'source': ['user.node_id'],
                             'augur': ['gh_node_id']
@@ -427,7 +429,7 @@ class GitHubWorker(WorkerGitInterfaceable):
         #This is sending empty data to enrich_cntrb_id, fix with check
         if len(pk_issue_events) > 0:
             pk_issue_events = self.enrich_cntrb_id(
-                pk_issue_events, 'actor.login', action_map_additions={
+                pk_issue_events, str('actor.login'), action_map_additions={
                     'insert': {
                         'source': ['actor.node_id'],
                         'augur': ['gh_node_id']
@@ -494,7 +496,7 @@ class GitHubWorker(WorkerGitInterfaceable):
             if len(events_df):
                 events_df = pd.DataFrame(
                     self.enrich_cntrb_id(
-                        events_df.to_dict(orient='records'), 'actor.login', action_map_additions={
+                        events_df.to_dict(orient='records'), str('actor.login'), action_map_additions={
                             'insert': {
                                 'source': ['actor.node_id'],
                                 'augur': ['gh_node_id']
@@ -631,7 +633,7 @@ class GitHubWorker(WorkerGitInterfaceable):
             self.logger.info(f"source_assignees_insert after organize_needed_data: {source_assignees_insert}")
             if len(source_assignees_insert) > 0:
                 source_assignees_insert = self.enrich_cntrb_id(
-                    source_assignees_insert, 'login', action_map_additions={
+                    source_assignees_insert, str('login'), action_map_additions={
                         'insert': {
                             'source': ['node_id'],
                             'augur': ['gh_node_id']

@@ -321,6 +321,9 @@ paths:
                 stars_count: 
                   description: 'Example: 443'
                   type: integer
+                commits_count: 
+                  description: '4434'
+                  type: integer 
                 committers_count: 
                   description: 'Example: 42'
                   type: integer
