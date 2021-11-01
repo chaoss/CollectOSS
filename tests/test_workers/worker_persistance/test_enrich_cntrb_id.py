@@ -60,6 +60,8 @@ def set_up_database():
     
     #Cleanup the docker container by killing it.
     databaseContainer.kill()
+    #Remove the name 
+    databaseContainer.remove()
     
 #Sample source data generation that pulls json data that has contributions listed
 @pytest.fixture
