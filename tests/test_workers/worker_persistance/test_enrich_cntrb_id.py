@@ -109,7 +109,34 @@ def test_enrich_data_primary_keys(set_up_database, sample_source_data_enriched, 
         
     print(tableDict['contributors_table'])
     
+    cntrb = [
+        {
+            "cntrb_login": test_data_not_enriched['login'],
+            "gh_user_id": test_data_not_enriched['id'],
+            "gh_login": test_data_not_enriched['login'],
+            "gh_url": test_data_not_enriched['url'],
+            "gh_html_url": test_data_not_enriched['html_url'],
+            "gh_node_id": test_data_not_enriched['node_id'],
+            "gh_avatar_url": test_data_not_enriched['avatar_url'],
+            "gh_gravatar_id": test_data_not_enriched['gravatar_id'],
+            "gh_followers_url": test_data_not_enriched['followers_url'],
+            "gh_following_url": test_data_not_enriched['following_url'],
+            "gh_gists_url": test_data_not_enriched['gists_url'],
+            "gh_starred_url": test_data_not_enriched['starred_url'],
+            "gh_subscriptions_url": test_data_not_enriched['subscriptions_url'],
+            "gh_organizations_url": test_data_not_enriched['organizations_url'],
+            "gh_repos_url": test_data_not_enriched['repos_url'],
+            "gh_events_url": test_data_not_enriched['events_url'],
+            "gh_received_events_url": test_data_not_enriched['received_events_url'],
+            "gh_type": test_data_not_enriched['type'],
+            "gh_site_admin": test_data_not_enriched['site_admin'],
+            "tool_source": "Test",
+            "tool_version": "test_enrich_data_primary_keys",
+            "data_source":"test_enrich_data_primary_keys"
+    } for test_data_not_enriched in sample_source_data_unenriched
+    ]
     
-    set_up_database.execute(tableDict['contributors_table'].insert().values(sample_source_data_unenriched))
+    
+    set_up_database.execute(tableDict['contributors_table'].insert().values(cntrb))
     
     return
