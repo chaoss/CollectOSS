@@ -22,8 +22,8 @@ COMMIT;
 
 BEGIN; 
 
-DELETE FROM pull_request_files a
-USING pull_request_files b
+DELETE FROM augur_data.pull_request_files a
+USING augur_data.pull_request_files b
 WHERE a.pr_file_id < b.pr_file_id
 AND a.pull_request_id = b.pull_request_id
 AND a.repo_id = b.repo_id 
@@ -33,7 +33,7 @@ SELECT create_constraint_if_not_exists('augur_data.pull_request_files', 'prfiles
 
 SELECT create_constraint_if_not_exists('augur_data.pull_request_commits', 'pr_commit_nk', 'UNIQUE ("pull_request_id", "repo_id", "pr_cmt_sha")');
 
-update "augur_operations"."augur_settings" set value = 84 where setting = 'augur_data_version'; 
+update "augur_operations"."augur_settings" set value = 83 where setting = 'augur_data_version'; 
 
 
 COMMIT; 
