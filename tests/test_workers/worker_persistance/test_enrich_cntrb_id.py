@@ -156,4 +156,14 @@ def test_enrich_data_primary_keys(set_up_database, sample_source_data_enriched, 
     
     dummyPersistant.enrich_data_primary_keys(sample_source_data_enriched, tableDict['contributors_table'], gh_merge_fields, augur_merge_fields)
     
+    #now test each record to make sure that they have an avatar_url
+    avatar_url_sql = s.sql.text("""
+        SELECT gh_avatar_url
+        FROM contributors
+                                """)
+    
+    avatar_url_list = pd.read_sql(avatar_url_sql, set_up_database, params={})
+    
+    for url in avatar_url_list:
+        print(url)
     return
