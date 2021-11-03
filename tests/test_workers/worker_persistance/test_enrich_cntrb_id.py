@@ -7,6 +7,13 @@ import os
 from workers.worker_persistance import *
 #from tests.test_workers.test_data import *
 
+#Define a dummy worker class that gets the methods we need without running super().__init__
+class Dummy(Persistant):
+    def __init__(self,database_connection):
+        self.db = database_connection
+        self.logger = logging.getLogger()
+
+
 #utility functions
 def poll_database_connection(database_string):
     print("Attempting to create db engine")
@@ -119,7 +126,7 @@ def test_enrich_data_primary_keys(set_up_database, sample_source_data_enriched, 
             "gh_url": test_data_not_enriched['url'],
             "gh_html_url": test_data_not_enriched['html_url'],
             "gh_node_id": test_data_not_enriched['node_id'],
-            "gh_avatar_url": test_data_not_enriched['avatar_url'],
+            #"gh_avatar_url": test_data_not_enriched['avatar_url'],
             "gh_gravatar_id": test_data_not_enriched['gravatar_id'],
             "gh_followers_url": test_data_not_enriched['followers_url'],
             "gh_following_url": test_data_not_enriched['following_url'],
@@ -140,5 +147,13 @@ def test_enrich_data_primary_keys(set_up_database, sample_source_data_enriched, 
     
     
     set_up_database.execute(tableDict['contributors_table'].insert().values(cntrb))
+    
+    #create class for enrichment
+    dummyPersistant = Dummy(set_up_database)
+    
+    gh_merge_fields = ['avatar_url']
+    augur_merge_fields = ['gh_avatar_url']
+    
+    dummyPersistant.enrich_data_primary_keys(sample_source_data_enriched, tableDict['contributors_table'], gh_merge_fields, augur_merge_fields)
     
     return
