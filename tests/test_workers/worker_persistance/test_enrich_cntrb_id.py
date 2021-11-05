@@ -165,5 +165,5 @@ def test_enrich_data_primary_keys(set_up_database, sample_source_data_enriched, 
     avatar_url_list = pd.read_sql(avatar_url_sql, set_up_database, params={})
     
     for url in avatar_url_list:
-        print(url)
+        assert url != None
     return
