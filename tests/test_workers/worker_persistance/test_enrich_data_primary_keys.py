@@ -5,15 +5,101 @@ from tests.test_workers.test_data import *
 from tests.test_workers.test_set_up_fixtures import *
 
 
-def test_enrich_data_primary_keys(set_up_and_tear_down_database):
 
-    #instantiate Worker Persistance
-    # assign db connection to self.db
-    # insert test data into db
-    # define data passed to method
+#Sample source data generation that pulls json data that has contributions listed
+@pytest.fixture
+def sample_source_data_enriched():
+    jsonFile = open("tests/test_workers/worker_persistance/contributors.json")
 
-    # call method
+    source_data = json.load(jsonFile)
 
-    # assert result
+    jsonFile.close()
+    return source_data
 
-    # set_up_and_tear_down_database fixture will clean up docker container
+#Sample source data generation that opens json data that doesn't have contributions listed
+@pytest.fixture
+def sample_source_data_unenriched():
+    jsonFile = open("tests/test_workers/worker_persistance/contributors_un_enriched.json")
+
+    source_data = json.load(jsonFile)
+
+    jsonFile.close()
+    return source_data
+
+
+def test_enrich_data_primary_keys(database_connection, sample_source_data_enriched, sample_source_data_unenriched):
+    
+    print(sample_source_data_enriched)
+    print(sample_source_data_unenriched)
+    
+    data_tables = ['contributors', 'pull_requests', 'commits',
+                            'pull_request_assignees', 'pull_request_events', 'pull_request_labels',
+                            'pull_request_message_ref', 'pull_request_meta', 'pull_request_repo',
+                            'pull_request_reviewers', 'pull_request_teams', 'message', 'pull_request_commits',
+                            'pull_request_files', 'pull_request_reviews', 'pull_request_review_message_ref',
+                            'contributors_aliases', 'unresolved_commit_emails']
+    operations_tables = ['worker_history', 'worker_job']
+    
+    metadata = s.MetaData()
+    # Reflect only the tables we will use for each schema's metadata object
+    metadata.reflect(database_connection,only=data_tables)
+    Base = automap_base(metadata=metadata)
+    Base.prepare()
+    
+    tableDict = {}
+    
+    for table in data_tables:
+        print(f"Table: {table}")
+        tableDict['{}_table'.format(table)] = Base.classes[table].__table__
+        
+    print(tableDict['contributors_table'])
+    
+    cntrb = [
+        {
+            "cntrb_login": test_data_not_enriched['login'],
+            "gh_user_id": test_data_not_enriched['id'],
+            "gh_login": test_data_not_enriched['login'],
+            "gh_url": test_data_not_enriched['url'],
+            "gh_html_url": test_data_not_enriched['html_url'],
+            "gh_node_id": test_data_not_enriched['node_id'],
+            #"gh_avatar_url": test_data_not_enriched['avatar_url'],
+            "gh_gravatar_id": test_data_not_enriched['gravatar_id'],
+            "gh_followers_url": test_data_not_enriched['followers_url'],
+            "gh_following_url": test_data_not_enriched['following_url'],
+            "gh_gists_url": test_data_not_enriched['gists_url'],
+            "gh_starred_url": test_data_not_enriched['starred_url'],
+            "gh_subscriptions_url": test_data_not_enriched['subscriptions_url'],
+            "gh_organizations_url": test_data_not_enriched['organizations_url'],
+            "gh_repos_url": test_data_not_enriched['repos_url'],
+            "gh_events_url": test_data_not_enriched['events_url'],
+            "gh_received_events_url": test_data_not_enriched['received_events_url'],
+            "gh_type": test_data_not_enriched['type'],
+            "gh_site_admin": test_data_not_enriched['site_admin'],
+            "tool_source": "Test",
+            "tool_version": "test_enrich_data_primary_keys",
+            "data_source":"test_enrich_data_primary_keys"
+    } for test_data_not_enriched in sample_source_data_unenriched
+    ]
+    
+    
+    database_connection.execute(tableDict['contributors_table'].insert().values(cntrb))
+    
+    #create class for enrichment
+    dummyPersistant = Dummy(database_connection)
+    
+    gh_merge_fields = ['avatar_url']
+    augur_merge_fields = ['gh_avatar_url']
+    
+    dummyPersistant.enrich_data_primary_keys(sample_source_data_enriched, tableDict['contributors_table'], gh_merge_fields, augur_merge_fields)
+    
+    #now test each record to make sure that they have an avatar_url
+    avatar_url_sql = s.sql.text("""
+        SELECT gh_avatar_url
+        FROM contributors
+                                """)
+    
+    avatar_url_list = pd.read_sql(avatar_url_sql, database_connection, params={})
+    
+    for url in avatar_url_list:
+        assert url != None
+    return
