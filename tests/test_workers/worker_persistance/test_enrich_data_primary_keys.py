@@ -1,7 +1,7 @@
 #SPDX-License-Identifier: MIT
 import pytest
 from workers.worker_persistance import *
-from tests.test_workers.test_data import *
+#from tests.test_workers.test_data import *
 from tests.test_workers.test_set_up_fixtures import *
 
 
