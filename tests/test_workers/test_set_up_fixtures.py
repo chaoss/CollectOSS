@@ -3,6 +3,7 @@ import docker
 import subprocess
 import json
 import os
+from workers.worker_persistance import *
 
 #Define a dummy worker class that gets the methods we need without running super().__init__
 class Dummy(Persistant):
