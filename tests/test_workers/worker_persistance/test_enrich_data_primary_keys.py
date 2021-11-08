@@ -117,7 +117,7 @@ def test_enrich_data_primary_keys_bad_data(database_connection):
     assert dummyPersistant.enrich_data_primary_keys(None, "contributors_table", gh_merge_fields, augur_merge_fields) == None
 
 
-def test_enrich_data_primary_keys_redundant_enrich(database_connection):
+def test_enrich_data_primary_keys_redundant_enrich(database_connection,sample_source_data_enriched, sample_source_data_unenriched):
     print(sample_source_data_enriched)
     print(sample_source_data_unenriched)
     
