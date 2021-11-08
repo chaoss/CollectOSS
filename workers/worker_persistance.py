@@ -969,7 +969,7 @@ class Persistant():
 
         self.logger.info("Preparing to enrich data.\n")
 
-        if len(source_data) == 0:
+        if source_data == None or len(source_data) == 0:
             self.logger.info("There is no source data to enrich.\n")
             return source_data
 
