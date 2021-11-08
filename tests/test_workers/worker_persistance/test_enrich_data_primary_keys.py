@@ -27,7 +27,7 @@ def sample_source_data_unenriched():
     return source_data
 
 
-def test_enrich_data_primary_keys(database_connection, sample_source_data_enriched, sample_source_data_unenriched):
+def test_enrich_data_primary_keys_standard_input(database_connection, sample_source_data_enriched, sample_source_data_unenriched):
     
     print(sample_source_data_enriched)
     print(sample_source_data_unenriched)
@@ -103,3 +103,15 @@ def test_enrich_data_primary_keys(database_connection, sample_source_data_enrich
     for url in avatar_url_list:
         assert url != None
     return
+
+def test_enrich_data_primary_keys_bad_data(database_connection):
+    
+    gh_merge_fields = ['avatar_url']
+    augur_merge_fields = ['gh_avatar_url']
+    
+    #create class for enrichment
+    dummyPersistant = Dummy(database_connection)
+    
+    #Make sure that function rejects null data
+    assert dummyPersistant.enrich_data_primary_keys({}, "contributors_table", gh_merge_fields, augur_merge_fields) == {}
+    assert dummyPersistant.enrich_data_primary_keys(None, "contributors_table", gh_merge_fields, augur_merge_fields) == None
