@@ -28,8 +28,6 @@ def send_task(worker_proxy):
     r = requests.get('{}/AUGWOP/heartbeat'.format(
         worker_proxy['location']))
     j = r.json()
-    logger.debug(f'json is {j} \n ')
-    time.sleep(10)
 
     if 'status' not in j:
         logger.error("Worker: {}'s heartbeat did not return a response, setting worker status as 'Disconnected'\n".format(worker_id))
@@ -77,7 +75,7 @@ def create_routes(server):
         for given_component in list(task['given'].keys()):
             given.append(given_component)
         model = task['models'][0]
-        logger.info("Broker received a new user task ... checking for compatible workers for given: " + str(given) + " and model(s): " + str(model) + "\n")
+        logger.info("Broker recieved a new user task ... checking for compatible workers for given: " + str(given) + " and model(s): " + str(model) + "\n")
 
         logger.debug("Broker's list of all workers: {}\n".format(server.broker._getvalue().keys()))
 
@@ -130,7 +128,7 @@ def create_routes(server):
             and telling the broker to add this worker to the set it maintains
         """
         worker = request.json
-        logger.info("Received HELLO message from worker {} listening on: https://localhost:{}\
+        logger.info("Recieved HELLO message from worker {} listening on: https://localhost:{}\
                     ".format(worker['id'], worker['id'].split('.')[2]))
         if worker['id'] not in server.broker:
             server.broker[worker['id']] = server.manager.dict()
@@ -164,7 +162,7 @@ def create_routes(server):
     def sync_queue():
         task = request.json
         worker = task['worker_id']
-        logger.info("Message received that worker {} completed task: {}\n".format(worker,task))
+        logger.info("Message recieved that worker {} completed task: {}\n".format(worker,task))
         try:
             models = server.broker[worker]['models']
             givens = server.broker[worker]['given']
@@ -204,7 +202,7 @@ def create_routes(server):
     @server.app.route('/{}/workers/remove'.format(server.api_version), methods=['POST'])
     def remove_worker():
         worker = request.json
-        logger.info("Received a message to disconnect worker: {}\n".format(worker))
+        logger.info("Recieved a message to disconnect worker: {}\n".format(worker))
         server.broker[worker['id']]['status'] = 'Disconnected'
         return Response(response=worker,
                         status=200,
@@ -214,7 +212,7 @@ def create_routes(server):
     def task_error():
         task = request.json
         worker_id = task['worker_id']
-        # logger.error("Received a message that {} ran into an error on task: {}\n".format(worker_id, task))
+        # logger.error("Recieved a message that {} ran into an error on task: {}\n".format(worker_id, task))
         if worker_id in server.broker:
             if server.broker[worker_id]['status'] != 'Disconnected':
                 logger.error("{} ran into error while completing task: {}\n".format(worker_id, task))
