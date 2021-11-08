@@ -28,6 +28,8 @@ def send_task(worker_proxy):
     r = requests.get('{}/AUGWOP/heartbeat'.format(
         worker_proxy['location']))
     j = r.json()
+    logger.debug(f'json is {j} \n ')
+    time.sleep(10)
 
     if 'status' not in j:
         logger.error("Worker: {}'s heartbeat did not return a response, setting worker status as 'Disconnected'\n".format(worker_id))
