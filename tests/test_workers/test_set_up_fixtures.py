@@ -35,8 +35,9 @@ def database_connection():
     #Postgres docker image if it doesn't exist.
     ROOT_AUGUR_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
     ROOT_AUGUR_DIR = str(ROOT_AUGUR_DIR).split("augur")
+    ROOT_AUGUR_DIR = ROOT_AUGUR_DIR[0] + "augur"
     
-    buildString = ROOT_AUGUR_DIR[0] + "augur" 
+    buildString = ROOT_AUGUR_DIR
     
     #change to root augur directory
     os.chdir(ROOT_AUGUR_DIR)
