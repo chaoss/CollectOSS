@@ -34,9 +34,9 @@ def database_connection():
     #Build the test database from the dockerfile and download
     #Postgres docker image if it doesn't exist.
     ROOT_AUGUR_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-    ROOT_AUGUR_DIR = str(ROOT_AUGUR_DIR).replace("/tests/test_workers","/")
+    ROOT_AUGUR_DIR = str(ROOT_AUGUR_DIR).split("augur")
     
-    buildString = ROOT_AUGUR_DIR
+    buildString = ROOT_AUGUR_DIR[0] + "augur" 
     
     #change to root augur directory
     os.chdir(ROOT_AUGUR_DIR)
