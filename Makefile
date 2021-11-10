@@ -91,8 +91,10 @@ test: test-application test-metric-routes test-workers
 test-application:
 	@ bash -c 'tox -e py-application'
 
+#Worker's tests need a database from docker
+#To use the docker daemon you need to be root so sudo is needed.
 test-workers:
-	@ bash -c 'tox -e py-workers'
+	@ bash -c 'sudo tox -e py-workers'
 
 test-metric-routes:
 	@ bash -c 'tox -e py-metric-routes'
