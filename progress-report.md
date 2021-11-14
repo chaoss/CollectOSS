@@ -4,6 +4,8 @@
 
 Our scope for our project will remain the same. We were able to get our version of Augur up and running and have planned out what we will be doing for the next sprint. During this sprint we started by choosing our topic, fixing the mixed content error due to the APIs returning HTTP content when modern browsers require HTTPS. After we chose our topic we mapped out our use cases and requirements.
 
+[Link to running augur instance/server: https://dev.osshealth.io/](https://dev.osshealth.io/)
+
 ![Use Cases, Requirements, & Benefits of HTTPS](requirements.png)
 
 ### USE CASES:
