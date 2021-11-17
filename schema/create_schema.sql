@@ -7,6 +7,7 @@
 \i schema/generate/80-schema_update_82.sql
 \i schema/generate/81-schema_update_83.sql
 \i schema/generate/82-schema_update_84.sql
+\i schema/generate/83-schema_update_85.sql
 
 
 
