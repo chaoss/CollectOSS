@@ -2,6 +2,7 @@
 from numpy.lib.utils import source
 from workers.worker_base import *
 import sqlalchemy as s
+import time 
 
 #This is a worker base subclass that adds the ability to query github/gitlab with the api key
 class WorkerGitInterfaceable(Worker):
@@ -970,6 +971,7 @@ class WorkerGitInterfaceable(Worker):
             except:
                 self.oauths[0]['rate_limit'] -= 1
                 self.logger.info("Headers did not work, had to decrement")
+                time.sleep(30)
         self.logger.info(
             f"Updated rate limit, you have: {self.oauths[0]['rate_limit']} requests remaining."
         )
