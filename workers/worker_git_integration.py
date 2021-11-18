@@ -1407,10 +1407,15 @@ class WorkerGitInterfaceable(Worker):
                             f"{url.format(page_number)}\n"
                         )
                         break
+                    if "You have exceeded a secondary rate limit. Please wait a few minutes before you try again" in page_data['message']:
+                        num_attempts -=1
+                        self.logger.info('\n\n\n\nSleeping for 100 seconds due to secondary rate limit issue.\n\n\n\n')
+                        time.sleep(100)
                     if "You have triggered an abuse detection mechanism." in page_data['message']:
                         num_attempts -= 1
                         self.update_rate_limit(response, temporarily_disable=True,platform=platform)
                     if page_data['message'] == "Bad credentials":
+                        self.logger.info("\n\n\n\n\n\n\n POSSIBLY BAD TOKEN \n\n\n\n\n\n\n")
                         self.update_rate_limit(response, bad_credentials=True, platform=platform)
                 elif type(page_data) == str:
                     self.logger.info(f"Warning! page_data was string: {page_data}\n")
