@@ -96,7 +96,7 @@ class Housekeeper:
                     for worker in list(broker._getvalue().keys()):
                         if job['model'] in broker[worker]['models'] and job['given'] in broker[worker]['given']:
                             compatible_worker_found = True
-                    time.sleep(3)
+                    time.sleep(120)
                     continue
 
                 logger.info("Housekeeper recognized that the broker has a worker that " + 
@@ -127,7 +127,7 @@ class Housekeeper:
 
                             logger.debug(task)
 
-                            time.sleep(15)
+                            time.sleep(120)
 
                     elif job['given'][0] == 'repo_group':
                         task = {
@@ -141,6 +141,7 @@ class Housekeeper:
                         try:
                             requests.post('http://{}:{}/api/unstable/task'.format(
                                 broker_host,broker_port), json=task, timeout=10)
+                            time.sleep(120)
                         except Exception as e:
                             logger.error("Error encountered: {}".format(e))
 
