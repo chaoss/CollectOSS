@@ -929,7 +929,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'pr_review_pull_request_url': review['pull_request_url'],
                 'pr_review_commit_id': review['commit_id'],
                 'tool_source': 'pull_request_reviews model',
-                'tool_version': self.tool_version,
+                'tool_version': self.tool_version+ "_reviews",
                 'data_source': self.data_source,
                 'repo_id': self.repo_id,
                 'platform_id': self.platform_id 
@@ -1037,7 +1037,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'msg_timestamp': comment['created_at'],
                 'cntrb_id': comment['cntrb_id'],
                 'tool_source': self.tool_source,
-                'tool_version': self.tool_version,
+                'tool_version': self.tool_version + "_reviews",
                 'data_source': 'pull_request_reviews model',
                 'repo_id': self.repo_id,
                 'platform_msg_id': int(comment['id']),
@@ -1093,7 +1093,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'pr_review_msg_original_line': comment['original_line'],
                 'pr_review_msg_side': comment['side'],
                 'tool_source': 'pull_request_reviews model',
-                'tool_version': self.tool_version,
+                'tool_version': self.tool_version + "_reviews",
                 'data_source': self.data_source,
                 'repo_id': self.repo_id
             } for comment in both_pk_source_comments
