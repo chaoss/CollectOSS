@@ -462,9 +462,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 ) else pr['merged_at'],
                 'pr_merge_commit_sha': pr['merge_commit_sha'],
                 'pr_teams': None,
-                'pr_milestone': None if not (
-                    pr['milestone'] 
-                ) else pr['milestone']['title'],
+                'pr_milestone': None,
                 'pr_commits_url': pr['commits_url'],
                 'pr_review_comments_url': pr['review_comments_url'],
                 'pr_review_comment_url': pr['review_comment_url'],
