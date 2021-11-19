@@ -2,6 +2,7 @@
 from tests.test_workers.worker_persistance.util_persistance import *
 
 
+#WIP
 def test_enrich_cntrb_id_standard_input(database_connection, sample_source_data_standard_github_comments, sample_source_data_enriched, sample_source_data_unenriched):
     
     #create class for testing
