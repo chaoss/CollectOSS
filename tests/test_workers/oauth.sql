@@ -1,0 +1,15 @@
+INSERT INTO "worker_oauth" ("oauth_id", "name", "consumer_key", "consumer_secret", "access_token", "access_token_secret", "repo_directory", "platform") VALUES
+(1100,	'mary g',	'0',	'0',	' 9y1FBfvGnlLdsbAt5O2YSwhURoitQ1i7',	'0',	NULL,	'github'),
+(1104,	'scott givan',	'0',	'0',	'515c9bc98bdd9c7999871161c23a54558440361f',	'0',	NULL,	'github'),
+(1200,	'helen pfeffer',	'0',	'0',	'527cc738c7bd554a181b5d65923372678a84edac',	'0',	NULL,	'github'),
+(1201,	'handy andy',	'0',	'0',	'6137c15f6740566574fa73ef7a1d616b81b95c3b',	'0',	NULL,	'github'),
+(1204,	'litzy@goggins.com',	'0',	'0',	'a41739c0e5c4ec91e97aeb17cd42db53d68badca',	'0',	NULL,	'github'),
+(1401,	'signalcaller',	'0',	'0',	'cd8e87a64a92b2e67aaf2d5a2d22bb0db20dd429',	'0',	NULL,	'github'),
+(1500,	'eagles',	'0',	'0',	'20675ee57c154a46a312faea3460a3618f88b6a0',	'0',	NULL,	'github'),
+(1102,	'winner g',	'0',	'0',	'0bec352c892a34cb957d6da6fe223c879c7b0e01',	'0',	NULL,	'github'),
+(1103,	'mikec',	'0',	'0',	'82e02d2d471c71f1a850a056bfa87d1a6a9dc5c5',	'0',	NULL,	'github'),
+(1001,	'eviecslcl',	'0',	'0',	'524a10f4bfc7d12d8011a21e27badcfd7763e14c',	'0',	NULL,	'github'),
+(1000,	'janecscl',	'0',	'0',	'b8859373667484311a48480de733a078aec15c4c',	'0',	NULL,	'github'),
+(1002,	'katecscl',	'0',	'0',	'f3c2f5ade3f2e20a974968846be0b83a7f3ef63f',	'0',	NULL,	'github'),
+(1003,	'timcscl',	'0',	'0',	'97c38a9301979630b0b1380544a2663584f57cd0',	'0',	NULL,	'github'),
+(1010,	'New Matt G.',	'0',	'0',	'd1e801ef2c94db57fd274bca76d9df202b3f69a3',	'0',	NULL,	'github');

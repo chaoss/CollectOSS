@@ -106,6 +106,7 @@ class DummyPersistance(Persistant):
         self.logger = logging.getLogger()
 
 
+
 # Dummy for the rest of the worker's methods and functionality including the facade g
 class DummyFullWorker(ContributorInterfaceable):
     def __init__(self, database_connection, config={}):
@@ -187,6 +188,8 @@ class DummyFullWorker(ContributorInterfaceable):
             except Exception as e:
                 self.logger.error(
                     "Error setting attribute for table: {} : {}".format(table, e))
+
+        insert_sql_file(self.db, "tests/test_workers/oauth.sql")
 
         self.logger.info("Trying to find max id of table...")
         try:
