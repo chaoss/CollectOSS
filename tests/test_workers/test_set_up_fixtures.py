@@ -3,18 +3,105 @@ import docker
 import subprocess
 import json
 import os
-from workers.worker_persistance import *
+from workers.worker_git_integration import *
+from workers.facade_worker.contributor_interfaceable.contributor_interface import *
 
-#User is 
+#TODO: test user input over
 #NaN
 #None
-#""S
+#""
 
 #Define a dummy worker class that gets the methods we need without running super().__init__
-class Dummy(Persistant):
+class DummyPersistance(Persistant):
     def __init__(self,database_connection):
         self.db = database_connection
         self.logger = logging.getLogger()
+
+#Dummy for the rest of the worker's methods and functionality including the facade g
+class DummyBase(ContributorInterfaceable):
+    def __init__(self, database_connection, config={}):
+        
+        #Get a way to connect to the docker database.
+        self.db = database_connection
+        self.logger = logging.getLogger()
+        
+        worker_type = "contributor_interface"
+
+        self.data_tables = ['contributors', 'pull_requests', 'commits',
+                            'pull_request_assignees', 'pull_request_events', 'pull_request_labels',
+                            'pull_request_message_ref', 'pull_request_meta', 'pull_request_repo',
+                            'pull_request_reviewers', 'pull_request_teams', 'message', 'pull_request_commits',
+                            'pull_request_files', 'pull_request_reviews', 'pull_request_review_message_ref',
+                            'contributors_aliases', 'unresolved_commit_emails']
+        self.operations_tables = ['worker_history', 'worker_job']
+
+        self.platform = "github"
+        # first set up logging.
+        self._root_augur_dir = Persistant.ROOT_AUGUR_DIR
+        self.augur_config = AugurConfig(self._root_augur_dir)
+        
+        # Get default logging settings
+        self.config = config
+        
+        self.config.update({
+            'gh_api_key': self.augur_config.get_value('Database', 'key'),
+            'gitlab_api_key': self.augur_config.get_value('Database', 'gitlab_api_key')
+            # 'port': self.augur_config.get_value('Workers', 'contributor_interface')
+        })
+        
+        #Use a special method overwrite to initialize the values for docker connection.
+        self.initialize_database_connections()
+        
+        self.tool_source = '\'Dummy GithubInterfaceable Worker\''
+        self.tool_version = '\'1.0.1\''
+        self.data_source = '\'Worker test Data\''
+    
+    #This mirros the functionality of the definition found in worker_persistance to make
+    #github related function calls much much easier to test.
+    def initialize_database_connections(self):
+        DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(
+            "augur", "augur", "172.17.0.1", 5400, "test"
+        )
+        
+        self.db_schema = 'augur_data'
+        self.helper_schema = 'augur_operations'
+        
+        self.helper_db = s.create_engine(DB_STR, poolclass=s.pool.NullPool,
+            connect_args={'options': '-csearch_path={}'.format(self.helper_schema)})
+        
+        metadata = s.MetaData()
+        helper_metadata = s.MetaData()
+        
+        # Reflect only the tables we will use for each schema's metadata object
+        metadata.reflect(self.db, only=self.data_tables)
+        helper_metadata.reflect(self.helper_db, only=self.operations_tables)
+        
+        Base = automap_base(metadata=metadata)
+        HelperBase = automap_base(metadata=helper_metadata)
+
+        Base.prepare()
+        HelperBase.prepare()
+         # So we can access all our tables when inserting, updating, etc
+        for table in self.data_tables:
+            setattr(self, '{}_table'.format(table), Base.classes[table].__table__)
+
+        try:
+            self.logger.info(HelperBase.classes.keys())
+        except:
+            pass
+
+        for table in self.operations_tables:
+            try:
+                setattr(self, '{}_table'.format(table), HelperBase.classes[table].__table__)
+            except Exception as e:
+                self.logger.error("Error setting attribute for table: {} : {}".format(table, e))
+        
+        self.logger.info("Trying to find max id of table...")
+        try:
+            self.history_id = self.get_max_id('worker_history', 'history_id', operations_table=True) + 1
+        except Exception as e:
+            self.logger.info(f"Could not find max id. ERROR: {e}")
+
 
 
 #utility functions

@@ -96,7 +96,7 @@ def test_enrich_data_primary_keys_standard_input(database_connection, sample_sou
     database_connection.execute(tableDict['contributors_table'].insert().values(cntrb))
     
     #create class for enrichment
-    dummyPersistant = Dummy(database_connection)
+    dummyPersistant = DummyPersistance(database_connection)
     
     gh_merge_fields = ['avatar_url']
     augur_merge_fields = ['gh_avatar_url']
@@ -121,7 +121,7 @@ def test_enrich_data_primary_keys_bad_data(database_connection):
     augur_merge_fields = ['gh_avatar_url']
     
     #create class for enrichment
-    dummyPersistant = Dummy(database_connection)
+    dummyPersistant = DummyPersistance(database_connection)
     
     #Make sure that function rejects null data
     assert dummyPersistant.enrich_data_primary_keys({}, "contributors_table", gh_merge_fields, augur_merge_fields) == {}
@@ -185,7 +185,7 @@ def test_enrich_data_primary_keys_redundant_enrich(database_connection,sample_so
     database_connection.execute(tableDict['contributors_table'].insert().values(cntrb))
     
     #create class for enrichment
-    dummyPersistant = Dummy(database_connection)
+    dummyPersistant = DummyPersistance(database_connection)
     
     gh_merge_fields = ['avatar_url']
     augur_merge_fields = ['gh_avatar_url']
@@ -263,7 +263,7 @@ def test_enrich_data_primary_keys_standard_input(database_connection, sample_sou
     database_connection.execute(tableDict['contributors_table'].insert().values(cntrb))
     
     #create class for enrichment
-    dummyPersistant = Dummy(database_connection)
+    dummyPersistant = DummyPersistance(database_connection)
     
     gh_merge_fields = ['avatar_url']
     augur_merge_fields = ['gh_avatar_url']

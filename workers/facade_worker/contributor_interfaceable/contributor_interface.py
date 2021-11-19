@@ -185,13 +185,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         self.tool_version = '\'0.2.0\''
         self.data_source = '\'Git Log\''
 
-    # Try to construct the best url to ping GitHub's API for a username given an email.
-    """
-    I changed this because of the following note on the API site: With the in qualifier you can restrict your search to the username (login), full name, public email, or any combination of these. When you omit this qualifier, only the username and email address are searched. For privacy reasons, you cannot search by email domain name.
-
-    https://docs.github.com/en/github/searching-for-information-on-github/searching-on-github/searching-users#search-only-users-or-organizations
-
-    """
+    
 
     def create_endpoint_from_commit_sha(self,commit_sha, repo_id):
         self.logger.info(f"Trying to create endpoint from commit hash: {commit_sha}")
@@ -225,7 +219,13 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         
         
+    # Try to construct the best url to ping GitHub's API for a username given an email.
+    """
+    I changed this because of the following note on the API site: With the in qualifier you can restrict your search to the username (login), full name, public email, or any combination of these. When you omit this qualifier, only the username and email address are searched. For privacy reasons, you cannot search by email domain name.
 
+    https://docs.github.com/en/github/searching-for-information-on-github/searching-on-github/searching-users#search-only-users-or-organizations
+
+    """
 
     def create_endpoint_from_email(self, email):
         self.logger.info(f"Trying to resolve contributor from email: {email}")
