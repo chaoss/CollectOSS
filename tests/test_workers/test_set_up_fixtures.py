@@ -5,6 +5,11 @@ import json
 import os
 from workers.worker_persistance import *
 
+#User is 
+#NaN
+#None
+#""S
+
 #Define a dummy worker class that gets the methods we need without running super().__init__
 class Dummy(Persistant):
     def __init__(self,database_connection):
@@ -21,6 +26,35 @@ def poll_database_connection(database_string):
     
     return db
     
+def insert_sql_file(database_connection, fileString):
+    fd = open(fileString, 'r')
+    
+    sqlFile = fd.read()
+    fd.close()
+    
+    #Get list of commmands
+    sqlCommands = sqlFile.split(';')
+    
+    #Iterate and execute
+    for command in sqlCommands:
+        toExecute = s.sql.text(command)
+        try:
+            database_connection.read_sql(toExecute, database_connection, params={})
+        except Exception as e:
+            print(f"Error when inserting data: {e}")
+
+def insert_json_file(database_connection, fileString, table):
+    jsonFile = open(fileString)
+    
+    source_data = json.load(jsonFile)
+    
+    jsonFile.close()
+    
+    #Actually insert the data to the table object passed in.
+    database_connection.execute(table.insert().values(source_data))
+    
+
+
 
 #database connection 
 @pytest.fixture
