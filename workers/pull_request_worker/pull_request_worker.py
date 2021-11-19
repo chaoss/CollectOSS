@@ -414,7 +414,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 return
 
 
-            self.logger.debug(f"inc_source_prs is: {inc_source_prs} and the action map is {action_map}...")
+            self.logger.debug(f"inc_source_prs is: {len(inc_source_prs['insert'])} and the action map is {action_map}...")
 
             #This is sending empty data to enrich_cntrb_id, fix with check
             if len(inc_source_prs['insert']) > 0:
@@ -454,20 +454,28 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 ) else None,
                 'pr_created_at': pr['created_at'],
                 'pr_updated_at': pr['updated_at'],
-                'pr_closed_at': pr['closed_at'],
-                'pr_merged_at': pr['merged_at'],
+                'pr_closed_at': None if not (
+                    pr['closed_at']
+                ) else pr['closed_at'],
+                'pr_merged_at': None if not (
+                    pr['merged_at']
+                ) else pr['merged_at'],
                 'pr_merge_commit_sha': pr['merge_commit_sha'],
                 'pr_teams': None,
                 'pr_milestone': None if not (
-                    pr['milestone'] and 'title' in pr['milestone']
+                    pr['milestone'] 
                 ) else pr['milestone']['title'],
                 'pr_commits_url': pr['commits_url'],
                 'pr_review_comments_url': pr['review_comments_url'],
                 'pr_review_comment_url': pr['review_comment_url'],
                 'pr_comments_url': pr['comments_url'],
                 'pr_statuses_url': pr['statuses_url'],
-                'pr_meta_head_id': None,
-                'pr_meta_base_id': None,
+                'pr_meta_head_id': None if not (
+                    pr['head']
+                ) else pr['head']['label'],
+                'pr_meta_base_id': None if not (
+                    pr['base']
+                ) else pr['base']['label'],
                 'pr_src_issue_url': pr['issue_url'],
                 'pr_src_comments_url': pr['comments_url'],
                 'pr_src_review_comments_url': pr['review_comments_url'],
@@ -479,6 +487,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'data_source': 'GitHub API'
             } for pr in inc_source_prs['insert']
             ]
+
+            # Removed due to error 11/18/2021 : and 'title' in pr['milestone']
 
             #The b_pr_src_id bug comes from here
             '''
