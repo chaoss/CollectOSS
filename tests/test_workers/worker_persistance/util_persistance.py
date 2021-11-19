@@ -39,7 +39,7 @@ def sample_source_data_bad_api_return():
 #Sample data for comments api return
 @pytest.fixture
 def sample_source_data_standard_github_comments():
-    jsonFile = open("tests/test_workers_worker_persistance/standard_enrich_cntrb_id_data.json")
+    jsonFile = open("tests/test_workers/worker_persistance/standard_enrich_cntrb_id_data.json")
     
     source_data = json.load(jsonFile)
     
