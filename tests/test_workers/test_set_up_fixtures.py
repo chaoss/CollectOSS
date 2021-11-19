@@ -197,3 +197,13 @@ class DummyFullWorker(ContributorInterfaceable):
                 'worker_history', 'history_id', operations_table=True) + 1
         except Exception as e:
             self.logger.info(f"Could not find max id. ERROR: {e}")
+        
+        # Organize different api keys/oauths available
+        self.logger.info("Initializing API key.")
+        if 'gh_api_key' in self.config or 'gitlab_api_key' in self.config:
+            try:
+                self.init_oauths(self.platform)
+            except AttributeError:
+                self.logger.error("Worker not configured to use API key!")
+        else:
+            self.oauths = [{'oauth_id': 0}]
