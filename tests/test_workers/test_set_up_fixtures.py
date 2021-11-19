@@ -105,10 +105,9 @@ class DummyPersistance(Persistant):
         self.db = database_connection
         self.logger = logging.getLogger()
 
+
 # Dummy for the rest of the worker's methods and functionality including the facade g
-
-
-class DummyBase(ContributorInterfaceable):
+class DummyFullWorker(ContributorInterfaceable):
     def __init__(self, database_connection, config={}):
 
         # Get a way to connect to the docker database.
