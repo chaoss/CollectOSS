@@ -2382,6 +2382,7 @@ CREATE TABLE "augur_data"."pull_request_message_ref" (
   "msg_id" int8,
   "pr_message_ref_src_comment_id" int8,
   "pr_message_ref_src_node_id" varchar COLLATE "pg_catalog"."default",
+  "pr_issue_url" varchar COLLATE "pg_catalog"."default",
   "tool_source" varchar COLLATE "pg_catalog"."default",
   "tool_version" varchar COLLATE "pg_catalog"."default",
   "data_source" varchar COLLATE "pg_catalog"."default",
