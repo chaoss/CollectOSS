@@ -1083,3 +1083,5 @@ INSERT INTO "augur_data"."repo" ("repo_id", "repo_group_id", "repo_git", "repo_p
 UPDATE "augur_data"."repo" set repo_name = NULL, repo_path = NULL, repo_status = 'New'; 
 
 
+INSERT INTO "augur_operations"."worker_history" ("history_id", "repo_id", "worker", "job_model", "oauth_id", "timestamp", "status", "total_results") VALUES (1, 1, 'workers.repo_info_worker.50723', 'repo_info', 0, '2021-10-17 12:05:22', 'Success', 1);
+
