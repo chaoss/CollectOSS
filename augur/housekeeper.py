@@ -177,23 +177,6 @@ class Housekeeper:
                     ) if 'repo_group_id' in job and job['repo_group_id'] != 0 else '{} repo.repo_id IN ({})'.format(
                     where_and, ",".join(str(id) for id in job['repo_ids'])) if 'repo_ids' in job else ''
                 repo_url_sql = s.sql.text("""
-                        -- SELECT repo.repo_id, repo.repo_git, pull_request_count, collected_pr_count, 
-                        -- (repo_info.pull_request_count - pr_count.collected_pr_count) AS pull_requests_missing
-                        -- FROM augur_data.repo LEFT OUTER JOIN (
-                        --     SELECT count(*) AS collected_pr_count, repo_id 
-                        --     FROM pull_requests GROUP BY repo_id ) pr_count 
-                        -- ON pr_count.repo_id = repo.repo_id LEFT OUTER JOIN ( 
-                        --     SELECT repo_id, MAX ( data_collection_date ) AS last_collected 
-                        --     FROM augur_data.repo_info 
-                        --     GROUP BY repo_id) recent_info 
-                        -- ON recent_info.repo_id = pr_count.repo_id LEFT OUTER JOIN repo_info 
-                        -- ON recent_info.repo_id = repo_info.repo_id
-                        --     AND repo_info.data_collection_date = recent_info.last_collected
-                        --     AND repo_info.pull_request_count >= 1
-
-                        -- {}
-                        -- GROUP BY repo.repo_id, repo_info.pull_request_count, pr_count.collected_pr_count
-                        -- ORDER BY pull_requests_missing DESC NULLS FIRST
                         SELECT
                             zz.repo_id, zz.repo_git, pull_request_count, collected_pr_count, pull_requests_missing  
                         FROM
@@ -209,6 +192,7 @@ class Housekeeper:
                             WHERE
                                 pull_request_count >= 1
                                 AND repo.repo_id = repo_info.repo_id 
+                                
                                 {}
                             GROUP BY
                                 repo_info.repo_id,
