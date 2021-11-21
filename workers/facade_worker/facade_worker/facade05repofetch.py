@@ -307,7 +307,7 @@ def git_repo_updates(cfg):
                 firstpull = ("git -C %s%s/%s%s pull"
                     % (cfg.repo_base_directory,row[1],row[4],row[3]))
 
-                return_code_remote = subprocess.Popen([firstpull],stdout=subprocess.PIPE,shell=True).wait()
+                return_code_remote = subprocess.Popen([firstpull],shell=True).wait()
 
                 cfg.log_activity('Verbose', 'Got to here. 1.')
 
@@ -336,7 +336,7 @@ def git_repo_updates(cfg):
 
                     cfg.log_activity('Verbose', f'get remote default command is: \n \n {getremotedefault} \n \n ')
 
-                    return_code_remote_default_again = subprocess.Popen([getremotedefault],stdout=subprocess.PIPE,shell=True).wait()
+                    return_code_remote_default_again = subprocess.Popen([getremotedefault],shell=True).wait()
 
                     if return_code_remote_default_again == 0: 
                         cfg.log_activity('Verbose', "local checkout worked.")
@@ -409,7 +409,7 @@ def git_repo_updates(cfg):
                     cmd_checkout_default =  (f"git -C %s%s/%s%s checkout {remote_default}" 
                     % (cfg.repo_base_directory,row[1],row[4],row[3]))
 
-                    cmd_checkout_default_wait = subprocess.Popen([cmd_checkout_default],stdout=subprocess.PIPE,shell=True).wait()
+                    cmd_checkout_default_wait = subprocess.Popen([cmd_checkout_default],shell=True).wait()
 
                     cmdpull2 = ("git -C %s%s/%s%s pull"
                         % (cfg.repo_base_directory,row[1],row[4],row[3]))
@@ -417,7 +417,7 @@ def git_repo_updates(cfg):
                     cmd_reset = ("git -C %s%s/%s%s reset --hard origin"
                         % (cfg.repo_base_directory,row[1],row[4],row[3]))
 
-                    cmd_reset_wait = subprocess.Popen([cmd_reset],stdout=subprocess.PIPE,shell=True).wait()
+                    cmd_reset_wait = subprocess.Popen([cmd_reset],shell=True).wait()
 
                     cmd_clean = ("git -C %s%s/%s%s clean -df"
                         % (cfg.repo_base_directory,row[1],row[4],row[3]))
