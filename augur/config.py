@@ -411,8 +411,8 @@ default_config = {
             "cache_expire": "3600",
             "host": "0.0.0.0",
             "port": main_port,
-            "workers": 12,
-            "timeout": 60000
+            "workers": 6,
+            "timeout": 6000
         },
         "Frontend": {
             "host": "0.0.0.0",
