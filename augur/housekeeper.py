@@ -64,7 +64,6 @@ class Housekeeper:
         logger.info("Scheduling update processes")
         for job in self.jobs:
             process = Process(target=self.updater_process, name=job["model"], args=(self.broker_host, self.broker_port, self.broker, job, (self.augur_logging.housekeeper_job_config, self.augur_logging.get_config())))
-            logger.debug(f'starting process {process}')
             self._processes.append(process)
             process.start()
 
@@ -97,7 +96,7 @@ class Housekeeper:
                     for worker in list(broker._getvalue().keys()):
                         if job['model'] in broker[worker]['models'] and job['given'] in broker[worker]['given']:
                             compatible_worker_found = True
-                    time.sleep(3)
+                    time.sleep(120)
                     continue
 
                 logger.info("Housekeeper recognized that the broker has a worker that " + 
@@ -107,7 +106,6 @@ class Housekeeper:
                         job['model'], job['given'][0]))
                     
                     if job['given'][0] == 'git_url' or job['given'][0] == 'github_url':
-                        logger.debug(f'job array is: {job}')
                         for repo in job['repos']:
                             if job['given'][0] == 'github_url' and 'github.com' not in repo['repo_git']:
                                 continue
@@ -129,10 +127,9 @@ class Housekeeper:
 
                             logger.debug(task)
 
-                            time.sleep(15)
+                            time.sleep(120)
 
                     elif job['given'][0] == 'repo_group':
-                        logger.debug(f'job array is: {job}')
                         task = {
                                 "job_type": job['job_type'] if 'job_type' in job else 'MAINTAIN', 
                                 "models": [job['model']], 
@@ -143,13 +140,10 @@ class Housekeeper:
                             }
                         try:
                             requests.post('http://{}:{}/api/unstable/task'.format(
-                                broker_host,broker_port), json=task, timeout=30)
+                                broker_host,broker_port), json=task, timeout=10)
+                            time.sleep(120)
                         except Exception as e:
                             logger.error("Error encountered: {}".format(e))
-
-                        logger.debug(task)
-
-                        time.sleep(15)
 
                     logger.info("Housekeeper finished sending {} tasks to the broker for it to distribute to your worker(s)".format(len(job['repos'])))
                     time.sleep(job['delay'])
@@ -247,7 +241,6 @@ class Housekeeper:
                         {}
                         group by repo.repo_id ORDER BY commit_count {}
                     """.format(where_condition, job['order']))
-                logger.debug(f'repo url sql is: {repo_url_sql}. \n\n \n \n  where condition is {where_condition} \n \n \n \n and the where_and condition is {where_and}\n \n \n ')
                 
                 reorganized_repos = pd.read_sql(repo_url_sql, self.db, params={})
                 if len(reorganized_repos) == 0:
@@ -310,8 +303,6 @@ class Housekeeper:
             
                 if finishing_task:
                     reorganized_repos[0]['focused_task'] = 1
-
-                #logger.debug(f'reorganized repos == {reorganized_repos}.')
                 
                 job['repos'] = reorganized_repos
 
