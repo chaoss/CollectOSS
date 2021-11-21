@@ -238,7 +238,6 @@ class Housekeeper:
                                 ( SELECT repo_id, MAX ( data_collection_date ) AS last_pr_collected FROM augur_data.pull_requests GROUP BY repo_id ORDER BY repo_id ) f 
                             WHERE
                                 A.repo_id = b.repo_id 
-                                AND LOWER ( A.repo_git ) LIKE'%github.com%' 
                                 AND A.repo_id = d.repo_id 
                                 AND b.repo_id = d.repo_id 
                                 AND e.repo_id = A.repo_id 
