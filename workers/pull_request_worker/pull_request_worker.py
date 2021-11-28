@@ -454,10 +454,10 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 ) else None,
                 'pr_created_at': pr['created_at'],
                 'pr_updated_at': pr['updated_at'],
-                'pr_closed_at': None if not (
+                'pr_closed_at': sqlalchemy.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL
                     pr['closed_at']
                 ) else pr['closed_at'],
-                'pr_merged_at': None if not (
+                'pr_merged_at': sqlalchemy.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL
                     pr['merged_at']
                 ) else pr['merged_at'],
                 'pr_merge_commit_sha': pr['merge_commit_sha'],
