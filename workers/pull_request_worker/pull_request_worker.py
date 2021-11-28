@@ -674,8 +674,10 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 inc_pr_comments['insert'] = self.enrich_cntrb_id(
                     inc_pr_comments['insert'], str('user.login'), action_map_additions={
                         'insert': {
-                            'source': ['user.node_id'],
-                            'augur': ['gh_node_id']
+                            #'source': ['user.node_id'],
+                            #'augur': ['gh_node_id']
+                            'source': ['user.gh_login'],
+                            'augur': ['gh_login']
                         }
                     }, prefix='user.'
                 )
@@ -710,7 +712,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                     try:
                         c_pk_source_comments = self.enrich_data_primary_keys(
                             inc_pr_comments['insert'], self.message_table, 
-                            comment_action_map['insert']['source'], 
+                            comment_action_map['insert']['source'],
                             comment_action_map['insert']['augur'], in_memory=True)
 
                         self.write_debug_data(c_pk_source_comments, 'c_pk_source_comments')
