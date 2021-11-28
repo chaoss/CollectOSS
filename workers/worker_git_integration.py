@@ -394,7 +394,7 @@ class WorkerGitInterfaceable(Worker):
                 if type(contributor) == dict:
                   self.logger.info("Request returned a dict!")
                   self.logger.info(f"Contributor data: {contributor}") 
-                  contributor['gh_login'] = str(contributor['gh_login']) ## cast as string by SPG on 11/28/2021 due to `nan` user
+                  #contributor['gh_login'] = str(contributor['gh_login']) ## cast as string by SPG on 11/28/2021 due to `nan` user
                   success = True
                   break
                 elif type(contributor) == list:
