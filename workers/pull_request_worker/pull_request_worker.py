@@ -454,7 +454,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 ) else None,
                 'pr_created_at': pr['created_at'],
                 'pr_updated_at': pr['updated_at'],
-                'pr_closed_at': sqlalchemy.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL
+                'pr_closed_at': sqlalchemy.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
                     pr['closed_at']
                 ) else pr['closed_at'],
                 'pr_merged_at': sqlalchemy.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL
@@ -783,7 +783,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             self.logger.debug(f"{stacker}")
             pass 
         finally: 
-            self.logger.debug(f"Pull request messages and message refs exception registered for {self.repo_id}")
+            self.logger.debug(f"Pull request messages and message refs worked without exception for {self.repo_id}")
 
     def pull_request_events_model(self, pk_source_prs=[]):
 

@@ -486,10 +486,10 @@ class WorkerGitInterfaceable(Worker):
 
 
               cntrb_data = {
-              'cntrb_id': data['cntrb_id'],
+              'cntrb_id': int(data['cntrb_id']), # came through as a float. Fixed 11/28/2021, SPG
               'gh_node_id': cntrb['gh_node_id'],
-              'cntrb_login': cntrb['cntrb_login'],
-              'gh_user_id': cntrb['gh_user_id']
+              'cntrb_login': str(cntrb['cntrb_login']), # NaN user issue. Fixed 11/28/2021, SPG
+              'gh_user_id': int(cntrb['gh_user_id']) # came through as a float. Fixed 11/28/2021, SPG
               }
               #This updates our list of who is already in the database as we iterate to avoid duplicates.
               #People who make changes tend to make more than one in a row.
@@ -1341,10 +1341,14 @@ class WorkerGitInterfaceable(Worker):
                                     f"Unhandled response code: {response.status_code} {url}\n"
                                 )
 
+                        ## Added additional exception logging and a pass in this block.
                         except Exception as e:
                             self.logger.debug(
-                                f"{url} generated an exception: {traceback.format_exc()}\n"
+                                f"{url} generated an exception: {traceback.format_exc(), count is {count}, attemts are {attempts}}.\n\n\n\n"
                             )
+                            stacker = traceback.format_exc()
+                            self.logger.debug(f"\n\n{stacker}\n\n")
+                            pass
 
                 attempts += 1
 
