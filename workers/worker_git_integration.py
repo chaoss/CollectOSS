@@ -300,7 +300,7 @@ class WorkerGitInterfaceable(Worker):
                 data[f'{prefix}id']
                 for row in table_values_cntrb:
                   try:
-                    user_unique_ids.append(row['gh_user_id'])
+                    user_unique_ids.append(str(row['gh_user_id']))  ## cast as string by SPG on 11/28/2021 due to `nan` user
                   except Exception as e:
                     self.logger.info(f"Error adding gh_user_id: {e}. Row: {row}")
                     stacker = traceback.format_exc()
@@ -393,7 +393,8 @@ class WorkerGitInterfaceable(Worker):
 
                 if type(contributor) == dict:
                   self.logger.info("Request returned a dict!")
-                  self.logger.info(f"Contributor data: {contributor}")
+                  self.logger.info(f"Contributor data: {contributor}") 
+                  contributor['gh_login'] = str(contributor['gh_login']) ## cast as string by SPG on 11/28/2021 due to `nan` user
                   success = True
                   break
                 elif type(contributor) == list:
@@ -408,6 +409,7 @@ class WorkerGitInterfaceable(Worker):
                   else:
                     try:
                       contributor = json.loads(contributor)
+                      contributor['gh_login'] = str(contributor['gh_login']) ## cast as string by SPG on 11/28/2021 due to `nan` user                     
                       success = True
                       break
                     except:
@@ -430,7 +432,7 @@ class WorkerGitInterfaceable(Worker):
               # "cntrb_type": , dont have a use for this as of now ... let it default to null
               "cntrb_canonical": contributor['email'] if 'email' in contributor else None,
               "gh_user_id": contributor['id'],
-              "gh_login": contributor['login'],
+              "gh_login": str(contributor['login']),  ## cast as string by SPG on 11/28/2021 due to `nan` user
               "gh_url": contributor['url'],
               "gh_html_url": contributor['html_url'],
               "gh_node_id": contributor['node_id'],

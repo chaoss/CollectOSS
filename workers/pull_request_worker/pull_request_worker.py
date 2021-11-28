@@ -1327,7 +1327,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                                 'pr_src_meta_label': meta['label'],
                                 'pr_src_meta_ref': meta['ref'],
                                 'pr_sha': meta['sha'],
-                                'cntrb_id': meta['cntrb_id'],
+                                'cntrb_id': int(meta['cntrb_id']),  ## Cast as int for the `nan` user by SPG on 11/28/2021
                                 'tool_source': self.tool_source,
                                 'tool_version': self.tool_version,
                                 'data_source': self.data_source,
