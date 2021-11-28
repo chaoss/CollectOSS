@@ -1063,7 +1063,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
 
         both_pk_source_comments = self.enrich_data_primary_keys(
-            c_pk_source_comments, self.pull_request_reviews_table, ['pull_request_review_id'],
+            c_pk_source_comments, self.pull_request_reviews_table, ['pr_review_src_id'],
             ['pr_review_src_id']
         )
         self.write_debug_data(both_pk_source_comments, 'both_pk_source_comments')
