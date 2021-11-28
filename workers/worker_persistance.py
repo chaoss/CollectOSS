@@ -320,6 +320,7 @@ class Persistant():
                             df.fillna(method='bfill').iloc[0][column], column_name=column
                         )
                     )
+                self.logger.debug(f'columns in merge data are: {columns}')
                 )
 
             data_tables.append(data_table)
