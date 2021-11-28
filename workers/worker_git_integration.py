@@ -1344,7 +1344,7 @@ class WorkerGitInterfaceable(Worker):
                         ## Added additional exception logging and a pass in this block.
                         except Exception as e:
                             self.logger.debug(
-                                f"{url} generated an exception: {traceback.format_exc(), count is {count}, attemts are {attempts}}.\n\n\n\n"
+                                f"{url} generated an exception: count is {count}, attemts are {attempts}."
                             )
                             stacker = traceback.format_exc()
                             self.logger.debug(f"\n\n{stacker}\n\n")
