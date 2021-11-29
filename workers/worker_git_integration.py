@@ -394,7 +394,7 @@ class WorkerGitInterfaceable(Worker):
                 if type(contributor) == dict:
                   self.logger.info("Request returned a dict!")
                   self.logger.info(f"Contributor data: {contributor}") 
-                  #contributor['gh_login'] = str(contributor['gh_login']) ## cast as string by SPG on 11/28/2021 due to `nan` user
+                  # contributor['gh_login'] = str(contributor['gh_login']) ## cast as string by SPG on 11/28/2021 due to `nan` user
                   success = True
                   break
                 elif type(contributor) == list:
@@ -464,9 +464,10 @@ class WorkerGitInterfaceable(Worker):
               except s.exc.IntegrityError:
                 self.logger.info(f"there was a collision caught ....")
                 self.logger.info(traceback.format_exc())
+                pass # added by sean 11/29/2021 ... think it might be blocking comment insertion otherwise
               except Exception as e:
                 self.logger.info(f"Contributor was unable to be added to table! Attempting to get cntrb_id from table anyway because of possible collision. Error: {e}")
-
+                pass # added by sean 11/29/2021 ... think it might be blocking comment insertion otherwise
 
               #Get the contributor id from the newly inserted contributor.
               cntrb_id_row = self.db.execute(
