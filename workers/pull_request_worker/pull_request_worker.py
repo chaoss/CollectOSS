@@ -1350,7 +1350,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                                 'tool_version': self.tool_version,
                                 'data_source': self.data_source,
                                 'repo_id': self.repo_id 
-                            } for meta in source_meta_insert if meta['user'] and 'login' in meta['user']
+                            } for meta in source_meta_insert if 'login' in meta['user'] # trying to fix bug SPG 11/29/2021 #meta['user'] and 'login' in meta['user']
                         ]
                         self.bulk_insert(self.pull_request_meta_table, insert=meta_insert)
 
