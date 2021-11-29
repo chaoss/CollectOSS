@@ -518,7 +518,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 self.bulk_insert(
                     self.pull_requests_table,
                     update=inc_source_prs['update'], unique_columns=action_map['insert']['augur'],
-                    insert=prs_insert, update_columns=action_map['update']['augur']
+                    insert=prs_insert, update_columns=action_map['update']['augur']+'pr_closed_at'+'pr_updated_at'+'pr_merged_at'
                 )
 
                 source_data = inc_source_prs['insert'] + inc_source_prs['update']
@@ -1392,7 +1392,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'pr_repo_name': new_pr_repo['name'],
                 'pr_repo_full_name': new_pr_repo['full_name'],
                 'pr_repo_private_bool': new_pr_repo['private'],
-                'pr_cntrb_id': cntrb_id,
+                'pr_cntrb_id': int(cntrb_id),
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
                 'data_source': self.data_source
