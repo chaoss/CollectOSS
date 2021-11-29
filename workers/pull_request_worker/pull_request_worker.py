@@ -923,7 +923,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'pr_review_submitted_at': review['submitted_at'] if (
                     'submitted_at' in review
                 ) else None,
-                'pr_review_src_id': review['id'],
+                'pr_review_src_id': review['id'], # Here, `pr_review_src_id` is mapped to `id` SPG 11/29/2021. This is fine. Its the review id.
                 'pr_review_node_id': review['node_id'],
                 'pr_review_html_url': review['html_url'],
                 'pr_review_pull_request_url': review['pull_request_url'],
@@ -997,8 +997,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             }
         }
 
-        in_clause = [] if len(both_pr_review_pk_source_reviews) == 0 else \
-            set(pd.DataFrame(both_pr_review_pk_source_reviews)['pr_review_id'])
+        in_clause = [] if len(both_pr_review_pk_source_reviews) == 0 else set(pd.DataFrame(both_pr_review_pk_source_reviews)['pr_review_id'])
 
         review_msgs = self.paginate_endpoint(
             review_msg_url, action_map=review_msg_action_map, table=self.message_table,
@@ -1040,7 +1039,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'tool_version': self.tool_version + "_reviews",
                 'data_source': 'pull_request_reviews model',
                 'repo_id': self.repo_id,
-                'platform_msg_id': int(comment['id']),
+                'platform_msg_id': int(float(comment['id'])),
                 'platform_node_id': comment['node_id']
             } for comment in review_msgs['insert']
             if comment['user'] and 'login' in comment['user']
@@ -1063,35 +1062,51 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
 
         both_pk_source_comments = self.enrich_data_primary_keys(
-            c_pk_source_comments, self.pull_request_reviews_table, ['pr_review_src_id'],
+            c_pk_source_comments, self.pull_request_reviews_table, ['pull_request_review_id'],
             ['pr_review_src_id']
         )
         self.write_debug_data(both_pk_source_comments, 'both_pk_source_comments')
 
         pr_review_msg_ref_insert = [
             {
-                'pr_review_id': comment['pr_review_id'],
+                'pr_review_id': comment int(float(['pr_review_id'])),
                 'msg_id': comment['msg_id'],
                 'pr_review_msg_url': comment['url'],
-                'pr_review_src_id': comment['pull_request_review_id'],
-                'pr_review_msg_src_id': int(comment['id']),
+                'pr_review_src_id': int(float(comment['pull_request_review_id'])),
+                'pr_review_msg_src_id': int(float(comment['id'])),
                 'pr_review_msg_node_id': comment['node_id'],
                 'pr_review_msg_diff_hunk': comment['diff_hunk'],
                 'pr_review_msg_path': comment['path'],
-                'pr_review_msg_position': comment['position'],
-                'pr_review_msg_original_position': comment['original_position'],
-                'pr_review_msg_commit_id': comment['commit_id'],
-                'pr_review_msg_original_commit_id': comment['original_commit_id'],
+                'pr_review_msg_position': sqlalchemy.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
+                    str(comment['position'])
+                ) else str(comment['position']),
+                'pr_review_msg_original_position': sqlalchemy.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
+                    str(comment['original_position'])
+                ) else str(comment['original_position']),
+                'pr_review_msg_commit_id': str(comment['commit_id']),
+                'pr_review_msg_original_commit_id': str(comment['original_commit_id']),
                 'pr_review_msg_updated_at': comment['updated_at'],
                 'pr_review_msg_html_url': comment['html_url'],
                 'pr_url': comment['pull_request_url'],
                 'pr_review_msg_author_association': comment['author_association'],
-                'pr_review_msg_start_line': comment['start_line'],
-                'pr_review_msg_original_start_line': comment['original_start_line'],
-                'pr_review_msg_start_side': comment['start_side'],
-                'pr_review_msg_line': comment['line'],
-                'pr_review_msg_original_line': comment['original_line'],
-                'pr_review_msg_side': comment['side'],
+                'pr_review_msg_start_line': sqlalchemy.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
+                    str(comment['start_line'])
+                ) else str(comment['start_line']),
+                'pr_review_msg_original_start_line': sqlalchemy.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
+                    str(comment['original_start_line'])
+                ) else str(comment['original_start_line']),
+                'pr_review_msg_start_side': sqlalchemy.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
+                    str(comment['start_side'])
+                ) else str(comment['start_side']),
+                'pr_review_msg_line': sqlalchemy.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
+                    str(comment['line'])
+                ) else str(comment['line']),
+                'pr_review_msg_original_line': sqlalchemy.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
+                    str(comment['original_line'])
+                ) else str(comment['original_line']),
+                'pr_review_msg_side': sqlalchemy.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
+                    str(comment['side'])
+                ) else str(comment['side']),
                 'tool_source': 'pull_request_reviews model',
                 'tool_version': self.tool_version + "_reviews",
                 'data_source': self.data_source,
