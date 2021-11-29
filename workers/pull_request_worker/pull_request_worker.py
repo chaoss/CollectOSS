@@ -389,15 +389,16 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         )
 
         #Database action map is essential in order to avoid duplicates messing up the data
-        ## 9/20/2021: SPG added closed_at, updated_at, and merged_at to the update map. 
+        ## 9/20/2021: SPG added closed_at, updated_at, and merged_at to the update map.
+        ## 11/29/2021: And this is the cause of PR updates not working because it doesn't handle NULLs ... I think. 
         pr_action_map = {
             'insert': {
                 'source': ['id'],
                 'augur': ['pr_src_id']
             },
             'update': {
-                'source': ['state', 'closed_at', 'updated_at', 'merged_at'],
-                'augur': ['pr_src_state', 'pr_closed_at', 'pr_updated_at', 'pr_merged_at']
+                'source': ['state'],
+                'augur': ['pr_src_state']
             }
         }
 
