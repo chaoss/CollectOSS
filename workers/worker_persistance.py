@@ -957,7 +957,7 @@ class Persistant():
 
 
     def enrich_data_primary_keys(
-        self, source_data, table, gh_merge_fields, augur_merge_fields, in_memory=False
+        self, source_data, table, gh_merge_fields, augur_merge_fields, in_memory=True
     ):
 
         ''' the gh_merge_fields are almost always direct from the source in the action map.
