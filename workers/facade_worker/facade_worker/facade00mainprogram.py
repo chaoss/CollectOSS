@@ -307,6 +307,7 @@ class FacadeWorker(Worker):
         if not limited_run or (limited_run and run_analysis):
             analysis(self.cfg, multithreaded, interface=self.github_interface)
 
+        ### moved up by spg on 12/1/2021
         #Interface with the contributor worker and inserts relevant data by repo
         self.cfg.update_status('Updating Contributors')
         self.cfg.log_activity('Info', 'Updating Contributors with commits')
@@ -322,6 +323,8 @@ class FacadeWorker(Worker):
           self.logger.info(f"Processing repo {repo}")
           self.github_interface.insert_facade_contributors(repo[0])
           self.logger.info(f"Processing repo contributors for repo: {repo}")
+
+        ### end moved up
 
         if nuke_stored_affiliations:
             nuke_affiliations(self.cfg)
