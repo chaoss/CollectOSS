@@ -778,6 +778,10 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         #Prepare for pagination and insertion into the contributor's table with an action map
         # TODO: this might be github specific
+
+        ## SPG 12/1/2021: I think we need to update as well. I am not sure this is happening. If the contributor is 
+        ## already in the database without github stuff, are we updating the additional info in the contributor 
+        ## record? 
         committer_action_map = {
             'insert': {
                 'source': ['login'],
