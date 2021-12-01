@@ -541,7 +541,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             augur_merge_fields = ['pr_src_id']
 
             self.pk_source_prs += self.enrich_data_primary_keys(source_data, self.pull_requests_table,
-                gh_merge_fields, augur_merge_fields)
+                gh_merge_fields, augur_merge_fields, in_memory=True)
             return
 
 
@@ -819,7 +819,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         #self.write_debug_data(pr_events, 'pr_events')
 
         pk_pr_events = self.enrich_data_primary_keys(pr_events['insert'],
-            self.pull_requests_table, ['issue.url'], ['pr_issue_url'])
+            self.pull_requests_table, ['issue.url'], ['pr_issue_url'], in_memory=True)
 
         self.write_debug_data(pk_pr_events, 'pk_pr_events')
 
@@ -957,7 +957,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         both_pr_review_pk_source_reviews = self.enrich_data_primary_keys(
             pr_pk_source_reviews, self.pull_request_reviews_table, gh_merge_fields,
-            augur_merge_fields
+            augur_merge_fields, in_memory=True
         )
         self.write_debug_data(both_pr_review_pk_source_reviews, 'both_pr_review_pk_source_reviews')
 
@@ -1055,7 +1055,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         c_pk_source_comments = self.enrich_data_primary_keys(
             review_msgs['insert'], self.message_table, review_msg_action_map['insert']['source'],
-            review_msg_action_map['insert']['augur']
+            review_msg_action_map['insert']['augur'], in_memory=True
         )
 
         self.write_debug_data(c_pk_source_comments, 'c_pk_source_comments')
@@ -1066,7 +1066,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         both_pk_source_comments = self.enrich_data_primary_keys(
             c_pk_source_comments, self.pull_request_reviews_table, ['pull_request_review_id'],
-            ['pr_review_src_id']
+            ['pr_review_src_id'], in_memory=True 
         )
         self.write_debug_data(both_pk_source_comments, 'both_pk_source_comments')
 
