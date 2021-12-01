@@ -645,7 +645,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
     def pull_request_comments_model(self, pk_source_prs):
 
         comments_url = (
-            f"https://api.github.com/repos/{self.owner}/{self.repo}/issues/comments?per_page=100"
+            f"https://api.github.com/repos/{self.owner}/{self.repo}/pulls/comments?per_page=100"
             "&page={}"
         )
 
@@ -725,7 +725,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                         #     ['issue_url'], ['pr_issue_url'], in_memory=True)
                         both_pk_source_comments = self.enrich_data_primary_keys(
                             c_pk_source_comments, self.pull_requests_table,
-                            ['pull_request_id'], ['pull_request_id'], in_memory=True)
+                            ['pull_request_url'], ['issue_url'], in_memory=True)
 
                         self.logger.info(f"log of the length of both_pk_source_comments {len(both_pk_source_comments)}.")
 
