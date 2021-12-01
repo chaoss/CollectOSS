@@ -515,8 +515,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             '''
 
             if len(inc_source_prs['insert']) > 0 or len(inc_source_prs['update']) > 0:
-                update_columns=action_map['update']['augur']
-                actual_update_columns=update_columns.append('pr_closed_at').append('pr_updated_at').append('pr_merged_at')
+                #update_columns=action_map['update']['augur']
+                #actual_update_columns=update_columns.append('pr_closed_at').append('pr_updated_at').append('pr_merged_at')
                 self.bulk_insert(
                     self.pull_requests_table,
                     update=inc_source_prs['update'], unique_columns=action_map['insert']['augur'],
