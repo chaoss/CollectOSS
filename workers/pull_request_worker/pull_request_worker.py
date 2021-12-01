@@ -727,6 +727,9 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                             c_pk_source_comments, self.pull_requests_table,
                             ['pull_request_id'], ['pull_request_id'], in_memory=True)
 
+                        self.logger.info(f"log of the length of both_pk_source_comments {len(both_pk_source_comments)}.")
+
+
        # both_pk_source_comments = self.enrich_data_primary_keys(
        #      c_pk_source_comments, self.pull_request_reviews_table, ['pull_request_review_id'],
        #      ['pr_review_src_id'], in_memory=True 
