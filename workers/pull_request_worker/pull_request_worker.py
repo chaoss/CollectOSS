@@ -422,8 +422,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 inc_source_prs['insert'] = self.enrich_cntrb_id(
                     inc_source_prs['insert'], str('user.login'), action_map_additions={
                         'insert': {
-                            'source': ['user.login'],
-                            'augur': ['cntrb_login']
+                            'source': ['user.node_id'],
+                            'augur': ['gh_node_id']
                         }
                     }, prefix='user.'
                 )
@@ -677,8 +677,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 inc_pr_comments['insert'] = self.enrich_cntrb_id(
                     inc_pr_comments['insert'], str('user.login'), action_map_additions={
                         'insert': {
-                            'source': ['user.login'],
-                            'augur': ['cntrb_login']
+                            'source': ['user.node_id'],
+                            'augur': ['gh_node_id']
                         }
                     }, prefix='user.'
                 )
@@ -839,8 +839,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             pk_pr_events = self.enrich_cntrb_id(
                 pk_pr_events, str('actor.login'), action_map_additions={
                     'insert': {
-                        'source': ['actor.login'],
-                        'augur': ['cntrb_login']
+                        'source': ['actor.node_id'],
+                        'augur': ['gh_node_id']
                     }
                 }, prefix='actor.'
             )
@@ -918,8 +918,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             source_reviews_insert = self.enrich_cntrb_id(
                 source_reviews_insert, str('user.login'), action_map_additions={
                     'insert': {
-                        'source': ['user.login'],
-                        'augur': ['cntrb_login']
+                        'source': ['user.node_id'],
+                        'augur': ['gh_node_id']
                     }
                 }, prefix='user.'
             )
@@ -1034,8 +1034,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             review_msgs['insert'] = self.enrich_cntrb_id(
                 review_msgs['insert'], str('user.login'), action_map_additions={
                     'insert': {
-                        'source': ['user.login'],
-                        'augur': ['cntrb_login']
+                        'source': ['user.node_id'],
+                        'augur': ['gh_node_id']
                     }
                 }, prefix='user.'
             )
@@ -1252,8 +1252,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                             source_reviewers_insert = self.enrich_cntrb_id(
                                 source_reviewers_insert, str('login'), action_map_additions={
                                     'insert': {
-                                        'source': ['login'],
-                                        'augur': ['cntrb_login']
+                                        'source': ['node_id'],
+                                        'augur': ['gh_node_id']
                                     }
                                 }
                             )
@@ -1297,8 +1297,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                             source_assignees_insert = self.enrich_cntrb_id(
                                 source_assignees_insert, str('login'), action_map_additions={
                                     'insert': {
-                                        'source': ['login'],
-                                        'augur': ['cntrb_login']
+                                        'source': ['node_id'],
+                                        'augur': ['gh_node_id']
                                     }
                                 }
                             )
@@ -1342,8 +1342,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                             source_meta_insert = self.enrich_cntrb_id(
                                 source_meta_insert, str('user.login'), action_map_additions={
                                     'insert': {
-                                        'source': ['user.login'],
-                                        'augur': ['cntrb_login']
+                                        'source': ['user.node_id'],
+                                        'augur': ['gh_node_id']
                                     }
                                 }, prefix='user.'
                             )

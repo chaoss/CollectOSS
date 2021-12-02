@@ -300,11 +300,16 @@ class WorkerGitInterfaceable(Worker):
                 data[f'{prefix}id']
                 for row in table_values_cntrb:
                   try:
-                    user_unique_ids.append(str(row['gh_user_id']))  ## cast as string by SPG on 11/28/2021 due to `nan` user
+                    if str(row['gh_user_id']) == 'NaN': # 12/2/2021 SPG -- just skipping this user for now
+                        continue 
+                    else: 
+                        user_unique_ids.append(row['gh_user_id']) ## cast as string by SPG on 11/28/2021 due to `nan` user
+                        # by 12/2/2021 it became clear this was causing a match failure
                   except Exception as e:
                     self.logger.info(f"Error adding gh_user_id: {e}. Row: {row}")
                     stacker = traceback.format_exc()
                     self.logger.debug(f"{stacker}")
+                    pass # added pass to keep loop going if this fails 12/2/2021
             except KeyError:
                 self.logger.info("Source data doesn't have user.id. Using node_id instead.")
                 stacker = traceback.format_exc()
