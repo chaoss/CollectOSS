@@ -725,7 +725,11 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                         #     ['issue_url'], ['pr_issue_url'], in_memory=True)
                         both_pk_source_comments = self.enrich_data_primary_keys(
                             c_pk_source_comments, self.pull_requests_table,
-                            ['pull_request_url'], ['issue_url'], in_memory=True)
+                            ['pull_request_url'], ['pr_url'], in_memory=True)
+                        ## The pull_request_url and pr_url mappings are going on my emergent understanding
+                        ## that enrich primary keys is retrieving the primary key from the already populated
+                        ## pull requests table, using the endpoint's 'pull_request_url' value, and mapping it 
+                        ## to the 'pr_url' in the pull_requests Table. SPG 12/2/2021
 
                         self.logger.info(f"log of the length of both_pk_source_comments {len(both_pk_source_comments)}.")
 
