@@ -1050,7 +1050,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 ) else None,
                 'msg_timestamp': comment['created_at'],
                 'cntrb_id': comment['cntrb_id'],
-                'tool_source': self.tool_source,
+                'tool_source': self.tool_source +"_reviews",
                 'tool_version': self.tool_version + "_reviews",
                 'data_source': 'pull_request_reviews model',
                 'repo_id': self.repo_id,
