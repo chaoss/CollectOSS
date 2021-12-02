@@ -10,7 +10,7 @@ from augur.util import register_metric
 @register_metric()
 def deps(self, repo_group_id, repo_id=None):
 	depsSQL = s.sql.text("""
-    	SELECT * FROM augur_data.dependencies
+    	SELECT * FROM augur_data.repo_dependencies
 	""")
 
 	results = pd.read_sql(depsSQL, self.database)
