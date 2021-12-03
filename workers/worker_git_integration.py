@@ -1323,11 +1323,13 @@ class WorkerGitInterfaceable(Worker):
 
                             elif response.status_code == 200:
                                 try:
-                                    page_data = response.json()
+                                    page_data = response.json() 
+                                    # This seems to not be working.
                                     ### added by SPG 12/1/2021 for dealing with empty JSON pages where there
                                     ### are no reviews.
-                                    if not 'results' in page_data or len(page_data['results']) == 0:
-                                        continue  
+                                    #if not 'results' in page_data or len(page_data['results']) == 0:
+                                    #    continue  
+                                  
                                 except:
                                     page_data = json.loads(json.dumps(response.text))
                                     continue
