@@ -354,6 +354,9 @@ class WorkerGitInterfaceable(Worker):
                     data[f'{prefix}id']
                     #gets the dict from the table_values_cntrb that contains data['user.id']
                     user_id_row = list(filter(lambda x: x['gh_user_id'] == source_data_id, table_values_cntrb))[0]
+                    #### Andrew: in a small number of cases, using data on contributors originally gathered in late 2019, there
+                    #### is a mismatch .. the gh_user_id for a login is different. I suspect this rare case to be one 
+                    #### where a person did something that changed their gh_user_id ... I am unsure how this can happen ... 
                 except KeyError:
                     user_id_row = list(filter(lambda x: x['gh_node_id'] == source_data_id, table_values_cntrb))[0]
                     #pass # 12/3/2021 SPG ... added pass to try to get past this key error in large inserts.
