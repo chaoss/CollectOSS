@@ -459,8 +459,9 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                     'pr_augur_contributor_id': int(pr['cntrb_id']) if ( ## Changed later on 12/3/2021 to use default contributor if something in enrich_cntrb_id broke 
                     ### MUST ENSURE THIS DOES NOT CAUSE ANY MAJOR ISSUES ... i.e., its a little risky if we aren't dealing with more than the rare anomaly, which as 
                     ### of 12/3/2021 appears empirically to be the case. 
-                        pr['cntrb_id']
-                    ) else 1, ### Changed to int cast based on error 12/3/2021 SPG (int cast above is first change on 12/3)
+                        int(pr['cntrb_id']) ## cast as an int because of an otherwise inexplicable error.
+                    ) else int(1), # also cast as an int due to an otherwise inexplicble error
+                    ### Changed to int cast based on error 12/3/2021 SPG (int cast above is first change on 12/3)
                     'pr_body': str(pr['body']).encode(encoding='UTF-8',errors='backslashreplace').decode(encoding='UTF-8',errors='ignore') if (
                         pr['body']
                     ) else None,
