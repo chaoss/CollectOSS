@@ -356,8 +356,8 @@ class WorkerGitInterfaceable(Worker):
                     user_id_row = list(filter(lambda x: x['gh_user_id'] == source_data_id, table_values_cntrb))[0]
                 except KeyError:
                     user_id_row = list(filter(lambda x: x['gh_node_id'] == source_data_id, table_values_cntrb))[0]
-                    pass # 12/3/2021 SPG ... added pass to try to get past this key error in large inserts.
-
+                    #pass # 12/3/2021 SPG ... added pass to try to get past this key error in large inserts.
+                    continue # 12/3/2021 SPG ... may be better inside a loop
 
                 #assigns the cntrb_id to the source data to be returned to the workers
                 data['cntrb_id'] = user_id_row['cntrb_id']
@@ -374,8 +374,8 @@ class WorkerGitInterfaceable(Worker):
                 url = ("https://api.github.com/users/" + str(data[f'{prefix}login']))
               except Exception as e:
                 self.logger.info(f"Error when creating url: {e}. Data: {data}")
-                pass # changed continue to pass 12/3/2021 SPG
-
+                #pass # changed continue to pass 12/3/2021 SPG
+                continue # changed back 12/3/2021 SPG
               attempts = 0
               contributor = None
               success = False
@@ -387,14 +387,15 @@ class WorkerGitInterfaceable(Worker):
                 except TimeoutError:
                   self.logger.info(f"User data request for enriching contributor data failed with {attempts} attempts! Trying again...")
                   time.sleep(10)
-                  pass # changed continue to pass 12/3/2021 SPG
-
+                  #pass # changed continue to pass 12/3/2021 SPG
+                  continue # changed back 12/3/2021 SPG
                 self.update_rate_limit(response,platform=platform)
 
                 try:
                   contributor = response.json()
                 except:
                   contributor = json.loads(json.dumps(response.text))
+                  continue # added continue 12/3/2021 SPG
 
 
                 if type(contributor) == dict:
@@ -470,10 +471,12 @@ class WorkerGitInterfaceable(Worker):
               except s.exc.IntegrityError:
                 self.logger.info(f"there was a collision caught ....")
                 self.logger.info(traceback.format_exc())
-                pass # added by sean 11/29/2021 ... think it might be blocking comment insertion otherwise
+                #pass # added by sean 11/29/2021 ... think it might be blocking comment insertion otherwise
+                continue # changed to continue on 12/3/2021
               except Exception as e:
                 self.logger.info(f"Contributor was unable to be added to table! Attempting to get cntrb_id from table anyway because of possible collision. Error: {e}")
-                pass # added by sean 11/29/2021 ... think it might be blocking comment insertion otherwise
+                #pass # added by sean 11/29/2021 ... think it might be blocking comment insertion otherwise
+                continue 
 
               #Get the contributor id from the newly inserted contributor.
               cntrb_id_row = self.db.execute(
