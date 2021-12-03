@@ -964,7 +964,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'pr_review_submitted_at': review['submitted_at'] if (
                     'submitted_at' in review
                 ) else None,
-                'pr_review_src_id': review['id'], # Here, `pr_review_src_id` is mapped to `id` SPG 11/29/2021. This is fine. Its the review id.
+                'pr_review_src_id': int(float(review['id'])), #12/3/2021 cast as int due to error. # Here, `pr_review_src_id` is mapped to `id` SPG 11/29/2021. This is fine. Its the review id.
                 'pr_review_node_id': review['node_id'],
                 'pr_review_html_url': review['html_url'],
                 'pr_review_pull_request_url': review['pull_request_url'],
