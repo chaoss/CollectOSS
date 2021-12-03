@@ -700,23 +700,32 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 )
             else:
                 self.logger.info("Contributor enrichment is not needed, no inserts in action map.")
-
-            pr_comments_insert = [
-                {
-                    'pltfrm_id': self.platform_id,
-                    'msg_text': str(comment['body']).encode(encoding='UTF-8',errors='backslashreplace').decode(encoding='UTF-8',errors='ignore') if (
-                        comment['body']
-                    ) else None,
-                    'msg_timestamp': comment['created_at'],
-                    'cntrb_id': comment['cntrb_id'],
-                    'tool_source': self.tool_source,
-                    'tool_version': self.tool_version,
-                    'data_source': self.data_source, 
-                    'repo_id': self.repo_id,
-                    'platform_msg_id': int(comment['id']),
-                    'platform_node_id': comment['node_id']
-                } for comment in inc_pr_comments['insert']
-            ]
+            pr_comments_insert = [] # added 12/3/2021 to put the value assignment into a try/except block
+            try: 
+                pr_comments_insert = [
+                    {
+                        'pltfrm_id': self.platform_id,
+                        'msg_text': str(comment['body']).encode(encoding='UTF-8',errors='backslashreplace').decode(encoding='UTF-8',errors='ignore') if (
+                            comment['body']
+                        ) else None,
+                        'msg_timestamp': comment['created_at'],
+                        'cntrb_id': int(comment['cntrb_id']) if ( ### added 12/3/2021 to address data anomalies. MONITOR. POSSIBLY WRONG if anomalies are *NOT* 
+                            ### EXTREMELY RARE
+                            comment['cntrb_id']
+                        ) else 1,
+                        'tool_source': self.tool_source,
+                        'tool_version': self.tool_version,
+                        'data_source': self.data_source, 
+                        'repo_id': self.repo_id,
+                        'platform_msg_id': int(comment['id']),
+                        'platform_node_id': comment['node_id']
+                    } for comment in inc_pr_comments['insert']
+                ]
+            except Exception as e: 
+                self.logger.debug(f"Comments model issue/error: {e}. exception registered.")
+                stacker = traceback.format_exc()
+                self.logger.debug(f"{stacker}")
+                pass
             try:
                 self.bulk_insert(self.message_table, insert=pr_comments_insert, 
                     unique_columns=comment_action_map['insert']['augur'])
