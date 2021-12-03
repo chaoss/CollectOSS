@@ -439,7 +439,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 stacker = traceback.format_exc()
                 self.logger.debug(f"{stacker}")
 
-
+            prs_insert = []
             try: 
                 prs_insert = [
                 {
