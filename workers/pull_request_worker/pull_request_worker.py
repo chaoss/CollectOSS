@@ -419,14 +419,21 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
             #This is sending empty data to enrich_cntrb_id, fix with check
             if len(inc_source_prs['insert']) > 0:
-                inc_source_prs['insert'] = self.enrich_cntrb_id(
-                    inc_source_prs['insert'], str('user.login'), action_map_additions={
-                        'insert': {
-                            'source': ['user.node_id'],
-                            'augur': ['gh_node_id']
-                        }
-                    }, prefix='user.'
-                )
+                try: 
+                    inc_source_prs['insert'] = self.enrich_cntrb_id(
+                        inc_source_prs['insert'], str('user.login'), action_map_additions={
+                            'insert': {
+                                'source': ['user.node_id'],
+                                'augur': ['gh_node_id']
+                            }
+                        }, prefix='user.'
+                    )
+                except Exception as e: 
+                    self.logger.debug(f"Pull Requests model failed with {e}.")
+                    stacker = traceback.format_exc()
+                    self.logger.debug(f"{stacker}")
+                    pass
+
             else:
                 self.logger.info("Contributor enrichment is not needed, no inserts in action map.")
                 stacker = traceback.format_exc()
