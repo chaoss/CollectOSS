@@ -456,7 +456,11 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                     'pr_src_state': pr['state'],
                     'pr_src_locked': pr['locked'],
                     'pr_src_title': str(pr['title']),
-                    'pr_augur_contributor_id': int(pr['cntrb_id']), ### Changed to int cast based on error 12/3/2021 SPG
+                    'pr_augur_contributor_id': int(pr['cntrb_id']) if ( ## Changed later on 12/3/2021 to use default contributor if something in enrich_cntrb_id broke 
+                    ### MUST ENSURE THIS DOES NOT CAUSE ANY MAJOR ISSUES ... i.e., its a little risky if we aren't dealing with more than the rare anomaly, which as 
+                    ### of 12/3/2021 appears empirically to be the case. 
+                        pr['cntrb_id']
+                    ) else 1, ### Changed to int cast based on error 12/3/2021 SPG (int cast above is first change on 12/3)
                     'pr_body': str(pr['body']).encode(encoding='UTF-8',errors='backslashreplace').decode(encoding='UTF-8',errors='ignore') if (
                         pr['body']
                     ) else None,
