@@ -356,6 +356,7 @@ class WorkerGitInterfaceable(Worker):
                     user_id_row = list(filter(lambda x: x['gh_user_id'] == source_data_id, table_values_cntrb))[0]
                 except KeyError:
                     user_id_row = list(filter(lambda x: x['gh_node_id'] == source_data_id, table_values_cntrb))[0]
+                    pass # 12/3/2021 SPG ... added pass to try to get past this key error in large inserts.
 
 
                 #assigns the cntrb_id to the source data to be returned to the workers
@@ -373,7 +374,7 @@ class WorkerGitInterfaceable(Worker):
                 url = ("https://api.github.com/users/" + str(data[f'{prefix}login']))
               except Exception as e:
                 self.logger.info(f"Error when creating url: {e}. Data: {data}")
-                continue
+                pass # changed continue to pass 12/3/2021 SPG
 
               attempts = 0
               contributor = None
@@ -386,7 +387,7 @@ class WorkerGitInterfaceable(Worker):
                 except TimeoutError:
                   self.logger.info(f"User data request for enriching contributor data failed with {attempts} attempts! Trying again...")
                   time.sleep(10)
-                  continue
+                  pass # changed continue to pass 12/3/2021 SPG
 
                 self.update_rate_limit(response,platform=platform)
 
@@ -414,7 +415,7 @@ class WorkerGitInterfaceable(Worker):
                   else:
                     try:
                       contributor = json.loads(contributor)
-                      contributor['gh_login'] = str(contributor['gh_login']) ## cast as string by SPG on 11/28/2021 due to `nan` user                     
+                      # contributor['gh_login'] = str(contributor['gh_login']) ## cast as string by SPG on 11/28/2021 due to `nan` user                     
                       success = True
                       break
                     except:
