@@ -6,7 +6,7 @@ externalDocs:
 host: augur.chaoss.io
 info:
   title: Augur REST API
-  version: 0.21.10
+  version: 0.21.11
 openapi: 3.0.0
 paths:
   #utility endpoints
