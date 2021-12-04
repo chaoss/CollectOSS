@@ -1011,9 +1011,9 @@ paths:
   #experimental endpoints
   /repo-groups/:repo_group_id/aggregate-summary:
     get:
-      description: Returns the current count of watchers, stars, and forks and the
+      description: 'Returns the current count of watchers, stars, and forks and the
         counts of all commits, committers, and pull requests merged between a given
-        beginning and end date (default between now and 365 days ago).
+        beginning and end date (default between now and 365 days ago).'
       operationId: Aggregate Summary (Repo Group)
       parameters:
       - description: Repository Group ID.
@@ -1063,9 +1063,9 @@ paths:
       - experimental
   /repos/:repo_id/aggregate-summary:
     get:
-      description: Returns the current count of watchers, stars, and forks and the
+      description: 'Returns the current count of watchers, stars, and forks and the
         counts of all commits, committers, and pull requests merged between a given
-        beginning and end date (default between now and 365 days ago).
+        beginning and end date (default between now and 365 days ago).'
       operationId: Aggregate Summary (Repo)
       parameters:
       - description: Repository ID.
@@ -1119,13 +1119,13 @@ paths:
         define these more formally. '
       operationId: Annual Commit Count Ranked by New Repo in Repo Group (Repo Group)
       parameters:
-      - description: Repository Group ID.
+      - description: 'Repository Group ID.'
         in: path
         name: repo_group_id
         schema:
           type: string
         type: string
-      - description: Periodicity specification.
+      - description: 'Periodicity specification.'
         in: path
         name: period
         schema:
@@ -1169,17 +1169,16 @@ paths:
       - experimental
   /repo-groups/:repo_id/annual-commit-count-ranked-by-new-repo-in-repo-group:
     get:
-      description: 'This is an Augur-specific metric. We are currently working to
-        define these more formally. '
+      description: 'Annual commit count ranked by repos. '
       operationId: Annual Commit Count Ranked by New Repo in Repo Group (Repo)
       parameters:
-      - description: Repository ID.
+      - description: 'Repository ID.'
         in: path
         name: repo_id
         schema:
           type: string
         type: string
-      - description: Periodicity specification.
+      - description: 'Periodicity specification.'
         in: path
         name: period
         schema:
