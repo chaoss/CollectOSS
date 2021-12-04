@@ -67,6 +67,7 @@ def deps(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_d
         """)
 
 		results = pd.read_sql(depsSQL, self.database)
+    return results
 
 
 
