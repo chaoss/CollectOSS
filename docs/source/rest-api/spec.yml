@@ -6,7 +6,7 @@ externalDocs:
 host: augur.chaoss.io
 info:
   title: Augur REST API
-  version: 0.12.0
+  version: 0.21.10
 openapi: 3.0.0
 paths:
   #utility endpoints
@@ -822,7 +822,7 @@ paths:
       - risk
   /repo-groups/:repo_group_id/license-declared:
     get:
-      description: 'Number of persons opening an issue for the first time. '
+      description: 'An enumeration of all the licenses declared in a repo group at the file level.'
       externalDocs:
         description: CHAOSS Metric Definition
         url: https://github.com/chaoss/wg-risk/blob/main/metrics/License_Coverage.md
@@ -854,11 +854,10 @@ paths:
       - risk
   /repos/:repo_id/license-declared:
     get:
-      description: 'Number of persons contributing with an accepted commit for the
-        first time. '
+      description: 'An enumeration of all the licenses declared in a repo at the file level.'
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-risk/blob/main/metrics/License_Coverage.md
+        url: https://github.com/chaoss/wg-risk/blob/main/focus-areas/licensing/license-declared.md
       operationId: License Declared (Repo)
       parameters:
       - description: Repository ID.
