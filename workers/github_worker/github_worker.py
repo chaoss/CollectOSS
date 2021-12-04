@@ -289,7 +289,8 @@ class GitHubWorker(WorkerGitInterfaceable):
                     'tool_version': self.tool_version,
                     'data_source': self.data_source,
                     'platform_msg_id': int(comment['id']),
-                    'platform_node_id': comment['node_id']
+                    'platform_node_id': comment['node_id'],
+                    'repo_id': self.repo_id 
                 } for comment in inc_issue_comments['insert']
             ]
             try:
