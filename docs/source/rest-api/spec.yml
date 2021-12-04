@@ -1115,8 +1115,7 @@ paths:
       - experimental
   /repo-groups/:repo_group_id/annual-commit-count-ranked-by-new-repo-in-repo-group:
     get:
-      description: 'This is an Augur-specific metric. We are currently working to
-        define these more formally. '
+      description: 'Annual commit count ranked by new repos in a repo group. '
       operationId: Annual Commit Count Ranked by New Repo in Repo Group (Repo Group)
       parameters:
       - description: 'Repository Group ID.'
@@ -1169,8 +1168,8 @@ paths:
       - experimental
   /repo-groups/:repo_id/annual-commit-count-ranked-by-new-repo-in-repo-group:
     get:
-      description: 'Annual commit count ranked by repos. '
-      operationId: Annual Commit Count Ranked by New Repo in Repo Group (Repo)
+      description: 'Annual commit count ranked by new repos.'
+      operationId: Annual Commit Count Ranked repos (Repo)
       parameters:
       - description: 'Repository ID.'
         in: path
@@ -1222,8 +1221,7 @@ paths:
       - experimental
   /repo-groups/:repo_group_id/annual-commit-count-ranked-by-repo-in-repo-group:
     get:
-      description: 'This is an Augur-specific metric. We are currently working to
-        define these more formally. '
+      description: 'Annual commit count ranked by repos in a repo group. '
       operationId: Annual Commit Count Ranked by Repo in Repo Group (Repo Group)
       parameters:
       - description: Repository Group ID.
