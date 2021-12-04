@@ -1,6 +1,6 @@
 #SPDX-License-Identifier: MIT
 """
-Metrics that provide data about with insight detection and reporting
+Metrics that provide data about software dependencies. 
 """
 
 import sqlalchemy as s
@@ -9,7 +9,7 @@ from augur.util import register_metric
 @register_metric()
 def deps(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
     """
-    Returns a timeseries of the count of persons opening an issue for the first time.
+    Returns a list of all the dependencies in a project/repo/repo_group.
 
     :param repo_id: The repository's id
     :param repo_group_id: The repository's group id
