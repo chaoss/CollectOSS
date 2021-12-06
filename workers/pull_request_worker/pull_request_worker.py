@@ -875,8 +875,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         pr_events_insert = [
             {
-                'pull_request_id': int(event['pull_request_id']),
-                'cntrb_id': int(event['cntrb_id']),
+                'pull_request_id': event['pull_request_id'],
+                'cntrb_id': event['cntrb_id'],
                 'action': event['event'],
                 'action_commit_hash': None,
                 'created_at': event['created_at'],
@@ -1118,10 +1118,10 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'pr_review_msg_node_id': comment['node_id'],
                 'pr_review_msg_diff_hunk': comment['diff_hunk'],
                 'pr_review_msg_path': comment['path'],
-                'pr_review_msg_position': s.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
+                'pr_review_msg_position': None if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
                     int(float(comment['position']))
                 ) else int(float(comment['position'])),
-                'pr_review_msg_original_position': s.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
+                'pr_review_msg_original_position': None if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
                     int(float(comment['original_position']))
                 ) else int(float(comment['original_position'])),
                 'pr_review_msg_commit_id': str(comment['commit_id']),
@@ -1130,19 +1130,19 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'pr_review_msg_html_url': comment['html_url'],
                 'pr_url': comment['pull_request_url'],
                 'pr_review_msg_author_association': comment['author_association'],
-                'pr_review_msg_start_line': s.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
+                'pr_review_msg_start_line': None if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
                     int(float(comment['start_line']))
                 ) else int(float(comment['start_line'])),
-                'pr_review_msg_original_start_line': s.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
+                'pr_review_msg_original_start_line': None if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
                     int(float(comment['original_start_line']))
                 ) else int(float(comment['original_start_line'])),
                 'pr_review_msg_start_side': s.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
                     str(comment['start_side'])
                 ) else str(comment['start_side']),
-                'pr_review_msg_line': s.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
+                'pr_review_msg_line': None if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
                     int(float(comment['line']))
                 ) else int(float(comment['line'])),
-                'pr_review_msg_original_line': s.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
+                'pr_review_msg_original_line': None if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
                     int(float(comment['original_line']))
                 ) else int(float(comment['original_line'])),
                 'pr_review_msg_side': s.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
@@ -1383,13 +1383,13 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                                 'pr_src_meta_label': meta['label'],
                                 'pr_src_meta_ref': meta['ref'],
                                 'pr_sha': meta['sha'],
-                                'cntrb_id': int(meta['cntrb_id']),  ## Cast as int for the `nan` user by SPG on 11/28/2021
+                                'cntrb_id': meta['cntrb_id'],  ## Cast as int for the `nan` user by SPG on 11/28/2021; removed 12/6/2021
                                 'tool_source': self.tool_source,
                                 'tool_version': self.tool_version,
                                 'data_source': self.data_source,
                                 'repo_id': self.repo_id 
-                            } for meta in source_meta_insert if 'login' in meta['user'] # trying to fix bug SPG 11/29/2021 #meta['user'] and 'login' in meta['user']
-                        ]
+                            } for meta in source_meta_insert if 'login' in meta['user']['login'] # trying to fix bug SPG 11/29/2021 #meta['user'] and 'login' in meta['user']
+                        ]  # trying meta['user']['login'] sytax 12/6/2021
                         self.bulk_insert(self.pull_request_meta_table, insert=meta_insert)
 
                 except Exception as e: 
@@ -1432,7 +1432,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'pr_repo_name': new_pr_repo['name'],
                 'pr_repo_full_name': new_pr_repo['full_name'],
                 'pr_repo_private_bool': new_pr_repo['private'],
-                'pr_cntrb_id': int(cntrb_id),
+                'pr_cntrb_id': cntrb_id, #12/6/2021 removed int casting 
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
                 'data_source': self.data_source
