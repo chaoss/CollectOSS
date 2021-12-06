@@ -88,9 +88,7 @@
               </thead>
               <tbody>
                 <tr v-for="(group, index) in sortedRepoGroups(sortColumn, ascending)">
-                  <td>
-                    <a @click="onRepoGroup(group)">{{ group.rg_name }}</a>
-                  </td>
+                  <router-link tag="a" :to="'/group/' + group.rg_name + '/overview'">{{ group.rg_name }}</router-link>
                   <td>{{ group.rg_description }}</td>
                   <td>{{ group.rg_website }}</td>
                   <td>{{ group.rg_last_modified }}</td>
@@ -219,11 +217,14 @@ export default class RepoGroups extends Vue {
     }
   }
 
-  onRepoGroup(e: any) {
-    this.$router.push({
-      name: "group_overview",
-      params: { group: e.rg_name, repo_group_id: e.repo_group_id }
-    });
-  }
+  // Removed 12/6/2021
+  // Replaced by router-link element
+  // If something broke in regards to group or repo_group_id being passed to the router, this could be it
+  // onRepoGroup(e: any) {
+  //   this.$router.push({
+  //     name: "group_overview",
+  //     params: { group: e.rg_name, repo_group_id: e.repo_group_id }
+  //   });
+  // }
 }
 </script>
