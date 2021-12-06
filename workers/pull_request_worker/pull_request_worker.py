@@ -1093,7 +1093,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         c_pk_source_comments = self.enrich_data_primary_keys(
             review_msgs['insert'], self.message_table, review_msg_action_map['insert']['source'],
-            review_msg_action_map['insert']['augur'], in_memory=True
+            review_msg_action_map['insert']['augur']
         )
 
         self.write_debug_data(c_pk_source_comments, 'c_pk_source_comments')
@@ -1104,7 +1104,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         both_pk_source_comments = self.enrich_data_primary_keys(
             c_pk_source_comments, self.pull_request_reviews_table, ['pull_request_review_id'],
-            ['pr_review_src_id'], in_memory=True 
+            ['pr_review_src_id']
         )
         self.write_debug_data(both_pk_source_comments, 'both_pk_source_comments')
 
