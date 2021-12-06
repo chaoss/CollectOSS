@@ -1119,10 +1119,10 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'pr_review_msg_diff_hunk': comment['diff_hunk'],
                 'pr_review_msg_path': comment['path'],
                 'pr_review_msg_position': None if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
-                    int(comment['position'])
+                    comment['position'] #12/6/2021 - removed casting from value check
                 ) else int(comment['position']),
                 'pr_review_msg_original_position': None if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
-                    int(comment['original_position'])
+                    comment['original_position'] #12/6/2021 - removed casting from value check
                 ) else int(comment['original_position']),
                 'pr_review_msg_commit_id': str(comment['commit_id']),
                 'pr_review_msg_original_commit_id': str(comment['original_commit_id']),
@@ -1131,19 +1131,19 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'pr_url': comment['pull_request_url'],
                 'pr_review_msg_author_association': comment['author_association'],
                 'pr_review_msg_start_line': None if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
-                    int(comment['start_line'])
+                    comment['start_line'] #12/6/2021 - removed casting from value check
                 ) else int(comment['start_line']),
                 'pr_review_msg_original_start_line': None if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
-                    int(comment['original_start_line'])
+                    comment['original_start_line']  #12/6/2021 - removed casting from value check
                 ) else int(comment['original_start_line']),
                 'pr_review_msg_start_side': s.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
                     str(comment['start_side'])
                 ) else str(comment['start_side']),
                 'pr_review_msg_line': None if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
-                    int(comment['line'])
+                    comment['line']  #12/6/2021 - removed casting from value check
                 ) else int(comment['line']),
                 'pr_review_msg_original_line': None if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
-                    int(comment['original_line'])
+                    comment['original_line']  #12/6/2021 - removed casting from value check
                 ) else int(comment['original_line']),
                 'pr_review_msg_side': s.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
                     str(comment['side'])
