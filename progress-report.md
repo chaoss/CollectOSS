@@ -44,7 +44,7 @@ For this sprint we encountered zero obstacles. We had our plan for this sprint a
 
 ## Sprint 3
 
-Though a bit of trouble had arrisen in this sprint, I do not think there's any reason to change our scope. I am confident that the issues can be resolved.
+Though a bit of trouble had arrisen in this sprint, I do not think there's any reason to change our scope. I am confident that the issues can be resolved given collaboration with Dr. Goggins.
 
 ### Sprint 3 Obstables, Reflection, and Goals
 
@@ -53,5 +53,9 @@ For this sprint we encountered our first obstancle. For starters, our Hello Worl
 From our team's research, we found a couple contenders for what could possibly be a very simple fix. [The first of these](https://blog.miguelgrinberg.com/post/running-your-flask-application-over-https) indicated we should look into our `gunicorn` configurations, leading us to the [official gunicorn documentation](https://docs.gunicorn.org/en/latest/deploy.html) which described our exact problem: "It is recommended to pass protocol information to Gunicorn. Many web frameworks use this information to generate URLs. Without this information, the application may mistakenly generate ‘http’ URLs in ‘https’ responses, leading to mixed content warnings or broken applications. To configure Nginx to pass an appropriate header, add a `proxy_set_header` directive to your `location` block". I find this description too specific to be a coincidence so I believe we have tracked down our problem, now we just had to find and correctly configure the gunicorn side of augur.
 
 First we tried altering the `nginx` configuration as suggested in the prior link with the `proxy_set_header X-Forwarded-Proto $scheme;` but after saving the new configuration and restarting `nginx`, it had not fixed a thing. Following [this thread](https://github.com/python-restx/flask-restx/issues/188) I added a `forwarded_allow_ips = '*'` directive in the gunicorn configuration and restarted the server, but to no avail: the `mixed active content` error persisted.
+
+Next, I tried looking into the frontend code for some clues. Among some other files like `AugurAPI.ts`, I looked at the router and edited the string in line 15 to be `https://` instead. This resulted in some strange behavior: there was then three sets of print statements from `AugurAPI.ts`, first with `https` the rest with `http`; the same file is ran multiple times but it somehow defaults back to `http`. Regardless, the `blocked mixed active content` error is coming from `“http://0.0.0.0:5000/api/unstable/repo-groups”`, but perhaps if I can discover the source of the second set of print statements I could nail down the issue.
+
+In summary, in this sprint we started to apply some of our research to the actual code in the Flask/Gunicorn portion of the augur application. While the [Hello World](https://dev.osshealth.io/) may seem unchanged at first, the server is actually running off a new git repository, nginx configuration, and augur code. That being said, we were not able to find the entire solution we've set out to find yet, but made great progress tracking the problem down. While I was pleasantly surprised to have not entirely broken the server through the multiple configuration edits, I wanted to have also definitively identified the problem in this sprint so that we could have a more wholesome solution in Sprint 4. However, setbacks like these are common in the Software Development Lifecycle and we'll have to work with that.
 
 ## Sprint 4
