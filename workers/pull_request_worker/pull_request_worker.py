@@ -1110,8 +1110,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         pr_review_msg_ref_insert = [
             {
-                'pr_review_id':  int(float(comment['pr_review_id'])),
-                'msg_id': int(float(comment['msg_id'])),
+                'pr_review_id':  comment['pr_review_id'],
+                'msg_id': comment['msg_id'],
                 'pr_review_msg_url': comment['url'],
                 'pr_review_src_id': int(float(comment['pull_request_review_id'])),
                 'pr_review_msg_src_id': int(float(comment['id'])),
@@ -1119,11 +1119,11 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'pr_review_msg_diff_hunk': comment['diff_hunk'],
                 'pr_review_msg_path': comment['path'],
                 'pr_review_msg_position': sqlalchemy.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
-                    str(comment['position'])
-                ) else str(comment['position']),
+                    int(float(comment['position']))
+                ) else int(float(comment['position'])),
                 'pr_review_msg_original_position': sqlalchemy.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
-                    str(comment['original_position'])
-                ) else str(comment['original_position']),
+                    int(float(comment['original_position']))
+                ) else int(float(comment['original_position'])),
                 'pr_review_msg_commit_id': str(comment['commit_id']),
                 'pr_review_msg_original_commit_id': str(comment['original_commit_id']),
                 'pr_review_msg_updated_at': comment['updated_at'],
@@ -1131,20 +1131,20 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'pr_url': comment['pull_request_url'],
                 'pr_review_msg_author_association': comment['author_association'],
                 'pr_review_msg_start_line': sqlalchemy.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
-                    str(comment['start_line'])
-                ) else str(comment['start_line']),
+                    int(float(comment['start_line'])
+                ) else int(float['start_line'])),
                 'pr_review_msg_original_start_line': sqlalchemy.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
-                    str(comment['original_start_line'])
-                ) else str(comment['original_start_line']),
+                    int(float(comment['original_start_line']))
+                ) else int(float(comment['original_start_line'])),
                 'pr_review_msg_start_side': sqlalchemy.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
                     str(comment['start_side'])
                 ) else str(comment['start_side']),
                 'pr_review_msg_line': sqlalchemy.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
-                    str(comment['line'])
-                ) else str(comment['line']),
+                    int(float(comment['line']))
+                ) else int(float(comment['line'])),
                 'pr_review_msg_original_line': sqlalchemy.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
-                    str(comment['original_line'])
-                ) else str(comment['original_line']),
+                    int(float(comment['original_line']))
+                ) else int(float(comment['original_line'])),
                 'pr_review_msg_side': sqlalchemy.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
                     str(comment['side'])
                 ) else str(comment['side']),
