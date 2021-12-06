@@ -8,8 +8,10 @@
 \i schema/generate/81-schema_update_83.sql
 \i schema/generate/82-schema_update_84.sql
 \i schema/generate/83-schema_update_85.sql
-
-
+\i schema/generate/84-schema_update_86.sql
+\i schema/generate/85-schema_update_87.sql
+\i schema/generate/86-schema_update_88.sql
+\i schema/generate/87-schema_update_89.sql
 
 -- prior update scripts incorporated into 
 -- augur.sql file for release v0.21.1

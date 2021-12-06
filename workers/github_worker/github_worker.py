@@ -289,7 +289,8 @@ class GitHubWorker(WorkerGitInterfaceable):
                     'tool_version': self.tool_version,
                     'data_source': self.data_source,
                     'platform_msg_id': int(comment['id']),
-                    'platform_node_id': comment['node_id']
+                    'platform_node_id': comment['node_id'],
+                    'repo_id': self.repo_id 
                 } for comment in inc_issue_comments['insert']
             ]
             try:
@@ -540,7 +541,7 @@ class GitHubWorker(WorkerGitInterfaceable):
 
                 # self.logger.info(f"Total of assignee's is: {assignees_all}. Labels are next.")
             except Exception as e: 
-                self.logger(f'assignee exception: {e}.')
+                self.logger.debug(f'assignee exception: {e}.')
                 stacker = traceback.format_exc()
                 self.logger.debug(f"{stacker}")
                 pass 
@@ -592,7 +593,7 @@ class GitHubWorker(WorkerGitInterfaceable):
                     # Closed issues, update with closer id
                     ''' TODO: Right here I am not sure if the update columns are right, and will catch the state changes. '''
                 except Exception as e: 
-                    self.logger(f'assignee exception: {e}.')
+                    self.logger.debug(f'assignee exception: {e}.')
                     stacker = traceback.format_exc()
                     self.logger.debug(f"{stacker}")
                     pass 

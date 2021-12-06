@@ -300,11 +300,16 @@ class WorkerGitInterfaceable(Worker):
                 data[f'{prefix}id']
                 for row in table_values_cntrb:
                   try:
-                    user_unique_ids.append(row['gh_user_id'])
+                    if str(row['gh_user_id']) == 'NaN': # 12/2/2021 SPG -- just skipping this user for now
+                        continue 
+                    else: 
+                        user_unique_ids.append(row['gh_user_id']) ## cast as string by SPG on 11/28/2021 due to `nan` user
+                        # by 12/2/2021 it became clear this was causing a match failure
                   except Exception as e:
                     self.logger.info(f"Error adding gh_user_id: {e}. Row: {row}")
                     stacker = traceback.format_exc()
                     self.logger.debug(f"{stacker}")
+                    pass # added pass to keep loop going if this fails 12/2/2021
             except KeyError:
                 self.logger.info("Source data doesn't have user.id. Using node_id instead.")
                 stacker = traceback.format_exc()
@@ -349,9 +354,13 @@ class WorkerGitInterfaceable(Worker):
                     data[f'{prefix}id']
                     #gets the dict from the table_values_cntrb that contains data['user.id']
                     user_id_row = list(filter(lambda x: x['gh_user_id'] == source_data_id, table_values_cntrb))[0]
+                    #### Andrew: in a small number of cases, using data on contributors originally gathered in late 2019, there
+                    #### is a mismatch .. the gh_user_id for a login is different. I suspect this rare case to be one 
+                    #### where a person did something that changed their gh_user_id ... I am unsure how this can happen ... 
                 except KeyError:
                     user_id_row = list(filter(lambda x: x['gh_node_id'] == source_data_id, table_values_cntrb))[0]
-
+                    #pass # 12/3/2021 SPG ... added pass to try to get past this key error in large inserts.
+                    continue # 12/3/2021 SPG ... may be better inside a loop
 
                 #assigns the cntrb_id to the source data to be returned to the workers
                 data['cntrb_id'] = user_id_row['cntrb_id']
@@ -368,8 +377,8 @@ class WorkerGitInterfaceable(Worker):
                 url = ("https://api.github.com/users/" + str(data[f'{prefix}login']))
               except Exception as e:
                 self.logger.info(f"Error when creating url: {e}. Data: {data}")
-                continue
-
+                #pass # changed continue to pass 12/3/2021 SPG
+                continue # changed back 12/3/2021 SPG
               attempts = 0
               contributor = None
               success = False
@@ -381,19 +390,21 @@ class WorkerGitInterfaceable(Worker):
                 except TimeoutError:
                   self.logger.info(f"User data request for enriching contributor data failed with {attempts} attempts! Trying again...")
                   time.sleep(10)
-                  continue
-
+                  #pass # changed continue to pass 12/3/2021 SPG
+                  continue # changed back 12/3/2021 SPG
                 self.update_rate_limit(response,platform=platform)
 
                 try:
                   contributor = response.json()
                 except:
                   contributor = json.loads(json.dumps(response.text))
+                  continue # added continue 12/3/2021 SPG
 
 
                 if type(contributor) == dict:
                   self.logger.info("Request returned a dict!")
-                  self.logger.info(f"Contributor data: {contributor}")
+                  self.logger.info(f"Contributor data: {contributor}") 
+                  # contributor['gh_login'] = str(contributor['gh_login']) ## cast as string by SPG on 11/28/2021 due to `nan` user
                   success = True
                   break
                 elif type(contributor) == list:
@@ -408,6 +419,7 @@ class WorkerGitInterfaceable(Worker):
                   else:
                     try:
                       contributor = json.loads(contributor)
+                      # contributor['gh_login'] = str(contributor['gh_login']) ## cast as string by SPG on 11/28/2021 due to `nan` user                     
                       success = True
                       break
                     except:
@@ -430,7 +442,7 @@ class WorkerGitInterfaceable(Worker):
               # "cntrb_type": , dont have a use for this as of now ... let it default to null
               "cntrb_canonical": contributor['email'] if 'email' in contributor else None,
               "gh_user_id": contributor['id'],
-              "gh_login": contributor['login'],
+              "gh_login": str(contributor['login']),  ## cast as string by SPG on 11/28/2021 due to `nan` user
               "gh_url": contributor['url'],
               "gh_html_url": contributor['html_url'],
               "gh_node_id": contributor['node_id'],
@@ -462,9 +474,12 @@ class WorkerGitInterfaceable(Worker):
               except s.exc.IntegrityError:
                 self.logger.info(f"there was a collision caught ....")
                 self.logger.info(traceback.format_exc())
+                #pass # added by sean 11/29/2021 ... think it might be blocking comment insertion otherwise
+                continue # changed to continue on 12/3/2021
               except Exception as e:
                 self.logger.info(f"Contributor was unable to be added to table! Attempting to get cntrb_id from table anyway because of possible collision. Error: {e}")
-
+                #pass # added by sean 11/29/2021 ... think it might be blocking comment insertion otherwise
+                continue 
 
               #Get the contributor id from the newly inserted contributor.
               cntrb_id_row = self.db.execute(
@@ -484,10 +499,10 @@ class WorkerGitInterfaceable(Worker):
 
 
               cntrb_data = {
-              'cntrb_id': data['cntrb_id'],
+              'cntrb_id': int(data['cntrb_id']), # came through as a float. Fixed 11/28/2021, SPG
               'gh_node_id': cntrb['gh_node_id'],
-              'cntrb_login': cntrb['cntrb_login'],
-              'gh_user_id': cntrb['gh_user_id']
+              'cntrb_login': str(cntrb['cntrb_login']), # NaN user issue. Fixed 11/28/2021, SPG
+              'gh_user_id': int(cntrb['gh_user_id']) # came through as a float. Fixed 11/28/2021, SPG
               }
               #This updates our list of who is already in the database as we iterate to avoid duplicates.
               #People who make changes tend to make more than one in a row.
@@ -1308,7 +1323,13 @@ class WorkerGitInterfaceable(Worker):
 
                             elif response.status_code == 200:
                                 try:
-                                    page_data = response.json()
+                                    page_data = response.json() 
+                                    # This seems to not be working.
+                                    ### added by SPG 12/1/2021 for dealing with empty JSON pages where there
+                                    ### are no reviews.
+                                    #if not 'results' in page_data or len(page_data['results']) == 0:
+                                    #    continue  
+                                  
                                 except:
                                     page_data = json.loads(json.dumps(response.text))
                                     continue
@@ -1339,10 +1360,14 @@ class WorkerGitInterfaceable(Worker):
                                     f"Unhandled response code: {response.status_code} {url}\n"
                                 )
 
+                        ## Added additional exception logging and a pass in this block.
                         except Exception as e:
                             self.logger.debug(
-                                f"{url} generated an exception: {traceback.format_exc()}\n"
+                                f"{url} generated an exception: count is {count}, attemts are {attempts}."
                             )
+                            stacker = traceback.format_exc()
+                            self.logger.debug(f"\n\n{stacker}\n\n")
+                            pass
 
                 attempts += 1
 

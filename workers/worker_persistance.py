@@ -815,6 +815,8 @@ class Persistant():
                     sql = 'COPY {} ({}) FROM STDIN WITH CSV'.format(
                         table_name, columns)
 
+                    self.logger.debug(f'table name is: {table_name}, and columns are {columns}.')
+
                     #This causes the github worker to throw an error with pandas
                     #cur.copy_expert(sql=sql, file=self.text_clean(s_buf))
                     # s_buf_encoded = s_buf.read().encode("UTF-8")
@@ -955,7 +957,7 @@ class Persistant():
 
 
     def enrich_data_primary_keys(
-        self, source_data, table, gh_merge_fields, augur_merge_fields, in_memory=False
+        self, source_data, table, gh_merge_fields, augur_merge_fields, in_memory=True
     ):
 
         ''' the gh_merge_fields are almost always direct from the source in the action map.
