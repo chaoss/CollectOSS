@@ -203,7 +203,7 @@
       if (currentlySelectedRepoGroup === 'undefined') {
         this.$router.push({ name: 'repo_groups' });
       } else {
-        this.$router.push(`group/${currentlySelectedRepoGroup}/overview`);
+        this.$router.push(`/group/${currentlySelectedRepoGroup}/overview`);
       }
     }
   }
