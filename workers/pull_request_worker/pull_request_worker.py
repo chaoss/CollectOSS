@@ -470,7 +470,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                     'pr_closed_at': s.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
                         pr['closed_at']
                     ) else pr['closed_at'],
-                    'pr_merged_at': s.sql.expression.null()::timestamp if not (  # This had to be changed because "None" is JSON. SQL requires NULL
+                    'pr_merged_at': None if not (  # This had to be changed because "None" is JSON. SQL requires NULL
                         pr['merged_at']
                     ) else pr['merged_at'],
                     'pr_merge_commit_sha': pr['merge_commit_sha'],
