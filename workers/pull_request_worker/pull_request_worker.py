@@ -1131,8 +1131,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'pr_url': comment['pull_request_url'],
                 'pr_review_msg_author_association': comment['author_association'],
                 'pr_review_msg_start_line': sqlalchemy.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
-                    int(float(comment['start_line'])
-                ) else int(float['start_line'])),
+                    int(float(comment['start_line']))
+                ) else int(float(comment['start_line'])),
                 'pr_review_msg_original_start_line': sqlalchemy.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
                     int(float(comment['original_start_line']))
                 ) else int(float(comment['original_start_line'])),
