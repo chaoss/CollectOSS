@@ -467,10 +467,10 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                     ) else None,
                     'pr_created_at': pr['created_at'],
                     'pr_updated_at': pr['updated_at'],
-                    'pr_closed_at': sqlalchemy.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
+                    'pr_closed_at': s.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
                         pr['closed_at']
                     ) else pr['closed_at'],
-                    'pr_merged_at': sqlalchemy.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL
+                    'pr_merged_at': s.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL
                         pr['merged_at']
                     ) else pr['merged_at'],
                     'pr_merge_commit_sha': pr['merge_commit_sha'],
@@ -1118,10 +1118,10 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'pr_review_msg_node_id': comment['node_id'],
                 'pr_review_msg_diff_hunk': comment['diff_hunk'],
                 'pr_review_msg_path': comment['path'],
-                'pr_review_msg_position': sqlalchemy.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
+                'pr_review_msg_position': s.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
                     int(float(comment['position']))
                 ) else int(float(comment['position'])),
-                'pr_review_msg_original_position': sqlalchemy.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
+                'pr_review_msg_original_position': s.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
                     int(float(comment['original_position']))
                 ) else int(float(comment['original_position'])),
                 'pr_review_msg_commit_id': str(comment['commit_id']),
@@ -1130,22 +1130,22 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'pr_review_msg_html_url': comment['html_url'],
                 'pr_url': comment['pull_request_url'],
                 'pr_review_msg_author_association': comment['author_association'],
-                'pr_review_msg_start_line': sqlalchemy.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
+                'pr_review_msg_start_line': s.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
                     int(float(comment['start_line']))
                 ) else int(float(comment['start_line'])),
-                'pr_review_msg_original_start_line': sqlalchemy.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
+                'pr_review_msg_original_start_line': s.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
                     int(float(comment['original_start_line']))
                 ) else int(float(comment['original_start_line'])),
-                'pr_review_msg_start_side': sqlalchemy.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
+                'pr_review_msg_start_side': s.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
                     str(comment['start_side'])
                 ) else str(comment['start_side']),
-                'pr_review_msg_line': sqlalchemy.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
+                'pr_review_msg_line': s.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
                     int(float(comment['line']))
                 ) else int(float(comment['line'])),
-                'pr_review_msg_original_line': sqlalchemy.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
+                'pr_review_msg_original_line': s.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
                     int(float(comment['original_line']))
                 ) else int(float(comment['original_line'])),
-                'pr_review_msg_side': sqlalchemy.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
+                'pr_review_msg_side': s.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
                     str(comment['side'])
                 ) else str(comment['side']),
                 'tool_source': 'pull_request_reviews model',
