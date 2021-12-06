@@ -770,7 +770,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                         pr_message_ref_insert = [
                             {
                                 'pull_request_id': comment['pull_request_id'],
-                                'msg_id': int(comment['msg_id']),
+                                'msg_id': comment['msg_id'], # to cast, or not to cast. That is the question. 12/6/2021
                                 'pr_message_ref_src_comment_id': int(comment['id']),
                                 'pr_message_ref_src_node_id': comment['node_id'],
                                 'tool_source': self.tool_source,
