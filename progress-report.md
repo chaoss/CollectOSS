@@ -44,4 +44,12 @@ For this sprint we encountered zero obstacles. We had our plan for this sprint a
 
 ## Sprint 3
 
+Though a bit of trouble had arrisen in this sprint, I do not think there's any reason to change our scope. I am confident that the issues can be resolved.
+
+### Sprint 3 Obstables, Reflection, and Goals
+
+For this sprint we encountered our first obstancle. For starters, our Hello World server was still on an older fork of augur that had since been deleted. I wanted to set the server to the new repository we were all working on, so I deleted the old augur directories and cloned the new one down. Now I just had to reinstall augur but the problem was I could not remember the passwords set in PostgreSQL. I uninstalled it following [this tutorial](https://sqlserverguides.com/uninstall-postgresql/) and did a [fresh install](https://www.digitalocean.com/community/tutorials/how-to-install-postgresql-on-ubuntu-20-04-quickstart). Though vega returned weird errors on `npm run build`, the distribution still seemed to compile fine luckily. Now that our instance was up to date, we were ready to tackle the core issue of the project: getting HTTPS fully working by fixing the `blocked mixed active content` error.
+
+From our team's research, we found a couple contenders for what could be a possible simple fix. The first of these was running a `gunicorn` command on the server.
+
 ## Sprint 4
