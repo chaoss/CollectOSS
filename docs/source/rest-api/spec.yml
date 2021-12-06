@@ -6,7 +6,7 @@ externalDocs:
 host: augur.chaoss.io
 info:
   title: Augur REST API
-  version: 0.12.0
+  version: 0.21.11
 openapi: 3.0.0
 paths:
   #utility endpoints
@@ -822,7 +822,7 @@ paths:
       - risk
   /repo-groups/:repo_group_id/license-declared:
     get:
-      description: 'Number of persons opening an issue for the first time. '
+      description: 'An enumeration of all the licenses declared in a repo group at the file level.'
       externalDocs:
         description: CHAOSS Metric Definition
         url: https://github.com/chaoss/wg-risk/blob/main/metrics/License_Coverage.md
@@ -854,11 +854,10 @@ paths:
       - risk
   /repos/:repo_id/license-declared:
     get:
-      description: 'Number of persons contributing with an accepted commit for the
-        first time. '
+      description: 'An enumeration of all the licenses declared in a repo at the file level.'
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-risk/blob/main/metrics/License_Coverage.md
+        url: https://github.com/chaoss/wg-risk/blob/main/focus-areas/licensing/license-declared.md
       operationId: License Declared (Repo)
       parameters:
       - description: Repository ID.
@@ -1012,9 +1011,9 @@ paths:
   #experimental endpoints
   /repo-groups/:repo_group_id/aggregate-summary:
     get:
-      description: Returns the current count of watchers, stars, and forks and the
+      description: 'Returns the current count of watchers, stars, and forks and the
         counts of all commits, committers, and pull requests merged between a given
-        beginning and end date (default between now and 365 days ago).
+        beginning and end date (default between now and 365 days ago).'
       operationId: Aggregate Summary (Repo Group)
       parameters:
       - description: Repository Group ID.
@@ -1064,9 +1063,9 @@ paths:
       - experimental
   /repos/:repo_id/aggregate-summary:
     get:
-      description: Returns the current count of watchers, stars, and forks and the
+      description: 'Returns the current count of watchers, stars, and forks and the
         counts of all commits, committers, and pull requests merged between a given
-        beginning and end date (default between now and 365 days ago).
+        beginning and end date (default between now and 365 days ago).'
       operationId: Aggregate Summary (Repo)
       parameters:
       - description: Repository ID.
@@ -1116,17 +1115,16 @@ paths:
       - experimental
   /repo-groups/:repo_group_id/annual-commit-count-ranked-by-new-repo-in-repo-group:
     get:
-      description: 'This is an Augur-specific metric. We are currently working to
-        define these more formally. '
+      description: 'Annual commit count ranked by new repos in a repo group. '
       operationId: Annual Commit Count Ranked by New Repo in Repo Group (Repo Group)
       parameters:
-      - description: Repository Group ID.
+      - description: 'Repository Group ID.'
         in: path
         name: repo_group_id
         schema:
           type: string
         type: string
-      - description: Periodicity specification.
+      - description: 'Periodicity specification.'
         in: path
         name: period
         schema:
@@ -1170,17 +1168,16 @@ paths:
       - experimental
   /repo-groups/:repo_id/annual-commit-count-ranked-by-new-repo-in-repo-group:
     get:
-      description: 'This is an Augur-specific metric. We are currently working to
-        define these more formally. '
-      operationId: Annual Commit Count Ranked by New Repo in Repo Group (Repo)
+      description: 'Annual commit count ranked by new repos.'
+      operationId: Annual Commit Count Ranked repos (Repo)
       parameters:
-      - description: Repository ID.
+      - description: 'Repository ID.'
         in: path
         name: repo_id
         schema:
           type: string
         type: string
-      - description: Periodicity specification.
+      - description: 'Periodicity specification.'
         in: path
         name: period
         schema:
@@ -1224,8 +1221,7 @@ paths:
       - experimental
   /repo-groups/:repo_group_id/annual-commit-count-ranked-by-repo-in-repo-group:
     get:
-      description: 'This is an Augur-specific metric. We are currently working to
-        define these more formally. '
+      description: 'Annual commit count ranked by repos in a repo group. '
       operationId: Annual Commit Count Ranked by Repo in Repo Group (Repo Group)
       parameters:
       - description: Repository Group ID.
