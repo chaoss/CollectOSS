@@ -770,7 +770,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                         pr_message_ref_insert = [
                             {
                                 'pull_request_id': comment['pull_request_id'],
-                                'msg_id': comment['msg_id'],
+                                'msg_id': int(comment['msg_id']),
                                 'pr_message_ref_src_comment_id': int(comment['id']),
                                 'pr_message_ref_src_node_id': comment['node_id'],
                                 'tool_source': self.tool_source,
@@ -1111,7 +1111,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         pr_review_msg_ref_insert = [
             {
                 'pr_review_id':  comment['pr_review_id'],
-                'msg_id': comment['msg_id'],
+                'msg_id': int(comment['msg_id']), #msg_id turned up null when I removed the cast to int .. 
                 'pr_review_msg_url': comment['url'],
                 'pr_review_src_id': int(float(comment['pull_request_review_id'])),
                 'pr_review_msg_src_id': int(float(comment['id'])),
