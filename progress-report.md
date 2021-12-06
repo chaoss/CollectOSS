@@ -32,6 +32,16 @@ For this sprint we encountered almost no obstacles. Sean was able to get out ins
 
 ## Sprint 2
 
+For this sprint, we simply added all our feature branches (one for each sprint) for our project, and finished our design work by completing our diagramming for each of the use cases listed above from sprint 1. [Our hello world server is the same](https://dev.osshealth.io/) and is already HTTPS enabled through Nginx, we just need to work on enabling HTTPS for the APIs/backend which is planned for sprint 3.
+
+### Design/Diagrams
+
+![Use Case Diagrams](diagrams.png)
+
+### Sprint 2 Obstacles, Reflection, and Goals
+
+For this sprint we encountered zero obstacles. We had our plan for this sprint and everyone's work delegated out even before the end of sprint 1, before the start of this one. We split each use case diagram between ourselves and all got our diagrams completed in time. In our meetings we asked any questions we may have had about the project and ensured we were all on the same page. Sean compiled our deliverables for the sprint and turned them in when they were originally due on the 21st before the extention was given.
+
 ## Sprint 3
 
 ## Sprint 4
