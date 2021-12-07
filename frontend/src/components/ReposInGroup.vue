@@ -69,9 +69,7 @@
               </thead>
               <tbody>
                 <tr v-for="(repo,index) in sortedReposInGroup(base,sortColumn,ascending)" v-bind:item="repo">
-                  <td>
-                    <a href="#" @click="onGitRepo(repo)">{{ repo.url }}</a>
-                  </td>
+                  <router-link tag="a" :to="'/repo/' + repo.rg_name + '/' + repo.repo_name + '/overview'">{{ repo.url }}</router-link>
                   <td>{{ repo.rg_name }}</td>
                   <!-- <td>{{ repo.description }}</td> -->
                   <!-- <td>{{ repo.repo_count }}</td> -->
@@ -182,14 +180,16 @@ export default class ReposInGroup extends Vue{
         this.sortColumn = col;
       }
   }
-
-  onGitRepo (e: any) {
-    console.log(e)
-    this.$router.push({
-      name: 'repo_overview',
-      params: {group:e.rg_name, repo:e.repo_name, repo_group_id: e.repo_group_id, repo_id: e.repo_id, url:e.url}
-    })
-  }
+  // Removed 12/6/2021
+  // Replaced by router-link element
+  // If something broke in regards to parameter passing to the router, this could be it
+  // onGitRepo (e: any) {
+  //   console.log(e)
+  //   this.$router.push({
+  //     name: 'repo_overview',
+  //     params: {group:e.rg_name, repo:e.repo_name, repo_group_id: e.repo_group_id, repo_id: e.repo_id, url:e.url}
+  //   })
+  // }
 }
 
 </script>
