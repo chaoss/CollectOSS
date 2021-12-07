@@ -875,8 +875,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         pr_events_insert = [
             {
-                'pull_request_id': event['pull_request_id'],
-                'cntrb_id': event['cntrb_id'],
+                'pull_request_id': int(event['pull_request_id']),
+                'cntrb_id': int(event['cntrb_id']),
                 'action': event['event'],
                 'action_commit_hash': None,
                 'created_at': event['created_at'],
@@ -889,7 +889,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'pr_platform_event_id': int(event['issue.id']),
                 'platform_id': self.platform_id,
                 'repo_id': self.repo_id 
-            } for event in pk_pr_events if event['actor'] is not None and event['cntrb_id'] is not None #12/6/2021 added event['cntrb_id'] as NULLs were getting through. 
+            } for event in pk_pr_events if event['actor'] is not None #12/6/2021 added event['cntrb_id'] as NULLs were getting through. 
         ]
         try: 
             self.bulk_insert(self.pull_request_events_table, insert=pr_events_insert, unique_columns=event_action_map['insert']['augur'])
