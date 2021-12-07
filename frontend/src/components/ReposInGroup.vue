@@ -69,7 +69,9 @@
               </thead>
               <tbody>
                 <tr v-for="(repo,index) in sortedReposInGroup(base,sortColumn,ascending)" v-bind:item="repo">
-                  <router-link tag="a" :to="'/repo/' + repo.rg_name + '/' + repo.repo_name + '/overview'">{{ repo.url }}</router-link>
+                  <td>
+                    <router-link tag="a" :to="'/repo/' + repo.rg_name + '/' + repo.repo_name + '/overview'">{{ repo.url }}</router-link>
+                  </td>
                   <td>{{ repo.rg_name }}</td>
                   <!-- <td>{{ repo.description }}</td> -->
                   <!-- <td>{{ repo.repo_count }}</td> -->

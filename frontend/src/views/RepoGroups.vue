@@ -88,7 +88,9 @@
               </thead>
               <tbody>
                 <tr v-for="(group, index) in sortedRepoGroups(sortColumn, ascending)">
-                  <router-link tag="a" :to="'/group/' + group.rg_name + '/overview'">{{ group.rg_name }}</router-link>
+                  <td>
+                    <router-link tag="a" :to="'/group/' + group.rg_name + '/overview'">{{ group.rg_name }}</router-link>
+                  </td>
                   <td>{{ group.rg_description }}</td>
                   <td>{{ group.rg_website }}</td>
                   <td>{{ group.rg_last_modified }}</td>
