@@ -41,6 +41,7 @@ class Application():
             'workers': int(self.config.get_value('Server', 'workers')),
             'timeout': int(self.config.get_value('Server', 'timeout'))
             ### Group 10 -- put gunicorn options additions here with root certificate.
+            ## curl -ksSL https://team10.guillotine.io:5099
         }
         self.logging.configure_logging(self.config)
         self.gunicorn_options.update(self.logging.gunicorn_logging_options)
