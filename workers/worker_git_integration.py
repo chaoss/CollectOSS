@@ -305,7 +305,7 @@ class WorkerGitInterfaceable(Worker):
                         # continue took out continue 
                     else: 
                         user_unique_ids.append(row['gh_user_id']) ## cast as string by SPG on 11/28/2021 due to `nan` user
-                        # by 12/2/2021 it became clear this was causing a match failure
+                        # by 12/2/2021 it became clear this was causing a match failure. Removed string cast. 
                   except Exception as e:
                     self.logger.info(f"Error adding gh_user_id: {e}. Row: {row}")
                     stacker = traceback.format_exc()
