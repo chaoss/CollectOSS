@@ -450,12 +450,12 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'pr_src_number': pr['number'],
                 'pr_src_state': pr['state'],
                 'pr_src_locked': pr['locked'],
-                'pr_src_title': str(issue['title']).encode(encoding='UTF-8',errors='backslashreplace').decode(encoding='UTF-8',errors='ignore') if (
-                        issue['title']
+                'pr_src_title': str(pr['title']).encode(encoding='UTF-8',errors='backslashreplace').decode(encoding='UTF-8',errors='ignore') if (
+                        pr['title']
                     ) else ' ',
                 'pr_augur_contributor_id': pr['cntrb_id'] if (
                     pr['cntrb_id']
-                ) else is_nan(comment['cntrb_id']), 
+                ) else is_nan(pr['cntrb_id']), 
                 'pr_body': str(pr['body']).encode(encoding='UTF-8',errors='backslashreplace').decode(encoding='UTF-8',errors='ignore') if (
                     pr['body']
                 ) else None,

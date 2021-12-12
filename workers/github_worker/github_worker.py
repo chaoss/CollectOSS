@@ -103,7 +103,10 @@ class GitHubWorker(WorkerGitInterfaceable):
             issues_insert = [
                 {
                     'repo_id': self.repo_id,
-                    'reporter_id': issue['cntrb_id'],
+                    'reporter_id': issue['cntrb_id'] if (
+                        comment['cntrb_id']
+                    ) else is_na(comment['cntrb_id']),
+                    #'reporter_id': issue['cntrb_id'], ## Errored on first run. Trying is_na. 12/12/2021
                     'pull_request': (
                         issue['pull_request']['url'].split('/')[-1]
                         if is_valid_pr_block(issue) else None
