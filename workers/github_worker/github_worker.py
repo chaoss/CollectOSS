@@ -577,7 +577,7 @@ class GitHubWorker(WorkerGitInterfaceable):
                         self.logger.info(f"issue closed_at is: {issue['closed_at']}")
                         closed_issue_updates.append({
                             'b_issue_id': int(issue['issue_id']),
-                            'cntrb_id': int(closed_event['cntrb_id']) if (
+                            'cntrb_id': closed_event['cntrb_id'] if (
                                 closed_event['cntrb_id']
                             else is_nan(closed_event['cntrb_id'])
                             ),

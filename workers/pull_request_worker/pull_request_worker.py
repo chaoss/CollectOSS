@@ -461,9 +461,9 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 ) else None,
                 'pr_created_at': pr['created_at'],
                 'pr_updated_at': pr['updated_at'],
-                'pr_closed_at': None (
-                    if not pr['closed_at']
-                ) else pr['closed_at'],
+                'pr_closed_at': pr['closed_at'] if (
+                    pr['closed_at']
+                ) else None,
                 'pr_merged_at': None if not (
                     pr['merged_at']
                 ) else pr['merged_at'],
