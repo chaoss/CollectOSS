@@ -453,7 +453,7 @@ class GitHubWorker(WorkerGitInterfaceable):
                 'cntrb_id': int(event['cntrb_id']),
                 'created_at': event['created_at'] if (
                     event['created_at']
-                    ) else None,
+                    ) else is_nan(event['cntrb_id']),
                 'action': event['event'],
                 'action_commit_hash': event['commit_id'],
                 'tool_source': self.tool_source,
@@ -577,7 +577,10 @@ class GitHubWorker(WorkerGitInterfaceable):
                         self.logger.info(f"issue closed_at is: {issue['closed_at']}")
                         closed_issue_updates.append({
                             'b_issue_id': int(issue['issue_id']),
-                            'cntrb_id': int(closed_event['cntrb_id']),
+                            'cntrb_id': int(closed_event['cntrb_id']) if (
+                                closed_event['cntrb_id']
+                            else is_nan(closed_event['cntrb_id'])
+                            ),
                             'issue_state': issue['state'],
                             'closed_at': issue['closed_at'] if not pd.isnull(issue['closed_at']) else None,
                         })
