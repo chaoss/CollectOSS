@@ -128,6 +128,10 @@ class Worker(Persistant):
         self._child = Process(target=self.collect, args=())
         self._child.start()
 
+
+    def is_nan(value):
+        return type(value) == float and math.isnan(value)
+
     def collect(self):
         """ Function to process each entry in the worker's task queue
         Determines what action to take based off the message type

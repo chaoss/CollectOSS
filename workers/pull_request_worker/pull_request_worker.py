@@ -452,7 +452,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'pr_src_locked': pr['locked'],
                 'pr_src_title': str(issue['title']).encode(encoding='UTF-8',errors='backslashreplace').decode(encoding='UTF-8',errors='ignore') if (
                         issue['title']
-                    ) else None,
+                    ) else is_nan(comment['cntrb_id']),
                 'pr_augur_contributor_id': pr['cntrb_id'] (
                     if pr['cntrb_id']
                 ) else None, 
@@ -487,9 +487,9 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'pr_src_commits_url': pr['commits_url'], 
                 'pr_src_statuses_url': pr['statuses_url'],
                 'pr_src_author_association': pr['author_association'],
-                'tool_source': self.tool_source,
+                'tool_source': self.tool_source + '_reviews',
                 'tool_version': self.tool_version,
-                'data_source': 'GitHub API'
+                'data_source': 'Pull Request Reviews Github API'
             } for pr in inc_source_prs['insert']
             ]
 
@@ -676,7 +676,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                     'msg_timestamp': comment['created_at'],
                     'cntrb_id': comment['cntrb_id'] if (
                         comment['cntrb_id']
-                    ) else is_na(comment['cntrb_id']),
+                    ) else is_nan(comment['cntrb_id']),
                     'tool_source': self.tool_source,
                     'tool_version': self.tool_version,
                     'data_source': self.data_source, 

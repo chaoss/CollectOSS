@@ -517,12 +517,6 @@ class GitHubWorker(WorkerGitInterfaceable):
 
         self.logger.info("Entering Assignee's.")
 
-        # assignees_all = []
-        # labels_all = []
-
-        def is_nan(value):
-            return type(value) == float and math.isnan(value)
-
         for issue in pk_source_issues:
 
             self.logger.debug(f"on issue: there are {len(pk_source_issues)} issues total. Editing assignee next.")
