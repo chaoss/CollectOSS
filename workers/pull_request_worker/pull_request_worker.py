@@ -195,7 +195,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         for index, pull_request in enumerate(pr_numbers.itertuples()):
 
-            self.logger.info(f'Querying files for pull request #{index + 1} of {len(pr_numbers)}')
+            self.logger.debug(f'Querying files for pull request #{index + 1} of {len(pr_numbers)}')
 
             query = """
                 {{
@@ -250,7 +250,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         if len(pr_file_rows) > 0:
             table_columns = pr_file_rows[0].keys()
         else:
-            self.logger.info(f'No rows need insertion for repo {self.repo_id}\n')
+            self.logger.debug(f'No rows need insertion for repo {self.repo_id}\n')
             self.register_task_completion(task_info, self.repo_id, 'pull_request_files')
             return
 
@@ -276,7 +276,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         pr_file_insert_rows = need_insertion.to_dict('records')
         pr_file_update_rows = need_updates.to_dict('records')
 
-        self.logger.info(
+        self.logger.debug(
             f'Repo id {self.repo_id} needs {len(need_insertion)} insertions and '
             f'{len(need_updates)} updates.\n'
         )
