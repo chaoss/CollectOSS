@@ -578,8 +578,8 @@ class GitHubWorker(WorkerGitInterfaceable):
                         closed_issue_updates.append({
                             'b_issue_id': int(issue['issue_id']),
                             'cntrb_id': closed_event['cntrb_id'] if not (
-                                is_nan(closed_event['cntrb_id'])
-                            else closed_event['cntrb_id']
+                                closed_event['cntrb_id']
+                            else is_nan(closed_event['cntrb_id'])
                             ),
                             'issue_state': issue['state'],
                             'closed_at': issue['closed_at'] if not pd.isnull(issue['closed_at']) else None,
