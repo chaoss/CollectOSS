@@ -294,10 +294,6 @@ class GitHubWorker(WorkerGitInterfaceable):
                 } for comment in inc_issue_comments['insert']
             ]
             try:
-                # self.bulk_insert(self.message_table, insert=issue_comments_insert,
-                #     unique_columns=comment_action_map['insert']['augur'])
-                # Using the action map resulted consistently in a duplicate key error
-                # Which really should not be possible ... ?? Trying hard coding the map.
                 self.bulk_insert(self.message_table, insert=issue_comments_insert,
                     unique_columns=comment_action_map['insert']['augur'])
             except Exception as e:
@@ -313,6 +309,9 @@ class GitHubWorker(WorkerGitInterfaceable):
                 )
             except Exception as e:
                 self.logger.info(f"exception registered in enrich_data_primary_keys for message_ref issues table: {e}.. exception registered")
+                stacker = traceback.format_exc()
+                self.logger.debug(f"{stacker}")
+                self.write_debug_data(c_pk_source_comments, 'c_pk_source_comments')
 
             self.logger.info(f"log of the length of c_pk_source_comments {len(c_pk_source_comments)}.")
 
@@ -460,6 +459,7 @@ class GitHubWorker(WorkerGitInterfaceable):
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
                 'data_source': self.data_source,
+                'platform_id': self.platform_id,
                 'repo_id': self.repo_id
             } for event in pk_issue_events if event['actor'] is not None
         ]
