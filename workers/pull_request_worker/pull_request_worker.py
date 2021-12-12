@@ -740,7 +740,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 } for comment in both_pk_source_comments
             ]
             try: 
-                self.logger.debug(f"inserting into {self.pull_request_message_ref}.")                
+                self.logger.debug(f"inserting into {self.pull_request_message_ref_table}.")                
                 self.bulk_insert(self.pull_request_message_ref_table, insert=pr_message_ref_insert,
                     unique_columns=comment_ref_action_map['insert']['augur'])
 
@@ -801,7 +801,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             }
         }
 
-        self.logger.info(pk_source_issues[0])
+        self.logger.info(pk_source_prs[0])
         self.logger.info(pd.DataFrame(pk_source_prs).columns)
         self.logger.info(pd.DataFrame(pk_source_prs))
 
