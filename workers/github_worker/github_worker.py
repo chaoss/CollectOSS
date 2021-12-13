@@ -56,6 +56,9 @@ class GitHubWorker(WorkerGitInterfaceable):
         # Run the general worker initialization
         super().__init__(worker_type, config, given, models, data_tables, operations_tables)
 
+    def is_nan(value):
+        return type(value) == float and math.isnan(value)
+
     def _get_pk_source_issues(self):
 
         issues_url = (
@@ -288,7 +291,7 @@ class GitHubWorker(WorkerGitInterfaceable):
                     ) else is_nan(comment['created_at']),
                     'cntrb_id': comment['cntrb_id'] if (
                         comment['cntrb_id']
-                    ) else is_na(comment['cntrb_id']),
+                    ) else is_nan(comment['cntrb_id']),
                     'tool_source': self.tool_source,
                     'tool_version': self.tool_version,
                     'data_source': self.data_source,
