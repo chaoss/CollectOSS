@@ -454,10 +454,12 @@ class GitHubWorker(WorkerGitInterfaceable):
                 'issue_id': int(event['issue_id']),
                 'node_id': event['node_id'],
                 'node_url': event['url'],
-                'cntrb_id': int(event['cntrb_id']),
+                'cntrb_id': event['cntrb_id'] if (
+                    event(cntrb_id)
+                ) else is_nan(event['cntrb_id']),
                 'created_at': event['created_at'] if (
                     event['created_at']
-                    ) else is_nan(event['cntrb_id']),
+                ) else is_nan(event['created_at']),
                 'action': event['event'],
                 'action_commit_hash': event['commit_id'],
                 'tool_source': self.tool_source,

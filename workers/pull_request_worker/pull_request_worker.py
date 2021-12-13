@@ -826,8 +826,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         ## Table. 12/12/2021, SPG)
 
         pk_pr_events = self.enrich_data_primary_keys(pr_events['insert'],
-            self.pull_requests_table, ['issue.id'], ['pr_src_id']) #changed 12/12/2021 to mirror issues events
-
+            #self.pull_requests_table, ['issue.id'], ['pr_src_id']) #changed 12/12/2021 to mirror issues events
+            self.pull_requests_table, ['issue.url'], ['pr_issue_url'], in_memory=True) # changed back
         #self.write_debug_data(pk_pr_events, 'pk_pr_events')
 
         if len(pk_pr_events):
