@@ -56,9 +56,6 @@ class GitHubWorker(WorkerGitInterfaceable):
         # Run the general worker initialization
         super().__init__(worker_type, config, given, models, data_tables, operations_tables)
 
-    def is_nan(value):
-        return type(value) == float and math.isnan(value)
-
     def _get_pk_source_issues(self):
 
         issues_url = (
@@ -525,6 +522,9 @@ class GitHubWorker(WorkerGitInterfaceable):
             #kip_closed_issue_update = True
 
         self.logger.info("Entering Assignee's.")
+
+        def is_nan(value):
+            return type(value) == float and math.isnan(value)
 
         for issue in pk_source_issues:
 
