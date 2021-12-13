@@ -54,6 +54,9 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         #Needs to be an attribute of the class for incremental database insert using paginate_endpoint
         self.pk_source_prs = []
+        
+    def is_nan(value):
+        return type(value) == float and math.isnan(value)
 
     def graphql_paginate(self, query, data_subjects, before_parameters=None):
         """ Paginate a GitHub GraphQL query backwards
