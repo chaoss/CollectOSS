@@ -856,10 +856,16 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 self.logger.debug(f"Exception registered. Dict has null cntrb_id: {issue}")
 
 
+                    # 'reporter_id': issue['cntrb_id'] if (
+                    #     issue['cntrb_id']
+                    # ) else is_na(issue['cntrb_id']),
+
         pr_events_insert = [
             {
                 'pull_request_id': int(event['pull_request_id']),
-                'cntrb_id': int(event['cntrb_id']),
+                'cntrb_id': event['cntrb_id'] if (
+                    event['cntrb_id']
+                ) else is_nan(event['cntrb_id']),
                 'action': event['event'],
                 'action_commit_hash': event['commit_id'],
                 'created_at': event['created_at'] if (

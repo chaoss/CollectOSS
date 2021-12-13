@@ -532,7 +532,7 @@ class GitHubWorker(WorkerGitInterfaceable):
             try: 
                 # Issue Assignees
                 source_assignees = [
-                    assignee for assignee in int(issue['assignee']) if assignee #issue with float iteration 12/12/2021
+                    assignee for assignee in issue['assignee'] if assignee #issue with float iteration 12/12/2021
                     and not is_nan(assignee)
                 ]
                 if (
