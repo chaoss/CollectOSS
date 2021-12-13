@@ -146,3 +146,40 @@ This file will be located in your `/etc/nginx/sites-enabled` directory on most l
 		        access_log /var/log/nginx/augur.censusscienceosshealth.access.log;
 
 		}
+		
+--------------------
+HTTPS
+--------------------
+
+HTTPS is an extension of HTTP. It is used for secure communication over a computer network and it is important that your deployment utilizes HTTPS. 
+A possible error that is encountered when not using HTTPS is the **Mixed Content** error which blocks communication between your page and the server.
+
+To convert from HTTP to HTTPS the `/insert/path/to/file(s)/where/the/issue/is` must be set up as follows:
+
+.. code-block::
+
+		placeholder {
+		        placeholder;
+		        place_holder  <<place.holder.text>>;
+			$placeholder
+
+
+
+		#        location /api/unstable/ {
+		#                proxy_pass http://dev.osshealth.io:5000;
+		#                proxy_set_header Host $host;
+		#        }
+
+		        placeholder /placeholder/ {
+		        placeholder /placeholder/placeholder/.../<<placeholder>>/placeholder/placeholder;
+		        index index.html;
+		        }
+
+
+		        error_log /var/log/nginx/placeholder.error.log;
+		        access_log /var/log/nginx/augur.placeholder.access.log;
+
+		}
+
+
+**FOR GROUP 11, WE WILL MODIFY THE ABOVE CODE BLOCK, ONCE THE SOLUTION IS FOUND SEND IT TO ADAM AND HE WILL UPDATE THIS DOCUMENTATION**		
