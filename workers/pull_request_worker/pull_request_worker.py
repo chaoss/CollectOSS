@@ -830,8 +830,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         #self.write_debug_data(pk_pr_events, 'pk_pr_events')
 
-        if len(pk_issue_events):
-            pk_issue_events = pd.DataFrame(pk_pr_events)[
+        if len(pk_pr_events):
+            pk_pr_events = pd.DataFrame(pk_pr_events)[
                 ['id', 'pull_request_id', 'node_id', 'url', 'actor', 'created_at', 'event', 'commit_id']
             ].to_dict(orient='records')
 

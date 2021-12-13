@@ -202,6 +202,7 @@ class GitHubWorker(WorkerGitInterfaceable):
         # self.query_github_contributors(entry_info, self.repo_id)
 
         pk_source_issues = self._get_pk_source_issues()
+        issue_events_all = []
         if pk_source_issues:
             try:
                 self.issue_comments_model(pk_source_issues)
