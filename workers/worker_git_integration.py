@@ -263,7 +263,7 @@ class WorkerGitInterfaceable(Worker):
 
         cntrb_action_map = {
             'insert': {
-                'source': [key] + action_map_additions['insert']['source'] + [f'{prefix}id'],
+                'source': str([key]) + action_map_additions['insert']['source'] + [f'{prefix}id'],
                 'augur': ['cntrb_login'] + action_map_additions['insert']['augur'] + ['gh_user_id']
             }
         }
@@ -275,9 +275,9 @@ class WorkerGitInterfaceable(Worker):
         source_data = expanded_source_df.to_dict(orient='records')
 
         #Filter out bad data where we can't even hit the api.
-        # source_data = [data for data in source_data if f'{prefix}login' in data and data[f'{prefix}login'] != None]
+        source_data = [data for data in source_data if f'{prefix}login' in data and data[f'{prefix}login'] != None]
         # Still dealing with 'nan' 12/14/2021
-        source_data = [data for data in source_data if f'{prefix}'+str(login) in data and data[f'{prefix}'+str(login)] != None]
+        # NOPE -- source_data = [data for data in source_data if f'{prefix}'+str(login) in data and data[f'{prefix}'+str(login)] != None]
 
         self.logger.info(f"table_values_cntrb keys: {table_values_cntrb[0].keys()}")
         # self.logger.info(f"source_data keys: {source_data[0].keys()}")
