@@ -1904,6 +1904,7 @@ CREATE TABLE "augur_data"."issue_events" (
   "created_at" timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "node_id" varchar COLLATE "pg_catalog"."default",
   "node_url" varchar COLLATE "pg_catalog"."default",
+  "platform_id" int8 NOT NULL, 
   "issue_event_src_id" int8,
   "tool_source" varchar COLLATE "pg_catalog"."default",
   "tool_version" varchar COLLATE "pg_catalog"."default",
@@ -2317,7 +2318,7 @@ CREATE TABLE "augur_data"."pull_request_events" (
   "issue_event_src_id" int8,
   "node_id" varchar COLLATE "pg_catalog"."default",
   "node_url" varchar COLLATE "pg_catalog"."default",
-  "platform_id" int8 DEFAULT 25150,
+  "platform_id" int8 DEFAULT 25150 NOT NULL,
   "pr_platform_event_id" int8,
   "tool_source" varchar COLLATE "pg_catalog"."default",
   "tool_version" varchar COLLATE "pg_catalog"."default",
@@ -3640,6 +3641,7 @@ ALTER TABLE "augur_data"."issue_events" ADD CONSTRAINT "fk_issue_events_issues_1
 ALTER TABLE "augur_data"."issue_events" ADD CONSTRAINT "fk_issue_events_repo" FOREIGN KEY ("repo_id") REFERENCES "augur_data"."repo" ("repo_id") ON DELETE RESTRICT ON UPDATE CASCADE;
 ALTER TABLE "augur_data"."issue_labels" ADD CONSTRAINT "fk_issue_labels_issues_1" FOREIGN KEY ("issue_id") REFERENCES "augur_data"."issues" ("issue_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "augur_data"."issue_labels" ADD CONSTRAINT "fk_issue_labels_repo_id" FOREIGN KEY ("repo_id") REFERENCES "augur_data"."repo" ("repo_id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "augur_data"."issue_events" ADD CONSTRAINT "fk_issue_event_platform_ide" FOREIGN KEY ("platform_id") REFERENCES "augur_data"."platform" ("pltfrm_id") ON DELETE RESTRICT ON UPDATE CASCADE;
 ALTER TABLE "augur_data"."issue_message_ref" ADD CONSTRAINT "fk_issue_message_ref_issues_1" FOREIGN KEY ("issue_id") REFERENCES "augur_data"."issues" ("issue_id") ON DELETE RESTRICT ON UPDATE CASCADE;
 ALTER TABLE "augur_data"."issue_message_ref" ADD CONSTRAINT "fk_issue_message_ref_message_1" FOREIGN KEY ("msg_id") REFERENCES "augur_data"."message" ("msg_id") ON DELETE RESTRICT ON UPDATE CASCADE;
 ALTER TABLE "augur_data"."issue_message_ref" ADD CONSTRAINT "fk_repo_id_fk1" FOREIGN KEY ("repo_id") REFERENCES "augur_data"."repo" ("repo_id") ON DELETE RESTRICT ON UPDATE CASCADE;

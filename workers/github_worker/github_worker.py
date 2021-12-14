@@ -103,7 +103,10 @@ class GitHubWorker(WorkerGitInterfaceable):
             issues_insert = [
                 {
                     'repo_id': self.repo_id,
-                    'reporter_id': issue['cntrb_id'],
+                    'reporter_id': issue['cntrb_id'] if (
+                        issue['cntrb_id']
+                    ) else is_na(issue['cntrb_id']),
+                    #'reporter_id': issue['cntrb_id'], ## Errored on first run. Trying is_na. 12/12/2021
                     'pull_request': (
                         issue['pull_request']['url'].split('/')[-1]
                         if is_valid_pr_block(issue) else None
@@ -199,6 +202,7 @@ class GitHubWorker(WorkerGitInterfaceable):
         # self.query_github_contributors(entry_info, self.repo_id)
 
         pk_source_issues = self._get_pk_source_issues()
+        issue_events_all = []
         if pk_source_issues:
             try:
                 self.issue_comments_model(pk_source_issues)
@@ -284,7 +288,7 @@ class GitHubWorker(WorkerGitInterfaceable):
                     ) else is_nan(comment['created_at']),
                     'cntrb_id': comment['cntrb_id'] if (
                         comment['cntrb_id']
-                    ) else is_na(comment['cntrb_id']),
+                    ) else is_nan(comment['cntrb_id']),
                     'tool_source': self.tool_source,
                     'tool_version': self.tool_version,
                     'data_source': self.data_source,
@@ -294,10 +298,6 @@ class GitHubWorker(WorkerGitInterfaceable):
                 } for comment in inc_issue_comments['insert']
             ]
             try:
-                # self.bulk_insert(self.message_table, insert=issue_comments_insert,
-                #     unique_columns=comment_action_map['insert']['augur'])
-                # Using the action map resulted consistently in a duplicate key error
-                # Which really should not be possible ... ?? Trying hard coding the map.
                 self.bulk_insert(self.message_table, insert=issue_comments_insert,
                     unique_columns=comment_action_map['insert']['augur'])
             except Exception as e:
@@ -313,6 +313,9 @@ class GitHubWorker(WorkerGitInterfaceable):
                 )
             except Exception as e:
                 self.logger.info(f"exception registered in enrich_data_primary_keys for message_ref issues table: {e}.. exception registered")
+                stacker = traceback.format_exc()
+                self.logger.debug(f"{stacker}")
+                self.write_debug_data(c_pk_source_comments, 'c_pk_source_comments')
 
             self.logger.info(f"log of the length of c_pk_source_comments {len(c_pk_source_comments)}.")
 
@@ -451,15 +454,18 @@ class GitHubWorker(WorkerGitInterfaceable):
                 'issue_id': int(event['issue_id']),
                 'node_id': event['node_id'],
                 'node_url': event['url'],
-                'cntrb_id': int(event['cntrb_id']),
+                'cntrb_id': event['cntrb_id'] if (
+                    event(cntrb_id)
+                ) else is_nan(event['cntrb_id']),
                 'created_at': event['created_at'] if (
                     event['created_at']
-                    ) else None,
+                ) else is_nan(event['created_at']),
                 'action': event['event'],
                 'action_commit_hash': event['commit_id'],
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
                 'data_source': self.data_source,
+                'platform_id': self.platform_id,
                 'repo_id': self.repo_id
             } for event in pk_issue_events if event['actor'] is not None
         ]
@@ -517,9 +523,6 @@ class GitHubWorker(WorkerGitInterfaceable):
 
         self.logger.info("Entering Assignee's.")
 
-        # assignees_all = []
-        # labels_all = []
-
         def is_nan(value):
             return type(value) == float and math.isnan(value)
 
@@ -529,7 +532,7 @@ class GitHubWorker(WorkerGitInterfaceable):
             try: 
                 # Issue Assignees
                 source_assignees = [
-                    assignee for assignee in issue['assignee'] if assignee
+                    assignee for assignee in issue['assignee'] if assignee #issue with float iteration 12/12/2021
                     and not is_nan(assignee)
                 ]
                 if (
@@ -583,7 +586,7 @@ class GitHubWorker(WorkerGitInterfaceable):
                         self.logger.info(f"issue closed_at is: {issue['closed_at']}")
                         closed_issue_updates.append({
                             'b_issue_id': int(issue['issue_id']),
-                            'cntrb_id': int(closed_event['cntrb_id']),
+                            'cntrb_id': closed_event['cntrb_id'],
                             'issue_state': issue['state'],
                             'closed_at': issue['closed_at'] if not pd.isnull(issue['closed_at']) else None,
                         })
