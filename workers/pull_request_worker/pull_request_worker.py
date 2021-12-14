@@ -864,8 +864,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             {
                 'pull_request_id': int(event['pull_request_id']),
                 'cntrb_id': event['cntrb_id'] if (
-                    event['cntrb_id']
-                ) else is_na(event['cntrb_id']),
+                    str(event['cntrb_id'])
+                ) else str(event['cntrb_id']),
                 'action': event['event'],
                 'action_commit_hash': event['commit_id'],
                 'created_at': event['created_at'] if (

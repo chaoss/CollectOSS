@@ -456,10 +456,9 @@ class GitHubWorker(WorkerGitInterfaceable):
                 'issue_id': int(event['issue_id']),
                 'node_id': event['node_id'],
                 'node_url': event['url'],
-                'cntrb_id': event['cntrb_id'],
                 'cntrb_id': event['cntrb_id'] if (
-                    event['cntrb_id']
-                ) else is_na(comment['cntrb_id']),
+                    str(event['cntrb_id'])
+                ) else str(event['cntrb_id']),
                 'created_at': event['created_at'] if (
                     event['created_at']
                     ) else None,
