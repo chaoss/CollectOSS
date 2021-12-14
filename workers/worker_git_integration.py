@@ -264,8 +264,7 @@ class WorkerGitInterfaceable(Worker):
         cntrb_action_map = {
             'insert': {
                 'source': [key] + action_map_additions['insert']['source'] + [f'{prefix}id'],
-                'augur': str(['cntrb_login']) + action_map_additions['insert']['augur'] + ['gh_user_id']
-                ## SPG 12/13/2021; Still battling "nan" user on GitHub.
+                'augur': ['cntrb_login'] + action_map_additions['insert']['augur'] + ['gh_user_id']
             }
         }
 
