@@ -275,7 +275,9 @@ class WorkerGitInterfaceable(Worker):
         source_data = expanded_source_df.to_dict(orient='records')
 
         #Filter out bad data where we can't even hit the api.
-        source_data = [data for data in source_data if f'{prefix}login' in data and data[f'{prefix}login'] != None]
+        # source_data = [data for data in source_data if f'{prefix}login' in data and data[f'{prefix}login'] != None]
+        # Still dealing with 'nan' 12/14/2021
+        source_data = [data for data in source_data if f'{prefix}'+str(login) in data and data[f'{prefix}'+str(login)] != None]
 
         self.logger.info(f"table_values_cntrb keys: {table_values_cntrb[0].keys()}")
         # self.logger.info(f"source_data keys: {source_data[0].keys()}")
@@ -300,7 +302,7 @@ class WorkerGitInterfaceable(Worker):
                 data[f'{prefix}id']
                 for row in table_values_cntrb:
                   try:
-                    if str(row['gh_user_id']).lower() == 'nan': # 12/2/2021 SPG -- just skipping this user for now
+                    if int(row['gh_user_id']) == 74832: # 12/2/2021 SPG -- just skipping this user for now
                         self.logger.info('found nan!')
                         user_unique_ids.append(row(74832)) # actual gh_user_id for login nan
                     #     # continue took out continue 
