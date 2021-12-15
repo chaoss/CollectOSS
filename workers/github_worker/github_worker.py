@@ -438,8 +438,7 @@ class GitHubWorker(WorkerGitInterfaceable):
                 ['id', 'issue_id', 'node_id', 'url', 'actor', 'created_at', 'event', 'commit_id']
             ]
 
-            pk_issue_events = pk_issue_events.astype{"id": int, "issue_id": int, "url": str, "actor": str, \
-              "event": str, "commit_id": str}
+            pk_issue_events = pk_issue_events.astype({"id": int, "issue_id": int, "url": str, "actor": str, "event": str, "commit_id": str})
 
             pk_issue_events = pk_issue_events.to_dict(orient='records')
 
