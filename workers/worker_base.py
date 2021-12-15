@@ -179,6 +179,13 @@ class Worker(Persistant):
                 self.repo_id = repo_id
                 self.owner, self.repo = self.get_owner_repo(list(message['given'].values())[0])
                 model_method(message, repo_id)
+            except KeyError: 
+                ## This is to deal with the cntrb_id issues related to 'nan'user
+                ## SPG 12/15/2021 https://augurlabs.slack.com/archives/C02714H3CES/p1639601234000600
+                self.logger.info("Added KeyError check to deal with 'nan' user issues. Monitor. ")
+                stacker = traceback.format_exc()
+                self.logger.debug(f"{stacker}")
+                pass                 
             except Exception as e: # this could be a custom exception, might make things easier
                 self.register_task_failure(message, repo_id, e)
                 break

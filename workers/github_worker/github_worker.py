@@ -413,7 +413,7 @@ class GitHubWorker(WorkerGitInterfaceable):
         self.logger.info(pd.DataFrame(pk_source_issues).columns)
         self.logger.info(pd.DataFrame(pk_source_issues))
         #list to hold contributors needing insertion or update
-        issue_events = self.new_paginate_endpoint(
+        issue_events = self.paginate_endpoint(
             events_url, table=self.issue_events_table, action_map=event_action_map,
             where_clause=self.issue_events_table.c.issue_id.in_(
                 set(pd.DataFrame(pk_source_issues)['issue_id'])

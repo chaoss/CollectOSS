@@ -351,6 +351,7 @@ class WorkerGitInterfaceable(Worker):
 
             #if user.id is in the database then there is no need to add the contributor
             if source_data_id in user_unique_ids:
+                
 
                 self.logger.info("{} found in database".format(source_data_id))
 
