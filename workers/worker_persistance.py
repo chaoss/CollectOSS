@@ -928,14 +928,22 @@ class Persistant():
             expanded_column = pd.DataFrame(
                 df[root].where(df[root].notna(), lambda x: [{}]).tolist()
             )
+
+
+            ## This is some wild foo... the 'nan' is coming from GithUb
+            ### We are expanding it here, and pythin is interpreting it as 
+            ## a 'nan' float value instead of an `nan` user login. 
             expanded_column.columns = [
-                f'{root}.{attribute}' for attribute in expanded_column.columns
+                f'{root}.{attribute}' f'for {attribute}'  f'in { expanded_column.columns}'
             ]
+
+            self.logger.debug(f'Expanded Columns Are: {expanded_column.columns}')
+
             if column not in expanded_column.columns:
                 expanded_column[column] = None
             try:
                 df = df.join(expanded_column)
-            except ValueError:
+            except ValueError as e:
                 # columns already added (happens if trying to expand the same column twice)
                 # TODO: Catch this before by only looping unique prefixs?
                 self.logger.debug(f"value error: {e}.") 
