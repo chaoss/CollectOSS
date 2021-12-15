@@ -302,13 +302,14 @@ class WorkerGitInterfaceable(Worker):
                 data[f'{prefix}id']
                 for row in table_values_cntrb:
                   try:
-                    if int(row['gh_user_id']) == 74832: # 12/2/2021 SPG -- just skipping this user for now
-                        self.logger.info('found nan!')
-                        user_unique_ids.append(row(74832)) # actual gh_user_id for login nan
-                    #     # continue took out continue 
-                    else: # 12/13/2021 ... I don't know .. trying this. 
-                        user_unique_ids.append(row['gh_user_id']) ## cast as string by SPG on 11/28/2021 due to `nan` user
+                    # if int(row['gh_user_id']) == 74832: # 12/2/2021 SPG -- just skipping this user for now
+                    #     self.logger.info('found nan!')
+                    #     #user_unique_ids.append(row(74832)) # actual gh_user_id for login nan
+                    # #     # continue took out continue 
+                    # else: # 12/13/2021 ... I don't know .. trying this. 
+                    user_unique_ids.append(row['gh_user_id']) ## cast as string by SPG on 11/28/2021 due to `nan` user
                         # by 12/2/2021 it became clear this was causing a match failure. Removed string cast. 
+                        # 12/15/2021 -- really no idea at this point. Trying this again. 
                   except Exception as e:
                     self.logger.info(f"Error adding gh_user_id: {e}. Row: {row}")
                     stacker = traceback.format_exc()
