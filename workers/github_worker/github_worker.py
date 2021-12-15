@@ -428,9 +428,20 @@ class GitHubWorker(WorkerGitInterfaceable):
         )
 
         if len(pk_issue_events):
+            # pk_issue_events = pd.DataFrame(pk_issue_events)[
+            #     ['id', 'issue_id', 'node_id', 'url', 'actor', 'created_at', 'event', 'commit_id']
+            # ].to_dict(orient='records')
+
+            ### Trying explicit dataframe typing 
+
             pk_issue_events = pd.DataFrame(pk_issue_events)[
                 ['id', 'issue_id', 'node_id', 'url', 'actor', 'created_at', 'event', 'commit_id']
-            ].to_dict(orient='records')
+            ]
+
+            pk_issue_events = pk_issue_events.astype{"id": int, "issue_id": int, "url": str, "actor": str, \
+              "event": str, "commit_id": str}
+
+            pk_issue_events = pk_issue_events.to_dict(orient='records')
 
         #This is sending empty data to enrich_cntrb_id, fix with check
         if len(pk_issue_events) > 0:
