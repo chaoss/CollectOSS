@@ -185,7 +185,7 @@ class Worker(Persistant):
                 self.logger.info("Added KeyError check to deal with 'nan' user issues. Monitor. ")
                 stacker = traceback.format_exc()
                 self.logger.debug(f"{stacker}")
-                continue                  
+                continue ### COME BACK TO REMOVE CONTINUE in FUTURE                 
             except Exception as e: # this could be a custom exception, might make things easier
                 self.register_task_failure(message, repo_id, e)
                 break
