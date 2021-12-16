@@ -1132,19 +1132,19 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'pr_review_msg_author_association': comment['author_association'],
                 'pr_review_msg_start_line': s.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
                     comment['start_line'] #12/6/2021 - removed casting from value check
-                ) else comment['start_line'],
+                ) else int(comment['start_line']),
                 'pr_review_msg_original_start_line': s.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
                     comment['original_start_line']  #12/6/2021 - removed casting from value check
-                ) else comment['original_start_line'],
+                ) else int(comment['original_start_line']),
                 'pr_review_msg_start_side': s.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
                     str(comment['start_side'])
                 ) else str(comment['start_side']),
                 'pr_review_msg_line': s.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
                     comment['line']  #12/6/2021 - removed casting from value check
-                ) else comment['line'],
+                ) else int(comment['line']),
                 'pr_review_msg_original_line': s.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
                     comment['original_line']  #12/6/2021 - removed casting from value check
-                ) else comment['original_line'],
+                ) else int(comment['original_line']),
                 'pr_review_msg_side': s.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
                     str(comment['side'])
                 ) else str(comment['side']),
