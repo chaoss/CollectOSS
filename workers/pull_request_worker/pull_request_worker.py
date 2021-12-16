@@ -19,7 +19,7 @@ from workers.worker_base import Worker
 
 class GitHubPullRequestWorker(WorkerGitInterfaceable):
     """
-    Worker that collects Pull Request related data from the
+    Worker that collects Pull Rffequest related data from the
     Github API and stores it in our database.
 
     :param task: most recent task the broker added to the worker's queue
@@ -810,7 +810,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         #list to hold contributors needing insertion or update
         #12/12/2021 -- Changed to new_paginate_endpoint because it works for issue_events
-        pr_events = self.new_paginate_endpoint(
+        pr_events = self.paginate_endpoint(
             events_url, table=self.pull_request_events_table, action_map=event_action_map,
             where_clause=self.pull_request_events_table.c.pull_request_id.in_(
                 set(pd.DataFrame(pk_source_prs)['pull_request_id'])
