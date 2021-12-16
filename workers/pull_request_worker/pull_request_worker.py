@@ -875,7 +875,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         pr_events_insert = [
             {
-                'pull_request_id': ['pull_request_id'],
+                'pull_request_id': event['pull_request_id'],
                 'cntrb_id': event['cntrb_id'],
                 'action': event['event'],
                 'action_commit_hash': None,
