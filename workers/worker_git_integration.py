@@ -522,7 +522,7 @@ class WorkerGitInterfaceable(Worker):
 
         for data in source_data:
 
-            print("User login type: " + type(data[f'{prefix}login']) + ". Login: " + data[f'{prefix}login'])
+            print("User login type: " + str(type(data[f'{prefix}login'])) + ". Login: " + str(data[f'{prefix}login']))
 
             try:
                 data['cntrb_id']
