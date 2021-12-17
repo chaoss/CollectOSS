@@ -284,13 +284,16 @@ class WorkerGitInterfaceable(Worker):
         #TODO: seperate this method into it's own worker.
         #cntrb_id_offset = self.get_max_id(self.contributors_table, 'cntrb_id') - 1
 
+        self.logger.debug(f"Enriching {len(source_data)} contributors.")
+
         # loop through data to test if it is already in the database
         for index, data in enumerate(source_data):
 
+            if data[f'{prefix}login'] == 'nan':
+                continue
+
             #removed this log because it was generating a lot of data.
             #self.logger.info(f"Enriching {index} of {len(source_data)}")
-            self.logger.debug(f"Enriching {len(source_data)} contributors.")
-
 
             user_unique_ids = []
 
@@ -299,18 +302,21 @@ class WorkerGitInterfaceable(Worker):
                 #This will trigger a KeyError if data has alt identifier.
                 data[f'{prefix}id']
                 for row in table_values_cntrb:
-                  try:
-                    if str(row['gh_user_id']) == 'NaN': # 12/2/2021 SPG -- just skipping this user for now
-                        user_unique_ids.append(row(74832)) # actual gh_user_id for login nan
-                        # continue took out continue 
-                    else: 
-                        user_unique_ids.append(row['gh_user_id']) ## cast as string by SPG on 11/28/2021 due to `nan` user
-                        # by 12/2/2021 it became clear this was causing a match failure. Removed string cast. 
-                  except Exception as e:
-                    self.logger.info(f"Error adding gh_user_id: {e}. Row: {row}")
-                    stacker = traceback.format_exc()
-                    self.logger.debug(f"{stacker}")
-                    pass # added pass to keep loop going if this fails 12/2/2021
+
+                    try:
+                        if str(row['gh_user_id']) == 'NaN': # 12/2/2021 SPG -- just skipping this user for now
+                            user_unique_ids.append(row(74832)) # actual gh_user_id for login nan
+                            # continue took out continue
+                        else:
+                            user_unique_ids.append(row['gh_user_id']) ## cast as string by SPG on 11/28/2021 due to `nan` user
+                            # by 12/2/2021 it became clear this was causing a match failure. Removed string cast.
+                    except Exception as e:
+                        self.logger.info(f"Error adding gh_user_id: {e}. Row: {row}")
+                        stacker = traceback.format_exc()
+                        self.logger.debug(f"{stacker}")
+                        # added pass to keep loop going if this fails 12/2/2021
+                        # commented out pass because pass is a code placeholder and will not effect loop 12/17/2021: Andrew Brain
+                        # pass
             except KeyError:
                 self.logger.info("Source data doesn't have user.id. Using node_id instead.")
                 stacker = traceback.format_exc()
@@ -387,7 +393,7 @@ class WorkerGitInterfaceable(Worker):
               while attempts < 10:
                 self.logger.info(f"Hitting endpoint: {url} ...\n")
                 try:
-                  response = requests.get(url=url , headers=self.headers)
+                  response = requests.get(url=url, headers=self.headers)
                 except TimeoutError:
                   self.logger.info(f"User data request for enriching contributor data failed with {attempts} attempts! Trying again...")
                   time.sleep(10)
@@ -513,6 +519,19 @@ class WorkerGitInterfaceable(Worker):
           "Contributor id enrichment successful, result has "
           f"{len(source_data)} data points.\n"
         )
+
+        for data in source_data:
+
+            print("User login type: " + type(data[f'{prefix}login']) + ". Login: " + data[f'{prefix}login'])
+
+            try:
+                data['cntrb_id']
+            except:
+                self.logger.info(f"AB ERROR: data exiting enrich_cntrb_id without cntrb_id, login is: " + data[f'{prefix}login'])
+
+
+
+
         return source_data
 
 
