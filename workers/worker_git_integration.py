@@ -522,12 +522,12 @@ class WorkerGitInterfaceable(Worker):
 
         for data in source_data:
 
-            print("User login type: " + str(type(data[f'{prefix}login'])) + ". Login: " + str(data[f'{prefix}login']))
+            self.logger.info("User login type: " + str(type(data[f'{prefix}login'])) + ". Login: " + str(data[f'{prefix}login']))
 
             try:
                 data['cntrb_id']
             except:
-                self.logger.info(f"AB ERROR: data exiting enrich_cntrb_id without cntrb_id, login is: " + data[f'{prefix}login'])
+                self.logger.info(f"AB ERROR: data exiting enrich_cntrb_id without cntrb_id, login is: " + str(data[f'{prefix}login']))
 
 
 
