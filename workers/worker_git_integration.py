@@ -286,10 +286,13 @@ class WorkerGitInterfaceable(Worker):
 
         self.logger.debug(f"Enriching {len(source_data)} contributors.")
 
+        source_data = source_data.loc[data[f'{prefix}login'] != 'nan']
+
         # loop through data to test if it is already in the database
         for index, data in enumerate(source_data):
 
             if data[f'{prefix}login'] == 'nan':
+                self.logger.debug("Nan user found continuing")
                 continue
 
             #removed this log because it was generating a lot of data.
