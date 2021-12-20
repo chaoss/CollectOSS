@@ -74,7 +74,7 @@
               <tbody>
                 <tr v-for="repo in sortedRepos(sortColumn,ascending)" v-bind:item="repo" :key="repo.url">
                   <td>
-                    <a href="#" @click="onGitRepo(repo.rg_name, repo.repo_name)">{{ repo.url }}</a>
+                    <router-link tag="a" :to="'/repo/' + repo.rg_name + '/' + repo.repo_name + '/overview'">{{ repo.url }}</router-link>
                   </td>
                   <td>{{ repo.rg_name }}</td>
                   <!-- <td>{{ repo.description }}</td> -->
@@ -184,23 +184,26 @@ export default class Repos extends Vue{
       }
   }
 
-  onGitRepo (rg_name: String, repo_name: String) {
-    // this.$router.push({
-    //   name: 'repo_overview',
-    //   params: {group:e.rg_name, repo:e.repo_name, repo_group_id: e.repo_group_id, repo_id: e.repo_id, url:e.url}
-    // }, () => {
-    //   console.dir(e);
-    // });
-    if (rg_name == null || repo_name == null ) {
-      window.alert('Error - repo name not found in store');
-      console.log(this.sortedRepos(this.sortColumn,this.ascending));
-    } else {
-      this.$router.push(`repo/${rg_name}/${repo_name}/overview`, () => {
-        console.log(`RG_NAME: ${rg_name}`);
-        console.log(`REPO_NAME: ${repo_name}`);
-      });
-    }
-  }
+  // Removed 12/9/2021
+  // Replaced by router-link element
+  // If something broke in regards to parameter passing to the router, this could be it
+  // onGitRepo (rg_name: String, repo_name: String) {
+  //   // this.$router.push({
+  //   //   name: 'repo_overview',
+  //   //   params: {group:e.rg_name, repo:e.repo_name, repo_group_id: e.repo_group_id, repo_id: e.repo_id, url:e.url}
+  //   // }, () => {
+  //   //   console.dir(e);
+  //   // });
+  //   if (rg_name == null || repo_name == null ) {
+  //     window.alert('Error - repo name not found in store');
+  //     console.log(this.sortedRepos(this.sortColumn,this.ascending));
+  //   } else {
+  //     this.$router.push(`repo/${rg_name}/${repo_name}/overview`, () => {
+  //       console.log(`RG_NAME: ${rg_name}`);
+  //       console.log(`REPO_NAME: ${repo_name}`);
+  //     });
+  //   }
+  // }
 }
 
 </script>

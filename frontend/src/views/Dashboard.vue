@@ -38,7 +38,7 @@
                   <d-tooltip 
                     :target="'#' + idx"
                     container=".shards-demo--example--tooltip-01"
-                    placement="right"
+                    placement="bottom"
                     offset="10">
                     Click here to see an overview of this repository's metrics
                   </d-tooltip>
@@ -57,7 +57,9 @@
                         <d-tooltip 
                           :target="'#ev' + idx"
                           container=".shards-demo--example--tooltip-01"
-                          offset="20">
+                          offset="20"
+                          position="top"
+                        >
                           Click to see evolution metrics for this repo.
                         </d-tooltip>
                       </d-col>
@@ -95,7 +97,7 @@
                         <d-tooltip 
                           :target="'#ri' + idx"
                           container=".shards-demo--example--tooltip-01"
-                          placement="right"
+                          placement="top"
                           offset="20">
                           Click to see risk metrics for this repo.
                         </d-tooltip>
