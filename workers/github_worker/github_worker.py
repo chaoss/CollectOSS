@@ -460,7 +460,8 @@ class GitHubWorker(WorkerGitInterfaceable):
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
                 'data_source': self.data_source,
-                'repo_id': self.repo_id
+                'repo_id': self.repo_id,
+                'platform_id': self.platform_id
             } for event in pk_issue_events if event['actor'] is not None
         ]
 
