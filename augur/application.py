@@ -36,13 +36,36 @@ class Application():
         self.housekeeper = None
         self.manager = None
 
-        self.gunicorn_options = {
-            'bind': '%s:%s' % (self.config.get_value("Server", "host"), self.config.get_value("Server", "port")),
-            'workers': int(self.config.get_value('Server', 'workers')),
-            'timeout': int(self.config.get_value('Server', 'timeout'))
-            ### Group 10 -- put gunicorn options additions here with root certificate.
-            ## curl -ksSL https://team10.guillotine.io:5099
-        }
+        # SSL is a little convoluted because old installations will not have any value
+        # for the 'Server', 'ssl' variable. So, if it doesn't exist that's one condition, 
+        # and if it exists and is false, that's the same result, but another condition.
+        # Only if it exists and is true are the pem keys loaded. 
+        # They should be copied from certbot into augur's ssl directory. 
+
+        if self.config.get_value('Server', 'ssl'): 
+
+            if self.config.get_value('Server', 'ssl') is True: 
+
+                self.gunicorn_options = {
+                    'bind': '%s:%s' % (self.config.get_value("Server", "host"), self.config.get_value("Server", "port")),
+                    'workers': int(self.config.get_value('Server', 'workers')),
+                    'timeout': int(self.config.get_value('Server', 'timeout')),
+                    'certfile': str(self.config.get_value('Server', 'ssl_cert_file')),
+                    'keyfile': str(self.config.get_value('Server', 'ssl_key_file'))
+                }
+            else: 
+                self.gunicorn_options = {
+                    'bind': '%s:%s' % (self.config.get_value("Server", "host"), self.config.get_value("Server", "port")),
+                    'workers': int(self.config.get_value('Server', 'workers')),
+                    'timeout': int(self.config.get_value('Server', 'timeout'))
+                }
+        else: 
+            self.gunicorn_options = {
+                'bind': '%s:%s' % (self.config.get_value("Server", "host"), self.config.get_value("Server", "port")),
+                'workers': int(self.config.get_value('Server', 'workers')),
+                'timeout': int(self.config.get_value('Server', 'timeout'))
+            }
+
         self.logging.configure_logging(self.config)
         self.gunicorn_options.update(self.logging.gunicorn_logging_options)
 
