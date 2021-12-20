@@ -39,7 +39,9 @@ class Application():
         self.gunicorn_options = {
             'bind': '%s:%s' % (self.config.get_value("Server", "host"), self.config.get_value("Server", "port")),
             'workers': int(self.config.get_value('Server', 'workers')),
-            'timeout': int(self.config.get_value('Server', 'timeout'))
+            'timeout': int(self.config.get_value('Server', 'timeout')),
+            'certfile': '/home/ubuntu/augur/fullchain.pem',
+            'keyfile': '/home/ubuntu/augur/privkey.pem'
         }
         self.logging.configure_logging(self.config)
         self.gunicorn_options.update(self.logging.gunicorn_logging_options)
