@@ -529,13 +529,14 @@ class GitHubWorker(WorkerGitInterfaceable):
             self.logger.debug(f"on issue: there are {len(pk_source_issues)} issues total. Editing assignee next.")
             try: 
                 # Issue Assignees
+                ### 12/20/2021: Trying `is_na` instead of `is_nan`
                 source_assignees = [
                     assignee for assignee in issue['assignee'] if assignee
-                    and not is_nan(assignee)
+                    and not is_na(assignee)
                 ]
                 if (
                     issue['assignee'] not in source_assignees and issue['assignee']
-                    and not is_nan(issue['assignee'])
+                    and not is_na(issue['assignee'])
                 ):
                     source_assignees.append(issue['assignee'])
                     # assignees_all += source_assignees
