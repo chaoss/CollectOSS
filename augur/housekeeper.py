@@ -130,6 +130,7 @@ class Housekeeper:
                             time.sleep(10)
 
                     elif job['given'][0] == 'repo_group':
+                        time.sleep(120)
                         task = {
                                 "job_type": job['job_type'] if 'job_type' in job else 'MAINTAIN', 
                                 "models": [job['model']], 
