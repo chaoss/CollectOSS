@@ -531,12 +531,12 @@ class GitHubWorker(WorkerGitInterfaceable):
                 # Issue Assignees
                 ### 12/20/2021: Trying `is_na` instead of `is_nan`
                 source_assignees = [
-                    assignee for assignee in issue['assignee'] if assignee
-                    and not is_na(assignee)
+                    assignee for assignee in issue['assignees'] if assignee
+                    and not is_nan(assignee)
                 ]
                 if (
                     issue['assignee'] not in source_assignees and issue['assignee']
-                    and not is_na(issue['assignee'])
+                    and not is_nan(issue['assignee'])
                 ):
                     source_assignees.append(issue['assignee'])
                     # assignees_all += source_assignees
