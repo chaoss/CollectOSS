@@ -308,21 +308,12 @@ class WorkerGitInterfaceable(Worker):
                 #This will trigger a KeyError if data has alt identifier.
                 data[f'{prefix}id']
                 for row in table_values_cntrb:
+                    # removed checks for nan user in this block because this is getting all the gh_user_ids that are
+                    # already in the database so it doesn't need to be filtered from the database, it needs to be
+                    # filtered out so it is never inserted into the database
+                    # Andrew Brain 12/21/2021
+                    user_unique_ids.append(row['gh_user_id'])
 
-                    try:
-                        if str(row['gh_user_id']) == 'NaN': # 12/2/2021 SPG -- just skipping this user for now
-                            user_unique_ids.append(row(74832)) # actual gh_user_id for login nan
-                            # continue took out continue
-                        else:
-                            user_unique_ids.append(row['gh_user_id']) ## cast as string by SPG on 11/28/2021 due to `nan` user
-                            # by 12/2/2021 it became clear this was causing a match failure. Removed string cast.
-                    except Exception as e:
-                        self.logger.info(f"Error adding gh_user_id: {e}. Row: {row}")
-                        stacker = traceback.format_exc()
-                        self.logger.debug(f"{stacker}")
-                        # added pass to keep loop going if this fails 12/2/2021
-                        # commented out pass because pass is a code placeholder and will not effect loop 12/17/2021: Andrew Brain
-                        # pass
             except KeyError:
                 self.logger.info("Source data doesn't have user.id. Using node_id instead.")
                 stacker = traceback.format_exc()
@@ -528,15 +519,12 @@ class WorkerGitInterfaceable(Worker):
 
         for data in source_data:
 
-            self.logger.info("User login type: " + str(type(data[f'{prefix}login'])) + ". Login: " + str(data[f'{prefix}login']))
+            self.logger.debug("User login type: " + str(type(data[f'{prefix}login'])) + ". Login: " + str(data[f'{prefix}login']))
 
             try:
                 data['cntrb_id']
             except:
-                self.logger.info(f"AB ERROR: data exiting enrich_cntrb_id without cntrb_id, login is: " + str(data[f'{prefix}login']))
-
-
-
+                self.logger.debug(f"AB ERROR: data exiting enrich_cntrb_id without cntrb_id, login is: " + str(data[f'{prefix}login']))
 
         return source_data
 
