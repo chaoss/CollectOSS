@@ -96,7 +96,7 @@ class Housekeeper:
                     for worker in list(broker._getvalue().keys()):
                         if job['model'] in broker[worker]['models'] and job['given'] in broker[worker]['given']:
                             compatible_worker_found = True
-                    time.sleep(120)
+                    time.sleep(10)
                     continue
 
                 logger.info("Housekeeper recognized that the broker has a worker that " + 
