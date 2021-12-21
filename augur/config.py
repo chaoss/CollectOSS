@@ -412,11 +412,15 @@ default_config = {
             "host": "0.0.0.0",
             "port": main_port,
             "workers": 6,
-            "timeout": 6000
+            "timeout": 6000,
+            "ssl": False,
+            "ssl_cert_file": None, 
+            "ssl_key_file": None 
         },
         "Frontend": {
             "host": "0.0.0.0",
-            "port": main_port
+            "port": main_port,
+            "ssl": False
         },
         "Logging": {
             "logs_directory": "logs/",

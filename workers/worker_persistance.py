@@ -928,14 +928,26 @@ class Persistant():
             expanded_column = pd.DataFrame(
                 df[root].where(df[root].notna(), lambda x: [{}]).tolist()
             )
+
             expanded_column.columns = [
                 f'{root}.{attribute}' for attribute in expanded_column.columns
             ]
+
+
+            self.logger.debug('\n')
+            self.logger.debug('\n')
+            self.logger.debug('\n')
+            self.logger.debug('\n')
+            self.logger.debug(f'Expanded Columns Are:{expanded_column.columns}')
+            self.logger.debug('\n')
+            self.logger.debug('\n')
+            self.logger.debug('\n')
+            
             if column not in expanded_column.columns:
                 expanded_column[column] = None
             try:
                 df = df.join(expanded_column)
-            except ValueError:
+            except ValueError as e:
                 # columns already added (happens if trying to expand the same column twice)
                 # TODO: Catch this before by only looping unique prefixs?
                 self.logger.debug(f"value error: {e}.") 
