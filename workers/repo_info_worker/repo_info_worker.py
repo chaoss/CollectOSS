@@ -134,6 +134,10 @@ class RepoInfoWorker(WorkerGitInterfaceable):
                 if data['message'] == 'Not Found':
                     self.logger.info("Github repo was not found or does not exist for endpoint: {}\n".format(url))
                     break
+                if data['message'] == 'You have exceeded a secondary rate limit. Please wait a few minutes before you try again.': 
+                    self.logger.info("Secondary rate limit triggered.  Sleeping 120 seconds.")
+                    time.sleep(120)
+                    continue 
                 if data['message'] == 'You have triggered an abuse detection mechanism. Please wait a few minutes before you try again.':
                     self.update_gh_rate_limit(r, temporarily_disable=True)
                     continue
