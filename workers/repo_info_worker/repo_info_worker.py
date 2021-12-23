@@ -15,6 +15,9 @@ from workers.worker_base import Worker
 # 1. Recognizing when a repository is a forked repository by updating the "forked_from" field and 
 # 2. Recognizing when a repository is archived, and recording the data we observed the change in status. 
 
+## CHANGELOG
+# Version 1.1.0 -- Accounting for periodic errors in the GitHub API when counting contributors, we set the value to -1 in cases where there is an error. 
+
 class RepoInfoWorker(WorkerGitInterfaceable):
     def __init__(self, config={}):
 
@@ -33,7 +36,7 @@ class RepoInfoWorker(WorkerGitInterfaceable):
 
         # Define data collection info
         self.tool_source = 'Repo Info Worker'
-        self.tool_version = '1.0.0'
+        self.tool_version = '1.1.0'
         self.data_source = 'GitHub API'
 
     def repo_info_model(self, task, repo_id):
@@ -103,7 +106,61 @@ class RepoInfoWorker(WorkerGitInterfaceable):
                     }
                 }
             }
+
         """ % (owner, repo)
+
+##############################
+# {
+#   repository(owner: "chaoss", name: "augur") {
+#     updatedAt
+#     hasIssuesEnabled
+#     issues(states: OPEN) {
+#       totalCount
+#     }
+#     hasWikiEnabled
+#     forkCount
+#     defaultBranchRef {
+#       name
+#     }
+#     watchers {
+#       totalCount
+#     }
+#     id
+#     licenseInfo {
+#       name
+#       url
+#     }
+#     stargazers {
+#       totalCount
+#     }
+#     codeOfConduct {
+#       name
+#       url
+#     }
+#     issue_count: issues {
+#       totalCount
+#     }
+#     issues_closed: issues(states: CLOSED) {
+#       totalCount
+#     }
+#     pr_count: pullRequests {
+#       totalCount
+#     }
+#     pr_open: pullRequests(states: OPEN) {
+#       totalCount
+#     }
+#     pr_closed: pullRequests(states: CLOSED) {
+#       totalCount
+#     }
+#     pr_merged: pullRequests(states: MERGED) {
+#       totalCount
+#     }
+#     stargazerCount
+#   }
+# }
+
+
+##############################
 
         # Hit the graphql endpoint and retry 3 times in case of failure
         num_attempts = 0
@@ -134,6 +191,10 @@ class RepoInfoWorker(WorkerGitInterfaceable):
                 if data['message'] == 'Not Found':
                     self.logger.info("Github repo was not found or does not exist for endpoint: {}\n".format(url))
                     break
+                if data['message'] == 'You have exceeded a secondary rate limit. Please wait a few minutes before you try again.': 
+                    self.logger.info("Secondary rate limit triggered.  Sleeping 120 seconds.")
+                    time.sleep(120)
+                    continue 
                 if data['message'] == 'You have triggered an abuse detection mechanism. Please wait a few minutes before you try again.':
                     self.update_gh_rate_limit(r, temporarily_disable=True)
                     continue
@@ -154,8 +215,14 @@ class RepoInfoWorker(WorkerGitInterfaceable):
             self.register_task_completion(self.task, repo_id, 'repo_info')
             return
 
-        # Get committers count info that requires seperate endpoint
+        # Get committers count info that requires seperate endpoint  
         committers_count = self.query_committers_count(owner, repo)
+            # except Exception as e: 
+            #     self.logger.debug(f"pr_commit exception registered: {e}.")
+            #     stacker = traceback.format_exc()
+            #     self.logger.debug(f"{stacker}")
+            #     continue
+
 
         # Put all data together in format of the table
         self.logger.info(f'Inserting repo info for repo with id:{repo_id}, owner:{owner}, name:{repo}\n')
@@ -223,24 +290,30 @@ class RepoInfoWorker(WorkerGitInterfaceable):
         self.register_task_completion(self.task, repo_id, "repo_info")
 
     def query_committers_count(self, owner, repo):
+
         self.logger.info('Querying committers count\n')
         url = f'https://api.github.com/repos/{owner}/{repo}/contributors?per_page=100'
         committers = 0
-
         try:
             while True:
                 r = requests.get(url, headers=self.headers)
                 self.update_gh_rate_limit(r)
                 committers += len(r.json())
-
                 if 'next' not in r.links:
                     break
                 else:
                     url = r.links['next']['url']
-        except Exception:
-            self.logger.exception('An error occured while querying contributor count\n')
-
-        return committers
+        except Exception as e:
+            self.logger.exception(f'The following error occurred while querying contributor count: {e}\n. Setting committers to -1 to indicate the error')
+            self.logger.debug(f"Stack Trace of Committer Count Error: {e} follows.")
+            stacker = traceback.format_exc()
+            self.logger.debug(f"{stacker}")
+            #continue
+            committers = -1
+            time.sleep(30)
+        finally:
+            self.logger.debug(f'committers total is : {committers}')
+            return committers
 
     def is_forked(self, owner, repo): #/repos/:owner/:repo parent
         self.logger.info('Querying parent info to verify if the repo is forked\n')

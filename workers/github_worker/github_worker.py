@@ -16,6 +16,10 @@ import math
 from datetime import datetime   
 from workers.worker_base import Worker
 
+### Revision History: 
+# Source assignees were not getting made in version 1.0.0
+# Version 1.1.0 fixes this issue. 
+
 class GitHubWorker(WorkerGitInterfaceable):
     """ Worker that collects data from the Github API and stores it in our database
     task: most recent task the broker added to the worker's queue
@@ -40,7 +44,7 @@ class GitHubWorker(WorkerGitInterfaceable):
 
         # These 3 are included in every tuple the worker inserts (data collection info)
         self.tool_source = 'GitHub API Worker'
-        self.tool_version = '1.0.0'
+        self.tool_version = '1.1.0'
         self.data_source = 'GitHub API'
 
         # if we are finishing a previous task, pagination works differenty (deprecated)
@@ -531,12 +535,12 @@ class GitHubWorker(WorkerGitInterfaceable):
                 # Issue Assignees
                 ### 12/20/2021: Trying `is_na` instead of `is_nan`
                 source_assignees = [
-                    assignee for assignee in issue['assignee'] if assignee
-                    and not is_na(assignee)
+                    assignee for assignee in issue['assignees'] if assignee
+                    and not is_nan(assignee)
                 ]
                 if (
                     issue['assignee'] not in source_assignees and issue['assignee']
-                    and not is_na(issue['assignee'])
+                    and not is_nan(issue['assignee'])
                 ):
                     source_assignees.append(issue['assignee'])
                     # assignees_all += source_assignees
@@ -653,7 +657,7 @@ class GitHubWorker(WorkerGitInterfaceable):
                     'tool_source': self.tool_source,
                     'tool_version': self.tool_version,
                     'data_source': self.data_source,
-                    'issue_assignee_src_id': assignee['id'],
+                    'issue_assignee_src_id': int(assignee['id']),
                     'issue_assignee_src_node': assignee['node_id'],
                     'repo_id': self.repo_id 
                 } for assignee in source_assignees_insert
