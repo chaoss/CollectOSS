@@ -653,7 +653,7 @@ class GitHubWorker(WorkerGitInterfaceable):
                     'tool_source': self.tool_source,
                     'tool_version': self.tool_version,
                     'data_source': self.data_source,
-                    'issue_assignee_src_id': assignee['id'],
+                    'issue_assignee_src_id': int(assignee['id']),
                     'issue_assignee_src_node': assignee['node_id'],
                     'repo_id': self.repo_id 
                 } for assignee in source_assignees_insert
