@@ -308,7 +308,7 @@ class RepoInfoWorker(WorkerGitInterfaceable):
             self.logger.debug(f"Stack Trace of Committer Count Error: {e} follows.")
             stacker = traceback.format_exc()
             self.logger.debug(f"{stacker}")
-            continue
+            #continue
             committers = -1
             time.sleep(30)
         finally:
