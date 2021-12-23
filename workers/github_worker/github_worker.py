@@ -16,6 +16,10 @@ import math
 from datetime import datetime   
 from workers.worker_base import Worker
 
+### Revision History: 
+# Source assignees were not getting made in version 1.0.0
+# Version 1.1.0 fixes this issue. 
+
 class GitHubWorker(WorkerGitInterfaceable):
     """ Worker that collects data from the Github API and stores it in our database
     task: most recent task the broker added to the worker's queue
@@ -40,7 +44,7 @@ class GitHubWorker(WorkerGitInterfaceable):
 
         # These 3 are included in every tuple the worker inserts (data collection info)
         self.tool_source = 'GitHub API Worker'
-        self.tool_version = '1.0.0'
+        self.tool_version = '1.1.0'
         self.data_source = 'GitHub API'
 
         # if we are finishing a previous task, pagination works differenty (deprecated)
