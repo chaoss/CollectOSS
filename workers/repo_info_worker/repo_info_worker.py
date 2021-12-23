@@ -305,10 +305,10 @@ class RepoInfoWorker(WorkerGitInterfaceable):
                     url = r.links['next']['url']
         except Exception as e:
             self.logger.exception(f'The following error occurred while querying contributor count: {e}\n. Setting committers to -1 to indicate the error')
-                self.logger.debug(f"Stack Trace of Committer Count Error: {e} follows.")
-                stacker = traceback.format_exc()
-                self.logger.debug(f"{stacker}")
-                continue
+            self.logger.debug(f"Stack Trace of Committer Count Error: {e} follows.")
+            stacker = traceback.format_exc()
+            self.logger.debug(f"{stacker}")
+            continue
             committers = -1
             time.sleep(30)
         finally:
