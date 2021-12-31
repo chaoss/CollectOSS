@@ -4,8 +4,13 @@ Message Insights Worker
 
 .. note:: 
     - If you have an NVidia GPU available, you can install the `cuda` drivers to make this worker run faster. 
-    - On Ubuntu 20.04, use the following commands: `sudo apt update` and `sudo apt install nvidia-cuda-toolkit`
-
+    - On Ubuntu 20.04, use the following commands: 
+      - On the Ubuntu machine, open a Terminal. Type in the following commands to add the Nvidia ppa repository:
+      - `wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-ubuntu2004.pin`
+      - `sudo mv cuda-ubuntu2004.pin /etc/apt/preferences.d/cuda-repository-pin-600 && sudo apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/7fa2af80.pub`
+      - `sudo add-apt-repository "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/ /"`
+      - `sudo apt-get update && sudo apt-get install -y nvidia-kernel-source-460`
+      - `sudo apt-get -y install cuda`
 
 This worker analyzes the comments and text messages corresponding to all the issues and pull requests in a repository and performs two tasks:
 
