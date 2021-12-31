@@ -2,6 +2,11 @@
 Message Insights Worker
 =======================
 
+.. note:: 
+    - If you have an NVidia GPU available, you can install the `cuda` drivers to make this worker run faster. 
+    - On Ubuntu 20.04, use the following commands: `sudo apt update` and `sudo apt install nvidia-cuda-toolkit`
+
+
 This worker analyzes the comments and text messages corresponding to all the issues and pull requests in a repository and performs two tasks:
 
 - **Identifies novel messages** - Detects if a new message is semantically different from past messages in a repo
