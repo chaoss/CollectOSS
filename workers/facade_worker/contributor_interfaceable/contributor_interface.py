@@ -627,6 +627,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         # Try to get GitHub API user data from each unique commit email.
 
+        #TODO: Remove debug statements before any merge.
         self.logger.info(
             f"DEBUG: The data to process looks like this: {new_contribs}"
         )
@@ -758,6 +759,8 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             except Exception as e:
                 self.logger.info(
                     f"Deleting now resolved email failed with error: {e}")
+
+        self.logger.info("DEBUG: Got through the new_contribs")
 
         # sql query used to find corresponding cntrb_id's of emails found in the contributor's table
         # i.e., if a contributor already exists, we use it!
