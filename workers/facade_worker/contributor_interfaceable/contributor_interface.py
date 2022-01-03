@@ -626,6 +626,11 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                                   'repo_id': repo_id}).to_json(orient="records"))
 
         # Try to get GitHub API user data from each unique commit email.
+
+        self.logger.info(
+            f"DEBUG: The data to process looks like this: {new_contribs}"
+        )
+
         for contributor in new_contribs:
 
             # Get the email from the commit data
