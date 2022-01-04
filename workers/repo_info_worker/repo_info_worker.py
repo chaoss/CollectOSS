@@ -169,7 +169,9 @@ class RepoInfoWorker(WorkerGitInterfaceable):
         while num_attempts < 3:
             self.logger.info("Hitting endpoint: {} ...\n".format(url))
             r = requests.post(url, json={'query': query}, headers=self.headers)
+            self.logger.debug("hitting update_gh_rate_limit")
             self.update_gh_rate_limit(r)
+            self.logger.debug("finished update_gh_rate_limit")
 
             try:
                 data = r.json()
