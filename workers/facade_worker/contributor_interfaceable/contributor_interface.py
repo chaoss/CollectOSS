@@ -557,8 +557,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             if item['score'] > match['score']:
                 match = item
 
-        self.logger.info("When searching for a contributor with info {}, we found the following users: {}\n".format(
-            contributor, match))
+        self.logger.info("When searching for a contributor with info {}, we found the following users: {}\n".format(match))
         
         return match['login']
 
@@ -762,7 +761,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                 self.logger.info(
                     f"Deleting now resolved email failed with error: {e}")
 
-        self.logger.info("DEBUG: Got through the new_contribs")
+        #self.logger.info("DEBUG: Got through the new_contribs")
 
         # sql query used to find corresponding cntrb_id's of emails found in the contributor's table
         # i.e., if a contributor already exists, we use it!
@@ -794,14 +793,14 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                 AND commits.repo_id = :repo_id
         """)
 
-        self.logger.info("DEBUG: got passed the sql statement declaration")
+        #self.logger.info("DEBUG: got passed the sql statement declaration")
         # Get a list of dicts that contain the emails and cntrb_id's of commits that appear in the contributor's table.
         existing_cntrb_emails = json.loads(pd.read_sql(resolve_email_to_cntrb_id_sql, self.db, params={
                                            'repo_id': repo_id}).to_json(orient="records"))
 
-        self.logger.info("DEBUG: got passed the sql statement's execution")
+        #self.logger.info("DEBUG: got passed the sql statement's execution")
 
-        self.logger.info(f"DEBUG: Here are the existing emails: {existing_cntrb_emails}")
+        #self.logger.info(f"DEBUG: Here are the existing emails: {existing_cntrb_emails}")
 
         # iterate through all the commits with emails that appear in contributors and give them the relevant cntrb_id.
         for cntrb_email in existing_cntrb_emails:
