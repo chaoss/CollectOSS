@@ -630,10 +630,9 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         # Try to get GitHub API user data from each unique commit email.
 
-        #TODO: Remove debug statements before any merge.
-        self.logger.info(
-            f"DEBUG: The data to process looks like this: {new_contribs}"
-        )
+        #self.logger.info(
+        #    f"DEBUG: The data to process looks like this: {new_contribs}"
+        #)
 
         for contributor in new_contribs:
 
