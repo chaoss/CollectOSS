@@ -570,11 +570,14 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         #Send api request
         login_json = self.request_dict_from_endpoint(url)
         
-        if login_json == None or 'sha' not in login_json:
+        if login_json is None or 'sha' not in login_json:
             self.logger.info("Search query returned empty data. Moving on")
             return None
 
-        match = login_json['author']['login']
+        try:
+            match = login_json['author']['login']
+        except:
+            match = None
         
         return match
 
