@@ -778,14 +778,17 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                 AND commits.repo_id = :repo_id
             UNION
             SELECT DISTINCT
-                cntrb_id,
+                contributors_aliases.cntrb_id,
+                                contributors.cntrb_login as login, 
                 contributors_aliases.alias_email AS email,
                 commits.cmt_author_raw_email
             FROM
+                              contributors,
                 contributors_aliases,
                 commits
             WHERE
                 contributors_aliases.alias_email = commits.cmt_author_raw_email
+                                AND contributors.cntrb_id = contributors_aliases.cntrb_id
                 AND commits.repo_id = :repo_id
         """)
 
