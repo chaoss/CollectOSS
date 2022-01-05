@@ -557,7 +557,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             if item['score'] > match['score']:
                 match = item
 
-        self.logger.info("When searching for a contributor with info {}, we found the following users: {}\n".format(match))
+        self.logger.info("When searching for a contributor, we found the following users: {}\n".format(match))
         
         return match['login']
 
