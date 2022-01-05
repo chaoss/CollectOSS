@@ -842,7 +842,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         # Create endpoint for committers in a repo.
         url = "https://api.github.com/repos/" + repo_path + "/contributors?state=all&direction=asc&per_page=100&page={}"
 
-        self.logger.info(f"Url: {url}")
+        #self.logger.info(f"Url: {url}")
 
         return url
 
