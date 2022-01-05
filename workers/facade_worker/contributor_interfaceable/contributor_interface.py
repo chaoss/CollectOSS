@@ -428,10 +428,11 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         canonical_email = contributor_table_data[0]['cntrb_canonical']
         #check if the contributor has a NULL canonical email or not
-        self.logger.info(f"The value of the canonical email is : {canonical_email}")
+        #self.logger.info(f"The value of the canonical email is : {canonical_email}")
 
         if canonical_email is not None:
             del cntrb["cntrb_canonical"]
+            self.logger.info("Existing canonical email found in database and will not be overwritten.")
 
         while attempts < max_attempts:
             try:
