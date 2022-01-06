@@ -1001,9 +1001,12 @@ class WorkerGitInterfaceable(Worker):
                 self.oauths[0]['rate_limit'] -= 1
                 self.logger.info("Headers did not work, had to decrement")
                 time.sleep(30)
+
         self.logger.info(
             f"Updated rate limit, you have: {self.oauths[0]['rate_limit']} requests remaining."
         )
+
+        #Stalls after here for some reason.
         if self.oauths[0]['rate_limit'] <= 0:
             try:
                 reset_time = response.headers['X-RateLimit-Reset']
