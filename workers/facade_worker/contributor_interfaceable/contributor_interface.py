@@ -185,6 +185,40 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         self.tool_version = '\'0.2.0\''
         self.data_source = '\'Git Log\''
 
+    
+
+    def create_endpoint_from_commit_sha(self,commit_sha, repo_id):
+        self.logger.info(f"Trying to create endpoint from commit hash: {commit_sha}")
+        
+        #https://api.github.com/repos/chaoss/augur/commits/53b0cc122ac9ecc1588d76759dc2e8e437f45b48
+        
+        select_repo_path_query = s.sql.text("""
+            SELECT repo_path, repo_name from repo
+            WHERE repo_id = :repo_id_bind
+        """)
+        
+        # Bind parameter
+        select_repo_path_query = select_repo_path_query.bindparams(
+            repo_id_bind=repo_id)
+        result = self.db.execute(select_repo_path_query).fetchall()
+        
+        # if not found
+        if not len(result) >= 1:
+            raise LookupError
+
+        # Else put into a more readable local var
+        self.logger.info(f"Result: {result}")
+        repo_path = result[0]['repo_path'].split(
+            "/")[1] + "/" + result[0]['repo_name']
+        
+        url = "https://api.github.com/repos/" + repo_path + "/commits/" + commit_sha
+        
+        self.logger.info(f"Url: {url}")
+
+        return url
+
+        
+        
     # Try to construct the best url to ping GitHub's API for a username given an email.
     """
     I changed this because of the following note on the API site: With the in qualifier you can restrict your search to the username (login), full name, public email, or any combination of these. When you omit this qualifier, only the username and email address are searched. For privacy reasons, you cannot search by email domain name.
@@ -394,10 +428,11 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         canonical_email = contributor_table_data[0]['cntrb_canonical']
         #check if the contributor has a NULL canonical email or not
-        self.logger.info(f"The value of the canonical email is : {canonical_email}")
+        #self.logger.info(f"The value of the canonical email is : {canonical_email}")
 
         if canonical_email is not None:
             del cntrb["cntrb_canonical"]
+            self.logger.info("Existing canonical email found in database and will not be overwritten.")
 
         while attempts < max_attempts:
             try:
@@ -482,6 +517,70 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         # failure condition returns None
         return login_json
 
+    #Method to return the login given commit data using the supplemental data in the commit
+    #   -email
+    #   -name
+    def get_login_with_supplemental_data(self, commit_data):
+        
+        # Try to get login from all possible emails
+        # Is None upon failure.
+        login_json = self.fetch_username_from_email(commit_data)
+        
+        # Check if the email result got anything, if it failed try a name search.
+        if login_json == None or 'total_count' not in login_json or login_json['total_count'] == 0:
+            self.logger.info(
+                "Could not resolve the username from the email. Trying a name only search...")
+
+            try:
+                url = self.create_endpoint_from_name(commit_data)
+            except Exception as e:
+                self.logger.info(
+                    f"Couldn't resolve name url with given data. Reason: {e}")
+                return None
+
+            login_json = self.request_dict_from_endpoint(
+                url, timeout_wait=30)
+        
+        # total_count is the count of username's found by the endpoint.
+        if login_json == None or 'total_count' not in login_json:
+            self.logger.info(
+                "Search query returned an empty response, moving on...\n")
+            return None
+        if login_json['total_count'] == 0:
+            self.logger.info(
+                "Search query did not return any results, adding commit's table remains null...\n")
+
+            return None
+        
+        # Grab first result and make sure it has the highest match score
+        match = login_json['items'][0]
+        for item in login_json['items']:
+            if item['score'] > match['score']:
+                match = item
+
+        self.logger.info("When searching for a contributor, we found the following users: {}\n".format(match))
+        
+        return match['login']
+
+    def get_login_with_commit_hash(self, commit_data, repo_id):
+        
+        #Get endpoint for login from hash
+        url = self.create_endpoint_from_commit_sha(commit_data['hash'], repo_id)
+        
+        #Send api request
+        login_json = self.request_dict_from_endpoint(url)
+        
+        if login_json is None or 'sha' not in login_json:
+            self.logger.info("Search query returned empty data. Moving on")
+            return None
+
+        try:
+            match = login_json['author']['login']
+        except:
+            match = None
+        
+        return match
+
     # Update the contributors table from the data facade has gathered.
 
     def insert_facade_contributors(self, repo_id):
@@ -492,7 +591,8 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         # in the contributors table or the contributors_aliases table.
         new_contrib_sql = s.sql.text("""
                 SELECT DISTINCT
-                    commits.cmt_author_name AS NAME,--commits.cmt_id AS id,
+                    commits.cmt_author_name AS NAME,
+                    commits.cmt_commit_hash AS hash,
                     commits.cmt_author_raw_email AS email_raw,
                     'not_unresolved' as resolution_status
                 FROM
@@ -504,10 +604,12 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                     AND ( commits.cmt_author_name ) IN ( SELECT C.cmt_author_name FROM commits AS C WHERE C.repo_id = :repo_id GROUP BY C.cmt_author_name ))
                 GROUP BY
                     commits.cmt_author_name,
+                    commits.cmt_commit_hash,
                     commits.cmt_author_raw_email
                 UNION
                 SELECT DISTINCT
                     commits.cmt_author_name AS NAME,--commits.cmt_id AS id,
+                    commits.cmt_commit_hash AS hash,
                     commits.cmt_author_raw_email AS email_raw,
                     'unresolved' as resolution_status
                 FROM
@@ -518,6 +620,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                     AND ( commits.cmt_author_name ) IN ( SELECT C.cmt_author_name FROM commits AS C WHERE C.repo_id = :repo_id GROUP BY C.cmt_author_name )
                 GROUP BY
                     commits.cmt_author_name,
+                    commits.cmt_commit_hash,
                     commits.cmt_author_raw_email
                 ORDER BY
                 NAME
@@ -526,10 +629,14 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                                   'repo_id': repo_id}).to_json(orient="records"))
 
         # Try to get GitHub API user data from each unique commit email.
+
+        #self.logger.info(
+        #    f"DEBUG: The data to process looks like this: {new_contribs}"
+        #)
+
         for contributor in new_contribs:
 
-            # Get list of all emails in the commit data.
-            # Start with the fields we know that we can start with
+            # Get the email from the commit data
             email = contributor['email_raw'] if 'email_raw' in contributor else contributor['email']
 
             # check the email to see if it already exists in contributor_aliases
@@ -549,46 +656,17 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                 self.logger.info(
                     f"alias table query failed with error: {e}")
 
-            # Try to get login from all possible emails
-            # Is None upon failure.
-            login_json = self.fetch_username_from_email(contributor)
-
-            # Check if the email result got anything, if it failed try a name search.
-            if login_json == None or 'total_count' not in login_json or login_json['total_count'] == 0:
-                self.logger.info(
-                    "Could not resolve the username from the email. Trying a name only search...")
-
-                try:
-                    url = self.create_endpoint_from_name(contributor)
-                except Exception as e:
-                    self.logger.info(
-                        f"Couldn't resolve name url with given data. Reason: {e}")
-                    continue
-
-                login_json = self.request_dict_from_endpoint(
-                    url, timeout_wait=30)
-
-            # total_count is the count of username's found by the endpoint.
-            if login_json == None or 'total_count' not in login_json:
-                self.logger.info(
-                    "Search query returned an empty response, moving on...\n")
-                continue
-            if login_json['total_count'] == 0:
-                self.logger.info(
-                    "Search query did not return any results, adding commit's table remains null...\n")
-
+            #Try to get the login from the commit sha
+            login = self.get_login_with_commit_hash(contributor, repo_id)
+            
+            if login == None or login == "":
+                #Try to get the login from supplemental data if not found with the commit hash
+                login = self.get_login_with_supplemental_data(contributor)
+            
+            if login == None:
                 continue
 
-            # Grab first result and make sure it has the highest match score
-            match = login_json['items'][0]
-            for item in login_json['items']:
-                if item['score'] > match['score']:
-                    match = item
-
-            self.logger.info("When searching for a contributor with info {}, we found the following users: {}\n".format(
-                contributor, match))
-
-            url = ("https://api.github.com/users/" + match['login'])
+            url = ("https://api.github.com/users/" + login)
 
             user_data = self.request_dict_from_endpoint(url)
 
@@ -684,11 +762,14 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                 self.logger.info(
                     f"Deleting now resolved email failed with error: {e}")
 
+        #self.logger.info("DEBUG: Got through the new_contribs")
+
         # sql query used to find corresponding cntrb_id's of emails found in the contributor's table
         # i.e., if a contributor already exists, we use it!
         resolve_email_to_cntrb_id_sql = s.sql.text("""
             SELECT DISTINCT
                 cntrb_id,
+                contributors.cntrb_login AS login,
                 contributors.cntrb_canonical AS email,
                 commits.cmt_author_raw_email
             FROM
@@ -699,20 +780,28 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                 AND commits.repo_id = :repo_id
             UNION
             SELECT DISTINCT
-                cntrb_id,
+                contributors_aliases.cntrb_id,
+                                contributors.cntrb_login as login, 
                 contributors_aliases.alias_email AS email,
                 commits.cmt_author_raw_email
             FROM
+                              contributors,
                 contributors_aliases,
                 commits
             WHERE
                 contributors_aliases.alias_email = commits.cmt_author_raw_email
+                                AND contributors.cntrb_id = contributors_aliases.cntrb_id
                 AND commits.repo_id = :repo_id
         """)
 
+        #self.logger.info("DEBUG: got passed the sql statement declaration")
         # Get a list of dicts that contain the emails and cntrb_id's of commits that appear in the contributor's table.
         existing_cntrb_emails = json.loads(pd.read_sql(resolve_email_to_cntrb_id_sql, self.db, params={
                                            'repo_id': repo_id}).to_json(orient="records"))
+
+        #self.logger.info("DEBUG: got passed the sql statement's execution")
+
+        #self.logger.info(f"DEBUG: Here are the existing emails: {existing_cntrb_emails}")
 
         # iterate through all the commits with emails that appear in contributors and give them the relevant cntrb_id.
         for cntrb_email in existing_cntrb_emails:
@@ -754,7 +843,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         # Create endpoint for committers in a repo.
         url = "https://api.github.com/repos/" + repo_path + "/contributors?state=all&direction=asc&per_page=100&page={}"
 
-        self.logger.info(f"Url: {url}")
+        #self.logger.info(f"Url: {url}")
 
         return url
 
@@ -778,10 +867,6 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         #Prepare for pagination and insertion into the contributor's table with an action map
         # TODO: this might be github specific
-
-        ## SPG 12/1/2021: I think we need to update as well. I am not sure this is happening. If the contributor is 
-        ## already in the database without github stuff, are we updating the additional info in the contributor 
-        ## record? 
         committer_action_map = {
             'insert': {
                 'source': ['login'],
