@@ -10,26 +10,26 @@ from random import randint
 # Actual randomness is generated without a seed
 # for this use case. 
 
-contributor_breadth_worker_p = randint(48000, 48500)
-facade_worker_p = randint(48501, 49000) 
-insight_worker_p = randint(49002, 49500) 
-metric_status_worker_p = randint(49501, 50000) 
-pull_request_worker_p = randint(50001, 50500) 
-repo_info_worker_p = randint(50501, 51000) 
-value_worker_p = randint(51002, 51500) 
-contributor_worker_p = randint(52000, 52500) 
-message_insights_worker_p = randint(53000, 53499) 
-pull_request_analysis_worker_p = randint(54000, 54500) 
-discourse_analysis_worker_p = randint(54500, 54999)  
-message_insights_worker_p = randint(55000, 55499) 
-clustering_worker_p = randint(57000, 57499)
-github_worker_p = randint(57500, 58000)
-linux_badge_worker_p = randint(47000,47499)
-gitlab_issues_worker_p = randint(47500,47999)
-release_worker_p = randint(56000, 56499)
-gitlab_merge_request_worker_p = randint(56500, 56999)
-deps_worker_p = randint(58001, 58499)
-deps_libyear_worker_p = randint(58500, 58999)
+contributor_breadth_worker_p = randint(9000, 9030)
+facade_worker_p = randint(9031, 9060) 
+insight_worker_p = randint(9061, 9090) 
+metric_status_worker_p = randint(9091, 9120) 
+pull_request_worker_p = randint(9121, 9150) 
+repo_info_worker_p = randint(9151, 9180) 
+value_worker_p = randint(9181, 9210) 
+contributor_worker_p = randint(9211, 9240) 
+message_insights_worker_p = randint(9241, 9270) 
+pull_request_analysis_worker_p = randint(9271, 9300) 
+discourse_analysis_worker_p = randint(9301, 9330)  
+message_insights_worker_p = randint(9331, 9360) 
+clustering_worker_p = randint(9361, 9390)
+github_worker_p = randint(9391, 9420)
+linux_badge_worker_p = randint(9421,9450)
+gitlab_issues_worker_p = randint(9451,9480)
+release_worker_p = randint(9481, 9510)
+gitlab_merge_request_worker_p = randint(9511, 9540)
+deps_worker_p = randint(9541, 9570)
+deps_libyear_worker_p = randint(9571, 9600)
 #contributor_interface_p = randint(47000,47499) 
 main_port = 5000 #randint(5001,5300) 
 
@@ -130,7 +130,7 @@ default_config = {
                     "repo_group_id": 0
                 },
                 {
-                    "delay": 150000,
+                    "delay": 86400,
                     "given": [
                         "repo_group"
                     ],
@@ -224,6 +224,15 @@ default_config = {
                     ],
                     "model": "clustering",
                     "repo_group_id": 0
+                },
+                {
+                    "delay": 10000,
+                    "given": [
+                        "git_url"
+                    ],
+                    "model": "repo_library_experience",
+                    "repo_group_id": 0
+
                 },
                 {
                     "all_focused": 1,
@@ -402,12 +411,16 @@ default_config = {
             "cache_expire": "3600",
             "host": "0.0.0.0",
             "port": main_port,
-            "workers": 12,
-            "timeout": 60000
+            "workers": 6,
+            "timeout": 6000,
+            "ssl": False,
+            "ssl_cert_file": None, 
+            "ssl_key_file": None 
         },
         "Frontend": {
             "host": "0.0.0.0",
-            "port": main_port
+            "port": main_port,
+            "ssl": False
         },
         "Logging": {
             "logs_directory": "logs/",

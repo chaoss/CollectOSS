@@ -12,7 +12,9 @@ from flask import request, Response
 import json
 from augur.config import AugurConfig
 import os 
+import traceback 
 
+logger = logging.getLogger(__name__)
 
 def create_routes(server):
 
@@ -146,6 +148,9 @@ def create_routes(server):
                             summary['repo_records_created'].append(get_inserted_repo(group_id, repo_id, repo, group, repo_manager.github_urlify(group, repo)))
                 except requests.ConnectionError:
                     summary['group_errors'] = "failed to find the group's child repos"
+                    logger.debug(f'Error is: {e}.')
+                except Exception as e: 
+                    logger.debug(f'Error is: {e}.')
 
             status_code = 200
             summary = json.dumps(summary)
@@ -170,12 +175,12 @@ class Repo_insertion_manager():
     ROOT_AUGUR_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
     def __init__(self, organization_name, database_connection):
+        #self.initialize_logging()
         self.org = organization_name
         self.db = database_connection
         ## added for keys
         self._root_augur_dir = Repo_insertion_manager.ROOT_AUGUR_DIR
         self.augur_config = AugurConfig(self._root_augur_dir)
-
         ##########
 
 

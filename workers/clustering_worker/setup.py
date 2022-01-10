@@ -21,15 +21,15 @@ setup(
     description="worker to cluster repository based on messages on issues and pull requests ",
     packages=find_packages(),
     install_requires=[
-        'Flask==1.1.4',
+        'Flask==2.0.2',
         'Flask-Cors==3.0.10',
         'Flask-Login==0.5.0',
-        'Flask-WTF==0.14.3',
+        'Flask-WTF==0.15.1',
         'requests==2.22.0',
         'psycopg2-binary==2.8.6',
         'sklearn==0.0',
         'numpy==1.19.5',
-        'nltk==3.5',
+        'nltk==3.6.5',
         'seaborn==0.11.1',
         'pandas==1.3.2',
         'matplotlib==3.3.4'
