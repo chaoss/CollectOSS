@@ -14,7 +14,7 @@ def set_up_repo_groups(db):
     INSERT INTO "augur_data"."repo_groups"("repo_group_id", "rg_name", "rg_description", "rg_website", "rg_recache", "rg_last_modified", "rg_type", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (:repo_group_id, :repo_group_name, '', '', 0, CURRENT_TIMESTAMP, 'Unknown', 'Loaded by user', '1.0', 'Git', CURRENT_TIMESTAMP);
     """)
 
-    with open(filename) as create_repo_groups_file:
+    with open("tests/test_workers/test_facade/test_facade_contributor_interface/test_repo_groups.csv") as create_repo_groups_file:
         data = csv.reader(create_repo_groups_file, delimiter=',')
         for row in data:
             logger.info(f"Inserting repo group with name {row[1]} and ID {row[0]}...")
@@ -36,7 +36,7 @@ def set_up_repo_groups(db):
         VALUES (:repo_group_id, :repo_git, 'New', 'CLI', 1.0, 'Git', CURRENT_TIMESTAMP)
     """)
 
-    with open("tests/test_facade/test_facade_contributor_interface/test_repos.csv") as upload_repos_file:
+    with open("tests/test_workers/test_facade/test_facade_contributor_interface/test_repos.csv") as upload_repos_file:
         data = csv.reader(upload_repos_file, delimiter=',')
         for row in data:
             logger.info(f"Inserting repo with Git URL `{row[1]}` into repo group {row[0]}")
@@ -49,17 +49,51 @@ def set_up_repo_groups(db):
 
 
 def test_create_sha_endpoint_default(database_connection):
+    
+    test_values = ['e362752b3c475903e185d039bca4bb892dd5e432', 
+                   '0fbfde8386eba4fca7e31ef97e93efeb5339638d',
+                   'notaHash',
+                   ''
+                   '\n'
+                   '102e1a534c33e8ce1e4d01927d5df667596b3dc7']
+    
     set_up_repo_groups(database_connection)
 
     #Dummy class for testing
     dummy = DummyFullWorker(database_connection)
+    
+    for value in test_values:
+    
+        url = dummy.create_endpoint_from_commit_sha(value, "10")
 
-    url = dummy.create_endpoint_from_commit_sha("e362752b3c475903e185d039bca4bb892dd5e432", "10")
+        try:
+            response = requests.get(url=url, headers=dummy.headers)
+        except:
+            raise AssertionError
 
+
+def test_create_email_endpoint_default(database_connection):
+    set_up_repo_groups(database_connection)
+    
+    dummy = DummyFullWorker(database_connection)
+    
+    url = dummy.create_endpoint_from_email("krabs@tilde.team")
+    
     try:
         response = requests.get(url=url, headers=dummy.headers)
     except:
         raise AssertionError
 
+def test_create_name_endpoint(database_connection):
+    set_up_repo_groups(database_connection)
+    
+    dummy = DummyFullWorker(database_connection)
+    
+    url = dummy.create_endpoint_from_name(database_connection)
+    
+    try:
+        response = requests.get(url=url, headers=dummy.headers)
+    except:
+        raise AssertionError
 
 

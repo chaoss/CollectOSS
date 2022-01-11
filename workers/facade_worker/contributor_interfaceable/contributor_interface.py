@@ -24,10 +24,6 @@ A few interesting ideas: Maybe get the top committers from each repo first? curl
 
 """
 
-# TODO : Make this borrow everything that it can from the facade worker.
-# i.e. port, logging, etc
-
-
 class ContributorInterfaceable(WorkerGitInterfaceable):
     def __init__(self, config={}, logger=None, special_rate_limit=10):
         # Define the data tables that we are needing
@@ -579,7 +575,6 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         return match
 
     # Update the contributors table from the data facade has gathered.
-
     def insert_facade_contributors(self, repo_id):
         self.logger.info(
             "Beginning process to insert contributors from facade commits for repo w entry info: {}\n".format(repo_id))
