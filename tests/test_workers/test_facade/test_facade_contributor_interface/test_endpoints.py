@@ -21,7 +21,10 @@ def set_up_repo_groups(database_connection):
             print(f"Inserting repo group with name {row[1]} and ID {row[0]}...")
             if int(row[0]) not in repo_group_IDs:
                 repo_group_IDs.append(int(row[0]))
-                database_connection.execute(insert_repo_group_sql, repo_group_id=int(row[0]), repo_group_name=row[1])
+                try:
+                    database_connection.execute(insert_repo_group_sql, repo_group_id=int(row[0]), repo_group_name=row[1])
+                except:
+                    print("failed to execute repo_group")
             else:
                 print(f"Repo group with ID {row[1]} for repo group {row[1]} already exists, skipping...")
 
@@ -42,7 +45,10 @@ def set_up_repo_groups(database_connection):
         for row in data:
             print(f"Inserting repo with Git URL `{row[1]}` into repo group {row[0]}")
             if int(row[0]) in repo_group_IDs:
-                result = database_connection.execute(insertSQL, repo_group_id=int(row[0]), repo_git=row[1])
+                try:
+                    result = database_connection.execute(insertSQL, repo_group_id=int(row[0]), repo_git=row[1])
+                except:
+                    print("Failed to execute")
             else:
                 logger.warning(f"Invalid repo group id specified for {row[1]}, skipping.")
 
