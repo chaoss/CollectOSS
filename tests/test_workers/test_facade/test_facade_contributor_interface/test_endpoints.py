@@ -17,12 +17,12 @@ def set_up_repo_groups(db):
     with open("tests/test_workers/test_facade/test_facade_contributor_interface/test_repo_groups.csv") as create_repo_groups_file:
         data = csv.reader(create_repo_groups_file, delimiter=',')
         for row in data:
-            logger.info(f"Inserting repo group with name {row[1]} and ID {row[0]}...")
+            print(f"Inserting repo group with name {row[1]} and ID {row[0]}...")
             if int(row[0]) not in repo_group_IDs:
                 repo_group_IDs.append(int(row[0]))
                 db.execute(insert_repo_group_sql, repo_group_id=int(row[0]), repo_group_name=row[1])
             else:
-                logger.info(f"Repo group with ID {row[1]} for repo group {row[1]} already exists, skipping...")
+                print(f"Repo group with ID {row[1]} for repo group {row[1]} already exists, skipping...")
 
 
 
@@ -39,7 +39,7 @@ def set_up_repo_groups(db):
     with open("tests/test_workers/test_facade/test_facade_contributor_interface/test_repos.csv") as upload_repos_file:
         data = csv.reader(upload_repos_file, delimiter=',')
         for row in data:
-            logger.info(f"Inserting repo with Git URL `{row[1]}` into repo group {row[0]}")
+            print(f"Inserting repo with Git URL `{row[1]}` into repo group {row[0]}")
             if int(row[0]) in repo_group_IDs:
                 result = db.execute(insertSQL, repo_group_id=int(row[0]), repo_git=row[1])
             else:
