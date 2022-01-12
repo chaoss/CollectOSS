@@ -373,9 +373,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                             f"Inserted Pull Request Commit: {result.inserted_primary_key}\n"
                         )
                 except Exception as e:
-                    self.logger.debug(f"pr_commit exception registered: {e}.")
-                    stacker = traceback.format_exc()
-                    self.logger.debug(f"{stacker}")
+                    self.print_traceback("pr commits model", e)
                     continue
 
         self.register_task_completion(self.task_info, self.repo_id, 'pull_request_commits')
@@ -428,16 +426,11 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                             }
                         }, prefix='user.'
                     )
-                except Exception as e: 
-                    self.logger.debug(f"Pull Requests model failed with {e}.")
-                    stacker = traceback.format_exc()
-                    self.logger.debug(f"{stacker}")
-                    pass
+                except Exception as e:
+                    self.print_traceback("pull requests model", e)
 
             else:
                 self.logger.info("Contributor enrichment is not needed, no inserts in action map.")
-                stacker = traceback.format_exc()
-                self.logger.debug(f"{stacker}")
 
             prs_insert = []
             try: 
@@ -498,11 +491,9 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                     'data_source': 'GitHub API'
                 } for pr in inc_source_prs['insert']
                 ]
-            except Exception as e: 
-                self.logger.debug(f"Pull Requests model failed with {e}.")
-                stacker = traceback.format_exc()
-                self.logger.debug(f"{stacker}")
-                pass 
+            except Exception as e:
+                self.print_traceback("Extracting data from source in pr model", e)
+
 
             # Removed due to error 11/18/2021 : and 'title' in pr['milestone']
 
@@ -591,6 +582,13 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         return pk_source_prs
 
+    def print_traceback(self, exception_message, exception, debug_log=True):
+
+        if debug_log:
+            self.logger.debug(f"{exception_message}. ERROR: {exception}", exc_info=sys.exc_info())
+        else:
+            self.logger.info(f"{exception_message}. ERROR: {exception}", exc_info=sys.exc_info())
+
     def pull_requests_model(self, entry_info, repo_id):
         """Pull Request data collection function. Query GitHub API for PhubRs.
 
@@ -609,11 +607,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         try: 
             pk_source_prs = self._get_pk_source_prs()
-        except Exception as e: 
-            self.logger.debug(f"Pull Requests model failed with {e}.")
-            stacker = traceback.format_exc()
-            self.logger.debug(f"{stacker}")
-            pass 
+        except Exception as e:
+            self.print_traceback("Pull Requests model", e)
 
 
         #self.write_debug_data(pk_source_prs, 'pk_source_prs')
@@ -622,38 +617,30 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             try:
                 self.pull_request_comments_model(pk_source_prs)
                 self.logger.info(f"Pull request comments model.")
-            except Exception as e: 
-                self.logger.debug(f"PR comments model failed on {e}. exception registered.")
-                stacker = traceback.format_exc()
-                self.logger.debug(f"{stacker}") 
-                pass
+            except Exception as e:
+                self.print_traceback("PR comments model", e)
+
             finally:
                 try: 
                     self.pull_request_events_model(pk_source_prs)
                     self.logger.info(f"Pull request events model.")
-                except Exception as e: 
-                    self.logger.debug(f"PR events model failed on {e}. exception registered for pr_step.")
-                    stacker = traceback.format_exc()
-                    self.logger.debug(f"{stacker}")  
-                    pass 
-                finally: 
+                except Exception as e:
+                    self.print_traceback("PR events model", e)
+
+                finally:
                     try: 
                         self.logger.info(f"Pull request reviews model factored out for now due to speed.")
-                    except Exception as e: 
-                        self.logger.debug(f"PR reviews model, which is factored out for now due to speed, somehow managed to fail on {e}. exception registered for pr_step.")
-                        stacker = traceback.format_exc()
-                        self.logger.debug(f"{stacker}")  
-                        pass 
-                    finally: 
+                    except Exception as e:
+                        self.print_traceback("PR reviews model, which is factored out for now due to speed", e)
+
+                    finally:
                         try:
                             self.pull_request_nested_data_model(pk_source_prs)
                             self.logger.info(f"Pull request nested data model.")
-                        except Exception as e: 
-                            self.logger.debug(f"PR nested model failed on {e}. exception registered for pr_step.")
-                            stacker = traceback.format_exc()
-                            self.logger.debug(f"{stacker}")
-                            pass  
-                        finally: 
+                        except Exception as e:
+                            self.print_traceback("PR nested model", e)
+
+                        finally:
                             self.logger.debug("finished running through four models.")
 
         self.register_task_completion(self.task_info, self.repo_id, 'pull_requests')
@@ -721,19 +708,15 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                         'platform_node_id': comment['node_id']
                     } for comment in inc_pr_comments['insert']
                 ]
-            except Exception as e: 
-                self.logger.debug(f"Comments model issue/error: {e}. exception registered.")
-                stacker = traceback.format_exc()
-                self.logger.debug(f"{stacker}")
-                pass
+            except Exception as e:
+                self.print_traceback("Creting list of pr comments", e)
+
             try:
                 self.bulk_insert(self.message_table, insert=pr_comments_insert, 
                     unique_columns=comment_action_map['insert']['augur'])
-            except Exception as e: 
-                self.logger.debug(f"PR comments data model failed on {e}. exception registered.")
-                stacker = traceback.format_exc()
-                self.logger.debug(f"{stacker}")
-                pass
+            except Exception as e:
+                self.print_traceback("Bulk inserting pr comments", e)
+
             finally:
                     try:
                         c_pk_source_comments = self.enrich_data_primary_keys(
@@ -783,11 +766,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                             unique_columns=comment_ref_action_map['insert']['augur'])
 
                     except Exception as e:
-
-                        self.logger.info(f"message inserts failed with: {e}.")
-                        stacker = traceback.format_exc()
-                        self.logger.debug(f"{stacker}")
-                        pass
+                        self.print_traceback("Gathering and inserting data into pr mesaage ref table", e)
 
                     finally:
 
@@ -818,11 +797,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             self.logger.info(f"comments inserted for repo_id: {self.repo_id}")
             return 
         except Exception as e:
-            self.logger.info(f"exception registered in paginate endpoint for issue comments: {e}")
-            stacker = traceback.format_exc()
-            self.logger.debug(f"{stacker}")
-            pass 
-        finally: 
+            self.print_traceback("Staggered paginate endpoint for pr comments", e)
+        finally:
             self.logger.debug(f"Pull request messages and message refs worked without exception for {self.repo_id}")
 
     def pull_request_events_model(self, pk_source_prs=[]):
@@ -892,10 +868,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         ]
         try: 
             self.bulk_insert(self.pull_request_events_table, insert=pr_events_insert, unique_columns=event_action_map['insert']['augur'])
-        except Exception as e: 
-            self.logger.debug(f"PR events data model failed on {e}. exception registered.")
-            stacker = traceback.format_exc()
-            self.logger.debug(f"{stacker}")           
+        except Exception as e:
+            self.print_traceback("Bulk insert pr events", e)
 
     def pull_request_nested_data_model(self, pk_source_prs=[]):
         try: 
@@ -908,11 +882,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 #prdata = json.loads(json.dumps(pk_source_prs))
                 self.logger.debug("nested model loaded.") 
 
-        except Exception as e: 
-
-            self.logger.debug(f'gettign source prs failed for nested model on {e}.')
-            pass 
-
+        except Exception as e:
+            self.print_traceback("Getting source prs in nested pr model", e)
 
         labels_all = []
         reviewers_all = []
@@ -1123,10 +1094,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                         ]  # reverted above to see if it works with other fixes.
                         self.bulk_insert(self.pull_request_meta_table, insert=meta_insert)
 
-                except Exception as e: 
-                    self.logger.debug(f"Nested Model error at loop {pr_nested_loop} : {e}.")
-                    stacker = traceback.format_exc()
-                    self.logger.debug(f"{stacker}")   
+                except Exception as e:
+                    self.print_traceback(f"Nested model error at loop {pr_nested_loop}", e)
                     continue   
 
     def query_pr_repo(self, pr_repo, pr_repo_type, pr_meta_id):
@@ -1178,7 +1147,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 self.logger.info(
                     f"Finished adding PR {pr_repo_type} Repo data for PR with id {self.pr_id_inc}"
                 )
-        except Exception as e: 
+        except Exception as e:
             self.logger.debug(f"repo exception registerred for PRs: {e}")
             self.logger.debug(f"Nested Model error at loop {pr_nested_loop} : {e}.")
             stacker = traceback.format_exc()
