@@ -5,9 +5,10 @@ from tests.test_workers.worker_persistance.util_persistance import *
 
 
 #Function to add repo_groups without starting an augur app instance
-def set_up_repo_groups(db):
+@pytest_fixture
+def set_up_repo_groups(database_connection):
 
-    df = pd.read_sql(s.sql.text("SELECT repo_group_id FROM augur_data.repo_groups"), db)
+    df = pd.read_sql(s.sql.text("SELECT repo_group_id FROM augur_data.repo_groups"), database_connection)
     repo_group_IDs = df['repo_group_id'].values.tolist()
 
     insert_repo_group_sql = s.sql.text("""
@@ -20,13 +21,13 @@ def set_up_repo_groups(db):
             print(f"Inserting repo group with name {row[1]} and ID {row[0]}...")
             if int(row[0]) not in repo_group_IDs:
                 repo_group_IDs.append(int(row[0]))
-                db.execute(insert_repo_group_sql, repo_group_id=int(row[0]), repo_group_name=row[1])
+                database_connection.execute(insert_repo_group_sql, repo_group_id=int(row[0]), repo_group_name=row[1])
             else:
                 print(f"Repo group with ID {row[1]} for repo group {row[1]} already exists, skipping...")
 
 
 
-    df = db.execute(s.sql.text("SELECT repo_group_id FROM augur_data.repo_groups"))
+    df = database_connection.execute(s.sql.text("SELECT repo_group_id FROM augur_data.repo_groups"))
 
     repo_group_IDs = [group[0] for group in df.fetchall()]
 
@@ -41,14 +42,14 @@ def set_up_repo_groups(db):
         for row in data:
             print(f"Inserting repo with Git URL `{row[1]}` into repo group {row[0]}")
             if int(row[0]) in repo_group_IDs:
-                result = db.execute(insertSQL, repo_group_id=int(row[0]), repo_git=row[1])
+                result = database_connection.execute(insertSQL, repo_group_id=int(row[0]), repo_git=row[1])
             else:
                 logger.warning(f"Invalid repo group id specified for {row[1]}, skipping.")
 
 
 
 
-def test_create_sha_endpoint_default(database_connection):
+def test_create_sha_endpoint_default(database_connection, set_up_repo_groups):
     
     test_values_good = ['e362752b3c475903e185d039bca4bb892dd5e432', 
                    '0fbfde8386eba4fca7e31ef97e93efeb5339638d']
@@ -84,7 +85,7 @@ def test_create_sha_endpoint_default(database_connection):
         raise AssertionError
 
 
-def test_create_email_endpoint_default(database_connection):
+def test_create_email_endpoint_default(database_connection, set_up_repo_groups):
     
     set_up_repo_groups(database_connection)
     
@@ -117,7 +118,7 @@ def test_create_email_endpoint_default(database_connection):
         
         raise AssertionError
 
-def test_create_name_endpoint(database_connection):
+def test_create_name_endpoint(database_connection, set_up_repo_groups):
     set_up_repo_groups(database_connection)
     
     test_values_good = ['Santiago Dueñas', 
