@@ -50,12 +50,8 @@ def set_up_repo_groups(db):
 
 def test_create_sha_endpoint_default(database_connection):
     
-    test_values = ['e362752b3c475903e185d039bca4bb892dd5e432', 
-                   '0fbfde8386eba4fca7e31ef97e93efeb5339638d',
-                   'notaHash',
-                   ''
-                   '\n'
-                   '102e1a534c33e8ce1e4d01927d5df667596b3dc7']
+    test_values_good = ['e362752b3c475903e185d039bca4bb892dd5e432', 
+                   '0fbfde8386eba4fca7e31ef97e93efeb5339638d']
     
     set_up_repo_groups(database_connection)
 
@@ -70,30 +66,89 @@ def test_create_sha_endpoint_default(database_connection):
             response = requests.get(url=url, headers=dummy.headers)
         except:
             raise AssertionError
+        
+    test_values_wrong = ['notaHash',
+                   ''
+                   '\n'
+                   '102e1a534c33e8ce1e4d01927d5df667596b3dc7']
+    
+    for value in test_values_wrong:
+        
+        url = dummy.create_endpoint_from_commit_sha(value, "10")
+        
+        try:
+            response = requests.get(url=url, headers=dummy.headers)
+        except:
+            continue
+        
+        raise AssertionError
 
 
 def test_create_email_endpoint_default(database_connection):
+    
     set_up_repo_groups(database_connection)
+    
+    test_values_good = ['krabs@tilde.team', 
+                   'jberkus@redhat.com',
+                   'imilarsky@gmail.com']
     
     dummy = DummyFullWorker(database_connection)
     
-    url = dummy.create_endpoint_from_email("krabs@tilde.team")
+    for value in test_values_good:
+        url = dummy.create_endpoint_from_email(value)
     
-    try:
-        response = requests.get(url=url, headers=dummy.headers)
-    except:
+        try:
+            response = requests.get(url=url, headers=dummy.headers)
+        except:
+            raise AssertionError
+    
+    test_values_bad = ['bad@email.com',
+                       'fakefakefakefakefakefakefake',
+                       ' ',
+                       '\n\t\t\t']
+    
+    for value in test_values_bad:
+        url = dummy.create_endpoint_from_email(value)
+        
+        try:
+            response = requests.get(url=url, headers=dummy.headers)
+        except:
+            continue
+        
         raise AssertionError
 
 def test_create_name_endpoint(database_connection):
     set_up_repo_groups(database_connection)
     
+    test_values_good = ['Santiago Dueñas', 
+                   'Isaac Milarsky',
+                   'Sean P. Goggins',
+                   'Isaac William Kenyon Milarsky',
+                   'Isaac William Kenyon Milarsky III']
+    
     dummy = DummyFullWorker(database_connection)
     
-    url = dummy.create_endpoint_from_name(database_connection)
+    for value in test_values_good:
+        url = dummy.create_endpoint_from_name(value)
     
-    try:
-        response = requests.get(url=url, headers=dummy.headers)
-    except:
+        try:
+            response = requests.get(url=url, headers=dummy.headers)
+        except:
+            raise AssertionError
+    
+    test_values_bad = ['Ghost',
+                       'NULL',
+                       None,
+                       '\n\t\t\t']
+    
+    for value in test_values_bad:
+        url = dummy.create_endpoint_from_name(value)
+        
+        try:
+            response = requests.get(url=url, headers=dummy.headers)
+        except:
+            continue
+        
         raise AssertionError
 
 
