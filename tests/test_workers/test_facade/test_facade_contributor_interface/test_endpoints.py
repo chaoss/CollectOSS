@@ -5,7 +5,7 @@ from tests.test_workers.worker_persistance.util_persistance import *
 
 
 #Function to add repo_groups without starting an augur app instance
-@pytest_fixture
+@pytest.fixture
 def set_up_repo_groups(database_connection):
 
     df = pd.read_sql(s.sql.text("SELECT repo_group_id FROM augur_data.repo_groups"), database_connection)
