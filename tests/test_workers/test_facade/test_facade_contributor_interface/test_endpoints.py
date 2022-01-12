@@ -60,7 +60,7 @@ def test_create_sha_endpoint_default(database_connection, set_up_repo_groups):
     test_values_good = ['e362752b3c475903e185d039bca4bb892dd5e432', 
                    '0fbfde8386eba4fca7e31ef97e93efeb5339638d']
     
-    set_up_repo_groups(database_connection)
+    #set_up_repo_groups(database_connection)
 
     #Dummy class for testing
     dummy = DummyFullWorker(database_connection)
@@ -93,7 +93,7 @@ def test_create_sha_endpoint_default(database_connection, set_up_repo_groups):
 
 def test_create_email_endpoint_default(database_connection, set_up_repo_groups):
     
-    set_up_repo_groups(database_connection)
+    #set_up_repo_groups(database_connection)
     
     test_values_good = ['krabs@tilde.team', 
                    'jberkus@redhat.com',
@@ -125,7 +125,7 @@ def test_create_email_endpoint_default(database_connection, set_up_repo_groups):
         raise AssertionError
 
 def test_create_name_endpoint(database_connection, set_up_repo_groups):
-    set_up_repo_groups(database_connection)
+    #set_up_repo_groups(database_connection)
     
     test_values_good = ['Santiago Dueñas', 
                    'Isaac Milarsky',
