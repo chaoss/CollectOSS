@@ -16,7 +16,7 @@
       width: 100%;
       display: block;
       border-bottom: 1px solid $border-color;
-      padding-bottom: $spacer / 2;
+      padding-bottom: $spacer * 0.5;
     }
 
     .copyright {
