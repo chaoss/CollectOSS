@@ -428,7 +428,6 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                     )
                 except Exception as e:
                     self.print_traceback("pull requests model", e)
-
             else:
                 self.logger.info("Contributor enrichment is not needed, no inserts in action map.")
 
@@ -493,10 +492,6 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 ]
             except Exception as e:
                 self.print_traceback("Extracting data from source in pr model", e)
-
-
-            # Removed due to error 11/18/2021 : and 'title' in pr['milestone']
-
             #The b_pr_src_id bug comes from here
             '''
             9/20/2021: Put the method definition for bulk insert here for reference. The method 
@@ -609,8 +604,6 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             pk_source_prs = self._get_pk_source_prs()
         except Exception as e:
             self.print_traceback("Pull Requests model", e)
-
-
         #self.write_debug_data(pk_source_prs, 'pk_source_prs')
 
         if pk_source_prs:
@@ -619,7 +612,6 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 self.logger.info(f"Pull request comments model.")
             except Exception as e:
                 self.print_traceback("PR comments model", e)
-
             finally:
                 try: 
                     self.pull_request_events_model(pk_source_prs)
@@ -632,14 +624,12 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                         self.logger.info(f"Pull request reviews model factored out for now due to speed.")
                     except Exception as e:
                         self.print_traceback("PR reviews model, which is factored out for now due to speed", e)
-
                     finally:
                         try:
                             self.pull_request_nested_data_model(pk_source_prs)
                             self.logger.info(f"Pull request nested data model.")
                         except Exception as e:
                             self.print_traceback("PR nested model", e)
-
                         finally:
                             self.logger.debug("finished running through four models.")
 
@@ -716,7 +706,6 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                     unique_columns=comment_action_map['insert']['augur'])
             except Exception as e:
                 self.print_traceback("Bulk inserting pr comments", e)
-
             finally:
                     try:
                         c_pk_source_comments = self.enrich_data_primary_keys(
@@ -764,14 +753,10 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
                         self.bulk_insert(self.pull_request_message_ref_table, insert=pr_message_ref_insert,
                             unique_columns=comment_ref_action_map['insert']['augur'])
-
                     except Exception as e:
                         self.print_traceback("Gathering and inserting data into pr mesaage ref table", e)
-
                     finally:
-
                         self.logger.info("Finished message insert section.")
-
         # TODO: add relational table so we can include a where_clause here
         try: 
             pr_comments = self.paginate_endpoint(
@@ -792,7 +777,6 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 stagger=True,
                 insertion_method=pr_comments_insert
             )
-
             pr_comments_insert(pr_comments,comment_action_map,comment_ref_action_map)
             self.logger.info(f"comments inserted for repo_id: {self.repo_id}")
             return 
@@ -881,10 +865,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             else: 
                 #prdata = json.loads(json.dumps(pk_source_prs))
                 self.logger.debug("nested model loaded.") 
-
         except Exception as e:
             self.print_traceback("Getting source prs in nested pr model", e)
-
         labels_all = []
         reviewers_all = []
         assignees_all = []
