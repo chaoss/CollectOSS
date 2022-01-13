@@ -13,7 +13,7 @@ def read(filename):
 
 setup(
     name="message_insights_worker",
-    version="0.0.0",
+    version="0.1.2",
     url="https://github.com/chaoss/augur",
     license='MIT',
     author="Augur Team",
