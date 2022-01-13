@@ -72,6 +72,7 @@ def test_create_sha_endpoint_default(database_connection, set_up_repo_groups):
         try:
             response = requests.get(url=url, headers=dummy.headers)
         except:
+            print(f"Good value wasn't accepted for value {value}")
             raise AssertionError
         
     test_values_wrong = ['notaHash',
@@ -88,6 +89,7 @@ def test_create_sha_endpoint_default(database_connection, set_up_repo_groups):
         except:
             continue
         
+        print(f"Bad value was accepted for value: {value}")
         raise AssertionError
 
 
@@ -107,6 +109,7 @@ def test_create_email_endpoint_default(database_connection, set_up_repo_groups):
         try:
             response = requests.get(url=url, headers=dummy.headers)
         except:
+            print(f"Good value wasn't accepted for value {value}")
             raise AssertionError
     
     test_values_bad = ['bad@email.com',
@@ -121,7 +124,8 @@ def test_create_email_endpoint_default(database_connection, set_up_repo_groups):
             response = requests.get(url=url, headers=dummy.headers)
         except:
             continue
-        
+
+        print(f"Bad value was accepted for value: {value}")
         raise AssertionError
 
 def test_create_name_endpoint(database_connection, set_up_repo_groups):
@@ -141,6 +145,7 @@ def test_create_name_endpoint(database_connection, set_up_repo_groups):
         try:
             response = requests.get(url=url, headers=dummy.headers)
         except:
+            print(f"Good value wasn't accepted for value {value}")
             raise AssertionError
     
     test_values_bad = [{'name' : 'Ghost'},
@@ -150,13 +155,13 @@ def test_create_name_endpoint(database_connection, set_up_repo_groups):
                        ]
     
     for value in test_values_bad:
-        url = dummy.create_endpoint_from_name(value)
-        
         try:
+            url = dummy.create_endpoint_from_name(value)
             response = requests.get(url=url, headers=dummy.headers)
         except:
             continue
         
+        print(f"Bad value was accepted for value: {value}")
         raise AssertionError
 
 
