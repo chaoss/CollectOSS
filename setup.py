@@ -44,7 +44,7 @@ setup(
         "Flask-Login==0.5.0",
         "Flask-WTF==0.15.1",
         "pandas==1.3.2",
-        "numpy ~> 1.21",
+        "numpy~>1.21",
         "requests==2.22.0",
         "psycopg2-binary==2.8.6",
         "click==8.0.3",
