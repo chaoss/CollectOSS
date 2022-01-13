@@ -57,8 +57,7 @@ def set_up_repo_groups(database_connection):
 
 def test_create_sha_endpoint_default(database_connection, set_up_repo_groups):
     
-    test_values_good = ['e362752b3c475903e185d039bca4bb892dd5e432', 
-                   '0fbfde8386eba4fca7e31ef97e93efeb5339638d']
+    test_values_good = ['53b0cc122ac9ecc1588d76759dc2e8e437f45b48']
     
     #set_up_repo_groups(database_connection)
 
