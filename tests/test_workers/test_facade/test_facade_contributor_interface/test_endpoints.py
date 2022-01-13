@@ -64,6 +64,15 @@ def test_create_sha_endpoint_default(database_connection, set_up_repo_groups):
 
     #Dummy class for testing
     dummy = DummyFullWorker(database_connection)
+
+    #Put a controlled repo path to test.
+    debug_repo_values = s.sql.text("""
+        UPDATE repo
+        SET repo_path = \'github.com/chaoss/\', repo_name = \'augur\'
+        WHERE repo_id = 1; 
+    """)
+
+    database_connection.execute(debug_repo_values)
     
     for value in test_values_good:
     
