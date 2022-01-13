@@ -53,7 +53,7 @@ def database_connection():
     # Create client to docker daemon
     client = docker.from_env()
 
-    print("Building a container")
+    print("Building the database container...")
 
     cwd = os.getcwd()
     # Build the test database from the dockerfile and download
@@ -189,7 +189,8 @@ class DummyFullWorker(ContributorInterfaceable):
                 self.logger.error(
                     "Error setting attribute for table: {} : {}".format(table, e))
 
-        insert_sql_file(self.db, "tests/test_workers/oauth.sql")
+        #looks for api keys one folder before the root augur folder.
+        insert_sql_file(self.db, "../oauth.sql")
 
         self.logger.info("Trying to find max id of table...")
         try:
