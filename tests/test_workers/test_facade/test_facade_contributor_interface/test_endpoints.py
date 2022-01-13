@@ -65,7 +65,7 @@ def test_create_sha_endpoint_default(database_connection, set_up_repo_groups):
     #Dummy class for testing
     dummy = DummyFullWorker(database_connection)
     
-    for value in test_values:
+    for value in test_values_good:
     
         url = dummy.create_endpoint_from_commit_sha(value, "10")
 
@@ -127,11 +127,11 @@ def test_create_email_endpoint_default(database_connection, set_up_repo_groups):
 def test_create_name_endpoint(database_connection, set_up_repo_groups):
     #set_up_repo_groups(database_connection)
     
-    test_values_good = ['Santiago Dueñas', 
-                   'Isaac Milarsky',
-                   'Sean P. Goggins',
-                   'Isaac William Kenyon Milarsky',
-                   'Isaac William Kenyon Milarsky III']
+    test_values_good = [{'name' : 'Santiago Dueñas'}, 
+                   {'name' : 'Isaac Milarsky'},
+                   {'name' : 'Sean P. Goggins'},
+                   {'name' : 'Isaac William Kenyon Milarsky'},
+                   {'name' : 'Isaac William Kenyon Milarsky III'}]
     
     dummy = DummyFullWorker(database_connection)
     
@@ -143,10 +143,11 @@ def test_create_name_endpoint(database_connection, set_up_repo_groups):
         except:
             raise AssertionError
     
-    test_values_bad = ['Ghost',
-                       'NULL',
-                       None,
-                       '\n\t\t\t']
+    test_values_bad = [{'name' : 'Ghost'},
+                       {'name' : 'NULL'},
+                       {'name' : None},
+                       {'name' : '\n\t\t\t'}
+                       ]
     
     for value in test_values_bad:
         url = dummy.create_endpoint_from_name(value)
