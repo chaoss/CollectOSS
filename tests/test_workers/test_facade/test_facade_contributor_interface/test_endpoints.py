@@ -112,8 +112,7 @@ def test_create_email_endpoint_default(database_connection, set_up_repo_groups):
             print(f"Good value wasn't accepted for value {value}")
             raise AssertionError
     
-    test_values_bad = ['bad@email.com',
-                       'fakefakefakefakefakefakefake',
+    test_values_bad = ['fakefakefakefakefakefakefake',
                        ' ',
                        '\n\t\t\t']
     
