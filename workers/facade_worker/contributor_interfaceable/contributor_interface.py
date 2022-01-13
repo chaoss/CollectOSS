@@ -202,6 +202,9 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         if not len(result) >= 1:
             raise LookupError
 
+        #debug for tests should be removed TODO
+        print(result)
+        
         # Else put into a more readable local var
         self.logger.info(f"Result: {result}")
         repo_path = result[0]['repo_path'].split(
