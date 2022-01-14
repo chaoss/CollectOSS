@@ -315,18 +315,16 @@ class WorkerGitInterfaceable(Worker):
                     user_unique_ids.append(row['gh_user_id'])
 
             except KeyError:
-                self.logger.info("Source data doesn't have user.id. Using node_id instead.")
-                stacker = traceback.format_exc()
-                self.logger.debug(f"{stacker}")
-                pass 
+                self.print_traceback("Enrich_cntrb_id, data doesn't have user.id. Using node_id instead", e, True)
+
             finally: 
                 for row in table_values_cntrb:
-                  try:
-                    user_unique_ids.append(row['gh_node_id'])
-                  except Exception as e:
-                    self.logger.info(f"Error adding gh_node_id: {e}. Row: {row}")
-                    stacker = traceback.format_exc()
-                    self.logger.debug(f"{stacker}")
+                    try:
+                        user_unique_ids.append(row['gh_node_id'])
+                    except Exception as e:
+                        self.logger.info(f"Error adding gh_node_id: {e}. Row: {row}")
+                        self.print_traceback("", e, True)
+
 
 
             #self.logger.info(f"gh_user_ids: {gh_user_ids}")
@@ -1379,12 +1377,8 @@ class WorkerGitInterfaceable(Worker):
 
                         ## Added additional exception logging and a pass in this block.
                         except Exception as e:
-                            self.logger.debug(
-                                f"{url} generated an exception: count is {count}, attemts are {attempts}."
-                            )
-                            stacker = traceback.format_exc()
-                            self.logger.debug(f"\n\n{stacker}\n\n")
-                            pass
+                            self.logger.info(f"Error adding gh_node_id: {e}. Row: {row}")
+                            self.print_traceback(f"{url} generated an exception: count is {count}, attemts are {attempts}.", e, True)
 
                 attempts += 1
 

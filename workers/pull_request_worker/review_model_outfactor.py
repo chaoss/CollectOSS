@@ -83,10 +83,8 @@
                 unique_columns=review_action_map['insert']['augur'],
                 update_columns=review_action_map['update']['augur']
             )
-        except Exception as e: 
-            self.logger.debug(f"PR reviews data model failed on {e}. exception registered.")
-            stacker = traceback.format_exc()
-            self.logger.debug(f"{stacker}")             
+        except Exception as e:
+            self.print_traceback("PR reviews data model", e, True)
 
         # Merge source data to inserted data to have access to inserted primary keys
 
@@ -261,7 +259,5 @@
                 self.pull_request_review_message_ref_table,
                 insert=pr_review_msg_ref_insert, unique_columns = review_msg_ref_action_map['insert']['augur']
             )
-        except Exception as e: 
-            self.logger.debug(f"bulk insert for review message ref failed on : {e}")
-            stacker = traceback.format_exc()
-            self.logger.debug(f"{stacker}")  
+        except Exception as e:
+            self.print_traceback("bulk insert for review message ref", e, True)

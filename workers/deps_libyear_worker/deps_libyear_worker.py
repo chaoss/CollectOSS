@@ -62,9 +62,7 @@ class DepsLibyearWorker(WorkerGitInterfaceable):
         try:
             self.generate_deps_libyear_data(repo_id, absolute_repo_path)
         except Exception as e:
-            self.logger.debug(f"This is the exception from generate_deps_libyear_data exception registered {e}.")
-            stacker = traceback.format_exc()
-            self.logger.debug(f"{stacker}")
+            self.print_traceback("Deps_libyear_worker: generate_deps_libyear_data", e, True)
 
         self.register_task_completion(entry_info, repo_id, "deps_libyear")
 
@@ -101,8 +99,5 @@ class DepsLibyearWorker(WorkerGitInterfaceable):
 
                     result = self.db.execute(self.repo_deps_libyear_table.insert().values(repo_deps))
                     self.logger.info(f"Added dep: {result.inserted_primary_key}")
-        except Exception as e: 
-            self.logger.debug(f"error generating libyear data, exception registered: {e}.")
-            stacker = traceback.format_exc()
-            self.logger.debug(f"{stacker}")
-            pass  
+        except Exception as e:
+            self.print_traceback("Deps_libyear_worker: generating and inserting data", e, True)
