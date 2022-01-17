@@ -24,6 +24,7 @@ A few interesting ideas: Maybe get the top committers from each repo first? curl
 
 """
 
+
 class ContributorInterfaceable(WorkerGitInterfaceable):
     def __init__(self, config={}, logger=None, special_rate_limit=10):
         # Define the data tables that we are needing
@@ -94,7 +95,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         self.special_rate_limit = special_rate_limit
         self.recent_requests_made = 0
 
-        #Needs to be an attribute of the class for incremental database insert using paginate_endpoint
+        # Needs to be an attribute of the class for incremental database insert using paginate_endpoint
         self.pk_source_prs = []
 
         self.logger.info("Facade now has contributor interface.")
@@ -181,44 +182,41 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         self.tool_version = '\'0.2.0\''
         self.data_source = '\'Git Log\''
 
-    
+    def create_endpoint_from_commit_sha(self, commit_sha, repo_id):
+        self.logger.info(
+            f"Trying to create endpoint from commit hash: {commit_sha}")
 
-    def create_endpoint_from_commit_sha(self,commit_sha, repo_id):
-        self.logger.info(f"Trying to create endpoint from commit hash: {commit_sha}")
-        
-        #https://api.github.com/repos/chaoss/augur/commits/53b0cc122ac9ecc1588d76759dc2e8e437f45b48
-        
+        # https://api.github.com/repos/chaoss/augur/commits/53b0cc122ac9ecc1588d76759dc2e8e437f45b48
+
         select_repo_path_query = s.sql.text("""
             SELECT repo_path, repo_name from repo
             WHERE repo_id = :repo_id_bind
         """)
-        
+
         # Bind parameter
         select_repo_path_query = select_repo_path_query.bindparams(
             repo_id_bind=repo_id)
         result = self.db.execute(select_repo_path_query).fetchall()
-        
+
         # if not found
         if not len(result) >= 1:
             raise LookupError
 
         if result[0]['repo_path'] is None or result[0]['repo_name'] is None:
             raise KeyError
-        #print(result)
+        # print(result)
 
         # Else put into a more readable local var
         self.logger.info(f"Result: {result}")
         repo_path = result[0]['repo_path'].split(
             "/")[1] + "/" + result[0]['repo_name']
-        
+
         url = "https://api.github.com/repos/" + repo_path + "/commits/" + commit_sha
-        
+
         self.logger.info(f"Url: {url}")
 
         return url
 
-        
-        
     # Try to construct the best url to ping GitHub's API for a username given an email.
     """
     I changed this because of the following note on the API site: With the in qualifier you can restrict your search to the username (login), full name, public email, or any combination of these. When you omit this qualifier, only the username and email address are searched. For privacy reasons, you cannot search by email domain name.
@@ -405,7 +403,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         # if yes
         if len(result.fetchall()) >= 1:
-            #self.insert_alias(contributor, email) Functions should do one thing ideally.
+            # self.insert_alias(contributor, email) Functions should do one thing ideally.
             return True
 
         # If not found, return false
@@ -417,22 +415,23 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         # Get primary key so that we can update
         contributor_table_data = self.db.execute(
-            s.sql.select([s.column('cntrb_id'), s.column('cntrb_canonical') ]).where(
+            s.sql.select([s.column('cntrb_id'), s.column('cntrb_canonical')]).where(
                 self.contributors_table.c.gh_user_id == cntrb["gh_user_id"]
             )
         ).fetchall()
 
         attempts = 0
 
-        #make sure not to overwrite canonical email if it isn't NULL
+        # make sure not to overwrite canonical email if it isn't NULL
 
         canonical_email = contributor_table_data[0]['cntrb_canonical']
-        #check if the contributor has a NULL canonical email or not
+        # check if the contributor has a NULL canonical email or not
         #self.logger.info(f"The value of the canonical email is : {canonical_email}")
 
         if canonical_email is not None:
             del cntrb["cntrb_canonical"]
-            self.logger.info("Existing canonical email found in database and will not be overwritten.")
+            self.logger.info(
+                "Existing canonical email found in database and will not be overwritten.")
 
         while attempts < max_attempts:
             try:
@@ -517,15 +516,15 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         # failure condition returns None
         return login_json
 
-    #Method to return the login given commit data using the supplemental data in the commit
+    # Method to return the login given commit data using the supplemental data in the commit
     #   -email
     #   -name
     def get_login_with_supplemental_data(self, commit_data):
-        
+
         # Try to get login from all possible emails
         # Is None upon failure.
         login_json = self.fetch_username_from_email(commit_data)
-        
+
         # Check if the email result got anything, if it failed try a name search.
         if login_json == None or 'total_count' not in login_json or login_json['total_count'] == 0:
             self.logger.info(
@@ -540,7 +539,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
             login_json = self.request_dict_from_endpoint(
                 url, timeout_wait=30)
-        
+
         # total_count is the count of username's found by the endpoint.
         if login_json == None or 'total_count' not in login_json:
             self.logger.info(
@@ -551,25 +550,27 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                 "Search query did not return any results, adding commit's table remains null...\n")
 
             return None
-        
+
         # Grab first result and make sure it has the highest match score
         match = login_json['items'][0]
         for item in login_json['items']:
             if item['score'] > match['score']:
                 match = item
 
-        self.logger.info("When searching for a contributor, we found the following users: {}\n".format(match))
-        
+        self.logger.info(
+            "When searching for a contributor, we found the following users: {}\n".format(match))
+
         return match['login']
 
     def get_login_with_commit_hash(self, commit_data, repo_id):
-        
-        #Get endpoint for login from hash
-        url = self.create_endpoint_from_commit_sha(commit_data['hash'], repo_id)
-        
-        #Send api request
+
+        # Get endpoint for login from hash
+        url = self.create_endpoint_from_commit_sha(
+            commit_data['hash'], repo_id)
+
+        # Send api request
         login_json = self.request_dict_from_endpoint(url)
-        
+
         if login_json is None or 'sha' not in login_json:
             self.logger.info("Search query returned empty data. Moving on")
             return None
@@ -578,58 +579,10 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             match = login_json['author']['login']
         except:
             match = None
-        
+
         return match
 
-    # Update the contributors table from the data facade has gathered.
-
-            try:
-                url = self.create_endpoint_from_name(commit_data)
-            except Exception as e:
-                self.logger.info(
-                    f"Couldn't resolve name url with given data. Reason: {e}")
-                return None
-
-            login_json = self.request_dict_from_endpoint(
-                url, timeout_wait=30)
-        
-        # total_count is the count of username's found by the endpoint.
-        if login_json == None or 'total_count' not in login_json:
-            self.logger.info(
-                "Search query returned an empty response, moving on...\n")
-            return None
-        if login_json['total_count'] == 0:
-            self.logger.info(
-                "Search query did not return any results, adding commit's table remains null...\n")
-
-            return None
-        
-        # Grab first result and make sure it has the highest match score
-        match = login_json['items'][0]
-        for item in login_json['items']:
-            if item['score'] > match['score']:
-                match = item
-
-        self.logger.info("When searching for a contributor with info {}, we found the following users: {}\n".format(
-            contributor, match))
-        
-        return match['login']
-
-    def get_login_with_commit_hash(self, commit_data, repo_id):
-        
-        #Get endpoint for login from hash
-        url = self.create_endpoint_from_commit_sha(commit_data['hash'], repo_id)
-        
-        #Send api request
-        login_json = self.request_dict_from_endpoint(url)
-        
-        if login_json == None or 'sha' not in login_json:
-            self.logger.info("Search query returned empty data. Moving on")
-            return None
-
-        match = login_json['author']['login']
-        
-        return match
+    
 
     # Update the contributors table from the data facade has gathered.
     def insert_facade_contributors(self, repo_id):
@@ -679,9 +632,9 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         # Try to get GitHub API user data from each unique commit email.
 
-        #self.logger.info(
+        # self.logger.info(
         #    f"DEBUG: The data to process looks like this: {new_contribs}"
-        #)
+        # )
 
         for contributor in new_contribs:
 
@@ -705,13 +658,13 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                 self.logger.info(
                     f"alias table query failed with error: {e}")
 
-            #Try to get the login from the commit sha
+            # Try to get the login from the commit sha
             login = self.get_login_with_commit_hash(contributor, repo_id)
-            
+
             if login == None or login == "":
-                #Try to get the login from supplemental data if not found with the commit hash
+                # Try to get the login from supplemental data if not found with the commit hash
                 login = self.get_login_with_supplemental_data(contributor)
-            
+
             if login == None:
                 continue
 
@@ -786,7 +739,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                             f"Ran into likely database collision. Assuming contributor exists in database. Error: {e}")
                 else:
                     self.update_contributor(cntrb)
-                
+
                 # Update alias after insertion. Insertion needs to happen first so we can get the autoincrementkey
                 self.insert_alias(cntrb, emailFromCommitData)
             except LookupError as e:
@@ -911,10 +864,10 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             return
 
         # HIt the endpoint if we can and put it in a dict
-        #committer_json = self.request_dict_from_endpoint(
+        # committer_json = self.request_dict_from_endpoint(
         #    endpoint, timeout_wait=0)
 
-        #Prepare for pagination and insertion into the contributor's table with an action map
+        # Prepare for pagination and insertion into the contributor's table with an action map
         # TODO: this might be github specific
         committer_action_map = {
             'insert': {
@@ -923,19 +876,18 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             }
         }
 
-        #Create a method so that paginate_endpoint knows how our records need to be inserted
+        # Create a method so that paginate_endpoint knows how our records need to be inserted
         def committer_insert(inc_source_comitters, action_map):
 
             if len(inc_source_comitters['all']) == 0:
                 self.logger.info("There are no committers for this repository.\n")
                 #self.register_task_completion(self.task_info, self.repo_id, 'pull_requests')
                 return
-            
 
             #self.logger.debug(f"inc_source_committers is: {inc_source_comitters} and the action map is {action_map}...")
 
             cntrbs_insert = [
-            {
+                {
                 "cntrb_login": cntrb['login'],
                 "cntrb_company": cntrb['company'] if 'company' in cntrb else None,
                 # "cntrb_type": , dont have a use for this as of now ... let it default to null
@@ -957,27 +909,27 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                 "gh_received_events_url": cntrb['received_events_url'],
                 "gh_type": cntrb['type'],
                 "gh_site_admin": cntrb['site_admin'],
-                "cntrb_last_used" : None if 'updated_at' not in cntrb else cntrb['updated_at'],
-                "cntrb_full_name" : None if 'name' not in cntrb else cntrb['name'],
+                "cntrb_last_used": None if 'updated_at' not in cntrb else cntrb['updated_at'],
+                "cntrb_full_name": None if 'name' not in cntrb else cntrb['name'],
                 "tool_source": self.tool_source,
                 "tool_version": self.tool_version,
                 "data_source": self.data_source
 
-            } for cntrb in inc_source_comitters['all'] 
+            } for cntrb in inc_source_comitters['all']
             ]
 
             inserted = len(inc_source_comitters['all'])
-            #Try to insert all committers
+            # Try to insert all committers
             for committer in cntrbs_insert:
                 try:
                     self.db.execute(
-                                self.contributors_table.insert().values(committer))
+                        self.contributors_table.insert().values(committer))
                 except Exception as e:
                     self.logger.info(f"Could not insert new committer ERROR: {e}")
-                    inserted -= 1 #Decrement the insertion cound
-            
+                    inserted -= 1  # Decrement the insertion cound
+
             self.logger.info(f"Inserted {inserted} new contributors.")
-            
+
             return
 
         source_committers = self.paginate_endpoint(
@@ -986,11 +938,10 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             stagger=True,
             insertion_method=committer_insert
         )
-        
+
         #self.logger.info(f"source committers: {source_committers}")
         committer_insert(source_committers, committer_action_map)
 
-    
     ''' Future method to try and get additional info for partially populated users. 
     def get_information_from_commits(self, repo_id):
 
@@ -1005,4 +956,3 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         Call the Github API for each of these people and fill in 
             any missing information '''
-
