@@ -812,8 +812,14 @@ class Persistant():
                     else:
                         table_name = table.name
 
-                    sql = 'COPY {} ({}) FROM STDIN WITH (FORMAT CSV, FORCE_NULL(closed_at))'.format(
+                    if 'pr_created_at' in columns: 
+
+                        sql = 'COPY {} ({}) FROM STDIN WITH (FORMAT CSV, FORCE_NULL(pr_closed_at))'.format(
                         table_name, columns)
+
+                    else: 
+                        sql = 'COPY {} ({}) FROM STDIN WITH FORMAT CSV'.format(
+                        table_name, columns)                        
 
                     #(FORMAT CSV, FORCE_NULL(column_name))
 
