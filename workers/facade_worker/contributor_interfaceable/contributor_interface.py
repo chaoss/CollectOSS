@@ -185,6 +185,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
     def create_endpoint_from_commit_sha(self,commit_sha, repo_id):
         self.logger.info(f"Trying to create endpoint from commit hash: {commit_sha}")
+        print(f"Trying to create endpoint from commit hash: {commit_sha}")
         
         #https://api.github.com/repos/chaoss/augur/commits/53b0cc122ac9ecc1588d76759dc2e8e437f45b48
         
