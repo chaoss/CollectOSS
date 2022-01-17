@@ -812,8 +812,10 @@ class Persistant():
                     else:
                         table_name = table.name
 
-                    sql = 'COPY {} ({}) FROM STDIN WITH CSV FORCE_NULL closed_at'.format(
+                    sql = 'COPY {} ({}) FROM STDIN WITH (FORMAT CSV, FORCE_NULL(closed_at))'.format(
                         table_name, columns)
+
+                    #(FORMAT CSV, FORCE_NULL(column_name))
 
                     self.logger.debug(f'table name is: {table_name}, and columns are {columns}.')
 
