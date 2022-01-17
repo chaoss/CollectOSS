@@ -198,6 +198,9 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             repo_id_bind=repo_id)
         result = self.db.execute(select_repo_path_query).fetchall()
         
+
+        print(result)
+        
         # if not found
         if not len(result) >= 1:
             raise LookupError
