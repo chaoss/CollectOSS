@@ -816,7 +816,7 @@ class Persistant():
 
                         self.logger.info('pr_closed_at is here.')
 
-                        sql = 'COPY {} ({}) FROM STDIN WITH (FORMAT CSV, FORCE_NULL(pr_closed_at))'.format(
+                        sql = 'COPY {} ({}) FROM STDIN WITH (FORMAT CSV, FORCE_NULL(pr_closed_at), NULL AS "NULL")'.format(
                         table_name, columns)
 
                     else: 
