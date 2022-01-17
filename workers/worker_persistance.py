@@ -826,6 +826,7 @@ class Persistant():
                     #(FORMAT CSV, FORCE_NULL(column_name))
 
                     self.logger.debug(f'table name is: {table_name}, and columns are {columns}.')
+                    self.logger.debug(f'sql is: {sql}')
 
                     #This causes the github worker to throw an error with pandas
                     #cur.copy_expert(sql=sql, file=self.text_clean(s_buf))
