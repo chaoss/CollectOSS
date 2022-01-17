@@ -28,14 +28,14 @@ setup(
         'requests==2.22.0',
         'psycopg2-binary==2.8.6',
         'sklearn==0.0',
-        'numpy==1.19.5',
-        'nltk==3.6.5',
+        'nltk==3.6.6',
+        'numpy==1.21.0',
         'pandas==1.3.2',
         'gensim==3.8.3',
         'emoji==1.2.0',
         'joblib==1.0.1',
         'xgboost==1.4.2',
-        'scipy==1.6.3'
+        'scipy==1.7.3'
     ],
     entry_points={
         'console_scripts': [

@@ -185,7 +185,6 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
     def create_endpoint_from_commit_sha(self,commit_sha, repo_id):
         self.logger.info(f"Trying to create endpoint from commit hash: {commit_sha}")
-        #print(f"Trying to create endpoint from commit hash: {commit_sha}")
         
         #https://api.github.com/repos/chaoss/augur/commits/53b0cc122ac9ecc1588d76759dc2e8e437f45b48
         
@@ -198,9 +197,6 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         select_repo_path_query = select_repo_path_query.bindparams(
             repo_id_bind=repo_id)
         result = self.db.execute(select_repo_path_query).fetchall()
-        
-
-        #print(result)
         
         # if not found
         if not len(result) >= 1:
@@ -432,10 +428,11 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         canonical_email = contributor_table_data[0]['cntrb_canonical']
         #check if the contributor has a NULL canonical email or not
-        self.logger.info(f"The value of the canonical email is : {canonical_email}")
+        #self.logger.info(f"The value of the canonical email is : {canonical_email}")
 
         if canonical_email is not None:
             del cntrb["cntrb_canonical"]
+            self.logger.info("Existing canonical email found in database and will not be overwritten.")
 
         while attempts < max_attempts:
             try:
@@ -561,6 +558,58 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             if item['score'] > match['score']:
                 match = item
 
+        self.logger.info("When searching for a contributor, we found the following users: {}\n".format(match))
+        
+        return match['login']
+
+    def get_login_with_commit_hash(self, commit_data, repo_id):
+        
+        #Get endpoint for login from hash
+        url = self.create_endpoint_from_commit_sha(commit_data['hash'], repo_id)
+        
+        #Send api request
+        login_json = self.request_dict_from_endpoint(url)
+        
+        if login_json is None or 'sha' not in login_json:
+            self.logger.info("Search query returned empty data. Moving on")
+            return None
+
+        try:
+            match = login_json['author']['login']
+        except:
+            match = None
+        
+        return match
+
+    # Update the contributors table from the data facade has gathered.
+
+            try:
+                url = self.create_endpoint_from_name(commit_data)
+            except Exception as e:
+                self.logger.info(
+                    f"Couldn't resolve name url with given data. Reason: {e}")
+                return None
+
+            login_json = self.request_dict_from_endpoint(
+                url, timeout_wait=30)
+        
+        # total_count is the count of username's found by the endpoint.
+        if login_json == None or 'total_count' not in login_json:
+            self.logger.info(
+                "Search query returned an empty response, moving on...\n")
+            return None
+        if login_json['total_count'] == 0:
+            self.logger.info(
+                "Search query did not return any results, adding commit's table remains null...\n")
+
+            return None
+        
+        # Grab first result and make sure it has the highest match score
+        match = login_json['items'][0]
+        for item in login_json['items']:
+            if item['score'] > match['score']:
+                match = item
+
         self.logger.info("When searching for a contributor with info {}, we found the following users: {}\n".format(
             contributor, match))
         
@@ -629,6 +678,11 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                                   'repo_id': repo_id}).to_json(orient="records"))
 
         # Try to get GitHub API user data from each unique commit email.
+
+        #self.logger.info(
+        #    f"DEBUG: The data to process looks like this: {new_contribs}"
+        #)
+
         for contributor in new_contribs:
 
             # Get the email from the commit data
@@ -757,6 +811,8 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                 self.logger.info(
                     f"Deleting now resolved email failed with error: {e}")
 
+        #self.logger.info("DEBUG: Got through the new_contribs")
+
         # sql query used to find corresponding cntrb_id's of emails found in the contributor's table
         # i.e., if a contributor already exists, we use it!
         resolve_email_to_cntrb_id_sql = s.sql.text("""
@@ -773,20 +829,28 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                 AND commits.repo_id = :repo_id
             UNION
             SELECT DISTINCT
-                cntrb_id,
+                contributors_aliases.cntrb_id,
+                                contributors.cntrb_login as login, 
                 contributors_aliases.alias_email AS email,
                 commits.cmt_author_raw_email
             FROM
+                              contributors,
                 contributors_aliases,
                 commits
             WHERE
                 contributors_aliases.alias_email = commits.cmt_author_raw_email
+                                AND contributors.cntrb_id = contributors_aliases.cntrb_id
                 AND commits.repo_id = :repo_id
         """)
 
+        #self.logger.info("DEBUG: got passed the sql statement declaration")
         # Get a list of dicts that contain the emails and cntrb_id's of commits that appear in the contributor's table.
         existing_cntrb_emails = json.loads(pd.read_sql(resolve_email_to_cntrb_id_sql, self.db, params={
                                            'repo_id': repo_id}).to_json(orient="records"))
+
+        #self.logger.info("DEBUG: got passed the sql statement's execution")
+
+        #self.logger.info(f"DEBUG: Here are the existing emails: {existing_cntrb_emails}")
 
         # iterate through all the commits with emails that appear in contributors and give them the relevant cntrb_id.
         for cntrb_email in existing_cntrb_emails:
@@ -828,7 +892,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         # Create endpoint for committers in a repo.
         url = "https://api.github.com/repos/" + repo_path + "/contributors?state=all&direction=asc&per_page=100&page={}"
 
-        self.logger.info(f"Url: {url}")
+        #self.logger.info(f"Url: {url}")
 
         return url
 
@@ -852,10 +916,6 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         #Prepare for pagination and insertion into the contributor's table with an action map
         # TODO: this might be github specific
-
-        ## SPG 12/1/2021: I think we need to update as well. I am not sure this is happening. If the contributor is 
-        ## already in the database without github stuff, are we updating the additional info in the contributor 
-        ## record? 
         committer_action_map = {
             'insert': {
                 'source': ['login'],

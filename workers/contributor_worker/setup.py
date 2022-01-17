@@ -29,7 +29,7 @@ setup(
         'requests==2.22.0',
         'psycopg2-binary==2.8.6',
         'click==8.0.3', 
-        'scipy==1.6.3',
+        'scipy==1.7.3',
         'sklearn==0.0'
     ],
     entry_points={
