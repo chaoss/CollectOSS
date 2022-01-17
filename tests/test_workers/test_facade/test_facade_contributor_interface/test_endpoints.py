@@ -91,9 +91,8 @@ def test_create_sha_endpoint_default(database_connection, set_up_repo_groups):
     
     for value in test_values_wrong:
         
-        url = dummy.create_endpoint_from_commit_sha(value, "10")
-        
         try:
+            url = dummy.create_endpoint_from_commit_sha(value, 1)
             response = requests.get(url=url, headers=dummy.headers)
         except:
             continue
