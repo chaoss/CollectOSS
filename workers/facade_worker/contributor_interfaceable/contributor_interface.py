@@ -24,10 +24,6 @@ A few interesting ideas: Maybe get the top committers from each repo first? curl
 
 """
 
-# TODO : Make this borrow everything that it can from the facade worker.
-# i.e. port, logging, etc
-
-
 class ContributorInterfaceable(WorkerGitInterfaceable):
     def __init__(self, config={}, logger=None, special_rate_limit=10):
         # Define the data tables that we are needing
@@ -205,6 +201,10 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         # if not found
         if not len(result) >= 1:
             raise LookupError
+
+        if result[0]['repo_path'] is None or result[0]['repo_name'] is None:
+            raise KeyError
+        #print(result)
 
         # Else put into a more readable local var
         self.logger.info(f"Result: {result}")
@@ -583,6 +583,55 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
     # Update the contributors table from the data facade has gathered.
 
+            try:
+                url = self.create_endpoint_from_name(commit_data)
+            except Exception as e:
+                self.logger.info(
+                    f"Couldn't resolve name url with given data. Reason: {e}")
+                return None
+
+            login_json = self.request_dict_from_endpoint(
+                url, timeout_wait=30)
+        
+        # total_count is the count of username's found by the endpoint.
+        if login_json == None or 'total_count' not in login_json:
+            self.logger.info(
+                "Search query returned an empty response, moving on...\n")
+            return None
+        if login_json['total_count'] == 0:
+            self.logger.info(
+                "Search query did not return any results, adding commit's table remains null...\n")
+
+            return None
+        
+        # Grab first result and make sure it has the highest match score
+        match = login_json['items'][0]
+        for item in login_json['items']:
+            if item['score'] > match['score']:
+                match = item
+
+        self.logger.info("When searching for a contributor with info {}, we found the following users: {}\n".format(
+            contributor, match))
+        
+        return match['login']
+
+    def get_login_with_commit_hash(self, commit_data, repo_id):
+        
+        #Get endpoint for login from hash
+        url = self.create_endpoint_from_commit_sha(commit_data['hash'], repo_id)
+        
+        #Send api request
+        login_json = self.request_dict_from_endpoint(url)
+        
+        if login_json == None or 'sha' not in login_json:
+            self.logger.info("Search query returned empty data. Moving on")
+            return None
+
+        match = login_json['author']['login']
+        
+        return match
+
+    # Update the contributors table from the data facade has gathered.
     def insert_facade_contributors(self, repo_id):
         self.logger.info(
             "Beginning process to insert contributors from facade commits for repo w entry info: {}\n".format(repo_id))
