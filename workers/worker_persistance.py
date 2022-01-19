@@ -812,16 +812,8 @@ class Persistant():
                     else:
                         table_name = table.name
 
-                    if 'pr_closed_at' in columns: 
-
-                        self.logger.info('pr_closed_at is here.')
-
-                        sql = 'COPY {} ({}) FROM STDIN WITH (FORMAT CSV, FORCE_NULL(pr_closed_at))'.format(
-                        table_name, columns)
-
-                    else: 
-                        sql = 'COPY {} ({}) FROM STDIN WITH FORMAT CSV'.format(
-                        table_name, columns)                        
+                    sql = 'COPY {} ({}) FROM STDIN WITH CSV'.format(
+                    table_name, columns)                        
 
                     #(FORMAT CSV, FORCE_NULL(column_name))
 
