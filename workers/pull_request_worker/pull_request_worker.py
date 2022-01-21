@@ -437,7 +437,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 {
                     'repo_id': self.repo_id,
                     'pr_url': pr['url'],
-                    'pr_src_id': pr['id'],
+                    'pr_src_id': int(pr['id']),
                     'pr_src_node_id': pr['node_id'],  ## 9/20/2021 - This was null. No idea why.
                     'pr_html_url': pr['html_url'],
                     'pr_diff_url': pr['diff_url'],
