@@ -383,7 +383,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         #self.owner and self.repo are both defined in the worker base's collect method using the url of the github repo.
         pr_url = (
             f"https://api.github.com/repos/{self.owner}/{self.repo}/pulls?state=all&"
-            "direction=asc&per_page=100&page={}"
+            "direction=desc&per_page=100&page={}"
         )
 
         #Database action map is essential in order to avoid duplicates messing up the data
