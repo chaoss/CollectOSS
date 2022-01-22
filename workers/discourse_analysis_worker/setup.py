@@ -26,14 +26,13 @@ setup(
         'Flask-Login==0.5.0',
         'Flask-WTF==0.15.1',
         'requests==2.22.0',
-        'psycopg2-binary==2.8.6',
+        'psycopg2-binary==2.9.3',
         'click==8.0.3', 
         'scipy==1.7.3',
         'nltk==3.6.6',
-        'pandas==1.3.2',
-        'scikit-learn==0.24.1',
-        'textblob==0.15.3',
-        'sklearn-crfsuite==0.3.6'
+        'pandas==1.3.5',
+        'scikit-learn==1.0.2',
+        'textblob==0.15.3'
     ],
     entry_points={
         'console_scripts': [
