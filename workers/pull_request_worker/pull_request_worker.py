@@ -49,7 +49,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         # Define data collection info
         self.tool_source = 'GitHub Pull Request Worker'
-        self.tool_version = '1.0.0'
+        self.tool_version = '1.2.0'
         self.data_source = 'GitHub API'
 
         #Needs to be an attribute of the class for incremental database insert using paginate_endpoint

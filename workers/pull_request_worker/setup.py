@@ -14,7 +14,7 @@ def read(filename):
 
 setup(
     name="pull_request_worker",
-    version="1.1.0",
+    version="1.2.0",
     url="https://github.com/chaoss/augur",
     license='MIT',
     author="Augurlabs",
