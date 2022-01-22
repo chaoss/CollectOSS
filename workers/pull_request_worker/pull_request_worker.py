@@ -523,7 +523,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 self.bulk_insert(
                     self.pull_requests_table,
                     update=inc_source_prs['update'], unique_columns=action_map['insert']['augur'],
-                    insert=prs_insert, update_columns=['pr_src_state', 'pr_closed_at', 'pr_updated_at', 'pr_merged_at']
+                    insert=prs_insert, update_columns=['pr_src_state', 'pr_closed_at', 'pr_updated_at', 'pr_merged_at'],
+                    convert_float_int=True
                 )
 
                 source_data = inc_source_prs['insert'] + inc_source_prs['update']

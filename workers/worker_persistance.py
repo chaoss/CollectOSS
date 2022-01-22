@@ -813,7 +813,7 @@ class Persistant():
                         table_name = table.name
 
                     sql = 'COPY {} ({}) FROM STDIN WITH CSV'.format(
-                    table_name, columns)                        
+                        table_name, columns)                        
 
                     #(FORMAT CSV, FORCE_NULL(column_name))
 
