@@ -195,6 +195,11 @@ class Worker(Persistant):
         self.logger.info("Collection process finished")
 
     def connect_to_broker(self):
+        """
+        Connects to the broker,
+        with 5 attempts at a successful connection,
+        and sleeps 10 seconds after each failed connection
+        """
         connected = False
         for i in range(5):
             try:
