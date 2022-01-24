@@ -386,6 +386,9 @@ class Worker(Persistant):
         self.collection_start_time = time.time()
 
     def register_task_completion(self, task, repo_id, model):
+        """Registers a task as complete with broker,
+        adds task to the worker_history table,
+        and updates the worker_job table"""
 
         self.logger.info(f"Worker completed this task in {self.collection_start_time - time.time()} seconds.\n")
 
