@@ -449,6 +449,9 @@ class Worker(Persistant):
         self.update_counter = 0
 
     def register_task_failure(self, task, repo_id, e):
+        """Registers a task as failed with the broker,
+        updates the worker_history table,
+        and updates the worker_job table"""
 
         self.logger.error(f"Worker ran into an error for task: {task}")
         self.logger.error(
