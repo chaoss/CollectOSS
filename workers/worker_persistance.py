@@ -1274,7 +1274,6 @@ class Persistant():
             self.logger.info(f"Column may not exist in the database -- registered exception: {e}.")
             self.print_traceback("", e, True)
 
-
     def retrieve_tuple(self, key_values, tables):
         table_str = tables[0]
         del tables[0]
@@ -1296,3 +1295,22 @@ class Persistant():
             pd.read_sql(retrieveTupleSQL, self.db, params={}).to_json(orient="records")
         )
         return values
+
+    """
+    Prints the traceback when an exception occurs
+    
+    Params
+        exception_message: String - Explain the location that the exception occurred
+        exception: String - Exception object that python returns during an Exception
+        debug_log: Boolean - Determines whether the message is printed to the debug log or info log
+        
+    Notes
+        To print the location of the exception to the info log and the traceback to the debug log, 
+        add a self.logger.info call then call self.print_traceback("", e) to print the traceback to only the debug log
+    """
+    def print_traceback(self, exception_message, exception, debug_log=True):
+
+        if debug_log:
+            self.logger.debug(f"{exception_message}. ERROR: {exception}", exc_info=sys.exc_info())
+        else:
+            self.logger.info(f"{exception_message}. ERROR: {exception}", exc_info=sys.exc_info())
