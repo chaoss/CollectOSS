@@ -67,19 +67,17 @@ class Worker(Persistant):
             self.tool_version = '0.0.0'
             self.data_source = 'Augur Worker Testing'
 
-    """
-        Writes json data to file, so it doesn't clog the log files
-        
-        Params
-            data: json - json data that needs to be dumped to a file
-            name: string - name of file to dump json data to
-    """
     def write_debug_data(self, data, name):
+        """
+            Writes json data to file, so it doesn't clog the log files
+
+            :param data: json - json data that needs to be dumped to a file
+            :param name: string - name of file to dump json data to
+        """
         if name in self.debug_data:
             with open(f'{name}.json', 'w') as f:
-                 json.dump(data, f)
+                json.dump(data, f)
 
-    
     @property
     def results_counter(self):
         """ Property that is returned when the worker's current results_counter is referenced
