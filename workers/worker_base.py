@@ -66,7 +66,14 @@ class Worker(Persistant):
             self.tool_source = 'Augur Worker Testing'
             self.tool_version = '0.0.0'
             self.data_source = 'Augur Worker Testing'
+
+    """
+        Writes json data to file, so it doesn't clog the log files
         
+        Params
+            data: json - json data that needs to be dumped to a file
+            name: string - name of file to dump json data to
+    """
     def write_debug_data(self, data, name):
         if name in self.debug_data:
             with open(f'{name}.json', 'w') as f:
