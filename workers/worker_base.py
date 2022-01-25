@@ -66,13 +66,18 @@ class Worker(Persistant):
             self.tool_source = 'Augur Worker Testing'
             self.tool_version = '0.0.0'
             self.data_source = 'Augur Worker Testing'
-        
+
     def write_debug_data(self, data, name):
+        """
+            Writes json data to file, so it doesn't clog the log files
+
+            :param data: json - json data that needs to be dumped to a file
+            :param name: string - name of file to dump json data to
+        """
         if name in self.debug_data:
             with open(f'{name}.json', 'w') as f:
-                 json.dump(data, f)
+                json.dump(data, f)
 
-    
     @property
     def results_counter(self):
         """ Property that is returned when the worker's current results_counter is referenced
@@ -188,6 +193,11 @@ class Worker(Persistant):
         self.logger.info("Collection process finished")
 
     def connect_to_broker(self):
+        """
+        Connects to the broker,
+        with 5 attempts at a successful connection,
+        and sleeps 10 seconds after each failed connection
+        """
         connected = False
         for i in range(5):
             try:
@@ -374,6 +384,9 @@ class Worker(Persistant):
         self.collection_start_time = time.time()
 
     def register_task_completion(self, task, repo_id, model):
+        """Registers a task as complete with broker,
+        adds task to the worker_history table,
+        and updates the worker_job table"""
 
         self.logger.info(f"Worker completed this task in {self.collection_start_time - time.time()} seconds.\n")
 
@@ -440,6 +453,9 @@ class Worker(Persistant):
         self.update_counter = 0
 
     def register_task_failure(self, task, repo_id, e):
+        """Registers a task as failed with the broker,
+        updates the worker_history table,
+        and updates the worker_job table"""
 
         self.logger.error(f"Worker ran into an error for task: {task}")
         self.logger.error(
