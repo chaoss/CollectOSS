@@ -260,8 +260,7 @@ class Persistant():
                 #self.logger.info(f"Type dict at {subject_columns[index]} is : {type(source[source_index].values[0])}")
             except Exception as e:
                 self.logger.info(f"Source data registered exception: {source[source_index]}")
-                stacker = traceback.format_exc()
-                self.logger.debug(f"{stacker}")
+                self.print_traceback("", e, True)
 
         subject = subject.astype(type_dict)
 
@@ -835,9 +834,7 @@ class Persistant():
                         self.logger.info(f"{e}")
                         dbapi_conn.rollback()                        
                     except Exception as e:
-                        self.logger.debug(f"Bulk insert error: {e}. exception registered")
-                        stacker = traceback.format_exc()
-                        self.logger.debug(f"{stacker}")
+                        self.print_traceback("Bulk insert error", e, True)
                         dbapi_conn.rollback()
 
             try: 
@@ -950,20 +947,13 @@ class Persistant():
             except ValueError as e:
                 # columns already added (happens if trying to expand the same column twice)
                 # TODO: Catch this before by only looping unique prefixs?
-                self.logger.debug(f"value error: {e}.") 
-                stacker = traceback.format_exc()
-                self.logger.debug(f"{stacker}")
-                pass
+                self.print_traceback("value error in _add_nested_columns", e, True)
+
             except Exception as e:
-                self.logger.debug(f"Looking for nan user error: {e}.") 
-                stacker = traceback.format_exc()
-                self.logger.debug(f"{stacker}")
-                pass 
+                self.print_traceback("_add_nested_columns", e, True)
+
             finally: 
                 self.logger.debug(f"finished _add_nested_columns.")
-
-
-
 
         return df
 
@@ -1282,9 +1272,7 @@ class Persistant():
             return relevant_columns_return
         except Exception as e:
             self.logger.info(f"Column may not exist in the database -- registered exception: {e}.")
-            stacker = traceback.format_exc()
-            self.logger.debug(f"{stacker}")
-
+            self.print_traceback("", e, True)
 
     def retrieve_tuple(self, key_values, tables):
         table_str = tables[0]
@@ -1307,3 +1295,22 @@ class Persistant():
             pd.read_sql(retrieveTupleSQL, self.db, params={}).to_json(orient="records")
         )
         return values
+
+    """
+    Prints the traceback when an exception occurs
+    
+    Params
+        exception_message: String - Explain the location that the exception occurred
+        exception: String - Exception object that python returns during an Exception
+        debug_log: Boolean - Determines whether the message is printed to the debug log or info log
+        
+    Notes
+        To print the location of the exception to the info log and the traceback to the debug log, 
+        add a self.logger.info call then call self.print_traceback("", e) to print the traceback to only the debug log
+    """
+    def print_traceback(self, exception_message, exception, debug_log=True):
+
+        if debug_log:
+            self.logger.debug(f"{exception_message}. ERROR: {exception}", exc_info=sys.exc_info())
+        else:
+            self.logger.info(f"{exception_message}. ERROR: {exception}", exc_info=sys.exc_info())
