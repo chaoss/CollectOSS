@@ -1391,7 +1391,7 @@ class WorkerGitInterfaceable(Worker):
 
     #insertion_method and stagger are arguments that allow paginate_endpoint to insert at around ~500 pages at a time.
     def paginate_endpoint(
-        self, url, action_map={}, table=None, where_clause=True, platform='github', in_memory=True, stagger=False, insertion_method=None, insertion_threshold=500
+        self, url, action_map={}, table=None, where_clause=True, platform='github', in_memory=True, stagger=False, insertion_method=None, insertion_threshold=1000
     ):
 
         #Get augur columns using the action map along with the primary key

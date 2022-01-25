@@ -49,7 +49,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         # Define data collection info
         self.tool_source = 'GitHub Pull Request Worker'
-        self.tool_version = '1.0.0'
+        self.tool_version = '1.2.0'
         self.data_source = 'GitHub API'
 
         #Needs to be an attribute of the class for incremental database insert using paginate_endpoint
@@ -383,7 +383,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         #self.owner and self.repo are both defined in the worker base's collect method using the url of the github repo.
         pr_url = (
             f"https://api.github.com/repos/{self.owner}/{self.repo}/pulls?state=all&"
-            "direction=asc&per_page=100&page={}"
+            "direction=desc&per_page=100&page={}"
         )
 
         #Database action map is essential in order to avoid duplicates messing up the data
@@ -437,7 +437,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 {
                     'repo_id': self.repo_id,
                     'pr_url': pr['url'],
-                    'pr_src_id': pr['id'],
+                    'pr_src_id': int(str(pr['id']).encode(encoding='UTF-8').decode(encoding='UTF-8')),#1-22-2022 inconsistent casting; sometimes int, sometimes float in bulk_insert 
                     'pr_src_node_id': pr['node_id'],  ## 9/20/2021 - This was null. No idea why.
                     'pr_html_url': pr['html_url'],
                     'pr_diff_url': pr['diff_url'],
@@ -459,10 +459,10 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                     ) else None,
                     'pr_created_at': pr['created_at'],
                     'pr_updated_at': pr['updated_at'],
-                    'pr_closed_at': s.sql.expression.null() if not (  # This had to be changed because "None" is JSON. SQL requires NULL SPG 11/28/2021
+                    'pr_closed_at': None if not (  
                         pr['closed_at']
                     ) else pr['closed_at'],
-                    'pr_merged_at': None if not (  # This had to be changed because "None" is JSON. SQL requires NULL
+                    'pr_merged_at': None if not (  
                         pr['merged_at']
                     ) else pr['merged_at'],
                     'pr_merge_commit_sha': pr['merge_commit_sha'],
@@ -523,7 +523,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 self.bulk_insert(
                     self.pull_requests_table,
                     update=inc_source_prs['update'], unique_columns=action_map['insert']['augur'],
-                    insert=prs_insert, update_columns=['pr_src_state', 'pr_closed_at', 'pr_updated_at', 'pr_merged_at']
+                    insert=prs_insert, update_columns=['pr_src_state', 'pr_closed_at', 'pr_updated_at', 'pr_merged_at'],
+                    convert_float_int=True
                 )
 
                 source_data = inc_source_prs['insert'] + inc_source_prs['update']

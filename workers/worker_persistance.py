@@ -811,10 +811,13 @@ class Persistant():
                     else:
                         table_name = table.name
 
-                    sql = 'COPY {} ({}) FROM STDIN WITH CSV'.format(
-                        table_name, columns)
+                    sql = 'COPY {} ({}) FROM STDIN WITH (FORMAT CSV, encoding "UTF-8")'.format(
+                        table_name, columns)                        
+
+                    #(FORMAT CSV, FORCE_NULL(column_name))
 
                     self.logger.debug(f'table name is: {table_name}, and columns are {columns}.')
+                    self.logger.debug(f'sql is: {sql}')
 
                     #This causes the github worker to throw an error with pandas
                     #cur.copy_expert(sql=sql, file=self.text_clean(s_buf))

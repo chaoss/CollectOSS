@@ -50,7 +50,7 @@ class MessageInsightsWorker(WorkerGitInterfaceable):
 
         # Define data collection info
         self.tool_source = 'Message Insights Worker'
-        self.tool_version = '0.0.2'
+        self.tool_version = '0.2.0'
         self.data_source = 'Non-existent API'
 
         self.insight_days = self.config['insight_days']
