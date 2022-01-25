@@ -384,14 +384,20 @@ class Worker(Persistant):
             'repo_id': repo_id,
             'job_model': model
         }
-        key = 'github_url' if 'github_url' in task['given'] else 'git_url' if 'git_url' in task['given'] else \
-            'gitlab_url' if 'gitlab_url' in task['given'] else 'INVALID_GIVEN'
-        task_completed[key] = task['given']['github_url'] if 'github_url' in task['given'] else task['given']['git_url'] \
-            if 'git_url' in task['given'] else task['given']['gitlab_url'] if 'gitlab_url' in task['given'] else 'INVALID_GIVEN'
-        if key == 'INVALID_GIVEN':
+
+        key = None
+        if 'github_url' in task['given']:
+            key = 'github_url'
+        elif 'git_url' in task['given']:
+            key = 'git_url'
+        elif 'gitlab_url' in task['given']:
+            key = 'gitlab_url'
+        else:
             self.register_task_failure(task, repo_id, "INVALID_GIVEN: Not a github/gitlab/git url.")
             return
 
+        task_completed[key] = task['given'][key]
+        
         # Add to history table
         task_history = {
             'repo_id': repo_id,
