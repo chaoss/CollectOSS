@@ -639,7 +639,6 @@ class WorkerGitInterfaceable(Worker):
 
         #return source_pk.to_dict(orient='records')"""
 
-    #Try to 
     def query_github_contributors(self, entry_info, repo_id):
 
         """ Data collection function
