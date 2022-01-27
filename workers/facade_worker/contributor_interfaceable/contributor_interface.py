@@ -863,8 +863,9 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         contrib_entry_info = {
             'given': {
                 'github_url': endpoint,
-                'git_url': endpoint
+                'git_url': endpoint,
+                'gitlab_url': endpoint
             }
         }
 
-        self.query_github_contributors(contrib_entry_info, repo_id)
+        self.query_github_contributors_bulk(contrib_entry_info, repo_id)
