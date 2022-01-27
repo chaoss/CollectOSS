@@ -649,7 +649,7 @@ class WorkerGitInterfaceable(Worker):
                 self.logger.error("Cascading Contributor Anomalie from missing repo contributor data: {} ...\n".format(cntrb_url))
                 continue
 
-    #probably a better version of query_github_contributors
+    #probably a better version of query_github_contributors but uses bulk_insert which is a bit shaky right now.
     def query_github_contributors_bulk(self, entry_info, repo_id):
 
         """ Data collection function
