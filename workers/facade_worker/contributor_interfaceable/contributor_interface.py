@@ -220,25 +220,6 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         return url
 
-    # Try to construct the best url to ping GitHub's API for a username given an email.
-    """
-    I changed this because of the following note on the API site: With the in qualifier you can restrict your search to the username (login), full name, public email, or any combination of these. When you omit this qualifier, only the username and email address are searched. For privacy reasons, you cannot search by email domain name.
-
-    https://docs.github.com/en/github/searching-for-information-on-github/searching-on-github/searching-users#search-only-users-or-organizations
-
-    """
-
-    def create_endpoint_from_email(self, email):
-        self.logger.info(f"Trying to resolve contributor from email: {email}")
-        # Note: I added "+type:user" to avoid having user owned organizations be returned
-        # Also stopped splitting per note above.
-        url = 'https://api.github.com/search/users?q={}+in:email+type:user'.format(
-            email)
-        # self.logger.info(f"url is: {url}") redundant log statement.
-        # (
-        #    email.split('@')[0], email.split('@')[-1])
-
-        return url
 
     # Try to construct the best url to ping GitHub's API for a username given a full name.
     def create_endpoint_from_name(self, contributor):
@@ -260,83 +241,6 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             cmt_cntrb['fname'], cmt_cntrb['lname'])
 
         return url
-
-    # Hit the endpoint specified by the url and return the json that it returns if it returns a dict.
-    # Returns None on failure.
-    def request_dict_from_endpoint(self, url, timeout_wait=10):
-        self.logger.info(f"Hitting endpoint: {url}")
-
-        attempts = 0
-        response_data = None
-        success = False
-
-        # This borrow's the logic to safely hit an endpoint from paginate_endpoint.
-        while attempts < 10:
-            try:
-                response = requests.get(url=url, headers=self.headers)
-            except TimeoutError:
-                self.logger.info(
-                    f"User data request for enriching contributor data failed with {attempts} attempts! Trying again...")
-                time.sleep(timeout_wait)
-                continue
-
-            # Make sure we know how many requests our api tokens have.
-            self.update_rate_limit(response, platform="github")
-
-            # Update the special rate limit
-            self.recent_requests_made += 1
-
-            # Sleep if we have made a lot of requests recently
-            if self.recent_requests_made == self.special_rate_limit:
-                self.recent_requests_made = 0
-                self.logger.info(
-                    f"Special rate limit of {self.special_rate_limit} reached! Sleeping for thirty seconds.")
-                # Sleep for thirty seconds before making a new request.
-                time.sleep(60)
-
-            try:
-                response_data = response.json()
-            except:
-                response_data = json.loads(json.dumps(response.text))
-
-            if type(response_data) == dict:
-                # Sometimes GitHub Sends us an error message in a dict instead of a string.
-                # While a bit annoying, it is easy to work around
-                if 'message' in response_data:
-                    try:
-                        assert 'API rate limit exceeded' not in response_data['message']
-                    except AssertionError as e:
-                        self.logger.info(
-                            f"Detected error in response data from gitHub. Trying again... Error: {e}")
-                        attempts += 1
-                        continue
-
-                # self.logger.info(f"Returned dict: {response_data}")
-                success = True
-                break
-            elif type(response_data) == list:
-                self.logger.warning("Wrong type returned, trying again...")
-                self.logger.info(f"Returned list: {response_data}")
-            elif type(response_data) == str:
-                self.logger.info(
-                    f"Warning! page_data was string: {response_data}")
-                if "<!DOCTYPE html>" in response_data:
-                    self.logger.info("HTML was returned, trying again...\n")
-                elif len(response_data) == 0:
-                    self.logger.warning("Empty string, trying again...\n")
-                else:
-                    try:
-                        # Sometimes raw text can be converted to a dict
-                        response_data = json.loads(response_data)
-                        success = True
-                        break
-                    except:
-                        pass
-            attempts += 1
-        if not success:
-            return None
-
-        return response_data
 
     def insert_alias(self, contributor, email):
         # Insert cntrb_id and email of the corresponding record into the alias table
