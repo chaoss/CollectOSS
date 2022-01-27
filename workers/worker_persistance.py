@@ -382,7 +382,7 @@ class Persistant():
     #table_pkey isn't used in this function don't know why it is here.
     #TODO: Figure out what types this expects and what types it returns
     def organize_needed_data(
-        self, new_data, table_values, table_pkey=None, action_map={}, in_memory=True
+        self, new_data, table_values, action_map={}, in_memory=True
     ):
 
         if len(table_values) == 0:
