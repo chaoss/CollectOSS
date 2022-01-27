@@ -868,4 +868,4 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             }
         }
 
-        self.query_github_contributors_bulk(contrib_entry_info, repo_id)
+        self.query_github_contributors(contrib_entry_info, repo_id)
