@@ -65,6 +65,9 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         # self.initialize_logging()
         self.logger = logger
 
+        
+        self.finishing_task = False
+
         # try:
 
         #     theConfig = self.augur_config.get_section(["contributor_interface"])

@@ -1277,124 +1277,6 @@ class WorkerGitInterfaceable(Worker):
                 response, bad_credentials=bad_credentials, temporarily_disable=temporarily_disable
             )
 
-
-    #Indexerror somewhere
-    def multi_thread_urls(self, all_urls, max_attempts=5, platform='github'):
-        """
-        :param all_urls: list of tuples
-        """
-
-        if not len(all_urls):
-            self.logger.info("No urls to multithread, returning blank list.\n")
-            return []
-
-        def load_url(url, extra_data={}):
-            try:
-                html = requests.get(url, stream=True, headers=self.headers)
-                return html, extra_data
-            except requests.exceptions.RequestException as e:
-                self.logger.debug(f"load_url inside multi_thread_urls failed with {e}, for usl {url}. exception registerred.registered")
-
-        self.logger.info("Beginning to multithread API endpoints.")
-
-        start = time.time()
-
-        all_data = []
-        valid_url_count = len(all_urls)
-
-        partitions = math.ceil(len(all_urls) / 600)
-        self.logger.info(f"{len(all_urls)} urls to process. Trying {partitions} partitions. " +
-            f"Using {max(multiprocessing.cpu_count()//8, 1)} threads.")
-        for urls in numpy.array_split(all_urls, partitions):
-            attempts = 0
-            self.logger.info(f"Total data points collected so far: {len(all_data)}")
-            while len(urls) > 0 and attempts < max_attempts:
-                with concurrent.futures.ThreadPoolExecutor(
-                    max_workers=max(multiprocessing.cpu_count()//8, 1)
-                ) as executor:
-                    # Start the load operations and mark each future with its URL
-                    future_to_url = {executor.submit(load_url, *url): url for url in urls}
-                    self.logger.info("Multithreaded urls and returned status codes:")
-                    count = 0
-                    for future in concurrent.futures.as_completed(future_to_url):
-
-                        if count % 100 == 0:
-                            self.logger.info(
-                                f"Processed {len(all_data)} / {valid_url_count} urls. "
-                                f"{len(urls)} remaining in this partition."
-                            )
-                        count += 1
-
-                        url = future_to_url[future]
-                        try:
-                            response, extra_data = future.result()
-
-                            if response.status_code != 200:
-                                self.logger.debug(
-                                    f"Url: {url[0]} ; Status code: {response.status_code}"
-                                )
-
-                            if response.status_code == 403 or response.status_code == 401: # 403 is rate limit, 404 is not found, 401 is bad credentials
-                                self.update_rate_limit(response, platform=platform)
-                                continue
-
-                            elif response.status_code == 200:
-                                try:
-                                    page_data = response.json() 
-                                    # This seems to not be working.
-                                    ### added by SPG 12/1/2021 for dealing with empty JSON pages where there
-                                    ### are no reviews.
-                                    #if not 'results' in page_data or len(page_data['results']) == 0:
-                                    #    continue  
-                                  
-                                except:
-                                    page_data = json.loads(json.dumps(response.text))
-                                    continue
-
-                                page_data = [{**data, **extra_data} for data in page_data]
-                                all_data += page_data
-
-                                try:
-                                    if 'last' in response.links and "&page=" not in url[0]:
-                                        urls += [
-                                            (url[0] + f"&page={page}", extra_data) for page in range(
-                                                2, int(response.links['last']['url'].split('=')[-1]) + 1
-                                            )
-                                        ]
-                                        # self.logger.info(f"urls boundry issue? for {urls} where they are equal to {url}.")
-
-                                        urls = numpy.delete(urls, numpy.where(urls == url), axis=0)
-                                except:
-                                    self.logger.info(f"ERROR with axis = 0 - Now attempting without setting axis for numpy.delete for {urls} where they are equal to {url}.")
-                                    urls = numpy.delete(urls, numpy.where(urls == url))
-                                    continue
-
-                            elif response.status_code == 404:
-                                urls = numpy.delete(urls, numpy.where(urls == url), axis=0)
-                                self.logger.info(f"Not found url: {url}\n")
-                            else:
-                                self.logger.info(
-                                    f"Unhandled response code: {response.status_code} {url}\n"
-                                )
-
-                        ## Added additional exception logging and a pass in this block.
-                        except Exception as e:
-                            self.logger.debug(
-                                f"{url} generated an exception: count is {count}, attemts are {attempts}."
-                            )
-                            stacker = traceback.format_exc()
-                            self.logger.debug(f"\n\n{stacker}\n\n")
-                            pass
-
-                attempts += 1
-
-        self.logger.debug(
-            f"Processed {valid_url_count} urls and got {len(all_data)} data points "
-            f"in {time.time() - start} seconds thanks to multithreading!\n"
-        )
-        return all_data
-
-
     #insertion_method and stagger are arguments that allow paginate_endpoint to insert at around ~500 pages at a time.
     def paginate_endpoint(
         self, url, action_map={}, table=None, where_clause=True, platform='github', in_memory=True, stagger=False, insertion_method=None, insertion_threshold=500
@@ -1556,7 +1438,7 @@ class WorkerGitInterfaceable(Worker):
             'all': all_data
         }
 
-    #TODO: deprecated but still used by the issues worker.
+    #TODO: deprecated but still used by many other methods
     def paginate(self, url, duplicate_col_map, update_col_map, table, table_pkey, where_clause="", value_update_col_map={}, platform="github"):
         """ DEPRECATED
             Paginate either backwards or forwards (depending on the value of the worker's
