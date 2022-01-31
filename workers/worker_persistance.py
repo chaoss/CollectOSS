@@ -378,12 +378,24 @@ class Persistant():
         self.logger.info("Finished getting data set columns")
         return df[list(set(final_columns))].to_dict(orient='records')
 
-
-    #table_pkey isn't used in this function don't know why it is here.
-    #TODO: Figure out what types this expects and what types it returns
     def organize_needed_data(
-        self, new_data, table_values, table_pkey=None, action_map={}, in_memory=True
+        self, new_data, table_values, action_map={}, in_memory=True
     ):
+        """
+        This method determines which rows need to be inserted into the database (ensures data ins't inserted more than once)
+        and determines which rows have data that needs to be updated
+
+        :param new_data: list of dictionaries - needs to be compared with data in database to see if any updates are
+            needed or if the data needs to be inserted
+        :param table_values: list of SQLAlchemy tuples - data that is currently in the database
+        :param action_map: dict with two keys (insert and update) and each key's value contains a list of the fields
+            that are needed to determine if a row is unique or if a row needs to be updated
+        :param in_memory: boolean - determines whether the method is done is memory or database
+            (currently everything keeps the default of in_memory=True)
+
+        :return: list of dictionaries that contain data that needs to be inserted into the database
+        :return: list of dictionaries that contain data that needs to be updated in the database
+        """
 
         if len(table_values) == 0:
             return new_data, []
