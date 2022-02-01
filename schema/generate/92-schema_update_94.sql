@@ -7,7 +7,7 @@ SELECT
   i.created_at,
   i.repo_id 
 FROM
-  issues i 
+  augur_data.issues i 
 ORDER BY
   i.created_at;
 
