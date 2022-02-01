@@ -637,8 +637,8 @@ class WorkerGitInterfaceable(Worker):
                         [self.contributors_table.c.gh_node_id]
                     ).where(
                         self.contributors_table.c.gh_node_id==cntrb["gh_node_id"]
-                    ).fetchall()
-                )
+                    )
+                ).fetchall()
 
                 if len(existingMatchingContributors) > 0:
                     break #if contributor already exists in table
