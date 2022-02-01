@@ -103,6 +103,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         self.logger.info("Facade now has contributor interface.")
 
+        self.worker_type = "Contributor_interface"
         self.tool_source = '\'Facade Worker\''
         self.tool_version = '\'1.0.1\''
         self.data_source = '\'Git Log\''
