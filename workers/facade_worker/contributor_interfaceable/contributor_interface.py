@@ -632,7 +632,8 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
                 # self.logger.info(f"{cntrb}")
             except Exception as e:
-                self.logger.info(f"Error: {e}")
+                self.logger.info(f"Error when trying to create cntrb: {e}")
+                continue
             # Check if the github login exists in the contributors table and add the emails to alias' if it does.
 
             # Also update the contributor record with commit data if we can.
