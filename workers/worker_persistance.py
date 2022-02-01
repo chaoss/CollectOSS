@@ -260,8 +260,7 @@ class Persistant():
                 #self.logger.info(f"Type dict at {subject_columns[index]} is : {type(source[source_index].values[0])}")
             except Exception as e:
                 self.logger.info(f"Source data registered exception: {source[source_index]}")
-                stacker = traceback.format_exc()
-                self.logger.debug(f"{stacker}")
+                self.print_traceback("", e, True)
 
         subject = subject.astype(type_dict)
 
@@ -379,12 +378,24 @@ class Persistant():
         self.logger.info("Finished getting data set columns")
         return df[list(set(final_columns))].to_dict(orient='records')
 
-
-    #table_pkey isn't used in this function don't know why it is here.
-    #TODO: Figure out what types this expects and what types it returns
     def organize_needed_data(
-        self, new_data, table_values, table_pkey=None, action_map={}, in_memory=True
+        self, new_data, table_values, action_map={}, in_memory=True
     ):
+        """
+        This method determines which rows need to be inserted into the database (ensures data ins't inserted more than once)
+        and determines which rows have data that needs to be updated
+
+        :param new_data: list of dictionaries - needs to be compared with data in database to see if any updates are
+            needed or if the data needs to be inserted
+        :param table_values: list of SQLAlchemy tuples - data that is currently in the database
+        :param action_map: dict with two keys (insert and update) and each key's value contains a list of the fields
+            that are needed to determine if a row is unique or if a row needs to be updated
+        :param in_memory: boolean - determines whether the method is done is memory or database
+            (currently everything keeps the default of in_memory=True)
+
+        :return: list of dictionaries that contain data that needs to be inserted into the database
+        :return: list of dictionaries that contain data that needs to be updated in the database
+        """
 
         if len(table_values) == 0:
             return new_data, []
@@ -812,10 +823,13 @@ class Persistant():
                     else:
                         table_name = table.name
 
-                    sql = 'COPY {} ({}) FROM STDIN WITH CSV'.format(
-                        table_name, columns)
+                    sql = 'COPY {} ({}) FROM STDIN WITH (FORMAT CSV, encoding "UTF-8")'.format(
+                        table_name, columns)                        
+
+                    #(FORMAT CSV, FORCE_NULL(column_name))
 
                     self.logger.debug(f'table name is: {table_name}, and columns are {columns}.')
+                    self.logger.debug(f'sql is: {sql}')
 
                     #This causes the github worker to throw an error with pandas
                     #cur.copy_expert(sql=sql, file=self.text_clean(s_buf))
@@ -835,9 +849,7 @@ class Persistant():
                         self.logger.info(f"{e}")
                         dbapi_conn.rollback()                        
                     except Exception as e:
-                        self.logger.debug(f"Bulk insert error: {e}. exception registered")
-                        stacker = traceback.format_exc()
-                        self.logger.debug(f"{stacker}")
+                        self.print_traceback("Bulk insert error", e, True)
                         dbapi_conn.rollback()
 
             try: 
@@ -950,20 +962,13 @@ class Persistant():
             except ValueError as e:
                 # columns already added (happens if trying to expand the same column twice)
                 # TODO: Catch this before by only looping unique prefixs?
-                self.logger.debug(f"value error: {e}.") 
-                stacker = traceback.format_exc()
-                self.logger.debug(f"{stacker}")
-                pass
+                self.print_traceback("value error in _add_nested_columns", e, True)
+
             except Exception as e:
-                self.logger.debug(f"Looking for nan user error: {e}.") 
-                stacker = traceback.format_exc()
-                self.logger.debug(f"{stacker}")
-                pass 
+                self.print_traceback("_add_nested_columns", e, True)
+
             finally: 
                 self.logger.debug(f"finished _add_nested_columns.")
-
-
-
 
         return df
 
@@ -1282,9 +1287,7 @@ class Persistant():
             return relevant_columns_return
         except Exception as e:
             self.logger.info(f"Column may not exist in the database -- registered exception: {e}.")
-            stacker = traceback.format_exc()
-            self.logger.debug(f"{stacker}")
-
+            self.print_traceback("", e, True)
 
     def retrieve_tuple(self, key_values, tables):
         table_str = tables[0]
@@ -1307,3 +1310,22 @@ class Persistant():
             pd.read_sql(retrieveTupleSQL, self.db, params={}).to_json(orient="records")
         )
         return values
+
+    """
+    Prints the traceback when an exception occurs
+    
+    Params
+        exception_message: String - Explain the location that the exception occurred
+        exception: String - Exception object that python returns during an Exception
+        debug_log: Boolean - Determines whether the message is printed to the debug log or info log
+        
+    Notes
+        To print the location of the exception to the info log and the traceback to the debug log, 
+        add a self.logger.info call then call self.print_traceback("", e) to print the traceback to only the debug log
+    """
+    def print_traceback(self, exception_message, exception, debug_log=True):
+
+        if debug_log:
+            self.logger.debug(f"{exception_message}. ERROR: {exception}", exc_info=sys.exc_info())
+        else:
+            self.logger.info(f"{exception_message}. ERROR: {exception}", exc_info=sys.exc_info())
