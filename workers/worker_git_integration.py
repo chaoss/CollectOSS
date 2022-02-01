@@ -662,6 +662,7 @@ class WorkerGitInterfaceable(Worker):
 
             except Exception as e:
                 self.logger.error("Caught exception: {}".format(e))
+                self.logger.error(f"Traceback: {traceback.format_exc()}")
                 self.logger.error("Cascading Contributor Anomalie from missing repo contributor data: {} ...\n".format(cntrb_url))
                 continue
 
