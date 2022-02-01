@@ -653,7 +653,10 @@ class WorkerGitInterfaceable(Worker):
                 elif repo_contributor['flag'] == 'need_insertion':
                     result = self.db.execute(self.contributors_table.insert().values(cntrb))
                     self.logger.info("Primary key inserted into the contributors table: {}".format(result.inserted_primary_key))
-                    self.results_counter += 1
+
+                    #For workers that aren't an interface.
+                    if self.worker_type != "Contributor_interface":
+                        self.results_counter += 1
 
                     self.logger.info("Inserted contributor: " + contributor['login'] + "\n")
 
