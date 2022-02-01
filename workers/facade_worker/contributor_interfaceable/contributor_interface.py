@@ -745,6 +745,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                     ''.join(traceback.format_exception(None, e, e.__traceback__)))
                 self.logger.info(
                     f"Contributor id not able to be found in database despite the user_id existing. Something very wrong is happening. Error: {e}")
+                continue 
 
             # Resolve any unresolved emails if we get to this point.
             # They will get added to the alias table later
