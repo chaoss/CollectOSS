@@ -633,7 +633,7 @@ class WorkerGitInterfaceable(Worker):
                 #dup check
                 #TODO: add additional fields to check if needed.
                 existingMatchingContributors = self.db.execute(
-                    self.sql.select(
+                    s.sql.select(
                         [self.contributors_table.c.gh_node_id]
                     ).where(
                         self.contributors_table.c.gh_node_id==cntrb["gh_node_id"]
