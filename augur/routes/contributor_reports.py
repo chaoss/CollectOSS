@@ -575,6 +575,12 @@ def create_routes(server):
 
         repo_id, start_date, end_date = get_repo_id_start_date_and_end_date()
 
+        if repo_id is None:
+            return Response(response="Invalid Query Params. Refer to the API docs here: https://oss-augur."
+                                     "readthedocs.io/en/main/rest-api/api.html",
+                            mimetype='application/json',
+                            status=200)
+
         group_by, required_contributions, required_time = get_new_cntrb_bar_chart_query_params()
 
         input_df = new_contributor_data_collection(repo_id=repo_id, required_contributions=required_contributions)
@@ -739,6 +745,12 @@ def create_routes(server):
     def new_contributors_stacked_bar():
 
         repo_id, start_date, end_date = get_repo_id_start_date_and_end_date()
+
+        if repo_id is None:
+            return Response(response="Invalid Query Params. Refer to the API docs here: https://oss-augur."
+                                     "readthedocs.io/en/main/rest-api/api.html",
+                            mimetype='application/json',
+                            status=200)
 
         group_by, required_contributions, required_time = get_new_cntrb_bar_chart_query_params()
 
@@ -938,6 +950,12 @@ def create_routes(server):
 
         repo_id, start_date, end_date = get_repo_id_start_date_and_end_date()
 
+        if repo_id is None:
+            return Response(response="Invalid Query Params. Refer to the API docs here: https://oss-augur."
+                                     "readthedocs.io/en/main/rest-api/api.html",
+                            mimetype='application/json',
+                            status=200)
+
         required_contributions = int(request.args.get('required_contributions', 4))
         required_time = int(request.args.get('required_time', 365))
 
@@ -1064,6 +1082,12 @@ def create_routes(server):
     def returning_contributor_stacked_bar():
 
         repo_id, start_date, end_date = get_repo_id_start_date_and_end_date()
+
+        if repo_id is None:
+            return Response(response="Invalid Query Params. Refer to the API docs here: https://oss-augur."
+                                     "readthedocs.io/en/main/rest-api/api.html",
+                            mimetype='application/json',
+                            status=200)
 
         group_by = str(request.args.get('group_by', "quarter"))
         required_contributions = int(request.args.get('required_contributions', 4))
