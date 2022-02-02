@@ -423,6 +423,13 @@ def create_routes(server):
 
     def get_repo_id_start_date_and_end_date():
 
+        """ Gets the repo_id, start_date, and end_date from the GET requests array
+
+        :return: repo_id - id of the repo data is being retrieved for
+        :return: start_date - earliest time on visualization. Defaults to the January 1st of last year
+        :return: end_date - latest time on visualization. Defaults to current date
+        """
+
         now = datetime.datetime.now()
 
         repo_id = request.args.get('repo_id')
