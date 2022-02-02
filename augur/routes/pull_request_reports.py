@@ -450,7 +450,7 @@ def create_routes(server):
             return Response(response="Invalid Query Params. Refer to the API docs here: https://oss-augur."
                                      "readthedocs.io/en/main/rest-api/api.html",
                             mimetype='application/json',
-                            status=200)
+                            status=400)
 
         group_by = str(request.args.get('group_by', "month"))
         return_json = request.args.get('return_json', "false")
@@ -596,7 +596,7 @@ def create_routes(server):
             return Response(response="Invalid Query Params. Refer to the API docs here: https://oss-augur."
                                      "readthedocs.io/en/main/rest-api/api.html",
                             mimetype='application/json',
-                            status=200)
+                            status=400)
 
         return_json = request.args.get('return_json', "false")
 
@@ -779,7 +779,7 @@ def create_routes(server):
             return Response(response="Invalid Query Params. Refer to the API docs here: https://oss-augur."
                                      "readthedocs.io/en/main/rest-api/api.html",
                             mimetype='application/json',
-                            status=200)
+                            status=400)
 
         return_json = request.args.get('return_json', "false")
 
@@ -972,7 +972,7 @@ def create_routes(server):
             return Response(response="Invalid Query Params. Refer to the API docs here: https://oss-augur."
                                      "readthedocs.io/en/main/rest-api/api.html",
                             mimetype='application/json',
-                            status=200)
+                            status=400)
 
         return_json = request.args.get('return_json', "false")
 
@@ -1272,7 +1272,7 @@ def create_routes(server):
             return Response(response="Invalid Query Params. Refer to the API docs here: https://oss-augur."
                                      "readthedocs.io/en/main/rest-api/api.html",
                             mimetype='application/json',
-                            status=200)
+                            status=400)
 
         return_json = request.args.get('return_json', "false")
 
@@ -1440,7 +1440,7 @@ def create_routes(server):
             return Response(response="Invalid Query Params. Refer to the API docs here: https://oss-augur."
                                      "readthedocs.io/en/main/rest-api/api.html",
                             mimetype='application/json',
-                            status=200)
+                            status=400)
 
         return_json = request.args.get('return_json', "false")
         remove_outliers = str(request.args.get('remove_outliers', "true"))
@@ -1577,7 +1577,7 @@ def create_routes(server):
             return Response(response="Invalid Query Params. Refer to the API docs here: https://oss-augur."
                                      "readthedocs.io/en/main/rest-api/api.html",
                             mimetype='application/json',
-                            status=200)
+                            status=400)
 
         return_json = request.args.get('return_json', "false")
         include_comments = str(request.args.get('include_comments', True))
@@ -1766,7 +1766,7 @@ def create_routes(server):
             return Response(response="Invalid Query Params. Refer to the API docs here: https://oss-augur."
                                      "readthedocs.io/en/main/rest-api/api.html",
                             mimetype='application/json',
-                            status=200)
+                            status=400)
         
         group_by = str(request.args.get('group_by', "month"))
         return_json = request.args.get('return_json', "false")

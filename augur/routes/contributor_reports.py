@@ -579,7 +579,7 @@ def create_routes(server):
             return Response(response="Invalid Query Params. Refer to the API docs here: https://oss-augur."
                                      "readthedocs.io/en/main/rest-api/api.html",
                             mimetype='application/json',
-                            status=200)
+                            status=400)
 
         group_by, required_contributions, required_time = get_new_cntrb_bar_chart_query_params()
 
@@ -750,7 +750,7 @@ def create_routes(server):
             return Response(response="Invalid Query Params. Refer to the API docs here: https://oss-augur."
                                      "readthedocs.io/en/main/rest-api/api.html",
                             mimetype='application/json',
-                            status=200)
+                            status=400)
 
         group_by, required_contributions, required_time = get_new_cntrb_bar_chart_query_params()
 
@@ -954,7 +954,7 @@ def create_routes(server):
             return Response(response="Invalid Query Params. Refer to the API docs here: https://oss-augur."
                                      "readthedocs.io/en/main/rest-api/api.html",
                             mimetype='application/json',
-                            status=200)
+                            status=400)
 
         required_contributions = int(request.args.get('required_contributions', 4))
         required_time = int(request.args.get('required_time', 365))
@@ -1087,7 +1087,7 @@ def create_routes(server):
             return Response(response="Invalid Query Params. Refer to the API docs here: https://oss-augur."
                                      "readthedocs.io/en/main/rest-api/api.html",
                             mimetype='application/json',
-                            status=200)
+                            status=400)
 
         group_by = str(request.args.get('group_by', "quarter"))
         required_contributions = int(request.args.get('required_contributions', 4))
