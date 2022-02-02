@@ -356,11 +356,14 @@ def create_routes(server):
 
         now = datetime.datetime.now()
 
-        repo_id = int(request.args.get('repo_id'))
+        repo_id = request.args.get('repo_id')
         start_date = str(request.args.get('start_date', "{}-01-01".format(now.year - 1)))
         end_date = str(request.args.get('end_date', "{}-{}-{}".format(now.year, now.month, now.day)))
 
-        return repo_id, start_date, end_date
+        if repo_id:
+            return int(repo_id), start_date, end_date
+
+        return None, None, None
 
     def filter_out_repeats_without_required_contributions_in_required_time(repeat_list, repeats_df, required_time,
                                                                            first_list):
