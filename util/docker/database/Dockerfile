@@ -4,7 +4,7 @@ FROM postgres:12
 LABEL maintainer="outdoors@acm.org"
 LABEL version="0.17.0"
 
-ENV POSTGRES_DB "augur"
+ENV POSTGRES_DB "test"
 ENV POSTGRES_USER "augur"
 ENV POSTGRES_PASSWORD "augur"
 
