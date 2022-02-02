@@ -946,7 +946,7 @@ def create_routes(server):
 
     @server.app.route('/{}/contributor_reports/returning_contributors_pie_chart/'.format(server.api_version),
                       methods=["GET"])
-    def returning_contributor_pie_chart():
+    def returning_contributors_pie_chart():
 
         repo_id, start_date, end_date = get_repo_id_start_date_and_end_date()
 
@@ -1079,7 +1079,7 @@ def create_routes(server):
 
     @server.app.route('/{}/contributor_reports/returning_contributors_stacked_bar/'.format(server.api_version),
                       methods=["GET"])
-    def returning_contributor_stacked_bar():
+    def returning_contributors_stacked_bar():
 
         repo_id, start_date, end_date = get_repo_id_start_date_and_end_date()
 
