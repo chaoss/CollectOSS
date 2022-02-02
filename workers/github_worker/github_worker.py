@@ -195,13 +195,6 @@ class GitHubWorker(WorkerGitInterfaceable):
         """ Data collection function
         Query the GitHub API for issues
         """
-
-        try:
-            x = 1 / 0
-            self.logger.info(x)
-        except Exception as e:
-            self.print_traceback("testing exception in beginning of pr model", e, False)
-
         github_url = entry_info['given']['github_url']
 
         # Contributors are part of this model, and finding all for the repo saves us
