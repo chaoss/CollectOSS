@@ -76,6 +76,12 @@ def add_repo_groups(augur_app, filename):
     with open(filename) as create_repo_groups_file:
         data = csv.reader(create_repo_groups_file, delimiter=',')
         for row in data:
+            
+            #Handle case where there's a hanging empty row.
+            if not row:
+                logger.info("Skipping empty data...")
+                continue
+
             logger.info(f"Inserting repo group with values {row}...")
             if int(row[0]) not in repo_group_IDs:
                 repo_group_IDs.append(int(row[0]))
