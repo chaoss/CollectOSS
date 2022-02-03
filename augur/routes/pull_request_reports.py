@@ -447,8 +447,8 @@ def create_routes(server):
         repo_id, start_date, end_date = get_repo_id_start_date_and_end_date()
 
         if repo_id is None:
-            return Response(response="Invalid Query Params. Refer to the API docs here: https://oss-augur."
-                                     "readthedocs.io/en/main/rest-api/api.html",
+            return Response(response="repo_id not specified. Use this endpoint to get a list of available repos: "
+                                     "http://<your_host>/api/unstable/repos",
                             mimetype='application/json',
                             status=400)
 
@@ -593,8 +593,8 @@ def create_routes(server):
         repo_id, start_date, end_date = get_repo_id_start_date_and_end_date()
 
         if repo_id is None:
-            return Response(response="Invalid Query Params. Refer to the API docs here: https://oss-augur."
-                                     "readthedocs.io/en/main/rest-api/api.html",
+            return Response(response="repo_id not specified. Use this endpoint to get a list of available repos: "
+                                     "http://<your_host>/api/unstable/repos",
                             mimetype='application/json',
                             status=400)
 
@@ -776,8 +776,8 @@ def create_routes(server):
         repo_id, start_date, end_date = get_repo_id_start_date_and_end_date()
 
         if repo_id is None:
-            return Response(response="Invalid Query Params. Refer to the API docs here: https://oss-augur."
-                                     "readthedocs.io/en/main/rest-api/api.html",
+            return Response(response="repo_id not specified. Use this endpoint to get a list of available repos: "
+                                     "http://<your_host>/api/unstable/repos",
                             mimetype='application/json',
                             status=400)
 
@@ -969,8 +969,8 @@ def create_routes(server):
         repo_id, start_date, end_date = get_repo_id_start_date_and_end_date()
 
         if repo_id is None:
-            return Response(response="Invalid Query Params. Refer to the API docs here: https://oss-augur."
-                                     "readthedocs.io/en/main/rest-api/api.html",
+            return Response(response="repo_id not specified. Use this endpoint to get a list of available repos: "
+                                     "http://<your_host>/api/unstable/repos",
                             mimetype='application/json',
                             status=400)
 
@@ -1269,8 +1269,8 @@ def create_routes(server):
         repo_id, start_date, end_date = get_repo_id_start_date_and_end_date()
 
         if repo_id is None:
-            return Response(response="Invalid Query Params. Refer to the API docs here: https://oss-augur."
-                                     "readthedocs.io/en/main/rest-api/api.html",
+            return Response(response="repo_id not specified. Use this endpoint to get a list of available repos: "
+                                     "http://<your_host>/api/unstable/repos",
                             mimetype='application/json',
                             status=400)
 
@@ -1437,8 +1437,8 @@ def create_routes(server):
         repo_id, start_date, end_date = get_repo_id_start_date_and_end_date()
 
         if repo_id is None:
-            return Response(response="Invalid Query Params. Refer to the API docs here: https://oss-augur."
-                                     "readthedocs.io/en/main/rest-api/api.html",
+            return Response(response="repo_id not specified. Use this endpoint to get a list of available repos: "
+                                     "http://<your_host>/api/unstable/repos",
                             mimetype='application/json',
                             status=400)
 
@@ -1574,8 +1574,8 @@ def create_routes(server):
         repo_id, start_date, end_date = get_repo_id_start_date_and_end_date()
 
         if repo_id is None:
-            return Response(response="Invalid Query Params. Refer to the API docs here: https://oss-augur."
-                                     "readthedocs.io/en/main/rest-api/api.html",
+            return Response(response="repo_id not specified. Use this endpoint to get a list of available repos: "
+                                     "http://<your_host>/api/unstable/repos",
                             mimetype='application/json',
                             status=400)
 
@@ -1763,8 +1763,8 @@ def create_routes(server):
         repo_id, start_date, end_date = get_repo_id_start_date_and_end_date()
 
         if repo_id is None:
-            return Response(response="Invalid Query Params. Refer to the API docs here: https://oss-augur."
-                                     "readthedocs.io/en/main/rest-api/api.html",
+            return Response(response="repo_id not specified. Use this endpoint to get a list of available repos: "
+                                     "http://<your_host>/api/unstable/repos",
                             mimetype='application/json',
                             status=400)
         
