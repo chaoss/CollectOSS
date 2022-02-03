@@ -555,7 +555,11 @@ class WorkerGitInterfaceable(Worker):
         github_url = entry_info['given']['github_url'] if 'github_url' in entry_info['given'] else entry_info['given']['git_url']
 
         # Extract owner/repo from the url for the endpoint
-        owner, name = self.get_owner_repo(github_url)
+        try:
+            owner, name = self.get_owner_repo(github_url)
+        except IndexError as e:
+            self.logger.error(f"Encountered bad entry info: {entry_info}")
+            return
 
         # Set the base of the url and place to hold contributors to insert
         contributors_url = (
