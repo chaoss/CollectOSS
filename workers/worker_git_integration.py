@@ -183,7 +183,6 @@ class WorkerGitInterfaceable(Worker):
 
         return self.find_id_from_login(login, platform)
 
-    #Blatently only for api key usage
     def init_oauths(self, platform='github'):
 
         self.oauths = []
@@ -526,117 +525,24 @@ class WorkerGitInterfaceable(Worker):
 
         return source_data
 
-
-
-
-    #old method
+    # Try to construct the best url to ping GitHub's API for a username given an email.
     """
-        # source_cntrb_insert, _ = self.organize_needed_data(
-        #     expanded_source_df.to_dict(orient='records'), table_values=table_values_cntrb,
-        #     action_map=cntrb_action_map
-        # )
+    I changed this because of the following note on the API site: With the in qualifier you can restrict your search to the username (login), full name, public email, or any combination of these. When you omit this qualifier, only the username and email address are searched. For privacy reasons, you cannot search by email domain name.
 
-        # cntrb_insert = [
-        #     {
-        #         'cntrb_login': contributor[f'{prefix}login'],
-        #         'cntrb_created_at': None if (
-        #             f'{prefix}created_at' not in contributor
-        #         ) else contributor[f'{prefix}created_at'],
-        #         'cntrb_email': None if f'{prefix}email' not in contributor else contributor[f'{prefix}email'],
-        #         'cntrb_company': None if f'{prefix}company' not in contributor else contributor[f'{prefix}company'],
-        #         'cntrb_location': None if (
-        #             f'{prefix}location' not in contributor
-        #         ) else contributor[f'{prefix}location'],
-        #         'gh_user_id': None if (
-        #             not contributor[f'{prefix}id']
-        #         ) else int(float(contributor[f'{prefix}id'])),
-        #         'gh_login': contributor[f'{prefix}login'],
-        #         'gh_url': contributor[f'{prefix}url'],
-        #         'gh_html_url': contributor[f'{prefix}html_url'],
-        #         'gh_node_id': contributor[f'{prefix}node_id'], #valid for dup check
-        #         'gh_avatar_url': contributor[f'{prefix}avatar_url'],
-        #         'gh_gravatar_id': contributor[f'{prefix}gravatar_id'],
-        #         'gh_followers_url': contributor[f'{prefix}followers_url'],
-        #         'gh_following_url': contributor[f'{prefix}following_url'],
-        #         'gh_gists_url': contributor[f'{prefix}gists_url'],
-        #         'gh_starred_url': contributor[f'{prefix}starred_url'],
-        #         'gh_subscriptions_url': contributor[f'{prefix}subscriptions_url'],
-        #         'gh_organizations_url': contributor[f'{prefix}organizations_url'],
-        #         'gh_repos_url': contributor[f'{prefix}repos_url'],
-        #         'gh_events_url': contributor[f'{prefix}events_url'],
-        #         'gh_received_events_url': contributor[f'{prefix}received_events_url'],
-        #         'gh_type': contributor[f'{prefix}type'],
-        #         'gh_site_admin': contributor[f'{prefix}site_admin'],
-        #         'tool_source': self.tool_source,
-        #         'tool_version': self.tool_version,
-        #         'data_source': self.data_source
-        #     } for contributor in source_cntrb_insert if contributor[f'{prefix}login']
-        # ]
-        #
-        # try:
-        #     self.bulk_insert(self.contributors_table, cntrb_insert)
-        # except s.exc.IntegrityError:
-        #     self.logger.info("Unique Violation in contributors table! ")
-        #
-        # # Query db for inserted cntrb pkeys and add to shallow level of data
-        #
-        # # Query
-        # cntrb_pk_name = list(self.contributors_table.primary_key)[0].name
-        # session = s.orm.Session(self.db)
-        # inserted_pks = pd.DataFrame(
-        #     session.query(
-        #         self.contributors_table.c[cntrb_pk_name], self.contributors_table.c.cntrb_login,
-        #         self.contributors_table.c.gh_node_id
-        #     ).distinct(self.contributors_table.c.cntrb_login).order_by(
-        #         self.contributors_table.c.cntrb_login, self.contributors_table.c[cntrb_pk_name]
-        #     ).all(), columns=[cntrb_pk_name, 'cntrb_login', 'gh_node_id']
-        # ).to_dict(orient='records')
-        # session.close()
-        #
-        # # Prepare for merge
-        # source_columns = sorted(list(source_df.columns))
-        # necessary_columns = sorted(list(set(source_columns + cntrb_action_map['insert']['source'])))
-        # (source_table, inserted_pks_table), metadata, session = self._setup_postgres_merge(
-        #     [
-        #         expanded_source_df[necessary_columns].to_dict(orient='records'),
-        #         inserted_pks
-        #     ], sort=True
-        # )
-        # final_columns = [cntrb_pk_name] + sorted(list(set(necessary_columns)))
-        #
-        # # Merge
-        # source_pk = pd.DataFrame(
-        #     session.query(
-        #         inserted_pks_table.c.cntrb_id, source_table
-        #     ).join(
-        #         source_table,
-        #         eval(
-        #             ' and '.join(
-        #                 [
-        #                     (
-        #                         f"inserted_pks_table.c['{table_column}'] "
-        #                         f"== source_table.c['{source_column}']"
-        #                     ) for table_column, source_column in zip(
-        #                         cntrb_action_map['insert']['augur'],
-        #                         cntrb_action_map['insert']['source']
-        #                     )
-        #                 ]
-        #             )
-        #         )
-        #     ).all(), columns=final_columns
-        # )
-        #
-        # # Cleanup merge
-        # source_pk = self._eval_json_columns(source_pk)
-        # self._close_postgres_merge(metadata, session)
+    https://docs.github.com/en/github/searching-for-information-on-github/searching-on-github/searching-users#search-only-users-or-organizations
 
-        #self.logger.info(
-        #    "Contributor id enrichment successful, result has "
-        #    f"{len(source_pk)} data points.\n"
-        #)
+    """
 
-        #return source_pk.to_dict(orient='records')"""
+    def create_endpoint_from_email(self, email):
+        self.logger.info(f"Trying to resolve contributor from email: {email}")
+        # Note: I added "+type:user" to avoid having user owned organizations be returned
+        # Also stopped splitting per note above.
+        url = 'https://api.github.com/search/users?q={}+in:email+type:user'.format(
+            email)
+        
 
+        return url
+    
     def query_github_contributors(self, entry_info, repo_id):
 
         """ Data collection function
@@ -649,7 +555,11 @@ class WorkerGitInterfaceable(Worker):
         github_url = entry_info['given']['github_url'] if 'github_url' in entry_info['given'] else entry_info['given']['git_url']
 
         # Extract owner/repo from the url for the endpoint
-        owner, name = self.get_owner_repo(github_url)
+        try:
+            owner, name = self.get_owner_repo(github_url)
+        except IndexError as e:
+            self.logger.error(f"Encountered bad entry info: {entry_info}")
+            return
 
         # Set the base of the url and place to hold contributors to insert
         contributors_url = (
@@ -727,12 +637,12 @@ class WorkerGitInterfaceable(Worker):
                 #dup check
                 #TODO: add additional fields to check if needed.
                 existingMatchingContributors = self.db.execute(
-                    self.sql.select(
+                    s.sql.select(
                         [self.contributors_table.c.gh_node_id]
                     ).where(
                         self.contributors_table.c.gh_node_id==cntrb["gh_node_id"]
-                    ).fetchall()
-                )
+                    )
+                ).fetchall()
 
                 if len(existingMatchingContributors) > 0:
                     break #if contributor already exists in table
@@ -747,7 +657,10 @@ class WorkerGitInterfaceable(Worker):
                 elif repo_contributor['flag'] == 'need_insertion':
                     result = self.db.execute(self.contributors_table.insert().values(cntrb))
                     self.logger.info("Primary key inserted into the contributors table: {}".format(result.inserted_primary_key))
-                    self.results_counter += 1
+
+                    #For workers that aren't an interface.
+                    if self.worker_type != "Contributor_interface":
+                        self.results_counter += 1
 
                     self.logger.info("Inserted contributor: " + contributor['login'] + "\n")
 
@@ -756,14 +669,93 @@ class WorkerGitInterfaceable(Worker):
 
             except Exception as e:
                 self.logger.error("Caught exception: {}".format(e))
+                self.logger.error(f"Traceback: {traceback.format_exc()}")
                 self.logger.error("Cascading Contributor Anomalie from missing repo contributor data: {} ...\n".format(cntrb_url))
                 continue
 
+    # Hit the endpoint specified by the url and return the json that it returns if it returns a dict.
+    # Returns None on failure.
+    def request_dict_from_endpoint(self, url, timeout_wait=10):
+        self.logger.info(f"Hitting endpoint: {url}")
 
+        attempts = 0
+        response_data = None
+        success = False
+
+        # This borrow's the logic to safely hit an endpoint from paginate_endpoint.
+        while attempts < 10:
+            try:
+                response = requests.get(url=url, headers=self.headers)
+            except TimeoutError:
+                self.logger.info(
+                    f"User data request for enriching contributor data failed with {attempts} attempts! Trying again...")
+                time.sleep(timeout_wait)
+                continue
+
+            # Make sure we know how many requests our api tokens have.
+            self.update_rate_limit(response, platform="github")
+
+            # Update the special rate limit
+            self.recent_requests_made += 1
+
+            # Sleep if we have made a lot of requests recently
+            if self.recent_requests_made == self.special_rate_limit:
+                self.recent_requests_made = 0
+                self.logger.info(
+                    f"Special rate limit of {self.special_rate_limit} reached! Sleeping for thirty seconds.")
+                # Sleep for thirty seconds before making a new request.
+                time.sleep(60)
+
+            try:
+                response_data = response.json()
+            except:
+                response_data = json.loads(json.dumps(response.text))
+
+            if type(response_data) == dict:
+                # Sometimes GitHub Sends us an error message in a dict instead of a string.
+                # While a bit annoying, it is easy to work around
+                if 'message' in response_data:
+                    try:
+                        assert 'API rate limit exceeded' not in response_data['message']
+                    except AssertionError as e:
+                        self.logger.info(
+                            f"Detected error in response data from gitHub. Trying again... Error: {e}")
+                        attempts += 1
+                        continue
+
+                # self.logger.info(f"Returned dict: {response_data}")
+                success = True
+                break
+            elif type(response_data) == list:
+                self.logger.warning("Wrong type returned, trying again...")
+                self.logger.info(f"Returned list: {response_data}")
+            elif type(response_data) == str:
+                self.logger.info(
+                    f"Warning! page_data was string: {response_data}")
+                if "<!DOCTYPE html>" in response_data:
+                    self.logger.info("HTML was returned, trying again...\n")
+                elif len(response_data) == 0:
+                    self.logger.warning("Empty string, trying again...\n")
+                else:
+                    try:
+                        # Sometimes raw text can be converted to a dict
+                        response_data = json.loads(response_data)
+                        success = True
+                        break
+                    except:
+                        pass
+            attempts += 1
+        if not success:
+            return None
+
+        return response_data
+    
+    #probably a better version of query_github_contributors but uses bulk_insert which is a bit shaky right now.
     def query_github_contributors_bulk(self, entry_info, repo_id):
 
         """ Data collection function
-        Query the GitHub API for contributors
+        Query the GitHub API for contributors.
+        Uses paginate_endpoint rather than paginate, and supports stagger for larger repos.
         """
         self.logger.info(f"Querying contributors with given entry info: {entry_info}\n")
 
@@ -831,77 +823,121 @@ class WorkerGitInterfaceable(Worker):
         contributors_insert_result, contributors_update_result = self.bulk_insert(self.contributors_table,
             update=source_contributors['update'], unique_columns=action_map['insert']['augur'],
             insert=contributors_insert, update_columns=action_map['update']['augur'])
+    
+    def query_gitlab_contributors(self, entry_info, repo_id):
 
-    def query_github_contributors_fast(self, entry_info, repo_id):
-        """ Data collection function
-        Query the GitHub API for contributors
-        """
-        self.logger.info(f"Querying contributors with given entry info: {entry_info}")
-
-        github_url = (
-            entry_info['given']['github_url'] if 'github_url' in entry_info['given']
+        gitlab_url = (
+            entry_info['given']['gitlab_url'] if 'gitlab_url' in entry_info['given']
             else entry_info['given']['git_url']
         )
 
-        contributors_url = (
-            f"https://api.github.com/repos/{self.owner}/{self.name}/"
-            "contributors?per_page=100&page={}"
-        )
+        self.logger.info("Querying contributors with given entry info: " + str(entry_info) + "\n")
 
-        action_map = {
-            'insert': {
-                'source': ['login'],
-                'augur': ['cntrb_login']
-            },
-            'update': {
-                'source': ['email'],
-                'augur': ['cntrb_email']
-            }
-        }
+        path = urlparse(gitlab_url)
+        split = path[2].split('/')
 
-        source_contributors = self.paginate_endpoint(
-            contributors_url, action_map=action_map, table=self.contributors_table
-        )
+        owner = split[1]
+        name = split[2]
 
-        contributors_insert = [
-            {
-                'cntrb_login': contributor['login'],
-                'cntrb_created_at': (
-                    contributor['created_at'] if 'created_at' in contributor else None
-                ),
-                'cntrb_email': contributor['email'] if 'email' in contributor else None,
-                'cntrb_company': contributor['company'] if 'company' in contributor else None,
-                'cntrb_location': contributor['location'] if 'location' in contributor else None,
-                'cntrb_canonical': contributor['email'] if 'email' in contributor else None,
-                'gh_user_id': contributor['id'],
-                'gh_login': contributor['login'],
-                'gh_url': contributor['url'],
-                'gh_html_url': contributor['html_url'],
-                'gh_node_id': contributor['node_id'],
-                'gh_avatar_url': contributor['avatar_url'],
-                'gh_gravatar_id': contributor['gravatar_id'],
-                'gh_followers_url': contributor['followers_url'],
-                'gh_following_url': contributor['following_url'],
-                'gh_gists_url': contributor['gists_url'],
-                'gh_starred_url': contributor['starred_url'],
-                'gh_subscriptions_url': contributor['subscriptions_url'],
-                'gh_organizations_url': contributor['organizations_url'],
-                'gh_repos_url': contributor['repos_url'],
-                'gh_events_url': contributor['events_url'],
-                'gh_received_events_url': contributor['received_events_url'],
-                'gh_type': contributor['type'],
-                'gh_site_admin': contributor['site_admin'],
-                'tool_source': self.tool_source,
-                'tool_version': self.tool_version,
-                'data_source': self.data_source
-            } for contributor in source_contributors['insert']
-        ]
+        # Handles git url case by removing the extension
+        if ".git" in name:
+            name = name[:-4]
 
-        self.bulk_insert(
-            self.contributors_table, update=source_contributors['update'],
-            unique_columns=action_map['insert']['augur'],
-            insert=contributors_insert, update_columns=action_map['update']['augur']
-        )
+        url_encoded_format = quote(owner + '/' + name, safe='')
+
+        table = 'contributors'
+        table_pkey = 'cntrb_id'
+        ### Here we are adding gitlab user information from the API
+        ### Following Gabe's rework of the contributor worker.
+
+        ### The GitLab API will NEVER give you an email. It will let you
+        ### Query an email, but never give you one.
+        ### ## Gitlab email api: https://gitlab.com/api/v4/users?search=s@goggins.com
+        ### We don't need to update right now, so commenting out.
+        ### TODO: SOLVE LOGIC.
+        # update_col_map = {'cntrb_email': 'email'}
+        update_col_map = {}
+        duplicate_col_map = {'gl_username': 'username'}
+
+        # list to hold contributors needing insertion or update
+        contributors = self.paginate("https://gitlab.com/api/v4/projects/" + url_encoded_format + "/repository/contributors?per_page=100&page={}", duplicate_col_map, update_col_map, table, table_pkey, platform='gitlab')
+
+        for repo_contributor in contributors:
+            try:
+                cntrb_compressed_url = ("https://gitlab.com/api/v4/users?search=" + repo_contributor['email'])
+                self.logger.info("Hitting endpoint: " + cntrb_compressed_url + " ...\n")
+                r = requests.get(url=cntrb_compressed_url, headers=self.headers)
+                contributor_compressed = r.json()
+
+                email = repo_contributor['email']
+                self.logger.info(contributor_compressed)
+                if len(contributor_compressed) == 0 or type(contributor_compressed) is dict or "id" not in contributor_compressed[0]:
+                    continue
+
+                self.logger.info("Fetching for user: " + str(contributor_compressed[0]["id"]))
+
+                cntrb_url = ("https://gitlab.com/api/v4/users/" + str(contributor_compressed[0]["id"]))
+                self.logger.info("Hitting end point to get complete contributor info now: " + cntrb_url + "...\n")
+                r = requests.get(url=cntrb_url, headers=self.headers)
+                contributor = r.json()
+
+                cntrb = {
+                    "gl_id": contributor.get('gl_id', None),
+                    "gl_full_name": contributor.get('full_name', None),
+                    "gl_username": contributor.get('username', None),
+                    "gl_state": contributor.get('state', None),
+                    "gl_avatar_url": contributor.get('avatar_url', None),
+                    "gl_web_url": contributor.get('web_url', None),
+                    #"cntrb_login": contributor.get('username', None),
+                    #"cntrb_created_at": contributor.get('created_at', None),
+                    "cntrb_email": ('email', None),
+                    #"cntrb_company": contributor.get('organization', None),
+                    #"cntrb_location": contributor.get('location', None),
+                    # "cntrb_type": , dont have a use for this as of now ... let it default to null
+                    #"cntrb_canonical": contributor.get('public_email', None),
+                    #"gh_user_id": contributor.get('id', None),
+                    #"gh_login": contributor.get('username', None),
+                    #"gh_url": contributor.get('web_url', None),
+                    #"gh_html_url": contributor.get('web_url', None),
+                    #"gh_node_id": None,
+                    #"gh_avatar_url": contributor.get('avatar_url', None),
+                    #"gh_gravatar_id": None,
+                    #"gh_followers_url": None,
+                    #"gh_following_url": None,
+                    #"gh_gists_url": None,
+                    #"gh_starred_url": None,
+                    #"gh_subscriptions_url": None,
+                    #"gh_organizations_url": None,
+                    #"gh_repos_url": None,
+                    #"gh_events_url": None,
+                    #"gh_received_events_url": None,
+                    #"gh_type": None,
+                    #"gh_site_admin": None,
+                    "tool_source": self.tool_source,
+                    "tool_version": self.tool_version,
+                    "data_source": self.data_source
+                }
+
+                # Commit insertion to table
+                if repo_contributor['flag'] == 'need_update':
+                    result = self.db.execute(self.contributors_table.update().where(
+                        self.worker_history_table.c.cntrb_email == email).values(cntrb))
+                    self.logger.info("Updated tuple in the contributors table with existing email: {}".format(email))
+                    self.cntrb_id_inc = repo_contributor['pkey']
+                elif repo_contributor['flag'] == 'need_insertion':
+                    result = self.db.execute(self.contributors_table.insert().values(cntrb))
+                    self.logger.info("Primary key inserted into the contributors table: {}".format(result.inserted_primary_key))
+                    self.results_counter += 1
+
+                    self.logger.info("Inserted contributor: " + contributor['username'] + "\n")
+
+                    # Increment our global track of the cntrb id for the possibility of it being used as a FK
+                    self.cntrb_id_inc = int(result.inserted_primary_key[0])
+
+            except Exception as e:
+                self.logger.info("Caught exception: {}".format(e))
+                self.logger.info("Cascading Contributor Anomalie from missing repo contributor data: {} ...\n".format(cntrb_url))
+                continue
 
     def update_gitlab_rate_limit(self, response, bad_credentials=False, temporarily_disable=False):
         # Try to get rate limit from request headers, sometimes it does not work (GH's issue)
@@ -1073,196 +1109,6 @@ class WorkerGitInterfaceable(Worker):
             # Change headers to be using the new oauth's key
             self.headers = {'Authorization': 'token %s' % self.oauths[0]['access_token']}
 
-    #TODO: figure out if changing this typo breaks anything
-    def query_gitlab_contributors(self, entry_info, repo_id):
-
-        gitlab_url = (
-            entry_info['given']['gitlab_url'] if 'gitlab_url' in entry_info['given']
-            else entry_info['given']['git_url']
-        )
-
-        self.logger.info("Querying contributors with given entry info: " + str(entry_info) + "\n")
-
-        path = urlparse(gitlab_url)
-        split = path[2].split('/')
-
-        owner = split[1]
-        name = split[2]
-
-        # Handles git url case by removing the extension
-        if ".git" in name:
-            name = name[:-4]
-
-        url_encoded_format = quote(owner + '/' + name, safe='')
-
-        table = 'contributors'
-        table_pkey = 'cntrb_id'
-        ### Here we are adding gitlab user information from the API
-        ### Following Gabe's rework of the contributor worker.
-
-        ### The GitLab API will NEVER give you an email. It will let you
-        ### Query an email, but never give you one.
-        ### ## Gitlab email api: https://gitlab.com/api/v4/users?search=s@goggins.com
-        ### We don't need to update right now, so commenting out.
-        ### TODO: SOLVE LOGIC.
-        # update_col_map = {'cntrb_email': 'email'}
-        update_col_map = {}
-        duplicate_col_map = {'gl_username': 'username'}
-
-        # list to hold contributors needing insertion or update
-        contributors = self.paginate("https://gitlab.com/api/v4/projects/" + url_encoded_format + "/repository/contributors?per_page=100&page={}", duplicate_col_map, update_col_map, table, table_pkey, platform='gitlab')
-
-        for repo_contributor in contributors:
-            try:
-                cntrb_compressed_url = ("https://gitlab.com/api/v4/users?search=" + repo_contributor['email'])
-                self.logger.info("Hitting endpoint: " + cntrb_compressed_url + " ...\n")
-                r = requests.get(url=cntrb_compressed_url, headers=self.headers)
-                contributor_compressed = r.json()
-
-                email = repo_contributor['email']
-                self.logger.info(contributor_compressed)
-                if len(contributor_compressed) == 0 or type(contributor_compressed) is dict or "id" not in contributor_compressed[0]:
-                    continue
-
-                self.logger.info("Fetching for user: " + str(contributor_compressed[0]["id"]))
-
-                cntrb_url = ("https://gitlab.com/api/v4/users/" + str(contributor_compressed[0]["id"]))
-                self.logger.info("Hitting end point to get complete contributor info now: " + cntrb_url + "...\n")
-                r = requests.get(url=cntrb_url, headers=self.headers)
-                contributor = r.json()
-
-                cntrb = {
-                    "gl_id": contributor.get('gl_id', None),
-                    "gl_full_name": contributor.get('full_name', None),
-                    "gl_username": contributor.get('username', None),
-                    "gl_state": contributor.get('state', None),
-                    "gl_avatar_url": contributor.get('avatar_url', None),
-                    "gl_web_url": contributor.get('web_url', None),
-                    #"cntrb_login": contributor.get('username', None),
-                    #"cntrb_created_at": contributor.get('created_at', None),
-                    "cntrb_email": ('email', None),
-                    #"cntrb_company": contributor.get('organization', None),
-                    #"cntrb_location": contributor.get('location', None),
-                    # "cntrb_type": , dont have a use for this as of now ... let it default to null
-                    #"cntrb_canonical": contributor.get('public_email', None),
-                    #"gh_user_id": contributor.get('id', None),
-                    #"gh_login": contributor.get('username', None),
-                    #"gh_url": contributor.get('web_url', None),
-                    #"gh_html_url": contributor.get('web_url', None),
-                    #"gh_node_id": None,
-                    #"gh_avatar_url": contributor.get('avatar_url', None),
-                    #"gh_gravatar_id": None,
-                    #"gh_followers_url": None,
-                    #"gh_following_url": None,
-                    #"gh_gists_url": None,
-                    #"gh_starred_url": None,
-                    #"gh_subscriptions_url": None,
-                    #"gh_organizations_url": None,
-                    #"gh_repos_url": None,
-                    #"gh_events_url": None,
-                    #"gh_received_events_url": None,
-                    #"gh_type": None,
-                    #"gh_site_admin": None,
-                    "tool_source": self.tool_source,
-                    "tool_version": self.tool_version,
-                    "data_source": self.data_source
-                }
-
-                # Commit insertion to table
-                if repo_contributor['flag'] == 'need_update':
-                    result = self.db.execute(self.contributors_table.update().where(
-                        self.worker_history_table.c.cntrb_email == email).values(cntrb))
-                    self.logger.info("Updated tuple in the contributors table with existing email: {}".format(email))
-                    self.cntrb_id_inc = repo_contributor['pkey']
-                elif repo_contributor['flag'] == 'need_insertion':
-                    result = self.db.execute(self.contributors_table.insert().values(cntrb))
-                    self.logger.info("Primary key inserted into the contributors table: {}".format(result.inserted_primary_key))
-                    self.results_counter += 1
-
-                    self.logger.info("Inserted contributor: " + contributor['username'] + "\n")
-
-                    # Increment our global track of the cntrb id for the possibility of it being used as a FK
-                    self.cntrb_id_inc = int(result.inserted_primary_key[0])
-
-            except Exception as e:
-                self.logger.info("Caught exception: {}".format(e))
-                self.logger.info("Cascading Contributor Anomalie from missing repo contributor data: {} ...\n".format(cntrb_url))
-                continue
-
-
-    def update_gitlab_rate_limit(self, response, bad_credentials=False, temporarily_disable=False):
-        # Try to get rate limit from request headers, sometimes it does not work (GH's issue)
-        #   In that case we just decrement from last recieved header count
-        if bad_credentials and len(self.oauths) > 1:
-            self.logger.info(
-                f"Removing oauth with bad credentials from consideration: {self.oauths[0]}"
-            )
-            del self.oauths[0]
-
-        if temporarily_disable:
-            self.logger.info("Gitlab rate limit reached. Temp. disabling...")
-            self.oauths[0]['rate_limit'] = 0
-        else:
-            try:
-                self.oauths[0]['rate_limit'] = int(response.headers['RateLimit-Remaining'])
-            except:
-                self.oauths[0]['rate_limit'] -= 1
-        self.logger.info("Updated rate limit, you have: " +
-            str(self.oauths[0]['rate_limit']) + " requests remaining.")
-        if self.oauths[0]['rate_limit'] <= 0:
-            try:
-                reset_time = response.headers['RateLimit-Reset']
-            except Exception as e:
-                self.logger.info(f"Could not get reset time from headers because of error: {e}")
-                reset_time = 3600
-            time_diff = datetime.datetime.fromtimestamp(int(reset_time)) - datetime.datetime.now()
-            self.logger.info("Rate limit exceeded, checking for other available keys to use.")
-
-            # We will be finding oauth with the highest rate limit left out of our list of oauths
-            new_oauth = self.oauths[0]
-            # Endpoint to hit solely to retrieve rate limit information from headers of the response
-            url = "https://gitlab.com/api/v4/version"
-
-            other_oauths = self.oauths[0:] if len(self.oauths) > 1 else []
-            for oauth in other_oauths:
-                # self.logger.info("Inspecting rate limit info for oauth: {}\n".format(oauth))
-                self.headers = {"PRIVATE-TOKEN" : oauth['access_token']}
-                response = requests.get(url=url, headers=self.headers)
-                oauth['rate_limit'] = int(response.headers['RateLimit-Remaining'])
-                oauth['seconds_to_reset'] = (
-                    datetime.datetime.fromtimestamp(
-                        int(response.headers['RateLimit-Reset'])
-                    ) - datetime.datetime.now()
-                ).total_seconds()
-
-                # Update oauth to switch to if a higher limit is found
-                if oauth['rate_limit'] > new_oauth['rate_limit']:
-                    self.logger.info(f"Higher rate limit found in oauth: {oauth}")
-                    new_oauth = oauth
-                elif (
-                    oauth['rate_limit'] == new_oauth['rate_limit']
-                    and oauth['seconds_to_reset'] < new_oauth['seconds_to_reset']
-                ):
-                    self.logger.info(
-                        f"Lower wait time found in oauth with same rate limit: {oauth}"
-                    )
-                    new_oauth = oauth
-
-            if new_oauth['rate_limit'] <= 0 and new_oauth['seconds_to_reset'] > 0:
-                self.logger.info(
-                    "No oauths with >0 rate limit were found, waiting for oauth with "
-                    f"smallest wait time: {new_oauth}\n"
-                )
-                time.sleep(new_oauth['seconds_to_reset'])
-
-            # Make new oauth the 0th element in self.oauths so we know which one is in use
-            index = self.oauths.index(new_oauth)
-            self.oauths[0], self.oauths[index] = self.oauths[index], self.oauths[0]
-            self.logger.info("Using oauth: {}\n".format(self.oauths[0]))
-
-            # Change headers to be using the new oauth's key
-            self.headers = {"PRIVATE-TOKEN" : self.oauths[0]['access_token']}
-
     def update_rate_limit(
         self, response, bad_credentials=False, temporarily_disable=False, platform="gitlab"
     ):
@@ -1274,120 +1120,6 @@ class WorkerGitInterfaceable(Worker):
             return self.update_gh_rate_limit(
                 response, bad_credentials=bad_credentials, temporarily_disable=temporarily_disable
             )
-
-
-    #Indexerror somewhere
-    def multi_thread_urls(self, all_urls, max_attempts=5, platform='github'):
-        """
-        :param all_urls: list of tuples
-        """
-
-        if not len(all_urls):
-            self.logger.info("No urls to multithread, returning blank list.\n")
-            return []
-
-        def load_url(url, extra_data={}):
-            try:
-                html = requests.get(url, stream=True, headers=self.headers)
-                return html, extra_data
-            except requests.exceptions.RequestException as e:
-                self.logger.debug(f"load_url inside multi_thread_urls failed with {e}, for usl {url}. exception registerred.registered")
-
-        self.logger.info("Beginning to multithread API endpoints.")
-
-        start = time.time()
-
-        all_data = []
-        valid_url_count = len(all_urls)
-
-        partitions = math.ceil(len(all_urls) / 600)
-        self.logger.info(f"{len(all_urls)} urls to process. Trying {partitions} partitions. " +
-            f"Using {max(multiprocessing.cpu_count()//8, 1)} threads.")
-        for urls in numpy.array_split(all_urls, partitions):
-            attempts = 0
-            self.logger.info(f"Total data points collected so far: {len(all_data)}")
-            while len(urls) > 0 and attempts < max_attempts:
-                with concurrent.futures.ThreadPoolExecutor(
-                    max_workers=max(multiprocessing.cpu_count()//8, 1)
-                ) as executor:
-                    # Start the load operations and mark each future with its URL
-                    future_to_url = {executor.submit(load_url, *url): url for url in urls}
-                    self.logger.info("Multithreaded urls and returned status codes:")
-                    count = 0
-                    for future in concurrent.futures.as_completed(future_to_url):
-
-                        if count % 100 == 0:
-                            self.logger.info(
-                                f"Processed {len(all_data)} / {valid_url_count} urls. "
-                                f"{len(urls)} remaining in this partition."
-                            )
-                        count += 1
-
-                        url = future_to_url[future]
-                        try:
-                            response, extra_data = future.result()
-
-                            if response.status_code != 200:
-                                self.logger.debug(
-                                    f"Url: {url[0]} ; Status code: {response.status_code}"
-                                )
-
-                            if response.status_code == 403 or response.status_code == 401: # 403 is rate limit, 404 is not found, 401 is bad credentials
-                                self.update_rate_limit(response, platform=platform)
-                                continue
-
-                            elif response.status_code == 200:
-                                try:
-                                    page_data = response.json() 
-                                    # This seems to not be working.
-                                    ### added by SPG 12/1/2021 for dealing with empty JSON pages where there
-                                    ### are no reviews.
-                                    #if not 'results' in page_data or len(page_data['results']) == 0:
-                                    #    continue  
-                                  
-                                except:
-                                    page_data = json.loads(json.dumps(response.text))
-                                    continue
-
-                                page_data = [{**data, **extra_data} for data in page_data]
-                                all_data += page_data
-
-                                try:
-                                    if 'last' in response.links and "&page=" not in url[0]:
-                                        urls += [
-                                            (url[0] + f"&page={page}", extra_data) for page in range(
-                                                2, int(response.links['last']['url'].split('=')[-1]) + 1
-                                            )
-                                        ]
-                                        # self.logger.info(f"urls boundry issue? for {urls} where they are equal to {url}.")
-
-                                        urls = numpy.delete(urls, numpy.where(urls == url), axis=0)
-                                except:
-                                    self.logger.info(f"ERROR with axis = 0 - Now attempting without setting axis for numpy.delete for {urls} where they are equal to {url}.")
-                                    urls = numpy.delete(urls, numpy.where(urls == url))
-                                    continue
-
-                            elif response.status_code == 404:
-                                urls = numpy.delete(urls, numpy.where(urls == url), axis=0)
-                                self.logger.info(f"Not found url: {url}\n")
-                            else:
-                                self.logger.info(
-                                    f"Unhandled response code: {response.status_code} {url}\n"
-                                )
-
-                        ## Added additional exception logging and a pass in this block.
-                        except Exception as e:
-                            self.logger.info(f"Error adding gh_node_id: {e}. Row: {row}")
-                            self.print_traceback(f"{url} generated an exception: count is {count}, attemts are {attempts}.", e, True)
-
-                attempts += 1
-
-        self.logger.debug(
-            f"Processed {valid_url_count} urls and got {len(all_data)} data points "
-            f"in {time.time() - start} seconds thanks to multithreading!\n"
-        )
-        return all_data
-
 
     #insertion_method and stagger are arguments that allow paginate_endpoint to insert at around ~500 pages at a time.
     def paginate_endpoint(
@@ -1550,7 +1282,7 @@ class WorkerGitInterfaceable(Worker):
             'all': all_data
         }
 
-    #TODO: deprecated but still used by the issues worker.
+    #TODO: deprecated but still used by many other methods
     def paginate(self, url, duplicate_col_map, update_col_map, table, table_pkey, where_clause="", value_update_col_map={}, platform="github"):
         """ DEPRECATED
             Paginate either backwards or forwards (depending on the value of the worker's
