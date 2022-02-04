@@ -1217,7 +1217,7 @@ class WorkerGitInterfaceable(Worker):
                 # Checking contents of requests with what we already have in the db
                 page_insertions, page_updates = self.organize_needed_data(
                     page_data, table_values, list(table.primary_key)[0].name,
-                    action_map, in_memory=True
+                    action_map
                 )
 
                 # Reached a page where we already have all tuples
