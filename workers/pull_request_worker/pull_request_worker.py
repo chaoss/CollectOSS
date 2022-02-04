@@ -674,7 +674,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         # )
 
         source_prs = self.paginate_endpoint(
-            self, pr_url, action_map=pr_action_map, table=self.pull_requests_table,
+            pr_url, action_map=pr_action_map, table=self.pull_requests_table,
             where_clause=self.pull_requests_table.c.repo_id == self.repo_id,
             stagger=True,
             insertion_method=pk_source_increment_insert
