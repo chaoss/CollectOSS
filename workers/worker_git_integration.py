@@ -1272,7 +1272,7 @@ class WorkerGitInterfaceable(Worker):
 
         if forward_pagination:
             need_insertion, need_update = self.organize_needed_data(
-                all_data, table_values, action_map
+                self, all_data, table_values, action_map
             )
 
             # list(table.primary_key)[0].name, -- organize_needed_data takes self as a parameter. This seems out of place and is 
