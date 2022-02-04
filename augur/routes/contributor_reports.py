@@ -361,17 +361,8 @@ def create_routes(server):
         end_date = str(request.args.get('end_date', "{}-{}-{}".format(now.year, now.month, now.day)))
 
         if repo_id:
-
-        else:
-            error = {
-                "message": "No repo_id",
-                ""
-            }
-            return None, None, None,
-
-        if repo_id:
             if start_date < end_date:
-                return int(repo_id), start_date, end_date, None
+                return int(repo_id), start_date, end_date
             else:
                 return int(repo_id), None, None
 
@@ -585,12 +576,13 @@ def create_routes(server):
     @server.app.route('/{}/contributor_reports/new_contributors_bar/'.format(server.api_version), methods=["GET"])
     def new_contributors_bar():
 
-        repo_id, start_date, end_date, error = get_repo_id_start_date_and_end_date()
+        repo_id, start_date, end_date = get_repo_id_start_date_and_end_date()
 
-        if error:
-            return Response(response=error['message'],
+        if repo_id is None:
+            return Response(response="repo_id not specified. Use this endpoint to get a list of available repos: "
+                                     "http://<your_host>/api/unstable/repos",
                             mimetype='application/json',
-                            status=error['status_code'])
+                            status=400)
 
         group_by, required_contributions, required_time = get_new_cntrb_bar_chart_query_params()
 
@@ -760,11 +752,6 @@ def create_routes(server):
         if repo_id is None:
             return Response(response="repo_id not specified. Use this endpoint to get a list of available repos: "
                                      "http://<your_host>/api/unstable/repos",
-                            mimetype='application/json',
-                            status=400)
-
-        if start_date is None:
-            return Response(response="Invalid request. The end_date is less than or equal to the start_date",
                             mimetype='application/json',
                             status=400)
 
@@ -972,11 +959,6 @@ def create_routes(server):
                             mimetype='application/json',
                             status=400)
 
-        if start_date is None:
-            return Response(response="Invalid request. The end_date is less than or equal to the start_date",
-                            mimetype='application/json',
-                            status=400)
-
         required_contributions = int(request.args.get('required_contributions', 4))
         required_time = int(request.args.get('required_time', 365))
 
@@ -1107,11 +1089,6 @@ def create_routes(server):
         if repo_id is None:
             return Response(response="repo_id not specified. Use this endpoint to get a list of available repos: "
                                      "http://<your_host>/api/unstable/repos",
-                            mimetype='application/json',
-                            status=400)
-
-        if start_date is None:
-            return Response(response="Invalid request. The end_date is less than or equal to the start_date",
                             mimetype='application/json',
                             status=400)
 
