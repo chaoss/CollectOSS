@@ -1272,8 +1272,7 @@ class WorkerGitInterfaceable(Worker):
 
         if forward_pagination:
             need_insertion, need_update = self.organize_needed_data(
-                all_data, table_values, list(table.primary_key)[0].name, action_map #,
-               # in_memory=in_memory there is no in_memory parameter on organize_needed_data
+                all_data, table_values, list(table.primary_key)[0].name, action_map
             )
 
         return {
