@@ -379,7 +379,7 @@ class Persistant():
         return df[list(set(final_columns))].to_dict(orient='records')
 
     def organize_needed_data(
-        self, new_data, table_values, action_map={}, in_memory=True
+        self, new_data, table_values, table_pkey=None, action_map={}, in_memory=True
     ):
         """
         This method determines which rows need to be inserted into the database (ensures data ins't inserted more than once)
@@ -988,7 +988,7 @@ class Persistant():
 
         self.logger.info("Preparing to enrich data.\n")
 
-        if len(source_data) == 0:
+        if source_data == None or len(source_data) == 0:
             self.logger.info("There is no source data to enrich.\n")
             return source_data
 

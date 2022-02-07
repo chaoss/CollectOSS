@@ -267,7 +267,7 @@ def annual_commit_count_ranked_by_repo_in_repo_group(self, repo_group_id, repo_i
     return results
 
 @register_metric()
-def top_committers(self, repo_group_id, repo_id=None, year=None, threshold=0.5):
+def top_committers(self, repo_group_id, repo_id=None, year=None, threshold=0.8):
     """
     Returns a list of contributors contributing N% of all commits.
 
