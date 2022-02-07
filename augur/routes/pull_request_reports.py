@@ -437,7 +437,10 @@ def create_routes(server):
         end_date = str(request.args.get('end_date', "{}-{}-{}".format(now.year, now.month, now.day)))
 
         if repo_id:
-            return int(repo_id), start_date, end_date
+            if start_date < end_date:
+                return int(repo_id), start_date, end_date
+            else:
+                return int(repo_id), None, None
 
         return None, None, None
 
