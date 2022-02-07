@@ -356,11 +356,14 @@ def create_routes(server):
 
         now = datetime.datetime.now()
 
-        repo_id = int(request.args.get('repo_id'))
+        repo_id = request.args.get('repo_id')
         start_date = str(request.args.get('start_date', "{}-01-01".format(now.year - 1)))
         end_date = str(request.args.get('end_date', "{}-{}-{}".format(now.year, now.month, now.day)))
 
-        return repo_id, start_date, end_date
+        if repo_id:
+            return int(repo_id), start_date, end_date
+
+        return None, None, None
 
     def filter_out_repeats_without_required_contributions_in_required_time(repeat_list, repeats_df, required_time,
                                                                            first_list):
@@ -572,6 +575,12 @@ def create_routes(server):
 
         repo_id, start_date, end_date = get_repo_id_start_date_and_end_date()
 
+        if repo_id is None:
+            return Response(response="repo_id not specified. Use this endpoint to get a list of available repos: "
+                                     "http://<your_host>/api/unstable/repos",
+                            mimetype='application/json',
+                            status=400)
+
         group_by, required_contributions, required_time = get_new_cntrb_bar_chart_query_params()
 
         input_df = new_contributor_data_collection(repo_id=repo_id, required_contributions=required_contributions)
@@ -736,6 +745,12 @@ def create_routes(server):
     def new_contributors_stacked_bar():
 
         repo_id, start_date, end_date = get_repo_id_start_date_and_end_date()
+
+        if repo_id is None:
+            return Response(response="repo_id not specified. Use this endpoint to get a list of available repos: "
+                                     "http://<your_host>/api/unstable/repos",
+                            mimetype='application/json',
+                            status=400)
 
         group_by, required_contributions, required_time = get_new_cntrb_bar_chart_query_params()
 
@@ -931,9 +946,15 @@ def create_routes(server):
 
     @server.app.route('/{}/contributor_reports/returning_contributors_pie_chart/'.format(server.api_version),
                       methods=["GET"])
-    def returning_contributor_pie_chart():
+    def returning_contributors_pie_chart():
 
         repo_id, start_date, end_date = get_repo_id_start_date_and_end_date()
+
+        if repo_id is None:
+            return Response(response="repo_id not specified. Use this endpoint to get a list of available repos: "
+                                     "http://<your_host>/api/unstable/repos",
+                            mimetype='application/json',
+                            status=400)
 
         required_contributions = int(request.args.get('required_contributions', 4))
         required_time = int(request.args.get('required_time', 365))
@@ -1058,9 +1079,15 @@ def create_routes(server):
 
     @server.app.route('/{}/contributor_reports/returning_contributors_stacked_bar/'.format(server.api_version),
                       methods=["GET"])
-    def returning_contributor_stacked_bar():
+    def returning_contributors_stacked_bar():
 
         repo_id, start_date, end_date = get_repo_id_start_date_and_end_date()
+
+        if repo_id is None:
+            return Response(response="repo_id not specified. Use this endpoint to get a list of available repos: "
+                                     "http://<your_host>/api/unstable/repos",
+                            mimetype='application/json',
+                            status=400)
 
         group_by = str(request.args.get('group_by', "quarter"))
         required_contributions = int(request.args.get('required_contributions', 4))
