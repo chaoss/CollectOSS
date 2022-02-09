@@ -36,8 +36,6 @@ class WorkerGitInterfaceable(Worker):
         }
 
         # Send broker hello message
-        if self.config['offline_mode'] is False:
-            self.connect_to_broker()
 
 				# Attempts to determine if these attributes exist
 				# If not, it creates them with default values
