@@ -361,9 +361,24 @@ def create_routes(server):
         end_date = str(request.args.get('end_date', "{}-{}-{}".format(now.year, now.month, now.day)))
 
         if repo_id:
-            return int(repo_id), start_date, end_date
 
-        return None, None, None
+            if start_date < end_date:
+                return int(repo_id), start_date, end_date, None
+            else:
+
+                error = {
+                    "message": "Invalid end_date. end_date is before the start_date",
+                    "status_code": 400
+                }
+
+                return int(repo_id), None, None, error
+
+        else:
+            error = {
+                "message": "repo_id not specified. Use this endpoint to get a list of available repos: http://<your_host>/api/unstable/repos",
+                "status_code": 400
+            }
+            return None, None, None, error
 
     def filter_out_repeats_without_required_contributions_in_required_time(repeat_list, repeats_df, required_time,
                                                                            first_list):
@@ -573,13 +588,12 @@ def create_routes(server):
     @server.app.route('/{}/contributor_reports/new_contributors_bar/'.format(server.api_version), methods=["GET"])
     def new_contributors_bar():
 
-        repo_id, start_date, end_date = get_repo_id_start_date_and_end_date()
+        repo_id, start_date, end_date, error = get_repo_id_start_date_and_end_date()
 
-        if repo_id is None:
-            return Response(response="repo_id not specified. Use this endpoint to get a list of available repos: "
-                                     "http://<your_host>/api/unstable/repos",
+        if error:
+            return Response(response=error["message"],
                             mimetype='application/json',
-                            status=400)
+                            status=error["status_code"])
 
         group_by, required_contributions, required_time = get_new_cntrb_bar_chart_query_params()
 
@@ -744,13 +758,12 @@ def create_routes(server):
                       methods=["GET"])
     def new_contributors_stacked_bar():
 
-        repo_id, start_date, end_date = get_repo_id_start_date_and_end_date()
+        repo_id, start_date, end_date, error = get_repo_id_start_date_and_end_date()
 
-        if repo_id is None:
-            return Response(response="repo_id not specified. Use this endpoint to get a list of available repos: "
-                                     "http://<your_host>/api/unstable/repos",
+        if error:
+            return Response(response=error["message"],
                             mimetype='application/json',
-                            status=400)
+                            status=error["status_code"])
 
         group_by, required_contributions, required_time = get_new_cntrb_bar_chart_query_params()
 
@@ -948,13 +961,12 @@ def create_routes(server):
                       methods=["GET"])
     def returning_contributors_pie_chart():
 
-        repo_id, start_date, end_date = get_repo_id_start_date_and_end_date()
+        repo_id, start_date, end_date, error = get_repo_id_start_date_and_end_date()
 
-        if repo_id is None:
-            return Response(response="repo_id not specified. Use this endpoint to get a list of available repos: "
-                                     "http://<your_host>/api/unstable/repos",
+        if error:
+            return Response(response=error["message"],
                             mimetype='application/json',
-                            status=400)
+                            status=error["status_code"])
 
         required_contributions = int(request.args.get('required_contributions', 4))
         required_time = int(request.args.get('required_time', 365))
@@ -1081,13 +1093,12 @@ def create_routes(server):
                       methods=["GET"])
     def returning_contributors_stacked_bar():
 
-        repo_id, start_date, end_date = get_repo_id_start_date_and_end_date()
+        repo_id, start_date, end_date, error = get_repo_id_start_date_and_end_date()
 
-        if repo_id is None:
-            return Response(response="repo_id not specified. Use this endpoint to get a list of available repos: "
-                                     "http://<your_host>/api/unstable/repos",
+        if error:
+            return Response(response=error["message"],
                             mimetype='application/json',
-                            status=400)
+                            status=error["status_code"])
 
         group_by = str(request.args.get('group_by', "quarter"))
         required_contributions = int(request.args.get('required_contributions', 4))
