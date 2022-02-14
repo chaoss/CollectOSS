@@ -51,7 +51,7 @@ To contribute to Augur, please follow the guidelines found in our [CONTRIBUTING.
 
 ## License, Copyright, and Funding
 
-Copyright © 2021 University of Nebraska at Omaha, University of Missouri and the CHAOSS Project.
+Copyright © 2022 University of Nebraska at Omaha, University of Missouri and the CHAOSS Project.
 
 Augur is free software: you can redistribute it and/or modify it under the terms of the MIT License as published by the Open Source Initiative. See the [LICENSE](LICENSE) file for more details.
 

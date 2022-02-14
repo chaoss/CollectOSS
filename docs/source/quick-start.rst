@@ -48,7 +48,7 @@ Then, once you've connected to your PostgreSQL instance\:
 	su - ubuntu
 	git clone https://github.com/chaoss/augur.git
 	cd augur/
-	sudo apt make
+	sudo apt install make
 	sudo add-apt-repository ppa:deadsnakes/ppa
 	sudo apt-get install python3-venv 
 	python3 -m venv $HOME/.virtualenvs/augur_env
