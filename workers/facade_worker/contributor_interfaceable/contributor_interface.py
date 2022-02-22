@@ -544,6 +544,8 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
             # Get the email from the commit data
             email = contributor['email_raw'] if 'email_raw' in contributor else contributor['email']
+            
+            name = contributor['name']
 
             # check the email to see if it already exists in contributor_aliases
             try:
@@ -561,9 +563,27 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             except Exception as e:
                 self.logger.info(
                     f"alias table query failed with error: {e}")
+                
+            login = None
+            
+            #Check the contributors table for a login for the given name
+            try:
+                contributors_with_matching_name = self.db.execute(
+                    s.sql.select([s.column('gh_login')]).where(
+                        self.contributors_table.c.cntrb_full_name == name
+                    )
+                ).fetchall()
+                
+                if len(contributors_with_matching_name) >= 1:
+                    login = contributors_with_matching_name[0]['gh_login']
+            
+            except Exception as e:
+                self.logger.info(f"Failed local login lookup with error: {e}")
+                
 
             # Try to get the login from the commit sha
-            login = self.get_login_with_commit_hash(contributor, repo_id)
+            if login == None or login == "":
+                login = self.get_login_with_commit_hash(contributor, repo_id)
 
             if login == None or login == "":
                 # Try to get the login from supplemental data if not found with the commit hash
