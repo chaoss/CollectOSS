@@ -693,17 +693,6 @@ class WorkerGitInterfaceable(Worker):
             # Make sure we know how many requests our api tokens have.
             self.update_rate_limit(response, platform="github")
 
-            # Update the special rate limit
-            self.recent_requests_made += 1
-
-            # Sleep if we have made a lot of requests recently
-            if self.recent_requests_made == self.special_rate_limit:
-                self.recent_requests_made = 0
-                self.logger.info(
-                    f"Special rate limit of {self.special_rate_limit} reached! Sleeping for thirty seconds.")
-                # Sleep for thirty seconds before making a new request.
-                time.sleep(60)
-
             try:
                 response_data = response.json()
             except:
