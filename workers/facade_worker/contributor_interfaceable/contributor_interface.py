@@ -564,6 +564,21 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                 self.logger.info(
                     f"alias table query failed with error: {e}")
                 
+            #Check the unresolved_commits table to avoid hitting endpoints that we know don't have relevant data needlessly
+            try:
+                unresolved_query_result = self.db.execute(
+                    s.sql.select([s.column('email'),s.column('name')]).where(
+                        self.unresolved_commit_emails_table.c.name == name and self.unresolved_commit_emails_table.c.email == email
+                    )
+                ).fetchall()
+                
+                if len(unresolved_query_result) >= 1:
+                    self.logger.info(f"Commit data has been unresolved in the past, skipping...")
+                    continue
+            except Exception as e:
+                self.logger.info(f"Failed to query unresolved alias table with error: {e}")
+            
+                
             login = None
             
             #Check the contributors table for a login for the given name
