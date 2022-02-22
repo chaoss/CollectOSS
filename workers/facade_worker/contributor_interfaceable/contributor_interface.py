@@ -26,7 +26,7 @@ A few interesting ideas: Maybe get the top committers from each repo first? curl
 
 
 class ContributorInterfaceable(WorkerGitInterfaceable):
-    def __init__(self, config={}, logger=None, special_rate_limit=10):
+    def __init__(self, config={}, logger=None):
         # Define the data tables that we are needing
         # Define the tables needed to insert, update, or delete on
 
@@ -93,10 +93,6 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         self.initialize_database_connections()
         self.logger.info("Facade worker git interface database set up")
         self.logger.info(f"configuration passed is: {str(self.config)}.")
-
-        # set up the max amount of requests this interface is allowed to make before sleeping for 2 minutes
-        self.special_rate_limit = special_rate_limit
-        self.recent_requests_made = 0
 
         # Needs to be an attribute of the class for incremental database insert using paginate_endpoint
         self.pk_source_prs = []
