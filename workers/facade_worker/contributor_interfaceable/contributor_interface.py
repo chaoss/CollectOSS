@@ -571,8 +571,6 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             except Exception as e:
                 self.logger.info(
                     f"alias table query failed with error: {e}")
-            
-            logSkippedSection = True
                 
             #Check the unresolved_commits table to avoid hitting endpoints that we know don't have relevant data needlessly
             try:
@@ -583,12 +581,16 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                 ).fetchall()
                 
                 if len(unresolved_query_result) >= 1:
-                    self.logger.info(f"Commit data with email {email} has been unresolved in the past, skipping...")
+                    if logSkippedSection:
+                        self.logger.info(f"Commit data with email {email} has been unresolved in the past, skipping...")
+                    
+                    logSkippedSection = False
                     continue
             except Exception as e:
                 self.logger.info(f"Failed to query unresolved alias table with error: {e}")
             
-                
+            logSkippedSection = True
+
             login = None
             
             #Check the contributors table for a login for the given name
