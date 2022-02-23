@@ -540,6 +540,8 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         #    f"DEBUG: The data to process looks like this: {new_contribs}"
         # )
 
+        logSkippedSection = True
+
         for contributor in new_contribs:
 
             # Get the email from the commit data
@@ -557,12 +559,20 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                 ).fetchall()
                 if len(alias_table_data) >= 1:
                     # Move on if email resolved
-                    self.logger.info(
-                        f"Email {email} has been resolved earlier.")
+
+                    #Only log the skip the first time to avoid redundancy
+                    if logSkippedSection:
+                        self.logger.info(
+                            f"Email {email} has been resolved earlier.")
+                        logSkippedSection = False
+                    
+
                     continue
             except Exception as e:
                 self.logger.info(
                     f"alias table query failed with error: {e}")
+            
+            logSkippedSection = True
                 
             #Check the unresolved_commits table to avoid hitting endpoints that we know don't have relevant data needlessly
             try:
@@ -573,7 +583,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                 ).fetchall()
                 
                 if len(unresolved_query_result) >= 1:
-                    self.logger.info(f"Commit data has been unresolved in the past, skipping...")
+                    self.logger.info(f"Commit data with email {email} has been unresolved in the past, skipping...")
                     continue
             except Exception as e:
                 self.logger.info(f"Failed to query unresolved alias table with error: {e}")
