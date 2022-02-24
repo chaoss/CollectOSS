@@ -86,7 +86,7 @@ class FacadeWorker(Worker):
         self.logger.info("created interface")
 
         self.tool_source = '\'Facade Worker\''
-        self.tool_version = '\'1.0.1\''
+        self.tool_version = '\'1.2.0\''
         self.data_source = '\'Git Log\''
 
         self.logger.info("Finished  Init")
