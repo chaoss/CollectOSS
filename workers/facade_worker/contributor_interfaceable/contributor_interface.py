@@ -26,7 +26,7 @@ A few interesting ideas: Maybe get the top committers from each repo first? curl
 
 
 class ContributorInterfaceable(WorkerGitInterfaceable):
-    def __init__(self, config={}, logger=None, special_rate_limit=10):
+    def __init__(self, config={}, logger=None):
         # Define the data tables that we are needing
         # Define the tables needed to insert, update, or delete on
 
@@ -93,10 +93,6 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         self.initialize_database_connections()
         self.logger.info("Facade worker git interface database set up")
         self.logger.info(f"configuration passed is: {str(self.config)}.")
-
-        # set up the max amount of requests this interface is allowed to make before sleeping for 2 minutes
-        self.special_rate_limit = special_rate_limit
-        self.recent_requests_made = 0
 
         # Needs to be an attribute of the class for incremental database insert using paginate_endpoint
         self.pk_source_prs = []
@@ -544,10 +540,14 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         #    f"DEBUG: The data to process looks like this: {new_contribs}"
         # )
 
+        logSkippedSection = True
+
         for contributor in new_contribs:
 
             # Get the email from the commit data
             email = contributor['email_raw'] if 'email_raw' in contributor else contributor['email']
+            
+            name = contributor['name']
 
             # check the email to see if it already exists in contributor_aliases
             try:
@@ -559,15 +559,58 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                 ).fetchall()
                 if len(alias_table_data) >= 1:
                     # Move on if email resolved
-                    self.logger.info(
-                        f"Email {email} has been resolved earlier.")
+
+                    #Only log the skip the first time to avoid redundancy
+                    if logSkippedSection:
+                        self.logger.info(
+                            f"Email {email} has been resolved earlier.")
+                        logSkippedSection = False
+                    
+
                     continue
             except Exception as e:
                 self.logger.info(
                     f"alias table query failed with error: {e}")
+                
+            #Check the unresolved_commits table to avoid hitting endpoints that we know don't have relevant data needlessly
+            try:
+                unresolved_query_result = self.db.execute(
+                    s.sql.select([s.column('email'),s.column('name')]).where(
+                        self.unresolved_commit_emails_table.c.name == name and self.unresolved_commit_emails_table.c.email == email
+                    )
+                ).fetchall()
+                
+                if len(unresolved_query_result) >= 1:
+                    if logSkippedSection:
+                        self.logger.info(f"Commit data with email {email} has been unresolved in the past, skipping...")
+                    
+                    logSkippedSection = False
+                    continue
+            except Exception as e:
+                self.logger.info(f"Failed to query unresolved alias table with error: {e}")
+            
+            logSkippedSection = True
+
+            login = None
+            
+            #Check the contributors table for a login for the given name
+            try:
+                contributors_with_matching_name = self.db.execute(
+                    s.sql.select([s.column('gh_login')]).where(
+                        self.contributors_table.c.cntrb_full_name == name
+                    )
+                ).fetchall()
+                
+                if len(contributors_with_matching_name) >= 1:
+                    login = contributors_with_matching_name[0]['gh_login']
+            
+            except Exception as e:
+                self.logger.info(f"Failed local login lookup with error: {e}")
+                
 
             # Try to get the login from the commit sha
-            login = self.get_login_with_commit_hash(contributor, repo_id)
+            if login == None or login == "":
+                login = self.get_login_with_commit_hash(contributor, repo_id)
 
             if login == None or login == "":
                 # Try to get the login from supplemental data if not found with the commit hash
