@@ -187,6 +187,37 @@ class Commits(db.Model):
         data_source = db.Column(db.String())
         data_collection_date = db.Column(db.TIMESTAMP())
 
+    class PullRequestReviewMessageRef(db.Model):
+        __tablename__ = 'pull_request_review_message_ref'
+        pr_review_msg_ref_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+        pr_review_id = db.Column(db.BigInteger)
+        repo_id = db.Column(db.BigInteger)
+        msg_id = db.Column(db.BigInteger)
+        pr_review_msg_url = db.Column(db.String())
+        pr_review_src_id = db.Column(db.BigInteger)
+        pr_review_msg_src_id = db.Column(db.BigInteger)
+        pr_review_msg_node_id = db.Column(db.String())
+        pr_review_msg_diff_hunk = db.Column(db.String())
+        pr_review_msg_path = db.Column(db.String())
+        pr_review_msg_position = db.Column(db.BigInteger)
+        pr_review_msg_original_position = db.Column(db.BigInteger)
+        pr_review_msg_commit_id = db.Column(db.String())
+        pr_review_msg_original_commit_id = db.Column(db.String())
+        pr_review_msg_updated_at = db.Column(db.TIMESTAMP())
+        pr_review_msg_html_url = db.Column(db.String())
+        pr_url = db.Column(db.String())
+        pr_review_msg_author_association = db.Column(db.String())
+        pr_review_msg_start_line = db.Column(db.BigInteger)
+        pr_review_msg_original_start_line = db.Column(db.BigInteger)
+        pr_review_msg_start_side = db.Column(db.String())
+        pr_review_msg_line = db.Column(db.BigInteger)
+        pr_review_msg_original_line = db.Column(db.BigInteger)
+        pr_review_msg_side = db.Column(db.String())
+        tool_source = db.Column(db.String())
+        tool_version = db.Column(db.String())
+        data_source = db.Column(db.String())
+        data_collection_date = db.Column(db.TIMESTAMP())
+
     class Pull_Requests(db.Model):
         __tablename__ = 'pull_requests'
         pull_request_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
