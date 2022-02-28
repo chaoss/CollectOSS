@@ -285,6 +285,20 @@ class Commits(db.Model):
         data_source = db.Column(db.String())
         data_collection_date = db.Column(db.TIMESTAMP())
 
+    class RepoGroups(db.Model):
+        __tablename__ = 'repo_groups'
+        repo_group_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+        rg_name = db.Column(db.String(), nullable=False)
+        rg_description = db.Column(db.String())
+        rg_website = db.Column(db.String(length=128))
+        rg_recache = db.Column(db.SmallInteger)
+        rg_last_modified = db.Column(db.TIMESTAMP(), nullable=False)
+        rg_type = db.Column(db.String())
+        tool_source = db.Column(db.String())
+        tool_version = db.Column(db.String())
+        data_source = db.Column(db.String())
+        data_collection_date = db.Column(db.TIMESTAMP())
+
 
 
 class User(db.Model):
