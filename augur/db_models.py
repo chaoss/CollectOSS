@@ -118,6 +118,30 @@ class Commits(db.Model):
         data_source = db.Column(db.String())
         data_collection_date = db.Column(db.TIMESTAMP())
 
+    class Repo(db.Model):
+        __tablename__ = 'repo'
+        repo_id = db.Column(db.Integer(length=64), primary_key=True, nullable=False)
+        repo_group_id = db.Column(db.Integer(length=64))
+        repo_git = db.Column(db.String())
+        repo_path = db.Column(db.String())
+        repo_name = db.Column(db.String())
+        repo_added = db.Column(db.TIMESTAMP())
+        repo_status = db.Column(db.String())
+        repo_type = db.Column(db.String())
+        url = db.Column(db.String())
+        owner_id = db.Column(db.Integer(length=32))
+        description = db.Column(db.String())
+        primary_language = db.Column(db.String())
+        created_at = db.Column(db.String())
+        forked_from = db.Column(db.String())
+        updated_at = db.Column(db.TIMESTAMP())
+        repo_archived_date_collected = db.Column(db.TIMESTAMP())
+        repo_archived = db.Column(db.Integer(length=32))
+        tool_source = db.Column(db.String())
+        tool_version = db.Column(db.String())
+        data_source = db.Column(db.String())
+        data_collection_date = db.Column(db.TIMESTAMP())
+
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
