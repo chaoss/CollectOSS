@@ -139,12 +139,12 @@ class Commits(db.Model):
     class Repo(db.Model):
         __tablename__ = 'repo'
         repo_id = db.Column(db.Integer(length=64), primary_key=True, nullable=False)
-        repo_group_id = db.Column(db.Integer(length=64))
-        repo_git = db.Column(db.String())
+        repo_group_id = db.Column(db.Integer(length=64), nullable=False)
+        repo_git = db.Column(db.String(), nullable=False)
         repo_path = db.Column(db.String())
         repo_name = db.Column(db.String())
-        repo_added = db.Column(db.TIMESTAMP())
-        repo_status = db.Column(db.String())
+        repo_added = db.Column(db.TIMESTAMP(), nullable=False)
+        repo_status = db.Column(db.String(), nullable=False)
         repo_type = db.Column(db.String())
         url = db.Column(db.String())
         owner_id = db.Column(db.Integer(length=32))
