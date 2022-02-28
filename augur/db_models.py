@@ -134,6 +134,20 @@ class Commits(db.Model):
         data_source = db.Column(db.String())
         data_collection_date = db.Column(db.TIMESTAMP())
 
+        class IssueLabels(db.Model):
+            __tablename__ = 'issue_labels'
+            issue_label_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+            issue_id = db.Column(db.BigInteger)
+            label_text = db.Column(db.String())
+            label_description = db.Column(db.String())
+            label_color = db.Column(db.String())
+            tool_source = db.Column(db.String(255))
+            tool_version = db.Column(db.String(255))
+            data_source = db.Column(db.String(255))
+            data_collection_date = db.Column(db.TIMESTAMP())
+            label_src_id = db.Column(db.BigInteger)
+            label_src_node_id = db.Column(db.String())
+
     class IssueMessageRef(db.Model):
         __tablename__ = 'issue_message_ref'
         issue_msg_ref_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
