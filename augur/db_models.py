@@ -42,6 +42,39 @@ class Commits(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP())
 
+    # should repo_id be allowed to be NULL?
+
+    class Issues(db.Model):
+        __tablename__ = 'issues'
+        issue_id = db.Column(db.Integer(length=64), primary_key=True, nullable=False)
+        repo_id = db.Column(db.Integer(length=64))
+        reporter_id = db.Column(db.Integer(length=64))
+        pull_request = db.Column(db.Integer(length=64))
+        pull_request_id = db.Column(db.Integer(length=64))
+        created_at = db.Column(db.TIMESTAMP())
+        issue_title = db.Column(db.String())
+        issue_body = db.Column(db.String())
+        cntrb_id = db.Column(db.Integer(length=64))
+        comment_count = db.Column(db.Integer(length=64))
+        updated_at = db.Column(db.TIMESTAMP())
+        closed_at = db.Column(db.TIMESTAMP())
+        due_on = db.Column(db.TIMESTAMP())
+        repository_url = db.Column(db.String())
+        issue_url = db.Column(db.String())
+        labels_url = db.Column(db.String())
+        comments_url = db.Column(db.String())
+        events_url = db.Column(db.String())
+        html_url = db.Column(db.String())
+        issue_state = db.Column(db.String())
+        issue_node_id = db.Column(db.String())
+        gh_issue_number = db.Column(db.Integer(length=64))
+        gh_issue_id = db.Column(db.Integer(length=64))
+        gh_user_id = db.Column(db.Integer(length=64))
+        tool_source = db.Column(db.String())
+        tool_version = db.Column(db.String())
+        data_source = db.Column(db.String())
+        data_collection_date = db.Column(db.TIMESTAMP())
+
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
