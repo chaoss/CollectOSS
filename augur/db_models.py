@@ -109,6 +109,19 @@ class Commits(db.Model):
         data_source = db.Column(db.String())
         data_collection_date = db.Column(db.TIMESTAMP())
 
+    class IssueMessageRef(db.Model):
+        __tablename__ = 'issue_message_ref'
+        issue_msg_ref_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+        issue_id = db.Column(db.BigInteger)
+        repo_id = db.Column(db.BigInteger)
+        msg_id = db.Column(db.BigInteger)
+        issue_msg_ref_src_node_id = db.Column(db.String())
+        issue_msg_ref_src_comment_id = db.Column(db.BigInteger)
+        tool_source = db.Column(db.String())
+        tool_version = db.Column(db.String())
+        data_source = db.Column(db.String())
+        data_collection_date = db.Column(db.TIMESTAMP())
+
     # should repo_id be allowed to be NULL?
 
     class Issues(db.Model):
