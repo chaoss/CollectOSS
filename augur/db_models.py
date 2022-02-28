@@ -119,6 +119,21 @@ class Commits(db.Model):
         data_source = db.Column(db.String())
         data_collection_date = db.Column(db.TIMESTAMP())
 
+    class IssueEvents(db.Model):
+        __tablename__ = 'issue_events'
+        event_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+        issue_id = db.Column(db.BigInteger, nullable=False)
+        cntrb_id = db.Column(db.BigInteger, nullable=False)
+        action = db.Column(db.String(255), nullable=False)
+        action_commit_hash = db.Column(db.String())
+        created_at = db.Column(db.TIMESTAMP(), nullable=False)
+        node_id = db.Column(db.String())
+        node_url = db.Column(db.String())
+        tool_source = db.Column(db.String())
+        tool_version = db.Column(db.String())
+        data_source = db.Column(db.String())
+        data_collection_date = db.Column(db.TIMESTAMP())
+
     class IssueMessageRef(db.Model):
         __tablename__ = 'issue_message_ref'
         issue_msg_ref_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
