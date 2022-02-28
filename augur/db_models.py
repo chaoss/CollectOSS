@@ -173,6 +173,20 @@ class Commits(db.Model):
         data_source = db.Column(db.String())
         data_collection_date = db.Column(db.TIMESTAMP())
 
+    class PullRequestMessageRef(db.Model):
+        __tablename__ = 'pull_request_message_ref'
+        pr_msg_ref_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+        pull_request_id = db.Column(db.BigInteger)
+        repo_id = db.Column(db.BigInteger)
+        msg_id = db.Column(db.BigInteger)
+        pr_message_ref_src_comment_id = db.Column(db.String())
+        pr_message_ref_src_node_id = db.Column(db.BigInteger)
+        pr_issue_url = db.Column(db.String())
+        tool_source = db.Column(db.String())
+        tool_version = db.Column(db.String())
+        data_source = db.Column(db.String())
+        data_collection_date = db.Column(db.TIMESTAMP())
+
     class Pull_Requests(db.Model):
         __tablename__ = 'pull_requests'
         pull_request_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
