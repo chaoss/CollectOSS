@@ -75,6 +75,24 @@ class Commits(db.Model):
         data_source = db.Column(db.String())
         data_collection_date = db.Column(db.TIMESTAMP())
 
+    class Message(db.Model):
+        __tablename__ = 'message'
+        msg_id = db.Column(db.Integer(length=64), primary_key=True, nullable=False)
+        rgls_id = db.Column(db.Integer(length=64))
+        platform_msg_id = db.Column(db.Integer(length=64))
+        platform_node_id = db.Column(db.String())
+        repo_id = db.Column(db.Integer(length=64))
+        cntrb_id = db.Column(db.Integer(length=64))
+        msg_text = db.Column(db.String())
+        msg_timestamp = db.Column(db.TIMESTAMP())
+        msg_sender_email = db.Column(db.String())
+        msg_header = db.Column(db.String())
+        pltfrm_id = db.Column(db.Integer(length=64), nullable=False)
+        tool_source = db.Column(db.String())
+        tool_version = db.Column(db.String())
+        data_source = db.Column(db.String())
+        data_collection_date = db.Column(db.TIMESTAMP())
+
     class Pull_Requests(db.Model):
         __tablename__ = 'pull_requests'
         pull_request_id = db.Column(db.Integer(length=64), primary_key=True, nullable=False)
@@ -141,6 +159,7 @@ class Commits(db.Model):
         tool_version = db.Column(db.String())
         data_source = db.Column(db.String())
         data_collection_date = db.Column(db.TIMESTAMP())
+
 
 
 class User(db.Model):
