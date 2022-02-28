@@ -11,6 +11,25 @@ from flask_sqlalchemy import SQLAlchemy
 db = SQLAlchemy(app)
 
 
+class CommitCommentRef(db.Model):
+    __tablename__ = 'commit_comment_ref'
+    cmt_comment_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+    cmt_id = db.Column(db.BigInteger, nullable=False)
+    repo_id = db.Column(db.BigInteger)
+    msg_id = db.Column(db.BigInteger, nullable=False)
+    user_id = db.Column(db.BigInteger, nullable=False)
+    body = db.Column(db.Text())
+    line = db.Column(db.BigInteger)
+    position = db.Column(db.BigInteger)
+    commit_comment_src_node_id = db.Column(db.String())
+    cmt_comment_src_id = db.Column(db.BigInteger, nullable=False)
+    created_at = db.Column(db.TIMESTAMP(), nullable=False)
+    tool_source = db.Column(db.String())
+    tool_version = db.Column(db.String())
+    data_source = db.Column(db.String())
+    data_collection_date = db.Column(db.TIMESTAMP())
+
+
 class Commits(db.Model):
     __tablename__ = 'commits'
     cmt_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
@@ -158,7 +177,7 @@ class Commits(db.Model):
         pr_src_locked = db.Column(db.Boolean)
         pr_src_title = db.Column(db.String())
         pr_augur_contributor_id = db.Column(db.BigInteger)
-        pr_body = db.Column(db.Text)
+        pr_body = db.Column(db.Text())
         pr_created_at = db.Column(db.TIMESTAMP())
         pr_updated_at = db.Column(db.TIMESTAMP())
         pr_closed_at = db.Column(db.TIMESTAMP())
