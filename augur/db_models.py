@@ -109,6 +109,16 @@ class Commits(db.Model):
         data_source = db.Column(db.String())
         data_collection_date = db.Column(db.TIMESTAMP())
 
+    class IssueAssignees(db.Model):
+        __tablename__ = 'issue_assignees'
+        issue_assignee_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+        issue_id = db.Column(db.BigInteger)
+        cntrb_id = db.Column(db.BigInteger)
+        tool_source = db.Column(db.String())
+        tool_version = db.Column(db.String())
+        data_source = db.Column(db.String())
+        data_collection_date = db.Column(db.TIMESTAMP())
+
     class IssueMessageRef(db.Model):
         __tablename__ = 'issue_message_ref'
         issue_msg_ref_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
