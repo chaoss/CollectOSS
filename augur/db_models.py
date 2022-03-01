@@ -505,6 +505,28 @@ class PullRequestReviewMessageRef(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP())
 
+
+# TODO: Timestamps were declared with length of 6 in database
+class Releases(db.Model):
+    __tablename__ = 'releases'
+    release_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+    repo_id = db.Column(db.BigInteger)
+    release_name = db.Column(db.String(length=255))
+    release_description = db.Column(db.String())
+    release_author = db.Column(db.String(length=255))
+    release_created_at = db.Column(db.TIMESTAMP())
+    release_published_at = db.Column(db.TIMESTAMP())
+    release_published_at = db.Column(db.TIMESTAMP())
+    release_is_draft = db.Column(db.Boolean())
+    release_is_prerelease = db.Column(db.Boolean())
+    release_tag_name = db.Column(db.String(length=255))
+    release_url = db.Column(db.String(length=255))
+    tool_source = db.Column(db.String(length=255))
+    tool_version = db.Column(db.String(length=255))
+    data_source = db.Column(db.String(length=255))
+    data_collection_date = db.Column(db.TIMESTAMP())
+    tag_only = db.Column(db.Boolean())
+
 class Repo(db.Model):
     __tablename__ = 'repo'
     repo_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
