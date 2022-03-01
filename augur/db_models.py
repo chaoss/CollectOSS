@@ -458,6 +458,22 @@ class PullRequestMessageRef(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP())
 
+class PullRequestRepo(db.Model):
+    __tablename__ = 'pull_request_repo'
+    pr_repo_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+    pr_repo_meta_id = db.Column(db.BigInteger)
+    pr_repo_head_or_base = db.Column(db.String())
+    pr_src_repo_id = db.Column(db.BigInteger)
+    pr_src_node_id = db.Column(db.String())
+    pr_repo_name = db.Column(db.String())
+    pr_repo_full_name = db.Column(db.String())
+    pr_repo_private_bool = db.Column(db.Boolean())
+    pr_cntrb_id = db.Column(db.BigInteger)
+    tool_source = db.Column(db.String(length=255))
+    tool_version = db.Column(db.String(length=255))
+    data_source = db.Column(db.String(length=255))
+    data_collection_date = db.Column(db.TIMESTAMP())
+
 class PullRequestReviewMessageRef(db.Model):
     __tablename__ = 'pull_request_review_message_ref'
     pr_review_msg_ref_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
