@@ -588,6 +588,19 @@ class RepoGroups(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP())
 
+class RepoGroupsListServe(db.Model):
+    __tablename__ = 'repo_groups_list_serve'
+    rgls_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+    repo_group_id = db.Column(db.BigInteger)
+    rgls_name = db.Column(db.String(length=255))
+    rgls_description = db.Column(db.String(length=3000))
+    rgls_sponsor = db.Column(db.String(length=255))
+    rgls_email = db.Column(db.String(length=255))
+    tool_source = db.Column(db.String(length=255))
+    tool_version = db.Column(db.String(length=255))
+    data_source = db.Column(db.String(length=255))
+    data_collection_date = db.Column(db.TIMESTAMP())
+
 
     # Template for model class
     """
