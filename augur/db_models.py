@@ -454,6 +454,39 @@ class User(db.Model):
         data_source = db.Column(db.String())
         data_collection_date = db.Column(db.TIMESTAMP())
         
+    class Pull_Requests(db.Model):
+        __tablename__ = 'pull_requests'
+        pull_request_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+        repo_id = db.Column(db.BigInteger)
+        pr_url = db.Column()
+        pr_src_id = db.Column()
+        pr_src_node_id = db.Column()
+        pr_html_url = db.Column()
+        pr_diff_url = db.Column()
+        pr_patch_url = db.Column()
+        pr_issue_url = db.Column()
+        pr_augur_issue_id = db.Column()
+        pr_src_number = db.Column()
+        pr_src_state = db.Column()
+        pr_src_locked = db.Column()
+        pr_src_title = db.Column()
+        pr_augur_contributor_id = db.Column()
+        pr_body = db.Column()
+        pr_created_at = db.Column()
+        pr_updated_at = db.Column()
+        pr_closed_at = db.Column()
+        pr_merged_at = db.Column()
+        pr_src_issue_url = db.Column()
+        pr_src_comments_url = db.Column()
+        pr_src_review_comments_url = db.Column()
+        pr_src_commits_url = db.Column()
+        pr_src_statuses_url = db.Column()
+        pr_src_author_association = db.Column()
+        tool_source = db.Column(db.String())
+        tool_version = db.Column(db.String())
+        data_source = db.Column(db.String())
+        data_collection_date = db.Column(db.TIMESTAMP())
+        
         
     class Commits(db.Model):
         __tablename__ = 'commits'
@@ -473,6 +506,20 @@ class User(db.Model):
         cmt_whitespace = db.Column()
         cmt_date_attempted = db.Column()
         cmt_ght_author_id = db.Column()
+        cmt_author_platform_username = db.Column()
+        tool_source = db.Column(db.String())
+        tool_version = db.Column(db.String())
+        data_source = db.Column(db.String())
+        data_collection_date = db.Column(db.TIMESTAMP())
+        
+    class ContributorAliases(db.Model):
+        __tablename__ = 'commits'
+        cmt_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+        cmt_commit_hash = db.Column()
+        cmt_author_name = db.Column()
+        cmt_author_raw_email = db.Column()
+        cmt_author_affiliation = db.Column()
+        cmt_committer_name = db.Column()
         cmt_author_platform_username = db.Column()
         tool_source = db.Column(db.String())
         tool_version = db.Column(db.String())
