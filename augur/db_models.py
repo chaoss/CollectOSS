@@ -446,6 +446,18 @@ class PullRequestEvents(db.Model):
     data_source = db.Column(db.String(length=255))
     data_collection_date = db.Column(db.TIMESTAMP())
 
+class PullRequestFiles(db.Model):
+    __tablename__ = 'pull_request_files'
+    pull_request_id = db.Column(db.BigInteger)
+    tool_source = db.Column(db.String())
+    tool_version = db.Column(db.String())
+    data_source = db.Column(db.String())
+    data_collection_date = db.Column(db.TIMESTAMP())
+    pr_file_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+    pr_file_additions = db.Column(db.BigInteger)
+    pr_file_deletions = db.Column(db.BigInteger)
+    pr_file_path = db.Column(db.String())
+
 class Repo(db.Model):
     __tablename__ = 'repo'
     repo_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
