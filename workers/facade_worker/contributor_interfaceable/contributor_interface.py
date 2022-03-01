@@ -73,7 +73,7 @@ def process_commit_metadata(contributorQueue,interface,repo_id):
                 login = contributors_with_matching_name[0]['gh_login']
 
         except Exception as e:
-            interface.logger.info(f"Failed local login lookup with error: {e}")
+            interface.logger.error(f"Failed local login lookup with error: {e}")
         
 
         # Try to get the login from the commit sha
@@ -408,7 +408,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         url = "https://api.github.com/repos/" + repo_path + "/commits/" + commit_sha
 
-        self.logger.info(f"Url: {url}")
+        #self.logger.info(f"Url: {url}")
 
         return url
 
@@ -477,7 +477,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                 self.contributors_aliases_table.insert().values(alias))
         except s.exc.IntegrityError:
             # It's expected to catch duplicates this way so no output is logged.
-            pass
+            #pass
             self.logger.info(f"alias {alias} already exists")
         except Exception as e:
             self.logger.info(
@@ -752,6 +752,26 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
 
         self.logger.debug("DEBUG: Got through the new_contribs")
+        
+        def link_commits_to_contributor(contributorQueue,logger,database, commits_table):
+            # iterate through all the commits with emails that appear in contributors and give them the relevant cntrb_id.
+            while not contributorQueue.empty():
+                cntrb_email = contributorQueue.get()
+                logger.debug(
+                   f"These are the emails and cntrb_id's  returned: {cntrb_email}")
+
+                try:
+                    database.execute(interface.commits_table.update().where(
+                        commits_table.c.cmt_committer_email == cntrb_email['email']
+                    ).values({
+                        'cmt_ght_author_id': cntrb_email['cntrb_id']
+                    }))
+                except Exception as e:
+                    logger.info(
+                        f"Ran into problem when enriching commit data. Error: {e}")
+                    continue
+            
+            return
 
         # sql query used to find corresponding cntrb_id's of emails found in the contributor's table
         # i.e., if a contributor already exists, we use it!
@@ -790,28 +810,28 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         
         #Put contributor commit data into a process queue
-        """
+        
         existingDataQueue = Queue()
         for commitData in existing_cntrb_emails:
             existingDataQueue.put(commitData)
-        """
+            
+        processList = []
+        #Create process start conditions
+        for process in range(processes):
+            
+            processList.append(Process(target=link_commits_to_contributor, args=(existingDataQueue,self.logger,self.db,self.commits_table,)))
         
+        
+        #Multiprocess process commits
+        for pNum,process in enumerate(processList):
+            process.start()
+            self.logger.info(f"Process {pNum} started..")
+        
+        
+        for process in processList:
+            process.join()
 
-        # iterate through all the commits with emails that appear in contributors and give them the relevant cntrb_id.
-        for cntrb_email in existing_cntrb_emails:
-            self.logger.info(
-                f"These are the emails and cntrb_id's  returned: {cntrb_email}")
-
-            try:
-                self.db.execute(self.commits_table.update().where(
-                    self.commits_table.c.cmt_committer_email == cntrb_email['email']
-                ).values({
-                    'cmt_ght_author_id': cntrb_email['cntrb_id']
-                }))
-            except Exception as e:
-                self.logger.info(
-                    f"Ran into problem when enriching commit data. Error: {e}")
-
+        self.logger.info("Done with inserting and updating facade contributors")
         return
 
     def create_endpoint_from_repo_id(self, repo_id):
