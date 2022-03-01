@@ -169,6 +169,19 @@ class Commits(db.Model):
         data_source = db.Column(db.String())
         data_collection_date = db.Column(db.TIMESTAMP())
 
+    class ContributorAliases(db.Model):
+        __tablename__ = 'contributor_aliases'
+        cntrb_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+        cntrb_a_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+        canonical_email = db.Column(db.String(), nullable=False)
+        alias_email = db.Column(db.String(length=128), nullable=False)
+        cntrb_active = db.Column(db.SmallInteger, nullable=False)
+        cntrb_last_modified = db.Column(db.TIMESTAMP(), nullable=False)
+        tool_source = db.Column(db.String(length=255))
+        tool_version = db.Column(db.String(length=255))
+        data_source = db.Column(db.String(length=255))
+        data_collection_date = db.Column(db.TIMESTAMP())
+
     class IssueAssignees(db.Model):
         __tablename__ = 'issue_assignees'
         issue_assignee_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
