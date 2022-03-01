@@ -34,8 +34,8 @@ def process_commit_metadata(contributorQueue,interface,repo_id):
             if len(alias_table_data) >= 1:
                 # Move on if email resolved
 
-                interface.logger.info(
-                    f"Email {email} has been resolved earlier.")
+                #interface.logger.info(
+                #    f"Email {email} has been resolved earlier.")
 
                 continue
         except Exception as e:
@@ -52,7 +52,7 @@ def process_commit_metadata(contributorQueue,interface,repo_id):
 
             if len(unresolved_query_result) >= 1:
 
-                interface.logger.info(f"Commit data with email {email} has been unresolved in the past, skipping...")
+                #interface.logger.info(f"Commit data with email {email} has been unresolved in the past, skipping...")
 
                 continue
         except Exception as e:
@@ -737,7 +737,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             process.join()
 
 
-        self.logger.info("DEBUG: Got through the new_contribs")
+        self.logger.debug("DEBUG: Got through the new_contribs")
 
         # sql query used to find corresponding cntrb_id's of emails found in the contributor's table
         # i.e., if a contributor already exists, we use it!
