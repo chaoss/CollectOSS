@@ -639,6 +639,26 @@ class RepoInfo(db.Model):
     pull_requests_closed = db.Column(db.BigInteger)
     pull_requests_merged = db.Column(db.BigInteger)
 
+class RepoLabor(db.Model):
+    __tablename__ = 'repo_labor'
+    repo_labor_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+    repo_id = db.Column(db.BigInteger)
+    repo_clone_date = db.Column(db.TIMESTAMP())
+    rl_analysis_date = db.Column(db.TIMESTAMP())
+    programming_language = db.Column(db.String(length=255))
+    file_path = db.Column(db.String(length=500))
+    file_name = db.Column(db.String(length=255))
+    total_lines = db.Column(db.Integer)
+    code_lines = db.Column(db.Integer)
+    comment_lines = db.Column(db.Integer)
+    blank_lines = db.Column(db.Integer)
+    code_complexity = db.Column(db.Integer)
+    repo_url = db.Column(db.String(length=500))
+    tool_source = db.Column(db.String(length=255))
+    tool_version = db.Column(db.String(length=255))
+    data_source = db.Column(db.String(length=255))
+    data_collection_date = db.Column(db.TIMESTAMP())
+
 
     # Template for model class
     """
