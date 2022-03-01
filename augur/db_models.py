@@ -11,6 +11,7 @@ from flask_sqlalchemy import SQLAlchemy
 db = SQLAlchemy(app)
 
 # some tool source, tool_version, data_source have length constraints
+# need to add default of current timestamp for data_collection_date
 
 
 class AnalysisLog(db.Model):
@@ -294,6 +295,20 @@ class MessageAnalysis(db.Model):
     reconstruction_error = db.Column(db.Float())
     novelty_flag = db.Column(db.Boolean())
     feedback_flag = db.Column(db.Boolean())
+    tool_source = db.Column(db.String())
+    tool_version = db.Column(db.String())
+    data_source = db.Column(db.String())
+    data_collection_date = db.Column(db.TIMESTAMP())
+
+class MessageAnalysisSummary(db.Model):
+    __tablename__ = 'message_analysis_summary'
+    msg_summary_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+    repo_id = db.Column(db.BigInteger)
+    worker_run_id = db.Column(db.BigInteger)
+    positive_ratio = db.Column(db.Float())
+    negative_ratio = db.Column(db.Float())
+    novel_count = db.Column(db.BigInteger)
+    period = db.Column(db.TIMESTAMP())
     tool_source = db.Column(db.String())
     tool_version = db.Column(db.String())
     data_source = db.Column(db.String())
