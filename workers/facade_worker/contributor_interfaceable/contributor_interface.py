@@ -722,7 +722,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         processList = []
         #Create process start conditions
-        for process in processes:
+        for process in range(processes):
             interface = ContributorInterfaceable(config=self.config,logger=self.logger)
             
             processList[process] = Process(target=process_commit_metadata, args=(commitDataQueue,interface,))
