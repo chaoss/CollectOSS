@@ -683,6 +683,19 @@ class Settings(db.Model):
     value = db.Column(db.String(), nullable=False)
     value = db.Column(db.TIMESTAMP(), nullable=False)
 
+class TopicWords(db.Model):
+    __tablename__ = 'topic_words'
+    topic_words_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+    topic_id = db.Column(db.BigInteger)
+    word = db.Column(db.String())
+    word_prob = db.Column(db.Float())
+    tool_source = db.Column(db.String())
+    tool_version = db.Column(db.String())
+    data_source = db.Column(db.String())
+    data_collection_date = db.Column(db.TIMESTAMP())
+
+
+
 
     # Template for model class
     """
