@@ -10,6 +10,8 @@ from flask_sqlalchemy import SQLAlchemy
 # TODO: Create db from Flask app
 db = SQLAlchemy(app)
 
+# some tool source, tool_version, data_source have length constraints
+
 
 class AnalysisLog(db.Model):
     __tablename__ = 'analysis_log'
@@ -90,6 +92,19 @@ class Commits(db.Model):
     tool_version = db.Column(db.String())
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP())
+
+    class ContributorAffiliations(db.Model):
+        __tablename__ = 'contributor_affiliations'
+        ca_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+        ca_domain = db.Column(db.String(length=64), nullable=False)
+        ca_start_date = db.Column(db.Date)
+        tool_source = db.Column(db.String(length=255))
+        tool_version = db.Column(db.String(length=255))
+        data_source = db.Column(db.String(length=255))
+        data_collection_date = db.Column(db.TIMESTAMP())
+        ca_last_used = db.Column(db.TIMESTAMP(), nullable=False)
+        ca_affiliation = db.Column(db.String())
+        ca_active = db.Column(db.SmallInteger)
 
     class Contributors(db.Model):
         __tablename__ = 'contributors'
