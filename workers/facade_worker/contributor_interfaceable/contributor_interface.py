@@ -730,7 +730,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         #Multiprocess process commits
         for pNum,process in enumerate(processList):
             process.start()
-            self.logger(f"Process {pNum} started..")
+            self.logger.info(f"Process {pNum} started..")
             
         
         for process in processList:
