@@ -591,7 +591,7 @@ class RepoGroups(db.Model):
 class RepoGroupsListServe(db.Model):
     __tablename__ = 'repo_groups_list_serve'
     rgls_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    repo_group_id = db.Column(db.BigInteger)
+    repo_group_id = db.Column(db.BigInteger, nullable=False)
     rgls_name = db.Column(db.String(length=255))
     rgls_description = db.Column(db.String(length=3000))
     rgls_sponsor = db.Column(db.String(length=255))
@@ -600,6 +600,44 @@ class RepoGroupsListServe(db.Model):
     tool_version = db.Column(db.String(length=255))
     data_source = db.Column(db.String(length=255))
     data_collection_date = db.Column(db.TIMESTAMP())
+
+class RepoInfo(db.Model):
+    __tablename__ = 'repo_info'
+    repo_info_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+    repo_id = db.Column(db.BigInteger, nullable=False)
+    last_updated = db.Column(db.BigInteger)
+    issues_enabled = db.Column(db.String(length=255))
+    open_issues = db.Column(db.Integer)
+    pull_requests_enabled = db.Column(db.String(length=255))
+    wiki_enabled = db.Column(db.String(length=255))
+    pages_enabled = db.Column(db.String(length=255))
+    fork_count = db.Column(db.Integer)
+    default_branch = db.Column(db.String(length=255))
+    watchers_count = db.Column(db.Integer)
+    UUID = db.Column(db.Integer)
+    license = db.Column(db.String(length=255))
+    stars_count = db.Column(db.Integer)
+    committers_count = db.Column(db.Integer)
+    issue_contributors_count = db.Column(db.String(length=255))
+    changelog_file = db.Column(db.String(length=255))
+    contributing_file = db.Column(db.String(length=255))
+    license_file = db.Column(db.String(length=255))
+    code_of_conduct_file = db.Column(db.String(length=255))
+    security_issue_file = db.Column()
+    security_audit_file = db.Column(db.String(length=255))
+    status = db.Column(db.String(length=255))
+    keywords = db.Column(db.String(length=255))
+    tool_source = db.Column(db.String(length=255))
+    tool_version = db.Column(db.String(length=255))
+    data_source = db.Column(db.String(length=255))
+    data_collection_date = db.Column(db.TIMESTAMP())
+    commit_count = db.Column(db.BigInteger)
+    issues_count = db.Column(db.BigInteger)
+    issues_closed = db.Column(db.BigInteger)
+    pull_request_count = db.Column(db.BigInteger)
+    pull_requests_open = db.Column(db.BigInteger)
+    pull_requests_closed = db.Column(db.BigInteger)
+    pull_requests_merged = db.Column(db.BigInteger)
 
 
     # Template for model class
