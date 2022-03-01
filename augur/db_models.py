@@ -694,6 +694,13 @@ class TopicWords(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP())
 
+class UtilityLog(db.Model):
+    __tablename__ = 'utility_log'
+    id = db.Column(db.BigInteger, primary_key=True, nullable = False)
+    level = db.Column(db.String(length=8), nullable=False)
+    status = db.Column(db.String(), nullable=False)
+    attempted = db.Column(db.TIMESTAMP(), nullable=False)
+
 
 
 
