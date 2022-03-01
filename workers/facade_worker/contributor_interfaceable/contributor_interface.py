@@ -728,10 +728,16 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             processList[process] = Process(target=process_commit_metadata, args=(commitDataQueue,interface,))
         
         #Multiprocess process commits
-
+        for pNum,process in enumerate(processList):
+            process.start()
+            self.logger(f"Process {pNum} started..")
             
+        
+        for process in processList:
+            process.join()
 
-        #self.logger.info("DEBUG: Got through the new_contribs")
+
+        self.logger.info("DEBUG: Got through the new_contribs")
 
         # sql query used to find corresponding cntrb_id's of emails found in the contributor's table
         # i.e., if a contributor already exists, we use it!
