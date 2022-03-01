@@ -264,14 +264,28 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         self.logger.info(
             "Facade worker git interface logging set up correctly")
         # self.db_schema = None
+        # Get config passed from the facade worker.
         self.config.update({
             'gh_api_key': self.augur_config.get_value('Database', 'key'),
             'gitlab_api_key': self.augur_config.get_value('Database', 'gitlab_api_key')
             # 'port': self.augur_config.get_value('Workers', 'contributor_interface')
         })
 
-        # Get config passed from the facade worker.
-        self.initialize_database_connections()
+        
+        tries = 5
+        
+        while tries > 0:
+            try:
+                self.initialize_database_connections()
+                break
+            except Exception as e:
+                self.logger.error("Could not init database connection and oauth! {e}")
+                
+                if tries == 0:
+                    raise e
+            
+            tries -= 1
+                
         self.logger.info("Facade worker git interface database set up")
         self.logger.info(f"configuration passed is: {str(self.config)}.")
 
@@ -774,9 +788,14 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         existing_cntrb_emails = json.loads(pd.read_sql(resolve_email_to_cntrb_id_sql, self.db, params={
                                            'repo_id': repo_id}).to_json(orient="records"))
 
-        #self.logger.info("DEBUG: got passed the sql statement's execution")
-
-        #self.logger.info(f"DEBUG: Here are the existing emails: {existing_cntrb_emails}")
+        
+        #Put contributor commit data into a process queue
+        """
+        existingDataQueue = Queue()
+        for commitData in existing_cntrb_emails:
+            existingDataQueue.put(commitData)
+        """
+        
 
         # iterate through all the commits with emails that appear in contributors and give them the relevant cntrb_id.
         for cntrb_email in existing_cntrb_emails:
