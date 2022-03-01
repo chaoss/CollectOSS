@@ -7,6 +7,8 @@ from workers.util import read_config
 from psycopg2.errors import UniqueViolation
 from random import randint
 import json
+import multiprocessing
+import time
 
 # Debugger
 import traceback
@@ -26,6 +28,7 @@ A few interesting ideas: Maybe get the top committers from each repo first? curl
 
 
 class ContributorInterfaceable(WorkerGitInterfaceable):
+    
     def __init__(self, config={}, logger=None):
         # Define the data tables that we are needing
         # Define the tables needed to insert, update, or delete on
@@ -819,3 +822,12 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         }
 
         self.query_github_contributors(contrib_entry_info, repo_id)
+        
+
+class WorkerProcess(multiprocessing.Process):
+    def __init__(self,id,interface):
+        super(Process, self).__init__()
+        self.id = id
+        
+        #Interface object holds methods and attributes to parallelize
+        self.interface = interface
