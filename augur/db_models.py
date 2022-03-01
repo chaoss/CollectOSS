@@ -285,6 +285,20 @@ class Message(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP())
 
+class MessageAnalysis(db.Model):
+    __tablename__ = 'message_analysis'
+    msg_analysis_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+    msg_id = db.Column(db.BigInteger)
+    worker_run_id = db.Column(db.BigInteger)
+    sentiment_score = db.Column(db.Float())
+    reconstruction_error = db.Column(db.Float())
+    novelty_flag = db.Column(db.Boolean())
+    feedback_flag = db.Column(db.Boolean())
+    tool_source = db.Column(db.String())
+    tool_version = db.Column(db.String())
+    data_source = db.Column(db.String())
+    data_collection_date = db.Column(db.TIMESTAMP())
+
 class PullRequestMessageRef(db.Model):
     __tablename__ = 'pull_request_message_ref'
     pr_msg_ref_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
