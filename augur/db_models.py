@@ -438,4 +438,29 @@ class User(db.Model):
         tool_version = db.Column(db.String())
         data_source = db.Column(db.String())
         data_collection_date = db.Column(db.TIMESTAMP())
+        
+        
+    class Commits(db.Model):
+        __tablename__ = 'commits'
+        cmt_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+        repo_id = db.Column()
+        cmt_commit_hash = db.Column()
+        cmt_author_name = db.Column()
+        cmt_author_raw_email = db.Column()
+        cmt_author_affiliation = db.Column()
+        cmt_committer_name = db.Column()
+        cmt_committer_raw_email = db.Column()
+        cmt_committer_email = db.Column()
+        cmt_committer_date = db.Column()
+        cmt_committer_affiliation = db.Column()
+        cmt_added = db.Column()
+        cmt_removed = db.Column()
+        cmt_whitespace = db.Column()
+        cmt_date_attempted = db.Column()
+        cmt_ght_author_id = db.Column()
+        cmt_author_platform_username = db.Column()
+        tool_source = db.Column(db.String())
+        tool_version = db.Column(db.String())
+        data_source = db.Column(db.String())
+        data_collection_date = db.Column(db.TIMESTAMP())
     """
