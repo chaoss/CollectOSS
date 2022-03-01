@@ -670,6 +670,12 @@ class RepoTopic(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP())
 
+class ReposFetchLog(db.Model):
+    __tablename__ = 'repos_fetch_log'
+    repos_id = db.Column(db.Integer, nullable=False)
+    status = db.Column(db.String(length=128), nullable=False)
+    date = db.Column(db.TIMESTAMP(), nullable=False)
+
 
     # Template for model class
     """
