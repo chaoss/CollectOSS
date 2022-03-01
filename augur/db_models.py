@@ -314,6 +314,17 @@ class MessageAnalysisSummary(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP())
 
+class Platform(db.Model):
+    __tablename__ = 'platform'
+    pltfrm_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+    pltfrm_name = db.Column(db.String(length=255))
+    pltfrm_version = db.Column(db.String(length=255))
+    pltfrm_release_date = db.Column(db.Date)
+    tool_source = db.Column(db.String(length=255))
+    tool_version = db.Column(db.String(length=255))
+    data_source = db.Column(db.String(length=255))
+    data_collection_date = db.Column(db.TIMESTAMP())
+
 class PullRequestMessageRef(db.Model):
     __tablename__ = 'pull_request_message_ref'
     pr_msg_ref_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
