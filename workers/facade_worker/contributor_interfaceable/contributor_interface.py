@@ -725,7 +725,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         for process in range(processes):
             interface = ContributorInterfaceable(config=self.config,logger=self.logger)
             
-            processList[process] = Process(target=process_commit_metadata, args=(commitDataQueue,interface,))
+            processList.append(Process(target=process_commit_metadata, args=(commitDataQueue,interface,)))
         
         #Multiprocess process commits
         for pNum,process in enumerate(processList):
