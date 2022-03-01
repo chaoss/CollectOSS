@@ -106,6 +106,21 @@ class Commits(db.Model):
         ca_affiliation = db.Column(db.String())
         ca_active = db.Column(db.SmallInteger)
 
+    class ContributorRepo(db.Model):
+        __tablename__ = 'contributor_repo'
+        cntrb_repo_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+        cntrb_id = db.Column(db.BigInteger, nullable=False)
+        repo_git = db.Column(db.String(), nullable=False)
+        tool_source = db.Column(db.String())
+        tool_version = db.Column(db.String())
+        data_source = db.Column(db.String())
+        data_collection_date = db.Column(db.TIMESTAMP())
+        repo_name = db.Column(db.String(length=255), nullable=False)
+        gh_repo_id = db.Column(db.BigInteger, nullable=False)
+        cntrb_category = db.Column(db.String(length=255))
+        event_id = db.Column(db.BigInteger)
+        created_at = db.Column(db.TIMESTAMP())
+
     class Contributors(db.Model):
         __tablename__ = 'contributors'
         cntrb_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
