@@ -155,22 +155,18 @@ def analysis(cfg, multithreaded, interface=None):
 
 ## TODO: Verify if the multithreaded approach here is optimal for postgresql
 
-        if multithreaded:
+        
 
-            from multiprocessing import Pool
+        from multiprocessing import Pool
 
-            pool = Pool()
+        pool = Pool()
 
-            for commit in missing_commits:
+        for commit in missing_commits:
 
-                result = pool.apply_async(analyze_commit(cfg, repo[0], repo_loc, commit, multithreaded, interface=interface))
+            result = pool.apply_async(analyze_commit(cfg, repo[0], repo_loc, commit, multithreaded, interface=interface))
 
-            pool.close()
-            pool.join()
-
-        else:
-            for commit in missing_commits:
-                analyze_commit(cfg, repo[0], repo_loc, commit, multithreaded, interface=interface)
+        pool.close()
+        pool.join()
 
         update_analysis_log(repo[0],'Data collection complete')
 
