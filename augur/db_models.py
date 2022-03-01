@@ -458,6 +458,21 @@ class PullRequestFiles(db.Model):
     pr_file_deletions = db.Column(db.BigInteger)
     pr_file_path = db.Column(db.String())
 
+class PullRequestLabels(db.Model):
+    __tablename__ = 'pull_request_labels'
+    pr_label_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+    pull_request_id = db.Column(db.BigInteger)
+    pr_src_id = db.Column(db.BigInteger)
+    pr_src_node_id = db.Column(db.String())
+    pr_src_url = db.Column(db.String())
+    pr_src_description = db.Column(db.String())
+    pr_src_color = db.Column(db.String())
+    pr_src_default_bool = db.Column(db.Boolean())
+    tool_source = db.Column(db.String(length=255))
+    tool_version = db.Column(db.String(length=255))
+    data_source = db.Column(db.String(length=255))
+    data_collection_date = db.Column(db.TIMESTAMP())
+
 class Repo(db.Model):
     __tablename__ = 'repo'
     repo_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
