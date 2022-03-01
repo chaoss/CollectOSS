@@ -659,6 +659,17 @@ class RepoLabor(db.Model):
     data_source = db.Column(db.String(length=255))
     data_collection_date = db.Column(db.TIMESTAMP())
 
+class RepoTopic(db.Model):
+    __tablename__ = 'repo_topic'
+    repo_topic_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+    repo_id = db.Column(db.Integer)
+    topic_id = db.Column(db.Integer)
+    topic_prob = db.Column(db.Float())
+    tool_source = db.Column(db.String())
+    tool_version = db.Column(db.String())
+    data_source = db.Column(db.String())
+    data_collection_date = db.Column(db.TIMESTAMP())
+
 
     # Template for model class
     """
