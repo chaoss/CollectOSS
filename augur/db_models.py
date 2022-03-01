@@ -11,6 +11,14 @@ from flask_sqlalchemy import SQLAlchemy
 db = SQLAlchemy(app)
 
 
+class AnalysisLog(db.Model):
+    __tablename__ = 'analysis_log'
+    repos_id = db.Column(db.Integer, nullable=False)
+    status = db.Column(db.String(), nullable=False)
+    date_attempted = db.Column(db.TIMESTAMP(), nullable=False)
+
+
+
 class CommitCommentRef(db.Model):
     __tablename__ = 'commit_comment_ref'
     cmt_comment_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
