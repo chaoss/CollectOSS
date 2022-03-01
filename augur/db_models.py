@@ -510,7 +510,7 @@ class PullRequestReviewMessageRef(db.Model):
 class Releases(db.Model):
     __tablename__ = 'releases'
     release_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    repo_id = db.Column(db.BigInteger)
+    repo_id = db.Column(db.BigInteger, nullable=False)
     release_name = db.Column(db.String(length=255))
     release_description = db.Column(db.String())
     release_author = db.Column(db.String(length=255))
@@ -550,6 +550,17 @@ class Repo(db.Model):
     tool_version = db.Column(db.String())
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP())
+
+class RepoBadging(db.Model):
+    __tablename__ = 'repo_badging'
+    badge_collection_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+    repo_id = db.Column(db.BigInteger)
+    created_at = db.Column(db.TIMESTAMP())
+    tool_source = db.Column(db.String(length=255))
+    tool_version = db.Column(db.String(length=255))
+    data_source = db.Column(db.String(length=255))
+    data_collection_date = db.Column(db.TIMESTAMP())
+    data = db.Column(db.JSONB())
 
 class RepoGroups(db.Model):
     __tablename__ = 'repo_groups'
