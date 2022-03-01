@@ -413,6 +413,23 @@ class Pull_Requests(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP())
 
+class PullRequestCommits(db.Model):
+    __tablename__ = 'pull_request_commits'
+    pr_cmt_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+    pull_request_id = db.Column(db.BigInteger)
+    pr_cmt_sha = db.Column(db.String())
+    pr_cmt_node_id = db.Column(db.String())
+    pr_cmt_message = db.Column(db.String())
+    #TODO: varbit in database can't find sqlalchemy equivalent
+    pr_cmt_comments_url = db.Column(db.String())
+    tool_source = db.Column(db.String())
+    tool_version = db.Column(db.String())
+    data_source = db.Column(db.String())
+    data_collection_date = db.Column(db.TIMESTAMP())
+    pr_cmt_author_cntrb_id = db.Column(db.BigInteger)
+    pr_cmt_timestamp = db.Column(db.TIMESTAMP())
+    pr_cmt_author_email = db.Column(db.String())
+
 class Repo(db.Model):
     __tablename__ = 'repo'
     repo_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
