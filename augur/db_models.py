@@ -676,6 +676,13 @@ class ReposFetchLog(db.Model):
     status = db.Column(db.String(length=128), nullable=False)
     date = db.Column(db.TIMESTAMP(), nullable=False)
 
+class Settings(db.Model):
+    __tablename__ = 'settings'
+    id = db.Column(db.Integer, primary_key=True nullable=False)
+    setting = db.Column(db.String(length=32), nullable=False)
+    value = db.Column(db.String(), nullable=False)
+    value = db.Column(db.TIMESTAMP(), nullable=False)
+
 
     # Template for model class
     """
