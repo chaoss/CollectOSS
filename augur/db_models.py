@@ -562,6 +562,18 @@ class RepoBadging(db.Model):
     data_collection_date = db.Column(db.TIMESTAMP())
     data = db.Column(db.JSONB())
 
+class RepoClusterMessages(db.Model):
+    __tablename__ = 'repo_cluster_messages'
+    msg_cluster_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+    repo_id = db.Column(db.BigInteger)
+    cluster_content = db.Column(db.Integer)
+    cluster_mechanism = db.Column(db.Integer)
+    tool_source = db.Column(db.String())
+    tool_version = db.Column(db.String())
+    data_source = db.Column(db.String())
+    data_collection_date = db.Column(db.TIMESTAMP())
+
+
 class RepoGroups(db.Model):
     __tablename__ = 'repo_groups'
     repo_group_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
