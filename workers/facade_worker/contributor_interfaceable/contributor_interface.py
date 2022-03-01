@@ -14,7 +14,7 @@ import time
 import traceback
 
 #Method to parallelize
-def process_commit_metadata(contributorQueue,interface):
+def process_commit_metadata(contributorQueue,interface,repo_id):
     
     while not contributorQueue.empty():
         contributor = contributorQueue.get()
@@ -725,7 +725,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         for process in range(processes):
             interface = ContributorInterfaceable(config=self.config,logger=self.logger)
             
-            processList.append(Process(target=process_commit_metadata, args=(commitDataQueue,interface,)))
+            processList.append(Process(target=process_commit_metadata, args=(commitDataQueue,interface,repo_id,)))
         
         #Multiprocess process commits
         for pNum,process in enumerate(processList):
