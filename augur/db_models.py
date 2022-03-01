@@ -18,6 +18,28 @@ class AnalysisLog(db.Model):
     date_attempted = db.Column(db.TIMESTAMP(), nullable=False)
 
 
+class ChaossMetricStatus(db.Model):
+    __tablename__ = 'chaoss_metric_status'
+    cms_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+    cm_group = db.Column(db.BigInteger)
+    cm_source = db.Column(db.String()
+    cm_type = db.Column(db.String())
+    cm_backend_status = db.Column(db.String())
+    cm_frontend_status = db.Column(db.String())
+    cm_defined = db.Column(db.Boolean())
+    cm_api_endpoint_repo = db.Column(db.String())
+    cm_api_endpoint_rg = db.Column(db.String())
+    cm_name = db.Column(db.String())
+    cm_working_group = db.Column(db.String())
+    cm_info = db.Column(db.JSON())
+    tool_source = db.Column(db.String())
+    tool_version = db.Column(db.String())
+    data_source = db.Column(db.String())
+    data_collection_date = db.Column(db.TIMESTAMP())
+    cm_working_group_focus_area = db.Column(db.String())
+
+
+
 
 class CommitCommentRef(db.Model):
     __tablename__ = 'commit_comment_ref'
@@ -279,7 +301,7 @@ class Commits(db.Model):
         pr_augur_issue_id = db.Column(db.BigInteger)
         pr_src_number = db.Column(db.BigInteger)
         pr_src_state = db.Column(db.String())
-        pr_src_locked = db.Column(db.Boolean)
+        pr_src_locked = db.Column(db.Boolean())
         pr_src_title = db.Column(db.String())
         pr_augur_contributor_id = db.Column(db.BigInteger)
         pr_body = db.Column(db.Text())
