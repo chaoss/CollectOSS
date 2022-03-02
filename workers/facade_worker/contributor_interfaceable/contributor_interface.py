@@ -761,7 +761,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                    f"These are the emails and cntrb_id's  returned: {cntrb_email}")
 
                 try:
-                    database.execute(interface.commits_table.update().where(
+                    database.execute(commits_table.update().where(
                         commits_table.c.cmt_committer_email == cntrb_email['email']
                     ).values({
                         'cmt_ght_author_id': cntrb_email['cntrb_id']
