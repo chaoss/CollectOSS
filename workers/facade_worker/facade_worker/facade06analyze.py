@@ -171,7 +171,7 @@ def analysis(cfg, multithreaded, interface=None, processes=5):
 
             processList = []
             for process in range(processes):
-                processList.append(Process(target=analyze_commits_in_parallel, args=(commitQueue, cfg,repo[0],repo_loc,multithreaded,interface,)))
+                processList.append(multiprocessing.Process(target=analyze_commits_in_parallel, args=(commitQueue, cfg,repo[0],repo_loc,multithreaded,interface,)))
             
             for pNum,process in enumerate(processList):
                 process.start()
