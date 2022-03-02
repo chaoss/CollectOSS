@@ -158,7 +158,7 @@ def analysis(cfg, multithreaded, interface=None, processes=5):
         ## TODO: Verify if the multithreaded approach here is optimal for postgresql
 
         if multithreaded:
-            commitQueue = Queue()
+            commitQueue = multiprocessing.Queue()
 
             for commit in missing_commits:
                 commitQueue.put(commit)
