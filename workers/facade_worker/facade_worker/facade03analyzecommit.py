@@ -40,7 +40,7 @@ import traceback
 
 from workers.util import read_config
 
-def analyze_commit(cfg, repo_id, repo_loc, passedCommit, multithreaded, interface=None):
+def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded, interface=None):
 
 # This function analyzes a given commit, counting the additions, removals, and
 # whitespace changes. It collects all of the metadata about the commit, and
@@ -233,7 +233,6 @@ def analyze_commit(cfg, repo_id, repo_loc, passedCommit, multithreaded, interfac
 	# Set up new threadsafe database connections if multithreading. Otherwise
 	# use the gloabl database connections so we don't incur a performance
 	# penalty.
-	commit = None
 
 	if multithreaded:
 		db_local,cursor_local = cfg.database_connection(
@@ -249,8 +248,6 @@ def analyze_commit(cfg, repo_id, repo_loc, passedCommit, multithreaded, interfac
 			db_pass_people,
 			db_name_people,
 			db_port_people, True, True)
-		
-		commit = passedCommit.get()
 
 	else:
 		db_local = cfg.db
@@ -258,8 +255,6 @@ def analyze_commit(cfg, repo_id, repo_loc, passedCommit, multithreaded, interfac
 
 		db_people_local = cfg.db_people
 		cursor_people_local = cfg.cursor_people
-
-		commit = passedCommit
 
 	# Go get the contributors (committers) for this repo here: 
 	# curl https://api.github.com/repos/chaoss/augur/contributors

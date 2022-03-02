@@ -163,10 +163,15 @@ def analysis(cfg, multithreaded, interface=None, processes=5):
             for commit in missing_commits:
                 commitQueue.put(commit)
 
+            def analyze_commits_in_parallel(queue, cfg, repo_id, repo_location, multithreaded,interface):
+                while not queue.empty():
+                    analyzeCommit = queue.get()
+
+                    analyze_commit(cfg, repo_id, repo_location, analyzeCommit, multithreaded,interface=interface)
 
             processList = []
             for process in range(processes):
-                processList.append(Process(target=analyze_commit, args=(cfg,repo[0],repo_loc,commitQueue, multithreaded,)))
+                processList.append(Process(target=analyze_commits_in_parallel, args=(commitQueue, cfg,repo[0],repo_loc,multithreaded,interface,)))
             
             for pNum,process in enumerate(processList):
                 process.start()
