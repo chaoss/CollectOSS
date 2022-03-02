@@ -36,6 +36,7 @@ import os
 import getopt
 import xlsxwriter
 import configparser
+import multiprocessing
 from facade_worker.facade02utilitymethods import update_repo_log, trim_commit, store_working_author, trim_author
 from facade_worker.facade03analyzecommit import analyze_commit
 
@@ -44,7 +45,7 @@ from facade_worker.facade03analyzecommit import analyze_commit
 # else:
 #   import MySQLdb
 
-def analysis(cfg, multithreaded, interface=None):
+def analysis(cfg, multithreaded, interface=None, processes=5):
 
 # Run the analysis by looping over all active repos. For each repo, we retrieve
 # the list of commits which lead to HEAD. If any are missing from the database,
@@ -84,6 +85,7 @@ def analysis(cfg, multithreaded, interface=None):
 
     for repo in repos:
 
+        
         #Add committers for repo if interface
         if interface != None:
             interface.grab_committer_list(repo[0])
@@ -153,20 +155,27 @@ def analysis(cfg, multithreaded, interface=None):
         cfg.log_activity('Debug','Commits missing from repo %s: %s' %
             (repo[0],len(missing_commits)))
 
-## TODO: Verify if the multithreaded approach here is optimal for postgresql
+        ## TODO: Verify if the multithreaded approach here is optimal for postgresql
 
-        
+        if multithreaded:
+            commitQueue = Queue()
 
-        from multiprocessing import Pool
+            for commit in missing_commits:
+                commitQueue.put(commit)
 
-        pool = Pool()
 
-        for commit in missing_commits:
-
-            result = pool.apply_async(analyze_commit(cfg, repo[0], repo_loc, commit, multithreaded, interface=interface))
-
-        pool.close()
-        pool.join()
+            processList = []
+            for process in range(processes):
+                processList.append(Process(target=analyze_commit, args=(cfg,repo[0],repo_loc,commitQueue, multithreaded,)))
+            
+            for pNum,process in enumerate(processList):
+                process.start()
+            
+            for process in processList:
+                process.join()
+        else:
+            for commit in missing_commits:
+                analyze_commit(cfg, repo[0], repo_loc, commit, multithreaded, interface=interface)
 
         update_analysis_log(repo[0],'Data collection complete')
 
