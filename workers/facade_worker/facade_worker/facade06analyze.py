@@ -167,7 +167,7 @@ def analysis(cfg, multithreaded, interface=None, processes=5):
                 while not queue.empty():
                     analyzeCommit = queue.get()
 
-                    analyze_commit(cfg, repo_id, repo_location, analyzeCommit, multithreaded,interface=interface)
+                    analyze_commit(cfg, repo_id, repo_location, analyzeCommit, False,interface=interface)
 
             processList = []
             for process in range(processes):
