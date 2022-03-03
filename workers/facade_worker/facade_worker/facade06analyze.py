@@ -174,10 +174,12 @@ def analysis(cfg, multithreaded, interface=None, processes=5):
                 processList.append(multiprocessing.Process(target=analyze_commits_in_parallel, args=(commitQueue, cfg,repo[0],repo_loc,multithreaded,interface,)))
             
             for pNum,process in enumerate(processList):
+                cfg.log_activity('Info','Starting commit analysis process %s' % pNum)
                 process.start()
             
             for process in processList:
                 process.join()
+                cfg.log_activity('Info','Subprocess has completed')
         else:
             for commit in missing_commits:
                 analyze_commit(cfg, repo[0], repo_loc, commit, multithreaded, interface=interface)

@@ -175,7 +175,7 @@ class Config:
             self.db = db
 
         # Figure out how much we're going to log
-        self.log_level = self.get_setting('log_level')
+        #self.log_level = self.get_setting('log_level')
         #Not getting debug logging for some reason.
         self.log_level = 'Debug'
         return db, cursor

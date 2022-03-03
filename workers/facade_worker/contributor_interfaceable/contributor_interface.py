@@ -724,7 +724,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                     commits.cmt_commit_hash,
                     commits.cmt_author_raw_email
                 ORDER BY
-                NAME
+                hash
         """)
         new_contribs = json.loads(pd.read_sql(new_contrib_sql, self.db, params={
                                   'repo_id': repo_id}).to_json(orient="records"))
@@ -747,8 +747,9 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             self.logger.info(f"Process {pNum} started..")
             
         
-        for process in processList:
+        for pNum,process in enumerate(processList):
             process.join()
+            self.logger.info(f"Process {pNum} has ended.")
 
 
         self.logger.debug("DEBUG: Got through the new_contribs")
