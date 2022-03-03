@@ -724,7 +724,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                     commits.cmt_commit_hash,
                     commits.cmt_author_raw_email
                 ORDER BY
-                NAME
+                hash
         """)
         new_contribs = json.loads(pd.read_sql(new_contrib_sql, self.db, params={
                                   'repo_id': repo_id}).to_json(orient="records"))
