@@ -47,8 +47,6 @@ class ChaossMetricStatus(db.Model):
     cm_working_group_focus_area = db.Column(db.String())
 
 
-
-
 class CommitCommentRef(db.Model):
     __tablename__ = 'commit_comment_ref'
     cmt_comment_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
@@ -190,6 +188,7 @@ class Contributors(db.Model):
     tool_version = db.Column(db.String())
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP())
+
 
 class ContributorAliases(db.Model):
     __tablename__ = 'contributor_aliases'
@@ -342,6 +341,7 @@ class IssueAssignees(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP())
 
+
 class IssueEvents(db.Model):
     __tablename__ = 'issue_events'
     event_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
@@ -359,6 +359,7 @@ class IssueEvents(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP())
     platform_id = db.Column(db.BigInteger)
+
 
 class IssueLabels(db.Model):
     __tablename__ = 'issue_labels'
@@ -389,8 +390,8 @@ class IssueMessageRef(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP())
 
-# should repo_id be allowed to be NULL?
 
+# should repo_id be allowed to be NULL?
 class Issues(db.Model):
     __tablename__ = 'issues'
     issue_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
@@ -603,6 +604,7 @@ class PullRequestEvents(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP())
 
+
 class PullRequestFiles(db.Model):
     __tablename__ = 'pull_request_files'
     pr_file_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
@@ -615,6 +617,7 @@ class PullRequestFiles(db.Model):
     tool_version = db.Column(db.String())
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP())
+
 
 class PullRequestLabels(db.Model):
     __tablename__ = 'pull_request_labels'
@@ -712,7 +715,63 @@ class PullRequestReviewMessageRef(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP())
 
-# stopped here
+
+class PullRequestReviewers(db.Model):
+    __tablename__ = 'pull_request_reviewers'
+    pr_reviewer_map_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+    pull_request_id = db.Column(db.BigInteger)
+    pr_source_id = db.Column(db.BigInteger)
+    repo_id = db.Column(db.BigInteger)
+    cntrb_id = db.Column(db.BigInteger)
+    pr_reviewer_src_id = db.Column(db.BigInteger)
+    tool_source = db.Column(db.String())
+    tool_version = db.Column(db.String())
+    data_source = db.Column(db.String())
+    data_collection_date = db.Column(db.TIMESTAMP())
+
+
+class PullRequestReviews(db.Model):
+    __tablename__ = 'pull_request_reviews'
+    pr_review_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+    pull_request_id = db.Column(db.BigInteger, nullable=False)
+    repo_id = db.Column(db.BigInteger)
+    cntrb_id = db.Column(db.BigInteger, nullable=False)
+    pr_review_author_association = db.Column(db.String())
+    pr_review_state = db.Column(db.String())
+    pr_review_body = db.Column(db.String())
+    pr_review_submitted_at = db.Column(db.TIMESTAMP())
+    pr_review_src_id = db.Column(db.BigInteger)
+    pr_review_node_id = db.Column(db.String())
+    pr_review_html_url = db.Column(db.String())
+    pr_review_pull_request_url = db.Column(db.String())
+    pr_review_commit_id = db.Column(db.String())
+    platform_id = db.Column(db.BigInteger)
+    tool_source = db.Column(db.String())
+    tool_version = db.Column(db.String())
+    data_source = db.Column(db.String())
+    data_collection_date = db.Column(db.TIMESTAMP())
+
+
+class PullRequestTeams(db.Model):
+    __tablename__ = 'pull_request_teams'
+    pr_team_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+    pull_request_id = db.Column(db.BigInteger)
+    pr_src_team_id = db.Column(db.BigInteger)
+    pr_src_team_node = db.Column(db.String())
+    pr_src_team_url = db.Column(db.String())
+    pr_team_name = db.Column(db.String())
+    pr_team_slug = db.Column(db.String())
+    pr_team_description = db.Column(db.String())
+    pr_team_privacy = db.Column(db.String())
+    pr_team_permission = db.Column(db.String())
+    pr_team_src_members_url = db.Column(db.String())
+    pr_team_src_repositories_url = db.Column(db.String())
+    pr_team_parent_id = db.Column(db.BigInteger)
+    tool_source = db.Column(db.String())
+    tool_version = db.Column(db.String())
+    data_source = db.Column(db.String())
+    data_collection_date = db.Column(db.TIMESTAMP())
+
 
 class Pull_Requests(db.Model):
     __tablename__ = 'pull_requests'
@@ -779,6 +838,7 @@ class Releases(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP())
 
+
 class Repo(db.Model):
     __tablename__ = 'repo'
     repo_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
@@ -803,6 +863,7 @@ class Repo(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP())
 
+
 # TODO: Changed JSONB to JSON
 class RepoBadging(db.Model):
     __tablename__ = 'repo_badging'
@@ -815,6 +876,7 @@ class RepoBadging(db.Model):
     data_collection_date = db.Column(db.TIMESTAMP())
     data = db.Column(db.JSON())
 
+
 class RepoClusterMessages(db.Model):
     __tablename__ = 'repo_cluster_messages'
     msg_cluster_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
@@ -825,6 +887,67 @@ class RepoClusterMessages(db.Model):
     tool_version = db.Column(db.String())
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP())
+
+
+class RepoDependencies(db.Model):
+    __tablename__ = 'repo_dependencies'
+    repo_dependencies_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+    repo_id = db.Column(db.BigInteger)
+    dep_name = db.Column(db.String())
+    dep_count = db.Column(db.Integer)
+    dep_language = db.Column(db.String())
+    tool_source = db.Column(db.String())
+    tool_version = db.Column(db.String())
+    data_source = db.Column(db.String())
+    data_collection_date = db.Column(db.TIMESTAMP())
+
+
+# TODO: typo in field current_verion
+class RepoDepsLibyear(db.Model):
+    __tablename__ = 'repo_deps_libyear'
+    repo_deps_libyear_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+    repo_id = db.Column(db.BigInteger)
+    name = db.Column(db.String())
+    requirement = db.Column(db.String())
+    type = db.Column(db.String())
+    package_manager = db.Column(db.String())
+    current_verion = db.Column(db.String())
+    latest_version = db.Column(db.String())
+    current_release_date = db.Column(db.String())
+    latest_release_date = db.Column(db.String())
+    libyear = db.Column(db.Float())
+    tool_source = db.Column(db.String())
+    tool_version = db.Column(db.String())
+    data_source = db.Column(db.String())
+    data_collection_date = db.Column(db.TIMESTAMP())
+
+
+class RepoDepsScorecard(db.Model):
+    __tablename__ = 'repo_deps_scorecard'
+    repo_deps_scorecard_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+    repo_id = db.Column(db.BigInteger)
+    name = db.Column(db.String())
+    status = db.Column(db.String())
+    score = db.Column(db.String())
+    tool_source = db.Column(db.String())
+    tool_version = db.Column(db.String())
+    data_source = db.Column(db.String())
+    data_collection_date = db.Column(db.TIMESTAMP())
+
+
+class RepoGroupInsights(db.Model):
+    __tablename__ = 'repo_group_insights'
+    rgi_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+    repo_group_id = db.Column(db.BigInteger)
+    rgi_metric = db.Column(db.String())
+    rgi_value = db.Column(db.String())
+    cms_id = db.Column(db.BigInteger)
+    rgi_fresh = db.Column(db.Boolean())
+    tool_source = db.Column(db.String())
+    tool_version = db.Column(db.String())
+    data_source = db.Column(db.String())
+    data_collection_date = db.Column(db.TIMESTAMP())
+
 
 # TODO: Has varchar with length but changed here
 class RepoGroups(db.Model):
@@ -841,6 +964,7 @@ class RepoGroups(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP())
 
+
 # TODO: has varchar with length, but changed here
 class RepoGroupsListServe(db.Model):
     __tablename__ = 'repo_groups_list_serve'
@@ -854,6 +978,7 @@ class RepoGroupsListServe(db.Model):
     tool_version = db.Column(db.String())
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP())
+
 
 class RepoInfo(db.Model):
     __tablename__ = 'repo_info'
@@ -894,6 +1019,40 @@ class RepoInfo(db.Model):
     data_collection_date = db.Column(db.TIMESTAMP())
 
 
+# TODO: Why is numeric defined without level or precision?
+class RepoInsights(db.Model):
+    __tablename__ = 'repo_insights'
+    ri_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+    repo_id = db.Column(db.BigInteger)
+    ri_metric = db.Column(db.String())
+    ri_value = db.Column(db.String())
+    ri_date = db.Column(db.TIMESTAMP())
+    ri_fresh = db.Column(db.Boolean())
+    tool_source = db.Column(db.String())
+    tool_version = db.Column(db.String())
+    data_source = db.Column(db.String())
+    data_collection_date = db.Column(db.TIMESTAMP())
+    ri_score = db.Column(db.Numeric())
+    ri_field = db.Column(db.String())
+    ri_detection_method = db.Column(db.String())
+
+
+class RepoInsightsRecords(db.Model):
+    __tablename__ = 'repo_insights_records'
+    cmt_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+    repo_id = db.Column(db.BigInteger)
+    cmt_commit_hash = db.Column(db.String())
+    cmt_author_name = db.Column(db.String())
+    cmt_author_raw_email = db.Column(db.String())
+    cmt_author_affiliation = db.Column(db.TIMESTAMP())
+    cmt_committer_name = db.Column(db.Float())
+    cmt_committer_raw_email = db.Column(db.String())
+    tool_source = db.Column(db.String())
+    tool_version = db.Column(db.String())
+    data_source = db.Column(db.String())
+    data_collection_date = db.Column(db.TIMESTAMP())
+
+
 class RepoLabor(db.Model):
     __tablename__ = 'repo_labor'
     repo_labor_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
@@ -914,6 +1073,57 @@ class RepoLabor(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP())
 
+
+class RepoMeta(db.Model):
+    __tablename__ = 'repo_meta'
+    repo_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+    rmeta_id = db.Column(db.BigInteger,  primary_key=True, nullable=False)
+    rmeta_name = db.Column(db.String())
+    rmeta_value = db.Column(db.String())
+    tool_source = db.Column(db.String())
+    tool_version = db.Column(db.String())
+    data_source = db.Column(db.String())
+    data_collection_date = db.Column(db.TIMESTAMP())
+
+
+class RepoSbomScans(db.Model):
+    __tablename__ = 'repo_sbom_scans'
+    rsb_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+    repo_id = db.Column(db.Integer)
+    sbom_scan = db.Column(db.JSON())
+
+
+class RepoStats(db.Model):
+    __tablename__ = 'repo_stats'
+    repo_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+    rstat_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+    rstat_name = db.Column(db.String())
+    rstat_value = db.Column(db.BigInteger)
+    tool_source = db.Column(db.String())
+    tool_version = db.Column(db.String())
+    data_source = db.Column(db.String())
+    data_collection_date = db.Column(db.TIMESTAMP())
+
+
+class RepoTestCoverage(db.Model):
+    __tablename__ = 'repo_test_coverage'
+    repo_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+    repo_clone_date = db.Columndb.TIMESTAMP()
+    rtc_analysis_date = db.Column(db.TIMESTAMP())
+    programming_language = db.Column(db.String())
+    file_path = db.Column(db.String())
+    file_name = db.Column(db.String())
+    testing_tool = db.Column(db.String())
+    file_statement_count = db.Column(db.BigInteger)
+    file_subroutine_count = db.Column(db.BigInteger)
+    file_statements_tested = db.Column(db.BigInteger)
+    file_subroutines_tested = db.Column(db.BigInteger)
+    tool_source = db.Column(db.String())
+    tool_version = db.Column(db.String())
+    data_source = db.Column(db.String())
+    data_collection_date = db.Column(db.TIMESTAMP())
+
+
 class RepoTopic(db.Model):
     __tablename__ = 'repo_topic'
     repo_topic_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
@@ -925,12 +1135,14 @@ class RepoTopic(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP())
 
+
 # TODO: Added primary keys
 class ReposFetchLog(db.Model):
     __tablename__ = 'repos_fetch_log'
     repos_id = db.Column(db.Integer, primary_key=True, nullable=False)
     status = db.Column(db.String(), primary_key=True, nullable=False)
     date = db.Column(db.TIMESTAMP(), nullable=False)
+
 
 # TODO: Has varchar with length but I changed here
 class Settings(db.Model):
@@ -939,6 +1151,7 @@ class Settings(db.Model):
     setting = db.Column(db.String(), nullable=False)
     value = db.Column(db.String(), nullable=False)
     last_modified = db.Column(db.TIMESTAMP(), nullable=False)
+
 
 class TopicWords(db.Model):
     __tablename__ = 'topic_words'
@@ -951,6 +1164,31 @@ class TopicWords(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP())
 
+
+class UnknownCache(db.Model):
+    __tablename__ = 'unknown_cache'
+    type = db.Column(db.String(), nullable=False)
+    repo_group_id = db.Column(db.SmallInteger, nullable=False)
+    email = db.Column(db.String(), nullable=False)
+    domain = db.Column(db.String())
+    added = db.Column(db.BigInteger, nullable=False)
+    tool_source = db.Column(db.String())
+    tool_version = db.Column(db.String())
+    data_source = db.Column(db.String())
+    data_collection_date = db.Column(db.TIMESTAMP())
+
+
+class UnresolvedCommitEmails(db.Model):
+    __tablename__ = 'unresolved_commit_emails'
+    email_unresolved_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+    email = db.Column(db.String(), nullable=False)
+    name = db.Column(db.String())
+    tool_source = db.Column(db.String())
+    tool_version = db.Column(db.String())
+    data_source = db.Column(db.String())
+    data_collection_date = db.Column(db.TIMESTAMP())
+
+
 # TODO: Has varchar with length but changed it
 class UtilityLog(db.Model):
     __tablename__ = 'utility_log'
@@ -960,122 +1198,14 @@ class UtilityLog(db.Model):
     attempted = db.Column(db.TIMESTAMP(), nullable=False)
 
 
-"""
-class Pull_Requests(db.Model):
-    __tablename__ = 'pull_requests'
-    pull_request_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    repo_id = db.Column(db.BigInteger)
-    pr_url = db.Column()
-    pr_src_id = db.Column()
-    pr_src_node_id = db.Column()
-    pr_html_url = db.Column()
-    pr_diff_url = db.Column()
-    pr_patch_url = db.Column()
-    pr_issue_url = db.Column()
-    pr_augur_issue_id = db.Column()
-    pr_src_number = db.Column()
-    pr_src_state = db.Column()
-    pr_src_locked = db.Column()
-    pr_src_title = db.Column()
-    pr_augur_contributor_id = db.Column()
-    pr_body = db.Column()
-    pr_created_at = db.Column()
-    pr_updated_at = db.Column()
-    pr_closed_at = db.Column()
-    pr_merged_at = db.Column()
-    pr_merge_commit_sha = db.Column()
-    pr_teams = db.Column())
-    pr_milestone = db.Column()
-    pr_commits_url = db.Column()
-    pr_review_comments_url = db.Column()
-    pr_review_comment_url = db.Column()
-    pr_comments_url = db.Column()
-    pr_statuses_url = db.Column()
-    pr_meta_head_id = db.Column()
-    pr_meta_base_id = db.Column()
-    pr_src_issue_url = db.Column()
-    pr_src_comments_url = db.Column()
-    pr_src_review_comments_url = db.Column()
-    pr_src_commits_url = db.Column()
-    pr_src_statuses_url = db.Column()
-    pr_src_author_association = db.Column()
-    tool_source = db.Column(db.String())
-    tool_version = db.Column(db.String())
-    data_source = db.Column(db.String())
-    data_collection_date = db.Column(db.TIMESTAMP())
-
-class Pull_Requests(db.Model):
-    __tablename__ = 'pull_requests'
-    pull_request_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    repo_id = db.Column(db.BigInteger)
-    pr_url = db.Column()
-    pr_src_id = db.Column()
-    pr_src_node_id = db.Column()
-    pr_html_url = db.Column()
-    pr_diff_url = db.Column()
-    pr_patch_url = db.Column()
-    pr_issue_url = db.Column()
-    pr_augur_issue_id = db.Column()
-    pr_src_number = db.Column()
-    pr_src_state = db.Column()
-    pr_src_locked = db.Column()
-    pr_src_title = db.Column()
-    pr_augur_contributor_id = db.Column()
-    pr_body = db.Column()
-    pr_created_at = db.Column()
-    pr_updated_at = db.Column()
-    pr_closed_at = db.Column()
-    pr_merged_at = db.Column()
-    pr_src_issue_url = db.Column()
-    pr_src_comments_url = db.Column()
-    pr_src_review_comments_url = db.Column()
-    pr_src_commits_url = db.Column()
-    pr_src_statuses_url = db.Column()
-    pr_src_author_association = db.Column()
-    tool_source = db.Column(db.String())
-    tool_version = db.Column(db.String())
-    data_source = db.Column(db.String())
-    data_collection_date = db.Column(db.TIMESTAMP())
-
-
-class Commits(db.Model):
-    __tablename__ = 'commits'
+# TODO: Needed to define a primary key
+class WorkingCommits(db.Model):
+    __tablename__ = 'working_commits'
     cmt_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    repo_id = db.Column()
-    cmt_commit_hash = db.Column()
-    cmt_author_name = db.Column()
-    cmt_author_raw_email = db.Column()
-    cmt_author_affiliation = db.Column()
-    cmt_committer_name = db.Column()
-    cmt_committer_raw_email = db.Column()
-    cmt_committer_email = db.Column()
-    cmt_committer_date = db.Column()
-    cmt_committer_affiliation = db.Column()
-    cmt_added = db.Column()
-    cmt_removed = db.Column()
-    cmt_whitespace = db.Column()
-    cmt_date_attempted = db.Column()
-    cmt_ght_author_id = db.Column()
-    cmt_author_platform_username = db.Column()
-    tool_source = db.Column(db.String())
-    tool_version = db.Column(db.String())
-    data_source = db.Column(db.String())
-    data_collection_date = db.Column(db.TIMESTAMP())
+    cmt_commit_hash = db.Column(db.String())
 
-class ContributorAliases(db.Model):
-    __tablename__ = 'commits'
-    cmt_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    cmt_commit_hash = db.Column()
-    cmt_author_name = db.Column()
-    cmt_author_raw_email = db.Column()
-    cmt_author_affiliation = db.Column()
-    cmt_committer_name = db.Column()
-    cmt_author_platform_username = db.Column()
-    tool_source = db.Column(db.String())
-    tool_version = db.Column(db.String())
-    data_source = db.Column(db.String())
-    data_collection_date = db.Column(db.TIMESTAMP())
-"""
+
+
 
 
 
