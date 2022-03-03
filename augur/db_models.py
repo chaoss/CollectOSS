@@ -9,7 +9,6 @@ from flask_sqlalchemy import SQLAlchemy
 
 # TODO: Create db from Flask app
 db = SQLAlchemy(app)
-
 # TODO: need to add default of current timestamp for data_collection_date
 # TODO: how to define schemas
 # TODO: how to add indexes
@@ -215,6 +214,7 @@ class DiscourseInsights(db.Model):
     data_collection_date = db.Column(db.TIMESTAMP())
 
 
+# TODO Temporaily defined priimary key on first attribute so it would generate
 class DmRepoAnnual(db.Model):
     __tablename__ = 'dm_repo_annual'
     repo_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
@@ -291,6 +291,7 @@ class DmRepoMonthly(db.Model):
     email = db.Column(db.String(), nullable=False)
     affiliation = db.Column(db.String())
     month = db.Column(db.SmallInteger, nullable=False)
+    year = db.Column(db.SmallInteger, nullable=False)
     added = db.Column(db.BigInteger, nullable=False)
     removed = db.Column(db.BigInteger, nullable=False)
     whitespace = db.Column(db.BigInteger, nullable=False)
@@ -1039,14 +1040,14 @@ class RepoInsights(db.Model):
 
 class RepoInsightsRecords(db.Model):
     __tablename__ = 'repo_insights_records'
-    cmt_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+    ri_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
     repo_id = db.Column(db.BigInteger)
-    cmt_commit_hash = db.Column(db.String())
-    cmt_author_name = db.Column(db.String())
-    cmt_author_raw_email = db.Column(db.String())
-    cmt_author_affiliation = db.Column(db.TIMESTAMP())
-    cmt_committer_name = db.Column(db.Float())
-    cmt_committer_raw_email = db.Column(db.String())
+    ri_metric = db.Column(db.String())
+    ri_field = db.Column(db.String())
+    ri_value = db.Column(db.String())
+    ri_date = db.Column(db.TIMESTAMP())
+    ri_score = db.Column(db.Float())
+    ri_detection_method = db.Column(db.String())
     tool_source = db.Column(db.String())
     tool_version = db.Column(db.String())
     data_source = db.Column(db.String())
@@ -1108,7 +1109,7 @@ class RepoStats(db.Model):
 class RepoTestCoverage(db.Model):
     __tablename__ = 'repo_test_coverage'
     repo_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    repo_clone_date = db.Columndb.TIMESTAMP()
+    repo_clone_date = db.Column(db.TIMESTAMP())
     rtc_analysis_date = db.Column(db.TIMESTAMP())
     programming_language = db.Column(db.String())
     file_path = db.Column(db.String())
@@ -1165,17 +1166,18 @@ class TopicWords(db.Model):
     data_collection_date = db.Column(db.TIMESTAMP())
 
 
+# TODO: Defined a primary key of all the non null and default values
 class UnknownCache(db.Model):
     __tablename__ = 'unknown_cache'
-    type = db.Column(db.String(), nullable=False)
-    repo_group_id = db.Column(db.SmallInteger, nullable=False)
-    email = db.Column(db.String(), nullable=False)
+    type = db.Column(db.String(), primary_key=True, nullable=False)
+    repo_group_id = db.Column(db.Integer, primary_key=True, nullable=False)
+    email = db.Column(db.String(), primary_key=True, nullable=False)
     domain = db.Column(db.String())
-    added = db.Column(db.BigInteger, nullable=False)
+    added = db.Column(db.BigInteger, primary_key=True, nullable=False)
     tool_source = db.Column(db.String())
     tool_version = db.Column(db.String())
     data_source = db.Column(db.String())
-    data_collection_date = db.Column(db.TIMESTAMP())
+    data_collection_date = db.Column(db.TIMESTAMP(), primary_key=True)
 
 
 class UnresolvedCommitEmails(db.Model):
@@ -1201,9 +1203,8 @@ class UtilityLog(db.Model):
 # TODO: Needed to define a primary key
 class WorkingCommits(db.Model):
     __tablename__ = 'working_commits'
-    cmt_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    cmt_commit_hash = db.Column(db.String())
-
+    repos_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+    working_commit = db.Column(db.String())
 
 
 
