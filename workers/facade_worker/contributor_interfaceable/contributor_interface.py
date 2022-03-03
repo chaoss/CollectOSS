@@ -747,8 +747,9 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             self.logger.info(f"Process {pNum} started..")
             
         
-        for process in processList:
+        for pNum,process in enumerate(processList):
             process.join()
+            self.logger.info(f"Process {pNum} has ended.")
 
 
         self.logger.debug("DEBUG: Got through the new_contribs")
