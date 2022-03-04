@@ -752,7 +752,11 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             
         
         for pNum,process in enumerate(processList):
-            process.join()
+            
+            while process.is_alive():
+                self.logger.info(f"Qsize is: {commitDataQueue}")
+                time.sleep(5)
+
             self.logger.info(f"Process {pNum} has ended.")
 
 
@@ -834,7 +838,9 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         
         
         for process in processList:
-            process.join()
+            while process.is_alive():
+                self.logger.info(f"Qsize is: {existingDataQueue}")
+                time.sleep(5)
 
         self.logger.info("Done with inserting and updating facade contributors")
         return
