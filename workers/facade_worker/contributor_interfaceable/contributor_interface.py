@@ -17,7 +17,11 @@ import traceback
 def process_commit_metadata(contributorQueue,interface,repo_id):
     
     while not contributorQueue.empty():
-        contributor = contributorQueue.get()
+        try:
+            contributor = contributorQueue.get()
+        except Exception as e:
+            interface.logger.error(f"Ran into issue when popping off commit data from process queue: {e}")
+            continue
         # Get the email from the commit data
         email = contributor['email_raw'] if 'email_raw' in contributor else contributor['email']
     
