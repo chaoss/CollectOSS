@@ -735,29 +735,39 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         #Put contributor commit data into a process queue
         commitDataQueue = Queue()
-        for commitData in new_contribs:
-            commitDataQueue.put(commitData)
+        #for commitData in new_contribs:
+        #    commitDataQueue.put(commitData)
 
-        processList = []
-        #Create process start conditions
-        for process in range(processes):
-            interface = ContributorInterfaceable(config=self.config,logger=self.logger)
+        while len(new_contribs) > 0:
             
-            processList.append(Process(target=process_commit_metadata, args=(commitDataQueue,interface,repo_id,)))
+            for n in range(5000):
+                try:
+                    commitData = new_contribs.pop()
+                    commitDataQueue.put(commitData)
+                except:
+                    break
+            
+            
+            processList = []
+            #Create process start conditions
+            for process in range(processes):
+                interface = ContributorInterfaceable(config=self.config,logger=self.logger)
+            
+                processList.append(Process(target=process_commit_metadata, args=(commitDataQueue,interface,repo_id,)))
         
-        #Multiprocess process commits
-        for pNum,process in enumerate(processList):
-            process.start()
-            self.logger.info(f"Process {pNum} started..")
+            #Multiprocess process commits
+            for pNum,process in enumerate(processList):
+                process.start()
+                self.logger.info(f"Process {pNum} started..")
             
         
-        for pNum,process in enumerate(processList):
+            for pNum,process in enumerate(processList):
             
-            while process.is_alive():
-                self.logger.info(f"Qsize is: {commitDataQueue}")
-                time.sleep(5)
+                while process.is_alive():
+                    self.logger.info(f"Qsize is: {commitDataQueue}")
+                    time.sleep(5)
 
-            self.logger.info(f"Process {pNum} has ended.")
+                self.logger.info(f"Process {pNum} has ended.")
 
 
         self.logger.debug("DEBUG: Got through the new_contribs")
@@ -824,26 +834,36 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         #Put contributor commit data into a process queue
         
         existingDataQueue = Queue()
-        for commitData in existing_cntrb_emails:
-            existingDataQueue.put(commitData)
+        #for commitData in existing_cntrb_emails:
+        #    existingDataQueue.put(commitData)
             
-        processList = []
-        #Create process start conditions
-        for process in range(processes):
+        
+        while len(existing_cntrb_emails) > 0:
             
-            processList.append(Process(target=link_commits_to_contributor, args=(existingDataQueue,self.logger,self.db,self.commits_table,)))
+            for n in range(5000):
+                try:
+                    commitData = existing_cntrb_emails.pop()
+                    existingDataQueue.put(commitData)
+                except:
+                    break
+            
+            processList = []
+            #Create process start conditions
+            for process in range(processes):
+            
+                processList.append(Process(target=link_commits_to_contributor, args=(existingDataQueue,self.logger,self.db,self.commits_table,)))
         
         
-        #Multiprocess process commits
-        for pNum,process in enumerate(processList):
-            process.start()
-            self.logger.info(f"Process {pNum} started..")
+            #Multiprocess process commits
+            for pNum,process in enumerate(processList):
+                process.start()
+                self.logger.info(f"Process {pNum} started..")
         
         
-        for process in processList:
-            while process.is_alive():
-                self.logger.info(f"Qsize is: {existingDataQueue}")
-                time.sleep(5)
+            for process in processList:
+                while process.is_alive():
+                    self.logger.info(f"Qsize is: {existingDataQueue}")
+                    time.sleep(5)
 
         self.logger.info("Done with inserting and updating facade contributors")
         return
