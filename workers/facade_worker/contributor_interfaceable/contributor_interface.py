@@ -18,7 +18,7 @@ def process_commit_metadata(contributorQueue,interface,repo_id):
     
     while not contributorQueue.empty():
         try:
-            contributor = contributorQueue.get(timeout=5)
+            contributor = contributorQueue.get(timeout=1)
         except Exception as e:
             interface.logger.error(f"Ran into issue when popping off commit data from process queue: {e}")
             continue
@@ -766,7 +766,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             # iterate through all the commits with emails that appear in contributors and give them the relevant cntrb_id.
             while not contributorQueue.empty():
                 try:
-                    cntrb_email = contributorQueue.get(timeout=5)
+                    cntrb_email = contributorQueue.get(timeout=1)
                 except:
                     continue
                 logger.debug(

@@ -167,7 +167,7 @@ def analysis(cfg, multithreaded, interface=None, processes=5):
                 while not queue.empty():
                     try:
                         cfg.log_activity('Info', 'Getting commit off queue for analysis...')
-                        analyzeCommit = queue.get(timeout=5)
+                        analyzeCommit = queue.get(timeout=1)
                     except Exception as e:
                         continue
                         cfg.log_activity('Info', 'Subprocess ran into error when trying to get commit from queue %s' % e)
