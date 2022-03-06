@@ -1591,5 +1591,122 @@ class WorkingCommits(db.Model):
     repos_id = db.Column(db.BigInteger, nullable=False)
     working_commit = db.Column(db.String())
 
+
+# Start of Augur Operations tablespoon
+class All(db.Model):
+    __tablename__ = 'all'
+    __table_args__ = ({"schema":"augur_operations"})
+    all_id = db.Column(db.BigInteger, primary_key=True)
+    Name = db.Column(db.String())
+    Bytes = db.Column(db.String())
+    Lines = db.Column(db.String())
+    Code = db.Column(db.String())
+    Comment = db.Column(db.String())
+    Blank = db.Column(db.String())
+    Complexity = db.Column(db.String())
+    Count = db.Column(db.String())
+    WeightedComplexity = db.Column(db.String())
+    Files = db.Column(db.String())
+
+
+class AugurSettings(db.Model):
+    __tablename__ = 'augur_settings'
+    __table_args__ = (
+        PrimaryKeyConstraint('id'),
+        UniqueConstraint('setting', name='setting-unique'),
+        {"schema":"augur_operations"}
+    )
+    id = db.Column(db.BigInteger)
+    setting = db.Column(db.String())
+    value = db.Column(db.String())
+    last_modified = db.Column(db.TIMESTAMP(), default=datetime.now())
+
+
+# class ReposFetchLog(db.Model):
+#     __tablename__ = 'repos_fetch_log'
+#     __table_args__ = (
+#         PrimaryKeyConstraint('repos_fetch_log_id'),
+#         {"schema":"augur_operations"}
+#     )
+#     repos_fetch_log_id = db.Column(db.BigInteger)
+#     repos_id = db.Column(db.Integer, nullable=False)
+#     status = db.Column(db.String(), nullable=False)
+#     date = db.Column(db.TIMESTAMP(), nullable=False, default=datetime.now())
+
+# Index("repos_id,statusops", ReposFetchLog.repos_id.asc().nullslast(), ReposFetchLog.status.asc().nullslast())
+
+
+class WorkerHistory(db.Model):
+    __tablename__ = 'worker_history'
+    __table_args__ = (
+        PrimaryKeyConstraint('history_id'),
+        {"schema":"augur_operations"}
+    )
+    history_id = db.Column(db.BigInteger)
+    repo_id = db.Column(db.BigInteger)
+    worker = db.Column(db.String(), nullable=False)
+    job_model = db.Column(db.String(), nullable=False)
+    oauth_id = db.Column(db.Integer)
+    timestamp = db.Column(db.TIMESTAMP(), nullable=False)
+    status = db.Column(db.String(), nullable=False)
+    total_results = db.Column(db.Integer)
+
+
+class WorkerJob(db.Model):
+    __tablename__ = 'worker_job'
+    __table_args__ = (
+        PrimaryKeyConstraint('job_model'),
+        {"schema":"augur_operations"}
+    )
+    job_model = db.Column(db.String())
+    state = db.Column(db.Integer, nullable=False)
+    zombie_head = db.Column(db.Integer, nullable=False)
+    since_id_str = db.Column(db.String())
+    description = db.Column(db.String())
+    last_count = db.Column(db.Integer)
+    last_run = db.Column(db.TIMESTAMP())
+    analysis_state = db.Column(db.Integer)
+    oauth_id = db.Column(db.Integer, nullable=False)
+
+
+class WorkerOauth(db.Model):
+    __tablename__ = 'worker_oauth'
+    __table_args__ = (
+        PrimaryKeyConstraint('oauth_id'),
+        {"schema":"augur_operations"}
+    )
+    oauth_id = db.Column(db.BigInteger)
+    name = db.Column(db.String(), nullable=False)
+    consumer_key = db.Column(db.String(), nullable=False)
+    consumer_secret = db.Column(db.String(), nullable=False)
+    access_token = db.Column(db.String(), nullable=False)
+    access_token_secret = db.Column(db.String(), nullable=False)
+    repo_directory = db.Column(db.String())
+    platform = db.Column(db.String())
+
+
+class WorkerSettingsFacade(db.Model):
+    __tablename__ = 'worker_settings_facade'
+    __table_args__ = (
+        PrimaryKeyConstraint('id'),
+        {"schema":"augur_operations"}
+    )
+    id = db.Column(db.Integer)
+    setting = db.Column(db.String(), nullable=False)
+    value = db.Column(db.String(), nullable=False)
+    last_modified = db.Column(db.TIMESTAMP(), nullable=False, default=datetime.now())
+
+
+# class WorkingCommits(db.Model):
+#     __tablename__ = 'working_commits'
+#     __table_args__ = (
+#         PrimaryKeyConstraint('working_commits_id'),
+#         {"schema":"augur_operations"}
+#     )
+#     working_commits_id = db.Column(db.BigInteger)
+#     repos_id = db.Column(db.Integer, nullable=False)
+#     working_commit = db.Column(db.String())
+  
+
 if __name__ == '__main__':
     app.run(debug=True)
