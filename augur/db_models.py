@@ -14,12 +14,12 @@ db = SQLAlchemy(app)
 # TODO: how to add indexes
 # TODO: Sqlalchemey defines timestamp with length of 6
 
-# Template for model class
-
 
 # TODO: Sqlalchemey defines timestamp with length of 6
 
 # TODO: removed asc and dsc from hash indexes because they are not supported (it automatically set them to ASC NULLS LAST which is the same as all the ones in the database)
+# TODO: Foreign keys should also be not null to make it more clear a row can't be added without it
+
 
 # TODO: Added primary key
 class AnalysisLog(db.Model):
@@ -59,9 +59,11 @@ class CommitCommentRef(db.Model):
     __tablename__ = 'commit_comment_ref'
     __table_args__ = {"schema": "augur_data"}
     cmt_comment_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    cmt_id = db.Column(db.BigInteger, nullable=False)
+    cmt_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.commits.cmt_id', name='fk_commit_comment_ref_commits_1',
+                                                    onupdate="CASCADE", ondelete="RESTRICT"), nullable=False)
     repo_id = db.Column(db.BigInteger)
-    msg_id = db.Column(db.BigInteger, nullable=False)
+    msg_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.message.msg_id', name='fk_commit_comment_ref_message_1',
+                                                    onupdate="CASCADE", ondelete="RESTRICT"), nullable=False)
     user_id = db.Column(db.BigInteger, nullable=False)
     body = db.Column(db.Text())
     line = db.Column(db.BigInteger)
@@ -82,8 +84,10 @@ Index("comment_id", CommitCommentRef.cmt_comment_src_id.asc().nullslast(),
 class CommitParents(db.Model):
     __tablename__ = 'commit_parents'
     __table_args__ = {"schema": "augur_data"}
-    cmt_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    parent_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+    cmt_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.commits.cmt_id', name='fk_commit_parents_commits_1'),
+                       primary_key=True)
+    parent_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.commits.cmt_id', name='fk_commit_parents_commits_2'),
+                          primary_key=True)
     tool_source = db.Column(db.String())
     tool_version = db.Column(db.String())
     data_source = db.Column(db.String())
@@ -95,11 +99,14 @@ Index("commit_parents_ibfk_2", CommitParents.parent_id.asc().nullslast())
 
 
 # TODO: Current db version has some varchar defined with length but I changed that with flask
+# TODO: Add foriegn key: cmt_author_platform_username = db.Column(db.String(), db.ForeignKey('augur_data.contributors.cntrb_login', name='fk_commits_contributors_3', ondelete="CASCADE", onupdate="CASCADE"))
 class Commits(db.Model):
     __tablename__ = 'commits'
     __table_args__ = {"schema": "augur_data"}
     cmt_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    repo_id = db.Column(db.BigInteger, nullable=False)
+    repo_id = db.Column(db.BigInteger,
+                        db.ForeignKey('augur_data.repo.repo_id', name='fk_commits_repo_2', ondelete="RESTRICT",
+                                      onupdate="CASCADE"), nullable=False)
     cmt_commit_hash = db.Column(db.String(), nullable=False)
     cmt_author_name = db.Column(db.String(), nullable=False)
     cmt_author_raw_email = db.Column(db.String(), nullable=False)
@@ -121,6 +128,7 @@ class Commits(db.Model):
     cmt_ght_committed_at = db.Column(db.TIMESTAMP())
     cmt_committer_timestamp = db.Column(db.TIMESTAMP(timezone=True))
     cmt_author_timestamp = db.Column(db.TIMESTAMP(timezone=True))
+    # TODO: Appears that this foreign key is duplicated in the database
     cmt_author_platform_username = db.Column(db.String())
     tool_source = db.Column(db.String())
     tool_version = db.Column(db.String())
@@ -179,7 +187,9 @@ class ContributorRepo(db.Model):
     __tablename__ = 'contributor_repo'
     __table_args__ = {"schema": "augur_data"}
     cntrb_repo_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    cntrb_id = db.Column(db.BigInteger, nullable=False)
+    cntrb_id = db.Column(db.BigInteger,
+                         db.ForeignKey('augur_data.contributors.cntrb_id', name='fk_contributor_repo_contributors_1',
+                                       ondelete="RESTRICT", onupdate="CASCADE"), nullable=False)
     repo_git = db.Column(db.String(), nullable=False)
     repo_name = db.Column(db.String(), nullable=False)
     gh_repo_id = db.Column(db.BigInteger, nullable=False)
@@ -267,7 +277,9 @@ class ContributorsAliases(db.Model):
     __tablename__ = 'contributors_aliases'
     __table_args__ = {"schema": "augur_data"}
     cntrb_alias_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    cntrb_id = db.Column(db.BigInteger, nullable=False)
+    cntrb_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.contributors.cntrb_id',
+                                                      name='fk_contributors_aliases_contributors_1', ondelete="CASCADE",
+                                                      onupdate="CASCADE"), nullable=False)
     canonical_email = db.Column(db.String(), nullable=False)
     alias_email = db.Column(db.String(), nullable=False)
     cntrb_active = db.Column(db.SmallInteger, nullable=False)
@@ -278,11 +290,13 @@ class ContributorsAliases(db.Model):
     data_collection_date = db.Column(db.TIMESTAMP(), default=datetime.now())
 
 
+# TODO: msg_id should be not null since foreign key
 class DiscourseInsights(db.Model):
     __tablename__ = 'discourse_insights'
     __table_args__ = {"schema": "augur_data"}
     msg_discourse_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    msg_id = db.Column(db.BigInteger)
+    msg_id = db.Column(db.BigInteger,
+                       db.ForeignKey('augur_data.message.msg_id', name='fk_discourse_insights_message_1'))
     discourse_act = db.Column(db.String())
     tool_source = db.Column(db.String())
     tool_version = db.Column(db.String())
@@ -462,9 +476,12 @@ class IssueAssignees(db.Model):
     __tablename__ = 'issue_assignees'
     __table_args__ = {"schema": "augur_data"}
     issue_assignee_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    issue_id = db.Column(db.BigInteger)
-    repo_id = db.Column(db.BigInteger)
-    cntrb_id = db.Column(db.BigInteger)
+    issue_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.issues.issue_id', name='fk_issue_assignees_issues_1'))
+    repo_id = db.Column(db.BigInteger,
+                        db.ForeignKey('augur_data.repo.repo_id', name='fk_issue_assignee_repo_id', ondelete="RESTRICT",
+                                      onupdate="CASCADE"))
+    cntrb_id = db.Column(db.BigInteger,
+                         db.ForeignKey('augur_data.contributors.cntrb_id', name='fk_issue_assignees_contributors_1'))
     issue_assignee_src_id = db.Column(db.BigInteger)
     issue_assignee_src_node = db.Column(db.String())
     tool_source = db.Column(db.String())
@@ -480,9 +497,14 @@ class IssueEvents(db.Model):
     __tablename__ = 'issue_events'
     __table_args__ = {"schema": "augur_data"}
     event_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    issue_id = db.Column(db.BigInteger, nullable=False)
-    repo_id = db.Column(db.BigInteger)
-    cntrb_id = db.Column(db.BigInteger, nullable=False)
+    issue_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.issues.issue_id', name='fk_issue_events_issues_1',
+                                                      ondelete="RESTRICT", onupdate="CASCADE"), nullable=False)
+    repo_id = db.Column(db.BigInteger,
+                        db.ForeignKey('augur_data.repo.repo_id', name='fk_issue_events_repo', ondelete="RESTRICT",
+                                      onupdate="CASCADE"))
+    cntrb_id = db.Column(db.BigInteger,
+                         db.ForeignKey('augur_data.contributors.cntrb_id', name='fk_issue_events_contributors_1',
+                                       ondelete="RESTRICT", onupdate="CASCADE"), nullable=False)
     action = db.Column(db.String(), nullable=False)
     action_commit_hash = db.Column(db.String())
     created_at = db.Column(db.TIMESTAMP(), nullable=False, default=datetime.now())
@@ -493,7 +515,9 @@ class IssueEvents(db.Model):
     tool_version = db.Column(db.String())
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), default=datetime.now())
-    platform_id = db.Column(db.BigInteger)
+    platform_id = db.Column(db.BigInteger,
+                            db.ForeignKey('augur_data.platform.pltfrm_id', name='fk_issue_event_platform_ide',
+                                          ondelete="RESTRICT", onupdate="CASCADE"))
 
 
 Index("issue-cntrb-idx2", IssueEvents.issue_event_src_id.asc().nullslast())
@@ -505,8 +529,11 @@ class IssueLabels(db.Model):
     __tablename__ = 'issue_labels'
     __table_args__ = {"schema": "augur_data"}
     issue_label_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    issue_id = db.Column(db.BigInteger, default=1, nullable=False)
-    repo_id = db.Column(db.BigInteger)
+    issue_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.issues.issue_id', name='fk_issue_labels_issues_1'),
+                         nullable=False)
+    repo_id = db.Column(db.BigInteger,
+                        db.ForeignKey('augur_data.repo.repo_id', name='fk_issue_labels_repo_id', ondelete="RESTRICT",
+                                      onupdate="CASCADE"))
     label_text = db.Column(db.String())
     label_description = db.Column(db.String())
     label_color = db.Column(db.String())
@@ -522,9 +549,14 @@ class IssueMessageRef(db.Model):
     __tablename__ = 'issue_message_ref'
     __table_args__ = {"schema": "augur_data"}
     issue_msg_ref_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    issue_id = db.Column(db.BigInteger)
-    repo_id = db.Column(db.BigInteger)
-    msg_id = db.Column(db.BigInteger)
+    issue_id = db.Column(db.BigInteger,
+                         db.ForeignKey('augur_data.issues.issue_id', name='fk_issue_message_ref_issues_1',
+                                       ondelete="RESTRICT", onupdate="CASCADE"))
+    repo_id = db.Column(db.BigInteger,
+                        db.ForeignKey('augur_data.repo.repo_id', name='fk_repo_id_fk1', ondelete="RESTRICT",
+                                      onupdate="CASCADE"))
+    msg_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.message.msg_id', name='fk_issue_message_ref_message_1',
+                                                    ondelete="RESTRICT", onupdate="CASCADE"))
     issue_msg_ref_src_node_id = db.Column(db.String())
     issue_msg_ref_src_comment_id = db.Column(db.BigInteger)
     tool_source = db.Column(db.String())
@@ -538,14 +570,18 @@ class Issues(db.Model):
     __tablename__ = 'issues'
     __table_args__ = {"schema": "augur_data"}
     issue_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    repo_id = db.Column(db.BigInteger)
-    reporter_id = db.Column(db.BigInteger)
+    repo_id = db.Column(db.BigInteger,
+                        db.ForeignKey('augur_data.repo.repo_id', name='fk_issues_repo', ondelete="CASCADE",
+                                      onupdate="CASCADE"))
+    reporter_id = db.Column(db.BigInteger,
+                            db.ForeignKey('augur_data.contributors.cntrb_id', name='fk_issues_contributors_2'))
     pull_request = db.Column(db.BigInteger)
     pull_request_id = db.Column(db.BigInteger)
     created_at = db.Column(db.TIMESTAMP())
     issue_title = db.Column(db.String())
     issue_body = db.Column(db.String())
-    cntrb_id = db.Column(db.BigInteger)
+    cntrb_id = db.Column(db.BigInteger,
+                         db.ForeignKey('augur_data.contributors.cntrb_id', name='fk_issues_contributors_1'))
     comment_count = db.Column(db.BigInteger)
     updated_at = db.Column(db.TIMESTAMP())
     closed_at = db.Column(db.TIMESTAMP())
@@ -578,7 +614,7 @@ class Libraries(db.Model):
     __tablename__ = 'libraries'
     __table_args__ = {"schema": "augur_data"}
     library_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    repo_id = db.Column(db.BigInteger)
+    repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='fk_libraries_repo_1'))
     platform = db.Column(db.String())
     name = db.Column(db.String())
     created_timestamp = db.Column(db.TIMESTAMP())
@@ -604,7 +640,8 @@ class LibraryDependecies(db.Model):
     __tablename__ = 'library_dependencies'
     __table_args__ = {"schema": "augur_data"}
     lib_dependency_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    library_id = db.Column(db.BigInteger)
+    library_id = db.Column(db.BigInteger,
+                           db.ForeignKey('augur_data.libraries.library_id', name='fk_library_dependencies_libraries_1'))
     manifest_platform = db.Column(db.String())
     manifest_filepath = db.Column(db.String())
     manifest_kind = db.Column(db.String())
@@ -622,7 +659,8 @@ class LibraryVersion(db.Model):
     __tablename__ = 'library_version'
     __table_args__ = {"schema": "augur_data"}
     library_version_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    library_id = db.Column(db.BigInteger)
+    library_id = db.Column(db.BigInteger,
+                           db.ForeignKey('augur_data.libraries.library_id', name='fk_library_version_libraries_1'))
     library_platform = db.Column(db.String())
     version_number = db.Column(db.String())
     version_release_date = db.Column(db.TIMESTAMP())
@@ -652,9 +690,10 @@ class LstmAnomalyResults(db.Model):
     __tablename__ = 'lstm_anomaly_results'
     __table_args__ = {"schema": "augur_data"}
     result_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    repo_id = db.Column(db.BigInteger)
+    repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='fk_lstm_anomaly_results_repo_1'))
     repo_category = db.Column(db.String())
-    model_id = db.Column(db.BigInteger)
+    model_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.lstm_anomaly_models.model_id',
+                                                      name='fk_lstm_anomaly_results_lstm_anomaly_models_1'))
     metric = db.Column(db.String())
     contamination_factor = db.Column(db.Float())
     mean_absolute_error = db.Column(db.Float())
@@ -672,16 +711,23 @@ class Message(db.Model):
     __tablename__ = 'message'
     __table_args__ = {"schema": "augur_data"}
     msg_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    rgls_id = db.Column(db.BigInteger)
+    rgls_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo_groups_list_serve.rgls_id',
+                                                     name='fk_message_repo_groups_list_serve_1', ondelete="CASCADE",
+                                                     onupdate="CASCADE"))
     platform_msg_id = db.Column(db.BigInteger)
     platform_node_id = db.Column(db.String())
-    repo_id = db.Column(db.BigInteger)
-    cntrb_id = db.Column(db.BigInteger)
+    repo_id = db.Column(db.BigInteger,
+                        db.ForeignKey('augur_data.repo.repo_id', name='fk_message_repoid', ondelete="CASCADE",
+                                      onupdate="CASCADE"))
+    cntrb_id = db.Column(db.BigInteger,
+                         db.ForeignKey('augur_data.contributors.cntrb_id', name='fk_message_contributors_1',
+                                       ondelete="CASCADE", onupdate="CASCADE"))
     msg_text = db.Column(db.String())
     msg_timestamp = db.Column(db.TIMESTAMP())
     msg_sender_email = db.Column(db.String())
     msg_header = db.Column(db.String())
-    pltfrm_id = db.Column(db.BigInteger, nullable=False)
+    pltfrm_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.platform.pltfrm_id', name='fk_message_platform_1',
+                                                       ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
     tool_source = db.Column(db.String())
     tool_version = db.Column(db.String())
     data_source = db.Column(db.String())
@@ -699,7 +745,7 @@ class MessageAnalysis(db.Model):
     __tablename__ = 'message_analysis'
     __table_args__ = {"schema": "augur_data"}
     msg_analysis_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    msg_id = db.Column(db.BigInteger)
+    msg_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.message.msg_id', name='fk_message_analysis_message_1'))
     worker_run_id = db.Column(db.BigInteger)
     sentiment_score = db.Column(db.Float())
     reconstruction_error = db.Column(db.Float())
@@ -715,7 +761,8 @@ class MessageAnalysisSummary(db.Model):
     __tablename__ = 'message_analysis_summary'
     __table_args__ = {"schema": "augur_data"}
     msg_summary_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    repo_id = db.Column(db.BigInteger)
+    repo_id = db.Column(db.BigInteger,
+                        db.ForeignKey('augur_data.repo.repo_id', name='fk_message_analysis_summary_repo_1'))
     worker_run_id = db.Column(db.BigInteger)
     positive_ratio = db.Column(db.Float())
     negative_ratio = db.Column(db.Float())
@@ -731,7 +778,7 @@ class MessageSentiment(db.Model):
     __tablename__ = 'message_sentiment'
     __table_args__ = {"schema": "augur_data"}
     msg_analysis_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    msg_id = db.Column(db.BigInteger)
+    msg_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.message.msg_id', name='fk_message_sentiment_message_1'))
     worker_run_id = db.Column(db.BigInteger)
     sentiment_score = db.Column(db.Float())
     reconstruction_error = db.Column(db.Float())
@@ -747,7 +794,8 @@ class MessageSentimentSummary(db.Model):
     __tablename__ = 'message_sentiment_summary'
     __table_args__ = {"schema": "augur_data"}
     msg_summary_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    repo_id = db.Column(db.BigInteger)
+    repo_id = db.Column(db.BigInteger,
+                        db.ForeignKey('augur_data.repo.repo_id', name='fk_message_sentiment_summary_repo_1'))
     worker_run_id = db.Column(db.BigInteger)
     positive_ratio = db.Column(db.Float())
     negative_ratio = db.Column(db.Float())
@@ -779,7 +827,9 @@ class PullRequestAnalysis(db.Model):
     __tablename__ = 'pull_request_analysis'
     __table_args__ = {"schema": "augur_data"}
     pull_request_analysis_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    pull_request_id = db.Column(db.BigInteger)
+    pull_request_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.pull_requests.pull_request_id',
+                                                             name='fk_pull_request_analysis_pull_requests_1',
+                                                             ondelete="CASCADE", onupdate="CASCADE"))
     merge_probability = db.Column(db.Numeric(precision=256, scale=250))
     mechanism = db.Column(db.String())
     tool_source = db.Column(db.String())
@@ -796,9 +846,13 @@ class PullRequestAssignees(db.Model):
     __tablename__ = 'pull_request_assignees'
     __table_args__ = {"schema": "augur_data"}
     pr_assignee_map_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    pull_request_id = db.Column(db.BigInteger)
-    repo_id = db.Column(db.BigInteger)
-    contrib_id = db.Column(db.BigInteger)
+    pull_request_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.pull_requests.pull_request_id',
+                                                             name='fk_pull_request_assignees_pull_requests_1'))
+    repo_id = db.Column(db.BigInteger,
+                        db.ForeignKey('augur_data.repo.repo_id', name='fk_pull_request_assignees_repo_id',
+                                      ondelete="RESTRICT", onupdate="CASCADE"))
+    contrib_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.contributors.cntrb_id',
+                                                        name='fk_pull_request_assignees_contributors_1'))
     pr_assignee_src_id = db.Column(db.BigInteger)
     tool_source = db.Column(db.String())
     tool_version = db.Column(db.String())
@@ -813,14 +867,19 @@ class PullRequestCommits(db.Model):
     __tablename__ = 'pull_request_commits'
     __table_args__ = {"schema": "augur_data"}
     pr_cmt_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    pull_request_id = db.Column(db.BigInteger)
-    repo_id = db.Column(db.BigInteger)
+    pull_request_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.pull_requests.pull_request_id',
+                                                             name='fk_pull_request_commits_pull_requests_1',
+                                                             ondelete="CASCADE", onupdate="CASCADE"))
+    repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='fk_pull_request_commits_repo_id',
+                                                     ondelete="RESTRICT", onupdate="CASCADE"))
     pr_cmt_sha = db.Column(db.String())
     pr_cmt_node_id = db.Column(db.String())
     pr_cmt_message = db.Column(db.String())
     # TODO: varbit in database can't find sqlalchemy equivalent
     pr_cmt_comments_url = db.Column(db.LargeBinary())
-    pr_cmt_author_cntrb_id = db.Column(db.BigInteger)
+    pr_cmt_author_cntrb_id = db.Column(db.BigInteger,
+                                       db.ForeignKey('augur_data.contributors.cntrb_id', name='fk_pr_commit_cntrb_id',
+                                                     ondelete="CASCADE", onupdate="CASCADE"))
     pr_cmt_timestamp = db.Column(db.TIMESTAMP())
     pr_cmt_author_email = db.Column(db.String())
     tool_source = db.Column(db.String())
@@ -833,16 +892,23 @@ class PullRequestEvents(db.Model):
     __tablename__ = 'pull_request_events'
     __table_args__ = {"schema": "augur_data"}
     pr_event_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    pull_request_id = db.Column(db.BigInteger, nullable=False)
-    repo_id = db.Column(db.BigInteger)
-    cntrb_id = db.Column(db.BigInteger, nullable=False)
+    pull_request_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.pull_requests.pull_request_id',
+                                                             name='fk_pull_request_events_pull_requests_1',
+                                                             ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
+    repo_id = db.Column(db.BigInteger,
+                        db.ForeignKey('augur_data.repo.repo_id', name='fkprevent_repo_id', ondelete="RESTRICT",
+                                      onupdate="RESTRICT"))
+    cntrb_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.contributors.cntrb_id',
+                                                      name='fk_pull_request_events_contributors_1'), nullable=False)
     action = db.Column(db.String(), nullable=False)
     action_commit_hash = db.Column(db.String())
     created_at = db.Column(db.TIMESTAMP(), nullable=False, default=datetime.now())
     issue_event_src_id = db.Column(db.BigInteger)
     node_id = db.Column(db.String())
     node_url = db.Column(db.String())
-    platform_id = db.Column(db.BigInteger)
+    platform_id = db.Column(db.BigInteger,
+                            db.ForeignKey('augur_data.platform.pltfrm_id', name='fkpr_platform', ondelete="RESTRICT",
+                                          onupdate="RESTRICT"))
     pr_platform_event_id = db.Column(db.BigInteger)
     tool_source = db.Column(db.String())
     tool_version = db.Column(db.String())
@@ -858,8 +924,11 @@ class PullRequestFiles(db.Model):
     __tablename__ = 'pull_request_files'
     __table_args__ = {"schema": "augur_data"}
     pr_file_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    pull_request_id = db.Column(db.BigInteger)
-    repo_id = db.Column(db.BigInteger)
+    pull_request_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.pull_requests.pull_request_id',
+                                                             name='fk_pull_request_commits_pull_requests_1_copy_1',
+                                                             ondelete="CASCADE", onupdate="CASCADE"))
+    repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='fk_pull_request_files_repo_id',
+                                                     ondelete="RESTRICT", onupdate="CASCADE"))
     pr_file_additions = db.Column(db.BigInteger)
     pr_file_deletions = db.Column(db.BigInteger)
     pr_file_path = db.Column(db.String())
@@ -873,8 +942,11 @@ class PullRequestLabels(db.Model):
     __tablename__ = 'pull_request_labels'
     __table_args__ = {"schema": "augur_data"}
     pr_label_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    pull_request_id = db.Column(db.BigInteger)
-    repo_id = db.Column(db.BigInteger)
+    pull_request_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.pull_requests.pull_request_id',
+                                                             name='fk_pull_request_labels_pull_requests_1',
+                                                             ondelete="CASCADE", onupdate="CASCADE"))
+    repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='fk_pull_request_labels_repo',
+                                                     ondelete="RESTRICT", onupdate="CASCADE"))
     pr_src_id = db.Column(db.BigInteger)
     pr_src_node_id = db.Column(db.String())
     pr_src_url = db.Column(db.String())
@@ -891,9 +963,14 @@ class PullRequestMessageRef(db.Model):
     __tablename__ = 'pull_request_message_ref'
     __table_args__ = {"schema": "augur_data"}
     pr_msg_ref_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    pull_request_id = db.Column(db.BigInteger)
-    repo_id = db.Column(db.BigInteger)
-    msg_id = db.Column(db.BigInteger)
+    pull_request_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.pull_requests.pull_request_id',
+                                                             name='fk_pull_request_message_ref_pull_requests_1',
+                                                             ondelete="RESTRICT", onupdate="CASCADE"))
+    repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='fk_pr_repo', ondelete="RESTRICT",
+                                                     onupdate="CASCADE"))
+    msg_id = db.Column(db.BigInteger,
+                       db.ForeignKey('augur_data.message.msg_id', name='fk_pull_request_message_ref_message_1',
+                                     ondelete="RESTRICT", onupdate="CASCADE"))
     pr_message_ref_src_comment_id = db.Column(db.BigInteger)
     pr_message_ref_src_node_id = db.Column(db.String())
     tool_source = db.Column(db.String())
@@ -907,13 +984,18 @@ class PullRequestMeta(db.Model):
     __tablename__ = 'pull_request_meta'
     __table_args__ = {"schema": "augur_data"}
     pr_repo_meta_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    pull_request_id = db.Column(db.BigInteger)
-    repo_id = db.Column(db.BigInteger)
+    pull_request_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.pull_requests.pull_request_id',
+                                                             name='fk_pull_request_meta_pull_requests_1',
+                                                             ondelete="CASCADE", onupdate="CASCADE"))
+    repo_id = db.Column(db.BigInteger,
+                        db.ForeignKey('augur_data.repo.repo_id', name='fk_pull_request_repo_meta_repo_id',
+                                      ondelete="RESTRICT", onupdate="CASCADE"))
     pr_head_or_base = db.Column(db.String())
     pr_src_meta_label = db.Column(db.String())
     pr_src_meta_ref = db.Column(db.String())
     pr_sha = db.Column(db.String())
-    cntrb_id = db.Column(db.BigInteger)
+    cntrb_id = db.Column(db.BigInteger,
+                         db.ForeignKey('augur_data.contributors.cntrb_id', name='fk_pull_request_meta_contributors_2'))
     tool_source = db.Column(db.String())
     tool_version = db.Column(db.String())
     data_source = db.Column(db.String())
@@ -927,14 +1009,17 @@ class PullRequestRepo(db.Model):
     __tablename__ = 'pull_request_repo'
     __table_args__ = {"schema": "augur_data"}
     pr_repo_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    pr_repo_meta_id = db.Column(db.BigInteger)
+    pr_repo_meta_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.pull_request_meta.pr_repo_meta_id',
+                                                             name='fk_pull_request_repo_pull_request_meta_1',
+                                                             ondelete="CASCADE", onupdate="CASCADE"))
     pr_repo_head_or_base = db.Column(db.String())
     pr_src_repo_id = db.Column(db.BigInteger)
     pr_src_node_id = db.Column(db.String())
     pr_repo_name = db.Column(db.String())
     pr_repo_full_name = db.Column(db.String())
     pr_repo_private_bool = db.Column(db.Boolean())
-    pr_cntrb_id = db.Column(db.BigInteger)
+    pr_cntrb_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.contributors.cntrb_id',
+                                                         name='fk_pull_request_repo_contributors_1'))
     tool_source = db.Column(db.String())
     tool_version = db.Column(db.String())
     data_source = db.Column(db.String())
@@ -948,9 +1033,15 @@ class PullRequestReviewMessageRef(db.Model):
     __tablename__ = 'pull_request_review_message_ref'
     __table_args__ = {"schema": "augur_data"}
     pr_review_msg_ref_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    pr_review_id = db.Column(db.BigInteger, nullable=False)
-    repo_id = db.Column(db.BigInteger)
-    msg_id = db.Column(db.BigInteger, nullable=False)
+    pr_review_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.pull_request_reviews.pr_review_id',
+                                                          name='fk_pull_request_review_message_ref_pull_request_reviews_1',
+                                                          ondelete="RESTRICT", onupdate="CASCADE"), nullable=False)
+    repo_id = db.Column(db.BigInteger,
+                        db.ForeignKey('augur_data.repo.repo_id', name='fk_review_repo', ondelete="RESTRICT",
+                                      onupdate="CASCADE"))
+    msg_id = db.Column(db.BigInteger,
+                       db.ForeignKey('augur_data.message.msg_id', name='fk_pull_request_review_message_ref_message_1',
+                                     ondelete="RESTRICT", onupdate="CASCADE"), nullable=False)
     pr_review_msg_url = db.Column(db.String())
     pr_review_src_id = db.Column(db.BigInteger)
     pr_review_msg_src_id = db.Column(db.BigInteger)
@@ -981,10 +1072,14 @@ class PullRequestReviewers(db.Model):
     __tablename__ = 'pull_request_reviewers'
     __table_args__ = {"schema": "augur_data"}
     pr_reviewer_map_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    pull_request_id = db.Column(db.BigInteger)
+    pull_request_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.pull_requests.pull_request_id',
+                                                             name='fk_pull_request_reviewers_pull_requests_1',
+                                                             ondelete="CASCADE", onupdate="CASCADE"))
     pr_source_id = db.Column(db.BigInteger)
     repo_id = db.Column(db.BigInteger)
-    cntrb_id = db.Column(db.BigInteger)
+    cntrb_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.contributors.cntrb_id',
+                                                      name='fk_pull_request_reviewers_contributors_1',
+                                                      ondelete="CASCADE", onupdate="CASCADE"))
     pr_reviewer_src_id = db.Column(db.BigInteger)
     tool_source = db.Column(db.String())
     tool_version = db.Column(db.String())
@@ -999,9 +1094,15 @@ class PullRequestReviews(db.Model):
     __tablename__ = 'pull_request_reviews'
     __table_args__ = {"schema": "augur_data"}
     pr_review_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    pull_request_id = db.Column(db.BigInteger, nullable=False)
-    repo_id = db.Column(db.BigInteger)
-    cntrb_id = db.Column(db.BigInteger, nullable=False)
+    pull_request_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.pull_requests.pull_request_id',
+                                                             name='fk_pull_request_reviews_pull_requests_1',
+                                                             ondelete="RESTRICT", onupdate="CASCADE"), nullable=False)
+    repo_id = db.Column(db.BigInteger,
+                        db.ForeignKey('augur_data.repo.repo_id', name='fk_repo_review', ondelete="RESTRICT",
+                                      onupdate="CASCADE"))
+    cntrb_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.contributors.cntrb_id',
+                                                      name='fk_pull_request_reviews_contributors_1',
+                                                      ondelete="RESTRICT", onupdate="CASCADE"), nullable=False)
     pr_review_author_association = db.Column(db.String())
     pr_review_state = db.Column(db.String())
     pr_review_body = db.Column(db.String())
@@ -1011,7 +1112,8 @@ class PullRequestReviews(db.Model):
     pr_review_html_url = db.Column(db.String())
     pr_review_pull_request_url = db.Column(db.String())
     pr_review_commit_id = db.Column(db.String())
-    platform_id = db.Column(db.BigInteger)
+    platform_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.platform.pltfrm_id', name='fk-review-platform',
+                                                         ondelete="RESTRICT", onupdate="CASCADE"))
     tool_source = db.Column(db.String())
     tool_version = db.Column(db.String())
     data_source = db.Column(db.String())
@@ -1022,7 +1124,9 @@ class PullRequestTeams(db.Model):
     __tablename__ = 'pull_request_teams'
     __table_args__ = {"schema": "augur_data"}
     pr_team_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    pull_request_id = db.Column(db.BigInteger)
+    pull_request_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.pull_requests.pull_request_id',
+                                                             name='fk_pull_request_teams_pull_requests_1',
+                                                             ondelete="CASCADE", onupdate="CASCADE"))
     pr_src_team_id = db.Column(db.BigInteger)
     pr_src_team_node = db.Column(db.String())
     pr_src_team_url = db.Column(db.String())
@@ -1044,7 +1148,9 @@ class Pull_Requests(db.Model):
     __tablename__ = 'pull_requests'
     __table_args__ = {"schema": "augur_data"}
     pull_request_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    repo_id = db.Column(db.BigInteger)
+    repo_id = db.Column(db.BigInteger,
+                        db.ForeignKey('augur_data.repo.repo_id', name='fk_pull_requests_repo_1', ondelete="CASCADE",
+                                      onupdate="CASCADE"))
     pr_url = db.Column(db.String())
     pr_src_id = db.Column(db.BigInteger)
     pr_src_node_id = db.Column(db.String())
@@ -1057,7 +1163,9 @@ class Pull_Requests(db.Model):
     pr_src_state = db.Column(db.String())
     pr_src_locked = db.Column(db.Boolean())
     pr_src_title = db.Column(db.String())
-    pr_augur_contributor_id = db.Column(db.BigInteger)
+    pr_augur_contributor_id = db.Column(db.BigInteger,
+                                        db.ForeignKey('augur_data.contributors.cntrb_id', name='fk_pr_contribs',
+                                                      ondelete="RESTRICT", onupdate="CASCADE"))
     pr_body = db.Column(db.Text())
     pr_created_at = db.Column(db.TIMESTAMP())
     pr_updated_at = db.Column(db.TIMESTAMP())
@@ -1096,7 +1204,8 @@ class Releases(db.Model):
     __tablename__ = 'releases'
     __table_args__ = {"schema": "augur_data"}
     release_id = db.Column(db.CHAR(length=64), primary_key=True, nullable=False)
-    repo_id = db.Column(db.BigInteger, nullable=False)
+    repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='fk_releases_repo_1'),
+                        nullable=False)
     release_name = db.Column(db.String())
     release_description = db.Column(db.String())
     release_author = db.Column(db.String())
@@ -1118,7 +1227,9 @@ class Repo(db.Model):
     __tablename__ = 'repo'
     __table_args__ = {"schema": "augur_data"}
     repo_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    repo_group_id = db.Column(db.BigInteger, nullable=False)
+    repo_group_id = db.Column(db.BigInteger,
+                              db.ForeignKey('augur_data.repo_groups.repo_group_id', name='fk_repo_repo_groups_1'),
+                              nullable=False)
     repo_git = db.Column(db.String(), nullable=False)
     repo_path = db.Column(db.String())
     repo_name = db.Column(db.String())
@@ -1155,7 +1266,7 @@ class RepoBadging(db.Model):
     __tablename__ = 'repo_badging'
     __table_args__ = {"schema": "augur_data"}
     badge_collection_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    repo_id = db.Column(db.BigInteger)
+    repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='fk_repo_badging_repo_1'))
     created_at = db.Column(db.TIMESTAMP(), default=datetime.now())
     tool_source = db.Column(db.String())
     tool_version = db.Column(db.String())
@@ -1168,7 +1279,7 @@ class RepoClusterMessages(db.Model):
     __tablename__ = 'repo_cluster_messages'
     __table_args__ = {"schema": "augur_data"}
     msg_cluster_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    repo_id = db.Column(db.BigInteger)
+    repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='fk_repo_cluster_messages_repo_1'))
     cluster_content = db.Column(db.Integer)
     cluster_mechanism = db.Column(db.Integer)
     tool_source = db.Column(db.String())
@@ -1181,7 +1292,7 @@ class RepoDependencies(db.Model):
     __tablename__ = 'repo_dependencies'
     __table_args__ = {"schema": "augur_data"}
     repo_dependencies_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    repo_id = db.Column(db.BigInteger)
+    repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='repo_id'))
     dep_name = db.Column(db.String())
     dep_count = db.Column(db.Integer)
     dep_language = db.Column(db.String())
@@ -1196,7 +1307,7 @@ class RepoDepsLibyear(db.Model):
     __tablename__ = 'repo_deps_libyear'
     __table_args__ = {"schema": "augur_data"}
     repo_deps_libyear_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    repo_id = db.Column(db.BigInteger)
+    repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='repo_id_copy_2'))
     name = db.Column(db.String())
     requirement = db.Column(db.String())
     type = db.Column(db.String())
@@ -1216,7 +1327,7 @@ class RepoDepsScorecard(db.Model):
     __tablename__ = 'repo_deps_scorecard'
     __table_args__ = {"schema": "augur_data"}
     repo_deps_scorecard_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    repo_id = db.Column(db.BigInteger)
+    repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='repo_id_copy_1'))
     name = db.Column(db.String())
     status = db.Column(db.String())
     score = db.Column(db.String())
@@ -1230,7 +1341,8 @@ class RepoGroupInsights(db.Model):
     __tablename__ = 'repo_group_insights'
     __table_args__ = {"schema": "augur_data"}
     rgi_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    repo_group_id = db.Column(db.BigInteger)
+    repo_group_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo_groups.repo_group_id',
+                                                           name='fk_repo_group_insights_repo_groups_1'))
     rgi_metric = db.Column(db.String())
     rgi_value = db.Column(db.String())
     cms_id = db.Column(db.BigInteger)
@@ -1267,7 +1379,9 @@ class RepoGroupsListServe(db.Model):
     __tablename__ = 'repo_groups_list_serve'
     __table_args__ = {"schema": "augur_data"}
     rgls_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    repo_group_id = db.Column(db.BigInteger, nullable=False)
+    repo_group_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo_groups.repo_group_id',
+                                                           name='fk_repo_groups_list_serve_repo_groups_1')
+    nullable = False)
     rgls_name = db.Column(db.String())
     rgls_description = db.Column(db.String())
     rgls_sponsor = db.Column(db.String())
@@ -1286,7 +1400,8 @@ class RepoInfo(db.Model):
     __tablename__ = 'repo_info'
     __table_args__ = {"schema": "augur_data"}
     repo_info_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    repo_id = db.Column(db.BigInteger, nullable=False)
+    repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='fk_repo_info_repo_1'),
+                        nullable=False)
     last_updated = db.Column(db.TIMESTAMP())
     issues_enabled = db.Column(db.String())
     open_issues = db.Column(db.Integer)
@@ -1333,7 +1448,7 @@ class RepoInsights(db.Model):
     __tablename__ = 'repo_insights'
     __table_args__ = {"schema": "augur_data"}
     ri_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    repo_id = db.Column(db.BigInteger)
+    repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='fk_repo_insights_repo_1'))
     ri_metric = db.Column(db.String())
     ri_value = db.Column(db.String())
     ri_date = db.Column(db.TIMESTAMP())
@@ -1351,7 +1466,8 @@ class RepoInsightsRecords(db.Model):
     __tablename__ = 'repo_insights_records'
     __table_args__ = {"schema": "augur_data"}
     ri_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    repo_id = db.Column(db.BigInteger)
+    repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='repo_id_ref', ondelete="SET NULL",
+                                                     onupdate="CASCADE"))
     ri_metric = db.Column(db.String())
     ri_field = db.Column(db.String())
     ri_value = db.Column(db.String())
@@ -1371,7 +1487,7 @@ class RepoLabor(db.Model):
     __tablename__ = 'repo_labor'
     __table_args__ = {"schema": "augur_data"}
     repo_labor_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    repo_id = db.Column(db.BigInteger)
+    repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='fk_repo_labor_repo_1'))
     repo_clone_date = db.Column(db.TIMESTAMP())
     rl_analysis_date = db.Column(db.TIMESTAMP())
     programming_language = db.Column(db.String())
@@ -1392,7 +1508,8 @@ class RepoLabor(db.Model):
 class RepoMeta(db.Model):
     __tablename__ = 'repo_meta'
     __table_args__ = {"schema": "augur_data"}
-    repo_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+    repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='fk_repo_meta_repo_1'),
+                        primary_key=True, nullable=False)
     rmeta_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
     rmeta_name = db.Column(db.String())
     rmeta_value = db.Column(db.String())
@@ -1406,14 +1523,17 @@ class RepoSbomScans(db.Model):
     __tablename__ = 'repo_sbom_scans'
     __table_args__ = {"schema": "augur_data"}
     rsb_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    repo_id = db.Column(db.Integer)
+    repo_id = db.Column(db.Integer,
+                        db.ForeignKey('augur_data.repo.repo_id', name='repo_linker_sbom', ondelete="CASCADE",
+                                      onupdate="CASCADE"))
     sbom_scan = db.Column(db.JSON())
 
 
 class RepoStats(db.Model):
     __tablename__ = 'repo_stats'
     __table_args__ = {"schema": "augur_data"}
-    repo_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+    repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='fk_repo_stats_repo_1'),
+                        primary_key=True, nullable=False)
     rstat_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
     rstat_name = db.Column(db.String())
     rstat_value = db.Column(db.BigInteger)
@@ -1426,7 +1546,8 @@ class RepoStats(db.Model):
 class RepoTestCoverage(db.Model):
     __tablename__ = 'repo_test_coverage'
     __table_args__ = {"schema": "augur_data"}
-    repo_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+    repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='fk_repo_test_coverage_repo_1'),
+                        primary_key=True, nullable=False)
     repo_clone_date = db.Column(db.TIMESTAMP())
     rtc_analysis_date = db.Column(db.TIMESTAMP())
     programming_language = db.Column(db.String())
@@ -1447,7 +1568,7 @@ class RepoTopic(db.Model):
     __tablename__ = 'repo_topic'
     __table_args__ = {"schema": "augur_data"}
     repo_topic_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    repo_id = db.Column(db.Integer)
+    repo_id = db.Column(db.Integer, db.ForeignKey('augur_data.repo.repo_id', name='fk_repo_topic_repo_1'))
     topic_id = db.Column(db.Integer)
     topic_prob = db.Column(db.Float())
     tool_source = db.Column(db.String())
@@ -1541,6 +1662,9 @@ class WorkingCommits(db.Model):
     repos_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
     working_commit = db.Column(db.String())
 
+
+if __name__ == '__main__':
+    app.run(debug=True)
 
 
 
