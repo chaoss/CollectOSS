@@ -45,21 +45,6 @@ from facade_worker.facade03analyzecommit import analyze_commit
 # else:
 #   import MySQLdb
 
-
-def analyze_commits_in_parallel(queue, cfg, repo_id, repo_location, multithreaded,interface):
-    while not queue.empty():
-        try:
-            cfg.log_activity('Info', 'Getting commit off queue for analysis...')
-            analyzeCommit = queue.get(timeout=1)
-        except Exception as e:
-            continue
-            cfg.log_activity('Info', 'Subprocess ran into error when trying to get commit from queue %s' % e)
-
-        try:
-            analyze_commit(cfg, repo_id, repo_location, analyzeCommit, multithreaded,interface=interface)
-        except Exception as e:
-            cfg.log_activity('Info', 'Subprocess ran into error when trying to anaylyze commit with error: %s' % e)
-
 def analysis(cfg, multithreaded, interface=None, processes=5):
 
 # Run the analysis by looping over all active repos. For each repo, we retrieve
@@ -174,12 +159,26 @@ def analysis(cfg, multithreaded, interface=None, processes=5):
 
         if multithreaded:
             #Use 'spawn' method of mp
-            context = multiprocessing.get_context('spawn')
+            context = multiprocessing.get_context('fork')
             commitQueue = context.Queue()
 
             #multiprocessing queues shouldn't be too long. ~5000 in a queue at a time is probably more reasonable
             #for commit in missing_commits:
             #    commitQueue.put(commit)
+
+            def analyze_commits_in_parallel(queue, cfg, repo_id, repo_location, multithreaded,interface):
+                while not queue.empty():
+                    try:
+                        cfg.log_activity('Info', 'Getting commit off queue for analysis...')
+                        analyzeCommit = queue.get(timeout=1)
+                    except Exception as e:
+                        continue
+                        cfg.log_activity('Info', 'Subprocess ran into error when trying to get commit from queue %s' % e)
+
+                    try:
+                        analyze_commit(cfg, repo_id, repo_location, analyzeCommit, multithreaded,interface=interface)
+                    except Exception as e:
+                        cfg.log_activity('Info', 'Subprocess ran into error when trying to anaylyze commit with error: %s' % e)
 
 
             while len(missing_commits) > 0:
