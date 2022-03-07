@@ -100,7 +100,10 @@ def analysis(cfg, multithreaded, interface=None, processes=5):
         get_status = ("SELECT working_commit FROM working_commits WHERE repos_id=%s")
 
         cfg.cursor.execute(get_status, (repo[0], ))
-        working_commits = list(cfg.cursor)
+        try:
+            working_commits = list(cfg.cursor)
+        except:
+            working_commits = []
         #cfg.cursor.fetchone()[1]
 
         # If there's a commit still there, the previous run was interrupted and
