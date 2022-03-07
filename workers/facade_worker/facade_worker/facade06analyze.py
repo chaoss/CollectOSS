@@ -45,7 +45,7 @@ from facade_worker.facade03analyzecommit import analyze_commit
 # else:
 #   import MySQLdb
 
-def analysis(cfg, multithreaded, interface=None, processes=5):
+def analysis(cfg, multithreaded, interface=None, processes=12):
 
 # Run the analysis by looping over all active repos. For each repo, we retrieve
 # the list of commits which lead to HEAD. If any are missing from the database,
