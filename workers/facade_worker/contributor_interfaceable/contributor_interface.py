@@ -17,7 +17,11 @@ import traceback
 def process_commit_metadata(contributorQueue,interface,repo_id):
     
     while not contributorQueue.empty():
-        contributor = contributorQueue.get()
+        try:
+            contributor = contributorQueue.get(timeout=1)
+        except Exception as e:
+            interface.logger.error(f"Ran into issue when popping off commit data from process queue: {e}")
+            continue
         # Get the email from the commit data
         email = contributor['email_raw'] if 'email_raw' in contributor else contributor['email']
     
@@ -731,25 +735,39 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         #Put contributor commit data into a process queue
         commitDataQueue = Queue()
-        for commitData in new_contribs:
-            commitDataQueue.put(commitData)
+        #for commitData in new_contribs:
+        #    commitDataQueue.put(commitData)
 
-        processList = []
-        #Create process start conditions
-        for process in range(processes):
-            interface = ContributorInterfaceable(config=self.config,logger=self.logger)
+        while len(new_contribs) > 0:
             
-            processList.append(Process(target=process_commit_metadata, args=(commitDataQueue,interface,repo_id,)))
+            for n in range(5000):
+                try:
+                    commitData = new_contribs.pop()
+                    commitDataQueue.put(commitData)
+                except:
+                    break
+            
+            
+            processList = []
+            #Create process start conditions
+            for process in range(processes):
+                interface = ContributorInterfaceable(config=self.config,logger=self.logger)
+            
+                processList.append(Process(target=process_commit_metadata, args=(commitDataQueue,interface,repo_id,)))
         
-        #Multiprocess process commits
-        for pNum,process in enumerate(processList):
-            process.start()
-            self.logger.info(f"Process {pNum} started..")
+            #Multiprocess process commits
+            for pNum,process in enumerate(processList):
+                process.start()
+                self.logger.info(f"Process {pNum} started..")
             
         
-        for pNum,process in enumerate(processList):
-            process.join()
-            self.logger.info(f"Process {pNum} has ended.")
+            for pNum,process in enumerate(processList):
+            
+                while process.is_alive():
+                    self.logger.info(f"Qsize is: {commitDataQueue}")
+                    time.sleep(5)
+
+                self.logger.info(f"Process {pNum} has ended.")
 
 
         self.logger.debug("DEBUG: Got through the new_contribs")
@@ -757,7 +775,10 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         def link_commits_to_contributor(contributorQueue,logger,database, commits_table):
             # iterate through all the commits with emails that appear in contributors and give them the relevant cntrb_id.
             while not contributorQueue.empty():
-                cntrb_email = contributorQueue.get()
+                try:
+                    cntrb_email = contributorQueue.get(timeout=1)
+                except:
+                    continue
                 logger.debug(
                    f"These are the emails and cntrb_id's  returned: {cntrb_email}")
 
@@ -813,24 +834,36 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         #Put contributor commit data into a process queue
         
         existingDataQueue = Queue()
-        for commitData in existing_cntrb_emails:
-            existingDataQueue.put(commitData)
+        #for commitData in existing_cntrb_emails:
+        #    existingDataQueue.put(commitData)
             
-        processList = []
-        #Create process start conditions
-        for process in range(processes):
+        
+        while len(existing_cntrb_emails) > 0:
             
-            processList.append(Process(target=link_commits_to_contributor, args=(existingDataQueue,self.logger,self.db,self.commits_table,)))
+            for n in range(5000):
+                try:
+                    commitData = existing_cntrb_emails.pop()
+                    existingDataQueue.put(commitData)
+                except:
+                    break
+            
+            processList = []
+            #Create process start conditions
+            for process in range(processes):
+            
+                processList.append(Process(target=link_commits_to_contributor, args=(existingDataQueue,self.logger,self.db,self.commits_table,)))
         
         
-        #Multiprocess process commits
-        for pNum,process in enumerate(processList):
-            process.start()
-            self.logger.info(f"Process {pNum} started..")
+            #Multiprocess process commits
+            for pNum,process in enumerate(processList):
+                process.start()
+                self.logger.info(f"Process {pNum} started..")
         
         
-        for process in processList:
-            process.join()
+            for process in processList:
+                while process.is_alive():
+                    self.logger.info(f"Qsize is: {existingDataQueue}")
+                    time.sleep(5)
 
         self.logger.info("Done with inserting and updating facade contributors")
         return
