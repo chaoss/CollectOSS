@@ -158,16 +158,14 @@ def analysis(cfg, multithreaded, interface=None, processes=5):
         ## TODO: Verify if the multithreaded approach here is optimal for postgresql
 
         if multithreaded:
-            #Use 'spawn' method of mp
-            context = multiprocessing.get_context('fork')
-            commitQueue = context.Queue()
+            commitQueue = multiprocessing.Queue()
 
             #multiprocessing queues shouldn't be too long. ~5000 in a queue at a time is probably more reasonable
             #for commit in missing_commits:
             #    commitQueue.put(commit)
 
             def analyze_commits_in_parallel(queue, cfg, repo_id, repo_location, multithreaded,interface):
-                while not queue.empty():
+                while True:
                     try:
                         cfg.log_activity('Info', 'Getting commit off queue for analysis...')
                         analyzeCommit = queue.get(timeout=1)
@@ -181,29 +179,25 @@ def analysis(cfg, multithreaded, interface=None, processes=5):
                         cfg.log_activity('Info', 'Subprocess ran into error when trying to anaylyze commit with error: %s' % e)
 
 
-            while len(missing_commits) > 0:
-                for n in range(1000):
-                    try:
-                        commit = missing_commits.pop()
-                        commitQueue.put(commit)
-                    except:
-                        break
-                
-                processList = []
-                
-
-                for process in range(processes):
-                    processList.append(context.Process(target=analyze_commits_in_parallel, args=(commitQueue, cfg,repo[0],repo_loc,multithreaded,interface,)))
             
-                for pNum,process in enumerate(processList):
-                    cfg.log_activity('Info','Starting commit analysis process %s' % pNum)
-                    process.daemon = True
-                    process.start()
+                
+            processList = []
+            for process in range(processes):
+                processList.append(multiprocessing.Process(target=analyze_commits_in_parallel, args=(commitQueue, cfg,repo[0],repo_loc,multithreaded,interface,)))
             
-                for process in processList:
-                    process.join()
+            for pNum,process in enumerate(processList):
+                cfg.log_activity('Info','Starting commit analysis process %s' % pNum)
+                process.daemon = True
+                process.start()
+            
+            for process in processList:
+                
+                while len(missing_commits) > 0:
+                    if commitQueue.qsize() < 500:
+                        commitQueue.put(missing_commits.pop())
 
-                    cfg.log_activity('Info','Subprocess has completed')
+                process.kill()
+                cfg.log_activity('Info','Subprocess has completed')
         else:
             for commit in missing_commits:
                 analyze_commit(cfg, repo[0], repo_loc, commit, multithreaded, interface=interface)
