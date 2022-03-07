@@ -148,8 +148,11 @@ def analysis(cfg, multithreaded, interface=None, processes=5):
 
         cfg.cursor.execute(find_existing, (repo[0], ))
 
-        for commit in list(cfg.cursor):
-            existing_commits.add(commit[0])
+        try:
+            for commit in list(cfg.cursor):
+                existing_commits.add(commit[0])
+        except:
+            cfg.log_activity('Info', 'list(cfg.cursor) returned an error')
 
         # Find missing commits and add them
 
