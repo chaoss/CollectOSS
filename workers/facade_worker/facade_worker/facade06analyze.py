@@ -196,7 +196,8 @@ def analysis(cfg, multithreaded, interface=None, processes=6):
                     process.start()
                     time.sleep(1)
 
-                for process in processList:   
+                for process in processList:  
+                    cfg.log_activity('Info', 'JOINING %s' % process) 
                     process.join(timeout=60) 
                     time.sleep(1)        
             
