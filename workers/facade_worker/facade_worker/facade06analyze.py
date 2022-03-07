@@ -196,9 +196,7 @@ def analysis(cfg, multithreaded, interface=None, processes=5):
                     process.start()
             
                 for process in processList:
-                    while process.is_alive():
-                        time.sleep(5)
-                        cfg.log_activity('Info','Qsize is: %s' % commitQueue.qsize())
+                    process.join()
 
                     cfg.log_activity('Info','Subprocess has completed')
         else:
