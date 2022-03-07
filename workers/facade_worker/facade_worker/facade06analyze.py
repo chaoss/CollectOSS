@@ -193,6 +193,7 @@ def analysis(cfg, multithreaded, interface=None, processes=5):
             
                 for pNum,process in enumerate(processList):
                     cfg.log_activity('Info','Starting commit analysis process %s' % pNum)
+                    process.daemon = True
                     process.start()
             
                 for process in processList:

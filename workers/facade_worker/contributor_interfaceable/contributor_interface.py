@@ -757,15 +757,14 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         
             #Multiprocess process commits
             for pNum,process in enumerate(processList):
+                process.daemon = True
                 process.start()
                 self.logger.info(f"Process {pNum} started..")
             
         
             for pNum,process in enumerate(processList):
             
-                while process.is_alive():
-                    self.logger.info(f"Qsize is: {commitDataQueue}")
-                    time.sleep(5)
+                process.join()
 
                 self.logger.info(f"Process {pNum} has ended.")
 
@@ -856,14 +855,13 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         
             #Multiprocess process commits
             for pNum,process in enumerate(processList):
+                process.daemon = True
                 process.start()
                 self.logger.info(f"Process {pNum} started..")
         
         
             for process in processList:
-                while process.is_alive():
-                    self.logger.info(f"Qsize is: {existingDataQueue}")
-                    time.sleep(5)
+                process.join()
 
         self.logger.info("Done with inserting and updating facade contributors")
         return
