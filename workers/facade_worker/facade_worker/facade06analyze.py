@@ -195,9 +195,11 @@ def analysis(cfg, multithreaded, interface=None, processes=5):
                     cfg.log_activity('Info','Starting commit analysis process %s' % pNum)
                     process.start()
                     # SPG, 3/7/2022
-                    process.join()
+                    # process.join()
             
                 for process in processList:
+                    # SPG, 3/7/2022 -- Putting the join() in a loop
+                    process.join()
                     while process.is_alive():
                         time.sleep(5)
                         cfg.log_activity('Info','Qsize is: %s' % commitQueue.qsize())
