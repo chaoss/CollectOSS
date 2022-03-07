@@ -180,7 +180,7 @@ def analysis(cfg, multithreaded, interface=None, processes=5):
 
 
             while len(missing_commits) > 0:
-                for n in range(5000):
+                for n in range(1000):
                     try:
                         commit = missing_commits.pop()
                         commitQueue.put(commit)
