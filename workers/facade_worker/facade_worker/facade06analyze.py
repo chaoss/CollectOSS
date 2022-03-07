@@ -198,9 +198,9 @@ def analysis(cfg, multithreaded, interface=None, processes=5):
                     # process.join()
             
                 for process in processList:
-                    # SPG, 3/7/2022 -- Putting the join() in a loop
-                    process.join()
                     while process.is_alive():
+                        # SPG, 3/7/2022 -- Putting the join() in a loop
+                        process.join()
                         time.sleep(5)
                         cfg.log_activity('Info','Qsize is: %s' % commitQueue.qsize())
                         # SPG, 3/7/2022
