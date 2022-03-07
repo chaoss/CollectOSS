@@ -16,7 +16,7 @@ import traceback
 #Method to parallelize
 def process_commit_metadata(contributorQueue,interface,repo_id):
     
-    while not contributorQueue.empty():
+    while True:
         try:
             contributor = contributorQueue.get(timeout=1)
         except Exception as e:
@@ -736,44 +736,38 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         #Put contributor commit data into a process queue
         commitDataQueue = Queue()
         #for commitData in new_contribs:
-        #    commitDataQueue.put(commitData)
-
-        while len(new_contribs) > 0:
+        #    commitDataQueue.put(commitData)    
             
-            for n in range(5000):
-                try:
-                    commitData = new_contribs.pop()
-                    commitDataQueue.put(commitData)
-                except:
-                    break
-            
-            
-            processList = []
-            #Create process start conditions
-            for process in range(processes):
-                interface = ContributorInterfaceable(config=self.config,logger=self.logger)
-            
-                processList.append(Process(target=process_commit_metadata, args=(commitDataQueue,interface,repo_id,)))
+        processList = []
+        #Create process start conditions
+        for process in range(processes):
+            interface = ContributorInterfaceable(config=self.config,logger=self.logger)
         
-            #Multiprocess process commits
-            for pNum,process in enumerate(processList):
-                process.daemon = True
-                process.start()
-                self.logger.info(f"Process {pNum} started..")
+            processList.append(Process(target=process_commit_metadata, args=(commitDataQueue,interface,repo_id,)))
+        
+        #Multiprocess process commits
+        for pNum,process in enumerate(processList):
+            process.daemon = True
+            process.start()
+            self.logger.info(f"Process {pNum} started..")
             
         
-            for pNum,process in enumerate(processList):
+        for pNum,process in enumerate(processList):
+        
+            while len(new_contribs) > 0:
+                if commitDataQueue.qsize() < 500:
+                    commitDataQueue.put(new_contribs.pop())
             
-                process.join()
+            process.kill()
 
-                self.logger.info(f"Process {pNum} has ended.")
+            self.logger.info(f"Process {pNum} has ended.")
 
 
         self.logger.debug("DEBUG: Got through the new_contribs")
         
         def link_commits_to_contributor(contributorQueue,logger,database, commits_table):
             # iterate through all the commits with emails that appear in contributors and give them the relevant cntrb_id.
-            while not contributorQueue.empty():
+            while True:
                 try:
                     cntrb_email = contributorQueue.get(timeout=1)
                 except:
@@ -836,32 +830,26 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         #for commitData in existing_cntrb_emails:
         #    existingDataQueue.put(commitData)
             
+        processList = []
+        #Create process start conditions
+        for process in range(processes):
         
-        while len(existing_cntrb_emails) > 0:
-            
-            for n in range(5000):
-                try:
-                    commitData = existing_cntrb_emails.pop()
-                    existingDataQueue.put(commitData)
-                except:
-                    break
-            
-            processList = []
-            #Create process start conditions
-            for process in range(processes):
-            
-                processList.append(Process(target=link_commits_to_contributor, args=(existingDataQueue,self.logger,self.db,self.commits_table,)))
+            processList.append(Process(target=link_commits_to_contributor, args=(existingDataQueue,self.logger,self.db,self.commits_table,)))
         
         
-            #Multiprocess process commits
-            for pNum,process in enumerate(processList):
-                process.daemon = True
-                process.start()
-                self.logger.info(f"Process {pNum} started..")
+        #Multiprocess process commits
+        for pNum,process in enumerate(processList):
+            process.daemon = True
+            process.start()
+            self.logger.info(f"Process {pNum} started..")
         
         
-            for process in processList:
-                process.join()
+        for process in processList:
+            while len(existing_cntrb_emails) > 0:
+                if existingDataQueue.qsize() < 500:
+                    existingDataQueue.put(existing_cntrb_emails.pop())
+                
+            process.kill()
 
         self.logger.info("Done with inserting and updating facade contributors")
         return
