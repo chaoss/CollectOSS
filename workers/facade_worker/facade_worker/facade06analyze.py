@@ -45,7 +45,7 @@ from facade_worker.facade03analyzecommit import analyze_commit
 # else:
 #   import MySQLdb
 
-def analysis(cfg, multithreaded, interface=None, processes=12):
+def analysis(cfg, multithreaded, interface=None, processes=6):
 
 # Run the analysis by looping over all active repos. For each repo, we retrieve
 # the list of commits which lead to HEAD. If any are missing from the database,
@@ -197,9 +197,8 @@ def analysis(cfg, multithreaded, interface=None, processes=12):
                     time.sleep(1)
 
                 for process in processList:   
-                    if commitQueue.qsize() > 0: 
-                        process.join() 
-                        time.sleep(1)        
+                    process.join(timeout=60) 
+                    time.sleep(1)        
             
                 for process in processList:
                     cfg.log_activity('Info','Process %s ' % process )
