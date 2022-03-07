@@ -197,8 +197,9 @@ def analysis(cfg, multithreaded, interface=None, processes=12):
                     time.sleep(1)
 
                 for process in processList:   
-                    process.join() 
-                    time.sleep(1)        
+                    if commitQueue.qsize() > 0: 
+                        process.join() 
+                        time.sleep(1)        
             
                 for process in processList:
                     cfg.log_activity('Process %s ' % process )
@@ -207,7 +208,7 @@ def analysis(cfg, multithreaded, interface=None, processes=12):
                         time.sleep(5)
                         cfg.log_activity('Info','Qsize is: %s' % commitQueue.qsize())
                         # SPG, 3/7/2022
-                        if commit.qsize == 0: 
+                        if commitQueue.qsize() == 0: 
                             time.sleep(10)
                             cfg.log_activity('process %s still running with qsize of 0 ' % process)
 
