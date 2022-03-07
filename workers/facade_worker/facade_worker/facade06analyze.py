@@ -202,8 +202,8 @@ def analysis(cfg, multithreaded, interface=None, processes=12):
                         time.sleep(1)        
             
                 for process in processList:
-                    cfg.log_activity('Process %s ' % process )
-                    cfg.log_activity('     of process %s' % processList)
+                    cfg.log_activity('Info','Process %s ' % process )
+                    cfg.log_activity('Info','     of process %s' % processList)
                     while process.is_alive():
                         time.sleep(5)
                         cfg.log_activity('Info','Qsize is: %s' % commitQueue.qsize())
