@@ -194,11 +194,17 @@ def analysis(cfg, multithreaded, interface=None, processes=5):
                 for pNum,process in enumerate(processList):
                     cfg.log_activity('Info','Starting commit analysis process %s' % pNum)
                     process.start()
+                    # SPG, 3/7/2022
+                    process.join()
             
                 for process in processList:
                     while process.is_alive():
                         time.sleep(5)
                         cfg.log_activity('Info','Qsize is: %s' % commitQueue.qsize())
+                        # SPG, 3/7/2022
+                        if commit.qsize == 0: 
+                            time.sleep(10)
+                            cfg.log_activity('process %s still running with qsize of 0 '%process)
 
                     cfg.log_activity('Info','Subprocess has completed')
         else:
