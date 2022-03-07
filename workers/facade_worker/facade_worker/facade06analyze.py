@@ -194,9 +194,11 @@ def analysis(cfg, multithreaded, interface=None, processes=12):
                 for pNum,process in enumerate(processList):
                     cfg.log_activity('Info','Starting commit analysis process %s' % pNum)
                     process.start()
+                    time.sleep(1)
 
                 for process in processList:   
-                    process.join()         
+                    process.join() 
+                    time.sleep(1)        
             
                 for process in processList:
                     while process.is_alive():
