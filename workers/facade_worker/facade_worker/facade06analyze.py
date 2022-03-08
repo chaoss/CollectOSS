@@ -100,7 +100,10 @@ def analysis(cfg, multithreaded, interface=None, processes=6):
         get_status = ("SELECT working_commit FROM working_commits WHERE repos_id=%s")
 
         cfg.cursor.execute(get_status, (repo[0], ))
-        working_commits = list(cfg.cursor)
+        try:
+            working_commits = list(cfg.cursor)
+        except:
+            working_commits = []
         #cfg.cursor.fetchone()[1]
 
         # If there's a commit still there, the previous run was interrupted and
@@ -145,8 +148,11 @@ def analysis(cfg, multithreaded, interface=None, processes=6):
 
         cfg.cursor.execute(find_existing, (repo[0], ))
 
-        for commit in list(cfg.cursor):
-            existing_commits.add(commit[0])
+        try:
+            for commit in list(cfg.cursor):
+                existing_commits.add(commit[0])
+        except:
+            cfg.log_activity('Info', 'list(cfg.cursor) returned an error')
 
         # Find missing commits and add them
 
@@ -165,7 +171,7 @@ def analysis(cfg, multithreaded, interface=None, processes=6):
             #    commitQueue.put(commit)
 
             def analyze_commits_in_parallel(queue, cfg, repo_id, repo_location, multithreaded,interface):
-                while not queue.empty():
+                while True:
                     try:
                         cfg.log_activity('Info', 'Getting commit off queue for analysis...')
                         analyzeCommit = queue.get(timeout=1)
@@ -179,40 +185,25 @@ def analysis(cfg, multithreaded, interface=None, processes=6):
                         cfg.log_activity('Info', 'Subprocess ran into error when trying to anaylyze commit with error: %s' % e)
 
 
-            while len(missing_commits) > 0:
-                for n in range(5000):
-                    try:
-                        commit = missing_commits.pop()
-                        commitQueue.put(commit)
-                    except:
-                        break
+            
                 
-                processList = []
-                for process in range(processes):
-                    processList.append(multiprocessing.Process(target=analyze_commits_in_parallel, args=(commitQueue, cfg,repo[0],repo_loc,multithreaded,interface,)))
+            processList = []
+            for process in range(processes):
+                processList.append(multiprocessing.Process(target=analyze_commits_in_parallel, args=(commitQueue, cfg,repo[0],repo_loc,multithreaded,interface,)))
             
-                for pNum,process in enumerate(processList):
-                    cfg.log_activity('Info','Starting commit analysis process %s' % pNum)
-                    process.start()
-                    time.sleep(1)
-
-                for process in processList:  
-                    cfg.log_activity('Info', 'JOINING %s' % process) 
-                    process.join(timeout=3) 
-                    time.sleep(1)        
+            for pNum,process in enumerate(processList):
+                cfg.log_activity('Info','Starting commit analysis process %s' % pNum)
+                process.daemon = True
+                process.start()
             
-                for process in processList:
-                    cfg.log_activity('Info','Process %s ' % process )
-                    cfg.log_activity('Info','     of process %s' % processList)
-                    while process.is_alive():
-                        time.sleep(5)
-                        cfg.log_activity('Info','Qsize is: %s' % commitQueue.qsize())
-                        # SPG, 3/7/2022
-                        if commitQueue.qsize() == 0: 
-                            time.sleep(10)
-                            cfg.log_activity('process %s still running with qsize of 0 ' % process)
+            for process in processList:
+                
+                while len(missing_commits) > 0:
+                    if commitQueue.qsize() < 500:
+                        commitQueue.put(missing_commits.pop())
 
-                    cfg.log_activity('Info','Subprocess has completed')
+                process.kill()
+                cfg.log_activity('Info','Subprocess has completed')
         else:
             for commit in missing_commits:
                 analyze_commit(cfg, repo[0], repo_loc, commit, multithreaded, interface=interface)
