@@ -199,7 +199,7 @@ def analysis(cfg, multithreaded, interface=None, processes=5):
             for process in processList:
                 
                 while len(missing_commits) > 0:
-                    if commitQueue.qsize() < 500:
+                    if commitQueue.qsize() < (processes * 2):
                         commitQueue.put(missing_commits.pop())
 
                 process.kill()
