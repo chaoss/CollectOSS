@@ -200,8 +200,11 @@ def analysis(cfg, multithreaded, interface=None, processes=5):
                 
                 while len(missing_commits) > 0:
                     qSize = commitQueue.qsize()
+                    
+                    cfg.log_activity('Info','Qsize: %s ' % qSize)
+                    cfg.log_activity('Info','Commits left: %s ' % len(missing_commits))
+                    cfg.log_activity('Info','(processes * 2) %s ' % (processes * 2))
                     if qSize < (processes * 2):
-                        cfg.log_activity('Info','Qsize: %s ' % qSize)
                         commitQueue.put(missing_commits.pop())
 
                 process.kill()
