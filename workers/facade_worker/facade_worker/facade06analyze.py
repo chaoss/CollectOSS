@@ -177,9 +177,9 @@ def analysis(cfg, multithreaded, interface=None, processes=5):
                     try:
                         cfg.log_activity('Info', 'Getting commit off queue for analysis...')
                         
-                        muxtexLock.acquire()
+                        #muxtexLock.acquire()
                         analyzeCommit = queue.get(block=False)
-                        muxtexLock.release()
+                        #muxtexLock.release()
                         
                     except Exception as e:
                         cfg.log_activity('Info', 'Subprocess ran into error when trying to get commit from queue %s' % e)
