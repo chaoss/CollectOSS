@@ -827,6 +827,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         #Put contributor commit data into a process queue
         
         existingDataQueue = Queue()
+        
         #for commitData in existing_cntrb_emails:
         #    existingDataQueue.put(commitData)
             
