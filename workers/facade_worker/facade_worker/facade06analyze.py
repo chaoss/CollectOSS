@@ -182,8 +182,10 @@ def analysis(cfg, multithreaded, interface=None, processes=5):
                         muxtexLock.release()
                         
                     except Exception as e:
-                        continue
                         cfg.log_activity('Info', 'Subprocess ran into error when trying to get commit from queue %s' % e)
+                        muxtexLock.release()
+                        continue
+                        
 
                     try:
                         analyze_commit(cfg, repo_id, repo_location, analyzeCommit, multithreaded,interface=interface)
