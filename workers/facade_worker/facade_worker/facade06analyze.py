@@ -214,7 +214,7 @@ def analysis(cfg, multithreaded, interface=None, processes=5):
                     cfg.log_activity('Info','(processes * 2) %s ' % (processes * 2))
                     if qSize < (processes * 2):
                         missingCommit = missing_commits.pop()
-                        commitQueue.put(missingCommit,block=False)
+                        commitQueue.put(missingCommit,block=True)
 
                 process.kill()
                 cfg.log_activity('Info','Subprocess has completed')
