@@ -165,27 +165,19 @@ def analysis(cfg, multithreaded, interface=None, processes=5):
 
         if multithreaded:
             commitQueue = multiprocessing.Queue()
-            
-            childLock = multiprocessing.Lock()
 
             #multiprocessing queues shouldn't be too long. ~5000 in a queue at a time is probably more reasonable
             #for commit in missing_commits:
             #    commitQueue.put(commit)
 
-            def analyze_commits_in_parallel(queue, cfg, repo_id, repo_location, multithreaded,interface,muxtexLock):
+            def analyze_commits_in_parallel(queue, cfg, repo_id, repo_location, multithreaded,interface):
                 while True:
                     try:
                         cfg.log_activity('Info', 'Getting commit off queue for analysis...')
-                        
-                        #muxtexLock.acquire()
-                        analyzeCommit = queue.get(block=False)
-                        #muxtexLock.release()
-                        
+                        analyzeCommit = queue.get(False)
                     except Exception as e:
-                        cfg.log_activity('Info', 'Subprocess ran into error when trying to get commit from queue %s' % e)
-                        muxtexLock.release()
                         continue
-                        
+                        cfg.log_activity('Info', 'Subprocess ran into error when trying to get commit from queue %s' % e)
 
                     try:
                         analyze_commit(cfg, repo_id, repo_location, analyzeCommit, multithreaded,interface=interface)
@@ -197,7 +189,7 @@ def analysis(cfg, multithreaded, interface=None, processes=5):
                 
             processList = []
             for process in range(processes):
-                processList.append(multiprocessing.Process(target=analyze_commits_in_parallel, args=(commitQueue, cfg,repo[0],repo_loc,multithreaded,interface,childLock,)))
+                processList.append(multiprocessing.Process(target=analyze_commits_in_parallel, args=(commitQueue, cfg,repo[0],repo_loc,multithreaded,interface,)))
             
             for pNum,process in enumerate(processList):
                 cfg.log_activity('Info','Starting commit analysis process %s' % pNum)
@@ -213,8 +205,7 @@ def analysis(cfg, multithreaded, interface=None, processes=5):
                     cfg.log_activity('Info','Commits left: %s ' % len(missing_commits))
                     cfg.log_activity('Info','(processes * 2) %s ' % (processes * 2))
                     if qSize < (processes * 2):
-                        missingCommit = missing_commits.pop()
-                        commitQueue.put(missingCommit,block=True)
+                        commitQueue.put(missing_commits.pop())
 
                 process.kill()
                 cfg.log_activity('Info','Subprocess has completed')
