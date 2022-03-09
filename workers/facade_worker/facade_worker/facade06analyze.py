@@ -165,17 +165,22 @@ def analysis(cfg, multithreaded, interface=None, processes=5):
 
         if multithreaded:
             commitQueue = multiprocessing.Queue()
+            
+            childLock = multiprocessing.Lock()
 
             #multiprocessing queues shouldn't be too long. ~5000 in a queue at a time is probably more reasonable
             #for commit in missing_commits:
             #    commitQueue.put(commit)
 
-            def analyze_commits_in_parallel(queue, cfg, repo_id, repo_location, multithreaded,interface):
+            def analyze_commits_in_parallel(queue, cfg, repo_id, repo_location, multithreaded,interface,muxtexLock):
                 while True:
                     try:
-                        time.sleep(1)
                         cfg.log_activity('Info', 'Getting commit off queue for analysis...')
-                        analyzeCommit = queue.get(timeout=1)
+                        
+                        muxtexLock.acquire()
+                        analyzeCommit = queue.get(False)
+                        muxtexLock.release()
+                        
                     except Exception as e:
                         continue
                         cfg.log_activity('Info', 'Subprocess ran into error when trying to get commit from queue %s' % e)
@@ -190,7 +195,7 @@ def analysis(cfg, multithreaded, interface=None, processes=5):
                 
             processList = []
             for process in range(processes):
-                processList.append(multiprocessing.Process(target=analyze_commits_in_parallel, args=(commitQueue, cfg,repo[0],repo_loc,multithreaded,interface,)))
+                processList.append(multiprocessing.Process(target=analyze_commits_in_parallel, args=(commitQueue, cfg,repo[0],repo_loc,multithreaded,interface,childLock,)))
             
             for pNum,process in enumerate(processList):
                 cfg.log_activity('Info','Starting commit analysis process %s' % pNum)
@@ -206,7 +211,7 @@ def analysis(cfg, multithreaded, interface=None, processes=5):
                     cfg.log_activity('Info','Commits left: %s ' % len(missing_commits))
                     cfg.log_activity('Info','(processes * 2) %s ' % (processes * 2))
                     if qSize < (processes * 2):
-                        commitQueue.put(missing_commits.pop(), False)
+                        commitQueue.put(missing_commits.pop(),False)
 
                 process.kill()
                 cfg.log_activity('Info','Subprocess has completed')
