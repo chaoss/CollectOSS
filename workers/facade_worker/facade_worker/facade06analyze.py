@@ -178,7 +178,7 @@ def analysis(cfg, multithreaded, interface=None, processes=5):
                         cfg.log_activity('Info', 'Getting commit off queue for analysis...')
                         
                         muxtexLock.acquire()
-                        analyzeCommit = queue.get(False)
+                        analyzeCommit = queue.get(block=False)
                         muxtexLock.release()
                         
                     except Exception as e:
@@ -213,7 +213,8 @@ def analysis(cfg, multithreaded, interface=None, processes=5):
                     cfg.log_activity('Info','Commits left: %s ' % len(missing_commits))
                     cfg.log_activity('Info','(processes * 2) %s ' % (processes * 2))
                     if qSize < (processes * 2):
-                        commitQueue.put(missing_commits.pop(),False)
+                        missingCommit = missing_commits.pop()
+                        commitQueue.put(missingCommit,block=False)
 
                 process.kill()
                 cfg.log_activity('Info','Subprocess has completed')
