@@ -186,7 +186,7 @@ def analysis(cfg, multithreaded, interface=None, processes=5):
                     except Exception as e:
                         cfg.log_activity('Info', 'Subprocess ran into error when trying to anaylyze commit with error: %s' % e)
 
-            cfg.log_activity('Info','Size of missing_commits: %s' % len(missing_commits))
+            cfg.log_activity('Info','Type of missing_commits: %s' % type(missing_commits))
             listsSplitForProcesses = np.array_split(missing_commits,processes)
                 
             processList = []
