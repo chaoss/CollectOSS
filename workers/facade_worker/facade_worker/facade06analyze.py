@@ -186,13 +186,13 @@ def analysis(cfg, multithreaded, interface=None, processes=5):
                     except Exception as e:
                         cfg.log_activity('Info', 'Subprocess ran into error when trying to anaylyze commit with error: %s' % e)
 
-            cfg.log_activity('Info','Type of missing_commits: %s' % type(missing_commits))
+            cfg.log_activity('Info','Type of missing_commits: %s' % type(np.array(missing_commits)))
             listsSplitForProcesses = np.array_split(missing_commits,processes)
                 
             processList = []
             for process in range(processes):
                 
-                processList.append(multiprocessing.Process(target=analyze_commits_in_parallel, args=(listsSplitForProcesses[process], cfg,repo[0],repo_loc,multithreaded,interface,)))
+                processList.append(multiprocessing.Process(target=analyze_commits_in_parallel, args=(listsSplitForProcesses[process].tolist(), cfg,repo[0],repo_loc,multithreaded,interface,)))
             
             for pNum,process in enumerate(processList):
                 cfg.log_activity('Info','Starting commit analysis process %s' % pNum)
