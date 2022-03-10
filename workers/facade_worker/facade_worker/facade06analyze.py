@@ -166,8 +166,7 @@ def analysis(cfg, multithreaded, interface=None, processes=5):
         if multithreaded:
             commitQueue = multiprocessing.Queue(maxsize=(processes * 2))
 
-            #multiprocessing queues shouldn't be too long. ~5000 in a queue at a time is probably more reasonable
-            #for commit in missing_commits:
+            #multiprocessing queues shouldn't be too long. 
             #    commitQueue.put(commit)
 
             def analyze_commits_in_parallel(queue, cfg, repo_id, repo_location, multithreaded,interface):

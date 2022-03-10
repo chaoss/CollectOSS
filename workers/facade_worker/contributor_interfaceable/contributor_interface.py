@@ -18,7 +18,7 @@ def process_commit_metadata(contributorQueue,interface,repo_id):
     
     while True:
         try:
-            contributor = contributorQueue.get(timeout=1)
+            contributor = contributorQueue.get(False)
         except Exception as e:
             interface.logger.error(f"Ran into issue when popping off commit data from process queue: {e}")
             continue
@@ -734,7 +734,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                                   'repo_id': repo_id}).to_json(orient="records"))
 
         #Put contributor commit data into a process queue
-        commitDataQueue = Queue()
+        commitDataQueue = Queue(maxsize=(processes * 2))
         #for commitData in new_contribs:
         #    commitDataQueue.put(commitData)    
             
@@ -755,9 +755,12 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         for pNum,process in enumerate(processList):
         
             while len(new_contribs) > 0:
-                if commitDataQueue.qsize() < 500:
+                try:
                     commitDataQueue.put(new_contribs.pop())
+                except multiprocessing.Queue.Full:
+                    self.logger.info("Queue is currently full.")
             
+            time.sleep(3)
             process.kill()
 
             self.logger.info(f"Process {pNum} has ended.")
@@ -769,7 +772,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
             # iterate through all the commits with emails that appear in contributors and give them the relevant cntrb_id.
             while True:
                 try:
-                    cntrb_email = contributorQueue.get(timeout=1)
+                    cntrb_email = contributorQueue.get(False)
                 except:
                     continue
                 logger.debug(
@@ -826,7 +829,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         
         #Put contributor commit data into a process queue
         
-        existingDataQueue = Queue()
+        existingDataQueue = Queue(maxsize=(processes * 2))
         
         #for commitData in existing_cntrb_emails:
         #    existingDataQueue.put(commitData)
@@ -847,8 +850,10 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         
         for process in processList:
             while len(existing_cntrb_emails) > 0:
-                if existingDataQueue.qsize() < 500:
+                try:
                     existingDataQueue.put(existing_cntrb_emails.pop())
+                except multiprocessing.Queue.Full:
+                    self.logger.info("Queue is full!")
                 
             process.kill()
 
