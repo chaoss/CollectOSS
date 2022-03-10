@@ -17,9 +17,9 @@ import traceback
 #Method to parallelize
 def process_commit_metadata(contributorQueue,interface,repo_id):
     
-    while True:
+    while len(contributorQueue) > 0:
         try:
-            contributor = contributorQueue.get(False)
+            contributor = contributorQueue.pop()
         except Exception as e:
             interface.logger.error(f"Ran into issue when popping off commit data from process queue: {e}")
             continue
@@ -735,16 +735,18 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                                   'repo_id': repo_id}).to_json(orient="records"))
 
         #Put contributor commit data into a process queue
-        commitDataQueue = Queue(maxsize=(processes * 2))
+        #commitDataQueue = Queue(maxsize=(processes * 2))
         #for commitData in new_contribs:
         #    commitDataQueue.put(commitData)    
-            
+        
+        commitDataLists = np.array_split(new_contribs, processes)
+        
         processList = []
         #Create process start conditions
         for process in range(processes):
             interface = ContributorInterfaceable(config=self.config,logger=self.logger)
         
-            processList.append(Process(target=process_commit_metadata, args=(commitDataQueue,interface,repo_id,)))
+            processList.append(Process(target=process_commit_metadata, args=(commitDataLists[process],interface,repo_id,)))
         
         #Multiprocess process commits
         for pNum,process in enumerate(processList):
@@ -755,14 +757,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         
         for pNum,process in enumerate(processList):
         
-            while len(new_contribs) > 0:
-                try:
-                    commitDataQueue.put(new_contribs.pop())
-                except multiprocessing.Queue.Full:
-                    self.logger.info("Queue is currently full.")
-            
-            time.sleep(3)
-            process.kill()
+            process.join()
 
             self.logger.info(f"Process {pNum} has ended.")
 
@@ -771,9 +766,9 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         
         def link_commits_to_contributor(contributorQueue,logger,database, commits_table):
             # iterate through all the commits with emails that appear in contributors and give them the relevant cntrb_id.
-            while True:
+            while len(contributorQueue) > 0:
                 try:
-                    cntrb_email = contributorQueue.get(False)
+                    cntrb_email = contributorQueue.pop()
                 except:
                     continue
                 logger.debug(
@@ -840,7 +835,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         #Create process start conditions
         for process in range(processes):
         
-            processList.append(Process(target=link_commits_to_contributor, args=(existingEmailsSplit,self.logger,self.db,self.commits_table,)))
+            processList.append(Process(target=link_commits_to_contributor, args=(existingEmailsSplit[process],self.logger,self.db,self.commits_table,)))
         
         
         #Multiprocess process commits
@@ -851,13 +846,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         
         
         for process in processList:
-            while len(existing_cntrb_emails) > 0:
-                try:
-                    existingDataQueue.put(existing_cntrb_emails.pop())
-                except multiprocessing.Queue.Full:
-                    self.logger.info("Queue is full!")
-                
-            process.kill()
+            process.join()
 
         self.logger.info("Done with inserting and updating facade contributors")
         return
