@@ -203,7 +203,7 @@ def analysis(cfg, multithreaded, interface=None, processes=5):
                     #qSize = commitQueue.qsize()
                     
                     #cfg.log_activity('Info','Qsize: %s ' % qSize)
-                    cfg.log_activity('Info','Commits left: %s ' % len(missing_commits))
+                    #cfg.log_activity('Info','Commits left: %s ' % len(missing_commits))
                     
                     try:
                         commitQueue.put(missing_commits.pop())
