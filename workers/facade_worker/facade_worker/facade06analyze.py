@@ -188,7 +188,7 @@ def analysis(cfg, multithreaded, interface=None, processes=5):
 
             cfg.log_activity('Info','Type of missing_commits: %s' % type(missing_commits))
             
-            numpyMissingCommits = np.array(missing_commits)
+            numpyMissingCommits = np.array(list(missing_commits))
             listsSplitForProcesses = np.array_split(numpyMissingCommits,processes)
                 
             processList = []
