@@ -172,14 +172,7 @@ def analysis(cfg, multithreaded, interface=None, processes=5):
             #    commitQueue.put(commit)
 
             def analyze_commits_in_parallel(queue, cfg, repo_id, repo_location, multithreaded,interface):
-                while len(queue) > 0:
-                    try:
-                        cfg.log_activity('Info', 'Getting commit off queue for analysis...')
-                        analyzeCommit = queue.pop()
-                    except Exception as e:
-                        cfg.log_activity('Info', 'Subprocess ran into error when trying to get commit from queue %s' % e)
-                        continue
-                        
+                for analyzeCommit in queue:    
 
                     try:
                         analyze_commit(cfg, repo_id, repo_location, analyzeCommit, multithreaded,interface=interface)
