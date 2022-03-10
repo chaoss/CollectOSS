@@ -164,20 +164,20 @@ def analysis(cfg, multithreaded, interface=None, processes=6):
         ## TODO: Verify if the multithreaded approach here is optimal for postgresql
 
         if multithreaded:
-            commitQueue = multiprocessing.Queue()
+            commitQueue = multiprocessing.Queue(maxsize=(processes * 2))
 
-            #multiprocessing queues shouldn't be too long. ~5000 in a queue at a time is probably more reasonable
-            #for commit in missing_commits:
+            #multiprocessing queues shouldn't be too long. 
             #    commitQueue.put(commit)
 
             def analyze_commits_in_parallel(queue, cfg, repo_id, repo_location, multithreaded,interface):
                 while True:
                     try:
                         cfg.log_activity('Info', 'Getting commit off queue for analysis...')
-                        analyzeCommit = queue.get(timeout=1)
+                        analyzeCommit = queue.get(False)
                     except Exception as e:
-                        continue
                         cfg.log_activity('Info', 'Subprocess ran into error when trying to get commit from queue %s' % e)
+                        continue
+                        
 
                     try:
                         analyze_commit(cfg, repo_id, repo_location, analyzeCommit, multithreaded,interface=interface)
@@ -199,8 +199,16 @@ def analysis(cfg, multithreaded, interface=None, processes=6):
             for process in processList:
                 
                 while len(missing_commits) > 0:
-                    if commitQueue.qsize() < (processes * 2):
+                    #qSize = commitQueue.qsize()
+                    
+                    #cfg.log_activity('Info','Qsize: %s ' % qSize)
+                    #cfg.log_activity('Info','Commits left: %s ' % len(missing_commits))
+                    
+                    try:
                         commitQueue.put(missing_commits.pop())
+                    except multiprocessing.Queue.Full:
+                        cfg.log_activity('Info', 'MP queue is full!')
+                    
 
                 process.kill()
                 cfg.log_activity('Info','Subprocess has completed')
