@@ -9,6 +9,7 @@ from random import randint
 import json
 import multiprocessing
 import time
+import numpy as np
 
 # Debugger
 import traceback
@@ -827,18 +828,19 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                                            'repo_id': repo_id}).to_json(orient="records"))
 
         
-        #Put contributor commit data into a process queue
-        
-        existingDataQueue = Queue(maxsize=(processes * 2))
+        #Should rethink queue when you can just split the list.
+        #existingDataQueue = Queue(maxsize=(processes * 2))
         
         #for commitData in existing_cntrb_emails:
         #    existingDataQueue.put(commitData)
+        
+        existingEmailsSplit = np.array_split(existing_cntrb_emails,processes)
             
         processList = []
         #Create process start conditions
         for process in range(processes):
         
-            processList.append(Process(target=link_commits_to_contributor, args=(existingDataQueue,self.logger,self.db,self.commits_table,)))
+            processList.append(Process(target=link_commits_to_contributor, args=(existingEmailsSplit,self.logger,self.db,self.commits_table,)))
         
         
         #Multiprocess process commits
