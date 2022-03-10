@@ -66,11 +66,6 @@ class FacadeWorker(Worker):
         # Facade-specific config
         self.cfg = Config(self.logger)
 
-        # Define data collection info
-        # self.tool_source = 'Facade Worker'
-        # self.tool_version = '1.1.0'
-        # self.data_source = 'Git Log'
-
         self.logger.info("Trying to create the ContributorInterface...")
         #Define interface to GitHub as an attribute
         self.logger.info(f"Config passed is: {str(self.config)}")
@@ -86,7 +81,7 @@ class FacadeWorker(Worker):
         self.logger.info("created interface")
 
         self.tool_source = '\'Facade Worker\''
-        self.tool_version = '\'1.2.0\''
+        self.tool_version = '\'1.2.4\''
         self.data_source = '\'Git Log\''
 
         self.logger.info("Finished  Init")

@@ -14,7 +14,7 @@ def read(filename):
 
 setup(
     name="facade_worker",
-    version="0.1",
+    version="1.2.4",
     url="https://github.com/chaoss/augur",
     license='MIT',
     author="Augurlabs",
