@@ -739,27 +739,28 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         #for commitData in new_contribs:
         #    commitDataQueue.put(commitData)    
         
-        commitDataLists = np.array_split(new_contribs, processes)
+        if len(new_contribs) > 0:
+            commitDataLists = np.array_split(new_contribs, processes)
         
-        processList = []
-        #Create process start conditions
-        for process in range(processes):
-            interface = ContributorInterfaceable(config=self.config,logger=self.logger)
+            processList = []
+            #Create process start conditions
+            for process in range(processes):
+                interface = ContributorInterfaceable(config=self.config,logger=self.logger)
+
+                processList.append(Process(target=process_commit_metadata, args=(commitDataLists[process],interface,repo_id,)))
         
-            processList.append(Process(target=process_commit_metadata, args=(commitDataLists[process],interface,repo_id,)))
-        
-        #Multiprocess process commits
-        for pNum,process in enumerate(processList):
-            process.daemon = True
-            process.start()
-            self.logger.info(f"Process {pNum} started..")
+            #Multiprocess process commits
+            for pNum,process in enumerate(processList):
+                process.daemon = True
+                process.start()
+                self.logger.info(f"Process {pNum} started..")
             
         
-        for pNum,process in enumerate(processList):
-        
-            process.join()
+            for pNum,process in enumerate(processList):
+            
+                process.join()
 
-            self.logger.info(f"Process {pNum} has ended.")
+                self.logger.info(f"Process {pNum} has ended.")
 
 
         self.logger.debug("DEBUG: Got through the new_contribs")
@@ -829,24 +830,25 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         #for commitData in existing_cntrb_emails:
         #    existingDataQueue.put(commitData)
         
-        existingEmailsSplit = np.array_split(existing_cntrb_emails,processes)
+        if len(existing_cntrb_emails) > 0:
+            existingEmailsSplit = np.array_split(existing_cntrb_emails,processes)
             
-        processList = []
-        #Create process start conditions
-        for process in range(processes):
-        
-            processList.append(Process(target=link_commits_to_contributor, args=(existingEmailsSplit[process],self.logger,self.db,self.commits_table,)))
-        
-        
-        #Multiprocess process commits
-        for pNum,process in enumerate(processList):
-            process.daemon = True
-            process.start()
-            self.logger.info(f"Process {pNum} started..")
+            processList = []
+            #Create process start conditions
+            for process in range(processes):
+            
+                processList.append(Process(target=link_commits_to_contributor, args=(existingEmailsSplit[process],self.logger,self.db,self.commits_table,)))
         
         
-        for process in processList:
-            process.join()
+            #Multiprocess process commits
+            for pNum,process in enumerate(processList):
+                process.daemon = True
+                process.start()
+                self.logger.info(f"Process {pNum} started..")
+        
+        
+            for process in processList:
+                process.join()
 
         self.logger.info("Done with inserting and updating facade contributors")
         return

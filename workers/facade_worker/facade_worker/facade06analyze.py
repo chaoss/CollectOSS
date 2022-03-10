@@ -164,7 +164,7 @@ def analysis(cfg, multithreaded, interface=None, processes=5):
 
         ## TODO: Verify if the multithreaded approach here is optimal for postgresql
 
-        if multithreaded:
+        if multithreaded and len(missing_commits) > 0:
             #Queue adds parent overhead that we should try to avoid.
             #commitQueue = multiprocessing.Queue(maxsize=(processes * 2))
 
@@ -203,7 +203,7 @@ def analysis(cfg, multithreaded, interface=None, processes=5):
 
                 process.join()
                 cfg.log_activity('Info','Subprocess has completed')
-        else:
+        elif len(missing_commits) > 0:
             for commit in missing_commits:
                 analyze_commit(cfg, repo[0], repo_loc, commit, multithreaded, interface=interface)
 
