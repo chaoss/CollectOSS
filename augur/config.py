@@ -401,7 +401,7 @@ default_config = {
             "force_invalidate_caches": 1,
             "force_updates": 1,
             "limited_run": 0,
-            "multithreaded": 0,
+            "multithreaded": 1,
             "nuke_stored_affiliations": 0,
             "pull_repos": 1,
             "rebuild_caches": 1,
