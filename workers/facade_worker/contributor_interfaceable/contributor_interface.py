@@ -296,7 +296,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         self.worker_type = "Contributor_interface"
         self.tool_source = '\'Facade Worker\''
-        self.tool_version = '\'1.0.1\''
+        self.tool_version = '\'1.2.4\''
         self.data_source = '\'Git Log\''
 
         return
@@ -374,7 +374,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         self.logger = logger
 
         self.tool_source = '\'Facade Worker\'s Contributor Interface\''
-        self.tool_version = '\'0.2.0\''
+        self.tool_version = '\'1.2.4\''
         self.data_source = '\'Git Log\''
 
     def create_endpoint_from_commit_sha(self, commit_sha, repo_id):
