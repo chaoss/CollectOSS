@@ -17,12 +17,7 @@ import traceback
 #Method to parallelize
 def process_commit_metadata(contributorQueue,interface,repo_id):
     
-    while len(contributorQueue) > 0:
-        try:
-            contributor = contributorQueue.pop()
-        except Exception as e:
-            interface.logger.error(f"Ran into issue when popping off commit data from process queue: {e}")
-            continue
+    for contributor in contributorQueue:
         # Get the email from the commit data
         email = contributor['email_raw'] if 'email_raw' in contributor else contributor['email']
     
@@ -740,14 +735,15 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         #    commitDataQueue.put(commitData)    
         
         if len(new_contribs) > 0:
-            commitDataLists = np.array_split(new_contribs, processes)
+            numpyNewContribs = np.array(list(new_contribs))
+            commitDataLists = np.array_split(numpyNewContribs, processes)
         
             processList = []
             #Create process start conditions
             for process in range(processes):
                 interface = ContributorInterfaceable(config=self.config,logger=self.logger)
 
-                processList.append(Process(target=process_commit_metadata, args=(commitDataLists[process],interface,repo_id,)))
+                processList.append(Process(target=process_commit_metadata, args=(commitDataLists[process].tolist(),interface,repo_id,)))
         
             #Multiprocess process commits
             for pNum,process in enumerate(processList):
@@ -767,11 +763,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         
         def link_commits_to_contributor(contributorQueue,logger,database, commits_table):
             # iterate through all the commits with emails that appear in contributors and give them the relevant cntrb_id.
-            while len(contributorQueue) > 0:
-                try:
-                    cntrb_email = contributorQueue.pop()
-                except:
-                    continue
+            for cntrb_email in contributorQueue:
                 logger.debug(
                    f"These are the emails and cntrb_id's  returned: {cntrb_email}")
 
@@ -831,13 +823,14 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         #    existingDataQueue.put(commitData)
         
         if len(existing_cntrb_emails) > 0:
-            existingEmailsSplit = np.array_split(existing_cntrb_emails,processes)
+            numpyExistingCntrbEmails = np.array(list(existing_cntrb_emails))
+            existingEmailsSplit = np.array_split(numpyExistingCntrbEmails,processes)
             
             processList = []
             #Create process start conditions
             for process in range(processes):
             
-                processList.append(Process(target=link_commits_to_contributor, args=(existingEmailsSplit[process],self.logger,self.db,self.commits_table,)))
+                processList.append(Process(target=link_commits_to_contributor, args=(existingEmailsSplit[process].tolist(),self.logger,self.db,self.commits_table,)))
         
         
             #Multiprocess process commits
