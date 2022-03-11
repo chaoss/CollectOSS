@@ -681,10 +681,8 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         return match
 
-    
-
     # Update the contributors table from the data facade has gathered.
-    def insert_facade_contributors(self, repo_id,processes=4):
+    def insert_facade_contributors(self, repo_id,processes=4,multithreaded=True):
         self.logger.info(
             "Beginning process to insert contributors from facade commits for repo w entry info: {}\n".format(repo_id))
 
@@ -734,7 +732,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         #for commitData in new_contribs:
         #    commitDataQueue.put(commitData)    
         
-        if len(new_contribs) > 0:
+        if len(new_contribs) > 0 and multithreaded:
             numpyNewContribs = np.array(list(new_contribs))
             commitDataLists = np.array_split(numpyNewContribs, processes)
         
@@ -757,7 +755,8 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                 process.join()
 
                 self.logger.info(f"Process {pNum} has ended.")
-
+        else:
+            process_commit_metadata(list(new_contribs),self,repo_id)
 
         self.logger.debug("DEBUG: Got through the new_contribs")
         
@@ -822,7 +821,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         #for commitData in existing_cntrb_emails:
         #    existingDataQueue.put(commitData)
         
-        if len(existing_cntrb_emails) > 0:
+        if len(existing_cntrb_emails) > 0 and multithreaded:
             numpyExistingCntrbEmails = np.array(list(existing_cntrb_emails))
             existingEmailsSplit = np.array_split(numpyExistingCntrbEmails,processes)
             
@@ -842,6 +841,8 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         
             for process in processList:
                 process.join()
+        else:
+            link_commits_to_contributor(list(existing_cntrb_emails), self.logger, self.db, self.commits_table)
 
         self.logger.info("Done with inserting and updating facade contributors")
         return
