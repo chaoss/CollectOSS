@@ -2,31 +2,17 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 
 # Import the flask app
-# app = Flask(__name__)
+app = Flask(__name__)
 
 # define the database connection string for Flask app
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/test.db'
 
 # TODO: Create db from Flask app
 db = SQLAlchemy(app)
-# TODO: need to add default of current timestamp for data_collection_date
-# TODO: how to define schemas
-# TODO: how to add indexes
-# TODO: Sqlalchemey defines timestamp with length of 6
-
-
-# TODO: Sqlalchemey defines timestamp with length of 6
-# TODO: How to define primary key without autoincrement
-# TODO: Why to some values have default set to NULL then their data type if they will default to NULL anyway
-
-# TODO: removed asc and dsc from hash indexes because they are not supported (it automatically set them to ASC NULLS LAST which is the same as all the ones in the database)
-# TODO: Foreign keys should also be not null to make it more clear a row can't be added without it
-
 
 # TODO: Why is there a working_commits and repos_fetch_log in both of the schemas? There classes conflict 
 
 
-# TODO: Added primary key
 class AnalysisLog(db.Model):
     analysis_log_id = db.Column(db.BigInteger, primary_key=True)
     repos_id = db.Column(db.Integer, nullable=False)
@@ -40,11 +26,6 @@ class AnalysisLog(db.Model):
     )
 
 class ChaossMetricStatus(db.Model):
-    __tablename__ = 'chaoss_metric_status'
-    __table_args__ = (
-        {"schema":"augur_data",
-        "comment": "This table used to track CHAOSS Metric implementations in Augur, but due to the constantly changing location of that information, it is for the moment not actively populated. "}
-    )
     cms_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
     cm_group = db.Column(db.String())
     cm_source = db.Column(db.String())
@@ -63,13 +44,14 @@ class ChaossMetricStatus(db.Model):
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
     cm_working_group_focus_area = db.Column(db.String())
 
-
-class CommitCommentRef(db.Model):
-    __tablename__ = 'commit_comment_ref'
+    __tablename__ = 'chaoss_metric_status'
     __table_args__ = (
-        UniqueConstraint('cmt_comment_src_id', name='commitcomment'),
-        {"schema": "augur_data"}
+        {"schema":"augur_data",
+        "comment": "This table used to track CHAOSS Metric implementations in Augur, but due to the constantly changing location of that information, it is for the moment not actively populated. "}
     )
+
+# TODO: I don't think the repo_id should be in this table because the same behavior can be made with Repo.commits.msg_ref
+class CommitCommentRef(db.Model):
     cmt_comment_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
     cmt_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.commits.cmt_id', name='fk_commit_comment_ref_commits_1', onupdate="CASCADE", ondelete="RESTRICT"), nullable=False)
     repo_id = db.Column(db.BigInteger)
@@ -78,19 +60,25 @@ class CommitCommentRef(db.Model):
     body = db.Column(db.Text())
     line = db.Column(db.BigInteger)
     position = db.Column(db.BigInteger)
-    commit_comment_src_node_id = db.Column(db.String())
-    cmt_comment_src_id = db.Column(db.BigInteger, nullable=False)
+    commit_comment_src_node_id = db.Column(db.String(), comment="For data provenance, we store the source node ID if it exists. ")
+    cmt_comment_src_id = db.Column(db.BigInteger, nullable=False, comment="For data provenance, we store the source ID if it exists. ")
     created_at = db.Column(db.TIMESTAMP(), nullable=False, server_default=func.current_timestamp())
     tool_source = db.Column(db.String())
     tool_version = db.Column(db.String())
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
-    
+    message = relationship("Message", back_populates="commit")
+    commit = relationship("Commits", back_populates="msg_ref")
 
-Index("comment_id", CommitCommentRef.cmt_comment_src_id.asc().nullslast(), CommitCommentRef.cmt_comment_id.asc().nullslast(), CommitCommentRef.msg_id.asc().nullslast())
+    __tablename__ = 'commit_comment_ref'
+    __table_args__ = (
+        db.Index("comment_id", cmt_comment_src_id, cmt_comment_id, msg_id),
+        UniqueConstraint('cmt_comment_src_id', name='commitcomment'),
+        {"schema": "augur_data"}
+    )
 
-    
+# TODO: Add relationship for this table but don't fully understand relationships yet
 class CommitParents(db.Model):
     cmt_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.commits.cmt_id', name='fk_commit_parents_commits_1'), primary_key=True)
     parent_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.commits.cmt_id', name='fk_commit_parents_commits_2'), primary_key=True)
@@ -108,8 +96,8 @@ class CommitParents(db.Model):
 
 
 
-# TODO: Current db version has some varchar defined with length but I changed that with flask
 # TODO: Add foriegn key: cmt_author_platform_username = db.Column(db.String(), db.ForeignKey('augur_data.contributors.cntrb_login', name='fk_commits_contributors_3', ondelete="CASCADE", onupdate="CASCADE"))
+# TODO: Add relationship with this foreign key
 class Commits(db.Model):
     cmt_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
     repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='fk_commits_repo_2', ondelete="RESTRICT", onupdate="CASCADE"), nullable=False)
@@ -141,6 +129,16 @@ class Commits(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
+    msg_ref = relationship("CommitCommentRef", back_populates="commit")
+
+    def get_messages(self):
+
+        messages = []
+        for msg_ref in self.msg_ref:
+            messages.append(msg_ref.message)
+
+        return messages
+
     __tablename__ = 'commits'
     __table_args__ = (
         db.Index("author_affiliation", cmt_author_affiliation, postgresql_using='hash'),
@@ -164,16 +162,9 @@ class Commits(db.Model):
         }
     )
 
-# TODO: Set default for ca_start_date to '1970-01-01'
-# TODO: Set default for ca_active to 1
+
 # Current db has varchar with length but I changed that
 class ContributorAffiliations(db.Model):
-    __tablename__ = 'contributor_affiliations'
-    __table_args__ = (
-        UniqueConstraint('ca_domain', name='unique_domain'), 
-        {"schema":"augur_data",
-        "comment": "This table exists outside of relations with other tables. The purpose is to provide a dynamic, owner maintained (and augur augmented) list of affiliations. This table is processed in affiliation information in the DM_ tables generated when Augur is finished counting commits using the Facade Worker. "}
-    )
     ca_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
     ca_domain = db.Column(db.String(), nullable=False)
     ca_start_date = db.Column(db.Date, server_default='1970-01-01')
@@ -185,19 +176,18 @@ class ContributorAffiliations(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
-    
-
-
-class ContributorRepo(db.Model):
-    __tablename__ = 'contributor_repo'
+    __tablename__ = 'contributor_affiliations'
     __table_args__ = (
-        PrimaryKeyConstraint('cntrb_repo_id', name='cntrb_repo_id_key'), 
-        UniqueConstraint('event_id', 'tool_version', name='eventer'),
-        {"schema":"augur_data"}
+        UniqueConstraint('ca_domain', name='unique_domain'), 
+        {"schema":"augur_data",
+        "comment": "This table exists outside of relations with other tables. The purpose is to provide a dynamic, owner maintained (and augur augmented) list of affiliations. This table is processed in affiliation information in the DM_ tables generated when Augur is finished counting commits using the Facade Worker. "}
     )
+
+# TODO: Add foreign key to repo table on cntrb_repo_id
+class ContributorRepo(db.Model):
     cntrb_repo_id = db.Column(db.BigInteger, nullable=False)
-    cntrb_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.contributors.cntrb_id', name='fk_contributor_repo_contributors_1', ondelete="RESTRICT", onupdate="CASCADE"), nullable=False)
-    repo_git = db.Column(db.String(), nullable=False)
+    cntrb_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.contributors.cntrb_id', name='fk_contributor_repo_contributors_1', ondelete="RESTRICT", onupdate="CASCADE"), nullable=False, comment="This is not null because what is the point without the contributor in this table? ")
+    repo_git = db.Column(db.String(), nullable=False, comment="Similar to cntrb_id, we need this data for the table to have meaningful data. ")
     repo_name = db.Column(db.String(), nullable=False)
     gh_repo_id = db.Column(db.BigInteger, nullable=False)
     cntrb_category = db.Column(db.String())
@@ -208,27 +198,22 @@ class ContributorRepo(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
-
-
-# TODO: Set cntrb_fake default to 0
-# TODO: Set cntrb_deleted default to 0
-class Contributors(db.Model):
-    __tablename__ = 'contributors'
+    __tablename__ = 'contributor_repo'
     __table_args__ = (
-        UniqueConstraint('gh_login', name='GH-UNIQUE-C', initially="DEFERRED", deferrable=True),
-        UniqueConstraint('gl_id', name='GL-UNIQUE-B', initially="DEFERRED", deferrable=True),
-        UniqueConstraint('gl_username', name='GL-UNIQUE-C', initially="DEFERRED", deferrable=True),
-        UniqueConstraint('cntrb_login', name='GL-cntrb-LOGIN-UNIQUE'), 
-        {"schema":"augur_data",
-        "comment": "For GitHub, this should be repeated from gh_login. for other systems, it should be that systems login.\nGithub now allows a user to change their login name, but their user id remains the same in this case. So, the natural key is the combination of id and login, but there should never be repeated logins. "}
+        PrimaryKeyConstraint('cntrb_repo_id', name='cntrb_repo_id_key'), 
+        UniqueConstraint('event_id', 'tool_version', name='eventer'),
+        {"schema":"augur_data"}
     )
+
+
+class Contributors(db.Model):
     cntrb_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    cntrb_login = db.Column(db.String())
-    cntrb_email = db.Column(db.String())
+    cntrb_login = db.Column(db.String(), comment="Will be a double population with the same value as gh_login for github, but the local value for other systems. ")
+    cntrb_email = db.Column(db.String(), comment="This needs to be here for matching contributor ids, which are augur, to the commit information. ")
     cntrb_full_name = db.Column(db.String())
     cntrb_company = db.Column(db.String())
     cntrb_created_at = db.Column(db.TIMESTAMP())
-    cntrb_type = db.Column(db.String())
+    cntrb_type = db.Column(db.String(), comment="Present in another models. It is not currently used in Augur. ")
     cntrb_fake = db.Column(db.SmallInteger, server_default=text('0'))
     cntrb_deleted = db.Column(db.SmallInteger, server_default=text('0'))
     cntrb_long = db.Column(db.Numeric(precision=11, scale=8))
@@ -240,7 +225,7 @@ class Contributors(db.Model):
     cntrb_canonical = db.Column(db.String())
     cntrb_last_used = db.Column(db.TIMESTAMP(timezone=True))
     gh_user_id = db.Column(db.BigInteger)
-    gh_login = db.Column(db.String())
+    gh_login = db.Column(db.String(), comment="populated with the github user name for github originated data. ")
     gh_url = db.Column(db.String())
     gh_html_url = db.Column(db.String())
     gh_node_id = db.Column(db.String())
@@ -268,36 +253,42 @@ class Contributors(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
-Index("cnt-fullname", Contributors.cntrb_full_name, postgresql_using='hash')
-Index("cntrb-theemail", Contributors.cntrb_email, postgresql_using='hash')
+    repos_contributed = relationship("ContributorRepo")
+    aliases = relationship("ContributorsAliases")
+    messages = relationship("Message")
 
-Index("cntrb_canonica-idx11", Contributors.cntrb_canonical.asc().nullslast())
-Index("cntrb_login_platform_index", Contributors.cntrb_login.asc().nullslast())
+    __tablename__ = 'contributors'
+    __table_args__ = (
+        UniqueConstraint('gh_login', name='GH-UNIQUE-C', initially="DEFERRED", deferrable=True),
+        UniqueConstraint('gl_id', name='GL-UNIQUE-B', initially="DEFERRED", deferrable=True),
+        UniqueConstraint('gl_username', name='GL-UNIQUE-C', initially="DEFERRED", deferrable=True),
+        UniqueConstraint('cntrb_login', name='GL-cntrb-LOGIN-UNIQUE'), 
 
-Index("contributor_delete_finder", Contributors.cntrb_id, Contributors.cntrb_email, postgresql_using='brin')
-Index("contributor_worker_email_finder", Contributors.cntrb_email, postgresql_using='brin')
-Index("contributor_worker_finder", Contributors.cntrb_login, Contributors.cntrb_email, Contributors.cntrb_id, postgresql_using='brin')
+        db.Index("cnt-fullname", cntrb_full_name, postgresql_using='hash'),
+        db.Index("cntrb-theemail", cntrb_email, postgresql_using='hash'),
 
-# TODO: This index is the saem as the first one but one has a different stuff
-Index("contributor_worker_fullname_finder", Contributors.cntrb_full_name, postgresql_using='brin')
+        db.Index("cntrb_canonica-idx11", cntrb_canonical),
+        db.Index("cntrb_login_platform_index", cntrb_login),
 
-Index("contributors_idx_cntrb_email3", Contributors.cntrb_email.asc().nullslast())
+        db.Index("contributor_delete_finder", cntrb_id, cntrb_email, postgresql_using='brin'),
+        db.Index("contributor_worker_email_finder", cntrb_email, postgresql_using='brin'),
+        db.Index("contributor_worker_finder", cntrb_login, cntrb_email, cntrb_id, postgresql_using='brin'),
 
-# TODO: These last onese appear to be the same
-Index("login", Contributors.cntrb_login.asc().nullslast())
-Index("login-contributor-idx", Contributors.cntrb_login.asc().nullslast())
+        # TODO: This index is the same as the first one but one has a different stuff
+        db.Index("contributor_worker_fullname_finder", cntrb_full_name, postgresql_using='brin'),
 
+        db.Index("contributors_idx_cntrb_email3", cntrb_email),
 
- 
+        # TODO: These last onese appear to be the same
+        db.Index("login", cntrb_login),
+        db.Index("login-contributor-idx", cntrb_login),
+
+        {"schema":"augur_data",
+        "comment": "For GitHub, this should be repeated from gh_login. for other systems, it should be that systems login.\nGithub now allows a user to change their login name, but their user id remains the same in this case. So, the natural key is the combination of id and login, but there should never be repeated logins. "}
+    )
 
 
 class ContributorsAliases(db.Model):
-    __tablename__ = 'contributors_aliases'
-    __table_args__ = (
-        UniqueConstraint('alias_email', 'canonical_email', name='only-email-once', initially="DEFERRED", deferrable=True), 
-        {"schema":"augur_data",
-        "comment": 'Every open source user may have more than one email used to make contributions over time. Augur selects the first email it encounters for a user as its “canonical_email”. \n\nThe canonical_email is also added to the contributors_aliases table, with the canonical_email and alias_email being identical.  Using this strategy, an email search will only need to join the alias table for basic email information, and can then more easily map the canonical email from each alias row to the same, more detailed information in the contributors table for a user. '}
-    )
     cntrb_alias_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
     cntrb_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.contributors.cntrb_id', name='fk_contributors_aliases_contributors_1', ondelete="CASCADE", onupdate="CASCADE", initially="DEFERRED", deferrable=True), nullable=False)
     canonical_email = db.Column(db.String(), nullable=False)
@@ -309,16 +300,16 @@ class ContributorsAliases(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
-
-
-
-# TODO: msg_id should be not null since foreign key
-class DiscourseInsights(db.Model):
-    __tablename__ = 'discourse_insights'
+    __tablename__ = 'contributors_aliases'
     __table_args__ = (
+        UniqueConstraint('alias_email', 'canonical_email', name='only-email-once', initially="DEFERRED", deferrable=True), 
         {"schema":"augur_data",
-        "comment": "This table is populated by the “Discourse_Analysis_Worker”. It examines sequential discourse, using computational linguistic methods, to draw statistical inferences regarding the discourse in a particular comment thread. "}
+        "comment": 'Every open source user may have more than one email used to make contributions over time. Augur selects the first email it encounters for a user as its “canonical_email”. \n\nThe canonical_email is also added to the contributors_aliases table, with the canonical_email and alias_email being identical.  Using this strategy, an email search will only need to join the alias table for basic email information, and can then more easily map the canonical email from each alias row to the same, more detailed information in the contributors table for a user. '}
     )
+
+
+# TODO: Add relationship: Don't understand table well enough
+class DiscourseInsights(db.Model):
     msg_discourse_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
     msg_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.message.msg_id', name='fk_discourse_insights_message_1'))
     discourse_act = db.Column(db.String())
@@ -327,11 +318,14 @@ class DiscourseInsights(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
+    __tablename__ = 'discourse_insights'
+    __table_args__ = (
+        {"schema":"augur_data",
+        "comment": "This table is populated by the “Discourse_Analysis_Worker”. It examines sequential discourse, using computational linguistic methods, to draw statistical inferences regarding the discourse in a particular comment thread. "}
+    )
 
-# TODO Temporaily defined priimary key on first attribute so it would generate
+# TODO: Add foreign keys to repo and repogroups
 class DmRepoAnnual(db.Model):
-    __tablename__ = 'dm_repo_annual'
-    __table_args__ = ({"schema":"augur_data"})
     dm_repo_annual_id = db.Column(db.BigInteger, primary_key=True)
     repo_id = db.Column(db.BigInteger, nullable=False)
     email = db.Column(db.String(), nullable=False)
@@ -347,13 +341,15 @@ class DmRepoAnnual(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
-Index("repo_id,affiliation_copy_1", DmRepoAnnual.repo_id.asc().nullslast(), DmRepoAnnual.affiliation.asc().nullslast())
-Index("repo_id,email_copy_1", DmRepoAnnual.repo_id.asc().nullslast(), DmRepoAnnual.email.asc().nullslast())
+    __tablename__ = 'dm_repo_annual'
+    __table_args__ = (
+        db.Index("repo_id,affiliation_copy_1", repo_id, affiliation),
+        db.Index("repo_id,email_copy_1", repo_id, email),
+        {"schema":"augur_data"}
+    )
 
 
 class DmRepoGroupAnnual(db.Model):
-    __tablename__ = 'dm_repo_group_annual'
-    __table_args__ = ({"schema":"augur_data"})
     dm_repo_group_annual_id = db.Column(db.BigInteger, primary_key=True)
     repo_group_id = db.Column(db.BigInteger, nullable=False)
     email = db.Column(db.String(), nullable=False)
@@ -369,13 +365,15 @@ class DmRepoGroupAnnual(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
-Index("projects_id,affiliation_copy_1", DmRepoGroupAnnual.repo_group_id.asc().nullslast(), DmRepoGroupAnnual.affiliation.asc().nullslast())
-Index("projects_id,email_copy_1", DmRepoGroupAnnual.repo_group_id.asc().nullslast(), DmRepoGroupAnnual.email.asc().nullslast())
+    __tablename__ = 'dm_repo_group_annual'
+    __table_args__ = (
+        db.Index("projects_id,affiliation_copy_1", repo_group_id, affiliation),
+        db.Index("projects_id,email_copy_1", repo_group_id, email),
+        {"schema":"augur_data"}
+    )
 
 
 class DmRepoGroupMonthly(db.Model):
-    __tablename__ = 'dm_repo_group_monthly'
-    __table_args__ = ({"schema":"augur_data"})
     dm_repo_group_monthly_id = db.Column(db.BigInteger, primary_key=True)
     repo_group_id = db.Column(db.BigInteger, nullable=False)
     email = db.Column(db.String(), nullable=False)
@@ -392,15 +390,17 @@ class DmRepoGroupMonthly(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
-Index("projects_id,affiliation_copy_2", DmRepoGroupMonthly.repo_group_id.asc().nullslast(), DmRepoGroupMonthly.affiliation.asc().nullslast())
-Index("projects_id,email_copy_2", DmRepoGroupMonthly.repo_group_id.asc().nullslast(), DmRepoGroupMonthly.email.asc().nullslast())
-Index("projects_id,year,affiliation_copy_1", DmRepoGroupMonthly.repo_group_id.asc().nullslast(), DmRepoGroupMonthly.year.asc().nullslast(), DmRepoGroupMonthly.affiliation.asc().nullslast())
-Index("projects_id,year,email_copy_1", DmRepoGroupMonthly.repo_group_id.asc().nullslast(), DmRepoGroupMonthly.year.asc().nullslast(), DmRepoGroupMonthly.email.asc().nullslast())
+    __tablename__ = 'dm_repo_group_monthly'
+    __table_args__ = (
+        db.Index("projects_id,affiliation_copy_2", repo_group_id, affiliation),
+        db.Index("projects_id,email_copy_2", repo_group_id, email),
+        db.Index("projects_id,year,affiliation_copy_1", repo_group_id, year, affiliation),
+        db.Index("projects_id,year,email_copy_1", repo_group_id, year, email),
+        {"schema":"augur_data"}
+    )
 
 
 class DmRepoGroupWeekly(db.Model):
-    __tablename__ = 'dm_repo_group_weekly'
-    __table_args__ = ({"schema":"augur_data"})
     dm_repo_group_weekly_id = db.Column(db.BigInteger, primary_key=True)
     repo_group_id = db.Column(db.BigInteger, nullable=False)
     email = db.Column(db.String(), nullable=False)
@@ -417,14 +417,17 @@ class DmRepoGroupWeekly(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
-Index("projects_id,affiliation", DmRepoGroupWeekly.repo_group_id.asc().nullslast(), DmRepoGroupWeekly.affiliation.asc().nullslast())
-Index("projects_id,email", DmRepoGroupWeekly.repo_group_id.asc().nullslast(), DmRepoGroupWeekly.email.asc().nullslast())
-Index("projects_id,year,affiliation", DmRepoGroupWeekly.repo_group_id.asc().nullslast(), DmRepoGroupWeekly.year.asc().nullslast(), DmRepoGroupWeekly.affiliation.asc().nullslast())
-Index("projects_id,year,email", DmRepoGroupWeekly.repo_group_id.asc().nullslast(), DmRepoGroupWeekly.year.asc().nullslast(), DmRepoGroupWeekly.email.asc().nullslast())
+    __tablename__ = 'dm_repo_group_weekly'
+    __table_args__ = (
+        db.Index("projects_id,affiliation", repo_group_id, affiliation),
+        db.Index("projects_id,email", repo_group_id, email),
+        db.Index("projects_id,year,affiliation", repo_group_id, year, affiliation),
+        db.Index("projects_id,year,email", repo_group_id, year, email),
+        {"schema":"augur_data"}
+    )
+
 
 class DmRepoMonthly(db.Model):
-    __tablename__ = 'dm_repo_monthly'
-    __table_args__ = ({"schema":"augur_data"})
     dm_repo_monthly_id = db.Column(db.BigInteger, primary_key=True)
     repo_id = db.Column(db.BigInteger, nullable=False)
     email = db.Column(db.String(), nullable=False)
@@ -441,15 +444,17 @@ class DmRepoMonthly(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
-Index("repo_id,affiliation_copy_2", DmRepoMonthly.repo_id.asc().nullslast(), DmRepoMonthly.affiliation.asc().nullslast())
-Index("repo_id,email_copy_2", DmRepoMonthly.repo_id.asc().nullslast(), DmRepoMonthly.email.asc().nullslast())
-Index("repo_id,year,affiliation_copy_1", DmRepoMonthly.repo_id.asc().nullslast(), DmRepoMonthly.year.asc().nullslast(), DmRepoMonthly.affiliation.asc().nullslast())
-Index("repo_id,year,email_copy_1", DmRepoMonthly.repo_id.asc().nullslast(), DmRepoMonthly.year.asc().nullslast(), DmRepoMonthly.email.asc().nullslast())
+    __tablename__ = 'dm_repo_monthly'
+    __table_args__ = (
+        db.Index("repo_id,affiliation_copy_2", repo_id, affiliation),
+        db.Index("repo_id,email_copy_2", repo_id, email),
+        db.Index("repo_id,year,affiliation_copy_1", repo_id, year, affiliation),
+        db.Index("repo_id,year,email_copy_1", repo_id, year, email),
+        {"schema":"augur_data"}
+    )
 
 
 class DmRepoWeekly(db.Model):
-    __tablename__ = 'dm_repo_weekly'
-    __table_args__ = ({"schema":"augur_data"})
     dm_repo_weekly_id = db.Column(db.BigInteger, primary_key=True)
     repo_id = db.Column(db.BigInteger, nullable=False)
     email = db.Column(db.String(), nullable=False)
@@ -466,43 +471,51 @@ class DmRepoWeekly(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
-Index("repo_id,affiliation", DmRepoWeekly.repo_id.asc().nullslast(), DmRepoWeekly.affiliation.asc().nullslast())
-Index("repo_id,email", DmRepoWeekly.repo_id.asc().nullslast(), DmRepoWeekly.email.asc().nullslast())
-Index("repo_id,year,affiliation", DmRepoWeekly.repo_id.asc().nullslast(), DmRepoWeekly.year.asc().nullslast(), DmRepoWeekly.affiliation.asc().nullslast())
-Index("repo_id,year,email", DmRepoWeekly.repo_id.asc().nullslast(), DmRepoWeekly.year.asc().nullslast(), DmRepoWeekly.email.asc().nullslast())
+    __tablename__ = 'dm_repo_weekly'
+    __table_args__ = (
+        db.Index("repo_id,affiliation", repo_id, affiliation),
+        db.Index("repo_id,email", repo_id, email),
+        db.Index("repo_id,year,affiliation", repo_id, year, affiliation),
+        db.Index("repo_id,year,email", repo_id, year, email),
+        {"schema":"augur_data"}
+    )
+
 
 class Exclude(db.Model):
-    __tablename__ = 'exclude'
-    __table_args__ = ({"schema":"augur_data"})
     id = db.Column(db.Integer, primary_key=True, nullable=False)
     projects_id = db.Column(db.Integer, nullable=False)
     email = db.Column(db.String(), server_default='NULL')
     domain = db.Column(db.String(), server_default='NULL')
 
+    __tablename__ = 'exclude'
+    __table_args__ = (
+        {"schema":"augur_data"}
+    )
 
+
+# TODO: Add relationship for repo_id: I don't think the repo_id should be in this table, I think that behavior can be obtained by getting all the issues for a repo then all the issue assignees for those issues
+# TODO: Add relationship for cntrb_id
 class IssueAssignees(db.Model):
-    __tablename__ = 'issue_assignees'
-    __table_args__ = ({"schema":"augur_data"})
     issue_assignee_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
     issue_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.issues.issue_id', name='fk_issue_assignees_issues_1'))
     repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='fk_issue_assignee_repo_id', ondelete="RESTRICT", onupdate="CASCADE"))
     cntrb_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.contributors.cntrb_id', name='fk_issue_assignees_contributors_1'))
-    issue_assignee_src_id = db.Column(db.BigInteger)
-    issue_assignee_src_node = db.Column(db.String())
+    issue_assignee_src_id = db.Column(db.BigInteger, comment="This ID comes from the source. In the case of GitHub, it is the id that is the first field returned from the issue events API in the issue_assignees embedded JSON object. We may discover it is an ID for the person themselves; but my hypothesis is that its not.")
+    issue_assignee_src_node = db.Column(db.String(), comment="This character based identifier comes from the source. In the case of GitHub, it is the id that is the second field returned from the issue events API in the issue_assignees embedded JSON object. We may discover it is an ID for the person themselves; but my hypothesis is that its not.")
     tool_source = db.Column(db.String())
     tool_version = db.Column(db.String())
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
-Index("issue-cntrb-assign-idx-1", IssueAssignees.cntrb_id.asc().nullslast())
-
-
-class IssueEvents(db.Model):
-    __tablename__ = 'issue_events'
+    __tablename__ = 'issue_assignees'
     __table_args__ = (
-        UniqueConstraint('issue_id', 'issue_event_src_id', name='unique_event_id_key'), 
+        db.Index("issue-cntrb-assign-idx-1", cntrb_id),
         {"schema":"augur_data"}
     )
+
+# TODO: Add relationship for repo_id: I don't think the repo_id should be in this table, I think that behavior can be obtained by getting all the issues for a repo then all the issue assignees for those issues
+# TODO: Add relationship for cntrb_id
+class IssueEvents(db.Model):
     event_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
     issue_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.issues.issue_id', name='fk_issue_events_issues_1', ondelete="RESTRICT", onupdate="CASCADE"), nullable=False)
     repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='fk_issue_events_repo', ondelete="RESTRICT", onupdate="CASCADE"))
@@ -510,75 +523,80 @@ class IssueEvents(db.Model):
     action = db.Column(db.String(), nullable=False)
     action_commit_hash = db.Column(db.String())
     created_at = db.Column(db.TIMESTAMP(), nullable=False, server_default=func.current_timestamp())
-    node_id = db.Column(db.String())
+    node_id = db.Column(db.String(), comment="This should be renamed to issue_event_src_node_id, as its the varchar identifier in GitHub and likely common in other sources as well. However, since it was created before we came to this naming standard and workers are built around it, we have it simply named as node_id. Anywhere you see node_id in the schema, it comes from GitHubs terminology.")
     node_url = db.Column(db.String())
-    issue_event_src_id = db.Column(db.BigInteger)
+    issue_event_src_id = db.Column(db.BigInteger, comment="This ID comes from the source. In the case of GitHub, it is the id that is the first field returned from the issue events API")
     tool_source = db.Column(db.String())
     tool_version = db.Column(db.String())
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
     platform_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.platform.pltfrm_id', name='fk_issue_event_platform_ide', ondelete="RESTRICT", onupdate="CASCADE"))
 
-Index("issue-cntrb-idx2", IssueEvents.issue_event_src_id.asc().nullslast())
-Index("issue_events_ibfk_1", IssueEvents.issue_id.asc().nullslast())
-Index("issue_events_ibfk_2", IssueEvents.cntrb_id.asc().nullslast())
-
-
-
-
-class IssueLabels(db.Model):
-    __tablename__ = 'issue_labels'
+    __tablename__ = 'issue_events'
     __table_args__ = (
-        UniqueConstraint('label_src_id', 'issue_id', name='unique_issue_label'), 
+        UniqueConstraint('issue_id', 'issue_event_src_id', name='unique_event_id_key'), 
+        db.Index("issue-cntrb-idx2", issue_event_src_id),
+        db.Index("issue_events_ibfk_1", issue_id),
+        db.Index("issue_events_ibfk_2", cntrb_id),
         {"schema":"augur_data"}
     )
+
+# TODO: Add relationship for repo_id: I don't think the repo_id should be in this table, I think that behavior can be obtained by getting all the issues for a repo then all the issue assignees for those issues
+class IssueLabels(db.Model):
     issue_label_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
     issue_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.issues.issue_id', name='fk_issue_labels_issues_1'))
     repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='fk_issue_labels_repo_id', ondelete="RESTRICT", onupdate="CASCADE"))
     label_text = db.Column(db.String())
     label_description = db.Column(db.String())
     label_color = db.Column(db.String())
-    label_src_id = db.Column(db.BigInteger)
+    label_src_id = db.Column(db.BigInteger, comment="This character based identifier (node) comes from the source. In the case of GitHub, it is the id that is the second field returned from the issue events API JSON subsection for issues.")
     label_src_node_id = db.Column(db.String())
     tool_source = db.Column(db.String())
     tool_version = db.Column(db.String())
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
-
-
-
-class IssueMessageRef(db.Model):
-    __tablename__ = 'issue_message_ref'
+    __tablename__ = 'issue_labels'
     __table_args__ = (
-        UniqueConstraint('issue_msg_ref_src_comment_id', 'tool_source', name='repo-issue'),
+        UniqueConstraint('label_src_id', 'issue_id', name='unique_issue_label'), 
         {"schema":"augur_data"}
     )
+
+# TODO: I don't think that the repo_id should be in this table because this behavior can be made with Repo.issues.msg_ref
+# TODO: Add replationship: for repo_id
+class IssueMessageRef(db.Model):
     issue_msg_ref_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
     issue_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.issues.issue_id', name='fk_issue_message_ref_issues_1', ondelete="RESTRICT", onupdate="CASCADE", initially="DEFERRED", deferrable=True))
     repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='fk_repo_id_fk1', ondelete="RESTRICT", onupdate="CASCADE", initially="DEFERRED", deferrable=True))
     msg_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.message.msg_id', name='fk_issue_message_ref_message_1', ondelete="RESTRICT", onupdate="CASCADE", initially="DEFERRED", deferrable=True))
-    issue_msg_ref_src_node_id = db.Column(db.String())
-    issue_msg_ref_src_comment_id = db.Column(db.BigInteger)
+    issue_msg_ref_src_node_id = db.Column(db.String(), comment="This character based identifier comes from the source. In the case of GitHub, it is the id that is the first field returned from the issue comments API")
+    issue_msg_ref_src_comment_id = db.Column(db.BigInteger, comment="This ID comes from the source. In the case of GitHub, it is the id that is the first field returned from the issue comments API")
     tool_source = db.Column(db.String())
     tool_version = db.Column(db.String())
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
+    message = relationship("Message", back_populates="issue")
+    issue = relationship("Issues", back_populates="msg_ref")
 
+    __tablename__ = 'issue_message_ref'
+    __table_args__ = (
+        UniqueConstraint('issue_msg_ref_src_comment_id', 'tool_source', name='repo-issue'),
+        {"schema":"augur_data"}
+    )
+
+# TODO: Add relationship for cntrb_id
 # should repo_id be allowed to be NULL?
 class Issues(db.Model):
-    __tablename__ = 'issues'
-    __table_args__ = ({"schema":"augur_data"})
     issue_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
     repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='fk_issues_repo', ondelete="CASCADE", onupdate="CASCADE"))
-    reporter_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.contributors.cntrb_id', name='fk_issues_contributors_2'))
+    reporter_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.contributors.cntrb_id', name='fk_issues_contributors_2'), comment="The ID of the person who opened the issue. ")
     pull_request = db.Column(db.BigInteger)
     pull_request_id = db.Column(db.BigInteger)
     created_at = db.Column(db.TIMESTAMP())
     issue_title = db.Column(db.String())
     issue_body = db.Column(db.String())
-    cntrb_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.contributors.cntrb_id', name='fk_issues_contributors_1'))
+    cntrb_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.contributors.cntrb_id', name='fk_issues_contributors_1'), comment="The ID of the person who closed the issue. ")
     comment_count = db.Column(db.BigInteger)
     updated_at = db.Column(db.TIMESTAMP())
     closed_at = db.Column(db.TIMESTAMP())
@@ -599,17 +617,32 @@ class Issues(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
-Index("issue-cntrb-dix2", Issues.cntrb_id.asc().nullslast())
-Index("issues_ibfk_1", Issues.repo_id.asc().nullslast())
-Index("issues_ibfk_2", Issues.reporter_id.asc().nullslast())
-Index("issues_ibfk_4", Issues.pull_request_id.asc().nullslast())
+    assignees = relationship("IssueAssignees")
+    events = relationship("IssueEvents")
+    labels = relationship("IssueLabels")
+
+    msg_ref = relationship("IssueMessageRef", back_populates="issue")
+
+    def get_messages(self):
+
+        messages = []
+        for msg_ref in self.msg_ref:
+            messages.append(msg_ref.message)
+
+        return messages
+
+    __tablename__ = 'issues'
+    __table_args__ = (
+        db.Index("issue-cntrb-dix2", cntrb_id),
+        db.Index("issues_ibfk_1", repo_id),
+        db.Index("issues_ibfk_2", reporter_id),
+        db.Index("issues_ibfk_4", pull_request_id),
+        {"schema":"augur_data"}
+    )
 
 
 # TODO: Should latest_release_timestamp be a timestamp
-# TODO: I made data_collection_date have a default it doesn't in current db
 class Libraries(db.Model):
-    __tablename__ = 'libraries'
-    __table_args__ = ({"schema":"augur_data"})
     library_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
     repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='fk_libraries_repo_1'))
     platform = db.Column(db.String())
@@ -632,11 +665,18 @@ class Libraries(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
+    library_dependencies = relationship("LibraryDependecies")
 
-# TODO: I made data_collection_date have a default it doesn't in current db
+    #TODO: Should this be a one to one relationship with library version (this it what I defined it as)?
+    library_version = relationship("LibraryVersion", back_populates="library")
+
+    __tablename__ = 'libraries'
+    __table_args__ = (
+        {"schema":"augur_data"}
+    )
+
+
 class LibraryDependecies(db.Model):
-    __tablename__ = 'library_dependencies'
-    __table_args__ = ({"schema":"augur_data"})
     lib_dependency_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
     library_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.libraries.library_id', name='fk_library_dependencies_libraries_1'))
     manifest_platform = db.Column(db.String())
@@ -648,13 +688,14 @@ class LibraryDependecies(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
-Index("REPO_DEP", LibraryDependecies.library_id.asc().nullslast())
+    __tablename__ = 'library_dependencies'
+    __table_args__ = (
+        db.Index("REPO_DEP", library_id),
+        {"schema":"augur_data"}
+    )
 
 
-# TODO: I made data_collection_date have a default it doesn't in current db
 class LibraryVersion(db.Model):
-    __tablename__ = 'library_version'
-    __table_args__ = ({"schema":"augur_data"})
     library_version_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
     library_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.libraries.library_id', name='fk_library_version_libraries_1'))
     library_platform = db.Column(db.String())
@@ -665,10 +706,15 @@ class LibraryVersion(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
+    library = relationship("Libraries", back_populates="library_version")
+
+    __tablename__ = 'library_version'
+    __table_args__ = (
+        {"schema":"augur_data"}
+    )
+
 
 class LstmAnomalyModels(db.Model):
-    __tablename__ = 'lstm_anomaly_models'
-    __table_args__ = ({"schema":"augur_data"})
     model_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
     model_name = db.Column(db.String())
     model_description = db.Column(db.String())
@@ -681,10 +727,16 @@ class LstmAnomalyModels(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
+    # TODO: Should this be a one to one relationship?
+    model_result = relationship("LstmAnomalyResults")
+
+    __tablename__ = 'lstm_anomaly_models'
+    __table_args__ = (
+        {"schema":"augur_data"}
+    )
+
 
 class LstmAnomalyResults(db.Model):
-    __tablename__ = 'lstm_anomaly_results'
-    __table_args__ = ({"schema":"augur_data"})
     result_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
     repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='fk_lstm_anomaly_results_repo_1'))
     repo_category = db.Column(db.String())
@@ -693,7 +745,7 @@ class LstmAnomalyResults(db.Model):
     contamination_factor = db.Column(db.Float())
     mean_absolute_error = db.Column(db.Float())
     remarks = db.Column(db.String())
-    metric_field = db.Column(db.String())
+    metric_field = db.Column(db.String(), comment="This is a listing of all of the endpoint fields included in the generation of the metric. Sometimes there is one, sometimes there is more than one. This will list them all. ")
     mean_absolute_actual_value = db.Column(db.Float())
     mean_absolute_prediction_value = db.Column(db.Float())
     tool_source = db.Column(db.String())
@@ -701,19 +753,20 @@ class LstmAnomalyResults(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
-
-class Message(db.Model):
-    __tablename__ = 'message'
+    __tablename__ = 'lstm_anomaly_results'
     __table_args__ = (
-        UniqueConstraint('platform_msg_id', 'tool_source', name='gh-message'), 
         {"schema":"augur_data"}
     )
+
+# TODO: I don't think that repo_id needs to be included because this behavior could be achieved by Repo.ParentObj.msg_ref.message (ParentObj is things such as prs or issues)
+# TODO: Add relationship to repo group list serve table
+class Message(db.Model):
     msg_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
     rgls_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo_groups_list_serve.rgls_id', name='fk_message_repo_groups_list_serve_1', ondelete="CASCADE", onupdate="CASCADE"))
     platform_msg_id = db.Column(db.BigInteger)
     platform_node_id = db.Column(db.String())
     repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='fk_message_repoid', ondelete="CASCADE", onupdate="CASCADE", initially="DEFERRED", deferrable=True))
-    cntrb_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.contributors.cntrb_id', name='fk_message_contributors_1', ondelete="CASCADE", onupdate="CASCADE"))
+    cntrb_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.contributors.cntrb_id', name='fk_message_contributors_1', ondelete="CASCADE", onupdate="CASCADE"), comment="Not populated for mailing lists. Populated for GitHub issues. ")
     msg_text = db.Column(db.String())
     msg_timestamp = db.Column(db.TIMESTAMP())
     msg_sender_email = db.Column(db.String())
@@ -724,35 +777,47 @@ class Message(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
-Index("messagegrouper", Message.msg_id.asc().nullslast(), 
-    Message.rgls_id.asc().nullslast(), unique=True)
-Index("msg-cntrb-id-idx", Message.cntrb_id.asc().nullslast())
-Index("platformgrouper", Message.msg_id.asc().nullslast(), 
-    Message.pltfrm_id.asc().nullslast())
+    # Used this thread to determine how to do one to many relationship with an extra middle table: https://stackoverflow.com/questions/35795717/flask-sqlalchemy-many-to-many-relationship-with-extra-field
+    commit = relationship("CommitCommentRef", back_populates="message")
+    issue = relationship("IssueMessageRef", back_populates="message")
+    pull_request = relationship("PullRequestMessageRef", back_populates="message")
+    pr_review = relationship("PullRequestReviewMessageRef", back_populates="message")
 
+    analysis = relationship("MessageAnalysis", back_populates="message")
+    sentiment = relationship("MessageSentiment", back_populates="message")
+
+
+    __tablename__ = 'message'
+    __table_args__ = (
+        UniqueConstraint('platform_msg_id', 'tool_source', name='gh-message'), 
+        db.Index("messagegrouper", msg_id, rgls_id, unique=True),
+        db.Index("msg-cntrb-id-idx", cntrb_id),
+        db.Index("platformgrouper", msg_id, pltfrm_id),
+        {"schema":"augur_data"}
+    )
 
 class MessageAnalysis(db.Model):
-    __tablename__ = 'message_analysis'
-    __table_args__ = ({"schema":"augur_data"})
     msg_analysis_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
     msg_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.message.msg_id', name='fk_message_analysis_message_1'))
-    worker_run_id = db.Column(db.BigInteger)
-    sentiment_score = db.Column(db.Float())
-    reconstruction_error = db.Column(db.Float())
-    novelty_flag = db.Column(db.Boolean())
-    feedback_flag = db.Column(db.Boolean())
+    worker_run_id = db.Column(db.BigInteger, comment="This column is used to indicate analyses run by a worker during the same execution period, and is useful for grouping, and time series analysis.  ")
+    sentiment_score = db.Column(db.Float(), comment="A sentiment analysis score. Zero is neutral, negative numbers are negative sentiment, and positive numbers are positive sentiment. ")
+    reconstruction_error = db.Column(db.Float(), comment="Each message is converted to a 250 dimensin doc2vec vector, so the reconstruction error is the difference between what the predicted vector and the actual vector.")
+    novelty_flag = db.Column(db.Boolean(), comment="This is an analysis of the degree to which the message is novel when compared to other messages in a repository.  For example when bots are producing numerous identical messages, the novelty score is low. It would also be a low novelty score when several people are making the same coment. ")
+    feedback_flag = db.Column(db.Boolean(), comment="This exists to provide the user with an opportunity provide feedback on the resulting the sentiment scores. ")
     tool_source = db.Column(db.String())
     tool_version = db.Column(db.String())
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
+    message = relationship("Message", back_populates="analysis")
+
+    __tablename__ = 'message_analysis'
+    __table_args__ = (
+        {"schema":"augur_data"}
+    )
+
 
 class MessageAnalysisSummary(db.Model):
-    __tablename__ = 'message_analysis_summary'
-    __table_args__ = (
-        {"schema":"augur_data",
-        "comment": "In a relationally perfect world, we would have a table called “message_analysis_run” the incremented the “worker_run_id” for both message_analysis and message_analysis_summary. For now, we decided this was overkill. "}
-    )
     msg_summary_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
     repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='fk_message_analysis_summary_repo_1'))
     worker_run_id = db.Column(db.BigInteger)
@@ -765,49 +830,59 @@ class MessageAnalysisSummary(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
+    # TODO: Ensure that this is a one to one relationship
+    repo = relationship("Repo", back_populates="msg_analysis_summary")
+
+    __tablename__ = 'message_analysis_summary'
+    __table_args__ = (
+        {"schema":"augur_data"}
+    )
+
 
 class MessageSentiment(db.Model):
-    __tablename__ = 'message_sentiment'
-    __table_args__ = ({"schema":"augur_data"})
     msg_analysis_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
     msg_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.message.msg_id', name='fk_message_sentiment_message_1'))
-    worker_run_id = db.Column(db.BigInteger)
-    sentiment_score = db.Column(db.Float())
-    reconstruction_error = db.Column(db.Float())
-    novelty_flag = db.Column(db.Boolean())
-    feedback_flag = db.Column(db.Boolean())
+    worker_run_id = db.Column(db.BigInteger, comment="This column is used to indicate analyses run by a worker during the same execution period, and is useful for grouping, and time series analysis.  ")
+    sentiment_score = db.Column(db.Float(), comment="A sentiment analysis score. Zero is neutral, negative numbers are negative sentiment, and positive numbers are positive sentiment. ")
+    reconstruction_error = db.Column(db.Float(), comment="Each message is converted to a 250 dimensin doc2vec vector, so the reconstruction error is the difference between what the predicted vector and the actual vector.")
+    novelty_flag = db.Column(db.Boolean(), comment="This is an analysis of the degree to which the message is novel when compared to other messages in a repository.  For example when bots are producing numerous identical messages, the novelty score is low. It would also be a low novelty score when several people are making the same coment. ")
+    feedback_flag = db.Column(db.Boolean(), comment="This exists to provide the user with an opportunity provide feedback on the resulting the sentiment scores. ")
     tool_source = db.Column(db.String())
     tool_version = db.Column(db.String())
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
+    message = relationship("Message", back_populates="sentiment")
+
+    __tablename__ = 'message_sentiment'
+    __table_args__ = (
+        {"schema":"augur_data"}
+    )
+
 
 class MessageSentimentSummary(db.Model):
+    msg_summary_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+    repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='fk_message_sentiment_summary_repo_1'))
+    worker_run_id = db.Column(db.BigInteger, comment='This value should reflect the worker_run_id for the messages summarized in the table. There is not a relation between these two tables for that purpose because its not *really*, relationaly a concept unless we create a third table for "worker_run_id", which we determined was unnecessarily complex. ')
+    positive_ratio = db.Column(db.Float())
+    negative_ratio = db.Column(db.Float())
+    novel_count = db.Column(db.BigInteger, comment="The number of messages identified as novel during the analyzed period")
+    period = db.Column(db.TIMESTAMP(), comment="The whole timeline is divided into periods based on the definition of time period for analysis, which is user specified. Timestamp of the first period to look at, until the end of messages at the data of execution. ")
+    tool_source = db.Column(db.String())
+    tool_version = db.Column(db.String())
+    data_source = db.Column(db.String())
+    data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
+
+    repo = relationship("Repo", back_populates="msg_sentiment_summary")
+
     __tablename__ = 'message_sentiment_summary'
     __table_args__ = (
         {"schema":"augur_data",
         "comment": "In a relationally perfect world, we would have a table called “message_sentiment_run” the incremented the “worker_run_id” for both message_sentiment and message_sentiment_summary. For now, we decided this was overkill. "}
     )
-    msg_summary_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='fk_message_sentiment_summary_repo_1'))
-    worker_run_id = db.Column(db.BigInteger)
-    positive_ratio = db.Column(db.Float())
-    negative_ratio = db.Column(db.Float())
-    novel_count = db.Column(db.BigInteger)
-    period = db.Column(db.TIMESTAMP())
-    tool_source = db.Column(db.String())
-    tool_version = db.Column(db.String())
-    data_source = db.Column(db.String())
-    data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
 
-# TODO: I made data_collection_date have a default it doesn't in current db
 class Platform(db.Model):
-    __tablename__ = 'platform'
-    __table_args__ = (
-        PrimaryKeyConstraint('pltfrm_id', name='theplat'),
-        {"schema":"augur_data"}
-    )
     pltfrm_id = db.Column(db.BigInteger, nullable=False)
     pltfrm_name = db.Column(db.String())
     pltfrm_version = db.Column(db.String())
@@ -817,28 +892,38 @@ class Platform(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
-Index("plat", Platform.pltfrm_id.asc().nullslast(), unique=True)
+    pr_reviews = relationship("PullRequestReviews")
+
+    __tablename__ = 'platform'
+    __table_args__ = (
+        PrimaryKeyConstraint('pltfrm_id', name='theplat'),
+        db.Index("plat", pltfrm_id, unique=True),
+        {"schema":"augur_data"}
+    )
 
 
 class PullRequestAnalysis(db.Model):
-    __tablename__ = 'pull_request_analysis'
-    __table_args__ = ({"schema":"augur_data"})
     pull_request_analysis_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    pull_request_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.pull_requests.pull_request_id', name='fk_pull_request_analysis_pull_requests_1', ondelete="CASCADE", onupdate="CASCADE"))
-    merge_probability = db.Column(db.Numeric(precision=256, scale=250))
-    mechanism = db.Column(db.String())
+    pull_request_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.pull_requests.pull_request_id', name='fk_pull_request_analysis_pull_requests_1', ondelete="CASCADE", onupdate="CASCADE"), comment="It would be better if the pull request worker is run first to fetch the latest PRs before analyzing")
+    merge_probability = db.Column(db.Numeric(precision=256, scale=250), comment="Indicates the probability of the PR being merged")
+    mechanism = db.Column(db.String(), comment="the ML model used for prediction (It is XGBoost Classifier at present)")
     tool_source = db.Column(db.String())
     tool_version = db.Column(db.String())
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), nullable=False, server_default=func.current_timestamp())
 
-Index("pr_anal_idx", PullRequestAnalysis.pull_request_id.asc().nullslast())
-Index("probability_idx", PullRequestAnalysis.merge_probability.desc().nullslast())
+    pull_request = relationship("PullRequests", back_populates="analysis")
 
+    __tablename__ = 'pull_request_analysis'
+    __table_args__ = (
+        db.Index("pr_anal_idx", pull_request_id),
+        db.Index("probability_idx", merge_probability.desc().nullslast()),
+        {"schema":"augur_data"}
+    )
 
+# TODO: I don't think repo_id is needed on this table because it can be achieved by doing Repo.PullRequests.assignees
+# TODO: Add relationship for cntrb_id
 class PullRequestAssignees(db.Model):
-    __tablename__ = 'pull_request_assignees'
-    __table_args__ = ({"schema":"augur_data"})
     pr_assignee_map_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
     pull_request_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.pull_requests.pull_request_id', name='fk_pull_request_assignees_pull_requests_1'))
     repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='fk_pull_request_assignees_repo_id', ondelete="RESTRICT", onupdate="CASCADE", initially="DEFERRED", deferrable=True))
@@ -849,24 +934,24 @@ class PullRequestAssignees(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
-Index("pr_meta_cntrb-idx", PullRequestAssignees.contrib_id.asc().nullslast())
-
-
-class PullRequestCommits(db.Model):
-    __tablename__ = 'pull_request_commits'
+    __tablename__ = 'pull_request_assignees'
     __table_args__ = (
-        UniqueConstraint('pull_request_id', 'repo_id', 'pr_cmt_sha', name='pr_commit_nk'),
-        {"schema":"augur_data",
-        "comment": "Pull request commits are an enumeration of each commit associated with a pull request. \nNot all pull requests are from a branch or fork into master. \nThe commits table intends to count only commits that end up in the master branch (i.e., part of the deployed code base for a project).\nTherefore, there will be commit “SHA”’s in this table that are no associated with a commit SHA in the commits table. \nIn cases where the PR is to the master branch of a project, you will find a match. In cases where the PR does not involve the master branch, you will not find a corresponding commit SHA in the commits table. This is expected. "}
+        db.Index("pr_meta_cntrb-idx", contrib_id),
+        {"schema":"augur_data"}
     )
+
+
+# TODO: I don't think repo_id is needed on this table because it can be achieved by doing Repo.PullRequests.commits
+# TODO: Add relationship for cntrb_id
+class PullRequestCommits(db.Model):
     pr_cmt_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
     pull_request_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.pull_requests.pull_request_id', name='fk_pull_request_commits_pull_requests_1', ondelete="CASCADE", onupdate="CASCADE"))
     repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='fk_pull_request_commits_repo_id', ondelete="RESTRICT", onupdate="CASCADE"))
-    pr_cmt_sha = db.Column(db.String())
+    pr_cmt_sha = db.Column(db.String(), comment="This is the commit SHA for a pull request commit. If the PR is not to the master branch of the main repository (or, in rare cases, from it), then you will NOT find a corresponding commit SHA in the commit table. (see table comment for further explanation). ")
     pr_cmt_node_id = db.Column(db.String())
     pr_cmt_message = db.Column(db.String())
     #TODO: varbit in database can't find sqlalchemy equivalent
-    pr_cmt_comments_url = db.Column(db.LargeBinary())
+    pr_cmt_comments_url = db.Column(db.String())
     pr_cmt_author_cntrb_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.contributors.cntrb_id', name='fk_pr_commit_cntrb_id', ondelete="CASCADE", onupdate="CASCADE"))
     pr_cmt_timestamp = db.Column(db.TIMESTAMP())
     pr_cmt_author_email = db.Column(db.String())
@@ -875,15 +960,16 @@ class PullRequestCommits(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
-
-# TODO: Set default platform_id to be 25150
-class PullRequestEvents(db.Model):
-    __tablename__ = 'pull_request_events'
+    __tablename__ = 'pull_request_commits'
     __table_args__ = (
-        PrimaryKeyConstraint('pr_event_id', name='pr_events_pkey'),
-        UniqueConstraint('pr_platform_event_id', 'platform_id', name='unique-pr-event-id'),
-        {"schema":"augur_data"}
+        UniqueConstraint('pull_request_id', 'repo_id', 'pr_cmt_sha', name='pr_commit_nk'),
+        {"schema":"augur_data",
+        "comment": "Pull request commits are an enumeration of each commit associated with a pull request. \nNot all pull requests are from a branch or fork into master. \nThe commits table intends to count only commits that end up in the master branch (i.e., part of the deployed code base for a project).\nTherefore, there will be commit “SHA”’s in this table that are no associated with a commit SHA in the commits table. \nIn cases where the PR is to the master branch of a project, you will find a match. In cases where the PR does not involve the master branch, you will not find a corresponding commit SHA in the commits table. This is expected. "}
     )
+
+# TODO: I don't think repo_id is needed on this table because it can be achieved by doing Repo.PullRequests.events
+# TODO: Add relationship for cntrb_id
+class PullRequestEvents(db.Model):
     pr_event_id = db.Column(db.BigInteger, nullable=False)
     pull_request_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.pull_requests.pull_request_id', name='fk_pull_request_events_pull_requests_1', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
     repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='fkprevent_repo_id', ondelete="RESTRICT", onupdate="RESTRICT", initially="DEFERRED", deferrable=True))
@@ -891,8 +977,8 @@ class PullRequestEvents(db.Model):
     action = db.Column(db.String(), nullable=False)
     action_commit_hash = db.Column(db.String())
     created_at = db.Column(db.TIMESTAMP(), nullable=False, server_default=func.current_timestamp())
-    issue_event_src_id = db.Column(db.BigInteger)
-    node_id = db.Column(db.String())
+    issue_event_src_id = db.Column(db.BigInteger, comment="This ID comes from the source. In the case of GitHub, it is the id that is the first field returned from the issue events API")
+    node_id = db.Column(db.String(), comment="This should be renamed to issue_event_src_node_id, as its the varchar identifier in GitHub and likely common in other sources as well. However, since it was created before we came to this naming standard and workers are built around it, we have it simply named as node_id. Anywhere you see node_id in the schema, it comes from GitHubs terminology.")
     node_url = db.Column(db.String())
     platform_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.platform.pltfrm_id', name='fkpr_platform', ondelete="RESTRICT", onupdate="RESTRICT", initially="DEFERRED", deferrable=True),server_default=text('25150'))
     pr_platform_event_id = db.Column(db.BigInteger)
@@ -901,17 +987,18 @@ class PullRequestEvents(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
-Index("pr_events_ibfk_1", PullRequestEvents.pull_request_id.asc().nullslast())
-Index("pr_events_ibfk_2", PullRequestEvents.cntrb_id.asc().nullslast())
-
-
-class PullRequestFiles(db.Model):
-    __tablename__ = 'pull_request_files'
+    __tablename__ = 'pull_request_events'
     __table_args__ = (
-        UniqueConstraint('pull_request_id', 'repo_id', 'pr_file_path', name='prfiles_unique'),
-        {"schema":"augur_data",
-        "comment": "Pull request commits are an enumeration of each commit associated with a pull request. \nNot all pull requests are from a branch or fork into master. \nThe commits table intends to count only commits that end up in the master branch (i.e., part of the deployed code base for a project).\nTherefore, there will be commit “SHA”’s in this table that are no associated with a commit SHA in the commits table. \nIn cases where the PR is to the master branch of a project, you will find a match. In cases where the PR does not involve the master branch, you will not find a corresponding commit SHA in the commits table. This is expected. "}
+        PrimaryKeyConstraint('pr_event_id', name='pr_events_pkey'),
+        UniqueConstraint('pr_platform_event_id', 'platform_id', name='unique-pr-event-id'),
+        db.Index("pr_events_ibfk_1", pull_request_id),
+        db.Index("pr_events_ibfk_2", cntrb_id),
+        {"schema":"augur_data"}
     )
+
+
+# TODO: I don't think repo_id is needed on this table because it can be achieved by doing Repo.PullRequests.files
+class PullRequestFiles(db.Model):
     pr_file_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
     pull_request_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.pull_requests.pull_request_id', name='fk_pull_request_commits_pull_requests_1_copy_1', ondelete="CASCADE", onupdate="CASCADE"))
     repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='fk_pull_request_files_repo_id', ondelete="RESTRICT", onupdate="CASCADE", initially="DEFERRED", deferrable=True))
@@ -923,13 +1010,15 @@ class PullRequestFiles(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
-
-class PullRequestLabels(db.Model):
-    __tablename__ = 'pull_request_labels'
+    __tablename__ = 'pull_request_files'
     __table_args__ = (
-        UniqueConstraint('pr_src_id', 'pull_request_id', name='unique-pr-src-label-id'),
-        {"schema":"augur_data"}
+        UniqueConstraint('pull_request_id', 'repo_id', 'pr_file_path', name='prfiles_unique'),
+        {"schema":"augur_data",
+        "comment": "Pull request commits are an enumeration of each commit associated with a pull request. \nNot all pull requests are from a branch or fork into master. \nThe commits table intends to count only commits that end up in the master branch (i.e., part of the deployed code base for a project).\nTherefore, there will be commit “SHA”’s in this table that are no associated with a commit SHA in the commits table. \nIn cases where the PR is to the master branch of a project, you will find a match. In cases where the PR does not involve the master branch, you will not find a corresponding commit SHA in the commits table. This is expected. "}
     )
+
+# TODO: I don't think repo_id is needed on this table because it can be achieved by doing Repo.PullRequests.labels
+class PullRequestLabels(db.Model):
     pr_label_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
     pull_request_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.pull_requests.pull_request_id', name='fk_pull_request_labels_pull_requests_1', ondelete="CASCADE", onupdate="CASCADE"))
     repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='fk_pull_request_labels_repo', ondelete="RESTRICT", onupdate="CASCADE"))
@@ -944,13 +1033,14 @@ class PullRequestLabels(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
-
-class PullRequestMessageRef(db.Model):
-    __tablename__ = 'pull_request_message_ref'
+    __tablename__ = 'pull_request_labels'
     __table_args__ = (
-        UniqueConstraint('pr_message_ref_src_comment_id', 'tool_source', name='pr-comment-nk'),
+        UniqueConstraint('pr_src_id', 'pull_request_id', name='unique-pr-src-label-id'),
         {"schema":"augur_data"}
     )
+
+# TODO: I don't think repo_id is needed on this table because it can be achieved by doing Repo.PullRequests.msg_ref
+class PullRequestMessageRef(db.Model):
     pr_msg_ref_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
     pull_request_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.pull_requests.pull_request_id', name='fk_pull_request_message_ref_pull_requests_1', ondelete="RESTRICT", onupdate="CASCADE", initially="DEFERRED", deferrable=True))
     repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='fk_pr_repo', ondelete="RESTRICT", onupdate="CASCADE"))
@@ -963,17 +1053,21 @@ class PullRequestMessageRef(db.Model):
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
     pr_issue_url = db.Column(db.String())
 
+    message = relationship("Message", back_populates="pull_request")
+    pull_request = relationship("PullRequests", back_populates="msg_ref")
 
-class PullRequestMeta(db.Model):
-    __tablename__ = 'pull_request_meta'
+    __tablename__ = 'pull_request_message_ref'
     __table_args__ = (
-        {"schema":"augur_data",
-        "comment": 'Pull requests contain referencing metadata.  There are a few columns that are discrete. There are also head and base designations for the repo on each side of the pull request. Similar functions exist in GitLab, though the language here is based on GitHub. The JSON Being adapted to as of the development of this schema is here:      "base": {       "label": "chaoss:dev",       "ref": "dev",       "sha": "dc6c6f3947f7dc84ecba3d8bda641ef786e7027d",       "user": {         "login": "chaoss",         "id": 29740296,         "node_id": "MDEyOk9yZ2FuaXphdGlvbjI5NzQwMjk2",         "avatar_url": "https://avatars2.githubusercontent.com/u/29740296?v=4",         "gravatar_id": "",         "url": "https://api.github.com/users/chaoss",         "html_url": "https://github.com/chaoss",         "followers_url": "https://api.github.com/users/chaoss/followers",         "following_url": "https://api.github.com/users/chaoss/following{/other_user}",         "gists_url": "https://api.github.com/users/chaoss/gists{/gist_id}",         "starred_url": "https://api.github.com/users/chaoss/starred{/owner}{/repo}",         "subscriptions_url": "https://api.github.com/users/chaoss/subscriptions",         "organizations_url": "https://api.github.com/users/chaoss/orgs",         "repos_url": "https://api.github.com/users/chaoss/repos",         "events_url": "https://api.github.com/users/chaoss/events{/privacy}",         "received_events_url": "https://api.github.com/users/chaoss/received_events",         "type": "Organization",         "site_admin": false       },       "repo": {         "id": 78134122,         "node_id": "MDEwOlJlcG9zaXRvcnk3ODEzNDEyMg==",         "name": "augur",         "full_name": "chaoss/augur",         "private": false,         "owner": {           "login": "chaoss",           "id": 29740296,           "node_id": "MDEyOk9yZ2FuaXphdGlvbjI5NzQwMjk2",           "avatar_url": "https://avatars2.githubusercontent.com/u/29740296?v=4",           "gravatar_id": "",           "url": "https://api.github.com/users/chaoss",           "html_url": "https://github.com/chaoss",           "followers_url": "https://api.github.com/users/chaoss/followers",           "following_url": "https://api.github.com/users/chaoss/following{/other_user}",           "gists_url": "https://api.github.com/users/chaoss/gists{/gist_id}",           "starred_url": "https://api.github.com/users/chaoss/starred{/owner}{/repo}",           "subscriptions_url": "https://api.github.com/users/chaoss/subscriptions",           "organizations_url": "https://api.github.com/users/chaoss/orgs",           "repos_url": "https://api.github.com/users/chaoss/repos",           "events_url": "https://api.github.com/users/chaoss/events{/privacy}",           "received_events_url": "https://api.github.com/users/chaoss/received_events",           "type": "Organization",           "site_admin": false         }, '}
+        UniqueConstraint('pr_message_ref_src_comment_id', 'tool_source', name='pr-comment-nk'),
+        {"schema":"augur_data"}
     )
+
+# TODO: I don't think repo_id is needed on this table because it can be achieved by doing Repo.PullRequests.meta_data
+class PullRequestMeta(db.Model):
     pr_repo_meta_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
     pull_request_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.pull_requests.pull_request_id', name='fk_pull_request_meta_pull_requests_1', ondelete="CASCADE", onupdate="CASCADE"))
     repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='fk_pull_request_repo_meta_repo_id', ondelete="RESTRICT", onupdate="CASCADE", initially="DEFERRED", deferrable=True))
-    pr_head_or_base = db.Column(db.String())
+    pr_head_or_base = db.Column(db.String(), comment="Each pull request should have one and only one head record; and one and only one base record. ")
     pr_src_meta_label = db.Column(db.String())
     pr_src_meta_ref = db.Column(db.String())
     pr_sha = db.Column(db.String())
@@ -983,18 +1077,18 @@ class PullRequestMeta(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
-Index("pr_meta-cntrbid-idx", PullRequestMeta.cntrb_id.asc().nullslast())
-
-
-class PullRequestRepo(db.Model):
-    __tablename__ = 'pull_request_repo'
+    __tablename__ = 'pull_request_meta'
     __table_args__ = (
+        db.Index("pr_meta-cntrbid-idx", cntrb_id),
         {"schema":"augur_data",
-        "comment": "This table is for storing information about forks that exist as part of a pull request. Generally we do not want to track these like ordinary repositories. "}
+        "comment": 'Pull requests contain referencing metadata.  There are a few columns that are discrete. There are also head and base designations for the repo on each side of the pull request. Similar functions exist in GitLab, though the language here is based on GitHub. The JSON Being adapted to as of the development of this schema is here:      "base": {       "label": "chaoss:dev",       "ref": "dev",       "sha": "dc6c6f3947f7dc84ecba3d8bda641ef786e7027d",       "user": {         "login": "chaoss",         "id": 29740296,         "node_id": "MDEyOk9yZ2FuaXphdGlvbjI5NzQwMjk2",         "avatar_url": "https://avatars2.githubusercontent.com/u/29740296?v=4",         "gravatar_id": "",         "url": "https://api.github.com/users/chaoss",         "html_url": "https://github.com/chaoss",         "followers_url": "https://api.github.com/users/chaoss/followers",         "following_url": "https://api.github.com/users/chaoss/following{/other_user}",         "gists_url": "https://api.github.com/users/chaoss/gists{/gist_id}",         "starred_url": "https://api.github.com/users/chaoss/starred{/owner}{/repo}",         "subscriptions_url": "https://api.github.com/users/chaoss/subscriptions",         "organizations_url": "https://api.github.com/users/chaoss/orgs",         "repos_url": "https://api.github.com/users/chaoss/repos",         "events_url": "https://api.github.com/users/chaoss/events{/privacy}",         "received_events_url": "https://api.github.com/users/chaoss/received_events",         "type": "Organization",         "site_admin": false       },       "repo": {         "id": 78134122,         "node_id": "MDEwOlJlcG9zaXRvcnk3ODEzNDEyMg==",         "name": "augur",         "full_name": "chaoss/augur",         "private": false,         "owner": {           "login": "chaoss",           "id": 29740296,           "node_id": "MDEyOk9yZ2FuaXphdGlvbjI5NzQwMjk2",           "avatar_url": "https://avatars2.githubusercontent.com/u/29740296?v=4",           "gravatar_id": "",           "url": "https://api.github.com/users/chaoss",           "html_url": "https://github.com/chaoss",           "followers_url": "https://api.github.com/users/chaoss/followers",           "following_url": "https://api.github.com/users/chaoss/following{/other_user}",           "gists_url": "https://api.github.com/users/chaoss/gists{/gist_id}",           "starred_url": "https://api.github.com/users/chaoss/starred{/owner}{/repo}",           "subscriptions_url": "https://api.github.com/users/chaoss/subscriptions",           "organizations_url": "https://api.github.com/users/chaoss/orgs",           "repos_url": "https://api.github.com/users/chaoss/repos",           "events_url": "https://api.github.com/users/chaoss/events{/privacy}",           "received_events_url": "https://api.github.com/users/chaoss/received_events",           "type": "Organization",           "site_admin": false         }, '}
     )
+
+# TODO: Don't know enough about table structure to create relationship
+class PullRequestRepo(db.Model):
     pr_repo_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
     pr_repo_meta_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.pull_request_meta.pr_repo_meta_id', name='fk_pull_request_repo_pull_request_meta_1', ondelete="CASCADE", onupdate="CASCADE"))
-    pr_repo_head_or_base = db.Column(db.String())
+    pr_repo_head_or_base = db.Column(db.String(), comment="For ease of validation checking, we should determine if the repository referenced is the head or base of the pull request. Each pull request should have one and only one of these, which is not enforcable easily in the database.")
     pr_src_repo_id = db.Column(db.BigInteger)
     pr_src_node_id = db.Column(db.String())
     pr_repo_name = db.Column(db.String())
@@ -1006,16 +1100,15 @@ class PullRequestRepo(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
-Index("pr-cntrb-idx-repo", PullRequestRepo.pr_cntrb_id.asc().nullslast())
-
-
-class PullRequestReviewMessageRef(db.Model):
-    __tablename__ = 'pull_request_review_message_ref'
+    __tablename__ = 'pull_request_repo'
     __table_args__ = (
-        PrimaryKeyConstraint('pr_review_msg_ref_id', name='pr_review_msg_ref_id'),
-        UniqueConstraint('pr_review_msg_src_id', 'tool_source', name='pr-review-nk'),
-        {"schema":"augur_data"}
+        db.Index("pr-cntrb-idx-repo", pr_cntrb_id),
+        {"schema":"augur_data",
+        "comment": "This table is for storing information about forks that exist as part of a pull request. Generally we do not want to track these like ordinary repositories. "}
     )
+
+# TODO: I don't think repo_id is needed on this table because it can be achieved by doing Repo.PullRequests.reviews.msg_ref
+class PullRequestReviewMessageRef(db.Model):
     pr_review_msg_ref_id = db.Column(db.BigInteger, nullable=False)
     pr_review_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.pull_request_reviews.pr_review_id', name='fk_pull_request_review_message_ref_pull_request_reviews_1', ondelete="RESTRICT", onupdate="CASCADE", initially="DEFERRED", deferrable=True), nullable=False)
     repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='fk_review_repo', ondelete="RESTRICT", onupdate="CASCADE", initially="DEFERRED", deferrable=True))
@@ -1045,35 +1138,40 @@ class PullRequestReviewMessageRef(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
+    message = relationship("Message", back_populates="pr_review")
+    pr_review = relationship("PullRequestReviews", back_populates="msg_ref")
 
-class PullRequestReviewers(db.Model):
-    __tablename__ = 'pull_request_reviewers'
+    __tablename__ = 'pull_request_review_message_ref'
     __table_args__ = (
-        UniqueConstraint('pr_source_id', 'pr_reviewer_src_id', name='unique_pr_src_reviewer_key', initially="DEFERRED", deferrable=True),
+        PrimaryKeyConstraint('pr_review_msg_ref_id', name='pr_review_msg_ref_id'),
+        UniqueConstraint('pr_review_msg_src_id', 'tool_source', name='pr-review-nk'),
         {"schema":"augur_data"}
     )
+
+# TODO: I don't think repo_id is needed on this table because it can be achieved by doing Repo.PullRequests.reviewers
+# TODO: Add cntrb_id relationship (don't understand table well enough)
+class PullRequestReviewers(db.Model):
     pr_reviewer_map_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
     pull_request_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.pull_requests.pull_request_id', name='fk_pull_request_reviewers_pull_requests_1', ondelete="CASCADE", onupdate="CASCADE"))
-    pr_source_id = db.Column(db.BigInteger)
+    pr_source_id = db.Column(db.BigInteger, comment="The platform ID for the pull/merge request. Used as part of the natural key, along with pr_reviewer_src_id in this table. ")
     repo_id = db.Column(db.BigInteger)
     cntrb_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.contributors.cntrb_id', name='fk_pull_request_reviewers_contributors_1', ondelete="CASCADE", onupdate="CASCADE"))
-    pr_reviewer_src_id = db.Column(db.BigInteger)
+    pr_reviewer_src_id = db.Column(db.BigInteger, comment="The platform ID for the pull/merge request reviewer. Used as part of the natural key, along with pr_source_id in this table. ")
     tool_source = db.Column(db.String())
     tool_version = db.Column(db.String())
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
-Index("pr-reviewers-cntrb-idx1", PullRequestReviewers.cntrb_id.asc().nullslast())
-
-
-# TODO: Set default platform_id to be 25150
-class PullRequestReviews(db.Model):
-    __tablename__ = 'pull_request_reviews'
+    __tablename__ = 'pull_request_reviewers'
     __table_args__ = (
-        PrimaryKeyConstraint('pr_review_id', name='pull_request_review_id'),
-        UniqueConstraint('pr_review_src_id', 'tool_source', name='sourcepr-review-id'),
+        UniqueConstraint('pr_source_id', 'pr_reviewer_src_id', name='unique_pr_src_reviewer_key', initially="DEFERRED", deferrable=True),
+        db.Index("pr-reviewers-cntrb-idx1", cntrb_id),
         {"schema":"augur_data"}
     )
+
+# TODO: I don't think repo_id is needed on this table because it can be achieved by doing Repo.PullRequests.reviews
+# TODO: Add relationship for cntrb_id
+class PullRequestReviews(db.Model):
     pr_review_id = db.Column(db.BigInteger, nullable=False)
     pull_request_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.pull_requests.pull_request_id', name='fk_pull_request_reviews_pull_requests_1', ondelete="RESTRICT", onupdate="CASCADE"), nullable=False)
     repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='fk_repo_review', ondelete="RESTRICT", onupdate="CASCADE"))
@@ -1093,10 +1191,25 @@ class PullRequestReviews(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
+    msg_ref = relationship("PullRequestReviewMessageRef", back_populates="pr_review")
+
+    def get_messages(self):
+
+        messages = []
+        for msg_ref in self.msg_ref:
+            messages.append(msg_ref.message)
+
+        return messages
+
+    __tablename__ = 'pull_request_reviews'
+    __table_args__ = (
+        PrimaryKeyConstraint('pr_review_id', name='pull_request_review_id'),
+        UniqueConstraint('pr_review_src_id', 'tool_source', name='sourcepr-review-id'),
+        {"schema":"augur_data"}
+    )
+
 
 class PullRequestTeams(db.Model):
-    __tablename__ = 'pull_request_teams'
-    __table_args__ = ({"schema":"augur_data"})
     pr_team_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
     pull_request_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.pull_requests.pull_request_id', name='fk_pull_request_teams_pull_requests_1', ondelete="CASCADE", onupdate="CASCADE"))
     pr_src_team_id = db.Column(db.BigInteger)
@@ -1115,40 +1228,43 @@ class PullRequestTeams(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
+    __tablename__ = 'pull_request_teams'
+    __table_args__ = (
+        {"schema":"augur_data"}
+    )
 
-class Pull_Requests(db.Model):
-    __tablename__ = 'pull_requests'
-    __table_args__ = ({"schema":"augur_data"})
+
+class PullRequests(db.Model):
     pull_request_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
     repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='fk_pull_requests_repo_1', ondelete="CASCADE", onupdate="CASCADE"), server_default=text('0'))
     pr_url = db.Column(db.String())
-    pr_src_id = db.Column(db.BigInteger)
+    pr_src_id = db.Column(db.BigInteger, comment="The pr_src_id is unique across all of github.")
     pr_src_node_id = db.Column(db.String())
     pr_html_url = db.Column(db.String())
     pr_diff_url = db.Column(db.String())
     pr_patch_url = db.Column(db.String())
     pr_issue_url = db.Column(db.String())
-    pr_augur_issue_id = db.Column(db.BigInteger)
-    pr_src_number = db.Column(db.BigInteger)
+    pr_augur_issue_id = db.Column(db.BigInteger, comment="This is to link to the augur stored related issue")
+    pr_src_number = db.Column(db.BigInteger, comment="The pr_src_number is unique within a repository.")
     pr_src_state = db.Column(db.String())
     pr_src_locked = db.Column(db.Boolean())
     pr_src_title = db.Column(db.String())
-    pr_augur_contributor_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.contributors.cntrb_id', name='fk_pr_contribs', ondelete="RESTRICT", onupdate="CASCADE"))
+    pr_augur_contributor_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.contributors.cntrb_id', name='fk_pr_contribs', ondelete="RESTRICT", onupdate="CASCADE"), comment="This is to link to the augur contributor record. ")
     pr_body = db.Column(db.Text())
     pr_created_at = db.Column(db.TIMESTAMP())
     pr_updated_at = db.Column(db.TIMESTAMP())
     pr_closed_at = db.Column(db.TIMESTAMP())
     pr_merged_at = db.Column(db.TIMESTAMP())
     pr_merge_commit_sha = db.Column(db.String())
-    pr_teams = db.Column(db.BigInteger)
+    pr_teams = db.Column(db.BigInteger, comment="One to many with pull request teams. ")
     pr_milestone = db.Column(db.String())
     pr_commits_url = db.Column(db.String())
     pr_review_comments_url = db.Column(db.String())
-    pr_review_comment_url = db.Column(db.String())
+    pr_review_comment_url = db.Column(db.String(), comment="This is a field with limited utility. It does expose how to access a specific comment if needed with parameters. If the source changes URL structure, it may be useful")
     pr_comments_url = db.Column(db.String())
     pr_statuses_url = db.Column(db.String())
-    pr_meta_head_id = db.Column(db.String())
-    pr_meta_base_id = db.Column(db.String())
+    pr_meta_head_id = db.Column(db.String(), comment="The metadata for the head repo that links to the pull_request_meta table. ")
+    pr_meta_base_id = db.Column(db.String(), comment="The metadata for the base repo that links to the pull_request_meta table. ")
     pr_src_issue_url = db.Column(db.String())
     pr_src_comments_url = db.Column(db.String())
     pr_src_review_comments_url = db.Column(db.String())
@@ -1160,16 +1276,35 @@ class Pull_Requests(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
-Index("id_node", Pull_Requests.pr_src_id.desc().nullsfirst(), 
-    Pull_Requests.pr_src_node_id.desc().nullsfirst())
-Index("pull_requests_idx_repo_id_data_datex", Pull_Requests.repo_id.asc().nullslast(),
-    Pull_Requests.data_collection_date.asc().nullslast())
+    analysis = relationship("PullRequestAnalysis", back_populates="pull_request")
+    assignees = relationship("PullRequestAssignees")
+    commits = relationship("PullRequestCommits")
+    events = relationship("PullRequestEvents")
+    files = relationship("PullRequestFiles")
+    labels = relationship("PullRequestLabels")
+    msg_ref = relationship("PullRequestMessageRef", back_populates="pull_request")
+    meta_data = relationship("PullRequestMeta")
+    reviewers = relationship("PullRequestReviewers")
+    reviews = relationship("PullRequestReviews")
+    teams = relationship("PullRequestTeams")
+
+    def get_messages(self):
+
+        messages = []
+        for msg_ref in self.msg_ref:
+            messages.append(msg_ref.message)
+
+        return messages
+
+    __tablename__ = 'pull_requests'
+    __table_args__ = (
+        db.Index("id_node", pr_src_id.desc().nullsfirst(), pr_src_node_id.desc().nullsfirst()),
+        db.Index("pull_requests_idx_repo_id_data_datex", repo_id, data_collection_date),
+        {"schema":"augur_data"}
+    )
 
 
-# TODO: Timestamps were declared with length of 6 in database
 class Releases(db.Model):
-    __tablename__ = 'releases'
-    __table_args__ = ({"schema":"augur_data"})
     release_id = db.Column(db.CHAR(length=64), primary_key=True, nullable=False)
     repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='fk_releases_repo_1'), nullable=False)
     release_name = db.Column(db.String())
@@ -1188,15 +1323,13 @@ class Releases(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
-
-# TODO: I made data_collection_date have a default it doesn't in current db
-class Repo(db.Model):
-    __tablename__ = 'repo'
+    __tablename__ = 'releases'
     __table_args__ = (
-        PrimaryKeyConstraint('repo_id', name='repounique'),
-        {"schema":"augur_data",
-        "comment": "This table is a combination of the columns in Facade’s repo table and GHTorrent’s projects table. "}
+        {"schema":"augur_data"}
     )
+
+
+class Repo(db.Model):
     repo_id = db.Column(db.BigInteger, nullable=False)
     repo_group_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo_groups.repo_group_id', name='fk_repo_repo_groups_1'), nullable=False)
     repo_git = db.Column(db.String(), nullable=False)
@@ -1204,7 +1337,7 @@ class Repo(db.Model):
     repo_name = db.Column(db.String(), server_default='NULL')
     repo_added = db.Column(db.TIMESTAMP(), nullable=False, server_default=func.current_timestamp())
     repo_status = db.Column(db.String(), nullable=False, server_default='New')
-    repo_type = db.Column(db.String(), server_default='')
+    repo_type = db.Column(db.String(), server_default='', comment='This field is intended to indicate if the repository is the "main instance" of a repository in cases where implementations choose to add the same repository to more than one repository group. In cases where the repository group is of rg_type Github Organization then this repo_type should be "primary". In other cases the repo_type should probably be "user created". We made this a varchar in order to hold open the possibility that there are additional repo_types we have not thought about. ')
     url = db.Column(db.String())
     owner_id = db.Column(db.Integer)
     description = db.Column(db.String())
@@ -1219,22 +1352,61 @@ class Repo(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
-Index("forked", Repo.forked_from.asc().nullslast())
-Index("repo_idx_repo_id_repo_namex", Repo.repo_id.asc().nullslast(), Repo.repo_name.asc().nullslast())
-Index("repogitindexrep", Repo.repo_git.asc().nullslast())
+    commits = relationship("Commits")
+    issues = relationship("Issues")
+    pull_requests = relationship("PullRequests")
+    libraries = relationship("Libraries")
+    messages = relationship("Message")
 
-Index("reponameindex", Repo.repo_name, postgresql_using='hash')
+    pr_assignees = relationship("PullRequestAssignees")
+    pr_commits = relationship("PullRequestCommits")
+    pr_events = relationship("PullRequestEvents")
+    pr_files = relationship("PullRequestFiles")
+    pr_labels = relationship("PullRequestLabels")
+    pr_meta_data = relationship("PullRequestMeta")
+    pr_reviews = relationship("PullRequestReviews")
 
-Index("reponameindexbtree", Repo.repo_name.asc().nullslast())
-Index("rggrouponrepoindex", Repo.repo_group_id.asc().nullslast())
-Index("therepo", Repo.repo_id.asc().nullslast(), unique=True)
+    msg_analysis_summary = relationship("MessageAnalysisSummary", back_populates="repo")
+    msg_sentiment_summary = relationship("MessageSentimentSummary", back_populates="repo")
+
+    lstm_anomaly_results = relationship("LstmAnomalyResults")
+
+    releases = relationship("Releases")
+    badges = relationship("RepoBadging")
+    cluster_messages = relationship("RepoClusterMessages")
+    dependencies = relationship("RepoDependencies")
+    deps_libyear = relationship("RepoDepsLibyear")
+    deps_scorecard_id = relationship("RepoDepsScorecard")
+
+    info = relationship("RepoInfo")
+    insights = relationship("RepoInsights")
+    insight_records = relationship("RepoInsightsRecords")
+
+    labor = relationship("RepoLabor")
+    meta_data = relationship("RepoMeta")
+    sbom_scans = relationship("RepoSbomScans")
+    stats = relationship("RepoStats")
+    topic = relationship("RepoTopic")
+    
+    
+    __tablename__ = 'repo'
+    __table_args__ = (
+        PrimaryKeyConstraint('repo_id', name='repounique'),
+        db.Index("forked", forked_from),
+        db.Index("repo_idx_repo_id_repo_namex", repo_id, repo_name),
+        db.Index("repogitindexrep", repo_git),
+
+        db.Index("reponameindex", repo_name, postgresql_using='hash'),
+
+        db.Index("reponameindexbtree", repo_name),
+        db.Index("rggrouponrepoindex", repo_group_id),
+        db.Index("therepo", repo_id, unique=True),
+        {"schema":"augur_data",
+        "comment": "This table is a combination of the columns in Facade’s repo table and GHTorrent’s projects table. "}
+    )
+
 
 class RepoBadging(db.Model):
-    __tablename__ = 'repo_badging'
-    __table_args__ = (
-        {"schema":"augur_data",
-        "comment": 'This will be collected from the LF’s Badging API\nhttps://bestpractices.coreinfrastructure.org/projects.json?pq=https%3A%2F%2Fgithub.com%2Fchaoss%2Faugur\n'}
-    )
     badge_collection_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
     repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='fk_repo_badging_repo_1'))
     created_at = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
@@ -1244,10 +1416,14 @@ class RepoBadging(db.Model):
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
     data = db.Column(JSONB())
 
+    __tablename__ = 'repo_badging'
+    __table_args__ = (
+        {"schema":"augur_data",
+        "comment": 'This will be collected from the LF’s Badging API\nhttps://bestpractices.coreinfrastructure.org/projects.json?pq=https%3A%2F%2Fgithub.com%2Fchaoss%2Faugur\n'}
+    )
+
 
 class RepoClusterMessages(db.Model):
-    __tablename__ = 'repo_cluster_messages'
-    __table_args__ = ({"schema":"augur_data"})
     msg_cluster_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
     repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='fk_repo_cluster_messages_repo_1'))
     cluster_content = db.Column(db.Integer)
@@ -1257,28 +1433,32 @@ class RepoClusterMessages(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
+    __tablename__ = 'repo_cluster_messages'
+    __table_args__ = (
+        {"schema":"augur_data"}
+    )
+
 
 class RepoDependencies(db.Model):
-    __tablename__ = 'repo_dependencies'
-    __table_args__ = (
-        {"schema":"augur_data",
-        "comment": "Contains the dependencies for a repo."}
-    )
     repo_dependencies_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='repo_id'))
-    dep_name = db.Column(db.String())
-    dep_count = db.Column(db.Integer)
-    dep_language = db.Column(db.String())
+    repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='repo_id'), comment="Forign key for repo id. ")
+    dep_name = db.Column(db.String(), comment="Name of the dependancy found in project. ")
+    dep_count = db.Column(db.Integer, comment="Number of times the dependancy was found. ")
+    dep_language = db.Column(db.String(), comment="Language of the dependancy. ")
     tool_source = db.Column(db.String())
     tool_version = db.Column(db.String())
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
+    __tablename__ = 'repo_dependencies'
+    __table_args__ = (
+        {"schema":"augur_data",
+        "comment": "Contains the dependencies for a repo."}
+    )
+
 
 # TODO: typo in field current_verion
 class RepoDepsLibyear(db.Model):
-    __tablename__ = 'repo_deps_libyear'
-    __table_args__ = ({"schema":"augur_data"})
     repo_deps_libyear_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
     repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='repo_id_copy_2'))
     name = db.Column(db.String())
@@ -1295,13 +1475,13 @@ class RepoDepsLibyear(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
-
-class RepoDepsScorecard(db.Model):
-    __tablename__ = 'repo_deps_scorecard'
+    __tablename__ = 'repo_deps_libyear'
     __table_args__ = (
-        PrimaryKeyConstraint('repo_deps_scorecard_id', name='repo_deps_scorecard_pkey1'),
         {"schema":"augur_data"}
     )
+
+
+class RepoDepsScorecard(db.Model):
     repo_deps_scorecard_id = db.Column(db.BigInteger, nullable=False)
     repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='repo_id_copy_1'))
     name = db.Column(db.String())
@@ -1312,34 +1492,35 @@ class RepoDepsScorecard(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
+    __tablename__ = 'repo_deps_scorecard'
+    __table_args__ = (
+        PrimaryKeyConstraint('repo_deps_scorecard_id', name='repo_deps_scorecard_pkey1'),
+        {"schema":"augur_data"}
+    )
+
 
 class RepoGroupInsights(db.Model):
-    __tablename__ = 'repo_group_insights'
-    __table_args__ = (
-        {"schema":"augur_data",
-        "comment": 'This table is output from an analytical worker inside of Augur. It runs through the different metrics on a REPOSITORY_GROUP and identifies the five to ten most “interesting” metrics as defined by some kind of delta or other factor. The algorithm is going to evolve. \n\nWorker Design Notes: The idea is that the "insight worker" will scan through a bunch of active metrics or "synthetic metrics" to list the most important insights. '}
-    )
     rgi_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
     repo_group_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo_groups.repo_group_id', name='fk_repo_group_insights_repo_groups_1'))
     rgi_metric = db.Column(db.String())
     rgi_value = db.Column(db.String())
     cms_id = db.Column(db.BigInteger)
-    rgi_fresh = db.Column(db.Boolean())
+    rgi_fresh = db.Column(db.Boolean(), comment='false if the date is before the statistic that triggered the insight, true if after. This allows us to automatically display only "fresh insights" and avoid displaying "stale insights". The insight worker will populate this table. ')
     tool_source = db.Column(db.String())
     tool_version = db.Column(db.String())
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
+    repo_group = relationship("RepoGroups")
 
-# TODO: Has varchar with length but changed here
-# TODO: I made data_collection_date have a default it doesn't in current db
-class RepoGroups(db.Model):
-    __tablename__ = 'repo_groups'
+    __tablename__ = 'repo_group_insights'
     __table_args__ = (
-        PrimaryKeyConstraint('repo_group_id', name='rgid'),
         {"schema":"augur_data",
-        "comment": "rg_type is intended to be either a GitHub Organization or a User Created Repo Group. "}
+        "comment": 'This table is output from an analytical worker inside of Augur. It runs through the different metrics on a REPOSITORY_GROUP and identifies the five to ten most “interesting” metrics as defined by some kind of delta or other factor. The algorithm is going to evolve. \n\nWorker Design Notes: The idea is that the "insight worker" will scan through a bunch of active metrics or "synthetic metrics" to list the most important insights. '}
     )
+
+
+class RepoGroups(db.Model):
     repo_group_id = db.Column(db.BigInteger, nullable=False)
     rg_name = db.Column(db.String(), nullable=False)
     rg_description = db.Column(db.String(), server_default='NULL')
@@ -1351,19 +1532,21 @@ class RepoGroups(db.Model):
     tool_version = db.Column(db.String())
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
+    
+    repos = relationship("Repo")
+    rg_list_serve = relationship("RepoGroupsListServe")
 
-Index("rgidm", RepoGroups.repo_group_id.asc().nullslast(), unique=True)
-Index("rgnameindex", RepoGroups.rg_name.asc().nullslast())
-
-
-# TODO: has varchar with length, but changed here
-# TODO: I made data_collection_date have a default it doesn't in current db
-class RepoGroupsListServe(db.Model):
-    __tablename__ = 'repo_groups_list_serve'
+    __tablename__ = 'repo_groups'
     __table_args__ = (
-        UniqueConstraint('rgls_id', 'repo_group_id', name='rglistserve'),
-        {"schema":"augur_data"}
+        PrimaryKeyConstraint('repo_group_id', name='rgid'),
+        db.Index("rgidm", repo_group_id, unique=True),
+        db.Index("rgnameindex", rg_name),
+        {"schema":"augur_data",
+        "comment": "rg_type is intended to be either a GitHub Organization or a User Created Repo Group. "}
     )
+
+
+class RepoGroupsListServe(db.Model):
     rgls_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
     repo_group_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo_groups.repo_group_id', name='fk_repo_groups_list_serve_repo_groups_1'), nullable=False)
     rgls_name = db.Column(db.String())
@@ -1375,12 +1558,15 @@ class RepoGroupsListServe(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
-Index("lister", RepoGroupsListServe.rgls_id.asc().nullslast(), RepoGroupsListServe.repo_group_id.asc().nullslast(), unique=True)
+    __tablename__ = 'repo_groups_list_serve'
+    __table_args__ = (
+        UniqueConstraint('rgls_id', 'repo_group_id', name='rglistserve'),
+        db.Index("lister", rgls_id, repo_group_id, unique=True),
+        {"schema":"augur_data"}
+    )
 
 
 class RepoInfo(db.Model):
-    __tablename__ = 'repo_info'
-    __table_args__ = ({"schema":"augur_data"})
     repo_info_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
     repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='fk_repo_info_repo_1'), nullable=False)
     last_updated = db.Column(db.TIMESTAMP())
@@ -1417,24 +1603,22 @@ class RepoInfo(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
-    # TODO: Their appears to be two of the same index in current database
-Index("repo_info_idx_repo_id_data_date_1x", RepoInfo.repo_id.asc().nullslast(), 
-    RepoInfo.data_collection_date.asc().nullslast())
+    __tablename__ = 'repo_info'
+    __table_args__ = (
+        # TODO: Their appears to be two of the same index in current database
+        db.Index("repo_info_idx_repo_id_data_date_1x", repo_id, data_collection_date),
+        {"schema":"augur_data"}
+    )
 
 
 # TODO: Why is numeric defined without level or precision?
 class RepoInsights(db.Model):
-    __tablename__ = 'repo_insights'
-    __table_args__ = (
-        {"schema":"augur_data",
-        "comment": 'This table is output from an analytical worker inside of Augur. It runs through the different metrics on a repository and identifies the five to ten most “interesting” metrics as defined by some kind of delta or other factor. The algorithm is going to evolve. \n\nWorker Design Notes: The idea is that the "insight worker" will scan through a bunch of active metrics or "synthetic metrics" to list the most important insights. '}
-    )
     ri_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
     repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='fk_repo_insights_repo_1'))
     ri_metric = db.Column(db.String())
     ri_value = db.Column(db.String())
     ri_date = db.Column(db.TIMESTAMP())
-    ri_fresh = db.Column(db.Boolean())
+    ri_fresh = db.Column(db.Boolean(), comment='false if the date is before the statistic that triggered the insight, true if after. This allows us to automatically display only "fresh insights" and avoid displaying "stale insights". The insight worker will populate this table. ')
     tool_source = db.Column(db.String())
     tool_version = db.Column(db.String())
     data_source = db.Column(db.String())
@@ -1443,33 +1627,35 @@ class RepoInsights(db.Model):
     ri_field = db.Column(db.String())
     ri_detection_method = db.Column(db.String())
 
-
-class RepoInsightsRecords(db.Model):
-    __tablename__ = 'repo_insights_records'
-    __table_args__ = ({"schema":"augur_data"})
-    ri_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='repo_id_ref', ondelete="SET NULL", onupdate="CASCADE"))
-    ri_metric = db.Column(db.String())
-    ri_field = db.Column(db.String())
-    ri_value = db.Column(db.String())
-    ri_date = db.Column(db.TIMESTAMP())
-    ri_score = db.Column(db.Float())
-    ri_detection_method = db.Column(db.String())
-    tool_source = db.Column(db.String())
-    tool_version = db.Column(db.String())
-    data_source = db.Column(db.String())
-    data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
-
-Index("dater", RepoInsightsRecords.ri_date.asc().nullslast())
-
-
-# TODO: I made data_collection_date have a default it doesn't in current db
-class RepoLabor(db.Model):
-    __tablename__ = 'repo_labor'
+    __tablename__ = 'repo_insights'
     __table_args__ = (
         {"schema":"augur_data",
-        "comment": "repo_labor is a derivative of tables used to store scc code and complexity counting statistics that are inputs to labor analysis, which are components of CHAOSS value metric calculations. "}
+        "comment": 'This table is output from an analytical worker inside of Augur. It runs through the different metrics on a repository and identifies the five to ten most “interesting” metrics as defined by some kind of delta or other factor. The algorithm is going to evolve. \n\nWorker Design Notes: The idea is that the "insight worker" will scan through a bunch of active metrics or "synthetic metrics" to list the most important insights. '}
     )
+
+
+class RepoInsightsRecords(db.Model):
+    ri_id = db.Column(db.BigInteger, primary_key=True, nullable=False, comment="Primary key. ")
+    repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='repo_id_ref', ondelete="SET NULL", onupdate="CASCADE"), comment="Refers to repo table primary key. Will have a foreign key")
+    ri_metric = db.Column(db.String(), comment="The metric endpoint")
+    ri_field = db.Column(db.String(), comment="The field in the metric endpoint")
+    ri_value = db.Column(db.String(), comment="The value of the endpoint in ri_field")
+    ri_date = db.Column(db.TIMESTAMP(), comment="The date the insight is for; in other words, some anomaly occurred on this date. ")
+    ri_score = db.Column(db.Float(), comment="A Score, derived from the algorithm used. ")
+    ri_detection_method = db.Column(db.String(), comment='A confidence interval or other expression of the type of threshold and the value of a threshold met in order for it to be "an insight". Example. "95% confidence interval". ')
+    tool_source = db.Column(db.String(), comment="Standard Augur Metadata")
+    tool_version = db.Column(db.String(), comment="Standard Augur Metadata")
+    data_source = db.Column(db.String(), comment="Standard Augur Metadata")
+    data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp(), comment="Standard Augur Metadata")
+
+    __tablename__ = 'repo_insights_records'
+    __table_args__ = (
+        db.Index("dater", ri_date),
+        {"schema":"augur_data"}
+    )
+
+
+class RepoLabor(db.Model):
     repo_labor_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
     repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='fk_repo_labor_repo_1'))
     repo_clone_date = db.Column(db.TIMESTAMP())
@@ -1482,20 +1668,20 @@ class RepoLabor(db.Model):
     comment_lines = db.Column(db.Integer)
     blank_lines = db.Column(db.Integer)
     code_complexity = db.Column(db.Integer)
-    repo_url = db.Column(db.String())
+    repo_url = db.Column(db.String(), comment="This is a convenience column to simplify analysis against external datasets")
     tool_source = db.Column(db.String())
     tool_version = db.Column(db.String())
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
-
-# TODO: I made data_collection_date have a default it doesn't in current db
-class RepoMeta(db.Model):
-    __tablename__ = 'repo_meta'
+    __tablename__ = 'repo_labor'
     __table_args__ = (
         {"schema":"augur_data",
-        "comment": "Project Languages"}
+        "comment": "repo_labor is a derivative of tables used to store scc code and complexity counting statistics that are inputs to labor analysis, which are components of CHAOSS value metric calculations. "}
     )
+
+
+class RepoMeta(db.Model):
     repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='fk_repo_meta_repo_1'), primary_key=True, nullable=False)
     rmeta_id = db.Column(db.BigInteger,  primary_key=True, nullable=False)
     rmeta_name = db.Column(db.String())
@@ -1505,22 +1691,25 @@ class RepoMeta(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
+    __tablename__ = 'repo_meta'
+    __table_args__ = (
+        {"schema":"augur_data",
+        "comment": "Project Languages"}
+    )
+
 
 class RepoSbomScans(db.Model):
-    __tablename__ = 'repo_sbom_scans'
-    __table_args__ = ({"schema":"augur_data"})
     rsb_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
     repo_id = db.Column(db.Integer, db.ForeignKey('augur_data.repo.repo_id', name='repo_linker_sbom', ondelete="CASCADE", onupdate="CASCADE"))
     sbom_scan = db.Column(db.JSON())
 
-
-# TODO: I made data_collection_date have a default it doesn't in current db
-class RepoStats(db.Model):
-    __tablename__ = 'repo_stats'
+    __tablename__ = 'repo_sbom_scans'
     __table_args__ = (
-        {"schema":"augur_data",
-        "comment": "Project Watchers"}
+        {"schema":"augur_data"}
     )
+
+
+class RepoStats(db.Model):
     repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='fk_repo_stats_repo_1'), primary_key=True, nullable=False)
     rstat_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
     rstat_name = db.Column(db.String())
@@ -1530,10 +1719,14 @@ class RepoStats(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
+    __tablename__ = 'repo_stats'
+    __table_args__ = (
+        {"schema":"augur_data",
+        "comment": "Project Watchers"}
+    )
+
 
 class RepoTestCoverage(db.Model):
-    __tablename__ = 'repo_test_coverage'
-    __table_args__ = ({"schema":"augur_data"})
     repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='fk_repo_test_coverage_repo_1'), primary_key=True, nullable=False)
     repo_clone_date = db.Column(db.TIMESTAMP())
     rtc_analysis_date = db.Column(db.TIMESTAMP())
@@ -1550,10 +1743,13 @@ class RepoTestCoverage(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
+    __tablename__ = 'repo_test_coverage'
+    __table_args__ = (
+        {"schema":"augur_data"}
+    )
+
 
 class RepoTopic(db.Model):
-    __tablename__ = 'repo_topic'
-    __table_args__ = ({"schema":"augur_data"})
     repo_topic_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
     repo_id = db.Column(db.Integer, db.ForeignKey('augur_data.repo.repo_id', name='fk_repo_topic_repo_1'))
     topic_id = db.Column(db.Integer)
@@ -1563,34 +1759,39 @@ class RepoTopic(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
+    __tablename__ = 'repo_topic'
+    __table_args__ = (
+        {"schema":"augur_data"}
+    )
 
-# TODO: Added primary keys
+# TODO: Add foreign key to repo table
 class ReposFetchLog(db.Model):
-    __tablename__ = 'repos_fetch_log'
-    __table_args__ = ({"schema":"augur_data"})
     repos_fetch_log_id = db.Column(db.BigInteger, primary_key=True)
     repos_id = db.Column(db.Integer, nullable=False)
     status = db.Column(db.String(), nullable=False)
     date = db.Column(db.TIMESTAMP(), nullable=False, server_default=func.current_timestamp())
 
-# TODO: There appear to be two identical indexes
-Index("repos_id,status", ReposFetchLog.repos_id.asc().nullslast(),
-    ReposFetchLog.status.asc().nullslast())
+    __tablename__ = 'repos_fetch_log'
+    __table_args__ = (
+        # TODO: There appear to be two identical indexes
+        db.Index("repos_id,status", repos_id, status),
+        {"schema":"augur_data"}
+    )
 
 
-# TODO: Has varchar with length but I changed here
 class Settings(db.Model):
-    __tablename__ = 'settings'
-    __table_args__ = ({"schema":"augur_data"})
     id = db.Column(db.Integer, primary_key=True, nullable=False)
     setting = db.Column(db.String(), nullable=False)
     value = db.Column(db.String(), nullable=False)
     last_modified = db.Column(db.TIMESTAMP(), nullable=False, server_default=func.current_timestamp())
 
+    __tablename__ = 'settings'
+    __table_args__ = (
+        {"schema":"augur_data"}
+    )
+
 
 class TopicWords(db.Model):
-    __tablename__ = 'topic_words'
-    __table_args__ = ({"schema":"augur_data"})
     topic_words_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
     topic_id = db.Column(db.BigInteger)
     word = db.Column(db.String())
@@ -1600,10 +1801,13 @@ class TopicWords(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
+    __tablename__ = 'topic_words'
+    __table_args__ = (
+        {"schema":"augur_data"}
+    )
 
+# TODO: Add foreign key to repo_group table
 class UnknownCache(db.Model):
-    __tablename__ = 'unknown_cache'
-    __table_args__ = ({"schema":"augur_data"})
     unknown_cache_id = db.Column(db.BigInteger, primary_key=True)
     type = db.Column(db.String(), nullable=False)
     repo_group_id = db.Column(db.Integer, nullable=False)
@@ -1615,16 +1819,14 @@ class UnknownCache(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
-Index("type,projects_id", UnknownCache.type.asc().nullslast(), 
-    UnknownCache.repo_group_id.asc().nullslast())
+    __tablename__ = 'unknown_cache'
+    __table_args__ = (
+        db.Index("type,projects_id", type, repo_group_id),
+        {"schema":"augur_data"}
+    )
 
 
 class UnresolvedCommitEmails(db.Model):
-    __tablename__ = 'unresolved_commit_emails'
-    __table_args__ = (
-        UniqueConstraint('email', name='unresolved_commit_emails_email_key'),
-        {"schema":"augur_data"}
-    )
     email_unresolved_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
     email = db.Column(db.String(), nullable=False)
     name = db.Column(db.String())
@@ -1633,30 +1835,38 @@ class UnresolvedCommitEmails(db.Model):
     data_source = db.Column(db.String())
     data_collection_date = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
+    __tablename__ = 'unresolved_commit_emails'
+    __table_args__ = (
+        UniqueConstraint('email', name='unresolved_commit_emails_email_key'),
+        {"schema":"augur_data"}
+    )
 
-# TODO: Has varchar with length but changed it
+
 class UtilityLog(db.Model):
-    __tablename__ = 'utility_log'
-    __table_args__ = ({"schema":"augur_data"})
     id = db.Column(db.BigInteger, primary_key=True, nullable = False)
     level = db.Column(db.String(), nullable=False)
     status = db.Column(db.String(), nullable=False)
     attempted = db.Column(db.TIMESTAMP(), nullable=False, server_default=func.current_timestamp())
 
+    __tablename__ = 'utility_log'
+    __table_args__ = (
+        {"schema":"augur_data"}
+    )
 
-# TODO: Needed to define a primary key
+# TODO: Add foreign key to repo table
 class WorkingCommits(db.Model):
-    __tablename__ = 'working_commits'
-    __table_args__ = ({"schema":"augur_data"})
     working_commits_id = db.Column(db.BigInteger, primary_key=True)
     repos_id = db.Column(db.Integer, nullable=False)
     working_commit = db.Column(db.String(), server_default='NULL')
 
+    __tablename__ = 'working_commits'
+    __table_args__ = (
+        {"schema":"augur_data"}
+    )
+
 
 # Start of Augur Operations tablespoon
 class All(db.Model):
-    __tablename__ = 'all'
-    __table_args__ = ({"schema":"augur_operations"})
     all_id = db.Column(db.BigInteger, primary_key=True)
     Name = db.Column(db.String())
     Bytes = db.Column(db.String())
@@ -1669,40 +1879,39 @@ class All(db.Model):
     WeightedComplexity = db.Column(db.String())
     Files = db.Column(db.String())
 
+    __tablename__ = 'all'
+    __table_args__ = ({"schema":"augur_operations"})
+
 
 class AugurSettings(db.Model):
+    id = db.Column(db.BigInteger)
+    setting = db.Column(db.String())
+    value = db.Column(db.String())
+    last_modified = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
+
     __tablename__ = 'augur_settings'
     __table_args__ = (
         PrimaryKeyConstraint('id'),
         UniqueConstraint('setting', name='setting-unique'),
         {"schema":"augur_operations"}
     )
-    id = db.Column(db.BigInteger)
-    setting = db.Column(db.String())
-    value = db.Column(db.String())
-    last_modified = db.Column(db.TIMESTAMP(), server_default=func.current_timestamp())
 
 
 # class ReposFetchLog(db.Model):
-#     __tablename__ = 'repos_fetch_log'
-#     __table_args__ = (
-#         PrimaryKeyConstraint('repos_fetch_log_id'),
-#         {"schema":"augur_operations"}
-#     )
 #     repos_fetch_log_id = db.Column(db.BigInteger)
 #     repos_id = db.Column(db.Integer, nullable=False)
 #     status = db.Column(db.String(), nullable=False)
 #     date = db.Column(db.TIMESTAMP(), nullable=False, server_default=func.current_timestamp())
 
-# Index("repos_id,statusops", ReposFetchLog.repos_id.asc().nullslast(), ReposFetchLog.status.asc().nullslast())
+#     __tablename__ = 'repos_fetch_log'
+#     __table_args__ = (
+#         PrimaryKeyConstraint('repos_fetch_log_id'),
+#         db.Index("repos_id,statusops", repos_id, status),
+#         {"schema":"augur_operations"}
+#     )
 
-
+# TODO: Add foreign key to Repo table
 class WorkerHistory(db.Model):
-    __tablename__ = 'worker_history'
-    __table_args__ = (
-        PrimaryKeyConstraint('history_id', name='history_pkey'),
-        {"schema":"augur_operations"}
-    )
     history_id = db.Column(db.BigInteger)
     repo_id = db.Column(db.BigInteger)
     worker = db.Column(db.String(), nullable=False)
@@ -1712,13 +1921,14 @@ class WorkerHistory(db.Model):
     status = db.Column(db.String(), nullable=False)
     total_results = db.Column(db.Integer)
 
-
-class WorkerJob(db.Model):
-    __tablename__ = 'worker_job'
+    __tablename__ = 'worker_history'
     __table_args__ = (
-        PrimaryKeyConstraint('job_model', name='job_pkey'),
+        PrimaryKeyConstraint('history_id', name='history_pkey'),
         {"schema":"augur_operations"}
     )
+
+
+class WorkerJob(db.Model):
     job_model = db.Column(db.String())
     state = db.Column(db.Integer, nullable=False, server_default=text('0'))
     zombie_head = db.Column(db.Integer)
@@ -1729,13 +1939,14 @@ class WorkerJob(db.Model):
     analysis_state = db.Column(db.Integer, server_default=text('0'))
     oauth_id = db.Column(db.Integer, nullable=False)
 
-
-class WorkerOauth(db.Model):
-    __tablename__ = 'worker_oauth'
+    __tablename__ = 'worker_job'
     __table_args__ = (
-        PrimaryKeyConstraint('oauth_id'),
+        PrimaryKeyConstraint('job_model', name='job_pkey'),
         {"schema":"augur_operations"}
     )
+
+
+class WorkerOauth(db.Model):
     oauth_id = db.Column(db.BigInteger)
     name = db.Column(db.String(), nullable=False)
     consumer_key = db.Column(db.String(), nullable=False)
@@ -1745,28 +1956,36 @@ class WorkerOauth(db.Model):
     repo_directory = db.Column(db.String())
     platform = db.Column(db.String(), server_default='github')
 
-
-class WorkerSettingsFacade(db.Model):
-    __tablename__ = 'worker_settings_facade'
+    __tablename__ = 'worker_oauth'
     __table_args__ = (
-        PrimaryKeyConstraint('id', name='settings_pkey'),
+        PrimaryKeyConstraint('oauth_id'),
         {"schema":"augur_operations"}
     )
+
+
+class WorkerSettingsFacade(db.Model):
     id = db.Column(db.Integer)
     setting = db.Column(db.String(), nullable=False)
     value = db.Column(db.String(), nullable=False)
     last_modified = db.Column(db.TIMESTAMP(), nullable=False, server_default=func.current_timestamp())
 
+    __tablename__ = 'worker_settings_facade'
+    __table_args__ = (
+        PrimaryKeyConstraint('id', name='settings_pkey'),
+        {"schema":"augur_operations"}
+    )
+
 
 # class WorkingCommits(db.Model):
+#     working_commits_id = db.Column(db.BigInteger)
+#     repos_id = db.Column(db.Integer, nullable=False)
+#     working_commit = db.Column(db.String())
+
 #     __tablename__ = 'working_commits'
 #     __table_args__ = (
 #         PrimaryKeyConstraint('working_commits_id'),
 #         {"schema":"augur_operations"}
 #     )
-#     working_commits_id = db.Column(db.BigInteger)
-#     repos_id = db.Column(db.Integer, nullable=False)
-#     working_commit = db.Column(db.String())
   
 
 if __name__ == '__main__':
