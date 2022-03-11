@@ -1,13 +1,28 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from augur.config import AugurConfig
+
+
+ROOT_AUGUR_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
 # Import the flask app
 app = Flask(__name__)
 
-# define the database connection string for Flask app
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/test.db'
 
-# TODO: Create db from Flask app
+config = AugurConfig(ROOT_AUGUR_DIR)
+
+user = self.config.get_value('Server', 'user')
+password = self.config.get_value('Server', 'password')
+host = self.config.get_value('Server', 'host')
+port = self.config.get_value('Server', 'port')
+database = self.config.get_value('Server', 'database')
+
+
+DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(user, password, host, port, database)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = DB_STR
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
+
 db = SQLAlchemy(app)
 
 # TODO: Why is there a working_commits and repos_fetch_log in both of the schemas? There classes conflict 
