@@ -14,7 +14,7 @@ import numpy as np
 # Debugger
 import traceback
 
-#Method to parallelize
+#Method to parallelize, takes a queue of data and iterates over it.
 def process_commit_metadata(contributorQueue,interface,repo_id):
     
     for contributor in contributorQueue:
@@ -727,12 +727,12 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         new_contribs = json.loads(pd.read_sql(new_contrib_sql, self.db, params={
                                   'repo_id': repo_id}).to_json(orient="records"))
 
-        #Put contributor commit data into a process queue
-        #commitDataQueue = Queue(maxsize=(processes * 2))
-        #for commitData in new_contribs:
-        #    commitDataQueue.put(commitData)    
         
         if len(new_contribs) > 0 and multithreaded:
+            
+            #Split commits into mostly equal queues so each process starts with a workload and there is no
+            #    overhead to pass into queue from the parent.
+            
             numpyNewContribs = np.array(list(new_contribs))
             commitDataLists = np.array_split(numpyNewContribs, processes)
         
@@ -822,6 +822,10 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         #    existingDataQueue.put(commitData)
         
         if len(existing_cntrb_emails) > 0 and multithreaded:
+            
+            #Split commits into mostly equal queues so each process starts with a workload and there is no
+            #    overhead to pass into queue from the parent.
+            
             numpyExistingCntrbEmails = np.array(list(existing_cntrb_emails))
             existingEmailsSplit = np.array_split(numpyExistingCntrbEmails,processes)
             

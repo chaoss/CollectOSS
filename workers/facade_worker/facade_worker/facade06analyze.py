@@ -165,11 +165,6 @@ def analysis(cfg, multithreaded, interface=None, processes=5):
         ## TODO: Verify if the multithreaded approach here is optimal for postgresql
 
         if multithreaded and len(missing_commits) > 0:
-            #Queue adds parent overhead that we should try to avoid.
-            #commitQueue = multiprocessing.Queue(maxsize=(processes * 2))
-
-            #multiprocessing queues shouldn't be too long. 
-            #    commitQueue.put(commit)
 
             def analyze_commits_in_parallel(queue, cfg, repo_id, repo_location, multithreaded,interface):
                 for analyzeCommit in queue:    
@@ -181,6 +176,9 @@ def analysis(cfg, multithreaded, interface=None, processes=5):
 
             #cfg.log_activity('Info','Type of missing_commits: %s' % type(missing_commits))
             
+            #Split commits into mostly equal queues so each process starts with a workload and there is no
+            #    overhead to pass into queue from the parent.
+            
             numpyMissingCommits = np.array(list(missing_commits))
             listsSplitForProcesses = np.array_split(numpyMissingCommits,processes)
                 
@@ -191,6 +189,8 @@ def analysis(cfg, multithreaded, interface=None, processes=5):
             
             for pNum,process in enumerate(processList):
                 cfg.log_activity('Info','Starting commit analysis process %s' % pNum)
+                
+                #Marks process for death if/when parent exits.
                 process.daemon = True
                 process.start()
             
