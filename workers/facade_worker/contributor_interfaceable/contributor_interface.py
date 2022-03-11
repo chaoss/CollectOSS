@@ -815,12 +815,6 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                                            'repo_id': repo_id}).to_json(orient="records"))
 
         
-        #Should rethink queue when you can just split the list.
-        #existingDataQueue = Queue(maxsize=(processes * 2))
-        
-        #for commitData in existing_cntrb_emails:
-        #    existingDataQueue.put(commitData)
-        
         if len(existing_cntrb_emails) > 0 and multithreaded:
             
             #Split commits into mostly equal queues so each process starts with a workload and there is no
