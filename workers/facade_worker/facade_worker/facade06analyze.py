@@ -36,6 +36,8 @@ import os
 import getopt
 import xlsxwriter
 import configparser
+import multiprocessing
+import numpy as np
 from facade_worker.facade02utilitymethods import update_repo_log, trim_commit, store_working_author, trim_author
 from facade_worker.facade03analyzecommit import analyze_commit
 
@@ -44,7 +46,7 @@ from facade_worker.facade03analyzecommit import analyze_commit
 # else:
 #   import MySQLdb
 
-def analysis(cfg, multithreaded, interface=None):
+def analysis(cfg, multithreaded, interface=None, processes=6):
 
 # Run the analysis by looping over all active repos. For each repo, we retrieve
 # the list of commits which lead to HEAD. If any are missing from the database,
@@ -84,6 +86,7 @@ def analysis(cfg, multithreaded, interface=None):
 
     for repo in repos:
 
+        
         #Add committers for repo if interface
         if interface != None:
             interface.grab_committer_list(repo[0])
@@ -98,7 +101,10 @@ def analysis(cfg, multithreaded, interface=None):
         get_status = ("SELECT working_commit FROM working_commits WHERE repos_id=%s")
 
         cfg.cursor.execute(get_status, (repo[0], ))
-        working_commits = list(cfg.cursor)
+        try:
+            working_commits = list(cfg.cursor)
+        except:
+            working_commits = []
         #cfg.cursor.fetchone()[1]
 
         # If there's a commit still there, the previous run was interrupted and
@@ -143,8 +149,11 @@ def analysis(cfg, multithreaded, interface=None):
 
         cfg.cursor.execute(find_existing, (repo[0], ))
 
-        for commit in list(cfg.cursor):
-            existing_commits.add(commit[0])
+        try:
+            for commit in list(cfg.cursor):
+                existing_commits.add(commit[0])
+        except:
+            cfg.log_activity('Info', 'list(cfg.cursor) returned an error')
 
         # Find missing commits and add them
 
@@ -153,22 +162,43 @@ def analysis(cfg, multithreaded, interface=None):
         cfg.log_activity('Debug','Commits missing from repo %s: %s' %
             (repo[0],len(missing_commits)))
 
-## TODO: Verify if the multithreaded approach here is optimal for postgresql
+        ## TODO: Verify if the multithreaded approach here is optimal for postgresql
 
-        if multithreaded:
+        if multithreaded and len(missing_commits) > 0:
 
-            from multiprocessing import Pool
+            def analyze_commits_in_parallel(queue, cfg, repo_id, repo_location, multithreaded,interface):
+                for analyzeCommit in queue:    
 
-            pool = Pool()
+                    try:
+                        analyze_commit(cfg, repo_id, repo_location, analyzeCommit, multithreaded,interface=interface)
+                    except Exception as e:
+                        cfg.log_activity('Info', 'Subprocess ran into error when trying to anaylyze commit with error: %s' % e)
 
-            for commit in missing_commits:
+            #cfg.log_activity('Info','Type of missing_commits: %s' % type(missing_commits))
+            
+            #Split commits into mostly equal queues so each process starts with a workload and there is no
+            #    overhead to pass into queue from the parent.
+            
+            numpyMissingCommits = np.array(list(missing_commits))
+            listsSplitForProcesses = np.array_split(numpyMissingCommits,processes)
+                
+            processList = []
+            for process in range(processes):
+                
+                processList.append(multiprocessing.Process(target=analyze_commits_in_parallel, args=(listsSplitForProcesses[process].tolist(), cfg,repo[0],repo_loc,multithreaded,interface,)))
+            
+            for pNum,process in enumerate(processList):
+                cfg.log_activity('Info','Starting commit analysis process %s' % pNum)
+                
+                #Marks process for death if/when parent exits.
+                process.daemon = True
+                process.start()
+            
+            for process in processList:         
 
-                result = pool.apply_async(analyze_commit(cfg, repo[0], repo_loc, commit, multithreaded, interface=interface))
-
-            pool.close()
-            pool.join()
-
-        else:
+                process.join()
+                cfg.log_activity('Info','Subprocess has completed')
+        elif len(missing_commits) > 0:
             for commit in missing_commits:
                 analyze_commit(cfg, repo[0], repo_loc, commit, multithreaded, interface=interface)
 

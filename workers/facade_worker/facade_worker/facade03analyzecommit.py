@@ -133,7 +133,7 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded, interface=None
 		#SQL to update the contributors table 
 		cntrb = ("INSERT INTO contributors "
 			"(cntrb_email,cntrb_canonical,cntrb_full_name,tool_source, tool_version, data_source) "
-			"VALUES (%s,%s,%s,'FacadeAugur','0.0.1','git_repository')")
+			"VALUES (%s,%s,%s,'FacadeAugur','1.2.4','git_repository')")
 
 		## Logic block for updating contributors. 
 		if contributor_exists(author_em): 

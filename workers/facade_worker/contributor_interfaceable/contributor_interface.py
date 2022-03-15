@@ -7,9 +7,189 @@ from workers.util import read_config
 from psycopg2.errors import UniqueViolation
 from random import randint
 import json
+import multiprocessing
+import time
+import numpy as np
 
 # Debugger
 import traceback
+
+#Method to parallelize, takes a queue of data and iterates over it.
+def process_commit_metadata(contributorQueue,interface,repo_id):
+    
+    for contributor in contributorQueue:
+        # Get the email from the commit data
+        email = contributor['email_raw'] if 'email_raw' in contributor else contributor['email']
+    
+        name = contributor['name']
+
+        # check the email to see if it already exists in contributor_aliases
+        try:
+            # Look up email to see if resolved
+            alias_table_data = interface.db.execute(
+                s.sql.select([s.column('alias_email')]).where(
+                    interface.contributors_aliases_table.c.alias_email == email
+                )
+            ).fetchall()
+            if len(alias_table_data) >= 1:
+                # Move on if email resolved
+
+                #interface.logger.info(
+                #    f"Email {email} has been resolved earlier.")
+
+                continue
+        except Exception as e:
+            interface.logger.info(
+                f"alias table query failed with error: {e}")
+        
+        #Check the unresolved_commits table to avoid hitting endpoints that we know don't have relevant data needlessly
+        try:
+            unresolved_query_result = interface.db.execute(
+                s.sql.select([s.column('email'),s.column('name')]).where(
+                    interface.unresolved_commit_emails_table.c.name == name and interface.unresolved_commit_emails_table.c.email == email
+                )
+            ).fetchall()
+
+            if len(unresolved_query_result) >= 1:
+
+                #interface.logger.info(f"Commit data with email {email} has been unresolved in the past, skipping...")
+
+                continue
+        except Exception as e:
+            interface.logger.info(f"Failed to query unresolved alias table with error: {e}")
+    
+
+        login = None
+    
+        #Check the contributors table for a login for the given name
+        try:
+            contributors_with_matching_name = interface.db.execute(
+                s.sql.select([s.column('gh_login')]).where(
+                    interface.contributors_table.c.cntrb_full_name == name
+                )
+            ).fetchall()
+
+            if len(contributors_with_matching_name) >= 1:
+                login = contributors_with_matching_name[0]['gh_login']
+
+        except Exception as e:
+            interface.logger.error(f"Failed local login lookup with error: {e}")
+        
+
+        # Try to get the login from the commit sha
+        if login == None or login == "":
+            login = interface.get_login_with_commit_hash(contributor, repo_id)
+    
+        if login == None or login == "":
+            # Try to get the login from supplemental data if not found with the commit hash
+            login = interface.get_login_with_supplemental_data(contributor)
+    
+        if login == None:
+            continue
+
+        url = ("https://api.github.com/users/" + login)
+
+        user_data = interface.request_dict_from_endpoint(url)
+
+        if user_data == None:
+            interface.logger.warning(
+                f"user_data was unable to be reached. Skipping...")
+            continue
+
+        # Use the email found in the commit data if api data is NULL
+        emailFromCommitData = contributor['email_raw'] if 'email_raw' in contributor else contributor['email']
+
+        interface.logger.info(
+            f"Successfully retrieved data from github for email: {emailFromCommitData}")
+
+        # Get name from commit if not found by GitHub
+        name_field = contributor['commit_name'] if 'commit_name' in contributor else contributor['name']
+
+        try:
+
+            # try to add contributor to database
+            cntrb = {
+                "cntrb_login": user_data['login'],
+                "cntrb_created_at": user_data['created_at'],
+                "cntrb_email": user_data['email'] if 'email' in user_data else None,
+                "cntrb_company": user_data['company'] if 'company' in user_data else None,
+                "cntrb_location": user_data['location'] if 'location' in user_data else None,
+                # "cntrb_type": , dont have a use for this as of now ... let it default to null
+                "cntrb_canonical": user_data['email'] if 'email' in user_data and user_data['email'] is not None else emailFromCommitData,
+                "gh_user_id": user_data['id'],
+                "gh_login": user_data['login'],
+                "gh_url": user_data['url'],
+                "gh_html_url": user_data['html_url'],
+                "gh_node_id": user_data['node_id'],
+                "gh_avatar_url": user_data['avatar_url'],
+                "gh_gravatar_id": user_data['gravatar_id'],
+                "gh_followers_url": user_data['followers_url'],
+                "gh_following_url": user_data['following_url'],
+                "gh_gists_url": user_data['gists_url'],
+                "gh_starred_url": user_data['starred_url'],
+                "gh_subscriptions_url": user_data['subscriptions_url'],
+                "gh_organizations_url": user_data['organizations_url'],
+                "gh_repos_url": user_data['repos_url'],
+                "gh_events_url": user_data['events_url'],
+                "gh_received_events_url": user_data['received_events_url'],
+                "gh_type": user_data['type'],
+                "gh_site_admin": user_data['site_admin'],
+                "cntrb_last_used": None if 'updated_at' not in user_data else user_data['updated_at'],
+                # Get name from commit if api doesn't get it.
+                "cntrb_full_name": name_field if 'name' not in user_data or user_data['name'] is None else user_data['name'],
+                "tool_source": interface.tool_source,
+                "tool_version": interface.tool_version,
+                "data_source": interface.data_source
+            }
+
+        # interface.logger.info(f"{cntrb}")
+        except Exception as e:
+            interface.logger.info(f"Error when trying to create cntrb: {e}")
+            continue
+        # Check if the github login exists in the contributors table and add the emails to alias' if it does.
+
+        # Also update the contributor record with commit data if we can.
+        try:
+            if not interface.resolve_if_login_existing(cntrb):
+                try:
+                    interface.db.execute(
+                        interface.contributors_table.insert().values(cntrb))
+                except Exception as e:
+                    interface.logger.info(
+                        f"Ran into likely database collision. Assuming contributor exists in database. Error: {e}")
+            else:
+                interface.update_contributor(cntrb)
+
+            # Update alias after insertion. Insertion needs to happen first so we can get the autoincrementkey
+            interface.insert_alias(cntrb, emailFromCommitData)
+        except LookupError as e:
+            interface.logger.info(
+                ''.join(traceback.format_exception(None, e, e.__traceback__)))
+            interface.logger.info(
+                f"Contributor id not able to be found in database despite the user_id existing. Something very wrong is happening. Error: {e}")
+            return 
+
+        # Resolve any unresolved emails if we get to this point.
+        # They will get added to the alias table later
+        # Do this last to absolutely make sure that the email was resolved before we remove it from the unresolved table.
+        query = s.sql.text("""
+            DELETE FROM unresolved_commit_emails
+            WHERE email='{}'
+        """.format(email))
+
+        interface.logger.info(f"Updating now resolved email {email}")
+
+        try:
+            interface.db.execute(query)
+        except Exception as e:
+            interface.logger.info(
+                f"Deleting now resolved email failed with error: {e}")
+    
+    
+    return
+
+
+
 """
 This class serves as an extension for the facade worker to allow it to make api calls and interface with GitHub.
 The motivation for doing it this way is because the functionality needed to interface with Github and/or GitLab
@@ -26,6 +206,7 @@ A few interesting ideas: Maybe get the top committers from each repo first? curl
 
 
 class ContributorInterfaceable(WorkerGitInterfaceable):
+    
     def __init__(self, config={}, logger=None):
         # Define the data tables that we are needing
         # Define the tables needed to insert, update, or delete on
@@ -83,14 +264,28 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         self.logger.info(
             "Facade worker git interface logging set up correctly")
         # self.db_schema = None
+        # Get config passed from the facade worker.
         self.config.update({
             'gh_api_key': self.augur_config.get_value('Database', 'key'),
             'gitlab_api_key': self.augur_config.get_value('Database', 'gitlab_api_key')
             # 'port': self.augur_config.get_value('Workers', 'contributor_interface')
         })
 
-        # Get config passed from the facade worker.
-        self.initialize_database_connections()
+        
+        tries = 5
+        
+        while tries > 0:
+            try:
+                self.initialize_database_connections()
+                break
+            except Exception as e:
+                self.logger.error("Could not init database connection and oauth! {e}")
+                
+                if tries == 0:
+                    raise e
+            
+            tries -= 1
+                
         self.logger.info("Facade worker git interface database set up")
         self.logger.info(f"configuration passed is: {str(self.config)}.")
 
@@ -101,7 +296,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         self.worker_type = "Contributor_interface"
         self.tool_source = '\'Facade Worker\''
-        self.tool_version = '\'1.0.1\''
+        self.tool_version = '\'1.2.4\''
         self.data_source = '\'Git Log\''
 
         return
@@ -179,7 +374,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         self.logger = logger
 
         self.tool_source = '\'Facade Worker\'s Contributor Interface\''
-        self.tool_version = '\'0.2.0\''
+        self.tool_version = '\'1.2.4\''
         self.data_source = '\'Git Log\''
 
     def create_endpoint_from_commit_sha(self, commit_sha, repo_id):
@@ -213,7 +408,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         url = "https://api.github.com/repos/" + repo_path + "/commits/" + commit_sha
 
-        self.logger.info(f"Url: {url}")
+        #self.logger.info(f"Url: {url}")
 
         return url
 
@@ -282,7 +477,7 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                 self.contributors_aliases_table.insert().values(alias))
         except s.exc.IntegrityError:
             # It's expected to catch duplicates this way so no output is logged.
-            pass
+            #pass
             self.logger.info(f"alias {alias} already exists")
         except Exception as e:
             self.logger.info(
@@ -486,10 +681,8 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
 
         return match
 
-    
-
     # Update the contributors table from the data facade has gathered.
-    def insert_facade_contributors(self, repo_id):
+    def insert_facade_contributors(self, repo_id,processes=4,multithreaded=True):
         self.logger.info(
             "Beginning process to insert contributors from facade commits for repo w entry info: {}\n".format(repo_id))
 
@@ -529,195 +722,62 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
                     commits.cmt_commit_hash,
                     commits.cmt_author_raw_email
                 ORDER BY
-                NAME
+                hash
         """)
         new_contribs = json.loads(pd.read_sql(new_contrib_sql, self.db, params={
                                   'repo_id': repo_id}).to_json(orient="records"))
 
-        # Try to get GitHub API user data from each unique commit email.
-
-        # self.logger.info(
-        #    f"DEBUG: The data to process looks like this: {new_contribs}"
-        # )
-
-        logSkippedSection = True
-
-        for contributor in new_contribs:
-
-            # Get the email from the commit data
-            email = contributor['email_raw'] if 'email_raw' in contributor else contributor['email']
+        
+        if len(new_contribs) > 0 and multithreaded:
             
-            name = contributor['name']
+            #Split commits into mostly equal queues so each process starts with a workload and there is no
+            #    overhead to pass into queue from the parent.
+            
+            numpyNewContribs = np.array(list(new_contribs))
+            commitDataLists = np.array_split(numpyNewContribs, processes)
+        
+            processList = []
+            #Create process start conditions
+            for process in range(processes):
+                interface = ContributorInterfaceable(config=self.config,logger=self.logger)
 
-            # check the email to see if it already exists in contributor_aliases
-            try:
-                # Look up email to see if resolved
-                alias_table_data = self.db.execute(
-                    s.sql.select([s.column('alias_email')]).where(
-                        self.contributors_aliases_table.c.alias_email == email
-                    )
-                ).fetchall()
-                if len(alias_table_data) >= 1:
-                    # Move on if email resolved
+                processList.append(Process(target=process_commit_metadata, args=(commitDataLists[process].tolist(),interface,repo_id,)))
+        
+            #Multiprocess process commits
+            for pNum,process in enumerate(processList):
+                process.daemon = True
+                process.start()
+                self.logger.info(f"Process {pNum} started..")
+            
+        
+            for pNum,process in enumerate(processList):
+            
+                process.join()
 
-                    #Only log the skip the first time to avoid redundancy
-                    if logSkippedSection:
-                        self.logger.info(
-                            f"Email {email} has been resolved earlier.")
-                        logSkippedSection = False
-                    
+                self.logger.info(f"Process {pNum} has ended.")
+        else:
+            process_commit_metadata(list(new_contribs),self,repo_id)
 
+        self.logger.debug("DEBUG: Got through the new_contribs")
+        
+        def link_commits_to_contributor(contributorQueue,logger,database, commits_table):
+            # iterate through all the commits with emails that appear in contributors and give them the relevant cntrb_id.
+            for cntrb_email in contributorQueue:
+                logger.debug(
+                   f"These are the emails and cntrb_id's  returned: {cntrb_email}")
+
+                try:
+                    database.execute(commits_table.update().where(
+                        commits_table.c.cmt_committer_email == cntrb_email['email']
+                    ).values({
+                        'cmt_ght_author_id': cntrb_email['cntrb_id']
+                    }))
+                except Exception as e:
+                    logger.info(
+                        f"Ran into problem when enriching commit data. Error: {e}")
                     continue
-            except Exception as e:
-                self.logger.info(
-                    f"alias table query failed with error: {e}")
-                
-            #Check the unresolved_commits table to avoid hitting endpoints that we know don't have relevant data needlessly
-            try:
-                unresolved_query_result = self.db.execute(
-                    s.sql.select([s.column('email'),s.column('name')]).where(
-                        self.unresolved_commit_emails_table.c.name == name and self.unresolved_commit_emails_table.c.email == email
-                    )
-                ).fetchall()
-                
-                if len(unresolved_query_result) >= 1:
-                    if logSkippedSection:
-                        self.logger.info(f"Commit data with email {email} has been unresolved in the past, skipping...")
-                    
-                    logSkippedSection = False
-                    continue
-            except Exception as e:
-                self.logger.info(f"Failed to query unresolved alias table with error: {e}")
             
-            logSkippedSection = True
-
-            login = None
-            
-            #Check the contributors table for a login for the given name
-            try:
-                contributors_with_matching_name = self.db.execute(
-                    s.sql.select([s.column('gh_login')]).where(
-                        self.contributors_table.c.cntrb_full_name == name
-                    )
-                ).fetchall()
-                
-                if len(contributors_with_matching_name) >= 1:
-                    login = contributors_with_matching_name[0]['gh_login']
-            
-            except Exception as e:
-                self.logger.info(f"Failed local login lookup with error: {e}")
-                
-
-            # Try to get the login from the commit sha
-            if login == None or login == "":
-                login = self.get_login_with_commit_hash(contributor, repo_id)
-
-            if login == None or login == "":
-                # Try to get the login from supplemental data if not found with the commit hash
-                login = self.get_login_with_supplemental_data(contributor)
-
-            if login == None:
-                continue
-
-            url = ("https://api.github.com/users/" + login)
-
-            user_data = self.request_dict_from_endpoint(url)
-
-            if user_data == None:
-                self.logger.warning(
-                    f"user_data was unable to be reached. Skipping...")
-                continue
-
-            # Use the email found in the commit data if api data is NULL
-            emailFromCommitData = contributor['email_raw'] if 'email_raw' in contributor else contributor['email']
-
-            self.logger.info(
-                f"Successfully retrieved data from github for email: {emailFromCommitData}")
-
-            # Get name from commit if not found by GitHub
-            name_field = contributor['commit_name'] if 'commit_name' in contributor else contributor['name']
-
-            try:
-
-                # try to add contributor to database
-                cntrb = {
-                    "cntrb_login": user_data['login'],
-                    "cntrb_created_at": user_data['created_at'],
-                    "cntrb_email": user_data['email'] if 'email' in user_data else None,
-                    "cntrb_company": user_data['company'] if 'company' in user_data else None,
-                    "cntrb_location": user_data['location'] if 'location' in user_data else None,
-                    # "cntrb_type": , dont have a use for this as of now ... let it default to null
-                    "cntrb_canonical": user_data['email'] if 'email' in user_data and user_data['email'] is not None else emailFromCommitData,
-                    "gh_user_id": user_data['id'],
-                    "gh_login": user_data['login'],
-                    "gh_url": user_data['url'],
-                    "gh_html_url": user_data['html_url'],
-                    "gh_node_id": user_data['node_id'],
-                    "gh_avatar_url": user_data['avatar_url'],
-                    "gh_gravatar_id": user_data['gravatar_id'],
-                    "gh_followers_url": user_data['followers_url'],
-                    "gh_following_url": user_data['following_url'],
-                    "gh_gists_url": user_data['gists_url'],
-                    "gh_starred_url": user_data['starred_url'],
-                    "gh_subscriptions_url": user_data['subscriptions_url'],
-                    "gh_organizations_url": user_data['organizations_url'],
-                    "gh_repos_url": user_data['repos_url'],
-                    "gh_events_url": user_data['events_url'],
-                    "gh_received_events_url": user_data['received_events_url'],
-                    "gh_type": user_data['type'],
-                    "gh_site_admin": user_data['site_admin'],
-                    "cntrb_last_used": None if 'updated_at' not in user_data else user_data['updated_at'],
-                    # Get name from commit if api doesn't get it.
-                    "cntrb_full_name": name_field if 'name' not in user_data or user_data['name'] is None else user_data['name'],
-                    "tool_source": self.tool_source,
-                    "tool_version": self.tool_version,
-                    "data_source": self.data_source
-                }
-
-                # self.logger.info(f"{cntrb}")
-            except Exception as e:
-                self.logger.info(f"Error when trying to create cntrb: {e}")
-                continue
-            # Check if the github login exists in the contributors table and add the emails to alias' if it does.
-
-            # Also update the contributor record with commit data if we can.
-            try:
-                if not self.resolve_if_login_existing(cntrb):
-                    try:
-                        self.db.execute(
-                            self.contributors_table.insert().values(cntrb))
-                    except Exception as e:
-                        self.logger.info(
-                            f"Ran into likely database collision. Assuming contributor exists in database. Error: {e}")
-                else:
-                    self.update_contributor(cntrb)
-
-                # Update alias after insertion. Insertion needs to happen first so we can get the autoincrementkey
-                self.insert_alias(cntrb, emailFromCommitData)
-            except LookupError as e:
-                self.logger.info(
-                    ''.join(traceback.format_exception(None, e, e.__traceback__)))
-                self.logger.info(
-                    f"Contributor id not able to be found in database despite the user_id existing. Something very wrong is happening. Error: {e}")
-                continue 
-
-            # Resolve any unresolved emails if we get to this point.
-            # They will get added to the alias table later
-            # Do this last to absolutely make sure that the email was resolved before we remove it from the unresolved table.
-            query = s.sql.text("""
-                DELETE FROM unresolved_commit_emails
-                WHERE email='{}'
-            """.format(email))
-
-            self.logger.info(f"Updating now resolved email {email}")
-
-            try:
-                self.db.execute(query)
-            except Exception as e:
-                self.logger.info(
-                    f"Deleting now resolved email failed with error: {e}")
-
-        #self.logger.info("DEBUG: Got through the new_contribs")
+            return
 
         # sql query used to find corresponding cntrb_id's of emails found in the contributor's table
         # i.e., if a contributor already exists, we use it!
@@ -754,25 +814,35 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         existing_cntrb_emails = json.loads(pd.read_sql(resolve_email_to_cntrb_id_sql, self.db, params={
                                            'repo_id': repo_id}).to_json(orient="records"))
 
-        #self.logger.info("DEBUG: got passed the sql statement's execution")
+        
+        if len(existing_cntrb_emails) > 0 and multithreaded:
+            
+            #Split commits into mostly equal queues so each process starts with a workload and there is no
+            #    overhead to pass into queue from the parent.
+            
+            numpyExistingCntrbEmails = np.array(list(existing_cntrb_emails))
+            existingEmailsSplit = np.array_split(numpyExistingCntrbEmails,processes)
+            
+            processList = []
+            #Create process start conditions
+            for process in range(processes):
+            
+                processList.append(Process(target=link_commits_to_contributor, args=(existingEmailsSplit[process].tolist(),self.logger,self.db,self.commits_table,)))
+        
+        
+            #Multiprocess process commits
+            for pNum,process in enumerate(processList):
+                process.daemon = True
+                process.start()
+                self.logger.info(f"Process {pNum} started..")
+        
+        
+            for process in processList:
+                process.join()
+        else:
+            link_commits_to_contributor(list(existing_cntrb_emails), self.logger, self.db, self.commits_table)
 
-        #self.logger.info(f"DEBUG: Here are the existing emails: {existing_cntrb_emails}")
-
-        # iterate through all the commits with emails that appear in contributors and give them the relevant cntrb_id.
-        for cntrb_email in existing_cntrb_emails:
-            self.logger.info(
-                f"These are the emails and cntrb_id's  returned: {cntrb_email}")
-
-            try:
-                self.db.execute(self.commits_table.update().where(
-                    self.commits_table.c.cmt_committer_email == cntrb_email['email']
-                ).values({
-                    'cmt_ght_author_id': cntrb_email['cntrb_id']
-                }))
-            except Exception as e:
-                self.logger.info(
-                    f"Ran into problem when enriching commit data. Error: {e}")
-
+        self.logger.info("Done with inserting and updating facade contributors")
         return
 
     def create_endpoint_from_repo_id(self, repo_id):
@@ -819,3 +889,5 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         }
 
         self.query_github_contributors(contrib_entry_info, repo_id)
+        
+
