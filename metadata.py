@@ -8,5 +8,6 @@ __short_description__ = "Python 3 package for free/libre and open-source softwar
 __version__ = "0.25.6"
 __release__ = "v0.25.6"
 
+
 __license__ = "MIT"
 __copyright__ = "University of Missouri, University of Nebraska-Omaha, CHAOSS, & Augurlabs 2022"
