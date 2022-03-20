@@ -12,7 +12,7 @@ PostgreSQL Installation
 	sudo apt update
 	sudo apt upgrade
 	sudo apt install software-properties-common
-	sudo apt install postgresql postgresql-contrib
+	sudo apt install postgresql postgresql-contrib postgresql-client
 	sudo apt install build-essential
 
 
@@ -45,6 +45,18 @@ Git Configuration
 
 - For each platform, perform a command line login in order to cache Git credentials for the LINUX user who will be operating Augur. This step is required in order to prevent the Facade Commit Counting Diesel from stalling on a command line prompt when repositories move or disappear. 
 
+Install Go
+~~~~~~~~~~~~~~~~~~~~~~~~
+Two of Augur's workers use the Go programming language, which needs to be installed on your computer. Snap is the easiest way to install Go. If Snap does not work for you, see instructions here: https://www.digitalocean.com/community/tutorials/how-to-install-go-on-ubuntu-20-04
+
+.. code-block:: bash
+
+	sudo apt update
+	sudo apt install snapd
+	sudo snap install go --classic
+
+Python Virtual Environment Configuration
+~~~~~~~~~~~~~~~~~~~~~~~~
 - Set up a Python virtual environment (Python 3.8 and above are now required. Python 3.9 and python 3.10 work as well, though we have tested Python 3.9 on more platforms.) 
 - Clone and install Augur as a regular user. 
 
