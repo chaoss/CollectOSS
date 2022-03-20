@@ -12,6 +12,7 @@ PostgreSQL Installation
 	sudo apt update
 	sudo apt upgrade
 	sudo apt install software-properties-common
+	sudo apt install python3-dev
 	sudo apt install postgresql postgresql-contrib postgresql-client
 	sudo apt install build-essential
 
@@ -62,20 +63,20 @@ Python Virtual Environment Configuration
 
 .. code-block:: bash
 
-	su - ubuntu
+	# make sure you are logged in as your own user (i.e. "sean")
 	git clone https://github.com/chaoss/augur.git
 	cd augur/
 	sudo apt install make
-	sudo add-apt-repository ppa:deadsnakes/ppa
 	sudo apt-get install python3-venv 
 	python3 -m venv $HOME/.virtualenvs/augur_env
 	source $HOME/.virtualenvs/augur_env/bin/activate
+	sudo apt install python-pip-whl
 	sudo apt install python3-pip
 	sudo apt install pythonpy
 	python -m pip install --upgrade pip
 	make install-dev {Follow prompts. You will need database credentials, a file location for cloned repositories, a GitHub Token, and a GitLab token.}
 
-- Load a sample set of repositories. This can be accomplished through the Augur Command Line Interface (CLI). You can see available commands using 
+- Seven sample repositories are loaded by default. You can delete them if you want to use your own repositories by deleting the records from the `repo` table first, then deleting the records from the `repo_groups` table. 
 
 .. code-block:: bash
 
@@ -83,6 +84,8 @@ Python Virtual Environment Configuration
 	augur db --help
 	augur backend --help
 
+Loading Repositories
+~~~~~~~~~~~~~~~~~~~~~~~~
 The commands for loading repos are: 
 
 .. code-block:: bash
