@@ -38,7 +38,7 @@ ALTER TABLE "augur_data"."pull_request_assignees"
 ALTER TABLE "augur_data"."pull_requests" 
   ADD CONSTRAINT "unique-pr" UNIQUE ("repo_id", "pr_src_id");
 
-update "augur_operations"."augur_settings" set value = 96
+update "augur_operations"."augur_settings" set value = 97
   where setting = 'augur_data_version'; 
 COMMIT; 
 
