@@ -16,6 +16,7 @@ ALTER TABLE "augur_data"."issue_message_ref"
    ) a where a.counter >1 and a.gh_issue_id = issues.gh_issue_id group by a.gh_issue_id );
  
 ALTER TABLE "augur_data"."issues" 
+  DROP CONSTRAINT IF EXISTS "unique-issue",
   ADD CONSTRAINT "unique-issue" UNIQUE ("repo_id", "gh_issue_id");
 
 
@@ -27,7 +28,7 @@ ALTER TABLE "augur_data"."pull_request_message_ref"
 
 ALTER TABLE "augur_data"."pull_request_assignees" 
   DROP CONSTRAINT "fk_pull_request_assignees_pull_requests_1",
-  ADD CONSTRAINT "fk_pull_request_assignees_pull_requests_1" FOREIGN KEY ("pull_request_id") REFERENCES "augur_data"."pull_requests" ("pull_request_id") ON DELETE CASCADE ON UPDATE NO ACTION;
+  ADD CONSTRAINT "fk_pull_request_assignees_pull_requests_1" FOREIGN KEY ("pull_request_id") REFERENCES "augur_data"."pull_requests" ("pull_request_id") ON DELETE CASCADE ON UPDATE CASCADE;
 
   delete from pull_requests CASCADE where pull_request_id in (
   select distinct max(pull_request_id) as pull_request_id from pull_requests, (
@@ -36,9 +37,15 @@ ALTER TABLE "augur_data"."pull_request_assignees"
    ) a where a.counter >1 and a.pr_src_id = pull_requests.pr_src_id group by a.pr_src_id );
   
 ALTER TABLE "augur_data"."pull_requests" 
-  ADD CONSTRAINT "unique-pr" UNIQUE ("repo_id", "pr_src_id");
+  DROP CONSTRAINT IF EXISTS "unique-prx",
+  ADD CONSTRAINT "unique-prx" UNIQUE ("repo_id", "pr_src_id");
+
+
+ALTER TABLE "augur_data"."repo_labor" 
+  DROP CONSTRAINT IF EXISTS "rl-unique",
+  ADD CONSTRAINT "rl-unique" UNIQUE ("repo_id", "rl_analysis_date", "file_path", "file_name") DEFERRABLE INITIALLY DEFERRED;
+
 
 update "augur_operations"."augur_settings" set value = 97
   where setting = 'augur_data_version'; 
 COMMIT; 
-
