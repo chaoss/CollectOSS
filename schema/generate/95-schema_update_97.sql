@@ -40,7 +40,12 @@ ALTER TABLE "augur_data"."pull_requests"
   DROP CONSTRAINT IF EXISTS "unique-prx",
   ADD CONSTRAINT "unique-prx" UNIQUE ("repo_id", "pr_src_id");
 
-
+  delete from repo_labor CASCADE where repo_labor_id in (
+  select distinct max(repo_labor.repo_labor_id) as repo_labor_id from repo_labor, (
+  select repo_id, repo_labor_id, rl_analysis_date, file_path, file_name, count(*) as counter from repo_labor
+   group by repo_id, repo_labor_id, rl_analysis_date, file_path, file_name order by counter desc
+   ) a where a.counter >1 and a.repo_labor_id = repo_labor.repo_labor_id group by a.repo_labor_id);
+   
 ALTER TABLE "augur_data"."repo_labor" 
   DROP CONSTRAINT IF EXISTS "rl-unique",
   ADD CONSTRAINT "rl-unique" UNIQUE ("repo_id", "rl_analysis_date", "file_path", "file_name") DEFERRABLE INITIALLY DEFERRED;
