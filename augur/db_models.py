@@ -35,6 +35,9 @@ db = SQLAlchemy(app)
 # TODO: look at how facade queries it and add index
 
 
+# TODO: Why is there a working_commits and repos_fetch_log in both of the schemas? There classes conflict
+
+# TODO: look at how facade queries it and add index
 class AnalysisLog(db.Model):
     analysis_log_id = db.Column(db.BigInteger, primary_key=True)
     repos_id = db.Column(db.Integer, nullable=False)
