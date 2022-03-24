@@ -5,8 +5,8 @@ __url__ = "https://github.com/chaoss/augur"
 
 __short_description__ = "Python 3 package for free/libre and open-source software community metrics, models & data collection"
 
-__version__ = "0.25.6"
-__release__ = "v0.25.6"
+__version__ = "0.25.10"
+__release__ = "v0.25.10"
 
 
 __license__ = "MIT"
