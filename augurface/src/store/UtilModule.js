@@ -8,7 +8,7 @@ export default {
   state: {
     host: configObject["Frontend"].host,
     port: configObject["Frontend"].port,
-    baseEndpointUrl: `http://${configObject["Frontend"].host}:${configObject["Frontend"].port}/api/unstable`,
+    baseEndpointUrl: `http${configObject["Frontend"].ssl ? "s" : ""}://${configObject["Frontend"].host}:${configObject["Frontend"].port}/api/unstable`,
     // baseEndpointUrl: 'http://localhost:5000/api/unstable',
     crudKey: sessionStorage.getItem("__augursessionstorage__crudkey") !== null ? sessionStorage.getItem("__augursessionstorage__crudkey") : '',
     availableEndpoints: [
