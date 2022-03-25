@@ -6,8 +6,6 @@ The foreign key from the pull_request_reviews table to the pull_requests table s
 The foreign key from the issue_labels table to the issues table still has on delete restrict on it, which I believe needs to be on delete cascade
 */
 
-ALTER TABLE "augur_data"."pull_request_reviews"
-
 
 ALTER TABLE "augur_data"."issue_labels" 
   DROP CONSTRAINT IF EXISTS "fk_issue_labels_issues_1",
