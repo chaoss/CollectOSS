@@ -1,3 +1,7 @@
+
+
+--draft
+
 BEGIN; 
 -- code added following PR review
 /*
@@ -21,7 +25,7 @@ ALTER TABLE "augur_data"."issue_message_ref"
   DROP CONSTRAINT "fk_issue_message_ref_issues_1",
   ADD CONSTRAINT "fk_issue_message_ref_issues_1" FOREIGN KEY ("issue_id") REFERENCES "augur_data"."issues" ("issue_id") ON DELETE CASCADE ON UPDATE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
-  delete from issues CASCADE where issue_id in (
+  delete from "augur_data"."issues" CASCADE where issue_id in (
   select distinct max(issue_id) as issue_id from issues, (
   select repo_id,  gh_issue_id, count(*) as counter from issues
    group by repo_id,  gh_issue_id order by counter desc
@@ -67,6 +71,6 @@ ALTER TABLE "augur_data"."repo_labor"
 
 
 --
-update "augur_operations"."augur_settings" set value = 98
+update "augur_operations"."augur_settings" set value = 97
   where setting = 'augur_data_version'; 
 COMMIT; 
