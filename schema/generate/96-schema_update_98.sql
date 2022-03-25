@@ -49,7 +49,7 @@ ALTER TABLE "augur_data"."pull_request_assignees"
   ADD CONSTRAINT "fk_pull_request_assignees_pull_requests_1" FOREIGN KEY ("pull_request_id") REFERENCES "augur_data"."pull_requests" ("pull_request_id") ON DELETE CASCADE ON UPDATE CASCADE;
 
   delete from "augur_data"."pull_requests" CASCADE where pull_request_id in (
-  select distinct max(pull_request_id) as pull_request_id from pull_requests, (
+  select distinct max(pull_request_id) as pull_request_id from "augur_data"."pull_requests", (
   select repo_id,  pr_src_id, count(*) as counter from "augur_data"."pull_requests"
    group by repo_id,  pr_src_id order by counter desc
    ) a where a.counter >1 and a.pr_src_id = pull_requests.pr_src_id group by a.pr_src_id );
@@ -60,9 +60,9 @@ ALTER TABLE "augur_data"."pull_requests"
 
   delete from "augur_data"."repo_labor" CASCADE where repo_labor_id in (
   select distinct max(repo_labor.repo_labor_id) as repo_labor_id from "augur_data"."repo_labor", (
-  select repo_id, repo_labor_id, rl_analysis_date, file_path, file_name, count(*) as counter from repo_labor
+  select repo_id, repo_labor_id, rl_analysis_date, file_path, file_name, count(*) as counter from "augur_data"."repo_labor"
    group by repo_id, repo_labor_id, rl_analysis_date, file_path, file_name order by counter desc
-   ) a where a.counter >1 and a.repo_labor_id = repo_labor.repo_labor_id group by a.repo_labor_id);
+   ) a where a.counter >1 and a.repo_labor_id = "augur_data"."repo_labor".repo_labor_id group by a.repo_labor_id);
    
 ALTER TABLE "augur_data"."repo_labor" 
   DROP CONSTRAINT IF EXISTS "rl-unique",
