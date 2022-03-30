@@ -15,9 +15,26 @@ This section of the documentation details how to install Augur's Python library 
 
 macOS Errata
 ~~~~~~~~~~~~~
-If you're running Augur on macOS, we strongly suggest adding the following line to your shell's initialization script::
+If you’re running Augur on macOS, we strongly suggest updating your shell’s initialization script as follows.
+
+In a terminal, open the script::
+
+  nano .bash_profile
+ 
+Add the following line to the end of the file::
 
   export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
+
+Save the file and exit.
+Run this command to reload bash_profile::
+
+  source .bash_profile
+
+Check if it was updated::
+
+  env
+
+``env`` should contain ``OBJC_DISABLE_INITIALIZE_FORK_SAFETY``.
 
 macOS takes "helpful" measures to prevent Python subprocesses (which Augur uses) from forking cleanly, and setting this environment variable disables these safety measures to restore normal Python functionality.
 
