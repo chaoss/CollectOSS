@@ -12,9 +12,9 @@ If you want to get started as fast as possible, we have `Docker images <../docke
 
 To install from source, we'll need to do a few things:
 
-0. Setup a PostgreSQL instance to store the data collected by Augur
-1. Install and configure Augur's application server
-2. Install and configure Augur's data collection workers
+1. Setup a PostgreSQL instance to store the data collected by Augur
+2. Install and configure Augur's application server
+3. Install and configure Augur's data collection workers
 
 The next section will start with getting a database setup, and then go from there.
 You can also find the table of contents for the whole walkthrough below.
