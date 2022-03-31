@@ -6,11 +6,11 @@ This section of the documentation details how to install Augur's Python library 
 .. note::
   There are 3 main issues new developers encounter when first installing Augur: 
 
-  1. The absence of a `gcc` or `fortran` compiler, required by numpy and nltk python libraries. Look up how to install these compilers for your local operating system. Many times they simply need to be updated to a more current version.
+  1. The absence of a `GCC` or `Fortran` compiler, required by numpy and NLTK Python libraries. Look up how to install these compilers for your local operating system. Many times they simply need to be updated to a more current version.
 
-  2. Conflicting versions of Python: The fix is platform specific. On Mac OS X, more often than not multiple versions of python have been installed by the OS, brew, Anaconda, or a combination of both. The result is some python commands are drawn from different paths because of how they are linked in `/usr/local/bin`
+  2. Conflicting versions of Python: The fix is platform specific. On Mac OS X, more often than not multiple versions of Python have been installed by the OS, brew, Anaconda, or a combination of both. The result is some python commands are drawn from different paths because of how they are linked in `/usr/local/bin`
 
-  3. Multiple, or conflicting versions of postgresql, sometimes due to the absence of a functional `psql` function at the command line.
+  3. Multiple, or conflicting versions of PostgreSQL, sometimes due to the absence of a functional `psql` function at the command line.
    
 
 macOS Errata
@@ -73,10 +73,10 @@ Frontend
 ---------
 If you're interested in using our visualizations, you can optionally install the frontend dependencies:
 
--  `node <https://nodejs.org/en/>`__
+-  `Node <https://nodejs.org/en/>`__
 -  `npm <https://www.npmjs.com/>`__
 -  `Vue.js <https://vuejs.org/>`__  
--  `vue-cli <https://cli.vuejs.org/>`__
+-  `Vue-CLI <https://cli.vuejs.org/>`__
 
 We use Vue.js as our frontend web framework, and ``npm`` as our package manager.
 
@@ -148,13 +148,13 @@ your installation of Python 3: on most systems, this is ``python3``, but yours m
 
 3. Run the install script. This script will:
 
-- install Augur’s Python library and application server
-- install Augur's data collection workers
-- prompt you for configuration settings, including your database credentials
-- generate a configuration file using your provided settings
-- install Augur's schema in the configured database
-- optionally, install Augur’s frontend and its dependencies
-- generate and output an Augur API key
+- Install Augur’s Python library and application server
+- Install Augur's data collection workers
+- Prompt you for configuration settings, including your database credentials
+- Generate a configuration file using your provided settings
+- Install Augur's schema in the configured database
+- Optionally, install Augur’s frontend and its dependencies
+- Generate and output an Augur API key
 
 .. note::
 
