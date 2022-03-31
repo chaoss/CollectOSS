@@ -121,7 +121,7 @@ If you're using the Docker container, you can use the `provided UI <../docker/us
 Running collections
 --------------------
 
-Congratuations! At this point you (hopefully) have a fully functioning and configured Augur instance.
+Congratulations! At this point you (hopefully) have a fully functioning and configured Augur instance.
 
 After you've loaded your repos, you're ready for your first collection run. We recommend running only the default workers first to gather the initial data. If you're collecting data for a lot of repositories, or repositories with a lot of data, we recommend increasing the number of ``github_workers`` and ``pull_request_workers``.
 
