@@ -116,7 +116,7 @@ The housekeeper is responsible for generating the tasks that will tell the worke
 Adding repos for collection
 -----------------------------
 
-If you're using the Docker container, you can use the `provided UI <../docker/usage.html>`_ to load your repositories. Otherwise, you'll need to use the `Augur CLI <command-line-interface/db.html>`_ to load your repositories. Please reference the respective sections of the documenation for detailed instructions on how to accomplish both of these steps.
+If you're using the Docker container, you can use the `provided UI <../docker/usage.html>`_ to load your repositories. Otherwise, you'll need to use the `Augur CLI <command-line-interface/db.html>`_ to load your repositories. Please reference the respective sections of the documentation for detailed instructions on how to accomplish both of these steps.
 
 Running collections
 --------------------
