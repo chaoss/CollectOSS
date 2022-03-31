@@ -128,14 +128,14 @@ after which you'll move on to the next section to configure the workers.
 .. warning::
   Do **NOT** install or run Augur using ``sudo``. It is not required, and using it will inevitably cause some permissions trouble. Don't say we didn't warn you!
 
-0. Clone the repository and change to the newly created directory.
+1. Clone the repository and change to the newly created directory.
 
 .. code-block:: bash
 
    $ git clone 'https://github.com/chaoss/augur.git'
    $ cd augur/
 
-1. Create a virtual environment in a directory of your choosing. Be sure to use the correct ``python`` command for
+2. Create a virtual environment in a directory of your choosing. Be sure to use the correct ``python`` command for
 your installation of Python 3: on most systems, this is ``python3``, but yours may differ (you can use ``python -V`` or ``python3 -V`` to check).
 
 .. code-block:: bash
@@ -146,7 +146,7 @@ your installation of Python 3: on most systems, this is ``python3``, but yours m
     # to activate the environment
     $ source $HOME/.virtualenvs/augur_env/bin/activate
 
-2. Run the install script. This script will:
+3. Run the install script. This script will:
 
 - install Augur’s Python library and application server
 - install Augur's data collection workers
