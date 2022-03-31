@@ -158,7 +158,7 @@ your installation of Python 3: on most systems, this is ``python3``, but yours m
 
 .. note::
 
-    At the very end, the install script will also generate an Augur API key for your database. This key will be automatically inserted into your database and then printed to your terminal. It's required to use the repo & repo group creation endpoints, so **make sure you save it off somehwere!** There is only one key per database.
+    At the very end, the install script will also generate an Augur API key for your database. This key will be automatically inserted into your database and then printed to your terminal. It's required to use the repo & repo group creation endpoints, so **make sure you save it off somewhere!** There is only one key per database.
 
 .. code-block:: bash
 
