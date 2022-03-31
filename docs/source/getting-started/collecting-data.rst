@@ -108,10 +108,10 @@ The housekeeper is responsible for generating the tasks that will tell the worke
         ... //other task-specific parameters
     }
 
-- the ``delay`` parameter is the amount of time the housekeeper should wait before scheduling a new update task
-- the ``given`` parameter is used in conjunction with the ``model`` parameter to determine which workers can accept a data collection task. Each worker can collect data if it is "given" data in a certain format, for example a ``github_url`` (in the case of the ``github_worker`` and ``pull_request_worker``) or perhaps just any valid ``git_url`` (as in the case of the ``facade_worker``)
-- the ``model`` parameter is the other parameter used to determine which workers can accept a given task. It represents the part of the conceptual data model that the worker can fulfill; for example, the ``facade_worker`` fills out the ``commits`` model since it primarly gathers data about commits, and the ``github_worker`` fills out both the ``issues`` and ``contributors`` model.
-- the ``repo_group_id`` parameter specifies which group of repos the housekeeper should collect data for; use the default of ``0`` to specify ALL repo groups in the database.
+- The ``delay`` parameter is the amount of time the housekeeper should wait before scheduling a new update task.
+- The ``given`` parameter is used in conjunction with the ``model`` parameter to determine which workers can accept a data collection task. Each worker can collect data if it is "given" data in a certain format, for example a ``github_url`` (in the case of the ``github_worker`` and ``pull_request_worker``) or perhaps just any valid ``git_url`` (as in the case of the ``facade_worker``).
+- The ``model`` parameter is the other parameter used to determine which workers can accept a given task. It represents the part of the conceptual data model that the worker can fulfill; for example, the ``facade_worker`` fills out the ``commits`` model since it primarly gathers data about commits, and the ``github_worker`` fills out both the ``issues`` and ``contributors`` model.
+- The ``repo_group_id`` parameter specifies which group of repos the housekeeper should collect data for; use the default of ``0`` to specify ALL repo groups in the database.
 
 Adding repos for collection
 -----------------------------
