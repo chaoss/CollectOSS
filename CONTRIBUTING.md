@@ -11,28 +11,28 @@ Please note that if you open a bug report and your issue does not follow our tem
 
 ## Contributing to the source code
 
-0. Fork this repo, and then clone it:
+1. Fork this repo, and then clone it:
 ```bash
 $ git clone github.com:your-username/augur.git
 $ cd augur/
 $ git remote add upstream https://github.com/<your username>/augur.git
 ```
 
-1. Follow the [development installation instructions](https://oss-augur.readthedocs.io/en/main/development-guide/installation.html).
+2. Follow the [development installation instructions](https://oss-augur.readthedocs.io/en/main/development-guide/installation.html).
 
-2. Create a new branch
+3. Create a new branch
 ```bash
 $ git checkout -b my-new-branch
 ```
-3. Make your change(s).
+4. Make your change(s).
 
-4. Commit the change(s) and push to your fork
+5. Commit the change(s) and push to your fork
 ```bash
 $ git add .
 $ git commit -s -m "This is my first commit"
 $ git push -u origin my-new-branch
 ```
-5. Then, [submit a pull request](https://github.com/chaoss/augur/compare).
+6. Then, [submit a pull request](https://github.com/chaoss/augur/compare).
 
 At this point, you're waiting on us. We like to at least comment on pull requests
 within three business days (and, typically, one business day). Once one of our maintainers has had a chance to review your PR, we will either mark it as "needs review" and provide specific feedback on your changes, or we will go ahead and complete the pull request.
