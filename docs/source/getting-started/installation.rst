@@ -6,11 +6,11 @@ This section of the documentation details how to install Augur's Python library 
 .. note::
   There are 3 main issues new developers encounter when first installing Augur: 
 
-  1. The absence of a `gcc` or `fortran` compiler, required by numpy and nltk python libraries. Look up how to install these compilers for your local operating system. Many times they simply need to be updated to a more current version.
+  1. The absence of a `GCC` or `Fortran` compiler, required by numpy and NLTK Python libraries. Look up how to install these compilers for your local operating system. Many times they simply need to be updated to a more current version.
 
-  2. Conflicting versions of Python: The fix is platform specific. On Mac OS X, more often than not multiple versions of python have been installed by the OS, brew, Anaconda, or a combination of both. The result is some python commands are drawn from different paths because of how they are linked in `/usr/local/bin`
+  2. Conflicting versions of Python: The fix is platform specific. On Mac OS X, more often than not multiple versions of Python have been installed by the OS, brew, Anaconda, or a combination of both. The result is some python commands are drawn from different paths because of how they are linked in `/usr/local/bin`
 
-  3. Multiple, or conflicting versions of postgresql, sometimes due to the absence of a functional `psql` function at the command line.
+  3. Multiple, or conflicting versions of PostgreSQL, sometimes due to the absence of a functional `psql` function at the command line.
    
 
 macOS Errata
@@ -39,7 +39,7 @@ Check if it was updated::
 macOS takes "helpful" measures to prevent Python subprocesses (which Augur uses) from forking cleanly, and setting this environment variable disables these safety measures to restore normal Python functionality.
 
 .. warning::
-  If you skip this step, you'll likely see all housekeeper jobs randomly exiting for no reason, and the Gunicorn server will not behave nicely either. Skip this step at your peril!
+  If you skip this step, you'll likely see all housekeeper jobs randomly exiting for no reason, and the Gunicorn server will not behave nicely either. Skip this step at your own risk!
 
 
 Dependencies
@@ -73,10 +73,10 @@ Frontend
 ---------
 If you're interested in using our visualizations, you can optionally install the frontend dependencies:
 
--  `node <https://nodejs.org/en/>`__
+-  `Node <https://nodejs.org/en/>`__
 -  `npm <https://www.npmjs.com/>`__
 -  `Vue.js <https://vuejs.org/>`__  
--  `vue-cli <https://cli.vuejs.org/>`__
+-  `Vue-CLI <https://cli.vuejs.org/>`__
 
 We use Vue.js as our frontend web framework, and ``npm`` as our package manager.
 
@@ -128,14 +128,14 @@ after which you'll move on to the next section to configure the workers.
 .. warning::
   Do **NOT** install or run Augur using ``sudo``. It is not required, and using it will inevitably cause some permissions trouble. Don't say we didn't warn you!
 
-0. Clone the repository and change to the newly created directory.
+1. Clone the repository and change to the newly created directory.
 
 .. code-block:: bash
 
    $ git clone 'https://github.com/chaoss/augur.git'
    $ cd augur/
 
-1. Create a virtual environment in a directory of your choosing. Be sure to use the correct ``python`` command for
+2. Create a virtual environment in a directory of your choosing. Be sure to use the correct ``python`` command for
 your installation of Python 3: on most systems, this is ``python3``, but yours may differ (you can use ``python -V`` or ``python3 -V`` to check).
 
 .. code-block:: bash
@@ -146,19 +146,19 @@ your installation of Python 3: on most systems, this is ``python3``, but yours m
     # to activate the environment
     $ source $HOME/.virtualenvs/augur_env/bin/activate
 
-2. Run the install script. This script will:
+3. Run the install script. This script will:
 
-- install Augur’s Python library and application server
-- install Augur's data collection workers
-- prompt you for configuration settings, including your database credentials
-- generate a configuration file using your provided settings
-- install Augur's schema in the configured database
-- optionally, install Augur’s frontend and its dependencies
-- generate and output an Augur API key
+- Install Augur’s Python library and application server
+- Install Augur's data collection workers
+- Prompt you for configuration settings, including your database credentials
+- Generate a configuration file using your provided settings
+- Install Augur's schema in the configured database
+- Optionally, install Augur’s frontend and its dependencies
+- Generate and output an Augur API key
 
 .. note::
 
-    At the very end, the install script will also generate an Augur API key for your database. This key will be automatically inserted into your database and then printed to your terminal. It's required to use the repo & repo group creation endpoints, so **make sure you save it off somehwere!** There is only one key per database.
+    At the very end, the install script will also generate an Augur API key for your database. This key will be automatically inserted into your database and then printed to your terminal. It's required to use the repo & repo group creation endpoints, so **make sure you save it off somewhere!** There is only one key per database.
 
 .. code-block:: bash
 
@@ -188,6 +188,6 @@ To enable log parsing for errors, you need to install `Elasticsearch <https://ww
    Please note, that Logstash v7.0 and above has unresolved issues that affect this functionality.
    In order to use it in the near future, please download v6.8.
    If you use a package manager, it defaults to v7+, so we recommend downloading `binary <https://www.elastic.co/downloads/past-releases/logstash-6-8-10>`_ .
-   This change is tested with Elasticserach v7.8.0_2 and Logstash v6.8.10.
+   This change is tested with Elasticsearch v7.8.0_2 and Logstash v6.8.10.
 
 Once everything is installed, you're ready to `configure your data collection workers <collecting-data.html>`_!
