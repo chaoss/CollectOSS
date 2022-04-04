@@ -16,8 +16,7 @@ To install from source, we'll need to do a few things:
 2. Install and configure Augur's application server
 3. Install and configure Augur's data collection workers
 
-The next section will start with getting a database setup, and then go from there.
-You can also find the table of contents for the whole walkthrough below.
+The next section will start with  a database setup, and then you can continue with the following steps given below..
 Happy hacking!
 
 .. toctree::
