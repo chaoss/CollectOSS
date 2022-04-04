@@ -44,7 +44,7 @@ Example usage\:
 
 .. code-block:: bash
 
-  # to retrive the repo groups
+  # to retrieve the repo groups
   $ augur db get-repo-groups
 
   # successful output looks like:
