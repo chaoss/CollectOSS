@@ -2,7 +2,7 @@
 
 We love to pull requests from everyone! We follow the standard Git workflow of `fork -> change -> pull request -> merge -> update fork -> change ... (repeat forever)`. If you are new to open source, we recommend GitHub's excellent guide on "[How to Contribute to Open Source](https://opensource.guide/how-to-contribute/)". In addition, please feel free to reach out to any of the maintainers or other community members if you are struggling; we are here to help you learn!
 
-Before getting started, please make sure you've read the [README](README.md) to get a primer on our project. Augur's documentation can be found at: https://oss-augur.readthedocs.io/en/main
+Before getting started, please make sure you've read the [README](README.md) to get a primer on our project. Augur's documentation can be found at: https://oss-augur.readthedocs.io/en/main/
 
 ## Opening an issue
 If you're experiencing an issue with Augur or have a question you'd like help answering, please feel free to open an [issue](https://github.com/chaoss/augur/issues). To help us prevent duplicates, we kindly ask that you briefly search for your problem or question in our issues before opening a new one.
@@ -15,7 +15,7 @@ Please note that if you open a bug report and your issue does not follow our tem
 ```bash
 $ git clone github.com:your-username/augur.git
 $ cd augur/
-$ git remote add upstream https://github.com/chaoss/augur.git
+$ git remote add upstream https://github.com/<your-username>/augur.git
 ```
 
 2. Follow the [development installation instructions](https://oss-augur.readthedocs.io/en/main/development-guide/installation.html).
@@ -42,7 +42,7 @@ We require all commits to be signed off with a [Developer Certificate of Origin]
 ## Community Resources
 
 ### Augur
-- [Stable documentation (`master` branch)](https://oss-augur.readthedocs.io/en/main/)
+- [Stable documentation (`main` branch)](https://oss-augur.readthedocs.io/en/main/)
 - [Nightly/developer build documentation (`dev` branch)](https://oss-augur.readthedocs.io/en/dev/) (warning: this is should be considered an unstable branch and should not be used for production)
 - [Live Augur demo](http://zephyr.osshealth.io/)
 
