@@ -31,15 +31,16 @@ jobs:
               echo "Building $CONTAINER"
               export IMAGE=$LOGIN/augur_$CONTAINER
               DOCKERFILE=${i}/Dockerfile
-              TAG=$GITHUB_SHA
 
-              docker build . -f $DOCKERFILE --tag $REGISTRY/$IMAGE:$TAG --tag $REGISTRY/$IMAGE:latest
+              docker build . -f $DOCKERFILE --tag $REGISTRY/$IMAGE:latest
               if [[ $GITHUB_EVENT_NAME == 'release' ]]; then
                 TAG=$(basename $GITHUB_REF)
+                docker tag $REGISTRY/$IMAGE:latest $REGISTRY/$IMAGE:$TAG
                 docker push $REGISTRY/$IMAGE:latest
                 docker push $REGISTRY/$IMAGE:$TAG
               elif [[ $GITHUB_EVENT_NAME == 'push' ]]; then
-                docker push $REGISTRY/$IMAGE-devel:latest
+                docker tag $REGISTRY/$IMAGE:latest $REGISTRY/$IMAGE:devel-latest
+                docker push $REGISTRY/$IMAGE:devel-latest
               fi
             fi
           done
