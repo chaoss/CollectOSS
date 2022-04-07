@@ -1,7 +1,7 @@
 Getting Started
 ================
 
-For the Docker Saavy Who Want to Understand How the Sausage is Made: 
+For the Docker Savvy Who Want to Understand How the Sausage is Made: 
 --------------------------------------------------------------------
 
 Augur provides several Docker images designed to get you started with our software as quickly as possible. They are:
@@ -10,7 +10,7 @@ Augur provides several Docker images designed to get you started with our softwa
 - ``augurlabs/augur:frontend``, our metrics visualization frontend (Experimental, will be replaced in the future)
 
 .. warning::
-   The frontend is very out of date and will likely not work. It is still available however it is in the process of being replaced with an entirely new frontend so the old frontend is not being actively fixed.
+   The frontend is very out of date and will likely not work. It is still available, but it is in the process of being replaced with an entirely new frontend so the old frontend is not being actively fixed.
 
 - ``augurlabs/augur:database``, an empty PostgreSQL database with the Augur schema installed
 - ``augurlabs/augur:test_data``, a PostgreSQL database loaded with the data used in our testing environment
