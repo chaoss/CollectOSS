@@ -49,5 +49,5 @@ Hosting
 Our documentation is graciously hosted by `Read the Docs <https://readthedocs.org/>`_.
 
 Enabled branches of the main ``chaoss/augur`` repository will each have their own documentation, with the 
-default ``master`` corresponding to ``master`` on the readthedocs. The documentation will automatically be 
+default ``main`` corresponding to ``main`` on the readthedocs. The documentation will automatically be 
 built and deployed on a push to one of these branches or on any incoming PR, but please don't forget to check before you push!
