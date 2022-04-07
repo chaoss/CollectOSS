@@ -172,6 +172,8 @@ your installation of Python 3: on most systems, this is ``python3``, but yours m
 
 If you think something went wrong, check the log files in ``logs/``. If you want to try again, you can use ``make clean`` to delete any build files before running ``make install`` again.
 
+MacOS users: if your build fails and in gunicorn.log you see this error: ``Connection in use: ('0.0.0.0', 5000)``, that means port 5000 is being used by another process. To solve this issue, go to System Preferences -> Sharing -> Disable Airplay Receiver.
+
 If you want to test new code you have written, you can rebuild Augur using: 
 
 .. code-block:: bash
