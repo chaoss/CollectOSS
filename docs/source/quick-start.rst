@@ -1,11 +1,11 @@
 Quickstart
 ===============
 
-Get going fast! Intended for folks familiar with setting up devops environments. These instructions are tested using Ubuntu 20.04 and Ubuntu 18.04. 
+Get going fast! Intended for folks familiar with setting up DevOps environments. These instructions were tested using Ubuntu 20.04 and Ubuntu 18.04. 
 
 PostgreSQL Installation
 ~~~~~~~~~~~~~~~~~~~~~~~~
-- Gain access to an Ubuntu 18.04 or later environment and install PostgreSQL. Ubuntu 20.04 is recommended because its long term support (LTS) window is longer. 
+- Gain access to an Ubuntu 18.04 or later environment and install PostgreSQL. Ubuntu 20.04 is recommended because its long-term support (LTS) window is longer. 
 
 .. code-block:: bash 
 
@@ -44,7 +44,7 @@ Git Configuration
 	git config --global credential.helper cache
 	git config --global credential.helper 'cache --timeout=9999999999999'
 
-- For each platform, perform a command line login in order to cache Git credentials for the LINUX user who will be operating Augur. This step is required in order to prevent the Facade Commit Counting Diesel from stalling on a command line prompt when repositories move or disappear. 
+- For each platform, perform a command line login in order to cache Git credentials for the LINUX user who operates Augur. This step is required in order to prevent the Facade Commit Counting Diesel from stalling on a command line prompt when repositories move or disappear. 
 
 Install Go
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -76,7 +76,7 @@ Python Virtual Environment Configuration
 	python -m pip install --upgrade pip
 	make install-dev {Follow prompts. You will need database credentials, a file location for cloned repositories, a GitHub Token, and a GitLab token.}
 
-- Seven sample repositories are loaded by default. You can delete them if you want to use your own repositories by deleting the records from the `repo` table first, then deleting the records from the `repo_groups` table. 
+- Seven sample repositories will load by default. You can delete them if you want to use your own repositories by deleting records from the `repo` table first, then deleting the records from the `repo_groups` table. 
 
 .. code-block:: bash
 
@@ -94,4 +94,4 @@ The commands for loading repos are:
 	augur db add-repo-groups
 	augur db add-repos
 
-We recommend that you test your instance using 50 or fewer repositories before undertaking a more substantial data collection. When you do take on a more substantial collection, you can "collect data faster" by adding additional tokens to the `worker_oauth` table in the `augur_operations` schema, and increasing the number of workers for the pull request and github worker blocks in the `augur.config.json` file that is generated at install. 
+We recommend that you test your instance using 50 or fewer repositories before undertaking a more substantial data collection. When you do take on more collection, you can "collect data faster" by adding additional tokens to the `worker_oauth` table in the `augur_operations` schema and increasing the number of workers for the pull request and GitHub worker blocks in the `augur.config.json` file that generates at install.
