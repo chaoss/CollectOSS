@@ -6,10 +6,10 @@ Setting up an Augur Server
 High Level Steps to Server Installation of Augur 
 ------------------------------------------------
 
-1. Have a list of repositories and groups you want them to be in, following the format in the files `schema/repo_group_load_sample.csv` and `schema/repo_load_sample.csv`. 
-2. Have access to a server that meets the augur installation pre-requistites (python, NodeJS, etc.)
-3. Have nginx installed for front end service. You can use another http server, but we have instructions for nginx.
-4. Make sure you have a database available, owned by a user who has rights to create tables. 
+1. Have a list of repositories and groups you want them to be in, following the format in the files schema/repo_group_load_sample.csv and schema/repo_load_sample.csv. 
+2. Have access to a server that meets the augur installation pre-requisites (python, NodeJS, etc.)
+3. Have nginx installed for front-end service. You can use another HTTP server, but we have instructions for nginx.
+4. Make sure you have a database available, owned by a user who has the rights to create tables. 
 5. Have a GitHub API Key handy
 
 Detailed Steps
@@ -21,7 +21,7 @@ Detailed Steps
 4. Change into that directory
 5. ``git checkout dev``, if you want to deploy the latest features. Otherwise remain in the master branch. 
 6. You’ll need a database owned by an Augur user. 
-7. ``make install`` ... now is a good time to go get some tea.
+7. ``make install`` ... now is a good time to go and get some tea.
 8. When you return with your tea, follow the prompts 
         - Respond to the SERVER prompt with localhost 
         - Current standard is to put the repos in a repos/ directory in the root augur directory (these will never get checked in to VC)
@@ -36,7 +36,7 @@ Detailed Steps
                 5005 (v6)                  ALLOW       Anywhere (v6)
                 5005/tcp (v6)              ALLOW       Anywhere (v6)
                 5005/udp (v6)              ALLOW       Anywhere (v6)
-11. In the Frontend block of ``augur.config.json``, set the server to be the domain you want the front end compiled for.  For example, we set ours to ``test.augurlabs.io``.
+11. In the Frontend block of ``augur.config.json``, set the server to be the domain you want the front end compiled.  For example, we set ours to ``test.augurlabs.io``.
 
 .. code-block:: json
 
