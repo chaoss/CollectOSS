@@ -141,7 +141,7 @@ your installation of Python 3: on most systems, this is ``python3``, but yours m
 
 .. note::
 
-    At the very end, the install script will also generate an Augur API key for your database. This key will be automatically inserted into your database and then printed to your terminal. It's required to use the repo & repo group creation endpoints, so **make sure you save it off somehwere!** There is only one key per database.
+    At the very end, the install script will also generate an Augur API key for your database. This key will be automatically inserted into your database and then printed to your terminal. It's required to use the repo & repo group creation endpoints, so **make sure you save it off somewhere!** There is only one key per database.
 
 .. code-block:: bash
 
@@ -171,6 +171,6 @@ To enable log parsing for errors, you need to install `Elasticsearch <https://ww
    Please note, that Logstash v7.0 and above has unresolved issues that affect this functionality.
    In order to use it in the near future, please download v6.8.
    If you use a package manager, it defaults to v7+, so we recommend downloading `binary <https://www.elastic.co/downloads/past-releases/logstash-6-8-10>`_ .
-   This change is tested with Elasticserach v7.8.0_2 and Logstash v6.8.10.
+   This change is tested with Elasticsearch v7.8.0_2 and Logstash v6.8.10.
 
 Once everything is installed, you're ready to `configure your data collection workers <collecting-data.html>`_!
