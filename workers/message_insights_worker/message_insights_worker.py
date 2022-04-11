@@ -114,6 +114,8 @@ class MessageInsightsWorker(WorkerGitInterfaceable):
             df_past = pd.read_sql_query(past_SQL, self.db, params={'repo_id': repo_id})
             df_past['msg_timestamp'] = pd.to_datetime(df_past['msg_timestamp'])
             df_past = df_past.sort_values(by='msg_timestamp')
+            self.logger.debug(f'{df_past} is df_past')
+            self.logger.debug(f'begin_date source is: {df_past['msg_timestamp'].iloc[-1]}.')
             self.begin_date = df_past['msg_timestamp'].iloc[-1]
 
             # Assign new run_id for every run
