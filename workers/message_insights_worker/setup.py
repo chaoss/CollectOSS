@@ -35,7 +35,7 @@ setup(
         'pandas==1.3.5',
         'gensim==4.1.2',
         'emoji==1.2.0',
-        'Keras>=2.8.0rc0,Keras<2.9.0rc0',
+        'Keras<2.9.0rc0',
         'Keras-Preprocessing==1.1.2',
         'tensorflow==2.8.0',
         'h5py~=3.6.0',
