@@ -20,7 +20,7 @@ from workers.message_insights_worker.preprocess_text import \
 
 train_path = os.path.join(ROOT_AUGUR_DIRECTORY, "workers", "message_insights_worker", "train_data")
 
-''' Doc2Vec model training
+# ''' Doc2Vec model training
 
 def build_model(max_epochs, vec_size, alpha, tag_data):    
     model = Doc2Vec(vector_size=vec_size, alpha=alpha,min_alpha=0.00025, min_count=2, dm=1)
@@ -37,7 +37,7 @@ def build_model(max_epochs, vec_size, alpha, tag_data):
     model.save("doc2vec.model")
     print("Model Saved")
     return model
-'''
+# '''
 
 def autoencoder(vec_input, train):
     input_dim = Input(shape = (vec_input, ))
