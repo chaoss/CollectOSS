@@ -63,8 +63,8 @@ Python Virtual Environment Configuration
 
 .. code-block:: bash
 
-	# make sure you are logged in as your own user (i.e. "sean")
-	git clone https://github.com/chaoss/augur.git
+	# Ensure you are logged in as your own user on Github and change the "<YOUR_GITHUB_USERNAME>" to your Github username (e.g. "sean")
+	git clone https://github.com/<YOUR_GITHUB_USERNAME>/augur.git
 	cd augur/
 	sudo apt install make
 	sudo apt-get install python3-venv 
