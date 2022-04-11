@@ -50,17 +50,17 @@ class MessageInsightsWorker(WorkerGitInterfaceable):
 
         # Define data collection info
         self.tool_source = 'Message Insights Worker'
-        self.tool_version = '0.2.0'
+        self.tool_version = '0.3.1'
         self.data_source = 'Non-existent API'
 
         self.insight_days = self.config['insight_days']
         
         # Abs paths
         self.models_dir = os.path.join(ROOT_AUGUR_DIRECTORY, "workers", "message_insights_worker", self.config['models_dir'])
-        self.full_train = False
-
+        self.full_train = True
+        now = datetime.datetime.utcnow()
         # To identify which run of worker inserted the data
-        self.run_id = 100
+        self.run_id = int(now.timestamp())+5
         
     def message_analysis_model(self, task, repo_id):
 
