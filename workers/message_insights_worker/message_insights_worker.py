@@ -117,6 +117,7 @@ class MessageInsightsWorker(WorkerGitInterfaceable):
             self.logger.debug(f'{df_past} is df_past')
             self.logger.debug(f'begin_date source is: {df_past['msg_timestamp'].iloc[-1]}.')
             self.begin_date = df_past['msg_timestamp'].iloc[-1]
+            self.logger.debug(f'{self.begin_date}')
 
             # Assign new run_id for every run
             self.run_id = self.get_max_id('message_analysis', 'worker_run_id')
