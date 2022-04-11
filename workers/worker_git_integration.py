@@ -216,7 +216,7 @@ class WorkerGitInterfaceable(Worker):
                 self.headers = {'Authorization': 'token %s' % oauth['access_token']}
             elif platform == 'gitlab':
                 self.headers = {'Authorization': 'Bearer %s' % oauth['access_token']}
-            response = requests.get(url=url, headers=self.headers)
+            response = requests.get(url=url, headers=self.headers, timeout=180)
             self.oauths.append({
                     'oauth_id': oauth['oauth_id'],
                     'access_token': oauth['access_token'],
