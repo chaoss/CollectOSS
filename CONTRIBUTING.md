@@ -42,7 +42,7 @@ We require all commits to be signed off with a [Developer Certificate of Origin]
 ## Community Resources
 
 ### Augur
-- [Stable documentation (`master` branch)](https://oss-augur.readthedocs.io/en/main/)
+- [Stable documentation (`main` branch)](https://oss-augur.readthedocs.io/en/main/)
 - [Nightly/developer build documentation (`dev` branch)](https://oss-augur.readthedocs.io/en/dev/) (warning: this is should be considered an unstable branch and should not be used for production)
 - [Live Augur demo](http://zephyr.osshealth.io/)
 
