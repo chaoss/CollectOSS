@@ -88,7 +88,7 @@ class MessageInsightsWorker(WorkerGitInterfaceable):
             SELECT exists (SELECT 1 FROM augur_data.message_analysis_summary WHERE repo_id = :repo_id LIMIT 1)""")
         
         df_rep = pd.read_sql_query(repo_exists_SQL, self.db, params={'repo_id': repo_id})
-        self.full_train = not(df_rep['exists'].iloc[0])
+        # self.full_train = not(df_rep['exists'].iloc[0])
         self.logger.info(f'Full Train: {self.full_train}')
 
         # Collection and insertion of data happens here
