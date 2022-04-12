@@ -4,6 +4,7 @@ import logging
 import multiprocessing
 import os
 from datetime import date
+import traceback 
 
 import numpy as np
 import pandas as pd

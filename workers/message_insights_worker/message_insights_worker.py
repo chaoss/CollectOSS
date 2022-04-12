@@ -6,6 +6,7 @@ import logging
 import os
 import sys
 import warnings
+import traceback
 from multiprocessing import Process, Queue
 from workers.worker_git_integration import WorkerGitInterfaceable
 
