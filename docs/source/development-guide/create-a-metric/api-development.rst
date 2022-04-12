@@ -1,8 +1,8 @@
 Parts of an Augur API Endpoint
 =====================================
 
-1. Developing the query that will produce data needed to deliver the endpoint, usually parameterized by a `repo_id`.
-2. Determining if the endpoint will be a "standard endpoint", or a custom endpoint. 
+1. Develop the query that will produce data needed to deliver the endpoint, usually parameterized by a `repo_id`.
+2. Determine if the endpoint will be a "standard endpoint", or a custom endpoint. 
 
 Where Are the Endpoints? 
 ---------------------------
