@@ -119,7 +119,7 @@ class Housekeeper:
                             task['given'][given_key] = repo['repo_git']
                             if "focused_task" in repo:
                                 task["focused_task"] = repo['focused_task']
-                            try:
+                            try: 
                                 requests.post('https://{}:{}/api/unstable/task'.format(
                                     broker_host,broker_port), json=task, timeout=10)
                             except Exception as e:
