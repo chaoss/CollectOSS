@@ -204,7 +204,7 @@ class Worker(Persistant):
                 self.logger.debug("Connecting to broker, attempt {}\n".format(i))
                 if i > 0:
                     time.sleep(10)
-                requests.post('http://{}:{}/api/unstable/workers'.format(
+                requests.post('https://{}:{}/api/unstable/workers'.format(
                     self.config['host_broker'],self.config['port_broker']), json=self.specs)
                 self.logger.info("Connection to the broker was successful\n")
                 connected = True
@@ -444,7 +444,7 @@ class Worker(Persistant):
             self.logger.info(f"This task inserted: {self.results_counter + self.insert_counter} tuples " +
                 f"and updated {self.update_counter} tuples.\n")
 
-            requests.post('http://{}:{}/api/unstable/completed_task'.format(
+            requests.post('https://{}:{}/api/unstable/completed_task'.format(
                 self.config['host_broker'],self.config['port_broker']), json=task_completed)
 
         # Reset results counter for next task
@@ -484,7 +484,7 @@ class Worker(Persistant):
 
         task['worker_id'] = self.config['id']
         try:
-            requests.post("http://{}:{}/api/unstable/task_error".format(
+            requests.post("https://{}:{}/api/unstable/task_error".format(
                 self.config['host_broker'],self.config['port_broker']), json=task)
         except requests.exceptions.ConnectionError:
             self.logger.error("Could not send task failure message to the broker:")
