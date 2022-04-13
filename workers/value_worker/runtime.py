@@ -16,7 +16,7 @@ def main():
     if app.worker._child is not None:
         app.worker._child.terminate()
     try:
-        requests.post('http://{}:{}/api/unstable/workers/remove'.format(broker_host, broker_port), json={"id": config['id']})
+        requests.post('https://{}:{}/api/unstable/workers/remove'.format(broker_host, broker_port), json={"id": config['id']})
     except:
         pass
 
