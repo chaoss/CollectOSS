@@ -12,7 +12,7 @@ var config = require('../frontend.config.json')
 const AugurAPIModule = require('@/AugurAPI').default;
 var port = config['Frontend'] ? (config['Frontend']['port'] ? ':' + config['Frontend']['port'] : '') : (config['Server']['port'] ? ':' + config['Server']['port'] : '')
 var host = config['Frontend'] ? (config['Frontend']['host']) : (config['Server']['host'])
-const AugurAPI = new AugurAPIModule('https://' + host + port);
+const AugurAPI = new AugurAPIModule('http://' + host + port);
 
 import Errors from './views/Errors.vue';
 import Tables from './views/Tables.vue';
