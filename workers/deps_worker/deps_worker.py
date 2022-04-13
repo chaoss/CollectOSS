@@ -59,9 +59,7 @@ class DepsWorker(WorkerGitInterfaceable):
         try:
             self.generate_deps_data(repo_id, absolute_repo_path)
         except Exception as e:
-            self.logger.debug(f"This is the error generated: {e}.")
-            stacker = traceback.format_exc()
-            self.logger.debug(f"{stacker}")
+            self.print_traceback("Deps model: generate_deps_data", e, True)
 
         self.register_task_completion(entry_info, repo_id, "deps")
 
@@ -86,9 +84,7 @@ class DepsWorker(WorkerGitInterfaceable):
         try:
             self.generate_scorecard(repo_id, scorecard_repo_path)
         except Exception as e:
-            self.logger.debug(f"This is the error for scorecard generation: {e}.")
-            stacker = traceback.format_exc()
-            self.logger.debug(f"{stacker}")
+            self.print_traceback("Depts model: scorecard generation", e, True)
 
         self.register_task_completion(entry_info, repo_id, "deps")
 
@@ -142,11 +138,8 @@ class DepsWorker(WorkerGitInterfaceable):
                 }  
                 result = self.db.execute(self.repo_deps_scorecard_table.insert().values(repo_deps_scorecard)) 
                 self.logger.info(f"Added OSSF scorecard data : {result.inserted_primary_key}") 
-        except Exception as e: 
-            self.logger.debug(f"Encountered trouble and exception registered inserting scorecard info: {e}.")
-            stacker = traceback.format_exc()
-            self.logger.debug(f"{stacker}")
-
+        except Exception as e:
+            self.print_traceback("inserting scorecard info for deps_worker", e, True)
 
     def generate_deps_data(self, repo_id, path):
         """Runs scc on repo and stores data in database
@@ -173,8 +166,5 @@ class DepsWorker(WorkerGitInterfaceable):
 
                     result = self.db.execute(self.repo_dependencies_table.insert().values(repo_deps))
                     self.logger.info(f"Added dep: {result.inserted_primary_key}")
-        except Exception as e: 
-            self.logger.debug(f"generate deps data failed on {e}.")
-            stacker = traceback.format_exc()
-            self.logger.debug(f"{stacker}")
-            pass  
+        except Exception as e:
+            self.print_traceback("Deps worker: generate_deps_data", e, True)

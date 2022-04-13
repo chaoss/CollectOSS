@@ -24,18 +24,18 @@ setup(
         'Flask==2.0.2',
         'Flask-Cors==3.0.10',
         'Flask-Login==0.5.0',
-        'Flask-WTF==0.15.1',
-        'requests==2.22.0',
-        'psycopg2-binary==2.8.6',
+        'Flask-WTF==1.0.0',
+        'requests==2.27.1',
+        'psycopg2-binary==2.9.3',
         'sklearn==0.0',
-        'numpy==1.19.5',
-        'nltk==3.6.5',
-        'pandas==1.3.2',
+        'nltk==3.6.6',
+        'numpy==1.21.0',
+        'pandas==1.3.5',
         'gensim==3.8.3',
         'emoji==1.2.0',
         'joblib==1.0.1',
         'xgboost==1.4.2',
-        'scipy==1.6.3'
+        'scipy==1.7.3'
     ],
     entry_points={
         'console_scripts': [

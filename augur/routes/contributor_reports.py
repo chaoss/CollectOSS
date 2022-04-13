@@ -1,4 +1,5 @@
 import psycopg2
+import psycopg2
 import sqlalchemy as salc
 import numpy as np
 import warnings
@@ -355,11 +356,29 @@ def create_routes(server):
 
         now = datetime.datetime.now()
 
-        repo_id = int(request.args.get('repo_id'))
+        repo_id = request.args.get('repo_id')
         start_date = str(request.args.get('start_date', "{}-01-01".format(now.year - 1)))
         end_date = str(request.args.get('end_date', "{}-{}-{}".format(now.year, now.month, now.day)))
 
-        return repo_id, start_date, end_date
+        if repo_id:
+
+            if start_date < end_date:
+                return int(repo_id), start_date, end_date, None
+            else:
+
+                error = {
+                    "message": "Invalid end_date. end_date is before the start_date",
+                    "status_code": 400
+                }
+
+                return int(repo_id), None, None, error
+
+        else:
+            error = {
+                "message": "repo_id not specified. Use this endpoint to get a list of available repos: http://<your_host>/api/unstable/repos",
+                "status_code": 400
+            }
+            return None, None, None, error
 
     def filter_out_repeats_without_required_contributions_in_required_time(repeat_list, repeats_df, required_time,
                                                                            first_list):
@@ -569,7 +588,12 @@ def create_routes(server):
     @server.app.route('/{}/contributor_reports/new_contributors_bar/'.format(server.api_version), methods=["GET"])
     def new_contributors_bar():
 
-        repo_id, start_date, end_date = get_repo_id_start_date_and_end_date()
+        repo_id, start_date, end_date, error = get_repo_id_start_date_and_end_date()
+
+        if error:
+            return Response(response=error["message"],
+                            mimetype='application/json',
+                            status=error["status_code"])
 
         group_by, required_contributions, required_time = get_new_cntrb_bar_chart_query_params()
 
@@ -734,7 +758,12 @@ def create_routes(server):
                       methods=["GET"])
     def new_contributors_stacked_bar():
 
-        repo_id, start_date, end_date = get_repo_id_start_date_and_end_date()
+        repo_id, start_date, end_date, error = get_repo_id_start_date_and_end_date()
+
+        if error:
+            return Response(response=error["message"],
+                            mimetype='application/json',
+                            status=error["status_code"])
 
         group_by, required_contributions, required_time = get_new_cntrb_bar_chart_query_params()
 
@@ -930,9 +959,14 @@ def create_routes(server):
 
     @server.app.route('/{}/contributor_reports/returning_contributors_pie_chart/'.format(server.api_version),
                       methods=["GET"])
-    def returning_contributor_pie_chart():
+    def returning_contributors_pie_chart():
 
-        repo_id, start_date, end_date = get_repo_id_start_date_and_end_date()
+        repo_id, start_date, end_date, error = get_repo_id_start_date_and_end_date()
+
+        if error:
+            return Response(response=error["message"],
+                            mimetype='application/json',
+                            status=error["status_code"])
 
         required_contributions = int(request.args.get('required_contributions', 4))
         required_time = int(request.args.get('required_time', 365))
@@ -1057,9 +1091,14 @@ def create_routes(server):
 
     @server.app.route('/{}/contributor_reports/returning_contributors_stacked_bar/'.format(server.api_version),
                       methods=["GET"])
-    def returning_contributor_stacked_bar():
+    def returning_contributors_stacked_bar():
 
-        repo_id, start_date, end_date = get_repo_id_start_date_and_end_date()
+        repo_id, start_date, end_date, error = get_repo_id_start_date_and_end_date()
+
+        if error:
+            return Response(response=error["message"],
+                            mimetype='application/json',
+                            status=error["status_code"])
 
         group_by = str(request.args.get('group_by', "quarter"))
         required_contributions = int(request.args.get('required_contributions', 4))

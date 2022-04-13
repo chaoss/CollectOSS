@@ -421,14 +421,51 @@ def create_routes(server):
             print("Developer error, not null columns should be a subset of needed columns")
             return df
 
-    @server.app.route('/{}/pull_request_reports/average_commits_per_PR/'.format(server.api_version), methods=["GET"])
-    def average_commits_per_PR():
+    def get_repo_id_start_date_and_end_date():
+
+        """ Gets the repo_id, start_date, and end_date from the GET requests array
+
+        :return: repo_id - id of the repo data is being retrieved for
+        :return: start_date - earliest time on visualization. Defaults to the January 1st of last year
+        :return: end_date - latest time on visualization. Defaults to current date
+        """
 
         now = datetime.datetime.now()
 
-        repo_id = int(request.args.get('repo_id'))
+        repo_id = request.args.get('repo_id')
         start_date = str(request.args.get('start_date', "{}-01-01".format(now.year - 1)))
         end_date = str(request.args.get('end_date', "{}-{}-{}".format(now.year, now.month, now.day)))
+
+        if repo_id:
+
+            if start_date < end_date:
+                return int(repo_id), start_date, end_date, None
+            else:
+
+                error = {
+                    "message": "Invalid end_date. end_date is before the start_date",
+                    "status_code": 400
+                }
+
+                return int(repo_id), None, None, error
+
+        else:
+            error = {
+                "message": "repo_id not specified. Use this endpoint to get a list of available repos: http://<your_host>/api/unstable/repos",
+                "status_code": 400
+            }
+            return None, None, None, error
+
+    @server.app.route('/{}/pull_request_reports/average_commits_per_PR/'.format(server.api_version), methods=["GET"])
+    def average_commits_per_PR():
+
+        repo_id, start_date, end_date, error = get_repo_id_start_date_and_end_date()
+
+        if error:
+            return Response(response=error["message"],
+                            mimetype='application/json',
+                            status=error["status_code"])
+
         group_by = str(request.args.get('group_by', "month"))
         return_json = request.args.get('return_json', "false")
 
@@ -567,11 +604,13 @@ def create_routes(server):
     @server.app.route('/{}/pull_request_reports/average_comments_per_PR/'.format(server.api_version), methods=["GET"])
     def average_comments_per_PR():
 
-        now = datetime.datetime.now()
+        repo_id, start_date, end_date, error = get_repo_id_start_date_and_end_date()
 
-        repo_id = int(request.args.get('repo_id'))
-        start_date = str(request.args.get('start_date', "{}-01-01".format(now.year - 1)))
-        end_date = str(request.args.get('end_date', "{}-{}-{}".format(now.year, now.month, now.day)))
+        if error:
+            return Response(response=error["message"],
+                            mimetype='application/json',
+                            status=error["status_code"])
+
         return_json = request.args.get('return_json', "false")
 
         df_type = get_df_tuple_locations()
@@ -747,11 +786,13 @@ def create_routes(server):
                       methods=["GET"])
     def PR_counts_by_merged_status():
 
-        now = datetime.datetime.now()
+        repo_id, start_date, end_date, error = get_repo_id_start_date_and_end_date()
 
-        repo_id = int(request.args.get('repo_id'))
-        start_date = str(request.args.get('start_date', "{}-01-01".format(now.year - 1)))
-        end_date = str(request.args.get('end_date', "{}-{}-{}".format(now.year, now.month, now.day)))
+        if error:
+            return Response(response=error["message"],
+                            mimetype='application/json',
+                            status=error["status_code"])
+
         return_json = request.args.get('return_json', "false")
 
         x_axis = 'closed_year'
@@ -937,11 +978,13 @@ def create_routes(server):
                       methods=["GET"])
     def mean_response_times_for_PR():
 
-        now = datetime.datetime.now()
+        repo_id, start_date, end_date, error = get_repo_id_start_date_and_end_date()
 
-        repo_id = int(request.args.get('repo_id'))
-        start_date = str(request.args.get('start_date', "{}-01-01".format(now.year - 1)))
-        end_date = str(request.args.get('end_date', "{}-{}-{}".format(now.year, now.month, now.day)))
+        if error:
+            return Response(response=error["message"],
+                            mimetype='application/json',
+                            status=error["status_code"])
+
         return_json = request.args.get('return_json', "false")
 
         df_type = get_df_tuple_locations()
@@ -1234,11 +1277,13 @@ def create_routes(server):
                       methods=["GET"])
     def mean_days_between_PR_comments():
 
-        now = datetime.datetime.now()
+        repo_id, start_date, end_date, error = get_repo_id_start_date_and_end_date()
 
-        repo_id = int(request.args.get('repo_id'))
-        start_date = str(request.args.get('start_date', "{}-01-01".format(now.year - 1)))
-        end_date = str(request.args.get('end_date', "{}-{}-{}".format(now.year, now.month, now.day)))
+        if error:
+            return Response(response=error["message"],
+                            mimetype='application/json',
+                            status=error["status_code"])
+
         return_json = request.args.get('return_json', "false")
 
         time_unit = 'Days'
@@ -1399,11 +1444,13 @@ def create_routes(server):
     @server.app.route('/{}/pull_request_reports/PR_time_to_first_response/'.format(server.api_version), methods=["GET"])
     def PR_time_to_first_response():
 
-        now = datetime.datetime.now()
+        repo_id, start_date, end_date, error = get_repo_id_start_date_and_end_date()
 
-        repo_id = int(request.args.get('repo_id'))
-        start_date = str(request.args.get('start_date', "{}-01-01".format(now.year - 1)))
-        end_date = str(request.args.get('end_date', "{}-{}-{}".format(now.year, now.month, now.day)))
+        if error:
+            return Response(response=error["message"],
+                            mimetype='application/json',
+                            status=error["status_code"])
+
         return_json = request.args.get('return_json', "false")
         remove_outliers = str(request.args.get('remove_outliers', "true"))
 
@@ -1533,11 +1580,13 @@ def create_routes(server):
                       methods=["GET"])
     def average_PR_events_for_closed_PRs():
 
-        now = datetime.datetime.now()
+        repo_id, start_date, end_date, error = get_repo_id_start_date_and_end_date()
 
-        repo_id = int(request.args.get('repo_id'))
-        start_date = str(request.args.get('start_date', "{}-01-01".format(now.year - 1)))
-        end_date = str(request.args.get('end_date', "{}-{}-{}".format(now.year, now.month, now.day)))
+        if error:
+            return Response(response=error["message"],
+                            mimetype='application/json',
+                            status=error["status_code"])
+
         return_json = request.args.get('return_json', "false")
         include_comments = str(request.args.get('include_comments', True))
 
@@ -1719,11 +1768,13 @@ def create_routes(server):
     @server.app.route('/{}/pull_request_reports/Average_PR_duration/'.format(server.api_version), methods=["GET"])
     def Average_PR_duration():
 
-        now = datetime.datetime.now()
+        repo_id, start_date, end_date, error = get_repo_id_start_date_and_end_date()
 
-        repo_id = int(request.args.get('repo_id'))
-        start_date = str(request.args.get('start_date', "{}-01-01".format(now.year - 1)))
-        end_date = str(request.args.get('end_date', "{}-{}-{}".format(now.year, now.month, now.day)))
+        if error:
+            return Response(response=error["message"],
+                            mimetype='application/json',
+                            status=error["status_code"])
+        
         group_by = str(request.args.get('group_by', "month"))
         return_json = request.args.get('return_json', "false")
         remove_outliers = str(request.args.get('remove_outliers', "true"))

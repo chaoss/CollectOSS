@@ -1,7 +1,7 @@
 Getting Started
 ================
 
-For the Docker Saavy Who Want to Understand How the Sausage is Made: 
+For the Docker Savvy Who Want to Understand How the Sausage is Made: 
 --------------------------------------------------------------------
 
 Augur provides several Docker images designed to get you started with our software as quickly as possible. They are:
@@ -10,7 +10,7 @@ Augur provides several Docker images designed to get you started with our softwa
 - ``augurlabs/augur:frontend``, our metrics visualization frontend (Experimental, will be replaced in the future)
 
 .. warning::
-   The frontend is very out of date and will likely not work. It is still available however it is in the process of being replaced with an entirely new frontend so the old frontend is not being actively fixed.
+   The frontend is very out of date and will likely not work. It is still available, but it is in the process of being replaced with an entirely new frontend so the old frontend is not being actively fixed.
 
 - ``augurlabs/augur:database``, an empty PostgreSQL database with the Augur schema installed
 - ``augurlabs/augur:test_data``, a PostgreSQL database loaded with the data used in our testing environment
@@ -23,7 +23,7 @@ If you are less familiar with Docker, or experience issues you cannot resolve at
 
 Credentials
 ------------
-Before you get started with Docker, you'll need to set up a PostgreSQL instance either locally or using a remote host. Alternatively, you can also set up the databse within a docker container either manually or through the script but this is not recommended.
+Before you get started with Docker, you'll need to set up a PostgreSQL instance either locally or using a remote host. Alternatively, you can also set up the database within a docker container either manually or through the script but this is not recommended.
 
 .. note::
 
@@ -59,9 +59,9 @@ First, you'll need to clone the repository. In your terminal, run:
 
 Now that you've got your external database credentials (if you are using one) and your access token, we'll need to use to docker setup script or set environment variables manually.
 
-Your database credentials and other environment variables used at runtime are stored in a file called docker_env.txt. This file determines the database credentials, the github API key, and whether or not to build the database schema.
+Your database credentials and other environment variables used at runtime are stored in a file called ``docker_env.txt``. This file determines the database credentials, the github API key, and whether or not to build the database schema.
 
-If you do not want to use the script (not recommended) you can provide your own docker_env.txt to pull from. The file should have the below format and set all the variables to some value.
+If you do not want to use the script (not recommended) you can provide your own ``docker_env.txt`` to pull from. The file should have the below format and set all the variables to some value.
 
   .. code:: 
 
@@ -83,7 +83,7 @@ If you're doing data collection or just want to try out Augur, you'll want to us
 
 .. note::
 
-  Linux is currently the only supported platform for the script. Docker is slightly differant on macOS. Additionally, the script uses a network alias for local connections which is done differantly for macOS. The script will setup the alias for macOS correctly but it is untested for macOS and can be unpredictable.
+  Linux is currently the only supported platform for the script. Docker is slightly different on macOS. Additionally, the script uses a network alias for local connections which is done differently for macOS. The script will setup the alias for macOS correctly but it is untested for macOS and can be unpredictable.
 
 Docker Setup Script
 -------------------

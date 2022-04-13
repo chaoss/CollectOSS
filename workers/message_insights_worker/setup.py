@@ -1,3 +1,5 @@
+#SPDX-License-Identifier: MIT
+
 import io
 import os
 import re
@@ -13,7 +15,7 @@ def read(filename):
 
 setup(
     name="message_insights_worker",
-    version="0.0.0",
+    version="0.3.1",
     url="https://github.com/chaoss/augur",
     license='MIT',
     author="Augur Team",
@@ -24,22 +26,22 @@ setup(
         'Flask==2.0.2',
         'Flask-Cors==3.0.10',
         'Flask-Login==0.5.0',
-        'Flask-WTF==0.15.1',
-        'requests==2.22.0',
-        'psycopg2-binary==2.8.6',
+        'Flask-WTF==1.0.0',
+        'requests==2.27.1',
+        'psycopg2-binary==2.9.3',
         'click==8.0.3',
-        'scipy==1.6.3',
+        'scipy==1.7.3',
         'sklearn==0.0',
-        'numpy==1.19.5',
-        'nltk==3.6.5',
-        'pandas==1.3.2',
+        'numpy==1.21.0',
+        'nltk==3.6.6',
+        'pandas==1.3.5',
         'gensim==3.8.3',
         'emoji==1.2.0',
-        'Keras==2.4.3',
+        'Keras<2.9.0rc0',
         'Keras-Preprocessing==1.1.2',
-        'tensorflow==2.5.1',
-        'h5py~=3.1.0',
-        'scikit-image==0.18.1',
+        'tensorflow==2.8.0',
+        'h5py~=3.6.0',
+        'scikit-image==0.19.1',
         'joblib==1.0.1',
         'xgboost',
         'bs4==0.0.1',
@@ -51,7 +53,7 @@ setup(
         ],
     },
     classifiers=[
-        'Development Status :: 2 - Pre-Alpha',
+        'Development Status :: 3 - Alpha',
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',

@@ -96,7 +96,7 @@ class Housekeeper:
                     for worker in list(broker._getvalue().keys()):
                         if job['model'] in broker[worker]['models'] and job['given'] in broker[worker]['given']:
                             compatible_worker_found = True
-                    time.sleep(120)
+                    time.sleep(10)
                     continue
 
                 logger.info("Housekeeper recognized that the broker has a worker that " + 
@@ -127,9 +127,10 @@ class Housekeeper:
 
                             logger.debug(task)
 
-                            time.sleep(120)
+                            time.sleep(10)
 
                     elif job['given'][0] == 'repo_group':
+                        time.sleep(120)
                         task = {
                                 "job_type": job['job_type'] if 'job_type' in job else 'MAINTAIN', 
                                 "models": [job['model']], 
@@ -139,6 +140,7 @@ class Housekeeper:
                                 }
                             }
                         try:
+                            time.sleep(120)
                             requests.post('http://{}:{}/api/unstable/task'.format(
                                 broker_host,broker_port), json=task, timeout=10)
                             time.sleep(120)
@@ -177,21 +179,29 @@ class Housekeeper:
                     ) if 'repo_group_id' in job and job['repo_group_id'] != 0 else '{} repo.repo_id IN ({})'.format(
                     where_and, ",".join(str(id) for id in job['repo_ids'])) if 'repo_ids' in job else ''
                 repo_url_sql = s.sql.text("""
-                        SELECT repo.repo_id, repo.repo_git, pull_request_count, collected_pr_count, 
-                        (repo_info.pull_request_count - pr_count.collected_pr_count) AS pull_requests_missing
-                        FROM augur_data.repo LEFT OUTER JOIN (
-                            SELECT count(*) AS collected_pr_count, repo_id 
-                            FROM pull_requests GROUP BY repo_id ) pr_count 
-                        ON pr_count.repo_id = repo.repo_id LEFT OUTER JOIN ( 
-                            SELECT repo_id, MAX ( data_collection_date ) AS last_collected 
-                            FROM augur_data.repo_info 
-                            GROUP BY repo_id) recent_info 
-                        ON recent_info.repo_id = pr_count.repo_id LEFT OUTER JOIN repo_info 
-                        ON recent_info.repo_id = repo_info.repo_id
-                            AND repo_info.data_collection_date = recent_info.last_collected
+                    SELECT 
+                        repo.repo_id,
+                        repo.repo_git,
+                        recent_info.pull_request_count,
+                        collected_pr_count,
+                        ( repo_info.pull_request_count - pr_count.collected_pr_count ) AS pull_requests_missing 
+                    FROM
+                        augur_data.repo
+                        LEFT OUTER JOIN ( SELECT COUNT ( * ) AS collected_pr_count, repo_id FROM pull_requests GROUP BY repo_id ) pr_count ON pr_count.repo_id = repo.repo_id
+                        LEFT OUTER JOIN ( SELECT repo_id, MAX(pull_request_count) as pull_request_count,  MAX ( data_collection_date ) AS last_collected FROM augur_data.repo_info 
+                            GROUP BY repo_id ) recent_info ON recent_info.repo_id = pr_count.repo_id
+                        LEFT OUTER JOIN repo_info ON recent_info.repo_id = repo_info.repo_id 
+                        AND repo_info.data_collection_date = recent_info.last_collected 
+                        and recent_info.pull_request_count >=1 
+                        and recent_info.pull_request_count is not null
                         {}
-                        GROUP BY repo.repo_id, repo_info.pull_request_count, pr_count.collected_pr_count
-                        ORDER BY pull_requests_missing DESC NULLS LAST
+                    GROUP BY
+                        repo.repo_id,
+                        recent_info.pull_request_count,
+                        pr_count.collected_pr_count,
+                        repo_info.pull_request_count
+                    ORDER BY
+                        pull_requests_missing DESC NULLS LAST;
                     """.format(where_condition)) if job['model'] == 'pull_requests' else s.sql.text("""
                         SELECT
                             * 

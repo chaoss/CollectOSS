@@ -16,6 +16,10 @@ import math
 from datetime import datetime   
 from workers.worker_base import Worker
 
+### Revision History: 
+# Source assignees were not getting made in version 1.0.0
+# Version 1.1.0 fixes this issue. 
+
 class GitHubWorker(WorkerGitInterfaceable):
     """ Worker that collects data from the Github API and stores it in our database
     task: most recent task the broker added to the worker's queue
@@ -40,7 +44,7 @@ class GitHubWorker(WorkerGitInterfaceable):
 
         # These 3 are included in every tuple the worker inserts (data collection info)
         self.tool_source = 'GitHub API Worker'
-        self.tool_version = '1.0.0'
+        self.tool_version = '1.1.0'
         self.data_source = 'GitHub API'
 
         # if we are finishing a previous task, pagination works differenty (deprecated)
@@ -191,7 +195,6 @@ class GitHubWorker(WorkerGitInterfaceable):
         """ Data collection function
         Query the GitHub API for issues
         """
-
         github_url = entry_info['given']['github_url']
 
         # Contributors are part of this model, and finding all for the repo saves us
@@ -205,26 +208,18 @@ class GitHubWorker(WorkerGitInterfaceable):
                 issue_events_all = self.issue_events_model(pk_source_issues)
                 self.issue_nested_data_model(pk_source_issues, issue_events_all)
             except Exception as e:
-                self.logger.info(f"issue comments model failed on {e}. exception registered")
-                stacker = traceback.format_exc()
-                self.logger.debug(f"{stacker}")
-                pass
-            finally: 
+                self.print_traceback("one of the issue models failed", e, False)
+            finally:
+                try:
+                    issue_events_all = self.issue_events_model(pk_source_issues)
+                except Exception as e:
+                    self.print_traceback("issue events model failed", e, False)
+                finally:
                     try:
-                        issue_events_all = self.issue_events_model(pk_source_issues)
+                        self.issue_nested_data_model(pk_source_issues, issue_events_all)
                     except Exception as e:
-                        self.logger.info(f"issue events model failed on {e}. exception registered")
-                        stacker = traceback.format_exc()
-                        self.logger.debug(f"{stacker}")
-                        pass
-                    finally: 
-                            try:
-                                self.issue_nested_data_model(pk_source_issues, issue_events_all)
-                            except Exception as e:
-                                self.logger.info(f"issue nested model failed on {e}. exception registered")
-                                stacker = traceback.format_exc()
-                                self.logger.debug(f"{stacker}")
-                                pass 
+                        self.print_traceback("issue nested model failed", e, False)
+
 
         # Register this task as completed
         self.register_task_completion(entry_info, self.repo_id, 'issues')
@@ -289,7 +284,8 @@ class GitHubWorker(WorkerGitInterfaceable):
                     'tool_version': self.tool_version,
                     'data_source': self.data_source,
                     'platform_msg_id': int(comment['id']),
-                    'platform_node_id': comment['node_id']
+                    'platform_node_id': comment['node_id'],
+                    'repo_id': self.repo_id 
                 } for comment in inc_issue_comments['insert']
             ]
             try:
@@ -300,9 +296,7 @@ class GitHubWorker(WorkerGitInterfaceable):
                 self.bulk_insert(self.message_table, insert=issue_comments_insert,
                     unique_columns=comment_action_map['insert']['augur'])
             except Exception as e:
-                self.logger.info(f"bulk insert of comments failed on {e}. exception registerred")
-                stacker = traceback.format_exc()
-                self.logger.debug(f"{stacker}")
+                self.print_traceback("bulk insert of issue comments", e, False)
 
             """ ISSUE MESSAGE REF TABLE """
             try:
@@ -311,7 +305,7 @@ class GitHubWorker(WorkerGitInterfaceable):
                     comment_action_map['insert']['source'], comment_action_map['insert']['augur']
                 )
             except Exception as e:
-                self.logger.info(f"exception registered in enrich_data_primary_keys for message_ref issues table: {e}.. exception registered")
+                self.print_traceback("enrich data primary keys for getting msg_id for issue comments", e, False)
 
             self.logger.info(f"log of the length of c_pk_source_comments {len(c_pk_source_comments)}.")
 
@@ -324,10 +318,7 @@ class GitHubWorker(WorkerGitInterfaceable):
                     c_pk_source_comments, self.issues_table, ['issue_url'], ['issue_url']
                 )
             except Exception as e:
-                self.logger.info(f"exception registered in enrich_data_primary_keys for message_ref issues table: {e}.. exception registered")
-                stacker = traceback.format_exc()
-                self.logger.debug(f"{stacker}")
-                pass 
+                self.print_traceback("enrich data primary keys for getting issue_id for issue comments", e, False)
 
             issue_message_ref_insert = [
                 {
@@ -348,10 +339,7 @@ class GitHubWorker(WorkerGitInterfaceable):
                     unique_columns=comment_ref_action_map['insert']['augur']
                 )
             except Exception as e:
-                self.logger.info(f"exception registered in bulk insert for issue_msg_ref_table: {e}.")
-                stacker = traceback.format_exc()
-                self.logger.debug(f"{stacker}")
-                pass
+                self.print_traceback("bulk insert on issue_msg_ref_table", e, False)
 
         # list to hold contributors needing insertion or update
         try:
@@ -380,10 +368,7 @@ class GitHubWorker(WorkerGitInterfaceable):
             return
 
         except Exception as e:
-            self.logger.info(f"exception registered in paginate endpoint for issue comments: {e}")
-            stacker = traceback.format_exc()
-            self.logger.debug(f"{stacker}")
-            pass 
+            self.print_traceback("paginate endpoint for issue comments", e, False)
 
     def issue_events_model(self, pk_source_issues):
 
@@ -459,7 +444,8 @@ class GitHubWorker(WorkerGitInterfaceable):
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
                 'data_source': self.data_source,
-                'repo_id': self.repo_id
+                'repo_id': self.repo_id,
+                'platform_id': self.platform_id
             } for event in pk_issue_events if event['actor'] is not None
         ]
 
@@ -527,8 +513,9 @@ class GitHubWorker(WorkerGitInterfaceable):
             self.logger.debug(f"on issue: there are {len(pk_source_issues)} issues total. Editing assignee next.")
             try: 
                 # Issue Assignees
+                ### 12/20/2021: Trying `is_na` instead of `is_nan`
                 source_assignees = [
-                    assignee for assignee in issue['assignee'] if assignee
+                    assignee for assignee in issue['assignees'] if assignee
                     and not is_nan(assignee)
                 ]
                 if (
@@ -539,11 +526,8 @@ class GitHubWorker(WorkerGitInterfaceable):
                     # assignees_all += source_assignees
 
                 # self.logger.info(f"Total of assignee's is: {assignees_all}. Labels are next.")
-            except Exception as e: 
-                self.logger(f'assignee exception: {e}.')
-                stacker = traceback.format_exc()
-                self.logger.debug(f"{stacker}")
-                pass 
+            except Exception as e:
+                self.print_traceback("when creating source assignees list", e, False)
                 
             finally: 
 
@@ -591,12 +575,8 @@ class GitHubWorker(WorkerGitInterfaceable):
 
                     # Closed issues, update with closer id
                     ''' TODO: Right here I am not sure if the update columns are right, and will catch the state changes. '''
-                except Exception as e: 
-                    self.logger(f'assignee exception: {e}.')
-                    stacker = traceback.format_exc()
-                    self.logger.debug(f"{stacker}")
-                    pass 
-
+                except Exception as e:
+                    self.print_traceback("issue assignees", e, True)
 
             try:
 
@@ -605,7 +585,7 @@ class GitHubWorker(WorkerGitInterfaceable):
                     update_columns=['cntrb_id', 'issue_state', 'closed_at']
                 )
             except Exception as e:
-                self.logger.info(f"Bulk insert failed on {e}. exception registerred.")
+                self.print_traceback("bulk insert on issues table", e, False)
 
             ''' Action maps are used to determine uniqueness based on the natural key at the source. '''
 
@@ -650,7 +630,7 @@ class GitHubWorker(WorkerGitInterfaceable):
                     'tool_source': self.tool_source,
                     'tool_version': self.tool_version,
                     'data_source': self.data_source,
-                    'issue_assignee_src_id': assignee['id'],
+                    'issue_assignee_src_id': int(assignee['id']),
                     'issue_assignee_src_node': assignee['node_id'],
                     'repo_id': self.repo_id 
                 } for assignee in source_assignees_insert

@@ -66,26 +66,22 @@ class FacadeWorker(Worker):
         # Facade-specific config
         self.cfg = Config(self.logger)
 
-        # Define data collection info
-        # self.tool_source = 'Facade Worker'
-        # self.tool_version = '1.1.0'
-        # self.data_source = 'Git Log'
-
         self.logger.info("Trying to create the ContributorInterface...")
         #Define interface to GitHub as an attribute
         self.logger.info(f"Config passed is: {str(self.config)}")
 
-        time.sleep(20)   
+        time.sleep(20)
 
         self.github_interface = ContribInterface(config=self.config, logger=self.logger)    
 
         time.sleep(20)   
 
+        time.sleep(20)
         #breakpoint()
         self.logger.info("created interface")
 
         self.tool_source = '\'Facade Worker\''
-        self.tool_version = '\'1.0.1\''
+        self.tool_version = '\'1.2.4\''
         self.data_source = '\'Git Log\''
 
         self.logger.info("Finished  Init")
@@ -307,6 +303,25 @@ class FacadeWorker(Worker):
         if not limited_run or (limited_run and run_analysis):
             analysis(self.cfg, multithreaded, interface=self.github_interface)
 
+        ### moved up by spg on 12/1/2021
+        #Interface with the contributor worker and inserts relevant data by repo
+        self.cfg.update_status('Updating Contributors')
+        self.cfg.log_activity('Info', 'Updating Contributors with commits')
+        query = ("SELECT repo_id FROM repo");
+
+        self.cfg.cursor.execute(query)
+
+        all_repos = list(self.cfg.cursor)
+
+        #pdb.set_trace()
+        #breakpoint()
+        for repo in all_repos:
+          self.logger.info(f"Processing repo {repo}")
+          self.github_interface.insert_facade_contributors(repo[0],multithreaded=multithreaded)
+          self.logger.info(f"Processing repo contributors for repo: {repo}")
+
+        ### end moved up
+
         if nuke_stored_affiliations:
             nuke_affiliations(self.cfg)
 
@@ -327,21 +342,6 @@ class FacadeWorker(Worker):
 
             self.cfg.log_activity('Info','Creating summary Excel files (complete)')
 
-
-        #Interface with the contributor worker and inserts relevant data by repo
-        self.cfg.update_status('Updating Contributors')
-        self.cfg.log_activity('Info', 'Updating Contributors with commits')
-        query = ("SELECT repo_id FROM repo");
-
-        self.cfg.cursor.execute(query)
-
-        all_repos = list(self.cfg.cursor)
-
-        #pdb.set_trace()
-        #breakpoint()
-        for repo in all_repos:
-          self.logger.info(f"Processing repo {repo}")
-          self.github_interface.insert_facade_contributors(repo[0])
 
         # All done
         self.cfg.update_status('Idle')

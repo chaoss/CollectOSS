@@ -1,8 +1,11 @@
 #Get everything that the base depends on.
+import math
+
 from numpy.lib.utils import source
 from workers.worker_base import *
 import sqlalchemy as s
-import time 
+import time
+import math
 
 #This is a worker base subclass that adds the ability to query github/gitlab with the api key
 class WorkerGitInterfaceable(Worker):
@@ -33,8 +36,6 @@ class WorkerGitInterfaceable(Worker):
         }
 
         # Send broker hello message
-        if self.config['offline_mode'] is False:
-            self.connect_to_broker()
 
 				# Attempts to determine if these attributes exist
 				# If not, it creates them with default values
@@ -180,7 +181,6 @@ class WorkerGitInterfaceable(Worker):
 
         return self.find_id_from_login(login, platform)
 
-    #Blatently only for api key usage
     def init_oauths(self, platform='github'):
 
         self.oauths = []
@@ -191,6 +191,7 @@ class WorkerGitInterfaceable(Worker):
         #   information from headers of the response
         # Adjust header keys needed to fetch rate limit information from the API responses
         if platform == 'github':
+            self.logger.debug("in Github block")
             url = "https://api.github.com/users/sgoggins"
             oauthSQL = s.sql.text("""
                 SELECT * FROM worker_oauth WHERE access_token <> '{}' and platform = 'github'
@@ -198,6 +199,7 @@ class WorkerGitInterfaceable(Worker):
             key_name = 'gh_api_key'
             rate_limit_header_key = "X-RateLimit-Remaining"
             rate_limit_reset_header_key = "X-RateLimit-Reset"
+            self.logger.debug('end of github block.')
         elif platform == 'gitlab':
             url = "https://gitlab.com/api/v4/version"
             oauthSQL = s.sql.text("""
@@ -214,7 +216,7 @@ class WorkerGitInterfaceable(Worker):
                 self.headers = {'Authorization': 'token %s' % oauth['access_token']}
             elif platform == 'gitlab':
                 self.headers = {'Authorization': 'Bearer %s' % oauth['access_token']}
-            response = requests.get(url=url, headers=self.headers)
+            response = requests.get(url=url, headers=self.headers, timeout=180)
             self.oauths.append({
                     'oauth_id': oauth['oauth_id'],
                     'access_token': oauth['access_token'],
@@ -275,7 +277,7 @@ class WorkerGitInterfaceable(Worker):
         source_data = expanded_source_df.to_dict(orient='records')
 
         #Filter out bad data where we can't even hit the api.
-        source_data = [data for data in source_data if f'{prefix}login' in data and data[f'{prefix}login'] != None]
+        source_data = [data for data in source_data if f'{prefix}login' in data and data[f'{prefix}login'] != None and type(data[f'{prefix}login']) is str]
 
         self.logger.info(f"table_values_cntrb keys: {table_values_cntrb[0].keys()}")
         # self.logger.info(f"source_data keys: {source_data[0].keys()}")
@@ -284,13 +286,19 @@ class WorkerGitInterfaceable(Worker):
         #TODO: seperate this method into it's own worker.
         #cntrb_id_offset = self.get_max_id(self.contributors_table, 'cntrb_id') - 1
 
+        self.logger.debug(f"Enriching {len(source_data)} contributors.")
+
+        # source_data = source_data.loc[data[f'{prefix}login'] != 'nan']
+
         # loop through data to test if it is already in the database
         for index, data in enumerate(source_data):
 
+            if data[f'{prefix}login'] == 'nan':
+                self.logger.debug("Nan user found continuing")
+                continue
+
             #removed this log because it was generating a lot of data.
             #self.logger.info(f"Enriching {index} of {len(source_data)}")
-            self.logger.debug(f"Enriching {len(source_data)} contributors.")
-
 
             user_unique_ids = []
 
@@ -299,25 +307,23 @@ class WorkerGitInterfaceable(Worker):
                 #This will trigger a KeyError if data has alt identifier.
                 data[f'{prefix}id']
                 for row in table_values_cntrb:
-                  try:
+                    # removed checks for nan user in this block because this is getting all the gh_user_ids that are
+                    # already in the database so it doesn't need to be filtered from the database, it needs to be
+                    # filtered out so it is never inserted into the database
+                    # Andrew Brain 12/21/2021
                     user_unique_ids.append(row['gh_user_id'])
-                  except Exception as e:
-                    self.logger.info(f"Error adding gh_user_id: {e}. Row: {row}")
-                    stacker = traceback.format_exc()
-                    self.logger.debug(f"{stacker}")
+
             except KeyError:
-                self.logger.info("Source data doesn't have user.id. Using node_id instead.")
-                stacker = traceback.format_exc()
-                self.logger.debug(f"{stacker}")
-                pass 
+                self.print_traceback("Enrich_cntrb_id, data doesn't have user.id. Using node_id instead", e, True)
+
             finally: 
                 for row in table_values_cntrb:
-                  try:
-                    user_unique_ids.append(row['gh_node_id'])
-                  except Exception as e:
-                    self.logger.info(f"Error adding gh_node_id: {e}. Row: {row}")
-                    stacker = traceback.format_exc()
-                    self.logger.debug(f"{stacker}")
+                    try:
+                        user_unique_ids.append(row['gh_node_id'])
+                    except Exception as e:
+                        self.logger.info(f"Error adding gh_node_id: {e}. Row: {row}")
+                        self.print_traceback("", e, True)
+
 
 
             #self.logger.info(f"gh_user_ids: {gh_user_ids}")
@@ -349,9 +355,13 @@ class WorkerGitInterfaceable(Worker):
                     data[f'{prefix}id']
                     #gets the dict from the table_values_cntrb that contains data['user.id']
                     user_id_row = list(filter(lambda x: x['gh_user_id'] == source_data_id, table_values_cntrb))[0]
+                    #### Andrew: in a small number of cases, using data on contributors originally gathered in late 2019, there
+                    #### is a mismatch .. the gh_user_id for a login is different. I suspect this rare case to be one 
+                    #### where a person did something that changed their gh_user_id ... I am unsure how this can happen ... 
                 except KeyError:
                     user_id_row = list(filter(lambda x: x['gh_node_id'] == source_data_id, table_values_cntrb))[0]
-
+                    #pass # 12/3/2021 SPG ... added pass to try to get past this key error in large inserts.
+                    continue # 12/3/2021 SPG ... may be better inside a loop
 
                 #assigns the cntrb_id to the source data to be returned to the workers
                 data['cntrb_id'] = user_id_row['cntrb_id']
@@ -368,8 +378,8 @@ class WorkerGitInterfaceable(Worker):
                 url = ("https://api.github.com/users/" + str(data[f'{prefix}login']))
               except Exception as e:
                 self.logger.info(f"Error when creating url: {e}. Data: {data}")
-                continue
-
+                #pass # changed continue to pass 12/3/2021 SPG
+                continue # changed back 12/3/2021 SPG
               attempts = 0
               contributor = None
               success = False
@@ -377,23 +387,25 @@ class WorkerGitInterfaceable(Worker):
               while attempts < 10:
                 self.logger.info(f"Hitting endpoint: {url} ...\n")
                 try:
-                  response = requests.get(url=url , headers=self.headers)
+                  response = requests.get(url=url, headers=self.headers)
                 except TimeoutError:
                   self.logger.info(f"User data request for enriching contributor data failed with {attempts} attempts! Trying again...")
                   time.sleep(10)
-                  continue
-
+                  #pass # changed continue to pass 12/3/2021 SPG
+                  continue # changed back 12/3/2021 SPG
                 self.update_rate_limit(response,platform=platform)
 
                 try:
                   contributor = response.json()
                 except:
                   contributor = json.loads(json.dumps(response.text))
+                  continue # added continue 12/3/2021 SPG
 
 
                 if type(contributor) == dict:
                   self.logger.info("Request returned a dict!")
-                  self.logger.info(f"Contributor data: {contributor}")
+                  self.logger.info(f"Contributor data: {contributor}") 
+                  # contributor['gh_login'] = str(contributor['gh_login']) ## cast as string by SPG on 11/28/2021 due to `nan` user
                   success = True
                   break
                 elif type(contributor) == list:
@@ -408,6 +420,7 @@ class WorkerGitInterfaceable(Worker):
                   else:
                     try:
                       contributor = json.loads(contributor)
+                      # contributor['gh_login'] = str(contributor['gh_login']) ## cast as string by SPG on 11/28/2021 due to `nan` user                     
                       success = True
                       break
                     except:
@@ -430,7 +443,7 @@ class WorkerGitInterfaceable(Worker):
               # "cntrb_type": , dont have a use for this as of now ... let it default to null
               "cntrb_canonical": contributor['email'] if 'email' in contributor else None,
               "gh_user_id": contributor['id'],
-              "gh_login": contributor['login'],
+              "gh_login": str(contributor['login']),  ## cast as string by SPG on 11/28/2021 due to `nan` user
               "gh_url": contributor['url'],
               "gh_html_url": contributor['html_url'],
               "gh_node_id": contributor['node_id'],
@@ -462,9 +475,12 @@ class WorkerGitInterfaceable(Worker):
               except s.exc.IntegrityError:
                 self.logger.info(f"there was a collision caught ....")
                 self.logger.info(traceback.format_exc())
+                #pass # added by sean 11/29/2021 ... think it might be blocking comment insertion otherwise
+                continue # changed to continue on 12/3/2021
               except Exception as e:
                 self.logger.info(f"Contributor was unable to be added to table! Attempting to get cntrb_id from table anyway because of possible collision. Error: {e}")
-
+                #pass # added by sean 11/29/2021 ... think it might be blocking comment insertion otherwise
+                continue 
 
               #Get the contributor id from the newly inserted contributor.
               cntrb_id_row = self.db.execute(
@@ -484,10 +500,10 @@ class WorkerGitInterfaceable(Worker):
 
 
               cntrb_data = {
-              'cntrb_id': data['cntrb_id'],
+              'cntrb_id': int(data['cntrb_id']), # came through as a float. Fixed 11/28/2021, SPG
               'gh_node_id': cntrb['gh_node_id'],
-              'cntrb_login': cntrb['cntrb_login'],
-              'gh_user_id': cntrb['gh_user_id']
+              'cntrb_login': str(cntrb['cntrb_login']), # NaN user issue. Fixed 11/28/2021, SPG
+              'gh_user_id': int(cntrb['gh_user_id']) # came through as a float. Fixed 11/28/2021, SPG
               }
               #This updates our list of who is already in the database as we iterate to avoid duplicates.
               #People who make changes tend to make more than one in a row.
@@ -497,119 +513,36 @@ class WorkerGitInterfaceable(Worker):
           "Contributor id enrichment successful, result has "
           f"{len(source_data)} data points.\n"
         )
+
+        for data in source_data:
+
+            self.logger.debug("User login type: " + str(type(data[f'{prefix}login'])) + ". Login: " + str(data[f'{prefix}login']))
+
+            try:
+                data['cntrb_id']
+            except:
+                self.logger.debug(f"AB ERROR: data exiting enrich_cntrb_id without cntrb_id, login is: " + str(data[f'{prefix}login']))
+
         return source_data
 
-
-
-
-    #old method
+    # Try to construct the best url to ping GitHub's API for a username given an email.
     """
-        # source_cntrb_insert, _ = self.organize_needed_data(
-        #     expanded_source_df.to_dict(orient='records'), table_values=table_values_cntrb,
-        #     action_map=cntrb_action_map
-        # )
+    I changed this because of the following note on the API site: With the in qualifier you can restrict your search to the username (login), full name, public email, or any combination of these. When you omit this qualifier, only the username and email address are searched. For privacy reasons, you cannot search by email domain name.
 
-        # cntrb_insert = [
-        #     {
-        #         'cntrb_login': contributor[f'{prefix}login'],
-        #         'cntrb_created_at': None if (
-        #             f'{prefix}created_at' not in contributor
-        #         ) else contributor[f'{prefix}created_at'],
-        #         'cntrb_email': None if f'{prefix}email' not in contributor else contributor[f'{prefix}email'],
-        #         'cntrb_company': None if f'{prefix}company' not in contributor else contributor[f'{prefix}company'],
-        #         'cntrb_location': None if (
-        #             f'{prefix}location' not in contributor
-        #         ) else contributor[f'{prefix}location'],
-        #         'gh_user_id': None if (
-        #             not contributor[f'{prefix}id']
-        #         ) else int(float(contributor[f'{prefix}id'])),
-        #         'gh_login': contributor[f'{prefix}login'],
-        #         'gh_url': contributor[f'{prefix}url'],
-        #         'gh_html_url': contributor[f'{prefix}html_url'],
-        #         'gh_node_id': contributor[f'{prefix}node_id'], #valid for dup check
-        #         'gh_avatar_url': contributor[f'{prefix}avatar_url'],
-        #         'gh_gravatar_id': contributor[f'{prefix}gravatar_id'],
-        #         'gh_followers_url': contributor[f'{prefix}followers_url'],
-        #         'gh_following_url': contributor[f'{prefix}following_url'],
-        #         'gh_gists_url': contributor[f'{prefix}gists_url'],
-        #         'gh_starred_url': contributor[f'{prefix}starred_url'],
-        #         'gh_subscriptions_url': contributor[f'{prefix}subscriptions_url'],
-        #         'gh_organizations_url': contributor[f'{prefix}organizations_url'],
-        #         'gh_repos_url': contributor[f'{prefix}repos_url'],
-        #         'gh_events_url': contributor[f'{prefix}events_url'],
-        #         'gh_received_events_url': contributor[f'{prefix}received_events_url'],
-        #         'gh_type': contributor[f'{prefix}type'],
-        #         'gh_site_admin': contributor[f'{prefix}site_admin'],
-        #         'tool_source': self.tool_source,
-        #         'tool_version': self.tool_version,
-        #         'data_source': self.data_source
-        #     } for contributor in source_cntrb_insert if contributor[f'{prefix}login']
-        # ]
-        #
-        # try:
-        #     self.bulk_insert(self.contributors_table, cntrb_insert)
-        # except s.exc.IntegrityError:
-        #     self.logger.info("Unique Violation in contributors table! ")
-        #
-        # # Query db for inserted cntrb pkeys and add to shallow level of data
-        #
-        # # Query
-        # cntrb_pk_name = list(self.contributors_table.primary_key)[0].name
-        # session = s.orm.Session(self.db)
-        # inserted_pks = pd.DataFrame(
-        #     session.query(
-        #         self.contributors_table.c[cntrb_pk_name], self.contributors_table.c.cntrb_login,
-        #         self.contributors_table.c.gh_node_id
-        #     ).distinct(self.contributors_table.c.cntrb_login).order_by(
-        #         self.contributors_table.c.cntrb_login, self.contributors_table.c[cntrb_pk_name]
-        #     ).all(), columns=[cntrb_pk_name, 'cntrb_login', 'gh_node_id']
-        # ).to_dict(orient='records')
-        # session.close()
-        #
-        # # Prepare for merge
-        # source_columns = sorted(list(source_df.columns))
-        # necessary_columns = sorted(list(set(source_columns + cntrb_action_map['insert']['source'])))
-        # (source_table, inserted_pks_table), metadata, session = self._setup_postgres_merge(
-        #     [
-        #         expanded_source_df[necessary_columns].to_dict(orient='records'),
-        #         inserted_pks
-        #     ], sort=True
-        # )
-        # final_columns = [cntrb_pk_name] + sorted(list(set(necessary_columns)))
-        #
-        # # Merge
-        # source_pk = pd.DataFrame(
-        #     session.query(
-        #         inserted_pks_table.c.cntrb_id, source_table
-        #     ).join(
-        #         source_table,
-        #         eval(
-        #             ' and '.join(
-        #                 [
-        #                     (
-        #                         f"inserted_pks_table.c['{table_column}'] "
-        #                         f"== source_table.c['{source_column}']"
-        #                     ) for table_column, source_column in zip(
-        #                         cntrb_action_map['insert']['augur'],
-        #                         cntrb_action_map['insert']['source']
-        #                     )
-        #                 ]
-        #             )
-        #         )
-        #     ).all(), columns=final_columns
-        # )
-        #
-        # # Cleanup merge
-        # source_pk = self._eval_json_columns(source_pk)
-        # self._close_postgres_merge(metadata, session)
+    https://docs.github.com/en/github/searching-for-information-on-github/searching-on-github/searching-users#search-only-users-or-organizations
 
-        #self.logger.info(
-        #    "Contributor id enrichment successful, result has "
-        #    f"{len(source_pk)} data points.\n"
-        #)
+    """
 
-        #return source_pk.to_dict(orient='records')"""
+    def create_endpoint_from_email(self, email):
+        self.logger.info(f"Trying to resolve contributor from email: {email}")
+        # Note: I added "+type:user" to avoid having user owned organizations be returned
+        # Also stopped splitting per note above.
+        url = 'https://api.github.com/search/users?q={}+in:email+type:user'.format(
+            email)
+        
 
+        return url
+    
     def query_github_contributors(self, entry_info, repo_id):
 
         """ Data collection function
@@ -622,7 +555,11 @@ class WorkerGitInterfaceable(Worker):
         github_url = entry_info['given']['github_url'] if 'github_url' in entry_info['given'] else entry_info['given']['git_url']
 
         # Extract owner/repo from the url for the endpoint
-        owner, name = self.get_owner_repo(github_url)
+        try:
+            owner, name = self.get_owner_repo(github_url)
+        except IndexError as e:
+            self.logger.error(f"Encountered bad entry info: {entry_info}")
+            return
 
         # Set the base of the url and place to hold contributors to insert
         contributors_url = (
@@ -700,12 +637,12 @@ class WorkerGitInterfaceable(Worker):
                 #dup check
                 #TODO: add additional fields to check if needed.
                 existingMatchingContributors = self.db.execute(
-                    self.sql.select(
+                    s.sql.select(
                         [self.contributors_table.c.gh_node_id]
                     ).where(
                         self.contributors_table.c.gh_node_id==cntrb["gh_node_id"]
-                    ).fetchall()
-                )
+                    )
+                ).fetchall()
 
                 if len(existingMatchingContributors) > 0:
                     break #if contributor already exists in table
@@ -720,7 +657,10 @@ class WorkerGitInterfaceable(Worker):
                 elif repo_contributor['flag'] == 'need_insertion':
                     result = self.db.execute(self.contributors_table.insert().values(cntrb))
                     self.logger.info("Primary key inserted into the contributors table: {}".format(result.inserted_primary_key))
-                    self.results_counter += 1
+
+                    #For workers that aren't an interface.
+                    if self.worker_type != "Contributor_interface":
+                        self.results_counter += 1
 
                     self.logger.info("Inserted contributor: " + contributor['login'] + "\n")
 
@@ -729,14 +669,82 @@ class WorkerGitInterfaceable(Worker):
 
             except Exception as e:
                 self.logger.error("Caught exception: {}".format(e))
+                self.logger.error(f"Traceback: {traceback.format_exc()}")
                 self.logger.error("Cascading Contributor Anomalie from missing repo contributor data: {} ...\n".format(cntrb_url))
                 continue
 
+    # Hit the endpoint specified by the url and return the json that it returns if it returns a dict.
+    # Returns None on failure.
+    def request_dict_from_endpoint(self, url, timeout_wait=10):
+        self.logger.info(f"Hitting endpoint: {url}")
 
+        attempts = 0
+        response_data = None
+        success = False
+
+        # This borrow's the logic to safely hit an endpoint from paginate_endpoint.
+        while attempts < 10:
+            try:
+                response = requests.get(url=url, headers=self.headers)
+            except TimeoutError:
+                self.logger.info(
+                    f"User data request for enriching contributor data failed with {attempts} attempts! Trying again...")
+                time.sleep(timeout_wait)
+                continue
+
+            # Make sure we know how many requests our api tokens have.
+            self.update_rate_limit(response, platform="github")
+
+            try:
+                response_data = response.json()
+            except:
+                response_data = json.loads(json.dumps(response.text))
+
+            if type(response_data) == dict:
+                # Sometimes GitHub Sends us an error message in a dict instead of a string.
+                # While a bit annoying, it is easy to work around
+                if 'message' in response_data:
+                    try:
+                        assert 'API rate limit exceeded' not in response_data['message']
+                    except AssertionError as e:
+                        self.logger.info(
+                            f"Detected error in response data from gitHub. Trying again... Error: {e}")
+                        attempts += 1
+                        continue
+
+                # self.logger.info(f"Returned dict: {response_data}")
+                success = True
+                break
+            elif type(response_data) == list:
+                self.logger.warning("Wrong type returned, trying again...")
+                self.logger.info(f"Returned list: {response_data}")
+            elif type(response_data) == str:
+                self.logger.info(
+                    f"Warning! page_data was string: {response_data}")
+                if "<!DOCTYPE html>" in response_data:
+                    self.logger.info("HTML was returned, trying again...\n")
+                elif len(response_data) == 0:
+                    self.logger.warning("Empty string, trying again...\n")
+                else:
+                    try:
+                        # Sometimes raw text can be converted to a dict
+                        response_data = json.loads(response_data)
+                        success = True
+                        break
+                    except:
+                        pass
+            attempts += 1
+        if not success:
+            return None
+
+        return response_data
+    
+    #probably a better version of query_github_contributors but uses bulk_insert which is a bit shaky right now.
     def query_github_contributors_bulk(self, entry_info, repo_id):
 
         """ Data collection function
-        Query the GitHub API for contributors
+        Query the GitHub API for contributors.
+        Uses paginate_endpoint rather than paginate, and supports stagger for larger repos.
         """
         self.logger.info(f"Querying contributors with given entry info: {entry_info}\n")
 
@@ -804,246 +812,7 @@ class WorkerGitInterfaceable(Worker):
         contributors_insert_result, contributors_update_result = self.bulk_insert(self.contributors_table,
             update=source_contributors['update'], unique_columns=action_map['insert']['augur'],
             insert=contributors_insert, update_columns=action_map['update']['augur'])
-
-    def query_github_contributors_fast(self, entry_info, repo_id):
-        """ Data collection function
-        Query the GitHub API for contributors
-        """
-        self.logger.info(f"Querying contributors with given entry info: {entry_info}")
-
-        github_url = (
-            entry_info['given']['github_url'] if 'github_url' in entry_info['given']
-            else entry_info['given']['git_url']
-        )
-
-        contributors_url = (
-            f"https://api.github.com/repos/{self.owner}/{self.name}/"
-            "contributors?per_page=100&page={}"
-        )
-
-        action_map = {
-            'insert': {
-                'source': ['login'],
-                'augur': ['cntrb_login']
-            },
-            'update': {
-                'source': ['email'],
-                'augur': ['cntrb_email']
-            }
-        }
-
-        source_contributors = self.paginate_endpoint(
-            contributors_url, action_map=action_map, table=self.contributors_table
-        )
-
-        contributors_insert = [
-            {
-                'cntrb_login': contributor['login'],
-                'cntrb_created_at': (
-                    contributor['created_at'] if 'created_at' in contributor else None
-                ),
-                'cntrb_email': contributor['email'] if 'email' in contributor else None,
-                'cntrb_company': contributor['company'] if 'company' in contributor else None,
-                'cntrb_location': contributor['location'] if 'location' in contributor else None,
-                'cntrb_canonical': contributor['email'] if 'email' in contributor else None,
-                'gh_user_id': contributor['id'],
-                'gh_login': contributor['login'],
-                'gh_url': contributor['url'],
-                'gh_html_url': contributor['html_url'],
-                'gh_node_id': contributor['node_id'],
-                'gh_avatar_url': contributor['avatar_url'],
-                'gh_gravatar_id': contributor['gravatar_id'],
-                'gh_followers_url': contributor['followers_url'],
-                'gh_following_url': contributor['following_url'],
-                'gh_gists_url': contributor['gists_url'],
-                'gh_starred_url': contributor['starred_url'],
-                'gh_subscriptions_url': contributor['subscriptions_url'],
-                'gh_organizations_url': contributor['organizations_url'],
-                'gh_repos_url': contributor['repos_url'],
-                'gh_events_url': contributor['events_url'],
-                'gh_received_events_url': contributor['received_events_url'],
-                'gh_type': contributor['type'],
-                'gh_site_admin': contributor['site_admin'],
-                'tool_source': self.tool_source,
-                'tool_version': self.tool_version,
-                'data_source': self.data_source
-            } for contributor in source_contributors['insert']
-        ]
-
-        self.bulk_insert(
-            self.contributors_table, update=source_contributors['update'],
-            unique_columns=action_map['insert']['augur'],
-            insert=contributors_insert, update_columns=action_map['update']['augur']
-        )
-
-    def update_gitlab_rate_limit(self, response, bad_credentials=False, temporarily_disable=False):
-        # Try to get rate limit from request headers, sometimes it does not work (GH's issue)
-        #   In that case we just decrement from last recieved header count
-        if bad_credentials and len(self.oauths) > 1:
-            self.logger.info(
-                f"Removing oauth with bad credentials from consideration: {self.oauths[0]}"
-            )
-            del self.oauths[0]
-
-        if temporarily_disable:
-            self.logger.info("Gitlab rate limit reached. Temp. disabling...")
-            self.oauths[0]['rate_limit'] = 0
-        else:
-            try:
-                self.oauths[0]['rate_limit'] = int(response.headers['RateLimit-Remaining'])
-            except:
-                self.oauths[0]['rate_limit'] -= 1
-        self.logger.info("Updated rate limit, you have: " +
-            str(self.oauths[0]['rate_limit']) + " requests remaining.")
-        if self.oauths[0]['rate_limit'] <= 0:
-            try:
-                reset_time = response.headers['RateLimit-Reset']
-            except Exception as e:
-                self.logger.info(f"Could not get reset time from headers because of error: {e}")
-                reset_time = 3600
-            time_diff = datetime.datetime.fromtimestamp(int(reset_time)) - datetime.datetime.now()
-            self.logger.info("Rate limit exceeded, checking for other available keys to use.")
-
-            # We will be finding oauth with the highest rate limit left out of our list of oauths
-            new_oauth = self.oauths[0]
-            # Endpoint to hit solely to retrieve rate limit information from headers of the response
-            url = "https://gitlab.com/api/v4/version"
-
-            other_oauths = self.oauths[0:] if len(self.oauths) > 1 else []
-            for oauth in other_oauths:
-                # self.logger.info("Inspecting rate limit info for oauth: {}\n".format(oauth))
-                self.headers = {"PRIVATE-TOKEN" : oauth['access_token']}
-                response = requests.get(url=url, headers=self.headers)
-                oauth['rate_limit'] = int(response.headers['RateLimit-Remaining'])
-                oauth['seconds_to_reset'] = (
-                    datetime.datetime.fromtimestamp(
-                        int(response.headers['RateLimit-Reset'])
-                    ) - datetime.datetime.now()
-                ).total_seconds()
-
-                # Update oauth to switch to if a higher limit is found
-                if oauth['rate_limit'] > new_oauth['rate_limit']:
-                    self.logger.info(f"Higher rate limit found in oauth: {oauth}")
-                    new_oauth = oauth
-                elif (
-                    oauth['rate_limit'] == new_oauth['rate_limit']
-                    and oauth['seconds_to_reset'] < new_oauth['seconds_to_reset']
-                ):
-                    self.logger.info(
-                        f"Lower wait time found in oauth with same rate limit: {oauth}"
-                    )
-                    new_oauth = oauth
-
-            if new_oauth['rate_limit'] <= 0 and new_oauth['seconds_to_reset'] > 0:
-                self.logger.info(
-                    "No oauths with >0 rate limit were found, waiting for oauth with "
-                    f"smallest wait time: {new_oauth}\n"
-                )
-                time.sleep(new_oauth['seconds_to_reset'])
-
-            # Make new oauth the 0th element in self.oauths so we know which one is in use
-            index = self.oauths.index(new_oauth)
-            self.oauths[0], self.oauths[index] = self.oauths[index], self.oauths[0]
-            self.logger.info("Using oauth: {}\n".format(self.oauths[0]))
-
-            # Change headers to be using the new oauth's key
-            self.headers = {"PRIVATE-TOKEN" : self.oauths[0]['access_token']}
-
-    def update_gh_rate_limit(self, response, bad_credentials=False, temporarily_disable=False):
-        # Try to get rate limit from request headers, sometimes it does not work (GH's issue)
-        #   In that case we just decrement from last recieved header count
-        if bad_credentials and len(self.oauths) > 1:
-            self.logger.warning(
-                f"Removing oauth with bad credentials from consideration: {self.oauths[0]}"
-            )
-            del self.oauths[0]
-
-        if temporarily_disable:
-            self.logger.debug(
-                "Github thinks we are abusing their api. Preventing use "
-                "of this key until its rate limit resets..."
-            )
-            self.oauths[0]['rate_limit'] = 0
-        else:
-            try:
-                self.oauths[0]['rate_limit'] = int(response.headers['X-RateLimit-Remaining'])
-                # self.logger.info("Recieved rate limit from headers\n")
-            except:
-                self.oauths[0]['rate_limit'] -= 1
-                self.logger.info("Headers did not work, had to decrement")
-                time.sleep(30)
-        self.logger.info(
-            f"Updated rate limit, you have: {self.oauths[0]['rate_limit']} requests remaining."
-        )
-        if self.oauths[0]['rate_limit'] <= 0:
-            try:
-                reset_time = response.headers['X-RateLimit-Reset']
-            except Exception as e:
-                self.logger.error(f"Could not get reset time from headers because of error: {e}")
-                reset_time = 3600
-            time_diff = datetime.datetime.fromtimestamp(int(reset_time)) - datetime.datetime.now()
-            self.logger.info("Rate limit exceeded, checking for other available keys to use.")
-
-            # We will be finding oauth with the highest rate limit left out of our list of oauths
-            new_oauth = self.oauths[0]
-            # Endpoint to hit solely to retrieve rate limit information from headers of the response
-            url = "https://api.github.com/users/sgoggins"
-
-            other_oauths = self.oauths[0:] if len(self.oauths) > 1 else []
-            for oauth in other_oauths:
-                # self.logger.info("Inspecting rate limit info for oauth: {}\n".format(oauth))
-                self.headers = {'Authorization': 'token %s' % oauth['access_token']}
-
-                attempts = 3
-                success = False
-                while attempts > 0 and not success:
-                    response = requests.get(url=url, headers=self.headers)
-                    try:
-                        oauth['rate_limit'] = int(response.headers['X-RateLimit-Remaining'])
-                        oauth['seconds_to_reset'] = (
-                            datetime.datetime.fromtimestamp(
-                                int(response.headers['X-RateLimit-Reset'])
-                            ) - datetime.datetime.now()
-                        ).total_seconds()
-                        success = True
-                    except Exception as e:
-                        self.logger.info(
-                            f"oath method ran into error getting info from headers: {e}\n"
-                        )
-                        self.logger.info(f"{self.headers}\n{url}\n")
-                    attempts -= 1
-                if not success:
-                    continue
-
-                # Update oauth to switch to if a higher limit is found
-                if oauth['rate_limit'] > new_oauth['rate_limit']:
-                    self.logger.info("Higher rate limit found in oauth: {}\n".format(oauth))
-                    new_oauth = oauth
-                elif (
-                    oauth['rate_limit'] == new_oauth['rate_limit']
-                    and oauth['seconds_to_reset'] < new_oauth['seconds_to_reset']
-                ):
-                    self.logger.info(
-                        f"Lower wait time found in oauth with same rate limit: {oauth}\n"
-                    )
-                    new_oauth = oauth
-
-            if new_oauth['rate_limit'] <= 0 and new_oauth['seconds_to_reset'] > 0:
-                self.logger.info(
-                    "No oauths with >0 rate limit were found, waiting for oauth with "
-                    f"smallest wait time: {new_oauth}\n"
-                )
-                time.sleep(new_oauth['seconds_to_reset'])
-
-            # Make new oauth the 0th element in self.oauths so we know which one is in use
-            index = self.oauths.index(new_oauth)
-            self.oauths[0], self.oauths[index] = self.oauths[index], self.oauths[0]
-            self.logger.info("Using oauth: {}\n".format(self.oauths[0]))
-
-            # Change headers to be using the new oauth's key
-            self.headers = {'Authorization': 'token %s' % self.oauths[0]['access_token']}
-
-    #TODO: figure out if changing this typo breaks anything
+    
     def query_gitlab_contributors(self, entry_info, repo_id):
 
         gitlab_url = (
@@ -1159,7 +928,6 @@ class WorkerGitInterfaceable(Worker):
                 self.logger.info("Cascading Contributor Anomalie from missing repo contributor data: {} ...\n".format(cntrb_url))
                 continue
 
-
     def update_gitlab_rate_limit(self, response, bad_credentials=False, temporarily_disable=False):
         # Try to get rate limit from request headers, sometimes it does not work (GH's issue)
         #   In that case we just decrement from last recieved header count
@@ -1233,6 +1001,103 @@ class WorkerGitInterfaceable(Worker):
             # Change headers to be using the new oauth's key
             self.headers = {"PRIVATE-TOKEN" : self.oauths[0]['access_token']}
 
+    def update_gh_rate_limit(self, response, bad_credentials=False, temporarily_disable=False):
+        # Try to get rate limit from request headers, sometimes it does not work (GH's issue)
+        #   In that case we just decrement from last recieved header count
+        if bad_credentials and len(self.oauths) > 1:
+            self.logger.warning(
+                f"Removing oauth with bad credentials from consideration: {self.oauths[0]}"
+            )
+            del self.oauths[0]
+
+        if temporarily_disable:
+            self.logger.debug(
+                "Github thinks we are abusing their api. Preventing use "
+                "of this key until its rate limit resets..."
+            )
+            self.oauths[0]['rate_limit'] = 0
+        else:
+            try:
+                self.oauths[0]['rate_limit'] = int(response.headers['X-RateLimit-Remaining'])
+                # self.logger.info("Recieved rate limit from headers\n")
+            except:
+                self.oauths[0]['rate_limit'] -= 1
+                self.logger.info("Headers did not work, had to decrement")
+                time.sleep(30)
+
+        self.logger.info(
+            f"Updated rate limit, you have: {self.oauths[0]['rate_limit']} requests remaining."
+        )
+
+        #Stalls after here for some reason.
+        if self.oauths[0]['rate_limit'] <= 0:
+            try:
+                reset_time = response.headers['X-RateLimit-Reset']
+            except Exception as e:
+                self.logger.error(f"Could not get reset time from headers because of error: {e}")
+                reset_time = 3600
+            time_diff = datetime.datetime.fromtimestamp(int(reset_time)) - datetime.datetime.now()
+            self.logger.info("Rate limit exceeded, checking for other available keys to use.")
+
+            # We will be finding oauth with the highest rate limit left out of our list of oauths
+            new_oauth = self.oauths[0]
+            # Endpoint to hit solely to retrieve rate limit information from headers of the response
+            url = "https://api.github.com/users/sgoggins"
+
+            other_oauths = self.oauths[0:] if len(self.oauths) > 1 else []
+            for oauth in other_oauths:
+                # self.logger.info("Inspecting rate limit info for oauth: {}\n".format(oauth))
+                self.headers = {'Authorization': 'token %s' % oauth['access_token']}
+
+                attempts = 3
+                success = False
+                while attempts > 0 and not success:
+                    response = requests.get(url=url, headers=self.headers)
+                    try:
+                        oauth['rate_limit'] = int(response.headers['X-RateLimit-Remaining'])
+                        oauth['seconds_to_reset'] = (
+                            datetime.datetime.fromtimestamp(
+                                int(response.headers['X-RateLimit-Reset'])
+                            ) - datetime.datetime.now()
+                        ).total_seconds()
+                        success = True
+                    except Exception as e:
+                        self.logger.info(
+                            f"oath method ran into error getting info from headers: {e}\n"
+                        )
+                        self.logger.info(f"{self.headers}\n{url}\n")
+                    attempts -= 1
+                if not success:
+                    continue
+
+                # Update oauth to switch to if a higher limit is found
+                if oauth['rate_limit'] > new_oauth['rate_limit']:
+                    self.logger.info("Higher rate limit found in oauth: {}\n".format(oauth))
+                    new_oauth = oauth
+                elif (
+                    oauth['rate_limit'] == new_oauth['rate_limit']
+                    and oauth['seconds_to_reset'] < new_oauth['seconds_to_reset']
+                ):
+                    self.logger.info(
+                        f"Lower wait time found in oauth with same rate limit: {oauth}\n"
+                    )
+                    new_oauth = oauth
+
+            if new_oauth['rate_limit'] <= 0 and new_oauth['seconds_to_reset'] > 0:
+                self.logger.info(
+                    "No oauths with >0 rate limit were found, waiting for oauth with "
+                    f"smallest wait time: {new_oauth}\n"
+                )
+                time.sleep(new_oauth['seconds_to_reset'])
+
+            # Make new oauth the 0th element in self.oauths so we know which one is in use
+            index = self.oauths.index(new_oauth)
+            self.oauths[0], self.oauths[index] = self.oauths[index], self.oauths[0]
+            self.logger.info("Using oauth: {}\n".format(self.oauths[0]))
+
+            # Change headers to be using the new oauth's key
+            self.headers = {'Authorization': 'token %s' % self.oauths[0]['access_token']}
+
     def update_rate_limit(
         self, response, bad_credentials=False, temporarily_disable=False, platform="gitlab"
     ):
@@ -1245,117 +1110,9 @@ class WorkerGitInterfaceable(Worker):
                 response, bad_credentials=bad_credentials, temporarily_disable=temporarily_disable
             )
 
-
-    #Indexerror somewhere
-    def multi_thread_urls(self, all_urls, max_attempts=5, platform='github'):
-        """
-        :param all_urls: list of tuples
-        """
-
-        if not len(all_urls):
-            self.logger.info("No urls to multithread, returning blank list.\n")
-            return []
-
-        def load_url(url, extra_data={}):
-            try:
-                html = requests.get(url, stream=True, headers=self.headers)
-                return html, extra_data
-            except requests.exceptions.RequestException as e:
-                self.logger.debug(f"load_url inside multi_thread_urls failed with {e}, for usl {url}. exception registerred.registered")
-
-        self.logger.info("Beginning to multithread API endpoints.")
-
-        start = time.time()
-
-        all_data = []
-        valid_url_count = len(all_urls)
-
-        partitions = math.ceil(len(all_urls) / 600)
-        self.logger.info(f"{len(all_urls)} urls to process. Trying {partitions} partitions. " +
-            f"Using {max(multiprocessing.cpu_count()//8, 1)} threads.")
-        for urls in numpy.array_split(all_urls, partitions):
-            attempts = 0
-            self.logger.info(f"Total data points collected so far: {len(all_data)}")
-            while len(urls) > 0 and attempts < max_attempts:
-                with concurrent.futures.ThreadPoolExecutor(
-                    max_workers=max(multiprocessing.cpu_count()//8, 1)
-                ) as executor:
-                    # Start the load operations and mark each future with its URL
-                    future_to_url = {executor.submit(load_url, *url): url for url in urls}
-                    self.logger.info("Multithreaded urls and returned status codes:")
-                    count = 0
-                    for future in concurrent.futures.as_completed(future_to_url):
-
-                        if count % 100 == 0:
-                            self.logger.info(
-                                f"Processed {len(all_data)} / {valid_url_count} urls. "
-                                f"{len(urls)} remaining in this partition."
-                            )
-                        count += 1
-
-                        url = future_to_url[future]
-                        try:
-                            response, extra_data = future.result()
-
-                            if response.status_code != 200:
-                                self.logger.debug(
-                                    f"Url: {url[0]} ; Status code: {response.status_code}"
-                                )
-
-                            if response.status_code == 403 or response.status_code == 401: # 403 is rate limit, 404 is not found, 401 is bad credentials
-                                self.update_rate_limit(response, platform=platform)
-                                continue
-
-                            elif response.status_code == 200:
-                                try:
-                                    page_data = response.json()
-                                except:
-                                    page_data = json.loads(json.dumps(response.text))
-                                    continue
-
-                                page_data = [{**data, **extra_data} for data in page_data]
-                                all_data += page_data
-
-                                try:
-                                    if 'last' in response.links and "&page=" not in url[0]:
-                                        urls += [
-                                            (url[0] + f"&page={page}", extra_data) for page in range(
-                                                2, int(response.links['last']['url'].split('=')[-1]) + 1
-                                            )
-                                        ]
-                                        # self.logger.info(f"urls boundry issue? for {urls} where they are equal to {url}.")
-
-                                        urls = numpy.delete(urls, numpy.where(urls == url), axis=0)
-                                except:
-                                    self.logger.info(f"ERROR with axis = 0 - Now attempting without setting axis for numpy.delete for {urls} where they are equal to {url}.")
-                                    urls = numpy.delete(urls, numpy.where(urls == url))
-                                    continue
-
-                            elif response.status_code == 404:
-                                urls = numpy.delete(urls, numpy.where(urls == url), axis=0)
-                                self.logger.info(f"Not found url: {url}\n")
-                            else:
-                                self.logger.info(
-                                    f"Unhandled response code: {response.status_code} {url}\n"
-                                )
-
-                        except Exception as e:
-                            self.logger.debug(
-                                f"{url} generated an exception: {traceback.format_exc()}\n"
-                            )
-
-                attempts += 1
-
-        self.logger.debug(
-            f"Processed {valid_url_count} urls and got {len(all_data)} data points "
-            f"in {time.time() - start} seconds thanks to multithreading!\n"
-        )
-        return all_data
-
-
     #insertion_method and stagger are arguments that allow paginate_endpoint to insert at around ~500 pages at a time.
     def paginate_endpoint(
-        self, url, action_map={}, table=None, where_clause=True, platform='github', in_memory=True, stagger=False, insertion_method=None, insertion_threshold=500
+        self, url, action_map={}, table=None, where_clause=True, platform='github', in_memory=True, stagger=False, insertion_method=None, insertion_threshold=1000
     ):
 
         #Get augur columns using the action map along with the primary key
@@ -1449,7 +1206,7 @@ class WorkerGitInterfaceable(Worker):
                 # Checking contents of requests with what we already have in the db
                 page_insertions, page_updates = self.organize_needed_data(
                     page_data, table_values, list(table.primary_key)[0].name,
-                    action_map, in_memory=True
+                    action_map
                 )
 
                 # Reached a page where we already have all tuples
@@ -1504,8 +1261,7 @@ class WorkerGitInterfaceable(Worker):
 
         if forward_pagination:
             need_insertion, need_update = self.organize_needed_data(
-                all_data, table_values, list(table.primary_key)[0].name, action_map,
-                in_memory=in_memory
+                all_data, table_values, list(table.primary_key)[0].name, action_map
             )
 
         return {
@@ -1514,7 +1270,7 @@ class WorkerGitInterfaceable(Worker):
             'all': all_data
         }
 
-    #TODO: deprecated but still used by the issues worker.
+    #TODO: deprecated but still used by many other methods
     def paginate(self, url, duplicate_col_map, update_col_map, table, table_pkey, where_clause="", value_update_col_map={}, platform="github"):
         """ DEPRECATED
             Paginate either backwards or forwards (depending on the value of the worker's
