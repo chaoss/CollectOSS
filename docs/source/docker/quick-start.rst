@@ -1,8 +1,8 @@
 Docker Quick Start
 ==================================
 Before you get off to such a quick start, go ahead and 
-  1. create a fork from augur starting at https://github.com/chaoss/augur
-  2. clone that fork locally
+  1. Create a fork from augur starting at https://github.com/chaoss/augur
+  2. Clone that fork locally
   3. Checkout the appropriate branch to work on (see notes below):
   
   .. code-block:: python
@@ -19,7 +19,7 @@ Before you get off to such a quick start, go ahead and
 
   If you want to start running docker against an external database right away: 
 
-  1. Follow the instructions to create a database, and database user (if you have just installed Postgresql locally, you may need to follow instructions for allow access to Postgresql from Docker in the next page. tl;dr, there are edits to the Postgresql `pg_hba.conf` and `postgresql.conf` files): 
+  1. Follow the instructions to create a database, and database user (if you have just installed Postgresql locally, you may need to follow instructions to allow access to Postgresql from Docker on the next page. tl;dr, there are edits to the Postgresql `pg_hba.conf` and `postgresql.conf` files): 
 
   .. code-block:: postgresql 
     

@@ -44,7 +44,7 @@ Example usage\:
 
 .. code-block:: bash
 
-  # to retrive the repo groups
+  # to retrieve the repo groups
   $ augur db get-repo-groups
 
   # successful output looks like:
@@ -193,4 +193,4 @@ Example usage\:
   $ augur db create-schema
 
 .. note::
-  If this runs sucessfully, you should see a bunch of schema creation commands fly by pretty fast. If everything worked you should see: ``update "augur_operations"."augur_settings" set value = xx where setting = 'augur_data_version';`` at the end.
+  If this runs successfully, you should see a bunch of schema creation commands fly by pretty fast. If everything worked you should see: ``update "augur_operations"."augur_settings" set value = xx where setting = 'augur_data_version';`` at the end.

@@ -62,13 +62,13 @@ Github worker. But it it easy to understand the mapping between the naming conve
 
 
 
-There are only a few considerable differences between the APIs-
+There are only a few considerable differences between the APIs:
 
-    1. Project can be owned by a group of people in Gitlab while in Github, there is always a unique repo owner basically the one who created the repo. Repo could be owned by an organization but the Github API values the repo creator and return the creator as the unique owner.
-    Although Gitlab doesn't differentiate between the group of owners and the project creator, but we explicitly store
+    1. Project can be owned by a group of people in Gitlab while in Github, there is always a unique repo owner (basically the one who created the repo). Repo could be owned by an organization but the Github API values the repo creator and returns the creator as the unique owner.
+    Although Gitlab doesn't differentiate between the group of owners and the project creator, we explicitly store
     the Gitlab project creator as the unique owner.
 
-    2.Gitlab API returns the email addresses of closed Gitlab accounts but they don't have a unique source id associated with them. But they have a login/username which is enough for our use-case.
+    2.Gitlab API returns the email addresses of closed Gitlab accounts but they don't have a unique source id associated with them. They have a login/username which is enough for our use-case.
 
     3.Gitlab allows 10X more requests per minute than Github API, so you may not need to store multiple API keys in the worker_oauth table.
 
@@ -95,7 +95,7 @@ Gitlab Issues Worker - Populated Models
 
 
 
-This worker has an architecture similar ot that of the Gitlab Issues Worker. Whenever you send a task for issue collection, it hits the API
+This worker has an architecture similar to that of the Gitlab Issues Worker. Whenever you send a task for issue collection, it hits the API
 endpoints to fetch the data. Duplicates are ignored and only upsert operations (Update/Insert) are performed.
 The issues model acts as a central repository for Github & Gitlab issue workers.
 Some of the columns present in the tables might be a bit off with respect to the Gitlab Worker, but easily perceptible.
