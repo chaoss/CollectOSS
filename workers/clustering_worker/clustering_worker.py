@@ -150,6 +150,8 @@ class ClusteringWorker(WorkerGitInterfaceable):
 			kmeans_model = pickle.load(model_file)
 		
 		msg_df = msg_df_cur_repo.groupby('repo_id')['msg_text'].apply(','.join).reset_index()
+
+		self.logger.debug(f'messages being clustered: {msg_df}')
 		
 		if msg_df.empty:
 			self.logger.info("not enough data for prediction")
@@ -206,7 +208,70 @@ class ClusteringWorker(WorkerGitInterfaceable):
 				result = self.db.execute(self.repo_topic_table.insert().values(record))
 				
 		self.register_task_completion(task, repo_id, 'clustering')
+
+
+	def get_tf_idf_matrix(self,text_list, max_df, max_features, min_df, ngram_range):
 	
+		
+		
+		tfidf_vectorizer = TfidfVectorizer(max_df = max_df, max_features=max_features,
+                                      min_df=min_df, stop_words='english',
+                                      use_idf=True, tokenizer=self.preprocess_and_tokenize, ngram_range=ngram_range)
+		tfidf_transformer = tfidf_vectorizer.fit(text_list)
+		tfidf_matrix = tfidf_transformer.transform(text_list)
+		pickle.dump(tfidf_transformer.vocabulary_, open("vocabulary",'wb'))
+		return tfidf_matrix, tfidf_vectorizer.get_feature_names()
+		
+	def cluster_and_label(self,feature_matrix, num_clusters):
+		kmeans_model = KMeans(n_clusters=num_clusters)
+		kmeans_model.fit(feature_matrix)
+		pickle.dump(kmeans_model, open("kmeans_repo_messages",'wb'))
+		return kmeans_model.labels_.tolist()
+		
+	def visualize_labels_PCA(self,features, labels, annotations, num_components, title):
+    
+		labels_color_map = {-1 : "red"}
+		for label in labels:
+			labels_color_map[label] = [list([x/255.0 for x in list(np.random.choice(range(256), size=3))])]
+		low_dim_data = PCA(n_components=num_components).fit_transform(features)
+	
+		fig, ax = plt.subplots(figsize=(20,10))
+	
+		for i, data in enumerate(low_dim_data):
+			pca_comp_1, pca_comp_2 = data
+			color = labels_color_map[labels[i]]
+			ax.scatter(pca_comp_1, pca_comp_2, c=color,label=labels[i])
+			#ax.annotate(annotations[i],(pca_comp_1, pca_comp_2))
+			
+		
+		handles,labels = ax.get_legend_handles_labels()
+		handles_label_dict = OrderedDict(zip(labels, handles))
+		ax.legend(handles_label_dict.values(), handles_label_dict.keys() )
+		
+		plt.title(title)
+		plt.xlabel("PCA Component 1")
+		plt.ylabel("PCA Component 2")
+		#plt.show()
+		filename = labels+"_PCA.png"
+		plt.save_fig(filename)
+		
+	def count_func(self,msg):
+		blobed = TextBlob(msg)
+		counts = Counter(tag for word,tag in blobed.tags if tag not in ['NNPS','RBS','SYM','WP$','LS','POS','RP','RBR','JJS','UH','FW','PDT'])
+		total = sum(counts.values())
+		normalized_count = {key: value/total for key,value in counts.items()}
+		return normalized_count
+		
+	def preprocess_and_tokenize(self,text):
+			text= text.lower()
+			text =  re.sub(r'[@]\w+','',text)
+			text =  re.sub(r'[^A-Za-z]+', ' ', text)
+    
+			tokens = nltk.word_tokenize(text)
+			tokens = [token for token in tokens if len(token)>1]
+			stems = [stemmer.stem(t) for t in tokens]
+			return stems
+
 	def train_model(self):
 		get_messages_sql = s.sql.text(
                             """
@@ -334,66 +399,4 @@ class ClusteringWorker(WorkerGitInterfaceable):
 		POS_count_dict = msg_df.apply(lambda row : self.count_func(row['msg_text']), axis = 1)
 		msg_df_aug = pd.concat([msg_df,pd.DataFrame.from_records(POS_count_dict)], axis=1)
 		self.logger.info(msg_df_aug)
-		
-	def get_tf_idf_matrix(self,text_list, max_df, max_features, min_df, ngram_range):
-	
-		
-		
-		tfidf_vectorizer = TfidfVectorizer(max_df = max_df, max_features=max_features,
-                                      min_df=min_df, stop_words='english',
-                                      use_idf=True, tokenizer=self.preprocess_and_tokenize, ngram_range=ngram_range)
-		tfidf_transformer = tfidf_vectorizer.fit(text_list)
-		tfidf_matrix = tfidf_transformer.transform(text_list)
-		pickle.dump(tfidf_transformer.vocabulary_, open("vocabulary",'wb'))
-		return tfidf_matrix, tfidf_vectorizer.get_feature_names()
-		
-	def cluster_and_label(self,feature_matrix, num_clusters):
-		kmeans_model = KMeans(n_clusters=num_clusters)
-		kmeans_model.fit(feature_matrix)
-		pickle.dump(kmeans_model, open("kmeans_repo_messages",'wb'))
-		return kmeans_model.labels_.tolist()
-		
-	def visualize_labels_PCA(self,features, labels, annotations, num_components, title):
-    
-		labels_color_map = {-1 : "red"}
-		for label in labels:
-			labels_color_map[label] = [list([x/255.0 for x in list(np.random.choice(range(256), size=3))])]
-		low_dim_data = PCA(n_components=num_components).fit_transform(features)
-	
-		fig, ax = plt.subplots(figsize=(20,10))
-	
-		for i, data in enumerate(low_dim_data):
-			pca_comp_1, pca_comp_2 = data
-			color = labels_color_map[labels[i]]
-			ax.scatter(pca_comp_1, pca_comp_2, c=color,label=labels[i])
-			#ax.annotate(annotations[i],(pca_comp_1, pca_comp_2))
-			
-		
-		handles,labels = ax.get_legend_handles_labels()
-		handles_label_dict = OrderedDict(zip(labels, handles))
-		ax.legend(handles_label_dict.values(), handles_label_dict.keys() )
-		
-		plt.title(title)
-		plt.xlabel("PCA Component 1")
-		plt.ylabel("PCA Component 2")
-		#plt.show()
-		filename = labels+"_PCA.png"
-		plt.save_fig(filename)
-		
-	def count_func(self,msg):
-		blobed = TextBlob(msg)
-		counts = Counter(tag for word,tag in blobed.tags if tag not in ['NNPS','RBS','SYM','WP$','LS','POS','RP','RBR','JJS','UH','FW','PDT'])
-		total = sum(counts.values())
-		normalized_count = {key: value/total for key,value in counts.items()}
-		return normalized_count
-		
-	def preprocess_and_tokenize(self,text):
-			text= text.lower()
-			text =  re.sub(r'[@]\w+','',text)
-			text =  re.sub(r'[^A-Za-z]+', ' ', text)
-    
-			tokens = nltk.word_tokenize(text)
-			tokens = [token for token in tokens if len(token)>1]
-			stems = [stemmer.stem(t) for t in tokens]
-			return stems
 
