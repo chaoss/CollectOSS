@@ -143,7 +143,7 @@ class ClusteringWorker(WorkerGitInterfaceable):
 			if model_age > 2000000: 
 				self.train_model()
 			else: 
-     			self.logger.info("using pre-trained clustering model....")	
+				self.logger.info("using pre-trained clustering model....")	
 		
 		with open("kmeans_repo_messages", 'rb') as model_file:
 			kmeans_model = pickle.load(model_file)
