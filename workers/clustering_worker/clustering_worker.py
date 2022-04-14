@@ -306,12 +306,7 @@ class ClusteringWorker(WorkerGitInterfaceable):
 		self.logger.info(msg_df.head())
 		
 		tfidf_matrix, features = self.get_tf_idf_matrix(msg_df['msg_text'], self.max_df, self.max_features, self.min_df, self.ngram_range)
-		msg_df['cluster'] = self.cluster_and_label(tfidf_matrix, self.num_clusters)
-		
-		
-		
-		visualize_labels_PCA(tfidf_matrix.todense(), msg_df['cluster'], msg_df['repo_id'], 2, "MIN_DF={} and MAX_DF={} and NGRAM_RANGE={}".format(MIN_DF, MAX_DF, NGRAM_RANGE))
-		
+		msg_df['cluster'] = self.cluster_and_label(tfidf_matrix, self.num_clusters)		
 		
 		#LDA - Topic Modeling
 		count_vectorizer = CountVectorizer(max_df=self.max_df, max_features=self.max_features, min_df=self.min_df,stop_words="english", tokenizer=self.preprocess_and_tokenize)
@@ -399,4 +394,8 @@ class ClusteringWorker(WorkerGitInterfaceable):
 		POS_count_dict = msg_df.apply(lambda row : self.count_func(row['msg_text']), axis = 1)
 		msg_df_aug = pd.concat([msg_df,pd.DataFrame.from_records(POS_count_dict)], axis=1)
 		self.logger.info(msg_df_aug)
+		
+		visualize_labels_PCA(tfidf_matrix.todense(), msg_df['cluster'], msg_df['repo_id'], 2, "MIN_DF={} and MAX_DF={} and NGRAM_RANGE={}".format(MIN_DF, MAX_DF, NGRAM_RANGE))
+
+
 
