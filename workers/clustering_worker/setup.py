@@ -13,7 +13,7 @@ def read(filename):
 
 setup(
     name="clustering_worker",
-    version="0.0.1",
+    version="0.0.2",
     url="https://github.com/chaoss/augur",
     license='MIT',
     author="Sarit Adhikari",

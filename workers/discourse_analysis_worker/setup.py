@@ -17,7 +17,7 @@ setup(
     url="https://github.com/chaoss/augur",
     license='MIT',
     author="Augur Team",
-    author_email="",
+    author_email="s@goggins.com",
     description="Worker to classify messages into discourse acts",
     packages=find_packages(),
     install_requires=[

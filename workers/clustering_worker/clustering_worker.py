@@ -49,7 +49,7 @@ class ClusteringWorker(WorkerGitInterfaceable):
 
 		# Define data collection info
 		self.tool_source = 'Clustering Worker'
-		self.tool_version = '0.1.0'
+		self.tool_version = '0.2.0'
 		self.data_source = 'Augur Collected Messages'
 		
 		#define clustering specific parameters
@@ -67,7 +67,7 @@ class ClusteringWorker(WorkerGitInterfaceable):
 		self.clustering_by_mechanism = False
 		
 		#define topic modeling specific parameters
-		self.num_topics = 14
+		self.num_topics = 8
 		self.num_words_per_topic = 12
 
 		nltk.download('punkt')
@@ -137,7 +137,13 @@ class ClusteringWorker(WorkerGitInterfaceable):
 			self.logger.info("clustering model not trained. Training the model.........")
 			self.train_model()
 		else:
-			self.logger.info("using pre-trained clustering model....")	
+			model_stats=os.stat(MODEL_FILE_NAME)
+			model_age=(time.time()-model_stats.st_mtime)
+			#if the model is more than month old, retrain it. 
+			if model_age > 2000000: 
+				self.train_model()
+			else: 
+     			self.logger.info("using pre-trained clustering model....")	
 		
 		with open("kmeans_repo_messages", 'rb') as model_file:
 			kmeans_model = pickle.load(model_file)
@@ -200,8 +206,6 @@ class ClusteringWorker(WorkerGitInterfaceable):
 				
 		self.register_task_completion(task, repo_id, 'clustering')
 	
-	
-	
 	def train_model(self):
 		get_messages_sql = s.sql.text(
                             """
@@ -240,7 +244,7 @@ class ClusteringWorker(WorkerGitInterfaceable):
 		
 		
 		
-		#visualize_labels_PCA(tfidf_matrix.todense(), msg_df['cluster'], msg_df['repo_id'], 2, "MIN_DF={} and MAX_DF={} and NGRAM_RANGE={}".format(MIN_DF, MAX_DF, NGRAM_RANGE))
+		visualize_labels_PCA(tfidf_matrix.todense(), msg_df['cluster'], msg_df['repo_id'], 2, "MIN_DF={} and MAX_DF={} and NGRAM_RANGE={}".format(MIN_DF, MAX_DF, NGRAM_RANGE))
 		
 		
 		#LDA - Topic Modeling
@@ -371,7 +375,9 @@ class ClusteringWorker(WorkerGitInterfaceable):
 		plt.title(title)
 		plt.xlabel("PCA Component 1")
 		plt.ylabel("PCA Component 2")
-		plt.show()
+		#plt.show()
+		filename = labels+"_PCA.png"
+		plt.save_fig(filename)
 		
 	def count_func(self,msg):
 		blobed = TextBlob(msg)
