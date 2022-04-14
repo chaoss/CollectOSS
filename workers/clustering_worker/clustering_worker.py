@@ -2,6 +2,7 @@ import logging, os, sys, time, requests, json
 from workers.worker_git_integration import WorkerGitInterfaceable
 from datetime import datetime
 from multiprocessing import Process, Queue
+import traceback
 import pandas as pd
 import sqlalchemy as s
 from sqlalchemy.schema import Sequence
@@ -183,29 +184,40 @@ class ClusteringWorker(WorkerGitInterfaceable):
 				  }
 		result = self.db.execute(self.repo_cluster_messages_table.insert().values(record))
 		logging.info("Primary key inserted into the repo_cluster_messages table: {}".format(result.inserted_primary_key))
-		
-		lda_model = pickle.load(open("lda_model", "rb"))
-		
-		vocabulary = pickle.load(open("vocabulary_count", "rb"))
-		count_vectorizer = CountVectorizer(max_df=self.max_df, max_features=self.max_features, min_df=self.min_df,stop_words="english", tokenizer=self.preprocess_and_tokenize, vocabulary=vocabulary)
-		count_transformer = count_vectorizer.fit(msg_df['msg_text']) #might be fitting twice, might have been used in training
-		
-		#save new vocabulary ??
-		count_matrix_cur_repo = count_transformer.transform(msg_df['msg_text'])
-		prediction = lda_model.transform(count_matrix_cur_repo)
-		
-		for i, prob_vector in enumerate(prediction):
-			#repo_id = msg_df.loc[i]['repo_id']
-			for i, prob in enumerate(prob_vector):
-				record = {
-				  'repo_id': int(repo_id),
-				  'topic_id': i+1,
-				  'topic_prob' : prob,
-				  'tool_source' : self.tool_source,
-				  'tool_version' : self.tool_version,
-				  'data_source' : self.data_source
-				  }
-				result = self.db.execute(self.repo_topic_table.insert().values(record))
+		try: 
+			self.logger.debug('pickling')
+			lda_model = pickle.load(open("lda_model", "rb"))
+			self.logger.debug('loading vocab')		
+			vocabulary = pickle.load(open("vocabulary_count", "rb"))
+			self.logger.debug('count vectorizing vocab')		
+			count_vectorizer = CountVectorizer(max_df=self.max_df, max_features=self.max_features, min_df=self.min_df,stop_words="english", tokenizer=self.preprocess_and_tokenize, vocabulary=vocabulary)
+			self.logger.debug('count transforming vocab')		
+			count_transformer = count_vectorizer.fit(msg_df['msg_text']) #might be fitting twice, might have been used in training
+			
+			#save new vocabulary ??
+			self.logger.debug('count matric cur repo vocab')		
+			count_matrix_cur_repo = count_transformer.transform(msg_df['msg_text'])
+			self.logger.debug('prediction vocab')		
+			prediction = lda_model.transform(count_matrix_cur_repo)
+
+			self.logger.debug('for loop for vocab')		
+			for i, prob_vector in enumerate(prediction):
+				#repo_id = msg_df.loc[i]['repo_id']
+				for i, prob in enumerate(prob_vector):
+					record = {
+					  'repo_id': int(repo_id),
+					  'topic_id': i+1,
+					  'topic_prob' : prob,
+					  'tool_source' : self.tool_source,
+					  'tool_version' : self.tool_version,
+					  'data_source' : self.data_source
+					  }
+					result = self.db.execute(self.repo_topic_table.insert().values(record))
+		except Exception as e: 
+			self.logger.debut(f'error is: {e}.')
+			stacker = traceback.format_exc()
+			self.logger.debug(f"\n\n{stacker}\n\n")
+			pass 
 				
 		self.register_task_completion(task, repo_id, 'clustering')
 
