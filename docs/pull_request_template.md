@@ -5,10 +5,8 @@ This PR fixes #
 
 **Notes for Reviewers**
 
-
 **Signed commits**
 - [ ] Yes, I signed my commits.
- 
 
 <!--
 Thank you for contributing to CHAOSS projects! 
