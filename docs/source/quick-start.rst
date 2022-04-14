@@ -1,7 +1,7 @@
 Quickstart
 ===============
 
-Get going fast! Intended for folks familiar with setting up DevOps environments. These instructions were tested using Ubuntu 20.04 and Ubuntu 18.04.
+Get going fast! Intended for folks familiar with setting up DevOps environments. These instructions were tested using Ubuntu 20.04. Ubuntu 18x is no longer supported because the versions of Python3 available on it are not current. 
 
 PostgreSQL Installation
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -63,8 +63,8 @@ Python Virtual Environment Configuration
 
 .. code-block:: bash
 
-	# make sure you are logged in as your own user (i.e. "sean")
-	git clone https://github.com/chaoss/augur.git
+	# Ensure you are logged in as your own user on Github and change the "<YOUR_GITHUB_USERNAME>" to your Github username (e.g. "sean")
+	git clone https://github.com/<YOUR_GITHUB_USERNAME>/augur.git
 	cd augur/
 	sudo apt install make
 	sudo apt-get install python3-venv

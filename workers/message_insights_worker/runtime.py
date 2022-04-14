@@ -1,3 +1,5 @@
+#SPDX-License-Identifier: MIT
+
 from flask import Flask, jsonify, request, Response
 import click, os, json, requests, logging
 from workers.message_insights_worker.message_insights_worker import MessageInsightsWorker
