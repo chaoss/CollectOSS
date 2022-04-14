@@ -9,7 +9,7 @@ Make sure to save off the credentials you use when creating the database; you'll
 PostgreSQL Installation
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-Before you can install our schema, you will need to make sure you have access to a PostgreSQL 10 or later database. If you're looking for the fastest possible way to get Augur started, we recommend using our `database container <../docker/docker.html>`_. If you're looking to collect data long-term, we recommend following the rest of this tutorial and setting up a persistent PostgreSQL installation.
+Before you can install our schema, you will need to make sure you have **write access** to a PostgreSQL 10 or later database. If you're looking for the fastest possible way to get Augur started, we recommend use our `database container <../docker/docker.html>`_. If you're looking to collect data long-term, we recommend following the rest of this tutorial and setting up a persistent PostgreSQL installation.
 
 .. warning::
 

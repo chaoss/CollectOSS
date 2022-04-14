@@ -6,7 +6,7 @@ This section of the documentation details how to install Augur's Python library 
 .. note::
   There are 3 main issues new developers encounter when first installing Augur: 
 
-  1. The absence of a `GCC` or `Fortran` compiler, required by numpy and NLTK Python libraries. Look up how to install these compilers for your local operating system. Many times they simply need to be updated to a more current version.
+  1. The absence of a `GCC` or `Fortran` compiler, required by NumPy and NLTK Python libraries. Look up how to install these compilers for your local operating system. Many times they simply need to be updated to a more current version.
 
   2. Conflicting versions of Python: The fix is platform specific. On Mac OS X, more often than not multiple versions of Python have been installed by the OS, brew, Anaconda, or a combination of both. The result is some python commands are drawn from different paths because of how they are linked in `/usr/local/bin`
 
@@ -64,7 +64,7 @@ Optional:
 The ``value_worker`` uses a Go package called `scc <https://github.com/boyter/scc>`_ to run COCOMO calculations.
 Once you've installed Go, follow the appropriate steps for your system to install the ``scc`` package.
 
--  Install gcc OpenMP Support: `sudo apt-get install libgomp1` -- Ubuntu 
+-  Install gcc OpenMP Support: ``sudo apt-get install libgomp1`` -- Ubuntu 
 
 The ``message_insights_worker`` uses a system level package called OpenMP. You will need this installed at the system level for that worker to "work". 
 
@@ -78,7 +78,7 @@ If you're interested in using our visualizations, you can optionally install the
 -  `Vue.js <https://vuejs.org/>`__  
 -  `Vue-CLI <https://cli.vuejs.org/>`__
 
-We use Vue.js as our frontend web framework, and ``npm`` as our package manager.
+We use Vue.js as our frontend web framework and ``npm`` as our package manager.
 
 Visualization API calls
 ---------------------------
@@ -172,6 +172,8 @@ your installation of Python 3: on most systems, this is ``python3``, but yours m
 
 If you think something went wrong, check the log files in ``logs/``. If you want to try again, you can use ``make clean`` to delete any build files before running ``make install`` again.
 
+MacOS users: if your build fails and in gunicorn.log you see this error: ``Connection in use: ('0.0.0.0', 5000)``, that means port 5000 is being used by another process. To solve this issue, go to System Preferences -> Sharing -> Disable Airplay Receiver.
+
 If you want to test new code you have written, you can rebuild Augur using: 
 
 .. code-block:: bash
@@ -182,12 +184,12 @@ If you want to test new code you have written, you can rebuild Augur using:
 
   If you chose to install Augur's frontend dependencies, you might see a bunch of ``canvas@1.6.x`` and ``canvas-prebuilt@1.6.x`` errors in the installation logs. These are harmless and are caused by a few of our dependencies having *optional* requirements for old versions of these libraries. If they seem to be causing you trouble, feel free to open an `issue <https://github.com/chaoss/augur/issues>`_.
 
-To enable log parsing for errors, you need to install `Elasticsearch <https://www.elastic.co/downloads/elasticsearch>`_ and `Logstash <https://www.elastic.co/downloads/past-releases/logstash-6-8-10>`_ .
+To enable log parsing for errors, you need to install `Elasticsearch <https://www.elastic.co/downloads/elasticsearch>`_ and `Logstash <https://www.elastic.co/downloads/past-releases/logstash-6-8-10>`_.
 
 .. warning::
-   Please note, that Logstash v7.0 and above has unresolved issues that affect this functionality.
+   Please note, that Logstash v7.0 and above have unresolved issues that affect this functionality.
    In order to use it in the near future, please download v6.8.
-   If you use a package manager, it defaults to v7+, so we recommend downloading `binary <https://www.elastic.co/downloads/past-releases/logstash-6-8-10>`_ .
+   If you use a package manager, it defaults to v7+, so we recommend downloading `binary <https://www.elastic.co/downloads/past-releases/logstash-6-8-10>`_.
    This change is tested with Elasticsearch v7.8.0_2 and Logstash v6.8.10.
 
 Once everything is installed, you're ready to `configure your data collection workers <collecting-data.html>`_!

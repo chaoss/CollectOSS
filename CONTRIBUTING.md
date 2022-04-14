@@ -15,7 +15,7 @@ Please note that if you open a bug report and your issue does not follow our tem
 ```bash
 $ git clone github.com:your-username/augur.git
 $ cd augur/
-$ git remote add upstream https://github.com/<your-username>/augur.git
+$ git remote add upstream https://github.com/chaoss/augur.git
 ```
 
 2. Follow the [development installation instructions](https://oss-augur.readthedocs.io/en/main/development-guide/installation.html).

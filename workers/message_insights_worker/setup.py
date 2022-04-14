@@ -1,3 +1,5 @@
+#SPDX-License-Identifier: MIT
+
 import io
 import os
 import re
@@ -13,7 +15,7 @@ def read(filename):
 
 setup(
     name="message_insights_worker",
-    version="0.2.0",
+    version="0.3.1",
     url="https://github.com/chaoss/augur",
     license='MIT',
     author="Augur Team",
@@ -33,9 +35,9 @@ setup(
         'numpy==1.21.0',
         'nltk==3.6.6',
         'pandas==1.3.5',
-        'gensim==4.1.2',
+        'gensim==3.8.3',
         'emoji==1.2.0',
-        'Keras>=2.8.0rc0',
+        'Keras<2.9.0rc0',
         'Keras-Preprocessing==1.1.2',
         'tensorflow==2.8.0',
         'h5py~=3.6.0',
@@ -51,7 +53,7 @@ setup(
         ],
     },
     classifiers=[
-        'Development Status :: 2 - Pre-Alpha',
+        'Development Status :: 3 - Alpha',
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
