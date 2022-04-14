@@ -5,9 +5,9 @@ Get going fast! Intended for folks familiar with setting up DevOps environments.
 
 PostgreSQL Installation
 ~~~~~~~~~~~~~~~~~~~~~~~~
-- Gain access to an Ubuntu 18.04 or later environment and install PostgreSQL. Ubuntu 20.04 is recommended because its long-term support (LTS) window is longer. 
+- Gain access to an Ubuntu 18.04 or later environment and install PostgreSQL. Ubuntu 20.04 is recommended because its long-term support (LTS) window is longer.
 
-.. code-block:: bash 
+.. code-block:: bash
 
 	sudo apt update
 	sudo apt upgrade
@@ -21,9 +21,9 @@ PostgreSQL Installation
 
 .. code-block:: bash
 
-    $ sudo su - 
+    $ sudo su -
     $ su - postgres
-    $ psql 
+    $ psql
 
 Then, once you've connected to your PostgreSQL instance\:
 
@@ -35,7 +35,7 @@ Then, once you've connected to your PostgreSQL instance\:
 
 Git Configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~
-- Configure Git: These instructions assume the potential of large repositories that occasionally perform significant refactoring within a small number of commits. Our experience is that nearly all organizations have at least one project that meets these criteria. 
+- Configure Git: These instructions assume the potential of large repositories that occasionally perform significant refactoring within a small number of commits. Our experience is that nearly all organizations have at least one project that meets these criteria.
 
 .. code-block:: bash
 
@@ -44,7 +44,7 @@ Git Configuration
 	git config --global credential.helper cache
 	git config --global credential.helper 'cache --timeout=9999999999999'
 
-- For each platform, perform a command line login in order to cache Git credentials for the LINUX user who operates Augur. This step is required in order to prevent the Facade Commit Counting Diesel from stalling on a command line prompt when repositories move or disappear. 
+- For each platform, perform a command line login in order to cache Git credentials for the LINUX user who operates Augur. This step is required in order to prevent the Facade Commit Counting Diesel from stalling on a command line prompt when repositories move or disappear.
 
 Install Go
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -58,8 +58,8 @@ Two of Augur's workers use the Go programming language, which needs to be instal
 
 Python Virtual Environment Configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~
-- Set up a Python virtual environment (Python 3.8 and above are now required. Python 3.9 and python 3.10 work as well, though we have tested Python 3.9 on more platforms.) 
-- Clone and install Augur as a regular user. 
+- Set up a Python virtual environment (Python 3.8 and above are now required. Python 3.9 and python 3.10 work as well, though we have tested Python 3.9 on more platforms.)
+- Clone and install Augur as a regular user.
 
 .. code-block:: bash
 
@@ -67,7 +67,7 @@ Python Virtual Environment Configuration
 	git clone https://github.com/<YOUR_GITHUB_USERNAME>/augur.git
 	cd augur/
 	sudo apt install make
-	sudo apt-get install python3-venv 
+	sudo apt-get install python3-venv
 	python3 -m venv $HOME/.virtualenvs/augur_env
 	source $HOME/.virtualenvs/augur_env/bin/activate
 	sudo apt install python-pip-whl
@@ -76,7 +76,7 @@ Python Virtual Environment Configuration
 	python -m pip install --upgrade pip
 	make install-dev {Follow prompts. You will need database credentials, a file location for cloned repositories, a GitHub Token, and a GitLab token.}
 
-- Seven sample repositories will load by default. You can delete them if you want to use your own repositories by deleting records from the `repo` table first, then deleting the records from the `repo_groups` table. 
+- Seven sample repositories will load by default. You can delete them if you want to use your own repositories by deleting records from the `repo` table first, then deleting the records from the `repo_groups` table.
 
 .. code-block:: bash
 
@@ -86,7 +86,7 @@ Python Virtual Environment Configuration
 
 Loading Repositories
 ~~~~~~~~~~~~~~~~~~~~~~~~
-The commands for loading repos are: 
+The commands for loading repos are:
 
 .. code-block:: bash
 
