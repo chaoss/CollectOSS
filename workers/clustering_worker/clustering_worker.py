@@ -240,33 +240,6 @@ class ClusteringWorker(WorkerGitInterfaceable):
 		pickle.dump(kmeans_model, open("kmeans_repo_messages",'wb'))
 		return kmeans_model.labels_.tolist()
 		
-	def visualize_labels_PCA(self,features, labels, annotations, num_components, title):
-    
-		labels_color_map = {-1 : "red"}
-		for label in labels:
-			labels_color_map[label] = [list([x/255.0 for x in list(np.random.choice(range(256), size=3))])]
-		low_dim_data = PCA(n_components=num_components).fit_transform(features)
-	
-		fig, ax = plt.subplots(figsize=(20,10))
-	
-		for i, data in enumerate(low_dim_data):
-			pca_comp_1, pca_comp_2 = data
-			color = labels_color_map[labels[i]]
-			ax.scatter(pca_comp_1, pca_comp_2, c=color,label=labels[i])
-			#ax.annotate(annotations[i],(pca_comp_1, pca_comp_2))
-			
-		
-		handles,labels = ax.get_legend_handles_labels()
-		handles_label_dict = OrderedDict(zip(labels, handles))
-		ax.legend(handles_label_dict.values(), handles_label_dict.keys() )
-		
-		plt.title(title)
-		plt.xlabel("PCA Component 1")
-		plt.ylabel("PCA Component 2")
-		#plt.show()
-		filename = labels+"_PCA.png"
-		plt.save_fig(filename)
-		
 	def count_func(self,msg):
 		blobed = TextBlob(msg)
 		counts = Counter(tag for word,tag in blobed.tags if tag not in ['NNPS','RBS','SYM','WP$','LS','POS','RP','RBR','JJS','UH','FW','PDT'])
@@ -285,6 +258,32 @@ class ClusteringWorker(WorkerGitInterfaceable):
 			return stems
 
 	def train_model(self):
+		def visualize_labels_PCA(self,features, labels, annotations, num_components, title):
+			labels_color_map = {-1 : "red"}
+			for label in labels:
+				labels_color_map[label] = [list([x/255.0 for x in list(np.random.choice(range(256), size=3))])]
+			low_dim_data = PCA(n_components=num_components).fit_transform(features)
+		
+			fig, ax = plt.subplots(figsize=(20,10))
+		
+			for i, data in enumerate(low_dim_data):
+				pca_comp_1, pca_comp_2 = data
+				color = labels_color_map[labels[i]]
+				ax.scatter(pca_comp_1, pca_comp_2, c=color,label=labels[i])
+				#ax.annotate(annotations[i],(pca_comp_1, pca_comp_2))
+				
+			
+			handles,labels = ax.get_legend_handles_labels()
+			handles_label_dict = OrderedDict(zip(labels, handles))
+			ax.legend(handles_label_dict.values(), handles_label_dict.keys() )
+			
+			plt.title(title)
+			plt.xlabel("PCA Component 1")
+			plt.ylabel("PCA Component 2")
+			#plt.show()
+			filename = labels+"_PCA.png"
+			plt.save_fig(filename)
+			
 		get_messages_sql = s.sql.text(
                             """
 				SELECT r.repo_group_id, r.repo_id, r.repo_git, r.repo_name, i.issue_id thread_id,m.msg_text,i.issue_title thread_title,m.msg_id
@@ -414,7 +413,7 @@ class ClusteringWorker(WorkerGitInterfaceable):
 			pass 
 		try: 
 			msg_df_aug = pd.concat([msg_df,pd.DataFrame.from_records(POS_count_dict)], axis=1)
-			self.logger.info(f'msg_df_aug worked: {msg_df_aug}.')
+			self.logger.info(f'msg_df_aug worked: {msg_df_aug}')
 		except Exception as e: 
 			self.logger.debug(f'msg_df_aug error is: {e}.')
 			stacker = traceback.format_exc()
