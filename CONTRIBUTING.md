@@ -1,4 +1,4 @@
-# How to Contribute
+  # How to Contribute
 
 We love to pull requests from everyone! We follow the standard Git workflow of `fork -> change -> pull request -> merge -> update fork -> change ... (repeat forever)`. If you are new to open source, we recommend GitHub's excellent guide on "[How to Contribute to Open Source](https://opensource.guide/how-to-contribute/)". In addition, please feel free to reach out to any of the maintainers or other community members if you are struggling; we are here to help you learn!
 
@@ -37,7 +37,22 @@ $ git push -u origin my-new-branch
 At this point, you're waiting on us. We like to at least comment on pull requests
 within three business days (and, typically, one business day). Once one of our maintainers has had a chance to review your PR, we will either mark it as "needs review" and provide specific feedback on your changes, or we will go ahead and complete the pull request.
 
-We require all commits to be signed off with a [Developer Certificate of Origin](https://developercertificate.org/) by the [CHAOSS charter](https://chaoss.community/about/charter/#user-content-8-intellectual-property-policy). This can be easily done by using the `-s` flag when using `git commit`. For example: `git commit -s -m "Update README.md"`. **Any pull requests containing commits that are not signed off will not be eligible for merge until the commits have been signed off.** 
+## Signing-off on Commits
+To contribute to this project, you must agree to the [Developer Certificate of Origin](https://developercertificate.org/) by the [CHAOSS charter](https://chaoss.community/about/charter/#user-content-8-intellectual-property-policy) for each commit you make. The DCO is a simple statement that you, as a contributor, have the legal right to make the contribution.
+To signify that you agree to the DCO for contributions, you simply add a line to each of your
+git commit messages:
+
+  ```
+  Signed-off-by: Jane Smith <jane.smith@example.com>
+  ```
+This can be easily done by using the `-s` flag when using `git commit`. For example:
+
+```
+$ git commit -s -m “my commit message w/signoff”
+```
+To ensure all your commits are signed, you may choose to [configure git](https://gist.github.com/xavierfoucrier/c156027fcc6ae23bcee1204199f177da) properly by editing your global ```.gitconfig```
+
+**Any pull requests containing commits that are not signed off will not be eligible for merge until the commits have been signed off.** 
 
 ## Community Resources
 
