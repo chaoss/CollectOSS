@@ -73,7 +73,7 @@ class Persistant():
         worker_port = self.config['port']
         while True:
             try:
-                r = requests.get('https://{}:{}/AUGWOP/heartbeat'.format(
+                r = requests.get('http://{}:{}/AUGWOP/heartbeat'.format(
                     self.config['host'], worker_port)).json()
                 if 'status' in r:
                     if r['status'] == 'alive':
@@ -86,7 +86,7 @@ class Persistant():
             'port': worker_port,
             'id': "workers.{}.{}".format(self.worker_type, worker_port),
             'capture_output': False,
-            'location': 'https://{}:{}'.format(self.config['host'], worker_port),
+            'location': 'http://{}:{}'.format(self.config['host'], worker_port),
             'port_broker': self.augur_config.get_value('Server', 'port'),
             'host_broker': self.augur_config.get_value('Server', 'host'),
             'host_database': self.augur_config.get_value('Database', 'host'),
