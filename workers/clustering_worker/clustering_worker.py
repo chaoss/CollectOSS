@@ -140,6 +140,7 @@ class ClusteringWorker(WorkerGitInterfaceable):
 			model_stats=os.stat(MODEL_FILE_NAME)
 			model_age=(time.time()-model_stats.st_mtime)
 			#if the model is more than month old, retrain it. 
+			self.logger.debug(f'model age is: {model_age}')
 			if model_age > 2000000: 
 				self.train_model()
 			else: 
