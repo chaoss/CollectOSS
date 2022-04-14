@@ -214,7 +214,7 @@ class ClusteringWorker(WorkerGitInterfaceable):
 					  }
 					result = self.db.execute(self.repo_topic_table.insert().values(record))
 		except Exception as e: 
-			self.logger.debut(f'error is: {e}.')
+			self.logger.debug(f'error is: {e}.')
 			stacker = traceback.format_exc()
 			self.logger.debug(f"\n\n{stacker}\n\n")
 			pass 
@@ -387,25 +387,40 @@ class ClusteringWorker(WorkerGitInterfaceable):
 		
 		#save the model and predict on each repo separately
 			
-		
+		self.logger.debug(f'entering prediction in model training, count matric is {count_matrix}')
 		prediction = lda_model.transform(count_matrix)
 
 		topic_model_dict_list = []
+		self.logger.debug('entering for loop in model training. ')
 		for i, prob_vector in enumerate(prediction):
 			topic_model_dict = {}
 			topic_model_dict['repo_id'] = msg_df.loc[i]['repo_id']
 			for i, prob in enumerate(prob_vector):
 				topic_model_dict["topic"+str(i+1)] = prob
 			topic_model_dict_list.append(topic_model_dict)
+		self.logger.debug('creating topic model data frame.')
 		topic_model_df = pd.DataFrame(topic_model_dict_list)
 
 		result_content_df = topic_model_df.set_index('repo_id').join(message_desc_df.set_index('repo_id')).join(msg_df.set_index('repo_id'))
 		result_content_df = result_content_df.reset_index()
 		self.logger.info(result_content_df)
-		
-		POS_count_dict = msg_df.apply(lambda row : self.count_func(row['msg_text']), axis = 1)
-		msg_df_aug = pd.concat([msg_df,pd.DataFrame.from_records(POS_count_dict)], axis=1)
-		self.logger.info(msg_df_aug)
+		try: 
+			POS_count_dict = msg_df.apply(lambda row : self.count_func(row['msg_text']), axis = 1)
+			self.logger.debug('POS_count_dict has no exceptions.')
+		except Exception as e: 
+			self.logger.debug(f'POS_count_dict error is: {e}.')
+			stacker = traceback.format_exc()
+			self.logger.debug(f"\n\n{stacker}\n\n")
+			pass 
+		try: 
+			msg_df_aug = pd.concat([msg_df,pd.DataFrame.from_records(POS_count_dict)], axis=1)
+			self.logger.info(f'msg_df_aug worked: {msg_df_aug}.')
+		except Exception as e: 
+			self.logger.debug(f'msg_df_aug error is: {e}.')
+			stacker = traceback.format_exc()
+			self.logger.debug(f"\n\n{stacker}\n\n")
+			pass 
+
 		
 		visualize_labels_PCA(tfidf_matrix.todense(), msg_df['cluster'], msg_df['repo_id'], 2, "MIN_DF={} and MAX_DF={} and NGRAM_RANGE={}".format(MIN_DF, MAX_DF, NGRAM_RANGE))
 
