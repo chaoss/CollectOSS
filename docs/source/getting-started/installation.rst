@@ -187,9 +187,13 @@ If you want to test new code you have written, you can rebuild Augur using:
 To enable log parsing for errors, you need to install `Elasticsearch <https://www.elastic.co/downloads/elasticsearch>`_ and `Logstash <https://www.elastic.co/downloads/past-releases/logstash-6-8-10>`_.
 
 .. warning::
-   Please note that Logstash v7.0 and above has unresolved issues that affect this functionality.
-   To use it in the future, please download v6.8.
+
+   Please note, that Logstash v7.0 and above have unresolved issues that affect this functionality.
+   
+   In order to use it in the near future, please download v6.8.
+
    If you use a package manager, it defaults to v7+, so we recommend downloading `binary <https://www.elastic.co/downloads/past-releases/logstash-6-8-10>`_ .
-   This change tests with Elasticsearch v7.8.0_2 and Logstash v6.8.10.
+
+   This change is tested with Elasticsearch v7.8.0_2 and Logstash v6.8.10.
 
 Once everything installs, you're ready to `configure your data collection workers <collecting-data.html>`_!
