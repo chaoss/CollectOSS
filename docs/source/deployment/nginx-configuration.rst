@@ -15,7 +15,7 @@ Once you have nginx configured, run these commands to make sure everything is lo
 Server Compilation
 ------------------
 
-**Your Augur instance must be compiled with a publicly accessible domain that the frontend instance will be able to access.**
+**Your Augur instance must compile with a publicly accessible domain that the frontend instance will be able to access.**
 
 1. Your ``augur.config.json`` server block **must** be set like this:
 
@@ -30,7 +30,7 @@ Server Compilation
 	    }
     }
 
-2.   Compile augur (this wires the host and port into the frontend so people pulling the web pages of Augur, in the `frontend/` subdirectory are referring to the right endpoints for this instance.): ``make rebuild``
+2.   Compile Augur (this wires the host and port into the frontend so people pulling the web pages of Augur, in the `frontend/` subdirectory are referring to the right endpoints for this instance.): ``make rebuild``
 3.   Run Augur: ``nohup augur backend start >augur.log 2>augur.err &``
 
 
@@ -115,7 +115,7 @@ nginx.conf
 Site Configuration
 --------------------
 
-This file will be located in the ``/etc/nginx/sites-enabled`` directory on most linux distributions.  Mac OSX keeps these files in the ``/usr/local/etc/nginx/sites-enabled`` directory. **Note that Augur's backend server must be running**
+This file will be located in the ``/etc/nginx/sites-enabled`` directory on most Linux distributions.  Mac OSX keeps these files in the ``/usr/local/etc/nginx/sites-enabled`` directory. **Note that Augur's backend server must be running**
 
 .. code-block::
 
