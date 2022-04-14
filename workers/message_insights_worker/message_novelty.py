@@ -1,7 +1,10 @@
+#SPDX-License-Identifier: MIT
+
 import logging
 import multiprocessing
 import os
 from datetime import date
+import traceback 
 
 import numpy as np
 import pandas as pd
@@ -18,7 +21,7 @@ from workers.message_insights_worker.preprocess_text import \
 
 train_path = os.path.join(ROOT_AUGUR_DIRECTORY, "workers", "message_insights_worker", "train_data")
 
-''' Doc2Vec model training
+# ''' Doc2Vec model training
 
 def build_model(max_epochs, vec_size, alpha, tag_data):    
     model = Doc2Vec(vector_size=vec_size, alpha=alpha,min_alpha=0.00025, min_count=2, dm=1)
@@ -33,9 +36,9 @@ def build_model(max_epochs, vec_size, alpha, tag_data):
         model.min_alpha = model.alpha
 
     model.save("doc2vec.model")
-    print("Model Saved")
+    self.logger.info("Model Saved")
     return model
-'''
+# '''
 
 def autoencoder(vec_input, train):
     input_dim = Input(shape = (vec_input, ))
@@ -111,9 +114,15 @@ def novelty_analysis(df_message, r_id, models_dir, full_train, logger=logging):
     logger.info('Normalized text corpus')
 
     # Load pretrained Doc2Vec model
-    d2v_model = Doc2Vec.load(os.path.join(train_path,"doc2vec.model"))
-    doc2vec_vectors = np.array([d2v_model.infer_vector(str(row['cleaned_msg_text']).split())for index, row in df_message.iterrows()])
-    logger.info('Doc2Vec vectorization done')
+    try: 
+        d2v_model = Doc2Vec.load(os.path.join(train_path,"doc2vec.model"))
+        doc2vec_vectors = np.array([d2v_model.infer_vector(str(row['cleaned_msg_text']).split())for index, row in df_message.iterrows()])
+        logger.info('Doc2Vec vectorization done')
+    except Exception as e: 
+        logger.debug(f"Doc2Vec Model Error")
+        stacker = traceback.format_exc()
+        logger.debug(f"\n\n{stacker}\n\n")
+        pass
 
     # Trains the AE model when worker runs first time
     if full_train:
