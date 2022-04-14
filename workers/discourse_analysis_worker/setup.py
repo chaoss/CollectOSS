@@ -32,8 +32,11 @@ setup(
         'nltk==3.6.6',
         'pandas==1.3.5',
         'scikit-learn==1.0.2',
-        'textblob==0.15.3'
-    ],
+        'textblob==0.15.3', 
+        'python-crfsuite==0.9.8',
+        'sklearn-crfsuite==0.3.6',
+        'tabulate==0.8.9'
+    ], # python-crfsuite-0.9.8 sklearn-crfsuite-0.3.6 tabulate-0.8.9
     entry_points={
         'console_scripts': [
             'discourse_analysis_worker_start=workers.discourse_analysis_worker.runtime:main',
