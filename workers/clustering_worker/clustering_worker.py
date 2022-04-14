@@ -71,8 +71,7 @@ class ClusteringWorker(WorkerGitInterfaceable):
 		self.num_topics = 8
 		self.num_words_per_topic = 12
 
-		nltk.download('punkt')
-		
+		nltk.download('all')		
 
 	def clustering_model(self, task, repo_id):
 		#self.logger.info("Clustering Worker init")
@@ -283,7 +282,7 @@ class ClusteringWorker(WorkerGitInterfaceable):
 			#plt.show()
 			filename = labels+"_PCA.png"
 			plt.save_fig(filename)
-			
+
 		get_messages_sql = s.sql.text(
                             """
 				SELECT r.repo_group_id, r.repo_id, r.repo_git, r.repo_name, i.issue_id thread_id,m.msg_text,i.issue_title thread_title,m.msg_id
