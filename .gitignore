@@ -156,7 +156,7 @@ workers/spdx_worker/ex-raw.txt
 workers/spdx_worker/ex.json
 
 # Model files for machine learning
-workers/message_instights_worker/message_models/*.h5
+workers/message_insights_worker/message_models/*.h5
 .h5
 *.h5
 workers/clustering_worker/kmeans_repo_messages

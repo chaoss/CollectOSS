@@ -191,6 +191,7 @@ class WorkerGitInterfaceable(Worker):
         #   information from headers of the response
         # Adjust header keys needed to fetch rate limit information from the API responses
         if platform == 'github':
+            self.logger.debug("in Github block")
             url = "https://api.github.com/users/sgoggins"
             oauthSQL = s.sql.text("""
                 SELECT * FROM worker_oauth WHERE access_token <> '{}' and platform = 'github'
@@ -198,6 +199,7 @@ class WorkerGitInterfaceable(Worker):
             key_name = 'gh_api_key'
             rate_limit_header_key = "X-RateLimit-Remaining"
             rate_limit_reset_header_key = "X-RateLimit-Reset"
+            self.logger.debug('end of github block.')
         elif platform == 'gitlab':
             url = "https://gitlab.com/api/v4/version"
             oauthSQL = s.sql.text("""
@@ -214,7 +216,7 @@ class WorkerGitInterfaceable(Worker):
                 self.headers = {'Authorization': 'token %s' % oauth['access_token']}
             elif platform == 'gitlab':
                 self.headers = {'Authorization': 'Bearer %s' % oauth['access_token']}
-            response = requests.get(url=url, headers=self.headers)
+            response = requests.get(url=url, headers=self.headers, timeout=180)
             self.oauths.append({
                     'oauth_id': oauth['oauth_id'],
                     'access_token': oauth['access_token'],

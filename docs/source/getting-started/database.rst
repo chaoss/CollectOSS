@@ -9,13 +9,13 @@ Make sure to save off the credentials you use when you create the database, you'
 PostgreSQL Installation
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-Before you can install our schema, you will need to make sure you have write access to a PostgreSQL 10 or later database. If you're looking for the fastest possible way to get Augur started, we recommend use our `database container <../docker/docker.html>`_. If you're looking to collect data long term, we recommend following the rest of this tutorial and setting up a persistent PostgreSQL installation.
+Before you can install our schema, you will need to make sure you have **write access** to a PostgreSQL 10 or later database. If you're looking for the fastest possible way to get Augur started, we recommend use our `database container <../docker/docker.html>`_. If you're looking to collect data long-term, we recommend following the rest of this tutorial and setting up a persistent PostgreSQL installation.
 
 .. warning::
 
     If you want to collect data over the long term, we strongly advise against `using a Docker container for your database <https://vsupalov.com/database-in-docker/>`_.
 
-If you're a newcomer to to PostgreSQL, you can follow their excellent instructions `here <https://www.postgresql.org/docs/12/tutorial-install.html>`_ to set it up for your machine of choice. We recommend using ``Postgres.app`` if you're on macOS, but if you're running UNIX or are looking for an alternative to ``Postgres.app`` then pgAdmin is a great open source alternative.
+If you're a newcomer to PostgreSQL, you can follow their excellent instructions `here <https://www.postgresql.org/docs/12/tutorial-install.html>`_ to set it up for your machine of choice. We recommend using ``Postgres.app`` if you're on macOS, but if you're running UNIX or are looking for an alternative to ``Postgres.app`` then pgAdmin is a great open-source alternative.
 
 Creating a Database
 ~~~~~~~~~~~~~~~~~~~~~
