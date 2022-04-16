@@ -10,8 +10,6 @@ fi
 
 target=${1-prod}
 
-python -m textblob.download_corpora
-
 scripts/install/backend.sh $target
 scripts/install/workers.sh $target
 
