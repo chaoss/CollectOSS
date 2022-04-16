@@ -89,7 +89,7 @@ To ensure all your commits are signed, you may choose to [configure git](https:/
 
 ### PostgreSQL guides
 - [PostgreSQL installation guide](https://www.postgresql.org/docs/12/tutorial-install.html)
-- [PostgreSQL official tutotial](https://www.postgresql.org/docs/)
+- [PostgreSQL official tutorial](https://www.postgresql.org/docs/)
 - [PostgreSQL docker official image](https://hub.docker.com/_/postgres)
 - [SQL style guide](https://docs.telemetry.mozilla.org/concepts/sql_style.html)
 
