@@ -54,6 +54,27 @@ To ensure all your commits are signed, you may choose to [configure git](https:/
 
 **Any pull requests containing commits that are not signed off will not be eligible for merge until the commits have been signed off.** 
 
+## Keeping in sync with the Augur Repository
+
+Remeber to sync your fork with the main branch regularly.
+To do this:
+
+Go to github and copy the url of the main Augur repo
+   ```   
+   https://github.com/chaoss/augur.git
+   ```
+   make sure to be in the rootfolder of the project and the branch should be master branch and type
+   ```
+   git remote add upstream https://github.com/chaoss/augur.git
+   ```
+   Now you have your upstream setup in your local machine,whenever you need to make a new branch for making changes make sure your main branch is in sync with the main repository, to do this,make sure to be in the main branch and type
+
+   ```
+   git pull upstream master
+   git push origin master
+   ```
+
+
 ## Community Resources
 
 ### Augur
