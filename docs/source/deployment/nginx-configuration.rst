@@ -159,7 +159,7 @@ This guide will start on a fully configured EC2 Ubuntu 20.04 instance, meaning i
 Let's Encrypt/Certbot
 ~~~~~~~~~~~~~~~~~~~~
 
-The easiest way to get an HTTPS server up is to make use of `Let's Encrypt <https://letsencrypt.org/>`_'s `Certbot <https://certbot.eff.org/>`_ tool. It is an open source tool that is so good it will even alter the nginx configuration for you automatically to enable HTTPS. Following their guide for ``Ubuntu 20.04``, run ``sudo snap install --classic certbot``, ``sudo ln -s /snap/bin/certbot /usr/bin/certbot``, and then ``sudo certbot --nginx``.
+The easiest way to get an HTTPS server up is to make use of `Let's Encrypt <https://letsencrypt.org/>`_'s `Certbot <https://certbot.eff.org/>`_ tool. It is an open source tool that is so good and it will even alter the nginx configuration for you automatically to enable HTTPS. Following their guide for ``Ubuntu 20.04``, run ``sudo snap install --classic certbot``, ``sudo ln -s /snap/bin/certbot /usr/bin/certbot``, and then ``sudo certbot --nginx``.
 
 .. code-block:: bash
 
@@ -197,7 +197,7 @@ The easiest way to get an HTTPS server up is to make use of `Let's Encrypt <http
 Fixing the Backend
 ~~~~~~~~~~~~~~~~~~~
 
-Now our server is configured properly and our frontend is being served over HTTPS, but there's an extra problem: the backend APIs are still being served over HTTP resulting in a ``blocked loading mixed active content`` error. This issue is a deep rooted issue and serveral files need to be modified to accomodate HTTPS.
+Now our server is configured properly and our frontend is being served over HTTPS, but there's an extra problem: the backend APIs are still being served over HTTP resulting in a ``blocked loading mixed active content`` error. This issue is a deep rooted issue and several files need to be modified to accomodate HTTPS.
 
 First, we will start with lines 29, 33, & 207 of ``augur/frontend/src/AugurAPI.ts`` and rewrite the URL to use the HTTPS protocol instead of HTTP. We will then do this again in ``augur/frontend/src/common/index.tx`` & ``augur/frontend/src/compare/index.ts`` where the ``AugurAPI`` constructor was called and passed an HTTP protocol. Next we need to configure gunicorn in the backend to support our SSL certificates, but by default certbot places these in a directory that requires root access. Copy these files by running ``sudo cp /etc/letsencrypt/live/<server name here>/fullchain.pem /home/ubuntu/augur/fullchain.pem`` and ``sudo cp /etc/letsencrypt/live/<server name here>/privkey.pem /home/ubuntu/augur/privkey.pem`` into augur's root directory, then change the user and group permissions with ``sudo chown ubuntu <filename.pem>`` and ``sudo chgrp ubuntu <filename.pem`` for both pem files. Now that the user permissions are set properly, gunicorn should be able to access them but we still need to add them to our gunicorn configuration document in ``augur/application.py``. Change the corresponding code block to look like this:
 
