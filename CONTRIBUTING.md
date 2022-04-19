@@ -2,7 +2,7 @@
 
 We love to pull requests from everyone! We follow the standard Git workflow of `fork -> change -> pull request -> merge -> update fork -> change ... (repeat forever)`. If you are new to open source, we recommend GitHub's excellent guide on "[How to Contribute to Open Source](https://opensource.guide/how-to-contribute/)". In addition, please feel free to reach out to any of the maintainers or other community members if you are struggling; we are here to help you learn!
 
-Before getting started, please make sure you've read the [README](README.md) to get a primer on our project. Augur's documentation can be found at: https://oss-augur.readthedocs.io/en/master
+Before getting started, please make sure you've read the [README](README.md) to get a primer on our project. Augur's documentation can be found at: https://oss-augur.readthedocs.io/en/main/
 
 ## Opening an issue
 If you're experiencing an issue with Augur or have a question you'd like help answering, please feel free to open an [issue](https://github.com/chaoss/augur/issues). To help us prevent duplicates, we kindly ask that you briefly search for your problem or question in our [issues](https://github.com/chaoss/augur/issues) before opening a new one.
@@ -11,38 +11,74 @@ Please note that if you open a bug report and your issue does not follow our tem
 
 ## Contributing to the source code
 
-0. Fork this repo, and then clone it:
+1. Fork this repo, and then clone it:
 ```bash
 $ git clone github.com:your-username/augur.git
 $ cd augur/
-$ git remote add upstream https://github.com/<your username>/augur.git
+$ git remote add upstream https://github.com/chaoss/augur.git
 ```
 
-1. Follow the [development installation instructions](https://oss-augur.readthedocs.io/en/master/development-guide/installation.html).
+2. Follow the [development installation instructions](https://oss-augur.readthedocs.io/en/main/development-guide/installation.html).
 
-2. Create a new branch
+3. Create a new branch
 ```bash
 $ git checkout -b my-new-branch
 ```
-3. Make your change(s).
+4. Make your change(s).
 
-4. Commit the change(s) and push to your fork
+5. Commit the change(s) and push to your fork
 ```bash
 $ git add .
 $ git commit -s -m "This is my first commit"
 $ git push -u origin my-new-branch
 ```
-5. Then, [submit a pull request](https://github.com/chaoss/augur/compare).
+6. Then, [submit a pull request](https://github.com/chaoss/augur/compare).
 
 At this point, you're waiting on us. We like to at least comment on pull requests
 within three business days (and, typically, one business day). Once one of our maintainers has had a chance to review your PR, we will either mark it as "needs review" and provide specific feedback on your changes, or we will go ahead and complete the pull request.
 
-We require all commits to be signed off with a [Developer Certificate of Origin](https://developercertificate.org/) by the [CHAOSS charter](https://chaoss.community/about/charter/#user-content-8-intellectual-property-policy). This can be easily done by using the `-s` flag when using `git commit`. For example: `git commit -s -m "Update README.md"`. **Any pull requests containing commits that are not signed off will not be eligible for merge until the commits have been signed off.** 
+## Signing-off on Commits
+To contribute to this project, you must agree to the [Developer Certificate of Origin](https://developercertificate.org/) by the [CHAOSS charter](https://chaoss.community/about/charter/#user-content-8-intellectual-property-policy) for each commit you make. The DCO is a simple statement that you, as a contributor, have the legal right to make the contribution.
+To signify that you agree to the DCO for contributions, you simply add a line to each of your
+git commit messages:
+
+  ```
+  Signed-off-by: Jane Smith <jane.smith@example.com>
+  ```
+This can be easily done by using the `-s` flag when using `git commit`. For example:
+
+```
+$ git commit -s -m “my commit message w/signoff”
+```
+To ensure all your commits are signed, you may choose to [configure git](https://gist.github.com/xavierfoucrier/c156027fcc6ae23bcee1204199f177da) properly by editing your global ```.gitconfig```
+
+**Any pull requests containing commits that are not signed off will not be eligible for merge until the commits have been signed off.** 
+
+## Keeping in sync with the Augur Repository
+
+Remeber to sync your fork with the main branch regularly.
+To do this:
+
+Go to github and copy the url of the main Augur repo
+   ```   
+   https://github.com/chaoss/augur.git
+   ```
+   make sure to be in the rootfolder of the project and the branch should be master branch and type
+   ```
+   git remote add upstream https://github.com/chaoss/augur.git
+   ```
+   Now you have your upstream setup in your local machine,whenever you need to make a new branch for making changes make sure your main branch is in sync with the main repository, to do this,make sure to be in the main branch and type
+
+   ```
+   git pull upstream master
+   git push origin master
+   ```
+
 
 ## Community Resources
 
 ### Augur
-- [Stable documentation (`master` branch)](https://oss-augur.readthedocs.io/en/master/)
+- [Stable documentation (`main` branch)](https://oss-augur.readthedocs.io/en/main/)
 - [Nightly/developer build documentation (`dev` branch)](https://oss-augur.readthedocs.io/en/dev/) (warning: this is should be considered an unstable branch and should not be used for production)
 - [Live Augur demo](http://zephyr.osshealth.io/)
 
@@ -74,7 +110,7 @@ We require all commits to be signed off with a [Developer Certificate of Origin]
 
 ### PostgreSQL guides
 - [PostgreSQL installation guide](https://www.postgresql.org/docs/12/tutorial-install.html)
-- [PostgreSQL official tutotial](https://www.postgresql.org/docs/)
+- [PostgreSQL official tutorial](https://www.postgresql.org/docs/)
 - [PostgreSQL docker official image](https://hub.docker.com/_/postgres)
 - [SQL style guide](https://docs.telemetry.mozilla.org/concepts/sql_style.html)
 

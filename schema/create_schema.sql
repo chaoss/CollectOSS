@@ -21,6 +21,9 @@
 \i schema/generate/94-schema_update_96.sql
 \i schema/generate/95-schema_update_97.sql
 \i schema/generate/96-schema_update_98.sql
+\i schema/generate/97-schema_update_99.sql
+\i schema/generate/98-schema_update_100.sql
+
 
 -- prior update scripts incorporated into 
 -- augur.sql file for release v0.21.1

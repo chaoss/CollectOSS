@@ -13,11 +13,11 @@ def read(filename):
 
 setup(
     name="discourse_analysis_worker",
-    version="0.0.0",
+    version="0.1.0",
     url="https://github.com/chaoss/augur",
     license='MIT',
     author="Augur Team",
-    author_email="",
+    author_email="s@goggins.com",
     description="Worker to classify messages into discourse acts",
     packages=find_packages(),
     install_requires=[
@@ -32,8 +32,11 @@ setup(
         'nltk==3.6.6',
         'pandas==1.3.5',
         'scikit-learn==1.0.2',
-        'textblob==0.15.3'
-    ],
+        'textblob==0.15.3', 
+        'python-crfsuite==0.9.8',
+        'sklearn-crfsuite==0.3.6',
+        'tabulate==0.8.9'
+    ], # python-crfsuite-0.9.8 sklearn-crfsuite-0.3.6 tabulate-0.8.9
     entry_points={
         'console_scripts': [
             'discourse_analysis_worker_start=workers.discourse_analysis_worker.runtime:main',

@@ -4,7 +4,7 @@ Getting Started
 
 This section of the documentation is an entry-level walkthrough of the Augur project. By the end, you'll hopefully have a fully functioning local installation of Augur ready to collect data.
 
-If you want to get started as fast as possible, we have `Docker images <../docker/toc.html>`_; however, if you're looking to use Augur for long-term data collection or if you want to install for development, you'll need to follow this walkthrough.
+If you want to get started as fast as possible, we have `Docker images <../docker/toc.html>`_; however, if you're looking to use Augur for long-term data collection or if you want to install it for development, you'll need to follow this walkthrough.
 
 .. note::
 
@@ -12,12 +12,12 @@ If you want to get started as fast as possible, we have `Docker images <../docke
 
 To install from source, we'll need to do a few things:
 
-0. Setup a PostgreSQL instance to store the data collected by Augur
-1. Install and configure Augur's application server
-2. Install and configure Augur's data collection workers
+1. Setup a PostgreSQL instance to store the data collected by Augur
+2. Install and configure Augur's application server
+3. Install and configure Augur's data collection workers
 
-The next section will start with getting a database setup, and then go from there.
-You can also find the table of contents for the whole walkthrough below.
+The next section will start with a database setup, and then you can continue with the following steps given below.
+
 Happy hacking!
 
 .. toctree::

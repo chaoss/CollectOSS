@@ -1,4 +1,4 @@
-# SSL Configuration Notes: 
+# SSL Configuration Notes:
 
 
 
