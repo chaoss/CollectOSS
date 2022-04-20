@@ -17,7 +17,7 @@ Augur provides several Docker images designed to get you started with our softwa
 
 If you're not familiar with Docker, their `starting guide <https://www.docker.com/resources/what-container>`_ is a great resource.
 
-The rest of this section of the documentation assumes you have a working installation of Docker as well as some familiarity with basic Docker concepts and a few basic Docker and Docker Compose commands.
+The rest of this section of the documentation assumes you have a working installation of Docker as well as some familiarity with basic Docker concepts and a few basic Docker and Docker,Compose commands.
 
 If you are less familiar with Docker, or experience issues you cannot resolve attempting our "quick start", please follow the instructions in this section, and the next few pages, to set up your environment.
 
@@ -27,7 +27,7 @@ Before you get started with Docker, you'll need to set up a PostgreSQL instance 
 
 .. note::
 
-  Make sure your database is configured to listen on all addresses in order to work with the containers. These settings can be edited in your ``postgresql.conf``. Additionally edit the bottom section of your ``pg_hba.conf`` file with:
+  Make sure your database is configured to listen to all addresses to work with the containers. These settings can be edited in your ``postgresql.conf``. Additionally, edit the bottom section of your ``pg_hba.conf`` file with:
   
 .. code-block:: 
 
@@ -59,7 +59,7 @@ First, you'll need to clone the repository. In your terminal, run:
 
 Now that you've got your external database credentials (if you are using one) and your access token, we'll need to use to docker setup script or set environment variables manually.
 
-Your database credentials and other environment variables used at runtime are stored in a file called ``docker_env.txt``. This file determines the database credentials, the github API key, and whether or not to build the database schema.
+Your database credentials and other environment variables used at runtime are stored in a file called ``docker_env.txt``. This file determines the database credentials, the GitHub API key, and whether or not to build the database schema.
 
 If you do not want to use the script (not recommended) you can provide your own ``docker_env.txt`` to pull from. The file should have the below format and set all the variables to some value.
 
@@ -98,7 +98,7 @@ First, start the script in the augur directory using ``sudo ./docker-setup.sh``
 Answer the prompt to select the type of deployment to use:
 
 1. Deploy the backend using docker connected to a non-docker database.
-    This option lets you deploy the backend using your own database whether local or remote.
+    This option lets you deploy the backend using your database whether local or remote.
 2. Deploy the backend and database together in docker containers.
     This option lets you deploy the backend and database together as a pure docker deployment starting from an empty database.
 3. Deploy the backend, and database together in docker containers using premade test data
@@ -116,9 +116,9 @@ Answer yes when the script prompts you for your database credentials if you did 
 
 The script will then prompt you to ask whether or not to build a schema on the database. The default option is "no," only select yes if the database is without an existing schema.
 
-If the containers deploy, the console output will switch to a monitor of state of the twin containers, with a monitor of both of their console output below.
+If the containers deploy, the console output will switch to a monitor of  the state of the twin containers, with a monitor of both of their console output below.
 
-A keyboard inturrupt will stop the containers and the script gives you the option of saving the console output to a log file.
+A keyboard interrupt will stop the containers and the script gives you the option of saving the console output to a log file.
 
 Deploy the backend and database together in docker containers. With and without test data
 ----------------------------------------------------------------------------------------------------
