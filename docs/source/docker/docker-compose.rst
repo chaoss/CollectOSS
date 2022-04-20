@@ -19,7 +19,7 @@ The default ports for each service are\:
         TCP/IP connections on port 5432?
   
 
-with the script (recommended)
+Docker Compose with the script (recommended)
 ============================================
 This section details how to use Augur's docker-setup script to get a docker-compose deployment up and running as fast as possible.
 
