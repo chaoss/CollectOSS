@@ -1,4 +1,4 @@
-# Machine Learning Queries 
+# Machine Learning Queries
 
 ```sql
 -- clustering
