@@ -63,15 +63,13 @@ Installing Ubuntu in VirtualBox
 .. image:: development-guide/images/Af.png
   :width: 600  
 - Select the keyboard layout you desire.
-.. image:: development-guide/images/Ae.png
-  :width: 600  
 - Select installation type as "Erase disk and install Ubuntu".
 .. image:: development-guide/images/Ad.png
   :width: 600  
 - Enter your details and set a password.
 .. image:: development-guide/images/Ac.png
   :width: 600  
-  .. image:: development-guide/images/Ab.png
+.. image:: development-guide/images/Ab.png
   :width: 600  
 - Your Ubuntu will be ready to use in few minutes.
 .. image:: development-guide/images/Aa.png
