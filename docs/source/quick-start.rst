@@ -21,6 +21,7 @@ PostgreSQL Installation
 
 .. code-block:: bash
 
+	$ sudo service postgresql start
     $ sudo su -
     $ su - postgres
     $ psql
