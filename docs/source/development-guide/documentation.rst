@@ -39,7 +39,7 @@ Or, you can use the shorcut which does exactly this:
     $ make docs-view
 
 
-After opening it once, Make your changes in the regular docs/source folder and just run ``make docs`` Everytime you make any change and refresh the browser
+After opening it once, Make your changes in the regular ``docs/source`` folder and just run ``make docs`` Everytime you make any change and refresh the browser
 
 .. code-block:: bash
 
