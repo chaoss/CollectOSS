@@ -76,7 +76,7 @@ Python Virtual Environment Configuration
 	python -m pip install --upgrade pip
 	make install-dev {Follow prompts. You will need database credentials, a file location for cloned repositories, a GitHub Token, and a GitLab token.}
 
-- Seven sample repositories are loaded by default. You can delete them if you want to use your own repositories by deleting the records from the `repo` table first, then deleting the records from the `repo_groups` table. 
+- Seven sample repositories are loaded by default. You can delete them if you want to use your own repositories by deleting the records from the ``repo`` table first, then deleting the records from the ``repo_groups`` table. 
 
 .. code-block:: bash
 
@@ -94,4 +94,4 @@ The commands for loading repos are:
 	augur db add-repo-groups
 	augur db add-repos
 
-We recommend that you test your instance using 50 or fewer repositories before undertaking a more substantial data collection. When you do take on a more substantial collection, you can "collect data faster" by adding additional tokens to the `worker_oauth` table in the `augur_operations` schema, and increasing the number of workers for the pull request and github worker blocks in the `augur.config.json` file that is generated at install. 
+We recommend that you test your instance using 50 or fewer repositories before undertaking a more substantial data collection. When you do take on a more substantial collection, you can "collect data faster" by adding additional tokens to the ``worker_oauth`` table in the ``augur_operations`` schema, and increasing the number of workers for the pull request and github worker blocks in the ``augur.config.json`` file that is generated at install. 
