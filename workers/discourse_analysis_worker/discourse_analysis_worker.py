@@ -51,8 +51,8 @@ class DiscourseAnalysisWorker(WorkerGitInterfaceable):
 
 		# Define data collection info
 		self.tool_source = 'Discourse Worker'
-		self.tool_version = '0.0.0'
-		self.data_source = 'Non-existent API'
+		self.tool_version = '0.1.0'
+		self.data_source = 'Analysis of Issue/PR Messages'
 		
 		#define discourse labeling specific parameters
 		

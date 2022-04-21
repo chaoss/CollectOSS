@@ -2,6 +2,7 @@ import logging, os, sys, time, requests, json
 from workers.worker_git_integration import WorkerGitInterfaceable
 from datetime import datetime
 from multiprocessing import Process, Queue
+import traceback
 import pandas as pd
 import sqlalchemy as s
 from sqlalchemy.schema import Sequence
@@ -49,7 +50,7 @@ class ClusteringWorker(WorkerGitInterfaceable):
 
 		# Define data collection info
 		self.tool_source = 'Clustering Worker'
-		self.tool_version = '0.1.0'
+		self.tool_version = '0.2.0'
 		self.data_source = 'Augur Collected Messages'
 		
 		#define clustering specific parameters
@@ -67,11 +68,10 @@ class ClusteringWorker(WorkerGitInterfaceable):
 		self.clustering_by_mechanism = False
 		
 		#define topic modeling specific parameters
-		self.num_topics = 14
+		self.num_topics = 8
 		self.num_words_per_topic = 12
 
-		nltk.download('punkt')
-		
+		nltk.download('all')		
 
 	def clustering_model(self, task, repo_id):
 		#self.logger.info("Clustering Worker init")
@@ -137,12 +137,21 @@ class ClusteringWorker(WorkerGitInterfaceable):
 			self.logger.info("clustering model not trained. Training the model.........")
 			self.train_model()
 		else:
-			self.logger.info("using pre-trained clustering model....")	
+			model_stats=os.stat(MODEL_FILE_NAME)
+			model_age=(time.time()-model_stats.st_mtime)
+			#if the model is more than month old, retrain it. 
+			self.logger.debug(f'model age is: {model_age}')
+			if model_age > 2000000: 
+				self.train_model()
+			else: 
+				self.logger.info("using pre-trained clustering model....")	
 		
 		with open("kmeans_repo_messages", 'rb') as model_file:
 			kmeans_model = pickle.load(model_file)
 		
 		msg_df = msg_df_cur_repo.groupby('repo_id')['msg_text'].apply(','.join).reset_index()
+
+		self.logger.debug(f'messages being clustered: {msg_df}')
 		
 		if msg_df.empty:
 			self.logger.info("not enough data for prediction")
@@ -174,35 +183,106 @@ class ClusteringWorker(WorkerGitInterfaceable):
 				  }
 		result = self.db.execute(self.repo_cluster_messages_table.insert().values(record))
 		logging.info("Primary key inserted into the repo_cluster_messages table: {}".format(result.inserted_primary_key))
-		
-		lda_model = pickle.load(open("lda_model", "rb"))
-		
-		vocabulary = pickle.load(open("vocabulary_count", "rb"))
-		count_vectorizer = CountVectorizer(max_df=self.max_df, max_features=self.max_features, min_df=self.min_df,stop_words="english", tokenizer=self.preprocess_and_tokenize, vocabulary=vocabulary)
-		count_transformer = count_vectorizer.fit(msg_df['msg_text']) #might be fitting twice, might have been used in training
-		
-		#save new vocabulary ??
-		count_matrix_cur_repo = count_transformer.transform(msg_df['msg_text'])
-		prediction = lda_model.transform(count_matrix_cur_repo)
-		
-		for i, prob_vector in enumerate(prediction):
-			#repo_id = msg_df.loc[i]['repo_id']
-			for i, prob in enumerate(prob_vector):
-				record = {
-				  'repo_id': int(repo_id),
-				  'topic_id': i+1,
-				  'topic_prob' : prob,
-				  'tool_source' : self.tool_source,
-				  'tool_version' : self.tool_version,
-				  'data_source' : self.data_source
-				  }
-				result = self.db.execute(self.repo_topic_table.insert().values(record))
+		try: 
+			self.logger.debug('pickling')
+			lda_model = pickle.load(open("lda_model", "rb"))
+			self.logger.debug('loading vocab')		
+			vocabulary = pickle.load(open("vocabulary_count", "rb"))
+			self.logger.debug('count vectorizing vocab')		
+			count_vectorizer = CountVectorizer(max_df=self.max_df, max_features=self.max_features, min_df=self.min_df,stop_words="english", tokenizer=self.preprocess_and_tokenize, vocabulary=vocabulary)
+			self.logger.debug('count transforming vocab')		
+			count_transformer = count_vectorizer.fit(msg_df['msg_text']) #might be fitting twice, might have been used in training
+			
+			#save new vocabulary ??
+			self.logger.debug('count matric cur repo vocab')		
+			count_matrix_cur_repo = count_transformer.transform(msg_df['msg_text'])
+			self.logger.debug('prediction vocab')		
+			prediction = lda_model.transform(count_matrix_cur_repo)
+
+			self.logger.debug('for loop for vocab')		
+			for i, prob_vector in enumerate(prediction):
+				#repo_id = msg_df.loc[i]['repo_id']
+				for i, prob in enumerate(prob_vector):
+					record = {
+					  'repo_id': int(repo_id),
+					  'topic_id': i+1,
+					  'topic_prob' : prob,
+					  'tool_source' : self.tool_source,
+					  'tool_version' : self.tool_version,
+					  'data_source' : self.data_source
+					  }
+					result = self.db.execute(self.repo_topic_table.insert().values(record))
+		except Exception as e: 
+			self.logger.debug(f'error is: {e}.')
+			stacker = traceback.format_exc()
+			self.logger.debug(f"\n\n{stacker}\n\n")
+			pass 
 				
 		self.register_task_completion(task, repo_id, 'clustering')
+
+
+	def get_tf_idf_matrix(self,text_list, max_df, max_features, min_df, ngram_range):
 	
-	
-	
+		
+		
+		tfidf_vectorizer = TfidfVectorizer(max_df = max_df, max_features=max_features,
+                                      min_df=min_df, stop_words='english',
+                                      use_idf=True, tokenizer=self.preprocess_and_tokenize, ngram_range=ngram_range)
+		tfidf_transformer = tfidf_vectorizer.fit(text_list)
+		tfidf_matrix = tfidf_transformer.transform(text_list)
+		pickle.dump(tfidf_transformer.vocabulary_, open("vocabulary",'wb'))
+		return tfidf_matrix, tfidf_vectorizer.get_feature_names()
+		
+	def cluster_and_label(self,feature_matrix, num_clusters):
+		kmeans_model = KMeans(n_clusters=num_clusters)
+		kmeans_model.fit(feature_matrix)
+		pickle.dump(kmeans_model, open("kmeans_repo_messages",'wb'))
+		return kmeans_model.labels_.tolist()
+		
+	def count_func(self,msg):
+		blobed = TextBlob(msg)
+		counts = Counter(tag for word,tag in blobed.tags if tag not in ['NNPS','RBS','SYM','WP$','LS','POS','RP','RBR','JJS','UH','FW','PDT'])
+		total = sum(counts.values())
+		normalized_count = {key: value/total for key,value in counts.items()}
+		return normalized_count
+		
+	def preprocess_and_tokenize(self,text):
+			text= text.lower()
+			text =  re.sub(r'[@]\w+','',text)
+			text =  re.sub(r'[^A-Za-z]+', ' ', text)
+    
+			tokens = nltk.word_tokenize(text)
+			tokens = [token for token in tokens if len(token)>1]
+			stems = [stemmer.stem(t) for t in tokens]
+			return stems
+
 	def train_model(self):
+		def visualize_labels_PCA(self,features, labels, annotations, num_components, title):
+			labels_color_map = {-1 : "red"}
+			for label in labels:
+				labels_color_map[label] = [list([x/255.0 for x in list(np.random.choice(range(256), size=3))])]
+			low_dim_data = PCA(n_components=num_components).fit_transform(features)
+		
+			fig, ax = plt.subplots(figsize=(20,10))
+		
+			for i, data in enumerate(low_dim_data):
+				pca_comp_1, pca_comp_2 = data
+				color = labels_color_map[labels[i]]
+				ax.scatter(pca_comp_1, pca_comp_2, c=color,label=labels[i])
+				#ax.annotate(annotations[i],(pca_comp_1, pca_comp_2))
+				
+			
+			handles,labels = ax.get_legend_handles_labels()
+			handles_label_dict = OrderedDict(zip(labels, handles))
+			ax.legend(handles_label_dict.values(), handles_label_dict.keys() )
+			
+			plt.title(title)
+			plt.xlabel("PCA Component 1")
+			plt.ylabel("PCA Component 2")
+			#plt.show()
+			filename = labels+"_PCA.png"
+			plt.save_fig(filename)
+
 		get_messages_sql = s.sql.text(
                             """
 				SELECT r.repo_group_id, r.repo_id, r.repo_git, r.repo_name, i.issue_id thread_id,m.msg_text,i.issue_title thread_title,m.msg_id
@@ -236,12 +316,7 @@ class ClusteringWorker(WorkerGitInterfaceable):
 		self.logger.info(msg_df.head())
 		
 		tfidf_matrix, features = self.get_tf_idf_matrix(msg_df['msg_text'], self.max_df, self.max_features, self.min_df, self.ngram_range)
-		msg_df['cluster'] = self.cluster_and_label(tfidf_matrix, self.num_clusters)
-		
-		
-		
-		#visualize_labels_PCA(tfidf_matrix.todense(), msg_df['cluster'], msg_df['repo_id'], 2, "MIN_DF={} and MAX_DF={} and NGRAM_RANGE={}".format(MIN_DF, MAX_DF, NGRAM_RANGE))
-		
+		msg_df['cluster'] = self.cluster_and_label(tfidf_matrix, self.num_clusters)		
 		
 		#LDA - Topic Modeling
 		count_vectorizer = CountVectorizer(max_df=self.max_df, max_features=self.max_features, min_df=self.min_df,stop_words="english", tokenizer=self.preprocess_and_tokenize)
@@ -310,83 +385,43 @@ class ClusteringWorker(WorkerGitInterfaceable):
 		
 		#save the model and predict on each repo separately
 			
-		
+		self.logger.debug(f'entering prediction in model training, count matric is {count_matrix}')
 		prediction = lda_model.transform(count_matrix)
 
 		topic_model_dict_list = []
+		self.logger.debug('entering for loop in model training. ')
 		for i, prob_vector in enumerate(prediction):
 			topic_model_dict = {}
 			topic_model_dict['repo_id'] = msg_df.loc[i]['repo_id']
 			for i, prob in enumerate(prob_vector):
 				topic_model_dict["topic"+str(i+1)] = prob
 			topic_model_dict_list.append(topic_model_dict)
+		self.logger.debug('creating topic model data frame.')
 		topic_model_df = pd.DataFrame(topic_model_dict_list)
 
 		result_content_df = topic_model_df.set_index('repo_id').join(message_desc_df.set_index('repo_id')).join(msg_df.set_index('repo_id'))
 		result_content_df = result_content_df.reset_index()
 		self.logger.info(result_content_df)
+		try: 
+			POS_count_dict = msg_df.apply(lambda row : self.count_func(row['msg_text']), axis = 1)
+			self.logger.debug('POS_count_dict has no exceptions.')
+		except Exception as e: 
+			self.logger.debug(f'POS_count_dict error is: {e}.')
+			stacker = traceback.format_exc()
+			self.logger.debug(f"\n\n{stacker}\n\n")
+			pass 
+		try: 
+			msg_df_aug = pd.concat([msg_df,pd.DataFrame.from_records(POS_count_dict)], axis=1)
+			self.logger.info(f'msg_df_aug worked: {msg_df_aug}')
+		except Exception as e: 
+			self.logger.debug(f'msg_df_aug error is: {e}.')
+			stacker = traceback.format_exc()
+			self.logger.debug(f"\n\n{stacker}\n\n")
+			pass 
+
+		visualize_labels_PCA(tfidf_matrix.todense(), msg_df['cluster'], msg_df['repo_id'], 2, "tex!")
 		
-		POS_count_dict = msg_df.apply(lambda row : self.count_func(row['msg_text']), axis = 1)
-		msg_df_aug = pd.concat([msg_df,pd.DataFrame.from_records(POS_count_dict)], axis=1)
-		self.logger.info(msg_df_aug)
-		
-	def get_tf_idf_matrix(self,text_list, max_df, max_features, min_df, ngram_range):
-	
-		
-		
-		tfidf_vectorizer = TfidfVectorizer(max_df = max_df, max_features=max_features,
-                                      min_df=min_df, stop_words='english',
-                                      use_idf=True, tokenizer=self.preprocess_and_tokenize, ngram_range=ngram_range)
-		tfidf_transformer = tfidf_vectorizer.fit(text_list)
-		tfidf_matrix = tfidf_transformer.transform(text_list)
-		pickle.dump(tfidf_transformer.vocabulary_, open("vocabulary",'wb'))
-		return tfidf_matrix, tfidf_vectorizer.get_feature_names()
-		
-	def cluster_and_label(self,feature_matrix, num_clusters):
-		kmeans_model = KMeans(n_clusters=num_clusters)
-		kmeans_model.fit(feature_matrix)
-		pickle.dump(kmeans_model, open("kmeans_repo_messages",'wb'))
-		return kmeans_model.labels_.tolist()
-		
-	def visualize_labels_PCA(self,features, labels, annotations, num_components, title):
-    
-		labels_color_map = {-1 : "red"}
-		for label in labels:
-			labels_color_map[label] = [list([x/255.0 for x in list(np.random.choice(range(256), size=3))])]
-		low_dim_data = PCA(n_components=num_components).fit_transform(features)
-	
-		fig, ax = plt.subplots(figsize=(20,10))
-	
-		for i, data in enumerate(low_dim_data):
-			pca_comp_1, pca_comp_2 = data
-			color = labels_color_map[labels[i]]
-			ax.scatter(pca_comp_1, pca_comp_2, c=color,label=labels[i])
-			#ax.annotate(annotations[i],(pca_comp_1, pca_comp_2))
-			
-		
-		handles,labels = ax.get_legend_handles_labels()
-		handles_label_dict = OrderedDict(zip(labels, handles))
-		ax.legend(handles_label_dict.values(), handles_label_dict.keys() )
-		
-		plt.title(title)
-		plt.xlabel("PCA Component 1")
-		plt.ylabel("PCA Component 2")
-		plt.show()
-		
-	def count_func(self,msg):
-		blobed = TextBlob(msg)
-		counts = Counter(tag for word,tag in blobed.tags if tag not in ['NNPS','RBS','SYM','WP$','LS','POS','RP','RBR','JJS','UH','FW','PDT'])
-		total = sum(counts.values())
-		normalized_count = {key: value/total for key,value in counts.items()}
-		return normalized_count
-		
-	def preprocess_and_tokenize(self,text):
-			text= text.lower()
-			text =  re.sub(r'[@]\w+','',text)
-			text =  re.sub(r'[^A-Za-z]+', ' ', text)
-    
-			tokens = nltk.word_tokenize(text)
-			tokens = [token for token in tokens if len(token)>1]
-			stems = [stemmer.stem(t) for t in tokens]
-			return stems
+		#visualize_labels_PCA(tfidf_matrix.todense(), msg_df['cluster'], msg_df['repo_id'], 2, "MIN_DF={} and MAX_DF={} and NGRAM_RANGE={}".format(MIN_DF, MAX_DF, NGRAM_RANGE))
+
+
 

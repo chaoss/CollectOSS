@@ -6,6 +6,7 @@ import logging
 import os
 import sys
 import warnings
+import traceback
 from multiprocessing import Process, Queue
 from workers.worker_git_integration import WorkerGitInterfaceable
 
@@ -50,17 +51,17 @@ class MessageInsightsWorker(WorkerGitInterfaceable):
 
         # Define data collection info
         self.tool_source = 'Message Insights Worker'
-        self.tool_version = '0.2.0'
+        self.tool_version = '0.3.1'
         self.data_source = 'Non-existent API'
 
         self.insight_days = self.config['insight_days']
         
         # Abs paths
         self.models_dir = os.path.join(ROOT_AUGUR_DIRECTORY, "workers", "message_insights_worker", self.config['models_dir'])
-        self.full_train = False
-
+        self.full_train = True
+        now = datetime.datetime.utcnow()
         # To identify which run of worker inserted the data
-        self.run_id = 100
+        self.run_id = int(now.timestamp())+5
         
     def message_analysis_model(self, task, repo_id):
 
@@ -87,7 +88,7 @@ class MessageInsightsWorker(WorkerGitInterfaceable):
             SELECT exists (SELECT 1 FROM augur_data.message_analysis_summary WHERE repo_id = :repo_id LIMIT 1)""")
         
         df_rep = pd.read_sql_query(repo_exists_SQL, self.db, params={'repo_id': repo_id})
-        self.full_train = not(df_rep['exists'].iloc[0])
+        # self.full_train = not(df_rep['exists'].iloc[0])
         self.logger.info(f'Full Train: {self.full_train}')
 
         # Collection and insertion of data happens here
@@ -114,7 +115,9 @@ class MessageInsightsWorker(WorkerGitInterfaceable):
             df_past = pd.read_sql_query(past_SQL, self.db, params={'repo_id': repo_id})
             df_past['msg_timestamp'] = pd.to_datetime(df_past['msg_timestamp'])
             df_past = df_past.sort_values(by='msg_timestamp')
+            self.logger.debug(f'{df_past} is df_past')
             self.begin_date = df_past['msg_timestamp'].iloc[-1]
+            self.logger.debug(f'{self.begin_date}')
 
             # Assign new run_id for every run
             self.run_id = self.get_max_id('message_analysis', 'worker_run_id')
