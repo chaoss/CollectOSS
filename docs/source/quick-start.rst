@@ -15,11 +15,11 @@ Setting up VirtualBox
 - Accept the warning for network Interfaces.
 - Give it all the permissions it wants.
 - Open the VirtualBox by clicking on the windows desktop icon.
-- Click on machine and then on new.
+- Click on "machine" and then on "new".
 - Name the machine as you wish. In type select "Linux" and in version select "Ubuntu (64-bits)"
 - Allot it the memory size you want , then click on NEXT.
 - Choose "Create a virtual hard disk now" and click on CREATE.
-- In hard disk file type choose VDI(VirtualBox Disk Image) and click on next.
+- In hard disk file type choose VDI(VirtualBox Disk Image) and click on NEXT.
 - In storage on physical hard disk choose "Dynamically allocated" and click on NEXT.
 - Continue with the default options by clicking on next. Your machine will be created.
 - Start the machine.
@@ -31,9 +31,13 @@ Ubuntu download
 
 Installing Ubuntu in VirtualBox
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-- Open the machine which we have created.
+- Open the machine which we have created earlier.
 - Now in the pop-up click on the disk image where you have downloaded your ubuntu and click on finish.
 - In the welcome window select Install Ubuntu and move forward with the default options.
+- Select the keyboard layout you desire.
+- Select installation type as "Erase disk and install Ubuntu".
+- Enter your details and set a password.
+- Your Ubuntu will be ready to use in few minutes.
 
 
 PostgreSQL Installation
