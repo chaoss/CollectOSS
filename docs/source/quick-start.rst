@@ -6,7 +6,7 @@ Get going fast! Intended for folks familiar with setting up DevOps environments.
 
 Setting up VirtualBox
 ~~~~~~~~~~~~~~~~~~~~~~~
-- In the search bar type "Download VirtualBox for windows".
+- Type "Download VirtualBox for windows" in the search bar.
 - Click on the websight by Oracle.
 .. image:: development-guide/images/A1.png
   :width: 600  
@@ -50,7 +50,7 @@ Setting up VirtualBox
 
 Ubuntu download 
 ~~~~~~~~~~~~~~~~~
-- In the search bar type "Download ubuntu".
+- Type "Download ubuntu" in the search bar.
 - Click on download (Prefer LTS version). Ubuntu will be downloaded.
 .. image:: development-guide/images/A14.png
   :width: 600  
@@ -58,7 +58,7 @@ Ubuntu download
 Installing Ubuntu in VirtualBox
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 - Open the machine which we have created earlier.
-- Now in the pop-up click on the disk image where you have downloaded your ubuntu and click on finish.
+- Now in the pop-up, click on the disk image where you have downloaded your ubuntu and click on finish.
 - In the welcome window select Install Ubuntu and move forward with the default options.
 .. image:: development-guide/images/Af.png
   :width: 600  
