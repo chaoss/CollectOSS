@@ -11,7 +11,7 @@ we update with each release. The following sections briefly outline how to contr
 Library and Usage Documentation
 --------------------------------
 
-The library documenation is written using `reStructuredText <https://docutils.sourceforge.io/rst.html>`_ for the raw markdown, and then built into web pages using `Sphinx <http://www.sphinx-doc.org/en/master/index.html>`_. 
+The library documentation is written using `reStructuredText <https://docutils.sourceforge.io/rst.html>`_ for the raw markdown and then built into web pages using `Sphinx <http://www.sphinx-doc.org/en/master/index.html>`_. 
 
 We'll avoid going over reStructuredText in detail here, 
 but `here <https://docutils.sourceforge.io/docs/user/rst/quickref.html>`__ is a good reference document.
@@ -21,6 +21,7 @@ most commonly used directives.
 
 Building
 ~~~~~~~~
+
 To see your changes and make sure everything rendered correctly, First activate the python virtual enivroment and run ``make docs`` in the root 
 ``augur/`` directory, and then open ``docs/build/html/index.html`` in your web browser to view it. 
 
@@ -31,7 +32,7 @@ To see your changes and make sure everything rendered correctly, First activate 
     $ source $HOME/.virtualenvs/augur_env/bin/activate
     $ make docs
 
-Or, you can use the shorcut which does exactly this:
+Or, you can use the shortcut which does exactly this:
 
 .. code-block:: bash
 

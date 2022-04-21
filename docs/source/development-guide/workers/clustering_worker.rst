@@ -1,15 +1,15 @@
 Clustering Worker
 ==========================
 
-The worker analyzes the comments in issues and pull requests, and clusters the repositories based on contents of those messages. 
+The worker analyzes the comments in issues and pull requests, and clusters the repositories based on contents of those messages.
 The worker also performs topic modeling using Latent Dirichlet allocation
 
 
 Clustering of text documents
 ----------------------------------------------------
 
-Clustering is a type of unsupervised machine learning technique that involves grouping together similar data points. In case of textual data, it invloves grouping together semantically similar documents. 
-The document is a collection of sentences. In our case, document represents the collection of comments across isssues and pull requests across a particular repository. Since, clustering algorithm works with numerical features, we need to first convert documents into vector representation.
+Clustering is a type of unsupervised machine learning technique that involves grouping together similar data points. In case of textual data, it involves grouping together semantically similar documents.
+The document is a collection of sentences. In our case, document represents the collection of comments across issues and pull requests across a particular repository. Since, clustering algorithm works with numerical features, we need to first convert documents into vector representation.
 
 Worker Implementation
 ---------------------
@@ -60,11 +60,11 @@ Further, in workers configuration block, we need to define port, switch and numb
             "num_clusters" : 4
     }
 
-Additional Worker Parameters in `augur.config.json`: 
+Additional Worker Parameters in `augur.config.json`:
 ------------------------------------------------------
 
 In addition to standard worker parameters, clustering worker requires some worker-specific parameters which are described below:
-  
+
  - **max_df** :sets the threshold which filters out terms that have higher document frequency (corpus specific stop words)
  - **min_df** : filters out uncommon words
  - **max_features** - defines maximum number of features to be used in calculating tfidf matrix
