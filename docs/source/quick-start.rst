@@ -3,6 +3,38 @@ Quickstart
 
 Get going fast! Intended for folks familiar with setting up DevOps environments. These instructions were tested using Ubuntu 20.04. Ubuntu 18x is no longer supported because the versions of Python3 available on it are not current. 
 
+
+Setting up VirtualBox
+~~~~~~~~~~~~~~~~~~~~~~~
+- In the search bar type "Download VirtualBox for windows".
+.. image:: 
+- Click on the websight by Oracle.
+- Download VirtualBox for "windows hosts".
+- Click on the downloaded VirtualBox and continue clicking NEXT with the default options.
+- Accept the warning for network Interfaces.
+- Give it all the permissions it wants.
+- Open the VirtualBox by clicking on the windows desktop icon.
+- Click on machine and then on new.
+- Name the machine as you wish. In type select "Linux" and in version select "Ubuntu (64-bits)"
+- Allot it the memory size you want , then click on NEXT.
+- Choose "Create a virtual hard disk now" and click on CREATE.
+- In hard disk file type choose VDI(VirtualBox Disk Image) and click on next.
+- In storage on physical hard disk choose "Dynamically allocated" and click on NEXT.
+- Continue with the default options by clicking on next. Your machine will be created.
+- Start the machine.
+
+Ubuntu download 
+~~~~~~~~~~~~~~~~~
+- In the search bar type "Download ubuntu".
+- Click on download (Prefer LTS version). Ubuntu will be downloaded.
+
+Installing Ubuntu in VirtualBox
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- Open the machine which we have created.
+- Now in the pop-up click on the disk image where you have downloaded your ubuntu and click on finish.
+- In the welcome window select Install Ubuntu and move forward with the default options.
+
+
 PostgreSQL Installation
 ~~~~~~~~~~~~~~~~~~~~~~~~
 - Gain access to an Ubuntu 18.04 or later environment and install PostgreSQL. Ubuntu 20.04 is recommended because its long-term support (LTS) window is longer.
