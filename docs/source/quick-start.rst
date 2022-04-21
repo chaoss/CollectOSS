@@ -7,9 +7,9 @@ Get going fast! Intended for folks familiar with setting up DevOps environments.
 Setting up VirtualBox
 ~~~~~~~~~~~~~~~~~~~~~~~
 - In the search bar type "Download VirtualBox for windows".
-.. image:: development-guide/images/augur-architecture.png 
-  :width: 500  
 - Click on the websight by Oracle.
+.. image:: development-guide/images/A1.png
+  :width: 600  
 - Download VirtualBox for "windows hosts".
 - Click on the downloaded VirtualBox and continue clicking NEXT with the default options.
 - Accept the warning for network Interfaces.
