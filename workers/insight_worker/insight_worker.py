@@ -676,10 +676,8 @@ class InsightWorker(WorkerGitInterfaceable):
                 "cm_defined": True if metric['is_defined'] == 'true' else False,
                 "cm_api_endpoint_repo": metric['endpoint'],
                 "cm_api_endpoint_rg": None,
-                // cm info key is being used twice
                 "cm_info": metric['display_name'],
                 "cm_working_group": metric['group'],
-                // 
                 "cm_info": metric['tag'],
                 "tool_source": self.tool_source,
                 "tool_version": self.tool_version,
