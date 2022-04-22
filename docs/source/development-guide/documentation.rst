@@ -21,13 +21,16 @@ most commonly used directives.
 
 Building
 ~~~~~~~~
-To see your changes and make sure everything is rendered correctly, run ``make docs`` in the root 
+
+To see your changes and make sure everything rendered correctly, First activate the python virtual enivroment and run ``make docs`` in the root 
 ``augur/`` directory, and then open ``docs/build/html/index.html`` in your web browser to view it. 
 
 .. code-block:: bash
-
+     
+    $ cd augur 
+    $ python3 -m venv $HOME/.virtualenvs/augur_env
+    $ source $HOME/.virtualenvs/augur_env/bin/activate
     $ make docs
-    $ open docs/build/html/index.html
 
 Or, you can use the shortcut which does exactly this:
 
@@ -37,7 +40,7 @@ Or, you can use the shortcut which does exactly this:
     $ make docs-view
 
 
-After opening it once, just run ``make docs`` and refresh the page in your browser to see the changes:
+After opening it once, Make your changes in the regular ``docs/source`` folder and just run ``make docs`` Everytime you make any change and refresh the browser
 
 .. code-block:: bash
 
