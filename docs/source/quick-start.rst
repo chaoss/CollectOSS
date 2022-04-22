@@ -78,6 +78,7 @@ Python Virtual Environment Configuration
 
 - Seven sample repositories will load by default. You can delete them if you want to use your own repositories by deleting records from the `repo` table first, then deleting the records from the `repo_groups` table.
 
+
 .. code-block:: bash
 
 	augur --help
@@ -95,3 +96,4 @@ The commands for loading repos are:
 	augur db add-repos
 
 We recommend that you test your instance using 50 or fewer repositories before undertaking a more substantial data collection. When you do take on more collection, you can "collect data faster" by adding additional tokens to the `worker_oauth` table in the `augur_operations` schema and increasing the number of workers for the pull request and GitHub worker blocks in the `augur.config.json` file that generates at install.
+
