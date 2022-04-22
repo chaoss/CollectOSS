@@ -5,7 +5,7 @@ We love to pull requests from everyone! We follow the standard Git workflow of `
 Before getting started, please make sure you've read the [README](README.md) to get a primer on our project. Augur's documentation can be found at: https://oss-augur.readthedocs.io/en/main/
 
 ## Opening an issue
-If you're experiencing an issue with Augur or have a question you'd like help answering, please feel free to open an [issue](https://github.com/chaoss/augur/issues). To help us prevent duplicates, we kindly ask that you briefly search for your problem or question in our issues before opening a new one.
+If you're experiencing an issue with Augur or have a question you'd like help answering, please feel free to open an [issue](https://github.com/chaoss/augur/issues). To help us prevent duplicates, we kindly ask that you briefly search for your problem or question in our [issues](https://github.com/chaoss/augur/issues) before opening a new one.
 
 Please note that if you open a bug report and your issue does not follow our template, we cannot help you until you have provided us all the relevant information in that format. Respectfully, we do not have the time to try and recreate an error given with minimal or no context, so by providing this information you are helping us help you! You will see this template when you open an issue; click on "Bug Report" and it will be populated with descriptions of what to put in each section. Replace the descriptions with your comments to the best of your ability, and please include screenshots and error logs if applicable.
 
@@ -54,6 +54,27 @@ To ensure all your commits are signed, you may choose to [configure git](https:/
 
 **Any pull requests containing commits that are not signed off will not be eligible for merge until the commits have been signed off.** 
 
+## Keeping in sync with the Augur Repository
+
+Remeber to sync your fork with the main branch regularly.
+To do this:
+
+Go to github and copy the url of the main Augur repo
+   ```   
+   https://github.com/chaoss/augur.git
+   ```
+   make sure to be in the rootfolder of the project and the branch should be master branch and type
+   ```
+   git remote add upstream https://github.com/chaoss/augur.git
+   ```
+   Now you have your upstream setup in your local machine,whenever you need to make a new branch for making changes make sure your main branch is in sync with the main repository, to do this,make sure to be in the main branch and type
+
+   ```
+   git pull upstream master
+   git push origin master
+   ```
+
+
 ## Community Resources
 
 ### Augur
@@ -89,7 +110,7 @@ To ensure all your commits are signed, you may choose to [configure git](https:/
 
 ### PostgreSQL guides
 - [PostgreSQL installation guide](https://www.postgresql.org/docs/12/tutorial-install.html)
-- [PostgreSQL official tutotial](https://www.postgresql.org/docs/)
+- [PostgreSQL official tutorial](https://www.postgresql.org/docs/)
 - [PostgreSQL docker official image](https://hub.docker.com/_/postgres)
 - [SQL style guide](https://docs.telemetry.mozilla.org/concepts/sql_style.html)
 

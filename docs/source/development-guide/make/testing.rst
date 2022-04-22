@@ -13,50 +13,46 @@ These commands are used to run specific subsets of unit tests. We use ``tox`` to
 
 ``make test``
 -------------
-Runs available tests for both the metric functions and their API endpoints.
+This command runs ALL available tests for both the metric functions and their API endpoints.
 
 Example\:
 
 .. code-block:: bash
 
-  # this will run ALL tests for JUST the issue model
   $ make test
 
 --------------
 
 ``make test-metrics``
 ------------------------
-Runs unit tests for the metric functions.
+This command will run ALL unit tests for the metric functions.
 
 Example\:
 
 .. code-block:: bash
 
-  # this will run ALL metric function unit tests
   $ make test-metrics
 
 --------------
 
 ``make test-metrics-api``
 --------------------------
-Runs tests for the metrics API.
+The above command runs ALL tests for the metrics API.
 
 Example\:
 
 .. code-block:: bash
 
-  # this will run ALL metric API tests
   $ make test-metrics-api
 
 --------------
 
 ``make test-python-versions``
 -----------------------------
-Runs all tests under all currently supported versions of Python (3.6 and above).
+The above command runs all tests under all currently supported versions of **Python 3.6 and above**.
 
 Example\:
 
 .. code-block:: bash
 
-  # this will run ALL metric API tests
   $ make test-python-versions

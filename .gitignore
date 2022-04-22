@@ -103,6 +103,7 @@ ipython_config.py
 
 # pyenv
 .python-version
+.python-version-hash
 
 # pipenv
 #   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
@@ -165,11 +166,24 @@ workers/clustering_worker/vocabulary
 workers/clustering_worker/vocabulary_count
 
 
-# gzipped files
+# compressed files
 *.gz
+*.zip
+*.z
+*.rar
+*.tgz
+*.iso
+*.tar.gz
+*.bz
+*.rpm
 
-#nohup logs
+# nohup logs
 nohup.out
 
-#vscode 
-.vscode
+# vscode 
+.vscode/
+
+
+
+# Generated files from github
+.history/
