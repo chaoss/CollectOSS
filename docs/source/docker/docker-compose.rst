@@ -11,7 +11,7 @@ The default ports for each service are\:
 
 .. note::
 
-    Make sure your database is configured to listen on all addresses in order to work with the containers. The most common error an improperly configured database throws is
+    Make sure your database is configured to listen to all addresses to work with the containers. The most common error an improperly configured database throws are
     ::
 
         psql: could not connect to server: Connection refused
@@ -21,7 +21,7 @@ The default ports for each service are\:
 
 Docker Compose with the script (recommended)
 ============================================
-This section details how to use Augur's docker-setup script in order to get a docker-compose deployment up and running as fast as possible.
+This section details how to use Augur's docker-setup script to get a docker-compose deployment up and running as fast as possible.
 
 Running the containers
 -----------------------
@@ -38,7 +38,7 @@ To run Augur
 
 Answer the prompts depending on your needs. If you are using a local database it is important to use 10.254.254.254 as a hostname or localhost if prompted. If you are using the container database or the test database press 2 or 3 for the prompt answer.
 
-The script should automatically generate the environment variables for the docker containers and compose files. Additionally it will set up a network alias so that the containers can communicate with localhost. Finally, it also takes care of whether or not to generate the schema to protect the integrity of any databases in use.
+The script should automatically generate the environment variables for the docker containers and compose files. Additionally, it will set up a network alias so that the containers can communicate with localhost. Finally, it also takes care of whether or not to generate the schema to protect the integrity of any databases in use.
 
 
 .. warning::
@@ -48,7 +48,7 @@ The script should automatically generate the environment variables for the docke
 Stopping the containers
 -------------------------
 
-To stop the containers, do a keyboard inturrupt while the script is running ``Ctrl+C``. The script will then ask if you want to generate log files to look at later.
+To stop the containers, do a keyboard interrupt while the script is running ``Ctrl+C``. The script will then ask if you want to generate log files to look at later.
 
 If not using the script, the standard method of stopping the containers that you started should work such as ``docker stop`` or ``docker-compose down``
 
@@ -62,7 +62,7 @@ This section of the documentation details how to use Augur's Docker Compose conf
 
 .. warning::
 
-    Don't forget to provide your external database credentials in the ``docker_env.txt`` file. Additionally an ``.env`` file is needed for the ``*.yml`` files' environment variables. Don't forget to set the variables specified specified in these files namely ``AUGUR_DB_TYPE`` and ``AUGUR_DB_HOST``.
+    Don't forget to provide your external database credentials in the ``docker_env.txt`` file. Additionally an ``.env`` file is needed for the ``*.yml`` files' environment variables. Don't forget to set the variables specified in these files namely ``AUGUR_DB_TYPE`` and ``AUGUR_DB_HOST``.
 
     Example docker_env.txt:
     .. code:: 

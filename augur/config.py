@@ -342,25 +342,7 @@ default_config = {
                     "insight_days": 30,
                     "models_dir": "message_models"
                 },
-                "pull_request_analysis_worker": {
-                    "port": pull_request_analysis_worker_p,
-                    "switch": 0,
-                    "workers": 1,
-                    "insight_days": 30
-                },
-                "discourse_analysis_worker":{
-                    "port" : discourse_analysis_worker_p,
-                    "switch": 0,
-                    "workers": 1
-                },
-                "message_insights_worker": {
-                    "port": message_insights_worker_p,
-                    "switch": 0,
-                    "workers": 1,
-                    "insight_days": 30,
-                    "models_dir": "message_models"
-                },
-                "pull_request_analysis_worker": {
+                "pull_request_analysis_worker": {                   
                     "port": pull_request_analysis_worker_p,
                     "switch": 0,
                     "workers": 1,
