@@ -130,6 +130,17 @@ Two of Augur's workers use the Go programming language, which needs to be instal
 	sudo apt install snapd
 	sudo snap install go --classic
 
+Incase you encounter any problem following the above commands, try doing these first:
+
+.. code-block:: bash
+
+	sudo apt-get update && sudo apt-get install -yqq daemonize dbus-user-session fontconfig
+	sudo daemonize /usr/bin/unshare --fork --pid --mount-proc /lib/systemd/systemd --system-unit=basic.target
+	exec sudo nsenter -t $(pidof systemd) -a su - $LOGNAME
+	snap version
+
+If the last command returns successfully, you can try installing Go again using either of the two options above.
+	
 Python Virtual Environment Configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~
 - Set up a Python virtual environment (Python 3.8 and above are now required. Python 3.9 and python 3.10 work as well, though we have tested Python 3.9 on more platforms.)
