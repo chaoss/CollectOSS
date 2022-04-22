@@ -45,6 +45,8 @@ done
 
 export PATH=$PATH:/usr/local/go/bin
 
+go mod download github.com/maxbrunsfeld/counterfeiter/v6@v6.5.0
+
 if [ -d "$HOME/scorecard" ]; then
   echo " Scorecard already exists, skipping cloning ..."
 else
