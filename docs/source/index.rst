@@ -20,7 +20,7 @@ Welcome to the Augur project's official documentation. Below is a brief primer o
 .. 
   schema/toc
 
-.. image:: development-guide/images/augur-architecture-2.png 
+.. image:: development-guide/images/augur-architecture-2.png
   :width: 700
   :alt: Development guide image overview of augur 
 
