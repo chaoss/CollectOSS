@@ -15,7 +15,7 @@ WHERE
 GROUP BY
 	repo_cluster_messages.repo_id,
 	repo.repo_name,
-	repo_cluster_messages.cluster_content
+	repo_cluster_messages.cluster_content;
 	
 -- discourse_insights
 SELECT
