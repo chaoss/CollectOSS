@@ -6,16 +6,19 @@ SELECT
 	repo_cluster_messages.repo_id,
 	repo.repo_name,
 	repo_cluster_messages.cluster_content,
+    count( messages.msg_id ),
 	MAX ( repo_cluster_messages.data_collection_date ) 
 FROM
 	repo_cluster_messages,
+    messages,
 	repo 
 WHERE
 	repo_cluster_messages.repo_id = repo.repo_id 
 GROUP BY
 	repo_cluster_messages.repo_id,
 	repo.repo_name,
-	repo_cluster_messages.cluster_content;
+	repo_cluster_messages.cluster_content
+    messages.repo_id;
 	
 -- discourse_insights
 SELECT
