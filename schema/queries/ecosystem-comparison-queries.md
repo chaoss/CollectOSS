@@ -26,6 +26,6 @@ order by average_sentiment;
 select  repo.repo_id, count(*) from issues, contributors, repo
 where contributors.gh_user_id=issues.gh_user_id
 and repo.repo_id = issues.repo_id 
-group by repo.repo_id 
+group by repo.repo_id; 
 
 ```
