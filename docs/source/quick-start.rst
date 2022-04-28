@@ -3,6 +3,7 @@ Quickstart
 
 Get going fast! Intended for folks familiar with setting up DevOps environments. These instructions were tested using Ubuntu 20.04. Ubuntu 18x is no longer supported because the versions of Python3 available on it are not current. 
 
+:ref:`Complete installation instructions with more complete explanations are located in our "Getting Started" section.<Getting Started>`
 
 Setting up VirtualBox
 ~~~~~~~~~~~~~~~~~~~~~~~
