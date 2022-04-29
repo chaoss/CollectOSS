@@ -2,23 +2,36 @@
 
 ```sql
 -- clustering
+
 SELECT
-	repo_cluster_messages.repo_id,
-	repo.repo_name,
-	repo_cluster_messages.cluster_content,
-    count( messages.msg_id ),
-	MAX ( repo_cluster_messages.data_collection_date ) 
+    repo.repo_name,
+    repo.repo_git,
+    repo.repo_id,
+    A.cluster_content,
+    MAX ( msg_cluster_id ) AS msg_cluster_id, 
+    d.message_count 
 FROM
-	repo_cluster_messages,
-    messages,
-	repo 
-WHERE
-	repo_cluster_messages.repo_id = repo.repo_id 
+    repo
+    LEFT OUTER JOIN (
+    SELECT
+        repo.repo_id,
+        repo_cluster_messages.cluster_content,
+        repo_cluster_messages.msg_cluster_id,
+        repo.repo_name 
+    FROM
+        ( SELECT MAX ( msg_cluster_id ) AS msg_cluster_id, repo_id, MAX ( data_collection_date ) AS data_collection_date FROM repo_cluster_messages GROUP BY repo_id )
+        C LEFT OUTER JOIN repo ON repo.repo_id = C.repo_id
+        LEFT OUTER JOIN repo_cluster_messages ON C.msg_cluster_id = repo_cluster_messages.msg_cluster_id 
+    ) A ON repo.repo_id = A.repo_id 
+    AND A.msg_cluster_id = msg_cluster_id 
+    left outer join (select repo_id, count(*) as message_count from message 
+where repo_id is not null group by repo_id) d on repo.repo_id = d.repo_id 
 GROUP BY
-	repo_cluster_messages.repo_id,
-	repo.repo_name,
-	repo_cluster_messages.cluster_content
-    messages.repo_id;
+    repo.repo_name,
+    repo.repo_git,
+    A.cluster_content,
+    repo.repo_id,
+    d.message_count;
 	
 -- discourse_insights
 SELECT
