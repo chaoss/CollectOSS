@@ -20,7 +20,7 @@ services:
     #   - ./path/to/your/repos.csv:/repos.csv
     restart: unless-stopped
     ports:
-      - 5000:5000
+      - 5002:5000
     environment:
       - "AUGUR_DB_SCHEMA_BUILD=0"
       - "AUGUR_DB_HOST=database"
