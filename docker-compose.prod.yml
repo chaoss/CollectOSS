@@ -9,6 +9,8 @@ services:
     restart: unless-stopped
     ports:
       - "${AUGUR_DB_PORT:-5432}:5432"
+    volumes:
+      - augur:/var/lib/postgresql/data
 
   backend:
     image: augurlabs/augur:backend
@@ -31,12 +33,10 @@ services:
       - database
 
   frontend:
-    image: augurlabs/augur:viteserver
+    image: augurlabs/augur:frontend
     build:
       context: .
-      dockerfile: ./util/docker/frontend/dev.dockerfile
-    volumes:
-      - ./frontend:/augur/frontend
+      dockerfile: ./util/docker/frontend/prod.dockerfile
     restart: unless-stopped
     ports:
       - 8080:8080

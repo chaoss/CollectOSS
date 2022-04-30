@@ -33,6 +33,7 @@ setup(
         "Programming Language :: Python :: 3.8",
     ],
     install_requires=[
+        "alembic==1.7.7",
         "wheel",
         "coloredlogs==15.0",
         "Beaker==1.11.0",
@@ -53,7 +54,7 @@ setup(
         "six==1.15.0",
         "bokeh==2.0.2",
         "selenium==3.141.0",
-        "dask>=2021.6.2", 
+        "dask>=2021.6.2",
         "cloudpickle >= 0.2.2",
         "fsspec >= 0.6.0",
         "toolz >= 0.8.2",

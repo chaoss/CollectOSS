@@ -8,11 +8,11 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN set -x \
     && apt-get update \
     && apt-get -y install --no-install-recommends \
-        git \
-        gcc \
-        python3-pip \
-        wget \
-        postgresql-client \
+    git \
+    gcc \
+    python3-pip \
+    wget \
+    postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
 EXPOSE 5000
@@ -32,7 +32,7 @@ RUN set -x \
     && pip install .
 
 RUN ./scripts/docker/install-go.sh
-RUN ./scripts/install/workers.sh 
+RUN ./scripts/install/workers.sh
 RUN augur config init --rc-config-file /augur/backend.docker.config.json \
     && mkdir -p repos/ logs/
 
