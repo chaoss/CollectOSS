@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
-    "skipLibCheck": true, 
+    "skipLibCheck": true,
     "target": "esnext",
     "module": "esnext",
-    "noImplicitAny": true,
+    "noImplicitAny": false,
     "strict": true,
     "jsx": "preserve",
     "importHelpers": true,

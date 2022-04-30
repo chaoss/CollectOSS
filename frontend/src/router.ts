@@ -1,15 +1,12 @@
 // #SPDX-License-Identifier: MIT
 // import Vue from 'vue';
 /* tslint:disable */
-import Vue from 'vue';
-import Router from 'vue-router';
-import store from '@/store/store';
+import { createRouter, createWebHistory } from 'vue-router';
 
-Vue.use(Router);
 import _ from 'lodash';
 
-var config = require('../frontend.config.json')
-const AugurAPIModule = require('@/AugurAPI').default;
+import config from '../frontend.config.json'
+import AugurAPIModule from './AugurAPI';
 var port = config['Frontend'] ? (config['Frontend']['port'] ? ':' + config['Frontend']['port'] : '') : (config['Server']['port'] ? ':' + config['Server']['port'] : '')
 var host = config['Frontend'] ? (config['Frontend']['host']) : (config['Server']['host'])
 const AugurAPI = new AugurAPIModule('http://' + host + port);
@@ -238,7 +235,7 @@ const routes = [
     component: Errors,
   },
   {
-    path: '*',
+    path: '/:unknownPath(.*)*',
     redirect: '/errors',
   },
   //   {path: '/', component: Default,
@@ -519,8 +516,10 @@ const routes = [
 // })
 
 
-export default new Router({
+const router = createRouter({
   // routes,
   routes,
-  mode: 'history',
+  history: createWebHistory(),
 });
+
+export default router

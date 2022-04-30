@@ -5,16 +5,22 @@
     <div class="growthMaturity">
       <h2 class="growthMaturityHeader">{{ $store.state.baseRepo }}</h2>
       <h2
-        class=" growthMaturity repolisting"
+        class="growthMaturity repolisting"
         v-if="$store.state.comparedRepos.length > 0"
-      >compared to:</h2>
-      <h2 class="growthMaturity" v-for="(repo, index) in $store.state.comparedRepos">
+      >
+        compared to:
+      </h2>
+      <h2
+        class="growthMaturity"
+        v-for="(repo, index) in $store.state.comparedRepos"
+        :key="index"
+      >
         <span
-          v-bind:style="{ 'color': colors[index] }"
-          @click
+          v-bind:style="{ color: colors[index] }"
           :value="repo"
           class="repolisting"
-        >{{ repo }}</span>
+          >{{ repo }}</span
+        >
       </h2>
     </div>
     <!-- <div class="row" v-if="loaded">
@@ -149,7 +155,11 @@
     </div>
     <div
       v-if="loaded == null"
-      style="text-align: center; margin-left: 44.4%; position: relative !important"
+      style="
+        text-align: center;
+        margin-left: 44.4%;
+        position: relative !important;
+      "
       class="col col-12 spinner loader"
     ></div>
 
@@ -163,16 +173,16 @@
 </template>
 
 <script>
-import BubbleChart from "./charts/BubbleChart";
-import StackedBarChart from "./charts/StackedBarChart";
-import DynamicLineChart from "./charts/DynamicLineChart";
-import SkeletonChart from "./charts/SkeletonChart";
+import BubbleChart from "./charts/BubbleChart.vue";
+import StackedBarChart from "./charts/StackedBarChart.vue";
+import DynamicLineChart from "./charts/DynamicLineChart.vue";
+import SkeletonChart from "./charts/SkeletonChart.vue";
 export default {
   components: {
     BubbleChart,
     StackedBarChart,
     DynamicLineChart,
-    SkeletonChart
+    SkeletonChart,
   },
   data() {
     return {
@@ -184,14 +194,14 @@ export default {
         "#f58231",
         "#911eb4",
         "#42d4f4",
-        "#f032e6"
+        "#f032e6",
       ],
       values: {},
       loaded1: null,
       loaded2: null,
       loaded3: null,
       loaded4: null,
-      loaded5: null
+      loaded5: null,
     };
   },
   computed: {
@@ -212,7 +222,7 @@ export default {
         this.loaded4 &&
         this.loaded5
       );
-    }
+    },
   },
   methods: {
     getMetricsStatus() {
@@ -230,7 +240,7 @@ export default {
         "&is_defined=" +
         this.selected_is_defined;
 
-      window.AugurAPI.getMetricsStatus(query_string).then(data => {
+      window.AugurAPI.getMetricsStatus(query_string).then((data) => {
         this.metricsData = data;
       });
     },
@@ -238,7 +248,7 @@ export default {
       $(this.$el)
         .find(".multiselect__content-wrapper")
         .removeClass("selecting");
-    }
+    },
   },
   mounted() {
     this.selected_group = "all";
@@ -262,14 +272,14 @@ export default {
       }
       // repos.push(this.repo)
     } // end if (this.$store.repo)
-    this.comparedRepos.forEach(function(repo) {
+    this.comparedRepos.forEach(function (repo) {
       repos.push(window.AugurRepos[repo]);
     });
     let endpoints1 = ["closedIssues", "codeReviewIteration"];
     window.AugurAPI.batchMapped(repos, endpoints1).then(
-      data => {
+      (data) => {
         console.log("here", data);
-        endpoints1.forEach(endpoint => {
+        endpoints1.forEach((endpoint) => {
           this.values[endpoint] = {};
           this.values[endpoint][this.repo] = {};
           this.values[endpoint][this.repo][endpoint] =
@@ -279,7 +289,7 @@ export default {
         this.loaded1 = true;
         // return data
       },
-      error => {
+      (error) => {
         this.loaded1 = false;
         console.log("failed", error);
       }
@@ -287,9 +297,9 @@ export default {
 
     let endpoints2 = ["contributionAcceptance", "forks"];
     window.AugurAPI.batchMapped(repos, endpoints2).then(
-      data => {
+      (data) => {
         console.log("here", data);
-        endpoints2.forEach(endpoint => {
+        endpoints2.forEach((endpoint) => {
           this.values[endpoint] = {};
           this.values[endpoint][this.repo] = {};
           this.values[endpoint][this.repo][endpoint] =
@@ -298,7 +308,7 @@ export default {
         // this.values=data
         this.loaded2 = true;
       },
-      error => {
+      (error) => {
         this.loaded2 = false;
         console.log("failed", error);
       }
@@ -306,12 +316,12 @@ export default {
 
     let endpoints3 = [
       "codeCommits",
-      "maintainerResponseToMergeRequestDuration"
+      "maintainerResponseToMergeRequestDuration",
     ];
     window.AugurAPI.batchMapped(repos, endpoints3).then(
-      data => {
+      (data) => {
         console.log("here", data);
-        endpoints3.forEach(endpoint => {
+        endpoints3.forEach((endpoint) => {
           this.values[endpoint] = {};
           this.values[endpoint][this.repo] = {};
           this.values[endpoint][this.repo][endpoint] =
@@ -321,7 +331,7 @@ export default {
         this.loaded3 = true;
         // return data
       },
-      error => {
+      (error) => {
         this.loaded3 = false;
         console.log("failed", error);
       }
@@ -329,9 +339,9 @@ export default {
 
     let endpoints4 = ["newContributingGithubOrganizations", "openIssues"];
     window.AugurAPI.batchMapped(repos, endpoints4).then(
-      data => {
+      (data) => {
         console.log("here", data);
-        endpoints4.forEach(endpoint => {
+        endpoints4.forEach((endpoint) => {
           this.values[endpoint] = {};
           this.values[endpoint][this.repo] = {};
           this.values[endpoint][this.repo][endpoint] =
@@ -341,7 +351,7 @@ export default {
         this.loaded4 = true;
         // return data
       },
-      error => {
+      (error) => {
         this.loaded4 = false;
         console.log("failed", error);
       }
@@ -350,12 +360,12 @@ export default {
     let endpoints5 = [
       "pullRequestComments",
       "pullRequestsOpen",
-      "contributingGithubOrganizations"
+      "contributingGithubOrganizations",
     ];
     window.AugurAPI.batchMapped(repos, endpoints4).then(
-      data => {
+      (data) => {
         console.log("here", data);
-        endpoints5.forEach(endpoint => {
+        endpoints5.forEach((endpoint) => {
           this.values[endpoint] = {};
           this.values[endpoint][this.repo] = {};
           this.values[endpoint][this.repo][endpoint] =
@@ -365,11 +375,11 @@ export default {
         this.loaded5 = true;
         // return data
       },
-      error => {
+      (error) => {
         this.loaded5 = false;
         console.log("failed", error);
       }
     ); // end batch request
-  }
+  },
 };
 </script>

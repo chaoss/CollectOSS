@@ -1,21 +1,17 @@
 // #SPDX-License-Identifier: MIT
 /* tslint:disable */
-import Vue from 'vue';
-import Vuex from 'vuex';
-import router from '@/router'
+import { createStore } from 'vuex';
 import createPersistedState from "vuex-persistedstate"
-
-Vue.use(Vuex);
 
 // Modules
 import common from './modules/common/index';
 import compare from './modules/compare/index'
 
-export default new Vuex.Store({
+export const store = createStore({
 	modules: {
 		common,
 		compare
 	},
-	plugins: [createPersistedState({paths:['common.cache']})]
+	plugins: [createPersistedState({ paths: ['common.cache'] })]
 
 })

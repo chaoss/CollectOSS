@@ -2,17 +2,23 @@
 <template>
   <section>
     <div class="overviewCard">
-      <h2
-        v-if="loaded"
-        class="overviewCardHeader"
-      >Project Overview: {{ project }}</h2>
+      <h2 v-if="loaded" class="overviewCardHeader">
+        Project Overview: {{ project }}
+      </h2>
       <p></p>
       <h2
         class="overviewCard repolisting"
         v-if="$store.state.comparedRepos.length > 0"
-      >compared to:</h2>
-      <h2 class="overviewCard" v-for="(repo, index) in $store.state.comparedRepos">
-        <span v-bind:style="{ 'color': colors[index] }" class="repolisting">{{ repo }}</span>
+      >
+        compared to:
+      </h2>
+      <h2
+        class="overviewCard"
+        v-for="(repo, index) in $store.state.comparedRepos"
+      >
+        <span v-bind:style="{ color: colors[index] }" class="repolisting">{{
+          repo
+        }}</span>
       </h2>
     </div>
 
@@ -54,15 +60,15 @@
 </template>
 
 <script>
-import AugurHeader from "./AugurHeader"
-import TickChart from "./charts/TickChart"
-import LinesOfCodeChart from "./charts/LinesOfCodeChart"
-import NormalizedStackedBarChart from "./charts/NormalizedStackedBarChart"
-import OneDimensionalStackedBarChart from "./charts/OneDimensionalStackedBarChart"
-import HorizontalBarChart from "./charts/HorizontalBarChart"
-import GroupedBarChart from "./charts/GroupedBarChart"
-import StackedBarChart from "./charts/StackedBarChart"
-import TimeIntervalBarChart from './charts/TimeIntervalBarChart'
+import AugurHeader from "./AugurHeader.vue";
+import TickChart from "./charts/TickChart.vue";
+import LinesOfCodeChart from "./charts/LinesOfCodeChart.vue";
+import NormalizedStackedBarChart from "./charts/NormalizedStackedBarChart.vue";
+import OneDimensionalStackedBarChart from "./charts/OneDimensionalStackedBarChart.vue";
+import HorizontalBarChart from "./charts/HorizontalBarChart.vue";
+import GroupedBarChart from "./charts/GroupedBarChart.vue";
+import StackedBarChart from "./charts/StackedBarChart.vue";
+import TimeIntervalBarChart from "./charts/TimeIntervalBarChart.vue";
 export default {
   data() {
     return {
@@ -74,11 +80,11 @@ export default {
         "#f58231",
         "#911eb4",
         "#42d4f4",
-        "#f032e6"
+        "#f032e6",
       ],
       values: {},
       loaded: false,
-      project: null
+      project: null,
     };
   },
   components: {
@@ -90,7 +96,7 @@ export default {
     HorizontalBarChart,
     GroupedBarChart,
     StackedBarChart,
-    TimeIntervalBarChart
+    TimeIntervalBarChart,
   },
   computed: {
     repo() {
@@ -101,7 +107,7 @@ export default {
     },
     comparedRepos() {
       return this.$store.state.comparedRepos;
-    }
+    },
     // loaded() {
     //   return this.loaded1 && this.loaded2
     // }
@@ -113,7 +119,7 @@ export default {
         repos.push(window.AugurRepos[this.repo]);
       // repos.push(this.repo)
     } // end if (this.$store.repo)
-    this.comparedRepos.forEach(function(repo) {
+    this.comparedRepos.forEach(function (repo) {
       repos.push(window.AugurRepos[repo]);
     });
     let endpoints1 = [
@@ -121,12 +127,12 @@ export default {
       "annualCommitCountRankedByRepoInRepoGroup",
       "annualLinesOfCodeCountRankedByNewRepoInRepoGroup",
       "annualCommitCountRankedByNewRepoInRepoGroup",
-      "facadeProject"
+      "facadeProject",
     ];
-    endpoints1.forEach(source => {
+    endpoints1.forEach((source) => {
       let repo = window.AugurAPI.Repo({ gitURL: this.gitRepo });
       repo[source]().then(
-        data => {
+        (data) => {
           console.log("batch data", data);
           this.values[source] = data;
           this.loaded = true;
@@ -138,6 +144,6 @@ export default {
         }
       ); // end batch request
     });
-  }
+  },
 };
 </script>

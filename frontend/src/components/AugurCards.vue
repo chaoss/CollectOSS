@@ -21,16 +21,16 @@ import AugurHeader from "../components/AugurHeader.vue";
 import MetricsStatusCard from "../components/MetricsStatusCard.vue";
 import BaseRepoActivityCard from "../components/BaseRepoActivityCard.vue";
 import BaseRepoEcosystemCard from "../components/BaseRepoEcosystemCard.vue";
-import GrowthMaturityDeclineCard from "../components/GrowthMaturityDeclineCard";
-import RiskCard from "../components/RiskCard";
-import ValueCard from "../components/ValueCard";
-import DiversityInclusionCard from "../components/DiversityInclusionCard";
-import GitCard from "../components/GitCard";
+import GrowthMaturityDeclineCard from "../components/GrowthMaturityDeclineCard.vue";
+import RiskCard from "../components/RiskCard.vue";
+import ValueCard from "../components/ValueCard.vue";
+import DiversityInclusionCard from "../components/DiversityInclusionCard.vue";
+import GitCard from "../components/GitCard.vue";
 import OverviewCard from "../components/OverviewCard.vue";
-import ExperimentalCard from "../components/ExperimentalCard";
+import ExperimentalCard from "../components/ExperimentalCard.vue";
 import DownloadedReposCard from "../components/DownloadedReposCard.vue";
 import MainControls from "../components/MainControls.vue";
-import LoginForm from "../components/LoginForm";
+import LoginForm from "../components/LoginForm.vue";
 import { mapState } from "vuex";
 export default {
   props: [
@@ -41,7 +41,7 @@ export default {
     "domain",
     "comparedowner",
     "comparedrepo",
-    "groupid"
+    "groupid",
   ],
   components: {
     MainControls,
@@ -56,19 +56,19 @@ export default {
     GitCard,
     ExperimentalCard,
     DownloadedReposCard,
-    LoginForm
+    LoginForm,
   },
 
   watch: {
-    $route: function(to, from) {
+    $route: function (to, from) {
       if (to.path != from.path) window.location.reload();
       // window.location.replace(to.path)
-    }
+    },
   },
   methods: {
     onRepo(e) {
       let repo = window.AugurAPI.Repo({
-        githubURL: e.target.value
+        githubURL: e.target.value,
       });
       if (!repo.batch(["codeCommits"], true)[0]) {
         alert(
@@ -79,7 +79,7 @@ export default {
       } else {
         this.$store.commit("resetBaseRepo");
         this.$store.commit("setRepo", {
-          githubURL: e.target.value
+          githubURL: e.target.value,
         });
         this.$router.push({
           name: "gmd",
@@ -87,11 +87,11 @@ export default {
             owner: repo.owner,
             repo: repo.name,
             repoID: repo.repoID,
-            repoGroupID: repo.repoGroupID
-          }
+            repoGroupID: repo.repoGroupID,
+          },
         });
       }
-    }
-  }
+    },
+  },
 };
 </script>

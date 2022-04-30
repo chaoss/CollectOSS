@@ -4,28 +4,21 @@
 // import VueRouter from 'vue-router'
 
 /* tslint:disable */
-import Vue from 'vue';
+import { createApp } from 'vue';
 import ShardsVue from 'shards-vue';
 import VueVega from 'vue-vega';
-import jQuery from 'jquery';
-import $ from 'jquery';
 import _ from 'lodash';
-import d3 from 'd3';
-import SvgSaver from 'svgsaver';
-import vega from 'vega';
-import vegaLite from 'vega-lite';
-import vegaEmbed from 'vega-embed'
 import NProgress from 'nprogress'
 // Styles
-import 'bootstrap/dist/css/bootstrap.css';
+import "../node_modules/bootstrap/scss/bootstrap.scss";
 import '@/styles/shards-dashboards.scss';
 import '@/assets/scss/date-range.scss';
 import 'nprogress/nprogress.css'
+import './styles/augur.styl'
 // Core
 import AugurApp from '@/components/AugurApp.vue';
 import router from './router';
-
-var store = require('@/store/store').default;
+import { store } from './store/store'
 
 // Layouts
 import Default from '@/layouts/Default.vue';
@@ -34,17 +27,7 @@ import Default from '@/layouts/Default.vue';
 import AugurAPI from '@/AugurAPI';
 import AugurStats from '@/AugurStats';
 
-ShardsVue.install(Vue);
 
-Vue.component('default-layout', Default);
-
-Vue.config.productionTip = false;
-Vue.prototype.$eventHub = new Vue();
-
-Vue.use(ShardsVue);
-// Vue.use(Vuex)
-Vue.use(VueVega);
-// Vue.use(VueRouter);
 
 export default function Augur() {
   // AugurApp.store = store
@@ -99,11 +82,11 @@ export default function Augur() {
           }).then(() => {
             NProgress.set(0.8);
 
-            if(to.params.compares) {
+            if (to.params.compares) {
               if (to.params.compares != 'none_selected') {
 
 
-                console.log("HERE,",store)
+                console.log("HERE,", store)
                 let compares = !to.params.compares ? [] : to.params.compares.split(',');
                 let ids = !to.params.comparedRepoIds ? [] : to.params.comparedRepoIds.split(',');
                 store.dispatch('compare/setComparedRepos', { 'names': compares, 'ids': ids }).then(() => {
@@ -114,7 +97,7 @@ export default function Augur() {
             } else {
               loaded = true
             }
-          }).finally(()=>{
+          }).finally(() => {
             if (loaded)
               next()
           })
@@ -127,17 +110,17 @@ export default function Augur() {
           repo_id: to.params.repo_id
         }).then(() => {
           NProgress.set(0.8);
-          if(to.params.compares) {
+          if (to.params.compares) {
             let compares = to.params.compares === '' ? [] : to.params.compares.split(',');
             let ids = to.params.comparedRepoIds === '' ? [] : to.params.comparedRepoIds.split(',');
             store.dispatch('compare/setComparedRepos', { 'names': compares, 'ids': ids })
             // return store.dispatch('compare/setComparedRepos', { 'names': compares, 'ids': ids })
           }
-        }).finally(()=>{
+        }).finally(() => {
           next()
         })
       }
-      
+
     } else if (to.params.group && !to.params.repo) {
       NProgress.set(0.6)
       store.dispatch('compare/setBaseGroup', {
@@ -145,11 +128,11 @@ export default function Augur() {
         repo_group_id: to.params.repo_group_id
       }).then((data: any) => {
         NProgress.set(0.8);
-        if(to.params.compares) {
+        if (to.params.compares) {
           let compares = to.params.compares === '' ? [] : to.params.compares.split(',');
           return store.dispatch('compare/setComparedGroup', compares)
         }
-      }).finally(()=>{
+      }).finally(() => {
         next()
       })
     } else {
@@ -178,7 +161,7 @@ export default function Augur() {
   //           githubURL: to.params.owner + '/' + to.params.repo
   //         })
   //       }
-  //     } else if (to.params.comparedrepo && AugurApp.store.state.comparedRepos.length == 0) { 
+  //     } else if (to.params.comparedrepo && AugurApp.store.state.comparedRepos.length == 0) {
   //       let tab = to.name
   //       tab = tab.substring(0, tab.length-7)
   //       AugurApp.store.commit("resetTab")
@@ -222,33 +205,21 @@ export default function Augur() {
   // })
 
   // AugurApp.storeApp = new window.Vue({
-  new Vue({
+
+  const app = createApp({
     router,
     store,
     render: h => h(AugurApp)
+  })
 
-  }).$mount('#app')
+  app.use(router)
+  app.use(store)
+  ShardsVue.install(app);
+  app.component('default-layout', Default);
+  app.use(ShardsVue);
+  app.use(VueVega);
 
-  // Load state from query string
-
-  // let parsed = queryString.parse(window.location.search, { arrayFormat: 'bracket' })
-  // let payload = { fromURL: true }
-  // let hasState = 0
-  // if (parsed.repo) {
-  //   payload.githubURL = parsed.repo.replace(' ', '/')
-  //   hasState = 1
-  // }
-  // if (parsed.git) {
-  //   payload.gitURL = window.atob(parsed.git)
-  //   hasState = 1
-  // }
-  // if (hasState) {  
-  //   AugurApp.storeApp.$store.commit('setRepo', payload)
-  // }
-  // if (parsed.comparedTo) {
-  //   parsed.comparedTo.forEach((repo) => {
-  //     AugurApp.storeApp.$store.commit('addComparedRepo', { githubURL: repo.replace(' ', '/') })
-  //   })
-  // }
-
+  app.mount("#app")
 }
+
+Augur()

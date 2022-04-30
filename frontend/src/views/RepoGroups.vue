@@ -24,10 +24,14 @@
           </d-card-body>
 
           <div v-if="loadedGroups" class="card-body p-0 pb-3 text-center">
-            <table style="table-layout:fixed;" class="table mb-0">
+            <table style="table-layout: fixed" class="table mb-0">
               <thead class="bg-light">
                 <tr>
-                  <th scope="col" class="border-0" v-on:click="sortTable('rg_name')">
+                  <th
+                    scope="col"
+                    class="border-0"
+                    v-on:click="sortTable('rg_name')"
+                  >
                     <div class="row">
                       <div class="col col-9">Name</div>
                       <div
@@ -37,7 +41,11 @@
                       ></div>
                     </div>
                   </th>
-                  <th scope="col" class="border-0" v-on:click="sortTable('rg_description')">
+                  <th
+                    scope="col"
+                    class="border-0"
+                    v-on:click="sortTable('rg_description')"
+                  >
                     <div class="row">
                       <div class="col col-9">Description</div>
                       <div
@@ -47,7 +55,11 @@
                       ></div>
                     </div>
                   </th>
-                  <th scope="col" class="border-0" v-on:click="sortTable('rg_website')">
+                  <th
+                    scope="col"
+                    class="border-0"
+                    v-on:click="sortTable('rg_website')"
+                  >
                     <div class="row">
                       <div class="col col-9">Website</div>
                       <div
@@ -57,7 +69,11 @@
                       ></div>
                     </div>
                   </th>
-                  <th scope="col" class="border-0" v-on:click="sortTable('rg_last_modified')">
+                  <th
+                    scope="col"
+                    class="border-0"
+                    v-on:click="sortTable('rg_last_modified')"
+                  >
                     <div class="row">
                       <div class="col col-9">Last Modified</div>
                       <div
@@ -67,7 +83,11 @@
                       ></div>
                     </div>
                   </th>
-                  <th scope="col" class="border-0" v-on:click="sortTable('rg_type')">
+                  <th
+                    scope="col"
+                    class="border-0"
+                    v-on:click="sortTable('rg_type')"
+                  >
                     <div class="row">
                       <div class="col col-9">Type</div>
                       <div
@@ -77,7 +97,7 @@
                       ></div>
                     </div>
                   </th>
-                  <!-- <th scope="col" class="border-0" v-on:click="sortTable('repo_count')"> 
+                  <!-- <th scope="col" class="border-0" v-on:click="sortTable('repo_count')">
                     <div class="row">
                       <div class="col col-9">Repo Count</div>
                       <div class="arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'repo_count' == sortColumn"></div>
@@ -87,9 +107,18 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(group, index) in sortedRepoGroups(sortColumn, ascending)">
+                <tr
+                  v-for="(group, index) in sortedRepoGroups(
+                    sortColumn,
+                    ascending
+                  )"
+                >
                   <td>
-                    <router-link tag="a" :to="'/group/' + group.rg_name + '/overview'">{{ group.rg_name }}</router-link>
+                    <router-link
+                      tag="a"
+                      :to="'/group/' + group.rg_name + '/overview'"
+                      >{{ group.rg_name }}</router-link
+                    >
                   </td>
                   <td>{{ group.rg_description }}</td>
                   <td>{{ group.rg_website }}</td>
@@ -136,20 +165,19 @@
 
 .title-container > button {
   background-color: white;
-  color: #007BFF;
+  color: #007bff;
   border: none;
   box-shadow: 1px 1px 0 4px black;
 }
 </style>
 
 <script lang="ts">
-import Component from "vue-class-component";
-import Vue from "vue";
+import { Options, Vue } from "vue-property-decorator";
 import { mapActions, mapGetters, mapMutations } from "vuex";
-import Spinner from "@/components/Spinner.vue";
-@Component({
+import Spinner from "../components/Spinner.vue";
+@Options({
   components: {
-    Spinner
+    Spinner,
   },
   methods: {
     ...mapActions("common", [
@@ -157,14 +185,14 @@ import Spinner from "@/components/Spinner.vue";
       // uses: this.endpoint({endpoints: [], repos (optional): [], repoGroups (optional): []})
       "getRepoRelations",
       "loadRepoGroups",
-      "addRepoGroup"
+      "addRepoGroup",
     ]),
     ...mapMutations("common", ["setCompareType"]),
-    ...mapActions("compare", ["addComparedGroup", "setBaseGroup"])
+    ...mapActions("compare", ["addComparedGroup", "setBaseGroup"]),
   },
   computed: {
-    ...mapGetters("common", ["sortedRepoGroups", "repoGroups"])
-  }
+    ...mapGetters("common", ["sortedRepoGroups", "repoGroups"]),
+  },
 })
 export default class RepoGroups extends Vue {
   colors: string[] = [
@@ -178,7 +206,7 @@ export default class RepoGroups extends Vue {
     "#f58231",
     "#911eb4",
     "#42d4f4",
-    "#f032e6"
+    "#f032e6",
   ];
   testEndpoints: string[] = ["issuesClosed", "codeChangesLines", "issueNew"];
   testTimeframes: string[] = ["past 1 month", "past 3 months", "past 2 weeks"];

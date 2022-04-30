@@ -6,7 +6,12 @@
         :active="false"
         :text="base.rg_name"
         href="#"
-        @click="onRepoGroup({rg_name: base.rg_name, repo_group_id: base.repo_group_id})"
+        @click="
+          onRepoGroup({
+            rg_name: base.rg_name,
+            repo_group_id: base.repo_group_id,
+          })
+        "
       />
       <d-breadcrumb-item :active="true" :text="base.repo_name" href="#" />
       <!-- <d-button style="line-height:1;transform: translateX(0.5rem) translateY(-0.1rem);"><d-link :to="{name: 'repo_risk', params: {repo: base.repo_name, group:base.rg_name}}"><span>Risk</span></d-link></d-button> -->
@@ -63,7 +68,10 @@
 
             <d-row>
               <d-col style>
-                <d-card-body title="Average Lines of Code Per Commit" class="text-center">
+                <d-card-body
+                  title="Average Lines of Code Per Commit"
+                  class="text-center"
+                >
                   <spinner v-if="!loadedBars"></spinner>
 
                   <horizontal-bar-chart
@@ -115,12 +123,19 @@
 
         <p></p>
         -->
-        <coverage-card title="License Coverage" source="sbom" sourcetwo="licenseDeclared"></coverage-card>
+        <coverage-card
+          title="License Coverage"
+          source="sbom"
+          sourcetwo="licenseDeclared"
+        ></coverage-card>
 
         <p></p>
 
         <d-card>
-          <d-card-body title="Lines of code added by the top 10 authors" class="text-center">
+          <d-card-body
+            title="Lines of code added by the top 10 authors"
+            class="text-center"
+          >
             <spinner v-if="!loadedBars"></spinner>
 
             <lines-of-code-chart
@@ -271,11 +286,11 @@
       <div class="col col-6 repo_Overview_Col">
         <d-card>
           <deps-chart
-	    source="deps"
-	    citeUrl
-	    citeText="Dependancties"
-	    title="Dependancies of project"
-	    :data="values['deps']"
+            source="deps"
+            citeUrl
+            citeText="Dependancties"
+            title="Dependancies of project"
+            :data="values['deps']"
           ></deps-chart>
         </d-card>
       </div>
@@ -284,7 +299,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from "vue-property-decorator";
+import { Options, Vue } from "vue-property-decorator";
 import { mapActions, mapGetters } from "vuex";
 import SparkChart from "../components/charts/SparkChart.vue";
 import InsightChart from "../components/charts/InsightChart.vue";
@@ -299,16 +314,16 @@ import DynamicLineChart from "../components/charts/DynamicLineChart.vue";
 import DualLineChart from "../components/charts/DualLineChart.vue";
 import Spinner from "../components/Spinner.vue";
 import CompareControl from "../components/common/CompareControl.vue";
-import router from "@/router";
+import router from "../router";
 import BubbleChart from "../components/charts/BubbleChart.vue";
 import TimeIntervalBarChart from "../components/charts/TimeIntervalBarChart.vue";
 import TabSelector from "../components/TabSelector.vue";
 import PieChart from "../components/charts/PieChart.vue";
-import CoverageCard from "@/components/charts/CoverageCard.vue";
-import LineChart from "@/components/charts/LineChart.vue";
-import DepsChart from "@/components/charts/DepsChart.vue";
+import CoverageCard from "../components/charts/CoverageCard.vue";
+import LineChart from "../components/charts/LineChart.vue";
+import DepsChart from "../components/charts/DepsChart.vue";
 
-@Component({
+@Options({
   components: {
     InsightChart,
     TickChart,
@@ -328,19 +343,19 @@ import DepsChart from "@/components/charts/DepsChart.vue";
     CoverageCard,
     LineChart,
     TabSelector,
-    DepsChart
+    DepsChart,
   },
   methods: {
     ...mapActions("common", [
-      "endpoint" // map `this.endpoint({...})` to `this.$store.dispatch('endpoint', {...})`
+      "endpoint", // map `this.endpoint({...})` to `this.$store.dispatch('endpoint', {...})`
       // uses: this.endpoint({endpoints: [], repos (optional): [], repoGroups (optional): []})
     ]),
-    ...mapActions("compare", ["addComparedRepo", "setBaseGroup"])
+    ...mapActions("compare", ["addComparedRepo", "setBaseGroup"]),
   },
   computed: {
     ...mapGetters("common", ["repoRelations"]),
-    ...mapGetters("compare", ["base"])
-  }
+    ...mapGetters("compare", ["base"]),
+  },
 })
 export default class RepoOverview extends Vue {
   colors = [
@@ -354,7 +369,7 @@ export default class RepoOverview extends Vue {
     "#f58231",
     "#911eb4",
     "#42d4f4",
-    "#f032e6"
+    "#f032e6",
   ];
   barEndpoints = ["changesByAuthor"];
   depsEndpoints = ["deps"];
@@ -368,7 +383,11 @@ export default class RepoOverview extends Vue {
   loaded_issues = false;
   loaded_experimental = false;
   loaded_activity = false;
-  values: { [key: string]: any } = { issuesClosed: [], changesByAuthor: [], deps: [] };
+  values: { [key: string]: any } = {
+    issuesClosed: [],
+    changesByAuthor: [],
+    deps: [],
+  };
   loadedBars = false;
   loadedDeps = false;
 
@@ -390,7 +409,7 @@ export default class RepoOverview extends Vue {
     this.endpoint({ endpoints: this.barEndpoints, repos: [this.base] }).then(
       (tuples: any) => {
         let ref = this.base.url || this.base.repo_name;
-        Object.keys(tuples[ref]).forEach(endpoint => {
+        Object.keys(tuples[ref]).forEach((endpoint) => {
           console.log(endpoint);
           this.values[endpoint] = tuples[ref][endpoint];
           console.log("lines data: ", this.values);
@@ -399,12 +418,12 @@ export default class RepoOverview extends Vue {
         this.loadedBars = true;
       }
     );
-    
+
     //copy of above with tweaks for deps because above code doesn't support multiple endpoints and I don't want to break it trying to fix it
     this.endpoint({ endpoints: this.depsEndpoints, repos: [this.base] }).then(
       (tuples: any) => {
         let ref = this.base.url || this.base.repo_name;
-        Object.keys(tuples[ref]).forEach(endpoint => {
+        Object.keys(tuples[ref]).forEach((endpoint) => {
           console.log(endpoint);
           this.values[endpoint] = tuples[ref][endpoint];
           console.log("lines data: ", this.values);
@@ -413,14 +432,13 @@ export default class RepoOverview extends Vue {
         this.loadedDeps = true;
       }
     );
-    
   }
 
   onRepoGroup(repo_group: any) {
     this.setBaseGroup(repo_group).then((repo: any) => {
       this.$router.push({
         name: "group_overview",
-        params: { group: repo_group.rg_name }
+        params: { group: repo_group.rg_name },
       });
     });
   }
