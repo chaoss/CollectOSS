@@ -20,7 +20,7 @@ Welcome Augur's documentation is split into Seven parts,if you’re new to the p
 .. 
   schema/toc
 
-.. image:: development-guide/images/augur-architecture.png 
+.. image:: development-guide/images/augur-architecture-2.png
   :width: 700
   :alt: Development guide image overview of augur 
 
