@@ -180,10 +180,12 @@ workers/clustering_worker/vocabulary_count
 # nohup logs
 nohup.out
 
-# vscode 
+# vscode
 .vscode/
 
-
+# local db volume
+pgdata/
+postgres-data/
 
 # Generated files from github
 .history/
