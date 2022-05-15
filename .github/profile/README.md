@@ -1,6 +1,6 @@
 # Welcome!
 
-!(Augur Landing)[augur_landing.jpg]
+!(Augur Landing)[augur-landing.jpg]
 
 Augur is part of the CHAOSS Community, and focuses on the accurate, verifiable collection of open source software health and sustainability data. 
 
