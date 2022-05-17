@@ -517,7 +517,15 @@ Select cntrb_id, created_at, month, year, repo_id, repo_name, full_name, login, 
 
 ALTER MATERIALIZED VIEW "augur_data"."augur_new_contributors" OWNER TO "augur";
 
+REFRESH MATERIALIZED VIEW "augur_data"."augur_new_contributors";
+REFRESH MATERIALIZED VIEW "augur_data"."explorer_new_contributors";
+
+GRANT SELECT ON "augur_data"."augur_new_contributors" to PUBLIC; 
+GRANT SELECT ON "augur_data"."explorer_new_contributors" to PUBLIC; 
+
 
 --
 update "augur_operations"."augur_settings" set value = 101
   where setting = 'augur_data_version'; 
+
+COMMIT; 
