@@ -1,4 +1,4 @@
-# Data collection completeness queries. 
+# Data collection completeness queries.
 
 ```sql
 SELECT
