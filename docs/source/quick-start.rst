@@ -58,7 +58,7 @@ Ubuntu download
 Installing Ubuntu in VirtualBox
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 - Open the machine which we have created earlier.
-- Now in the pop-up, click on the disk image where you have downloaded your ubuntu and click on finish.
+- Now in the pop-up, click on the disk image where you have downloaded your Ubuntu and click on finish.
 - In the welcome window select Install Ubuntu and move forward with the default options.
 .. image:: development-guide/images/Af.png
   :width: 600  
@@ -117,7 +117,7 @@ Git Configuration
 	git config --global credential.helper cache
 	git config --global credential.helper 'cache --timeout=9999999999999'
 
-- For each platform, perform a command line login in order to cache Git credentials for the LINUX user who operates Augur. This step is required in order to prevent the Facade Commit Counting Diesel from stalling on a command line prompt when repositories move or disappear.
+- For each platform, perform a command-line login  to cache Git credentials for the LINUX user who operates Augur. This step is required in order to prevent the Facade Commit Counting Diesel from stalling on a command-line prompt when repositories move or disappear.
 
 Install Go
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -136,7 +136,7 @@ Python Virtual Environment Configuration
 
 .. code-block:: bash
 
-	# Ensure you are logged in as your own user on Github and change the "<YOUR_GITHUB_USERNAME>" to your Github username (e.g. "sean")
+	# Ensure you are logged in as your user on Github and change the "<YOUR_GITHUB_USERNAME>" to your Github username (e.g. "sean")
 	git clone https://github.com/<YOUR_GITHUB_USERNAME>/augur.git
 	cd augur/
 	sudo apt install make
@@ -149,7 +149,7 @@ Python Virtual Environment Configuration
 	python -m pip install --upgrade pip
 	make install-dev {Follow prompts. You will need database credentials, a file location for cloned repositories, a GitHub Token, and a GitLab token.}
 
-- Seven sample repositories will load by default. You can delete them if you want to use your own repositories by deleting records from the `repo` table first, then deleting the records from the `repo_groups` table.
+- Seven sample repositories will load by default. You can delete them if you want to use your repositories by deleting records from the `repo` table first, then deleting the records from the `repo_groups` table.
 
 
 .. code-block:: bash
