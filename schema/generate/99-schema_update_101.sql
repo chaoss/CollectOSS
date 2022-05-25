@@ -213,9 +213,9 @@ Select repo_id, cntrb_id, created_at, month, year, rank from
                             contributors.cntrb_full_name AS full_name,
                             contributors.cntrb_login AS login 
                         FROM
-                            issues,
-                            issue_message_ref,
-                            message
+                            augur_data.issues,
+                            augur_data.issue_message_ref,
+                            augur_data.message
                             LEFT OUTER JOIN augur_data.contributors ON contributors.cntrb_id = message.cntrb_id
                             LEFT OUTER JOIN ( 
                                 SELECT DISTINCT ON ( cntrb_canonical ) cntrb_full_name, 
@@ -472,9 +472,9 @@ Select cntrb_id, created_at, month, year, repo_id, repo_name, full_name, login, 
                             contributors.cntrb_full_name AS full_name,
                             contributors.cntrb_login AS login 
                         FROM
-                            issues,
-                            issue_message_ref,
-                            message
+                            augur_data.issues,
+                            augur_data.issue_message_ref,
+                            augur_data.message
                             LEFT OUTER JOIN augur_data.contributors ON contributors.cntrb_id = message.cntrb_id
                             LEFT OUTER JOIN ( 
                                 SELECT DISTINCT ON ( cntrb_canonical ) cntrb_full_name, 
@@ -517,7 +517,15 @@ Select cntrb_id, created_at, month, year, repo_id, repo_name, full_name, login, 
 
 ALTER MATERIALIZED VIEW "augur_data"."augur_new_contributors" OWNER TO "augur";
 
+REFRESH MATERIALIZED VIEW "augur_data"."augur_new_contributors";
+REFRESH MATERIALIZED VIEW "augur_data"."explorer_new_contributors";
+
+GRANT SELECT ON "augur_data"."augur_new_contributors" to PUBLIC; 
+GRANT SELECT ON "augur_data"."explorer_new_contributors" to PUBLIC; 
+
 
 --
 update "augur_operations"."augur_settings" set value = 101
   where setting = 'augur_data_version'; 
+
+COMMIT; 
