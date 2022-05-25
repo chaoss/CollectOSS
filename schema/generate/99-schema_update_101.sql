@@ -497,10 +497,10 @@ Select cntrb_id, created_at, month, year, repo_id, repo_name, full_name, login, 
                             contributors.cntrb_login 
                         ) 
                     ) A,
-                    repo 
+                    augur_data.repo 
                 WHERE
                 ID IS NOT NULL 
-                    AND A.repo_id = repo.repo_id 
+                    AND A.repo_id = augur_data.repo.repo_id 
                 GROUP BY
                     A.ID,
                     A.repo_id,
