@@ -238,7 +238,7 @@ Select repo_id, cntrb_id, created_at, month, year, rank from
                             contributors.cntrb_login 
                         ) 
                     ) A,
-                    repo 
+                    augur_data.repo 
                 WHERE
                 ID IS NOT NULL 
                     AND A.repo_id = repo.repo_id 
