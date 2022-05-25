@@ -31,7 +31,6 @@ setup(
         'nltk==3.6.6',
         'numpy==1.21.0',
         'pandas==1.3.5',
-        'gensim==3.8.3',
         'emoji==1.2.0',
         'joblib==1.0.1',
         'xgboost==1.4.2',
