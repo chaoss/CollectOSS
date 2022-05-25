@@ -241,7 +241,7 @@ Select repo_id, cntrb_id, created_at, month, year, rank from
                     augur_data.repo 
                 WHERE
                 ID IS NOT NULL 
-                    AND A.repo_id = repo.repo_id 
+                    AND A.repo_id = augur_data.repo.repo_id 
                 GROUP BY
                     A.ID,
                     A.repo_id,
