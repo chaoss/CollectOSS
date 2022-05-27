@@ -1,5 +1,5 @@
 Web Server Configuration
-------------------------
+-------------------------------------
 
 Configuring nginx for Augur to run behind nginx requires you to have certain options available for symlinks and other basic nginx options. The `nginx.conf` file below is one example of a configuration known to work.
 
@@ -11,9 +11,9 @@ Once you have nginx configured, run these commands to make sure everything is lo
 2. ``sudo systemctl restart nginx`` on Ubuntu.
 3. sudo nginx on OS X.
 
-------------------
+--------------------------
 Server Compilation
-------------------
+--------------------------
 
 **Your Augur instance must compile with a publicly accessible domain that the frontend instance will be able to access.**
 

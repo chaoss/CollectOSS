@@ -9,6 +9,7 @@
 *.swp
 *.vi
 *~
+*.spg
 *.sass-cache
 dist/*
 

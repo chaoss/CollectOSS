@@ -2,6 +2,7 @@ BEGIN;
 
 ALTER TABLE "augur_data"."issue_events" 
   ADD COLUMN IF NOT EXISTS "platform_id" int8,
+  DROP CONSTRAINT IF EXISTS "fk_issue_event_platform_ide",
   ADD CONSTRAINT "fk_issue_event_platform_ide" FOREIGN KEY ("platform_id") REFERENCES "augur_data"."platform" ("pltfrm_id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 
