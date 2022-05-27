@@ -5,7 +5,7 @@ import glob
 
 files = glob.glob('%s/generate*.py' % os.path.dirname(__file__))
 
-__all__ = []
+__all__ = list()
 
 for f in files:
 	if os.path.isfile(f):

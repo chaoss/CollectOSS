@@ -33,7 +33,7 @@ def find(name, path):
 def get_parsed_deps(path):
 
     deps_file = None
-    dependency_list = []
+    dependency_list = list()
 
     for f in file_list:
         deps_file = find(f, path)

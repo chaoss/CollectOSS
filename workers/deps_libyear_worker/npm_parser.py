@@ -1,7 +1,7 @@
 import json
 
 def map_dependencies(dict, key, type):
-    deps = []
+    deps = list()
     if not dict:
         return []
     for name, info in dict[key].items():

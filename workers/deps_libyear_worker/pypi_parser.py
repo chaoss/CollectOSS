@@ -43,7 +43,7 @@ requirement_regrex = re.compile(REQUIREMENTS_REGEXP)
 def parse_requirement_txt(file_handle):
 
     manifest= file_handle.read()
-    deps=[]
+    deps=list()
     for line in manifest.split('\n'):
         matches = require_regrex.search(line.replace("'",""))
         if not matches:
@@ -65,7 +65,7 @@ def map_dependencies(info):
 
 
 def map_dependencies_pipfile(packages, type):
-    deps = []
+    deps = list()
     if not packages:
         return []
     for name, info in packages.items():
@@ -81,7 +81,7 @@ def parse_pipfile(file_handle):
 
 def parse_pipfile_lock(file_object):
     manifest = json.load(file_object)
-    deps = []
+    deps = list()
     for group,dependencies in manifest.items():
         
         if group == "_meta":
@@ -98,7 +98,7 @@ def parse_pipfile_lock(file_object):
 def parse_setup_py(file_handle):
     manifest= file_handle.read()
 
-    deps = []
+    deps = list()
 
     # for single_line in manifest:
     # matchh = re.match(INSTALL_REGEXP, manifest)
@@ -135,7 +135,7 @@ def parse_poetry(file_handle):
 
 def parse_poetry_lock(file_handle):
     manifest = toml.load(file_handle)
-    deps = []
+    deps = list()
     group = 'runtime'
     for package in manifest['package']:
         req = None
