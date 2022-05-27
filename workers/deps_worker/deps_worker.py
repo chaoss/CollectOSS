@@ -76,6 +76,8 @@ class DepsWorker(WorkerGitInterfaceable):
             WHERE repo_id = :repo_id
         """)
 
+        self.logger.debug(f'Repo Path SQL is {repo_path_sql}')
+
         scorecard_repo_path = self.db.execute(repo_path_sql, {'repo_id': repo_id}).fetchone()[1]
         # absolute_repo_path = self.config['repo_directory'] + relative_repo_path
 ## TODO: Flesh out generate_scorecard 
