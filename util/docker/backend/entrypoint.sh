@@ -2,10 +2,6 @@
 #SPDX-License-Identifier: MIT
 set -e
 
-if [[ "$AUGUR_DB_SCHEMA_BUILD" == "1" ]]; then
-    augur db create-schema
-fi
-
 augur config init \
     --db_name "${AUGUR_DB_NAME:-augur}" \
     --db_host "${AUGUR_DB_HOST:-database}" \
@@ -13,6 +9,8 @@ augur config init \
     --db_user "${AUGUR_DB_DB_USER:-augur}" \
     --db_password "$AUGUR_DB_PASSWORD" \
     --github_api_key "$AUGUR_GITHUB_API_KEY"
+
+alembic upgrade head
 
 if [[ -f /repo_groups.csv ]]; then
     augur db add-repo-groups /repo_groups.csv

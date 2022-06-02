@@ -18,24 +18,27 @@ RUN set -x \
 EXPOSE 5000
 
 WORKDIR /augur
+
+COPY ./scripts/docker/install-go.sh ./scripts/docker/install-go.sh
+RUN ./scripts/docker/install-go.sh && pip install -U pip
+
+COPY ./scripts/install/workers.sh ./scripts/install/workers.sh
+COPY ./workers/ workers/
+RUN ./scripts/install/workers.sh
+
 COPY ./README.md .
 COPY ./augur/ augur/
 COPY ./metadata.py .
 COPY ./setup.py .
-COPY ./scripts/ scripts/
-COPY ./workers/ workers/
-COPY ./schema/ schema/
+RUN set -x && pip install .
 
+COPY ./scripts/ scripts/
+COPY ./schema/ schema/
+COPY ./util/docker/backend/entrypoint.sh ./util/docker/backend/entrypoint.sh
 COPY ./util/docker/backend/backend.docker.config.json .
 
-RUN set -x \
-    && pip install .
+RUN mkdir -p repos/ logs/ &&\
+    chmod +x ./util/docker/backend/entrypoint.sh &&\
+    augur config init --rc-config-file /augur/backend.docker.config.json
 
-RUN ./scripts/docker/install-go.sh
-RUN ./scripts/install/workers.sh
-RUN augur config init --rc-config-file /augur/backend.docker.config.json \
-    && mkdir -p repos/ logs/
-
-COPY ./util/docker/backend/entrypoint.sh /
-RUN chmod +x /entrypoint.sh
-ENTRYPOINT /entrypoint.sh
+ENTRYPOINT /augur/util/docker/backend/entrypoint.sh
