@@ -1,12 +1,14 @@
 import collections
 import httpx
 
-from urllib.parse import urlparse
+from urllib.parse import *
 from urllib.parse import parse_qs
 
 
 class GithubPaginator(collections.abc.Sequence):
     def __init__(self, url, from_datetime=None, to_datetime=None):
+
+        url = clean_url(url)
 
         self.url = f"{url}?per_page=100"
         self.from_datetime = from_datetime
@@ -78,11 +80,21 @@ class GithubPaginator(collections.abc.Sequence):
     def __aiter__(self):
         pass
 
+def clean_url(url):
 
-url = "https://api.github.com/repos/chaoss/augur/issues/events"
+    u = urlparse(url)
+    query = parse_qs(u.query, keep_blank_values=True)
+    query.pop('per_page', None)
+    query.pop('page', None)
+    u = u._replace(query=urlencode(query, True))
+    clean_url = urlunparse(u)
+
+    return clean_url
+
+url = "https://api.github.com/repos/chaoss/augur/issues/events?per_page=50&page=5"
 
 issues = GithubPaginator(url)
 # print(issues[0])
-print(issues[10000000000])
+# print(issues[10000000000])
 
 
