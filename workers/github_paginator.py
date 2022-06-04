@@ -8,11 +8,17 @@ from urllib.parse import parse_qs
 class GithubPaginator(collections.abc.Sequence):
     def __init__(self, url, from_datetime=None, to_datetime=None):
 
-        url = clean_url(url)
+        remove_fields = ["per_page", "page"]
+        url = clean_url(url, remove_fields)
 
-        self.url = f"{url}?per_page=100"
+        per_page_param = {"per_page": 100}
+        url = add_query_params(url, per_page_param)
+
+        self.url = url
         self.from_datetime = from_datetime
         self.to_datetime = to_datetime
+
+        print(self.url)
 
     def __getitem__(self, index):
 
@@ -80,16 +86,30 @@ class GithubPaginator(collections.abc.Sequence):
     def __aiter__(self):
         pass
 
-def clean_url(url):
+def clean_url(url, remove_fields):
 
     u = urlparse(url)
     query = parse_qs(u.query, keep_blank_values=True)
-    query.pop('per_page', None)
-    query.pop('page', None)
+
+    for field in remove_fields:
+        query.pop(field, None)
+
     u = u._replace(query=urlencode(query, True))
     clean_url = urlunparse(u)
 
     return clean_url
+
+
+def add_query_params(url: str, additional_params: dict) -> str:
+    url_components = urlparse(url)
+    original_params = parse_qs(url_components.query)
+    # Before Python 3.5 you could update original_params with
+    # additional_params, but here all the variables are immutable.
+    merged_params = {**original_params, **additional_params}
+    updated_query = urlencode(merged_params, doseq=True)
+    # _replace() is how you can create a new NamedTuple with a changed field
+    return url_components._replace(query=updated_query).geturl()
+
 
 url = "https://api.github.com/repos/chaoss/augur/issues/events?per_page=50&page=5"
 
