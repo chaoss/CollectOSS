@@ -5,8 +5,6 @@ from urllib.parse import urlparse
 from urllib.parse import parse_qs
 
 
-
-
 class GithubPaginator(collections.abc.Sequence):
     def __init__(self, url, from_datetime=None, to_datetime=None):
 
@@ -16,30 +14,21 @@ class GithubPaginator(collections.abc.Sequence):
 
     def __getitem__(self, index):
 
+        # get the page the item is on
         items_page = (index // 100) + 1
 
+        # create url to query
         url = f"{self.url}&page={items_page}"
-        print(url)
 
-        r = httpx.get(url)
+        data = httpx.get(url).json()
 
-        data = r.json()
-
+        # get the position of data on the page
         page_index = index % 100
 
-        item = data[page_index]
-
-        # print(item)
-
-        return data[index % 100]
-
-        # make get request to the page that the data is on
-
-        # if page is empty return None
-
-        # Else retrieve data item from page
-
-        pass
+        try:
+            return data[page_index]
+        except KeyError:
+            return None
 
     def __len__(self):
 
@@ -93,7 +82,7 @@ class GithubPaginator(collections.abc.Sequence):
 url = "https://api.github.com/repos/chaoss/augur/issues/events"
 
 issues = GithubPaginator(url)
-print(issues[0])
-print(issues[100])
+# print(issues[0])
+print(issues[10000000000])
 
 
