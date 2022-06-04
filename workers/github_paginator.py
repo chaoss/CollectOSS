@@ -6,7 +6,7 @@ from urllib.parse import parse_qs
 
 
 class GithubPaginator(collections.abc.Sequence):
-    def __init__(self, url, from_datetime=None, to_datetime=None):
+    def __init__(self, url, from_datetime=None, to_datetime=None, access_token=None):
 
         remove_fields = ["per_page", "page"]
         url = clean_url(url, remove_fields)
@@ -18,7 +18,7 @@ class GithubPaginator(collections.abc.Sequence):
         self.from_datetime = from_datetime
         self.to_datetime = to_datetime
 
-        print(self.url)
+        self.headers = {"Authorization": access_token}
 
     def __getitem__(self, index):
 
@@ -44,27 +44,21 @@ class GithubPaginator(collections.abc.Sequence):
         # make head request
         r = httpx.head(self.url)
 
-        # get links (next, first, last prev)
-        links = r.headers['Link']
-
         num_pages = None
         last_page_data_count = None
         last_page_url = None
 
-        if 'last' not in links:
+        if 'last' not in r.links.keys():
             num_pages = 1
             per_page_param = {"page": num_pages}
             last_page_url = add_query_params(self.url, per_page_param)
             
         else:
-            for link in links.split(','):
+            # get the last url from header
+            last_page_url = get_url_from_header(r, 'last')
 
-                if 'last' in link:
-                    # get the last page link
-                    last_page_url = (link.split("<"))[1].split(">")[0]
-
-                    parsed_url = urlparse(last_page_url)
-                    num_pages = int(parse_qs(parsed_url.query)['page'][0])
+            parsed_url = urlparse(last_page_url)
+            num_pages = int(parse_qs(parsed_url.query)['page'][0])
 
         # get the amount of data on last page
         r = httpx.get(last_page_url)
@@ -78,12 +72,13 @@ class GithubPaginator(collections.abc.Sequence):
 
     def __iter__(self):
 
-        # make a get request for data
+        r = httpx.get(url=self.url, headers=self.headers)
+        yield r.json()
 
-        # yield data
-
-        # if the headers include next then go to the next page
-        pass
+        while 'next' in r.links.keys():
+            next_page = get_url_from_header(r, 'next')
+            next_page_res = httpx.get(next_page, headers=self.headers)
+            yield next_page_res.json()
 
     def __aiter__(self):
         pass
@@ -112,11 +107,15 @@ def add_query_params(url: str, additional_params: dict) -> str:
     # _replace() is how you can create a new NamedTuple with a changed field
     return url_components._replace(query=updated_query).geturl()
 
+def get_url_from_header(request, type):
+
+    return request.links[type]['url']
+
 
 url = "https://api.github.com/repos/chaoss/augur/issues/events?per_page=50&page=5"
 
 issues = GithubPaginator(url)
-# print(issues[0])
+print(len(issues))
 # print(issues[10000000000])
 
 
