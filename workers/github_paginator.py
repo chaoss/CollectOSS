@@ -26,7 +26,8 @@ class GithubPaginator(collections.abc.Sequence):
         items_page = (index // 100) + 1
 
         # create url to query
-        url = f"{self.url}&page={items_page}"
+        per_page_param = {"page": items_page}
+        url = add_query_params(self.url, per_page_param)
 
         data = httpx.get(url).json()
 
@@ -52,8 +53,9 @@ class GithubPaginator(collections.abc.Sequence):
 
         if 'last' not in links:
             num_pages = 1
-            last_page_url = f"{self.url}&page={num_pages}"
-
+            per_page_param = {"page": num_pages}
+            last_page_url = add_query_params(self.url, per_page_param)
+            
         else:
             for link in links.split(','):
 
