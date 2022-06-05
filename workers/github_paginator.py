@@ -6,7 +6,7 @@ from urllib.parse import parse_qs
 
 
 class GithubPaginator(collections.abc.Sequence):
-    def __init__(self, url, from_datetime=None, to_datetime=None, access_token=None):
+    def __init__(self, url, access_token, from_datetime=None, to_datetime=None):
 
         remove_fields = ["per_page", "page"]
         url = clean_url(url, remove_fields)
@@ -18,7 +18,7 @@ class GithubPaginator(collections.abc.Sequence):
         self.from_datetime = from_datetime
         self.to_datetime = to_datetime
 
-        self.headers = {"Authorization": access_token}
+        self.headers = {'Authorization': f'token {access_token}'}
 
     def __getitem__(self, index):
 
@@ -50,8 +50,10 @@ class GithubPaginator(collections.abc.Sequence):
 
         if 'last' not in r.links.keys():
             num_pages = 1
-            per_page_param = {"page": num_pages}
-            last_page_url = add_query_params(self.url, per_page_param)
+
+            # add query page number to establish which page we need to look at and count the data
+            page_num_param = {"page": num_pages}
+            last_page_url = add_query_params(self.url, page_num_param)
             
         else:
             # get the last url from header
@@ -73,12 +75,22 @@ class GithubPaginator(collections.abc.Sequence):
     def __iter__(self):
 
         r = httpx.get(url=self.url, headers=self.headers)
-        yield r.json()
+
+        print(self.headers)
+
+        print("Page 1")
+        for data in r.json():
+            yield data
+
+        # add connection timeout checks
 
         while 'next' in r.links.keys():
             next_page = get_url_from_header(r, 'next')
-            next_page_res = httpx.get(next_page, headers=self.headers)
-            yield next_page_res.json()
+            print(f"Hitting url: {next_page}")
+            r = httpx.get(next_page, headers=self.headers)
+
+            for data in r.json():
+                yield data
 
     def __aiter__(self):
         pass
@@ -114,8 +126,11 @@ def get_url_from_header(request, type):
 
 url = "https://api.github.com/repos/chaoss/augur/issues/events?per_page=50&page=5"
 
-issues = GithubPaginator(url)
-print(len(issues))
-# print(issues[10000000000])
+access_token = "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"
+
+issues = GithubPaginator(url, access_token)
+for issue in issues:
+    pass
+
 
 
