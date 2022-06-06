@@ -32,7 +32,7 @@ class GithubPaginator(collections.abc.Sequence):
         per_page_param = {"page": items_page}
         url = add_query_params(self.url, per_page_param)
 
-        data = httpx.get(url).json()
+        data = retrieve_data(url, self.headers)
 
         # get the position of data on the page
         page_index = index % 100
@@ -45,7 +45,16 @@ class GithubPaginator(collections.abc.Sequence):
     def __len__(self):
 
         # make head request
-        r = httpx.head(self.url)
+        num_attempts = 0
+        success = False
+        while num_attempts < 10:
+            r = hit_api(self.url, self.headers, method="HEAD")
+
+            if r:
+                break
+
+        else:
+            return None
 
         num_pages = None
         last_page_data_count = None
@@ -66,9 +75,9 @@ class GithubPaginator(collections.abc.Sequence):
             num_pages = int(parse_qs(parsed_url.query)['page'][0])
 
         # get the amount of data on last page
-        r = httpx.get(last_page_url)
+        data = retrieve_data(last_page_url, self.headers)
 
-        last_page_data_count = len(r.json())
+        last_page_data_count = len(data)
 
         data_length = (100 * (num_pages - 1)) + last_page_data_count
 
@@ -77,7 +86,7 @@ class GithubPaginator(collections.abc.Sequence):
 
     def __iter__(self):
 
-        data_list, response = hit_api(self.url, self.headers)
+        data_list, response = retrieve_data(self.url, self.headers)
 
         if data_list is None:
             yield None
@@ -91,7 +100,10 @@ class GithubPaginator(collections.abc.Sequence):
         while 'next' in response.links.keys():
             next_page = get_url_from_header(response, 'next')
             print(f"Hitting url: {next_page}")
-            data_list, response = hit_api(next_page, self.headers)
+            data_list, response = retrieve_data(next_page, self.headers)
+
+            if data_list is None:
+                return
 
             for data in data_list:
                 yield data
@@ -127,20 +139,14 @@ def get_url_from_header(request, type):
 
     return request.links[type]['url']
 
-def hit_api(url, headers):
+def retrieve_data(url, headers):
 
     num_attempts = 0
-    success = False
     while num_attempts < 10:
-        print(f"Hitting endpoint: {url}...\n")
 
-        try:
-            response = httpx.get(url=url, headers=headers)
-        except TimeoutError:
-            print("Request timed out. Sleeping 10 seconds and trying again...\n")
-            time.sleep(10)
+        response = hit_api(url, headers)
+        if response is None:
             continue
-
         # update rate limit here
 
         try:
@@ -169,6 +175,18 @@ def hit_api(url, headers):
 
     return None, None
 
+def hit_api(url, headers, method='GET'):
+
+    print(f"Hitting endpoint with {method} request: {url}...\n")
+
+    try:
+        response = httpx.request(method=method, url=url, headers=headers)
+    except TimeoutError:
+        print("Request timed out. Sleeping 10 seconds and trying again...\n")
+        time.sleep(10)
+        return None
+
+    return response
 
 def process_dict_response(response, page_data):
     
@@ -212,13 +230,14 @@ def process_str_response(response, page_data):
                 pass
 
 
-url = "https://api.github.com/repos/chaoss/augur/issues/events?per_page=50&page=5"
+# url = "https://api.github.com/repos/chaoss/augur/issues/events?per_page=50&page=5"
+
+url = "https://api.github.com/repos/ABrain7710/cs-4320-github-assignment-one-repo/pulls?state=all&direction=desc"
 
 access_token = "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"
 
 issues = GithubPaginator(url, access_token)
-for issue in issues:
-    pass
+print(len(issues))
 
 
 
