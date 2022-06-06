@@ -1,49 +1,19 @@
-Installation
-=============
+Installation Guide
+===================
 
 This section shows how to install Augur's Python library from the source. If you don't have a required dependency, please follow the provided links to install and configure it.
-
 .. note::
+
   There are three main issues new developers encounter when first installing Augur: 
 
   1. The absence of a `GCC` or `Fortran` compiler; which are required by NumPy and NLTK Python libraries. Look up how to install these compilers for your local operating system. Many times they need to be updated to a more current version.
-
+  
   2. Conflicting versions of Python: The fix is platform-specific. On Mac OS X, multiple versions of Python often have been installed by the OS, brew, Anaconda, or both. The result is some python commands draw from different paths because of how they link in `/usr/local/bin`
 
-  3. Multiple, or conflicting versions of PostgreSQL, sometimes due to the absence of a functional `psql` function at the command line.
-   
+  3. Multiple, or conflicting versions of PostgreSQL, sometimes due to the absence of a functional `psql` function at the command line.   
 
-macOS Errata
-~~~~~~~~~~~~~
-If you’re running Augur on macOS, we strongly suggest updating your shell’s initialization script in the following.
-
-In a terminal, open the script:
-
-  nano .bash_profile
- 
-Add the following line to the end of the file:
-
-  export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
-
-Save the file and exit.
-Run this command to reload bash_profile:
-
-  source .bash_profile
-
-Check if it is updated:
-
-  env
-
-``env`` should contain ``OBJC_DISABLE_INITIALIZE_FORK_SAFETY``.
-
-macOS takes "helpful" measures to prevent Python subprocesses (which Augur uses) from forking cleanly, and setting this environment variable disables these safety measures to restore regular Python functionality.
-
-.. warning::
-  If you skip this step, you'll likely see all housekeeper jobs randomly exiting for no reason, and the Gunicorn server will not behave nicely either. Skip this step at your own risk!
-
-
-Dependencies
-~~~~~~~~~~~~~
+General Requirements
+~~~~~~~~~~~~~~~~~~~~
 
 Backend
 ---------
@@ -80,10 +50,11 @@ If you're interested in using our visualizations, you can optionally install the
 
 We use Vue.js as our frontend web framework and ``npm`` as our package manager.
 
+
 Visualization API calls
 ---------------------------
 
-On Ubuntu and other Linux flavors: if you want to use the new Augur API Calls that generate downloadable graphics developed in the `https://github.com/chaoss/augur-community-reports` repository, you need to install the `firefox-geckodriver` (on Ubuntu or Red Hat Fedora) or `geckodriver` on Mac OSX, at the system level. This dependency exists because the Bokeh libraries we use for these APIs require a web browser engine. 
+On Ubuntu and other Linux flavors: if you want to use the new Augur API Calls that generate downloadable graphics developed in the `https://github.com/chaoss/augur-community-reports` repository, you need to install the `firefox-geckodriver` (on Ubuntu or Red Hat Fedora) or `geckodriver` on Mac OSX, at the system level. This dependency exists because the Bokeh libraries we use for these APIs require a web browser engine.
 
 For Ubuntu you can use: 
 
@@ -111,22 +82,54 @@ For Mac OSX you can use:
 
 .. note::
   If you have BOTH Firefox-geckodriver AND ChromeDriver installed the visualization API will not work. 
-
+  
   We have fully tested with Firefox-gecko driver on Linux platforms, and geckodriver on OSX. If you have ONLY ChromeDriver installed, it will probably work. Open an issue if you have a functioning ChromeDriver implementation.  
 
 
-=================
-Installing Augur
-=================
+===================
+Installation 
+===================
 
-Now you're ready to build! The steps below outline how to create a virtual environment (**required**) and start the installation process,
-after which you'll move on to the next section to configure the workers.
+Now you're ready to build! The steps below outline how to create a virtual environment (**required**) and start the installation process, after which you'll move on to the next section to configure the workers. The instructions are written in a way that you can follow for your respective Operating System.
 
 .. note::
   Lines that start with a ``$`` denote a command that needs to run in an interactive terminal.
 
 .. warning::
   Do **NOT** install or run Augur using ``sudo``. It is not required, and using it will inevitably cause some permissions trouble.
+
+For macOS Errata
+~~~~~~~~~~~~~~~~
+
+If you’re running Augur on macOS, we strongly suggest updating your shell’s initialization script in the following:
+
+In a terminal, open the script:
+
+  nano .bash_profile
+ 
+Add the following line to the end of the file:
+
+  export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
+
+Save the file and exit.
+Run this command to reload bash_profile:
+
+  source .bash_profile
+
+Check if it is updated:
+
+  env
+
+``env`` should contain ``OBJC_DISABLE_INITIALIZE_FORK_SAFETY``.
+
+macOS takes "helpful" measures to prevent Python subprocesses (which Augur uses) from forking cleanly, and setting this environment variable disables these safety measures to restore regular Python functionality.
+
+.. warning::
+  If you skip this step, you'll likely see all housekeeper jobs randomly exiting for no reason, and the Gunicorn server will not behave nicely either. Skip this step at your own risk!
+
+
+General Augur Installation Steps (Irrespective of Operating System)
+--------------------------------------------------------------
 
 1. Clone the repository and change to the newly-created directory.
 
@@ -172,7 +175,10 @@ your installation of Python 3: on most systems, this is ``python3``, but yours m
 
 If you think something went wrong, check the log files in ``logs/``. If you want to try again, you can use ``make clean`` to delete any build files before running ``make install`` again.
 
-MacOS users: if your build fails and in gunicorn.log you see this error: ``Connection in use: ('0.0.0.0', 5000)``, that means port 5000 is being used by another process. To solve this issue, go to System Preferences -> Sharing -> Disable Airplay Receiver.
+MacOS users: 
+------------
+
+If your build fails and in gunicorn.log you see this error: ``Connection in use: ('0.0.0.0', 5000)``, that means port 5000 is being used by another process. To solve this issue, go to System Preferences -> Sharing -> Disable Airplay Receiver.
 
 If you want to test new code you have written, you can rebuild Augur using: 
 
