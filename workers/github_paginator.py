@@ -32,7 +32,10 @@ class GithubPaginator(collections.abc.Sequence):
         per_page_param = {"page": items_page}
         url = add_query_params(self.url, per_page_param)
 
-        data = retrieve_data(url, self.headers)
+        data, _ = retrieve_data(url, self.headers)
+
+        if data is None:
+            return None
 
         # get the position of data on the page
         page_index = index % 100
@@ -46,7 +49,6 @@ class GithubPaginator(collections.abc.Sequence):
 
         # make head request
         num_attempts = 0
-        success = False
         while num_attempts < 10:
             r = hit_api(self.url, self.headers, method="HEAD")
 
@@ -75,7 +77,7 @@ class GithubPaginator(collections.abc.Sequence):
             num_pages = int(parse_qs(parsed_url.query)['page'][0])
 
         # get the amount of data on last page
-        data = retrieve_data(last_page_url, self.headers)
+        data, _ = retrieve_data(last_page_url, self.headers)
 
         last_page_data_count = len(data)
 
@@ -92,14 +94,11 @@ class GithubPaginator(collections.abc.Sequence):
             yield None
             return 
 
-        print("Page 1")
         for data in data_list:
             yield data
 
-
         while 'next' in response.links.keys():
             next_page = get_url_from_header(response, 'next')
-            print(f"Hitting url: {next_page}")
             data_list, response = retrieve_data(next_page, self.headers)
 
             if data_list is None:
@@ -177,7 +176,7 @@ def retrieve_data(url, headers):
 
 def hit_api(url, headers, method='GET'):
 
-    print(f"Hitting endpoint with {method} request: {url}...\n")
+    # print(f"Hitting endpoint with {method} request: {url}...\n")
 
     try:
         response = httpx.request(method=method, url=url, headers=headers)
@@ -234,10 +233,20 @@ def process_str_response(response, page_data):
 
 url = "https://api.github.com/repos/ABrain7710/cs-4320-github-assignment-one-repo/pulls?state=all&direction=desc"
 
-access_token = "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"
-
-issues = GithubPaginator(url, access_token)
-print(len(issues))
+with open('../augur.config.json', 'r') as f:
+  access_token = json.load(f)["Database"]["key"]
 
 
+prs = GithubPaginator(url, access_token)
+
+print("Data")
+for i in prs:
+    print(i["url"])
+
+print("Length")
+print(len(prs))
+
+print("First pr url")
+print(prs[0]["url"])
+print("\n")
 
