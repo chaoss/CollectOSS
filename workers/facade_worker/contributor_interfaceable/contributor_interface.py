@@ -844,28 +844,22 @@ def insert_facade_contributors(self, repo_id,processes=4,multithreaded=True):
     self.logger.info("Done with inserting and updating facade contributors")
     return
 
-def create_endpoint_from_repo_id(repo_id):
+def create_endpoint_from_repo_id(session, repo_id):
+    
     """
-    select_repo_path_query = s.sql.text("""
-    #    SELECT repo_git from repo
-    #    WHERE repo_id = :repo_id_bind
-    """)
+        SELECT repo_git from repo
+        WHERE repo_id = :repo_id_bind
+    """
+    #ORM syntax of above statement
+    query = select(Repo).where(Repo.repo_id == repo_id)
 
-    # Bind parameter
-    select_repo_path_query = select_repo_path_query.bindparams(
-        repo_id_bind=repo_id)
-    result = self.db.execute(select_repo_path_query).fetchall()
+    result = session.execute(query)
 
     # if not found
     if not len(result) >= 1:
         raise LookupError
-    """
 
-    query = select(Repo).where(Repo.repo_id == repo_id)
-
-    result = session
-
-    url = result[0]['repo_git']
+    url = result.scalars()[0].repo_git
     self.logger.info(f"Url: {url}")
 
     return url
@@ -873,13 +867,13 @@ def create_endpoint_from_repo_id(repo_id):
 # Get all the committer data for a repo.
 # Used by facade in facade03analyzecommit
 
-def grab_committer_list(logger, repo_id, platform="github"):
+def grab_committer_list(session, repo_id, platform="github"):
 
     # Create API endpoint from repo_id
     try:
-        endpoint = create_endpoint_from_repo_id(repo_id)
+        endpoint = create_endpoint_from_repo_id(session, repo_id)
     except Exception as e:
-        logger.info(
+        session.logger.info(
             f"Could not create endpoint from repo {repo_id} because of ERROR: {e}")
         # Exit on failure
         return

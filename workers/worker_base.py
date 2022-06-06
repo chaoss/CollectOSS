@@ -1,6 +1,6 @@
 
 from workers.worker_persistance import *
-from augur import db_models.py
+from augur import db_models
 
 
 #Encapsulate data for celery task worker api
