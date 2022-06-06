@@ -2,12 +2,18 @@
 from workers.worker_persistance import *
 from augur import db_models.py
 
-class TaskSession():
-    def __init__(self,logger,db_str,config):
+
+#Encapsulate data for celery task worker api
+class TaskSession(sqlalchemy.orm.Session):
+    def __init__(self,logger,db_str,config={},platform='github'):
         self.logger = logger
+        self.config = config
+        self.platform = platform
         engine = create_engine(db_str)
 
-        session = Session(engine)
+        super.__init__(engine)
+    
+
 
 
 class Worker(Persistant):
