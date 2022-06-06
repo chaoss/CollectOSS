@@ -1,13 +1,13 @@
 
 from workers.worker_persistance import *
-#I figure I can seperate this class into at least three parts.
-#I should also look into the subclass and see what uses what.
-#
-#   Parts (Hierarchal relation)
-#1. Persistance
-#2. Base
-#3. Github/lab 
-# Might be good to seperate the machine learning functionality into its own class too.
+from augur import db_models.py
+
+class TaskSession():
+    def __init__(self,logger,db_str,config):
+        self.logger = logger
+        engine = create_engine(db_str)
+
+        session = Session(engine)
 
 
 class Worker(Persistant):

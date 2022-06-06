@@ -10,10 +10,12 @@ import json
 import multiprocessing
 import time
 import numpy as np
-from augur import db_models.py
+
 
 # Debugger
 import traceback
+
+#TODO: maybe have a TaskSession class that holds information about the database, logger, config, etc.
 
 # postgresql
 #'sqla+postgresql://scott:tiger@localhost/mydatabase'
@@ -843,9 +845,10 @@ def insert_facade_contributors(self, repo_id,processes=4,multithreaded=True):
     return
 
 def create_endpoint_from_repo_id(repo_id):
+    """
     select_repo_path_query = s.sql.text("""
-        SELECT repo_git from repo
-        WHERE repo_id = :repo_id_bind
+    #    SELECT repo_git from repo
+    #    WHERE repo_id = :repo_id_bind
     """)
 
     # Bind parameter
@@ -856,6 +859,11 @@ def create_endpoint_from_repo_id(repo_id):
     # if not found
     if not len(result) >= 1:
         raise LookupError
+    """
+
+    query = select(Repo).where(Repo.repo_id == repo_id)
+
+    result = session
 
     url = result[0]['repo_git']
     self.logger.info(f"Url: {url}")
