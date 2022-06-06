@@ -887,6 +887,6 @@ def grab_committer_list(session, repo_id, platform="github"):
         }
     }
 
-    self.query_github_contributors(contrib_entry_info, repo_id)
+    query_github_contributors(contrib_entry_info, repo_id)
     
 

@@ -2,13 +2,14 @@
 from workers.worker_persistance import *
 from augur import db_models
 
-
+#TODO: setup github headers in a method here.
 #Encapsulate data for celery task worker api
 class TaskSession(sqlalchemy.orm.Session):
     def __init__(self,logger,db_str,config={},platform='github'):
         self.logger = logger
         self.config = config
         self.platform = platform
+        self.headers = None #TODO
         engine = create_engine(db_str)
 
         super.__init__(engine)
