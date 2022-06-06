@@ -2,6 +2,8 @@ import collections
 import httpx
 import time
 import json
+import asyncio
+
 
 from urllib.parse import *
 from urllib.parse import parse_qs
@@ -47,34 +49,9 @@ class GithubPaginator(collections.abc.Sequence):
 
     def __len__(self):
 
-        # make head request
-        num_attempts = 0
-        while num_attempts < 10:
-            r = hit_api(self.url, self.headers, method="HEAD")
+        num_pages = get_last_page_number(self.url, self.headers)
 
-            if r:
-                break
-
-        else:
-            return None
-
-        num_pages = None
-        last_page_data_count = None
-        last_page_url = None
-
-        if 'last' not in r.links.keys():
-            num_pages = 1
-
-            # add query page number to establish which page we need to look at and count the data
-            page_num_param = {"page": num_pages}
-            last_page_url = add_query_params(self.url, page_num_param)
-            
-        else:
-            # get the last url from header
-            last_page_url = get_url_from_header(r, 'last')
-
-            parsed_url = urlparse(last_page_url)
-            num_pages = int(parse_qs(parsed_url.query)['page'][0])
+        last_page_url = add_query_params(self.url, {"page": num_pages})
 
         # get the amount of data on last page
         data, _ = retrieve_data(last_page_url, self.headers)
@@ -98,7 +75,7 @@ class GithubPaginator(collections.abc.Sequence):
             yield data
 
         while 'next' in response.links.keys():
-            next_page = get_url_from_header(response, 'next')
+            next_page = response.links['next']
             data_list, response = retrieve_data(next_page, self.headers)
 
             if data_list is None:
@@ -107,8 +84,37 @@ class GithubPaginator(collections.abc.Sequence):
             for data in data_list:
                 yield data
 
-    def __aiter__(self):
-        pass
+    async def __aiter__(self):
+        
+        last_page_num = get_last_page_number(self.url, self.headers)
+
+        print(last_page_num)
+
+        if last_page_num == 1:
+            data_list, _ = retrieve_data(self.url, self.headers)
+
+            for data in data_list:
+                yield data
+
+            return
+        
+        for page_num in range(1, last_page_num + 1):
+            url = add_query_params(self.url, {"page": page_num})
+
+            data_list, _ = await async_retrieve_data(url, self.headers)
+
+            if data_list is None:
+                return
+
+            for data in data_list:
+                yield data
+
+                
+
+################################################################################
+
+# Url Helper Methods
+
 
 def clean_url(url, remove_fields):
 
@@ -123,7 +129,6 @@ def clean_url(url, remove_fields):
 
     return clean_url
 
-
 def add_query_params(url: str, additional_params: dict) -> str:
     url_components = urlparse(url)
     original_params = parse_qs(url_components.query)
@@ -134,16 +139,16 @@ def add_query_params(url: str, additional_params: dict) -> str:
     # _replace() is how you can create a new NamedTuple with a changed field
     return url_components._replace(query=updated_query).geturl()
 
-def get_url_from_header(request, type):
+################################################################################
 
-    return request.links[type]['url']
+# Syncrounous data retrieval methods
 
 def retrieve_data(url, headers):
 
     num_attempts = 0
     while num_attempts < 10:
 
-        response = hit_api(url, headers)
+        response = sync_hit_api(url, headers)
         if response is None:
             continue
         # update rate limit here
@@ -174,7 +179,8 @@ def retrieve_data(url, headers):
 
     return None, None
 
-def hit_api(url, headers, method='GET'):
+
+def sync_hit_api(url, headers, method='GET'):
 
     # print(f"Hitting endpoint with {method} request: {url}...\n")
 
@@ -186,6 +192,64 @@ def hit_api(url, headers, method='GET'):
         return None
 
     return response
+################################################################################
+
+# Async data retrieval methods
+
+def async_sync_hit_api(url, headers, method='GET'):
+    # print(f"Hitting endpoint with {method} request: {url}...\n")
+
+    try:
+        response = httpx.request(method=method, url=url, headers=headers)
+    except TimeoutError:
+        print("Request timed out. Sleeping 10 seconds and trying again...\n")
+        time.sleep(10)
+        return None
+
+    return response
+
+
+async def async_retrieve_data(url, headers):
+
+    print(url)
+
+    num_attempts = 0
+    while num_attempts < 10:
+
+        response = async_sync_hit_api(url, headers)
+        if response is None:
+            continue
+        # update rate limit here
+
+        try:
+            page_data = response.json()
+        except:
+           page_data = json.loads(json.dumps(response.text))
+
+        if type(page_data) == list:
+            return page_data, response
+
+        elif type(page_data) == dict:
+            result = process_dict_response(response, page_data)
+
+            if result == "break":
+                break
+            elif result == "decrease_attempts":
+                num_attempts -= 1
+
+        elif type(page_data) == str:
+            result, data_loaded = process_str_response(response, page_data)
+
+            if data_loaded:
+                return result, response
+
+        num_attempts += 1
+
+    return None, None
+
+################################################################################################
+
+# Methods to process api responses
 
 def process_dict_response(response, page_data):
     
@@ -229,24 +293,49 @@ def process_str_response(response, page_data):
                 pass
 
 
-# url = "https://api.github.com/repos/chaoss/augur/issues/events?per_page=50&page=5"
+################################################################################
 
-url = "https://api.github.com/repos/ABrain7710/cs-4320-github-assignment-one-repo/pulls?state=all&direction=desc"
+# Other utility functions
 
-with open('../augur.config.json', 'r') as f:
-  access_token = json.load(f)["Database"]["key"]
+def get_last_page_number(url, headers):
+
+    num_attempts = 0
+    while num_attempts < 10:
+        r = sync_hit_api(url, headers, method="HEAD")
+
+        if r:
+            break
+
+    else:
+        return None
+
+    if 'last' not in r.links.keys():
+        return 1
+    else:
+        # get the last url from header
+        last_page_url = r.links['last']
+
+        parsed_url = urlparse(last_page_url)
+        num_pages = int(parse_qs(parsed_url.query)['page'][0])
 
 
-prs = GithubPaginator(url, access_token)
+################################################################################
 
-print("Data")
-for i in prs:
-    print(i["url"])
+# Main function to test program
 
-print("Length")
-print(len(prs))
+async def main():
+    # url = "https://api.github.com/repos/chaoss/augur/issues/events?per_page=50&page=5"
 
-print("First pr url")
-print(prs[0]["url"])
-print("\n")
+    small_url = "https://api.github.com/repos/bradtraversy/50projects50days/pulls?state=all&direction=desc"
 
+    large_url = "https://api.github.com/repos/chaoss/augur/pulls?state=all&direction=desc"
+
+    with open('../augur.config.json', 'r') as f:
+        access_token = json.load(f)["Database"]["key"]
+
+    prs = GithubPaginator(large_url, access_token)
+
+    print(len(prs))
+if __name__ == '__main__':
+    # This code won't run if this file is imported.
+    asyncio.run(main())
