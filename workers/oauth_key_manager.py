@@ -88,11 +88,11 @@ class OauthKeyManager():
             print("Sleeping for 60 seconds to wait for new keys")
             time.sleep(60)
 
-        print(self.fresh_keys.queue)
+        first_key_data = list(self.fresh_keys.queue)[0]
 
-        first_key = list(self.fresh_keys.queue)[0]
+        print(first_key_data["rate_limit"])
 
-        return first_key
+        return first_key_data["access_token"]
 
     # helper method to move a key from fresh to depleted
     def mark_as_depleted(self):
@@ -147,9 +147,8 @@ def get_list_of_oauth_keys(operations_db_conn, config_key):
 
 def get_oauth_key_data(client, oauth_key_data):
 
-    rate_limit_header_key = "X-RateLimit-Remaining"
-    rate_limit_reset_header_key = "X-RateLimit-Reset"
-    url = "https://api.github.com/users/sgoggins"
+    # this endpoint allows us to check the rate limit, but it does not use one of our 5000 requests
+    url = "https://api.github.com/rate_limit"
 
     headers = {'Authorization': f'token {oauth_key_data["access_token"]}'}
 
@@ -164,17 +163,18 @@ def get_oauth_key_data(client, oauth_key_data):
     except KeyError:
         pass
 
+    rate_limit_data = data["resources"]["core"]
+
     seconds_to_reset = (
         datetime.datetime.fromtimestamp(
             int(
-                response.headers[rate_limit_reset_header_key])
+                rate_limit_data["reset"])
         ) - datetime.datetime.now()
     ).total_seconds()
 
     key_data = {
-        'oauth_id': oauth_key_data['oauth_id'],
         'access_token': oauth_key_data['access_token'],
-        'rate_limit': int(response.headers[rate_limit_header_key]),
+        'rate_limit': int(rate_limit_data["remaining"]),
         'seconds_to_reset': seconds_to_reset
     }
 
