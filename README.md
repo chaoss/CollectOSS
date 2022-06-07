@@ -14,7 +14,7 @@ branch | status
 
 ## What is Augur?
 
-Augur is a software suite for collecting and measuring structured data
+Relational. Easy to pull data out of for open source software metrics. Collection is verifiably accurate. Augur is a software suite for collecting and measuring structured data
 about [free](https://www.fsf.org/about/) and [open-source](https://opensource.org/docs/osd) software (FOSS) communities.
 
 We gather trace data for a group of repositories, normalize
