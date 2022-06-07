@@ -3,6 +3,7 @@ import math
 
 from numpy.lib.utils import source
 from workers.worker_base import *
+from workers.github_paginator import *
 import sqlalchemy as s
 import time
 import math
@@ -577,7 +578,7 @@ def query_github_contributors(session, entry_info, repo_id):
     duplicate_col_map = {'cntrb_login': 'login'}
 
     #list to hold contributors needing insertion or update
-    contributors = paginate(contributors_url, duplicate_col_map, update_col_map, table, table_pkey)
+    contributors = GithubPaginator(contributors_url, access_token)#paginate(contributors_url, duplicate_col_map, update_col_map, table, table_pkey)
 
     session.logger.info("Count of contributors needing insertion: " + str(len(contributors)) + "\n")
 

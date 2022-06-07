@@ -1,18 +1,34 @@
 
 from workers.worker_persistance import *
 from augur import db_models
+from workers.oauth_key_manager import *
 
 #TODO: setup github headers in a method here.
 #Encapsulate data for celery task worker api
 class TaskSession(sqlalchemy.orm.Session):
+
+    ROOT_AUGUR_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+
     def __init__(self,logger,db_str,config={},platform='github'):
         self.logger = logger
         self.config = config
         self.platform = platform
-        self.headers = None #TODO
+        
+        #print(f"path = {str(ROOT_AUGUR_DIR) + "augur.config.json"}")
+        self._oauths = OauthKeyManager(str(ROOT_AUGUR_DIR) + "augur.config.json")
+
         engine = create_engine(db_str)
 
         super.__init__(engine)
+    
+    @property
+    def access_token(self):
+        try:
+            return self._oauths.fresh_keys.get(timeout=5)
+        except:
+            self.logger.error("No access token in queue!")
+            return None
+        
     
 
 
