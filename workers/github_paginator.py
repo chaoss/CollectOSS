@@ -24,7 +24,7 @@ class GithubPaginator(collections.abc.Sequence):
 
         self.key_manager = OauthKeyManager(config_path)
 
-        key = self.key_manager.get_key()
+        key = self.key_manager.get_key(first_key=True)
 
         self.headers = get_header(key)
 
@@ -36,7 +36,7 @@ class GithubPaginator(collections.abc.Sequence):
         # create url to query
         params = {"page": items_page}.update(self.default_params)
 
-        data, _ = retrieve_data(self.url, self.headers, query_params=params)
+        data, _ = self.retrieve_data(self.url, self.headers, query_params=params)
 
         if data is None:
             return None
@@ -51,12 +51,12 @@ class GithubPaginator(collections.abc.Sequence):
 
     def __len__(self):
 
-        num_pages = get_last_page_number(self.url, self.headers)
+        num_pages = self.get_last_page_number(self.url, self.headers)
 
         params = {"page": num_pages}.update(self.default_params)
 
         # get the amount of data on last page
-        data, _ = retrieve_data(self.url, self.headers, query_params=params)
+        data, _ = self.retrieve_data(self.url, self.headers, query_params=params)
 
         last_page_data_count = len(data)
 
@@ -67,7 +67,7 @@ class GithubPaginator(collections.abc.Sequence):
 
     def __iter__(self):
 
-        data_list, response = retrieve_data(self.url, self.headers, query_params=self.default_params)
+        data_list, response = self.retrieve_data(self.url, self.headers, query_params=self.default_params)
 
         if data_list is None:
             yield None
@@ -80,7 +80,7 @@ class GithubPaginator(collections.abc.Sequence):
             next_page = response.links['next']['url']
 
             # Here we don't need to pass in params with the page, or the default params because the url from the headers already has those values
-            data_list, response = retrieve_data(next_page, self.headers)
+            data_list, response = self.retrieve_data(next_page, self.headers)
 
             if data_list is None:
                 return
@@ -88,15 +88,74 @@ class GithubPaginator(collections.abc.Sequence):
             for data in data_list:
                 yield data
 
+    def hit_api(self, url, headers, query_params={}, method='GET'):
+
+        print(f"Hitting endpoint with {method} request: {url}...\n")
+
+        with httpx.Client() as client:
+
+            try:
+                response = client.request(
+                    method=method, url=url, headers=headers, params=query_params)
+
+                if is_key_depleted(response) is True:
+
+                    key = self.key_manager.get_key()
+
+                    self.headers = get_header(key)
+
+            except TimeoutError:
+                print("Request timed out. Sleeping 10 seconds and trying again...\n")
+                time.sleep(10)
+                return None
+
+        return response 
+
+    def retrieve_data(self, url, headers, query_params={}):
+
+        num_attempts = 0
+        while num_attempts < 10:
+
+            response = self.hit_api(url, headers, query_params)
+            if response is None:
+                continue
+            # update rate limit here
+
+            try:
+                page_data = response.json()
+            except:
+                page_data = json.loads(json.dumps(response.text))
+
+            if type(page_data) == list:
+                return page_data, response
+
+            elif type(page_data) == dict:
+                result = process_dict_response(response, page_data)
+
+                if result == "break":
+                    break
+                elif result == "decrease_attempts":
+                    num_attempts -= 1
+
+            elif type(page_data) == str:
+                result, data_loaded = process_str_response(response, page_data)
+
+                if data_loaded:
+                    return result, response
+
+            num_attempts += 1
+
+        return None, None
+
     async def __aiter__(self):
         
-        last_page_num = get_last_page_number(self.url, self.headers)
+        last_page_num = self.get_last_page_number(self.url, self.headers)
 
 
         if last_page_num == 1:
             params = {"page": 1}.update(self.default_params)
 
-            data_list, _ = retrieve_data(
+            data_list, _ = self.retrieve_data(
                 self.url, self.headers, query_params=params)
 
             for data in data_list:
@@ -111,7 +170,7 @@ class GithubPaginator(collections.abc.Sequence):
                 params = {"page": page_num}.update(self.default_params)
 
                 tasks.append(asyncio.ensure_future(
-                    async_retrieve_data(client, self.url, self.headers, query_params=params)))
+                    self.async_retrieve_data(client, self.url, self.headers, query_params=params)))
  
             index = 1
             while len(tasks) > 0:
@@ -124,13 +183,90 @@ class GithubPaginator(collections.abc.Sequence):
                 for data in data_list:
                     yield data
 
+    async def async_hit_api(self, client, url, headers, method='GET'):
+        # print(f"Hitting endpoint with {method} request: {url}...\n")
+
+        try:
+            response = await client.request(method=method, url=url, headers=headers)
+
+            if is_key_depleted(response) is True:
+
+                key = self.key_manager.get_key()
+
+                self.headers = get_header(key)
+        except TimeoutError:
+            print("Request timed out. Sleeping 10 seconds and trying again...\n")
+            time.sleep(10)
+            return None
+
+        print(url)
+
+        return response
+
+
+    async def async_retrieve_data(self, client, url, headers, query_params={}):
+
+        num_attempts = 0
+        while num_attempts < 10:
+
+            response = await self.async_hit_api(client, url, headers)
+            if response is None:
+                continue
+            # update rate limit here
+
+            try:
+                page_data = response.json()
+            except:
+                page_data = json.loads(json.dumps(response.text))
+
+            if type(page_data) == list:
+                return page_data, response
+
+            elif type(page_data) == dict:
+                result = process_dict_response(response, page_data)
+
+                if result == "break":
+                    break
+                elif result == "decrease_attempts":
+                    num_attempts -= 1
+
+            elif type(page_data) == str:
+                result, data_loaded = process_str_response(response, page_data)
+
+                if data_loaded:
+                    return result, response
+
+            num_attempts += 1
+
+        return None, None
+
+    def get_last_page_number(self, url, headers):
+
+        num_attempts = 0
+        while num_attempts < 10:
+            r = self.hit_api(url, headers, method="HEAD")
+
+            if r:
+                break
+
+        else:
+            return None
+
+        if 'last' not in r.links.keys():
+            return 1
+        else:
+            # get the last url from header
+            last_page_url = r.links['last']['url']
+
+            parsed_url = urlparse(last_page_url)
+            num_pages = int(parse_qs(parsed_url.query)['page'][0])
+
+            return num_pages
 
 
 ################################################################################
 
-# Url Helper Methods
-
-
+# Url Helper Method to remove query paramaters from the url
 def clean_url(url, remove_fields):
 
     u = urlparse(url)
@@ -146,117 +282,6 @@ def clean_url(url, remove_fields):
 
 ################################################################################
 
-# Syncrounous data retrieval methods
-
-
-def retrieve_data(url, headers, query_params={}):
-
-    num_attempts = 0
-    while num_attempts < 10:
-
-        response = sync_hit_api(url, headers, query_params)
-        if response is None:
-            continue
-        # update rate limit here
-
-        try:
-            page_data = response.json()
-        except:
-           page_data = json.loads(json.dumps(response.text))
-
-        if type(page_data) == list:
-            return page_data, response
-
-        elif type(page_data) == dict:
-            result = process_dict_response(response, page_data)
-
-            if result == "break":
-                break
-            elif result == "decrease_attempts":
-                num_attempts -= 1
-
-        elif type(page_data) == str:
-            result, data_loaded = process_str_response(response, page_data)
-
-            if data_loaded:
-                return result, response
-
-        num_attempts += 1
-
-    return None, None
-
-
-def sync_hit_api(url, headers, query_params={}, method='GET'):
-
-    print(f"Hitting endpoint with {method} request: {url}...\n")
-
-    try:
-        with httpx.Client() as client:
-            response = client.request(method=method, url=url, headers=headers, params=query_params)
-    except TimeoutError:
-        print("Request timed out. Sleeping 10 seconds and trying again...\n")
-        time.sleep(10)
-        return None
-
-    return response
-################################################################################
-
-# Async data retrieval methods
-
-
-async def async_sync_hit_api(client, url, headers, method='GET'):
-    # print(f"Hitting endpoint with {method} request: {url}...\n")
-
-    try:
-        response = await client.request(method=method, url=url, headers=headers)
-    except TimeoutError:
-        print("Request timed out. Sleeping 10 seconds and trying again...\n")
-        time.sleep(10)
-        return None
-
-    print(url)
-
-    return response
-
-
-async def async_retrieve_data(client, url, headers, query_params={}):
-
-    num_attempts = 0
-    while num_attempts < 10:
-
-        response = await async_sync_hit_api(client, url, headers)
-        if response is None:
-            continue
-        # update rate limit here
-
-        try:
-            page_data = response.json()
-        except:
-           page_data = json.loads(json.dumps(response.text))
-
-        if type(page_data) == list:
-            return page_data, response
-
-        elif type(page_data) == dict:
-            result = process_dict_response(response, page_data)
-
-            if result == "break":
-                break
-            elif result == "decrease_attempts":
-                num_attempts -= 1
-
-        elif type(page_data) == str:
-            result, data_loaded = process_str_response(response, page_data)
-
-            if data_loaded:
-                return result, response
-
-        num_attempts += 1
-
-    return None, None
-
-################################################################################################
-
 # Methods to process api responses
 
 def process_dict_response(response, page_data):
@@ -265,7 +290,7 @@ def process_dict_response(response, page_data):
     if page_data['message'] == "Not Found":
         print(
             "Github repo was not found or does not exist for endpoint: "
-            f"{url.format(page_number)}\n"
+            f"{response.url}\n"
         )
         return "break"
 
@@ -305,32 +330,20 @@ def process_str_response(response, page_data):
 
 # Other utility functions
 
-def get_last_page_number(url, headers):
-
-    num_attempts = 0
-    while num_attempts < 10:
-        r = sync_hit_api(url, headers, method="HEAD")
-
-        if r:
-            break
-
-    else:
-        return None
-
-    if 'last' not in r.links.keys():
-        return 1
-    else:
-        # get the last url from header
-        last_page_url = r.links['last']['url']
-
-        parsed_url = urlparse(last_page_url)
-        num_pages = int(parse_qs(parsed_url.query)['page'][0])
-
-        return num_pages
-
+# creates the header needed for a request, when given an api key
 def get_header(oauth_key):
 
     return {'Authorization': f'token {oauth_key}'}
+
+
+# determines if all the rate limit is used up on a key, and it is depleted
+def is_key_depleted(response):
+
+    rate_limit_header_key = "X-RateLimit-Remaining"
+
+    rate_limit = int(response.headers[rate_limit_header_key])
+
+    return rate_limit == 0
 
 
 ################################################################################
