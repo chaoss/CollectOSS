@@ -4,6 +4,7 @@ import math
 from numpy.lib.utils import source
 from workers.worker_base import *
 from workers.github_paginator import *
+from augur import db_models
 import sqlalchemy as s
 import time
 import math
@@ -578,7 +579,7 @@ def query_github_contributors(session, entry_info, repo_id):
     duplicate_col_map = {'cntrb_login': 'login'}
 
     #list to hold contributors needing insertion or update
-    contributors = GithubPaginator(contributors_url, access_token)#paginate(contributors_url, duplicate_col_map, update_col_map, table, table_pkey)
+    contributors = GithubPaginator(contributors_url, session.access_token)#paginate(contributors_url, duplicate_col_map, update_col_map, table, table_pkey)
 
     session.logger.info("Count of contributors needing insertion: " + str(len(contributors)) + "\n")
 
@@ -589,8 +590,7 @@ def query_github_contributors(session, entry_info, repo_id):
             #   i think that's it
             cntrb_url = ("https://api.github.com/users/" + repo_contributor['login'])
             session.logger.info("Hitting endpoint: " + cntrb_url + " ...\n")
-            r = requests.get(url=cntrb_url, headers=session.headers)
-            self.update_gh_rate_limit(r)
+            r = sync_hit_api(cntrb_url, contributors.headers)
             contributor = r.json()
 
             company = None
@@ -638,22 +638,32 @@ def query_github_contributors(session, entry_info, repo_id):
             }
             #dup check
             #TODO: add additional fields to check if needed.
-            existingMatchingContributors = self.db.execute(
-                s.sql.select(
-                    [self.contributors_table.c.gh_node_id]
-                ).where(
-                    self.contributors_table.c.gh_node_id==cntrb["gh_node_id"]
-                )
-            ).fetchall()
+            #existingMatchingContributors = self.db.execute(
+            #    s.sql.select(
+            #        [self.contributors_table.c.gh_node_id]
+            #    ).where(
+            #        self.contributors_table.c.gh_node_id==cntrb["gh_node_id"]
+            #    )
+            #).fetchall()
+
+            stmnt = select(Contributors.gh_node_id).where(Contributors.gh_node_id == cntrb["gh_node_id"])
+            existingMatchingContributors = session.execute(stmnt)
 
             if len(existingMatchingContributors) > 0:
                 break #if contributor already exists in table
 
-
+            
+            #insert cntrb to table.
+            new_contrib = Contributors(**cntrb)
+            session.add(new_contrib)
+            session.commit()
+            """
             # Commit insertion to table
             if repo_contributor['flag'] == 'need_update':
-                result = self.db.execute(self.contributors_table.update().where(
-                    self.worker_history_table.c.cntrb_email==email).values(cntrb))
+
+                #result = self.db.execute(self.contributors_table.update().where(
+                #    self.worker_history_table.c.cntrb_email==email).values(cntrb))
+                stmnt = update(Contributors).where(Contributors.)
                 self.logger.info("Updated tuple in the contributors table with existing email: {}".format(email))
                 self.cntrb_id_inc = repo_contributor['pkey']
             elif repo_contributor['flag'] == 'need_insertion':
@@ -668,11 +678,12 @@ def query_github_contributors(session, entry_info, repo_id):
 
                 # Increment our global track of the cntrb id for the possibility of it being used as a FK
                 self.cntrb_id_inc = int(result.inserted_primary_key[0])
+            """
 
         except Exception as e:
-            self.logger.error("Caught exception: {}".format(e))
-            self.logger.error(f"Traceback: {traceback.format_exc()}")
-            self.logger.error("Cascading Contributor Anomalie from missing repo contributor data: {} ...\n".format(cntrb_url))
+            session.logger.error("Caught exception: {}".format(e))
+            session.logger.error(f"Traceback: {traceback.format_exc()}")
+            session.logger.error("Cascading Contributor Anomalie from missing repo contributor data: {} ...\n".format(cntrb_url))
             continue
 
 # Hit the endpoint specified by the url and return the json that it returns if it returns a dict.
