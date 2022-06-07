@@ -4,13 +4,14 @@ import time
 import json
 import asyncio
 
+from workers.oauth_key_manager import *
 
 from urllib.parse import *
 from urllib.parse import parse_qs
 
 
 class GithubPaginator(collections.abc.Sequence):
-    def __init__(self, url, access_token, from_datetime=None, to_datetime=None):
+    def __init__(self, url, config_path, from_datetime=None, to_datetime=None):
 
         remove_fields = ["per_page", "page"]
         url = clean_url(url, remove_fields)
@@ -21,7 +22,11 @@ class GithubPaginator(collections.abc.Sequence):
         self.rate_limit = None
         self.default_params = {"per_page": 100}
 
-        self.headers = {'Authorization': f'token {access_token}'}
+        self.key_manager = OauthKeyManager(config_path)
+
+        key = self.key_manager.get_key()
+
+        self.headers = get_header(key)
 
     def __getitem__(self, index):
 
@@ -81,7 +86,7 @@ class GithubPaginator(collections.abc.Sequence):
                 return
 
             for data in data_list:
-                yield datas
+                yield data
 
     async def __aiter__(self):
         
@@ -183,7 +188,7 @@ def retrieve_data(url, headers, query_params={}):
 
 def sync_hit_api(url, headers, query_params={}, method='GET'):
 
-    # print(f"Hitting endpoint with {method} request: {url}...\n")
+    print(f"Hitting endpoint with {method} request: {url}...\n")
 
     try:
         with httpx.Client() as client:
@@ -323,34 +328,36 @@ def get_last_page_number(url, headers):
 
         return num_pages
 
+def get_header(oauth_key):
+
+    return {'Authorization': f'token {oauth_key}'}
+
 
 ################################################################################
 
 # Main function to test program
 
-async def main():
-    # url = "https://api.github.com/repos/chaoss/augur/issues/events?per_page=50&page=5"
-
+def main():
     small_url = "https://api.github.com/repos/bradtraversy/50projects50days/pulls?state=all&direction=desc"
 
     large_url = "https://api.github.com/repos/chaoss/augur/pulls?state=all&direction=desc"
 
     extra_large_url = "https://api.github.com/repos/freeCodeCamp/freeCodeCamp/pulls?state=all&direction=desc"
 
-    
 
-    with open('../augur.config.json', 'r') as f:
-        access_token = json.load(f)["Database"]["key"]
+    config_path = '../augur.config.json'
 
-    prs = GithubPaginator(extra_large_url, access_token)
+    prs = GithubPaginator(extra_large_url, config_path)
 
     start_time = time.time()
-    async for pr in prs:
-        pass
+
+    for i in range(0, 30):
+        for pr in prs:
+            pass
 
     total_time = time.time() - start_time
-
     print(total_time)
+
 if __name__ == '__main__':
     # This code won't run if this file is imported.
-    asyncio.run(main())
+    main()
