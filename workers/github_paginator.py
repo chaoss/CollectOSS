@@ -15,13 +15,11 @@ class GithubPaginator(collections.abc.Sequence):
         remove_fields = ["per_page", "page"]
         url = clean_url(url, remove_fields)
 
-        per_page_param = {"per_page": 100}
-        url = add_query_params(url, per_page_param)
-
         self.url = url
         self.from_datetime = from_datetime
         self.to_datetime = to_datetime
         self.rate_limit = None
+        self.default_params = {"per_page": 100}
 
         self.headers = {'Authorization': f'token {access_token}'}
 
@@ -31,10 +29,9 @@ class GithubPaginator(collections.abc.Sequence):
         items_page = (index // 100) + 1
 
         # create url to query
-        per_page_param = {"page": items_page}
-        url = add_query_params(self.url, per_page_param)
+        params = {"page": items_page}.update(self.default_params)
 
-        data, _ = retrieve_data(url, self.headers)
+        data, _ = retrieve_data(self.url, self.headers, query_params=params)
 
         if data is None:
             return None
@@ -51,10 +48,10 @@ class GithubPaginator(collections.abc.Sequence):
 
         num_pages = get_last_page_number(self.url, self.headers)
 
-        last_page_url = add_query_params(self.url, {"page": num_pages})
+        params = {"page": num_pages}.update(self.default_params)
 
         # get the amount of data on last page
-        data, _ = retrieve_data(last_page_url, self.headers)
+        data, _ = retrieve_data(self.url, self.headers, query_params=params)
 
         last_page_data_count = len(data)
 
@@ -65,7 +62,7 @@ class GithubPaginator(collections.abc.Sequence):
 
     def __iter__(self):
 
-        data_list, response = retrieve_data(self.url, self.headers)
+        data_list, response = retrieve_data(self.url, self.headers, query_params=self.default_params)
 
         if data_list is None:
             yield None
@@ -75,41 +72,54 @@ class GithubPaginator(collections.abc.Sequence):
             yield data
 
         while 'next' in response.links.keys():
-            next_page = response.links['next']
+            next_page = response.links['next']['url']
+
+            # Here we don't need to pass in params with the page, or the default params because the url from the headers already has those values
             data_list, response = retrieve_data(next_page, self.headers)
 
             if data_list is None:
                 return
 
             for data in data_list:
-                yield data
+                yield datas
 
     async def __aiter__(self):
         
         last_page_num = get_last_page_number(self.url, self.headers)
 
-        print(last_page_num)
 
         if last_page_num == 1:
-            data_list, _ = retrieve_data(self.url, self.headers)
+            params = {"page": 1}.update(self.default_params)
+
+            data_list, _ = retrieve_data(
+                self.url, self.headers, query_params=params)
 
             for data in data_list:
                 yield data
 
             return
         
-        for page_num in range(1, last_page_num + 1):
-            url = add_query_params(self.url, {"page": page_num})
+        async with httpx.AsyncClient() as client:
+            tasks = []
+            for page_num in range(1, last_page_num + 1):
 
-            data_list, _ = await async_retrieve_data(url, self.headers)
+                params = {"page": page_num}.update(self.default_params)
 
-            if data_list is None:
-                return
+                tasks.append(asyncio.ensure_future(
+                    async_retrieve_data(client, self.url, self.headers, query_params=params)))
+ 
+            index = 1
+            while len(tasks) > 0:
 
-            for data in data_list:
-                yield data
+                print(f"Batch {index}")
+                data_list = await asyncio.gather(*tasks[:1])
+            
+                del tasks[:1]
 
-                
+                for data in data_list:
+                    yield data
+
+
 
 ################################################################################
 
@@ -129,26 +139,17 @@ def clean_url(url, remove_fields):
 
     return clean_url
 
-def add_query_params(url: str, additional_params: dict) -> str:
-    url_components = urlparse(url)
-    original_params = parse_qs(url_components.query)
-    # Before Python 3.5 you could update original_params with
-    # additional_params, but here all the variables are immutable.
-    merged_params = {**original_params, **additional_params}
-    updated_query = urlencode(merged_params, doseq=True)
-    # _replace() is how you can create a new NamedTuple with a changed field
-    return url_components._replace(query=updated_query).geturl()
-
 ################################################################################
 
 # Syncrounous data retrieval methods
 
-def retrieve_data(url, headers):
+
+def retrieve_data(url, headers, query_params={}):
 
     num_attempts = 0
     while num_attempts < 10:
 
-        response = sync_hit_api(url, headers)
+        response = sync_hit_api(url, headers, query_params)
         if response is None:
             continue
         # update rate limit here
@@ -180,12 +181,13 @@ def retrieve_data(url, headers):
     return None, None
 
 
-def sync_hit_api(url, headers, method='GET'):
+def sync_hit_api(url, headers, query_params={}, method='GET'):
 
     # print(f"Hitting endpoint with {method} request: {url}...\n")
 
     try:
-        response = httpx.request(method=method, url=url, headers=headers)
+        with httpx.Client() as client:
+            response = client.request(method=method, url=url, headers=headers, params=query_params)
     except TimeoutError:
         print("Request timed out. Sleeping 10 seconds and trying again...\n")
         time.sleep(10)
@@ -196,27 +198,28 @@ def sync_hit_api(url, headers, method='GET'):
 
 # Async data retrieval methods
 
-def async_sync_hit_api(url, headers, method='GET'):
+
+async def async_sync_hit_api(client, url, headers, method='GET'):
     # print(f"Hitting endpoint with {method} request: {url}...\n")
 
     try:
-        response = httpx.request(method=method, url=url, headers=headers)
+        response = await client.request(method=method, url=url, headers=headers)
     except TimeoutError:
         print("Request timed out. Sleeping 10 seconds and trying again...\n")
         time.sleep(10)
         return None
 
+    print(url)
+
     return response
 
 
-async def async_retrieve_data(url, headers):
-
-    print(url)
+async def async_retrieve_data(client, url, headers, query_params={}):
 
     num_attempts = 0
     while num_attempts < 10:
 
-        response = async_sync_hit_api(url, headers)
+        response = await async_sync_hit_api(client, url, headers)
         if response is None:
             continue
         # update rate limit here
@@ -313,10 +316,12 @@ def get_last_page_number(url, headers):
         return 1
     else:
         # get the last url from header
-        last_page_url = r.links['last']
+        last_page_url = r.links['last']['url']
 
         parsed_url = urlparse(last_page_url)
         num_pages = int(parse_qs(parsed_url.query)['page'][0])
+
+        return num_pages
 
 
 ################################################################################
@@ -330,12 +335,22 @@ async def main():
 
     large_url = "https://api.github.com/repos/chaoss/augur/pulls?state=all&direction=desc"
 
+    extra_large_url = "https://api.github.com/repos/freeCodeCamp/freeCodeCamp/pulls?state=all&direction=desc"
+
+    
+
     with open('../augur.config.json', 'r') as f:
         access_token = json.load(f)["Database"]["key"]
 
-    prs = GithubPaginator(large_url, access_token)
+    prs = GithubPaginator(extra_large_url, access_token)
 
-    print(len(prs))
+    start_time = time.time()
+    async for pr in prs:
+        pass
+
+    total_time = time.time() - start_time
+
+    print(total_time)
 if __name__ == '__main__':
     # This code won't run if this file is imported.
     asyncio.run(main())
