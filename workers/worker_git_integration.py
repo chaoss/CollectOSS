@@ -212,8 +212,10 @@ class WorkerGitInterfaceable(Worker):
         for oauth in [{'oauth_id': 0, 'access_token': self.config[key_name]}] + json.loads(
             pd.read_sql(oauthSQL, self.helper_db, params={}).to_json(orient="records")
         ):
+            self.logger.debug('getting oauth.')
             if platform == 'github':
                 self.headers = {'Authorization': 'token %s' % oauth['access_token']}
+                self.logger.debug('in github oauth block')
             elif platform == 'gitlab':
                 self.headers = {'Authorization': 'Bearer %s' % oauth['access_token']}
             response = requests.get(url=url, headers=self.headers, timeout=180)
