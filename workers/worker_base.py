@@ -24,7 +24,7 @@ class TaskSession(sqlalchemy.orm.Session):
     @property
     def access_token(self):
         try:
-            return self._oauths.fresh_keys.get(timeout=5)
+            return self._oauths.get_key()
         except:
             self.logger.error("No access token in queue!")
             return None
