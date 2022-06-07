@@ -654,32 +654,11 @@ def query_github_contributors(session, entry_info, repo_id):
 
             
             #insert cntrb to table.
+            #TODO: Convert to postgres upsert
             new_contrib = Contributors(**cntrb)
             session.add(new_contrib)
             session.commit()
-            """
-            # Commit insertion to table
-            if repo_contributor['flag'] == 'need_update':
-
-                #result = self.db.execute(self.contributors_table.update().where(
-                #    self.worker_history_table.c.cntrb_email==email).values(cntrb))
-                stmnt = update(Contributors).where(Contributors.)
-                self.logger.info("Updated tuple in the contributors table with existing email: {}".format(email))
-                self.cntrb_id_inc = repo_contributor['pkey']
-            elif repo_contributor['flag'] == 'need_insertion':
-                result = self.db.execute(self.contributors_table.insert().values(cntrb))
-                self.logger.info("Primary key inserted into the contributors table: {}".format(result.inserted_primary_key))
-
-                #For workers that aren't an interface.
-                if self.worker_type != "Contributor_interface":
-                    self.results_counter += 1
-
-                self.logger.info("Inserted contributor: " + contributor['login'] + "\n")
-
-                # Increment our global track of the cntrb id for the possibility of it being used as a FK
-                self.cntrb_id_inc = int(result.inserted_primary_key[0])
-            """
-
+            
         except Exception as e:
             session.logger.error("Caught exception: {}".format(e))
             session.logger.error(f"Traceback: {traceback.format_exc()}")

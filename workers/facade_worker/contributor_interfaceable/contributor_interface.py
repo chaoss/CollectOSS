@@ -681,8 +681,8 @@ def get_login_with_commit_hash(self, commit_data, repo_id):
     return match
 
 # Update the contributors table from the data facade has gathered.
-def insert_facade_contributors(self, repo_id,processes=4,multithreaded=True):
-    self.logger.info(
+def insert_facade_contributors(session, repo_id,processes=4,multithreaded=True):
+    session.logger.info(
         "Beginning process to insert contributors from facade commits for repo w entry info: {}\n".format(repo_id))
 
     # Get all of the commit data's emails and names from the commit table that do not appear
@@ -860,7 +860,7 @@ def create_endpoint_from_repo_id(session, repo_id):
         raise LookupError
 
     url = result.scalars()[0].repo_git
-    self.logger.info(f"Url: {url}")
+    session.logger.info(f"Url: {url}")
 
     return url
 

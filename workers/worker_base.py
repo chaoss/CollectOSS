@@ -5,6 +5,10 @@ from workers.oauth_key_manager import *
 
 #TODO: setup github headers in a method here.
 #Encapsulate data for celery task worker api
+
+
+#TODO: This opens the config and create the db string
+
 class TaskSession(sqlalchemy.orm.Session):
 
     ROOT_AUGUR_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
@@ -17,9 +21,9 @@ class TaskSession(sqlalchemy.orm.Session):
         #print(f"path = {str(ROOT_AUGUR_DIR) + "augur.config.json"}")
         self._oauths = OauthKeyManager(str(ROOT_AUGUR_DIR) + "augur.config.json")
 
-        engine = create_engine(db_str)
+        self.engine = create_engine(db_str)
 
-        super.__init__(engine)
+        super.__init__(self.engine)
     
     @property
     def access_token(self):
@@ -28,11 +32,14 @@ class TaskSession(sqlalchemy.orm.Session):
         except:
             self.logger.error("No access token in queue!")
             return None
+    
+
+
         
     
 
 
-
+"""
 class Worker(Persistant):
 
     ## Set Thread Safety for OSX
@@ -550,3 +557,4 @@ class Worker(Persistant):
 
         # Reset results counter for next task
         self.results_counter = 0
+"""
