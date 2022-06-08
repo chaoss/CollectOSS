@@ -6,6 +6,8 @@ import sqlalchemy as s
 import pandas as pd
 import time
 
+# from augur import dbmodels
+
 
 class OauthKeyManager():
     def __init__(self, config_file_path):
@@ -62,8 +64,9 @@ class OauthKeyManager():
         self.depleted_keys = []
 
         # sort the fresh keys by rate_limit from smallest to largeset so that the keys with the least requests get used first
+        # the sorting order here is determined by the values that calculate_oauth_sorting_weight returns
         sorted_fresh_keys = sorted(
-            fresh_keys_list, key=lambda k: k["rate_limit"])
+            fresh_keys_list, key=calculate_oauth_sorting_weight)
 
         # add the keys to the queue
         for key in sorted_fresh_keys:
@@ -76,7 +79,10 @@ class OauthKeyManager():
             self.depleted_keys.append(key)
     
     # mehtod to obtain a new key when one runs out
-    def get_key(self):
+    def get_key(self, first_key=False):
+
+        if not first_key:
+            self.mark_as_depleted()
 
         while self.fresh_keys.empty() is True:
             
@@ -122,6 +128,12 @@ class OauthKeyManager():
                     count += 1
 
             print(f"Found {count} keys that were replenished")
+
+
+def calculate_oauth_sorting_weight(value):
+
+    return (value["rate_limit"] + (value["seconds_to_reset"] * 0.694)) / 2
+
 
 ################################################################################
 
