@@ -667,8 +667,8 @@ def query_github_contributors(session, entry_info, repo_id):
 
 # Hit the endpoint specified by the url and return the json that it returns if it returns a dict.
 # Returns None on failure.
-def request_dict_from_endpoint(self, url, timeout_wait=10):
-    self.logger.info(f"Hitting endpoint: {url}")
+def request_dict_from_endpoint(session, url, timeout_wait=10):
+    session.logger.info(f"Hitting endpoint: {url}")
 
     attempts = 0
     response_data = None
@@ -677,15 +677,12 @@ def request_dict_from_endpoint(self, url, timeout_wait=10):
     # This borrow's the logic to safely hit an endpoint from paginate_endpoint.
     while attempts < 10:
         try:
-            response = requests.get(url=url, headers=self.headers)
+            response = requests.get(url=url, headers=get_header(session.access_token))
         except TimeoutError:
-            self.logger.info(
+            session.logger.info(
                 f"User data request for enriching contributor data failed with {attempts} attempts! Trying again...")
             time.sleep(timeout_wait)
             continue
-
-        # Make sure we know how many requests our api tokens have.
-        self.update_rate_limit(response, platform="github")
 
         try:
             response_data = response.json()
@@ -699,7 +696,7 @@ def request_dict_from_endpoint(self, url, timeout_wait=10):
                 try:
                     assert 'API rate limit exceeded' not in response_data['message']
                 except AssertionError as e:
-                    self.logger.info(
+                    session.logger.info(
                         f"Detected error in response data from gitHub. Trying again... Error: {e}")
                     attempts += 1
                     continue
@@ -708,15 +705,15 @@ def request_dict_from_endpoint(self, url, timeout_wait=10):
             success = True
             break
         elif type(response_data) == list:
-            self.logger.warning("Wrong type returned, trying again...")
-            self.logger.info(f"Returned list: {response_data}")
+            session.logger.warning("Wrong type returned, trying again...")
+            session.logger.info(f"Returned list: {response_data}")
         elif type(response_data) == str:
-            self.logger.info(
+            session.logger.info(
                 f"Warning! page_data was string: {response_data}")
             if "<!DOCTYPE html>" in response_data:
-                self.logger.info("HTML was returned, trying again...\n")
+                session.logger.info("HTML was returned, trying again...\n")
             elif len(response_data) == 0:
-                self.logger.warning("Empty string, trying again...\n")
+                session.logger.warning("Empty string, trying again...\n")
             else:
                 try:
                     # Sometimes raw text can be converted to a dict

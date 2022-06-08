@@ -679,10 +679,10 @@ def get_login_with_commit_hash(session, commit_data, repo_id):
 
     #TODO: here.
     # Send api request
-    login_json = self.request_dict_from_endpoint(url)
+    login_json = request_dict_from_endpoint(url)
 
     if login_json is None or 'sha' not in login_json:
-        self.logger.info("Search query returned empty data. Moving on")
+        session.logger.info("Search query returned empty data. Moving on")
         return None
 
     try:
