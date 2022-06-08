@@ -1,21 +1,33 @@
 from celery import Celery
 import redis
 from github_paginator import GithubPaginator
+import ..worker_base import TaskSession
+import json
+from celery.utils.log import get_task_logger
+
 
 
 BROKER_URL = 'redis://localhost:6379/0'
 BACKEND_URL = 'redis://localhost:6379/1'
 app = Celery('tasks', broker=BROKER_URL, backend=BACKEND_URL)
 
-# r = redis.Redis(decode_responses=True)
 r = redis.from_url('redis://localhost:6379/1', decode_responses=True)
-r.set('mykey', 'thevalueofmykey')
-print(r.get('mykey'))
-r.delete('mykey')
-print(r.get('mykey'))
+# r.set('mykey', 'thevalueofmykey')
+# print(r.get('mykey'))
+# r.delete('mykey')
+# print(r.get('mykey'))
 
 
 config_path = '../../augur.config.json'
+
+with open(config_path, 'r') as f:
+    config = json.load(f)
+
+logger = get_task_logger(__name__)
+
+session = TaskSession(logger, config)
+
+print(session.config)
 
 @app.task
 def repo_info(owner, repo):

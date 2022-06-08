@@ -2,22 +2,25 @@
 from workers.worker_persistance import *
 from augur import db_models
 from augur.config import AugurConfig
-from workers.oauth_key_manager import *
+from .augur_new.oauth_key_manager import *
 from sqlalchemy.dialects.postgresql import insert
+import sqlalchemy as s
+
+
 
 #TODO: setup github headers in a method here.
 #Encapsulate data for celery task worker api
 
 
 #TODO: Test all methods
-class TaskSession(sqlalchemy.orm.Session):
+class TaskSession(s.orm.Session):
 
     ROOT_AUGUR_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
     def __init__(self,logger,config={},platform='github'):
         self.logger = logger
         
-        self.root_augur_dir = ROOT_AUGUR_DIR
+        self.root_augur_dir = TaskSession.ROOT_AUGUR_DIR
         self.__init_config(self.root_augur_dir)
         
         DB_STR = f'postgresql://{self.config["user_database"]}:{self.config["password_database"]}@{self.config["host_database"]}:{self.config["port_database"]}/{self.config["name_database"]}'
@@ -27,8 +30,7 @@ class TaskSession(sqlalchemy.orm.Session):
         
         #print(f"path = {str(ROOT_AUGUR_DIR) + "augur.config.json"}")
         
-
-        self.__engine = create__engine(DB_STR)
+        self.__engine = s.create__engine(DB_STR)
 
         self.__oauths = OauthKeyManager(self.config,db_str=DB_STR)
 
@@ -36,7 +38,7 @@ class TaskSession(sqlalchemy.orm.Session):
 
     def __init_config(self, root_augur_dir):
         #Load config.
-        self.augur_config = AugurConfig(self.root_augur_dir,config)
+        self.augur_config = AugurConfig(self.root_augur_dir)
         self.config = {
             'host': self.augur_config.get_value('Server', 'host')
         }
