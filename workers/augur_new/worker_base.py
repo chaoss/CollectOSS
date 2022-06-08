@@ -1,8 +1,5 @@
 
-from workers.worker_persistance import *
-from augur import db_models
 from augur.config import AugurConfig
-from .augur_new.oauth_key_manager import *
 from sqlalchemy.dialects.postgresql import insert
 import sqlalchemy as s
 
