@@ -142,11 +142,6 @@ def calculate_oauth_sorting_weight(value):
 
 # Helper functions relating to oauth keys
 
-def get_oauth_key_from_config(config_file_path):
-
-    with open(config_file_path, 'r') as f:
-        return json.load(f)["Database"]["key"]
-
 
 def get_list_of_oauth_keys(operations_db_conn, config_key):
 
