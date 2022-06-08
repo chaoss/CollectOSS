@@ -9,8 +9,7 @@ from workers.oauth_key_manager import *
 #Encapsulate data for celery task worker api
 
 
-#TODO: This opens the config and create the db string
-
+#TODO: Test all methods
 class TaskSession(sqlalchemy.orm.Session):
 
     ROOT_AUGUR_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
@@ -29,11 +28,11 @@ class TaskSession(sqlalchemy.orm.Session):
         #print(f"path = {str(ROOT_AUGUR_DIR) + "augur.config.json"}")
         
 
-        self._engine = create_engine(DB_STR)
+        self.__engine = create__engine(DB_STR)
 
-        self._oauths = OauthKeyManager(self.config,db_str=DB_STR)
+        self.__oauths = OauthKeyManager(self.config,db_str=DB_STR)
 
-        super.__init__(self._engine)
+        super.__init__(self.__engine)
 
     def __init_config(self, root_augur_dir):
         #Load config.
@@ -59,10 +58,16 @@ class TaskSession(sqlalchemy.orm.Session):
     @property
     def access_token(self):
         try:
-            return self._oauths.get_key()
+            return self.__oauths.get_key()
         except:
             self.logger.error("No access token in queue!")
             return None
+
+    
+    def execute_sql(self, sql_text):
+        connection = self.__engine.connect()
+
+        return connection.execute(sql_text)
     
 
 

@@ -21,7 +21,7 @@ import traceback
 #'sqla+postgresql://scott:tiger@localhost/mydatabase'
 
 #Method to parallelize, takes a queue of data and iterates over it.
-def process_commit_metadata(contributorQueue,interface,repo_id):
+def process_commit_metadata(session, contributorQueue,repo_id):
     
     for contributor in contributorQueue:
         # Get the email from the commit data
@@ -32,11 +32,17 @@ def process_commit_metadata(contributorQueue,interface,repo_id):
         # check the email to see if it already exists in contributor_aliases
         try:
             # Look up email to see if resolved
+            """
             alias_table_data = interface.db.execute(
                 s.sql.select([s.column('alias_email')]).where(
                     interface.contributors_aliases_table.c.alias_email == email
                 )
             ).fetchall()
+            """
+
+            stmnt = select(ContributorsAliases.alias_email).where(ContributorsAliases.alias_email == email)
+
+            alias_table_data = session.execute(stmnt)
             if len(alias_table_data) >= 1:
                 # Move on if email resolved
 
@@ -45,16 +51,20 @@ def process_commit_metadata(contributorQueue,interface,repo_id):
 
                 continue
         except Exception as e:
-            interface.logger.info(
+            session.logger.info(
                 f"alias table query failed with error: {e}")
         
         #Check the unresolved_commits table to avoid hitting endpoints that we know don't have relevant data needlessly
         try:
-            unresolved_query_result = interface.db.execute(
-                s.sql.select([s.column('email'),s.column('name')]).where(
-                    interface.unresolved_commit_emails_table.c.name == name and interface.unresolved_commit_emails_table.c.email == email
-                )
-            ).fetchall()
+            #unresolved_query_result = interface.db.execute(
+            #    s.sql.select([s.column('email'),s.column('name')]).where(
+            #        interface.unresolved_commit_emails_table.c.name == name and interface.unresolved_commit_emails_table.c.email == email
+            #    )
+            #).fetchall()
+
+            stmnt = select(UnresolvedCommitEmails.email,UnresolvedCommitEmails.name).where(UnresolvedCommitEmails.name == name and UnresolvedCommitEmails.email == email)
+
+            unresolved_query_result = session.execute(stmnt)
 
             if len(unresolved_query_result) >= 1:
 
@@ -62,29 +72,35 @@ def process_commit_metadata(contributorQueue,interface,repo_id):
 
                 continue
         except Exception as e:
-            interface.logger.info(f"Failed to query unresolved alias table with error: {e}")
+            session.logger.info(f"Failed to query unresolved alias table with error: {e}")
     
 
         login = None
     
         #Check the contributors table for a login for the given name
         try:
+            """
             contributors_with_matching_name = interface.db.execute(
                 s.sql.select([s.column('gh_login')]).where(
                     interface.contributors_table.c.cntrb_full_name == name
                 )
             ).fetchall()
+            """
+
+            stmnt = select(Contributors.gh_login).where(Contributors.cbtrb_full_name == name)
+
+            contributors_with_matching_name = session.execute(stmnt)
 
             if len(contributors_with_matching_name) >= 1:
                 login = contributors_with_matching_name[0]['gh_login']
 
         except Exception as e:
-            interface.logger.error(f"Failed local login lookup with error: {e}")
+            session.logger.error(f"Failed local login lookup with error: {e}")
         
 
         # Try to get the login from the commit sha
         if login == None or login == "":
-            login = interface.get_login_with_commit_hash(contributor, repo_id)
+            login = get_login_with_commit_hash(session,contributor, repo_id)
     
         if login == None or login == "":
             # Try to get the login from supplemental data if not found with the commit hash
@@ -660,7 +676,7 @@ def get_login_with_supplemental_data(self, commit_data):
 
     return match['login']
 
-def get_login_with_commit_hash(self, commit_data, repo_id):
+def get_login_with_commit_hash(session, commit_data, repo_id):
 
     # Get endpoint for login from hash
     url = self.create_endpoint_from_commit_sha(
@@ -723,8 +739,14 @@ def insert_facade_contributors(session, repo_id,processes=4,multithreaded=True):
             ORDER BY
             hash
     """)
-    new_contribs = json.loads(pd.read_sql(new_contrib_sql, self.db, params={
-                                'repo_id': repo_id}).to_json(orient="records"))
+
+    #Execute statement with session.
+    new_contribs = session.execute_sql(new_contrib_sql)
+
+    print(new_contribs)
+    
+    #json.loads(pd.read_sql(new_contrib_sql, self.db, params={
+                   #             'repo_id': repo_id}).to_json(orient="records"))
 
     
     if len(new_contribs) > 0 and multithreaded:
@@ -738,9 +760,9 @@ def insert_facade_contributors(session, repo_id,processes=4,multithreaded=True):
         processList = []
         #Create process start conditions
         for process in range(processes):
-            interface = ContributorInterfaceable(config=self.config,logger=self.logger)
+            #interface = ContributorInterfaceable(config=self.config,logger=self.logger)
 
-            processList.append(Process(target=process_commit_metadata, args=(commitDataLists[process].tolist(),interface,repo_id,)))
+            processList.append(Process(target=process_commit_metadata, args=(session,commitDataLists[process].tolist(),repo_id,)))
     
         #Multiprocess process commits
         for pNum,process in enumerate(processList):
@@ -755,7 +777,7 @@ def insert_facade_contributors(session, repo_id,processes=4,multithreaded=True):
 
             self.logger.info(f"Process {pNum} has ended.")
     else:
-        process_commit_metadata(list(new_contribs),self,repo_id)
+        process_commit_metadata(session,list(new_contribs),repo_id)
 
     self.logger.debug("DEBUG: Got through the new_contribs")
     
