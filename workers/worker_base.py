@@ -42,11 +42,13 @@ class TaskSession(sqlalchemy.orm.Session):
         self.platform = platform
         
         #print(f"path = {str(ROOT_AUGUR_DIR) + "augur.config.json"}")
-        self._oauths = OauthKeyManager(str(ROOT_AUGUR_DIR) + "augur.config.json")
+        
 
-        self.engine = create_engine(DB_STR)
+        self._engine = create_engine(DB_STR)
 
-        super.__init__(self.engine)
+        self._oauths = OauthKeyManager(self.config,db_str=DB_STR)
+
+        super.__init__(self._engine)
     
     @property
     def access_token(self):
