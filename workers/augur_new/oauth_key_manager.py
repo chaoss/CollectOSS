@@ -25,7 +25,7 @@ class OauthKeyManager():
             #config_file_path, operations_schema)
 
         # create a list of oauth keys
-        config_key = config['key_database']#get_oauth_key_from_config(config_file_path)
+        config_key = config['key_database']
         oauth_keys = get_list_of_oauth_keys(operations_db_conn, config_key)
 
         fresh_keys_list = []
@@ -191,31 +191,6 @@ def get_oauth_key_data(client, oauth_key_data):
     return key_data
 
 ################################################################################
-
-# Helper functions relating to the database 
-
-def get_db_conn_string(config_file_path):
-
-    with open(config_file_path, 'r') as f:
-        db_config = json.load(f)["Database"]
-
-    DB_STR = f'postgresql://{db_config["user"]}:{db_config["password"]}@{db_config["host"]}:{db_config["port"]}/{db_config["name"]}'
-
-    return DB_STR
-
-
-def get_db_connection(config_file_path, schema):
-
-    DB_STR = get_db_conn_string(config_file_path)
-
-    db_conn = s.create_engine(DB_STR, poolclass=s.pool.NullPool,
-                                connect_args={'options': f'-csearch_path={schema}'})
-
-    return db_conn
-
-
-################################################################################
-
 
 # Main function to test program
 
