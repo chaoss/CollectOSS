@@ -218,8 +218,8 @@ CREATE MATERIALIZED VIEW "augur_data"."explorer_entry_list"
 AS
 SELECT DISTINCT r.repo_git,
     rg.rg_name
-   FROM (repo r
-     JOIN repo_groups rg ON ((rg.repo_group_id = r.repo_group_id)))
+   FROM (augur_data.repo r
+     JOIN augur_data.repo_groups rg ON ((rg.repo_group_id = r.repo_group_id)))
   ORDER BY rg.rg_name; 
 
 ALTER MATERIALIZED VIEW "augur_data"."explorer_entry_list" OWNER TO "augur";
