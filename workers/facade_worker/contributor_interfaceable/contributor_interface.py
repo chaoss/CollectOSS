@@ -104,7 +104,7 @@ def process_commit_metadata(session, contributorQueue,repo_id):
     
         if login == None or login == "":
             # Try to get the login from supplemental data if not found with the commit hash
-            login = interface.get_login_with_supplemental_data(contributor)
+            login = get_login_with_supplemental_data(session,contributor)
     
         if login == None:
             continue
@@ -159,9 +159,9 @@ def process_commit_metadata(session, contributorQueue,repo_id):
                 "cntrb_last_used": None if 'updated_at' not in user_data else user_data['updated_at'],
                 # Get name from commit if api doesn't get it.
                 "cntrb_full_name": name_field if 'name' not in user_data or user_data['name'] is None else user_data['name'],
-                "tool_source": interface.tool_source,
-                "tool_version": interface.tool_version,
-                "data_source": interface.data_source
+                #"tool_source": interface.tool_source,
+                #"tool_version": interface.tool_version,
+                #"data_source": interface.data_source
             }
 
         # interface.logger.info(f"{cntrb}")
@@ -567,12 +567,12 @@ def update_contributor(self, cntrb, max_attempts=3):
 #   \return A dictionary of response data from github with potential logins on success.
 #           None on failure
 
-def fetch_username_from_email(self, commit):
+def fetch_username_from_email(session, commit):
 
     # Default to failed state
     login_json = None
 
-    self.logger.info(f"Here is the commit: {commit}")
+    session.logger.info(f"Here is the commit: {commit}")
 
     # email = commit['email_raw'] if 'email_raw' in commit else commit['email_raw']
 
@@ -580,19 +580,19 @@ def fetch_username_from_email(self, commit):
         return login_json  # Don't bother with emails that are blank or less than 2 characters
 
     try:
-        url = self.create_endpoint_from_email(commit['email_raw'])
+        url = create_endpoint_from_email(commit['email_raw'])
     except Exception as e:
-        self.logger.info(
+        session.logger.info(
             f"Couldn't resolve email url with given data. Reason: {e}")
         # If the method throws an error it means that we can't hit the endpoint so we can't really do much
         return login_json
 
-    login_json = self.request_dict_from_endpoint(
+    login_json = request_dict_from_endpoint(session,
         url, timeout_wait=30)
 
     # Check if the email result got anything, if it failed try a name search.
     if login_json == None or 'total_count' not in login_json or login_json['total_count'] == 0:
-        self.logger.info(
+        session.logger.info(
             f"Could not resolve the username from {commit['email_raw']}")
 
         # Go back to failure condition
@@ -608,15 +608,16 @@ def fetch_username_from_email(self, commit):
             "data_source": self.data_source
         }
 
-        self.logger.info(f"Inserting data to unresolved: {unresolved}")
+        session.logger.info(f"Inserting data to unresolved: {unresolved}")
 
         try:
-            self.db.execute(
-                self.unresolved_commit_emails_table.insert().values(unresolved))
-        except s.exc.IntegrityError:
-            pass  # Pass because duplicate checking is expected
+            #self.db.execute(
+            #    self.unresolved_commit_emails_table.insert().values(unresolved))
+            new_unresolved_commit_email = UnresolvedCommitEmails(**unresolved)
+            session.add(new_unresolved_commit_email)
+            session.commit()
         except Exception as e:
-            self.logger.info(
+            session.logger.info(
                 f"Could not create new unresolved email {unresolved['email']}. Error: {e}")
     else:
         # Return endpoint dictionary if email found it.
@@ -628,15 +629,15 @@ def fetch_username_from_email(self, commit):
 # Method to return the login given commit data using the supplemental data in the commit
 #   -email
 #   -name
-def get_login_with_supplemental_data(self, commit_data):
+def get_login_with_supplemental_data(session, commit_data):
 
     # Try to get login from all possible emails
     # Is None upon failure.
-    login_json = self.fetch_username_from_email(commit_data)
+    login_json = fetch_username_from_email(commit_data)
 
     # Check if the email result got anything, if it failed try a name search.
     if login_json == None or 'total_count' not in login_json or login_json['total_count'] == 0:
-        self.logger.info(
+        session.logger.info(
             "Could not resolve the username from the email. Trying a name only search...")
 
         try:
@@ -679,7 +680,7 @@ def get_login_with_commit_hash(session, commit_data, repo_id):
 
     #TODO: here.
     # Send api request
-    login_json = request_dict_from_endpoint(url)
+    login_json = request_dict_from_endpoint(session,url)
 
     if login_json is None or 'sha' not in login_json:
         session.logger.info("Search query returned empty data. Moving on")
