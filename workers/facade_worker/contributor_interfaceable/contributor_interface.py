@@ -392,34 +392,29 @@ class ContributorInterfaceable(WorkerGitInterfaceable):
         self.data_source = '\'Git Log\''
 """
 
-def create_endpoint_from_commit_sha(self, commit_sha, repo_id):
-    self.logger.info(
+def create_endpoint_from_commit_sha(session,commit_sha, repo_id):
+    session.logger.info(
         f"Trying to create endpoint from commit hash: {commit_sha}")
 
     # https://api.github.com/repos/chaoss/augur/commits/53b0cc122ac9ecc1588d76759dc2e8e437f45b48
 
-    select_repo_path_query = s.sql.text("""
-        SELECT repo_path, repo_name from repo
-        WHERE repo_id = :repo_id_bind
-    """)
 
-    # Bind parameter
-    select_repo_path_query = select_repo_path_query.bindparams(
-        repo_id_bind=repo_id)
-    result = self.db.execute(select_repo_path_query).fetchall()
+    stmnt = select(Repo.repo_path, Repo.repo_name).where(Repo.repo_id == repo_id)
+
+    result = session.execute(stmnt)
 
     # if not found
     if not len(result) >= 1:
         raise LookupError
 
-    if result[0]['repo_path'] is None or result[0]['repo_name'] is None:
+    if result[0].repo_path is None or result[0].repo_name is None:
         raise KeyError
     # print(result)
 
     # Else put into a more readable local var
-    self.logger.info(f"Result: {result}")
-    repo_path = result[0]['repo_path'].split(
-        "/")[1] + "/" + result[0]['repo_name']
+    session.logger.info(f"Result: {result}")
+    repo_path = result[0].repo_path.split(
+        "/")[1] + "/" + result[0].repo_name
 
     url = "https://api.github.com/repos/" + repo_path + "/commits/" + commit_sha
 
@@ -679,9 +674,10 @@ def get_login_with_supplemental_data(self, commit_data):
 def get_login_with_commit_hash(session, commit_data, repo_id):
 
     # Get endpoint for login from hash
-    url = self.create_endpoint_from_commit_sha(
-        commit_data['hash'], repo_id)
+    url = create_endpoint_from_commit_sha(
+        session,commit_data['hash'], repo_id)
 
+    #TODO: here.
     # Send api request
     login_json = self.request_dict_from_endpoint(url)
 
@@ -768,18 +764,18 @@ def insert_facade_contributors(session, repo_id,processes=4,multithreaded=True):
         for pNum,process in enumerate(processList):
             process.daemon = True
             process.start()
-            self.logger.info(f"Process {pNum} started..")
+            session.logger.info(f"Process {pNum} started..")
         
     
         for pNum,process in enumerate(processList):
         
             process.join()
 
-            self.logger.info(f"Process {pNum} has ended.")
+            session.logger.info(f"Process {pNum} has ended.")
     else:
         process_commit_metadata(session,list(new_contribs),repo_id)
 
-    self.logger.debug("DEBUG: Got through the new_contribs")
+    session.logger.debug("DEBUG: Got through the new_contribs")
     
     def link_commits_to_contributor(contributorQueue,logger,database, commits_table):
         # iterate through all the commits with emails that appear in contributors and give them the relevant cntrb_id.
