@@ -3,7 +3,7 @@ from workers.worker_persistance import *
 from augur import db_models
 from augur.config import AugurConfig
 from workers.oauth_key_manager import *
-
+from sqlalchemy.dialects.postgresql import insert
 
 #TODO: setup github headers in a method here.
 #Encapsulate data for celery task worker api
@@ -69,6 +69,24 @@ class TaskSession(sqlalchemy.orm.Session):
 
         return connection.execute(sql_text)
     
+    def insert_data(self, data, table, natural_keys):
 
+        self.logger.info(f"Length of data to insert: {len(data)}")
+        self.logger.info(type(data))
+
+        if type(data) != list:
+            self.logger.info("Data must be a list")
+            return
+
+        if type(data[0]) != dict:
+            self.logger.info("Must be list of dicts")
+            return
+
+        table_stmt = insert(table)
+        for value in data:
+            insert_stmt = table_stmt.values(value)
+            insert_stmt = insert_stmt.on_conflict_do_update(
+                index_elements=natural_keys, set_=dict(value))
+            result = self.execute_sql(insert_stmt)
 
     

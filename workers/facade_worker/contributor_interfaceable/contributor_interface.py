@@ -111,17 +111,17 @@ def process_commit_metadata(session, contributorQueue,repo_id):
 
         url = ("https://api.github.com/users/" + login)
 
-        user_data = interface.request_dict_from_endpoint(url)
+        user_data = request_dict_from_endpoint(session,url)
 
         if user_data == None:
-            interface.logger.warning(
+            session.logger.warning(
                 f"user_data was unable to be reached. Skipping...")
             continue
 
         # Use the email found in the commit data if api data is NULL
         emailFromCommitData = contributor['email_raw'] if 'email_raw' in contributor else contributor['email']
 
-        interface.logger.info(
+        session.logger.info(
             f"Successfully retrieved data from github for email: {emailFromCommitData}")
 
         # Get name from commit if not found by GitHub
@@ -166,18 +166,21 @@ def process_commit_metadata(session, contributorQueue,repo_id):
 
         # interface.logger.info(f"{cntrb}")
         except Exception as e:
-            interface.logger.info(f"Error when trying to create cntrb: {e}")
+            session.logger.info(f"Error when trying to create cntrb: {e}")
             continue
         # Check if the github login exists in the contributors table and add the emails to alias' if it does.
 
         # Also update the contributor record with commit data if we can.
         try:
-            if not interface.resolve_if_login_existing(cntrb):
+            if not resolve_if_login_existing(session,cntrb):
                 try:
-                    interface.db.execute(
-                        interface.contributors_table.insert().values(cntrb))
+                    #interface.db.execute(
+                    #    interface.contributors_table.insert().values(cntrb))
+                    newContrib = Contributors(**cntrb)
+                    session.add(newContrib)
+                    session.commit()
                 except Exception as e:
-                    interface.logger.info(
+                    session.logger.info(
                         f"Ran into likely database collision. Assuming contributor exists in database. Error: {e}")
             else:
                 interface.update_contributor(cntrb)
@@ -498,7 +501,7 @@ def insert_alias(self, contributor, email):
 # Takes the user data from the endpoint as arg
 # Updates the alias table if the login is already in the contributor's table with the new email.
 # Returns whether the login was found in the contributors table
-def resolve_if_login_existing(self, contributor):
+def resolve_if_login_existing(session, contributor):
     # check if login exists in contributors table
     select_cntrbs_query = s.sql.text("""
         SELECT cntrb_id from contributors
@@ -508,7 +511,7 @@ def resolve_if_login_existing(self, contributor):
     # Bind parameter
     select_cntrbs_query = select_cntrbs_query.bindparams(
         gh_login_value=contributor['cntrb_login'])
-    result = self.db.execute(select_cntrbs_query)
+    result = session.execute_sql(select_cntrbs_query)
 
     # if yes
     if len(result.fetchall()) >= 1:
@@ -516,7 +519,7 @@ def resolve_if_login_existing(self, contributor):
         return True
 
     # If not found, return false
-    self.logger.info(
+    session.logger.info(
         f"Contributor not found in contributors table but can be added. Adding...")
     return False
 
