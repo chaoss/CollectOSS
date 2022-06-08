@@ -34,7 +34,6 @@ setup(
     ],
     install_requires=[
         "wheel",
-        "random",
         "coloredlogs==15.0",
         "Beaker==1.11.0",
         "SQLAlchemy==1.3.23",
