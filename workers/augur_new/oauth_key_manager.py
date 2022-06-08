@@ -10,7 +10,7 @@ import time
 
 
 class OauthKeyManager():
-    def __init__(self, config_file_path):
+    def __init__(self, config, db_str):
 
         print("Initializing Oauth key manager")
 
@@ -18,11 +18,14 @@ class OauthKeyManager():
 
         # make a connection to the database
         operations_schema = 'augur_operations'
-        operations_db_conn = get_db_connection(
-            config_file_path, operations_schema)
+        operations_db_conn = s.create_engine(db_str, poolclass=s.pool.NullPool,
+                                connect_args={'options': f'-csearch_path={schema}'})
+        
+        #get_db_connection(
+            #config_file_path, operations_schema)
 
         # create a list of oauth keys
-        config_key = get_oauth_key_from_config(config_file_path)
+        config_key = config['key_database']#get_oauth_key_from_config(config_file_path)
         oauth_keys = get_list_of_oauth_keys(operations_db_conn, config_key)
 
         fresh_keys_list = []
