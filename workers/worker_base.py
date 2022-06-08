@@ -1,7 +1,9 @@
 
 from workers.worker_persistance import *
 from augur import db_models
+from augur.config import AugurConfig
 from workers.oauth_key_manager import *
+
 
 #TODO: setup github headers in a method here.
 #Encapsulate data for celery task worker api
@@ -13,15 +15,36 @@ class TaskSession(sqlalchemy.orm.Session):
 
     ROOT_AUGUR_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
-    def __init__(self,logger,db_str,config={},platform='github'):
+    def __init__(self,logger,config={},platform='github'):
         self.logger = logger
-        self.config = config
+        
+        self.root_augur_dir = ROOT_AUGUR_DIR
+        #Load config.
+        self.augur_config = AugurConfig(self.root_augur_dir,config)
+        self.config = {
+            'host': self.augur_config.get_value('Server', 'host')
+        }
+        self.config.update(self.augur_config.get_section("Logging"))
+
+        self.config.update({
+            'capture_output': False,
+            'host_database': self.augur_config.get_value('Database', 'host'),
+            'port_database': self.augur_config.get_value('Database', 'port'),
+            'user_database': self.augur_config.get_value('Database', 'user'),
+            'name_database': self.augur_config.get_value('Database', 'name'),
+            'password_database': self.augur_config.get_value('Database', 'password'),
+            'key_database' : self.augur_config.get_value('Database', 'key')
+        })
+
+        DB_STR = f'postgresql://{self.config["user_database"]}:{self.config["password_database"]}@{self.config["host_database"]}:{self.config["port_database"]}/{self.config["name_database"]}'
+
+        self.config.update(config)
         self.platform = platform
         
         #print(f"path = {str(ROOT_AUGUR_DIR) + "augur.config.json"}")
         self._oauths = OauthKeyManager(str(ROOT_AUGUR_DIR) + "augur.config.json")
 
-        self.engine = create_engine(db_str)
+        self.engine = create_engine(DB_STR)
 
         super.__init__(self.engine)
     
