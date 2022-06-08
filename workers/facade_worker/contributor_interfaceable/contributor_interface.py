@@ -424,9 +424,9 @@ def create_endpoint_from_commit_sha(session,commit_sha, repo_id):
 
 
 # Try to construct the best url to ping GitHub's API for a username given a full name.
-def create_endpoint_from_name(self, contributor):
-    self.logger.info(
-        f"Trying to resolve contributor from name: {contributor}")
+def create_endpoint_from_name(contributor):
+    #self.logger.info(
+    #    f"Trying to resolve contributor from name: {contributor}")
 
     # Try to get the 'names' field if 'commit_name' field is not present in contributor data.
     name_field = 'cmt_author_name' if 'commit_name' in contributor else 'name'
@@ -603,9 +603,9 @@ def fetch_username_from_email(session, commit):
         unresolved = {
             "email": commit['email_raw'],
             "name": commit['name'],
-            "tool_source": self.tool_source,
-            "tool_version": self.tool_version,
-            "data_source": self.data_source
+            #"tool_source": self.tool_source,
+            #"tool_version": self.tool_version,
+            #"data_source": self.data_source
         }
 
         session.logger.info(f"Inserting data to unresolved: {unresolved}")
@@ -633,7 +633,7 @@ def get_login_with_supplemental_data(session, commit_data):
 
     # Try to get login from all possible emails
     # Is None upon failure.
-    login_json = fetch_username_from_email(commit_data)
+    login_json = fetch_username_from_email(session,commit_data)
 
     # Check if the email result got anything, if it failed try a name search.
     if login_json == None or 'total_count' not in login_json or login_json['total_count'] == 0:
@@ -641,22 +641,22 @@ def get_login_with_supplemental_data(session, commit_data):
             "Could not resolve the username from the email. Trying a name only search...")
 
         try:
-            url = self.create_endpoint_from_name(commit_data)
+            url = create_endpoint_from_name(commit_data)
         except Exception as e:
-            self.logger.info(
+            session.logger.info(
                 f"Couldn't resolve name url with given data. Reason: {e}")
             return None
 
-        login_json = self.request_dict_from_endpoint(
+        login_json = request_dict_from_endpoint(session,
             url, timeout_wait=30)
 
     # total_count is the count of username's found by the endpoint.
     if login_json == None or 'total_count' not in login_json:
-        self.logger.info(
+        session.logger.info(
             "Search query returned an empty response, moving on...\n")
         return None
     if login_json['total_count'] == 0:
-        self.logger.info(
+        session.logger.info(
             "Search query did not return any results, adding commit's table remains null...\n")
 
         return None
@@ -667,7 +667,7 @@ def get_login_with_supplemental_data(session, commit_data):
         if item['score'] > match['score']:
             match = item
 
-    self.logger.info(
+    session.logger.info(
         "When searching for a contributor, we found the following users: {}\n".format(match))
 
     return match['login']
