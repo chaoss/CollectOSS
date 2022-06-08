@@ -19,10 +19,7 @@ class OauthKeyManager():
         # make a connection to the database
         operations_schema = 'augur_operations'
         operations_db_conn = s.create_engine(db_str, poolclass=s.pool.NullPool,
-                                connect_args={'options': f'-csearch_path={schema}'})
-        
-        #get_db_connection(
-            #config_file_path, operations_schema)
+                                             connect_args={'options': f'-csearch_path={operations_schema}'})
 
         # create a list of oauth keys
         config_key = config['key_database']
