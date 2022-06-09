@@ -31,7 +31,7 @@ class TaskSession(s.orm.Session):
         #print(f"path = {str(ROOT_AUGUR_DIR) + "augur.config.json"}")
         
 
-        self.__engine = create__engine(DB_STR)
+        self.__engine = s.create_engine(DB_STR)
 
         self.__oauths = OauthKeyManager(self.config,db_str=DB_STR)
 
