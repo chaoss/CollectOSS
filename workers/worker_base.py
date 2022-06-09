@@ -4,7 +4,7 @@ from augur import db_models
 from augur.config import AugurConfig
 from workers.oauth_key_manager import *
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy import SQLAlchemy
+#from sqlalchemy import SQLAlchemy
 
 #TODO: setup github headers in a method here.
 #Encapsulate data for celery task worker api
