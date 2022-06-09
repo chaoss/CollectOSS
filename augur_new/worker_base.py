@@ -16,7 +16,7 @@ from oauth_key_manager import OauthKeyManager
 #Encapsulate data for celery task worker api
 
 
-#TODO: Test all methods
+#TODO: Test sql methods
 class TaskSession(s.orm.Session):
 
     #ROOT_AUGUR_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
