@@ -1,5 +1,5 @@
 
-from augur.config import AugurConfig
+from augur.augur_new.config import AugurConfig
 from sqlalchemy.dialects.postgresql import insert
 #from sqlalchemy import SQLAlchemy
 import sqlalchemy as s
