@@ -4,7 +4,7 @@ from sqlalchemy.dialects.postgresql import insert
 import sqlalchemy as s
 
 
-# from db_models import *
+from db_models import *
 from config import AugurConfig
 from oauth_key_manager import OauthKeyManager
 
