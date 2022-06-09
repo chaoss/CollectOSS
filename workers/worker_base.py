@@ -18,7 +18,9 @@ class TaskSession(s.orm.Session):
     def __init__(self,logger,config={},platform='github'):
         self.logger = logger
         
-        self.root_augur_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+        current_dir = os.getcwd()
+
+        self.root_augur_dir = ''.join(current_dir.partition("augur/")[:2])
         self.__init_config(self.root_augur_dir)
         
         DB_STR = f'postgresql://{self.config["user_database"]}:{self.config["password_database"]}@{self.config["host_database"]}:{self.config["port_database"]}/{self.config["name_database"]}'
