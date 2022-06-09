@@ -5,7 +5,7 @@ from celery import Celery, group
 from celery.utils.log import get_task_logger
 import time
 
-from db_models import PullRequests, Message, PullRequestReviews, PullRequestLabels
+from db_models import PullRequests, Message, PullRequestReviews, PullRequestLabels, PullRequestReviewers
 
 
 from github_paginator import GithubPaginator
@@ -261,7 +261,7 @@ def create_pr_event_object(event, platform_id, repo_id, tool_source, tool_versio
         repo_id=repo_id
     )
 
-# test with pr_id 1793 which has one review
+# do this task after others because we need to add the multi threading like we did it before
 @app.task
 def pull_request_reviews(owner, repo, pr_number_list):
     print(f"Collecting pull request reviews for {owner}/{repo}")
@@ -350,7 +350,7 @@ def pull_request_assignees(owner, repo, assignees):
     repo_id = 1
 
     platform_id = 25150
-    tool_source = "Pr comment task"
+    tool_source = "Pr assignee task"
     tool_version = "2.0"
     data_source = "Github API"
 
@@ -382,13 +382,75 @@ def create_pr_assignee_object(assignee, platform_id, repo_id, tool_source, tool_
 def pull_request_reviewers(owner, repo, reviewers):
     print(f"Handling reviewers for {owner}/{repo}")
 
+    # get repo_id
+    repo_id = 1
+
+    platform_id = 25150
+    tool_source = "Pr reviewer task"
+    tool_version = "2.0"
+    data_source = "Github API"
+
+    pr_reviewer_objects = []
+
+    for reviewer in reviewers:
+        pr_reviewer_objects.append(
+            create_pr_reviewer_object(reviewer, platform_id, repo_id,
+                                      tool_source, tool_version, data_source)
+        )
+
+
+def create_pr_reviewer_object(reviewer, platform_id, repo_id, tool_source, tool_version, data_source):
+
+    # TODO: Add db pull request id
+
+    return PullRequestReviewers(
+        #pull_request_id=reviewer['pull_request_id'],
+        cntrb_id=None,
+        pr_reviewer_src_id=int(float(reviewer['id'])),
+        tool_source=tool_source,
+        tool_version=tool_version,
+        data_source=data_source,
+        repo_id=repo_id
+    )
 
 @app.task
-def pull_request_meta(owner, repo, meta_data):
-    print(f"Handling reviewers for {owner}/{repo}")
+def pull_request_meta(owner, repo, metadata):
+    print(f"Handling metadata for {owner}/{repo}")
 
-    # for data in meta_data:
-    #     print(data)
+    # get repo_id
+    repo_id = 1
+
+    platform_id = 25150
+    tool_source = "Pr metadata task"
+    tool_version = "2.0"
+    data_source = "Github API"
+
+    pr_metadata_objects = []
+
+    for data in metadata:
+        pr_metadata_objects.append(
+            create_pr_meta_object(data, platform_id, repo_id,
+                                      tool_source, tool_version, data_source)
+        )
+
+
+def create_pr_meta_object(meta, platform_id, repo_id, tool_source, tool_version, data_source):
+
+    # TODO: Add db pull request id
+
+    return PullRequestMeta(
+        #pull_request_id=meta['pull_request_id'],
+        pr_head_or_base=meta['pr_head_or_base'],
+        pr_src_meta_label=meta['label'],
+        pr_src_meta_ref=meta['ref'],
+        pr_sha=meta['sha'],
+        # Cast as int for the `nan` user by SPG on 11/28/2021; removed 12/6/2021
+        cntrb_id=meta['cntrb_id'],
+        tool_source=tool_source,
+        tool_version=tool_version,
+        data_source=data_source,
+        repo_id=repo_id
+    )
 
 
 @app.task
