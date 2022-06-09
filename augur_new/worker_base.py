@@ -32,7 +32,7 @@ class TaskSession(s.orm.Session):
         
         self.__engine = s.create_engine(DB_STR)
 
-        self.__oauths = OauthKeyManager(self.config, db_engine=self.__engine)
+        self.oauths = OauthKeyManager(self.config, db_engine=self.__engine, logger=self.logger)
 
         super().__init__(self.__engine)
 

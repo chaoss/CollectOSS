@@ -10,7 +10,10 @@ import time
 
 
 class OauthKeyManager():
-    def __init__(self, config, db_engine):
+    def __init__(self, config, db_engine, logger):
+
+        self.db_conn = db_engine
+        self.logger = logger
 
         print("Initializing Oauth key manager")
 
@@ -18,7 +21,7 @@ class OauthKeyManager():
 
         # create a list of oauth keys
         config_key = config['key_database']
-        oauth_keys = get_list_of_oauth_keys(db_engine, config_key)
+        oauth_keys = get_list_of_oauth_keys(self.db_conn, config_key)
 
         fresh_keys_list = []
         depleted_keys_list = []

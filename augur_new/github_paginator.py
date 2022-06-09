@@ -11,18 +11,21 @@ from urllib.parse import parse_qs
 
 
 class GithubPaginator(collections.abc.Sequence):
-    def __init__(self, url, config_path, from_datetime=None, to_datetime=None):
+    def __init__(self, url, key_manager, from_datetime=None, to_datetime=None):
 
         remove_fields = ["per_page", "page"]
         url = clean_url(url, remove_fields)
 
         self.url = url
+        self.key_manager = key_manager
+
+        # get the logger from the key manager
+        # self.logger = key_manager.logger
+
         self.from_datetime = from_datetime
         self.to_datetime = to_datetime
         self.rate_limit = None
         self.default_params = {"per_page": 100}
-
-        self.key_manager = OauthKeyManager(config_path)
 
         key = self.key_manager.get_key(first_key=True)
 
