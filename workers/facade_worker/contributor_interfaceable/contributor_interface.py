@@ -231,179 +231,6 @@ A few interesting ideas: Maybe get the top committers from each repo first? curl
 
 """
 
-"""
-class ContributorInterfaceable(WorkerGitInterfaceable):
-    
-    def __init__(self, config={}, logger=None):
-        # Define the data tables that we are needing
-        # Define the tables needed to insert, update, or delete on
-
-        worker_type = "contributor_interface"
-
-        self.data_tables = ['contributors', 'pull_requests', 'commits',
-                            'pull_request_assignees', 'pull_request_events', 'pull_request_labels',
-                            'pull_request_message_ref', 'pull_request_meta', 'pull_request_repo',
-                            'pull_request_reviewers', 'pull_request_teams', 'message', 'pull_request_commits',
-                            'pull_request_files', 'pull_request_reviews', 'pull_request_review_message_ref',
-                            'contributors_aliases', 'unresolved_commit_emails']
-        self.operations_tables = ['worker_history', 'worker_job']
-
-        self.platform = "github"
-        # first set up logging.
-        self._root_augur_dir = Persistant.ROOT_AUGUR_DIR
-        self.augur_config = AugurConfig(self._root_augur_dir)
-
-        # Get default logging settings
-        self.config = config
-        # self.config.update(self.augur_config.get_section("Logging"))
-
-        # create a random port instead of 226
-        # SPG 9/24/2021
-        # self.facade_com = randint(47000,47555)
-
-        # contrib_port = self.facade_com
-
-        # Get the same logging dir as the facade worker.
-        # self.config.update({
-        #     # self.config['port_database'])
-        #     'id': "workers.{}.{}".format("contributor_interface", contrib_port)
-        # })
-
-        # Getting stuck here.
-        # self.initialize_logging()
-        self.logger = logger
-
-        
-        self.finishing_task = False
-
-        # try:
-
-        #     theConfig = self.augur_config.get_section(["contributor_interface"])
-        #     jsonConfig = json.loads(theConfig)
-        #     self.logger.debug(f"The config for workers is: {json.dumps(jsonConfig, indent=2, sort_keys=True)}.")
-
-        # except Exception as e:
-
-        #     self.logger.debug(f"Exception in initialization is: {e}.")
-
-        # self.logger = logging.getLogger(self.config["id"])
-        # Test logging after init.
-        self.logger.info(
-            "Facade worker git interface logging set up correctly")
-        # self.db_schema = None
-        # Get config passed from the facade worker.
-        self.config.update({
-            'gh_api_key': self.augur_config.get_value('Database', 'key'),
-            'gitlab_api_key': self.augur_config.get_value('Database', 'gitlab_api_key')
-            # 'port': self.augur_config.get_value('Workers', 'contributor_interface')
-        })
-
-        
-        tries = 5
-        
-        while tries > 0:
-            try:
-                self.initialize_database_connections()
-                break
-            except Exception as e:
-                self.logger.error("Could not init database connection and oauth! {e}")
-                
-                if tries == 0:
-                    raise e
-            
-            tries -= 1
-                
-        self.logger.info("Facade worker git interface database set up")
-        self.logger.info(f"configuration passed is: {str(self.config)}.")
-
-        # Needs to be an attribute of the class for incremental database insert using paginate_endpoint
-        self.pk_source_prs = []
-
-        self.logger.info("Facade now has contributor interface.")
-
-        self.worker_type = "Contributor_interface"
-        self.tool_source = '\'Facade Worker\''
-        self.tool_version = '\'1.2.4\''
-        self.data_source = '\'Git Log\''
-
-        return
-
-    def initialize_logging(self):
-        # Get the log level in upper case from the augur config's logging section.
-        self.config['log_level'] = self.config['log_level'].upper()
-        if self.config['debug']:
-            self.config['log_level'] = 'DEBUG'
-
-        if self.config['verbose']:
-            format_string = AugurLogging.verbose_format_string
-        else:
-            format_string = AugurLogging.simple_format_string
-
-        format_string = AugurLogging.verbose_format_string
-
-        # log_port = self.facade_com
-
-        # Use stock python formatter for stdout
-        formatter = Formatter(fmt=format_string)
-        # User custom for stderr, Gives more info than verbose_format_string
-        error_formatter = Formatter(fmt=AugurLogging.error_format_string)
-        worker_type = "contributor_interface"
-        worker_dir = AugurLogging.get_log_directories(
-            self.augur_config, reset_logfiles=False) + "/workers/"
-        Path(worker_dir).mkdir(exist_ok=True)
-        logfile_dir = worker_dir + f"/{worker_type}/"
-        Path(logfile_dir).mkdir(exist_ok=True)
-
-        # Create more complex sublogs in the logfile directory determined by the AugurLogging class
-        server_logfile = logfile_dir + \
-            '{}_{}_server.log'.format(
-                worker_type, self.config['port_database'])
-        collection_logfile = logfile_dir + \
-            '{}_{}_collection.log'.format(
-                worker_type, self.config['port_database'])
-        collection_errorfile = logfile_dir + \
-            '{}_{}_collection.err'.format(
-                worker_type, self.config['port_database'])
-        self.config.update({
-            'logfile_dir': logfile_dir,
-            'server_logfile': server_logfile,
-            'collection_logfile': collection_logfile,
-            'collection_errorfile': collection_errorfile
-        })
-
-        collection_file_handler = FileHandler(
-            filename=self.config['collection_logfile'], mode="a")
-        collection_file_handler.setFormatter(formatter)
-        collection_file_handler.setLevel(self.config['log_level'])
-
-        collection_errorfile_handler = FileHandler(
-            filename=self.config['collection_errorfile'], mode="a")
-        collection_errorfile_handler.setFormatter(error_formatter)
-        collection_errorfile_handler.setLevel(logging.WARNING)
-
-        logger = logging.getLogger(self.config['id'])
-        logger.handlers = []
-        logger.addHandler(collection_file_handler)
-        logger.addHandler(collection_errorfile_handler)
-        logger.setLevel(self.config['log_level'])
-        logger.propagate = False
-
-        if self.config['debug']:
-            self.config['log_level'] = 'DEBUG'
-            console_handler = StreamHandler()
-            console_handler.setFormatter(formatter)
-            console_handler.setLevel(self.config['log_level'])
-            logger.addHandler(console_handler)
-
-        if self.config['quiet']:
-            logger.disabled = True
-
-        self.logger = logger
-
-        self.tool_source = '\'Facade Worker\'s Contributor Interface\''
-        self.tool_version = '\'1.2.4\''
-        self.data_source = '\'Git Log\''
-"""
 
 def create_endpoint_from_commit_sha(session,commit_sha, repo_id):
     session.logger.info(
@@ -542,7 +369,8 @@ def resolve_if_login_existing(session, contributor):
     session.logger.info(
         f"Contributor not found in contributors table but can be added. Adding...")
     return False
-
+"""
+No longer used after orm upsert implement
 def update_contributor(self, cntrb, max_attempts=3):
 
     # Get primary key so that we can update
@@ -583,6 +411,7 @@ def update_contributor(self, cntrb, max_attempts=3):
             time.sleep(1)
 
         attempts += 1
+"""
 
 # Try every distinct email found within a commit for possible username resolution.
 # Add email to garbage table if can't be resolved.
