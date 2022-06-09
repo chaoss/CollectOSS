@@ -70,112 +70,6 @@ class FacadeSession(TaskSession):
 
 
 html = html.parser.HTMLParser()
-"""
-class FacadeWorker(Worker):
-    def __init__(self, config={}, task=None):
-        worker_type = "facade_worker"
-
-        # Define what this worker can be given and know how to interpret
-        given = [['repo_group']]
-        models = ['commits']
-
-        # Define the tables needed to insert, update, or delete on
-        data_tables = []
-        operations_tables = ['worker_history', 'worker_job']
-
-        # Run the general worker initialization
-        super().__init__(worker_type, config, given, models, data_tables, operations_tables)
-
-        time.sleep(10)
-
-        # Facade-specific config
-        session.cfg = Config(self.logger)
-
-        self.logger.info("Trying to create the ContributorInterface...")
-        #Define interface to GitHub as an attribute
-        self.logger.info(f"Config passed is: {str(self.config)}")
-
-        time.sleep(20)
-
-        self.github_interface = ContribInterface(config=self.config, logger=self.logger)    
-
-        time.sleep(20)   
-
-        time.sleep(20)
-        #breakpoint()
-        self.logger.info("created interface")
-
-        self.tool_source = '\'Facade Worker\''
-        self.tool_version = '\'1.2.4\''
-        self.data_source = '\'Git Log\''
-
-        self.logger.info("Finished  Init")
-        #breakpoint() #What is going on after this
-
-    def initialize_database_connections(self):
-
-        # Set up the database
-        db_user = self.config['user_database']
-        db_pass = self.config['password_database']
-        db_name = self.config['name_database']
-        db_host = self.config['host_database']
-        db_port = self.config['port_database']
-
-        # Open a general-purpose connection
-        self.db, self.cursor = session.cfg.database_connection(
-            db_host,
-            db_user,
-            db_pass,
-            db_name, 
-            db_port,    False, False)
-
-        # Open a connection for the people database
-        self.db_people,self.cursor_people = session.cfg.database_connection(
-            db_host,
-            db_user,
-            db_pass,
-            db_name,
-            db_port, True, False)
-
-        # Check if the database is current and update it if necessary
-        try:
-            self.current_db = int(session.cfg.get_setting('database_version'))
-        except:
-            # Catch databases which existed before database versioning
-            self.current_db = -1
-
-        self.logger.info("initialized database.")
-
-    def collect(self):
-         
-        self.initialize_logging() # need to initialize logging again in child process cause multiprocessing
-
-        self.logger.info("Starting data collection process\n")
-        self.initialize_database_connections() 
-        while True:
-            if not self._queue.empty():
-                message = self._queue.get() # Get the task off our MP queue
-            else:
-                break
-            self.logger.info("Popped off message: {}\n".format(str(message)))
-
-            if message['job_type'] == 'STOP':
-                break
-
-            # If task is not a valid job type
-            if message['job_type'] != 'MAINTAIN' and message['job_type'] != 'UPDATE':
-                raise ValueError('{} is not a recognized task type'.format(message['job_type']))
-                pass
-
-            try:
-                self.commits_model(message)
-            except Exception as e:
-                self.logger.debug(f"The error is: {e}. exception registered.")
-                stacker = traceback.format_exc()
-                self.logger.debug(f"{stacker}")
-                raise(e)
-                break
-"""
 
 #TODO: Make this a celery task.
 def commits_model( message):
@@ -328,7 +222,7 @@ def commits_model( message):
 
     #Give analysis the github interface so that it can make API calls
     if not limited_run or (limited_run and run_analysis):
-        analysis(session.cfg, multithreaded, interface=self.github_interface)
+        analysis(session.cfg, multithreaded, session=session)
 
     ### moved up by spg on 12/1/2021
     #Interface with the contributor worker and inserts relevant data by repo
@@ -343,9 +237,9 @@ def commits_model( message):
     #pdb.set_trace()
     #breakpoint()
     for repo in all_repos:
-        self.logger.info(f"Processing repo {repo}")
-        self.github_interface.insert_facade_contributors(repo[0],multithreaded=multithreaded)
-        self.logger.info(f"Processing repo contributors for repo: {repo}")
+        session.logger.info(f"Processing repo {repo}")
+        sesion.github_interface.insert_facade_contributors(repo[0],multithreaded=multithreaded)
+        session.logger.info(f"Processing repo contributors for repo: {repo}")
 
     ### end moved up
 

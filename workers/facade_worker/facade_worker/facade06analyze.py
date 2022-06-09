@@ -40,13 +40,14 @@ import multiprocessing
 import numpy as np
 from facade_worker.facade02utilitymethods import update_repo_log, trim_commit, store_working_author, trim_author
 from facade_worker.facade03analyzecommit import analyze_commit
+from contributor_interfaceable.contributor_interface import *
 
 # if platform.python_implementation() == 'PyPy':
 #   import pymysql
 # else:
 #   import MySQLdb
 
-def analysis(cfg, multithreaded, interface=None, processes=6):
+def analysis(cfg, multithreaded, session=None, processes=6):
 
 # Run the analysis by looping over all active repos. For each repo, we retrieve
 # the list of commits which lead to HEAD. If any are missing from the database,
@@ -75,7 +76,7 @@ def analysis(cfg, multithreaded, interface=None, processes=6):
 ### The real function starts here ###
 
     cfg.update_status('Running analysis')
-    cfg.log_activity('Info',f"Beginning analysis. Interface={interface}")
+    cfg.log_activity('Info',f"Beginning analysis.")
 
     start_date = cfg.get_setting('start_date')
 
@@ -87,9 +88,9 @@ def analysis(cfg, multithreaded, interface=None, processes=6):
     for repo in repos:
 
         
-        #Add committers for repo if interface
-        if interface != None:
-            interface.grab_committer_list(repo[0])
+        #Add committers for repo if session
+        if session != None:
+            grab_committer_list(session,repo[0])
 
         update_analysis_log(repo[0],"Beginning analysis.")
         cfg.log_activity('Verbose','Analyzing repo: %s (%s)' % (repo[0],repo[3]))
@@ -166,11 +167,11 @@ def analysis(cfg, multithreaded, interface=None, processes=6):
 
         if multithreaded and len(missing_commits) > 0:
 
-            def analyze_commits_in_parallel(queue, cfg, repo_id, repo_location, multithreaded,interface):
+            def analyze_commits_in_parallel(queue, cfg, repo_id, repo_location, multithreaded):
                 for analyzeCommit in queue:    
 
                     try:
-                        analyze_commit(cfg, repo_id, repo_location, analyzeCommit, multithreaded,interface=interface)
+                        analyze_commit(cfg, repo_id, repo_location, analyzeCommit, multithreaded)
                     except Exception as e:
                         cfg.log_activity('Info', 'Subprocess ran into error when trying to anaylyze commit with error: %s' % e)
 
@@ -185,7 +186,7 @@ def analysis(cfg, multithreaded, interface=None, processes=6):
             processList = []
             for process in range(processes):
                 
-                processList.append(multiprocessing.Process(target=analyze_commits_in_parallel, args=(listsSplitForProcesses[process].tolist(), cfg,repo[0],repo_loc,multithreaded,interface,)))
+                processList.append(multiprocessing.Process(target=analyze_commits_in_parallel, args=(listsSplitForProcesses[process].tolist(), cfg,repo[0],repo_loc,multithreaded,)))
             
             for pNum,process in enumerate(processList):
                 cfg.log_activity('Info','Starting commit analysis process %s' % pNum)
@@ -200,7 +201,7 @@ def analysis(cfg, multithreaded, interface=None, processes=6):
                 cfg.log_activity('Info','Subprocess has completed')
         elif len(missing_commits) > 0:
             for commit in missing_commits:
-                analyze_commit(cfg, repo[0], repo_loc, commit, multithreaded, interface=interface)
+                analyze_commit(cfg, repo[0], repo_loc, commit, multithreaded)
 
         update_analysis_log(repo[0],'Data collection complete')
 
