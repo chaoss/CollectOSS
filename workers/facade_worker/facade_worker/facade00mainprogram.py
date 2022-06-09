@@ -38,14 +38,14 @@ from facade_worker.facade07rebuildcache import nuke_affiliations, fill_empty_aff
 
 #from contributor_interfaceable.facade08contributorinterfaceable import ContributorInterfaceable
 
-from contributor_interfaceable.contributor_interface import ContributorInterfaceable as ContribInterface 
+from contributor_interfaceable.contributor_interface import *
 
 from workers.util import read_config
 from workers.worker_base import Worker
 
 
 html = html.parser.HTMLParser()
-
+"""
 class FacadeWorker(Worker):
     def __init__(self, config={}, task=None):
         worker_type = "facade_worker"
@@ -153,7 +153,7 @@ class FacadeWorker(Worker):
                 self.logger.debug(f"{stacker}")
                 raise(e)
                 break
-
+"""
     def commits_model(self, message):
         # Figure out what we need to do
         limited_run = self.augur_config.get_value("Facade", "limited_run")
