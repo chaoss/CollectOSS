@@ -185,23 +185,3 @@ def get_oauth_key_data(client, oauth_key_data):
 
     return key_data
 
-################################################################################
-
-# Main function to test program
-
-def main():
-    # url = "https://api.github.com/repos/chaoss/augur/issues/events?per_page=50&page=5"
-    config = '../augur.config.json'
-
-    key_manager = OauthKeyManager(config)
-
-    my_key = key_manager.get_key()
-
-    print(my_key)
-
-
-
-
-if __name__ == '__main__':
-    # This code won't run if this file is imported.
-    main()

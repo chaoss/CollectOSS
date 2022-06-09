@@ -6,8 +6,7 @@ import asyncio
 
 from oauth_key_manager import OauthKeyManager
 
-from urllib.parse import *
-from urllib.parse import parse_qs
+from urllib.parse import parse_qs, urlparse, urlencode, urlunparse
 
 
 class GithubPaginator(collections.abc.Sequence):
@@ -352,30 +351,3 @@ def is_key_depleted(response):
 
 
 ################################################################################
-
-# Main function to test program
-
-def main():
-    small_url = "https://api.github.com/repos/bradtraversy/50projects50days/pulls?state=all&direction=desc"
-
-    large_url = "https://api.github.com/repos/chaoss/augur/pulls?state=all&direction=desc"
-
-    extra_large_url = "https://api.github.com/repos/freeCodeCamp/freeCodeCamp/pulls?state=all&direction=desc"
-
-
-    config_path = '../augur.config.json'
-
-    prs = GithubPaginator(extra_large_url, config_path)
-
-    start_time = time.time()
-
-    for i in range(0, 30):
-        for pr in prs:
-            pass
-
-    total_time = time.time() - start_time
-    print(total_time)
-
-if __name__ == '__main__':
-    # This code won't run if this file is imported.
-    main()

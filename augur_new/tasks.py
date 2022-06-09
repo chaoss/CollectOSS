@@ -5,11 +5,11 @@ from celery import Celery, group
 from celery.utils.log import get_task_logger
 import time
 
-from db_models import PullRequests, Message, PullRequestReviews, PullRequestLabels, PullRequestReviewers
+from db_models import PullRequests, Message, PullRequestReviews, PullRequestLabels, PullRequestReviewers, PullRequestEvents, PullRequestMeta
 
 
 from github_paginator import GithubPaginator
-from worker_base import *
+from worker_base import TaskSession
 
 
 BROKER_URL = 'redis://localhost:6379/0'
@@ -27,6 +27,7 @@ with open(config_path, 'r') as f:
 
 logger = get_task_logger(__name__)
 
+# creates a class that is sub class of the sqlalchemy.orm.Session class that additional methods and fields added to it. 
 session = TaskSession(logger, config)
 
 
@@ -37,7 +38,6 @@ def repo_info(owner, repo):
 
 @app.task
 def pull_requests(owner, repo):
-    # start_time = time.time()
     print(f"Collecting pull requests for {owner}/{repo}")
 
     url = f"https://api.github.com/repos/{owner}/{repo}/pulls?state=all&"
@@ -82,7 +82,6 @@ def pull_requests(owner, repo):
         pr_object_list.append(pr_object)
 
  
-    print("Finished looping prs")
     task_list = []
 
     task_list.append(pull_request_comments.s(owner, repo))
@@ -93,12 +92,10 @@ def pull_requests(owner, repo):
     task_list.append(pull_request_reviewers.s(owner, repo, repo_pr_reviewers))
     task_list.append(pull_request_meta.s(owner, repo, repo_pr_meta_data))
 
-    g = group(task_list)
+    pr_task_group = group(task_list)
 
-    # total_time = time.time() - start_time
-    # print(f"LOG: PR task finished in {total_time}")
-
-    g()
+    # executes all the tasks in the group in parallel
+    pr_task_group()
 
     # insert prs into db or cache
 
