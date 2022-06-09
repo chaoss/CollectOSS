@@ -36,7 +36,7 @@ class TaskSession(sqlalchemy.orm.Session):
 
     def __init_config(self, root_augur_dir):
         #Load config.
-        self.augur_config = AugurConfig(self.root_augur_dir,config)
+        self.augur_config = AugurConfig(self.root_augur_dir)
         self.config = {
             'host': self.augur_config.get_value('Server', 'host')
         }

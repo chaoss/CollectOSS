@@ -171,6 +171,7 @@ def process_commit_metadata(session, contributorQueue,repo_id):
         # Check if the github login exists in the contributors table and add the emails to alias' if it does.
 
         # Also update the contributor record with commit data if we can.
+        """
         try:
             if not resolve_if_login_existing(session,cntrb):
                 try:
@@ -184,30 +185,39 @@ def process_commit_metadata(session, contributorQueue,repo_id):
                         f"Ran into likely database collision. Assuming contributor exists in database. Error: {e}")
             else:
                 interface.update_contributor(cntrb)
+        """
+        
+        #Executes an upsert with sqlalchemy 
+        session.insert_data([cntrb],Contributors,cntrb.keys())
 
+        try:
             # Update alias after insertion. Insertion needs to happen first so we can get the autoincrementkey
-            interface.insert_alias(cntrb, emailFromCommitData)
+            insert_alias(session,cntrb, emailFromCommitData)
         except LookupError as e:
             interface.logger.info(
                 ''.join(traceback.format_exception(None, e, e.__traceback__)))
             interface.logger.info(
                 f"Contributor id not able to be found in database despite the user_id existing. Something very wrong is happening. Error: {e}")
             return 
+        
 
+        
         # Resolve any unresolved emails if we get to this point.
         # They will get added to the alias table later
         # Do this last to absolutely make sure that the email was resolved before we remove it from the unresolved table.
-        query = s.sql.text("""
-            DELETE FROM unresolved_commit_emails
-            WHERE email='{}'
-        """.format(email))
+        #query = s.sql.text("""
+        #    DELETE FROM unresolved_commit_emails
+        #    WHERE email='{}'
+        #""".format(email))
 
-        interface.logger.info(f"Updating now resolved email {email}")
+        session.logger.info(f"Updating now resolved email {email}")
 
         try:
-            interface.db.execute(query)
+            #interface.db.execute(query)
+            session.query(UnresolvedCommitEmails).filter(UnresolvedCommitEmails.email == email).delete()
+            session.commit()
         except Exception as e:
-            interface.logger.info(
+            session.logger.info(
                 f"Deleting now resolved email failed with error: {e}")
     
     
@@ -447,30 +457,33 @@ def create_endpoint_from_name(contributor):
 
     return url
 
-def insert_alias(self, contributor, email):
+def insert_alias(session, contributor, email):
     # Insert cntrb_id and email of the corresponding record into the alias table
     # Another database call to get the contributor id is needed because its an autokeyincrement that is accessed by multiple workers
     # Same principle as enrich_cntrb_id method.
-    contributor_table_data = self.db.execute(
-        s.sql.select([s.column('cntrb_id'), s.column('cntrb_canonical')]).where(
-            self.contributors_table.c.gh_user_id == contributor["gh_user_id"]
-        )
-    ).fetchall()
+    #contributor_table_data = self.db.execute(
+    #    s.sql.select([s.column('cntrb_id'), s.column('cntrb_canonical')]).where(
+    #        self.contributors_table.c.gh_user_id == contributor["gh_user_id"]
+    #    )
+    #).fetchall()
 
+    stmnt = select(Contributors.cntrb_id, Contributors.cntrb_canonical).where(Contributors.gh_user_id == contributor["gh_user_id"])
+    result = session.execute(stmnt)
+    contributor_table_data = result.scalars().all()
     # self.logger.info(f"Contributor query: {contributor_table_data}")
 
     # Handle potential failures
     if len(contributor_table_data) == 1:
-        self.logger.info(
-            f"cntrb_id {contributor_table_data[0]['cntrb_id']} found in database and assigned to enriched data")
+        session.logger.info(
+            f"cntrb_id {contributor_table_data[0].cntrb_id} found in database and assigned to enriched data")
     elif len(contributor_table_data) == 0:
-        self.logger.error("Couldn't find contributor in database. Something has gone very wrong. Augur ran into a contributor whose login can be found in the contributor's table, but cannot be retrieved via the user_id that was gotten using the same login.")
+        session.logger.error("Couldn't find contributor in database. Something has gone very wrong. Augur ran into a contributor whose login can be found in the contributor's table, but cannot be retrieved via the user_id that was gotten using the same login.")
         raise LookupError
     else:
-        self.logger.info(
+        session.logger.info(
             f"There are more than one contributors in the table with gh_user_id={contributor['gh_user_id']}")
 
-    self.logger.info(f"Creating alias for email: {email}")
+    session.logger.info(f"Creating alias for email: {email}")
 
     # Insert a new alias that corresponds to where the contributor was found
     # use the email of the new alias for canonical_email if the api returns NULL
@@ -479,12 +492,16 @@ def insert_alias(self, contributor, email):
         "cntrb_id": contributor_table_data[0]['cntrb_id'],
         "alias_email": email,
         "canonical_email": contributor['cntrb_canonical'] if 'cntrb_canonical' in contributor and contributor['cntrb_canonical'] is not None else email,
-        "tool_source": self.tool_source,
-        "tool_version": self.tool_version,
-        "data_source": self.data_source
+        #"tool_source": #self.tool_source,
+        #"tool_version": self.tool_version,
+        #"data_source": self.data_source
     }
 
     # Insert new alias
+    newAlias = ContributorsAliases(**alias)
+    session.add(newAlias)
+    session.commit()
+    """
     try:
         self.db.execute(
             self.contributors_aliases_table.insert().values(alias))
@@ -494,7 +511,10 @@ def insert_alias(self, contributor, email):
         self.logger.info(f"alias {alias} already exists")
     except Exception as e:
         self.logger.info(
-            f"Ran into issue with alias: {alias}. Error: {e}")
+            f"Ran into issue with alias: {alias}. Error: {e}
+    """
+
+
 
     return
 
