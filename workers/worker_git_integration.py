@@ -220,7 +220,7 @@ class WorkerGitInterfaceable(Worker):
             elif platform == 'gitlab':
                 self.headers = {'Authorization': 'Bearer %s' % oauth['access_token']}
             ## Changed timeout from 180 to 12. Seems to be hanging in some workers. 
-            response = requests.get(url=url, headers=self.headers, timeout=12)
+            response = requests.get(url=url, headers=self.headers)
             self.oauths.append({
                     'oauth_id': oauth['oauth_id'],
                     'access_token': oauth['access_token'],
