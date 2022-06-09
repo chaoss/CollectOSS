@@ -11,7 +11,7 @@ from sqlalchemy.dialects.postgresql import insert
 
 
 #TODO: Test all methods
-class TaskSession(sqlalchemy.orm.Session):
+class TaskSession(s.orm.Session):
 
     ROOT_AUGUR_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
