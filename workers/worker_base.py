@@ -13,12 +13,12 @@ from sqlalchemy.dialects.postgresql import insert
 #TODO: Test all methods
 class TaskSession(s.orm.Session):
 
-    ROOT_AUGUR_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+    #ROOT_AUGUR_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
     def __init__(self,logger,config={},platform='github'):
         self.logger = logger
         
-        self.root_augur_dir = ROOT_AUGUR_DIR
+        self.root_augur_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
         self.__init_config(self.root_augur_dir)
         
         DB_STR = f'postgresql://{self.config["user_database"]}:{self.config["password_database"]}@{self.config["host_database"]}:{self.config["port_database"]}/{self.config["name_database"]}'
