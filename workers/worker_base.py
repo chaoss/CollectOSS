@@ -32,7 +32,7 @@ class TaskSession(sqlalchemy.orm.Session):
 
         self.__oauths = OauthKeyManager(self.config,db_str=DB_STR)
 
-        super.__init__(self.__engine)
+        super().__init__(self.__engine)
 
     def __init_config(self, root_augur_dir):
         #Load config.
@@ -89,6 +89,3 @@ class TaskSession(sqlalchemy.orm.Session):
                 index_elements=natural_keys, set_=dict(value))
             result = self.execute_sql(insert_stmt)
 
-class FacadeSession(TaskSession):
-    def __init__(self,logger,config={},platform='github'):
-        pass
