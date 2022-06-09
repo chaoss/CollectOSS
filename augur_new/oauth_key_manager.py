@@ -10,23 +10,18 @@ import time
 
 
 class OauthKeyManager():
-    def __init__(self, config, db_str):
+    def __init__(self, config, db_engine, logger):
+
+        self.db_conn = db_engine
+        self.logger = logger
 
         print("Initializing Oauth key manager")
 
         self.fresh_key_cutoff = 0
 
-        # make a connection to the database
-        operations_schema = 'augur_operations'
-        operations_db_conn = s.create_engine(db_str, poolclass=s.pool.NullPool,
-                                connect_args={'options': f'-csearch_path={schema}'})
-        
-        #get_db_connection(
-            #config_file_path, operations_schema)
-
         # create a list of oauth keys
-        config_key = config['key_database']#get_oauth_key_from_config(config_file_path)
-        oauth_keys = get_list_of_oauth_keys(operations_db_conn, config_key)
+        config_key = config['key_database']
+        oauth_keys = get_list_of_oauth_keys(self.db_conn, config_key)
 
         fresh_keys_list = []
         depleted_keys_list = []
@@ -142,16 +137,11 @@ def calculate_oauth_sorting_weight(value):
 
 # Helper functions relating to oauth keys
 
-def get_oauth_key_from_config(config_file_path):
-
-    with open(config_file_path, 'r') as f:
-        return json.load(f)["Database"]["key"]
-
 
 def get_list_of_oauth_keys(operations_db_conn, config_key):
 
     oauthSQL = s.sql.text(f"""
-            SELECT * FROM worker_oauth WHERE access_token <> '{config_key}' and platform = 'github'
+            SELECT * FROM augur_operations.worker_oauth WHERE access_token <> '{config_key}' and platform = 'github'
             """)
 
     oauth_keys_list = [{'oauth_id': 0, 'access_token': config_key}] + json.loads(
@@ -195,48 +185,3 @@ def get_oauth_key_data(client, oauth_key_data):
 
     return key_data
 
-################################################################################
-
-# Helper functions relating to the database 
-
-def get_db_conn_string(config_file_path):
-
-    with open(config_file_path, 'r') as f:
-        db_config = json.load(f)["Database"]
-
-    DB_STR = f'postgresql://{db_config["user"]}:{db_config["password"]}@{db_config["host"]}:{db_config["port"]}/{db_config["name"]}'
-
-    return DB_STR
-
-
-def get_db_connection(config_file_path, schema):
-
-    DB_STR = get_db_conn_string(config_file_path)
-
-    db_conn = s.create_engine(DB_STR, poolclass=s.pool.NullPool,
-                                connect_args={'options': f'-csearch_path={schema}'})
-
-    return db_conn
-
-
-################################################################################
-
-
-# Main function to test program
-
-def main():
-    # url = "https://api.github.com/repos/chaoss/augur/issues/events?per_page=50&page=5"
-    config = '../augur.config.json'
-
-    key_manager = OauthKeyManager(config)
-
-    my_key = key_manager.get_key()
-
-    print(my_key)
-
-
-
-
-if __name__ == '__main__':
-    # This code won't run if this file is imported.
-    main()

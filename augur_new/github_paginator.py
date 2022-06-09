@@ -4,25 +4,27 @@ import time
 import json
 import asyncio
 
-from workers.oauth_key_manager import *
+from oauth_key_manager import OauthKeyManager
 
-from urllib.parse import *
-from urllib.parse import parse_qs
+from urllib.parse import parse_qs, urlparse, urlencode, urlunparse
 
 
 class GithubPaginator(collections.abc.Sequence):
-    def __init__(self, url, config_path, from_datetime=None, to_datetime=None):
+    def __init__(self, url, key_manager, from_datetime=None, to_datetime=None):
 
         remove_fields = ["per_page", "page"]
         url = clean_url(url, remove_fields)
 
         self.url = url
+        self.key_manager = key_manager
+
+        # get the logger from the key manager
+        # self.logger = key_manager.logger
+
         self.from_datetime = from_datetime
         self.to_datetime = to_datetime
         self.rate_limit = None
         self.default_params = {"per_page": 100}
-
-        self.key_manager = OauthKeyManager(config_path)
 
         key = self.key_manager.get_key(first_key=True)
 
@@ -52,6 +54,8 @@ class GithubPaginator(collections.abc.Sequence):
     def __len__(self):
 
         num_pages = self.get_last_page_number(self.url, self.headers)
+
+        print(f"Num pages: {num_pages}")
 
         params = {"page": num_pages}.update(self.default_params)
 
@@ -90,7 +94,7 @@ class GithubPaginator(collections.abc.Sequence):
 
     def hit_api(self, url, headers, query_params={}, method='GET'):
 
-        print(f"Hitting endpoint with {method} request: {url}...\n")
+        # print(f"Hitting endpoint with {method} request: {url}...\n")
 
         with httpx.Client() as client:
 
@@ -347,30 +351,3 @@ def is_key_depleted(response):
 
 
 ################################################################################
-
-# Main function to test program
-
-def main():
-    small_url = "https://api.github.com/repos/bradtraversy/50projects50days/pulls?state=all&direction=desc"
-
-    large_url = "https://api.github.com/repos/chaoss/augur/pulls?state=all&direction=desc"
-
-    extra_large_url = "https://api.github.com/repos/freeCodeCamp/freeCodeCamp/pulls?state=all&direction=desc"
-
-
-    config_path = '../augur.config.json'
-
-    prs = GithubPaginator(extra_large_url, config_path)
-
-    start_time = time.time()
-
-    for i in range(0, 30):
-        for pr in prs:
-            pass
-
-    total_time = time.time() - start_time
-    print(total_time)
-
-if __name__ == '__main__':
-    # This code won't run if this file is imported.
-    main()
