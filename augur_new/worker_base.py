@@ -9,9 +9,6 @@ from config import AugurConfig
 from oauth_key_manager import OauthKeyManager
 
 
-
-
-
 #TODO: setup github headers in a method here.
 #Encapsulate data for celery task worker api
 
@@ -37,11 +34,22 @@ class TaskSession(s.orm.Session):
         #print(f"path = {str(ROOT_AUGUR_DIR) + "augur.config.json"}")
         
 
-        self.__engine = s.create_engine(DB_STR)
+        self.engine = s.create_engine(DB_STR)
 
-        self.__oauths = OauthKeyManager(self.config,self.__engine,self.logger)
+        #Derek 
+        @event.listens_for(self.engine, "connect", insert=True)
+        def set_search_path(dbapi_connection, connection_record):
+            existing_autocommit = dbapi_connection.autocommit
+            dbapi_connection.autocommit = True
+            cursor = dbapi_connection.cursor()
+            cursor.execute("SET SESSION search_path=public,augur_data,augur_operations,spdx")
+            cursor.close()
+            dbapi_connection.autocommit = existing_autocommit
 
-        super().__init__(self.__engine)
+
+        self.__oauths = OauthKeyManager(self.config,self.engine,self.logger)
+
+        super().__init__(self.engine)
 
     def __init_config(self, root_augur_dir):
         #Load config.
@@ -74,7 +82,7 @@ class TaskSession(s.orm.Session):
 
     
     def execute_sql(self, sql_text):
-        connection = self.__engine.connect()
+        connection = self.engine.connect()
 
         return connection.execute(sql_text)
     
