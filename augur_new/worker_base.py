@@ -36,17 +36,6 @@ class TaskSession(s.orm.Session):
 
         self.engine = s.create_engine(DB_STR)
 
-        #Derek 
-        @event.listens_for(self.engine, "connect", insert=True)
-        def set_search_path(dbapi_connection, connection_record):
-            existing_autocommit = dbapi_connection.autocommit
-            dbapi_connection.autocommit = True
-            cursor = dbapi_connection.cursor()
-            cursor.execute("SET SESSION search_path=public,augur_data,augur_operations,spdx")
-            cursor.close()
-            dbapi_connection.autocommit = existing_autocommit
-
-
         self.__oauths = OauthKeyManager(self.config,self.engine,self.logger)
 
         super().__init__(self.engine)
@@ -106,3 +95,13 @@ class TaskSession(s.orm.Session):
                 index_elements=natural_keys, set_=dict(value))
             result = self.execute_sql(insert_stmt)
 
+
+#Derek 
+@event.listens_for(TaskSession, "connect", insert=True)
+def set_search_path(dbapi_connection, connection_record):
+    existing_autocommit = dbapi_connection.autocommit
+    dbapi_connection.autocommit = True
+    cursor = dbapi_connection.cursor()
+    cursor.execute("SET SESSION search_path=public,augur_data,augur_operations,spdx")
+    cursor.close()
+    dbapi_connection.autocommit = existing_autocommit
