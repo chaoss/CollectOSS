@@ -247,6 +247,7 @@ def init_oauths(self, platform='github'):
 
     self.logger.info("OAuth initialized\n")
 
+"""
 def enrich_cntrb_id(
     self, data, key, action_map_additions={'insert': {'source': [], 'augur': []}},
     platform='github', prefix=''
@@ -527,7 +528,7 @@ def enrich_cntrb_id(
             self.logger.debug(f"AB ERROR: data exiting enrich_cntrb_id without cntrb_id, login is: " + str(data[f'{prefix}login']))
 
     return source_data
-
+"""
 # Try to construct the best url to ping GitHub's API for a username given an email.
 """
 I changed this because of the following note on the API site: With the in qualifier you can restrict your search to the username (login), full name, public email, or any combination of these. When you omit this qualifier, only the username and email address are searched. For privacy reasons, you cannot search by email domain name.
