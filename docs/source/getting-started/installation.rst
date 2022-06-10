@@ -92,6 +92,7 @@ Installation
 
 Now you're ready to build! The steps below outline how to create a virtual environment (**required**) and start the installation process, after which you'll move on to the next section to configure the workers. The instructions are written in a way that you can follow for your respective Operating System.
 
+
 .. note::
   Lines that start with a ``$`` denote a command that needs to run in an interactive terminal.
 
