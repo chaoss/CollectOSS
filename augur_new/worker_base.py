@@ -112,14 +112,17 @@ class TaskSession(s.orm.Session):
             return
 
         stmnt = insert(table).values(data)
+
+        setDict = {}
+        for key in data.keys:
+            setDict[key] = getattr(stmnt.excluded,key)
+
         stmnt = stmnt.on_conflict_do_update(
             #This might need to change
-            constraint = "post_pkey",
+            index_elements=natural_keys,
             
             #Columns to be updated
-            set_ = {
-                "title": stmnt.excluded.title
-            }
+            set_ = setDict
         )
 
         self.execute(stmnt)
