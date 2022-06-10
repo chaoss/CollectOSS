@@ -16,7 +16,7 @@ BROKER_URL = 'redis://localhost:6379/0'
 BACKEND_URL = 'redis://localhost:6379/1'
 app = Celery('tasks', broker=BROKER_URL, backend=BACKEND_URL)
 
-r = redis.from_url('redis://localhost:6379/1', decode_responses=True)
+r = redis.from_url('redis://localhost:6379/2', decode_responses=True)
 r.set('mykey', 'thevalueofmykey')
 r.delete('mykey')
 
