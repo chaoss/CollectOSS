@@ -2,7 +2,7 @@
 import math
 
 from numpy.lib.utils import source
-from workers.worker_base import *
+from augur_new.worker_base import *
 from workers.github_paginator import *
 from augur import db_models
 import sqlalchemy as s
