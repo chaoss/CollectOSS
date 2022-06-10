@@ -15,7 +15,7 @@ import numpy as np
 # Debugger
 import traceback
 
-#TODO: maybe have a TaskSession class that holds information about the database, logger, config, etc.
+##TODO: maybe have a TaskSession class that holds information about the database, logger, config, etc.
 
 # postgresql
 #'sqla+postgresql://scott:tiger@localhost/mydatabase'
