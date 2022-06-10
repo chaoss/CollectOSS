@@ -916,7 +916,7 @@ def query_gitlab_contributors(self, entry_info, repo_id):
             self.logger.info("Caught exception: {}".format(e))
             self.logger.info("Cascading Contributor Anomalie from missing repo contributor data: {} ...\n".format(cntrb_url))
             continue
-
+"""
 def update_gitlab_rate_limit(self, response, bad_credentials=False, temporarily_disable=False):
     # Try to get rate limit from request headers, sometimes it does not work (GH's issue)
     #   In that case we just decrement from last recieved header count
@@ -1259,9 +1259,9 @@ def paginate_endpoint(
         'all': all_data
     }
 
-#TODO: deprecated but still used by many other methods
+
 def paginate(url, duplicate_col_map, update_col_map, table, table_pkey, where_clause="", value_update_col_map={}, platform="github"):
-    """ DEPRECATED
+    DEPRECATED
         Paginate either backwards or forwards (depending on the value of the worker's
         finishing_task attribute) through all the GitHub or GitLab api endpoint pages.
 
@@ -1296,7 +1296,6 @@ def paginate(url, duplicate_col_map, update_col_map, table, table_pkey, where_cl
     :return: List of dictionaries, all data points from the pages of the specified API endpoint
         each with a 'flag' key-value pair representing the required action to take with that
         data point (i.e. 'need_insertion', 'need_update', 'none')
-    """
 
     update_keys = list(update_col_map.keys()) if update_col_map else []
     update_keys += list(value_update_col_map.keys()) if value_update_col_map else []
@@ -1412,6 +1411,16 @@ def paginate(url, duplicate_col_map, update_col_map, table, table_pkey, where_cl
             break
 
     return tuples
+
+
+
+
+
+
+
+
+
+
 
 def new_paginate_endpoint(
     self, url, action_map={}, table=None, where_clause=True, platform='github'
@@ -1540,3 +1549,4 @@ def new_paginate_endpoint(
         'update': need_update,
         'all': all_data
     }
+"""
