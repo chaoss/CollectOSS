@@ -5,6 +5,8 @@ import sqlalchemy as s
 
 
 from db_models import *
+from sqlalchemy.event import listen
+from sqlalchemy.event import listens_for
 from config import AugurConfig
 from oauth_key_manager import OauthKeyManager
 
@@ -94,6 +96,33 @@ class TaskSession(s.orm.Session):
             insert_stmt = insert_stmt.on_conflict_do_update(
                 index_elements=natural_keys, set_=dict(value))
             result = self.execute_sql(insert_stmt)
+
+    #TODO: Bulk upsert
+    
+    def insert_bulk_data(self,data,table,natural_keys):
+        self.logger.info(f"Length of data to insert: {len(data)}")
+        self.logger.info(type(data))
+
+        if type(data) != list:
+            self.logger.info("Data must be a list")
+            return
+
+        if type(data[0]) != dict:
+            self.logger.info("Must be list of dicts")
+            return
+
+        stmnt = insert(table).values(data)
+        stmnt = stmnt.on_conflict_do_update(
+            #This might need to change
+            constraint = "post_pkey",
+            
+            #Columns to be updated
+            set_ = {
+                "title": stmnt.excluded.title
+            }
+        )
+
+        self.execute(stmnt)
 
 
 #Derek 
