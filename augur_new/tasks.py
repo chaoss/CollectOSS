@@ -5,7 +5,7 @@ from celery import Celery, group
 from celery.utils.log import get_task_logger
 import time
 
-from db_models import PullRequests, Message, PullRequestReviews, PullRequestLabels, PullRequestReviewers, PullRequestEvents, PullRequestMeta
+from db_models import PullRequests, Message, PullRequestReviews, PullRequestLabels, PullRequestReviewers, PullRequestEvents, PullRequestMeta, PullRequestAssignees
 
 
 from github_paginator import GithubPaginator
@@ -47,57 +47,91 @@ def pull_requests(owner, repo):
     repo_id = 1
     tool_source = "Pr Task"
     tool_version = "2.0"
+    platform_id = 25150
+    data_source = "Github API"
+
+    pr_natural_keys = ["pr_url"]
+
 
     # returns an iterable of all prs at this url
     prs = GithubPaginator(url, session.oauths)
 
-    repo_pr_labels = []
-    repo_pr_assignees = []
-    repo_pr_reviewers = []
-    repo_pr_meta_data = []
+    pr_label_objects = []
+    pr_assignee_objects = []
+    pr_reviewer_objects = []
+    pr_metadata_objects = []
+
     repo_pr_numbers = []
-    pr_object_list = []
+
+    # creating a list, because we would like to bulk insert in the future
 
     for pr in prs:
 
-        # get labels, assigness, and reviewers to pass to their respective tasks  
-        repo_pr_labels += pr["labels"]
-        repo_pr_assignees += pr["assignees"]
-        repo_pr_reviewers += pr["requested_reviewers"]
+        print(f"Processing {pr["url"]}")
+        pr_object = create_pull_request_object(
+            pr, repo_id, tool_source, tool_version)
 
-        # get a list of pr numbers to pass for the pr reviews task
-        repo_pr_numbers.append(pr["number"])
+        # when the object gets inserted the pull_request_id is automatically added
+        session.insert_data(pr_object, PullRequests, pr_natural_keys)
 
-        # add pr_head_or_base to be able to differentiate between the two in the pr_meta task
+        pr_label_objects.append(
+            create_pr_label_objects(pr["labels"], pr_object.pull_request_id,  platform_id, repo_id,
+                                   tool_source, tool_version, data_source)
+        )
+
+        pr_assignee_objects.append(
+            create_pr_assignee_objects(pr["assignees"], pr_object.pull_request_id, platform_id, repo_id,
+                                    tool_source, tool_version, data_source)
+        )
+
+        pr_reviewer_objects.append(
+            create_pr_reviewer_objects(pr["requested_reviewers"], pr_object.pull_request_id, platform_id, repo_id,
+                                      tool_source, tool_version, data_source)
+        )
+
         pr['head'].update(
             {'pr_head_or_base': 'head'}
         )
         pr['base'].update(
             {'pr_head_or_base': 'base'}
         )
-        repo_pr_meta_data += [pr['head'], pr['base']]
 
-        # get needed data for prs and add to list
-        pr_object = create_pull_request_object(pr, repo_id, tool_source, tool_version)
-        pr_object_list.append(pr_object)
+        pr_metadata_objects.append(
+            create_pr_meta_objects(pr['head'] + pr['base'], pr_object.pull_request_id, platform_id, repo_id,
+                                  tool_source, tool_version, data_source)
+        )
 
- 
+        # get a list of pr numbers to pass for the pr reviews task
+        repo_pr_numbers.append(pr["number"])
+
+
+    print("Inserting pr labels")
+    session.insert_data(pr_label_objects, PullRequestLabels, pr_natural_keys)
+
+    print("Inserting pr assignees")
+    session.insert_data(pr_assignee_objects, PullRequestAssignees, pr_natural_keys)
+
+
+    print("Inserting pr reviewers")
+    session.insert_data(pr_reviewer_objects, PullRequestReviewers, pr_natural_keys)
+
+    print("Inserting pr reviewers")
+    session.insert_data(pr_metadata_objects, PullRequestMeta, pr_natural_keys)
+
+            
+    print("Prepping to start pr comments, pr events, and pr reviews")
     task_list = []
-
     task_list.append(pull_request_comments.s(owner, repo))
     task_list.append(pull_request_events.s(owner, repo))
     task_list.append(pull_request_reviews.s(owner, repo, repo_pr_numbers))
-    task_list.append(pull_request_labels.s(owner, repo, repo_pr_labels))
-    task_list.append(pull_request_assignees.s(owner, repo, repo_pr_assignees))
-    task_list.append(pull_request_reviewers.s(owner, repo, repo_pr_reviewers))
-    task_list.append(pull_request_meta.s(owner, repo, repo_pr_meta_data))
 
     pr_task_group = group(task_list)
 
     # executes all the tasks in the group in parallel
+    print("Starting pr comments, pr events, and pr reviews")
     pr_task_group()
 
-    # insert prs into db or cache
+    
 
 # func to get the data we need for prs
 # added to separate func so it doesn't clutter the pr task
@@ -122,7 +156,7 @@ def create_pull_request_object(pr, repo_id, tool_source, tool_version):
         pr_html_url=pr['html_url'], # derivable
         pr_diff_url=pr['diff_url'],  # derivable
         pr_patch_url=pr['patch_url'],  # derivable
-        pr_issue_url=pr['issue_url'],  # derivable
+        pr_issue_url=pr['issue_url'],  # derivable but needed so we can relate a pr event back to a specific pr
         pr_augur_issue_id=None, # always none why keep?
         pr_src_number=pr['number'],
         pr_src_state=pr['state'],
@@ -164,6 +198,109 @@ def create_pull_request_object(pr, repo_id, tool_source, tool_version):
         tool_version=tool_version,
         data_source='GitHub API'
     )
+
+
+def create_pr_label_objects(labels, pr_id, platform_id, repo_id, tool_source, tool_version, data_source):
+
+    if len(labels) == 0:
+        return []
+
+    label_objects = []
+    for label in labels:
+
+        label_obj = PullRequestLabels(
+            pull_request_id=pr_id,
+            pr_src_id=int(label['id']),
+            pr_src_node_id=label['node_id'],
+            pr_src_url=label['url'],
+            pr_src_description=label['name'],
+            pr_src_color=label['color'],
+            pr_src_default_bool=label['default'],
+            tool_source=tool_source,
+            tool_version=tool_version,
+            data_source=data_source,
+            repo_id=repo_id
+        )
+
+    label_objects.append(label_obj)
+
+    return label_objects
+
+
+def create_pr_assignee_objects(assignees, pr_id, platform_id, repo_id, tool_source, tool_version, data_source):
+
+    if len(assignees) == 0:
+        return []
+
+    assignee_objects = []
+    for assignee in assignees:
+
+        label_obj = PullRequestAssignees(
+            pull_request_id=pr_id,
+            contrib_id=assignee['cntrb_id'],
+            pr_assignee_src_id=int(assignee['id']),
+            tool_source=tool_source,
+            tool_version=tool_version,
+            data_source=data_source,
+            repo_id=repo_id
+        )
+
+    assignee_objects.append(label_obj)
+
+    return assignee_objects
+
+
+def create_pr_reviewer_objects(reviewers, pr_id, platform_id, repo_id, tool_source, tool_version, data_source):
+
+    if len(reviewers) == 0:
+        return []
+
+    reviewer_objects = []
+    for reviewer in reviewers:
+
+        reviewer_obj = PullRequestReviewers(
+            pull_request_id=pr_id,
+            cntrb_id=None,
+            pr_reviewer_src_id=int(float(reviewer['id'])),
+            tool_source=tool_source,
+            tool_version=tool_version,
+            data_source=data_source,
+            repo_id=repo_id
+        )
+
+    reviewer_objects.append(reviewer_obj)
+
+    return reviewer_objects
+
+
+def create_pr_meta_objects(metadata_list, pr_id, platform_id, repo_id, tool_source, tool_version, data_source):
+
+    if len(metadata_list) == 0:
+        return []
+
+    metadata_objects = []
+    for meta in metadata_list:
+
+        metadata_obj = PullRequestMeta(
+            pull_request_id=pr_id,
+            pr_head_or_base=meta['pr_head_or_base'],
+            pr_src_meta_label=meta['label'],
+            pr_src_meta_ref=meta['ref'],
+            pr_sha=meta['sha'],
+            # Cast as int for the `nan` user by SPG on 11/28/2021; removed 12/6/2021
+            cntrb_id=meta['cntrb_id'],
+            tool_source=tool_source,
+            tool_version=tool_version,
+            data_source=data_source,
+            repo_id=repo_id
+        )
+
+    metadata_objects.append(metadata_obj)
+
+    return metadata_objects
+
+
+
     
 @app.task
 def pull_request_comments(owner, repo):
@@ -190,7 +327,8 @@ def pull_request_comments(owner, repo):
                     tool_source, tool_version, data_source)
             )
 
-    # insert pr comments into database or cache
+    print("Inserting pr comments")
+    session.insert_data(pr_metadata_objects, PullRequestMeta, pr_natural_keys)
 
 def create_pr_comment_object(comment, platform_id, repo_id, tool_source, tool_version, data_source):
 
@@ -229,6 +367,9 @@ def pull_request_events(owner, repo):
     pr_event_objects = []
 
     for event in pr_events:
+
+        stmt = select(PullRequests).where(
+            PullRequests.pr_issue_url == event["issue"]["url"]))
         pr_event_objects.append(
             create_pr_comment_object(event, platform_id, repo_id,
                                      tool_source, tool_version, data_source)
@@ -296,157 +437,6 @@ def create_pr_review_object(review, platform_id, repo_id, tool_version, data_sou
         data_source=data_source,
         repo_id=repo_id,
         platform_id=platform_id
-    )
-
-
-@app.task
-def pull_request_labels(owner, repo, labels):
-    print(f"Handling pull request labels for {owner}/{repo}")
-    
-    # get repo_id
-    repo_id = 1
-
-    platform_id = 25150
-    tool_source = "Pr comment task"
-    tool_version = "2.0"
-    data_source = "Github API"
-
-    pr_label_objects = []
-
-    for label in labels:
-        pr_label_objects.append(
-            create_pr_label_object(label, platform_id, repo_id,
-                                     tool_source, tool_version, data_source)
-        )
-
-
-def create_pr_label_object(label, platform_id, repo_id, tool_source, tool_version, data_source):
-
-    # TODO: Add db pull request id
-
-    return PullRequestReviews(
-        #pull_request_id=label['pull_request_id'],
-        pr_src_id=int(label['id']),
-        pr_src_node_id=label['node_id'],
-        pr_src_url=label['url'],
-        pr_src_description=label['name'],
-        pr_src_color=label['color'],
-        pr_src_default_bool=label['default'],
-        tool_source=tool_source,
-        tool_version=tool_version,
-        data_source=data_source,
-        repo_id=repo_id
-    )
-
-
-@app.task
-def pull_request_assignees(owner, repo, assignees):
-    print(f"Handling pull request labels for {owner}/{repo}")
-
-    # get repo_id
-    repo_id = 1
-
-    platform_id = 25150
-    tool_source = "Pr assignee task"
-    tool_version = "2.0"
-    data_source = "Github API"
-
-    pr_assinee_objects = []
-
-    for assignee in assignees:
-        pr_assinee_objects.append(
-            create_pr_assignee_object(assignee, platform_id, repo_id,
-                                   tool_source, tool_version, data_source)
-        )
-
-
-def create_pr_assignee_object(assignee, platform_id, repo_id, tool_source, tool_version, data_source):
-
-    # TODO: Add db pull request id
-
-    return PullRequestReviews(
-        #pull_request_id=assignee['pull_request_id'],
-        contrib_id=assignee['cntrb_id'],
-        pr_assignee_src_id=int(assignee['id']),
-        tool_source=tool_source,
-        tool_version=tool_version,
-        data_source=data_source,
-        repo_id=repo_id
-    )  
-
-
-@app.task
-def pull_request_reviewers(owner, repo, reviewers):
-    print(f"Handling reviewers for {owner}/{repo}")
-
-    # get repo_id
-    repo_id = 1
-
-    platform_id = 25150
-    tool_source = "Pr reviewer task"
-    tool_version = "2.0"
-    data_source = "Github API"
-
-    pr_reviewer_objects = []
-
-    for reviewer in reviewers:
-        pr_reviewer_objects.append(
-            create_pr_reviewer_object(reviewer, platform_id, repo_id,
-                                      tool_source, tool_version, data_source)
-        )
-
-
-def create_pr_reviewer_object(reviewer, platform_id, repo_id, tool_source, tool_version, data_source):
-
-    # TODO: Add db pull request id
-
-    return PullRequestReviewers(
-        #pull_request_id=reviewer['pull_request_id'],
-        cntrb_id=None,
-        pr_reviewer_src_id=int(float(reviewer['id'])),
-        tool_source=tool_source,
-        tool_version=tool_version,
-        data_source=data_source,
-        repo_id=repo_id
-    )
-
-@app.task
-def pull_request_meta(owner, repo, metadata):
-    print(f"Handling metadata for {owner}/{repo}")
-
-    # get repo_id
-    repo_id = 1
-
-    platform_id = 25150
-    tool_source = "Pr metadata task"
-    tool_version = "2.0"
-    data_source = "Github API"
-
-    pr_metadata_objects = []
-
-    for data in metadata:
-        pr_metadata_objects.append(
-            create_pr_meta_object(data, platform_id, repo_id,
-                                      tool_source, tool_version, data_source)
-        )
-
-
-def create_pr_meta_object(meta, platform_id, repo_id, tool_source, tool_version, data_source):
-
-    # TODO: Add db pull request id
-
-    return PullRequestMeta(
-        #pull_request_id=meta['pull_request_id'],
-        pr_head_or_base=meta['pr_head_or_base'],
-        pr_src_meta_label=meta['label'],
-        pr_src_meta_ref=meta['ref'],
-        pr_sha=meta['sha'],
-        # Cast as int for the `nan` user by SPG on 11/28/2021; removed 12/6/2021
-        cntrb_id=meta['cntrb_id'],
-        tool_source=tool_source,
-        tool_version=tool_version,
-        data_source=data_source,
-        repo_id=repo_id
     )
 
 
