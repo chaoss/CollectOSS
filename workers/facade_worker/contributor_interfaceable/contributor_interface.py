@@ -1,5 +1,5 @@
 from requests.api import head
-from workers.worker_base import *
+from augur_new.worker_base import *
 import logging
 from logging import FileHandler, Formatter, StreamHandler, log
 from workers.worker_git_integration import WorkerGitInterfaceable

@@ -238,7 +238,7 @@ def commits_model( message):
     #breakpoint()
     for repo in all_repos:
         session.logger.info(f"Processing repo {repo}")
-        insert_facade_contributors(repo[0],multithreaded=multithreaded)
+        insert_facade_contributors(session,repo[0],multithreaded=multithreaded)
         session.logger.info(f"Processing repo contributors for repo: {repo}")
 
     ### end moved up
