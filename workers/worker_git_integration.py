@@ -6,6 +6,7 @@ from workers.worker_base import *
 import sqlalchemy as s
 import time
 import math
+from random import randint
 
 #This is a worker base subclass that adds the ability to query github/gitlab with the api key
 class WorkerGitInterfaceable(Worker):
@@ -212,11 +213,14 @@ class WorkerGitInterfaceable(Worker):
         for oauth in [{'oauth_id': 0, 'access_token': self.config[key_name]}] + json.loads(
             pd.read_sql(oauthSQL, self.helper_db, params={}).to_json(orient="records")
         ):
+            self.logger.debug('getting oauth.')
             if platform == 'github':
                 self.headers = {'Authorization': 'token %s' % oauth['access_token']}
+                self.logger.debug('in github oauth block')
             elif platform == 'gitlab':
                 self.headers = {'Authorization': 'Bearer %s' % oauth['access_token']}
-            response = requests.get(url=url, headers=self.headers, timeout=180)
+            ## Changed timeout from 180 to 12. Seems to be hanging in some workers. 
+            response = requests.get(url=url, headers=self.headers)
             self.oauths.append({
                     'oauth_id': oauth['oauth_id'],
                     'access_token': oauth['access_token'],
@@ -237,10 +241,13 @@ class WorkerGitInterfaceable(Worker):
 
         # First key to be used will be the one specified in the config (first element in
         #   self.oauths array will always be the key in use)
+        ## Attempt to get this to circulate the keys more spg 6/7/2022
+        availablekeys = len(self.oauths)
+        keytouse = randint(0,availablekeys-1)
         if platform == 'github':
-            self.headers = {'Authorization': 'token %s' % self.oauths[0]['access_token']}
+            self.headers = {'Authorization': 'token %s' % self.oauths[keytouse]['access_token']}
         elif platform == 'gitlab':
-            self.headers = {'Authorization': 'Bearer %s' % self.oauths[0]['access_token']}
+            self.headers = {'Authorization': 'Bearer %s' % self.oauths[keytouse]['access_token']}
 
         self.logger.info("OAuth initialized\n")
 
