@@ -7,10 +7,7 @@ Get going fast! Intended for folks familiar with setting up DevOps environments.
 
 Setting up VirtualBox
 ~~~~~~~~~~~~~~~~~~~~~~~
-- Type "Download VirtualBox for Windows" in the search bar.
-- Click on the websight by Oracle.
-.. image:: development-guide/images/A1.png
-  :width: 600  
+- Go to the official box website to download using this link `https://www.virtualbox.org/`
 - Download VirtualBox for "Windows hosts".
 .. image:: development-guide/images/A2.png
   :width: 600  
