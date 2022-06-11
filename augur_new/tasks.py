@@ -67,28 +67,6 @@ def pull_requests(owner, repo):
 
     for pr in prs:
 
-        print(f"Processing {pr["url"]}")
-        pr_object = create_pull_request_object(
-            pr, repo_id, tool_source, tool_version)
-
-        # when the object gets inserted the pull_request_id is automatically added
-        session.insert_data(pr_object, PullRequests, pr_natural_keys)
-
-        pr_label_objects.append(
-            create_pr_label_objects(pr["labels"], pr_object.pull_request_id,  platform_id, repo_id,
-                                   tool_source, tool_version, data_source)
-        )
-
-        pr_assignee_objects.append(
-            create_pr_assignee_objects(pr["assignees"], pr_object.pull_request_id, platform_id, repo_id,
-                                    tool_source, tool_version, data_source)
-        )
-
-        pr_reviewer_objects.append(
-            create_pr_reviewer_objects(pr["requested_reviewers"], pr_object.pull_request_id, platform_id, repo_id,
-                                      tool_source, tool_version, data_source)
-        )
-
         pr['head'].update(
             {'pr_head_or_base': 'head'}
         )
@@ -96,13 +74,39 @@ def pull_requests(owner, repo):
             {'pr_head_or_base': 'base'}
         )
 
-        pr_metadata_objects.append(
-            create_pr_meta_objects(pr['head'] + pr['base'], pr_object.pull_request_id, platform_id, repo_id,
-                                  tool_source, tool_version, data_source)
-        )
+        # print(f"Processing {pr["url"]}")
+        pr_object = create_pull_request_object(
+            pr, repo_id, tool_source, tool_version)
 
-        # get a list of pr numbers to pass for the pr reviews task
-        repo_pr_numbers.append(pr["number"])
+        print(pr_object.labels)
+
+        # when the object gets inserted the pull_request_id is automatically added
+        session.insert_data(pr_object, PullRequests, pr_natural_keys)
+
+        # pr_label_objects.append(
+        #     create_pr_label_objects(pr["labels"], pr_object.pull_request_id,  platform_id, repo_id,
+        #                            tool_source, tool_version, data_source)
+        # )
+
+        # pr_assignee_objects.append(
+        #     create_pr_assignee_objects(pr["assignees"], pr_object.pull_request_id, platform_id, repo_id,
+        #                             tool_source, tool_version, data_source)
+        # )
+
+        # pr_reviewer_objects.append(
+        #     create_pr_reviewer_objects(pr["requested_reviewers"], pr_object.pull_request_id, platform_id, repo_id,
+        #                               tool_source, tool_version, data_source)
+        # )
+
+
+
+        # pr_metadata_objects.append(
+        #     create_pr_meta_objects(pr['head'] + pr['base'], pr_object.pull_request_id, platform_id, repo_id,
+        #                           tool_source, tool_version, data_source)
+        # )
+
+        # # get a list of pr numbers to pass for the pr reviews task
+        # repo_pr_numbers.append(pr["number"])
 
 
     print("Inserting pr labels")
@@ -196,7 +200,10 @@ def create_pull_request_object(pr, repo_id, tool_source, tool_version):
         pr_src_author_association=pr['author_association'],
         tool_source=tool_source,
         tool_version=tool_version,
-        data_source='GitHub API'
+        data_source='GitHub API',
+        labels = pr['labels'],
+        assignees = pr['assignees'],
+        metadata = pr["head"] + pr["base"]
     )
 
 
@@ -366,14 +373,14 @@ def pull_request_events(owner, repo):
 
     pr_event_objects = []
 
-    for event in pr_events:
+    # for event in pr_events:
 
-        stmt = select(PullRequests).where(
-            PullRequests.pr_issue_url == event["issue"]["url"]))
-        pr_event_objects.append(
-            create_pr_comment_object(event, platform_id, repo_id,
-                                     tool_source, tool_version, data_source)
-        )
+    #     stmt = select(PullRequests).where(
+    #         PullRequests.pr_issue_url == event["issue"]["url"]))
+    #     pr_event_objects.append(
+    #         create_pr_comment_object(event, platform_id, repo_id,
+    #                                  tool_source, tool_version, data_source)
+    #     )
 
     # insert pr events into database or cache
     
@@ -440,19 +447,22 @@ def create_pr_review_object(review, platform_id, repo_id, tool_version, data_sou
     )
 
 
+
 @app.task
-def issues():
-    pass
+def issues(owner, repo):
+    
+    url =  f"https://api.github.com/repos/{owner}/{repo}/issues?state=all"
+    
 
 
 @app.task
 def issue_comments():
-    pass
+    url = f"https://api.github.com/repos/{owner}/{repo}/issues/comments"
 
 
 @app.task
 def issue_events():
-    pass
+    url = f"https://api.github.com/repos/{owner}/{repo}/issues/events"
 
 
 @app.task
@@ -464,6 +474,46 @@ def issue_labels():
 def issue_assignees():
     pass
 
+
+def create_pull_request_label_objects(labels):
+
+
+    if len(labels) == 0:
+        return []
+
+    label_objects=[]
+    for label in labels:
+
+        label_obj=IssueLabels(
+            pull_request_id = pr_id,
+            pr_src_id = int(label['id']),
+            pr_src_node_id = label['node_id'],
+            pr_src_url = label['url'],
+            pr_src_description = label['name'],
+            pr_src_color = label['color'],
+            pr_src_default_bool = label['default'],
+            tool_source = tool_source,
+            tool_version = tool_version,
+            data_source = data_source,
+            repo_id = repo_id
+        )
+
+    label_objects.append(label_obj)
+
+    return label_objects
+
+    {
+        'issue_id': issue_id,
+        'label_text': label['name'],
+        'label_description': label['description'] if 'description' in label else None,
+        'label_color': label['color'],
+        'tool_source': self.tool_source,
+        'tool_version': self.tool_version,
+        'data_source': self.data_source,
+        'label_src_id': int(label['id']),
+        'label_src_node_id': label['node_id'],
+        'repo_id': self.repo_id
+    }
 
 pull_requests("chaoss", "augur")
 
