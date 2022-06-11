@@ -45,7 +45,7 @@ setup(
         "Flask-WTF==1.0.0",
         "pandas==1.3.5",
         "numpy==1.21",
-        "requests==2.27.1",
+        "requests==2.28.0",
         "psycopg2-binary==2.9.3",
         "click==8.0.3",
         "psutil==5.8.0",
