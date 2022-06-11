@@ -1,7 +1,7 @@
 Collecting data
 ===============
 
-Now that you've installed Augur's application server, it's time to configure your data collection workers. If you just want to run Augur using the single repository in the default database, and default worker settings all you need to do is this: 
+Now that you’ve installed Augur’s application server, it’s time to configure your data collection workers. If you just want to run Augur using the one repository in the default database, and default worker settings, all you need to do is this:
 
 .. code-block:: bash
 

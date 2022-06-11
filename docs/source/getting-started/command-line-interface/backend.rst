@@ -16,7 +16,7 @@ This command is for starting Augur's API server & (optionally) data collection w
 
 --skip-cleanup      Flag that disables the old process cleanup that runs before Augur starts. Useful for Python scripts where Augur needs to be run in the background: see the `test/api/runner.py` file for an example.
 
-**To start the backend as normal:**
+**To start the backend normally:**
 
 .. code-block:: 
 
