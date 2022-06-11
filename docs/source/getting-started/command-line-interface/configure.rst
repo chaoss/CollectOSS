@@ -28,7 +28,7 @@ Below is the list of available parameters, their defaults, and the corresponding
 
 --rc-config-file        Path to an existing Augur config file whose values will be used as the defaults. Defaults to ``None``. This parameter does not support being set by an environment variable.
 
---write-to-src          Flag for writing the generated config file to the source code tree, instead of the default ``$HOME/.augur``. For developer use only. Defaults to ``False``.
+--write-to-src          Flag for writing the generated config file to the source code tree, instead of the default ``$HOME/.augur``. For developers use only. Defaults to ``False``.
 
 Example usage\:
 
