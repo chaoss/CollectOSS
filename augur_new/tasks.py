@@ -83,6 +83,8 @@ def pull_requests(owner, repo):
         # when the object gets inserted the pull_request_id is automatically added
         session.insert_data(pr_object, PullRequests, pr_natural_keys)
 
+        print(pr_object.labels)
+
         # pr_label_objects.append(
         #     create_pr_label_objects(pr["labels"], pr_object.pull_request_id,  platform_id, repo_id,
         #                            tool_source, tool_version, data_source)
@@ -109,31 +111,31 @@ def pull_requests(owner, repo):
         # repo_pr_numbers.append(pr["number"])
 
 
-    print("Inserting pr labels")
-    session.insert_data(pr_label_objects, PullRequestLabels, pr_natural_keys)
+    # print("Inserting pr labels")
+    # session.insert_data(pr_label_objects, PullRequestLabels, pr_natural_keys)
 
-    print("Inserting pr assignees")
-    session.insert_data(pr_assignee_objects, PullRequestAssignees, pr_natural_keys)
+    # print("Inserting pr assignees")
+    # session.insert_data(pr_assignee_objects, PullRequestAssignees, pr_natural_keys)
 
 
-    print("Inserting pr reviewers")
-    session.insert_data(pr_reviewer_objects, PullRequestReviewers, pr_natural_keys)
+    # print("Inserting pr reviewers")
+    # session.insert_data(pr_reviewer_objects, PullRequestReviewers, pr_natural_keys)
 
-    print("Inserting pr reviewers")
-    session.insert_data(pr_metadata_objects, PullRequestMeta, pr_natural_keys)
+    # print("Inserting pr reviewers")
+    # session.insert_data(pr_metadata_objects, PullRequestMeta, pr_natural_keys)
 
             
-    print("Prepping to start pr comments, pr events, and pr reviews")
-    task_list = []
-    task_list.append(pull_request_comments.s(owner, repo))
-    task_list.append(pull_request_events.s(owner, repo))
-    task_list.append(pull_request_reviews.s(owner, repo, repo_pr_numbers))
+    # print("Prepping to start pr comments, pr events, and pr reviews")
+    # task_list = []
+    # task_list.append(pull_request_comments.s(owner, repo))
+    # task_list.append(pull_request_events.s(owner, repo))
+    # task_list.append(pull_request_reviews.s(owner, repo, repo_pr_numbers))
 
-    pr_task_group = group(task_list)
+    # pr_task_group = group(task_list)
 
-    # executes all the tasks in the group in parallel
-    print("Starting pr comments, pr events, and pr reviews")
-    pr_task_group()
+    # # executes all the tasks in the group in parallel
+    # print("Starting pr comments, pr events, and pr reviews")
+    # pr_task_group()
 
     
 
@@ -335,7 +337,7 @@ def pull_request_comments(owner, repo):
             )
 
     print("Inserting pr comments")
-    session.insert_data(pr_metadata_objects, PullRequestMeta, pr_natural_keys)
+    # session.insert_data(pr_comment_objects, PullRequestMeta, pr_natural_keys)
 
 def create_pr_comment_object(comment, platform_id, repo_id, tool_source, tool_version, data_source):
 
