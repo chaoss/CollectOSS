@@ -5,12 +5,25 @@ import sqlalchemy as s
 import pandas as pd
 import json
 
-from db_models import *
+from .db_models import *
 from sqlalchemy.event import listen
 from sqlalchemy.event import listens_for
-from config import AugurConfig
+from .config import AugurConfig
 
-from random_key_auth import RandomKeyAuth
+from .random_key_auth import RandomKeyAuth
+# from .engine import engine
+
+# #Derek
+# @s.event.listens_for(engine, "connect", insert=True)
+# def set_search_path(dbapi_connection, connection_record):
+#     existing_autocommit = dbapi_connection.autocommit
+#     dbapi_connection.autocommit = True
+#     cursor = dbapi_connection.cursor()
+#     cursor.execute(
+#         "SET SESSION search_path=public,augur_data,augur_operations,spdx")
+#     cursor.close()
+#     dbapi_connection.autocommit = existing_autocommit
+
 
 #TODO: setup github headers in a method here.
 #Encapsulate data for celery task worker api
@@ -38,8 +51,9 @@ class TaskSession(s.orm.Session):
         
 
         self.engine = s.create_engine(DB_STR)
+        # self.engine = engine
         
-        keys = self.get_list_of_oauth_keys()
+        keys = get_list_of_oauth_keys(self.engine, config["Database"]["key"])
 
         self.oauths = RandomKeyAuth(keys)
 
@@ -133,18 +147,7 @@ class TaskSession(s.orm.Session):
         self.execute(stmnt)
 
 
-#Derek 
-@event.listens_for(TaskSession, "connect", insert=True)
-def set_search_path(dbapi_connection, connection_record):
-    existing_autocommit = dbapi_connection.autocommit
-    dbapi_connection.autocommit = True
-    cursor = dbapi_connection.cursor()
-    cursor.execute("SET SESSION search_path=public,augur_data,augur_operations,spdx")
-    cursor.close()
-    dbapi_connection.autocommit = existing_autocommit
-
-
-def get_list_of_oauth_keys(self, db_engine, config_key):
+def get_list_of_oauth_keys(db_engine, config_key):
 
     oauthSQL = s.sql.text(f"""
             SELECT access_token FROM augur_operations.worker_oauth WHERE access_token <> '{config_key}' and platform = 'github'
@@ -153,5 +156,7 @@ def get_list_of_oauth_keys(self, db_engine, config_key):
     oauth_keys_list = [{'access_token': config_key}] + json.loads(
         pd.read_sql(oauthSQL, db_engine, params={}).to_json(orient="records"))
 
-    return oauth_keys_list
+    key_list = [x["access_token"] for x in oauth_keys_list]
+
+    return key_list
 

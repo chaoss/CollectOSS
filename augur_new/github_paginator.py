@@ -4,7 +4,7 @@ import time
 import json
 import asyncio
 
-from oauth_key_manager import OauthKeyManager
+# from oauth_key_manager import OauthKeyManager
 
 from urllib.parse import parse_qs, urlparse, urlencode, urlunparse
 
@@ -26,10 +26,6 @@ class GithubPaginator(collections.abc.Sequence):
         self.rate_limit = None
         self.default_params = {"per_page": 100}
 
-        key = self.key_manager.get_key(first_key=True)
-
-        self.headers = get_header(key)
-
     def __getitem__(self, index):
 
         # get the page the item is on
@@ -38,7 +34,7 @@ class GithubPaginator(collections.abc.Sequence):
         # create url to query
         params = {"page": items_page}.update(self.default_params)
 
-        data, _ = self.retrieve_data(self.url, self.headers, query_params=params)
+        data, _ = self.retrieve_data(self.url, query_params=params)
 
         if data is None:
             return None
@@ -53,14 +49,14 @@ class GithubPaginator(collections.abc.Sequence):
 
     def __len__(self):
 
-        num_pages = self.get_last_page_number(self.url, self.headers)
+        num_pages = self.get_last_page_number(self.url)
 
         print(f"Num pages: {num_pages}")
 
         params = {"page": num_pages}.update(self.default_params)
 
         # get the amount of data on last page
-        data, _ = self.retrieve_data(self.url, self.headers, query_params=params)
+        data, _ = self.retrieve_data(self.url, query_params=params)
 
         last_page_data_count = len(data)
 
@@ -71,7 +67,7 @@ class GithubPaginator(collections.abc.Sequence):
 
     def __iter__(self):
 
-        data_list, response = self.retrieve_data(self.url, self.headers, query_params=self.default_params)
+        data_list, response = self.retrieve_data(self.url, query_params=self.default_params)
 
         if data_list is None:
             yield None
@@ -84,7 +80,7 @@ class GithubPaginator(collections.abc.Sequence):
             next_page = response.links['next']['url']
 
             # Here we don't need to pass in params with the page, or the default params because the url from the headers already has those values
-            data_list, response = self.retrieve_data(next_page, self.headers)
+            data_list, response = self.retrieve_data(next_page)
 
             if data_list is None:
                 return
@@ -92,7 +88,7 @@ class GithubPaginator(collections.abc.Sequence):
             for data in data_list:
                 yield data
 
-    def hit_api(self, url, headers, query_params={}, method='GET'):
+    def hit_api(self, url, query_params={}, method='GET'):
 
         # print(f"Hitting endpoint with {method} request: {url}...\n")
 
@@ -100,13 +96,7 @@ class GithubPaginator(collections.abc.Sequence):
 
             try:
                 response = client.request(
-                    method=method, url=url, headers=headers, params=query_params)
-
-                if is_key_depleted(response) is True:
-
-                    key = self.key_manager.get_key()
-
-                    self.headers = get_header(key)
+                    method=method, url=url, params=query_params, auth=self.key_manager)
 
             except TimeoutError:
                 print("Request timed out. Sleeping 10 seconds and trying again...\n")
@@ -115,12 +105,12 @@ class GithubPaginator(collections.abc.Sequence):
 
         return response 
 
-    def retrieve_data(self, url, headers, query_params={}):
+    def retrieve_data(self, url, query_params={}):
 
         num_attempts = 0
         while num_attempts < 10:
 
-            response = self.hit_api(url, headers, query_params)
+            response = self.hit_api(url, query_params)
             if response is None:
                 continue
             # update rate limit here
@@ -153,14 +143,14 @@ class GithubPaginator(collections.abc.Sequence):
 
     async def __aiter__(self):
         
-        last_page_num = self.get_last_page_number(self.url, self.headers)
+        last_page_num = self.get_last_page_number(self.url)
 
 
         if last_page_num == 1:
             params = {"page": 1}.update(self.default_params)
 
             data_list, _ = self.retrieve_data(
-                self.url, self.headers, query_params=params)
+                self.url, query_params=params)
 
             for data in data_list:
                 yield data
@@ -174,7 +164,7 @@ class GithubPaginator(collections.abc.Sequence):
                 params = {"page": page_num}.update(self.default_params)
 
                 tasks.append(asyncio.ensure_future(
-                    self.async_retrieve_data(client, self.url, self.headers, query_params=params)))
+                    self.async_retrieve_data(client, self.url, query_params=params)))
  
             index = 1
             while len(tasks) > 0:
@@ -187,17 +177,12 @@ class GithubPaginator(collections.abc.Sequence):
                 for data in data_list:
                     yield data
 
-    async def async_hit_api(self, client, url, headers, method='GET'):
+    async def async_hit_api(self, client, url, method='GET'):
         # print(f"Hitting endpoint with {method} request: {url}...\n")
 
         try:
-            response = await client.request(method=method, url=url, headers=headers)
+            response = await client.request(method=method, url=url, auth=self.key_manager)
 
-            if is_key_depleted(response) is True:
-
-                key = self.key_manager.get_key()
-
-                self.headers = get_header(key)
         except TimeoutError:
             print("Request timed out. Sleeping 10 seconds and trying again...\n")
             time.sleep(10)
@@ -208,12 +193,12 @@ class GithubPaginator(collections.abc.Sequence):
         return response
 
 
-    async def async_retrieve_data(self, client, url, headers, query_params={}):
+    async def async_retrieve_data(self, client, url, query_params={}):
 
         num_attempts = 0
         while num_attempts < 10:
 
-            response = await self.async_hit_api(client, url, headers)
+            response = await self.async_hit_api(client, url)
             if response is None:
                 continue
             # update rate limit here
@@ -244,11 +229,11 @@ class GithubPaginator(collections.abc.Sequence):
 
         return None, None
 
-    def get_last_page_number(self, url, headers):
+    def get_last_page_number(self, url):
 
         num_attempts = 0
         while num_attempts < 10:
-            r = self.hit_api(url, headers, method="HEAD")
+            r = self.hit_api(url, method="HEAD")
 
             if r:
                 break

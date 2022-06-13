@@ -1,27 +1,23 @@
 import logging
 import json
 import redis
-from celery import Celery, group
+from celery import group
 from celery.utils.log import get_task_logger
 import time
 
+from .main import app
 
-from db_models import PullRequests, Message, PullRequestReviews, PullRequestLabels, PullRequestReviewers, PullRequestEvents, PullRequestMeta, PullRequestAssignees
-
-
-from github_paginator import GithubPaginator
-from worker_base import TaskSession
+from .db_models import PullRequests, Message, PullRequestReviews, PullRequestLabels, PullRequestReviewers, PullRequestEvents, PullRequestMeta, PullRequestAssignees
 
 
-BROKER_URL = 'redis://localhost:6379/0'
-BACKEND_URL = 'redis://localhost:6379/1'
-app = Celery('tasks', broker=BROKER_URL, backend=BACKEND_URL)
+from .github_paginator import GithubPaginator
+from .worker_base import TaskSession
+
 
 r = redis.from_url('redis://localhost:6379/2', decode_responses=True)
-r.set('mykey', 'thevalueofmykey')
-r.delete('mykey')
 
-config_path = '../augur.config.json'
+
+config_path = '../augur/augur.config.json'
 
 with open(config_path, 'r') as f:
     config = json.load(f)
@@ -53,9 +49,13 @@ def pull_requests(owner, repo):
 
     pr_natural_keys = ["pr_url"]
 
+    print("About to collect pages")
+
 
     # returns an iterable of all prs at this url
     prs = GithubPaginator(url, session.oauths)
+
+    print(f"Pages collected: length: {len(prs)}")
 
     pr_label_objects = []
     pr_assignee_objects = []
