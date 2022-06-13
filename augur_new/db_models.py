@@ -1564,9 +1564,8 @@ class PullRequests(db.Model):
     data_collection_date = db.Column(
         db.TIMESTAMP(), server_default=func.current_timestamp())
 
-    def __init__(self, pull_request_id, repo_id,  pr_url, pr_src_id, pr_src_node_id, pr_html_url, pr_diff_url, pr_patch_url, pr_issue_url, pr_augur_issue_id, pr_src_number, pr_src_state, pr_src_locked, pr_src_title,  pr_augur_contributor_id, pr_body, pr_created_at, pr_updated_at, pr_closed_at, pr_merged_at, pr_merge_commit_sha, pr_teams, pr_milestone, pr_commits_url, pr_review_comments_url, pr_review_comment_url, pr_comments_url, pr_statuses_url, pr_meta_head_id, pr_meta_base_id, pr_src_issue_url, pr_src_comments_url, pr_src_review_comments_url, pr_src_commits_url,pr_src_statuses_url, pr_src_author_association,tool_source, tool_version, data_source, labels, assignees, metadata):
+    def __init__(self, repo_id,  pr_url, pr_src_id, pr_src_node_id, pr_html_url, pr_diff_url, pr_patch_url, pr_issue_url, pr_augur_issue_id, pr_src_number, pr_src_state, pr_src_locked, pr_src_title,  pr_augur_contributor_id, pr_body, pr_created_at, pr_updated_at, pr_closed_at, pr_merged_at, pr_merge_commit_sha, pr_teams, pr_milestone, pr_commits_url, pr_review_comments_url, pr_review_comment_url, pr_comments_url, pr_statuses_url, pr_meta_head_id, pr_meta_base_id, pr_src_issue_url, pr_src_comments_url, pr_src_review_comments_url, pr_src_commits_url,pr_src_statuses_url, pr_src_author_association,tool_source, tool_version, data_source, labels, assignees, metadata):
 
-        self.pull_request_id = pull_request_id
         self.repo_id = repo_id
         self.pr_url = pr_url
         self.pr_src_id = pr_src_id

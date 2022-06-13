@@ -5,6 +5,7 @@ from celery import Celery, group
 from celery.utils.log import get_task_logger
 import time
 
+
 from db_models import PullRequests, Message, PullRequestReviews, PullRequestLabels, PullRequestReviewers, PullRequestEvents, PullRequestMeta, PullRequestAssignees
 
 
@@ -81,9 +82,9 @@ def pull_requests(owner, repo):
         print(pr_object.labels)
 
         # when the object gets inserted the pull_request_id is automatically added
-        session.insert_data(pr_object, PullRequests, pr_natural_keys)
+        # session.insert_data(pr_object, PullRequests, pr_natural_keys)
 
-        print(pr_object.labels)
+        # print(pr_object.labels)
 
         # pr_label_objects.append(
         #     create_pr_label_objects(pr["labels"], pr_object.pull_request_id,  platform_id, repo_id,
@@ -205,7 +206,7 @@ def create_pull_request_object(pr, repo_id, tool_source, tool_version):
         data_source='GitHub API',
         labels = pr['labels'],
         assignees = pr['assignees'],
-        metadata = pr["head"] + pr["base"]
+        metadata = [pr["head"], pr["base"]]
     )
 
 

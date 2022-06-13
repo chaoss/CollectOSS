@@ -2,14 +2,13 @@
 import os
 from sqlalchemy.dialects.postgresql import insert
 import sqlalchemy as s
-
+import pandas as pd
+import json
 
 # from db_models import *
 from config import AugurConfig
-from oauth_key_manager import OauthKeyManager
 
-
-
+from random_key_auth import RandomKeyAuth
 
 
 #TODO: setup github headers in a method here.
@@ -36,7 +35,9 @@ class TaskSession(s.orm.Session):
         
         self.__engine = s.create_engine(DB_STR)
 
-        self.oauths = OauthKeyManager(self.config, db_engine=self.__engine, logger=self.logger)
+        keys = self.get_list_of_oauth_keys()
+
+        self.oauths = RandomKeyAuth(keys)
 
         super().__init__(self.__engine)
 
@@ -94,5 +95,17 @@ class TaskSession(s.orm.Session):
             insert_stmt = insert_stmt.on_conflict_do_update(
                 index_elements=natural_keys, set_=dict(value))
             result = self.execute_sql(insert_stmt)
+
+
+def get_list_of_oauth_keys(self, db_engine, config_key):
+
+    oauthSQL = s.sql.text(f"""
+            SELECT access_token FROM augur_operations.worker_oauth WHERE access_token <> '{config_key}' and platform = 'github'
+            """)
+
+    oauth_keys_list = [{'access_token': config_key}] + json.loads(
+        pd.read_sql(oauthSQL, db_engine, params={}).to_json(orient="records"))
+
+    return oauth_keys_list
 
     
