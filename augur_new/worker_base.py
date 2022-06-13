@@ -4,7 +4,7 @@ from sqlalchemy.dialects.postgresql import insert
 import sqlalchemy as s
 
 
-from db_models import *
+from augur_new import db_models 
 from sqlalchemy.event import listen
 from sqlalchemy.event import listens_for
 from config import AugurConfig
