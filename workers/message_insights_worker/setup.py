@@ -27,7 +27,7 @@ setup(
         'Flask-Cors==3.0.10',
         'Flask-Login==0.5.0',
         'Flask-WTF==1.0.0',
-        'requests==2.27.1',
+        'requests==2.28.0',
         'psycopg2-binary==2.9.3',
         'click==8.0.3',
         'scipy==1.7.3',

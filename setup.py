@@ -68,7 +68,8 @@ setup(
         "boto3==1.17.57",
         "toml",
         "mistune==0.8.4",
-        "pyYaml"
+        "pyYaml", 
+        "urllib3==1.26.9"
     ],
     extras_require={
         "dev": [
