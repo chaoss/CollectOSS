@@ -7,8 +7,8 @@ import sqlalchemy as s
 from augur_new import db_models 
 from sqlalchemy.event import listen
 from sqlalchemy.event import listens_for
-from config import AugurConfig
-from oauth_key_manager import OauthKeyManager
+from augur.config import AugurConfig
+from augur_new.oauth_key_manager import OauthKeyManager
 
 
 #TODO: setup github headers in a method here.
