@@ -5,25 +5,28 @@ import sqlalchemy as s
 import pandas as pd
 import json
 
-# from db_models import *
+from db_models import *
+from sqlalchemy.event import listen
+from sqlalchemy.event import listens_for
 from config import AugurConfig
 
 from random_key_auth import RandomKeyAuth
-
 
 #TODO: setup github headers in a method here.
 #Encapsulate data for celery task worker api
 
 
-#TODO: Test all methods
+#TODO: Test sql methods
 class TaskSession(s.orm.Session):
 
-    ROOT_AUGUR_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+    #ROOT_AUGUR_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
     def __init__(self,logger,config={},platform='github'):
         self.logger = logger
         
-        self.root_augur_dir = TaskSession.ROOT_AUGUR_DIR
+        current_dir = os.getcwd()
+
+        self.root_augur_dir = ''.join(current_dir.partition("augur/")[:2])
         self.__init_config(self.root_augur_dir)
         
         DB_STR = f'postgresql://{self.config["user_database"]}:{self.config["password_database"]}@{self.config["host_database"]}:{self.config["port_database"]}/{self.config["name_database"]}'
@@ -33,13 +36,15 @@ class TaskSession(s.orm.Session):
         
         #print(f"path = {str(ROOT_AUGUR_DIR) + "augur.config.json"}")
         
-        self.__engine = s.create_engine(DB_STR)
 
+        self.engine = s.create_engine(DB_STR)
+        
         keys = self.get_list_of_oauth_keys()
 
         self.oauths = RandomKeyAuth(keys)
 
-        super().__init__(self.__engine)
+
+        super().__init__(self.engine)
 
     def __init_config(self, root_augur_dir):
         #Load config.
@@ -72,7 +77,7 @@ class TaskSession(s.orm.Session):
 
     
     def execute_sql(self, sql_text):
-        connection = self.__engine.connect()
+        connection = self.engine.connect()
 
         return connection.execute(sql_text)
     
@@ -97,6 +102,48 @@ class TaskSession(s.orm.Session):
             result = self.execute_sql(insert_stmt)
 
 
+    #TODO: Bulk upsert
+    
+    def insert_bulk_data(self,data,table,natural_keys):
+        self.logger.info(f"Length of data to insert: {len(data)}")
+        self.logger.info(type(data))
+
+        if type(data) != list:
+            self.logger.info("Data must be a list")
+            return
+
+        if type(data[0]) != dict:
+            self.logger.info("Must be list of dicts")
+            return
+
+        stmnt = insert(table).values(data)
+
+        setDict = {}
+        for key in data.keys:
+            setDict[key] = getattr(stmnt.excluded,key)
+
+        stmnt = stmnt.on_conflict_do_update(
+            #This might need to change
+            index_elements=natural_keys,
+            
+            #Columns to be updated
+            set_ = setDict
+        )
+
+        self.execute(stmnt)
+
+
+#Derek 
+@event.listens_for(TaskSession, "connect", insert=True)
+def set_search_path(dbapi_connection, connection_record):
+    existing_autocommit = dbapi_connection.autocommit
+    dbapi_connection.autocommit = True
+    cursor = dbapi_connection.cursor()
+    cursor.execute("SET SESSION search_path=public,augur_data,augur_operations,spdx")
+    cursor.close()
+    dbapi_connection.autocommit = existing_autocommit
+
+
 def get_list_of_oauth_keys(self, db_engine, config_key):
 
     oauthSQL = s.sql.text(f"""
@@ -108,4 +155,3 @@ def get_list_of_oauth_keys(self, db_engine, config_key):
 
     return oauth_keys_list
 
-    

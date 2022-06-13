@@ -2,9 +2,9 @@
 import math
 
 from numpy.lib.utils import source
-from workers.worker_base import *
-from workers.github_paginator import *
-from augur import db_models
+from augur_new.worker_base import *
+from augur_new.github_paginator import *
+from augur_new import db_models
 import sqlalchemy as s
 import time
 import math
@@ -247,6 +247,7 @@ def init_oauths(self, platform='github'):
 
     self.logger.info("OAuth initialized\n")
 
+"""
 def enrich_cntrb_id(
     self, data, key, action_map_additions={'insert': {'source': [], 'augur': []}},
     platform='github', prefix=''
@@ -527,7 +528,7 @@ def enrich_cntrb_id(
             self.logger.debug(f"AB ERROR: data exiting enrich_cntrb_id without cntrb_id, login is: " + str(data[f'{prefix}login']))
 
     return source_data
-
+"""
 # Try to construct the best url to ping GitHub's API for a username given an email.
 """
 I changed this because of the following note on the API site: With the in qualifier you can restrict your search to the username (login), full name, public email, or any combination of these. When you omit this qualifier, only the username and email address are searched. For privacy reasons, you cannot search by email domain name.
@@ -649,7 +650,7 @@ def query_github_contributors(session, entry_info, repo_id):
             stmnt = select(Contributors.gh_node_id).where(Contributors.gh_node_id == cntrb["gh_node_id"])
             existingMatchingContributors = session.execute(stmnt)
 
-            if len(existingMatchingContributors) > 0:
+            if len(existingMatchingContributors.fetchall()) > 0:
                 break #if contributor already exists in table
 
             
@@ -916,7 +917,7 @@ def query_gitlab_contributors(self, entry_info, repo_id):
             self.logger.info("Caught exception: {}".format(e))
             self.logger.info("Cascading Contributor Anomalie from missing repo contributor data: {} ...\n".format(cntrb_url))
             continue
-
+"""
 def update_gitlab_rate_limit(self, response, bad_credentials=False, temporarily_disable=False):
     # Try to get rate limit from request headers, sometimes it does not work (GH's issue)
     #   In that case we just decrement from last recieved header count
@@ -1259,9 +1260,9 @@ def paginate_endpoint(
         'all': all_data
     }
 
-#TODO: deprecated but still used by many other methods
+
 def paginate(url, duplicate_col_map, update_col_map, table, table_pkey, where_clause="", value_update_col_map={}, platform="github"):
-    """ DEPRECATED
+    DEPRECATED
         Paginate either backwards or forwards (depending on the value of the worker's
         finishing_task attribute) through all the GitHub or GitLab api endpoint pages.
 
@@ -1296,7 +1297,6 @@ def paginate(url, duplicate_col_map, update_col_map, table, table_pkey, where_cl
     :return: List of dictionaries, all data points from the pages of the specified API endpoint
         each with a 'flag' key-value pair representing the required action to take with that
         data point (i.e. 'need_insertion', 'need_update', 'none')
-    """
 
     update_keys = list(update_col_map.keys()) if update_col_map else []
     update_keys += list(value_update_col_map.keys()) if value_update_col_map else []
@@ -1412,6 +1412,16 @@ def paginate(url, duplicate_col_map, update_col_map, table, table_pkey, where_cl
             break
 
     return tuples
+
+
+
+
+
+
+
+
+
+
 
 def new_paginate_endpoint(
     self, url, action_map={}, table=None, where_clause=True, platform='github'
@@ -1540,3 +1550,4 @@ def new_paginate_endpoint(
         'update': need_update,
         'all': all_data
     }
+"""

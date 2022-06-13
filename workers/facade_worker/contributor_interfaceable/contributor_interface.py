@@ -1,8 +1,8 @@
 from requests.api import head
-from workers.worker_base import *
+from augur_new.worker_base import *
 import logging
 from logging import FileHandler, Formatter, StreamHandler, log
-from workers.worker_git_integration import WorkerGitInterfaceable
+from workers.worker_git_integration import *
 from workers.util import read_config
 from psycopg2.errors import UniqueViolation
 from random import randint
@@ -15,7 +15,7 @@ import numpy as np
 # Debugger
 import traceback
 
-#TODO: maybe have a TaskSession class that holds information about the database, logger, config, etc.
+##TODO: maybe have a TaskSession class that holds information about the database, logger, config, etc.
 
 # postgresql
 #'sqla+postgresql://scott:tiger@localhost/mydatabase'
@@ -171,6 +171,7 @@ def process_commit_metadata(session, contributorQueue,repo_id):
         # Check if the github login exists in the contributors table and add the emails to alias' if it does.
 
         # Also update the contributor record with commit data if we can.
+        """
         try:
             if not resolve_if_login_existing(session,cntrb):
                 try:
@@ -184,30 +185,39 @@ def process_commit_metadata(session, contributorQueue,repo_id):
                         f"Ran into likely database collision. Assuming contributor exists in database. Error: {e}")
             else:
                 interface.update_contributor(cntrb)
+        """
+        
+        #Executes an upsert with sqlalchemy 
+        session.insert_data([cntrb],Contributors,cntrb.keys())
 
+        try:
             # Update alias after insertion. Insertion needs to happen first so we can get the autoincrementkey
-            interface.insert_alias(cntrb, emailFromCommitData)
+            insert_alias(session,cntrb, emailFromCommitData)
         except LookupError as e:
             interface.logger.info(
                 ''.join(traceback.format_exception(None, e, e.__traceback__)))
             interface.logger.info(
                 f"Contributor id not able to be found in database despite the user_id existing. Something very wrong is happening. Error: {e}")
             return 
+        
 
+        
         # Resolve any unresolved emails if we get to this point.
         # They will get added to the alias table later
         # Do this last to absolutely make sure that the email was resolved before we remove it from the unresolved table.
-        query = s.sql.text("""
-            DELETE FROM unresolved_commit_emails
-            WHERE email='{}'
-        """.format(email))
+        #query = s.sql.text("""
+        #    DELETE FROM unresolved_commit_emails
+        #    WHERE email='{}'
+        #""".format(email))
 
-        interface.logger.info(f"Updating now resolved email {email}")
+        session.logger.info(f"Updating now resolved email {email}")
 
         try:
-            interface.db.execute(query)
+            #interface.db.execute(query)
+            session.query(UnresolvedCommitEmails).filter(UnresolvedCommitEmails.email == email).delete()
+            session.commit()
         except Exception as e:
-            interface.logger.info(
+            session.logger.info(
                 f"Deleting now resolved email failed with error: {e}")
     
     
@@ -221,179 +231,6 @@ A few interesting ideas: Maybe get the top committers from each repo first? curl
 
 """
 
-"""
-class ContributorInterfaceable(WorkerGitInterfaceable):
-    
-    def __init__(self, config={}, logger=None):
-        # Define the data tables that we are needing
-        # Define the tables needed to insert, update, or delete on
-
-        worker_type = "contributor_interface"
-
-        self.data_tables = ['contributors', 'pull_requests', 'commits',
-                            'pull_request_assignees', 'pull_request_events', 'pull_request_labels',
-                            'pull_request_message_ref', 'pull_request_meta', 'pull_request_repo',
-                            'pull_request_reviewers', 'pull_request_teams', 'message', 'pull_request_commits',
-                            'pull_request_files', 'pull_request_reviews', 'pull_request_review_message_ref',
-                            'contributors_aliases', 'unresolved_commit_emails']
-        self.operations_tables = ['worker_history', 'worker_job']
-
-        self.platform = "github"
-        # first set up logging.
-        self._root_augur_dir = Persistant.ROOT_AUGUR_DIR
-        self.augur_config = AugurConfig(self._root_augur_dir)
-
-        # Get default logging settings
-        self.config = config
-        # self.config.update(self.augur_config.get_section("Logging"))
-
-        # create a random port instead of 226
-        # SPG 9/24/2021
-        # self.facade_com = randint(47000,47555)
-
-        # contrib_port = self.facade_com
-
-        # Get the same logging dir as the facade worker.
-        # self.config.update({
-        #     # self.config['port_database'])
-        #     'id': "workers.{}.{}".format("contributor_interface", contrib_port)
-        # })
-
-        # Getting stuck here.
-        # self.initialize_logging()
-        self.logger = logger
-
-        
-        self.finishing_task = False
-
-        # try:
-
-        #     theConfig = self.augur_config.get_section(["contributor_interface"])
-        #     jsonConfig = json.loads(theConfig)
-        #     self.logger.debug(f"The config for workers is: {json.dumps(jsonConfig, indent=2, sort_keys=True)}.")
-
-        # except Exception as e:
-
-        #     self.logger.debug(f"Exception in initialization is: {e}.")
-
-        # self.logger = logging.getLogger(self.config["id"])
-        # Test logging after init.
-        self.logger.info(
-            "Facade worker git interface logging set up correctly")
-        # self.db_schema = None
-        # Get config passed from the facade worker.
-        self.config.update({
-            'gh_api_key': self.augur_config.get_value('Database', 'key'),
-            'gitlab_api_key': self.augur_config.get_value('Database', 'gitlab_api_key')
-            # 'port': self.augur_config.get_value('Workers', 'contributor_interface')
-        })
-
-        
-        tries = 5
-        
-        while tries > 0:
-            try:
-                self.initialize_database_connections()
-                break
-            except Exception as e:
-                self.logger.error("Could not init database connection and oauth! {e}")
-                
-                if tries == 0:
-                    raise e
-            
-            tries -= 1
-                
-        self.logger.info("Facade worker git interface database set up")
-        self.logger.info(f"configuration passed is: {str(self.config)}.")
-
-        # Needs to be an attribute of the class for incremental database insert using paginate_endpoint
-        self.pk_source_prs = []
-
-        self.logger.info("Facade now has contributor interface.")
-
-        self.worker_type = "Contributor_interface"
-        self.tool_source = '\'Facade Worker\''
-        self.tool_version = '\'1.2.4\''
-        self.data_source = '\'Git Log\''
-
-        return
-
-    def initialize_logging(self):
-        # Get the log level in upper case from the augur config's logging section.
-        self.config['log_level'] = self.config['log_level'].upper()
-        if self.config['debug']:
-            self.config['log_level'] = 'DEBUG'
-
-        if self.config['verbose']:
-            format_string = AugurLogging.verbose_format_string
-        else:
-            format_string = AugurLogging.simple_format_string
-
-        format_string = AugurLogging.verbose_format_string
-
-        # log_port = self.facade_com
-
-        # Use stock python formatter for stdout
-        formatter = Formatter(fmt=format_string)
-        # User custom for stderr, Gives more info than verbose_format_string
-        error_formatter = Formatter(fmt=AugurLogging.error_format_string)
-        worker_type = "contributor_interface"
-        worker_dir = AugurLogging.get_log_directories(
-            self.augur_config, reset_logfiles=False) + "/workers/"
-        Path(worker_dir).mkdir(exist_ok=True)
-        logfile_dir = worker_dir + f"/{worker_type}/"
-        Path(logfile_dir).mkdir(exist_ok=True)
-
-        # Create more complex sublogs in the logfile directory determined by the AugurLogging class
-        server_logfile = logfile_dir + \
-            '{}_{}_server.log'.format(
-                worker_type, self.config['port_database'])
-        collection_logfile = logfile_dir + \
-            '{}_{}_collection.log'.format(
-                worker_type, self.config['port_database'])
-        collection_errorfile = logfile_dir + \
-            '{}_{}_collection.err'.format(
-                worker_type, self.config['port_database'])
-        self.config.update({
-            'logfile_dir': logfile_dir,
-            'server_logfile': server_logfile,
-            'collection_logfile': collection_logfile,
-            'collection_errorfile': collection_errorfile
-        })
-
-        collection_file_handler = FileHandler(
-            filename=self.config['collection_logfile'], mode="a")
-        collection_file_handler.setFormatter(formatter)
-        collection_file_handler.setLevel(self.config['log_level'])
-
-        collection_errorfile_handler = FileHandler(
-            filename=self.config['collection_errorfile'], mode="a")
-        collection_errorfile_handler.setFormatter(error_formatter)
-        collection_errorfile_handler.setLevel(logging.WARNING)
-
-        logger = logging.getLogger(self.config['id'])
-        logger.handlers = []
-        logger.addHandler(collection_file_handler)
-        logger.addHandler(collection_errorfile_handler)
-        logger.setLevel(self.config['log_level'])
-        logger.propagate = False
-
-        if self.config['debug']:
-            self.config['log_level'] = 'DEBUG'
-            console_handler = StreamHandler()
-            console_handler.setFormatter(formatter)
-            console_handler.setLevel(self.config['log_level'])
-            logger.addHandler(console_handler)
-
-        if self.config['quiet']:
-            logger.disabled = True
-
-        self.logger = logger
-
-        self.tool_source = '\'Facade Worker\'s Contributor Interface\''
-        self.tool_version = '\'1.2.4\''
-        self.data_source = '\'Git Log\''
-"""
 
 def create_endpoint_from_commit_sha(session,commit_sha, repo_id):
     session.logger.info(
@@ -447,30 +284,33 @@ def create_endpoint_from_name(contributor):
 
     return url
 
-def insert_alias(self, contributor, email):
+def insert_alias(session, contributor, email):
     # Insert cntrb_id and email of the corresponding record into the alias table
     # Another database call to get the contributor id is needed because its an autokeyincrement that is accessed by multiple workers
     # Same principle as enrich_cntrb_id method.
-    contributor_table_data = self.db.execute(
-        s.sql.select([s.column('cntrb_id'), s.column('cntrb_canonical')]).where(
-            self.contributors_table.c.gh_user_id == contributor["gh_user_id"]
-        )
-    ).fetchall()
+    #contributor_table_data = self.db.execute(
+    #    s.sql.select([s.column('cntrb_id'), s.column('cntrb_canonical')]).where(
+    #        self.contributors_table.c.gh_user_id == contributor["gh_user_id"]
+    #    )
+    #).fetchall()
 
+    stmnt = select(Contributors.cntrb_id, Contributors.cntrb_canonical).where(Contributors.gh_user_id == contributor["gh_user_id"])
+    result = session.execute(stmnt)
+    contributor_table_data = result.scalars().all()
     # self.logger.info(f"Contributor query: {contributor_table_data}")
 
     # Handle potential failures
     if len(contributor_table_data) == 1:
-        self.logger.info(
-            f"cntrb_id {contributor_table_data[0]['cntrb_id']} found in database and assigned to enriched data")
+        session.logger.info(
+            f"cntrb_id {contributor_table_data[0].cntrb_id} found in database and assigned to enriched data")
     elif len(contributor_table_data) == 0:
-        self.logger.error("Couldn't find contributor in database. Something has gone very wrong. Augur ran into a contributor whose login can be found in the contributor's table, but cannot be retrieved via the user_id that was gotten using the same login.")
+        session.logger.error("Couldn't find contributor in database. Something has gone very wrong. Augur ran into a contributor whose login can be found in the contributor's table, but cannot be retrieved via the user_id that was gotten using the same login.")
         raise LookupError
     else:
-        self.logger.info(
+        session.logger.info(
             f"There are more than one contributors in the table with gh_user_id={contributor['gh_user_id']}")
 
-    self.logger.info(f"Creating alias for email: {email}")
+    session.logger.info(f"Creating alias for email: {email}")
 
     # Insert a new alias that corresponds to where the contributor was found
     # use the email of the new alias for canonical_email if the api returns NULL
@@ -479,12 +319,16 @@ def insert_alias(self, contributor, email):
         "cntrb_id": contributor_table_data[0]['cntrb_id'],
         "alias_email": email,
         "canonical_email": contributor['cntrb_canonical'] if 'cntrb_canonical' in contributor and contributor['cntrb_canonical'] is not None else email,
-        "tool_source": self.tool_source,
-        "tool_version": self.tool_version,
-        "data_source": self.data_source
+        #"tool_source": #self.tool_source,
+        #"tool_version": self.tool_version,
+        #"data_source": self.data_source
     }
 
     # Insert new alias
+    newAlias = ContributorsAliases(**alias)
+    session.add(newAlias)
+    session.commit()
+    """
     try:
         self.db.execute(
             self.contributors_aliases_table.insert().values(alias))
@@ -494,7 +338,10 @@ def insert_alias(self, contributor, email):
         self.logger.info(f"alias {alias} already exists")
     except Exception as e:
         self.logger.info(
-            f"Ran into issue with alias: {alias}. Error: {e}")
+            f"Ran into issue with alias: {alias}. Error: {e}
+    """
+
+
 
     return
 
@@ -522,7 +369,8 @@ def resolve_if_login_existing(session, contributor):
     session.logger.info(
         f"Contributor not found in contributors table but can be added. Adding...")
     return False
-
+"""
+No longer used after orm upsert implement
 def update_contributor(self, cntrb, max_attempts=3):
 
     # Get primary key so that we can update
@@ -563,6 +411,7 @@ def update_contributor(self, cntrb, max_attempts=3):
             time.sleep(1)
 
         attempts += 1
+"""
 
 # Try every distinct email found within a commit for possible username resolution.
 # Add email to garbage table if can't be resolved.

@@ -1,6 +1,7 @@
 
-from augur.config import AugurConfig
+from augur.augur_new.config import AugurConfig
 from sqlalchemy.dialects.postgresql import insert
+#from sqlalchemy import SQLAlchemy
 import sqlalchemy as s
 
 
@@ -12,12 +13,14 @@ import sqlalchemy as s
 #TODO: Test all methods
 class TaskSession(s.orm.Session):
 
-    ROOT_AUGUR_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+    #ROOT_AUGUR_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
     def __init__(self,logger,config={},platform='github'):
         self.logger = logger
         
-        self.root_augur_dir = TaskSession.ROOT_AUGUR_DIR
+        current_dir = os.getcwd()
+
+        self.root_augur_dir = ''.join(current_dir.partition("augur/")[:2])
         self.__init_config(self.root_augur_dir)
         
         DB_STR = f'postgresql://{self.config["user_database"]}:{self.config["password_database"]}@{self.config["host_database"]}:{self.config["port_database"]}/{self.config["name_database"]}'
@@ -27,11 +30,12 @@ class TaskSession(s.orm.Session):
         
         #print(f"path = {str(ROOT_AUGUR_DIR) + "augur.config.json"}")
         
-        self.__engine = s.create__engine(DB_STR)
+
+        self.__engine = s.create_engine(DB_STR)
 
         self.__oauths = OauthKeyManager(self.config,db_str=DB_STR)
 
-        super.__init__(self.__engine)
+        super().__init__(self.__engine)
 
     def __init_config(self, root_augur_dir):
         #Load config.
@@ -88,4 +92,3 @@ class TaskSession(s.orm.Session):
                 index_elements=natural_keys, set_=dict(value))
             result = self.execute_sql(insert_stmt)
 
-    
