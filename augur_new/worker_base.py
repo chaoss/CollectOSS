@@ -129,7 +129,7 @@ class TaskSession(s.orm.Session):
 
 
 #Derek 
-@event.listens_for(TaskSession, "connect", insert=True)
+@s.event.listens_for(TaskSession, "connect", insert=True)
 def set_search_path(dbapi_connection, connection_record):
     existing_autocommit = dbapi_connection.autocommit
     dbapi_connection.autocommit = True
