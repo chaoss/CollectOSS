@@ -90,7 +90,7 @@ class GithubPaginator(collections.abc.Sequence):
 
     def hit_api(self, url, query_params={}, method='GET'):
 
-        # print(f"Hitting endpoint with {method} request: {url}...\n")
+        print(f"Hitting endpoint with {method} request: {url}...\n")
 
         with httpx.Client() as client:
 

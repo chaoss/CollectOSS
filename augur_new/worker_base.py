@@ -4,6 +4,7 @@ from sqlalchemy.dialects.postgresql import insert
 import sqlalchemy as s
 import pandas as pd
 import json
+import httpx
 
 from .db_models import *
 from sqlalchemy.event import listen
@@ -158,5 +159,37 @@ def get_list_of_oauth_keys(db_engine, config_key):
 
     key_list = [x["access_token"] for x in oauth_keys_list]
 
+    with httpx.Client() as client:
+
+        # loop throuh each key in the list and get the rate_limit and seconds_to_reset
+        # then add them either the fresh keys or depleted keys based on the rate_limit
+        for key in key_list:
+
+            key_data = get_oauth_key_data(client, key)
+
+            # this makes sure that keys with bad credentials are not used
+            if key_data is None:
+                key_list.remove(key)
+
     return key_list
 
+
+def get_oauth_key_data(client, oauth_key):
+
+    # this endpoint allows us to check the rate limit, but it does not use one of our 5000 requests
+    url = "https://api.github.com/rate_limit"
+
+    headers = {'Authorization': f'token {oauth_key}'}
+
+    response = client.request(
+        method="GET", url=url, headers=headers, timeout=180)
+
+    data = response.json()
+
+    try:
+        if data["message"] == "Bad credentials":
+            return None
+    except KeyError:
+        pass
+
+    return True
