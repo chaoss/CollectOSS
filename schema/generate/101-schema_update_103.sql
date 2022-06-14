@@ -13,7 +13,14 @@ ALTER TABLE "augur_data"."pull_request_meta"
 ALTER TABLE "augur_data"."pull_request_assignees" 
   ADD CONSTRAINT "assigniees-unique" UNIQUE ("pull_request_id", "pr_assignee_src_id");
 
+ALTER TABLE "augur_data"."repo" 
+  ADD CONSTRAINT "repo_git-unique" UNIQUE ("repo_git");
 --
+update "augur_operations"."augur_settings" set value = 103
+  where setting = 'augur_data_version'; 
+COMMIT; 
+
+BEGIN;
 update "augur_operations"."augur_settings" set value = 103
   where setting = 'augur_data_version'; 
 COMMIT; 
