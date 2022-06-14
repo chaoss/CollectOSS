@@ -98,23 +98,71 @@ class TaskSession(s.orm.Session):
     
     def insert_data(self, data, table, natural_keys):
 
+        if len(data) == 0:
+            return
+
+        first_data = data[0]
+
+        if type(first_data) == dict:
+            self.insert_dict_data(data, table, natural_keys)
+        else:
+            self.insert_github_class_objects(data, table, natural_keys)
+
+    def insert_dict_data(self, data, table, natural_keys):
+
+        print(f"Length of data to insert: {len(data)}")
+
         self.logger.info(f"Length of data to insert: {len(data)}")
         self.logger.info(type(data))
 
         if type(data) != list:
-            self.logger.info("Data must be a list")
+            print("Data must be a list")
             return
 
         if type(data[0]) != dict:
+            print("Data must be a list of dicts")
             self.logger.info("Must be list of dicts")
             return
 
         table_stmt = insert(table)
+
         for value in data:
             insert_stmt = table_stmt.values(value)
             insert_stmt = insert_stmt.on_conflict_do_update(
                 index_elements=natural_keys, set_=dict(value))
-            result = self.execute_sql(insert_stmt)
+
+            self.execute_sql(insert_stmt)
+
+    def insert_github_class_objects(self, objects, table, natural_keys):
+
+        self.logger.info(f"Length of data to insert: {len(objects)}")
+        self.logger.info(type(objects))
+
+        if type(objects) != list:
+            print("Data must be a list")
+            return
+
+        table_stmt = insert(table)
+
+        for obj in objects:
+            data = obj.get_dict()
+            insert_stmt = table_stmt.values(data)
+            insert_stmt = insert_stmt.on_conflict_do_update(
+                index_elements=natural_keys, set_=dict(data))
+
+            self.execute_sql(insert_stmt)
+
+            natural_key_dict = {}
+            for key in natural_keys:
+                natural_key_dict[key] = data[key]
+
+            rows = table.query.filter_by(**natural_key_dict).all()
+
+            if len(rows) > 1:
+                print(f"Error values in table not unique on {natural_keys}")
+
+            obj.set_db_row(rows[0])
+
 
 
     #TODO: Bulk upsert

@@ -1,3 +1,4 @@
+from urllib.parse import urlencode, urlparse, parse_qs
 import collections
 import httpx
 import time
@@ -15,6 +16,11 @@ class GithubPaginator(collections.abc.Sequence):
         remove_fields = ["per_page", "page"]
         url = clean_url(url, remove_fields)
 
+        # we need to add query params directly to the url, instead of passing the param to the httpx.Client.request
+        # this is because github will only append specified params to the links in the headers if they are a part of the url, and not the params with the request
+        params = {"per_page": 100}
+        url = add_query_params(url, params)
+
         self.url = url
         self.key_manager = key_manager
 
@@ -23,8 +29,6 @@ class GithubPaginator(collections.abc.Sequence):
 
         self.from_datetime = from_datetime
         self.to_datetime = to_datetime
-        self.rate_limit = None
-        self.default_params = {"per_page": 100}
 
     def __getitem__(self, index):
 
@@ -32,9 +36,10 @@ class GithubPaginator(collections.abc.Sequence):
         items_page = (index // 100) + 1
 
         # create url to query
-        params = {"page": items_page}.update(self.default_params)
+        params = {"page": items_page}
+        url = add_query_params(self.url, params)
 
-        data, _ = self.retrieve_data(self.url, query_params=params)
+        data, _ = self.retrieve_data(url)
 
         if data is None:
             return None
@@ -53,10 +58,11 @@ class GithubPaginator(collections.abc.Sequence):
 
         print(f"Num pages: {num_pages}")
 
-        params = {"page": num_pages}.update(self.default_params)
+        params = {"page": num_pages}
+        url = add_query_params(self.url, params)
 
         # get the amount of data on last page
-        data, _ = self.retrieve_data(self.url, query_params=params)
+        data, _ = self.retrieve_data(url)
 
         last_page_data_count = len(data)
 
@@ -67,7 +73,7 @@ class GithubPaginator(collections.abc.Sequence):
 
     def __iter__(self):
 
-        data_list, response = self.retrieve_data(self.url, query_params=self.default_params)
+        data_list, response = self.retrieve_data(self.url)
 
         if data_list is None:
             yield None
@@ -88,7 +94,7 @@ class GithubPaginator(collections.abc.Sequence):
             for data in data_list:
                 yield data
 
-    def hit_api(self, url, query_params={}, method='GET'):
+    def hit_api(self, url, method='GET'):
 
         print(f"Hitting endpoint with {method} request: {url}...\n")
 
@@ -96,7 +102,7 @@ class GithubPaginator(collections.abc.Sequence):
 
             try:
                 response = client.request(
-                    method=method, url=url, params=query_params, auth=self.key_manager)
+                    method=method, url=url, auth=self.key_manager)
 
             except TimeoutError:
                 print("Request timed out. Sleeping 10 seconds and trying again...\n")
@@ -105,12 +111,50 @@ class GithubPaginator(collections.abc.Sequence):
 
         return response 
 
-    def retrieve_data(self, url, query_params={}):
+    def retrieve_data(self, url):
 
         num_attempts = 0
         while num_attempts < 10:
 
-            response = self.hit_api(url, query_params)
+            response = self.hit_api(url)
+
+            # increment attempts
+            if response is None:
+                continue
+            # update rate limit here
+
+            try:
+                page_data = response.json()
+            except:
+                page_data = json.loads(json.dumps(response.text))
+
+            if type(page_data) == list:
+                return page_data, response
+
+            elif type(page_data) == dict:
+                result = process_dict_response(response, page_data)
+
+                if result == "break":
+                    break
+                elif result == "decrease_attempts":
+                    num_attempts -= 1
+
+            elif type(page_data) == str:
+                result, data_loaded = process_str_response(response, page_data)
+
+                if data_loaded:
+                    return result, response
+
+            num_attempts += 1
+
+        return None, None
+
+    def temp(self, url):
+
+        num_attempts = 0
+        while num_attempts < 10:
+
+            response = self.hit_api(url)
             if response is None:
                 continue
             # update rate limit here
@@ -147,10 +191,11 @@ class GithubPaginator(collections.abc.Sequence):
 
 
         if last_page_num == 1:
-            params = {"page": 1}.update(self.default_params)
 
-            data_list, _ = self.retrieve_data(
-                self.url, query_params=params)
+            params = {"page": 1}
+            url = add_query_params(self.url, params)
+
+            data_list, _ = self.retrieve_data(url)
 
             for data in data_list:
                 yield data
@@ -161,10 +206,11 @@ class GithubPaginator(collections.abc.Sequence):
             tasks = []
             for page_num in range(1, last_page_num + 1):
 
-                params = {"page": page_num}.update(self.default_params)
+                params = {"page": page_num}
+                url = add_query_params(self.url, params)
 
                 tasks.append(asyncio.ensure_future(
-                    self.async_retrieve_data(client, self.url, query_params=params)))
+                    self.async_retrieve_data(client, url)))
  
             index = 1
             while len(tasks) > 0:
@@ -193,7 +239,7 @@ class GithubPaginator(collections.abc.Sequence):
         return response
 
 
-    async def async_retrieve_data(self, client, url, query_params={}):
+    async def async_retrieve_data(self, client, url):
 
         num_attempts = 0
         while num_attempts < 10:
@@ -268,6 +314,17 @@ def clean_url(url, remove_fields):
     clean_url = urlunparse(u)
 
     return clean_url
+
+
+def add_query_params(url: str, additional_params: dict) -> str:
+    url_components = urlparse(url)
+    original_params = parse_qs(url_components.query)
+    # Before Python 3.5 you could update original_params with
+    # additional_params, but here all the variables are immutable.
+    merged_params = {**original_params, **additional_params}
+    updated_query = urlencode(merged_params, doseq=True)
+    # _replace() is how you can create a new NamedTuple with a changed field
+    return url_components._replace(query=updated_query).geturl()
 
 ################################################################################
 
