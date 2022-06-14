@@ -220,18 +220,28 @@ class WorkerGitInterfaceable(Worker):
             elif platform == 'gitlab':
                 self.headers = {'Authorization': 'Bearer %s' % oauth['access_token']}
             ## Changed timeout from 180 to 12. Seems to be hanging in some workers. 
-            response = requests.get(url=url, headers=self.headers)
-            self.oauths.append({
-                    'oauth_id': oauth['oauth_id'],
-                    'access_token': oauth['access_token'],
-                    'rate_limit': int(response.headers[rate_limit_header_key]),
-                    'seconds_to_reset': (
-                        datetime.datetime.fromtimestamp(
-                            int(response.headers[rate_limit_reset_header_key])
-                        ) - datetime.datetime.now()
-                    ).total_seconds()
-                })
-            self.logger.debug("Found OAuth available for use: {}".format(self.oauths[-1]))
+            number_of_attempts=0
+            while number_of_attempts < 10: 
+                try: 
+                    response = requests.get(url=url, headers=self.headers, timeout=10)
+                except TimeoutError: 
+                    self.logger.debug(f'Tried to get key headers. Timed out. Napping 10 seconds.')
+                    time.sleep(10)
+                    number_of_attempts += number_of_attempts+1 
+                    continue 
+
+                self.oauths.append({
+                        'oauth_id': oauth['oauth_id'],
+                        'access_token': oauth['access_token'],
+                        'rate_limit': int(response.headers[rate_limit_header_key]),
+                        'seconds_to_reset': (
+                            datetime.datetime.fromtimestamp(
+                                int(response.headers[rate_limit_reset_header_key])
+                            ) - datetime.datetime.now()
+                        ).total_seconds()
+                    })
+                self.logger.debug("Found OAuth available for use: {}".format(self.oauths[-1]))
+                break 
 
         if len(self.oauths) == 0:
             self.logger.info(
