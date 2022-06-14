@@ -259,6 +259,7 @@ class WorkerGitInterfaceable(Worker):
             while number_of_attempts < 10: 
                 try: 
                     response = requests.get(url=url, headers=self.headers, timeout=10)
+                    self.logger.debug('response obtained.')
                 except TimeoutError: 
                     self.logger.debug(f'Tried to get key headers. Timed out. Napping 10 seconds.')
                     time.sleep(10)
@@ -266,6 +267,8 @@ class WorkerGitInterfaceable(Worker):
                     continue 
 
                 if platform == 'github':
+
+                    self.logger.debug('checking rate limit status.')
 
                     rate_limit_data = data["resources"]["core"]
 
