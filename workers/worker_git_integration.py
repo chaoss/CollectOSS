@@ -182,6 +182,41 @@ class WorkerGitInterfaceable(Worker):
 
         return self.find_id_from_login(login, platform)
 
+    def get_oauth_key_data(client, oauth_key_data):
+
+        # this endpoint allows us to check the rate limit, but it does not use one of our 5000 requests
+    url = "https://api.github.com/rate_limit"
+
+    headers = {'Authorization': f'token {oauth_key_data["access_token"]}'}
+
+    response = client.request(
+        method="GET", url=url, headers=headers, timeout=180)
+
+    data = response.json()
+
+    try:
+        if data["message"] == "Bad credentials":
+            return None
+    except KeyError:
+        pass
+
+    rate_limit_data = data["resources"]["core"]
+
+    seconds_to_reset = (
+        datetime.datetime.fromtimestamp(
+            int(
+                rate_limit_data["reset"])
+        ) - datetime.datetime.now()
+    ).total_seconds()
+
+    key_data = {
+        'access_token': oauth_key_data['access_token'],
+        'rate_limit': int(rate_limit_data["remaining"]),
+        'seconds_to_reset': seconds_to_reset
+    }
+
+    return key_data
+
     def init_oauths(self, platform='github'):
 
         self.oauths = []
@@ -193,7 +228,7 @@ class WorkerGitInterfaceable(Worker):
         # Adjust header keys needed to fetch rate limit information from the API responses
         if platform == 'github':
             self.logger.debug("in Github block")
-            url = "https://api.github.com/users/sgoggins"
+            url = "https://api.github.com/rate_limit"
             oauthSQL = s.sql.text("""
                 SELECT * FROM worker_oauth WHERE access_token <> '{}' and platform = 'github'
                 """.format(self.config['gh_api_key']))
@@ -219,7 +254,7 @@ class WorkerGitInterfaceable(Worker):
                 self.logger.debug('in github oauth block')
             elif platform == 'gitlab':
                 self.headers = {'Authorization': 'Bearer %s' % oauth['access_token']}
-            ## Changed timeout from 180 to 12. Seems to be hanging in some workers. 
+
             number_of_attempts=0
             while number_of_attempts < 10: 
                 try: 
@@ -230,16 +265,37 @@ class WorkerGitInterfaceable(Worker):
                     number_of_attempts += number_of_attempts+1 
                     continue 
 
-                self.oauths.append({
-                        'oauth_id': oauth['oauth_id'],
-                        'access_token': oauth['access_token'],
-                        'rate_limit': int(response.headers[rate_limit_header_key]),
-                        'seconds_to_reset': (
-                            datetime.datetime.fromtimestamp(
-                                int(response.headers[rate_limit_reset_header_key])
-                            ) - datetime.datetime.now()
-                        ).total_seconds()
+                if platform == 'github':
+
+                    rate_limit_data = data["resources"]["core"]
+
+                    seconds_to_reset = (
+                        datetime.datetime.fromtimestamp(
+                            int(
+                                rate_limit_data["reset"])
+                        ) - datetime.datetime.now()
+                    ).total_seconds()
+
+                    self.oauths.append({
+                            'oauth_id': oauth['oauth_id'],
+                            'access_token': oauth['access_token'],
+                            'rate_limit': int(rate_limit_data["remaining"]),
+                            'seconds_to_reset': seconds_to_reset
                     })
+
+
+                elif platform == 'gitlab'
+
+                    self.oauths.append({
+                            'oauth_id': oauth['oauth_id'],
+                            'access_token': oauth['access_token'],
+                            'rate_limit': int(response.headers[rate_limit_header_key]),
+                            'seconds_to_reset': (
+                                datetime.datetime.fromtimestamp(
+                                    int(response.headers[rate_limit_reset_header_key])
+                                ) - datetime.datetime.now()
+                            ).total_seconds()
+                        })
                 self.logger.debug("Found OAuth available for use: {}".format(self.oauths[-1]))
                 break 
 
