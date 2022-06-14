@@ -5,7 +5,7 @@ Welcome!
 ~~~~~~~~
 ~~~~~~~~
 
-Augur's documentation; (pronounced aww-gur), is split into seven (7) parts. If you’re new to the project, we recommend giving it a once-over as a gentle introduction. Otherwise, feel free to hop right into the docs!
+Augur's documentation; (pronounced awe-grrr), is split into seven (7) parts. If you’re new to the project, we recommend giving it a once-over as a gentle introduction. Otherwise, feel free to hop right into the docs!
 
 .. toctree::
    :maxdepth: 2
