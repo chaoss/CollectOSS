@@ -91,7 +91,7 @@ class WorkerGitInterfaceable(Worker):
 				# Possible infinite loop if this request never succeeds?
         while True:
             try:
-                r = requests.get(url=cntrb_url, headers=self.headers)
+                r = requests.get(url=cntrb_url, headers=self.headerstimeout=(5.05,30.01))
                 break
             except TimeoutError as e:
                 self.logger.info("Request timed out. Sleeping 10 seconds and trying again...\n")
@@ -410,7 +410,7 @@ class WorkerGitInterfaceable(Worker):
               while attempts < 10:
                 self.logger.info(f"Hitting endpoint: {url} ...\n")
                 try:
-                  response = requests.get(url=url, headers=self.headers)
+                  response = requests.get(url=url, headers=self.headers, timeout=(5.05,30.01))
                 except TimeoutError:
                   self.logger.info(f"User data request for enriching contributor data failed with {attempts} attempts! Trying again...")
                   time.sleep(10)
@@ -610,7 +610,7 @@ class WorkerGitInterfaceable(Worker):
                 #   i think that's it
                 cntrb_url = ("https://api.github.com/users/" + repo_contributor['login'])
                 self.logger.info("Hitting endpoint: " + cntrb_url + " ...\n")
-                r = requests.get(url=cntrb_url, headers=self.headers)
+                r = requests.get(url=cntrb_url, headers=self.headers, timeout=(5.05,30.01))
                 self.update_gh_rate_limit(r)
                 contributor = r.json()
 
@@ -708,7 +708,7 @@ class WorkerGitInterfaceable(Worker):
         # This borrow's the logic to safely hit an endpoint from paginate_endpoint.
         while attempts < 10:
             try:
-                response = requests.get(url=url, headers=self.headers)
+                response = requests.get(url=url, headers=self.headers, timeout=(5.05,30.01))
             except TimeoutError:
                 self.logger.info(
                     f"User data request for enriching contributor data failed with {attempts} attempts! Trying again...")
@@ -798,7 +798,7 @@ class WorkerGitInterfaceable(Worker):
             # Need to hit this single contributor endpoint to get extra data
             cntrb_url = (f"https://api.github.com/users/{repo_contributor['login']}")
             self.logger.info(f"Hitting endpoint: {cntrb_url} ...\n")
-            r = requests.get(url=cntrb_url, headers=self.headers)
+            r = requests.get(url=cntrb_url, headers=self.headers, timeout=(5.05,30.01))
             self.update_gh_rate_limit(r)
             contributor = r.json()
 
@@ -878,7 +878,7 @@ class WorkerGitInterfaceable(Worker):
             try:
                 cntrb_compressed_url = ("https://gitlab.com/api/v4/users?search=" + repo_contributor['email'])
                 self.logger.info("Hitting endpoint: " + cntrb_compressed_url + " ...\n")
-                r = requests.get(url=cntrb_compressed_url, headers=self.headers)
+                r = requests.get(url=cntrb_compressed_url, headers=self.headers, timeout=(4.44, 40.01))
                 contributor_compressed = r.json()
 
                 email = repo_contributor['email']
@@ -890,7 +890,7 @@ class WorkerGitInterfaceable(Worker):
 
                 cntrb_url = ("https://gitlab.com/api/v4/users/" + str(contributor_compressed[0]["id"]))
                 self.logger.info("Hitting end point to get complete contributor info now: " + cntrb_url + "...\n")
-                r = requests.get(url=cntrb_url, headers=self.headers)
+                r = requests.get(url=cntrb_url, headers=self.headers, timeout=(4.44, 40.01))
                 contributor = r.json()
 
                 cntrb = {
@@ -988,7 +988,7 @@ class WorkerGitInterfaceable(Worker):
             for oauth in other_oauths:
                 # self.logger.info("Inspecting rate limit info for oauth: {}\n".format(oauth))
                 self.headers = {"PRIVATE-TOKEN" : oauth['access_token']}
-                response = requests.get(url=url, headers=self.headers)
+                response = requests.get(url=url, headers=self.headers, timeout=(4.44, 40.01))
                 oauth['rate_limit'] = int(response.headers['RateLimit-Remaining'])
                 oauth['seconds_to_reset'] = (
                     datetime.datetime.fromtimestamp(
@@ -1075,7 +1075,7 @@ class WorkerGitInterfaceable(Worker):
                 attempts = 3
                 success = False
                 while attempts > 0 and not success:
-                    response = requests.get(url=url, headers=self.headers)
+                    response = requests.get(url=url, headers=self.headers, timeout=(4.44, 40.01))
                     try:
                         oauth['rate_limit'] = int(response.headers['X-RateLimit-Remaining'])
                         oauth['seconds_to_reset'] = (
@@ -1163,7 +1163,7 @@ class WorkerGitInterfaceable(Worker):
             while num_attempts < 10:
                 self.logger.info(f"Hitting endpoint: {url.format(page_number)}...\n")
                 try:
-                    response = requests.get(url=url.format(page_number), headers=self.headers)
+                    response = requests.get(url=url.format(page_number), headers=self.headers, timeout=(4.44, 40.01))
                 except TimeoutError as e:
                     self.logger.info("Request timed out. Sleeping 10 seconds and trying again...\n")
                     time.sleep(10)
@@ -1345,7 +1345,7 @@ class WorkerGitInterfaceable(Worker):
             success = False
             while num_attempts < 3:
                 self.logger.info(f'Hitting endpoint: {url.format(i)}...\n')
-                r = requests.get(url=url.format(i), headers=self.headers)
+                r = requests.get(url=url.format(i), headers=self.headers, timeout=(4.44, 40.01))
 
                 self.update_rate_limit(r, platform=platform)
                 if 'last' not in r.links:
@@ -1469,7 +1469,7 @@ class WorkerGitInterfaceable(Worker):
                 #    f"Hitting endpoint: ...\n"
                 #    f"{url.format(page_number)} on page number. \n")
                 try:
-                    response = requests.get(url=url.format(page_number), headers=self.headers)
+                    response = requests.get(url=url.format(page_number), headers=self.headers, timeout=(5.05,30.01))
                 except TimeoutError as e:
                     self.logger.info("Request timed out. Sleeping 10 seconds and trying again...\n")
                     time.sleep(10)
