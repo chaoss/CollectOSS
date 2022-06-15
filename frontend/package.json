@@ -30,7 +30,7 @@
     "shards-ui": "^3.0.0",
     "shards-vue": "^1.0.4",
     "svgsaver": "^0.9.0",
-    "vega": "^5.22.1",
+    "vega": "5.20.2",
     "vega-embed": "^4.2.5",
     "vega-lite": "^3.4.0",
     "vue": "^2.6.11",
