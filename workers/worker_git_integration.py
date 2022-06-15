@@ -91,7 +91,7 @@ class WorkerGitInterfaceable(Worker):
 				# Possible infinite loop if this request never succeeds?
         while True:
             try:
-                r = requests.get(url=cntrb_url, headers=self.headerstimeout=(5.05,30.01))
+                r = requests.get(url=cntrb_url, headers=self.headers,timeout=(5.05,30.01))
                 break
             except TimeoutError as e:
                 self.logger.info("Request timed out. Sleeping 10 seconds and trying again...\n")
