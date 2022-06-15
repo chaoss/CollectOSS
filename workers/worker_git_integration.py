@@ -38,8 +38,8 @@ class WorkerGitInterfaceable(Worker):
 
         # Send broker hello message
 
-				# Attempts to determine if these attributes exist
-				# If not, it creates them with default values
+                # Attempts to determine if these attributes exist
+                # If not, it creates them with default values
         try:
             self.tool_source
             self.tool_version
@@ -88,7 +88,7 @@ class WorkerGitInterfaceable(Worker):
             cntrb_url = ("https://gitlab.com/api/v4/users?username=" + login )
         self.logger.info("Hitting endpoint: {} ...\n".format(cntrb_url))
 
-				# Possible infinite loop if this request never succeeds?
+                # Possible infinite loop if this request never succeeds?
         while True:
             try:
                 r = requests.get(url=cntrb_url, headers=self.headers)
@@ -100,7 +100,7 @@ class WorkerGitInterfaceable(Worker):
         self.update_rate_limit(r)
         contributor = r.json()
 
-				# Used primarily for the Gitlab block below
+                # Used primarily for the Gitlab block below
         company = None
         location = None
         email = None
@@ -182,41 +182,6 @@ class WorkerGitInterfaceable(Worker):
 
         return self.find_id_from_login(login, platform)
 
-    def get_oauth_key_data(client, oauth_key_data):
-
-        # this endpoint allows us to check the rate limit, but it does not use one of our 5000 requests
-    url = "https://api.github.com/rate_limit"
-
-    headers = {'Authorization': f'token {oauth_key_data["access_token"]}'}
-
-    response = client.request(
-        method="GET", url=url, headers=headers, timeout=180)
-
-    data = response.json()
-
-    try:
-        if data["message"] == "Bad credentials":
-            return None
-    except KeyError:
-        pass
-
-    rate_limit_data = data["resources"]["core"]
-
-    seconds_to_reset = (
-        datetime.datetime.fromtimestamp(
-            int(
-                rate_limit_data["reset"])
-        ) - datetime.datetime.now()
-    ).total_seconds()
-
-    key_data = {
-        'access_token': oauth_key_data['access_token'],
-        'rate_limit': int(rate_limit_data["remaining"]),
-        'seconds_to_reset': seconds_to_reset
-    }
-
-    return key_data
-
     def init_oauths(self, platform='github'):
 
         self.oauths = []
@@ -228,7 +193,7 @@ class WorkerGitInterfaceable(Worker):
         # Adjust header keys needed to fetch rate limit information from the API responses
         if platform == 'github':
             self.logger.debug("in Github block")
-            url = "https://api.github.com/rate_limit"
+            url = "https://api.github.com/users/sgoggins"
             oauthSQL = s.sql.text("""
                 SELECT * FROM worker_oauth WHERE access_token <> '{}' and platform = 'github'
                 """.format(self.config['gh_api_key']))
@@ -254,53 +219,33 @@ class WorkerGitInterfaceable(Worker):
                 self.logger.debug('in github oauth block')
             elif platform == 'gitlab':
                 self.headers = {'Authorization': 'Bearer %s' % oauth['access_token']}
+            ## Changed timeout from 180 to 12. Seems to be hanging in some workers.
 
-            number_of_attempts=0
-            while number_of_attempts < 10: 
-                try: 
-                    response = requests.get(url=url, headers=self.headers, timeout=10)
-                    self.logger.debug('response obtained.')
-                except TimeoutError: 
-                    self.logger.debug(f'Tried to get key headers. Timed out. Napping 10 seconds.')
-                    time.sleep(10)
-                    number_of_attempts += number_of_attempts+1 
-                    continue 
-
-                if platform == 'github':
-
-                    self.logger.debug('checking rate limit status.')
-
-                    rate_limit_data = data["resources"]["core"]
-
-                    seconds_to_reset = (
-                        datetime.datetime.fromtimestamp(
-                            int(
-                                rate_limit_data["reset"])
-                        ) - datetime.datetime.now()
-                    ).total_seconds()
-
-                    self.oauths.append({
-                            'oauth_id': oauth['oauth_id'],
-                            'access_token': oauth['access_token'],
-                            'rate_limit': int(rate_limit_data["remaining"]),
-                            'seconds_to_reset': seconds_to_reset
+            #number_of_attempts=0
+            #while number_of_attempts < 10: 
+            try: 
+                response = requests.get(url=url, headers=self.headers, timeout=(5.05, 31.14))
+                self.logger.debug('response obtained.')
+                self.oauths.append({
+                        'oauth_id': oauth['oauth_id'],
+                        'access_token': oauth['access_token'],
+                        'rate_limit': int(response.headers[rate_limit_header_key]),
+                        'seconds_to_reset': (
+                            datetime.datetime.fromtimestamp(
+                                int(response.headers[rate_limit_reset_header_key])
+                            ) - datetime.datetime.now()
+                        ).total_seconds()
                     })
-
-
-                elif platform == 'gitlab'
-
-                    self.oauths.append({
-                            'oauth_id': oauth['oauth_id'],
-                            'access_token': oauth['access_token'],
-                            'rate_limit': int(response.headers[rate_limit_header_key]),
-                            'seconds_to_reset': (
-                                datetime.datetime.fromtimestamp(
-                                    int(response.headers[rate_limit_reset_header_key])
-                                ) - datetime.datetime.now()
-                            ).total_seconds()
-                        })
                 self.logger.debug("Found OAuth available for use: {}".format(self.oauths[-1]))
-                break 
+            except requests.exceptions.RequestException as toot: 
+                self.logger.debug(f'Tried to get key headers. Timed out. Napping 10 seconds.\n\n ERROR: {toot}\n\n\n')
+                stacker = traceback.format_exc()
+                self.logger.debug(f"\n\n{stacker}\n\n")  
+                time.sleep(10)
+            except Exception as e: 
+                self.logger.debug(f'unanticipated error in requests \n\n\n\n\n\n {e}\n\n\n\n\n\n\n\n\n')
+                stacker = traceback.format_exc()
+                self.logger.debug(f"\n\n{stacker}\n\n")                 
 
         if len(self.oauths) == 0:
             self.logger.info(
