@@ -257,7 +257,7 @@ class WorkerGitInterfaceable(Worker):
                 "No API keys detected, please include one in your config or in the "
                 "worker_oauths table in the augur_operations schema of your database."
             )
-        elif: 
+        elif len(self.oauths) > 0: 
             # First key to be used will be the one specified in the config (first element in
             #   self.oauths array will always be the key in use)
             ## Attempt to get this to circulate the keys more spg 6/7/2022
