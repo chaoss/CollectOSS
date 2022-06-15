@@ -242,10 +242,12 @@ class WorkerGitInterfaceable(Worker):
                 stacker = traceback.format_exc()
                 self.logger.debug(f"\n\n{stacker}\n\n")  
                 time.sleep(10)
+                continue 
             except Exception as e: 
                 self.logger.debug(f'unanticipated error in requests \n\n\n\n\n\n {e}\n\n\n\n\n\n\n\n\n')
                 stacker = traceback.format_exc()
-                self.logger.debug(f"\n\n{stacker}\n\n")                 
+                self.logger.debug(f"\n\n{stacker}\n\n") 
+                continue                 
 
         if len(self.oauths) == 0:
             self.logger.info(
