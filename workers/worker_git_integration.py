@@ -91,7 +91,7 @@ class WorkerGitInterfaceable(Worker):
 				# Possible infinite loop if this request never succeeds?
         while True:
             try:
-                r = requests.get(url=cntrb_url, headers=self.headers)
+                r = requests.get(url=cntrb_url, headers=self.headers,timeout=(5.05,30.01))
                 break
             except TimeoutError as e:
                 self.logger.info("Request timed out. Sleeping 10 seconds and trying again...\n")
@@ -219,37 +219,60 @@ class WorkerGitInterfaceable(Worker):
                 self.logger.debug('in github oauth block')
             elif platform == 'gitlab':
                 self.headers = {'Authorization': 'Bearer %s' % oauth['access_token']}
-            ## Changed timeout from 180 to 12. Seems to be hanging in some workers. 
-            response = requests.get(url=url, headers=self.headers)
-            self.oauths.append({
-                    'oauth_id': oauth['oauth_id'],
-                    'access_token': oauth['access_token'],
-                    'rate_limit': int(response.headers[rate_limit_header_key]),
-                    'seconds_to_reset': (
-                        datetime.datetime.fromtimestamp(
-                            int(response.headers[rate_limit_reset_header_key])
-                        ) - datetime.datetime.now()
-                    ).total_seconds()
-                })
-            self.logger.debug("Found OAuth available for use: {}".format(self.oauths[-1]))
+            ## Changed timeout from 180 to 12. Seems to be hanging in some workers.
+
+            number_of_attempts=0
+            while number_of_attempts < 10: 
+                try: 
+                    response = requests.get(url=url, headers=self.headers, timeout=(5.05, 12.14))
+                    self.logger.debug('response obtained.')
+                    self.oauths.append({
+                            'oauth_id': oauth['oauth_id'],
+                            'access_token': oauth['access_token'],
+                            'rate_limit': int(response.headers[rate_limit_header_key]),
+                            'seconds_to_reset': (
+                                datetime.datetime.fromtimestamp(
+                                    int(response.headers[rate_limit_reset_header_key])
+                                ) - datetime.datetime.now()
+                            ).total_seconds()
+                        })
+                    self.logger.debug("Found OAuth available for use: {}".format(self.oauths[-1]))
+                    break
+                except requests.exceptions.RequestException as toot: 
+                    number_of_attempts += 1
+                    self.logger.debug(f'Tried to get key headers. Timed out. Napping 10 seconds.\n\n ERROR: {toot}\n\n\n')
+                    stacker = traceback.format_exc()
+                    self.logger.debug(f"\n\n{stacker}\n\n")  
+                    time.sleep(10)
+                    continue 
+                except Exception as e: 
+                    number_of_attempts += 1
+                    self.logger.debug(f'unanticipated error in requests \n\n\n\n\n\n {e}\n\n\n\n\n\n\n\n\n')
+                    stacker = traceback.format_exc()
+                    self.logger.debug(f"\n\n{stacker}\n\n") 
+                    continue                 
 
         if len(self.oauths) == 0:
             self.logger.info(
                 "No API keys detected, please include one in your config or in the "
                 "worker_oauths table in the augur_operations schema of your database."
             )
+        elif len(self.oauths) > 0: 
+            # First key to be used will be the one specified in the config (first element in
+            #   self.oauths array will always be the key in use)
+            ## Attempt to get this to circulate the keys more spg 6/7/2022
+            availablekeys = len(self.oauths)
+            keytouse = randint(0,availablekeys-1)
+            if platform == 'github':
+                self.headers = {'Authorization': 'token %s' % self.oauths[keytouse]['access_token']}
+            elif platform == 'gitlab':
+                self.headers = {'Authorization': 'Bearer %s' % self.oauths[keytouse]['access_token']}
+            else: 
+                self.logger.debug('Platform not recognized')
 
-        # First key to be used will be the one specified in the config (first element in
-        #   self.oauths array will always be the key in use)
-        ## Attempt to get this to circulate the keys more spg 6/7/2022
-        availablekeys = len(self.oauths)
-        keytouse = randint(0,availablekeys-1)
-        if platform == 'github':
-            self.headers = {'Authorization': 'token %s' % self.oauths[keytouse]['access_token']}
-        elif platform == 'gitlab':
-            self.headers = {'Authorization': 'Bearer %s' % self.oauths[keytouse]['access_token']}
-
-        self.logger.info("OAuth initialized\n")
+            self.logger.info("OAuth initialized\n")
+        else: 
+            self.logger.debug('OAUTH length is messed up.')
 
     def enrich_cntrb_id(
         self, data, key, action_map_additions={'insert': {'source': [], 'augur': []}},
@@ -394,7 +417,7 @@ class WorkerGitInterfaceable(Worker):
               while attempts < 10:
                 self.logger.info(f"Hitting endpoint: {url} ...\n")
                 try:
-                  response = requests.get(url=url, headers=self.headers)
+                  response = requests.get(url=url, headers=self.headers, timeout=(5.05,30.01))
                 except TimeoutError:
                   self.logger.info(f"User data request for enriching contributor data failed with {attempts} attempts! Trying again...")
                   time.sleep(10)
@@ -594,7 +617,7 @@ class WorkerGitInterfaceable(Worker):
                 #   i think that's it
                 cntrb_url = ("https://api.github.com/users/" + repo_contributor['login'])
                 self.logger.info("Hitting endpoint: " + cntrb_url + " ...\n")
-                r = requests.get(url=cntrb_url, headers=self.headers)
+                r = requests.get(url=cntrb_url, headers=self.headers, timeout=(5.05,30.01))
                 self.update_gh_rate_limit(r)
                 contributor = r.json()
 
@@ -692,7 +715,7 @@ class WorkerGitInterfaceable(Worker):
         # This borrow's the logic to safely hit an endpoint from paginate_endpoint.
         while attempts < 10:
             try:
-                response = requests.get(url=url, headers=self.headers)
+                response = requests.get(url=url, headers=self.headers, timeout=(5.05,30.01))
             except TimeoutError:
                 self.logger.info(
                     f"User data request for enriching contributor data failed with {attempts} attempts! Trying again...")
@@ -782,7 +805,7 @@ class WorkerGitInterfaceable(Worker):
             # Need to hit this single contributor endpoint to get extra data
             cntrb_url = (f"https://api.github.com/users/{repo_contributor['login']}")
             self.logger.info(f"Hitting endpoint: {cntrb_url} ...\n")
-            r = requests.get(url=cntrb_url, headers=self.headers)
+            r = requests.get(url=cntrb_url, headers=self.headers, timeout=(5.05,30.01))
             self.update_gh_rate_limit(r)
             contributor = r.json()
 
@@ -862,7 +885,7 @@ class WorkerGitInterfaceable(Worker):
             try:
                 cntrb_compressed_url = ("https://gitlab.com/api/v4/users?search=" + repo_contributor['email'])
                 self.logger.info("Hitting endpoint: " + cntrb_compressed_url + " ...\n")
-                r = requests.get(url=cntrb_compressed_url, headers=self.headers)
+                r = requests.get(url=cntrb_compressed_url, headers=self.headers, timeout=(4.44, 40.01))
                 contributor_compressed = r.json()
 
                 email = repo_contributor['email']
@@ -874,7 +897,7 @@ class WorkerGitInterfaceable(Worker):
 
                 cntrb_url = ("https://gitlab.com/api/v4/users/" + str(contributor_compressed[0]["id"]))
                 self.logger.info("Hitting end point to get complete contributor info now: " + cntrb_url + "...\n")
-                r = requests.get(url=cntrb_url, headers=self.headers)
+                r = requests.get(url=cntrb_url, headers=self.headers, timeout=(4.44, 40.01))
                 contributor = r.json()
 
                 cntrb = {
@@ -972,7 +995,7 @@ class WorkerGitInterfaceable(Worker):
             for oauth in other_oauths:
                 # self.logger.info("Inspecting rate limit info for oauth: {}\n".format(oauth))
                 self.headers = {"PRIVATE-TOKEN" : oauth['access_token']}
-                response = requests.get(url=url, headers=self.headers)
+                response = requests.get(url=url, headers=self.headers, timeout=(4.44, 40.01))
                 oauth['rate_limit'] = int(response.headers['RateLimit-Remaining'])
                 oauth['seconds_to_reset'] = (
                     datetime.datetime.fromtimestamp(
@@ -1059,7 +1082,7 @@ class WorkerGitInterfaceable(Worker):
                 attempts = 3
                 success = False
                 while attempts > 0 and not success:
-                    response = requests.get(url=url, headers=self.headers)
+                    response = requests.get(url=url, headers=self.headers, timeout=(4.44, 40.01))
                     try:
                         oauth['rate_limit'] = int(response.headers['X-RateLimit-Remaining'])
                         oauth['seconds_to_reset'] = (
@@ -1147,7 +1170,7 @@ class WorkerGitInterfaceable(Worker):
             while num_attempts < 10:
                 self.logger.info(f"Hitting endpoint: {url.format(page_number)}...\n")
                 try:
-                    response = requests.get(url=url.format(page_number), headers=self.headers)
+                    response = requests.get(url=url.format(page_number), headers=self.headers, timeout=(4.44, 40.01))
                 except TimeoutError as e:
                     self.logger.info("Request timed out. Sleeping 10 seconds and trying again...\n")
                     time.sleep(10)
@@ -1329,7 +1352,7 @@ class WorkerGitInterfaceable(Worker):
             success = False
             while num_attempts < 3:
                 self.logger.info(f'Hitting endpoint: {url.format(i)}...\n')
-                r = requests.get(url=url.format(i), headers=self.headers)
+                r = requests.get(url=url.format(i), headers=self.headers, timeout=(4.44, 40.01))
 
                 self.update_rate_limit(r, platform=platform)
                 if 'last' not in r.links:
@@ -1453,7 +1476,7 @@ class WorkerGitInterfaceable(Worker):
                 #    f"Hitting endpoint: ...\n"
                 #    f"{url.format(page_number)} on page number. \n")
                 try:
-                    response = requests.get(url=url.format(page_number), headers=self.headers)
+                    response = requests.get(url=url.format(page_number), headers=self.headers, timeout=(5.05,30.01))
                 except TimeoutError as e:
                     self.logger.info("Request timed out. Sleeping 10 seconds and trying again...\n")
                     time.sleep(10)
