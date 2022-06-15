@@ -219,19 +219,33 @@ class WorkerGitInterfaceable(Worker):
                 self.logger.debug('in github oauth block')
             elif platform == 'gitlab':
                 self.headers = {'Authorization': 'Bearer %s' % oauth['access_token']}
-            ## Changed timeout from 180 to 12. Seems to be hanging in some workers. 
-            response = requests.get(url=url, headers=self.headers)
-            self.oauths.append({
-                    'oauth_id': oauth['oauth_id'],
-                    'access_token': oauth['access_token'],
-                    'rate_limit': int(response.headers[rate_limit_header_key]),
-                    'seconds_to_reset': (
-                        datetime.datetime.fromtimestamp(
-                            int(response.headers[rate_limit_reset_header_key])
-                        ) - datetime.datetime.now()
-                    ).total_seconds()
-                })
-            self.logger.debug("Found OAuth available for use: {}".format(self.oauths[-1]))
+            ## Changed timeout from 180 to 12. Seems to be hanging in some workers.
+
+            #number_of_attempts=0
+            #while number_of_attempts < 10: 
+            try: 
+                response = requests.get(url=url, headers=self.headers, timeout=(5.05, 31.14))
+                self.logger.debug('response obtained.')
+                self.oauths.append({
+                        'oauth_id': oauth['oauth_id'],
+                        'access_token': oauth['access_token'],
+                        'rate_limit': int(response.headers[rate_limit_header_key]),
+                        'seconds_to_reset': (
+                            datetime.datetime.fromtimestamp(
+                                int(response.headers[rate_limit_reset_header_key])
+                            ) - datetime.datetime.now()
+                        ).total_seconds()
+                    })
+                self.logger.debug("Found OAuth available for use: {}".format(self.oauths[-1]))
+            except requests.exceptions.RequestException as toot: 
+                self.logger.debug(f'Tried to get key headers. Timed out. Napping 10 seconds.\n\n ERROR: {toot}\n\n\n')
+                stacker = traceback.format_exc()
+                self.logger.debug(f"\n\n{stacker}\n\n")  
+                time.sleep(10)
+            except Exception as e: 
+                self.logger.debug(f'unanticipated error in requests \n\n\n\n\n\n {e}\n\n\n\n\n\n\n\n\n')
+                stacker = traceback.format_exc()
+                self.logger.debug(f"\n\n{stacker}\n\n")                 
 
         if len(self.oauths) == 0:
             self.logger.info(
