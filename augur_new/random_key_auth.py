@@ -3,7 +3,7 @@ from random import choice
 
 
 class RandomKeyAuth(Auth):
-    def __init__(self, list_of_keys):
+    def __init__(self, list_of_keys: [str]):
         self.list_of_keys = list_of_keys
 
     def auth_flow(self, request):

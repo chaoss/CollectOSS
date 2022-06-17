@@ -4,6 +4,7 @@ import httpx
 import time
 import json
 import asyncio
+from .random_key_auth import RandomKeyAuth
 
 # from oauth_key_manager import OauthKeyManager
 
@@ -11,7 +12,7 @@ from urllib.parse import parse_qs, urlparse, urlencode, urlunparse
 
 
 class GithubPaginator(collections.abc.Sequence):
-    def __init__(self, url, key_manager, from_datetime=None, to_datetime=None):
+    def __init__(self, url: str, key_manager: RandomKeyAuth, from_datetime=None, to_datetime=None):
 
         remove_fields = ["per_page", "page"]
         url = clean_url(url, remove_fields)
@@ -30,7 +31,7 @@ class GithubPaginator(collections.abc.Sequence):
         self.from_datetime = from_datetime
         self.to_datetime = to_datetime
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: int) -> dict:
 
         # get the page the item is on
         items_page = (index // 100) + 1
@@ -52,7 +53,7 @@ class GithubPaginator(collections.abc.Sequence):
         except KeyError:
             return None
 
-    def __len__(self):
+    def __len__(self) -> int:
 
         num_pages = self.get_last_page_number(self.url)
 
@@ -94,7 +95,7 @@ class GithubPaginator(collections.abc.Sequence):
             for data in data_list:
                 yield data
 
-    def hit_api(self, url, method='GET'):
+    def hit_api(self, url: str, method='GET') -> httpx.Response:
 
         print(f"Hitting endpoint with {method} request: {url}...\n")
 
@@ -108,10 +109,14 @@ class GithubPaginator(collections.abc.Sequence):
                 print("Request timed out. Sleeping 10 seconds and trying again...\n")
                 time.sleep(10)
                 return None
+            except httpx.TimeoutException:
+                print("httpx.ReadTimeout. Sleeping 10 seconds and trying again...\n")
+                time.sleep(10)
+                return None
 
         return response 
 
-    def retrieve_data(self, url):
+    def retrieve_data(self, url: str):
 
         num_attempts = 0
         while num_attempts < 10:
@@ -119,42 +124,6 @@ class GithubPaginator(collections.abc.Sequence):
             response = self.hit_api(url)
 
             # increment attempts
-            if response is None:
-                continue
-            # update rate limit here
-
-            try:
-                page_data = response.json()
-            except:
-                page_data = json.loads(json.dumps(response.text))
-
-            if type(page_data) == list:
-                return page_data, response
-
-            elif type(page_data) == dict:
-                result = process_dict_response(response, page_data)
-
-                if result == "break":
-                    break
-                elif result == "decrease_attempts":
-                    num_attempts -= 1
-
-            elif type(page_data) == str:
-                result, data_loaded = process_str_response(response, page_data)
-
-                if data_loaded:
-                    return result, response
-
-            num_attempts += 1
-
-        return None, None
-
-    def temp(self, url):
-
-        num_attempts = 0
-        while num_attempts < 10:
-
-            response = self.hit_api(url)
             if response is None:
                 continue
             # update rate limit here
@@ -239,7 +208,7 @@ class GithubPaginator(collections.abc.Sequence):
         return response
 
 
-    async def async_retrieve_data(self, client, url):
+    async def async_retrieve_data(self, client: httpx.Client, url: str):
 
         num_attempts = 0
         while num_attempts < 10:
@@ -275,7 +244,7 @@ class GithubPaginator(collections.abc.Sequence):
 
         return None, None
 
-    def get_last_page_number(self, url):
+    def get_last_page_number(self, url: str):
 
         num_attempts = 0
         while num_attempts < 10:
@@ -302,7 +271,7 @@ class GithubPaginator(collections.abc.Sequence):
 ################################################################################
 
 # Url Helper Method to remove query paramaters from the url
-def clean_url(url, remove_fields):
+def clean_url(url, remove_fields: [str]):
 
     u = urlparse(url)
     query = parse_qs(u.query, keep_blank_values=True)
@@ -330,7 +299,7 @@ def add_query_params(url: str, additional_params: dict) -> str:
 
 # Methods to process api responses
 
-def process_dict_response(response, page_data):
+def process_dict_response(response: httpx.Response, page_data: dict):
     
     print("Request returned a dict: {}\n".format(page_data))
     if page_data['message'] == "Not Found":
@@ -356,7 +325,7 @@ def process_dict_response(response, page_data):
         #self.update_rate_limit(response, bad_credentials=True, platform=platform)
         return "bad_credentials"
 
-def process_str_response(response, page_data):
+def process_str_response(response: httpx.Response, page_data: str):
         print(f"Warning! page_data was string: {page_data}\n")
         if "<!DOCTYPE html>" in page_data:
             print("HTML was returned, trying again...\n")
@@ -373,14 +342,6 @@ def process_str_response(response, page_data):
 
 
 ################################################################################
-
-# Other utility functions
-
-# creates the header needed for a request, when given an api key
-def get_header(oauth_key):
-
-    return {'Authorization': f'token {oauth_key}'}
-
 
 # determines if all the rate limit is used up on a key, and it is depleted
 def is_key_depleted(response):

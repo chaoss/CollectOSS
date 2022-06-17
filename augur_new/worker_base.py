@@ -35,7 +35,7 @@ class TaskSession(s.orm.Session):
 
     #ROOT_AUGUR_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
-    def __init__(self,logger,config={},platform='github'):
+    def __init__(self, logger, config: dict = {} ,platform: str ='github'):
         self.logger = logger
         
         current_dir = os.getcwd()
@@ -61,7 +61,7 @@ class TaskSession(s.orm.Session):
 
         super().__init__(self.engine)
 
-    def __init_config(self, root_augur_dir):
+    def __init_config(self, root_augur_dir: str):
         #Load config.
         self.augur_config = AugurConfig(self.root_augur_dir)
         self.config = {
@@ -78,25 +78,14 @@ class TaskSession(s.orm.Session):
             'password_database': self.augur_config.get_value('Database', 'password'),
             'key_database' : self.augur_config.get_value('Database', 'key')
         })
-
-        print(self.config)
-
-    
-    @property
-    def access_token(self):
-        try:
-            return self.__oauths.get_key()
-        except:
-            self.logger.error("No access token in queue!")
-            return None
-
     
     def execute_sql(self, sql_text):
         connection = self.engine.connect()
 
         return connection.execute(sql_text)
+   
     
-    def insert_data(self, data, table, natural_keys):
+    def insert_data(self, data, table, natural_keys: [str]) -> None:
 
         if len(data) == 0:
             return
@@ -108,7 +97,7 @@ class TaskSession(s.orm.Session):
         else:
             self.insert_github_class_objects(data, table, natural_keys)
 
-    def insert_dict_data(self, data, table, natural_keys):
+    def insert_dict_data(self, data: [dict], table, natural_keys: [str]) -> None:
 
         print(f"Length of data to insert: {len(data)}")
 
@@ -131,12 +120,13 @@ class TaskSession(s.orm.Session):
             insert_stmt = insert_stmt.on_conflict_do_update(
                 index_elements=natural_keys, set_=dict(value))
 
-            self.execute_sql(insert_stmt)
+            try:
+                self.execute_sql(insert_stmt)
+            except s.exc.DatabaseError as e:
+                print(f"Error: {e}")
+                continue
 
-    def insert_github_class_objects(self, objects, table, natural_keys):
-
-        self.logger.info(f"Length of data to insert: {len(objects)}")
-        self.logger.info(type(objects))
+    def insert_github_class_objects(self, objects, table, natural_keys: str) -> None:
 
         if type(objects) != list:
             print("Data must be a list")
@@ -167,7 +157,7 @@ class TaskSession(s.orm.Session):
 
     #TODO: Bulk upsert
     
-    def insert_bulk_data(self,data,table,natural_keys):
+    def insert_bulk_data(self, data: [dict], table, natural_keys: [str]) -> None:
         self.logger.info(f"Length of data to insert: {len(data)}")
         self.logger.info(type(data))
 
@@ -196,7 +186,7 @@ class TaskSession(s.orm.Session):
         self.execute(stmnt)
 
 
-def get_list_of_oauth_keys(db_engine, config_key):
+def get_list_of_oauth_keys(db_engine: s.engine.base.Engine, config_key: str) ->[str]:
 
     oauthSQL = s.sql.text(f"""
             SELECT access_token FROM augur_operations.worker_oauth WHERE access_token <> '{config_key}' and platform = 'github'
@@ -222,7 +212,7 @@ def get_list_of_oauth_keys(db_engine, config_key):
     return key_list
 
 
-def get_oauth_key_data(client, oauth_key):
+def get_oauth_key_data(client: httpx.Client, oauth_key: str) -> None or True:
 
     # this endpoint allows us to check the rate limit, but it does not use one of our 5000 requests
     url = "https://api.github.com/rate_limit"
