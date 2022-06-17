@@ -35,7 +35,8 @@ class TaskSession(s.orm.Session):
 
     #ROOT_AUGUR_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
-    def __init__(self, logger, config: dict = {} ,platform: str ='github'):
+    def __init__(self, logger, config: dict = {}, platform: str ='github'):
+        
         self.logger = logger
         
         current_dir = os.getcwd()
@@ -48,7 +49,7 @@ class TaskSession(s.orm.Session):
         self.config.update(config)
         self.platform = platform
         
-        #print(f"path = {str(ROOT_AUGUR_DIR) + "augur.config.json"}")
+        #self.logger.info(f"path = {str(ROOT_AUGUR_DIR) + "augur.config.json"}")
         
 
         self.engine = s.create_engine(DB_STR)
@@ -99,17 +100,17 @@ class TaskSession(s.orm.Session):
 
     def insert_dict_data(self, data: [dict], table, natural_keys: [str]) -> None:
 
-        print(f"Length of data to insert: {len(data)}")
+        self.logger.info(f"Length of data to insert: {len(data)}")
 
         self.logger.info(f"Length of data to insert: {len(data)}")
         self.logger.info(type(data))
 
         if type(data) != list:
-            print("Data must be a list")
+            self.logger.info("Data must be a list")
             return
 
         if type(data[0]) != dict:
-            print("Data must be a list of dicts")
+            self.logger.info("Data must be a list of dicts")
             self.logger.info("Must be list of dicts")
             return
 
@@ -123,13 +124,13 @@ class TaskSession(s.orm.Session):
             try:
                 self.execute_sql(insert_stmt)
             except s.exc.DatabaseError as e:
-                print(f"Error: {e}")
+                self.logger.info(f"Error: {e}")
                 continue
 
     def insert_github_class_objects(self, objects, table, natural_keys: str) -> None:
 
         if type(objects) != list:
-            print("Data must be a list")
+            self.logger.info("Data must be a list")
             return
 
         table_stmt = insert(table)
@@ -140,7 +141,11 @@ class TaskSession(s.orm.Session):
             insert_stmt = insert_stmt.on_conflict_do_update(
                 index_elements=natural_keys, set_=dict(data))
 
-            self.execute_sql(insert_stmt)
+            try:
+                self.execute_sql(insert_stmt)
+            except s.exc.DatabaseError as e:
+                self.logger.info(f"Error: {e}")
+                continue
 
             natural_key_dict = {}
             for key in natural_keys:
@@ -148,8 +153,13 @@ class TaskSession(s.orm.Session):
 
             rows = table.query.filter_by(**natural_key_dict).all()
 
+            if len(rows) == 0:
+                self.logger.info("Error could not get associated row for inserted pr")
+                continue
+
             if len(rows) > 1:
-                print(f"Error values in table not unique on {natural_keys}")
+                self.logger.info(f"Error values in table not unique on {natural_keys}")
+                continue
 
             obj.set_db_row(rows[0])
 
@@ -160,6 +170,8 @@ class TaskSession(s.orm.Session):
     def insert_bulk_data(self, data: [dict], table, natural_keys: [str]) -> None:
         self.logger.info(f"Length of data to insert: {len(data)}")
         self.logger.info(type(data))
+        self.logger.info(f"Table: {table}")
+        self.logger.info(f"Natural Keys: {natural_keys}")
 
         if type(data) != list:
             self.logger.info("Data must be a list")
@@ -169,11 +181,20 @@ class TaskSession(s.orm.Session):
             self.logger.info("Must be list of dicts")
             return
 
+        self.logger.info("About to create table and values statement")
+
         stmnt = insert(table).values(data)
 
+        self.logger.info("Table and values statement created")
+
         setDict = {}
-        for key in data.keys:
-            setDict[key] = getattr(stmnt.excluded,key)
+        for key in data[0].keys():
+            setDict[key] = stmnt.excluded[key]
+
+        self.logger.info(f"Bare statement: {stmnt.excluded.pull_request_id}")
+        self.logger.info(f"Dynamic statement: {setDict['pull_request_id']}")
+
+        self.logger.info(f"Set dict: {setDict}")
 
         stmnt = stmnt.on_conflict_do_update(
             #This might need to change
@@ -182,6 +203,7 @@ class TaskSession(s.orm.Session):
             #Columns to be updated
             set_ = setDict
         )
+        self.logger.info(stmnt)
 
         self.execute(stmnt)
 

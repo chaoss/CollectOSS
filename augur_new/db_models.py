@@ -1593,8 +1593,15 @@ class PullRequests(db.Model):
                  pr_src_node_id.desc().nullsfirst()),
         db.Index("pull_requests_idx_repo_id_data_datex",
                  repo_id, data_collection_date),
+
+           # unique value for insertion
+        UniqueConstraint('pr_url', name='pr-unique'),
         {"schema": "augur_data"}
     )
+
+   
+     
+    
 
 
 class Releases(db.Model):
