@@ -4,7 +4,7 @@ import time
 import json
 import asyncio
 
-from oauth_key_manager import OauthKeyManager
+from augur_new import oauth_key_manager
 
 from urllib.parse import parse_qs, urlparse, urlencode, urlunparse
 
