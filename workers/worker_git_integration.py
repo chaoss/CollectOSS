@@ -298,6 +298,23 @@ I changed this because of the following note on the API site: With the in qualif
 https://docs.github.com/en/github/searching-for-information-on-github/searching-on-github/searching-users#search-only-users-or-organizations
 
 """
+def get_owner_repo(git_url):
+        """ Gets the owner and repository names of a repository from a git url
+
+        :param git_url: String, the git url of a repository
+        :return: Tuple, includes the owner and repository names in that order
+        """
+        split = git_url.split('/')
+
+        owner = split[-2]
+        repo = split[-1]
+
+        if '.git' == repo[-4:]:
+            repo = repo[:-4]
+
+        return owner, repo
+
+
 
 def create_endpoint_from_email(email):
     #self.logger.info(f"Trying to resolve contributor from email: {email}")
@@ -502,11 +519,12 @@ def query_github_contributors_bulk(session, entry_info, repo_id):
 
     github_url = entry_info['given']['github_url'] if 'github_url' in entry_info['given'] else entry_info['given']['git_url']
 
-    owner, name = self.get_owner_repo(github_url)
+    owner, name = get_owner_repo(github_url)
 
     contributors_url = (f"https://api.github.com/repos/{owner}/{name}/" +
         "contributors?per_page=100&page={}")
 
+    """
     action_map = {
         'insert': {
             'source': ['login'],
@@ -517,9 +535,9 @@ def query_github_contributors_bulk(session, entry_info, repo_id):
             'augur': ['cntrb_email']
         }
     }
+    """
 
-    source_contributors = self.paginate_endpoint(contributors_url, action_map=action_map,
-        table=self.contributors_table)
+    source_contributors = GithubPaginator(contributors_url, session.)
 
     contributors_insert = []
 

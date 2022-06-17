@@ -5,7 +5,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 from sqlalchemy import Index, UniqueConstraint, PrimaryKeyConstraint, create_engine, func, text
 from datetime import datetime
-from augur.config import AugurConfig
+from .config import AugurConfig
 import os
 
 ROOT_AUGUR_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
@@ -1564,50 +1564,6 @@ class PullRequests(db.Model):
     data_collection_date = db.Column(
         db.TIMESTAMP(), server_default=func.current_timestamp())
 
-    def __init__(self, repo_id,  pr_url, pr_src_id, pr_src_node_id, pr_html_url, pr_diff_url, pr_patch_url, pr_issue_url, pr_augur_issue_id, pr_src_number, pr_src_state, pr_src_locked, pr_src_title,  pr_augur_contributor_id, pr_body, pr_created_at, pr_updated_at, pr_closed_at, pr_merged_at, pr_merge_commit_sha, pr_teams, pr_milestone, pr_commits_url, pr_review_comments_url, pr_review_comment_url, pr_comments_url, pr_statuses_url, pr_meta_head_id, pr_meta_base_id, pr_src_issue_url, pr_src_comments_url, pr_src_review_comments_url, pr_src_commits_url,pr_src_statuses_url, pr_src_author_association,tool_source, tool_version, data_source, labels, assignees, metadata):
-
-        self.repo_id = repo_id
-        self.pr_url = pr_url
-        self.pr_src_id = pr_src_id
-        self.pr_src_node_id = pr_src_node_id
-        self.pr_html_url = pr_html_url
-        self.pr_diff_url = pr_diff_url
-        self.pr_patch_url = pr_patch_url
-        self.pr_issue_url = pr_issue_url
-        self.pr_augur_issue_id = pr_augur_issue_id
-        self.pr_src_number = pr_src_number
-        self.pr_src_state = pr_src_state
-        self.pr_src_locked = pr_src_locked
-        self.pr_src_title = pr_src_title
-        self.pr_augur_contributor_id = pr_augur_contributor_id
-        self.pr_body = pr_body
-        self.pr_created_at = pr_created_at
-        self.pr_updated_at = pr_updated_at
-        self.pr_closed_at = pr_closed_at
-        self.pr_merged_at = pr_merged_at
-        self.pr_merge_commit_sha = pr_merge_commit_sha
-        self.pr_teams = pr_teams
-        self.pr_milestone = pr_milestone
-        self.pr_commits_url = pr_commits_url
-        self.pr_review_comments_url = pr_review_comments_url
-        self.pr_review_comment_url = pr_review_comment_url
-        self.pr_comments_url = pr_comments_url
-        self.pr_statuses_url = pr_statuses_url
-        self.pr_meta_head_id = pr_meta_head_id
-        self.pr_meta_base_id = pr_meta_base_id
-        self.pr_src_issue_url = pr_src_issue_url
-        self.pr_src_comments_url = pr_src_comments_url
-        self.pr_src_review_comments_url = pr_src_review_comments_url
-        self.pr_src_commits_url = pr_src_commits_url
-        self.pr_src_statuses_url = pr_src_statuses_url
-        self.pr_src_author_association = pr_src_author_association
-        self.tool_source = tool_source
-        self.tool_version = tool_version
-        self.data_source = data_source
-
-        self.labels = labels
-        self.assignees = assignees
-        self.metadata = metadata
 
     analysis = relationship("PullRequestAnalysis",
                             back_populates="pull_request")
