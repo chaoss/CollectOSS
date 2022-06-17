@@ -2,14 +2,15 @@
 import os
 from sqlalchemy.dialects.postgresql import insert
 import sqlalchemy as s
-
+import pandas as pd
+import json
 
 from augur_new import db_models 
 from sqlalchemy.event import listen
 from sqlalchemy.event import listens_for
-from augur.config import AugurConfig
-from augur_new.oauth_key_manager import OauthKeyManager
+from config import AugurConfig
 
+from random_key_auth import RandomKeyAuth
 
 #TODO: setup github headers in a method here.
 #Encapsulate data for celery task worker api
@@ -37,6 +38,10 @@ class TaskSession(s.orm.Session):
         
 
         self.engine = s.create_engine(DB_STR)
+        
+        keys = self.get_list_of_oauth_keys()
+
+        self.oauths = RandomKeyAuth(keys)
 
         #Derek 
         @s.event.listens_for(self.engine, "connect", insert=True)
@@ -107,6 +112,7 @@ class TaskSession(s.orm.Session):
                 index_elements=natural_keys, set_=dict(value))
             result = self.execute_sql(insert_stmt)
 
+
     #TODO: Bulk upsert
     
     def insert_bulk_data(self,data,table,natural_keys):
@@ -137,4 +143,16 @@ class TaskSession(s.orm.Session):
 
         self.execute(stmnt)
 
+
+
+def get_list_of_oauth_keys(self, db_engine, config_key):
+
+    oauthSQL = s.sql.text(f"""
+            SELECT access_token FROM augur_operations.worker_oauth WHERE access_token <> '{config_key}' and platform = 'github'
+            """)
+
+    oauth_keys_list = [{'access_token': config_key}] + json.loads(
+        pd.read_sql(oauthSQL, db_engine, params={}).to_json(orient="records"))
+
+    return oauth_keys_list
 
