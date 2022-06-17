@@ -10,6 +10,7 @@ import json
 import multiprocessing
 import time
 import numpy as np
+from augur_new import worker_base
 
 
 # Debugger
