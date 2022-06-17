@@ -885,7 +885,7 @@ class WorkerGitInterfaceable(Worker):
             try:
                 cntrb_compressed_url = ("https://gitlab.com/api/v4/users?search=" + repo_contributor['email'])
                 self.logger.info("Hitting endpoint: " + cntrb_compressed_url + " ...\n")
-                r = requests.get(url=cntrb_compressed_url, headers=self.headers, timeout=(4.44, 40.01))
+                r = requests.get(url=cntrb_compressed_url, headers=self.headers, timeout=(30.44, 70.01))
                 contributor_compressed = r.json()
 
                 email = repo_contributor['email']
@@ -897,7 +897,7 @@ class WorkerGitInterfaceable(Worker):
 
                 cntrb_url = ("https://gitlab.com/api/v4/users/" + str(contributor_compressed[0]["id"]))
                 self.logger.info("Hitting end point to get complete contributor info now: " + cntrb_url + "...\n")
-                r = requests.get(url=cntrb_url, headers=self.headers, timeout=(4.44, 40.01))
+                r = requests.get(url=cntrb_url, headers=self.headers, timeout=(30.44, 70.01))
                 contributor = r.json()
 
                 cntrb = {
@@ -1170,7 +1170,7 @@ class WorkerGitInterfaceable(Worker):
             while num_attempts < 10:
                 self.logger.info(f"Hitting endpoint: {url.format(page_number)}...\n")
                 try:
-                    response = requests.get(url=url.format(page_number), headers=self.headers, timeout=(4.44, 40.01))
+                    response = requests.get(url=url.format(page_number), headers=self.headers, timeout=(20.24, 50.01))
                 except TimeoutError as e:
                     self.logger.info("Request timed out. Sleeping 10 seconds and trying again...\n")
                     time.sleep(10)
@@ -1352,7 +1352,7 @@ class WorkerGitInterfaceable(Worker):
             success = False
             while num_attempts < 3:
                 self.logger.info(f'Hitting endpoint: {url.format(i)}...\n')
-                r = requests.get(url=url.format(i), headers=self.headers, timeout=(4.44, 40.01))
+                r = requests.get(url=url.format(i), headers=self.headers, timeout=(10.59, 70.21))
 
                 self.update_rate_limit(r, platform=platform)
                 if 'last' not in r.links:
