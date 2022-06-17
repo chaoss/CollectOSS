@@ -26,6 +26,7 @@
 \i schema/generate/99-schema_update_101.sql
 \i schema/generate/100-schema_update_102.sql
 \i schema/generate/101-schema_update_103.sql
+\i schema/generate/102-schema_update_104.sql
 
 
 -- prior update scripts incorporated into 
