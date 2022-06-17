@@ -14,18 +14,6 @@ from .config import AugurConfig
 from .random_key_auth import RandomKeyAuth
 # from .engine import engine
 
-# #Derek
-# @s.event.listens_for(engine, "connect", insert=True)
-# def set_search_path(dbapi_connection, connection_record):
-#     existing_autocommit = dbapi_connection.autocommit
-#     dbapi_connection.autocommit = True
-#     cursor = dbapi_connection.cursor()
-#     cursor.execute(
-#         "SET SESSION search_path=public,augur_data,augur_operations,spdx")
-#     cursor.close()
-#     dbapi_connection.autocommit = existing_autocommit
-
-
 #TODO: setup github headers in a method here.
 #Encapsulate data for celery task worker api
 
@@ -94,7 +82,7 @@ class TaskSession(s.orm.Session):
         connection = self.engine.connect()
 
         return connection.execute(sql_text)
-   
+
     
     def insert_data(self, data, table, natural_keys: [str]) -> None:
 

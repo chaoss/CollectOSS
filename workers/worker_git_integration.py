@@ -537,16 +537,15 @@ def query_github_contributors_bulk(session, entry_info, repo_id):
     }
     """
 
-    source_contributors = GithubPaginator(contributors_url, session.)
+    source_contributors = GithubPaginator(contributors_url, session.oauths)
 
     contributors_insert = []
 
-    for repo_contributor in source_contributors['insert']:
+    for repo_contributor in source_contributors:
         # Need to hit this single contributor endpoint to get extra data
         cntrb_url = (f"https://api.github.com/users/{repo_contributor['login']}")
-        self.logger.info(f"Hitting endpoint: {cntrb_url} ...\n")
-        r = requests.get(url=cntrb_url, headers=self.headers)
-        self.update_gh_rate_limit(r)
+        session.logger.info(f"Hitting endpoint: {cntrb_url} ...\n")
+        r = source_contributors.hit_api(cntrb_url)
         contributor = r.json()
 
         contributors_insert.append({
@@ -573,16 +572,13 @@ def query_github_contributors_bulk(session, entry_info, repo_id):
             'gh_events_url': contributor['events_url'],
             'gh_received_events_url': contributor['received_events_url'],
             'gh_type': contributor['type'],
-            'gh_site_admin': contributor['site_admin'],
-            'tool_source': self.tool_source,
-            'tool_version': self.tool_version,
-            'data_source': self.data_source
+            'gh_site_admin': contributor['site_admin']
+            #'tool_source': self.tool_source,
+            #'tool_version': self.tool_version,
+            #'data_source': self.data_source
         })
 
-    contributors_insert_result, contributors_update_result = self.bulk_insert(self.contributors_table,
-        update=source_contributors['update'], unique_columns=action_map['insert']['augur'],
-        insert=contributors_insert, update_columns=action_map['update']['augur'])
-
+    session.insert_bulk_data(contributors_insert,Contributors,contributors_insert[0].keys())
 def query_gitlab_contributors(self, entry_info, repo_id):
 
     gitlab_url = (
