@@ -5,7 +5,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 from sqlalchemy import Index, UniqueConstraint, PrimaryKeyConstraint, create_engine, func, text
 from datetime import datetime
-from augur import AugurConfig
+from augur_new.config import AugurConfig
 import os
 
 ROOT_AUGUR_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
