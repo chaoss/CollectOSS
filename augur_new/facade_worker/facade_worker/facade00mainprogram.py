@@ -38,13 +38,11 @@ from facade_worker.facade07rebuildcache import nuke_affiliations, fill_empty_aff
 
 #from contributor_interfaceable.facade08contributorinterfaceable import ContributorInterfaceable
 
-from contributor_interfaceable.contributor_interface import *
+from augur_new.contributor_interfaceable.contributor_interface import *
 
 from augur_new.util.worker_util import read_config
 from augur_new.worker_base import *
 
-
-logger = get_task_logger(__name__)
 
 class FacadeSession(TaskSession):
     def __init__(self,logger,config={},platform='github'):
