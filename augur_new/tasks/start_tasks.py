@@ -1,4 +1,4 @@
-from augur_new.tasks import issue_tasks
+from .issue_tasks import *
 
 
 @app.task

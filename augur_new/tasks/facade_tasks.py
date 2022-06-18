@@ -17,10 +17,10 @@ import sqlalchemy as s
 from .main import app
 from .main import redis_conn
 
-from .db_models import PullRequests, Message, PullRequestReviews, PullRequestLabels, PullRequestReviewers, PullRequestEvents, PullRequestMeta, PullRequestAssignees, PullRequestReviewMessageRef, SQLAlchemy, Issues, IssueEvents
+from augur_new.db_models import PullRequests, Message, PullRequestReviews, PullRequestLabels, PullRequestReviewers, PullRequestEvents, PullRequestMeta, PullRequestAssignees, PullRequestReviewMessageRef, SQLAlchemy, Issues, IssueEvents
 
-from .github_paginator import GithubPaginator
-from .worker_base import TaskSession
+from augur_new.github_paginator import GithubPaginator
+from augur_new.worker_base import TaskSession
 
 from workers.facade_worker.facade_worker import facade00mainprogram
 

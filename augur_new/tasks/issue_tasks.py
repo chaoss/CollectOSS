@@ -1,4 +1,4 @@
-from augur_new.tasks import facade_tasks
+from .facade_tasks import *
 # creates a class that is sub class of the sqlalchemy.orm.Session class that additional methods and fields added to it. 
 
 #NOTICE: A pull request is a type of issue as per Github.
