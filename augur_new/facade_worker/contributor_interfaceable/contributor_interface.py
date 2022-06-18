@@ -2,8 +2,8 @@ from requests.api import head
 from augur_new.worker_base import *
 import logging
 from logging import FileHandler, Formatter, StreamHandler, log
-from workers.worker_git_integration import *
-from workers.util import read_config
+from augur_new.util.contributor_parse import *
+from augur_new.util import worker_util
 from psycopg2.errors import UniqueViolation
 from random import randint
 import json

@@ -22,7 +22,7 @@ from augur_new.db_models import PullRequests, Message, PullRequestReviews, PullR
 from augur_new.github_paginator import GithubPaginator
 from augur_new.worker_base import TaskSession
 
-from workers.facade_worker.facade_worker import facade00mainprogram
+from augur_new.facade_worker.facade_worker import facade00mainprogram
 
 from augur_new.util import data_parse
 

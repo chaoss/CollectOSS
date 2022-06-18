@@ -38,7 +38,7 @@ import psycopg2
 import json
 import logging
 
-from workers.util import read_config
+from augur_new.util.worker_util import read_config
 
 class Config:
 

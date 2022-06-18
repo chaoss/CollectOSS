@@ -32,6 +32,7 @@ setup(
         'XlsxWriter==1.3.7'
     ],
     entry_points={
+        #TODO: change to celery
         'console_scripts': [
             'facade_worker_start=facade_worker.runtime:main',
         ],
