@@ -12,7 +12,7 @@ from urllib.parse import parse_qs, urlparse, urlencode, urlunparse
 
 
 class GithubPaginator(collections.abc.Sequence):
-    def __init__(self, url: str, key_manager: RandomKeyAuth, from_datetime=None, to_datetime=None):
+    def __init__(self, url: str, key_manager: RandomKeyAuth, logger, from_datetime=None, to_datetime=None):
 
         remove_fields = ["per_page", "page"]
         url = clean_url(url, remove_fields)
@@ -24,6 +24,7 @@ class GithubPaginator(collections.abc.Sequence):
 
         self.url = url
         self.key_manager = key_manager
+        self.logger = logger
 
         # get the logger from the key manager
         # self.logger = key_manager.logger
@@ -57,7 +58,7 @@ class GithubPaginator(collections.abc.Sequence):
 
         num_pages = self.get_last_page_number(self.url)
 
-        print(f"Num pages: {num_pages}")
+        self.logger.info(f"Num pages: {num_pages}")
 
         params = {"page": num_pages}
         url = add_query_params(self.url, params)
@@ -97,7 +98,7 @@ class GithubPaginator(collections.abc.Sequence):
 
     def hit_api(self, url: str, method='GET') -> httpx.Response:
 
-        print(f"Hitting endpoint with {method} request: {url}...\n")
+        self.logger.info(f"Hitting endpoint with {method} request: {url}...\n")
 
         with httpx.Client() as client:
 
@@ -106,11 +107,11 @@ class GithubPaginator(collections.abc.Sequence):
                     method=method, url=url, auth=self.key_manager)
 
             except TimeoutError:
-                print("Request timed out. Sleeping 10 seconds and trying again...\n")
+                self.logger.info("Request timed out. Sleeping 10 seconds and trying again...\n")
                 time.sleep(10)
                 return None
             except httpx.TimeoutException:
-                print("httpx.ReadTimeout. Sleeping 10 seconds and trying again...\n")
+                self.logger.info("httpx.ReadTimeout. Sleeping 10 seconds and trying again...\n")
                 time.sleep(10)
                 return None
 
@@ -184,7 +185,7 @@ class GithubPaginator(collections.abc.Sequence):
             index = 1
             while len(tasks) > 0:
 
-                print(f"Batch {index}")
+                self.logger.info(f"Batch {index}")
                 data_list = await asyncio.gather(*tasks[:1])
             
                 del tasks[:1]
@@ -193,17 +194,17 @@ class GithubPaginator(collections.abc.Sequence):
                     yield data
 
     async def async_hit_api(self, client, url, method='GET'):
-        # print(f"Hitting endpoint with {method} request: {url}...\n")
+        # self.logger.info(f"Hitting endpoint with {method} request: {url}...\n")
 
         try:
             response = await client.request(method=method, url=url, auth=self.key_manager)
 
         except TimeoutError:
-            print("Request timed out. Sleeping 10 seconds and trying again...\n")
+            self.logger.info("Request timed out. Sleeping 10 seconds and trying again...\n")
             time.sleep(10)
             return None
 
-        print(url)
+        self.logger.info(url)
 
         return response
 
@@ -301,16 +302,16 @@ def add_query_params(url: str, additional_params: dict) -> str:
 
 def process_dict_response(response: httpx.Response, page_data: dict):
     
-    print("Request returned a dict: {}\n".format(page_data))
+    self.logger.info("Request returned a dict: {}\n".format(page_data))
     if page_data['message'] == "Not Found":
-        print(
+        self.logger.info(
             "Github repo was not found or does not exist for endpoint: "
             f"{response.url}\n"
         )
         return "break"
 
     if "You have exceeded a secondary rate limit. Please wait a few minutes before you try again" in page_data['message']:
-        print('\n\n\n\nSleeping for 100 seconds due to secondary rate limit issue.\n\n\n\n')
+        self.logger.info('\n\n\n\nSleeping for 100 seconds due to secondary rate limit issue.\n\n\n\n')
         time.sleep(100)
 
         return "decrease_attempts"
@@ -321,17 +322,17 @@ def process_dict_response(response: httpx.Response, page_data: dict):
         return "decrease_attempts"
 
     if page_data['message'] == "Bad credentials":
-        print("\n\n\n\n\n\n\n POSSIBLY BAD TOKEN \n\n\n\n\n\n\n")
+        self.logger.info("\n\n\n\n\n\n\n POSSIBLY BAD TOKEN \n\n\n\n\n\n\n")
         #self.update_rate_limit(response, bad_credentials=True, platform=platform)
         return "bad_credentials"
 
 def process_str_response(response: httpx.Response, page_data: str):
-        print(f"Warning! page_data was string: {page_data}\n")
+        self.logger.info(f"Warning! page_data was string: {page_data}\n")
         if "<!DOCTYPE html>" in page_data:
-            print("HTML was returned, trying again...\n")
+            self.logger.info("HTML was returned, trying again...\n")
             return "html_response", False
         elif len(page_data) == 0:
-            print("Empty string, trying again...\n")
+            self.logger.info("Empty string, trying again...\n")
             return "empty_string", False
         else:
             try:
