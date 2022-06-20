@@ -226,12 +226,12 @@ def facade_commits_model( message: str):
     session.cfg.db_people.close()
 
 @app.task
-def facade_grab_contribs():
+def facade_grab_contribs(repo_id):
     logger = get_task_logger(facade_grab_contribs.name)
     session = FacadeSession(logger)
-
-    #Give analysis the github interface so that it can make API calls
-    analysis(session.cfg, multithreaded, session=session)
+    
+    grab_committer_list(session,repo_id)
+    
 
 #Method to parallelize, takes a queue of data and iterates over it
 
