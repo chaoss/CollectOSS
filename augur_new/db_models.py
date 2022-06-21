@@ -705,17 +705,14 @@ class IssueLabels(db.Model):
 
 class IssueMessageRef(db.Model):
     issue_msg_ref_id = db.Column(
-        db.BigInteger, primary_key=True, nullable=False)
-    issue_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.issues.issue_id', name='fk_issue_message_ref_issues_1',
-                         ondelete="RESTRICT", onupdate="CASCADE", initially="DEFERRED", deferrable=True))
+        db.Integer, primary_key=True, nullable=False)
+    issue_id = db.Column(db.BigInteger, nullable=False)
     repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='fk_repo_id_fk1',
-                        ondelete="RESTRICT", onupdate="CASCADE", initially="DEFERRED", deferrable=True))
+                        ondelete="RESTRICT", onupdate="CASCADE", initially="DEFERRED", deferrable=True), nullable=False)
     msg_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.message.msg_id', name='fk_issue_message_ref_message_1',
-                       ondelete="RESTRICT", onupdate="CASCADE", initially="DEFERRED", deferrable=True))
-    issue_msg_ref_src_node_id = db.Column(db.String(
+                       ondelete="RESTRICT", onupdate="CASCADE", initially="DEFERRED", deferrable=True), nullable=False)
+    msg_node_id = db.Column(db.String(
     ), comment="This character based identifier comes from the source. In the case of GitHub, it is the id that is the first field returned from the issue comments API")
-    issue_msg_ref_src_comment_id = db.Column(
-        db.BigInteger, comment="This ID comes from the source. In the case of GitHub, it is the id that is the first field returned from the issue comments API")
     tool_source = db.Column(db.String())
     tool_version = db.Column(db.String())
     data_source = db.Column(db.String())
@@ -728,9 +725,16 @@ class IssueMessageRef(db.Model):
     __tablename__ = 'issue_message_ref'
     __table_args__ = (
 
-        # insert on
-        UniqueConstraint('issue_msg_ref_src_comment_id',
-                         'tool_source', name='repo-issue'),
+        ForeignKeyConstraint([issue_id, repo_id],
+                            ["augur_data.issues.issue_id", 
+                            "augur_data.issues.repo_id"], ondelete="CASCADE", onupdate="CASCADE"),
+        
+        ForeignKeyConstraint([msg_id, repo_id],
+                    ["augur_data.message.msg_id", 
+                    "augur_data.message.repo_id"], ondelete="CASCADE", onupdate="CASCADE"),
+
+        UniqueConstraint('repo_id', 'issue_id', 'msg_id',
+                         name='unique_event_id_key'),
         {"schema": "augur_data"}
     )
 
