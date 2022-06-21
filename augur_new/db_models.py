@@ -595,9 +595,8 @@ class Exclude(db.Model):
 # TODO: Add relationship for cntrb_id
 class IssueAssignees(db.Model):
     issue_assignee_id = db.Column(
-        db.BigInteger, primary_key=True, nullable=False)
-    issue_id = db.Column(db.BigInteger, db.ForeignKey(
-        'augur_data.issues.issue_id', name='fk_issue_assignees_issues_1'))
+        db.BigInteger, primary_key=True)
+    issue_id = db.Column(db.BigInteger)
     repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id',
                         name='fk_issue_assignee_repo_id', ondelete="RESTRICT", onupdate="CASCADE"))
     cntrb_id = db.Column(db.BigInteger, db.ForeignKey(
@@ -631,7 +630,7 @@ class IssueAssignees(db.Model):
 
 
 class IssueEvents(db.Model):
-    event_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+    event_id = db.Column(db.BigInteger, primary_key=True,)
     issue_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.issues.issue_id',
                          name='fk_issue_events_issues_1', ondelete="RESTRICT", onupdate="CASCADE"), nullable=False)
     repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id',
