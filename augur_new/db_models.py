@@ -743,13 +743,11 @@ class IssueMessageRef(db.Model):
 
 
 class Issues(db.Model):
-    issue_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+    issue_id = db.Column(db.BigInteger, primary_key=True)
     repo_id = db.Column(db.BigInteger, db.ForeignKey(
-        'augur_data.repo.repo_id', name='fk_issues_repo', ondelete="CASCADE", onupdate="CASCADE"))
+        'augur_data.repo.repo_id', name='fk_issues_repo', ondelete="CASCADE", onupdate="CASCADE"),primary_key=True)
     reporter_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.contributors.cntrb_id',
                             name='fk_issues_contributors_2'), comment="The ID of the person who opened the issue. ")
-    pull_request = db.Column(db.BigInteger)
-    pull_request_id = db.Column(db.BigInteger)
     created_at = db.Column(db.TIMESTAMP())
     issue_title = db.Column(db.String())
     issue_body = db.Column(db.String())
