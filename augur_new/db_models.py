@@ -1152,6 +1152,10 @@ class PullRequestAssignees(db.Model):
     __tablename__ = 'pull_request_assignees'
     __table_args__ = (
 
+        ForeignKeyConstraint([pull_request_id, repo_id],
+                            ["augur_data.pull_requests.pull_request_id", 
+                            "augur_data.pull_requests.repo_id"], ondelete="CASCADE", onupdate="CASCADE"),
+
         UniqueConstraint('repo_id', 'pull_request_id', 'pr_assignee_src_id', name='pr-assignee-unique'),
         db.Index("pr_meta_cntrb-idx", cntrb_id),
         {"schema": "augur_data"}
