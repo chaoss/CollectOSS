@@ -17,14 +17,24 @@ import collections
 
 #Should take the query and two page variables for pagination
 class GraphQlPageCollection(collections.abc.Sequence):
-    def __init__(self,query,client,numPerPage=100):
+    #Bind is needed for things like query by repo. Contains bind variables for the graphql query
+    def __init__(self,query,client,bind={},numPerPage=100):
         self.per_page = numPerPage
         self.query = query
         self.client = client
 
         self.url = "https://api.github.com/graphql"
 
+        self.page_cache = []
+
     def __getitem__(self, index: int) -> dict:
+        #first try cache
+        try:
+            return self.page_cache[index]
+        except KeyError:
+            pass
+
+
         #borrowed from the default github paginator
         items_page = (index // self.per_page) + 1
 
@@ -32,7 +42,23 @@ class GraphQlPageCollection(collections.abc.Sequence):
             "numRecords" : self.per_page,
             "cursor"    : None
         }
-        pass
+
+        params.update(bind)
+
+
+        for page in range(items_page):
+            result = self.client.execute(self.query,variable_values=params)
+
+            self.page_cache += result[params['values'][0]][params['values'][1]]
+            
+            #check if there is a next page to paginate. (graphql doesn't support random access)
+            if result['pageInfo']['hasNextPage']:
+                params['cursor'] = result['pageInfo']['endCursor']
+            else:
+                break
+        
+
+        return self.page_cache[index]
 
 
 class GitHubRepo():
@@ -61,3 +87,48 @@ class GitHubRepo():
         transport = AIOHTTPTransport(url=self.url,headers=self.headers)
         client = Client(transport=transport)
         return client
+    
+    def get_issues_collection(self):
+        query = gql("""
+            query($numRecords: Int!, $cursor: String) {
+                repository(owner:$owner, name:$repo) {
+                    issues(first: $numRecords, after:$cursor) {
+                        edges {
+                            node {
+                                title
+                                body
+                                closed
+                                url
+                                labels(first:5) {
+                                    edges {
+                                        node {
+                                            name
+                                        }
+                                    }
+                                createdAt
+                                databaseId
+                                }
+                        
+                            }
+                        }
+                        pageInfo {
+                            hasNextPage
+                            endCursor
+                        }
+                    }
+                }
+            }
+        """)
+
+        values = ("repository","issues")
+        params = {
+            'owner' : self.owner,
+            'repo' : self.repo,
+            'values' : values
+        }
+
+        
+
+        issueCollection = GraphQlPageCollection(query, self.gqlClient,bind=params)
+
+        return issueCollection
