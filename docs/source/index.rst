@@ -33,7 +33,7 @@ Augur’s main focus is to measure the overall health and sustainability of open
 
 Augur gathers trace data for a group of repositories, normalize it inot our data model, and provide a variety of metrics about the said data.
 
-This software is developed as part of the CHAOSS (Community Health Analytics Open Source Software) project. Many of our metrics are implementations of the metrics defined by our awesome community. You can find more information about how to get involved on the CHAOSS website. If you want to see augur in action, you can view CHAOSS’s augur instance.
+This software is developed as part of the CHAOSS (Community Health Analytics Open Source Software) project. Many of our metrics are implementations of the metrics defined by our awesome community. You can find more information about how to get involved on the CHAOSS website. If you want to see augur in action, you can view some examples of augur instance in the following `sites <https://www.augurlabs.io/live-examples/>`_.
 
 Current maintainers
 --------------------
