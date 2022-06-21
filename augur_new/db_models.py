@@ -595,15 +595,14 @@ class Exclude(db.Model):
 # TODO: Add relationship for cntrb_id
 class IssueAssignees(db.Model):
     issue_assignee_id = db.Column(
-        db.Integer, primary_key=True)
+        db.BigInteger, primary_key=True)
     issue_id = db.Column(db.BigInteger)
-    repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id',
-                        name='fk_issue_assignee_repo_id', ondelete="RESTRICT", onupdate="CASCADE"))
+    repo_id = db.Column(db.BigInteger)
     cntrb_id = db.Column(db.BigInteger, db.ForeignKey(
         'augur_data.contributors.cntrb_id', name='fk_issue_assignees_contributors_1'))
     issue_assignee_src_id = db.Column(
         db.BigInteger, comment="This ID comes from the source. In the case of GitHub, it is the id that is the first field returned from the issue events API in the issue_assignees embedded JSON object. We may discover it is an ID for the person themselves; but my hypothesis is that its not.")
-    issue_assignee_src_node_id = db.Column(db.String(
+    issue_assignee_src_node = db.Column(db.String(
     ), comment="This character based identifier comes from the source. In the case of GitHub, it is the id that is the second field returned from the issue events API in the issue_assignees embedded JSON object. We may discover it is an ID for the person themselves; but my hypothesis is that its not.")
     tool_source = db.Column(db.String())
     tool_version = db.Column(db.String())
@@ -614,13 +613,10 @@ class IssueAssignees(db.Model):
     __tablename__ = 'issue_assignees'
     __table_args__ = (
 
+        UniqueConstraint('issue_id', 'repo_id', 'issue_assignee_src_id', name='unique_event_id_key'),
         ForeignKeyConstraint([issue_id, repo_id],
                             ["augur_data.issues.issue_id", 
                             "augur_data.issues.repo_id"], ondelete="CASCADE", onupdate="CASCADE"),
-
-        UniqueConstraint('repo_id', 'issue_id', 'issue_assignee_src_id',
-                         name='unique_event_id_key'),
-
         db.Index("issue-cntrb-assign-idx-1", cntrb_id),
         {"schema": "augur_data"}
     )
@@ -630,10 +626,9 @@ class IssueAssignees(db.Model):
 
 
 class IssueEvents(db.Model):
-    event_id = db.Column(db.Integer, primary_key=True)
-    issue_id = db.Column(db.BigInteger, nullable=False)
-    repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id',
-                        name='fk_issue_events_repo', ondelete="RESTRICT", onupdate="CASCADE"), nullable=False)
+    event_id = db.Column(db.BigInteger, primary_key=True)
+    issue_id = db.Column(db.BigInteger)
+    repo_id = db.Column(db.BigInteger)
     cntrb_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.contributors.cntrb_id',
                          name='fk_issue_events_contributors_1', ondelete="RESTRICT", onupdate="CASCADE"), nullable=False)
     action = db.Column(db.String(), nullable=False)
@@ -641,7 +636,7 @@ class IssueEvents(db.Model):
     created_at = db.Column(db.TIMESTAMP(), nullable=False,
                            server_default=func.current_timestamp())
     node_id = db.Column(db.String(), comment="This should be renamed to issue_event_src_node_id, as its the varchar identifier in GitHub and likely common in other sources as well. However, since it was created before we came to this naming standard and workers are built around it, we have it simply named as node_id. Anywhere you see node_id in the schema, it comes from GitHubs terminology.")
-    event_url = db.Column(db.String())
+    node_url = db.Column(db.String())
     issue_event_src_id = db.Column(
         db.BigInteger, comment="This ID comes from the source. In the case of GitHub, it is the id that is the first field returned from the issue events API")
     tool_source = db.Column(db.String())
@@ -655,12 +650,13 @@ class IssueEvents(db.Model):
     __tablename__ = 'issue_events'
     __table_args__ = (
 
+        # contstraint to determine whether to insert or not
+        UniqueConstraint('repo_id', 'issue_event_src_id',
+                         name='unique_event_id_key'),
+
         ForeignKeyConstraint([issue_id, repo_id],
                             ["augur_data.issues.issue_id", 
                             "augur_data.issues.repo_id"], ondelete="CASCADE", onupdate="CASCADE"),
-
-        UniqueConstraint('repo_id', 'issue_event_src_id',
-                         name='unique_event_id_key'),
 
         db.Index("issue-cntrb-idx2", issue_event_src_id),
         db.Index("issue_events_ibfk_1", issue_id),
@@ -672,15 +668,14 @@ class IssueEvents(db.Model):
 
 
 class IssueLabels(db.Model):
-    issue_label_id = db.Column(db.Integer, primary_key=True)
-    issue_id = db.Column(db.BigInteger, nullable=False)
-    repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id',
-                        name='fk_issue_labels_repo_id', ondelete="RESTRICT", onupdate="CASCADE"), nullable=False)
+    issue_label_id = db.Column(db.BigInteger, primary_key=True)
+    issue_id = db.Column(db.BigInteger)
+    repo_id = db.Column(db.BigInteger)
     label_text = db.Column(db.String())
     label_description = db.Column(db.String())
     label_color = db.Column(db.String())
     label_src_id = db.Column(
-        db.BigInteger, comment="This character based identifier (node) comes from the source. In the case of GitHub, it is the id that is the second field returned from the issue events API JSON subsection for issues.", nullable=False)
+        db.BigInteger, comment="This character based identifier (node) comes from the source. In the case of GitHub, it is the id that is the second field returned from the issue events API JSON subsection for issues.")
     label_src_node_id = db.Column(db.String())
     tool_source = db.Column(db.String())
     tool_version = db.Column(db.String())
@@ -690,13 +685,13 @@ class IssueLabels(db.Model):
 
     __tablename__ = 'issue_labels'
     __table_args__ = (
+        # insert on
+        UniqueConstraint('repo_id', 'issue_id', 'label_src_id', name='unique_issue_label'),
 
         ForeignKeyConstraint([issue_id, repo_id],
                             ["augur_data.issues.issue_id", 
                             "augur_data.issues.repo_id"], ondelete="CASCADE", onupdate="CASCADE"),
 
-        UniqueConstraint('repo_id', 'issue_id', 'label_src_id',
-                         name='unique_event_id_key'),
         {"schema": "augur_data"}
     )
 
@@ -704,15 +699,15 @@ class IssueLabels(db.Model):
 
 
 class IssueMessageRef(db.Model):
-    issue_msg_ref_id = db.Column(
-        db.Integer, primary_key=True, nullable=False)
-    issue_id = db.Column(db.BigInteger, nullable=False)
-    repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='fk_repo_id_fk1',
-                        ondelete="RESTRICT", onupdate="CASCADE", initially="DEFERRED", deferrable=True), nullable=False)
+    issue_msg_ref_id = db.Column(db.BigInteger, primary_key=True)
+    issue_id = db.Column(db.BigInteger)
+    repo_id = db.Column(db.BigInteger)
     msg_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.message.msg_id', name='fk_issue_message_ref_message_1',
-                       ondelete="RESTRICT", onupdate="CASCADE", initially="DEFERRED", deferrable=True), nullable=False)
-    msg_node_id = db.Column(db.String(
+                       ondelete="RESTRICT", onupdate="CASCADE", initially="DEFERRED", deferrable=True))
+    issue_msg_ref_src_node_id = db.Column(db.String(
     ), comment="This character based identifier comes from the source. In the case of GitHub, it is the id that is the first field returned from the issue comments API")
+    issue_msg_ref_src_comment_id = db.Column(
+        db.BigInteger, comment="This ID comes from the source. In the case of GitHub, it is the id that is the first field returned from the issue comments API")
     tool_source = db.Column(db.String())
     tool_version = db.Column(db.String())
     data_source = db.Column(db.String())
@@ -725,16 +720,13 @@ class IssueMessageRef(db.Model):
     __tablename__ = 'issue_message_ref'
     __table_args__ = (
 
+        # insert on
+        UniqueConstraint('msg_id', 'repo_id', name='repo-issue'),
+
         ForeignKeyConstraint([issue_id, repo_id],
                             ["augur_data.issues.issue_id", 
-                            "augur_data.issues.repo_id"], ondelete="CASCADE", onupdate="CASCADE"),
-        
-        ForeignKeyConstraint([msg_id, repo_id],
-                    ["augur_data.message.msg_id", 
-                    "augur_data.message.repo_id"], ondelete="CASCADE", onupdate="CASCADE"),
+                            "augur_data.issues.repo_id"], ondelete="RESTRICT", onupdate="CASCADE", initially="DEFERRED", deferrable=True),
 
-        UniqueConstraint('repo_id', 'issue_id', 'msg_id',
-                         name='unique_event_id_key'),
         {"schema": "augur_data"}
     )
 
@@ -744,10 +736,12 @@ class IssueMessageRef(db.Model):
 
 class Issues(db.Model):
     issue_id = db.Column(db.BigInteger, primary_key=True)
-    repo_id = db.Column(db.BigInteger, db.ForeignKey(
-        'augur_data.repo.repo_id', name='fk_issues_repo', ondelete="CASCADE", onupdate="CASCADE"),primary_key=True)
+    repo_id = db.Column(db.BigInteger,  db.ForeignKey(
+        'augur_data.repo.repo_id', name='fk_issues_repo', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
     reporter_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.contributors.cntrb_id',
                             name='fk_issues_contributors_2'), comment="The ID of the person who opened the issue. ")
+    pull_request = db.Column(db.BigInteger)
+    pull_request_id = db.Column(db.BigInteger)
     created_at = db.Column(db.TIMESTAMP())
     issue_title = db.Column(db.String())
     issue_body = db.Column(db.String())
@@ -795,6 +789,7 @@ class Issues(db.Model):
         db.Index("issues_ibfk_1", repo_id),
         db.Index("issues_ibfk_2", reporter_id),
         db.Index("issues_ibfk_4", pull_request_id),
+        UniqueConstraint('issue_url', name='issue-unique'),
         {"schema": "augur_data"}
     )
 
@@ -934,13 +929,13 @@ class LstmAnomalyResults(db.Model):
 
 
 class Message(db.Model):
-    msg_id = db.Column(db.BigInteger, primary_key=True)
+    msg_id = db.Column(db.BigInteger, primary_key=True, autoincrement=False)
     rgls_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo_groups_list_serve.rgls_id',
                         name='fk_message_repo_groups_list_serve_1', ondelete="CASCADE", onupdate="CASCADE"))
     platform_msg_id = db.Column(db.BigInteger)
     platform_node_id = db.Column(db.String())
     repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='fk_message_repoid',
-                        ondelete="CASCADE", onupdate="CASCADE", initially="DEFERRED", deferrable=True), nullable=False)
+                        ondelete="CASCADE", onupdate="CASCADE", initially="DEFERRED", deferrable=True))
     cntrb_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.contributors.cntrb_id', name='fk_message_contributors_1',
                          ondelete="CASCADE", onupdate="CASCADE"), comment="Not populated for mailing lists. Populated for GitHub issues. ")
     msg_text = db.Column(db.String())
@@ -968,7 +963,7 @@ class Message(db.Model):
 
     __tablename__ = 'message'
     __table_args__ = (
-        UniqueConstraint('repo_id', 'msg_id', name='gh-message'),
+        UniqueConstraint('platform_msg_id', name='gh-message'),
         db.Index("messagegrouper", msg_id, rgls_id, unique=True),
         db.Index("msg-cntrb-id-idx", cntrb_id),
         db.Index("platformgrouper", msg_id, pltfrm_id),
@@ -1104,8 +1099,9 @@ class Platform(db.Model):
 
 class PullRequestAnalysis(db.Model):
     pull_request_analysis_id = db.Column(
-        db.Integer, primary_key=True)
-    pull_request_id = db.Column(db.BigInteger, nullable=False), comment="It would be better if the pull request worker is run first to fetch the latest PRs before analyzing")
+        db.BigInteger, primary_key=True)
+    pull_request_id = db.Column(db.BigInteger, comment="It would be better if the pull request worker is run first to fetch the latest PRs before analyzing")
+    repo_id = db.Column(db.BigInteger)
     merge_probability = db.Column(db.Numeric(
         precision=256, scale=250), comment="Indicates the probability of the PR being merged")
     mechanism = db.Column(db.String(
@@ -1120,7 +1116,7 @@ class PullRequestAnalysis(db.Model):
 
     __tablename__ = 'pull_request_analysis'
     __table_args__ = (
-
+        UniqueConstraint('repo_id', 'pull_request_id', name='pr-assignee-unique'),
         ForeignKeyConstraint([pull_request_id, repo_id],
                             ["augur_data.pull_requests.pull_request_id", 
                             "augur_data.pull_requests.repo_id"], ondelete="CASCADE", onupdate="CASCADE"),
@@ -1135,14 +1131,13 @@ class PullRequestAnalysis(db.Model):
 
 
 class PullRequestAssignees(db.Model):
-    pr_assignee_id = db.Column(
-        db.Integer, primary_key=True)
-    pull_request_id = db.Column(db.BigInteger, nullable=False)
-    repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='fk_pull_request_assignees_repo_id',
-                        ondelete="RESTRICT", onupdate="CASCADE", initially="DEFERRED", deferrable=True), nullable=False)
-    cntrb_id = db.Column(db.BigInteger, db.ForeignKey(
+    pr_assignee_map_id = db.Column(
+        db.BigInteger, primary_key=True)
+    pull_request_id = db.Column(db.BigInteger)
+    repo_id = db.Column(db.BigInteger)
+    contrib_id = db.Column(db.BigInteger, db.ForeignKey(
         'augur_data.contributors.cntrb_id', name='fk_pull_request_assignees_contributors_1'))
-    pr_assignee_src_id = db.Column(db.BigInteger, nullable=False)
+    pr_assignee_src_id = db.Column(db.BigInteger)
     tool_source = db.Column(db.String())
     tool_version = db.Column(db.String())
     data_source = db.Column(db.String())
@@ -1151,13 +1146,12 @@ class PullRequestAssignees(db.Model):
 
     __tablename__ = 'pull_request_assignees'
     __table_args__ = (
-
         ForeignKeyConstraint([pull_request_id, repo_id],
                             ["augur_data.pull_requests.pull_request_id", 
-                            "augur_data.pull_requests.repo_id"], ondelete="CASCADE", onupdate="CASCADE"),
+                            "augur_data.pull_requests.repo_id"], ondelete="RESTRICT", onupdate="CASCADE"),
 
+        db.Index("pr_meta_cntrb-idx", contrib_id),
         UniqueConstraint('repo_id', 'pull_request_id', 'pr_assignee_src_id', name='pr-assignee-unique'),
-        db.Index("pr_meta_cntrb-idx", cntrb_id),
         {"schema": "augur_data"}
     )
 
@@ -1165,10 +1159,9 @@ class PullRequestAssignees(db.Model):
 # TODO: I don't think repo_id is needed on this table because it can be achieved by doing Repo.PullRequests.commits
 # TODO: Add relationship for cntrb_id
 class PullRequestCommits(db.Model):
-    pr_cmt_id = db.Column(db.BigInteger, primary_key=True)
-    pull_request_id = db.Column(db.BigInteger, nullable=False)
-    repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id',
-                        name='fk_pull_request_commits_repo_id', ondelete="RESTRICT", onupdate="CASCADE"), nullable=False)
+    pr_cmt_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+    pull_request_id = db.Column(db.BigInteger)
+    repo_id = db.Column(db.BigInteger)
     pr_cmt_sha = db.Column(db.String(), comment="This is the commit SHA for a pull request commit. If the PR is not to the master branch of the main repository (or, in rare cases, from it), then you will NOT find a corresponding commit SHA in the commit table. (see table comment for further explanation). ")
     pr_cmt_node_id = db.Column(db.String())
     pr_cmt_message = db.Column(db.String())
@@ -1185,7 +1178,6 @@ class PullRequestCommits(db.Model):
 
     __tablename__ = 'pull_request_commits'
     __table_args__ = (
-
         ForeignKeyConstraint([pull_request_id, repo_id],
                             ["augur_data.pull_requests.pull_request_id", 
                             "augur_data.pull_requests.repo_id"], ondelete="CASCADE", onupdate="CASCADE"),
@@ -1201,11 +1193,9 @@ class PullRequestCommits(db.Model):
 
 
 class PullRequestEvents(db.Model):
-    pr_event_id = db.Column(db.BigInteger, nullable=False)
-    pull_request_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.pull_requests.pull_request_id',
-                                name='fk_pull_request_events_pull_requests_1', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
-    repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='fkprevent_repo_id',
-                        ondelete="RESTRICT", onupdate="RESTRICT", initially="DEFERRED", deferrable=True))
+    pr_event_id = db.Column(db.BigInteger, primary_key=True)
+    pull_request_id = db.Column(db.BigInteger)
+    repo_id = db.Column(db.BigInteger)
     cntrb_id = db.Column(db.BigInteger, db.ForeignKey(
         'augur_data.contributors.cntrb_id', name='fk_pull_request_events_contributors_1'), nullable=False)
     action = db.Column(db.String(), nullable=False)
@@ -1227,8 +1217,12 @@ class PullRequestEvents(db.Model):
 
     __tablename__ = 'pull_request_events'
     __table_args__ = (
-        PrimaryKeyConstraint('pr_event_id', name='pr_events_pkey'),
-        UniqueConstraint('pr_platform_event_id', 'platform_id',
+        ForeignKeyConstraint([pull_request_id, repo_id],
+                            ["augur_data.pull_requests.pull_request_id", 
+                            "augur_data.pull_requests.repo_id"], ondelete="CASCADE", onupdate="CASCADE"),
+
+        # 
+        UniqueConstraint('repo_id', 'issue_event_src_id',
                          name='unique-pr-event-id'),
         db.Index("pr_events_ibfk_1", pull_request_id),
         db.Index("pr_events_ibfk_2", cntrb_id),
@@ -1239,10 +1233,8 @@ class PullRequestEvents(db.Model):
 # TODO: I don't think repo_id is needed on this table because it can be achieved by doing Repo.PullRequests.files
 class PullRequestFiles(db.Model):
     pr_file_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    pull_request_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.pull_requests.pull_request_id',
-                                name='fk_pull_request_commits_pull_requests_1_copy_1', ondelete="CASCADE", onupdate="CASCADE"))
-    repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='fk_pull_request_files_repo_id',
-                        ondelete="RESTRICT", onupdate="CASCADE", initially="DEFERRED", deferrable=True))
+    pull_request_id = db.Column(db.BigInteger)
+    repo_id = db.Column(db.BigInteger)
     pr_file_additions = db.Column(db.BigInteger)
     pr_file_deletions = db.Column(db.BigInteger)
     pr_file_path = db.Column(db.String())
@@ -1254,6 +1246,11 @@ class PullRequestFiles(db.Model):
 
     __tablename__ = 'pull_request_files'
     __table_args__ = (
+
+        ForeignKeyConstraint([pull_request_id, repo_id],
+                            ["augur_data.pull_requests.pull_request_id", 
+                            "augur_data.pull_requests.repo_id"]),
+
         # TODO: Confirm: Values to determine if insert needed
         UniqueConstraint('pull_request_id', 'repo_id',
                          'pr_file_path', name='prfiles_unique'),
@@ -1265,17 +1262,15 @@ class PullRequestFiles(db.Model):
 
 
 class PullRequestLabels(db.Model):
-    pr_label_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    pull_request_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.pull_requests.pull_request_id',
-                                name='fk_pull_request_labels_pull_requests_1', ondelete="CASCADE", onupdate="CASCADE"))
-    repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id',
-                        name='fk_pull_request_labels_repo', ondelete="RESTRICT", onupdate="CASCADE"))
-    pr_src_id = db.Column(db.BigInteger)
-    pr_src_node_id = db.Column(db.String())
-    pr_src_url = db.Column(db.String())
-    pr_src_description = db.Column(db.String())
-    pr_src_color = db.Column(db.String())
-    pr_src_default_bool = db.Column(db.Boolean())
+    pr_label_id = db.Column(db.BigInteger, primary_key=True)
+    pull_request_id = db.Column(db.BigInteger)
+    repo_id = db.Column(db.BigInteger)
+    label_src_id = db.Column(db.BigInteger)
+    label_node_id = db.Column(db.String())
+    label_url = db.Column(db.String())
+    label_description = db.Column(db.String())
+    label_color = db.Column(db.String())
+    label_default_bool = db.Column(db.Boolean())
     tool_source = db.Column(db.String())
     tool_version = db.Column(db.String())
     data_source = db.Column(db.String())
@@ -1285,8 +1280,12 @@ class PullRequestLabels(db.Model):
     __tablename__ = 'pull_request_labels'
     __table_args__ = (
 
+        ForeignKeyConstraint([pull_request_id, repo_id],
+                            ["augur_data.pull_requests.pull_request_id", 
+                            "augur_data.pull_requests.repo_id"], ondelete="CASCADE", onupdate="CASCADE"),
+
         # TODO: Confirm: Values to determine if insert needed
-        UniqueConstraint('pr_src_id', 'pull_request_id',
+        UniqueConstraint('repo_id', 'pull_request_id', 'pr_src_id',
                          name='unique-pr-src-label-id'),
         {"schema": "augur_data"}
     )
@@ -1295,13 +1294,10 @@ class PullRequestLabels(db.Model):
 
 
 class PullRequestMessageRef(db.Model):
-    pr_msg_ref_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    pull_request_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.pull_requests.pull_request_id',
-                                name='fk_pull_request_message_ref_pull_requests_1', ondelete="RESTRICT", onupdate="CASCADE", initially="DEFERRED", deferrable=True))
-    repo_id = db.Column(db.BigInteger, db.ForeignKey(
-        'augur_data.repo.repo_id', name='fk_pr_repo', ondelete="RESTRICT", onupdate="CASCADE"))
+    pull_request_id = db.Column(db.BigInteger)
+    repo_id = db.Column(db.BigInteger, primary_key=True)
     msg_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.message.msg_id', name='fk_pull_request_message_ref_message_1',
-                       ondelete="RESTRICT", onupdate="CASCADE", initially="DEFERRED", deferrable=True))
+                       ondelete="RESTRICT", onupdate="CASCADE", initially="DEFERRED", deferrable=True), primary_key=True)
     pr_message_ref_src_comment_id = db.Column(db.BigInteger)
     pr_message_ref_src_node_id = db.Column(db.String())
     tool_source = db.Column(db.String())
@@ -1317,6 +1313,10 @@ class PullRequestMessageRef(db.Model):
     __tablename__ = 'pull_request_message_ref'
     __table_args__ = (
 
+        ForeignKeyConstraint([pull_request_id, repo_id],
+                            ["augur_data.pull_requests.pull_request_id", 
+                            "augur_data.pull_requests.repo_id"], ondelete="CASCADE", onupdate="CASCADE"),
+
         # TODO: Confirm: Values to determine if insert needed
         UniqueConstraint('pr_message_ref_src_comment_id',
                          'tool_source', name='pr-comment-nk'),
@@ -1328,11 +1328,9 @@ class PullRequestMessageRef(db.Model):
 
 class PullRequestMeta(db.Model):
     pr_repo_meta_id = db.Column(
-        db.BigInteger, primary_key=True, nullable=False)
-    pull_request_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.pull_requests.pull_request_id',
-                                name='fk_pull_request_meta_pull_requests_1', ondelete="CASCADE", onupdate="CASCADE"))
-    repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='fk_pull_request_repo_meta_repo_id',
-                        ondelete="RESTRICT", onupdate="CASCADE", initially="DEFERRED", deferrable=True))
+        db.BigInteger, primary_key=True)
+    pull_request_id = db.Column(db.BigInteger, primary_key=True)
+    repo_id = db.Column(db.BigInteger, primary_key=True)
     pr_head_or_base = db.Column(db.String(
     ), comment="Each pull request should have one and only one head record; and one and only one base record. ")
     pr_src_meta_label = db.Column(db.String())
@@ -1348,7 +1346,12 @@ class PullRequestMeta(db.Model):
 
     __tablename__ = 'pull_request_meta'
     __table_args__ = (
+        ForeignKeyConstraint([pull_request_id, repo_id],
+                            ["augur_data.pull_requests.pull_request_id", 
+                            "augur_data.pull_requests.repo_id"]),
+
         db.Index("pr_meta-cntrbid-idx", cntrb_id),
+        UniqueConstraint('pull_request_id', 'pr_head_or_base', 'pr_sha', name='pr-meta-unique'),
         {"schema": "augur_data",
          "comment": 'Pull requests contain referencing metadata.  There are a few columns that are discrete. There are also head and base designations for the repo on each side of the pull request. Similar functions exist in GitLab, though the language here is based on GitHub. The JSON Being adapted to as of the development of this schema is here:      "base": {       "label": "chaoss:dev",       "ref": "dev",       "sha": "dc6c6f3947f7dc84ecba3d8bda641ef786e7027d",       "user": {         "login": "chaoss",         "id": 29740296,         "node_id": "MDEyOk9yZ2FuaXphdGlvbjI5NzQwMjk2",         "avatar_url": "https://avatars2.githubusercontent.com/u/29740296?v=4",         "gravatar_id": "",         "url": "https://api.github.com/users/chaoss",         "html_url": "https://github.com/chaoss",         "followers_url": "https://api.github.com/users/chaoss/followers",         "following_url": "https://api.github.com/users/chaoss/following{/other_user}",         "gists_url": "https://api.github.com/users/chaoss/gists{/gist_id}",         "starred_url": "https://api.github.com/users/chaoss/starred{/owner}{/repo}",         "subscriptions_url": "https://api.github.com/users/chaoss/subscriptions",         "organizations_url": "https://api.github.com/users/chaoss/orgs",         "repos_url": "https://api.github.com/users/chaoss/repos",         "events_url": "https://api.github.com/users/chaoss/events{/privacy}",         "received_events_url": "https://api.github.com/users/chaoss/received_events",         "type": "Organization",         "site_admin": false       },       "repo": {         "id": 78134122,         "node_id": "MDEwOlJlcG9zaXRvcnk3ODEzNDEyMg==",         "name": "augur",         "full_name": "chaoss/augur",         "private": false,         "owner": {           "login": "chaoss",           "id": 29740296,           "node_id": "MDEyOk9yZ2FuaXphdGlvbjI5NzQwMjk2",           "avatar_url": "https://avatars2.githubusercontent.com/u/29740296?v=4",           "gravatar_id": "",           "url": "https://api.github.com/users/chaoss",           "html_url": "https://github.com/chaoss",           "followers_url": "https://api.github.com/users/chaoss/followers",           "following_url": "https://api.github.com/users/chaoss/following{/other_user}",           "gists_url": "https://api.github.com/users/chaoss/gists{/gist_id}",           "starred_url": "https://api.github.com/users/chaoss/starred{/owner}{/repo}",           "subscriptions_url": "https://api.github.com/users/chaoss/subscriptions",           "organizations_url": "https://api.github.com/users/chaoss/orgs",           "repos_url": "https://api.github.com/users/chaoss/repos",           "events_url": "https://api.github.com/users/chaoss/events{/privacy}",           "received_events_url": "https://api.github.com/users/chaoss/received_events",           "type": "Organization",           "site_admin": false         }, '}
     )
@@ -1356,43 +1359,45 @@ class PullRequestMeta(db.Model):
 # TODO: Don't know enough about table structure to create relationship
 
 
-class PullRequestRepo(db.Model):
-    pr_repo_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    pr_repo_meta_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.pull_request_meta.pr_repo_meta_id',
-                                name='fk_pull_request_repo_pull_request_meta_1', ondelete="CASCADE", onupdate="CASCADE"))
-    pr_repo_head_or_base = db.Column(db.String(
-    ), comment="For ease of validation checking, we should determine if the repository referenced is the head or base of the pull request. Each pull request should have one and only one of these, which is not enforcable easily in the database.")
-    pr_src_repo_id = db.Column(db.BigInteger)
-    pr_src_node_id = db.Column(db.String())
-    pr_repo_name = db.Column(db.String())
-    pr_repo_full_name = db.Column(db.String())
-    pr_repo_private_bool = db.Column(db.Boolean())
-    pr_cntrb_id = db.Column(db.BigInteger, db.ForeignKey(
-        'augur_data.contributors.cntrb_id', name='fk_pull_request_repo_contributors_1'))
-    tool_source = db.Column(db.String())
-    tool_version = db.Column(db.String())
-    data_source = db.Column(db.String())
-    data_collection_date = db.Column(
-        db.TIMESTAMP(), server_default=func.current_timestamp())
+# class PullRequestRepo(db.Model):
+#     pr_repo_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+#     pr_repo_meta_id = db.Column(db.BigInteger)
+#     pull_request_id = db.Column(db.BigInteger)
+#     pr_repo_head_or_base = db.Column(db.String(
+#     ), comment="For ease of validation checking, we should determine if the repository referenced is the head or base of the pull request. Each pull request should have one and only one of these, which is not enforcable easily in the database.")
+#     pr_src_repo_id = db.Column(db.BigInteger)
+#     pr_src_node_id = db.Column(db.String())
+#     pr_repo_name = db.Column(db.String())
+#     pr_repo_full_name = db.Column(db.String())
+#     pr_repo_private_bool = db.Column(db.Boolean())
+#     pr_cntrb_id = db.Column(db.BigInteger, db.ForeignKey(
+#         'augur_data.contributors.cntrb_id', name='fk_pull_request_repo_contributors_1'))
+#     tool_source = db.Column(db.String())
+#     tool_version = db.Column(db.String())
+#     data_source = db.Column(db.String())
+#     data_collection_date = db.Column(
+#         db.TIMESTAMP(), server_default=func.current_timestamp())
 
-    __tablename__ = 'pull_request_repo'
-    __table_args__ = (
-        db.Index("pr-cntrb-idx-repo", pr_cntrb_id),
-        {"schema": "augur_data",
-         "comment": "This table is for storing information about forks that exist as part of a pull request. Generally we do not want to track these like ordinary repositories. "}
-    )
+#     __tablename__ = 'pull_request_repo'
+#     __table_args__ = (
+#         ForeignKeyConstraint([pull_request_id, pr_repo_meta_id],
+#                             ["augur_data.pull_request_meta.pull_request_id", 
+#                             "augur_data.pull_request_meta.pr_repo_meta_id"], ondelete="CASCADE", onupdate="CASCADE"),
+#         db.Index("pr-cntrb-idx-repo", pr_cntrb_id),
+#         {"schema": "augur_data",
+#          "comment": "This table is for storing information about forks that exist as part of a pull request. Generally we do not want to track these like ordinary repositories. "}
+#     )
 
 # TODO: I don't think repo_id is needed on this table because it can be achieved by doing Repo.PullRequests.reviews.msg_ref
 
 
 class PullRequestReviewMessageRef(db.Model):
-    pr_review_msg_ref_id = db.Column(db.BigInteger, nullable=False)
-    pr_review_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.pull_request_reviews.pr_review_id', name='fk_pull_request_review_message_ref_pull_request_reviews_1',
-                             ondelete="RESTRICT", onupdate="CASCADE", initially="DEFERRED", deferrable=True), nullable=False)
+    pr_review_id = db.Column(db.BigInteger, primary_key=True)
+    pull_request_id = db.Column(db.BigInteger, primary_key=True)
     repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='fk_review_repo',
-                        ondelete="RESTRICT", onupdate="CASCADE", initially="DEFERRED", deferrable=True))
+                        ondelete="RESTRICT", onupdate="CASCADE", initially="DEFERRED", deferrable=True), primary_key=True)
     msg_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.message.msg_id', name='fk_pull_request_review_message_ref_message_1',
-                       ondelete="RESTRICT", onupdate="CASCADE", initially="DEFERRED", deferrable=True), nullable=False)
+                       ondelete="RESTRICT", onupdate="CASCADE", initially="DEFERRED", deferrable=True), primary_key=True)
     pr_review_msg_url = db.Column(db.String())
     pr_review_src_id = db.Column(db.BigInteger)
     pr_review_msg_src_id = db.Column(db.BigInteger)
@@ -1424,8 +1429,10 @@ class PullRequestReviewMessageRef(db.Model):
 
     __tablename__ = 'pull_request_review_message_ref'
     __table_args__ = (
-        PrimaryKeyConstraint('pr_review_msg_ref_id',
-                             name='pr_review_msg_ref_id'),
+        ForeignKeyConstraint([pull_request_id, repo_id],
+                    ["augur_data.pull_requests.pull_request_id", 
+                    "augur_data.pull_requests.repo_id"], ondelete="CASCADE", onupdate="CASCADE"),
+
         UniqueConstraint('pr_review_msg_src_id',
                          'tool_source', name='pr-review-nk'),
         {"schema": "augur_data"}
@@ -1438,8 +1445,7 @@ class PullRequestReviewMessageRef(db.Model):
 class PullRequestReviewers(db.Model):
     pr_reviewer_map_id = db.Column(
         db.BigInteger, primary_key=True, nullable=False)
-    pull_request_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.pull_requests.pull_request_id',
-                                name='fk_pull_request_reviewers_pull_requests_1', ondelete="CASCADE", onupdate="CASCADE"))
+    pull_request_id = db.Column(db.BigInteger)
     pr_source_id = db.Column(
         db.BigInteger, comment="The platform ID for the pull/merge request. Used as part of the natural key, along with pr_reviewer_src_id in this table. ")
     repo_id = db.Column(db.BigInteger)
@@ -1455,8 +1461,13 @@ class PullRequestReviewers(db.Model):
 
     __tablename__ = 'pull_request_reviewers'
     __table_args__ = (
+        ForeignKeyConstraint([pull_request_id, repo_id],
+                            ["augur_data.pull_requests.pull_request_id", 
+                            "augur_data.pull_requests.repo_id"], ondelete="CASCADE", onupdate="CASCADE"),
+
         UniqueConstraint('pr_source_id', 'pr_reviewer_src_id',
                          name='unique_pr_src_reviewer_key', initially="DEFERRED", deferrable=True),
+        UniqueConstraint('pull_request_id', 'pr_reviewer_src_id', name='pr-reviewers-unique'),
         db.Index("pr-reviewers-cntrb-idx1", cntrb_id),
         {"schema": "augur_data"}
     )
@@ -1466,11 +1477,9 @@ class PullRequestReviewers(db.Model):
 
 
 class PullRequestReviews(db.Model):
-    pr_review_id = db.Column(db.BigInteger, nullable=False)
-    pull_request_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.pull_requests.pull_request_id',
-                                name='fk_pull_request_reviews_pull_requests_1', ondelete="RESTRICT", onupdate="CASCADE"), nullable=False)
-    repo_id = db.Column(db.BigInteger, db.ForeignKey(
-        'augur_data.repo.repo_id', name='fk_repo_review', ondelete="RESTRICT", onupdate="CASCADE"))
+    pr_review_id = db.Column(db.BigInteger, primary_key=True)
+    pull_request_id = db.Column(db.BigInteger, primary_key=True)
+    repo_id = db.Column(db.BigInteger, primary_key=True)
     cntrb_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.contributors.cntrb_id',
                          name='fk_pull_request_reviews_contributors_1', ondelete="RESTRICT", onupdate="CASCADE"), nullable=False)
     pr_review_author_association = db.Column(db.String())
@@ -1503,7 +1512,9 @@ class PullRequestReviews(db.Model):
 
     __tablename__ = 'pull_request_reviews'
     __table_args__ = (
-        PrimaryKeyConstraint('pr_review_id', name='pull_request_review_id'),
+        ForeignKeyConstraint([pull_request_id, repo_id],
+                            ["augur_data.pull_requests.pull_request_id", 
+                            "augur_data.pull_requests.repo_id"], ondelete="CASCADE", onupdate="CASCADE"),
         UniqueConstraint('pr_review_src_id', 'tool_source',
                          name='sourcepr-review-id'),
         {"schema": "augur_data"}
@@ -1512,8 +1523,8 @@ class PullRequestReviews(db.Model):
 
 class PullRequestTeams(db.Model):
     pr_team_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    pull_request_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.pull_requests.pull_request_id',
-                                name='fk_pull_request_teams_pull_requests_1', ondelete="CASCADE", onupdate="CASCADE"))
+    pull_request_id = db.Column(db.BigInteger)
+    repo_id = db.Column(db.BigInteger)
     pr_src_team_id = db.Column(db.BigInteger)
     pr_src_team_node = db.Column(db.String())
     pr_src_team_url = db.Column(db.String())
@@ -1533,6 +1544,9 @@ class PullRequestTeams(db.Model):
 
     __tablename__ = 'pull_request_teams'
     __table_args__ = (
+        ForeignKeyConstraint([pull_request_id, repo_id],
+                    ["augur_data.pull_requests.pull_request_id", 
+                    "augur_data.pull_requests.repo_id"]),
         {"schema": "augur_data"}
     )
 
@@ -1540,9 +1554,9 @@ class PullRequestTeams(db.Model):
 class PullRequests(db.Model):
 
     pull_request_id = db.Column(
-        db.BigInteger, primary_key=True, nullable=False)
-    repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id',
-                        name='fk_pull_requests_repo_1', ondelete="CASCADE", onupdate="CASCADE"), server_default=text('0'))
+        db.BigInteger, primary_key=True)
+    repo_id = db.Column(db.BigInteger, 
+                db.ForeignKey('augur_data.repo.repo_id', name='fk_pull_requests_repo_1', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
     pr_url = db.Column(db.String())
     pr_src_id = db.Column(
         db.BigInteger, comment="The pr_src_id is unique across all of github.")
@@ -1591,51 +1605,6 @@ class PullRequests(db.Model):
     data_collection_date = db.Column(
         db.TIMESTAMP(), server_default=func.current_timestamp())
 
-    def __init__(self, pull_request_id, repo_id,  pr_url, pr_src_id, pr_src_node_id, pr_html_url, pr_diff_url, pr_patch_url, pr_issue_url, pr_augur_issue_id, pr_src_number, pr_src_state, pr_src_locked, pr_src_title,  pr_augur_contributor_id, pr_body, pr_created_at, pr_updated_at, pr_closed_at, pr_merged_at, pr_merge_commit_sha, pr_teams, pr_milestone, pr_commits_url, pr_review_comments_url, pr_review_comment_url, pr_comments_url, pr_statuses_url, pr_meta_head_id, pr_meta_base_id, pr_src_issue_url, pr_src_comments_url, pr_src_review_comments_url, pr_src_commits_url,pr_src_statuses_url, pr_src_author_association,tool_source, tool_version, data_source, labels, assignees, metadata):
-
-        self.pull_request_id = pull_request_id
-        self.repo_id = repo_id
-        self.pr_url = pr_url
-        self.pr_src_id = pr_src_id
-        self.pr_src_node_id = pr_src_node_id
-        self.pr_html_url = pr_html_url
-        self.pr_diff_url = pr_diff_url
-        self.pr_patch_url = pr_patch_url
-        self.pr_issue_url = pr_issue_url
-        self.pr_augur_issue_id = pr_augur_issue_id
-        self.pr_src_number = pr_src_number
-        self.pr_src_state = pr_src_state
-        self.pr_src_locked = pr_src_locked
-        self.pr_src_title = pr_src_title
-        self.pr_augur_contributor_id = pr_augur_contributor_id
-        self.pr_body = pr_body
-        self.pr_created_at = pr_created_at
-        self.pr_updated_at = pr_updated_at
-        self.pr_closed_at = pr_closed_at
-        self.pr_merged_at = pr_merged_at
-        self.pr_merge_commit_sha = pr_merge_commit_sha
-        self.pr_teams = pr_teams
-        self.pr_milestone = pr_milestone
-        self.pr_commits_url = pr_commits_url
-        self.pr_review_comments_url = pr_review_comments_url
-        self.pr_review_comment_url = pr_review_comment_url
-        self.pr_comments_url = pr_comments_url
-        self.pr_statuses_url = pr_statuses_url
-        self.pr_meta_head_id = pr_meta_head_id
-        self.pr_meta_base_id = pr_meta_base_id
-        self.pr_src_issue_url = pr_src_issue_url
-        self.pr_src_comments_url = pr_src_comments_url
-        self.pr_src_review_comments_url = pr_src_review_comments_url
-        self.pr_src_commits_url = pr_src_commits_url
-        self.pr_src_statuses_url = pr_src_statuses_url
-        self.pr_src_author_association = pr_src_author_association
-        self.tool_source = tool_source
-        self.tool_version = tool_version
-        self.data_source = data_source
-
-        self.labels = labels
-        self.assignees = assignees
-        self.metadata = metadata
 
     analysis = relationship("PullRequestAnalysis",
                             back_populates="pull_request")
@@ -1665,6 +1634,7 @@ class PullRequests(db.Model):
                  pr_src_node_id.desc().nullsfirst()),
         db.Index("pull_requests_idx_repo_id_data_datex",
                  repo_id, data_collection_date),
+        UniqueConstraint('pr_url', name='pr-unique'),
         {"schema": "augur_data"}
     )
 
@@ -1698,7 +1668,7 @@ class Releases(db.Model):
 
 
 class Repo(db.Model):
-    repo_id = db.Column(db.BigInteger, nullable=False)
+    repo_id = db.Column(db.BigInteger, primary_key=True, autoincrement=False)
     repo_group_id = db.Column(db.BigInteger, db.ForeignKey(
         'augur_data.repo_groups.repo_group_id', name='fk_repo_repo_groups_1'), nullable=False)
     repo_git = db.Column(db.String(), nullable=False)
@@ -1763,7 +1733,6 @@ class Repo(db.Model):
 
     __tablename__ = 'repo'
     __table_args__ = (
-        PrimaryKeyConstraint('repo_id', name='repounique'),
         db.Index("forked", forked_from),
         db.Index("repo_idx_repo_id_repo_namex", repo_id, repo_name),
         db.Index("repogitindexrep", repo_git),
