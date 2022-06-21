@@ -1135,15 +1135,14 @@ class PullRequestAnalysis(db.Model):
 
 
 class PullRequestAssignees(db.Model):
-    pr_assignee_map_id = db.Column(
-        db.BigInteger, primary_key=True, nullable=False)
-    pull_request_id = db.Column(db.BigInteger, db.ForeignKey(
-        'augur_data.pull_requests.pull_request_id', name='fk_pull_request_assignees_pull_requests_1'))
+    pr_assignee_id = db.Column(
+        db.Integer, primary_key=True)
+    pull_request_id = db.Column(db.BigInteger, nullable=False)
     repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='fk_pull_request_assignees_repo_id',
-                        ondelete="RESTRICT", onupdate="CASCADE", initially="DEFERRED", deferrable=True))
-    contrib_id = db.Column(db.BigInteger, db.ForeignKey(
+                        ondelete="RESTRICT", onupdate="CASCADE", initially="DEFERRED", deferrable=True), nullable=False)
+    cntrb_id = db.Column(db.BigInteger, db.ForeignKey(
         'augur_data.contributors.cntrb_id', name='fk_pull_request_assignees_contributors_1'))
-    pr_assignee_src_id = db.Column(db.BigInteger)
+    pr_assignee_src_id = db.Column(db.BigInteger, nullable=False)
     tool_source = db.Column(db.String())
     tool_version = db.Column(db.String())
     data_source = db.Column(db.String())
@@ -1152,7 +1151,9 @@ class PullRequestAssignees(db.Model):
 
     __tablename__ = 'pull_request_assignees'
     __table_args__ = (
-        db.Index("pr_meta_cntrb-idx", contrib_id),
+
+        UniqueConstraint('repo_id', 'pull_request_id', 'pr_assignee_src_id', name='pr-assignee-unique'),
+        db.Index("pr_meta_cntrb-idx", cntrb_id),
         {"schema": "augur_data"}
     )
 
