@@ -329,6 +329,59 @@ def pull_request_reviews(owner: str, repo: str, pr_number_list: [int]) -> None:
 
 
 
+@app.task
+def issues(owner: str, repo: str) -> None:
+
+    logger = get_task_logger(start.name)
+    session = TaskSession(logger, config)
+
+    print(f"Collecting issues for {owner}/{repo}")
+
+    url = f"https://api.github.com/repos/{owner}/{repo}/issues?state=all"
+
+    # get repo_id or have it passed
+    repo_id = 1
+    tool_source = "Issue Task"
+    tool_version = "2.0"
+    # platform_id = 25150
+    data_source = "Github API"
+
+    issue_natural_keys = ["issue_url"]
+
+    # returns an iterable of all prs at this url
+    issues = GithubPaginator(url, session.oauths, logger)
+
+    # issue_label_dicts = []
+    # issue_assignee_dicts = []
+ 
+
+    # creating a list, because we would like to bulk insert in the future
+    len_issues = len(issues)
+    issue_total = len_issues
+    print(f"Length of issues: {len_issues}")
+    for index, issue in enumerate(issues):
+
+        print(f"Inserting issue {index + 1} of {len_issues}")
+
+        if is_valid_pr_block(issue) is True:
+            issue_total-=1
+            continue
+
+        issue_object = IssueObject(issue, repo_id, tool_source, tool_version, data_source)
+
+        # when the object gets inserted the db_row is added to the object which is a PullRequests orm object (so it contains all the column values)
+        session.insert_data([issue_object], Issues, issue_natural_keys)
+
+    print(f"{issue_total} issues inserted")
+
+def is_valid_pr_block(issue):
+    return (
+        'pull_request' in issue and issue['pull_request']
+        and isinstance(issue['pull_request'], dict) and 'url' in issue['pull_request']
+    )
+
+
+
 
 # start("grafana", "oncall")
 

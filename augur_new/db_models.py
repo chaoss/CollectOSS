@@ -38,6 +38,7 @@ db = SQLAlchemy(app)
 # TODO: Why is there a working_commits and repos_fetch_log in both of the schemas? There classes conflict
 
 # TODO: look at how facade queries it and add index
+# TODO: look at how facade queries it and add index
 class AnalysisLog(db.Model):
     analysis_log_id = db.Column(db.BigInteger, primary_key=True)
     repos_id = db.Column(db.Integer, nullable=False)
@@ -613,7 +614,7 @@ class IssueAssignees(db.Model):
     __tablename__ = 'issue_assignees'
     __table_args__ = (
 
-        UniqueConstraint('issue_id', 'repo_id', 'issue_assignee_src_id', name='unique_event_id_key'),
+        UniqueConstraint('issue_id', 'repo_id', 'issue_assignee_src_id', name='unique-assignee-key'),
         ForeignKeyConstraint([issue_id, repo_id],
                             ["augur_data.issues.issue_id", 
                             "augur_data.issues.repo_id"], ondelete="CASCADE", onupdate="CASCADE"),
@@ -1116,7 +1117,7 @@ class PullRequestAnalysis(db.Model):
 
     __tablename__ = 'pull_request_analysis'
     __table_args__ = (
-        UniqueConstraint('repo_id', 'pull_request_id', name='pr-assignee-unique'),
+        UniqueConstraint('repo_id', 'pull_request_id', name='pr-analysis-unique'),
         ForeignKeyConstraint([pull_request_id, repo_id],
                             ["augur_data.pull_requests.pull_request_id", 
                             "augur_data.pull_requests.repo_id"], ondelete="CASCADE", onupdate="CASCADE"),
@@ -1265,12 +1266,12 @@ class PullRequestLabels(db.Model):
     pr_label_id = db.Column(db.BigInteger, primary_key=True)
     pull_request_id = db.Column(db.BigInteger)
     repo_id = db.Column(db.BigInteger)
-    label_src_id = db.Column(db.BigInteger)
-    label_node_id = db.Column(db.String())
-    label_url = db.Column(db.String())
-    label_description = db.Column(db.String())
-    label_color = db.Column(db.String())
-    label_default_bool = db.Column(db.Boolean())
+    pr_src_id = db.Column(db.BigInteger)
+    pr_src_node_id = db.Column(db.String())
+    pr_src_url = db.Column(db.String())
+    pr_src_description = db.Column(db.String())
+    pr_src_color = db.Column(db.String())
+    pr_src_default_bool = db.Column(db.Boolean())
     tool_source = db.Column(db.String())
     tool_version = db.Column(db.String())
     data_source = db.Column(db.String())

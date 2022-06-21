@@ -52,7 +52,7 @@ class GithubPaginator(collections.abc.Sequence):
         try:
             return data[page_index]
         except KeyError:
-            return None
+            raise IndexError
 
     def __len__(self) -> int:
 
@@ -138,7 +138,7 @@ class GithubPaginator(collections.abc.Sequence):
                 return page_data, response
 
             elif type(page_data) == dict:
-                result = process_dict_response(response, page_data)
+                result = process_dict_response(response, page_data, self.logger.info)
 
                 if result == "break":
                     break
@@ -146,7 +146,7 @@ class GithubPaginator(collections.abc.Sequence):
                     num_attempts -= 1
 
             elif type(page_data) == str:
-                result, data_loaded = process_str_response(response, page_data)
+                result, data_loaded = process_str_response(response, page_data, self.logger.info)
 
                 if data_loaded:
                     return result, response
@@ -300,18 +300,18 @@ def add_query_params(url: str, additional_params: dict) -> str:
 
 # Methods to process api responses
 
-def process_dict_response(response: httpx.Response, page_data: dict):
+def process_dict_response(self, response: httpx.Response, page_data: dict, logger):
     
-    self.logger.info("Request returned a dict: {}\n".format(page_data))
+    logger.info("Request returned a dict: {}\n".format(page_data))
     if page_data['message'] == "Not Found":
-        self.logger.info(
+        logger.info(
             "Github repo was not found or does not exist for endpoint: "
             f"{response.url}\n"
         )
         return "break"
 
     if "You have exceeded a secondary rate limit. Please wait a few minutes before you try again" in page_data['message']:
-        self.logger.info('\n\n\n\nSleeping for 100 seconds due to secondary rate limit issue.\n\n\n\n')
+        logger.info('\n\n\n\nSleeping for 100 seconds due to secondary rate limit issue.\n\n\n\n')
         time.sleep(100)
 
         return "decrease_attempts"
@@ -322,17 +322,17 @@ def process_dict_response(response: httpx.Response, page_data: dict):
         return "decrease_attempts"
 
     if page_data['message'] == "Bad credentials":
-        self.logger.info("\n\n\n\n\n\n\n POSSIBLY BAD TOKEN \n\n\n\n\n\n\n")
+        logger.info("\n\n\n\n\n\n\n POSSIBLY BAD TOKEN \n\n\n\n\n\n\n")
         #self.update_rate_limit(response, bad_credentials=True, platform=platform)
         return "bad_credentials"
 
-def process_str_response(response: httpx.Response, page_data: str):
-        self.logger.info(f"Warning! page_data was string: {page_data}\n")
+def process_str_response(response: httpx.Response, page_data: str, logger):
+        logger.info(f"Warning! page_data was string: {page_data}\n")
         if "<!DOCTYPE html>" in page_data:
-            self.logger.info("HTML was returned, trying again...\n")
+            logger.info("HTML was returned, trying again...\n")
             return "html_response", False
         elif len(page_data) == 0:
-            self.logger.info("Empty string, trying again...\n")
+            logger.info("Empty string, trying again...\n")
             return "empty_string", False
         else:
             try:
