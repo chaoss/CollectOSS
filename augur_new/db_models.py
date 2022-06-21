@@ -1104,7 +1104,7 @@ class Platform(db.Model):
 
 class PullRequestAnalysis(db.Model):
     pull_request_analysis_id = db.Column(
-        db.BigInteger, primary_key=True, nullable=False)
+        db.Integer, primary_key=True)
     pull_request_id = db.Column(db.BigInteger, nullable=False), comment="It would be better if the pull request worker is run first to fetch the latest PRs before analyzing")
     merge_probability = db.Column(db.Numeric(
         precision=256, scale=250), comment="Indicates the probability of the PR being merged")
