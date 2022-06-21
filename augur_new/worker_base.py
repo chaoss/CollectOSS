@@ -57,8 +57,6 @@ class TaskSession(s.orm.Session):
             cursor.close()
             dbapi_connection.autocommit = existing_autocommit
 
-        self.__oauths = OauthKeyManager(self.config,self.engine,self.logger)
-
         super().__init__(self.engine)
 
     def __init_config(self, root_augur_dir: str):
