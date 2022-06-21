@@ -1105,8 +1105,7 @@ class Platform(db.Model):
 class PullRequestAnalysis(db.Model):
     pull_request_analysis_id = db.Column(
         db.BigInteger, primary_key=True, nullable=False)
-    pull_request_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.pull_requests.pull_request_id', name='fk_pull_request_analysis_pull_requests_1',
-                                ondelete="CASCADE", onupdate="CASCADE"), comment="It would be better if the pull request worker is run first to fetch the latest PRs before analyzing")
+    pull_request_id = db.Column(db.BigInteger, nullable=False), comment="It would be better if the pull request worker is run first to fetch the latest PRs before analyzing")
     merge_probability = db.Column(db.Numeric(
         precision=256, scale=250), comment="Indicates the probability of the PR being merged")
     mechanism = db.Column(db.String(
