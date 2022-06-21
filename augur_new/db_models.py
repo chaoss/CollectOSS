@@ -934,13 +934,13 @@ class LstmAnomalyResults(db.Model):
 
 
 class Message(db.Model):
-    msg_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+    msg_id = db.Column(db.BigInteger, primary_key=True)
     rgls_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo_groups_list_serve.rgls_id',
                         name='fk_message_repo_groups_list_serve_1', ondelete="CASCADE", onupdate="CASCADE"))
     platform_msg_id = db.Column(db.BigInteger)
     platform_node_id = db.Column(db.String())
     repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id', name='fk_message_repoid',
-                        ondelete="CASCADE", onupdate="CASCADE", initially="DEFERRED", deferrable=True))
+                        ondelete="CASCADE", onupdate="CASCADE", initially="DEFERRED", deferrable=True), nullable=False)
     cntrb_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.contributors.cntrb_id', name='fk_message_contributors_1',
                          ondelete="CASCADE", onupdate="CASCADE"), comment="Not populated for mailing lists. Populated for GitHub issues. ")
     msg_text = db.Column(db.String())
@@ -968,7 +968,7 @@ class Message(db.Model):
 
     __tablename__ = 'message'
     __table_args__ = (
-        UniqueConstraint('platform_msg_id', 'tool_source', name='gh-message'),
+        UniqueConstraint('repo_id', 'msg_id', name='gh-message'),
         db.Index("messagegrouper", msg_id, rgls_id, unique=True),
         db.Index("msg-cntrb-id-idx", cntrb_id),
         db.Index("platformgrouper", msg_id, pltfrm_id),
@@ -1121,6 +1121,11 @@ class PullRequestAnalysis(db.Model):
 
     __tablename__ = 'pull_request_analysis'
     __table_args__ = (
+
+        ForeignKeyConstraint([pull_request_id, repo_id],
+                            ["augur_data.pull_requests.pull_request_id", 
+                            "augur_data.pull_requests.repo_id"], ondelete="CASCADE", onupdate="CASCADE"),
+
         db.Index("pr_anal_idx", pull_request_id),
         db.Index("probability_idx", merge_probability.desc().nullslast()),
         {"schema": "augur_data"}
