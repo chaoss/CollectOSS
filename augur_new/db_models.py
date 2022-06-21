@@ -1165,11 +1165,10 @@ class PullRequestAssignees(db.Model):
 # TODO: I don't think repo_id is needed on this table because it can be achieved by doing Repo.PullRequests.commits
 # TODO: Add relationship for cntrb_id
 class PullRequestCommits(db.Model):
-    pr_cmt_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    pull_request_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.pull_requests.pull_request_id',
-                                name='fk_pull_request_commits_pull_requests_1', ondelete="CASCADE", onupdate="CASCADE"))
+    pr_cmt_id = db.Column(db.BigInteger, primary_key=True)
+    pull_request_id = db.Column(db.BigInteger, nullable=False)
     repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id',
-                        name='fk_pull_request_commits_repo_id', ondelete="RESTRICT", onupdate="CASCADE"))
+                        name='fk_pull_request_commits_repo_id', ondelete="RESTRICT", onupdate="CASCADE"), nullable=False)
     pr_cmt_sha = db.Column(db.String(), comment="This is the commit SHA for a pull request commit. If the PR is not to the master branch of the main repository (or, in rare cases, from it), then you will NOT find a corresponding commit SHA in the commit table. (see table comment for further explanation). ")
     pr_cmt_node_id = db.Column(db.String())
     pr_cmt_message = db.Column(db.String())
@@ -1186,6 +1185,11 @@ class PullRequestCommits(db.Model):
 
     __tablename__ = 'pull_request_commits'
     __table_args__ = (
+
+        ForeignKeyConstraint([pull_request_id, repo_id],
+                            ["augur_data.pull_requests.pull_request_id", 
+                            "augur_data.pull_requests.repo_id"], ondelete="CASCADE", onupdate="CASCADE"),
+
         UniqueConstraint('pull_request_id', 'repo_id',
                          'pr_cmt_sha', name='pr_commit_nk'),
         {"schema": "augur_data",
