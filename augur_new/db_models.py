@@ -672,16 +672,15 @@ class IssueEvents(db.Model):
 
 
 class IssueLabels(db.Model):
-    issue_label_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
-    issue_id = db.Column(db.BigInteger, db.ForeignKey(
-        'augur_data.issues.issue_id', name='fk_issue_labels_issues_1'))
+    issue_label_id = db.Column(db.Integer, primary_key=True)
+    issue_id = db.Column(db.BigInteger, nullable=False)
     repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id',
-                        name='fk_issue_labels_repo_id', ondelete="RESTRICT", onupdate="CASCADE"))
+                        name='fk_issue_labels_repo_id', ondelete="RESTRICT", onupdate="CASCADE"), nullable=False)
     label_text = db.Column(db.String())
     label_description = db.Column(db.String())
     label_color = db.Column(db.String())
     label_src_id = db.Column(
-        db.BigInteger, comment="This character based identifier (node) comes from the source. In the case of GitHub, it is the id that is the second field returned from the issue events API JSON subsection for issues.")
+        db.BigInteger, comment="This character based identifier (node) comes from the source. In the case of GitHub, it is the id that is the second field returned from the issue events API JSON subsection for issues.", nullable=False)
     label_src_node_id = db.Column(db.String())
     tool_source = db.Column(db.String())
     tool_version = db.Column(db.String())
@@ -691,9 +690,13 @@ class IssueLabels(db.Model):
 
     __tablename__ = 'issue_labels'
     __table_args__ = (
-        # insert on
-        UniqueConstraint('label_src_id', 'issue_id',
-                         name='unique_issue_label'),
+
+        ForeignKeyConstraint([issue_id, repo_id],
+                            ["augur_data.issues.issue_id", 
+                            "augur_data.issues.repo_id"], ondelete="CASCADE", onupdate="CASCADE"),
+
+        UniqueConstraint('repo_id', 'issue_id', 'label_src_id',
+                         name='unique_event_id_key'),
         {"schema": "augur_data"}
     )
 
