@@ -630,11 +630,10 @@ class IssueAssignees(db.Model):
 
 
 class IssueEvents(db.Model):
-    event_id = db.Column(db.BigInteger, primary_key=True)
-    issue_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.issues.issue_id',
-                         name='fk_issue_events_issues_1', ondelete="RESTRICT", onupdate="CASCADE"), nullable=False)
+    event_id = db.Column(db.Integer, primary_key=True)
+    issue_id = db.Column(db.BigInteger, nullable=False)
     repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id',
-                        name='fk_issue_events_repo', ondelete="RESTRICT", onupdate="CASCADE"))
+                        name='fk_issue_events_repo', ondelete="RESTRICT", onupdate="CASCADE"), nullable=False)
     cntrb_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.contributors.cntrb_id',
                          name='fk_issue_events_contributors_1', ondelete="RESTRICT", onupdate="CASCADE"), nullable=False)
     action = db.Column(db.String(), nullable=False)
@@ -642,7 +641,7 @@ class IssueEvents(db.Model):
     created_at = db.Column(db.TIMESTAMP(), nullable=False,
                            server_default=func.current_timestamp())
     node_id = db.Column(db.String(), comment="This should be renamed to issue_event_src_node_id, as its the varchar identifier in GitHub and likely common in other sources as well. However, since it was created before we came to this naming standard and workers are built around it, we have it simply named as node_id. Anywhere you see node_id in the schema, it comes from GitHubs terminology.")
-    node_url = db.Column(db.String())
+    event_url = db.Column(db.String())
     issue_event_src_id = db.Column(
         db.BigInteger, comment="This ID comes from the source. In the case of GitHub, it is the id that is the first field returned from the issue events API")
     tool_source = db.Column(db.String())
@@ -656,8 +655,11 @@ class IssueEvents(db.Model):
     __tablename__ = 'issue_events'
     __table_args__ = (
 
-        # contstraint to determine whether to insert or not
-        UniqueConstraint('issue_id', 'issue_event_src_id',
+        ForeignKeyConstraint([issue_id, repo_id],
+                            ["augur_data.issues.issue_id", 
+                            "augur_data.issues.repo_id"], ondelete="CASCADE", onupdate="CASCADE"),
+
+        UniqueConstraint('repo_id', 'issue_event_src_id',
                          name='unique_event_id_key'),
 
         db.Index("issue-cntrb-idx2", issue_event_src_id),
