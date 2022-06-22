@@ -13,6 +13,9 @@ import collections
     then various attributes call queries on the fly.
 
     Base level class will be a github repo.
+
+
+    PR_reviews, events, messages, pr_commits, pr_files(already done convert it)
 """
 
 
@@ -180,7 +183,7 @@ class GraphQlPageCollection(collections.abc.Sequence):
 
 
 
-
+#use httpx and pass random_key_auth
 class GitHubRepo():
     def __init__(self, session, owner, repo):
 
