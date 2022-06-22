@@ -43,7 +43,7 @@ class TaskSession(s.orm.Session):
         self.engine = s.create_engine(DB_STR)
         # self.engine = engine
         
-        keys = get_list_of_oauth_keys(self.engine, config["Database"]["key"])
+        keys = get_list_of_oauth_keys(self.engine, config["key_database"])
 
         self.oauths = RandomKeyAuth(keys)
 
