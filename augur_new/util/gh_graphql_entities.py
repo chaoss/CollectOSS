@@ -41,7 +41,7 @@ class GraphQlPageCollection(collections.abc.Sequence):
         #first try cache
         try:
             return self.page_cache[index]
-        except KeyError:
+        except:
             pass
 
 
