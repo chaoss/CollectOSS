@@ -29,6 +29,14 @@ class GraphQlPageCollection(collections.abc.Sequence):
 
         self.bind = bind
 
+    def extract_paginate_result(self,result_dict):
+
+        #extract the core keys that we want from our query
+        core = result_dict[self.bind['values'][0]][self.bind['values'][1]]
+
+        return core
+
+
     def __getitem__(self, index):# -> dict:
         #first try cache
         try:
@@ -51,16 +59,70 @@ class GraphQlPageCollection(collections.abc.Sequence):
         for page in range(items_page):
             result = self.client.execute(self.query,variable_values=params)
 
-            self.page_cache.extend(result[params['values'][0]][params['values'][1]])
+            coreData = self.extract_paginate_result(result)
+            #extract the content from the graphql query result
+            content = coreData['edges']
+            self.page_cache.extend(content)
+
+            #extract the pageinfo
+            pageInfo = coreData['pageInfo']
             
             #check if there is a next page to paginate. (graphql doesn't support random access)
-            if result['pageInfo']['hasNextPage']:
-                params['cursor'] = result['pageInfo']['endCursor']
+            if pageInfo['hasNextPage']:
+                params['cursor'] = pageInfo['endCursor']
             else:
                 break
         
 
         return self.page_cache[index]
+    
+    def __len__(self):
+        params = {
+            "numRecords" : 2,
+            "cursor"    : None
+        }
+        params.update(self.bind)
+
+        result = self.client.execute(self.query,variable_values=params)
+        coreData = self.extract_paginate_result(result)
+
+        totalCount = int(coreData['totalCount'])
+
+        return totalCount
+    
+    def __iter__(self):
+        params = {
+            "numRecords" : self.per_page,
+            "cursor"    : None
+        }
+        params.update(self.bind)
+
+        result = self.client.execute(self.query,variable_values=params)
+
+        coreData = self.extract_paginate_result(result)
+
+
+        if int(coreData['totalCount']) == 0:
+            yield None
+            return
+        
+        #extract the content from the graphql query result 
+        for data in coreData['edges']:
+            yield data
+
+        while coreData['pageInfo']['hasNextPage']:
+            params['cursor'] = coreData['pageInfo']['endCursor']
+
+            result = self.client.execute(self.query,variable_values=params)
+
+            coreData = self.extract_paginate_result(result)
+
+            if len(coreData['edges']) == 0:
+                return
+            
+            for data in coreData['edges']:
+                yield data
+
 
 
 class GitHubRepo():
@@ -96,10 +158,13 @@ class GitHubRepo():
     def get_issues_collection(self):
 
         #Cursor and numRecords is handled by the collection internals
+        #totalCount is needed to furfill container class
+        #edges has the 'content' of the issues
         query = gql("""
-            query($numRecords: Int!, $cursor: String) {
+            query($numRecords: Int!, $cursor: String, $owner: String!, $repo: String!) {
                 repository(owner:$owner, name:$repo) {
                     issues(first: $numRecords, after:$cursor) {
+                        totalCount
                         edges {
                             node {
                                 title
@@ -112,8 +177,7 @@ class GitHubRepo():
                                             name
                                         }
                                     }
-                                createdAt
-                                databaseId
+                                totalCount
                                 }
                         
                             }
@@ -131,8 +195,8 @@ class GitHubRepo():
         #e.g. here we get the issues of the specified repository.
         values = ("repository","issues")
         params = {
-            'owner' : self.owner,
-            'repo' : self.repo,
+            'owner' : "chaoss",#self.owner,
+            'repo' : "augur",#self.repo,
             'values' : values
         }
 
