@@ -27,6 +27,8 @@ class GraphQlPageCollection(collections.abc.Sequence):
 
         self.page_cache = []
 
+        self.bind = bind
+
     def __getitem__(self, index):# -> dict:
         #first try cache
         try:
@@ -43,13 +45,13 @@ class GraphQlPageCollection(collections.abc.Sequence):
             "cursor"    : None
         }
 
-        params.update(bind)
+        params.update(self.bind)
 
 
         for page in range(items_page):
             result = self.client.execute(self.query,variable_values=params)
 
-            self.page_cache += result[params['values'][0]][params['values'][1]]
+            self.page_cache.extend(result[params['values'][0]][params['values'][1]])
             
             #check if there is a next page to paginate. (graphql doesn't support random access)
             if result['pageInfo']['hasNextPage']:
@@ -76,7 +78,8 @@ class GitHubRepo():
     def headers(self):
         key_value = choice(self.list_of_keys)
 
-        return {"Authorization": f'Bearer {key_value}'}
+        header = {'Authorization': f'Bearer {key_value}'}
+        return header
     
 
     @property
@@ -89,6 +92,8 @@ class GitHubRepo():
         return client
     
     def get_issues_collection(self):
+
+        #Cursor and numRecords is handled by the collection internals
         query = gql("""
             query($numRecords: Int!, $cursor: String) {
                 repository(owner:$owner, name:$repo) {
@@ -120,6 +125,8 @@ class GitHubRepo():
             }
         """)
 
+        #Values specifies the dictionary values we want to return as the issue collection.
+        #e.g. here we get the issues of the specified repository.
         values = ("repository","issues")
         params = {
             'owner' : self.owner,
