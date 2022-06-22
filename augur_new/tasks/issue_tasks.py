@@ -5,7 +5,7 @@ from .facade_tasks import *
 #So this file contains functionality for both prs and issues
 
 
-@app.task
+@celery.task
 def pull_requests(owner: str, repo: str) -> None:
 
     logger = get_task_logger(pull_requests.name)
@@ -106,7 +106,7 @@ def pull_requests(owner: str, repo: str) -> None:
 
 
 
-@app.task
+@celery.task
 def pull_request_review_comments(owner: str, repo: str) -> None:
 
     logger = get_task_logger(pull_request_review_comments.name)
@@ -171,7 +171,7 @@ def pull_request_review_comments(owner: str, repo: str) -> None:
     session.insert_data(pr_comment_ref_dicts, PullRequestReviewMessageRef, pr_comment_ref_natural_keys)
 
 
-@app.task
+@celery.task
 def github_events(owner: str, repo: str):
 
     logger = get_task_logger(github_events.name)
@@ -243,7 +243,7 @@ def chunk_data(data, min_events_per_task, max_tasks):
 
     return chunked_data
 
-@app.task
+@celery.task
 def process_events(events):
 
     logger = get_task_logger(process_events.name)
@@ -313,7 +313,7 @@ def process_events(events):
     session.insert_data(issue_event_dicts, IssueEvents, issue_event_natural_keys)
 
 # do this task after others because we need to add the multi threading like we did it before
-@app.task
+@celery.task
 def pull_request_reviews(owner: str, repo: str, pr_number_list: [int]) -> None:
 
     logger = get_task_logger(pull_request_reviews.name)
@@ -329,7 +329,7 @@ def pull_request_reviews(owner: str, repo: str, pr_number_list: [int]) -> None:
 
 
 
-@app.task
+@celery.task
 def issues(owner: str, repo: str) -> None:
 
     logger = get_task_logger(start.name)

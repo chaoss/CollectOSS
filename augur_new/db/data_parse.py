@@ -1,4 +1,10 @@
 
+"""
+This file contains functions that take the api response 
+and return only the data that the database needs
+"""
+
+
 
 # retrieve only the needed data for pr labels from the api response
 def extract_needed_pr_label_data(labels: [dict], pr_id: int, platform_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> [dict]:

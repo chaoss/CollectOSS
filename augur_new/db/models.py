@@ -3,7 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
-from sqlalchemy import Index, UniqueConstraint, PrimaryKeyConstraint, create_engine, func, text
+from sqlalchemy import Index, UniqueConstraint, PrimaryKeyConstraint, ForeignKeyConstraint, create_engine, func, text
 from datetime import datetime
 from augur.config import AugurConfig
 import os
