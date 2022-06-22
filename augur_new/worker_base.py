@@ -31,7 +31,7 @@ class TaskSession(s.orm.Session):
 
         self.root_augur_dir = ''.join(current_dir.partition("augur/")[:2])
         self.__init_config(self.root_augur_dir)
-        print(self.config)
+        #print(self.config)
 
         DB_STR = f'postgresql://{self.config["user_database"]}:{self.config["password_database"]}@{self.config["host_database"]}:{self.config["port_database"]}/{self.config["name_database"]}'
 
@@ -46,7 +46,7 @@ class TaskSession(s.orm.Session):
         self.engine = s.create_engine(DB_STR)
         # self.engine = engine
         
-        keys = get_list_of_oauth_keys(self.engine, config["key_database"])
+        keys = get_list_of_oauth_keys(self.engine, self.config["key_database"])
 
         self.oauths = RandomKeyAuth(keys)
 
