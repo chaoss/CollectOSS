@@ -31,10 +31,13 @@ class TaskSession(s.orm.Session):
 
         self.root_augur_dir = ''.join(current_dir.partition("augur/")[:2])
         self.__init_config(self.root_augur_dir)
-        
+        print(self.config)
+
         DB_STR = f'postgresql://{self.config["user_database"]}:{self.config["password_database"]}@{self.config["host_database"]}:{self.config["port_database"]}/{self.config["name_database"]}'
 
         self.config.update(config)
+
+        
         self.platform = platform
         
         #self.logger.info(f"path = {str(ROOT_AUGUR_DIR) + "augur.config.json"}")
