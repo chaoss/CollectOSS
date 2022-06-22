@@ -78,7 +78,9 @@ class GitHubRepo():
     def headers(self):
         key_value = choice(self.list_of_keys)
 
-        header = {'Authorization': f'Bearer {key_value}'}
+        bearer = "Bearer {value}".format(value=key_value)
+
+        header = {'Authorization': bearer}
         return header
     
 
