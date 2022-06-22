@@ -1,4 +1,5 @@
 from augur_new.worker_base import *
+import asyncio
 from gql import gql, Client
 from gql.transport.aiohttp import AIOHTTPTransport
 from random import choice
@@ -123,6 +124,61 @@ class GraphQlPageCollection(collections.abc.Sequence):
             for data in coreData['edges']:
                 yield data
 
+    #recursive function to paginate an endpoint's pages close to all at once.
+    #Limited by graphql really only supporting cursor pagination as a reasonable option.
+    async def get_next_page(self,gql_session,cursor=None):
+        records = []
+
+        params = {
+            "numRecords" : self.per_page,
+            "cursor"    : cursor
+        }
+        params.update(self.bind)
+
+        result = gql_session.execute(self.query,variable_values=params)
+        coreData = self.extract_paginate_result(result)
+
+        if coreData['pageInfo']['hasNextPage']:
+            records.extend(self.get_next_page(gql_session=gql_session,cursor=coreData['pageInfo']['endCursor']))
+    
+        records.extend(coreData['edges'])
+
+        yield records
+
+        return
+
+
+    async def __aiter__(self):
+        params = {
+            "numRecords" : self.per_page,
+            "cursor"    : None
+        }
+        params.update(self.bind)
+
+        result = self.client.execute(self.query,variable_values=params)
+        coreData = self.extract_paginate_result(result)
+
+        #Check if one page is needed
+        if int(coreData['totalCount']) <= self.per_page:
+            
+            for data in coreData['edges']:
+                yield data
+            
+            return
+        
+        # Using `async with` on the client will start a connection on the transport
+        # and provide a `session` variable to execute queries on this connection
+        async with self.client as gql_session:
+
+            data_list = await self.get_next_page(gql_session=gql_session)
+
+            yield data_list
+
+            return
+
+
+
+
 
 
 class GitHubRepo():
@@ -195,8 +251,8 @@ class GitHubRepo():
         #e.g. here we get the issues of the specified repository.
         values = ("repository","issues")
         params = {
-            'owner' : "chaoss",#self.owner,
-            'repo' : "augur",#self.repo,
+            'owner' : self.owner,
+            'repo' : self.repo,
             'values' : values
         }
 
@@ -205,3 +261,43 @@ class GitHubRepo():
         issueCollection = GraphQlPageCollection(query, self.gqlClient,bind=params)
 
         return issueCollection
+    
+    def get_pull_requests_collection(self):
+        #Cursor and numRecords is handled by the collection internals
+        #totalCount is needed to furfill container class
+        #edges has the 'content' of the issues
+        query = gql("""
+            query($numRecords: Int!, $cursor: String, $owner: String!, $repo: String!) {
+                repository(owner:$owner, name:$repo) {
+                    pullRequests(first: $numRecords, after:$cursor) {
+                        totalCount
+                        edges {
+                            node {
+                                title
+                                body
+                                closed
+                                url
+                        
+                            }
+                        }
+                        pageInfo {
+                            hasNextPage
+                            endCursor
+                        }
+                    }
+                }
+            }
+        """)
+
+        #Values specifies the dictionary values we want to return as the issue collection.
+        #e.g. here we get the pullRequests of the specified repository.
+        values = ("repository","pullRequests")
+        params = {
+            'owner' : self.owner,
+            'repo' : self.repo,
+            'values' : values
+        }
+
+        pull_request_collection = GraphQlPageCollection(query, self.gqlClient,bind=params)
+
+        return pull_request_collection
