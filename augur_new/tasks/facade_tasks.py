@@ -1,30 +1,23 @@
-from typing import Any, Union, Optional
-from dataclasses import dataclass
-from enforce_typing import enforce_types
-
 import json
-from celery import group, chain, chord, signature
-from celery.utils.log import get_task_logger
-
-
 import time
 import traceback
 import logging
 import sys
 
+from celery import group, chain, chord, signature
+from celery.utils.log import get_task_logger
 import sqlalchemy as s
 
-from .main import app
-from .main import redis_conn
+from augur_new.server import redis_conn
+from augur_new.celery import celery
 
-from augur_new.db_models import PullRequests, Message, PullRequestReviews, PullRequestLabels, PullRequestReviewers, PullRequestEvents, PullRequestMeta, PullRequestAssignees, PullRequestReviewMessageRef, SQLAlchemy, Issues, IssueEvents
+from augur_new.db import data_parse
+from augur_new.db.models import PullRequests, Message, PullRequestReviews, PullRequestLabels, PullRequestReviewers, PullRequestEvents, PullRequestMeta, PullRequestAssignees, PullRequestReviewMessageRef, SQLAlchemy, Issues, IssueEvents
 
-from augur_new.github_paginator import GithubPaginator
-from augur_new.worker_base import TaskSession
+from augur_new.util.github_paginator import GithubPaginator
+from augur_new.util.worker_base import TaskSession
 
 from augur_new.facade_worker.facade_worker import facade00mainprogram
-
-from augur_new.util import data_parse
 
 
 config_path = '../augur/augur.config.json'
@@ -34,7 +27,7 @@ with open(config_path, 'r') as f:
     config = json.load(f)
 
 
-@app.task
+@celery.task
 def facade_commits_model( message: str):
 
     logger = get_task_logger(facade_commits_model.name)
@@ -607,7 +600,7 @@ def insert_facade_contributors(session, repo_id,processes=4,multithreaded=True):
     session.logger.info("Done with inserting and updating facade contributors")
     return
 
-@app.task
+@celery.task
 def facade_resolve_contribs():
     logger = get_task_logger(facade_resolve_contribs.name)
     session = FacadeSession(logger)
