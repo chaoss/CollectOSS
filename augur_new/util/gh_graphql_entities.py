@@ -62,7 +62,7 @@ class GraphQlPageCollection(collections.abc.Sequence):
 
 
 class GitHubRepo():
-    def __init__(self, session: TaskSession, owner: str, repo: str):
+    def __init__(self, session, owner, repo):
 
         self.list_of_keys = get_list_of_oauth_keys(session.engine, session.config["Database"]["key"])
     
