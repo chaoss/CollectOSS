@@ -27,7 +27,7 @@ class GraphQlPageCollection(collections.abc.Sequence):
 
         self.page_cache = []
 
-    def __getitem__(self, index) -> dict:
+    def __getitem__(self, index):# -> dict:
         #first try cache
         try:
             return self.page_cache[index]
