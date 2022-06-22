@@ -76,7 +76,7 @@ class GitHubRepo():
     def headers(self):
         key_value = choice(self.list_of_keys)
 
-        return {"Authorization": f"Bearer {key_value}"}
+        return {"Authorization": f'Bearer {key_value}'}
     
 
     @property
