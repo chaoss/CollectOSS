@@ -66,7 +66,7 @@ class GraphQlPageCollection(collections.abc.Sequence):
 class GitHubRepo():
     def __init__(self, session, owner, repo):
 
-        self.list_of_keys = get_list_of_oauth_keys(session.engine, session.config["Database"]["key"])
+        self.list_of_keys = get_list_of_oauth_keys(session.engine, session.config["key_database"])
     
         self.url = "https://api.github.com/graphql"
 
