@@ -258,9 +258,6 @@ class GraphQlPageCollection(collections.abc.Sequence):
             return
 
 
-
-
-
 #use httpx and pass random_key_auth
 class GitHubRepo():
     def __init__(self, session, owner, repo):
@@ -329,7 +326,7 @@ class GitHubRepo():
         #Cursor and numRecords is handled by the collection internals
         #totalCount is needed to furfill container class
         #edges has the 'content' of the issues
-        query = gql("""
+        query = """
             query($numRecords: Int!, $cursor: String, $owner: String!, $repo: String!) {
                 repository(owner:$owner, name:$repo) {
                     pullRequests(first: $numRecords, after:$cursor) {
@@ -350,7 +347,7 @@ class GitHubRepo():
                     }
                 }
             }
-        """)
+        """
 
         #Values specifies the dictionary values we want to return as the issue collection.
         #e.g. here we get the pullRequests of the specified repository.
@@ -361,6 +358,18 @@ class GitHubRepo():
             'values' : values
         }
 
-        pull_request_collection = GraphQlPageCollection(query, self.gqlClient,bind=params)
+        pull_request_collection = GraphQlPageCollection(query, self.keyAuth,self.logger,bind=params)
 
         return pull_request_collection
+
+
+class PullRequest():
+    def __init__(self, session, owner, repo):
+
+        self.keyAuth = session.oauths
+        self.url = "https://api.github.com/graphql"
+
+        self.logger = session.logger
+
+        self.owner = owner
+        self.repo = repo
