@@ -54,7 +54,7 @@ class GraphQlPageCollection(collections.abc.Sequence):
                     json_dict['variables'] = json_dict['variables']
                     #print(json_dict['variables'])
                 
-                print(json.dumps(json_dict))
+                #print(json.dumps(json_dict))
                 response = client.post(
                     url=self.url,auth=self.keyAuth,json=json_dict
                     )
@@ -105,7 +105,7 @@ class GraphQlPageCollection(collections.abc.Sequence):
         for page in range(items_page):
             result = self.hit_api(self.query,variables=params)#self.client.execute(self.query,variable_values=params)
 
-            print(result)
+            #print(result)
 
             coreData = self.extract_paginate_result(result)
             #extract the content from the graphql query result
