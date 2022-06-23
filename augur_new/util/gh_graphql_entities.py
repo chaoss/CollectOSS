@@ -280,8 +280,8 @@ class GitHubRepo():
         #e.g. here we get the issues of the specified repository.
         values = ("repository","issues")
         params = {
-            '$owner' : self.owner,
-            '$repo' : self.repo,
+            'owner' : self.owner,
+            'repo' : self.repo,
             'values' : values
         }
 
