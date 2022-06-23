@@ -1,5 +1,5 @@
 from requests.api import head
-from augur_new.worker_base import *
+from augur_new.tasks.task_session import *
 import logging
 from logging import FileHandler, Formatter, StreamHandler, log
 from augur_new.util.contributor_parse import *
@@ -10,7 +10,6 @@ import json
 import multiprocessing
 import time
 import numpy as np
-from augur_new import worker_base
 
 
 # Debugger

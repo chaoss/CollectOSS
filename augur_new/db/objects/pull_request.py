@@ -1,4 +1,4 @@
-from augur_new.objects.github import GithubObject
+from augur_new.db.objects.github import GithubObject
 
 class PrObject():
     def __init__(self, pr, repo_id, tool_source, tool_version):

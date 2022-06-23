@@ -8,14 +8,15 @@ from celery import group, chain, chord, signature
 from celery.utils.log import get_task_logger
 import sqlalchemy as s
 
-from augur_new.server import redis_conn
+# from augur_new.server import redis_conn
 from augur_new.celery import celery
+
 
 from augur_new.db import data_parse
 from augur_new.db.models import PullRequests, Message, PullRequestReviews, PullRequestLabels, PullRequestReviewers, PullRequestEvents, PullRequestMeta, PullRequestAssignees, PullRequestReviewMessageRef, SQLAlchemy, Issues, IssueEvents
 
 from augur_new.util.github_paginator import GithubPaginator
-from augur_new.util.worker_base import TaskSession
+from augur_new.tasks.task_session import *
 
 from augur_new.facade_worker.facade_worker import facade00mainprogram
 

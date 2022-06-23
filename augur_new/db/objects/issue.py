@@ -1,4 +1,4 @@
-from augur_new.objects.github import GithubObject
+from augur_new.db.objects.github import GithubObject
 
 class IssueObject(GithubObject):
     def __init__(self, issue: dict, repo_id: int, tool_source: str, tool_version: str, data_source: str):

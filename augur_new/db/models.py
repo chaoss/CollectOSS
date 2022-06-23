@@ -1557,7 +1557,7 @@ class PullRequests(db.Model):
     pull_request_id = db.Column(
         db.BigInteger, primary_key=True)
     repo_id = db.Column(db.BigInteger, 
-                db.ForeignKey('augur_data.repo.repo_id', name='fk_pull_requests_repo_1', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
+                db.ForeignKey('augur_data.repo.repo_id', name='fk_pull_requests_repo_1', ondelete="CASCADE", onupdate="CASCADE"))
     pr_url = db.Column(db.String())
     pr_src_id = db.Column(
         db.BigInteger, comment="The pr_src_id is unique across all of github.")

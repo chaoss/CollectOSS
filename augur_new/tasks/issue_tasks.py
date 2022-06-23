@@ -1,4 +1,6 @@
 from .facade_tasks import *
+
+from augur_new.db.objects.pull_request import PrObject
 # creates a class that is sub class of the sqlalchemy.orm.Session class that additional methods and fields added to it. 
 
 #NOTICE: A pull request is a type of issue as per Github.
@@ -9,7 +11,7 @@ from .facade_tasks import *
 def pull_requests(owner: str, repo: str) -> None:
 
     logger = get_task_logger(pull_requests.name)
-    session = TaskSession(logger, config)
+    session = GithubTaskSession(logger, config)
 
     logger.info(f"Collecting pull requests for {owner}/{repo}")
 
@@ -42,7 +44,7 @@ def pull_requests(owner: str, repo: str) -> None:
     len_prs = len(prs)
     for index, pr in enumerate(prs):
 
-        if index == 100:
+        if index == 10:
             break
 
         pr['head'].update(
@@ -110,7 +112,7 @@ def pull_requests(owner: str, repo: str) -> None:
 def pull_request_review_comments(owner: str, repo: str) -> None:
 
     logger = get_task_logger(pull_request_review_comments.name)
-    session = TaskSession(logger, config)
+    session = GithubTaskSession(logger, config)
 
     logger.info(f"Collecting pull request comments for {owner}/{repo}")
 
@@ -247,7 +249,7 @@ def chunk_data(data, min_events_per_task, max_tasks):
 def process_events(events):
 
     logger = get_task_logger(process_events.name)
-    session = TaskSession(logger, config)
+    session = GithubTaskSession(logger, config)
 
     logger.info(f"Len of events: {len(events)}")
     logger.info(f"Type of events: {type(events)}")
@@ -317,7 +319,7 @@ def process_events(events):
 def pull_request_reviews(owner: str, repo: str, pr_number_list: [int]) -> None:
 
     logger = get_task_logger(pull_request_reviews.name)
-    session = TaskSession(logger, config)
+    session = GithubTaskSession(logger, config)
 
     logger.info(f"Collecting pull request reviews for {owner}/{repo}")
 
@@ -333,7 +335,7 @@ def pull_request_reviews(owner: str, repo: str, pr_number_list: [int]) -> None:
 def issues(owner: str, repo: str) -> None:
 
     logger = get_task_logger(start.name)
-    session = TaskSession(logger, config)
+    session = GithubTaskSession(logger, config)
 
     print(f"Collecting issues for {owner}/{repo}")
 

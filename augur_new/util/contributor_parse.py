@@ -2,9 +2,9 @@
 import math
 
 from numpy.lib.utils import source
-from augur_new.worker_base import *
-from augur_new.github_paginator import *
-from augur_new import db_models
+from augur_new.tasks.task_session import *
+from augur_new.util.github_paginator import *
+from augur_new.db import models
 import sqlalchemy as s
 import time
 import math

@@ -6,12 +6,12 @@ import pandas as pd
 import json
 import httpx
 
-from augur_new import db_models 
+from augur_new.db import models 
 from sqlalchemy.event import listen
 from sqlalchemy.event import listens_for
-from .config import AugurConfig
+from augur_new.config import AugurConfig
 
-from .random_key_auth import RandomKeyAuth
+from augur_new.util.random_key_auth import RandomKeyAuth
 # from .engine import engine
 
 #TODO: setup github headers in a method here.
@@ -78,7 +78,11 @@ class TaskSession(s.orm.Session):
     def execute_sql(self, sql_text):
         connection = self.engine.connect()
 
-        return connection.execute(sql_text)
+        connection.execute(sql_text)
+
+        print(f"Last insert id: {connection.insert_id()}")
+
+        return 
 
     
     def insert_data(self, data, table, natural_keys: [str]) -> None:
@@ -212,14 +216,14 @@ class GithubTaskSession(TaskSession):
 
     def __init__(self, logger, config: dict = {}, platform: str ='github'):
 
+        super().__init__(logger, config, platform)
+
         keys = self.get_list_of_oauth_keys(self.engine, config["Database"]["key"])
 
         self.oauths = RandomKeyAuth(keys)
         
-        super().__init__(logger, config, platform)
 
-
-    def get_list_of_oauth_keys(db_engine: s.engine.base.Engine, config_key: str) ->[str]:
+    def get_list_of_oauth_keys(self, db_engine: s.engine.base.Engine, config_key: str) ->[str]:
 
         oauthSQL = s.sql.text(f"""
                 SELECT access_token FROM augur_operations.worker_oauth WHERE access_token <> '{config_key}' and platform = 'github'
@@ -245,7 +249,7 @@ class GithubTaskSession(TaskSession):
         return key_list
 
 
-    def get_oauth_key_data(client: httpx.Client, oauth_key: str) -> None or True:
+    def get_oauth_key_data(self, client: httpx.Client, oauth_key: str) -> None or True:
 
         # this endpoint allows us to check the rate limit, but it does not use one of our 5000 requests
         url = "https://api.github.com/rate_limit"
