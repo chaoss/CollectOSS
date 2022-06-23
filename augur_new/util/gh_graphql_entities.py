@@ -1,7 +1,9 @@
 from augur_new.worker_base import *
 import asyncio
-from gql import gql, Client
-from gql.transport.aiohttp import AIOHTTPTransport
+#from gql import gql, Client
+#from gql.transport.aiohttp import AIOHTTPTransport
+import httpx
+import json
 from random import choice
 import collections
 
@@ -32,6 +34,9 @@ class GraphQlPageCollection(collections.abc.Sequence):
         self.page_cache = []
 
         self.bind = bind
+
+    def hit_api(self,query):
+
 
     def extract_paginate_result(self,result_dict):
 
@@ -187,39 +192,20 @@ class GraphQlPageCollection(collections.abc.Sequence):
 class GitHubRepo():
     def __init__(self, session, owner, repo):
 
-        self.list_of_keys = get_list_of_oauth_keys(session.engine, session.config["key_database"])
-    
+        self.keyAuth = keyAuth
         self.url = "https://api.github.com/graphql"
 
 
         self.owner = owner
         self.repo = repo
     
-    @property
-    def headers(self):
-        key_value = choice(self.list_of_keys)
-
-        bearer = "Bearer {value}".format(value=key_value)
-
-        header = {'Authorization': bearer}
-        return header
-    
-
-    @property
-    def gqlClient(self):
-        #Create objects to execute graphql queries on the endpoint
-        #Use random key defined earlier.
-
-        transport = AIOHTTPTransport(url=self.url,headers=self.headers)
-        client = Client(transport=transport)
-        return client
     
     def get_issues_collection(self):
 
         #Cursor and numRecords is handled by the collection internals
         #totalCount is needed to furfill container class
         #edges has the 'content' of the issues
-        query = gql("""
+        query = """
             query($numRecords: Int!, $cursor: String, $owner: String!, $repo: String!) {
                 repository(owner:$owner, name:$repo) {
                     issues(first: $numRecords, after:$cursor) {
@@ -248,7 +234,7 @@ class GitHubRepo():
                     }
                 }
             }
-        """)
+        """
 
         #Values specifies the dictionary values we want to return as the issue collection.
         #e.g. here we get the issues of the specified repository.
