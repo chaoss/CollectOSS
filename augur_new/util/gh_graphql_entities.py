@@ -53,7 +53,7 @@ class GraphQlPageCollection(collections.abc.Sequence):
                     json_dict['variables'].pop("values",None)
 
                 response = client.post(
-                    url=self.url,auth=self.keyAuth,json=json_dict
+                    url=self.url,auth=self.keyAuth,json=json.dumps(json_dict,indent=4)
                     )
             
             except TimeoutError:
