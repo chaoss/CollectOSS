@@ -109,7 +109,9 @@ class GraphQlPageCollection(collections.abc.Sequence):
 
             coreData = self.extract_paginate_result(result)
             #extract the content from the graphql query result
-            content = coreData['edges']
+
+            content = [data['node'] for data in list(coreData['edges'])]
+
             self.page_cache.extend(content)
 
             #extract the pageinfo
@@ -131,7 +133,7 @@ class GraphQlPageCollection(collections.abc.Sequence):
         }
         params.update(self.bind)
 
-        result = self.client.execute(self.query,variable_values=params)
+        result = self.hit_api(self.query,variables=params)#self.client.execute(self.query,variable_values=params)
         coreData = self.extract_paginate_result(result)
 
         totalCount = int(coreData['totalCount'])
@@ -145,7 +147,7 @@ class GraphQlPageCollection(collections.abc.Sequence):
         }
         params.update(self.bind)
 
-        result = self.client.execute(self.query,variable_values=params)
+        result = self.hit_api(self.query,variables=params)#self.client.execute(self.query,variable_values=params)
 
         coreData = self.extract_paginate_result(result)
 
@@ -156,12 +158,12 @@ class GraphQlPageCollection(collections.abc.Sequence):
         
         #extract the content from the graphql query result 
         for data in coreData['edges']:
-            yield data
+            yield data['node']
 
         while coreData['pageInfo']['hasNextPage']:
             params['cursor'] = coreData['pageInfo']['endCursor']
 
-            result = self.client.execute(self.query,variable_values=params)
+            result = self.hit_api(self.query,variables=params)#self.client.execute(self.query,variable_values=params)
 
             coreData = self.extract_paginate_result(result)
 
@@ -169,7 +171,7 @@ class GraphQlPageCollection(collections.abc.Sequence):
                 return
             
             for data in coreData['edges']:
-                yield data
+                yield data['node']
 
     #recursive function to paginate an endpoint's pages close to all at once.
     #Limited by graphql really only supporting cursor pagination as a reasonable option.
