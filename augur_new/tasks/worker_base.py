@@ -6,7 +6,7 @@ import pandas as pd
 import json
 import httpx
 
-from augur_new import db_models 
+from augur_new.db import models 
 from sqlalchemy.event import listen
 from sqlalchemy.event import listens_for
 from .config import AugurConfig
