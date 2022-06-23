@@ -1,4 +1,4 @@
-from augur_new.worker_base import *
+from augur_new.tasks.worker_base import *
 import asyncio
 #from gql import gql, Client
 #from gql.transport.aiohttp import AIOHTTPTransport
@@ -24,18 +24,49 @@ import collections
 #Should take the query and two page variables for pagination
 class GraphQlPageCollection(collections.abc.Sequence):
     #Bind is needed for things like query by repo. Contains bind variables for the graphql query
-    def __init__(self,query,client,bind={},numPerPage=100):
+    def __init__(self,query,keyAuth,logger,bind={},numPerPage=100,url="https://api.github.com/graphql"):
         self.per_page = numPerPage
         self.query = query
-        self.client = client
+        self.keyAuth = keyAuth
+        self.logger = logger
 
-        self.url = "https://api.github.com/graphql"
+        self.url = url
 
         self.page_cache = []
 
         self.bind = bind
 
-    def hit_api(self,query):
+    def hit_api(self,query,variables={}):
+        self.logger.debug(f"Sending query {query}  to github graphql")
+
+        response = None
+        with httpx.Client() as client:
+
+            try:
+                json_dict = {
+                    'query' : query
+                }
+
+                if variables:
+
+                    json_dict['variables'] = variables
+                    json_dict['variables'].pop("values",None)
+
+                response = client.post(
+                    url=self.url,auth=self.keyAuth,json=json_dict
+                    )
+            
+            except TimeoutError:
+                self.logger.info("Request timed out. Sleeping 10 seconds and trying again...\n")
+                time.sleep(10)
+                return None
+            except httpx.TimeoutException:
+                self.logger.info("httpx.ReadTimeout. Sleeping 10 seconds and trying again...\n")
+                time.sleep(10)
+                return None
+        
+        return response
+
 
 
     def extract_paginate_result(self,result_dict):
@@ -58,15 +89,17 @@ class GraphQlPageCollection(collections.abc.Sequence):
         items_page = (index // self.per_page) + 1
 
         params = {
-            "numRecords" : self.per_page,
-            "cursor"    : None
+            "$numRecords" : self.per_page,
+            "$cursor"    : None
         }
 
         params.update(self.bind)
 
 
         for page in range(items_page):
-            result = self.client.execute(self.query,variable_values=params)
+            result = self.hit_api(self.query,variables=params)#self.client.execute(self.query,variable_values=params)
+
+            print(result)
 
             coreData = self.extract_paginate_result(result)
             #extract the content from the graphql query result
@@ -87,8 +120,8 @@ class GraphQlPageCollection(collections.abc.Sequence):
     
     def __len__(self):
         params = {
-            "numRecords" : 2,
-            "cursor"    : None
+            "$numRecords" : 2,
+            "$cursor"    : None
         }
         params.update(self.bind)
 
@@ -101,8 +134,8 @@ class GraphQlPageCollection(collections.abc.Sequence):
     
     def __iter__(self):
         params = {
-            "numRecords" : self.per_page,
-            "cursor"    : None
+            "$numRecords" : self.per_page,
+            "$cursor"    : None
         }
         params.update(self.bind)
 
@@ -138,8 +171,8 @@ class GraphQlPageCollection(collections.abc.Sequence):
         records = []
 
         params = {
-            "numRecords" : self.per_page,
-            "cursor"    : cursor
+            "$numRecords" : self.per_page,
+            "$cursor"    : cursor
         }
         params.update(self.bind)
 
@@ -158,8 +191,8 @@ class GraphQlPageCollection(collections.abc.Sequence):
 
     async def __aiter__(self):
         params = {
-            "numRecords" : self.per_page,
-            "cursor"    : None
+            "$numRecords" : self.per_page,
+            "$cursor"    : None
         }
         params.update(self.bind)
 
@@ -192,9 +225,10 @@ class GraphQlPageCollection(collections.abc.Sequence):
 class GitHubRepo():
     def __init__(self, session, owner, repo):
 
-        self.keyAuth = keyAuth
+        self.keyAuth = session.oauths
         self.url = "https://api.github.com/graphql"
 
+        self.logger = session.logger
 
         self.owner = owner
         self.repo = repo
@@ -240,14 +274,14 @@ class GitHubRepo():
         #e.g. here we get the issues of the specified repository.
         values = ("repository","issues")
         params = {
-            'owner' : self.owner,
-            'repo' : self.repo,
+            '$owner' : self.owner,
+            '$repo' : self.repo,
             'values' : values
         }
 
         
 
-        issueCollection = GraphQlPageCollection(query, self.gqlClient,bind=params)
+        issueCollection = GraphQlPageCollection(query, self.keyAuth,self.logger,bind=params)
 
         return issueCollection
     
