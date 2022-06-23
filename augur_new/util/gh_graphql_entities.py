@@ -47,9 +47,11 @@ class GraphQlPageCollection(collections.abc.Sequence):
                     'query' : query
                 }
 
+                #If there are bind variables bind them to the query here.
                 if variables:
 
                     json_dict['variables'] = variables
+                    #Get rid of values tuple used to extract results so its not used in actual request.
                     json_dict['variables'].pop("values",None)
                     json_dict['variables'] = json_dict['variables']
                     #print(json_dict['variables'])
@@ -69,7 +71,37 @@ class GraphQlPageCollection(collections.abc.Sequence):
                 return None
         
         return response
+    
+    async def async_hit_api(self,client,query,variables={}):
+        self.logger.debug(f"Sending query {query}  to github graphql")
 
+        response = None
+
+        try:
+            json_dict = {
+                'query' : query
+            }
+
+            #If there are bind variables bind them to the query here.
+            if variables:
+
+                json_dict['variables'] = variables
+                #Get rid of values tuple used to extract results so its not used in actual request.
+                json_dict['variables'].pop("values",None)
+                json_dict['variables'] = json_dict['variables']
+                #print(json_dict['variables'])
+            
+            #print(json.dumps(json_dict))
+            response = await client.post(
+                url=self.url,auth=self.keyAuth,json=json_dict
+                )
+        
+        except TimeoutError:
+            self.logger.info("Request timed out. Sleeping 10 seconds and trying again...\n")
+            time.sleep(10)
+            return None
+        
+        return response
 
 
     def extract_paginate_result(self,responseObject):
@@ -184,13 +216,13 @@ class GraphQlPageCollection(collections.abc.Sequence):
         }
         params.update(self.bind)
 
-        result = gql_session.execute(self.query,variable_values=params)
+        result = self.async_hit_api(gql_session, self.query)#gql_session.execute(self.query,variable_values=params)
         coreData = self.extract_paginate_result(result)
 
         if coreData['pageInfo']['hasNextPage']:
             records.extend(self.get_next_page(gql_session=gql_session,cursor=coreData['pageInfo']['endCursor']))
     
-        records.extend(coreData['edges'])
+        records.extend([data['node'] for data in coreData['edges']])
 
         yield records
 
@@ -204,20 +236,20 @@ class GraphQlPageCollection(collections.abc.Sequence):
         }
         params.update(self.bind)
 
-        result = self.client.execute(self.query,variable_values=params)
+        result = self.hit_api(self.query,variables=params)#self.client.execute(self.query,variable_values=params)
         coreData = self.extract_paginate_result(result)
 
         #Check if one page is needed
         if int(coreData['totalCount']) <= self.per_page:
             
             for data in coreData['edges']:
-                yield data
+                yield data['node']
             
             return
         
         # Using `async with` on the client will start a connection on the transport
         # and provide a `session` variable to execute queries on this connection
-        async with self.client as gql_session:
+        async with httpx.AsyncClient() as gql_session:
 
             data_list = await self.get_next_page(gql_session=gql_session)
 
