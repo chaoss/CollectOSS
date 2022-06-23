@@ -95,8 +95,8 @@ class GraphQlPageCollection(collections.abc.Sequence):
         items_page = (index // self.per_page) + 1
 
         params = {
-            "$numRecords" : self.per_page,
-            "$cursor"    : None
+            "numRecords" : self.per_page,
+            "cursor"    : None
         }
 
         params.update(self.bind)
@@ -126,8 +126,8 @@ class GraphQlPageCollection(collections.abc.Sequence):
     
     def __len__(self):
         params = {
-            "$numRecords" : 2,
-            "$cursor"    : None
+            "numRecords" : 2,
+            "cursor"    : None
         }
         params.update(self.bind)
 
@@ -140,8 +140,8 @@ class GraphQlPageCollection(collections.abc.Sequence):
     
     def __iter__(self):
         params = {
-            "$numRecords" : self.per_page,
-            "$cursor"    : None
+            "numRecords" : self.per_page,
+            "cursor"    : None
         }
         params.update(self.bind)
 
@@ -177,8 +177,8 @@ class GraphQlPageCollection(collections.abc.Sequence):
         records = []
 
         params = {
-            "$numRecords" : self.per_page,
-            "$cursor"    : cursor
+            "numRecords" : self.per_page,
+            "cursor"    : cursor
         }
         params.update(self.bind)
 
@@ -197,8 +197,8 @@ class GraphQlPageCollection(collections.abc.Sequence):
 
     async def __aiter__(self):
         params = {
-            "$numRecords" : self.per_page,
-            "$cursor"    : None
+            "numRecords" : self.per_page,
+            "cursor"    : None
         }
         params.update(self.bind)
 
