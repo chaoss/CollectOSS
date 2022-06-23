@@ -42,6 +42,7 @@ This software is developed as part of the CHAOSS (Community Health Analytics Ope
 
 If you want to see augur in action, you can view CHAOSS’s augur instance at http://augur.chaoss.io 
 
+
 Current maintainers
 --------------------
 - `Derek Howard <https://github.com/howderek>`_
