@@ -74,7 +74,7 @@ class GraphQlPageCollection(collections.abc.Sequence):
 
     def extract_paginate_result(self,responseObject):
         
-        result_dict = responseObject.json()
+        result_dict = responseObject.json()['data']
 
         print(result_dict)
         #extract the core keys that we want from our query
