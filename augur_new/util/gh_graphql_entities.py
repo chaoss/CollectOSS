@@ -76,7 +76,7 @@ class GraphQlPageCollection(collections.abc.Sequence):
         
         result_dict = responseObject.json()['data']
 
-        print(result_dict)
+        #print(result_dict)
         #extract the core keys that we want from our query
         core = result_dict[self.bind['values'][0]][self.bind['values'][1]]
 
