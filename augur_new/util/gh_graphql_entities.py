@@ -52,9 +52,9 @@ class GraphQlPageCollection(collections.abc.Sequence):
                     json_dict['variables'] = variables
                     json_dict['variables'].pop("values",None)
                     json_dict['variables'] = json.dumps(json_dict['variables'],indent=4)
-                    print(json_dict['variables'])
+                    #print(json_dict['variables'])
                 
-                
+                print(json_dict)
                 response = client.post(
                     url=self.url,auth=self.keyAuth,json=json_dict
                     )
