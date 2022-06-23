@@ -9,9 +9,9 @@ import httpx
 from augur_new.db import models 
 from sqlalchemy.event import listen
 from sqlalchemy.event import listens_for
-from .config import AugurConfig
+from augur_new.config import AugurConfig
 
-from .random_key_auth import RandomKeyAuth
+from augur_new.util.random_key_auth import RandomKeyAuth
 # from .engine import engine
 
 #TODO: setup github headers in a method here.
