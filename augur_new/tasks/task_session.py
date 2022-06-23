@@ -43,9 +43,7 @@ class TaskSession(s.orm.Session):
         self.engine = s.create_engine(DB_STR)
         # self.engine = engine
         
-        keys = get_list_of_oauth_keys(self.engine, config["Database"]["key"])
 
-        self.oauths = RandomKeyAuth(keys)
 
         #Derek 
         @s.event.listens_for(self.engine, "connect", insert=True)
@@ -205,48 +203,64 @@ class TaskSession(s.orm.Session):
         self.execute(stmnt)
 
 
-def get_list_of_oauth_keys(db_engine: s.engine.base.Engine, config_key: str) ->[str]:
-
-    oauthSQL = s.sql.text(f"""
-            SELECT access_token FROM augur_operations.worker_oauth WHERE access_token <> '{config_key}' and platform = 'github'
-            """)
-
-    oauth_keys_list = [{'access_token': config_key}] + json.loads(
-        pd.read_sql(oauthSQL, db_engine, params={}).to_json(orient="records"))
-
-    key_list = [x["access_token"] for x in oauth_keys_list]
-
-    with httpx.Client() as client:
-
-        # loop throuh each key in the list and get the rate_limit and seconds_to_reset
-        # then add them either the fresh keys or depleted keys based on the rate_limit
-        for key in key_list:
-
-            key_data = get_oauth_key_data(client, key)
-
-            # this makes sure that keys with bad credentials are not used
-            if key_data is None:
-                key_list.remove(key)
-
-    return key_list
 
 
-def get_oauth_key_data(client: httpx.Client, oauth_key: str) -> None or True:
+#TODO: Test sql methods
+class GithubTaskSession(TaskSession):
 
-    # this endpoint allows us to check the rate limit, but it does not use one of our 5000 requests
-    url = "https://api.github.com/rate_limit"
+    #ROOT_AUGUR_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
-    headers = {'Authorization': f'token {oauth_key}'}
+    def __init__(self, logger, config: dict = {}, platform: str ='github'):
 
-    response = client.request(
-        method="GET", url=url, headers=headers, timeout=180)
+        keys = self.get_list_of_oauth_keys(self.engine, config["Database"]["key"])
 
-    data = response.json()
+        self.oauths = RandomKeyAuth(keys)
+        
+        super().__init__(logger, config, platform)
 
-    try:
-        if data["message"] == "Bad credentials":
-            return None
-    except KeyError:
-        pass
 
-    return True
+    def get_list_of_oauth_keys(db_engine: s.engine.base.Engine, config_key: str) ->[str]:
+
+        oauthSQL = s.sql.text(f"""
+                SELECT access_token FROM augur_operations.worker_oauth WHERE access_token <> '{config_key}' and platform = 'github'
+                """)
+
+        oauth_keys_list = [{'access_token': config_key}] + json.loads(
+            pd.read_sql(oauthSQL, db_engine, params={}).to_json(orient="records"))
+
+        key_list = [x["access_token"] for x in oauth_keys_list]
+
+        with httpx.Client() as client:
+
+            # loop throuh each key in the list and get the rate_limit and seconds_to_reset
+            # then add them either the fresh keys or depleted keys based on the rate_limit
+            for key in key_list:
+
+                key_data = self.get_oauth_key_data(client, key)
+
+                # this makes sure that keys with bad credentials are not used
+                if key_data is None:
+                    key_list.remove(key)
+
+        return key_list
+
+
+    def get_oauth_key_data(client: httpx.Client, oauth_key: str) -> None or True:
+
+        # this endpoint allows us to check the rate limit, but it does not use one of our 5000 requests
+        url = "https://api.github.com/rate_limit"
+
+        headers = {'Authorization': f'token {oauth_key}'}
+
+        response = client.request(
+            method="GET", url=url, headers=headers, timeout=180)
+
+        data = response.json()
+
+        try:
+            if data["message"] == "Bad credentials":
+                return None
+        except KeyError:
+            pass
+
+        return True
