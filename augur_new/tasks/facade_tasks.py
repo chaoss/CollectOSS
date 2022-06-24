@@ -45,7 +45,11 @@ with open(config_path, 'r') as f:
 
 #enable celery multithreading
 @celery.task
-def analyze_commits_in_parallel(queue, cfg, repo_id, repo_location, multithreaded):
+def analyze_commits_in_parallel(queue, repo_id, repo_location, multithreaded):
+    #create new cfg for celery thread.
+    logger = get_task_logger(facade_resolve_contribs.name)
+    cfg = Config(logger)
+
     for analyzeCommit in queue:    
 
         try:
@@ -192,7 +196,7 @@ def analysis(cfg, multithreaded, session=None, processes=6):
             listsSplitForProcesses = np.array_split(numpyMissingCommits,processes)
             
             #cfg, repo_id, repo_location, multithreaded
-            task_list = [analyze_commits_in_parallel.s(data.tolist(), cfg,repo[0],repo_loc,multithreaded) for data in listsSplitForProcesses]
+            task_list = [analyze_commits_in_parallel.s(data.tolist(),repo[0],repo_loc,multithreaded) for data in listsSplitForProcesses]
 
             contrib_jobs = group(task_list)
         
