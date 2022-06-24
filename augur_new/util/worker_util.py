@@ -3,15 +3,20 @@ import os, json, requests, logging
 from flask import Flask, Response, jsonify, request
 import gunicorn.app.base
 
-def read_config(section, name=None, environment_variable=None, default=None, config_file_path='../../augur.config.json', no_config_file=0, use_main_config=0):
+def read_config(section, name=None, environment_variable=None, default=None, config_file_path='_', no_config_file=0, use_main_config=0):
     """
     Read a variable in specified section of the config file, unless provided an environment variable
 
     :param section: location of given variable
     :param name: name of variable
     """
-    config_file_path = os.getenv("AUGUR_CONFIG_FILE", config_file_path)
+    augur_directory = os.getcwd()
+    augur_directory = ''.join(augur_directory.partition("augur/")[:2])
+
     _config_file_name = 'augur.config.json'
+
+    config_file_path = augur_directory + "/" + _config_file_name#os.getenv("AUGUR_CONFIG_FILE", config_file_path)
+    
     _config_bad = False
     _already_exported = {}
     _runtime_location = 'runtime/'
