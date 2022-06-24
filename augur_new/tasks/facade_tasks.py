@@ -18,7 +18,7 @@ from augur_new.db.models import PullRequests, Message, PullRequestReviews, PullR
 from augur_new.util.github_paginator import GithubPaginator
 from augur_new.tasks.task_session import *
 
-from augur_new.facade_worker.facade_worker import facade00mainprogram
+from augur_new.facade_worker.facade_worker.facade00mainprogram import *
 
 
 config_path = '../augur/augur.config.json'
