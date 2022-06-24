@@ -29,7 +29,7 @@ with open(config_path, 'r') as f:
 
 
 @celery.task
-def facade_commits_model( message: str):
+def facade_commits_model():
 
     logger = get_task_logger(facade_commits_model.name)
     session = FacadeSession(logger)
