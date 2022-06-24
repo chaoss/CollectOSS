@@ -35,4 +35,63 @@ class IssueObject(GithubObject):
             'data_source': data_source
         }
 
+        source_assignees = []
+
+        # loops through the list of assignees that github returns
+        for assignee in issue['assignees']:
+
+            if assignee:
+
+                if not is_nan(issue['assignee']):
+
+                    source_assignees.append(assignee)
+
+        before_assignee_ids = [assignee["id"] for assignee in source_assignees]
+
+        # handles the asignee field that github returns
+        issue_assignee = issue['assignee']
+
+        if issue_assignee:
+
+            if issue_assignee not in source_assignees:
+
+                print(f"Please tell Andrew is this occurs! ASSIGNEE not in Assignees list. Issue_id: {gh_issue_id}. Assignee data: {issue_assignee}")
+
+                if not is_nan(issue_assignee):
+
+                    source_assignees.append(issue_assignee)
+
+        after_assignee_ids = [assignee["id"] for assignee in source_assignees]
+              
+
+        self.assignees = source_assignees
+        self.labels = issue["labels"]
+
+        assignee_ids = [assignee["id"] for assignee in self.assignees]
+
+        if checkIfDuplicates_1(assignee_ids):
+
+            print(f"DUPLICATE assignees: {assignee_ids}")
+            print(f"Before assignee ids: {before_assignee_ids}")
+            print(f"After assignee ids: {after_assignee_ids}")
+            print(f"Data assignees: {issue['assignees']}")
+            print(f"Data assignee: {issue_assignee}")
+
+
         super().__init__(dict_data)
+
+def is_nan(value):
+
+    it_is_nan = type(value) == float and math.isnan(value)
+
+    if it_is_nan:
+        print(f"Please tell Andrew is this occurs! Nan assignee: {value}")
+
+    return it_is_nan
+
+def checkIfDuplicates_1(listOfElems):
+    ''' Check if given list contains any duplicates '''
+    if len(listOfElems) == len(set(listOfElems)):
+        return False
+    else:
+        return True

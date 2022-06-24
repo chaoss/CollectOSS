@@ -78,11 +78,7 @@ class TaskSession(s.orm.Session):
     def execute_sql(self, sql_text):
         connection = self.engine.connect()
 
-        connection.execute(sql_text)
-
-        print(f"Last insert id: {connection.insert_id()}")
-
-        return 
+        return connection.execute(sql_text)
 
     
     def insert_data(self, data, table, natural_keys: [str]) -> None:
@@ -99,11 +95,6 @@ class TaskSession(s.orm.Session):
 
     def insert_dict_data(self, data: [dict], table, natural_keys: [str]) -> None:
 
-        self.logger.info(f"Length of data to insert: {len(data)}")
-
-        self.logger.info(f"Length of data to insert: {len(data)}")
-        self.logger.info(type(data))
-
         if type(data) != list:
             self.logger.info("Data must be a list")
             return
@@ -112,6 +103,8 @@ class TaskSession(s.orm.Session):
             self.logger.info("Data must be a list of dicts")
             self.logger.info("Must be list of dicts")
             return
+
+        self.logger.info(f"Length of data to insert: {len(data)}")
 
         table_stmt = insert(table)
 
@@ -205,8 +198,6 @@ class TaskSession(s.orm.Session):
         self.logger.info(stmnt)
 
         self.execute(stmnt)
-
-
 
 
 #TODO: Test sql methods

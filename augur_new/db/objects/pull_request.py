@@ -61,6 +61,7 @@ class PrObject():
 
         self.labels = pr["labels"]
         self.assignees = pr["assignees"]
+        self.reviewers = pr["requested_reviewers"]
         self.metadata = [pr["head"], pr["base"]]
 
     def set_db_row(self, row):
