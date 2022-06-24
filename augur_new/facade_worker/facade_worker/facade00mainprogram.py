@@ -45,7 +45,7 @@ from augur_new.tasks.task_session import GithubTaskSession
 
 class FacadeSession(GithubTaskSession):
     def __init__(self,logger,config={},platform='github'):
-        session.cfg = Config(self.logger)
+        session.cfg = Config(logger)
 
         super().__init__(logger,config,platform)
         # Figure out what we need to do
