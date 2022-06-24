@@ -1,6 +1,6 @@
 from augur_new.db.objects.github import GithubObject
 
-class PrCommentObject(GithubObject):
+class MessageObject(GithubObject):
     def __init__(self, comment: dict, platform_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str):
 
         dict_data = {
