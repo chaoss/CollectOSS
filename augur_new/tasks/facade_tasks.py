@@ -219,7 +219,7 @@ def facade_commits_model( message: str):
     session.cfg.db.close()
     session.cfg.db_people.close()
 
-@app.task
+@celery.task
 def facade_grab_contribs(repo_id):
     logger = get_task_logger(facade_grab_contribs.name)
     session = FacadeSession(logger)
@@ -229,7 +229,7 @@ def facade_grab_contribs(repo_id):
 
 #Method to parallelize, takes a queue of data and iterates over it
 
-@app.task
+@celery.task
 def process_commit_metadata(contributorQueue,repo_id):
     logger = get_task_logger(facade_grab_contribs.name)
     session = FacadeSession(logger)
@@ -434,7 +434,7 @@ def process_commit_metadata(contributorQueue,repo_id):
     
     return
 
-@app.task
+@celery.task
 def link_commits_to_contributor(contributorQueue):
         logger = get_task_logger(facade_resolve_contribs.name)
         session = FacadeSession(logger)
