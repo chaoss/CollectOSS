@@ -62,6 +62,7 @@ class FacadeSession(GithubTaskSession):
         self.force_invalidate_caches = self.augur_config.get_value("Facade", "force_invalidate_caches")
         self.rebuild_caches = self.augur_config.get_value("Facade", "rebuild_caches")
         self.multithreaded = self.augur_config.get_value("Facade", "multithreaded")
+        self.create_xlsx_summary_files = self.augur_config.get_value("Facade", "create_xlsx_summary_files")
 
 
 
