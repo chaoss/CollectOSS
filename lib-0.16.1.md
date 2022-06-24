@@ -16,7 +16,7 @@ bs4==0.0.1
 cachetools==4.2.2
 certifi==2021.5.30
 chardet==3.0.4
-click==8.0.3
+click==7.1.2
 cloudpickle==1.6.0
 -e git+https://github.com/chaoss/augur@bf86da2210439979ed20512f911a660ba589fe61#egg=clustering_worker&subdirectory=workers/clustering_worker
 coloredlogs==15.0
@@ -109,7 +109,7 @@ pyrsistent==0.17.3
 pytest==6.2.2
 python-crfsuite==0.9.7
 python-dateutil==2.8.1
-pytz==2021.3
+pytz==2021.1
 PyWavelets==1.1.1
 PyYAML==5.4.1
 regex==2021.4.4
@@ -161,7 +161,7 @@ tornado==6.1
 tox==3.23.0
 tqdm==4.61.0
 traitlets==5.0.5
-typing-extensions==3.10.0.0
+typing-extensions==3.7.4.3
 urllib3==1.25.11
 -e git+https://github.com/chaoss/augur@bf86da2210439979ed20512f911a660ba589fe61#egg=value_worker&subdirectory=workers/value_worker
 virtualenv==20.4.7
