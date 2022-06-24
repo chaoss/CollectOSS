@@ -38,9 +38,9 @@ import xlsxwriter
 import configparser
 import multiprocessing
 import numpy as np
-from facade_worker.facade02utilitymethods import update_repo_log, trim_commit, store_working_author, trim_author
-from facade_worker.facade03analyzecommit import analyze_commit
-from contributor_interfaceable.contributor_interface import *
+from .facade02utilitymethods import update_repo_log, trim_commit, store_working_author, trim_author
+from .facade03analyzecommit import analyze_commit
+from augur_new.facade_worker.contributor_interfaceable.contributor_interface import *
 
 # if platform.python_implementation() == 'PyPy':
 #   import pymysql

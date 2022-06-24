@@ -105,6 +105,8 @@ class GraphQlPageCollection(collections.abc.Sequence):
 
 
     def extract_paginate_result(self,responseObject):
+
+        print(responseObject.json())
         
         result_dict = responseObject.json()['data']
 

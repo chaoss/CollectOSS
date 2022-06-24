@@ -36,7 +36,7 @@ import os
 import getopt
 import xlsxwriter
 import configparser
-from facade_worker.facade02utilitymethods import update_repo_log, trim_commit, store_working_author, trim_author  
+from .facade02utilitymethods import update_repo_log, trim_commit, store_working_author, trim_author  
 
 def git_repo_initialize(cfg, repo_group_id=None):
 

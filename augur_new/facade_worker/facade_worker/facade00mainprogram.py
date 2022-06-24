@@ -28,13 +28,13 @@
 import traceback
 import sys, platform, imp, time, datetime, html.parser, subprocess, os, getopt, xlsxwriter, configparser, logging
 from multiprocessing import Process, Queue
-from facade_worker.facade01config import Config#increment_db, update_db, migrate_database_config, database_connection, get_setting, update_status, log_activity          
-from facade_worker.facade02utilitymethods import update_repo_log, trim_commit, store_working_author, trim_author   
-from facade_worker.facade03analyzecommit import analyze_commit
-from facade_worker.facade04postanalysiscleanup import git_repo_cleanup
-from facade_worker.facade05repofetch import git_repo_initialize, check_for_repo_updates, force_repo_updates, force_repo_analysis, git_repo_updates
-from facade_worker.facade06analyze import analysis
-from facade_worker.facade07rebuildcache import nuke_affiliations, fill_empty_affiliations, invalidate_caches, rebuild_unknown_affiliation_and_web_caches
+from .facade01config import Config#increment_db, update_db, migrate_database_config, database_connection, get_setting, update_status, log_activity          
+from .facade02utilitymethods import update_repo_log, trim_commit, store_working_author, trim_author   
+from .facade03analyzecommit import analyze_commit
+from .facade04postanalysiscleanup import git_repo_cleanup
+from .facade05repofetch import git_repo_initialize, check_for_repo_updates, force_repo_updates, force_repo_analysis, git_repo_updates
+#from .facade06analyze import analysis moved to facade_tasks.py
+from .facade07rebuildcache import nuke_affiliations, fill_empty_affiliations, invalidate_caches, rebuild_unknown_affiliation_and_web_caches
 
 #from contributor_interfaceable.facade08contributorinterfaceable import ContributorInterfaceable
 
@@ -45,7 +45,7 @@ from augur_new.tasks.task_session import GithubTaskSession
 
 class FacadeSession(GithubTaskSession):
     def __init__(self,logger,config={},platform='github'):
-        session.cfg = Config(self.logger)
+        self.cfg = Config(logger)
 
         super().__init__(logger,config,platform)
         # Figure out what we need to do
@@ -62,6 +62,7 @@ class FacadeSession(GithubTaskSession):
         self.force_invalidate_caches = self.augur_config.get_value("Facade", "force_invalidate_caches")
         self.rebuild_caches = self.augur_config.get_value("Facade", "rebuild_caches")
         self.multithreaded = self.augur_config.get_value("Facade", "multithreaded")
+        self.create_xlsx_summary_files = self.augur_config.get_value("Facade", "create_xlsx_summary_files")
 
 
 
