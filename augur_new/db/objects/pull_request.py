@@ -1,4 +1,4 @@
-from augur_new.objects.github import GithubObject
+from augur_new.db.objects.github import GithubObject
 
 class PrObject():
     def __init__(self, pr, repo_id, tool_source, tool_version):
@@ -61,6 +61,7 @@ class PrObject():
 
         self.labels = pr["labels"]
         self.assignees = pr["assignees"]
+        self.reviewers = pr["requested_reviewers"]
         self.metadata = [pr["head"], pr["base"]]
 
     def set_db_row(self, row):

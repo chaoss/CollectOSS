@@ -1,9 +1,14 @@
+import os
+
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 import redis
 
+from augur_new.config import AugurConfig
 from augur_new.tasks.start_tasks import start
 
+
+ROOT_AUGUR_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
 # initialize the flask app
 config = AugurConfig(ROOT_AUGUR_DIR)

@@ -1,15 +1,82 @@
 from .facade_tasks import *
+
+from augur_new.db.objects.pull_request import PrObject
+from augur_new.db.objects.issue import IssueObject
+from augur_new.db.data_parse import *
 # creates a class that is sub class of the sqlalchemy.orm.Session class that additional methods and fields added to it. 
 
 #NOTICE: A pull request is a type of issue as per Github.
 #So this file contains functionality for both prs and issues
 
 
+
+@celery.task
+def issues(owner: str, repo: str) -> None:
+
+    logger = get_task_logger(__name__)
+    session = GithubTaskSession(logger, config)
+
+    print(f"Collecting issues for {owner}/{repo}")
+
+    url = f"https://api.github.com/repos/{owner}/{repo}/issues?state=all"
+
+    # get repo_id or have it passed
+    repo_id = 1
+    tool_source = "Issue Task"
+    tool_version = "2.0"
+    # platform_id = 25150
+    data_source = "Github API"
+
+    issue_natural_keys = ["issue_url"]
+
+    # returns an iterable of all prs at this url
+    issues = GithubPaginator(url, session.oauths, logger)
+
+    issue_label_dicts = []
+    issue_assignee_dicts = []
+ 
+
+    # creating a list, because we would like to bulk insert in the future
+    len_issues = len(issues)
+    issue_total = len_issues
+    print(f"Length of issues: {len_issues}")
+    for index, issue in enumerate(issues):
+
+        print(f"Inserting issue {index + 1} of {len_issues}")
+
+        if is_valid_pr_block(issue) is True:
+            issue_total-=1
+            continue
+
+        issue_object = IssueObject(issue, repo_id, tool_source, tool_version, data_source)
+
+        # when the object gets inserted the db_row is added to the object which is a PullRequests orm object (so it contains all the column values)
+        session.insert_data([issue_object], Issues, issue_natural_keys)
+
+        issue_label_dicts += extract_needed_issue_label_data(issue_object.labels, issue_object.db_row.issue_id, repo_id,
+                                                       tool_source, tool_version, data_source)
+
+        issue_assignee_dicts += extract_needed_issue_assignee_data(issue_object.assignees, issue_object.db_row.issue_id, repo_id,
+                                                             tool_source, tool_version, data_source)
+
+
+    # logger.info(f"Inserting issue labels of length: {len(issue_label_dicts)}")
+    # issue_label_natural_keys = ['label_src_id', 'issue_id']
+    # session.insert_data(issue_label_dicts, IssueLabels, issue_label_natural_keys)
+  
+
+    # logger.info(f"Inserting issue assignees of length: {len(issue_assignee_dicts)}")
+    # issue_assignee_natural_keys = ['issue_assignee_src_id', 'issue_id']
+    # session.insert_data(issue_assignee_dicts, IssueAssignees, issue_assignee_natural_keys)
+
+    print(f"{issue_total} issues inserted")
+
+
 @celery.task
 def pull_requests(owner: str, repo: str) -> None:
 
     logger = get_task_logger(pull_requests.name)
-    session = TaskSession(logger, config)
+    session = GithubTaskSession(logger, config)
 
     logger.info(f"Collecting pull requests for {owner}/{repo}")
 
@@ -41,9 +108,6 @@ def pull_requests(owner: str, repo: str) -> None:
 
     len_prs = len(prs)
     for index, pr in enumerate(prs):
-
-        if index == 100:
-            break
 
         pr['head'].update(
             {'pr_head_or_base': 'head'}
@@ -79,111 +143,52 @@ def pull_requests(owner: str, repo: str) -> None:
         repo_pr_numbers.append(pr["number"]) 
 
 
-    # logger.info(f"\nInserting pr labels of length: {len(pr_label_dicts)}")
+    # logger.info(f"Inserting pr labels of length: {len(pr_label_dicts)}")
     # pr_label_natural_keys = ['pr_src_id', 'pull_request_id']
     # session.insert_data(pr_label_dicts, PullRequestLabels, pr_label_natural_keys)
   
 
-    # logger.info(f"\nInserting pr assignees of length: {len(pr_assignee_dicts)}")
+    # logger.info(f"Inserting pr assignees of length: {len(pr_assignee_dicts)}")
     # pr_assignee_natural_keys = ['pr_assignee_src_id', 'pull_request_id']
     # session.insert_data(pr_assignee_dicts, PullRequestAssignees, pr_assignee_natural_keys)
  
 
-    # logger.info(f"\nInserting pr reviewers of length: {len(pr_reviewer_dicts)}")
-    # pr_reviewer_natural_keys = ["pr_reviewer_src_id", "pull_request_id"]
+    # logger.info(f"Inserting pr reviewers of length: {len(pr_reviewer_dicts)}")
+    # pr_reviewer_natural_keys = ["pull_request_id", "pr_reviewer_src_id"]
     # session.insert_data(pr_reviewer_dicts, PullRequestReviewers, pr_reviewer_natural_keys)
     
 
-    start_time = time.time()
-    logger.info(f"\nBulk Inserting pr metadata of length: {len(pr_metadata_dicts)}")
-    pr_metadata_natural_keys = ['pull_request_id', 'pr_head_or_base', 'pr_sha']
-    session.insert_bulk_data(pr_metadata_dicts, PullRequestMeta, pr_metadata_natural_keys)
+    # start_time = time.time()
+    # logger.info(f"Inserting pr metadata of length: {len(pr_metadata_dicts)}")
+    # pr_metadata_natural_keys = ['pull_request_id', 'pr_head_or_base', 'pr_sha']
+    # session.insert_data(pr_metadata_dicts, PullRequestMeta, pr_metadata_natural_keys)
     
-    total_time = time.time() - start_time
-
-    print(f"{total_time} seconds to insert metadata")
 
 
-
-
+# TODO: Why do I need self?
 @celery.task
-def pull_request_review_comments(owner: str, repo: str) -> None:
-
-    logger = get_task_logger(pull_request_review_comments.name)
-    session = TaskSession(logger, config)
-
-    logger.info(f"Collecting pull request comments for {owner}/{repo}")
-
-    url = f"https://api.github.com/repos/{owner}/{repo}/pulls/comments"
-
-    pr_comments = GithubPaginator(url, session.oauths)
-
-    # get repo_id
-    repo_id = 1
-
-    platform_id = 25150
-    tool_source = "Pr comment task"
-    tool_version = "2.0"
-    data_source = "Github API"
-    pr_comment_natural_keys = ["platform_msg_id"]
-    pr_comment_ref_natural_keys = ["pr_review_msg_src_id"]
-
-    pr_comment_ref_dicts = []
-
-    pr_comment_len = len(pr_comments)
-
-    logger.info(f"Pr comments len: {pr_comment_len}")
-    for index, comment in enumerate(pr_comments):
-
-        # pr url associated with this comment
-        comment_pr_url = comment["pull_request_url"]
-
-        related_pr = PullRequests.query.filter_by(pr_url=comment_pr_url).one()
-
-        if not related_pr:
-            logger.info(
-                f"Error can't find pr for pr comment with id: {comment['id']}")
-            continue
-
-        pr_id = related_pr.pull_request_id
-
-        pr_comment_object = PrCommentObject(comment, platform_id, repo_id, tool_source, tool_version, data_source)
-
-        logger.info(f"Inserting pr review comment {index + 1} of {pr_comment_len}")
-        session.insert_data([pr_comment_object], Message, pr_comment_natural_keys)
-
-        msg_id = pr_comment_object.db_row.msg_id
-
-        pr_comment_ref = extract_pr_comment_ref_data(
-            comment, pr_id, msg_id, repo_id, tool_source, tool_version, data_source)
-
-        logger.info(pr_comment_ref)
-
-        pr_comment_ref_dicts.append(
-            pr_comment_ref
-        )
-
-        # pr_comment_ref_dicts.append(
-        #     extract_pr_comment_ref_data(comment, pr_id, msg_id, repo_id, tool_source, tool_version, data_source)
-        # )
-
-    logger.info(f"Insert pr comment refs")
-    session.insert_data(pr_comment_ref_dicts, PullRequestReviewMessageRef, pr_comment_ref_natural_keys)
-
-
-@celery.task
-def github_events(owner: str, repo: str):
+def github_events(self, owner: str, repo: str):
 
     logger = get_task_logger(github_events.name)
     logger.info(f"Collecting pull request events for {owner}/{repo}")
     
+    session = GithubTaskSession(logger, config)
+    
     url = f"https://api.github.com/repos/{owner}/{repo}/issues/events"
     
-    pr_events = GithubPaginator(url, session.oauths)
+    pr_events = GithubPaginator(url, session.oauths, logger)
+
+    index = 0
 
     data = []
     for pr_event in pr_events:
+
+        if index == 100:
+            break
+
         data.append(pr_event)
+
+        index+=1
 
     # len_pr_events = len(pr_events)
 
@@ -211,10 +216,6 @@ def github_events(owner: str, repo: str):
     process_events_job = group(task_list)
 
     result = process_events_job.apply_async()
-
-    logger.info(result.ready())
-
-    logger.info(result.successful())
 
     total_time = time.time() - start_time
     logger.info(f"{total_time} to complete github events for {owner}/{repo}")
@@ -247,7 +248,7 @@ def chunk_data(data, min_events_per_task, max_tasks):
 def process_events(events):
 
     logger = get_task_logger(process_events.name)
-    session = TaskSession(logger, config)
+    session = GithubTaskSession(logger, config)
 
     logger.info(f"Len of events: {len(events)}")
     logger.info(f"Type of events: {type(events)}")
@@ -312,12 +313,81 @@ def process_events(events):
     logger.info("Inserting all issue events")
     session.insert_data(issue_event_dicts, IssueEvents, issue_event_natural_keys)
 
+
+
+
+
+@celery.task
+def pull_request_review_comments(owner: str, repo: str) -> None:
+
+    logger = get_task_logger(pull_request_review_comments.name)
+    session = GithubTaskSession(logger, config)
+
+    logger.info(f"Collecting pull request comments for {owner}/{repo}")
+
+    url = f"https://api.github.com/repos/{owner}/{repo}/pulls/comments"
+
+    pr_comments = GithubPaginator(url, session.oauths)
+
+    # get repo_id
+    repo_id = 1
+
+    platform_id = 25150
+    tool_source = "Pr comment task"
+    tool_version = "2.0"
+    data_source = "Github API"
+    pr_comment_natural_keys = ["platform_msg_id"]
+    pr_comment_ref_natural_keys = ["pr_review_msg_src_id"]
+
+    pr_comment_ref_dicts = []
+
+    pr_comment_len = len(pr_comments)
+
+    logger.info(f"Pr comments len: {pr_comment_len}")
+    for index, comment in enumerate(pr_comments):
+
+        # pr url associated with this comment
+        comment_pr_url = comment["pull_request_url"]
+
+        related_pr = PullRequests.query.filter_by(pr_url=comment_pr_url).one()
+
+        if not related_pr:
+            logger.info(
+                f"Error can't find pr for pr comment with id: {comment['id']}")
+            continue
+
+        pr_id = related_pr.pull_request_id
+
+        pr_comment_object = PrCommentObject(comment, platform_id, repo_id, tool_source, tool_version, data_source)
+
+        logger.info(f"Inserting pr review comment {index + 1} of {pr_comment_len}")
+        session.insert_data([pr_comment_object], Message, pr_comment_natural_keys)
+
+        msg_id = pr_comment_object.db_row.msg_id
+
+        pr_comment_ref = extract_pr_comment_ref_data(
+            comment, pr_id, msg_id, repo_id, tool_source, tool_version, data_source)
+
+        logger.info(pr_comment_ref)
+
+        pr_comment_ref_dicts.append(
+            pr_comment_ref
+        )
+
+        # pr_comment_ref_dicts.append(
+        #     extract_pr_comment_ref_data(comment, pr_id, msg_id, repo_id, tool_source, tool_version, data_source)
+        # )
+
+    logger.info(f"Insert pr comment refs")
+    session.insert_data(pr_comment_ref_dicts, PullRequestReviewMessageRef, pr_comment_ref_natural_keys)
+
+
 # do this task after others because we need to add the multi threading like we did it before
 @celery.task
 def pull_request_reviews(owner: str, repo: str, pr_number_list: [int]) -> None:
 
     logger = get_task_logger(pull_request_reviews.name)
-    session = TaskSession(logger, config)
+    session = GithubTaskSession(logger, config)
 
     logger.info(f"Collecting pull request reviews for {owner}/{repo}")
 
@@ -329,50 +399,6 @@ def pull_request_reviews(owner: str, repo: str, pr_number_list: [int]) -> None:
 
 
 
-@celery.task
-def issues(owner: str, repo: str) -> None:
-
-    logger = get_task_logger(start.name)
-    session = TaskSession(logger, config)
-
-    print(f"Collecting issues for {owner}/{repo}")
-
-    url = f"https://api.github.com/repos/{owner}/{repo}/issues?state=all"
-
-    # get repo_id or have it passed
-    repo_id = 1
-    tool_source = "Issue Task"
-    tool_version = "2.0"
-    # platform_id = 25150
-    data_source = "Github API"
-
-    issue_natural_keys = ["issue_url"]
-
-    # returns an iterable of all prs at this url
-    issues = GithubPaginator(url, session.oauths, logger)
-
-    # issue_label_dicts = []
-    # issue_assignee_dicts = []
- 
-
-    # creating a list, because we would like to bulk insert in the future
-    len_issues = len(issues)
-    issue_total = len_issues
-    print(f"Length of issues: {len_issues}")
-    for index, issue in enumerate(issues):
-
-        print(f"Inserting issue {index + 1} of {len_issues}")
-
-        if is_valid_pr_block(issue) is True:
-            issue_total-=1
-            continue
-
-        issue_object = IssueObject(issue, repo_id, tool_source, tool_version, data_source)
-
-        # when the object gets inserted the db_row is added to the object which is a PullRequests orm object (so it contains all the column values)
-        session.insert_data([issue_object], Issues, issue_natural_keys)
-
-    print(f"{issue_total} issues inserted")
 
 def is_valid_pr_block(issue):
     return (
