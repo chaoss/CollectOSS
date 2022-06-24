@@ -362,6 +362,46 @@ class GitHubRepo():
 
         return pull_request_collection
 
+    def get_pull_requests_reviews_collection(self):
+        #Cursor and numRecords is handled by the collection internals
+        #totalCount is needed to furfill container class
+        #edges has the 'content' of the issues
+        query = """
+            query($numRecords: Int!, $cursor: String, $owner: String!, $repo: String!) {
+                repository(owner:$owner, name:$repo) {
+                    pullRequestReviews (first: $numRecords, after:$cursor) {
+                        totalCount
+                        edges {
+                            node {
+                                title
+                                body
+                                closed
+                                url
+                        
+                            }
+                        }
+                        pageInfo {
+                            hasNextPage
+                            endCursor
+                        }
+                    }
+                }
+            }
+        """
+
+        #Values specifies the dictionary values we want to return as the issue collection.
+        #e.g. here we get the pullRequests of the specified repository.
+        values = ("repository","pullRequests")
+        params = {
+            'owner' : self.owner,
+            'repo' : self.repo,
+            'values' : values
+        }
+
+        pull_request_collection = GraphQlPageCollection(query, self.keyAuth,self.logger,bind=params)
+
+        return pull_request_collection
+
 
 class PullRequest():
     def __init__(self, session, owner, repo):
