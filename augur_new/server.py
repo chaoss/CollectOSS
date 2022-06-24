@@ -1,9 +1,14 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 import redis
-from augur_new.config import AugurConfig
 import os
+import sys
 
+# allows us to reference augur_new (the parent module)
+# even though the code is executed from augur_new
+sys.path.append("..")
+
+from augur_new.config import AugurConfig
 from augur_new.tasks.start_tasks import start
 
 ROOT_AUGUR_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
@@ -23,6 +28,10 @@ DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = DB_STR
+
+@app.route("/")
+def hello_world():
+    return "<p>Hello, World!</p>"
 
 
 # intialize the redis conn
