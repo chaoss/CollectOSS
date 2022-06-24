@@ -37,12 +37,13 @@ from augur_new.tasks.task_session import *
 from augur_new.facade_worker.facade_worker.facade00mainprogram import *
 
 
+"""
 config_path = '../augur/augur.config.json'
 
 
 with open(config_path, 'r') as f:
     config = json.load(f)
-
+"""
 #enable celery multithreading
 @celery.task
 def analyze_commits_in_parallel(queue, repo_id, repo_location, multithreaded):
@@ -67,16 +68,16 @@ def analyze_commits_in_parallel(queue, repo_id, repo_location, multithreaded):
 
 def analysis(cfg, multithreaded, session=None, processes=6):
 
-# Run the analysis by looping over all active repos. For each repo, we retrieve
-# the list of commits which lead to HEAD. If any are missing from the database,
-# they are filled in. Then we check to see if any commits in the database are
-# not in the list of parents, and prune them out.
-#
-# We also keep track of the last commit to be processed, so that if the analysis
-# is interrupted (possibly leading to partial data in the database for the
-# commit being analyzed at the time) we can recover.
+    # Run the analysis by looping over all active repos. For each repo, we retrieve
+    # the list of commits which lead to HEAD. If any are missing from the database,
+    # they are filled in. Then we check to see if any commits in the database are
+    # not in the list of parents, and prune them out.
+    #
+    # We also keep track of the last commit to be processed, so that if the analysis
+    # is interrupted (possibly leading to partial data in the database for the
+    # commit being analyzed at the time) we can recover.
 
-### Local helper functions ###
+    ### Local helper functions ###
 
     def update_analysis_log(repos_id,status):
 
@@ -91,7 +92,7 @@ def analysis(cfg, multithreaded, session=None, processes=6):
         except:
             pass
 
-### The real function starts here ###
+    ### The real function starts here ###
 
     cfg.update_status('Running analysis')
     cfg.log_activity('Info',f"Beginning analysis.")
@@ -235,10 +236,6 @@ def analysis(cfg, multithreaded, session=None, processes=6):
         update_analysis_log(repo[0],'Complete')
 
     cfg.log_activity('Info','Running analysis (complete)')
-
-
-
-
 
 @celery.task
 def facade_commits_model():
