@@ -37,7 +37,11 @@ from augur_new.tasks.task_session import *
 from augur_new.facade_worker.facade_worker.facade00mainprogram import *
 
 
-config_path = '../augur/augur.config.json'
+current_dir = os.getcwd()
+
+root_augur_dir = ''.join(current_dir.partition("augur/")[:2])
+
+config_path = root_augur_dir + '/augur.config.json'
 
 
 with open(config_path, 'r') as f:
@@ -400,6 +404,7 @@ def facade_commits_model():
     if nuke_stored_affiliations:
         nuke_affiliations(session.cfg)
 
+    session.logger.info(session.cfg)
     if not limited_run or (limited_run and fix_affiliations):
         fill_empty_affiliations(session.cfg)
 
@@ -427,9 +432,9 @@ def facade_commits_model():
     print('\nCompleted in %s\n' % datetime.timedelta(seconds=int(elapsed_time)))
 
     session.cfg.cursor.close()
-    session.cfg.cursor_people.close()
+    #session.cfg.cursor_people.close()
     session.cfg.db.close()
-    session.cfg.db_people.close()
+    #session.cfg.db_people.close()
 
 @celery.task
 def facade_grab_contribs(repo_id):
