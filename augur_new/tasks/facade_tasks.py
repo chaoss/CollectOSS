@@ -432,9 +432,9 @@ def facade_commits_model():
     print('\nCompleted in %s\n' % datetime.timedelta(seconds=int(elapsed_time)))
 
     session.cfg.cursor.close()
-    session.cfg.cursor_people.close()
+    #session.cfg.cursor_people.close()
     session.cfg.db.close()
-    session.cfg.db_people.close()
+    #session.cfg.db_people.close()
 
 @celery.task
 def facade_grab_contribs(repo_id):
