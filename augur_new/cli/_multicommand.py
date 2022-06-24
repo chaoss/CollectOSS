@@ -7,7 +7,7 @@ import os
 import sys
 import click
 import importlib
-import augur.application
+# import augur.application
 
 CONTEXT_SETTINGS = dict(auto_envvar_prefix='AUGUR')
 
@@ -25,7 +25,7 @@ class AugurMultiCommand(click.MultiCommand):
 
     def get_command(self, ctx, name):
         try:
-            module = importlib.import_module('.' + name, 'augur.cli')
+            module = importlib.import_module('.' + name, 'cli')
             return module.cli
         except ModuleNotFoundError as e:
             pass

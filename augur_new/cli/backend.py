@@ -10,12 +10,13 @@ import signal
 import multiprocessing as mp
 import gunicorn.app.base
 from gunicorn.arbiter import Arbiter
+import sys
 
-from augur.cli import initialize_logging, pass_config, pass_application
-from augur.housekeeper import Housekeeper
-from augur.server import Server
-from augur.application import Application
-from augur.gunicorn import AugurGunicornApp
+
+# from augur.housekeeper import Housekeeper
+# from augur.server import Server
+# from augur.application import Application
+# from augur.gunicorn import AugurGunicornApp
 
 logger = logging.getLogger("augur")
 
@@ -67,7 +68,7 @@ def start(disable_housekeeper, skip_cleanup, logstash, logstash_with_cleanup):
     # Arbiter(master).run()
 
 @cli.command('stop')
-@initialize_logging
+
 def stop():
     """
     Sends SIGTERM to all Augur server & worker processes
@@ -75,7 +76,7 @@ def stop():
     _broadcast_signal_to_processes(given_logger=logging.getLogger("augur.cli"))
 
 @cli.command('kill')
-@initialize_logging
+
 def kill():
     """
     Sends SIGKILL to all Augur server & worker processes
@@ -83,7 +84,7 @@ def kill():
     _broadcast_signal_to_processes(signal=signal.SIGKILL, given_logger=logging.getLogger("augur.cli"))
 
 @cli.command('export-env')
-@pass_config
+
 def export_env(config):
     """
     Exports your GitHub key and database credentials
@@ -104,7 +105,6 @@ def export_env(config):
     env_file.close()
 
 @cli.command('repo-reset')
-@pass_application
 def repo_reset(augur_app):
     """
     Refresh repo collection to force data collection
@@ -114,7 +114,7 @@ def repo_reset(augur_app):
     logger.info("Repos successfully reset")
 
 @cli.command('processes')
-@initialize_logging
+
 def processes():
     """
     Outputs the name/PID of all Augur server & worker processes"""
