@@ -404,6 +404,7 @@ def facade_commits_model():
     if nuke_stored_affiliations:
         nuke_affiliations(session.cfg)
 
+    session.logger.info(session.cfg)
     if not limited_run or (limited_run and fix_affiliations):
         fill_empty_affiliations(session.cfg)
 
