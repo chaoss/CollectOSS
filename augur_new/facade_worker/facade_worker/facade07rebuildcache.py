@@ -98,10 +98,10 @@ def fill_empty_affiliations(cfg):
             "AND ca_active = 1 "
             "ORDER BY ca_start_date DESC")
 
-        cfg.cursor_people.execute(find_exact_match, (email, ))
+        cfg.cursor.execute(find_exact_match, (email, ))
         cfg.db_people.commit()
 
-        matches = list(cfg.cursor_people)
+        matches = list(cfg.cursor)
 
         if not matches and email.find('@') < 0:
 
@@ -123,10 +123,10 @@ def fill_empty_affiliations(cfg):
                 "AND ca_active = 1 "
                 "ORDER BY ca_start_date DESC")
 
-            cfg.cursor_people.execute(find_exact_domain, (domain, ))
+            cfg.cursor.execute(find_exact_domain, (domain, ))
             cfg.db_people.commit()
 
-            matches = list(cfg.cursor_people)
+            matches = list(cfg.cursor)
 
         if not matches:
 
@@ -138,10 +138,10 @@ def fill_empty_affiliations(cfg):
                 "AND ca_active = 1 "
                 "ORDER BY ca_start_date DESC")
 
-            cfg.cursor_people.execute(find_domain, (domain[domain.rfind('.',0,domain.rfind('.',0))+1:], ))
+            cfg.cursor.execute(find_domain, (domain[domain.rfind('.',0,domain.rfind('.',0))+1:], ))
             cfg.db_people.commit()
 
-            matches = list(cfg.cursor_people)
+            matches = list(cfg.cursor)
 
         if not matches:
 
@@ -182,10 +182,10 @@ def fill_empty_affiliations(cfg):
             "WHERE alias_email=%s "
             "AND cntrb_active = 1")
 
-        cfg.cursor_people.execute(fetch_canonical, (email, ))
+        cfg.cursor.execute(fetch_canonical, (email, ))
         cfg.db_people.commit()
 
-        canonical = list(cfg.cursor_people)
+        canonical = list(cfg.cursor)
 
         if canonical:
             for email in canonical:
@@ -214,9 +214,9 @@ def fill_empty_affiliations(cfg):
     get_changed_affiliations = ("SELECT ca_domain FROM contributor_affiliations")# WHERE "
         #"ca_last_used >= timestamptz  %s")
 
-    cfg.cursor_people.execute(get_changed_affiliations)#, (affiliations_processed, ))
+    cfg.cursor.execute(get_changed_affiliations)#, (affiliations_processed, ))
 
-    changed_affiliations = list(cfg.cursor_people)
+    changed_affiliations = list(cfg.cursor)
 
     # Process any affiliations which changed since we last checked
 
@@ -260,9 +260,9 @@ def fill_empty_affiliations(cfg):
     get_changed_aliases = ("SELECT alias_email FROM contributors_aliases WHERE "
         "cntrb_last_modified >= %s")
 
-    cfg.cursor_people.execute(get_changed_aliases, (aliases_processed, ))
+    cfg.cursor.execute(get_changed_aliases, (aliases_processed, ))
 
-    changed_aliases = list(cfg.cursor_people)
+    changed_aliases = list(cfg.cursor)
 
     # Process any aliases which changed since we last checked
 
