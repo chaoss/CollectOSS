@@ -111,7 +111,7 @@ def extract_needed_pr_metadata(metadata_list: [dict], pr_id: int, platform_id: i
 
 
 
-def extract_pr_comment_ref_data(comment: dict, pr_id: int, msg_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> dict:
+def extract_pr_review_message_ref_data(comment: dict, pr_id: int, msg_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> dict:
 
     pr_review_comment_message_ref = {
         'pr_review_id':  pr_id,
@@ -282,6 +282,62 @@ def extract_needed_issue_label_data(labels: [dict], issue_id: int, repo_id: int,
         label_dicts.append(label_dict)
 
     return label_dicts
+
+
+
+# retrieve only the needed data for pr labels from the api response
+def extract_needed_issue_message_ref_data(messages: [dict], issue_id: int, msg_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> [dict]:
+
+    if len(messages) == 0:
+        return []
+
+    message_ref_dicts = []
+    for message in messages:
+
+        message_ref_dict = {
+            'issue_id': issue_id,
+            'msg_id': message['msg_id'],
+            'tool_source': tool_source,
+            'tool_version': tool_version,
+            'data_source': data_source,
+            'issue_msg_ref_src_comment_id': int(message['id']),
+            'issue_msg_ref_src_node_id': message['node_id'],
+            'repo_id': repo_id
+        }
+
+        # label_obj = PullRequestLabels(**label_dict)
+
+        message_ref_dicts.append(message_ref_dict)
+
+    return message_ref_dicts
+
+
+
+# retrieve only the needed data for pr labels from the api response
+def extract_needed_pr_message_ref_data(messages: [dict], pull_request_id: int, msg_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> [dict]:
+
+    if len(messages) == 0:
+        return []
+
+    message_ref_dicts = []
+    for message in messages:
+
+        message_ref_dict = {
+                'pull_request_id': pull_request_id,
+                'msg_id': msg_id, # to cast, or not to cast. That is the question. 12/6/2021
+                'pr_message_ref_src_comment_id': int(comment['id']),
+                'pr_message_ref_src_node_id': comment['node_id'],
+                'tool_source': tool_source,
+                'tool_version': tool_version,
+                'data_source': data_source,
+                'repo_id': repo_id
+        }
+                
+
+        message_ref_dicts.append(message_ref_dict)
+
+    return message_ref_dicts
+     
 
                 
 

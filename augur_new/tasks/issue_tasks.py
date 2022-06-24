@@ -312,9 +312,78 @@ def process_events(events):
     session.insert_data(issue_event_dicts, IssueEvents, issue_event_natural_keys)
 
 
+@celery.task
+def github_comments(owner: str, repo: str) -> None:
+
+    # define logger for task
+    logger = get_task_logger(github_comments.name)
+    logger.info(f"Collecting github comments for {owner}/{repo}")
+    
+    # define database task session, that also holds autentication keys the GithubPaginator needs
+    session = GithubTaskSession(logger, config)
+    
+    # url to get issue and pull request comments
+    url = f"https://api.github.com/repos/{owner}/{repo}/issues/comments"
+    
+    # GithubPaginator creates and iterable of pr_events
+    messages = GithubPaginator(url, session.oauths, logger)
+
+
+    repo_id = 1
+    platform_id = 25150
+    tool_source = "Pr comment task"
+    tool_version = "2.0"
+    data_source = "Github API"
+
+    # TODO: Remove tool_source
+    message_natural_keys = ["platform_msg_id", "tool_source"]
+    pr_message_ref_natural_keys = ["pull_request_id", "pr_message_ref_src_comment_id"]
+    issue_message_ref_natural_keys = ["issue_id", "issue_msg_ref_src_comment_id"]
+
+    pr_message_ref_dicts = []
+    issue_message_ref_dicts = []
+
+
+    # SELECT pr_src_number FROM augur_data.pull_requests where repo_id= 25961
+    # SELECT pr_src_number FROM augur_data.pull_requests where repo_id= 25961
 
 
 
+    for message in messages:
+
+        message_object = MessageObject(message, platform_id, repo_id, tool_source, tool_version, data_source)
+
+        # when the object gets inserted the db_row is added to the object which is a PullRequests orm object (so it contains all the column values)
+        session.insert_data([message_object], Message, message_natural_keys)
+
+        if is_issue_message(message):
+
+            issue_message_ref_dicts += extract_needed_issue_message_ref_data(messages, issue_id, message_object.db_row.msg_id, repo_id, tool_source, tool_version, data_source)
+
+        else:
+
+            pr_message_ref_dicts += extract_needed_pr_message_ref_data(messages, pull_request_id, message_object.db_row.msg_id, platform_id, repo_id, tool_source, tool_version, data_source)
+
+
+
+    logger.info(f"Issue message count: {len(issue_message_ref_dicts)}")
+    logger.info(f"Pr message count: {len(pr_message_ref_dicts)}")
+
+    logger.info("Inserting all pr messages")
+    session.insert_data(pr_message_ref_dicts, PullRequestMessageRef, pr_message_ref_natural_keys)
+
+    logger.info("Inserting all issue messages")
+    session.insert_data(issue_message_ref_dicts, IssueMessageRef, issue_message_ref_natural_keys)
+
+
+
+def is_issue_message():
+
+        pass
+
+
+
+        
 @celery.task
 def pull_request_review_comments(owner: str, repo: str) -> None:
 
@@ -363,7 +432,7 @@ def pull_request_review_comments(owner: str, repo: str) -> None:
 
         msg_id = pr_comment_object.db_row.msg_id
 
-        pr_comment_ref = extract_pr_comment_ref_data(
+        pr_comment_ref = extract_pr_review_message_ref_data(
             comment, pr_id, msg_id, repo_id, tool_source, tool_version, data_source)
 
         logger.info(pr_comment_ref)
