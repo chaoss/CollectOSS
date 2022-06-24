@@ -20,6 +20,7 @@ import collections
     PR_reviews, events, messages, pr_commits, pr_files(already done convert it)
 """
 
+#Get data extraction logic for nested nodes in return data.
 
 #Should take the query and two page variables for pagination
 class GraphQlPageCollection(collections.abc.Sequence):
@@ -324,6 +325,7 @@ class GitHubRepo():
 
         return issueCollection
     
+    #Get pr reviews from here and mark the ones we can't get all at once.
     def get_pull_requests_collection(self):
         #Cursor and numRecords is handled by the collection internals
         #totalCount is needed to furfill container class
