@@ -41,7 +41,7 @@ current_dir = os.getcwd()
 
 root_augur_dir = ''.join(current_dir.partition("augur/")[:2])
 
-config_path = root_augur_dir + 'augur.config.json'
+config_path = root_augur_dir + '/augur.config.json'
 
 
 with open(config_path, 'r') as f:
