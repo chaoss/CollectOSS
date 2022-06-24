@@ -33,7 +33,7 @@ from .facade02utilitymethods import update_repo_log, trim_commit, store_working_
 from .facade03analyzecommit import analyze_commit
 from .facade04postanalysiscleanup import git_repo_cleanup
 from .facade05repofetch import git_repo_initialize, check_for_repo_updates, force_repo_updates, force_repo_analysis, git_repo_updates
-from .facade06analyze import analysis
+#from .facade06analyze import analysis moved to facade_tasks.py
 from .facade07rebuildcache import nuke_affiliations, fill_empty_affiliations, invalidate_caches, rebuild_unknown_affiliation_and_web_caches
 
 #from contributor_interfaceable.facade08contributorinterfaceable import ContributorInterfaceable
