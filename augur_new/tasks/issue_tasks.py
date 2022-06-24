@@ -60,14 +60,14 @@ def issues(owner: str, repo: str) -> None:
                                                              tool_source, tool_version, data_source)
 
 
-    # logger.info(f"Inserting issue labels of length: {len(issue_label_dicts)}")
-    # issue_label_natural_keys = ['label_src_id', 'issue_id']
-    # session.insert_data(issue_label_dicts, IssueLabels, issue_label_natural_keys)
+    logger.info(f"Inserting issue labels of length: {len(issue_label_dicts)}")
+    issue_label_natural_keys = ['label_src_id', 'issue_id']
+    session.insert_data(issue_label_dicts, IssueLabels, issue_label_natural_keys)
   
 
-    # logger.info(f"Inserting issue assignees of length: {len(issue_assignee_dicts)}")
-    # issue_assignee_natural_keys = ['issue_assignee_src_id', 'issue_id']
-    # session.insert_data(issue_assignee_dicts, IssueAssignees, issue_assignee_natural_keys)
+    logger.info(f"Inserting issue assignees of length: {len(issue_assignee_dicts)}")
+    issue_assignee_natural_keys = ['issue_assignee_src_id', 'issue_id']
+    session.insert_data(issue_assignee_dicts, IssueAssignees, issue_assignee_natural_keys)
 
     print(f"{issue_total} issues inserted")
 
@@ -143,25 +143,26 @@ def pull_requests(owner: str, repo: str) -> None:
         repo_pr_numbers.append(pr["number"]) 
 
 
-    # logger.info(f"Inserting pr labels of length: {len(pr_label_dicts)}")
-    # pr_label_natural_keys = ['pr_src_id', 'pull_request_id']
-    # session.insert_data(pr_label_dicts, PullRequestLabels, pr_label_natural_keys)
+    # start task()
+    logger.info(f"Inserting pr labels of length: {len(pr_label_dicts)}")
+    pr_label_natural_keys = ['pr_src_id', 'pull_request_id']
+    session.insert_data(pr_label_dicts, PullRequestLabels, pr_label_natural_keys)
   
-
-    # logger.info(f"Inserting pr assignees of length: {len(pr_assignee_dicts)}")
-    # pr_assignee_natural_keys = ['pr_assignee_src_id', 'pull_request_id']
-    # session.insert_data(pr_assignee_dicts, PullRequestAssignees, pr_assignee_natural_keys)
+    # start task()
+    logger.info(f"Inserting pr assignees of length: {len(pr_assignee_dicts)}")
+    pr_assignee_natural_keys = ['pr_assignee_src_id', 'pull_request_id']
+    session.insert_data(pr_assignee_dicts, PullRequestAssignees, pr_assignee_natural_keys)
  
 
-    # logger.info(f"Inserting pr reviewers of length: {len(pr_reviewer_dicts)}")
-    # pr_reviewer_natural_keys = ["pull_request_id", "pr_reviewer_src_id"]
-    # session.insert_data(pr_reviewer_dicts, PullRequestReviewers, pr_reviewer_natural_keys)
+    logger.info(f"Inserting pr reviewers of length: {len(pr_reviewer_dicts)}")
+    pr_reviewer_natural_keys = ["pull_request_id", "pr_reviewer_src_id"]
+    session.insert_data(pr_reviewer_dicts, PullRequestReviewers, pr_reviewer_natural_keys)
     
 
-    # start_time = time.time()
-    # logger.info(f"Inserting pr metadata of length: {len(pr_metadata_dicts)}")
-    # pr_metadata_natural_keys = ['pull_request_id', 'pr_head_or_base', 'pr_sha']
-    # session.insert_data(pr_metadata_dicts, PullRequestMeta, pr_metadata_natural_keys)
+    start_time = time.time()
+    logger.info(f"Inserting pr metadata of length: {len(pr_metadata_dicts)}")
+    pr_metadata_natural_keys = ['pull_request_id', 'pr_head_or_base', 'pr_sha']
+    session.insert_data(pr_metadata_dicts, PullRequestMeta, pr_metadata_natural_keys)
     
 
 
@@ -183,8 +184,8 @@ def github_events(self, owner: str, repo: str):
     data = []
     for pr_event in pr_events:
 
-        if index == 100:
-            break
+        # if index == 100:
+        #     break
 
         data.append(pr_event)
 
@@ -206,7 +207,7 @@ def github_events(self, owner: str, repo: str):
     logger.info(len(data))
 
     min_events_per_task = 250
-    max_tasks = 1
+    max_tasks = 5
 
     chunked_data = chunk_data(data, min_events_per_task, max_tasks)
 
@@ -216,9 +217,6 @@ def github_events(self, owner: str, repo: str):
     process_events_job = group(task_list)
 
     result = process_events_job.apply_async()
-
-    total_time = time.time() - start_time
-    logger.info(f"{total_time} to complete github events for {owner}/{repo}")
 
 
 def chunk_data(data, min_events_per_task, max_tasks):

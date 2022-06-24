@@ -227,3 +227,63 @@ def extract_issue_event_data(event: dict, issue_id: int, platform_id: int, repo_
     }
 
     return issue_event
+
+
+def extract_needed_issue_assignee_data(assignees: [dict], issue_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> [dict]:
+
+    if len(assignees) == 0:
+        return []
+
+
+    assignee_dicts = []
+    for assignee in assignees:
+
+        assignee_dict = {
+            'issue_id': issue_id,
+            'cntrb_id': None,
+            'tool_source': tool_source,
+            'tool_version': tool_version,
+            'data_source': data_source,
+            'issue_assignee_src_id': int(assignee['id']),
+            'issue_assignee_src_node': assignee['node_id'],
+            'repo_id': repo_id 
+        }
+
+        assignee_dicts.append(assignee_dict)
+
+    return assignee_dicts
+
+
+
+# retrieve only the needed data for pr labels from the api response
+def extract_needed_issue_label_data(labels: [dict], issue_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> [dict]:
+
+    if len(labels) == 0:
+        return []
+
+    label_dicts = []
+    for label in labels:
+
+        label_dict = {
+            'issue_id': issue_id,
+            'label_text': label['name'],
+            'label_description': label['description'] if 'description' in label else None,
+            'label_color': label['color'],
+            'tool_source': tool_source,
+            'tool_version': tool_version,
+            'data_source': data_source,
+            'label_src_id': int(label['id']),
+            'label_src_node_id': label['node_id'],
+            'repo_id': repo_id 
+        }
+
+        # label_obj = PullRequestLabels(**label_dict)
+
+        label_dicts.append(label_dict)
+
+    return label_dicts
+
+                
+
+
+

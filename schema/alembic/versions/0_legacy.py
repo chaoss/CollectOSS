@@ -36,20 +36,26 @@ def upgrade():
             logger.info(f"New database, will run all legacy migrations")
     legacy_folder = Path(__file__).parent / "legacy"
     relevant_legacy_migrations = filter(
-        lambda x: int(x.split(".")[0]) > augur_version,
-        glob("*.sql", root_dir=str(legacy_folder)),
+        lambda x: int(x.split("/")[-1].split(".")[0]) > augur_version,
+        glob(f"{legacy_folder}/*.sql"),
     )
     ordered_legacy_migrations = list(
         sorted(
             relevant_legacy_migrations,
-            key=lambda x: int(x.split(".")[0]),
+            key=lambda x: str(int(x.split("/")[-1].split(".")[0])*10000) + x,
         )
     )
+
     for legacy_migration_filename in ordered_legacy_migrations:
-        legacy_migration_file_path = legacy_folder / legacy_migration_filename
-        with legacy_migration_file_path.open() as legacy_migration_file:
-            logger.info(f"Running legacy migration {legacy_migration_filename}")
-            op.execute(legacy_migration_file.read())
+        print(f"Migration file: {legacy_migration_filename}")
+
+    
+    # for legacy_migration_filename in ordered_legacy_migrations:
+        
+    #     legacy_migration_file_path = legacy_folder / legacy_migration_filename
+    #     with legacy_migration_file_path.open() as legacy_migration_file:
+    #         logger.info(f"Running legacy migration {legacy_migration_filename}")
+    #         op.execute(legacy_migration_file.read())
 
 
 def downgrade():

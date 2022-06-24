@@ -615,6 +615,8 @@ class IssueAssignees(db.Model):
 
     __tablename__ = 'issue_assignees'
     __table_args__ = (
+        UniqueConstraint("issue_assignee_src_id", "issue_id", name="issue-assignee-unique"),
+
         db.Index("issue-cntrb-assign-idx-1", cntrb_id),
         {"schema": "augur_data"}
     )
@@ -630,7 +632,7 @@ class IssueEvents(db.Model):
     repo_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.repo.repo_id',
                         name='fk_issue_events_repo', ondelete="RESTRICT", onupdate="CASCADE"))
     cntrb_id = db.Column(db.BigInteger, db.ForeignKey('augur_data.contributors.cntrb_id',
-                         name='fk_issue_events_contributors_1', ondelete="RESTRICT", onupdate="CASCADE"), nullable=False)
+                         name='fk_issue_events_contributors_1', ondelete="RESTRICT", onupdate="CASCADE"))
     action = db.Column(db.String(), nullable=False)
     action_commit_hash = db.Column(db.String())
     created_at = db.Column(db.TIMESTAMP(), nullable=False,
@@ -777,6 +779,8 @@ class Issues(db.Model):
 
     __tablename__ = 'issues'
     __table_args__ = (
+
+        UniqueConstraint('issue_url', name="issues-unique"),
 
         db.Index("issue-cntrb-dix2", cntrb_id),
         db.Index("issues_ibfk_1", repo_id),
@@ -1135,6 +1139,8 @@ class PullRequestAssignees(db.Model):
 
     __tablename__ = 'pull_request_assignees'
     __table_args__ = (
+        UniqueConstraint('pr_assignee_src_id', 'pull_request_id', name="pr-assignees-unique"),
+
         db.Index("pr_meta_cntrb-idx", contrib_id),
         {"schema": "augur_data"}
     )
@@ -1182,7 +1188,7 @@ class PullRequestEvents(db.Model):
                         ondelete="RESTRICT", onupdate="RESTRICT", initially="DEFERRED", deferrable=True))
     cntrb_id = db.Column(db.BigInteger, db.ForeignKey(
         'augur_data.contributors.cntrb_id', name='fk_pull_request_events_contributors_1'), nullable=False)
-    action = db.Column(db.String(), nullable=False)
+    action = db.Column(db.String())
     action_commit_hash = db.Column(db.String())
     created_at = db.Column(db.TIMESTAMP(), nullable=False,
                            server_default=func.current_timestamp())
@@ -1202,7 +1208,7 @@ class PullRequestEvents(db.Model):
     __tablename__ = 'pull_request_events'
     __table_args__ = (
         PrimaryKeyConstraint('pr_event_id', name='pr_events_pkey'),
-        UniqueConstraint('pr_platform_event_id', 'platform_id',
+        UniqueConstraint('node_id', 'platform_id',
                          name='unique-pr-event-id'),
         db.Index("pr_events_ibfk_1", pull_request_id),
         db.Index("pr_events_ibfk_2", cntrb_id),
@@ -1322,6 +1328,8 @@ class PullRequestMeta(db.Model):
 
     __tablename__ = 'pull_request_meta'
     __table_args__ = (
+        UniqueConstraint('pull_request_id', 'pr_head_or_base', 'pr_sha', name='pr-meta-unique'),
+
         db.Index("pr_meta-cntrbid-idx", cntrb_id),
         {"schema": "augur_data",
          "comment": 'Pull requests contain referencing metadata.  There are a few columns that are discrete. There are also head and base designations for the repo on each side of the pull request. Similar functions exist in GitLab, though the language here is based on GitHub. The JSON Being adapted to as of the development of this schema is here:      "base": {       "label": "chaoss:dev",       "ref": "dev",       "sha": "dc6c6f3947f7dc84ecba3d8bda641ef786e7027d",       "user": {         "login": "chaoss",         "id": 29740296,         "node_id": "MDEyOk9yZ2FuaXphdGlvbjI5NzQwMjk2",         "avatar_url": "https://avatars2.githubusercontent.com/u/29740296?v=4",         "gravatar_id": "",         "url": "https://api.github.com/users/chaoss",         "html_url": "https://github.com/chaoss",         "followers_url": "https://api.github.com/users/chaoss/followers",         "following_url": "https://api.github.com/users/chaoss/following{/other_user}",         "gists_url": "https://api.github.com/users/chaoss/gists{/gist_id}",         "starred_url": "https://api.github.com/users/chaoss/starred{/owner}{/repo}",         "subscriptions_url": "https://api.github.com/users/chaoss/subscriptions",         "organizations_url": "https://api.github.com/users/chaoss/orgs",         "repos_url": "https://api.github.com/users/chaoss/repos",         "events_url": "https://api.github.com/users/chaoss/events{/privacy}",         "received_events_url": "https://api.github.com/users/chaoss/received_events",         "type": "Organization",         "site_admin": false       },       "repo": {         "id": 78134122,         "node_id": "MDEwOlJlcG9zaXRvcnk3ODEzNDEyMg==",         "name": "augur",         "full_name": "chaoss/augur",         "private": false,         "owner": {           "login": "chaoss",           "id": 29740296,           "node_id": "MDEyOk9yZ2FuaXphdGlvbjI5NzQwMjk2",           "avatar_url": "https://avatars2.githubusercontent.com/u/29740296?v=4",           "gravatar_id": "",           "url": "https://api.github.com/users/chaoss",           "html_url": "https://github.com/chaoss",           "followers_url": "https://api.github.com/users/chaoss/followers",           "following_url": "https://api.github.com/users/chaoss/following{/other_user}",           "gists_url": "https://api.github.com/users/chaoss/gists{/gist_id}",           "starred_url": "https://api.github.com/users/chaoss/starred{/owner}{/repo}",           "subscriptions_url": "https://api.github.com/users/chaoss/subscriptions",           "organizations_url": "https://api.github.com/users/chaoss/orgs",           "repos_url": "https://api.github.com/users/chaoss/repos",           "events_url": "https://api.github.com/users/chaoss/events{/privacy}",           "received_events_url": "https://api.github.com/users/chaoss/received_events",           "type": "Organization",           "site_admin": false         }, '}
@@ -1429,8 +1437,8 @@ class PullRequestReviewers(db.Model):
 
     __tablename__ = 'pull_request_reviewers'
     __table_args__ = (
-        UniqueConstraint('pr_source_id', 'pr_reviewer_src_id',
-                         name='unique_pr_src_reviewer_key', initially="DEFERRED", deferrable=True),
+        UniqueConstraint('pr_reviewer_src_id', 'pull_request_id',
+                         name='unique_pr_src_reviewer_key'),
         db.Index("pr-reviewers-cntrb-idx1", cntrb_id),
         {"schema": "augur_data"}
     )
