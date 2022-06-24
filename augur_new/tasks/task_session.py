@@ -211,7 +211,7 @@ class GithubTaskSession(TaskSession):
 
         super().__init__(logger, config, platform)
 
-        keys = self.get_list_of_oauth_keys(self.engine, config["key_database"])
+        keys = self.get_list_of_oauth_keys(self.engine, self.config["key_database"])
 
         self.oauths = RandomKeyAuth(keys)
         
