@@ -356,7 +356,7 @@ def github_comments(owner: str, repo: str) -> None:
         # when the object gets inserted the db_row is added to the object which is a PullRequests orm object (so it contains all the column values)
         session.insert_data([message_object], Message, message_natural_keys)
 
-        if is_issue_message(message):
+        if is_issue_message(message["html_url"]):
 
             issue_message_ref_dicts += extract_needed_issue_message_ref_data(messages, issue_id, message_object.db_row.msg_id, repo_id, tool_source, tool_version, data_source)
 
@@ -377,9 +377,9 @@ def github_comments(owner: str, repo: str) -> None:
 
 
 
-def is_issue_message():
+def is_issue_message(html_url):
 
-        pass
+    return 'pull' not in html_url
 
 
 
