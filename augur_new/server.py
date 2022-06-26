@@ -40,7 +40,10 @@ def hello_world():
 owner = "chaoss"
 repo = "augur"
 
-start.delay(owner, repo)
+start_task = start.s(owner, repo)
+result = contrib_jobs.apply_async()
+
+# start.delay(owner, repo)
 
 # app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 # db = SQLAlchemy(app)

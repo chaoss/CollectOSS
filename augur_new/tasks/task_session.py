@@ -136,7 +136,9 @@ class TaskSession(s.orm.Session):
                 index_elements=natural_keys, set_=dict(data))
 
             try:
-                self.execute_sql(insert_stmt)
+                connection = self.engine.connect()
+                id = connection.execute(insert_stmt)
+                
             except s.exc.DatabaseError as e:
                 self.logger.info(f"Error: {e}")
                 continue
@@ -154,6 +156,9 @@ class TaskSession(s.orm.Session):
             if len(rows) > 1:
                 self.logger.info(f"Error values in table not unique on {natural_keys}")
                 continue
+
+            print(id)
+            print(rows[0].pull_reqest_id)
 
             obj.set_db_row(rows[0])
 

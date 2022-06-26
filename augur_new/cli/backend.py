@@ -12,6 +12,9 @@ import gunicorn.app.base
 from gunicorn.arbiter import Arbiter
 import sys
 
+sys.path.append("..")
+
+from augur_new.tasks.start_tasks import start
 
 # from augur.housekeeper import Housekeeper
 # from augur.server import Server
@@ -33,7 +36,19 @@ def start(disable_housekeeper, skip_cleanup, logstash, logstash_with_cleanup):
     """
     Start Augur's backend server
     """
+    # print("Starting celery worker")
+    # subprocess.call(["celery", "-A", "tasks.celery.celery", "worker", "--loglevel=info", "-E"])
+
+    print("Starting flask server")
     subprocess.call(["gunicorn", "-c", "gunicorn.py", "-b", "127.0.0.1:8000", "wsgi:app"])
+
+
+    owner = "chaoss"
+    repo = "augur"
+
+    start.delay(owner, repo)
+
+
     # augur_app = Application()
     # logger.info("Augur application initialized")
     # logger.info(f"Using config file: {augur_app.config.config_file_location}")
