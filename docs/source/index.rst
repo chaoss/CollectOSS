@@ -40,7 +40,7 @@ Augur gathers trace data for a group of repositories, normalize it into our data
 
 This software is developed as part of the CHAOSS (Community Health Analytics Open Source Software) project. Many of our metrics are implementations of the metrics defined by our community. You can find more information about how to get involved on the CHAOSS website. 
 
-If you want to see augur in action, you can view CHAOSS’s augur instance at http://augur.chaoss.io 
+If you want to see augur in action, you can view CHAOSS’s augur instance `here <http://augur.chaoss.io>`_. 
 
 
 Current maintainers
