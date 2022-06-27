@@ -12,14 +12,11 @@ import gunicorn.app.base
 from gunicorn.arbiter import Arbiter
 import sys
 
-sys.path.append("..")
-
-from augur_new.tasks.start_tasks import start
-
-# from augur.housekeeper import Housekeeper
+from tasks.start_tasks import start_task
+from augur.application import Application
+from augur.gunicorn import AugurGunicornApp
 # from augur.server import Server
-# from augur.application import Application
-# from augur.gunicorn import AugurGunicornApp
+
 
 logger = logging.getLogger("augur")
 
@@ -28,59 +25,33 @@ def cli():
     pass
 
 @cli.command("start")
-@click.option("--disable-housekeeper", is_flag=True, default=False, help="Turns off the housekeeper")
-@click.option("--skip-cleanup", is_flag=True, default=False, help="Disables the old process cleanup that runs before Augur starts")
-@click.option("--logstash", is_flag=True, default=False, help="Runs logstash to collect errors from logs")
-@click.option("--logstash-with-cleanup", is_flag=True, default=False, help="Runs logstash to collect errors from logs and cleans all previously collected errors")
-def start(disable_housekeeper, skip_cleanup, logstash, logstash_with_cleanup):
+@click.option("--disable-collection", is_flag=True, default=False, help="Turns off data collection workers")
+def start(disable_collection):
     """
     Start Augur's backend server
     """
-    # print("Starting celery worker")
-    # subprocess.call(["celery", "-A", "tasks.celery.celery", "worker", "--loglevel=info", "-E"])
 
-    print("Starting flask server")
-    subprocess.call(["gunicorn", "-c", "gunicorn.py", "-b", "127.0.0.1:8000", "wsgi:app"])
+    augur_app = Application()
+    logger.info("Augur application initialized")
+    logger.info(f"Using config file: {augur_app.config.config_file_location}")
 
+    augur_gunicorn_app = AugurGunicornApp(augur_app.gunicorn_options, augur_app=augur_app)
 
-    owner = "chaoss"
-    repo = "augur"
+    logger.info('Starting Gunicorn webserver...')
+    logger.info(f'Augur is running at: http://127.0.0.1:{augur_app.config.get_value("Server", "port")}')
+    logger.info('Gunicorn server logs & errors will be written to logs/gunicorn.log')
+    logger.info('Housekeeper update process logs will now take over.')
+    Arbiter(augur_gunicorn_app).run()
 
-    start.delay(owner, repo)
+    if not disable_collection:
 
+        owner = "chaoss"
+        repo = "augur"
 
-    # augur_app = Application()
-    # logger.info("Augur application initialized")
-    # logger.info(f"Using config file: {augur_app.config.config_file_location}")
-    # if not skip_cleanup:
-    #     logger.debug("Cleaning up old Augur processes...")
-    #     _broadcast_signal_to_processes()
-    #     time.sleep(2)
-    # else:
-    #     logger.debug("Skipping process cleanup")
+        result = start_task.apply_async(args=[owner, repo])
 
-    # if logstash or logstash_with_cleanup:
-    #     augur_home = os.getenv('ROOT_AUGUR_DIRECTORY', "")
-    #     if logstash_with_cleanup:
-    #         print("Cleaning old workers errors...")
-    #         with open(augur_home + "/log_analysis/http/empty_index.html") as f:
-    #             lines = f.readlines()
-    #         with open(augur_home + "/log_analysis/http/index.html", "w") as f1:
-    #             f1.writelines(lines)
-    #         print("All previous workers errors got deleted.")
-
-    #     elasticsearch_path = os.getenv('ELASTIC_SEARCH_PATH', "/usr/local/bin/elasticsearch")
-    #     subprocess.Popen(elasticsearch_path)
-    #     logstash_path = os.getenv('LOGSTASH_PATH', "/usr/local/bin/logstash")
-    #     subprocess.Popen([logstash_path, "-f", augur_home + "/log_analysis/logstash-filter.conf"])
-
-    # master = initialize_components(augur_app, disable_housekeeper)
-
-    # logger.info('Starting Gunicorn webserver...')
-    # logger.info(f'Augur is running at: http://127.0.0.1:{augur_app.config.get_value("Server", "port")}')
-    # logger.info('Gunicorn server logs & errors will be written to logs/gunicorn.log')
-    # logger.info('Housekeeper update process logs will now take over.')
-    # Arbiter(master).run()
+    atexit._clear()
+    atexit.register(exit, augur_app, augur_gunicorn_app)
 
 @cli.command('stop')
 

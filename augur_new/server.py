@@ -40,8 +40,8 @@ def hello_world():
 owner = "chaoss"
 repo = "augur"
 
-start_task = start.s(owner, repo)
-result = contrib_jobs.apply_async()
+# start_task = start.s(owner, repo)
+# result = contrib_jobs.apply_async()
 
 # start.delay(owner, repo)
 

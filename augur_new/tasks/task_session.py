@@ -9,7 +9,7 @@ import httpx
 from augur_new.db import models 
 from sqlalchemy.event import listen
 from sqlalchemy.event import listens_for
-from augur_new.config import AugurConfig
+from augur_new.augur.config import AugurConfig
 
 from augur_new.util.random_key_auth import RandomKeyAuth
 # from .engine import engine
