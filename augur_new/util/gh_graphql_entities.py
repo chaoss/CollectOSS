@@ -133,7 +133,11 @@ class GraphQlPageCollection(collections.abc.Sequence):
 
         #print(result_dict)
         #extract the core keys that we want from our query
-        core = result_dict[self.bind['values'][0]][self.bind['values'][1]]
+        #core = result_dict[self.bind['values'][0]][self.bind['values'][1]]
+        core = result_dict
+
+        for value in self.bind['values']:
+            core = core[value]
 
         return core
 
@@ -365,7 +369,7 @@ class GitHubRepo():
         #edges has the 'content' of the issues
         query = """
 
-            query MyQuery($repo: String!, $owner: String!, $numRecords: Int!, $cursor: String) {
+            query($repo: String!, $owner: String!, $numRecords: Int!, $cursor: String) {
                 repository(name: $repo, owner: $owner) {
                     pullRequests(first: $numRecords, after: $cursor) {
                         totalCount
@@ -429,7 +433,7 @@ class GitHubRepo():
 
 
 class PullRequest():
-    def __init__(self, session, owner, repo):
+    def __init__(self, session, owner, repo,number):
 
         self.keyAuth = session.oauths
         self.url = "https://api.github.com/graphql"
@@ -438,3 +442,51 @@ class PullRequest():
 
         self.owner = owner
         self.repo = repo
+        self.number = number
+
+    def get_reviews_collection(self):
+
+        query = """
+            query MyQuery($repo: String!, $owner: String!,$number: Int!, $numRecords!, $cursor: String) {
+                repository(name: $repo, owner: $owner) {
+                    pullRequest(number: $number) {
+                        reviews(first: $numRecords, after: $cursor) {
+                            edges {
+                                node {
+                                    author {
+                                        login
+                                        url
+                                    }
+                                    body
+                                    bodyHTML
+                                    bodyText
+                                    id
+                                    createdAt
+                                    url
+                                }
+                            }
+                            totalCount
+                            pageInfo {
+                                hasNextPage
+                                endCursor
+                            }
+                        }
+                    }
+                }
+            }
+            """
+
+        #Values specifies the dictionary values we want to return as the issue collection.
+        #e.g. here we get the reviews of the specified repository by pr.
+        values = ("repository","pullRequest","reviews")
+
+        params = {
+            'owner' : self.owner,
+            'repo' : self.repo,
+            'number' : self.number,
+            'values' : values
+        }
+
+        review_collection = GraphQlPageCollection(query, self.keyAuth, self.logger,bind=params)
+
+        return review_collection
