@@ -50,6 +50,8 @@ def start(disable_collection):
 
         result = start_task.apply_async(args=[owner, repo])
 
+    atexit._clear()
+    atexit.register(exit, augur_app, augur_gunicorn_app)
 
 @cli.command('stop')
 
