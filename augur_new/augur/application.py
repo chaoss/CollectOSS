@@ -32,9 +32,9 @@ class Application():
         self.root_augur_dir = ROOT_AUGUR_DIRECTORY
         self.config = AugurConfig(self.root_augur_dir, given_config)
 
-        # we need these for later
-        self.housekeeper = None
-        self.manager = None
+        # # we need these for later
+        # self.housekeeper = None
+        # self.manager = None
 
         # SSL is a little convoluted because old installations will not have any value
         # for the 'Server', 'ssl' variable. So, if it doesn't exist that's one condition, 
@@ -125,13 +125,13 @@ class Application():
             logger.debug("Stopping housekeeper logging listener...")
             self.logging.stop_event.set()
 
-        if self.housekeeper is not None:
-            logger.debug("Shutting down housekeeper updates...")
-            self.housekeeper.shutdown_updates()
-            self.housekeeper = None
+        # if self.housekeeper is not None:
+        #     logger.debug("Shutting down housekeeper updates...")
+        #     self.housekeeper.shutdown_updates()
+        #     self.housekeeper = None
 
-        if self.manager is not None:
-            logger.debug("Shutting down manager...")
-            self.manager.shutdown()
-            self.manager = None
+        # if self.manager is not None:
+        #     logger.debug("Shutting down manager...")
+        #     self.manager.shutdown()
+        #     self.manager = None
 

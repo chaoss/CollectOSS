@@ -24,11 +24,12 @@ class AugurMultiCommand(click.MultiCommand):
         return rv
 
     def get_command(self, ctx, name):
+        print(f"Ctx: {ctx}. Name: {name}")
         try:
             module = importlib.import_module('.' + name, 'cli')
             return module.cli
         except ModuleNotFoundError as e:
-            pass
+            print(f"Error: {e}")
 
 @click.command(cls=AugurMultiCommand, context_settings=CONTEXT_SETTINGS)
 @click.pass_context
