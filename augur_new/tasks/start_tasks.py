@@ -2,9 +2,9 @@ from .issue_tasks import *
 
 
 @celery.task
-def start(owner: str, repo):
+def start_task(owner: str, repo):
     
-    logger = get_task_logger(start.name)
+    logger = get_task_logger(start_task.name)
     session = TaskSession(logger, config)
 
     logger.info(f"Collecting data for {owner}/{repo}")
