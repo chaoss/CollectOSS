@@ -201,7 +201,7 @@ def exit(augur_app, worker_processes, master):
 
     if master is not None:
         logger.debug("Shutting down Gunicorn server")
-        master.halt()
+        master.send_signal(signal.SIGTERM)
 
     logger.info("Shutdown complete")
     sys.exit(0)
