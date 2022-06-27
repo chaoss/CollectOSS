@@ -22,7 +22,7 @@ import collections
 
 #Get data extraction logic for nested nodes in return data.
 
-#Should take the query and two page variables for pagination
+#Should keep track of embedded data that is incomplete.
 class GraphQlPageCollection(collections.abc.Sequence):
     #Bind is needed for things like query by repo. Contains bind variables for the graphql query
     def __init__(self,query,keyAuth,logger,bind={},numPerPage=100,url="https://api.github.com/graphql"):
@@ -331,17 +331,39 @@ class GitHubRepo():
         #totalCount is needed to furfill container class
         #edges has the 'content' of the issues
         query = """
-            query($numRecords: Int!, $cursor: String, $owner: String!, $repo: String!) {
-                repository(owner:$owner, name:$repo) {
-                    pullRequests(first: $numRecords, after:$cursor) {
+
+            query MyQuery($repo: String!, $owner: String!, $numRecords: Int!, $cursor: String) {
+                repository(name: $repo, owner: $owner) {
+                    pullRequests(first: $numRecords, after: $cursor) {
                         totalCount
                         edges {
                             node {
-                                title
                                 body
+                                id
+                                number
+                                title
                                 closed
-                                url
-                        
+                                bodyHTML
+                                bodyText
+                                author {
+                                    login
+                                    url
+                                }
+                                reviews(first: 10) {
+                                    edges {
+                                        node {
+                                            author {
+                                                login
+                                                url
+                                            }
+                                            bodyText
+                                            body
+                                            bodyHTML
+                                            id
+                                        }
+                                    }
+                                    totalCount
+                                }
                             }
                         }
                         pageInfo {
