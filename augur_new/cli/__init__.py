@@ -2,9 +2,11 @@
 import click
 from functools import update_wrapper
 
+
+
 # from augur.application import Application
-from augur.config import AugurConfig
-from augur.logging import AugurLogging, ROOT_AUGUR_DIRECTORY
+# from augur_new.config import AugurConfig
+# from augur_new.logging import AugurLogging, ROOT_AUGUR_DIRECTORY
 
 # def pass_application(f):
 #     @click.pass_context

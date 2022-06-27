@@ -9,6 +9,20 @@ from augur_new.db.data_parse import *
 #So this file contains functionality for both prs and issues
 
 
+# import logging
+
+# logger = logging.getLogger()
+
+# # Initialize logging
+# formatter = "%(asctime)s: %(message)s"
+# logging.basicConfig(filename="augur_view.log", filemode='w', format=formatter, level=logging.INFO, datefmt="%H:%M:%S")
+
+# logging.debug("This is a debug message")
+# logging.info("This is an information message")
+# logging.warn("This is a warning message")
+# logging.error("This is an error message")
+
+
 
 @celery.task
 def issues(owner: str, repo: str) -> None:

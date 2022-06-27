@@ -1,8 +1,8 @@
+import sys
 import json
 import time
 import traceback
 import logging
-import sys
 import platform
 import imp
 import time
@@ -15,17 +15,21 @@ import xlsxwriter
 import configparser
 import multiprocessing
 import numpy as np
+from celery import group, chain, chord, signature
+from celery.utils.log import get_task_logger
+import sqlalchemy as s
+
+# allows us to reference augur_new (the parent module)
+# even though the code is executed from augur_new
+sys.path.append("..")
+
 from augur_new.facade_worker.facade_worker.facade02utilitymethods import update_repo_log, trim_commit, store_working_author, trim_author
 from augur_new.facade_worker.facade_worker.facade03analyzecommit import analyze_commit
 from augur_new.facade_worker.contributor_interfaceable.contributor_interface import *
 
 
-from celery import group, chain, chord, signature
-from celery.utils.log import get_task_logger
-import sqlalchemy as s
-
 # from augur_new.server import redis_conn
-from augur_new.celery import celery
+from tasks.celery import celery
 
 
 from augur_new.db import data_parse
