@@ -42,7 +42,14 @@ def start(disable_housekeeper, skip_cleanup, logstash, logstash_with_cleanup):
     logger.info(f"Using config file: {augur_app.config.config_file_location}")
 
 
-    augur_app = AugurGunicornApp(augur_app.gunicorn_options, augur_app=augur_app)
+    augur_gunicorn_app = AugurGunicornApp(augur_app.gunicorn_options, augur_app=augur_app)
+
+    logger.info('Starting Gunicorn webserver...')
+    logger.info(f'Augur is running at: http://127.0.0.1:{augur_app.config.get_value("Server", "port")}')
+    logger.info('Gunicorn server logs & errors will be written to logs/gunicorn.log')
+    logger.info('Housekeeper update process logs will now take over.')
+    Arbiter(augur_gunicorn_app).run()
+
     # print("Starting celery worker")
     # subprocess.call(["celery", "-A", "tasks.celery.celery", "worker", "--loglevel=info", "-E"])
 
@@ -83,11 +90,7 @@ def start(disable_housekeeper, skip_cleanup, logstash, logstash_with_cleanup):
 
     # master = initialize_components(augur_app, disable_housekeeper)
 
-    # logger.info('Starting Gunicorn webserver...')
-    # logger.info(f'Augur is running at: http://127.0.0.1:{augur_app.config.get_value("Server", "port")}')
-    # logger.info('Gunicorn server logs & errors will be written to logs/gunicorn.log')
-    # logger.info('Housekeeper update process logs will now take over.')
-    # Arbiter(master).run()
+ 
 
 @cli.command('stop')
 

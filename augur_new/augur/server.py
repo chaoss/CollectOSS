@@ -41,9 +41,7 @@ class Server(object):
         app.url_map.strict_slashes = False
 
         self.augur_app = augur_app
-        # self.manager = augur_app.manager
-        # self.broker = augur_app.broker
-        # self.housekeeper = augur_app.housekeeper
+
 
         # Initialize cache
         expire = int(self.augur_app.config.get_value('Server', 'cache_expire'))

@@ -15,9 +15,6 @@ class AugurGunicornApp(gunicorn.app.base.BaseApplication):
     def __init__(self, options={}, augur_app=None):
         self.options = options
         self.augur_app = augur_app
-        # self.manager = self.augur_app.manager
-        # self.broker = self.augur_app.broker
-        # self.housekeeper = self.augur_app.housekeeper
         self.server = None
         logger.debug(f"Gunicorn will start {self.options['workers']} worker processes")
         super(AugurGunicornApp, self).__init__()
