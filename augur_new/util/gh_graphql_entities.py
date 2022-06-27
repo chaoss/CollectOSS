@@ -20,11 +20,12 @@ import collections
     PR_reviews, events, messages, pr_commits, pr_files(already done convert it)
 """
 
+#Get data extraction logic for nested nodes in return data.
 
-#Should take the query and two page variables for pagination
+#Should keep track of embedded data that is incomplete.
 class GraphQlPageCollection(collections.abc.Sequence):
     #Bind is needed for things like query by repo. Contains bind variables for the graphql query
-    def __init__(self,query,keyAuth,logger,bind={},numPerPage=100,url="https://api.github.com/graphql"):
+    def __init__(self,query,keyAuth,logger,bind={},numPerPage=100,url="https://api.github.com/graphql",repaginateIfIncomplete=[]):
         self.per_page = numPerPage
         self.query = query
         self.keyAuth = keyAuth
@@ -35,6 +36,26 @@ class GraphQlPageCollection(collections.abc.Sequence):
         self.page_cache = []
 
         self.bind = bind
+
+        #things to mark as to repaginate if we can't get them in one query
+        self.repaginate = repaginateIfIncomplete
+        #dict of ids to query later.
+        self.marked_records = {}
+
+        for record in self.repaginate:
+            #ids of records should be stored in a set
+            self.marked_records[record] = set()
+
+    def mark_for_repagination(self,records):
+        #iterate through list of records and check against values specified.
+        for record in records:
+            for valueToCheck in self.repaginate:
+                #get the ids of records that have incomplete sublists.
+                if record[valueToCheck]['totalCount'] > len(record[valueToCheck]['edges']):
+                    #Store number as most common value github graphql queries by
+                    self.marked_records[valueToCheck].add(record['number'])
+
+        
 
     def hit_api(self,query,variables={}):
         self.logger.debug(f"Sending query {query}  to github graphql")
@@ -112,7 +133,11 @@ class GraphQlPageCollection(collections.abc.Sequence):
 
         #print(result_dict)
         #extract the core keys that we want from our query
-        core = result_dict[self.bind['values'][0]][self.bind['values'][1]]
+        #core = result_dict[self.bind['values'][0]][self.bind['values'][1]]
+        core = result_dict
+
+        for value in self.bind['values']:
+            core = core[value]
 
         return core
 
@@ -145,6 +170,9 @@ class GraphQlPageCollection(collections.abc.Sequence):
             #extract the content from the graphql query result
 
             content = [data['node'] for data in list(coreData['edges'])]
+
+            if self.repaginate:
+                self.mark_for_repagination(content) 
 
             self.page_cache.extend(content)
 
@@ -189,10 +217,17 @@ class GraphQlPageCollection(collections.abc.Sequence):
         if int(coreData['totalCount']) == 0:
             yield None
             return
+
+        content = []
         
         #extract the content from the graphql query result 
         for data in coreData['edges']:
             yield data['node']
+            if self.repaginate:
+                content.append(data['node'])
+
+        if self.repaginate:
+                self.mark_for_repagination(content) 
 
         while coreData['pageInfo']['hasNextPage']:
             params['cursor'] = coreData['pageInfo']['endCursor']
@@ -254,6 +289,9 @@ class GraphQlPageCollection(collections.abc.Sequence):
         async with httpx.AsyncClient() as gql_session:
 
             data_list = await self.get_next_page(gql_session=gql_session)
+
+            if self.repaginate:
+                self.mark_for_repagination(data_list) 
 
             yield data_list
 
@@ -324,22 +362,45 @@ class GitHubRepo():
 
         return issueCollection
     
+    #Get pr reviews from here and mark the ones we can't get all at once.
     def get_pull_requests_collection(self):
         #Cursor and numRecords is handled by the collection internals
         #totalCount is needed to furfill container class
         #edges has the 'content' of the issues
         query = """
-            query($numRecords: Int!, $cursor: String, $owner: String!, $repo: String!) {
-                repository(owner:$owner, name:$repo) {
-                    pullRequests(first: $numRecords, after:$cursor) {
+
+            query($repo: String!, $owner: String!, $numRecords: Int!, $cursor: String) {
+                repository(name: $repo, owner: $owner) {
+                    pullRequests(first: $numRecords, after: $cursor) {
                         totalCount
                         edges {
                             node {
-                                title
                                 body
+                                id
+                                number
+                                title
                                 closed
-                                url
-                        
+                                bodyHTML
+                                bodyText
+                                author {
+                                    login
+                                    url
+                                }
+                                reviews(first: 10) {
+                                    edges {
+                                        node {
+                                            author {
+                                                login
+                                                url
+                                            }
+                                            bodyText
+                                            body
+                                            bodyHTML
+                                            id
+                                        }
+                                    }
+                                    totalCount
+                                }
                             }
                         }
                         pageInfo {
@@ -360,53 +421,19 @@ class GitHubRepo():
             'values' : values
         }
 
-        pull_request_collection = GraphQlPageCollection(query, self.keyAuth,self.logger,bind=params)
+        #specify values to be marked if we can't get them all at once due to rate limits
+        #e.g. here we specify to go back and get reviews if we can't get them all at once.
+
+        repaginateIfIncomplete = ['reviews']
+
+        pull_request_collection = GraphQlPageCollection(query, self.keyAuth,self.logger,bind=params,repaginateIfIncomplete=repaginateIfIncomplete)
 
         return pull_request_collection
 
-    def get_pull_requests_reviews_collection(self):
-        #Cursor and numRecords is handled by the collection internals
-        #totalCount is needed to furfill container class
-        #edges has the 'content' of the issues
-        query = """
-            query($numRecords: Int!, $cursor: String, $owner: String!, $repo: String!) {
-                repository(owner:$owner, name:$repo) {
-                    pullRequestReviews (first: $numRecords, after:$cursor) {
-                        totalCount
-                        edges {
-                            node {
-                                title
-                                body
-                                closed
-                                url
-                        
-                            }
-                        }
-                        pageInfo {
-                            hasNextPage
-                            endCursor
-                        }
-                    }
-                }
-            }
-        """
-
-        #Values specifies the dictionary values we want to return as the issue collection.
-        #e.g. here we get the pullRequests of the specified repository.
-        values = ("repository","pullRequests")
-        params = {
-            'owner' : self.owner,
-            'repo' : self.repo,
-            'values' : values
-        }
-
-        pull_request_collection = GraphQlPageCollection(query, self.keyAuth,self.logger,bind=params)
-
-        return pull_request_collection
 
 
 class PullRequest():
-    def __init__(self, session, owner, repo):
+    def __init__(self, session, owner, repo,number):
 
         self.keyAuth = session.oauths
         self.url = "https://api.github.com/graphql"
@@ -415,3 +442,51 @@ class PullRequest():
 
         self.owner = owner
         self.repo = repo
+        self.number = number
+
+    def get_reviews_collection(self):
+
+        query = """
+            query MyQuery($repo: String!, $owner: String!,$number: Int!, $numRecords!, $cursor: String) {
+                repository(name: $repo, owner: $owner) {
+                    pullRequest(number: $number) {
+                        reviews(first: $numRecords, after: $cursor) {
+                            edges {
+                                node {
+                                    author {
+                                        login
+                                        url
+                                    }
+                                    body
+                                    bodyHTML
+                                    bodyText
+                                    id
+                                    createdAt
+                                    url
+                                }
+                            }
+                            totalCount
+                            pageInfo {
+                                hasNextPage
+                                endCursor
+                            }
+                        }
+                    }
+                }
+            }
+            """
+
+        #Values specifies the dictionary values we want to return as the issue collection.
+        #e.g. here we get the reviews of the specified repository by pr.
+        values = ("repository","pullRequest","reviews")
+
+        params = {
+            'owner' : self.owner,
+            'repo' : self.repo,
+            'number' : self.number,
+            'values' : values
+        }
+
+        review_collection = GraphQlPageCollection(query, self.keyAuth, self.logger,bind=params)
+
+        return review_collection
