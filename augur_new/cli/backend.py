@@ -11,6 +11,8 @@ import multiprocessing as mp
 import gunicorn.app.base
 from gunicorn.arbiter import Arbiter
 import sys
+import subprocess
+
 
 from tasks.start_tasks import start_task
 from augur.application import Application
@@ -19,6 +21,10 @@ from augur.gunicorn import AugurGunicornApp
 
 
 logger = logging.getLogger("augur")
+
+celery_process = None
+augur_app = None
+gunicorn_arbiter = None
 
 @click.group('server', short_help='Commands for controlling the backend API server & data collection workers')
 def cli():
@@ -31,6 +37,25 @@ def start(disable_collection):
     Start Augur's backend server
     """
 
+    global celery_process
+    global augur_app
+    global gunicorn_arbiter
+
+    atexit._clear()
+    atexit.register(exit)
+
+    logger.info("Starting workers")
+    command = ["celery", "-A", "tasks.celery.celery", "worker", "--loglevel=info", "-E"]
+    celery_process = subprocess.Popen(command)
+
+    if not disable_collection:
+
+        owner = "chaoss"
+        repo = "augur"
+
+        logger.info("Launch start task")
+        result = start_task.apply_async(args=[owner, repo])
+
     augur_app = Application()
     logger.info("Augur application initialized")
     logger.info(f"Using config file: {augur_app.config.config_file_location}")
@@ -41,20 +66,13 @@ def start(disable_collection):
     logger.info(f'Augur is running at: http://127.0.0.1:{augur_app.config.get_value("Server", "port")}')
     logger.info('Gunicorn server logs & errors will be written to logs/gunicorn.log')
     logger.info('Housekeeper update process logs will now take over.')
-    Arbiter(augur_gunicorn_app).run()
 
-    if not disable_collection:
+    gunicorn_arbiter = Arbiter(augur_gunicorn_app)
+    
+    gunicorn_arbiter.run()
 
-        owner = "chaoss"
-        repo = "augur"
-
-        result = start_task.apply_async(args=[owner, repo])
-
-    atexit._clear()
-    atexit.register(exit, augur_app, augur_gunicorn_app)
 
 @cli.command('stop')
-
 def stop():
     """
     Sends SIGTERM to all Augur server & worker processes
@@ -62,7 +80,6 @@ def stop():
     _broadcast_signal_to_processes(given_logger=logging.getLogger("augur.cli"))
 
 @cli.command('kill')
-
 def kill():
     """
     Sends SIGKILL to all Augur server & worker processes
@@ -70,7 +87,6 @@ def kill():
     _broadcast_signal_to_processes(signal=signal.SIGKILL, given_logger=logging.getLogger("augur.cli"))
 
 @cli.command('export-env')
-
 def export_env(config):
     """
     Exports your GitHub key and database credentials
@@ -176,19 +192,27 @@ def worker_start(worker_name=None, instance_number=0, worker_port=None):
     except KeyboardInterrupt as e:
         pass
 
-def exit(augur_app, worker_processes, master):
+def exit():
 
-    logger.info("Shutdown started for this Gunicorn worker...")
-    augur_app.shutdown()
+    global celery_process
+    global augur_app
+    global gunicorn_arbiter
 
-    if worker_processes:
-        for process in worker_processes:
-            logger.debug("Shutting down worker process with pid: {}...".format(process.pid))
-            process.terminate()
+    logger.info(f"Celery process: {celery_process}")
+    logger.info(f"augur_app: {augur_app}")
+    logger.info(f"gunicorn_arbiter: {gunicorn_arbiter}")
 
-    if master is not None:
-        logger.debug("Shutting down Gunicorn server")
-        master.halt()
+    if augur_app is not None:
+        logger.info("Shutdown started for augur app...")
+        augur_app.shutdown()
+
+    if celery_process is not None:
+        logger.info("Shutting down the celery process")
+        celery_process.terminate()
+
+    if gunicorn_arbiter is not None:
+        logger.info("Shutting down Gunicorn server")
+        gunicorn_arbiter.halt()
 
     logger.info("Shutdown complete")
     sys.exit(0)

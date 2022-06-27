@@ -130,7 +130,7 @@ def _tail(f, lines=20, _buffer=4098):
 
         # we found enough lines, get out
         # Removed this line because it was redundant the while will catch
-        # it, I left it for history
+        # it, I left it for histop_eventry
         # if len(lines_found) > lines:
         #    break
 
