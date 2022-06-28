@@ -210,7 +210,7 @@ def analysis(cfg, multithreaded, session=None, processes=6):
         
             result = contrib_jobs.apply_async()
 
-            result.join_native()
+            result.wait()
             #session.logger.info(result.ready())
 
             session.logger.info(result) #Got to here.
