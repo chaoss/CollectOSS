@@ -1,7 +1,5 @@
 from .facade_tasks import *
 
-from augur_new.db.objects.pull_request import PrObject
-from augur_new.db.objects.issue import IssueObject
 from augur_new.db.data_parse import *
 # creates a class that is sub class of the sqlalchemy.orm.Session class that additional methods and fields added to it. 
 
@@ -41,15 +39,12 @@ def issues(owner: str, repo: str) -> None:
     # platform_id = 25150
     data_source = "Github API"
 
-    issue_natural_keys = ["issue_url"]
-
     # returns an iterable of all prs at this url
     issues = GithubPaginator(url, session.oauths, logger)
 
-    issue_label_dicts = []
-    issue_assignee_dicts = []
+    issue_dicts = []
+    issue_other_data = []
  
-
     # creating a list, because we would like to bulk insert in the future
     len_issues = len(issues)
     issue_total = len_issues
@@ -62,16 +57,47 @@ def issues(owner: str, repo: str) -> None:
             issue_total-=1
             continue
 
-        issue_object = IssueObject(issue, repo_id, tool_source, tool_version, data_source)
-
-        # when the object gets inserted the db_row is added to the object which is a PullRequests orm object (so it contains all the column values)
-        session.insert_data([issue_object], Issues, issue_natural_keys)
-
-        issue_label_dicts += extract_needed_issue_label_data(issue_object.labels, issue_object.db_row.issue_id, repo_id,
+        issue_dicts.append(
+            extract_needed_issue_data(issue, repo_id, tool_source, tool_version, data_source)
+        )
+    
+        issue_labels = extract_needed_issue_label_data(issue["labels"], repo_id,
                                                        tool_source, tool_version, data_source)
 
-        issue_assignee_dicts += extract_needed_issue_assignee_data(issue_object.assignees, issue_object.db_row.issue_id, repo_id,
+        issue_assignees = extract_needed_issue_assignee_data(issue["assignees"], repo_id,
                                                              tool_source, tool_version, data_source)
+
+        issue_other_data.append(
+            {
+                "issue_url": issue["url"],
+                "labels": issue_labels,
+                "assignees": issue_assignees
+            }
+        )                                        
+
+    issue_natural_keys = ["issue_url"]
+    issue_return_columns = ["issue_url", "issue_id"]
+    issue_return_data = session.insert_data(issue_dicts, Issues, issue_natural_keys, issue_return_columns)
+
+    print(issue_return_data)
+
+    issue_label_dicts = []
+    issue_assignee_dicts = []
+    for data in issue_other_data:
+
+        key = "issue_url"
+        value = data[key]
+    
+        issue = find_dict_in_list_of_dicts(issue_return_data, key, value)
+
+        if issue:
+            issue_id = issue["issue_id"]
+        else:
+            print("Count not find issue")
+
+        dict_key = "issue_id"
+        issue_label_dicts += add_key_value_pair_to_list_of_dicts(data["labels"], "issue_id", issue_id)
+        issue_assignee_dicts += add_key_value_pair_to_list_of_dicts(data["assignees"], "issue_id", issue_id)
 
 
     logger.info(f"Inserting issue labels of length: {len(issue_label_dicts)}")
@@ -173,7 +199,7 @@ def pull_requests(owner: str, repo: str) -> None:
         pr_url = data["pr_url"]
         key = "pr_url"
 
-        pull_request = next((item for item in pr_return_data if item[key] == pr_url), None)
+        pull_request = find_dict_in_list_of_dicts(pr_return_data, key, value)
 
         if pull_request:
 
@@ -181,13 +207,11 @@ def pull_requests(owner: str, repo: str) -> None:
         else:
             print("Count not find pull_request")
 
-        pr_label_dicts += add_pull_request_id_to_list_of_dicts(data["labels"], pull_request_id)
-        
-        pr_assignee_dicts += add_pull_request_id_to_list_of_dicts(data["assignees"], pull_request_id)
-        
-        pr_reviewer_dicts += add_pull_request_id_to_list_of_dicts(data["reviewers"], pull_request_id)
-        
-        pr_metadata_dicts += add_pull_request_id_to_list_of_dicts(data["metadata"], pull_request_id)
+        dict_key = "pull_request_id"
+        pr_label_dicts += add_key_value_pair_to_list_of_dicts(data["labels"], dict_key, pull_request_id)
+        pr_assignee_dicts += add_pull_request_id_to_list_of_dicts(data["assignees"], dict_key, pull_request_id)
+        pr_reviewer_dicts += add_pull_request_id_to_list_of_dicts(data["reviewers"], dict_key, pull_request_id)
+        pr_metadata_dicts += add_pull_request_id_to_list_of_dicts(data["metadata"], dict_key, pull_request_id)
         
 
     # start task()
@@ -212,13 +236,17 @@ def pull_requests(owner: str, repo: str) -> None:
     session.insert_data(pr_metadata_dicts, PullRequestMeta, pr_metadata_natural_keys)
 
 
-def add_pull_request_id_to_list_of_dicts(data, pull_request_id):
+def add_key_value_pair_to_list_of_dicts(data_list, key, value):
 
-    for value in data:
+    for data in data_list:
 
-        value["pull_request_id"] = pull_request_id
+        data[key] = value
 
-    return data
+    return data_list
+
+def find_dict_in_list_of_dicts(data, key, value):
+
+    return next((item for item in data if item[key] == value), None)
     
 
 

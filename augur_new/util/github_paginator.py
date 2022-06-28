@@ -248,14 +248,16 @@ class GithubPaginator(collections.abc.Sequence):
         return None, None
 
     def get_last_page_number(self, url: str):
-
+        
+        timeout = 5
         num_attempts = 0
         while num_attempts < 10:
-            r = self.hit_api(url, method="HEAD")
+            r = self.hit_api(url, timeout=timeout, method="HEAD")
 
             if r:
                 break
 
+            timeout = timeout * 1.2
         else:
             return None
 
