@@ -104,19 +104,40 @@ def pull_requests(owner: str, repo: str) -> None:
     platform_id = 25150
     data_source = "Github API"
 
-    pr_natural_keys = ["pr_url"]
+
 
     # returns an iterable of all prs at this url
     prs = GithubPaginator(url, session.oauths, logger)
 
     # logger.info(f"Pages collected: length: {len(prs)}")
 
-    pr_label_dicts = []
-    pr_assignee_dicts = []
-    pr_reviewer_dicts = []
-    pr_metadata_dicts = []
-
+    pr_dicts = []
+    pr_other_data = []
     repo_pr_numbers = []
+
+
+    # data = []
+    # for i in range(1,2):
+
+    #     from random import randint
+
+    #     value = randint(0, 100)
+
+    #     data.append(
+    #         {
+    #             "unique_value": i,
+    #             "testing_key": "value_" + str(i*2), 
+    #             "testing_value": (i*value)
+    #         }
+    #     )
+
+    # logger.info(f"Inserting testing data of length: {len(data)}")
+    # testing_natural_keys = ['unique_value']
+    # return_data = ["unique_value", "testing_id"]
+    # session.insert_bulk_data(data, Testing, testing_natural_keys, return_data)
+
+    # return
+
 
     # creating a list, because we would like to bulk insert in the future
 
@@ -131,31 +152,81 @@ def pull_requests(owner: str, repo: str) -> None:
         )
 
         logger.info(f"Inserting pr {index + 1} of {len_prs}")
-        pr_object = PrObject(pr, repo_id, tool_source,
-                             tool_version)
 
-        # when the object gets inserted the db_row is added to the object which is a PullRequests orm object (so it contains all the column values)
-        session.insert_data([pr_object], PullRequests, pr_natural_keys)
+        
 
-        if pr_object.db_row is None:
-            logger.info("Error while inserting pr, skipping other data")
-            continue
+        # # when the object gets inserted the db_row is added to the object which is a PullRequests orm object (so it contains all the column values)
+        # pr_return_data = session.insert_data(pr_dict, PullRequests, pr_natural_keys, return_columns=pr_return_columns)
+        # logger.info(f"Pr return_data: {pr_return_data}")
 
-        pr_label_dicts += extract_needed_pr_label_data(pr_object.labels, pr_object.db_row.pull_request_id,  platform_id, repo_id,
+        # if len(pr_return_data) == 0:
+        #     logger.info("Error while inserting pr, returned more than one primary key skipping other data")
+        #     continue
+
+        # pull_request_id = pr_return_data[0]["pull_request_id"]
+
+        pr_dicts.append(
+                    extract_needed_pr_data(pr, repo_id, tool_source,tool_version)
+        )
+
+        pr_labels = extract_needed_pr_label_data(pr["labels"],  platform_id, repo_id,
                                                        tool_source, tool_version, data_source)
 
-        pr_assignee_dicts += extract_needed_pr_assignee_data(pr_object.assignees, pr_object.db_row.pull_request_id, platform_id, repo_id,
+        pr_assignees = extract_needed_pr_assignee_data(pr["assignees"], platform_id, repo_id,
                                                              tool_source, tool_version, data_source)
 
-        pr_reviewer_dicts += extract_needed_pr_reviewer_data(pr_object.reviewers, pr_object.db_row.pull_request_id, platform_id, repo_id,
+
+        pr_reviewers = extract_needed_pr_reviewer_data(pr["requested_reviewers"], platform_id, repo_id,
                                                              tool_source, tool_version, data_source)
 
-        pr_metadata_dicts += extract_needed_pr_metadata(pr_object.metadata, pr_object.db_row.pull_request_id, platform_id, repo_id,
-                                                        tool_source, tool_version, data_source)
+        pr_metadata = extract_needed_pr_metadata([pr["head"], pr["base"]], platform_id, repo_id,
+                                                        tool_source, tool_version, data_source)                                                             
+                                                        
+        pr_other_data.append(
+            {
+                "pr_url": pr["url"],
+                "labels": pr_labels,
+                "assignees": pr_assignees,
+                "reviewers": pr_reviewers,
+                "metadata": pr_metadata,
+            }
+        )
 
         # get a list of pr numbers to pass for the pr reviews task
         repo_pr_numbers.append(pr["number"]) 
 
+
+    logger.info(f"Inserting prs of length: {len(pr_dicts)}")
+    pr_natural_keys = ["pr_url"]
+    pr_return_columns = ["pull_request_id", "pr_url"]
+    pr_return_data = session.insert_data(pr_dicts, PullRequests, pr_natural_keys, return_columns=pr_return_columns)
+
+    pr_label_dicts = []
+    pr_assignee_dicts = []
+    pr_reviewer_dicts = []
+    pr_metadata_dicts = []
+
+    for data in pr_other_data:
+
+        pr_url = data["pr_url"]
+        key = "pr_url"
+
+        pull_request = next((item for item in pr_return_data if item[key] == pr_url), None)
+
+        if pull_request:
+
+            pull_request_id = pull_request["pull_request_id"]
+        else:
+            print("Count not find pull_request")
+
+        pr_label_dicts += add_pull_request_id_to_list_of_dicts(data["labels"], pull_request_id)
+        
+        pr_assignee_dicts += add_pull_request_id_to_list_of_dicts(data["assignees"], pull_request_id)
+        
+        pr_reviewer_dicts += add_pull_request_id_to_list_of_dicts(data["reviewers"], pull_request_id)
+        
+        pr_metadata_dicts += add_pull_request_id_to_list_of_dicts(data["metadata"], pull_request_id)
+        
 
     # start task()
     logger.info(f"Inserting pr labels of length: {len(pr_label_dicts)}")
@@ -177,6 +248,15 @@ def pull_requests(owner: str, repo: str) -> None:
     logger.info(f"Inserting pr metadata of length: {len(pr_metadata_dicts)}")
     pr_metadata_natural_keys = ['pull_request_id', 'pr_head_or_base', 'pr_sha']
     session.insert_data(pr_metadata_dicts, PullRequestMeta, pr_metadata_natural_keys)
+
+
+def add_pull_request_id_to_list_of_dicts(data, pull_request_id):
+
+    for value in data:
+
+        value["pull_request_id"] = pull_request_id
+
+    return data
     
 
 

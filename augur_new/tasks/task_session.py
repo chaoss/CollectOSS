@@ -87,52 +87,38 @@ class TaskSession(s.orm.Session):
 
         return connection.execute(sql_text)
 
-    
-    def insert_data(self, data, table, natural_keys: [str]) -> None:
+    # def insert_dict_data(self, data: [dict], table, natural_keys: [str]) -> None:
 
-        if len(data) == 0:
-            return
+    #     if type(data) != list:
+    #         self.logger.info("Data must be a list")
+    #         return
 
-        first_data = data[0]
+    #     if type(data[0]) != dict:
+    #         self.logger.info("Data must be a list of dicts")
+    #         self.logger.info("Must be list of dicts")
+    #         return
 
-        if type(first_data) == dict:
-            return self.insert_dict_data(data, table, natural_keys)
-        else:
-            print("Error passed a github class object")
-            # return self.insert_github_class_objects(data, table, natural_keys)
+    #     self.logger.info(f"Length of data to insert: {len(data)}")
 
-    def insert_dict_data(self, data: [dict], table, natural_keys: [str]) -> None:
+    #     table_stmt = pg.insert(table)
 
-        if type(data) != list:
-            self.logger.info("Data must be a list")
-            return
+    #     primary_keys = []
 
-        if type(data[0]) != dict:
-            self.logger.info("Data must be a list of dicts")
-            self.logger.info("Must be list of dicts")
-            return
+    #     for value in data:
+    #         insert_stmt = table_stmt.returning(table.pull_request_id).values(value)
+    #         insert_stmt = insert_stmt.on_conflict_do_update(
+    #             index_elements=natural_keys, set_=dict(value))
 
-        self.logger.info(f"Length of data to insert: {len(data)}")
+    #         try:
+    #             connection = self.engine.connect()
+    #             primary_key_tuple = connection.execute(insert_stmt).fetchone()
+    #             primary_keys.append(primary_key_tuple)
 
-        table_stmt = pg.insert(table)
+    #         except s.exc.DatabaseError as e:
+    #             self.logger.info(f"Error: {e}")
+    #             continue
 
-        primary_keys = []
-
-        for value in data:
-            insert_stmt = table_stmt.returning(table.pull_request_id).values(value)
-            insert_stmt = insert_stmt.on_conflict_do_update(
-                index_elements=natural_keys, set_=dict(value))
-
-            try:
-                connection = self.engine.connect()
-                primary_key_tuple = connection.execute(insert_stmt).fetchone()
-                primary_keys.append(primary_key_tuple)
-
-            except s.exc.DatabaseError as e:
-                self.logger.info(f"Error: {e}")
-                continue
-
-        return primary_keys
+    #     return primary_keys
 
                 
 
@@ -186,14 +172,22 @@ class TaskSession(s.orm.Session):
 
     #TODO: Bulk upsert
     
-    def insert_bulk_data(self, data: [dict], table, natural_keys: [str], return_columns: [str] = []) -> None:
-        self.logger.info(f"Length of data to insert: {len(data)}")
+    def insert_data(self, data: [dict], table, natural_keys: [str], return_columns: [str] = []) -> None:
 
+        # print(f"Return columns: {return_columns}")
+        
         if type(data) != list:
-            self.logger.info("Data must be a list")
-            return
+            
+            # if a dict is passed to data then 
+            # convert it to a list with one value
+            if type(data) == dict:
+                data = [data]
+            
+            else:
+                self.logger.info("Data must be a list or a dict")
+                return
 
-        if len(data) < 0:
+        if len(data) == 0:
             self.logger.info("Gave no data to insert, returning...")
             return
 
@@ -201,22 +195,26 @@ class TaskSession(s.orm.Session):
             self.logger.info("Must be list of dicts")
             return
 
+        self.logger.info(f"Length of data to insert: {len(data)}")
+
         # creates list of arguments to tell sqlalchemy what columns to return after the data is inserted
         returning_args = []
         for column in return_columns:
+            print(f"Table: {table}. Column: {column}")
             argument = getattr(table, column)
             returning_args.append(argument)
 
         # creates insert on table
         # that returns cols specificed in returning_args
         # and inserts the data specified in data
+        # NOTE: if return_columns does not have an values this still works
         stmnt = pg.insert(table).returning(*returning_args).values(data)
 
         # create a dict that the on_conflict_do_update method requires to be able to map updates whenever there is a conflict. See sqlalchemy docs for more explanation and examples: https://docs.sqlalchemy.org/en/14/dialects/postgresql.html#updating-using-the-excluded-insert-values
         setDict = {}
         for key in data[0].keys():
-            setDict[key] = getattr(stmnt.excluded, key)
-
+                setDict[key] = getattr(stmnt.excluded, key)
+            
         stmnt = stmnt.on_conflict_do_update(
             #This might need to change
             index_elements=natural_keys,
@@ -224,15 +222,25 @@ class TaskSession(s.orm.Session):
             #Columns to be updated
             set_ = setDict
         )
+        
 
-        return_data_tuples = self.execute_sql(stmnt).fetchall()
+        # print(str(stmnt.compile(dialect=pg.dialect())))
 
-        # converts the return data to a list of dicts
-        return_data = []
-        for data in return_data_tuples:
-            return_data.append(dict(data))
+        # if there is no data to return then it executes the insert the returns nothing
+        if len(return_columns) == 0:
+            self.execute_sql(stmnt)
+            return
+        
+        # else it get the requested return columns and returns them as a list of dicts
+        else:
+            return_data_tuples = self.execute_sql(stmnt).fetchall()
 
-        return return_data
+            # converts the return data to a list of dicts
+            return_data = []
+            for data in return_data_tuples:
+                return_data.append(dict(data))
+
+            return return_data
 
 #TODO: Test sql methods
 class GithubTaskSession(TaskSession):

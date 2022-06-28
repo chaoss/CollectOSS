@@ -7,7 +7,7 @@ and return only the data that the database needs
 
 
 # retrieve only the needed data for pr labels from the api response
-def extract_needed_pr_label_data(labels: [dict], pr_id: int, platform_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> [dict]:
+def extract_needed_pr_label_data(labels: [dict], platform_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> [dict]:
 
     if len(labels) == 0:
         return []
@@ -16,7 +16,7 @@ def extract_needed_pr_label_data(labels: [dict], pr_id: int, platform_id: int, r
     for label in labels:
 
         label_dict = {
-            'pull_request_id': pr_id,
+            # store the pr_url data on in the pr label data for now so we can relate it back to a pr later
             'pr_src_id': int(label['id']),
             'pr_src_node_id': label['node_id'],
             'pr_src_url': label['url'],
@@ -36,7 +36,7 @@ def extract_needed_pr_label_data(labels: [dict], pr_id: int, platform_id: int, r
     return label_dicts
 
 # retrieve only the needed data for pr assignees from the api response
-def extract_needed_pr_assignee_data(assignees: [dict], pr_id: int, platform_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> [dict]:
+def extract_needed_pr_assignee_data(assignees: [dict], platform_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> [dict]:
 
     if len(assignees) == 0:
         return []
@@ -46,7 +46,7 @@ def extract_needed_pr_assignee_data(assignees: [dict], pr_id: int, platform_id: 
     for assignee in assignees:
 
         assignee_dict = {
-            'pull_request_id': pr_id,
+            # store the pr_url data on in the pr assignee data for now so we can relate it back to a pr later
             'contrib_id': None,
             'pr_assignee_src_id': int(assignee['id']),
             'tool_source': tool_source,
@@ -56,11 +56,11 @@ def extract_needed_pr_assignee_data(assignees: [dict], pr_id: int, platform_id: 
         }
 
         assignee_dicts.append(assignee_dict)
-
+ 
     return assignee_dicts
 
 # retrieve only the needed data for pr reviewers from the api response
-def extract_needed_pr_reviewer_data(reviewers: [dict], pr_id: int, platform_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> [dict]:
+def extract_needed_pr_reviewer_data(reviewers: [dict], platform_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> [dict]:
 
     if len(reviewers) == 0:
         return []
@@ -69,7 +69,6 @@ def extract_needed_pr_reviewer_data(reviewers: [dict], pr_id: int, platform_id: 
     for reviewer in reviewers:
 
         reviewer_dict = {
-            'pull_request_id': pr_id,
             'cntrb_id': None,
             'pr_reviewer_src_id': int(float(reviewer['id'])),
             'tool_source': tool_source,
@@ -82,8 +81,7 @@ def extract_needed_pr_reviewer_data(reviewers: [dict], pr_id: int, platform_id: 
 
     return reviewer_dicts
 
-
-def extract_needed_pr_metadata(metadata_list: [dict], pr_id: int, platform_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> [dict]:
+def extract_needed_pr_metadata(metadata_list: [dict], platform_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> [dict]:
 
     if len(metadata_list) == 0:
         return []
@@ -92,7 +90,6 @@ def extract_needed_pr_metadata(metadata_list: [dict], pr_id: int, platform_id: i
     for meta in metadata_list:
 
         metadata_dict = {
-            'pull_request_id': pr_id,
             'pr_head_or_base': meta['pr_head_or_base'],
             'pr_src_meta_label': meta['label'],
             'pr_src_meta_ref': meta['ref'],
@@ -108,7 +105,6 @@ def extract_needed_pr_metadata(metadata_list: [dict], pr_id: int, platform_id: i
         metadata_dicts.append(metadata_dict)
 
     return metadata_dicts
-
 
 
 def extract_pr_review_message_ref_data(comment: dict, pr_id: int, msg_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> dict:
@@ -338,6 +334,64 @@ def extract_needed_pr_message_ref_data(messages: [dict], pull_request_id: int, m
 
     return message_ref_dicts
      
+
+def extract_needed_pr_data(pr, repo_id, tool_source, tool_version):
+
+    pr_dict = {
+        'repo_id': repo_id,
+        'pr_url': pr['url'],
+        # 1-22-2022 inconsistent casting; sometimes int, sometimes float in bulk_insert
+        'pr_src_id': int(str(pr['id']).encode(encoding='UTF-8').decode(encoding='UTF-8')),
+        # 9/20/2021 - This was null. No idea why.
+        'pr_src_node_id': pr['node_id'],
+        'pr_html_url': pr['html_url'],
+        'pr_diff_url': pr['diff_url'],
+        'pr_patch_url': pr['patch_url'],
+        'pr_issue_url': pr['issue_url'],
+        'pr_augur_issue_id': None,
+        'pr_src_number': pr['number'],
+        'pr_src_state': pr['state'],
+        'pr_src_locked': pr['locked'],
+        'pr_src_title': str(pr['title']),
+        'pr_augur_contributor_id': None,
+        ### Changed to int cast based on error 12/3/2021 SPG (int cast above is first change on 12/3)
+        'pr_body': str(pr['body']).encode(encoding='UTF-8', errors='backslashreplace').decode(encoding='UTF-8', errors='ignore') if (
+            pr['body']
+        ) else None,
+        'pr_created_at': pr['created_at'],
+        'pr_updated_at': pr['updated_at'],
+        'pr_closed_at': None if not (
+            pr['closed_at']
+        ) else pr['closed_at'],
+        'pr_merged_at': None if not (
+            pr['merged_at']
+        ) else pr['merged_at'],
+        'pr_merge_commit_sha': pr['merge_commit_sha'],
+        'pr_teams': None,
+        'pr_milestone': None,
+        'pr_commits_url': pr['commits_url'],
+        'pr_review_comments_url': pr['review_comments_url'],
+        'pr_review_comment_url': pr['review_comment_url'],
+        'pr_comments_url': pr['comments_url'],
+        'pr_statuses_url': pr['statuses_url'],
+        'pr_meta_head_id': None if not (
+            pr['head']
+        ) else pr['head']['label'],
+        'pr_meta_base_id': None if not (
+            pr['base']
+        ) else pr['base']['label'],
+        'pr_src_issue_url': pr['issue_url'],
+        'pr_src_comments_url': pr['comments_url'],
+        'pr_src_review_comments_url': pr['review_comments_url'],
+        'pr_src_commits_url': pr['commits_url'],
+        'pr_src_statuses_url': pr['statuses_url'],
+        'pr_src_author_association': pr['author_association'],
+        'tool_source': tool_source,
+        'tool_version': tool_version,
+        'data_source': 'GitHub API'
+    }
+
+    return pr_dict
 
                 
 
