@@ -98,7 +98,8 @@ class TaskSession(s.orm.Session):
         if type(first_data) == dict:
             return self.insert_dict_data(data, table, natural_keys)
         else:
-            return self.insert_github_class_objects(data, table, natural_keys)
+            print("Error passed a github class object")
+            # return self.insert_github_class_objects(data, table, natural_keys)
 
     def insert_dict_data(self, data: [dict], table, natural_keys: [str]) -> None:
 
@@ -224,39 +225,7 @@ class TaskSession(s.orm.Session):
             set_ = setDict
         )
 
-        # get the sqlalchemy sql statement back as a string so we 
-        # can insert it ourselves since passing the variable stmnt
-        #  to sqlalchemy is not working
-        insert_stmt = str(stmnt.compile(dialect=pg.dialect()))
-
-        # insert_stmt = "INSERT INTO augur_data.table (col_1, col_2, col_3) VALUES (value_1, value_2, value_3), (value_4, value_5, value_6) ON CONFLICT (col1) DO UPDATE SET col_1 = excluded.col_1, col_2 = excluded.col_2, col_3 = excluded.col_3"
-
-        # this regex statement is done on a SQL statement like above
-        # it gets the list of tuples between VALUeS and ON CONFLICT so 
-        # we can replace it with a list of valid tuples that need to be inserted
-        regex_pattern = "(?<=VALUES)(.*)(?=ON CONFLICT)"
-
-        # gets the generic tuple list that sqlalchemy generates
-        sqlalchemy_generated_tuple_list = re.search(regex_pattern, insert_stmt).group()
-
-        # create a list of tuples from the list of dictionaries
-        tuple_list = []
-        for value in data:
-            tuple_data = str(tuple(value.values()))
-            tuple_list.append(tuple_data)
-
-        # convert list of tuples to a comma separted string like this: (1, 2, 3), (8, 9, 10), (13, 18, 25)
-        new_tuple_string = ', '.join(tuple_list)
-
-        # add spaces to tuple string so there are spaces between the VALUES and ON CONFLICT postgres keywords
-        new_tuple_string = f" {new_tuple_string} "
-
-        # replace the sqlalchemy tuples list with actual data
-        insert_stmt_with_data = insert_stmt.replace(sqlalchemy_generated_tuple_list, new_tuple_string)
-
-        # insert the data and get the return values back as a tuple
-        # fetchall is what signals to sqlalchemy to return the pks
-        return_data_tuples = self.execute_sql(insert_stmt_with_data).fetchall()
+        return_data_tuples = self.execute_sql(stmnt).fetchall()
 
         # converts the return data to a list of dicts
         return_data = []
