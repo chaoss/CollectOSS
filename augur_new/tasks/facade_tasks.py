@@ -217,7 +217,7 @@ def analysis(cfg, multithreaded, session=None, processes=6):
             for commit in missing_commits:
                 analyze_commit(cfg, repo[0], repo_loc, commit, multithreaded)
 
-        session.loggger.info("Why doesn't it get to here?")
+        session.logger.info("Why doesn't it get to here?")
         update_analysis_log(repo[0],'Data collection complete')
 
         update_analysis_log(repo[0],'Beginning to trim commits')
