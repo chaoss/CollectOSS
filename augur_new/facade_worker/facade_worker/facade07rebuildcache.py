@@ -594,7 +594,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 
     cfg.log_activity('Verbose','Caching projects')
 
-    cache_projects_by_week = ("""INSERT INTO dm_repo_group_weekly  
+    cache_projects_by_week = ("""INSERT INTO dm_repo_group_weekly (repo_group_id, email, affiliation, week, year, added, removed, whitespace, files, patches, tool_source, tool_version, data_source)
         SELECT r.repo_group_id AS repo_group_id, 
         a.cmt_%s_email AS email, 
         a.cmt_%s_affiliation AS affiliation, 
@@ -633,7 +633,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
     cfg.cursor.execute(cache_projects_by_week)
     cfg.db.commit()
 
-    cache_projects_by_month = ("""INSERT INTO dm_repo_group_monthly 
+    cache_projects_by_month = ("""INSERT INTO dm_repo_group_monthly (repo_group_id, email, affiliation, month, year, added, removed, whitespace, files, patches, tool_source, tool_version, data_source)
         SELECT r.repo_group_id AS repo_group_id, 
         a.cmt_%s_email AS email, 
         a.cmt_%s_affiliation AS affiliation, 
@@ -672,7 +672,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
     cfg.cursor.execute(cache_projects_by_month)
     cfg.db.commit()
 
-    cache_projects_by_year = ("""INSERT INTO dm_repo_group_annual
+    cache_projects_by_year = ("""INSERT INTO dm_repo_group_annual (repo_group_id, email, affiliation, year, added, removed, whitespace, files, patches, tool_source, tool_version, data_source)
         SELECT r.repo_group_id AS repo_group_id, 
         a.cmt_%s_email AS email, 
         a.cmt_%s_affiliation AS affiliation, 
@@ -712,7 +712,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 
     cfg.log_activity('Verbose','Caching repos')
 
-    cache_repos_by_week = ("""INSERT INTO dm_repo_weekly 
+    cache_repos_by_week = ("""INSERT INTO dm_repo_weekly (repo_id, email, affiliation, week, year, added, removed, whitespace, files, patches, tool_source, tool_version, data_source)
         SELECT a.repo_id AS repo_id, 
         a.cmt_%s_email AS email, 
         a.cmt_%s_affiliation AS affiliation, 
@@ -751,7 +751,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
     cfg.cursor.execute(cache_repos_by_week)
     cfg.db.commit()
 
-    cache_repos_by_month = ("""INSERT INTO dm_repo_monthly
+    cache_repos_by_month = ("""INSERT INTO dm_repo_monthly (repo_id, email, affiliation, month, year, added, removed, whitespace, files, patches, tool_source, tool_version, data_source)
         SELECT a.repo_id AS repo_id, 
         a.cmt_%s_email AS email, 
         a.cmt_%s_affiliation AS affiliation, 
@@ -790,7 +790,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
     cfg.cursor.execute(cache_repos_by_month)
     cfg.db.commit()
 
-    cache_repos_by_year = ("""INSERT INTO dm_repo_annual 
+    cache_repos_by_year = ("""INSERT INTO dm_repo_annual (repo_id, email, affiliation, year, added, removed, whitespace, files, patches, tool_source, tool_version, data_source)
         SELECT a.repo_id AS repo_id, 
         a.cmt_%s_email AS email, 
         a.cmt_%s_affiliation AS affiliation, 
