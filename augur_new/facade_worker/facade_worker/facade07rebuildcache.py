@@ -550,7 +550,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
     # Cache the unknown authors
 
     unknown_authors = ("""
-        INSERT INTO unknown_cache 
+        INSERT INTO unknown_cache (type, repo_group_id, email, domain, added, tool_source, tool_version, data_source)
         SELECT 'author', 
         r.repo_group_id, 
         a.cmt_author_email, 
@@ -572,7 +572,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 
     # Cache the unknown committers
 
-    unknown_committers = ("""INSERT INTO unknown_cache
+    unknown_committers = ("""INSERT INTO unknown_cache (type, repo_group_id, email, domain, added, tool_source, tool_version, data_source)
         SELECT 'committer', 
         r.repo_group_id, 
         a.cmt_committer_email, 
