@@ -1,10 +1,12 @@
 
 import os
-from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.dialects import postgresql as pg
 import sqlalchemy as s
 import pandas as pd
 import json
 import httpx
+from sqlalchemy.inspection import inspect
+import re
 
 from augur_new.db import models 
 from sqlalchemy.event import listen
@@ -12,6 +14,7 @@ from sqlalchemy.event import listens_for
 from augur_new.augur.config import AugurConfig
 
 from augur_new.util.random_key_auth import RandomKeyAuth
+import psycopg2
 # from .engine import engine
 
 #TODO: setup github headers in a method here.
@@ -34,6 +37,8 @@ class TaskSession(s.orm.Session):
         #print(self.config)
 
         DB_STR = f'postgresql://{self.config["user_database"]}:{self.config["password_database"]}@{self.config["host_database"]}:{self.config["port_database"]}/{self.config["name_database"]}'
+
+
 
         self.config.update(config)
 
@@ -91,9 +96,9 @@ class TaskSession(s.orm.Session):
         first_data = data[0]
 
         if type(first_data) == dict:
-            self.insert_dict_data(data, table, natural_keys)
+            return self.insert_dict_data(data, table, natural_keys)
         else:
-            self.insert_github_class_objects(data, table, natural_keys)
+            return self.insert_github_class_objects(data, table, natural_keys)
 
     def insert_dict_data(self, data: [dict], table, natural_keys: [str]) -> None:
 
@@ -108,92 +113,108 @@ class TaskSession(s.orm.Session):
 
         self.logger.info(f"Length of data to insert: {len(data)}")
 
-        table_stmt = insert(table)
+        table_stmt = pg.insert(table)
+
+        primary_keys = []
 
         for value in data:
-            insert_stmt = table_stmt.values(value)
+            insert_stmt = table_stmt.returning(table.pull_request_id).values(value)
             insert_stmt = insert_stmt.on_conflict_do_update(
                 index_elements=natural_keys, set_=dict(value))
 
             try:
-                self.execute_sql(insert_stmt)
-            except s.exc.DatabaseError as e:
-                self.logger.info(f"Error: {e}")
-                continue
-
-    def insert_github_class_objects(self, objects, table, natural_keys: str) -> None:
-
-        if type(objects) != list:
-            self.logger.info("Data must be a list")
-            return
-
-        table_stmt = insert(table)
-
-        for obj in objects:
-            data = obj.get_dict()
-            insert_stmt = table_stmt.values(data)
-            insert_stmt = insert_stmt.on_conflict_do_update(
-                index_elements=natural_keys, set_=dict(data))
-
-            try:
                 connection = self.engine.connect()
-                id = connection.execute(insert_stmt)
-                
+                primary_key_tuple = connection.execute(insert_stmt).fetchone()
+                primary_keys.append(primary_key_tuple)
+
             except s.exc.DatabaseError as e:
                 self.logger.info(f"Error: {e}")
                 continue
 
-            natural_key_dict = {}
-            for key in natural_keys:
-                natural_key_dict[key] = data[key]
+        return primary_keys
 
-            rows = table.query.filter_by(**natural_key_dict).all()
+                
 
-            if len(rows) == 0:
-                self.logger.info("Error could not get associated row for inserted pr")
-                continue
+    # def insert_github_class_objects(self, objects, table, natural_keys: str) -> None:
 
-            if len(rows) > 1:
-                self.logger.info(f"Error values in table not unique on {natural_keys}")
-                continue
+    #     if type(objects) != list:
+    #         self.logger.info("Data must be a list")
+    #         return
 
-            print(id)
-            print(rows[0].pull_reqest_id)
+    #     table_stmt = pg.insert(table)
 
-            obj.set_db_row(rows[0])
+    #     for obj in objects:
+    #         data = obj.get_dict()
+    #         insert_stmt = table_stmt.returning(table.pull_request_id).values(data)
+    #         insert_stmt = insert_stmt.on_conflict_do_update(
+    #             index_elements=natural_keys, set_=dict(data))
+
+    #         try:
+                
+                
+    #         except s.exc.DatabaseError as e:
+    #             self.logger.info(f"Error: {e}")
+    #             continue
+
+    #         # the insert returns a list of tuples
+    #         # since we are only inserting one it should 
+    #         # primary_key = return_values[0][0]
+
+    #         # natural_key_dict = {}
+    #         # for key in natural_keys:
+    #         #     natural_key_dict[key] = data[key]
+
+    #         # rows = table.query.filter_by(**natural_key_dict).all()
+
+    #         # if len(rows) == 0:
+    #         #     self.logger.info("Error could not get associated row for inserted pr")
+    #         #     continue
+
+    #         # if len(rows) > 1:
+    #         #     self.logger.info(f"Error values in table not unique on {natural_keys}")
+    #         #     continue
+
+    #         # print(return_value)
+    #         # print(rows[0].pull_request_id)
+
+    #         # obj.set_db_row(rows[0])
+
+    #         return 
 
 
 
     #TODO: Bulk upsert
     
-    def insert_bulk_data(self, data: [dict], table, natural_keys: [str]) -> None:
+    def insert_bulk_data(self, data: [dict], table, natural_keys: [str], return_columns: [str] = []) -> None:
         self.logger.info(f"Length of data to insert: {len(data)}")
-        self.logger.info(type(data))
-        self.logger.info(f"Table: {table}")
-        self.logger.info(f"Natural Keys: {natural_keys}")
 
         if type(data) != list:
             self.logger.info("Data must be a list")
+            return
+
+        if len(data) < 0:
+            self.logger.info("Gave no data to insert, returning...")
             return
 
         if type(data[0]) != dict:
             self.logger.info("Must be list of dicts")
             return
 
-        self.logger.info("About to create table and values statement")
+        # creates list of arguments to tell sqlalchemy what columns to return after the data is inserted
+        returning_args = []
+        for column in return_columns:
+            argument = getattr(table, column)
+            returning_args.append(argument)
 
-        stmnt = insert(table).values(data)
+        # creates insert on table
+        # that returns cols specificed in returning_args
+        # and inserts the data specified in data
+        stmnt = pg.insert(table).returning(*returning_args).values(data)
 
-        self.logger.info("Table and values statement created")
-
+        # create a dict that the on_conflict_do_update method requires to be able to map updates whenever there is a conflict. See sqlalchemy docs for more explanation and examples: https://docs.sqlalchemy.org/en/14/dialects/postgresql.html#updating-using-the-excluded-insert-values
         setDict = {}
         for key in data[0].keys():
-            setDict[key] = stmnt.excluded[key]
-
-        self.logger.info(f"Bare statement: {stmnt.excluded.pull_request_id}")
-        self.logger.info(f"Dynamic statement: {setDict['pull_request_id']}")
-
-        self.logger.info(f"Set dict: {setDict}")
+            setDict[key] = getattr(stmnt.excluded, key)
 
         stmnt = stmnt.on_conflict_do_update(
             #This might need to change
@@ -202,10 +223,47 @@ class TaskSession(s.orm.Session):
             #Columns to be updated
             set_ = setDict
         )
-        self.logger.info(stmnt)
 
-        self.execute(stmnt)
+        # get the sqlalchemy sql statement back as a string so we 
+        # can insert it ourselves since passing the variable stmnt
+        #  to sqlalchemy is not working
+        insert_stmt = str(stmnt.compile(dialect=pg.dialect()))
 
+        # insert_stmt = "INSERT INTO augur_data.table (col_1, col_2, col_3) VALUES (value_1, value_2, value_3), (value_4, value_5, value_6) ON CONFLICT (col1) DO UPDATE SET col_1 = excluded.col_1, col_2 = excluded.col_2, col_3 = excluded.col_3"
+
+        # this regex statement is done on a SQL statement like above
+        # it gets the list of tuples between VALUeS and ON CONFLICT so 
+        # we can replace it with a list of valid tuples that need to be inserted
+        regex_pattern = "(?<=VALUES)(.*)(?=ON CONFLICT)"
+
+        # gets the generic tuple list that sqlalchemy generates
+        sqlalchemy_generated_tuple_list = re.search(regex_pattern, insert_stmt).group()
+
+        # create a list of tuples from the list of dictionaries
+        tuple_list = []
+        for value in data:
+            tuple_data = str(tuple(value.values()))
+            tuple_list.append(tuple_data)
+
+        # convert list of tuples to a comma separted string like this: (1, 2, 3), (8, 9, 10), (13, 18, 25)
+        new_tuple_string = ', '.join(tuple_list)
+
+        # add spaces to tuple string so there are spaces between the VALUES and ON CONFLICT postgres keywords
+        new_tuple_string = f" {new_tuple_string} "
+
+        # replace the sqlalchemy tuples list with actual data
+        insert_stmt_with_data = insert_stmt.replace(sqlalchemy_generated_tuple_list, new_tuple_string)
+
+        # insert the data and get the return values back as a tuple
+        # fetchall is what signals to sqlalchemy to return the pks
+        return_data_tuples = self.execute_sql(insert_stmt_with_data).fetchall()
+
+        # converts the return data to a list of dicts
+        return_data = []
+        for data in return_data_tuples:
+            return_data.append(dict(data))
+
+        return return_data
 
 #TODO: Test sql methods
 class GithubTaskSession(TaskSession):
