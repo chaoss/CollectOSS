@@ -208,15 +208,16 @@ def analysis(cfg, multithreaded, session=None, processes=6):
 
             contrib_jobs = group(task_list)
         
-            result = contrib_jobs.apply_async()
+            result = contrib_jobs.apply_async().wait()
 
-            session.logger.info(result.ready())
+            #session.logger.info(result.ready())
 
-            session.logger.info(result.successful())
+            session.logger.info(result) #Got to here.
         elif len(missing_commits) > 0:
             for commit in missing_commits:
                 analyze_commit(cfg, repo[0], repo_loc, commit, multithreaded)
 
+        session.loggger.info("Why doesn't it get to here?")
         update_analysis_log(repo[0],'Data collection complete')
 
         update_analysis_log(repo[0],'Beginning to trim commits')
