@@ -115,32 +115,6 @@ def pull_requests(owner: str, repo: str) -> None:
     pr_other_data = []
     repo_pr_numbers = []
 
-
-    # data = []
-    # for i in range(1,2):
-
-    #     from random import randint
-
-    #     value = randint(0, 100)
-
-    #     data.append(
-    #         {
-    #             "unique_value": i,
-    #             "testing_key": "value_" + str(i*2), 
-    #             "testing_value": (i*value)
-    #         }
-    #     )
-
-    # logger.info(f"Inserting testing data of length: {len(data)}")
-    # testing_natural_keys = ['unique_value']
-    # return_data = ["unique_value", "testing_id"]
-    # session.insert_bulk_data(data, Testing, testing_natural_keys, return_data)
-
-    # return
-
-
-    # creating a list, because we would like to bulk insert in the future
-
     len_prs = len(prs)
     for index, pr in enumerate(prs):
 
@@ -152,18 +126,6 @@ def pull_requests(owner: str, repo: str) -> None:
         )
 
         logger.info(f"Inserting pr {index + 1} of {len_prs}")
-
-        
-
-        # # when the object gets inserted the db_row is added to the object which is a PullRequests orm object (so it contains all the column values)
-        # pr_return_data = session.insert_data(pr_dict, PullRequests, pr_natural_keys, return_columns=pr_return_columns)
-        # logger.info(f"Pr return_data: {pr_return_data}")
-
-        # if len(pr_return_data) == 0:
-        #     logger.info("Error while inserting pr, returned more than one primary key skipping other data")
-        #     continue
-
-        # pull_request_id = pr_return_data[0]["pull_request_id"]
 
         pr_dicts.append(
                     extract_needed_pr_data(pr, repo_id, tool_source,tool_version)
