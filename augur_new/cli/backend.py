@@ -22,10 +22,6 @@ from augur.gunicorn import AugurGunicornApp
 
 logger = logging.getLogger("augur")
 
-celery_process = None
-augur_app = None
-gunicorn_arbiter = None
-
 @click.group('server', short_help='Commands for controlling the backend API server & data collection workers')
 def cli():
     pass
@@ -37,17 +33,10 @@ def start(disable_collection):
     Start Augur's backend server
     """
 
-    global celery_process
-    global augur_app
-    global gunicorn_arbiter
-
-    atexit._clear()
-    atexit.register(exit)
-
     logger.info("Starting workers")
     command = ["celery", "-A", "tasks.celery.celery", "worker", "--loglevel=info", "-E"]
     celery_process = subprocess.Popen(command)
-
+    
     if not disable_collection:
 
         owner = "chaoss"
@@ -68,7 +57,10 @@ def start(disable_collection):
     logger.info('Housekeeper update process logs will now take over.')
 
     gunicorn_arbiter = Arbiter(augur_gunicorn_app)
-    
+
+    atexit._clear()
+    atexit.register(exit, celery_process, gunicorn_arbiter)
+
     gunicorn_arbiter.run()
 
 
@@ -152,59 +144,51 @@ def _broadcast_signal_to_processes(signal=signal.SIGTERM, given_logger=None):
                 except psutil.NoSuchProcess as e:
                     pass
 
-def initialize_components(augur_app, disable_housekeeper):
-    master = None
-    manager = None
-    broker = None
-    housekeeper = None
-    worker_processes = []
-    mp.set_start_method('forkserver', force=True)
+# def initialize_components(augur_app, disable_housekeeper):
+#     master = None
+#     manager = None
+#     broker = None
+#     housekeeper = None
+#     worker_processes = []
+#     mp.set_start_method('forkserver', force=True)
 
-    if not disable_housekeeper:
+#     if not disable_housekeeper:
 
-        manager = mp.Manager()
-        broker = manager.dict()
-        housekeeper = Housekeeper(broker=broker, augur_app=augur_app)
+#         manager = mp.Manager()
+#         broker = manager.dict()
+#         housekeeper = Housekeeper(broker=broker, augur_app=augur_app)
 
-        controller = augur_app.config.get_section('Workers')
-        for worker in controller.keys():
-            if controller[worker]['switch']:
-                for i in range(controller[worker]['workers']):
-                    logger.info("Booting {} #{}".format(worker, i + 1))
-                    worker_process = mp.Process(target=worker_start, name=f"{worker}_{i}", kwargs={'worker_name': worker, 'instance_number': i, 'worker_port': controller[worker]['port']}, daemon=True)
-                    worker_processes.append(worker_process)
-                    worker_process.start()
+#         controller = augur_app.config.get_section('Workers')
+#         for worker in controller.keys():
+#             if controller[worker]['switch']:
+#                 for i in range(controller[worker]['workers']):
+#                     logger.info("Booting {} #{}".format(worker, i + 1))
+#                     worker_process = mp.Process(target=worker_start, name=f"{worker}_{i}", kwargs={'worker_name': worker, 'instance_number': i, 'worker_port': controller[worker]['port']}, daemon=True)
+#                     worker_processes.append(worker_process)
+#                     worker_process.start()
 
-    augur_app.manager = manager
-    augur_app.broker = broker
-    augur_app.housekeeper = housekeeper
+#     augur_app.manager = manager
+#     augur_app.broker = broker
+#     augur_app.housekeeper = housekeeper
 
-    atexit._clear()
-    atexit.register(exit, augur_app, worker_processes, master)
-    return AugurGunicornApp(augur_app.gunicorn_options, augur_app=augur_app)
+#     atexit._clear()
+#     atexit.register(exit, augur_app, worker_processes, master)
+#     return AugurGunicornApp(augur_app.gunicorn_options, augur_app=augur_app)
 
-def worker_start(worker_name=None, instance_number=0, worker_port=None):
-    try:
-        time.sleep(30 * instance_number)
-        destination = subprocess.DEVNULL
-        process = subprocess.Popen("cd workers/{} && {}_start".format(worker_name,worker_name), shell=True, stdout=destination, stderr=subprocess.STDOUT)
-        logger.info("{} #{} booted.".format(worker_name,instance_number+1))
-    except KeyboardInterrupt as e:
-        pass
+# def worker_start(worker_name=None, instance_number=0, worker_port=None):
+#     try:
+#         time.sleep(30 * instance_number)
+#         destination = subprocess.DEVNULL
+#         process = subprocess.Popen("cd workers/{} && {}_start".format(worker_name,worker_name), shell=True, stdout=destination, stderr=subprocess.STDOUT)
+#         logger.info("{} #{} booted.".format(worker_name,instance_number+1))
+#     except KeyboardInterrupt as e:
+#         pass
 
-def exit():
 
-    global celery_process
-    global augur_app
-    global gunicorn_arbiter
+def exit(celery_process, gunicorn_arbiter):
 
     logger.info(f"Celery process: {celery_process}")
-    logger.info(f"augur_app: {augur_app}")
     logger.info(f"gunicorn_arbiter: {gunicorn_arbiter}")
-
-    if augur_app is not None:
-        logger.info("Shutdown started for augur app...")
-        augur_app.shutdown()
 
     if celery_process is not None:
         logger.info("Shutting down the celery process")

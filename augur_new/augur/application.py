@@ -120,18 +120,18 @@ class Application():
             logger.error("Unable to connect to the database. Terminating...")
             raise(e)
 
-    def shutdown(self):
-        if self.logging.stop_event is not None:
-            logger.debug("Stopping housekeeper logging listener...")
-            self.logging.stop_event.set()
+    # def shutdown(self):
+    #     if self.logging.stop_event is not None:
+    #         logger.debug("Stopping housekeeper logging listener...")
+    #         self.logging.stop_event.set()
 
-        # if self.housekeeper is not None:
-        #     logger.debug("Shutting down housekeeper updates...")
-        #     self.housekeeper.shutdown_updates()
-        #     self.housekeeper = None
+    #     if self.housekeeper is not None:
+    #         logger.debug("Shutting down housekeeper updates...")
+    #         self.housekeeper.shutdown_updates()
+    #         self.housekeeper = None
 
-        # if self.manager is not None:
-        #     logger.debug("Shutting down manager...")
-        #     self.manager.shutdown()
-        #     self.manager = None
+    #     if self.manager is not None:
+    #         logger.debug("Shutting down manager...")
+    #         self.manager.shutdown()
+    #         self.manager = None
 

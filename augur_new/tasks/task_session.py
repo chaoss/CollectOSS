@@ -1,10 +1,12 @@
 
 import os
-from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.dialects import postgresql as pg
 import sqlalchemy as s
 import pandas as pd
 import json
 import httpx
+from sqlalchemy.inspection import inspect
+import re
 
 from augur_new.db import models 
 from sqlalchemy.event import listen
@@ -12,6 +14,7 @@ from sqlalchemy.event import listens_for
 from augur_new.augur.config import AugurConfig
 
 from augur_new.util.random_key_auth import RandomKeyAuth
+import psycopg2
 # from .engine import engine
 
 #TODO: setup github headers in a method here.
@@ -34,6 +37,8 @@ class TaskSession(s.orm.Session):
         #print(self.config)
 
         DB_STR = f'postgresql://{self.config["user_database"]}:{self.config["password_database"]}@{self.config["host_database"]}:{self.config["port_database"]}/{self.config["name_database"]}'
+
+
 
         self.config.update(config)
 
@@ -82,119 +87,50 @@ class TaskSession(s.orm.Session):
 
         return connection.execute(sql_text)
 
-    
-    def insert_data(self, data, table, natural_keys: [str]) -> None:
-
-        if len(data) == 0:
-            return
-
-        first_data = data[0]
-
-        if type(first_data) == dict:
-            self.insert_dict_data(data, table, natural_keys)
-        else:
-            self.insert_github_class_objects(data, table, natural_keys)
-
-    def insert_dict_data(self, data: [dict], table, natural_keys: [str]) -> None:
-
-        if type(data) != list:
-            self.logger.info("Data must be a list")
-            return
-
-        if type(data[0]) != dict:
-            self.logger.info("Data must be a list of dicts")
-            self.logger.info("Must be list of dicts")
-            return
-
-        self.logger.info(f"Length of data to insert: {len(data)}")
-
-        table_stmt = insert(table)
-
-        for value in data:
-            insert_stmt = table_stmt.values(value)
-            insert_stmt = insert_stmt.on_conflict_do_update(
-                index_elements=natural_keys, set_=dict(value))
-
-            try:
-                self.execute_sql(insert_stmt)
-            except s.exc.DatabaseError as e:
-                self.logger.info(f"Error: {e}")
-                continue
-
-    def insert_github_class_objects(self, objects, table, natural_keys: str) -> None:
-
-        if type(objects) != list:
-            self.logger.info("Data must be a list")
-            return
-
-        table_stmt = insert(table)
-
-        for obj in objects:
-            data = obj.get_dict()
-            insert_stmt = table_stmt.values(data)
-            insert_stmt = insert_stmt.on_conflict_do_update(
-                index_elements=natural_keys, set_=dict(data))
-
-            try:
-                connection = self.engine.connect()
-                id = connection.execute(insert_stmt)
-                
-            except s.exc.DatabaseError as e:
-                self.logger.info(f"Error: {e}")
-                continue
-
-            natural_key_dict = {}
-            for key in natural_keys:
-                natural_key_dict[key] = data[key]
-
-            rows = table.query.filter_by(**natural_key_dict).all()
-
-            if len(rows) == 0:
-                self.logger.info("Error could not get associated row for inserted pr")
-                continue
-
-            if len(rows) > 1:
-                self.logger.info(f"Error values in table not unique on {natural_keys}")
-                continue
-
-            print(id)
-            print(rows[0].pull_reqest_id)
-
-            obj.set_db_row(rows[0])
-
-
-
     #TODO: Bulk upsert
     
-    def insert_bulk_data(self, data: [dict], table, natural_keys: [str]) -> None:
-        self.logger.info(f"Length of data to insert: {len(data)}")
-        self.logger.info(type(data))
-        self.logger.info(f"Table: {table}")
-        self.logger.info(f"Natural Keys: {natural_keys}")
+    def insert_data(self, data: [dict], table, natural_keys: [str], return_columns: [str] = []) -> None:
 
+        # print(f"Return columns: {return_columns}")
+        
         if type(data) != list:
-            self.logger.info("Data must be a list")
+            
+            # if a dict is passed to data then 
+            # convert it to a list with one value
+            if type(data) == dict:
+                data = [data]
+            
+            else:
+                self.logger.info("Data must be a list or a dict")
+                return
+
+        if len(data) == 0:
+            self.logger.info("Gave no data to insert, returning...")
             return
 
         if type(data[0]) != dict:
             self.logger.info("Must be list of dicts")
             return
 
-        self.logger.info("About to create table and values statement")
+        self.logger.info(f"Length of data to insert: {len(data)}")
 
-        stmnt = insert(table).values(data)
+        # creates list of arguments to tell sqlalchemy what columns to return after the data is inserted
+        returning_args = []
+        for column in return_columns:
+            argument = getattr(table, column)
+            returning_args.append(argument)
 
-        self.logger.info("Table and values statement created")
+        # creates insert on table
+        # that returns cols specificed in returning_args
+        # and inserts the data specified in data
+        # NOTE: if return_columns does not have an values this still works
+        stmnt = pg.insert(table).returning(*returning_args).values(data)
 
+        # create a dict that the on_conflict_do_update method requires to be able to map updates whenever there is a conflict. See sqlalchemy docs for more explanation and examples: https://docs.sqlalchemy.org/en/14/dialects/postgresql.html#updating-using-the-excluded-insert-values
         setDict = {}
         for key in data[0].keys():
-            setDict[key] = stmnt.excluded[key]
-
-        self.logger.info(f"Bare statement: {stmnt.excluded.pull_request_id}")
-        self.logger.info(f"Dynamic statement: {setDict['pull_request_id']}")
-
-        self.logger.info(f"Set dict: {setDict}")
-
+                setDict[key] = getattr(stmnt.excluded, key)
+            
         stmnt = stmnt.on_conflict_do_update(
             #This might need to change
             index_elements=natural_keys,
@@ -202,10 +138,25 @@ class TaskSession(s.orm.Session):
             #Columns to be updated
             set_ = setDict
         )
-        self.logger.info(stmnt)
+        
 
-        self.execute(stmnt)
+        # print(str(stmnt.compile(dialect=pg.dialect())))
 
+        # if there is no data to return then it executes the insert the returns nothing
+        if len(return_columns) == 0:
+            self.execute_sql(stmnt)
+            return
+        
+        # else it get the requested return columns and returns them as a list of dicts
+        else:
+            return_data_tuples = self.execute_sql(stmnt).fetchall()
+
+            # converts the return data to a list of dicts
+            return_data = []
+            for data in return_data_tuples:
+                return_data.append(dict(data))
+
+            return return_data
 
 #TODO: Test sql methods
 class GithubTaskSession(TaskSession):

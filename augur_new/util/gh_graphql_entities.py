@@ -126,8 +126,6 @@ class GraphQlPageCollection(collections.abc.Sequence):
 
 
     def extract_paginate_result(self,responseObject):
-
-        print(responseObject.json())
         
         result_dict = responseObject.json()['data']
 
@@ -433,7 +431,7 @@ class GitHubRepo():
 
 
 class PullRequest():
-    def __init__(self, session, owner, repo,number):
+    def __init__(self, session, owner, repo, number):
 
         self.keyAuth = session.oauths
         self.url = "https://api.github.com/graphql"
@@ -447,7 +445,7 @@ class PullRequest():
     def get_reviews_collection(self):
 
         query = """
-            query MyQuery($repo: String!, $owner: String!,$number: Int!, $numRecords!, $cursor: String) {
+            query MyQuery($repo: String!, $owner: String!,$number: Int!, $numRecords: Int!, $cursor: String) {
                 repository(name: $repo, owner: $owner) {
                     pullRequest(number: $number) {
                         reviews(first: $numRecords, after: $cursor) {

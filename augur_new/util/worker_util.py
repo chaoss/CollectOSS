@@ -1,7 +1,7 @@
 #SPDX-License-Identifier: MIT
 import os, json, requests, logging
 from flask import Flask, Response, jsonify, request
-import gunicorn.app.base
+#import gunicorn.app.base
 
 def read_config(section, name=None, environment_variable=None, default=None, config_file_path='_', no_config_file=0, use_main_config=0):
     """

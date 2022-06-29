@@ -96,7 +96,7 @@ class GithubPaginator(collections.abc.Sequence):
             for data in data_list:
                 yield data
 
-    def hit_api(self, url: str, method='GET') -> httpx.Response:
+    def hit_api(self, url: str, timeout, method='GET') -> httpx.Response:
 
         self.logger.info(f"Hitting endpoint with {method} request: {url}...\n")
 
@@ -104,14 +104,14 @@ class GithubPaginator(collections.abc.Sequence):
 
             try:
                 response = client.request(
-                    method=method, url=url, auth=self.key_manager)
+                    method=method, url=url, auth=self.key_manager, timeout=timeout)
 
             except TimeoutError:
                 self.logger.info("Request timed out. Sleeping 10 seconds and trying again...\n")
                 time.sleep(10)
                 return None
             except httpx.TimeoutException:
-                self.logger.info("httpx.ReadTimeout. Sleeping 10 seconds and trying again...\n")
+                self.logger.info("Request timed out. Sleeping 10 seconds and trying again...\n")
                 time.sleep(10)
                 return None
 
@@ -119,13 +119,15 @@ class GithubPaginator(collections.abc.Sequence):
 
     def retrieve_data(self, url: str):
 
-        num_attempts = 0
-        while num_attempts < 10:
+        timeout = 5.0
+        num_attempts = 1
+        while num_attempts <= 10:
 
-            response = self.hit_api(url)
+            response = self.hit_api(url, timeout)
 
             # increment attempts
             if response is None:
+                timeout = timeout * 1.2
                 continue
             # update rate limit here
 
@@ -246,14 +248,16 @@ class GithubPaginator(collections.abc.Sequence):
         return None, None
 
     def get_last_page_number(self, url: str):
-
+        
+        timeout = 5
         num_attempts = 0
         while num_attempts < 10:
-            r = self.hit_api(url, method="HEAD")
+            r = self.hit_api(url, timeout=timeout, method="HEAD")
 
             if r:
                 break
 
+            timeout = timeout * 1.2
         else:
             return None
 
