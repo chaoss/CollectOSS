@@ -273,10 +273,10 @@ def facade_commits_model():
     create_xlsx_summary_files = session.create_xlsx_summary_files
     multithreaded = session.multithreaded
 
-    """
     
-        opts,args = getopt.getopt(sys.argv[1:],'hdpcuUaAmnfIrx')
-     for opt in opts:
+    
+    opts,args = getopt.getopt(sys.argv[1:],'hdpcuUaAmnfIrx')
+    for opt in opts:
         if opt[0] == '-h':
             print("\nfacade-worker.py does everything by default except invalidating caches\n"
                     "and forcing updates, unless invoked with one of the following options.\n"
@@ -361,7 +361,7 @@ def facade_commits_model():
             limited_run = 1
             session.cfg.log_activity('Info','Option set: creating Excel summary files.')
 
-    """
+    
     # Get the location of the directory where git repos are stored
     repo_base_directory = session.cfg.repo_base_directory
 
