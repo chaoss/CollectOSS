@@ -107,10 +107,9 @@ def extract_needed_pr_metadata(metadata_list: [dict], platform_id: int, repo_id:
     return metadata_dicts
 
 
-def extract_pr_review_message_ref_data(comment: dict, pr_id: int, msg_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> dict:
+def extract_pr_review_message_ref_data(comment: dict, pr_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> dict:
 
     pr_review_comment_message_ref = {
-        'pr_review_id':  pr_id,
         # msg_id turned up null when I removed the cast to int ..
         'msg_id': msg_id,
         'pr_review_msg_url': comment['url'],

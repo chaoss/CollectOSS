@@ -128,8 +128,6 @@ def pull_requests(owner: str, repo: str) -> None:
     platform_id = 25150
     data_source = "Github API"
 
-
-
     # returns an iterable of all prs at this url
     prs = GithubPaginator(url, session.oauths, logger)
 
@@ -424,7 +422,7 @@ def github_comments(self, owner: str, repo: str) -> None:
     data_source = "Github API"
 
     message_dicts = []
-    message_ref_data = []
+    message_ref_mapping_data = []
 
     message_len = len(messages)
 
@@ -437,27 +435,26 @@ def github_comments(self, owner: str, repo: str) -> None:
             logger.info(f"Processing page {page_index} of {total_pages}")
             page_index += 1
 
+        related_pr_of_issue_found = False
+
         
-
-        # logger.info(f"Processing message {index + 1} of {message_len}")
-
-        message_dicts.append(
-                        extract_needed_message_data(message, platform_id, repo_id, tool_source, tool_version, data_source)
-        )
-       
         if is_issue_message(message["html_url"]):
 
             try:
                 related_issue = Issues.query.filter_by(issue_url=message["issue_url"]).one()
+                related_pr_of_issue_found = True
+
             except s.orm.exc.NoResultFound:
                 logger.info("Could not find related pr")
-                logger.info(f"We were searching for: {message['issue_url']}")
+                logger.info(f"We were searching for: {message['id']}")
                 logger.info("Skipping")
                 continue
 
-            issue_message_ref_data = extract_needed_issue_message_ref_data(message, related_issue.issue_id, repo_id, tool_source, tool_version, data_source)
+            issue_id = related_issue.issue_id
 
-            message_ref_data.append(
+            issue_message_ref_data = extract_needed_issue_message_ref_data(message, issue_id, repo_id, tool_source, tool_version, data_source)
+
+            message_ref_mapping_data.append(
                 {
                     "platform_msg_id": message["id"],
                     "msg_ref_data": issue_message_ref_data,
@@ -469,20 +466,30 @@ def github_comments(self, owner: str, repo: str) -> None:
 
             try:
                 related_pr = PullRequests.query.filter_by(pr_issue_url=message["issue_url"]).one()
+                related_pr_of_issue_found = True
+
             except s.orm.exc.NoResultFound:
                 logger.info("Could not find related pr")
                 logger.info(f"We were searching for: {message['issue_url']}")
                 logger.info("Skipping")
                 continue
 
-            pr_message_ref_data = extract_needed_pr_message_ref_data(message, related_pr.pull_request_id, repo_id, tool_source, tool_version, data_source)
+            pull_request_id = related_pr.pull_request_id
 
-            message_ref_data.append(
+            pr_message_ref_data = extract_needed_pr_message_ref_data(message, pull_request_id, repo_id, tool_source, tool_version, data_source)
+
+            message_ref_mapping_data.append(
                 {
                     "platform_msg_id": message["id"],
                     "msg_ref_data": pr_message_ref_data,
                     "is_issue": False
                 }
+            )
+        
+        if related_pr_of_issue_found:
+
+            message_dicts.append(
+                            extract_needed_message_data(message, platform_id, repo_id, tool_source, tool_version, data_source)
             )
 
 
@@ -492,9 +499,9 @@ def github_comments(self, owner: str, repo: str) -> None:
 
     pr_message_ref_dicts = []
     issue_message_ref_dicts = []
-    for data in message_ref_data:
+    for mapping_data in message_ref_mapping_data:
 
-        value = data["platform_msg_id"]
+        value = mapping_data["platform_msg_id"]
         key = "platform_msg_id"
 
         issue_or_pr_message = find_dict_in_list_of_dicts(message_return_data, key, value)
@@ -506,10 +513,10 @@ def github_comments(self, owner: str, repo: str) -> None:
             print("Count not find issue or pull request message to map to")
             continue
 
-        message_ref_data = data["msg_ref_data"]
+        message_ref_data = mapping_data["msg_ref_data"]
         message_ref_data["msg_id"] = msg_id 
 
-        if data["is_issue"] is True:
+        if mapping_data["is_issue"] is True:
             issue_message_ref_dicts.append(message_ref_data)
         else:
             pr_message_ref_dicts.append(message_ref_data)
@@ -534,7 +541,7 @@ def is_issue_message(html_url):
 
         
 @celery.task
-def pull_request_review_comments(owner: str, repo: str) -> None:
+def pull_request_review_comments(self, owner: str, repo: str) -> None:
 
     logger = get_task_logger(pull_request_review_comments.name)
     session = GithubTaskSession(logger, config)
@@ -543,59 +550,82 @@ def pull_request_review_comments(owner: str, repo: str) -> None:
 
     url = f"https://api.github.com/repos/{owner}/{repo}/pulls/comments"
 
-    pr_comments = GithubPaginator(url, session.oauths)
+    pr_review_comments = GithubPaginator(url, session.oauths, logger)
 
     # get repo_id
     repo_id = 1
 
     platform_id = 25150
-    tool_source = "Pr comment task"
+    tool_source = "Pr review comment task"
     tool_version = "2.0"
     data_source = "Github API"
-    pr_comment_natural_keys = ["platform_msg_id"]
-    pr_comment_ref_natural_keys = ["pr_review_msg_src_id"]
 
-    pr_comment_ref_dicts = []
+    pr_review_comment_dicts = []
+    pr_review_msg_mapping_data = []
 
-    pr_comment_len = len(pr_comments)
+    pr_review_comments_len = len(pr_review_comments)
+    logger.info(f"Pr comments len: {pr_review_comments_len}")
+    for index, comment in enumerate(pr_review_comments):
 
-    logger.info(f"Pr comments len: {pr_comment_len}")
-    for index, comment in enumerate(pr_comments):
+        logger.info(f"Processing pr review comment {index + 1} of {pr_review_comments_len}")
 
-        # pr url associated with this comment
-        comment_pr_url = comment["pull_request_url"]
+        pr_review_id = comment["pull_request_review_id"]
 
-        related_pr = PullRequests.query.filter_by(pr_url=comment_pr_url).one()
+        try:
+            related_pr_review = PullRequestReviews.query.filter_by(pr_review_src_id=pr_review_id).one()
 
-        if not related_pr:
-            logger.info(
-                f"Error can't find pr for pr comment with id: {comment['id']}")
+        # if we cannot find a pr review to relate the message to, then we skip the message and it is not inserted
+        except s.orm.exc.NoResultFound:
+            logger.info("Could not find related pr")
+            logger.info(f"We were searching for pr review with id: {pr_review_id}")
+            logger.info("Skipping")
             continue
 
-        pr_id = related_pr.pull_request_id
-
-        pr_comment_object = PrCommentObject(comment, platform_id, repo_id, tool_source, tool_version, data_source)
-
-        logger.info(f"Inserting pr review comment {index + 1} of {pr_comment_len}")
-        session.insert_data([pr_comment_object], Message, pr_comment_natural_keys)
-
-        msg_id = pr_comment_object.db_row.msg_id
-
-        pr_comment_ref = extract_pr_review_message_ref_data(
-            comment, pr_id, msg_id, repo_id, tool_source, tool_version, data_source)
-
-        logger.info(pr_comment_ref)
-
-        pr_comment_ref_dicts.append(
-            pr_comment_ref
+        pr_review_comment_dicts.append(
+                                extract_needed_message_data(comment, platform_id, repo_id, tool_source, tool_version, data_source)
         )
 
-        # pr_comment_ref_dicts.append(
-        #     extract_pr_comment_ref_data(comment, pr_id, msg_id, repo_id, tool_source, tool_version, data_source)
-        # )
+        pr_review_id = related_pr_review.pr_review_id
 
-    logger.info(f"Insert pr comment refs")
-    session.insert_data(pr_comment_ref_dicts, PullRequestReviewMessageRef, pr_comment_ref_natural_keys)
+        pr_comment_ref = extract_pr_review_message_ref_data(comment, pr_review_id, repo_id, tool_source, tool_version, data_source)
+
+        pr_review_msg_mapping_data.append(
+             {
+                "platform_msg_id": message["id"],
+                "msg_ref_data": pr_comment_ref,
+             }
+         )
+    
+    logger.info(f"Inserting {len(pr_review_comment_dicts)} pr review comments")
+    message_natural_keys = ["platform_msg_id"]
+    message_return_columns = ["msg_id", "platform_msg_id"]
+    message_return_data = session.insert_data(pr_review_comment_dicts, Message, message_natural_keys, message_return_columns)
+
+
+    pr_review_message_ref_insert_data = []
+    for mapping_data in pr_review_msg_mapping_data:
+
+        value = mapping_data["platform_msg_id"]
+        key = "platform_msg_id"
+
+        issue_or_pr_message = find_dict_in_list_of_dicts(message_return_data, key, value)
+
+        if issue_or_pr_message:
+
+            msg_id = issue_or_pr_message["msg_id"]
+        else:
+            print("Count not find issue or pull request message to map to")
+            continue
+
+        message_ref_data = mapping_data["msg_ref_data"]
+        message_ref_data["msg_id"] = msg_id 
+
+        pr_review_message_ref_insert_data.append(message_ref_data)
+       
+
+    logger.info(f"Inserting {len(pr_review_message_ref_insert_data)} pr review refs")
+    pr_comment_ref_natural_keys = ["pr_review_msg_src_id"]
+    session.insert_data(pr_review_message_ref_insert_data, PullRequestReviewMessageRef, pr_comment_ref_natural_keys)
 
 
 # do this task after others because we need to add the multi threading like we did it before
