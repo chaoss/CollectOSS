@@ -41,7 +41,7 @@ def issues(owner: str, repo: str) -> None:
     # platform_id = 25150
     data_source = "Github API"
 
-    # returns an iterable of all prs at this url (this essentially means you can treat the issues variable as a list of the issues)
+    # returns an iterable of all issues at this url (this essentially means you can treat the issues variable as a list of the issues)
     issues = GithubPaginator(url, session.oauths, logger)
     issues_length = len(issues)
 
@@ -104,7 +104,7 @@ def issues(owner: str, repo: str) -> None:
     issue_assignee_dicts = []
     for data in issue_mapping_data:
 
-        # search the list of data returned from the messages insert 
+        # search the list of data returned from the issues insert 
         # to find the dict that has the same url as the labels and assignees
         key = "issue_url"
         value = data[key]
@@ -138,10 +138,14 @@ def issues(owner: str, repo: str) -> None:
     print(f"{issue_total} issues inserted")
 
 
+# TODO: Rename pull_request_reviewers table to pull_request_requested_reviewers
+# TODO: Fix column names in pull request labels table
 @celery.task
 def pull_requests(owner: str, repo: str) -> None:
 
     logger = get_task_logger(pull_requests.name)
+
+    # define GithubTaskSession to handle insertions, and store oauth keys 
     session = GithubTaskSession(logger, config)
 
     logger.info(f"Collecting pull requests for {owner}/{repo}")
@@ -156,18 +160,21 @@ def pull_requests(owner: str, repo: str) -> None:
     platform_id = 25150
     data_source = "Github API"
 
-    # returns an iterable of all prs at this url
+    # returns an iterable of all prs at this url (this essentially means you can treat the prs variable as a list of the prs)
     prs = GithubPaginator(url, session.oauths, logger)
-
-    # logger.info(f"Pages collected: length: {len(prs)}")
+    prs_length = len(prs)
 
     pr_dicts = []
-    pr_other_data = []
-    repo_pr_numbers = []
+    pr_mapping_data = []
+    pr_numbers = []
 
-    len_prs = len(prs)
     for index, pr in enumerate(prs):
 
+        logger.info(f"Inserting pr {index + 1} of {prs_length}")
+
+        # add a field called pr_head_or_base to the head and base field of the pr
+        # this is done so we can insert them both into the pr metadata table
+        # and still determine whether it is a head or base
         pr['head'].update(
             {'pr_head_or_base': 'head'}
         )
@@ -175,27 +182,38 @@ def pull_requests(owner: str, repo: str) -> None:
             {'pr_head_or_base': 'base'}
         )
 
-        logger.info(f"Inserting pr {index + 1} of {len_prs}")
+        # add metadata field to pr
+        pr.update(
+            "metadata": [pr["head"], pr["base"]]
+        )
 
+        # create list of pr_dicts to bulk insert later
         pr_dicts.append(
+                    # get only the needed data for the pull_requests table
                     extract_needed_pr_data(pr, repo_id, tool_source,tool_version)
         )
 
+        # get only the needed data for the pull_request_labels table
         pr_labels = extract_needed_pr_label_data(pr["labels"],  platform_id, repo_id,
                                                        tool_source, tool_version, data_source)
 
+        # get only the needed data for the pull_request_assignees table
         pr_assignees = extract_needed_pr_assignee_data(pr["assignees"], platform_id, repo_id,
                                                              tool_source, tool_version, data_source)
 
-
+        # get only the needed data for the pull_request_reviewers table
         pr_reviewers = extract_needed_pr_reviewer_data(pr["requested_reviewers"], platform_id, repo_id,
                                                              tool_source, tool_version, data_source)
 
-        pr_metadata = extract_needed_pr_metadata([pr["head"], pr["base"]], platform_id, repo_id,
+        # get only the needed data for the pull_request_meta table
+        pr_metadata = extract_needed_pr_metadata(pr["metadata"], platform_id, repo_id,
                                                         tool_source, tool_version, data_source)                                                             
                                                         
-        pr_other_data.append(
+        pr_mapping_data.append(
             {
+                # store the pr_url, labels, assignees, reviewers, and metadata
+                # so we can relate the labels, assignees, reviewers, and metadata
+                # to a specific row in the pr table after we insert the prs
                 "pr_url": pr["url"],
                 "labels": pr_labels,
                 "assignees": pr_assignees,
@@ -204,33 +222,43 @@ def pull_requests(owner: str, repo: str) -> None:
             }
         )
 
-        # get a list of pr numbers to pass for the pr reviews task
-        repo_pr_numbers.append(pr["number"]) 
+        # create a list of pr numbers to pass for the pr reviews task
+        pr_numbers.append(pr["number"]) 
 
 
+    # insert the prs into the pull_requests table. 
+    # pr_urls are gloablly unique across github so we are using it to determine whether a pull_request we collected is already in the table
+    # specified in pr_return_columns is the columns of data we want returned. This data will return in this form; {"pr_url": url, "pull_request_id": id}
     logger.info(f"Inserting prs of length: {len(pr_dicts)}")
     pr_natural_keys = ["pr_url"]
     pr_return_columns = ["pull_request_id", "pr_url"]
     pr_return_data = session.insert_data(pr_dicts, PullRequests, pr_natural_keys, return_columns=pr_return_columns)
 
+
+    # loop through the pr mapping data so the 
+    # labels, assignees, reviewers, and assignees 
+    # can be mapped to their respective prs
     pr_label_dicts = []
     pr_assignee_dicts = []
     pr_reviewer_dicts = []
     pr_metadata_dicts = []
+    for data in pr_mapping_data:
 
-    for data in pr_other_data:
-
+        # search the list of data returned from the pr insert 
+        # to find the dict that has the same url as the labels, assignees, reviewers, and metadata
         value = data["pr_url"]
         key = "pr_url"
-
         pull_request = find_dict_in_list_of_dicts(pr_return_data, key, value)
 
         if pull_request:
 
             pull_request_id = pull_request["pull_request_id"]
         else:
-            print("Count not find pull_request")
+            print("Count not find pr for labels, assignees, reviewers, or metadata. If the insertion was successful this should never happen")
+            print("Skipping because we can't map the labels, assignees, reviewers, or metadata without the pull_request_id")
+            continue
 
+        # add the pull_request_id to the labels, assignees, reviewers, or metadata then add them to a list of dicts that will be inserted soon
         dict_key = "pull_request_id"
         pr_label_dicts += add_key_value_pair_to_list_of_dicts(data["labels"], dict_key, pull_request_id)
         pr_assignee_dicts += add_key_value_pair_to_list_of_dicts(data["assignees"], dict_key, pull_request_id)
@@ -238,28 +266,31 @@ def pull_requests(owner: str, repo: str) -> None:
         pr_metadata_dicts += add_key_value_pair_to_list_of_dicts(data["metadata"], dict_key, pull_request_id)
         
 
-    # start task()
+    # inserting pr labels
+    # we are using pr_src_id and pull_request_id to determine if the label is already in the database.
     logger.info(f"Inserting pr labels of length: {len(pr_label_dicts)}")
     pr_label_natural_keys = ['pr_src_id', 'pull_request_id']
     session.insert_data(pr_label_dicts, PullRequestLabels, pr_label_natural_keys)
   
-    # start task()
+    # inserting pr assignees
+    # we are using pr_assignee_src_id and pull_request_id to determine if the label is already in the database.
     logger.info(f"Inserting pr assignees of length: {len(pr_assignee_dicts)}")
     pr_assignee_natural_keys = ['pr_assignee_src_id', 'pull_request_id']
     session.insert_data(pr_assignee_dicts, PullRequestAssignees, pr_assignee_natural_keys)
  
-
+    # inserting pr assignees
+    # we are using pr_src_id and pull_request_id to determine if the label is already in the database.
     logger.info(f"Inserting pr reviewers of length: {len(pr_reviewer_dicts)}")
     pr_reviewer_natural_keys = ["pull_request_id", "pr_reviewer_src_id"]
     session.insert_data(pr_reviewer_dicts, PullRequestReviewers, pr_reviewer_natural_keys)
     
-
-    start_time = time.time()
+    # inserting pr metadata
+    # we are using pull_request_id, pr_head_or_base, and pr_sha to determine if the label is already in the database.
     logger.info(f"Inserting pr metadata of length: {len(pr_metadata_dicts)}")
     pr_metadata_natural_keys = ['pull_request_id', 'pr_head_or_base', 'pr_sha']
     session.insert_data(pr_metadata_dicts, PullRequestMeta, pr_metadata_natural_keys)
 
-
+# This function adds a key value pair to a list of dicts and returns the modified list of dicts back
 def add_key_value_pair_to_list_of_dicts(data_list, key, value):
 
     for data in data_list:
@@ -268,6 +299,8 @@ def add_key_value_pair_to_list_of_dicts(data_list, key, value):
 
     return data_list
 
+# this function finds a dict in a list of dicts. 
+# This is done by searching all the dicts for the given key that has the specified value
 def find_dict_in_list_of_dicts(data, key, value):
 
     return next((item for item in data if item[key] == value), None)
@@ -281,11 +314,13 @@ def github_events(self, owner: str, repo: str):
     logger = get_task_logger(github_events.name)
     logger.info(f"Collecting pull request events for {owner}/{repo}")
     
+        # define GithubTaskSession to handle insertions, and store oauth keys 
     session = GithubTaskSession(logger, config)
     
     url = f"https://api.github.com/repos/{owner}/{repo}/issues/events"
     
-    pr_events = GithubPaginator(url, session.oauths, logger)
+    pr_events =     # returns an iterable of all issues at this url (this essentially means you can treat the issues variable as a list of the issues)
+    issues = GithubPaginator(url, session.oauths, logger)
 
     index = 0
 
@@ -354,6 +389,7 @@ def chunk_data(data, min_events_per_task, max_tasks):
 def process_events(events, task_name):
 
     logger = get_task_logger(process_events.name)
+        # define GithubTaskSession to handle insertions, and store oauth keys 
     session = GithubTaskSession(logger, config)
 
     # get repo_id
@@ -435,12 +471,13 @@ def github_comments(self, owner: str, repo: str) -> None:
     logger.info(f"Collecting github comments for {owner}/{repo}")
     
     # define database task session, that also holds autentication keys the GithubPaginator needs
+        # define GithubTaskSession to handle insertions, and store oauth keys 
     session = GithubTaskSession(logger, config)
     
     # url to get issue and pull request comments
     url = f"https://api.github.com/repos/{owner}/{repo}/issues/comments"
     
-    # GithubPaginator creates and iterable of pr_events
+    # returns an iterable of all issues at this url (this essentially means you can treat the issues variable as a list of the issues)
     messages = GithubPaginator(url, session.oauths, logger)
 
     repo_id = 1
@@ -572,12 +609,14 @@ def is_issue_message(html_url):
 def pull_request_review_comments(self, owner: str, repo: str) -> None:
 
     logger = get_task_logger(pull_request_review_comments.name)
+        # define GithubTaskSession to handle insertions, and store oauth keys 
     session = GithubTaskSession(logger, config)
 
     logger.info(f"Collecting pull request comments for {owner}/{repo}")
 
     url = f"https://api.github.com/repos/{owner}/{repo}/pulls/comments"
 
+    # returns an iterable of all issues at this url (this essentially means you can treat the issues variable as a list of the issues)
     pr_review_comments = GithubPaginator(url, session.oauths, logger)
 
     # get repo_id
@@ -661,6 +700,7 @@ def pull_request_review_comments(self, owner: str, repo: str) -> None:
 def pull_request_reviews(owner: str, repo: str, pr_number_list: [int]) -> None:
 
     logger = get_task_logger(pull_request_reviews.name)
+        # define GithubTaskSession to handle insertions, and store oauth keys 
     session = GithubTaskSession(logger, config)
 
     logger.info(f"Collecting pull request reviews for {owner}/{repo}")
