@@ -126,8 +126,6 @@ class GraphQlPageCollection(collections.abc.Sequence):
 
 
     def extract_paginate_result(self,responseObject):
-
-        print(responseObject.json())
         
         result_dict = responseObject.json()['data']
 
@@ -433,7 +431,7 @@ class GitHubRepo():
 
 
 class PullRequest():
-    def __init__(self, session, owner, repo,number):
+    def __init__(self, session, owner, repo, number):
 
         self.keyAuth = session.oauths
         self.url = "https://api.github.com/graphql"

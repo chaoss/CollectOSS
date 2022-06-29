@@ -697,7 +697,7 @@ def pull_request_review_comments(self, owner: str, repo: str) -> None:
 
 # do this task after others because we need to add the multi threading like we did it before
 @celery.task
-def pull_request_reviews(owner: str, repo: str, pr_number_list: [int]) -> None:
+def pull_request_reviews(self, owner: str, repo: str, pr_number_list: [int]) -> None:
 
     logger = get_task_logger(pull_request_reviews.name)
         # define GithubTaskSession to handle insertions, and store oauth keys 

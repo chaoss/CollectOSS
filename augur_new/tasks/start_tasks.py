@@ -23,10 +23,12 @@ def start_task(owner: str, repo):
     #     pull_request_review_comments.s(owner, repo)
     # )
 
+    pr_numbers = [106]
+
 
 
     secondary_task_list = []
-    secondary_task_list.append(pull_request_reviews.s(owner, repo))
+    secondary_task_list.append(pull_request_reviews.s(owner, repo, pr_numbers))
     # secondary_task_list.append(github_events.s(owner, repo))
     # secondary_task_list.append(github_comments.s(owner, repo))
     
