@@ -184,7 +184,7 @@ def pull_requests(owner: str, repo: str) -> None:
 
         # add metadata field to pr
         pr.update(
-            "metadata": [pr["head"], pr["base"]]
+            {"metadata": [pr["head"], pr["base"]]}
         )
 
         # create list of pr_dicts to bulk insert later
@@ -319,8 +319,8 @@ def github_events(self, owner: str, repo: str):
     
     url = f"https://api.github.com/repos/{owner}/{repo}/issues/events"
     
-    pr_events =     # returns an iterable of all issues at this url (this essentially means you can treat the issues variable as a list of the issues)
-    issues = GithubPaginator(url, session.oauths, logger)
+    # returns an iterable of all issues at this url (this essentially means you can treat the issues variable as a list of the issues)
+    pr_events = GithubPaginator(url, session.oauths, logger)
 
     index = 0
 
@@ -396,7 +396,7 @@ def process_events(events, task_name):
     repo_id = 1
 
     platform_id = 25150
-    tool_source = "Pr comment task"
+    tool_source = "Pr event task"
     tool_version = "2.0"
     data_source = "Github API"
     # TODO: Could replace this with "id" but it isn't stored on the table for some reason
@@ -471,7 +471,6 @@ def github_comments(self, owner: str, repo: str) -> None:
     logger.info(f"Collecting github comments for {owner}/{repo}")
     
     # define database task session, that also holds autentication keys the GithubPaginator needs
-        # define GithubTaskSession to handle insertions, and store oauth keys 
     session = GithubTaskSession(logger, config)
     
     # url to get issue and pull request comments
@@ -609,7 +608,8 @@ def is_issue_message(html_url):
 def pull_request_review_comments(self, owner: str, repo: str) -> None:
 
     logger = get_task_logger(pull_request_review_comments.name)
-        # define GithubTaskSession to handle insertions, and store oauth keys 
+    
+    # define GithubTaskSession to handle insertions, and store oauth keys 
     session = GithubTaskSession(logger, config)
 
     logger.info(f"Collecting pull request comments for {owner}/{repo}")
