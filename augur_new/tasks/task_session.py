@@ -117,7 +117,6 @@ class TaskSession(s.orm.Session):
         # creates list of arguments to tell sqlalchemy what columns to return after the data is inserted
         returning_args = []
         for column in return_columns:
-            print(f"Table: {table}. Column: {column}")
             argument = getattr(table, column)
             returning_args.append(argument)
 

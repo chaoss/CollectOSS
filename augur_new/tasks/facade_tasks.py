@@ -36,6 +36,7 @@ from augur_new.db import data_parse
 from augur_new.db.models import PullRequests, Message, PullRequestReviews, PullRequestLabels, PullRequestReviewers, PullRequestEvents, PullRequestMeta, PullRequestAssignees, PullRequestReviewMessageRef, SQLAlchemy, Issues, IssueEvents, IssueLabels, IssueAssignees, PullRequestMessageRef, IssueMessageRef
 
 from augur_new.util.github_paginator import GithubPaginator
+from augur_new.util.gh_graphql_entities import PullRequest
 from augur_new.tasks.task_session import *
 
 from augur_new.facade_worker.facade_worker.facade00mainprogram import *

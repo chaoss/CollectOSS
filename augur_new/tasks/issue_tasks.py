@@ -79,8 +79,6 @@ def issues(owner: str, repo: str) -> None:
     issue_return_columns = ["issue_url", "issue_id"]
     issue_return_data = session.insert_data(issue_dicts, Issues, issue_natural_keys, issue_return_columns)
 
-    print(issue_return_data)
-
     issue_label_dicts = []
     issue_assignee_dicts = []
     for data in issue_other_data:
@@ -196,7 +194,7 @@ def pull_requests(owner: str, repo: str) -> None:
 
     for data in pr_other_data:
 
-        pr_url = data["pr_url"]
+        value = data["pr_url"]
         key = "pr_url"
 
         pull_request = find_dict_in_list_of_dicts(pr_return_data, key, value)
@@ -209,9 +207,9 @@ def pull_requests(owner: str, repo: str) -> None:
 
         dict_key = "pull_request_id"
         pr_label_dicts += add_key_value_pair_to_list_of_dicts(data["labels"], dict_key, pull_request_id)
-        pr_assignee_dicts += add_pull_request_id_to_list_of_dicts(data["assignees"], dict_key, pull_request_id)
-        pr_reviewer_dicts += add_pull_request_id_to_list_of_dicts(data["reviewers"], dict_key, pull_request_id)
-        pr_metadata_dicts += add_pull_request_id_to_list_of_dicts(data["metadata"], dict_key, pull_request_id)
+        pr_assignee_dicts += add_key_value_pair_to_list_of_dicts(data["assignees"], dict_key, pull_request_id)
+        pr_reviewer_dicts += add_key_value_pair_to_list_of_dicts(data["reviewers"], dict_key, pull_request_id)
+        pr_metadata_dicts += add_key_value_pair_to_list_of_dicts(data["metadata"], dict_key, pull_request_id)
         
 
     # start task()
@@ -296,7 +294,7 @@ def github_events(self, owner: str, repo: str):
     chunked_data = chunk_data(data, min_events_per_task, max_tasks)
 
     
-    task_list = [process_events.s(data) for data in chunked_data]
+    task_list = [process_events.s(data, f"Events task {index+1}") for index, data in enumerate(chunked_data)]
 
     process_events_job = group(task_list)
 
@@ -327,13 +325,10 @@ def chunk_data(data, min_events_per_task, max_tasks):
     return chunked_data
 
 @celery.task
-def process_events(events):
+def process_events(events, task_name):
 
     logger = get_task_logger(process_events.name)
     session = GithubTaskSession(logger, config)
-
-    logger.info(f"Len of events: {len(events)}")
-    logger.info(f"Type of events: {type(events)}")
 
     # get repo_id
     repo_id = 1
@@ -348,9 +343,18 @@ def process_events(events):
     pr_event_dicts = []
     issue_event_dicts = []
 
+    event_len = len(events)
     for index, event in enumerate(events):
-        
-        logger.info(f"Proccessing event {index + 1} of {len(events)}")
+
+        if index % 100 == 0:
+
+            event_index_start = index 
+            event_index_end = index + 100
+
+            if event_index_end > event_len:
+                event_index_end = event_len
+
+            logger.info(f"{task_name}: Proccessing event {event_index_start} to {event_index_end} of {event_len}")
 
         if 'pull_request' in list(event["issue"].keys()):
             pr_url = event["issue"]["pull_request"]["url"]
@@ -388,6 +392,7 @@ def process_events(events):
 
     logger.info(f"Issue event count: {len(issue_event_dicts)}")
     logger.info(f"Pr event count: {len(pr_event_dicts)}")
+    logger.info(f"Total event count: {len(issue_event_dicts) + len(pr_event_dicts)}")
 
     logger.info("Inserting all pr events")
     session.insert_data(pr_event_dicts, PullRequestEvents, pr_event_natural_keys)
@@ -397,7 +402,7 @@ def process_events(events):
 
 
 @celery.task
-def github_comments(owner: str, repo: str) -> None:
+def github_comments(self, owner: str, repo: str) -> None:
 
     # define logger for task
     logger = get_task_logger(github_comments.name)
@@ -412,51 +417,113 @@ def github_comments(owner: str, repo: str) -> None:
     # GithubPaginator creates and iterable of pr_events
     messages = GithubPaginator(url, session.oauths, logger)
 
-
     repo_id = 1
     platform_id = 25150
     tool_source = "Pr comment task"
     tool_version = "2.0"
     data_source = "Github API"
 
-    # TODO: Remove tool_source
-    message_natural_keys = ["platform_msg_id", "tool_source"]
-    pr_message_ref_natural_keys = ["pull_request_id", "pr_message_ref_src_comment_id"]
-    issue_message_ref_natural_keys = ["issue_id", "issue_msg_ref_src_comment_id"]
+    message_dicts = []
+    message_ref_data = []
 
-    pr_message_ref_dicts = []
-    issue_message_ref_dicts = []
+    message_len = len(messages)
 
+    total_pages = (message_len // 100) + 1
+    page_index = 1
 
-    # SELECT pr_src_number FROM augur_data.pull_requests where repo_id= 25961
-    # SELECT pr_src_number FROM augur_data.pull_requests where repo_id= 25961
+    for index, message in enumerate(messages):
 
+        if index % 100 == 0:
+            logger.info(f"Processing page {page_index} of {total_pages}")
+            page_index += 1
 
+        
 
-    for message in messages:
+        # logger.info(f"Processing message {index + 1} of {message_len}")
 
-        message_object = MessageObject(message, platform_id, repo_id, tool_source, tool_version, data_source)
-
-        # when the object gets inserted the db_row is added to the object which is a PullRequests orm object (so it contains all the column values)
-        session.insert_data([message_object], Message, message_natural_keys)
-
+        message_dicts.append(
+                        extract_needed_message_data(message, platform_id, repo_id, tool_source, tool_version, data_source)
+        )
+       
         if is_issue_message(message["html_url"]):
 
-            issue_message_ref_dicts += extract_needed_issue_message_ref_data(messages, issue_id, message_object.db_row.msg_id, repo_id, tool_source, tool_version, data_source)
+            try:
+                related_issue = Issues.query.filter_by(issue_url=message["issue_url"]).one()
+            except s.orm.exc.NoResultFound:
+                logger.info("Could not find related pr")
+                logger.info(f"We were searching for: {message['issue_url']}")
+                logger.info("Skipping")
+                continue
+
+            issue_message_ref_data = extract_needed_issue_message_ref_data(message, related_issue.issue_id, repo_id, tool_source, tool_version, data_source)
+
+            message_ref_data.append(
+                {
+                    "platform_msg_id": message["id"],
+                    "msg_ref_data": issue_message_ref_data,
+                    "is_issue": True
+                }
+            )
 
         else:
 
-            pr_message_ref_dicts += extract_needed_pr_message_ref_data(messages, pull_request_id, message_object.db_row.msg_id, platform_id, repo_id, tool_source, tool_version, data_source)
+            try:
+                related_pr = PullRequests.query.filter_by(pr_issue_url=message["issue_url"]).one()
+            except s.orm.exc.NoResultFound:
+                logger.info("Could not find related pr")
+                logger.info(f"We were searching for: {message['issue_url']}")
+                logger.info("Skipping")
+                continue
 
+            pr_message_ref_data = extract_needed_pr_message_ref_data(message, related_pr.pull_request_id, repo_id, tool_source, tool_version, data_source)
+
+            message_ref_data.append(
+                {
+                    "platform_msg_id": message["id"],
+                    "msg_ref_data": pr_message_ref_data,
+                    "is_issue": False
+                }
+            )
+
+
+    message_natural_keys = ["platform_msg_id"]
+    message_return_columns = ["msg_id", "platform_msg_id"]
+    message_return_data = session.insert_data(message_dicts, Message, message_natural_keys, message_return_columns)
+
+    pr_message_ref_dicts = []
+    issue_message_ref_dicts = []
+    for data in message_ref_data:
+
+        value = data["platform_msg_id"]
+        key = "platform_msg_id"
+
+        issue_or_pr_message = find_dict_in_list_of_dicts(message_return_data, key, value)
+
+        if issue_or_pr_message:
+
+            msg_id = issue_or_pr_message["msg_id"]
+        else:
+            print("Count not find issue or pull request message to map to")
+            continue
+
+        message_ref_data = data["msg_ref_data"]
+        message_ref_data["msg_id"] = msg_id 
+
+        if data["is_issue"] is True:
+            issue_message_ref_dicts.append(message_ref_data)
+        else:
+            pr_message_ref_dicts.append(message_ref_data)
 
 
     logger.info(f"Issue message count: {len(issue_message_ref_dicts)}")
     logger.info(f"Pr message count: {len(pr_message_ref_dicts)}")
 
     logger.info("Inserting all pr messages")
+    pr_message_ref_natural_keys = ["pull_request_id", "pr_message_ref_src_comment_id"]
     session.insert_data(pr_message_ref_dicts, PullRequestMessageRef, pr_message_ref_natural_keys)
 
     logger.info("Inserting all issue messages")
+    issue_message_ref_natural_keys = ["issue_id", "issue_msg_ref_src_comment_id"]
     session.insert_data(issue_message_ref_dicts, IssueMessageRef, issue_message_ref_natural_keys)
 
 
@@ -464,8 +531,6 @@ def github_comments(owner: str, repo: str) -> None:
 def is_issue_message(html_url):
 
     return 'pull' not in html_url
-
-
 
         
 @celery.task
@@ -542,12 +607,15 @@ def pull_request_reviews(owner: str, repo: str, pr_number_list: [int]) -> None:
 
     logger.info(f"Collecting pull request reviews for {owner}/{repo}")
 
-    # for pr_number in pr_number_list:
+    for pr_number in pr_number_list:
 
-    #     url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{pr_number}/reviews"
+        reviews = PullRequest(session, owner, repo, pr_number).get_reviews_collection()
 
-        # add pr review
+        for review in reviews:
+            print(review)
 
+        if len(reviews) == 0:
+            print(f"No reviews for pr number: {pr_number}")
 
 
 
