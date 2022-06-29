@@ -1,6 +1,9 @@
 from .facade_tasks import *
 
 from augur_new.db.data_parse import *
+from celery.result import allow_join_result
+import time
+
 # creates a class that is sub class of the sqlalchemy.orm.Session class that additional methods and fields added to it. 
 
 #NOTICE: A pull request is a type of issue as per Github.
@@ -51,91 +54,93 @@ def issues(owner: str, repo: str) -> None:
     # this is defined so we can decrement it each time 
     # we come across a pr, so at the end we can log how 
     # many issues were collected
-    issue_total = len_issues
+    issue_total = issues_length
 
-    # loop through the issues 
-    for index, issue in enumerate(issues):
+    print(issue_total)
 
-        print(f"Inserting issue {index + 1} of {len_issues}")
+    # # loop through the issues 
+    # for index, issue in enumerate(issues):
 
-        # calls is_valid_pr_block to see if the data is a pr.
-        # if it is a pr we skip it because we don't need prs 
-        # in the issues table
-        if is_valid_pr_block(issue) is True:
-            issue_total-=1
-            continue
+    #     print(f"Inserting issue {index + 1} of {issues_length}")
+
+    #     # calls is_valid_pr_block to see if the data is a pr.
+    #     # if it is a pr we skip it because we don't need prs 
+    #     # in the issues table
+    #     if is_valid_pr_block(issue) is True:
+    #         issue_total-=1
+    #         continue
         
-        # create list of issue_dicts to bulk insert later
-        issue_dicts.append(
-            # get only the needed data for the issues table
-            extract_needed_issue_data(issue, repo_id, tool_source, tool_version, data_source)
-        )
+    #     # create list of issue_dicts to bulk insert later
+    #     issue_dicts.append(
+    #         # get only the needed data for the issues table
+    #         extract_needed_issue_data(issue, repo_id, tool_source, tool_version, data_source)
+    #     )
 
-        # get only the needed data for the issue_labels table
-        issue_labels = extract_needed_issue_label_data(issue["labels"], repo_id,
-                                                       tool_source, tool_version, data_source)
+    #     # get only the needed data for the issue_labels table
+    #     issue_labels = extract_needed_issue_label_data(issue["labels"], repo_id,
+    #                                                    tool_source, tool_version, data_source)
 
-        # get only the needed data for the issue_assignees table
-        issue_assignees = extract_needed_issue_assignee_data(issue["assignees"], repo_id,
-                                                             tool_source, tool_version, data_source)
+    #     # get only the needed data for the issue_assignees table
+    #     issue_assignees = extract_needed_issue_assignee_data(issue["assignees"], repo_id,
+    #                                                          tool_source, tool_version, data_source)
 
         
-        issue_mapping_data.append(
-            # store the issue_url, labels, and assignees 
-            # so we can relate the lables and assigness 
-            # to a specific row in the pr table after we insert the prs
-            {
-                "issue_url": issue["url"],
-                "labels": issue_labels,
-                "assignees": issue_assignees
-            }
-        )                                        
+    #     issue_mapping_data.append(
+    #         # store the issue_url, labels, and assignees 
+    #         # so we can relate the lables and assigness 
+    #         # to a specific row in the pr table after we insert the prs
+    #         {
+    #             "issue_url": issue["url"],
+    #             "labels": issue_labels,
+    #             "assignees": issue_assignees
+    #         }
+    #     )                                        
 
-    # insert the issues into the issues table. 
-    # issue_urls are gloablly unique across github so we are using it to determine whether an issue we collected is already in the table
-    # specified in issue_return_columns is the columns of data we want returned. This data will return in this form; {"issue_url": url, "issue_id": id}
-    issue_natural_keys = ["issue_url"]
-    issue_return_columns = ["issue_url", "issue_id"]
-    issue_return_data = session.insert_data(issue_dicts, Issues, issue_natural_keys, issue_return_columns)
+    # # insert the issues into the issues table. 
+    # # issue_urls are gloablly unique across github so we are using it to determine whether an issue we collected is already in the table
+    # # specified in issue_return_columns is the columns of data we want returned. This data will return in this form; {"issue_url": url, "issue_id": id}
+    # issue_natural_keys = ["issue_url"]
+    # issue_return_columns = ["issue_url", "issue_id"]
+    # issue_return_data = session.insert_data(issue_dicts, Issues, issue_natural_keys, issue_return_columns)
 
-    # loop through the issue mapping data so the labels 
-    # and assignees and be mapped to their respective prs
-    issue_label_dicts = []
-    issue_assignee_dicts = []
-    for data in issue_mapping_data:
+    # # loop through the issue mapping data so the labels 
+    # # and assignees and be mapped to their respective prs
+    # issue_label_dicts = []
+    # issue_assignee_dicts = []
+    # for data in issue_mapping_data:
 
-        # search the list of data returned from the issues insert 
-        # to find the dict that has the same url as the labels and assignees
-        key = "issue_url"
-        value = data[key]
-        issue = find_dict_in_list_of_dicts(issue_return_data, key, value)
+    #     # search the list of data returned from the issues insert 
+    #     # to find the dict that has the same url as the labels and assignees
+    #     key = "issue_url"
+    #     value = data[key]
+    #     issue = find_dict_in_list_of_dicts(issue_return_data, key, value)
 
 
-        if issue:
-            issue_id = issue["issue_id"]
-        else:
-            print("Count not find issue for labels or assignees. If the insertion was successful this should never happen")
-            print("Skipping because we can't map the labels or assignees without the issue_id")
-            continue
+    #     if issue:
+    #         issue_id = issue["issue_id"]
+    #     else:
+    #         print("Count not find issue for labels or assignees. If the insertion was successful this should never happen")
+    #         print("Skipping because we can't map the labels or assignees without the issue_id")
+    #         continue
 
-        # add the issue id to the lables and assignees, then add them to a list of dicts that will be inserted soon
-        dict_key = "issue_id"
-        issue_label_dicts += add_key_value_pair_to_list_of_dicts(data["labels"], "issue_id", issue_id)
-        issue_assignee_dicts += add_key_value_pair_to_list_of_dicts(data["assignees"], "issue_id", issue_id)
+    #     # add the issue id to the lables and assignees, then add them to a list of dicts that will be inserted soon
+    #     dict_key = "issue_id"
+    #     issue_label_dicts += add_key_value_pair_to_list_of_dicts(data["labels"], "issue_id", issue_id)
+    #     issue_assignee_dicts += add_key_value_pair_to_list_of_dicts(data["assignees"], "issue_id", issue_id)
 
-    # inserting issue labels
-    # we are using label_src_id and issue_id to determine if the label is already in the database.
-    logger.info(f"Inserting issue labels of length: {len(issue_label_dicts)}")
-    issue_label_natural_keys = ['label_src_id', 'issue_id']
-    session.insert_data(issue_label_dicts, IssueLabels, issue_label_natural_keys)
+    # # inserting issue labels
+    # # we are using label_src_id and issue_id to determine if the label is already in the database.
+    # logger.info(f"Inserting issue labels of length: {len(issue_label_dicts)}")
+    # issue_label_natural_keys = ['label_src_id', 'issue_id']
+    # session.insert_data(issue_label_dicts, IssueLabels, issue_label_natural_keys)
   
-    # inserting issue assignees
-    # we are using issue_assignee_src_id and issue_id to determine if the label is already in the database.
-    logger.info(f"Inserting issue assignees of length: {len(issue_assignee_dicts)}")
-    issue_assignee_natural_keys = ['issue_assignee_src_id', 'issue_id']
-    session.insert_data(issue_assignee_dicts, IssueAssignees, issue_assignee_natural_keys)
+    # # inserting issue assignees
+    # # we are using issue_assignee_src_id and issue_id to determine if the label is already in the database.
+    # logger.info(f"Inserting issue assignees of length: {len(issue_assignee_dicts)}")
+    # issue_assignee_natural_keys = ['issue_assignee_src_id', 'issue_id']
+    # session.insert_data(issue_assignee_dicts, IssueAssignees, issue_assignee_natural_keys)
 
-    print(f"{issue_total} issues inserted")
+    # print(f"{issue_total} issues inserted")
 
 
 # TODO: Rename pull_request_reviewers table to pull_request_requested_reviewers
@@ -699,23 +704,30 @@ def pull_request_review_comments(self, owner: str, repo: str) -> None:
 @celery.task
 def pull_request_reviews(self, owner: str, repo: str, pr_number_list: [int]) -> None:
 
+    
+    repo_id = 1
+    platform_id = 25150
+    tool_version = "2.0"
+    data_source = "Github API"
+
     logger = get_task_logger(pull_request_reviews.name)
         # define GithubTaskSession to handle insertions, and store oauth keys 
     session = GithubTaskSession(logger, config)
 
     logger.info(f"Collecting pull request reviews for {owner}/{repo}")
 
+    pr_review_dicts = []
+
     for pr_number in pr_number_list:
 
         reviews = PullRequest(session, owner, repo, pr_number).get_reviews_collection()
 
-        for review in reviews:
-            print(review)
+        pr_review_dicts += extract_need_pr_review_data(reviews, platform_id, repo_id, tool_version, data_source)
 
         if len(reviews) == 0:
             print(f"No reviews for pr number: {pr_number}")
 
-
+    print(pr_review_dicts)
 
 def is_valid_pr_block(issue):
     return (

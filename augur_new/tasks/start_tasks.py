@@ -11,7 +11,7 @@ def start_task(owner: str, repo):
  
     start_task_list = []
     # start_task_list.append(pull_requests.s(owner, repo))
-    # start_task_list.append(issues.s(owner, repo))
+    start_task_list.append(issues.s(owner, repo))
 
     start_tasks_group = group(start_task_list)
 
@@ -28,7 +28,6 @@ def start_task(owner: str, repo):
 
 
     secondary_task_list = []
-    secondary_task_list.append(pull_request_reviews.s(owner, repo, pr_numbers))
     # secondary_task_list.append(github_events.s(owner, repo))
     # secondary_task_list.append(github_comments.s(owner, repo))
     

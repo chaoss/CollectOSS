@@ -423,6 +423,42 @@ def extract_needed_message_data(comment: dict, platform_id: int, repo_id: int, t
 
     return dict_data
 
+def extract_need_pr_review_data(reviews, platform_id, repo_id, tool_version, data_source):
+
+    if len(reviews) == 0:
+        return []
+
+    review_data = []
+    for review in reviews:
+
+        pr_review_dict = {
+                'cntrb_id': None,
+                'pr_review_author_association': review['author_association'],
+                'pr_review_state': review['state'],
+                'pr_review_body': str(review['body']).encode(encoding='UTF-8',errors='backslashreplace').decode(encoding='UTF-8',errors='ignore') if (
+                    review['body']
+                ) else None,
+                'pr_review_submitted_at': review['submitted_at'] if (
+                    'submitted_at' in review
+                ) else None,
+                'pr_review_src_id': int(float(review['id'])), #12/3/2021 cast as int due to error. # Here, `pr_review_src_id` is mapped to `id` SPG 11/29/2021. This is fine. Its the review id.
+                'pr_review_node_id': review['node_id'],
+                'pr_review_html_url': review['html_url'],
+                'pr_review_pull_request_url': review['pull_request_url'],
+                'pr_review_commit_id': review['commit_id'],
+                'tool_source': 'pull_request_reviews model',
+                'tool_version': tool_version+ "_reviews",
+                'data_source': data_source,
+                'repo_id': repo_id,
+                'platform_id': platform_id 
+        }
+
+        review_data.append(pr_review_dict)
+
+    return review_data
+
+
+
 
 
                 
