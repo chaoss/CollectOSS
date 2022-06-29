@@ -26,6 +26,8 @@ from augur_new.db.data_parse import *
 def issues(owner: str, repo: str) -> None:
 
     logger = get_task_logger(__name__)
+
+    # define GithubTaskSession to handle insertions, and store oauth keys 
     session = GithubTaskSession(logger, config)
 
     print(f"Collecting issues for {owner}/{repo}")
@@ -39,35 +41,49 @@ def issues(owner: str, repo: str) -> None:
     # platform_id = 25150
     data_source = "Github API"
 
-    # returns an iterable of all prs at this url
+    # returns an iterable of all prs at this url (this essentially means you can treat the issues variable as a list of the issues)
     issues = GithubPaginator(url, session.oauths, logger)
+    issues_length = len(issues)
 
     issue_dicts = []
-    issue_other_data = []
+    issue_mapping_data = []
  
-    # creating a list, because we would like to bulk insert in the future
-    len_issues = len(issues)
+    # this is defined so we can decrement it each time 
+    # we come across a pr, so at the end we can log how 
+    # many issues were collected
     issue_total = len_issues
-    print(f"Length of issues: {len_issues}")
+
+    # loop through the issues 
     for index, issue in enumerate(issues):
 
         print(f"Inserting issue {index + 1} of {len_issues}")
 
+        # calls is_valid_pr_block to see if the data is a pr.
+        # if it is a pr we skip it because we don't need prs 
+        # in the issues table
         if is_valid_pr_block(issue) is True:
             issue_total-=1
             continue
-
+        
+        # create list of issue_dicts to bulk insert later
         issue_dicts.append(
+            # get only the needed data for the issues table
             extract_needed_issue_data(issue, repo_id, tool_source, tool_version, data_source)
         )
-    
+
+        # get only the needed data for the issue_labels table
         issue_labels = extract_needed_issue_label_data(issue["labels"], repo_id,
                                                        tool_source, tool_version, data_source)
 
+        # get only the needed data for the issue_assignees table
         issue_assignees = extract_needed_issue_assignee_data(issue["assignees"], repo_id,
                                                              tool_source, tool_version, data_source)
 
-        issue_other_data.append(
+        
+        issue_mapping_data.append(
+            # store the issue_url, labels, and assignees 
+            # so we can relate the lables and assigness 
+            # to a specific row in the pr table after we insert the prs
             {
                 "issue_url": issue["url"],
                 "labels": issue_labels,
@@ -75,34 +91,46 @@ def issues(owner: str, repo: str) -> None:
             }
         )                                        
 
+    # insert the issues into the issues table. 
+    # issue_urls are gloablly unique across github so we are using it to determine whether an issue we collected is already in the table
+    # specified in issue_return_columns is the columns of data we want returned. This data will return in this form; {"issue_url": url, "issue_id": id}
     issue_natural_keys = ["issue_url"]
     issue_return_columns = ["issue_url", "issue_id"]
     issue_return_data = session.insert_data(issue_dicts, Issues, issue_natural_keys, issue_return_columns)
 
+    # loop through the issue mapping data so the labels 
+    # and assignees and be mapped to their respective prs
     issue_label_dicts = []
     issue_assignee_dicts = []
-    for data in issue_other_data:
+    for data in issue_mapping_data:
 
+        # search the list of data returned from the messages insert 
+        # to find the dict that has the same url as the labels and assignees
         key = "issue_url"
         value = data[key]
-    
         issue = find_dict_in_list_of_dicts(issue_return_data, key, value)
+
 
         if issue:
             issue_id = issue["issue_id"]
         else:
-            print("Count not find issue")
+            print("Count not find issue for labels or assignees. If the insertion was successful this should never happen")
+            print("Skipping because we can't map the labels or assignees without the issue_id")
+            continue
 
+        # add the issue id to the lables and assignees, then add them to a list of dicts that will be inserted soon
         dict_key = "issue_id"
         issue_label_dicts += add_key_value_pair_to_list_of_dicts(data["labels"], "issue_id", issue_id)
         issue_assignee_dicts += add_key_value_pair_to_list_of_dicts(data["assignees"], "issue_id", issue_id)
 
-
+    # inserting issue labels
+    # we are using label_src_id and issue_id to determine if the label is already in the database.
     logger.info(f"Inserting issue labels of length: {len(issue_label_dicts)}")
     issue_label_natural_keys = ['label_src_id', 'issue_id']
     session.insert_data(issue_label_dicts, IssueLabels, issue_label_natural_keys)
   
-
+    # inserting issue assignees
+    # we are using issue_assignee_src_id and issue_id to determine if the label is already in the database.
     logger.info(f"Inserting issue assignees of length: {len(issue_assignee_dicts)}")
     issue_assignee_natural_keys = ['issue_assignee_src_id', 'issue_id']
     session.insert_data(issue_assignee_dicts, IssueAssignees, issue_assignee_natural_keys)
