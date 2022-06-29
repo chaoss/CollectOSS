@@ -191,7 +191,7 @@ def analysis(cfg, multithreaded, session=None, processes=6):
 
         ## TODO: Verify if the multithreaded approach here is optimal for postgresql
 
-        if multithreaded and len(missing_commits) > 0:
+        if True:#multithreaded and len(missing_commits) > 0:
 
             
 
@@ -210,10 +210,8 @@ def analysis(cfg, multithreaded, session=None, processes=6):
         
             result = contrib_jobs.apply_async()
 
-            result.wait()
-            #session.logger.info(result.ready())
-
-            session.logger.info(result) #Got to here.
+            result.ready()
+            
         elif len(missing_commits) > 0:
             for commit in missing_commits:
                 analyze_commit(cfg, repo[0], repo_loc, commit, multithreaded)
@@ -275,8 +273,10 @@ def facade_commits_model():
     create_xlsx_summary_files = session.create_xlsx_summary_files
     multithreaded = session.multithreaded
 
-    opts,args = getopt.getopt(sys.argv[1:],'hdpcuUaAmnfIrx')
-    for opt in opts:
+    """
+    
+        opts,args = getopt.getopt(sys.argv[1:],'hdpcuUaAmnfIrx')
+     for opt in opts:
         if opt[0] == '-h':
             print("\nfacade-worker.py does everything by default except invalidating caches\n"
                     "and forcing updates, unless invoked with one of the following options.\n"
@@ -361,6 +361,7 @@ def facade_commits_model():
             limited_run = 1
             session.cfg.log_activity('Info','Option set: creating Excel summary files.')
 
+    """
     # Get the location of the directory where git repos are stored
     repo_base_directory = session.cfg.repo_base_directory
 
@@ -402,8 +403,8 @@ def facade_commits_model():
 
     
     #Give analysis the github interface so that it can make API calls
-    if not limited_run or (limited_run and run_analysis):
-        analysis(session.cfg, multithreaded, session=session)
+    #if not limited_run or (limited_run and run_analysis):
+    analysis(session.cfg, multithreaded, session=session)
     
     ### end moved up
 
