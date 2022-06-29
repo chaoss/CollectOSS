@@ -447,7 +447,7 @@ class PullRequest():
     def get_reviews_collection(self):
 
         query = """
-            query MyQuery($repo: String!, $owner: String!,$number: Int!, $numRecords!, $cursor: String) {
+            query MyQuery($repo: String!, $owner: String!,$number: Int!, $numRecords: Int!, $cursor: String) {
                 repository(name: $repo, owner: $owner) {
                     pullRequest(number: $number) {
                         reviews(first: $numRecords, after: $cursor) {
