@@ -7,6 +7,7 @@ import json
 import httpx
 from sqlalchemy.inspection import inspect
 import re
+import time
 
 from augur_new.db import models 
 from sqlalchemy.event import listen
@@ -14,6 +15,7 @@ from sqlalchemy.event import listens_for
 from augur_new.augur.config import AugurConfig
 
 from augur_new.util.random_key_auth import RandomKeyAuth
+from augur_new.tasks.redis import redis_connection as redis
 import psycopg2
 # from .engine import engine
 
@@ -37,8 +39,6 @@ class TaskSession(s.orm.Session):
         #print(self.config)
 
         DB_STR = f'postgresql://{self.config["user_database"]}:{self.config["password_database"]}@{self.config["host_database"]}:{self.config["port_database"]}/{self.config["name_database"]}'
-
-
 
         self.config.update(config)
 
@@ -167,13 +167,25 @@ class GithubTaskSession(TaskSession):
 
         super().__init__(logger, config, platform)
 
-        keys = self.get_list_of_oauth_keys(self.engine, self.config["key_database"])
+        start_time = time.time()
+        keys = self.get_list_of_oauth_keys_from_db(self.engine, self.config["key_database"])
+        print(keys)
+        total_time = time.time() - start_time
+        print(f"Time to get oauth keys: {total_time}")
 
         self.oauths = RandomKeyAuth(keys)
         
 
-    def get_list_of_oauth_keys(self, db_engine: s.engine.base.Engine, config_key: str) ->[str]:
+    def get_list_of_oauth_keys_from_db(self, db_engine: s.engine.base.Engine, config_key: str) ->[str]:
 
+        key_list_length = redis.llen("oauth_keys_list")
+
+        if key_list_length > 0:
+            keys = []
+            for i in range(0, key_list_length):
+                keys.append(redis.lindex("oauth_keys_list",i))
+            return keys
+        
         oauthSQL = s.sql.text(f"""
                 SELECT access_token FROM augur_operations.worker_oauth WHERE access_token <> '{config_key}' and platform = 'github'
                 """)
@@ -194,6 +206,14 @@ class GithubTaskSession(TaskSession):
                 # this makes sure that keys with bad credentials are not used
                 if key_data is None:
                     key_list.remove(key)
+
+        for key in key_list:
+            # just in case the mulitprocessing adds extra values to the list.
+            # we are clearing it before we push the values we got
+            for i in range(0, redis.llen("oauth_keys_list")):
+                redis.lpop("oauth_keys_list")
+
+            redis.lpush("oauth_keys_list", key)
 
         return key_list
 

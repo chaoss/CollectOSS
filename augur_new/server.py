@@ -35,7 +35,6 @@ def hello_world():
 
 
 # intialize the redis conn
-# redis_conn = redis.from_url('redis://localhost:6379/2', decode_responses=True)
 
 owner = "chaoss"
 repo = "augur"

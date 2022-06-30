@@ -17,6 +17,7 @@ import subprocess
 from tasks.start_tasks import start_task
 from augur.application import Application
 from augur.gunicorn import AugurGunicornApp
+from tasks.redis import redis_connection 
 # from augur.server import Server
 
 
@@ -186,6 +187,9 @@ def _broadcast_signal_to_processes(signal=signal.SIGTERM, given_logger=None):
 
 
 def exit(celery_process, gunicorn_arbiter):
+
+    logger.info("Flushing redis cache")
+    redis_connection.flushdb()
 
     logger.info(f"Celery process: {celery_process}")
     logger.info(f"gunicorn_arbiter: {gunicorn_arbiter}")

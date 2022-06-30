@@ -330,65 +330,21 @@ def github_events(self, owner: str, repo: str):
     index = 0
 
     data = []
-    for pr_event in pr_events:
-
-        # if index == 100:
-        #     break
+    for index, pr_event in enumerate(pr_events):
 
         data.append(pr_event)
 
-        index+=1
+        if index % 100 == 0:
+            task = process_events.s(data, f"Task {index // 100}")
+            task.apply_async()
+            data = []
 
-    # len_pr_events = len(pr_events)
+    if len(data) != 0:
+        task = process_events.s(data, f"Final Events Task")
+        task.apply_async()
+        data = []
 
-    # logger.info(f"Length of pr events: {len_pr_events}")
-
-    # logger.info(f"Number of tasks with 500 events: {len_pr_events // 500}")
-
-    # events_per_task = 500
-    # max_tasks = 5
-
-    # if len_pr_events > (max_tasks * 1000):
-    #     events_per_task = len_pr_events // max_tasks
-    #     # round up the events per task so we ensure no more than 5 tasks are spawned
-    #     events_per_task += 1
-    logger.info(len(data))
-
-    min_events_per_task = 250
-    max_tasks = 5
-
-    chunked_data = chunk_data(data, min_events_per_task, max_tasks)
-
-    
-    task_list = [process_events.s(data, f"Events task {index+1}") for index, data in enumerate(chunked_data)]
-
-    process_events_job = group(task_list)
-
-    result = process_events_job.apply_async()
-
-
-def chunk_data(data, min_events_per_task, max_tasks):
-
-    data_length = len(data)
-
-    events_per_task = (data_length // max_tasks) + 1
-
-    if min_events_per_task > events_per_task:
-        events_per_task = min_events_per_task
-
-    end = 0
-    index = 0
-    chunked_data = []
-    while(end + 1 < data_length):
-
-        start = index * events_per_task
-        end = start + events_per_task        
-        list_slice = data[slice(start, end)]
-        chunked_data.append(list_slice)
-
-        index+=1
-
-    return chunked_data
+    print("Completed events")
 
 @celery.task
 def process_events(events, task_name):
@@ -484,6 +440,39 @@ def github_comments(self, owner: str, repo: str) -> None:
     # returns an iterable of all issues at this url (this essentially means you can treat the issues variable as a list of the issues)
     messages = GithubPaginator(url, session.oauths, logger)
 
+
+
+    message_len = len(messages)
+
+    total_pages = (message_len // 100) + 1
+    page_index = 1
+
+    data = []
+    for index, message in enumerate(messages):
+
+        data.append(message)
+
+        if index % 100 == 0:
+            task = process_messages.s(data, f"Message Task {index // 100}")
+            task.apply_async()
+            data = []
+
+    if len(data) != 0:
+        task = process_messages.s(data, f"Final Message Task")
+        task.apply_async()
+        data = []
+
+    print("Completed Messages")
+
+@celery.task
+def process_messages(messages, task_name):
+
+    # define logger for task
+    logger = get_task_logger(process_messages.name)
+    
+    # define database task session, that also holds autentication keys the GithubPaginator needs
+    session = GithubTaskSession(logger, config)
+
     repo_id = 1
     platform_id = 25150
     tool_source = "Pr comment task"
@@ -493,16 +482,13 @@ def github_comments(self, owner: str, repo: str) -> None:
     message_dicts = []
     message_ref_mapping_data = []
 
-    message_len = len(messages)
-
-    total_pages = (message_len // 100) + 1
-    page_index = 1
+    logger.info(f"{task_name}: Processing {len(messages)} messages")
 
     for index, message in enumerate(messages):
 
-        if index % 100 == 0:
-            logger.info(f"Processing page {page_index} of {total_pages}")
-            page_index += 1
+        # if index % 100 == 0:
+        #     logger.info(f"Processing page {page_index} of {total_pages}")
+        #     page_index += 1
 
         related_pr_of_issue_found = False
 
