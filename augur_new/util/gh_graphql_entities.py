@@ -6,6 +6,7 @@ import httpx
 import json
 from random import choice
 import collections
+import time
 
 """
     Should be designed on a per entity basis that has attributes that call 
@@ -126,8 +127,13 @@ class GraphQlPageCollection(collections.abc.Sequence):
 
 
     def extract_paginate_result(self,responseObject):
-        
-        result_dict = responseObject.json()['data']
+
+        response = responseObject.json()
+
+        if "errors" in response: 
+            print(response["errors"])
+    
+        result_dict = response['data']
 
         #print(result_dict)
         #extract the core keys that we want from our query
