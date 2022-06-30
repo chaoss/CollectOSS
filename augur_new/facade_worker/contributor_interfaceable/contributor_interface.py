@@ -10,7 +10,7 @@ import json
 import multiprocessing
 import time
 import numpy as np
-
+from augur_new.db import models
 
 # Debugger
 import traceback
