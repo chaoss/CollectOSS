@@ -432,7 +432,7 @@ def query_github_contributors(session, entry_info, repo_id):
             #stmnt = select(Contributors.gh_node_id).where(Contributors.gh_node_id == cntrb["gh_node_id"])
             existingMatchingContributors = Contributors.query.filter_by(gh_node_id=cntrb["gh_node_id"]).all() #session.execute(stmnt)
 
-            if len(existingMatchingContributors.fetchall()) > 0:
+            if len(existingMatchingContributors) > 0:
                 break #if contributor already exists in table
 
             cntrb_natural_keys = ['gh_login','gl_id','gl_username','cntrb_login']
