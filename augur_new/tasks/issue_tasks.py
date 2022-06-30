@@ -37,6 +37,41 @@ def issues(owner: str, repo: str) -> None:
 
     url = f"https://api.github.com/repos/{owner}/{repo}/issues?state=all"
 
+
+
+    # returns an iterable of all issues at this url (this essentially means you can treat the issues variable as a list of the issues)
+    # Reference the code documenation for GithubPaginator for more details
+    issues = GithubPaginator(url, session.oauths, logger)
+
+    # this is defined so we can decrement it each time 
+    # we come across a pr, so at the end we can log how 
+    # many issues were collected
+    # loop through the issues 
+    data = []
+    for index, issue in enumerate(issues):
+
+        data.append(issue)
+
+        if index % 100 == 0:
+            task = process_issues.s(data, f"Issues Task {index // 100}")
+            task.apply_async()
+            data = []
+
+    if len(data) != 0:
+        task = process_issues.s(data, f"Final Issue Task")
+        task.apply_async()
+        data = []
+
+        
+
+@celery.task
+def process_issues(issues, task_name) -> None:
+
+    logger = get_task_logger(process_issues.name)
+
+    # define GithubTaskSession to handle insertions, and store oauth keys 
+    session = GithubTaskSession(logger, config)
+
     # get repo_id or have it passed
     repo_id = 1
     tool_source = "Issue Task"
@@ -44,22 +79,10 @@ def issues(owner: str, repo: str) -> None:
     # platform_id = 25150
     data_source = "Github API"
 
-    # returns an iterable of all issues at this url (this essentially means you can treat the issues variable as a list of the issues)
-    # Reference the code documenation for GithubPaginator for more details
-    issues = GithubPaginator(url, session.oauths, logger)
-    issues_length = len(issues)
-
     issue_dicts = []
     issue_mapping_data = []
- 
-    # this is defined so we can decrement it each time 
-    # we come across a pr, so at the end we can log how 
-    # many issues were collected
-    issue_total = issues_length
-    # loop through the issues 
+    issue_total = len(issues)
     for index, issue in enumerate(issues):
-
-        print(f"Inserting issue {index + 1} of {issues_length}")
 
         # calls is_valid_pr_block to see if the data is a pr.
         # if it is a pr we skip it because we don't need prs 
@@ -156,24 +179,45 @@ def pull_requests(owner: str, repo: str) -> None:
     url = f"https://api.github.com/repos/{owner}/{repo}/pulls?state=all&direction=desc"
     
 
-    # get repo_id or have it passed
+    # returns an iterable of all prs at this url (this essentially means you can treat the prs variable as a list of the prs)
+    prs = GithubPaginator(url, session.oauths, logger)
+
+    
+    data = []
+    for index, pr in enumerate(prs):
+
+        data.append(pr)
+
+        if index % 100 == 0:
+            task = process_pull_requests.s(data, f"Pr Task {index // 100}")
+            task.apply_async()
+            data = []
+
+    if len(data) != 0:
+        task = process_pull_requests.s(data, f"Final Pr Task")
+        task.apply_async()
+        data = []
+
+
+@celery.task
+def process_pull_requests(pull_requests, task_name):
+
+    logger = get_task_logger(process_pull_requests.name)
+
+    # define GithubTaskSession to handle insertions, and store oauth keys 
+    session = GithubTaskSession(logger, config)
+
+     # get repo_id or have it passed
     repo_id = 1
     tool_source = "Pr Task"
     tool_version = "2.0"
     platform_id = 25150
     data_source = "Github API"
 
-    # returns an iterable of all prs at this url (this essentially means you can treat the prs variable as a list of the prs)
-    prs = GithubPaginator(url, session.oauths, logger)
-    prs_length = len(prs)
-
     pr_dicts = []
     pr_mapping_data = []
     pr_numbers = []
-
-    for index, pr in enumerate(prs):
-
-        logger.info(f"Processing pr {index + 1} of {prs_length}")
+    for index, pr in enumerate(pull_requests):
 
         # add a field called pr_head_or_base to the head and base field of the pr
         # this is done so we can insert them both into the pr metadata table
@@ -293,7 +337,8 @@ def pull_requests(owner: str, repo: str) -> None:
     pr_metadata_natural_keys = ['pull_request_id', 'pr_head_or_base', 'pr_sha']
     session.insert_data(pr_metadata_dicts, PullRequestMeta, pr_metadata_natural_keys)
 
-    print(pr_numbers)
+
+
 
 # This function adds a key value pair to a list of dicts and returns the modified list of dicts back
 def add_key_value_pair_to_list_of_dicts(data_list, key, value):
