@@ -3,6 +3,7 @@ import os, json, requests, logging
 from flask import Flask, Response, jsonify, request
 #import gunicorn.app.base
 import numpy as np
+from celery import group
 
 
 def create_grouped_task_load(*args,processes=6,dataList=[],task=None):
