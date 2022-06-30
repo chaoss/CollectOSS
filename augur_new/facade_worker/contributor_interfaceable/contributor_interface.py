@@ -350,15 +350,13 @@ def create_endpoint_from_repo_id(session, repo_id):
         WHERE repo_id = :repo_id_bind
     """
     #ORM syntax of above statement
-    query = s.select(Repo).where(Repo.repo_id == repo_id)
-
-    result = session.execute(query)
+    result = Repo.query.filter_by(repo_id=1).one()
 
     # if not found
     if not len(result) >= 1:
         raise LookupError
 
-    url = result.scalars()[0].repo_git
+    url = result.repo_git
     session.logger.info(f"Url: {url}")
 
     return url

@@ -347,7 +347,7 @@ def query_github_contributors(session, entry_info, repo_id):
     # Set the base of the url and place to hold contributors to insert
     contributors_url = (
         f"https://api.github.com/repos/{owner}/{name}/" +
-        "contributors?per_page=100&page={}"
+        "contributors?state=all"
     )
 
     # Get contributors that we already have stored
@@ -359,18 +359,20 @@ def query_github_contributors(session, entry_info, repo_id):
     duplicate_col_map = {'cntrb_login': 'login'}
 
     #list to hold contributors needing insertion or update
-    contributors = GithubPaginator(contributors_url, session.access_token)#paginate(contributors_url, duplicate_col_map, update_col_map, table, table_pkey)
+    contributor_list = GithubPaginator(contributors_url, session.oauths,session.logger)#paginate(contributors_url, duplicate_col_map, update_col_map, table, table_pkey)
 
     session.logger.info("Count of contributors needing insertion: " + str(len(contributors)) + "\n")
 
-    for repo_contributor in contributors:
+    for repo_contributor in contributor_list:
         try:
             # Need to hit this single contributor endpoint to get extra data including...
             #   `created at`
             #   i think that's it
             cntrb_url = ("https://api.github.com/users/" + repo_contributor['login'])
+
+            
             session.logger.info("Hitting endpoint: " + cntrb_url + " ...\n")
-            r = sync_hit_api(cntrb_url, contributors.headers)
+            r = hit_api(session, cntrb_url)
             contributor = r.json()
 
             company = None
@@ -426,18 +428,15 @@ def query_github_contributors(session, entry_info, repo_id):
             #    )
             #).fetchall()
 
-            stmnt = select(Contributors.gh_node_id).where(Contributors.gh_node_id == cntrb["gh_node_id"])
-            existingMatchingContributors = session.execute(stmnt)
+            #stmnt = select(Contributors.gh_node_id).where(Contributors.gh_node_id == cntrb["gh_node_id"])
+            existingMatchingContributors = Contributors.query.filter_by(gh_node_id=cntrb["gh_node_id"]).all() #session.execute(stmnt)
 
             if len(existingMatchingContributors.fetchall()) > 0:
                 break #if contributor already exists in table
 
-            
+            cntrb_natural_keys = ['gh_login','gl_id','gl_username','cntrb_login']
             #insert cntrb to table.
-            #TODO: Convert to postgres upsert
-            new_contrib = Contributors(**cntrb)
-            session.add(new_contrib)
-            session.commit()
+            session.insert_data(cntrb,Contributor,cntrb_natural_keys)
             
         except Exception as e:
             session.logger.error("Caught exception: {}".format(e))
