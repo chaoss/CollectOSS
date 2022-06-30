@@ -435,7 +435,7 @@ def query_github_contributors(session, entry_info, repo_id):
             if len(existingMatchingContributors) > 0:
                 break #if contributor already exists in table
 
-            cntrb_natural_keys = ['gh_login','gl_id','gl_username','cntrb_login']
+            cntrb_natural_keys = ['cntrb_login']
             #insert cntrb to table.
             session.insert_data(cntrb,Contributors,cntrb_natural_keys)
             
