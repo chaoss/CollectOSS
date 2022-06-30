@@ -2,6 +2,25 @@
 import os, json, requests, logging
 from flask import Flask, Response, jsonify, request
 #import gunicorn.app.base
+import numpy as np
+
+
+def create_grouped_task_load(*args,processes=6,dataList=[],task=None):
+    
+    if not dataList or not task:
+        return None
+    
+    numpyData = np.array(list(dataList))
+    listsSplitForProcesses = np.array_split(numpyData, processes)
+
+    task_list = [task.s(data.toList(), *args) for data in listsSplitForProcesses]
+
+    jobs = group(task_list)
+
+    return jobs
+
+
+
 
 def read_config(section, name=None, environment_variable=None, default=None, config_file_path='_', no_config_file=0, use_main_config=0):
     """

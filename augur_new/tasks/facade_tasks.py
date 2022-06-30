@@ -28,6 +28,7 @@ from augur_new.facade_worker.facade_worker.facade02utilitymethods import update_
 from augur_new.facade_worker.facade_worker.facade03analyzecommit import analyze_commit
 from augur_new.facade_worker.contributor_interfaceable.contributor_interface import *
 
+from augur_new.util.worker_util import create_grouped_task_load
 
 # from augur_new.server import redis_conn
 from tasks.celery import celery
@@ -199,18 +200,13 @@ def analysis(cfg, multithreaded, session=None, processes=6):
             #cfg.log_activity('Info','Type of missing_commits: %s' % type(missing_commits))
             
             #Split commits into mostly equal queues so each process starts with a workload and there is no
-            #    overhead to pass into queue from the parent.
-            
-            numpyMissingCommits = np.array(list(missing_commits))
-            listsSplitForProcesses = np.array_split(numpyMissingCommits,processes)
-            
+            #    overhead to pass into queue from the parent.            
             #Each task generates their own cfg as celery cannot serialize this data
-            task_list = [analyze_commits_in_parallel.s(data.tolist(),repo[0],repo_loc,multithreaded) for data in listsSplitForProcesses]
+            
+            
+            contrib_jobs = create_grouped_task_load(repo[0],repo_loc,multithreaded,processes=processes,dataList=missing_commits,task=analyze_commits_in_parallel)
 
-            contrib_jobs = group(task_list)
-        
             group_result = contrib_jobs.apply_async()
-
             #Context manager needed for joining back to parent process properly.
             with allow_join_result():
                 group_result.join()
@@ -220,7 +216,7 @@ def analysis(cfg, multithreaded, session=None, processes=6):
             for commit in missing_commits:
                 analyze_commit(cfg, repo[0], repo_loc, commit, multithreaded)
 
-        session.logger.info("Why doesn't it get to here?")
+
         update_analysis_log(repo[0],'Data collection complete')
 
         update_analysis_log(repo[0],'Beginning to trim commits')
