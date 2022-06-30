@@ -213,8 +213,8 @@ def analysis(cfg, multithreaded, session=None, processes=6):
 
             #Context manager needed for joining back to parent process properly.
             with allow_join_result():
-                results = group_result.join()
-                session.logger.info(results)
+                group_result.join()
+                
             
         elif len(missing_commits) > 0:
             for commit in missing_commits:

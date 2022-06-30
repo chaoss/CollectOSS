@@ -35,7 +35,7 @@ def create_endpoint_from_commit_sha(session,commit_sha, repo_id):
     # https://api.github.com/repos/chaoss/augur/commits/53b0cc122ac9ecc1588d76759dc2e8e437f45b48
 
 
-    stmnt = select(Repo.repo_path, Repo.repo_name).where(Repo.repo_id == repo_id)
+    stmnt = s.select(Repo.repo_path, Repo.repo_name).where(Repo.repo_id == repo_id)
 
     result = session.execute(stmnt)
 
@@ -90,7 +90,7 @@ def insert_alias(session, contributor, email):
     #    )
     #).fetchall()
 
-    stmnt = select(Contributors.cntrb_id, Contributors.cntrb_canonical).where(Contributors.gh_user_id == contributor["gh_user_id"])
+    stmnt = s.select(Contributors.cntrb_id, Contributors.cntrb_canonical).where(Contributors.gh_user_id == contributor["gh_user_id"])
     result = session.execute(stmnt)
     contributor_table_data = result.scalars().all()
     # self.logger.info(f"Contributor query: {contributor_table_data}")
@@ -350,7 +350,7 @@ def create_endpoint_from_repo_id(session, repo_id):
         WHERE repo_id = :repo_id_bind
     """
     #ORM syntax of above statement
-    query = select(Repo).where(Repo.repo_id == repo_id)
+    query = s.select(Repo).where(Repo.repo_id == repo_id)
 
     result = session.execute(query)
 
