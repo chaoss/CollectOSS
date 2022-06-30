@@ -744,19 +744,13 @@ def insert_facade_contributors(session, repo_id,processes=4,multithreaded=True):
         #Split commits into mostly equal queues so each process starts with a workload and there is no
         #    overhead to pass into queue from the parent.
         
-        numpyNewContribs = np.array(list(new_contribs))
-        commitDataLists = np.array_split(numpyNewContribs, processes)
-    
-        task_list = [process_commit_metadata.s(data.tolist(), repo_id) for data in commitDataLists]
 
-        contrib_jobs = group(task_list)
+        contrib_jobs = create_grouped_task_load(repo_id,processes=processes,dataList=new_contribs,task=process_commit_metadata)
         
         result = contrib_jobs.apply_async()
 
-        session.logger.info(result.ready())
-
-        session.logger.info(result.successful())
-    
+        with allow_join_result():
+            result.join()
 
     else:
         #I think this is the right syntax for running a celery task directly
@@ -808,17 +802,13 @@ def insert_facade_contributors(session, repo_id,processes=4,multithreaded=True):
         #Split commits into mostly equal queues so each process starts with a workload and there is no
         #    overhead to pass into queue from the parent.
         
-        numpyExistingCntrbEmails = np.array(list(existing_cntrb_emails))
-        existingEmailsSplit = np.array_split(numpyExistingCntrbEmails,processes)
         
-        task_list = [link_commits_to_contributor.s(data.tolist()) for data in existingEmailsSplit]
-        update_jobs = group(task_list)
+        update_jobs = create_grouped_task_load(processes=processes,dataList=existing_cntrb_emails,task=link_commits_to_contributor)
 
         result = update_jobs.apply_async()
 
-        session.logger.info(result.ready())
-
-        session.logger.info(result.successful())
+        with allow_join_result():
+            result.join()
     else:
         link_commits_to_contributor(list(existing_cntrb_emails))
 
