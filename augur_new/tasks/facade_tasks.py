@@ -193,7 +193,7 @@ def analysis(cfg, multithreaded, session=None, processes=6):
 
         ## TODO: Verify if the multithreaded approach here is optimal for postgresql
 
-        if True:#multithreaded and len(missing_commits) > 0:
+        if len(missing_commits) > 0:
 
             
 
