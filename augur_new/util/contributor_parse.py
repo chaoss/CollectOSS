@@ -437,7 +437,7 @@ def query_github_contributors(session, entry_info, repo_id):
 
             cntrb_natural_keys = ['gh_login','gl_id','gl_username','cntrb_login']
             #insert cntrb to table.
-            session.insert_data(cntrb,Contributor,cntrb_natural_keys)
+            session.insert_data(cntrb,Contributors,cntrb_natural_keys)
             
         except Exception as e:
             session.logger.error("Caught exception: {}".format(e))
