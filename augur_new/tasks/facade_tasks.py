@@ -17,6 +17,7 @@ import multiprocessing
 import numpy as np
 from celery import group, chain, chord, signature
 from celery.utils.log import get_task_logger
+from celery.result import allow_join_result
 import sqlalchemy as s
 
 # allows us to reference augur_new (the parent module)
@@ -203,14 +204,17 @@ def analysis(cfg, multithreaded, session=None, processes=6):
             numpyMissingCommits = np.array(list(missing_commits))
             listsSplitForProcesses = np.array_split(numpyMissingCommits,processes)
             
-            #cfg, repo_id, repo_location, multithreaded
+            #Each task generates their own cfg as celery cannot serialize this data
             task_list = [analyze_commits_in_parallel.s(data.tolist(),repo[0],repo_loc,multithreaded) for data in listsSplitForProcesses]
 
             contrib_jobs = group(task_list)
         
-            result = contrib_jobs.apply_async()
+            group_result = contrib_jobs.apply_async()
 
-            result.ready()
+            #Context manager needed for joining back to parent process properly.
+            with allow_join_result():
+                results = group_result.join()
+                session.logger.info(results)
             
         elif len(missing_commits) > 0:
             for commit in missing_commits:
