@@ -6,6 +6,7 @@ import httpx
 import json
 from random import choice
 import collections
+import time
 
 """
     Should be designed on a per entity basis that has attributes that call 
@@ -127,9 +128,12 @@ class GraphQlPageCollection(collections.abc.Sequence):
 
     def extract_paginate_result(self,responseObject):
 
-        print(responseObject.json())
-        
-        result_dict = responseObject.json()['data']
+        response = responseObject.json()
+
+        if "errors" in response: 
+            print(response["errors"])
+    
+        result_dict = response['data']
 
         #print(result_dict)
         #extract the core keys that we want from our query
@@ -433,7 +437,7 @@ class GitHubRepo():
 
 
 class PullRequest():
-    def __init__(self, session, owner, repo,number):
+    def __init__(self, session, owner, repo, number):
 
         self.keyAuth = session.oauths
         self.url = "https://api.github.com/graphql"
@@ -447,7 +451,7 @@ class PullRequest():
     def get_reviews_collection(self):
 
         query = """
-            query MyQuery($repo: String!, $owner: String!,$number: Int!, $numRecords!, $cursor: String) {
+            query MyQuery($repo: String!, $owner: String!,$number: Int!, $numRecords: Int!, $cursor: String) {
                 repository(name: $repo, owner: $owner) {
                     pullRequest(number: $number) {
                         reviews(first: $numRecords, after: $cursor) {
