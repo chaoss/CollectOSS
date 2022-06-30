@@ -38,13 +38,13 @@ def start(disable_collection):
     command = ["celery", "-A", "tasks.celery.celery", "worker", "--loglevel=info", "-E"]
     celery_process = subprocess.Popen(command)
     
-    if not disable_collection:
+    # if not disable_collection:
 
-        owner = "chaoss"
-        repo = "augur"
+    #     owner = "chaoss"
+    #     repo = "augur"
 
-        logger.info("Launch start task")
-        result = start_task.apply_async(args=[owner, repo])
+    #     logger.info("Launch start task")
+    #     result = start_task.apply_async(args=[owner, repo])
 
     augur_app = Application()
     logger.info("Augur application initialized")

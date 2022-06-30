@@ -112,8 +112,6 @@ class TaskSession(s.orm.Session):
             self.logger.info("Must be list of dicts")
             return
 
-        self.logger.info(f"Length of data to insert: {len(data)}")
-
         # creates list of arguments to tell sqlalchemy what columns to return after the data is inserted
         returning_args = []
         for column in return_columns:
@@ -167,11 +165,7 @@ class GithubTaskSession(TaskSession):
 
         super().__init__(logger, config, platform)
 
-        start_time = time.time()
         keys = self.get_list_of_oauth_keys_from_db(self.engine, self.config["key_database"])
-        print(keys)
-        total_time = time.time() - start_time
-        print(f"Time to get oauth keys: {total_time}")
 
         self.oauths = RandomKeyAuth(keys)
         
