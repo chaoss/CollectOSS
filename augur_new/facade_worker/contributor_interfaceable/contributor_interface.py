@@ -353,7 +353,7 @@ def create_endpoint_from_repo_id(session, repo_id):
     result = Repo.query.filter_by(repo_id=1).one()
 
     # if not found
-    if not len(result) >= 1:
+    if not result:
         raise LookupError
 
     url = result.repo_git
