@@ -17,6 +17,7 @@ import multiprocessing
 import numpy as np
 from celery import group, chain, chord, signature
 from celery.utils.log import get_task_logger
+from celery.result import allow_join_result
 import sqlalchemy as s
 
 # allows us to reference augur_new (the parent module)
@@ -27,6 +28,7 @@ from augur_new.facade_worker.facade_worker.facade02utilitymethods import update_
 from augur_new.facade_worker.facade_worker.facade03analyzecommit import analyze_commit
 from augur_new.facade_worker.contributor_interfaceable.contributor_interface import *
 
+from augur_new.util.worker_util import create_grouped_task_load
 
 # from augur_new.server import redis_conn
 from tasks.celery import celery
@@ -116,8 +118,8 @@ def analysis(cfg, multithreaded, session=None, processes=6):
 
         
         #Add committers for repo if session
-        if session != None:
-            grab_committer_list(session,repo[0])
+        #if session != None:
+            #grab_committer_list(session,repo[0])
 
         update_analysis_log(repo[0],"Beginning analysis.")
         cfg.log_activity('Verbose','Analyzing repo: %s (%s)' % (repo[0],repo[3]))
@@ -192,34 +194,30 @@ def analysis(cfg, multithreaded, session=None, processes=6):
 
         ## TODO: Verify if the multithreaded approach here is optimal for postgresql
 
-        if multithreaded and len(missing_commits) > 0:
+        if len(missing_commits) > 0:
 
             
 
             #cfg.log_activity('Info','Type of missing_commits: %s' % type(missing_commits))
             
             #Split commits into mostly equal queues so each process starts with a workload and there is no
-            #    overhead to pass into queue from the parent.
+            #    overhead to pass into queue from the parent.            
+            #Each task generates their own cfg as celery cannot serialize this data
             
-            numpyMissingCommits = np.array(list(missing_commits))
-            listsSplitForProcesses = np.array_split(numpyMissingCommits,processes)
             
-            #cfg, repo_id, repo_location, multithreaded
-            task_list = [analyze_commits_in_parallel.s(data.tolist(),repo[0],repo_loc,multithreaded) for data in listsSplitForProcesses]
+            contrib_jobs = create_grouped_task_load(repo[0],repo_loc,multithreaded,processes=processes,dataList=missing_commits,task=analyze_commits_in_parallel)
 
-            contrib_jobs = group(task_list)
-        
-            result = contrib_jobs.apply_async()
-
-            result.wait()
-            #session.logger.info(result.ready())
-
-            session.logger.info(result) #Got to here.
+            group_result = contrib_jobs.apply_async()
+            #Context manager needed for joining back to parent process properly.
+            with allow_join_result():
+                group_result.join()
+                
+            
         elif len(missing_commits) > 0:
             for commit in missing_commits:
                 analyze_commit(cfg, repo[0], repo_loc, commit, multithreaded)
 
-        session.logger.info("Why doesn't it get to here?")
+
         update_analysis_log(repo[0],'Data collection complete')
 
         update_analysis_log(repo[0],'Beginning to trim commits')
@@ -276,6 +274,8 @@ def facade_commits_model():
     create_xlsx_summary_files = session.create_xlsx_summary_files
     multithreaded = session.multithreaded
 
+    
+    
     opts,args = getopt.getopt(sys.argv[1:],'hdpcuUaAmnfIrx')
     for opt in opts:
         if opt[0] == '-h':
@@ -362,6 +362,7 @@ def facade_commits_model():
             limited_run = 1
             session.cfg.log_activity('Info','Option set: creating Excel summary files.')
 
+    
     # Get the location of the directory where git repos are stored
     repo_base_directory = session.cfg.repo_base_directory
 
@@ -403,8 +404,8 @@ def facade_commits_model():
 
     
     #Give analysis the github interface so that it can make API calls
-    if not limited_run or (limited_run and run_analysis):
-        analysis(session.cfg, multithreaded, session=session)
+    #if not limited_run or (limited_run and run_analysis):
+    analysis(session.cfg, multithreaded, session=session)
     
     ### end moved up
 
@@ -674,7 +675,7 @@ def link_commits_to_contributor(contributorQueue):
                 #).values({
                 #    'cmt_ght_author_id': cntrb_email['cntrb_id']
                 #}))
-                stmnt = update(Commits).where(Commits.cmt_committer_email == cntrb_email['email']).values(
+                stmnt = s.update(Commits).where(Commits.cmt_committer_email == cntrb_email['email']).values(
                     cmt_ght_author_id=cntrb_email['cntrb_id']
                 ).execution_options(synchronize_session="fetch")
 
@@ -744,19 +745,13 @@ def insert_facade_contributors(session, repo_id,processes=4,multithreaded=True):
         #Split commits into mostly equal queues so each process starts with a workload and there is no
         #    overhead to pass into queue from the parent.
         
-        numpyNewContribs = np.array(list(new_contribs))
-        commitDataLists = np.array_split(numpyNewContribs, processes)
-    
-        task_list = [process_commit_metadata.s(data.tolist(), repo_id) for data in commitDataLists]
 
-        contrib_jobs = group(task_list)
+        contrib_jobs = create_grouped_task_load(repo_id,processes=processes,dataList=new_contribs,task=process_commit_metadata)
         
         result = contrib_jobs.apply_async()
 
-        session.logger.info(result.ready())
-
-        session.logger.info(result.successful())
-    
+        with allow_join_result():
+            result.join()
 
     else:
         #I think this is the right syntax for running a celery task directly
@@ -808,17 +803,13 @@ def insert_facade_contributors(session, repo_id,processes=4,multithreaded=True):
         #Split commits into mostly equal queues so each process starts with a workload and there is no
         #    overhead to pass into queue from the parent.
         
-        numpyExistingCntrbEmails = np.array(list(existing_cntrb_emails))
-        existingEmailsSplit = np.array_split(numpyExistingCntrbEmails,processes)
         
-        task_list = [link_commits_to_contributor.s(data.tolist()) for data in existingEmailsSplit]
-        update_jobs = group(task_list)
+        update_jobs = create_grouped_task_load(processes=processes,dataList=existing_cntrb_emails,task=link_commits_to_contributor)
 
         result = update_jobs.apply_async()
 
-        session.logger.info(result.ready())
-
-        session.logger.info(result.successful())
+        with allow_join_result():
+            result.join()
     else:
         link_commits_to_contributor(list(existing_cntrb_emails))
 

@@ -10,6 +10,28 @@ from .random_key_auth import RandomKeyAuth
 
 from urllib.parse import parse_qs, urlparse, urlencode, urlunparse
 
+def hit_api(session,url: str, method='GET') -> httpx.Response:
+
+    session.logger.info(f"Hitting endpoint with {method} request: {url}...\n")
+
+    with httpx.Client() as client:
+
+        try:
+            response = client.request(
+                method=method, url=url, auth=session.oauths)
+
+        except TimeoutError:
+            session.logger.info("Request timed out. Sleeping 10 seconds and trying again...\n")
+            time.sleep(10)
+            return None
+        except httpx.TimeoutException:
+            session.logger.info("httpx.ReadTimeout. Sleeping 10 seconds and trying again...\n")
+            time.sleep(10)
+            return None
+
+    return response 
+
+
 
 class GithubPaginator(collections.abc.Sequence):
     def __init__(self, url: str, key_manager: RandomKeyAuth, logger, from_datetime=None, to_datetime=None):
