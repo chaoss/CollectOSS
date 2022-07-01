@@ -38,7 +38,6 @@ def issues(owner: str, repo: str) -> None:
     url = f"https://api.github.com/repos/{owner}/{repo}/issues?state=all"
 
 
-
     # returns an iterable of all issues at this url (this essentially means you can treat the issues variable as a list of the issues)
     # Reference the code documenation for GithubPaginator for more details
     issues = GithubPaginator(url, session.oauths, logger)
@@ -80,7 +79,7 @@ def process_issues(issues, task_name) -> None:
     data_source = "Github API"
 
     issue_dicts = []
-    issue_mapping_data = []
+    issue_mapping_data = {}
     issue_total = len(issues)
     for index, issue in enumerate(issues):
 
@@ -106,16 +105,14 @@ def process_issues(issues, task_name) -> None:
                                                              tool_source, tool_version, data_source)
 
         
-        issue_mapping_data.append(
-            # store the issue_url, labels, and assignees 
-            # so we can relate the lables and assigness 
-            # to a specific row in the pr table after we insert the prs
-            {
-                "issue_url": issue["url"],
-                "labels": issue_labels,
-                "assignees": issue_assignees
-            }
-        )                                        
+        mapping_data_key = issue["url"]
+        issue_mapping_data[mapping_data_key] = {
+                                            "labels": issue_labels,
+                                            "assignees": issue_assignees,
+                                            }     
+
+    if len(issue_dicts) == 0:
+        print("No issues found while processing")                             
 
     # insert the issues into the issues table. 
     # issue_urls are gloablly unique across github so we are using it to determine whether an issue we collected is already in the table
@@ -124,30 +121,25 @@ def process_issues(issues, task_name) -> None:
     issue_return_columns = ["issue_url", "issue_id"]
     issue_return_data = session.insert_data(issue_dicts, Issues, issue_natural_keys, issue_return_columns)
 
-    # loop through the issue mapping data so the labels 
-    # and assignees and be mapped to their respective prs
+    # loop through the issue_return_data so it can find the labels and 
+    # assignees that corelate to the issue that was inserted labels 
     issue_label_dicts = []
     issue_assignee_dicts = []
-    for data in issue_mapping_data:
+    for data in issue_return_data:
 
-        # search the list of data returned from the issues insert 
-        # to find the dict that has the same url as the labels and assignees
-        key = "issue_url"
-        value = data[key]
-        issue = find_dict_in_list_of_dicts(issue_return_data, key, value)
+        issue_url = data["issue_url"]
+        issue_id = data["issue_id"]
 
+        try:
+            other_issue_data = issue_mapping_data[issue_url]
+        except KeyError as e:
+            logger.info(f"Cold not find other issue data. This should never happen. Error: {e}")
 
-        if issue:
-            issue_id = issue["issue_id"]
-        else:
-            print("Count not find issue for labels or assignees. If the insertion was successful this should never happen")
-            print("Skipping because we can't map the labels or assignees without the issue_id")
-            continue
 
         # add the issue id to the lables and assignees, then add them to a list of dicts that will be inserted soon
         dict_key = "issue_id"
-        issue_label_dicts += add_key_value_pair_to_list_of_dicts(data["labels"], "issue_id", issue_id)
-        issue_assignee_dicts += add_key_value_pair_to_list_of_dicts(data["assignees"], "issue_id", issue_id)
+        issue_label_dicts += add_key_value_pair_to_list_of_dicts(other_issue_data["labels"], "issue_id", issue_id)
+        issue_assignee_dicts += add_key_value_pair_to_list_of_dicts(other_issue_data["assignees"], "issue_id", issue_id)
 
     # inserting issue labels
     # we are using label_src_id and issue_id to determine if the label is already in the database.
@@ -182,7 +174,7 @@ def pull_requests(owner: str, repo: str) -> None:
     # returns an iterable of all prs at this url (this essentially means you can treat the prs variable as a list of the prs)
     prs = GithubPaginator(url, session.oauths, logger)
 
-    
+
     data = []
     for index, pr in enumerate(prs):
 
@@ -215,7 +207,7 @@ def process_pull_requests(pull_requests, task_name):
     data_source = "Github API"
 
     pr_dicts = []
-    pr_mapping_data = []
+    pr_mapping_data = {}
     pr_numbers = []
     for index, pr in enumerate(pull_requests):
 
@@ -255,19 +247,17 @@ def process_pull_requests(pull_requests, task_name):
         # get only the needed data for the pull_request_meta table
         pr_metadata = extract_needed_pr_metadata(pr["metadata"], platform_id, repo_id,
                                                         tool_source, tool_version, data_source)                                                             
-                                                        
-        pr_mapping_data.append(
-            {
-                # store the pr_url, labels, assignees, reviewers, and metadata
-                # so we can relate the labels, assignees, reviewers, and metadata
-                # to a specific row in the pr table after we insert the prs
-                "pr_url": pr["url"],
-                "labels": pr_labels,
-                "assignees": pr_assignees,
-                "reviewers": pr_reviewers,
-                "metadata": pr_metadata,
-            }
-        )
+
+                               
+
+        mapping_data_key = pr["url"]
+        pr_mapping_data[mapping_data_key] = {
+                                            "labels": pr_labels,
+                                            "assignees": pr_assignees,
+                                            "reviewers": pr_reviewers,
+                                            "metadata": pr_metadata
+                                            }          
+       
 
         # create a list of pr numbers to pass for the pr reviews task
         pr_numbers.append(pr["number"]) 
@@ -282,35 +272,30 @@ def process_pull_requests(pull_requests, task_name):
     pr_return_data = session.insert_data(pr_dicts, PullRequests, pr_natural_keys, return_columns=pr_return_columns)
 
 
-    # loop through the pr mapping data so the 
-    # labels, assignees, reviewers, and assignees 
-    # can be mapped to their respective prs
+    # loop through the pr_return_data (which is a list of pr_urls 
+    # and pull_request_id in dicts) so we can find the labels, 
+    # assignees, reviewers, and assignees that match the pr
     pr_label_dicts = []
     pr_assignee_dicts = []
     pr_reviewer_dicts = []
     pr_metadata_dicts = []
-    for data in pr_mapping_data:
+    for data in pr_return_data:
 
-        # search the list of data returned from the pr insert 
-        # to find the dict that has the same url as the labels, assignees, reviewers, and metadata
-        value = data["pr_url"]
-        key = "pr_url"
-        pull_request = find_dict_in_list_of_dicts(pr_return_data, key, value)
+        pr_url = data["pr_url"]
+        pull_request_id = data["pull_request_id"]
 
-        if pull_request:
+        try:
+            other_pr_data = pr_mapping_data[pr_url]
+        except KeyError as e:
+            logger.info(f"Cold not find other pr data. This should never happen. Error: {e}")
 
-            pull_request_id = pull_request["pull_request_id"]
-        else:
-            print("Count not find pr for labels, assignees, reviewers, or metadata. If the insertion was successful this should never happen")
-            print("Skipping because we can't map the labels, assignees, reviewers, or metadata without the pull_request_id")
-            continue
 
         # add the pull_request_id to the labels, assignees, reviewers, or metadata then add them to a list of dicts that will be inserted soon
         dict_key = "pull_request_id"
-        pr_label_dicts += add_key_value_pair_to_list_of_dicts(data["labels"], dict_key, pull_request_id)
-        pr_assignee_dicts += add_key_value_pair_to_list_of_dicts(data["assignees"], dict_key, pull_request_id)
-        pr_reviewer_dicts += add_key_value_pair_to_list_of_dicts(data["reviewers"], dict_key, pull_request_id)
-        pr_metadata_dicts += add_key_value_pair_to_list_of_dicts(data["metadata"], dict_key, pull_request_id)
+        pr_label_dicts += add_key_value_pair_to_list_of_dicts(other_pr_data["labels"], dict_key, pull_request_id)
+        pr_assignee_dicts += add_key_value_pair_to_list_of_dicts(other_pr_data["assignees"], dict_key, pull_request_id)
+        pr_reviewer_dicts += add_key_value_pair_to_list_of_dicts(other_pr_data["reviewers"], dict_key, pull_request_id)
+        pr_metadata_dicts += add_key_value_pair_to_list_of_dicts(other_pr_data["metadata"], dict_key, pull_request_id)
         
 
     # inserting pr labels
@@ -620,6 +605,7 @@ def process_messages(messages, task_name):
             issue_message_ref_dicts.append(message_ref_data)
         else:
             pr_message_ref_dicts.append(message_ref_data)
+        
 
 
     logger.info(f"Issue message count: {len(issue_message_ref_dicts)}")

@@ -34,9 +34,9 @@ def start(disable_collection):
     Start Augur's backend server
     """
 
-    logger.info("Starting workers")
-    command = ["celery", "-A", "tasks.celery.celery", "worker", "--loglevel=info", "-E"]
-    celery_process = subprocess.Popen(command)
+    # logger.info("Starting workers")
+    # command = ["celery", "-A", "tasks.celery.celery", "worker", "--loglevel=info", "-E"]
+    # celery_process = subprocess.Popen(command)
     
     if not disable_collection:
 
@@ -60,7 +60,7 @@ def start(disable_collection):
     gunicorn_arbiter = Arbiter(augur_gunicorn_app)
 
     atexit._clear()
-    atexit.register(exit, celery_process, gunicorn_arbiter)
+    atexit.register(exit, gunicorn_arbiter)
 
     gunicorn_arbiter.run()
 
@@ -186,17 +186,12 @@ def _broadcast_signal_to_processes(signal=signal.SIGTERM, given_logger=None):
 #         pass
 
 
-def exit(celery_process, gunicorn_arbiter):
+def exit(gunicorn_arbiter):
 
     logger.info("Flushing redis cache")
     redis_connection.flushdb()
 
-    logger.info(f"Celery process: {celery_process}")
     logger.info(f"gunicorn_arbiter: {gunicorn_arbiter}")
-
-    if celery_process is not None:
-        logger.info("Shutting down the celery process")
-        celery_process.terminate()
 
     if gunicorn_arbiter is not None:
         logger.info("Shutting down Gunicorn server")
