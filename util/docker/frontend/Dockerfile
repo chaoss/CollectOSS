@@ -23,7 +23,7 @@ RUN npm run build
 # COPY augurface/ .
 # RUN npm run build
 
-FROM nginx as production-stage
+FROM docker.io/library/nginx as production-stage
 COPY --from=core-ui /augur/frontend/dist /usr/share/nginx/core
 # COPY --from=augurface /augur/augurface/dist /usr/share/nginx/augurface
 COPY ./util/docker/frontend/nginx.conf /etc/nginx/nginx.conf
