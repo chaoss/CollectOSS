@@ -136,25 +136,46 @@ class TaskSession(s.orm.Session):
             #Columns to be updated
             set_ = setDict
         )
+
+         with self.engine.connect() as connection:
+
+       
         
+            # print(str(stmnt.compile(dialect=pg.dialect())))
 
-        # print(str(stmnt.compile(dialect=pg.dialect())))
+            # if there is no data to return then it executes the insert the returns nothing
+            if len(return_columns) == 0:
+                connection.execute(stmnt)
+                return
+            
+            # else it get the requested return columns and returns them as a list of dicts
+            else:
+                try:
+                    return_data_tuples = connection.execute(stmnt).fetchall()
+                     # converts the return data to a list of dicts
+                    return_data = []
+                    for data in return_data_tuples:
+                        return_data.append(dict(data))
 
-        # if there is no data to return then it executes the insert the returns nothing
-        if len(return_columns) == 0:
-            self.execute_sql(stmnt)
-            return
-        
-        # else it get the requested return columns and returns them as a list of dicts
-        else:
-            return_data_tuples = self.execute_sql(stmnt).fetchall()
+                    return return_data
+                except:
+                    pr_url_list = []
+                    for value in data:
+                        pr_url_list.append(value["pr_url"])
+                    # natural_key_data_list = []
+                    # for value in data:
 
-            # converts the return data to a list of dicts
-            return_data = []
-            for data in return_data_tuples:
-                return_data.append(dict(data))
+                    #     natural_key_data = {}
+                    #     for key in natural_keys:
+                    #         natural_key_data[key] = value
 
-            return return_data
+                    #     natural_key_data_list.append(natural_key_data)
+
+                    duplicates = set([x for x in pr_url_list if pr_url_list.count(x) > 1])
+
+                    print(duplicates)
+
+               
 
 #TODO: Test sql methods
 class GithubTaskSession(TaskSession):
