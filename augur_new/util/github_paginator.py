@@ -162,7 +162,7 @@ class GithubPaginator(collections.abc.Sequence):
                 return page_data, response
 
             elif type(page_data) == dict:
-                result = self.process_dict_response(response, page_data, self.logger.info)
+                result = self.process_dict_response(response, page_data)
 
                 if result == "break":
                     break
@@ -170,7 +170,7 @@ class GithubPaginator(collections.abc.Sequence):
                     num_attempts -= 1
 
             elif type(page_data) == str:
-                result, data_loaded = self.process_str_response(response, page_data, self.logger.info)
+                result, data_loaded = self.process_str_response(response, page_data)
 
                 if data_loaded:
                     return result, response
@@ -252,7 +252,7 @@ class GithubPaginator(collections.abc.Sequence):
                 return page_data, response
 
             elif type(page_data) == dict:
-                result = self.process_dict_response(response, page_data, self.logger.info)
+                result = self.process_dict_response(response, page_data)
 
                 if result == "break":
                     break
