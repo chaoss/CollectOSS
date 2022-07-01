@@ -137,10 +137,8 @@ class TaskSession(s.orm.Session):
             set_ = setDict
         )
 
-         with self.engine.connect() as connection:
+        with self.engine.connect() as connection:
 
-       
-        
             # print(str(stmnt.compile(dialect=pg.dialect())))
 
             # if there is no data to return then it executes the insert the returns nothing
