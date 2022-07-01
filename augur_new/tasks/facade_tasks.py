@@ -118,8 +118,8 @@ def analysis(cfg, multithreaded, session=None, processes=6):
 
         
         #Add committers for repo if session
-        if session != None:
-            grab_committer_list(session,repo[0])
+        #if session != None:
+        #    grab_committer_list(session,repo[0])
 
         update_analysis_log(repo[0],"Beginning analysis.")
         cfg.log_activity('Verbose','Analyzing repo: %s (%s)' % (repo[0],repo[3]))
