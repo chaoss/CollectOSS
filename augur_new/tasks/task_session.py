@@ -16,7 +16,7 @@ from augur_new.augur.config import AugurConfig
 
 from augur_new.util.random_key_auth import RandomKeyAuth
 from augur_new.tasks.redis import redis_connection as redis
-import psycopg2
+import psycopg2 
 # from .engine import engine
 
 #TODO: setup github headers in a method here.
@@ -158,7 +158,7 @@ class TaskSession(s.orm.Session):
                         return_data.append(dict(data))
 
                     return return_data
-                except:
+                except psycopg2.errors.CardinalityViolation as e:
                     pr_url_list = []
                     for value in data:
                         pr_url_list.append(value["pr_url"])
@@ -172,8 +172,10 @@ class TaskSession(s.orm.Session):
                     #     natural_key_data_list.append(natural_key_data)
 
                     duplicates = set([x for x in pr_url_list if pr_url_list.count(x) > 1])
-
+                    
                     print(duplicates)
+                    print(e)
+                    return None
 
                
 

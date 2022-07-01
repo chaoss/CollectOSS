@@ -272,6 +272,9 @@ def process_pull_requests(pull_requests, task_name):
     pr_return_columns = ["pull_request_id", "pr_url"]
     pr_return_data = session.insert_data(pr_dicts, PullRequests, pr_natural_keys, return_columns=pr_return_columns)
 
+    if pr_return_data is None:
+        return
+
 
     # loop through the pr_return_data (which is a list of pr_urls 
     # and pull_request_id in dicts) so we can find the labels, 
