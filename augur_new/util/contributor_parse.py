@@ -391,7 +391,7 @@ def query_github_contributors(session, entry_info, repo_id):
             #TODO get and store an owner id
             
             #Generate ID for cntrb table
-            cntrb_id = AugurUUID(platform=session.platform_id,repo=repo_id)
+            cntrb_id = AugurUUID(platform=(session.platform_id % 256),repo=(repo_id % 256))
 
             cntrb = {
                 "cntrb_id" : cntrb_id,
