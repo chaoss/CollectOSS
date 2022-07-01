@@ -78,7 +78,7 @@ class GithubPaginator(collections.abc.Sequence):
 
     def __len__(self) -> int:
 
-        num_pages = self.get_last_page_number(self.url)
+        num_pages = self.get_num_pages()
 
         self.logger.info(f"Num pages: {num_pages}")
 
@@ -118,9 +118,35 @@ class GithubPaginator(collections.abc.Sequence):
             for data in data_list:
                 yield data
 
+    def iter_pages(self):
+
+        data_list, response = self.retrieve_data(self.url)
+
+        page_number = get_url_page_number(self.url)
+
+        if data_list is None:
+            yield None, page_number
+            return 
+
+        yield data_list, page_number
+
+        while 'next' in response.links.keys():
+            next_page = response.links['next']['url']
+
+            # Here we don't need to pass in params with the page, or the default params because the url from the headers already has those values
+            data_list, response = self.retrieve_data(next_page)
+
+            page_number = get_url_page_number(next_page)
+
+            if data_list is None:
+                return
+
+            yield data_list, page_number
+
+
     def hit_api(self, url: str, timeout, method='GET') -> httpx.Response:
 
-        self.logger.info(f"Hitting endpoint with {method} request: {url}...\n")
+        # self.logger.info(f"Hitting endpoint with {method} request: {url}...\n")
 
         with httpx.Client() as client:
 
@@ -181,7 +207,7 @@ class GithubPaginator(collections.abc.Sequence):
 
     async def __aiter__(self):
         
-        last_page_num = self.get_last_page_number(self.url)
+        last_page_num = self.get_num_pages()
 
 
         if last_page_num == 1:
@@ -269,12 +295,12 @@ class GithubPaginator(collections.abc.Sequence):
 
         return None, None
 
-    def get_last_page_number(self, url: str):
+    def get_num_pages(self):
         
         timeout = 5
         num_attempts = 0
         while num_attempts < 10:
-            r = self.hit_api(url, timeout=timeout, method="HEAD")
+            r = self.hit_api(self.url, timeout=timeout, method="HEAD")
 
             if r:
                 break
@@ -382,3 +408,17 @@ def is_key_depleted(response):
 
 
 ################################################################################
+
+
+def get_url_page_number(url):
+
+    parsed_url = urlparse(url)
+    
+    try:
+        page_number = int(parse_qs(parsed_url.query)['page'][0])
+    # if page is not a url query param then this is page 1
+
+    except KeyError:
+        return 1
+
+    return page_number

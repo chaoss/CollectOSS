@@ -156,24 +156,51 @@ class TaskSession(s.orm.Session):
                         return_data.append(dict(data))
 
                     return return_data
+
+                except ValueError as e:
+                    print(f"ERROR: {e}")
+                    data_keys = list(data[0].keys())
+
+                    string_data_list = []
+                    # loop through data with potential errors
+                    for value in data:
+
+                        string_data = {}
+                        # find the fields that are strings for that data
+                        for key in data_keys:
+
+                            if type(value[key]) == str:
+                                string_data[field] = value[field]
+
+                        string_data_list.append(string_data)
+
+                    for data in string_data_list:
+                        print(f"Data: {data}\n\n")
+
                 except psycopg2.errors.CardinalityViolation as e:
+
                     pr_url_list = []
                     for value in data:
                         pr_url_list.append(value["pr_url"])
-                    # natural_key_data_list = []
-                    # for value in data:
-
-                    #     natural_key_data = {}
-                    #     for key in natural_keys:
-                    #         natural_key_data[key] = value
-
-                    #     natural_key_data_list.append(natural_key_data)
 
                     duplicates = set([x for x in pr_url_list if pr_url_list.count(x) > 1])
                     
-                    print(duplicates)
-                    print(e)
-                    return None
+                    print(f"DUPLICATES: {duplicates}. ERROR: {e}")
+                    return_data_set = set()
+                    for value in data:
+                        return_column_data = insert_data(value, table, natural_keys, return_columns)
+                        return_data_set.add(return_column_data)
+
+                    return_data_tuples = list(return_data_set)
+
+                return_data = []
+                for data in return_data_tuples:
+                    return_data.append(dict(data))
+
+                return return_data
+
+
+                   
 
                
 
@@ -192,8 +219,6 @@ class GithubTaskSession(TaskSession):
         
 
     def get_list_of_oauth_keys_from_db(self, db_engine: s.engine.base.Engine, config_key: str) ->[str]:
-
-        print(redis)
 
         key_list_length = redis.llen("oauth_keys_list")
 

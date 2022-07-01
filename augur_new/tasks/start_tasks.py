@@ -4,15 +4,15 @@ pr_numbers = [70, 106, 170, 190, 192, 208, 213, 215, 216, 218, 223, 224, 226, 23
 
 
 @celery.task
-def start_task(owner: str, repo):
+def github_collect(owner: str, repo):
     
-    logger = get_task_logger(start_task.name)
+    logger = get_task_logger(github_collect.name)
     session = TaskSession(logger, config)
 
     logger.info(f"Collecting data for {owner}/{repo}")
  
     start_task_list = []
-    start_task_list.append(pull_requests.s(owner, repo))
+    # start_task_list.append(pull_requests.s(owner, repo))
     start_task_list.append(issues.s(owner, repo))
 
     start_tasks_group = group(start_task_list)

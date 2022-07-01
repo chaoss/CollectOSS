@@ -33,7 +33,7 @@ def issues(owner: str, repo: str) -> None:
     # define GithubTaskSession to handle insertions, and store oauth keys 
     session = GithubTaskSession(logger, config)
 
-    print(f"Collecting issues for {owner}/{repo}")
+    logger.info(f"Collecting issues for {owner}/{repo}")
 
     url = f"https://api.github.com/repos/{owner}/{repo}/issues?state=all"
 
@@ -46,21 +46,13 @@ def issues(owner: str, repo: str) -> None:
     # we come across a pr, so at the end we can log how 
     # many issues were collected
     # loop through the issues 
-    data = []
-    for index, issue in enumerate(issues):
+    num_pages = issues.get_num_pages()
+    
+    for page_data, page in issues.iter_pages():
 
-        data.append(issue)
+        logger.info(f"Issues Page {page} of {num_pages}")
 
-        if index != 0 and index % 100 == 0:
-            task = process_issues.s(data, f"Issues Task {index // 100}")
-            task.apply_async()
-            data = []
-
-    if len(data) != 0:
-        task = process_issues.s(data, f"Final Issue Task")
-        task.apply_async()
-        data = []
-
+        process_issues.s(page_data, f"Issues Page {page} Task").apply_async()
         
 
 @celery.task
@@ -118,6 +110,7 @@ def process_issues(issues, task_name) -> None:
     # insert the issues into the issues table. 
     # issue_urls are gloablly unique across github so we are using it to determine whether an issue we collected is already in the table
     # specified in issue_return_columns is the columns of data we want returned. This data will return in this form; {"issue_url": url, "issue_id": id}
+    logger.info(f"{task_name}: Inserting {len(issue_dicts)} issues")
     issue_natural_keys = ["issue_url"]
     issue_return_columns = ["issue_url", "issue_id"]
     issue_return_data = session.insert_data(issue_dicts, Issues, issue_natural_keys, issue_return_columns)
@@ -142,20 +135,17 @@ def process_issues(issues, task_name) -> None:
         issue_label_dicts += add_key_value_pair_to_list_of_dicts(other_issue_data["labels"], "issue_id", issue_id)
         issue_assignee_dicts += add_key_value_pair_to_list_of_dicts(other_issue_data["assignees"], "issue_id", issue_id)
 
+    logger.info(f"{task_name}: Inserting other pr data of lengths: Labels: {len(issue_label_dicts)} - Assignees: {len(issue_assignee_dicts)}")
+
     # inserting issue labels
     # we are using label_src_id and issue_id to determine if the label is already in the database.
-    logger.info(f"Inserting issue labels of length: {len(issue_label_dicts)}")
     issue_label_natural_keys = ['label_src_id', 'issue_id']
     session.insert_data(issue_label_dicts, IssueLabels, issue_label_natural_keys)
   
     # inserting issue assignees
     # we are using issue_assignee_src_id and issue_id to determine if the label is already in the database.
-    logger.info(f"Inserting issue assignees of length: {len(issue_assignee_dicts)}")
     issue_assignee_natural_keys = ['issue_assignee_src_id', 'issue_id']
     session.insert_data(issue_assignee_dicts, IssueAssignees, issue_assignee_natural_keys)
-
-    print(f"{issue_total} issues inserted")
-
 
 # TODO: Rename pull_request_reviewers table to pull_request_requested_reviewers
 # TODO: Fix column names in pull request labels table
@@ -175,21 +165,13 @@ def pull_requests(owner: str, repo: str) -> None:
     # returns an iterable of all prs at this url (this essentially means you can treat the prs variable as a list of the prs)
     prs = GithubPaginator(url, session.oauths, logger)
 
+    num_pages = prs.get_num_pages()
+    
+    for page_data, page in prs.iter_pages():
 
-    data = []
-    for index, pr in enumerate(prs):
+        logger.info(f"Prs Page {page} of {num_pages}")
 
-        data.append(pr)
-
-        if index != 0 and index % 100 == 0:
-            task = process_pull_requests.s(data, f"Pr Task {index // 100}")
-            task.apply_async()
-            data = []
-
-    if len(data) != 0:
-        task = process_pull_requests.s(data, f"Final Pr Task")
-        task.apply_async()
-        data = []
+        process_pull_requests.s(page_data, f"Pr Page {page} Task").apply_async()
 
 
 @celery.task
@@ -210,6 +192,8 @@ def process_pull_requests(pull_requests, task_name):
     pr_dicts = []
     pr_mapping_data = {}
     pr_numbers = []
+
+
     for index, pr in enumerate(pull_requests):
 
         # add a field called pr_head_or_base to the head and base field of the pr
@@ -267,7 +251,7 @@ def process_pull_requests(pull_requests, task_name):
     # insert the prs into the pull_requests table. 
     # pr_urls are gloablly unique across github so we are using it to determine whether a pull_request we collected is already in the table
     # specified in pr_return_columns is the columns of data we want returned. This data will return in this form; {"pr_url": url, "pull_request_id": id}
-    logger.info(f"Inserting prs of length: {len(pr_dicts)}")
+    logger.info(f"{task_name}: Inserting prs of length: {len(pr_dicts)}")
     pr_natural_keys = ["pr_url"]
     pr_return_columns = ["pull_request_id", "pr_url"]
     pr_return_data = session.insert_data(pr_dicts, PullRequests, pr_natural_keys, return_columns=pr_return_columns)
@@ -302,31 +286,27 @@ def process_pull_requests(pull_requests, task_name):
         pr_metadata_dicts += add_key_value_pair_to_list_of_dicts(other_pr_data["metadata"], dict_key, pull_request_id)
         
 
+    logger.info(f"{task_name}: Other pr data lengths: Labels: {len(pr_label_dicts)} - Assignees: {len(pr_assignee_dicts)} - Reviewers: {len(pr_reviewer_dicts)} - Metadata: {len(pr_metadata_dicts)}")
+
     # inserting pr labels
     # we are using pr_src_id and pull_request_id to determine if the label is already in the database.
-    logger.info(f"Inserting pr labels of length: {len(pr_label_dicts)}")
     pr_label_natural_keys = ['pr_src_id', 'pull_request_id']
     session.insert_data(pr_label_dicts, PullRequestLabels, pr_label_natural_keys)
   
     # inserting pr assignees
     # we are using pr_assignee_src_id and pull_request_id to determine if the label is already in the database.
-    logger.info(f"Inserting pr assignees of length: {len(pr_assignee_dicts)}")
     pr_assignee_natural_keys = ['pr_assignee_src_id', 'pull_request_id']
     session.insert_data(pr_assignee_dicts, PullRequestAssignees, pr_assignee_natural_keys)
  
     # inserting pr assignees
     # we are using pr_src_id and pull_request_id to determine if the label is already in the database.
-    logger.info(f"Inserting pr reviewers of length: {len(pr_reviewer_dicts)}")
     pr_reviewer_natural_keys = ["pull_request_id", "pr_reviewer_src_id"]
     session.insert_data(pr_reviewer_dicts, PullRequestReviewers, pr_reviewer_natural_keys)
     
     # inserting pr metadata
     # we are using pull_request_id, pr_head_or_base, and pr_sha to determine if the label is already in the database.
-    logger.info(f"Inserting pr metadata of length: {len(pr_metadata_dicts)}")
     pr_metadata_natural_keys = ['pull_request_id', 'pr_head_or_base', 'pr_sha']
     session.insert_data(pr_metadata_dicts, PullRequestMeta, pr_metadata_natural_keys)
-
-
 
 
 # This function adds a key value pair to a list of dicts and returns the modified list of dicts back
