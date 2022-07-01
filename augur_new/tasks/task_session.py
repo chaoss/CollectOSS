@@ -9,7 +9,7 @@ from sqlalchemy.inspection import inspect
 import re
 import time
 
-from augur_new.db import models 
+from db.models import * 
 from sqlalchemy.event import listen
 from sqlalchemy.event import listens_for
 from augur_new.augur.config import AugurConfig
@@ -28,7 +28,7 @@ class TaskSession(s.orm.Session):
 
     #ROOT_AUGUR_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
-    def __init__(self, logger, config: dict = {}, platform: str ='github'):
+    def __init__(self, logger, config: dict = {}):
         
         self.logger = logger
         
@@ -42,8 +42,6 @@ class TaskSession(s.orm.Session):
 
         self.config.update(config)
 
-        
-        self.platform = platform
         
         #self.logger.info(f"path = {str(ROOT_AUGUR_DIR) + "augur.config.json"}")
         
@@ -161,13 +159,17 @@ class GithubTaskSession(TaskSession):
 
     #ROOT_AUGUR_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
-    def __init__(self, logger, config: dict = {}, platform: str ='github'):
+    def __init__(self, logger, config: dict = {}, platform: str ='GitHub'):
 
-        super().__init__(logger, config, platform)
+        super().__init__(logger, config)
 
         keys = self.get_list_of_oauth_keys_from_db(self.engine, self.config["key_database"])
 
         self.oauths = RandomKeyAuth(keys)
+
+        result = Platform.query.filter_by(pltfrm_name=platform).one()
+
+        self.platform_id = result.pltfrm_id
         
 
     def get_list_of_oauth_keys_from_db(self, db_engine: s.engine.base.Engine, config_key: str) ->[str]:

@@ -6,6 +6,7 @@ from augur_new.tasks.task_session import *
 from augur_new.util.github_paginator import *
 from augur_new.db import models
 from db.models import *
+from AugurUUID import *
 import sqlalchemy as s
 import time
 import math
@@ -387,7 +388,13 @@ def query_github_contributors(session, entry_info, repo_id):
                 email = contributor['email']
                 canonical_email = contributor['email']
 
+            #TODO get and store an owner id
+            
+            #Generate ID for cntrb table
+            cntrb_id = AugurUUID(platform=session.platform_id,repo=repo_id)
+
             cntrb = {
+                "cntrb_id" : cntrb_id,
                 "cntrb_login": contributor['login'],
                 "cntrb_created_at": contributor['created_at'],
                 "cntrb_email": email,
