@@ -16,6 +16,8 @@ from augur import ROOT_AUGUR_DIRECTORY
 
 logger = logging.getLogger(__name__)
 
+
+#TODO dynamically define loggers for every task names.
 class AugurLogConfig():
     def __init__(self,disable_logs=False,reset_logfiles=True,base_log_dir="/var/log/augur/"):
         if reset_logfiles is True:
@@ -27,6 +29,9 @@ class AugurLogConfig():
         self.base_log_dir = Path(base_log_dir)
 
         self.base_log_dir.mkdir(exist_ok=True)
+    
+    def __initFacadeLogger(self):
+        pass
     
     def getFacadeLogger(self):
         pass

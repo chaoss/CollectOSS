@@ -77,6 +77,7 @@ def setup_loggers(*args,**kwargs):
     facadeLogger = loggingConfig.getFacadeLogger()
     issueLogger = loggingConfig.getIssueLogger()
     startLogger = loggingConfig.getStartLogger()
+    
 
 
 
