@@ -16,6 +16,29 @@ from augur import ROOT_AUGUR_DIRECTORY
 
 logger = logging.getLogger(__name__)
 
+class AugurLogConfig():
+    def __init__(self,disable_logs=False,reset_logfiles=True,base_log_dir="/var/log/augur/"):
+        if reset_logfiles is True:
+            try:
+                shutil.rmtree(LOGS_DIRECTORY)
+            except FileNotFoundError as e:
+                pass
+
+        self.base_log_dir = Path(base_log_dir)
+
+        self.base_log_dir.mkdir(exist_ok=True)
+    
+    def getFacadeLogger(self):
+        pass
+
+    def getIssueLogger(self):
+        pass
+
+    def getStartLogger(self):
+        pass
+
+
+
 class AugurLogging():
 
     simple_format_string = "[%(process)d] %(name)s [%(levelname)s] %(message)s"
