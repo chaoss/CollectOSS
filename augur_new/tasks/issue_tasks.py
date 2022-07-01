@@ -51,7 +51,7 @@ def issues(owner: str, repo: str) -> None:
 
         data.append(issue)
 
-        if index % 100 == 0:
+        if index != 0 and index % 100 == 0:
             task = process_issues.s(data, f"Issues Task {index // 100}")
             task.apply_async()
             data = []
@@ -181,7 +181,7 @@ def pull_requests(owner: str, repo: str) -> None:
 
         data.append(pr)
 
-        if index % 100 == 0:
+        if index != 0 and index % 100 == 0:
             task = process_pull_requests.s(data, f"Pr Task {index // 100}")
             task.apply_async()
             data = []
@@ -365,7 +365,7 @@ def github_events(self, owner: str, repo: str):
 
         data.append(pr_event)
 
-        if index % 100 == 0:
+        if index != 0 and index % 100 == 0:
             task = process_events.s(data, f"Task {index // 100}")
             task.apply_async()
             data = []
@@ -483,7 +483,7 @@ def github_comments(self, owner: str, repo: str) -> None:
 
         data.append(message)
 
-        if index % 100 == 0:
+        if index != 0 and index % 100 == 0:
             task = process_messages.s(data, f"Message Task {index // 100}")
             task.apply_async()
             data = []

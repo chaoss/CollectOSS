@@ -162,7 +162,7 @@ class GithubPaginator(collections.abc.Sequence):
                 return page_data, response
 
             elif type(page_data) == dict:
-                result = process_dict_response(response, page_data, self.logger.info)
+                result = self.process_dict_response(response, page_data, self.logger.info)
 
                 if result == "break":
                     break
@@ -170,7 +170,7 @@ class GithubPaginator(collections.abc.Sequence):
                     num_attempts -= 1
 
             elif type(page_data) == str:
-                result, data_loaded = process_str_response(response, page_data, self.logger.info)
+                result, data_loaded = self.process_str_response(response, page_data, self.logger.info)
 
                 if data_loaded:
                     return result, response
@@ -252,7 +252,7 @@ class GithubPaginator(collections.abc.Sequence):
                 return page_data, response
 
             elif type(page_data) == dict:
-                result = process_dict_response(response, page_data)
+                result = self.process_dict_response(response, page_data, self.logger.info)
 
                 if result == "break":
                     break
@@ -260,7 +260,7 @@ class GithubPaginator(collections.abc.Sequence):
                     num_attempts -= 1
 
             elif type(page_data) == str:
-                result, data_loaded = process_str_response(response, page_data)
+                result, data_loaded = self.process_str_response(response, page_data)
 
                 if data_loaded:
                     return result, response
@@ -295,6 +295,52 @@ class GithubPaginator(collections.abc.Sequence):
             return num_pages
 
 
+###################################################
+
+    # Methods to process api responses
+
+    def process_dict_response(self, response: httpx.Response, page_data: dict):
+        
+        self.logger.info("Request returned a dict: {}\n".format(page_data))
+        if page_data['message'] == "Not Found":
+            self.logger.info(
+                "Github repo was not found or does not exist for endpoint: "
+                f"{response.url}\n"
+            )
+            return "break"
+
+        if "You have exceeded a secondary rate limit. Please wait a few minutes before you try again" in page_data['message']:
+            self.logger.info('\n\n\n\nSleeping for 100 seconds due to secondary rate limit issue.\n\n\n\n')
+            time.sleep(100)
+
+            return "decrease_attempts"
+
+        if "You have triggered an abuse detection mechanism." in page_data['message']:
+            #self.update_rate_limit(response, temporarily_disable=True,platform=platform)
+
+            return "decrease_attempts"
+
+        if page_data['message'] == "Bad credentials":
+            self.logger.info("\n\n\n\n\n\n\n POSSIBLY BAD TOKEN \n\n\n\n\n\n\n")
+            #self.update_rate_limit(response, bad_credentials=True, platform=platform)
+            return "bad_credentials"
+
+    def process_str_response(self, response: httpx.Response, page_data: str):
+            self.logger.info(f"Warning! page_data was string: {page_data}\n")
+            if "<!DOCTYPE html>" in page_data:
+                self.logger.info("HTML was returned, trying again...\n")
+                return "html_response", False
+            elif len(page_data) == 0:
+                self.logger.info("Empty string, trying again...\n")
+                return "empty_string", False
+            else:
+                try:
+                    page_data = json.loads(page_data)
+                    return page_data, True
+                except:
+                    pass
+
+
 ################################################################################
 
 # Url Helper Method to remove query paramaters from the url
@@ -321,51 +367,6 @@ def add_query_params(url: str, additional_params: dict) -> str:
     updated_query = urlencode(merged_params, doseq=True)
     # _replace() is how you can create a new NamedTuple with a changed field
     return url_components._replace(query=updated_query).geturl()
-
-################################################################################
-
-# Methods to process api responses
-
-def process_dict_response(self, response: httpx.Response, page_data: dict, logger):
-    
-    logger.info("Request returned a dict: {}\n".format(page_data))
-    if page_data['message'] == "Not Found":
-        logger.info(
-            "Github repo was not found or does not exist for endpoint: "
-            f"{response.url}\n"
-        )
-        return "break"
-
-    if "You have exceeded a secondary rate limit. Please wait a few minutes before you try again" in page_data['message']:
-        logger.info('\n\n\n\nSleeping for 100 seconds due to secondary rate limit issue.\n\n\n\n')
-        time.sleep(100)
-
-        return "decrease_attempts"
-
-    if "You have triggered an abuse detection mechanism." in page_data['message']:
-        #self.update_rate_limit(response, temporarily_disable=True,platform=platform)
-
-        return "decrease_attempts"
-
-    if page_data['message'] == "Bad credentials":
-        logger.info("\n\n\n\n\n\n\n POSSIBLY BAD TOKEN \n\n\n\n\n\n\n")
-        #self.update_rate_limit(response, bad_credentials=True, platform=platform)
-        return "bad_credentials"
-
-def process_str_response(response: httpx.Response, page_data: str, logger):
-        logger.info(f"Warning! page_data was string: {page_data}\n")
-        if "<!DOCTYPE html>" in page_data:
-            logger.info("HTML was returned, trying again...\n")
-            return "html_response", False
-        elif len(page_data) == 0:
-            logger.info("Empty string, trying again...\n")
-            return "empty_string", False
-        else:
-            try:
-                page_data = json.loads(page_data)
-                return page_data, True
-            except:
-                pass
 
 
 ################################################################################
