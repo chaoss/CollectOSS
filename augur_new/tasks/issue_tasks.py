@@ -112,7 +112,8 @@ def process_issues(issues, task_name) -> None:
                                             }     
 
     if len(issue_dicts) == 0:
-        print("No issues found while processing")                             
+        print("No issues found while processing")  
+        return                           
 
     # insert the issues into the issues table. 
     # issue_urls are gloablly unique across github so we are using it to determine whether an issue we collected is already in the table
