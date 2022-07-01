@@ -172,6 +172,8 @@ class GithubTaskSession(TaskSession):
 
     def get_list_of_oauth_keys_from_db(self, db_engine: s.engine.base.Engine, config_key: str) ->[str]:
 
+        print(redis)
+
         key_list_length = redis.llen("oauth_keys_list")
 
         if key_list_length > 0:
