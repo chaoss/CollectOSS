@@ -18,6 +18,7 @@ import numpy as np
 from celery import group, chain, chord, signature
 from celery.utils.log import get_task_logger
 from celery.result import allow_join_result
+from celery.signals import after_setup_logger
 import sqlalchemy as s
 
 # allows us to reference augur_new (the parent module)
@@ -53,7 +54,7 @@ root_augur_dir = ''.join(current_dir.partition("augur/")[:2])
 config_path = root_augur_dir + '/augur.config.json'
 
 #Have one log file for facade_tasks
-facadeLogger = logging.getLogger(__name__)
+#facadeLogger = logging.getLogger(__name__)
 
 
 
@@ -74,9 +75,7 @@ def setup_loggers(*args,**kwargs):
     #load config
     loggingConfig = AugurLogConfig()
 
-    facadeLogger = loggingConfig.getFacadeLogger()
-    issueLogger = loggingConfig.getIssueLogger()
-    startLogger = loggingConfig.getStartLogger()
+    
     
 
 
