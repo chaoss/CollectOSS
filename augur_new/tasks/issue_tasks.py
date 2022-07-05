@@ -36,7 +36,7 @@ def collect_all_repo_data(owner: str, repo):
     logger.info(f"Collecting data for {owner}/{repo}")
  
     start_task_list = []
-    start_task_list.append(collect_pull_requests.s(owner, repo))
+    # start_task_list.append(collect_pull_requests.s(owner, repo))
     # start_task_list.append(collect_issues.s(owner, repo))
 
     start_tasks_group = group(start_task_list)
@@ -44,7 +44,7 @@ def collect_all_repo_data(owner: str, repo):
 
     secondary_task_list = []
     # secondary_task_list.append(pull_request_reviews.s(owner, repo, pr_numbers))
-    # secondary_task_list.append(collect_events.s(owner, repo))
+    secondary_task_list.append(collect_events.s(owner, repo))
     # secondary_task_list.append(collect_issue_and_pr_comments.s(owner, repo))
     
     secondary_task_group = group(secondary_task_list)
@@ -418,28 +418,21 @@ def process_pull_request_contributors(pr, platform_id, tool_source, tool_version
 
     contributors.append(pr_cntrb)
 
-    try:
 
-        if pr["base"]["user"]:
+    if pr["base"]["user"]:
 
-            # get contributor data and set pr metadat cntrb_id
-            pr_meta_base_cntrb = extract_needed_contributor_data(pr["base"]["user"], platform_id, tool_source, tool_version, data_source)
-            pr["base"]["cntrb_id"] = pr_meta_base_cntrb["cntrb_id"]
+        # get contributor data and set pr metadat cntrb_id
+        pr_meta_base_cntrb = extract_needed_contributor_data(pr["base"]["user"], platform_id, tool_source, tool_version, data_source)
+        pr["base"]["cntrb_id"] = pr_meta_base_cntrb["cntrb_id"]
 
-            contributors.append(pr_meta_base_cntrb)
+        contributors.append(pr_meta_base_cntrb)
 
-        if pr["head"]["user"]:
+    if pr["head"]["user"]:
 
-            pr_meta_head_cntrb = extract_needed_contributor_data(pr["head"]["user"], platform_id, tool_source, tool_version, data_source)
-            pr["head"]["cntrb_id"] = pr_meta_head_cntrb["cntrb_id"]
+        pr_meta_head_cntrb = extract_needed_contributor_data(pr["head"]["user"], platform_id, tool_source, tool_version, data_source)
+        pr["head"]["cntrb_id"] = pr_meta_head_cntrb["cntrb_id"]
 
-            contributors.append(pr_meta_head_cntrb)
-
-    except Exception as e:
-
-        print(f"Head: {pr['head']}")
-        print(f"Base: {pr['base']}")
-        print(e)
+        contributors.append(pr_meta_head_cntrb)
 
     contributors += [pr_cntrb]
 
@@ -499,26 +492,19 @@ def process_events(events, task_name):
 
     # get repo_id
     repo_id = 1
-    platform_id = 25150
+    platform_id = 1
     tool_source = "Pr event task"
     tool_version = "2.0"
     data_source = "Github API"
    
     pr_event_dicts = []
     issue_event_dicts = []
+    contributors = []
 
     event_len = len(events)
-    total_time = 0
-    events_processed = 0
     for index, event in enumerate(events):
 
-        if index % 100 == 0:
-
-            event_index_start = index 
-            event_index_end = index + 100
-
-            if event_index_end > event_len:
-                event_index_end = event_len
+        event, contributor = process_github_event_contributors(event, platform_id, tool_source, tool_version, data_source)
 
         if 'pull_request' in list(event["issue"].keys()):
             pr_url = event["issue"]["pull_request"]["url"]
@@ -526,7 +512,6 @@ def process_events(events, task_name):
             try:
                 start_time = time.time()
                 related_pr = PullRequests.query.filter_by(pr_url=pr_url).one()
-                total_time += time.time() - start_time
             except s.orm.exc.NoResultFound:
                 logger.info("Could not find related pr")
                 logger.info(f"We were searching for: {pr_url}")
@@ -545,7 +530,6 @@ def process_events(events, task_name):
             try:
                 start_time = time.time()
                 related_issue = Issues.query.filter_by(issue_url=issue_url).one()
-                total_time += time.time() - start_time
             except s.orm.exc.NoResultFound:
                 logger.info("Could not find related pr")
                 logger.info(f"We were searching for: {issue_url}")
@@ -557,8 +541,21 @@ def process_events(events, task_name):
                 extract_issue_event_data(event, related_issue.issue_id, platform_id, repo_id,
                                          tool_source, tool_version, data_source)
             )
-        events_processed +=1
-        print(f"Average time to fetch: {total_time / events_processed}")
+        
+        # add contributor to list after porcessing the event, 
+        # so if it fails processing for some reason the contributor is not inserted
+
+        if contributor:
+            contributors.append(contributor)
+        
+        if type(contributor) == list:
+            print(f"Event: {event}")
+            print(f"Contributor: {contributor}")
+
+    # remove contributors that were found in the data more than once
+    contributors = remove_duplicate_dicts(contributors)
+
+    session.insert_data(contributors, Contributors, ["cntrb_login"])
 
     logger.info(f"{task_name}: Inserting {len(pr_event_dicts)} pr events and {len(issue_event_dicts)} issue events")
 
@@ -569,11 +566,25 @@ def process_events(events, task_name):
     issue_event_natural_keys = ["issue_id", "issue_event_src_id"]
     session.insert_data(issue_event_dicts, IssueEvents, issue_event_natural_keys)
 
+
+# TODO: Should we skip an event if there is no contributor to resolve it o
+def process_github_event_contributors(event, platform_id, tool_source, tool_version, data_source):
+
+    if event["actor"]:
+
+        event_cntrb = extract_needed_contributor_data(event["actor"], platform_id, tool_source, tool_version, data_source)
+        event["cntrb_id"] = event_cntrb["cntrb_id"]
+
+    else:
+        return event, None
+    
+    return event, event_cntrb
+
 @celery.task
 def collect_issue_and_pr_comments(self, owner: str, repo: str) -> None:
 
     # define logger for task
-    logger = get_task_logger(github_comments.name)
+    logger = get_task_logger(collect_issue_and_pr_comments.name)
     logger.info(f"Collecting github comments for {owner}/{repo}")
     
     # define database task session, that also holds autentication keys the GithubPaginator needs
@@ -679,42 +690,49 @@ def process_messages(messages, task_name):
 
             contributors.append(contributor)
 
+    contributors = remove_duplicate_dicts(contributors)
+
+    # logger.info(f"Inserting {len(contributors)} contributors")
+
+    # session.insert_data(contributors, Contributors, ["cntrb_login"])
+
     
+    logger.info(f"Inserting {len(message_dicts)} messages")
     message_natural_keys = ["platform_msg_id"]
     message_return_columns = ["msg_id", "platform_msg_id"]
     message_return_data = session.insert_data(message_dicts, Message, message_natural_keys, message_return_columns)
 
-    pr_message_ref_dicts = []
-    issue_message_ref_dicts = []
-    for mapping_data in message_ref_mapping_data:
+    # pr_message_ref_dicts = []
+    # issue_message_ref_dicts = []
+    # for mapping_data in message_ref_mapping_data:
 
-        value = mapping_data["platform_msg_id"]
-        key = "platform_msg_id"
+    #     value = mapping_data["platform_msg_id"]
+    #     key = "platform_msg_id"
 
-        issue_or_pr_message = find_dict_in_list_of_dicts(message_return_data, key, value)
+    #     issue_or_pr_message = find_dict_in_list_of_dicts(message_return_data, key, value)
 
-        if issue_or_pr_message:
+    #     if issue_or_pr_message:
 
-            msg_id = issue_or_pr_message["msg_id"]
-        else:
-            print("Count not find issue or pull request message to map to")
-            continue
+    #         msg_id = issue_or_pr_message["msg_id"]
+    #     else:
+    #         print("Count not find issue or pull request message to map to")
+    #         continue
 
-        message_ref_data = mapping_data["msg_ref_data"]
-        message_ref_data["msg_id"] = msg_id 
+    #     message_ref_data = mapping_data["msg_ref_data"]
+    #     message_ref_data["msg_id"] = msg_id 
 
-        if mapping_data["is_issue"] is True:
-            issue_message_ref_dicts.append(message_ref_data)
-        else:
-            pr_message_ref_dicts.append(message_ref_data)
+    #     if mapping_data["is_issue"] is True:
+    #         issue_message_ref_dicts.append(message_ref_data)
+    #     else:
+    #         pr_message_ref_dicts.append(message_ref_data)
 
-    pr_message_ref_natural_keys = ["pull_request_id", "pr_message_ref_src_comment_id"]
-    session.insert_data(pr_message_ref_dicts, PullRequestMessageRef, pr_message_ref_natural_keys)
+    # pr_message_ref_natural_keys = ["pull_request_id", "pr_message_ref_src_comment_id"]
+    # session.insert_data(pr_message_ref_dicts, PullRequestMessageRef, pr_message_ref_natural_keys)
 
-    issue_message_ref_natural_keys = ["issue_id", "issue_msg_ref_src_comment_id"]
-    session.insert_data(issue_message_ref_dicts, IssueMessageRef, issue_message_ref_natural_keys)
+    # issue_message_ref_natural_keys = ["issue_id", "issue_msg_ref_src_comment_id"]
+    # session.insert_data(issue_message_ref_dicts, IssueMessageRef, issue_message_ref_natural_keys)
 
-    logger.info(f"{task_name}: Inserted {len(message_dicts)} messages. {len(issue_message_ref_dicts)} from issues and {len(pr_message_ref_dicts)} from prs")
+    # logger.info(f"{task_name}: Inserted {len(message_dicts)} messages. {len(issue_message_ref_dicts)} from issues and {len(pr_message_ref_dicts)} from prs")
 
 
 
@@ -722,15 +740,13 @@ def is_issue_message(html_url):
 
     return 'pull' not in html_url
 
+
 def process_github_comment_contributors(message, platform_id, tool_source, tool_version, data_source):
 
-    contributors = []
+    message_cntrb = extract_needed_contributor_data(message["user"], platform_id, tool_source, tool_version, data_source)
+    message["cntrb_id"] = message_cntrb["cntrb_id"]
 
-    # set cntrb_id for pr
-    message["user"]["cntrb_id"] = AugurUUID(platform_id, messsage["user"]["id"]).to_UUID()    
-    contributor = extract_needed_contributor_data(messsage["user"], messsage["cntrb_id"], tool_source, tool_version, data_source)
-
-    return message, contributor
+    return message, message_cntrb
 
         
 @celery.task

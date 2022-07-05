@@ -211,8 +211,8 @@ class TaskSession(s.orm.Session):
                     
                     # print(f"DUPLICATES: {duplicates}. ERROR: {e}")
                     # return_data_set = set()
-                    print("Error splitting the data into two pieces")
-                    print(f"Data length: {len(data)}")
+                    self.logger.info("Error splitting the data into two pieces")
+                    self.logger.info(f"Data length: {len(data)}")
                     list_1, list_2 = split_list(data)
                     self.insert_data(list_1, table, natural_keys, return_columns)
                     self.insert_data(list_2, table, natural_keys, return_columns)

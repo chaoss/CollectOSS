@@ -181,7 +181,7 @@ def extract_pr_event_data(event: dict, pr_id: int, platform_id: int, repo_id: in
 
     pr_event = {
         'pull_request_id': pr_id,
-        'cntrb_id': None,
+        'cntrb_id': event["cntrb_id"] if "cntrb_id" in event else None,
         'action': event['event'],
         'action_commit_hash': None,
         'created_at': event['created_at'],
@@ -208,7 +208,7 @@ def extract_issue_event_data(event: dict, issue_id: int, platform_id: int, repo_
         'issue_id': issue_id,
         'node_id': event['node_id'],
         'node_url': event['url'],
-        'cntrb_id': None,
+        'cntrb_id': event["cntrb_id"] if "cntrb_id" in event else None,
         'created_at': event['created_at'] if (
             event['created_at']
         ) else None,
