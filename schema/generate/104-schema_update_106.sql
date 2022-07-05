@@ -35,7 +35,6 @@ SELECT
   b.current_verion, 
   b.latest_version, 
   b.current_release_date, 
-  b.current_release_date, 
   libyear,
   max(b.data_collection_date)
 FROM
@@ -48,7 +47,6 @@ GROUP BY
   b.requirement, 
   b.current_verion, 
   b.latest_version, 
-  b.current_release_date, 
   b.current_release_date, 
   libyear 
 ORDER BY
