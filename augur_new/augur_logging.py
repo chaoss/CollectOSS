@@ -54,20 +54,29 @@ class AugurLogConfig():
         
         
         for module in task_modules:
-            #strange typechecking is because celery is strange.
-            #might be a better way to do this.
+            """
+            strange typechecking is because celery is strange. 
+            Celery task functions are of type Celery.local.PromiseProxy and I couldn't find how to import that
+            from the docs so I just do a string check.
+            might be a better way to do this.
+            """
             allTasksInModule = [str(obj[0]) for obj in getmembers(module) if 'local.PromiseProxy' in str(type(obj[1]))]
+            
+            #seperate log files by module
+            #module_dir = Path(str(self.base_log_dir) + "/" +)
 
             for task in allTasksInModule:
                 #Create logging profiles for each task in seperate files.
-                lg = logging.getLogger(logger)
+                lg = logging.getLogger(task)
 
                 #Don't bother if logs are disabled.
                 if self.disable_logs:
                     lg.disabled = True
                     break
                 
-                handler = StreamHandler()
+                #Absolute path to log file
+                file = str(self.base_log_dir) + "/" + str(task)
+                handler = FileHandler(filename=file,mode='a') 
                 handler.setLevel(logLevel)
 
                 lg.setLevel(logLevel)
