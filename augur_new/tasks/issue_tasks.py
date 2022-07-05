@@ -36,8 +36,8 @@ def collect_all_repo_data(owner: str, repo):
     logger.info(f"Collecting data for {owner}/{repo}")
  
     start_task_list = []
-    # start_task_list.append(collect_pull_requests.s(owner, repo))
-    start_task_list.append(collect_issues.s(owner, repo))
+    start_task_list.append(collect_pull_requests.s(owner, repo))
+    # start_task_list.append(collect_issues.s(owner, repo))
 
     start_tasks_group = group(start_task_list)
     
@@ -164,7 +164,27 @@ def process_issues(issues, task_name) -> None:
     issue_return_columns = ["issue_url", "issue_id"]
     issue_return_data = session.insert_data(issue_dicts, Issues, issue_natural_keys, issue_return_columns)
 
-    issue_label_dicts, issue_assignee_dicts = map_other_issue_data_to_issue(issue_return_data, issue_mapping_data)
+
+    # loop through the issue_return_data so it can find the labels and 
+    # assignees that corelate to the issue that was inserted labels 
+    issue_label_dicts = []
+    issue_assignee_dicts = []
+    for data in issue_return_data:
+
+        issue_url = data["issue_url"]
+        issue_id = data["issue_id"]
+
+        try:
+            other_issue_data = issue_mapping_data[issue_url]
+        except KeyError as e:
+            logger.info(f"Cold not find other issue data. This should never happen. Error: {e}")
+
+
+        # add the issue id to the lables and assignees, then add them to a list of dicts that will be inserted soon
+        dict_key = "issue_id"
+        issue_label_dicts += add_key_value_pair_to_list_of_dicts(other_issue_data["labels"], "issue_id", issue_id)
+        issue_assignee_dicts += add_key_value_pair_to_list_of_dicts(other_issue_data["assignees"], "issue_id", issue_id)
+
 
     logger.info(f"{task_name}: Inserting other issue data of lengths: Labels: {len(issue_label_dicts)} - Assignees: {len(issue_assignee_dicts)}")
 
@@ -201,42 +221,13 @@ def process_issue_contributors(issue, platform_id, tool_source, tool_version, da
 
     return issue, contributors
 
-def remove_duplicate_dicts(data_list):
-
-    return [dict(y) for y in set(tuple(x.items()) for x in data_list)]
-
-
-def map_other_issue_data_to_issue(issue_return_data, issue_mapping_data):
-
-    # loop through the issue_return_data so it can find the labels and 
-    # assignees that corelate to the issue that was inserted labels 
-    issue_label_dicts = []
-    issue_assignee_dicts = []
-    for data in issue_return_data:
-
-        issue_url = data["issue_url"]
-        issue_id = data["issue_id"]
-
-        try:
-            other_issue_data = issue_mapping_data[issue_url]
-        except KeyError as e:
-            logger.info(f"Cold not find other issue data. This should never happen. Error: {e}")
-
-
-        # add the issue id to the lables and assignees, then add them to a list of dicts that will be inserted soon
-        dict_key = "issue_id"
-        issue_label_dicts += add_key_value_pair_to_list_of_dicts(other_issue_data["labels"], "issue_id", issue_id)
-        issue_assignee_dicts += add_key_value_pair_to_list_of_dicts(other_issue_data["assignees"], "issue_id", issue_id)
-
-    return issue_label_dicts, issue_assignee_dicts
-
 
 # TODO: Rename pull_request_reviewers table to pull_request_requested_reviewers
 # TODO: Fix column names in pull request labels table
 @celery.task
 def collect_pull_requests(owner: str, repo: str) -> None:
 
-    logger = get_task_logger(pull_requests.name)
+    logger = get_task_logger(collect_pull_requests.name)
 
     # define GithubTaskSession to handle insertions, and store oauth keys 
     session = GithubTaskSession(logger, config)
@@ -250,12 +241,19 @@ def collect_pull_requests(owner: str, repo: str) -> None:
     prs = GithubPaginator(url, session.oauths, logger)
 
     num_pages = prs.get_num_pages()
+
+    data = []
     
     for page_data, page in prs.iter_pages():
 
         logger.info(f"Prs Page {page} of {num_pages}")
 
-        process_pull_requests.s(page_data, f"Pr Page {page} Task").apply_async()
+        data += page_data
+
+        if page == 2:
+            break
+
+    process_pull_requests.s(page_data, f"Pr Page {page} Task").apply_async()
 
 
 @celery.task
@@ -270,15 +268,21 @@ def process_pull_requests(pull_requests, task_name):
     repo_id = 1
     tool_source = "Pr Task"
     tool_version = "2.0"
-    platform_id = 25150
+    platform_id = 1
     data_source = "Github API"
 
     pr_dicts = []
     pr_mapping_data = {}
     pr_numbers = []
-
+    contributors = []
 
     for index, pr in enumerate(pull_requests):
+
+        # adds cntrb_id to reference the contributors table to the 
+        # prs, assignees, reviewers, and metadata
+        pr, contributor_data = process_pull_request_contributors(pr, platform_id, tool_source, tool_version, data_source)
+
+        contributors += contributor_data
 
         # add a field called pr_head_or_base to the head and base field of the pr
         # this is done so we can insert them both into the pr metadata table
@@ -331,6 +335,13 @@ def process_pull_requests(pull_requests, task_name):
 
         # create a list of pr numbers to pass for the pr reviews task
         pr_numbers.append(pr["number"]) 
+
+    # remove duplicate contributors before inserting
+    contributors = remove_duplicate_dicts(contributors)
+
+    # insert contributors from these issues
+    logger.info(f"{task_name}: Inserting {len(contributors)} contributors")
+    session.insert_data(contributors, Contributors, ["cntrb_login"])
 
 
     # insert the prs into the pull_requests table. 
@@ -406,21 +417,44 @@ def process_pull_requests(pull_requests, task_name):
     session.insert_data(pr_metadata_dicts, PullRequestMeta, pr_metadata_natural_keys)
 
 
-# This function adds a key value pair to a list of dicts and returns the modified list of dicts back
-def add_key_value_pair_to_list_of_dicts(data_list, key, value):
+def process_pull_request_contributors(pr, platform_id, tool_source, tool_version, data_source):
 
-    for data in data_list:
+    contributors = []
 
-        data[key] = value
+    # set cntrb_id for pr
+    pr["cntrb_id"] = AugurUUID(platform_id, pr["user"]["id"]).to_UUID()    
+    pr_cntrb = extract_needed_contributor_data(pr["user"], pr["cntrb_id"], tool_source, tool_version, data_source)
 
-    return data_list
+    # set cntrb_id for metadata (base and head)
+    base = pr["base"]
+    base["user"]["cntrb_id"] = AugurUUID(platform_id, base["user"]["id"]).to_UUID()
+    meta_base_cntrb = extract_needed_contributor_data(base["user"], base["user"]["cntrb_id"], tool_source, tool_version, data_source)    
+       
+    head = pr["head"]
+    head["user"]["cntrb_id"] = AugurUUID(platform_id, head["user"]["id"]).to_UUID()
+    meta_head_cntrb = extract_needed_contributor_data(base["user"], base["user"]["cntrb_id"], tool_source, tool_version, data_source) 
 
-# this function finds a dict in a list of dicts. 
-# This is done by searching all the dicts for the given key that has the specified value
-def find_dict_in_list_of_dicts(data, key, value):
+    contributors += [pr_cntrb, meta_base_cntrb, meta_head_cntrb]
 
-    return next((item for item in data if item[key] == value), None)
-    
+    # set cntrb_id for assignees
+    for assignee in pr["assignees"]:
+
+        assignee["cntrb_id"] = AugurUUID(platform_id, assignee["id"]).to_UUID()
+
+        contributors.append(
+            extract_needed_contributor_data(assignee, assignee["cntrb_id"], tool_source, tool_version, data_source)
+        )
+
+    # set cntrb_id for reviewers
+    for reviewer in pr["requested_reviewers"]:
+
+        reviewer["cntrb_id"] = AugurUUID(platform_id, reviewer["id"]).to_UUID()
+
+        contributors.append(
+            extract_needed_contributor_data(reviewer, reviewer["cntrb_id"], tool_source, tool_version, data_source)
+        )
+
+    return pr, contributors
 
 
 # TODO: Why do I need self?
@@ -926,6 +960,27 @@ def is_valid_pr_block(issue):
         'pull_request' in issue and issue['pull_request']
         and isinstance(issue['pull_request'], dict) and 'url' in issue['pull_request']
     )
+
+def remove_duplicate_dicts(data_list):
+
+    return [dict(y) for y in set(tuple(x.items()) for x in data_list)]
+
+
+# This function adds a key value pair to a list of dicts and returns the modified list of dicts back
+def add_key_value_pair_to_list_of_dicts(data_list, key, value):
+
+    for data in data_list:
+
+        data[key] = value
+
+    return data_list
+
+# this function finds a dict in a list of dicts. 
+# This is done by searching all the dicts for the given key that has the specified value
+def find_dict_in_list_of_dicts(data, key, value):
+
+    return next((item for item in data if item[key] == value), None)
+    
 
 
 
