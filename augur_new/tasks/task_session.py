@@ -105,7 +105,7 @@ class TaskSession(s.orm.Session):
                 return
 
         if len(data) == 0:
-            self.logger.info("Gave no data to insert, returning...")
+            # self.logger.info("Gave no data to insert, returning...")
             return
 
         if type(data[0]) != dict:
@@ -140,11 +140,31 @@ class TaskSession(s.orm.Session):
         with self.engine.connect() as connection:
 
             # print(str(stmnt.compile(dialect=pg.dialect())))
+            try:
+                # if there is no data to return then it executes the insert the returns nothing
+                if len(return_columns) == 0:
+                    connection.execute(stmnt)
+                    return
 
-            # if there is no data to return then it executes the insert the returns nothing
-            if len(return_columns) == 0:
-                connection.execute(stmnt)
-                return
+            except Exception as e:
+                    
+                    def split_list(a_list):
+                        half = len(a_list)//2
+                        return a_list[:half], a_list[half:]
+
+                    # pr_url_list = []
+                    # for value in data:
+                    #     pr_url_list.append(value["pr_url"])
+
+                    # duplicates = set([x for x in pr_url_list if pr_url_list.count(x) > 1])
+                    
+                    # print(f"DUPLICATES: {duplicates}. ERROR: {e}")
+                    # return_data_set = set()
+                    print("Error splitting the data into two pieces")
+                    print(f"Data length: {len(data)}")
+                    list_1, list_2 = split_list(data)
+                    self.insert_data(list_1, table, natural_keys, return_columns)
+                    self.insert_data(list_2, table, natural_keys, return_columns)
             
             # else it get the requested return columns and returns them as a list of dicts
             else:
@@ -177,27 +197,34 @@ class TaskSession(s.orm.Session):
                     for data in string_data_list:
                         print(f"Data: {data}\n\n")
 
-                except psycopg2.errors.CardinalityViolation as e:
-
-                    pr_url_list = []
-                    for value in data:
-                        pr_url_list.append(value["pr_url"])
-
-                    duplicates = set([x for x in pr_url_list if pr_url_list.count(x) > 1])
+                except Exception as e:
                     
-                    print(f"DUPLICATES: {duplicates}. ERROR: {e}")
-                    return_data_set = set()
-                    for value in data:
-                        return_column_data = insert_data(value, table, natural_keys, return_columns)
-                        return_data_set.add(return_column_data)
+                    def split_list(a_list):
+                        half = len(a_list)//2
+                        return a_list[:half], a_list[half:]
 
-                    return_data_tuples = list(return_data_set)
+                    # pr_url_list = []
+                    # for value in data:
+                    #     pr_url_list.append(value["pr_url"])
 
-                return_data = []
-                for data in return_data_tuples:
-                    return_data.append(dict(data))
+                    # duplicates = set([x for x in pr_url_list if pr_url_list.count(x) > 1])
+                    
+                    # print(f"DUPLICATES: {duplicates}. ERROR: {e}")
+                    # return_data_set = set()
+                    print("Error splitting the data into two pieces")
+                    print(f"Data length: {len(data)}")
+                    list_1, list_2 = split_list(data)
+                    self.insert_data(list_1, table, natural_keys, return_columns)
+                    self.insert_data(list_2, table, natural_keys, return_columns)
+                        # return_data_set.add(return_column_data)
 
-                return return_data
+                    # return_data_tuples = list(return_data_set)
+
+                # return_data = []
+                # for data in return_data_tuples:
+                #     return_data.append(dict(data))
+
+                # return return_data
 
 
                    

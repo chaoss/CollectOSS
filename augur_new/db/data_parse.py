@@ -234,7 +234,7 @@ def extract_needed_issue_assignee_data(assignees: [dict], repo_id: int, tool_sou
     for assignee in assignees:
 
         assignee_dict = {
-            'cntrb_id': None,
+            'cntrb_id': assignee["cntrb_id"], # # this is added to the data by the function process_issue_contributors in issue_tasks.py
             'tool_source': tool_source,
             'tool_version': tool_version,
             'data_source': data_source,
@@ -311,6 +311,7 @@ def extract_needed_pr_message_ref_data(comment: dict, pull_request_id: int, repo
      
 
 def extract_needed_pr_data(pr, repo_id, tool_source, tool_version):
+    
 
     pr_dict = {
         'repo_id': repo_id,
@@ -371,6 +372,7 @@ def extract_needed_pr_data(pr, repo_id, tool_source, tool_version):
 def extract_needed_issue_data(issue: dict, repo_id: int, tool_source: str, tool_version: str, data_source: str):
 
     dict_data = {
+        'cntrb_id': issue["cntrb_id"], # this is added to the data by the function process_issue_contributors in issue_tasks.py
         'repo_id': repo_id,
         'reporter_id': None,
         'pull_request': None,
@@ -456,6 +458,44 @@ def extract_need_pr_review_data(reviews, platform_id, repo_id, tool_version, dat
         review_data.append(pr_review_dict)
 
     return review_data
+
+def extract_needed_contributor_data(contributor, cntrb_id, tool_source, tool_version, data_source):
+
+    cntrb = {
+            "cntrb_id": cntrb_id,
+            "cntrb_login": contributor['login'],
+            "cntrb_created_at": contributor['created_at'] if 'created_at' in contributor else None,
+            "cntrb_email": contributor['email'] if 'email' in contributor else None,
+            "cntrb_company": contributor['company'] if 'company' in contributor else None,
+            "cntrb_location": contributor['location'] if 'location' in contributor else None,
+            # "cntrb_type": , dont have a use for this as of now ... let it default to null
+            "cntrb_canonical": contributor['email'] if 'email' in contributor else None,
+            "gh_user_id": contributor['id'],
+            "gh_login": str(contributor['login']),  ## cast as string by SPG on 11/28/2021 due to `nan` user
+            "gh_url": contributor['url'],
+            "gh_html_url": contributor['html_url'],
+            "gh_node_id": contributor['node_id'],
+            "gh_avatar_url": contributor['avatar_url'],
+            "gh_gravatar_id": contributor['gravatar_id'],
+            "gh_followers_url": contributor['followers_url'],
+            "gh_following_url": contributor['following_url'],
+            "gh_gists_url": contributor['gists_url'],
+            "gh_starred_url": contributor['starred_url'],
+            "gh_subscriptions_url": contributor['subscriptions_url'],
+            "gh_organizations_url": contributor['organizations_url'],
+            "gh_repos_url": contributor['repos_url'],
+            "gh_events_url": contributor['events_url'],
+            "gh_received_events_url": contributor['received_events_url'],
+            "gh_type": contributor['type'],
+            "gh_site_admin": contributor['site_admin'],
+            "cntrb_last_used" : None if 'updated_at' not in contributor else contributor['updated_at'],
+            "cntrb_full_name" : None if 'name' not in contributor else contributor['name'],
+            "tool_source": tool_source,
+            "tool_version": tool_version,
+            "data_source": data_source
+        }
+
+    return cntrb
 
 
 

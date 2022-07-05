@@ -2,6 +2,7 @@ from .facade_tasks import *
 
 from augur_new.db.data_parse import *
 from celery.result import allow_join_result
+from AugurUUID import AugurUUID
 import time
 
 # creates a class that is sub class of the sqlalchemy.orm.Session class that additional methods and fields added to it. 
@@ -23,10 +24,41 @@ import time
 # logging.warn("This is a warning message")
 # logging.error("This is an error message")
 
+pr_numbers = [70, 106, 170, 190, 192, 208, 213, 215, 216, 218, 223, 224, 226, 230, 237, 238, 240, 241, 248, 249, 250, 252, 253, 254, 255, 256, 257, 261, 268, 270, 273, 277, 281, 283, 288, 291, 303, 306, 309, 310, 311, 323, 324, 325, 334, 335, 338, 343, 346, 348, 350, 353, 355, 356, 357, 359, 360, 365, 369, 375, 381, 382, 388, 405, 408, 409, 410, 414, 418, 419, 420, 421, 422, 424, 425, 431, 433, 438, 445, 450, 454, 455, 456, 457, 460, 463, 468, 469, 470, 474, 475, 476, 477, 478, 479, 480, 481, 482, 484, 485, 486, 487, 488, 490, 491, 492, 493, 494, 495, 496, 497, 498, 499, 500, 501, 502, 504, 506, 507, 508, 509, 510, 512, 514]
 
 
 @celery.task
-def issues(owner: str, repo: str) -> None:
+def collect_all_repo_data(owner: str, repo):
+    
+    logger = get_task_logger(collect_all_repo_data.name)
+    session = TaskSession(logger, config)
+
+    logger.info(f"Collecting data for {owner}/{repo}")
+ 
+    start_task_list = []
+    # start_task_list.append(collect_pull_requests.s(owner, repo))
+    start_task_list.append(collect_issues.s(owner, repo))
+
+    start_tasks_group = group(start_task_list)
+    
+
+    secondary_task_list = []
+    # secondary_task_list.append(pull_request_reviews.s(owner, repo, pr_numbers))
+    # secondary_task_list.append(collect_events.s(owner, repo))
+    # secondary_task_list.append(collect_issue_and_pr_comments.s(owner, repo))
+    
+    secondary_task_group = group(secondary_task_list)
+
+    job = chain(
+        start_tasks_group,
+        secondary_task_group,
+    )
+
+    job.apply_async()
+
+
+@celery.task
+def collect_issues(owner: str, repo: str) -> None:
 
     logger = get_task_logger(__name__)
 
@@ -47,12 +79,16 @@ def issues(owner: str, repo: str) -> None:
     # many issues were collected
     # loop through the issues 
     num_pages = issues.get_num_pages()
+
+    data = []
     
     for page_data, page in issues.iter_pages():
 
         logger.info(f"Issues Page {page} of {num_pages}")
 
-        process_issues.s(page_data, f"Issues Page {page} Task").apply_async()
+        data += page_data
+
+    process_issues.s(data, f"Issues Page {page} Task").apply_async()
         
 
 @celery.task
@@ -67,12 +103,13 @@ def process_issues(issues, task_name) -> None:
     repo_id = 1
     tool_source = "Issue Task"
     tool_version = "2.0"
-    # platform_id = 25150
+    platform_id = 1
     data_source = "Github API"
 
     issue_dicts = []
     issue_mapping_data = {}
     issue_total = len(issues)
+    contributors = []
     for index, issue in enumerate(issues):
 
         # calls is_valid_pr_block to see if the data is a pr.
@@ -81,14 +118,18 @@ def process_issues(issues, task_name) -> None:
         if is_valid_pr_block(issue) is True:
             issue_total-=1
             continue
-        
+
+        issue, contributor_data = process_issue_contributors(issue, platform_id, tool_source, tool_version, data_source)
+
+        contributors += contributor_data
+
         # create list of issue_dicts to bulk insert later
         issue_dicts.append(
             # get only the needed data for the issues table
             extract_needed_issue_data(issue, repo_id, tool_source, tool_version, data_source)
         )
 
-        # get only the needed data for the issue_labels table
+         # get only the needed data for the issue_labels table
         issue_labels = extract_needed_issue_label_data(issue["labels"], repo_id,
                                                        tool_source, tool_version, data_source)
 
@@ -96,7 +137,7 @@ def process_issues(issues, task_name) -> None:
         issue_assignees = extract_needed_issue_assignee_data(issue["assignees"], repo_id,
                                                              tool_source, tool_version, data_source)
 
-        
+
         mapping_data_key = issue["url"]
         issue_mapping_data[mapping_data_key] = {
                                             "labels": issue_labels,
@@ -105,7 +146,15 @@ def process_issues(issues, task_name) -> None:
 
     if len(issue_dicts) == 0:
         print("No issues found while processing")  
-        return                           
+        return
+
+    # remove duplicate contributors before inserting
+    contributors = remove_duplicate_dicts(contributors)
+
+    # insert contributors from these issues
+    logger.info(f"{task_name}: Inserting {len(contributors)} contributors")
+    session.insert_data(contributors, Contributors, ["cntrb_login"])
+                        
 
     # insert the issues into the issues table. 
     # issue_urls are gloablly unique across github so we are using it to determine whether an issue we collected is already in the table
@@ -114,6 +163,50 @@ def process_issues(issues, task_name) -> None:
     issue_natural_keys = ["issue_url"]
     issue_return_columns = ["issue_url", "issue_id"]
     issue_return_data = session.insert_data(issue_dicts, Issues, issue_natural_keys, issue_return_columns)
+
+    issue_label_dicts, issue_assignee_dicts = map_other_issue_data_to_issue(issue_return_data, issue_mapping_data)
+
+    logger.info(f"{task_name}: Inserting other issue data of lengths: Labels: {len(issue_label_dicts)} - Assignees: {len(issue_assignee_dicts)}")
+
+    # inserting issue labels
+    # we are using label_src_id and issue_id to determine if the label is already in the database.
+    issue_label_natural_keys = ['label_src_id', 'issue_id']
+    session.insert_data(issue_label_dicts, IssueLabels, issue_label_natural_keys)
+  
+    # inserting issue assignees
+    # we are using issue_assignee_src_id and issue_id to determine if the label is already in the database.
+    issue_assignee_natural_keys = ['issue_assignee_src_id', 'issue_id']
+    session.insert_data(issue_assignee_dicts, IssueAssignees, issue_assignee_natural_keys, issue_assignee_return_columns)
+
+
+def process_issue_contributors(issue, platform_id, tool_source, tool_version, data_source):
+
+    contributors = []
+
+    issue["cntrb_id"] = AugurUUID(platform_id, issue["user"]["id"]).to_UUID()
+
+    # add issue contributor to the list of contributors
+    contributors.append(
+            extract_needed_contributor_data(issue["user"], issue["cntrb_id"], tool_source, tool_version, data_source)
+    )
+
+
+    for assignee in issue["assignees"]:
+
+        assignee["cntrb_id"] = AugurUUID(platform_id, assignee["id"]).to_UUID()
+
+        contributors.append(
+            extract_needed_contributor_data(assignee, assignee["cntrb_id"], tool_source, tool_version, data_source)
+        )
+
+    return issue, contributors
+
+def remove_duplicate_dicts(data_list):
+
+    return [dict(y) for y in set(tuple(x.items()) for x in data_list)]
+
+
+def map_other_issue_data_to_issue(issue_return_data, issue_mapping_data):
 
     # loop through the issue_return_data so it can find the labels and 
     # assignees that corelate to the issue that was inserted labels 
@@ -135,22 +228,13 @@ def process_issues(issues, task_name) -> None:
         issue_label_dicts += add_key_value_pair_to_list_of_dicts(other_issue_data["labels"], "issue_id", issue_id)
         issue_assignee_dicts += add_key_value_pair_to_list_of_dicts(other_issue_data["assignees"], "issue_id", issue_id)
 
-    logger.info(f"{task_name}: Inserting other pr data of lengths: Labels: {len(issue_label_dicts)} - Assignees: {len(issue_assignee_dicts)}")
+    return issue_label_dicts, issue_assignee_dicts
 
-    # inserting issue labels
-    # we are using label_src_id and issue_id to determine if the label is already in the database.
-    issue_label_natural_keys = ['label_src_id', 'issue_id']
-    session.insert_data(issue_label_dicts, IssueLabels, issue_label_natural_keys)
-  
-    # inserting issue assignees
-    # we are using issue_assignee_src_id and issue_id to determine if the label is already in the database.
-    issue_assignee_natural_keys = ['issue_assignee_src_id', 'issue_id']
-    session.insert_data(issue_assignee_dicts, IssueAssignees, issue_assignee_natural_keys)
 
 # TODO: Rename pull_request_reviewers table to pull_request_requested_reviewers
 # TODO: Fix column names in pull request labels table
 @celery.task
-def pull_requests(owner: str, repo: str) -> None:
+def collect_pull_requests(owner: str, repo: str) -> None:
 
     logger = get_task_logger(pull_requests.name)
 
@@ -240,7 +324,8 @@ def process_pull_requests(pull_requests, task_name):
                                             "labels": pr_labels,
                                             "assignees": pr_assignees,
                                             "reviewers": pr_reviewers,
-                                            "metadata": pr_metadata
+                                            "metadata": pr_metadata,
+                                            "contributor": pr["user"]
                                             }          
        
 
@@ -267,6 +352,7 @@ def process_pull_requests(pull_requests, task_name):
     pr_assignee_dicts = []
     pr_reviewer_dicts = []
     pr_metadata_dicts = []
+    pr_contributors = []
     for data in pr_return_data:
 
         pr_url = data["pr_url"]
@@ -284,9 +370,19 @@ def process_pull_requests(pull_requests, task_name):
         pr_assignee_dicts += add_key_value_pair_to_list_of_dicts(other_pr_data["assignees"], dict_key, pull_request_id)
         pr_reviewer_dicts += add_key_value_pair_to_list_of_dicts(other_pr_data["reviewers"], dict_key, pull_request_id)
         pr_metadata_dicts += add_key_value_pair_to_list_of_dicts(other_pr_data["metadata"], dict_key, pull_request_id)
+
+        pr_contributors.append(
+            {
+            "pull_request_id": pull_request_id,
+            "contributor": other_pr_data["contributor"]
+            }
+        )
+
+    # starting task to process pr contributors
+    # process_contributors.s(pr_contributors, PullRequests).apply_async()
         
 
-    logger.info(f"{task_name}: Other pr data lengths: Labels: {len(pr_label_dicts)} - Assignees: {len(pr_assignee_dicts)} - Reviewers: {len(pr_reviewer_dicts)} - Metadata: {len(pr_metadata_dicts)}")
+    logger.info(f"{task_name}: Inserting other pr data of lengths: Labels: {len(pr_label_dicts)} - Assignees: {len(pr_assignee_dicts)} - Reviewers: {len(pr_reviewer_dicts)} - Metadata: {len(pr_metadata_dicts)}")
 
     # inserting pr labels
     # we are using pr_src_id and pull_request_id to determine if the label is already in the database.
@@ -297,6 +393,7 @@ def process_pull_requests(pull_requests, task_name):
     # we are using pr_assignee_src_id and pull_request_id to determine if the label is already in the database.
     pr_assignee_natural_keys = ['pr_assignee_src_id', 'pull_request_id']
     session.insert_data(pr_assignee_dicts, PullRequestAssignees, pr_assignee_natural_keys)
+
  
     # inserting pr assignees
     # we are using pr_src_id and pull_request_id to determine if the label is already in the database.
@@ -328,9 +425,9 @@ def find_dict_in_list_of_dicts(data, key, value):
 
 # TODO: Why do I need self?
 @celery.task
-def github_events(self, owner: str, repo: str):
+def collect_events(self, owner: str, repo: str):
 
-    logger = get_task_logger(github_events.name)
+    logger = get_task_logger(collect_events.name)
     logger.info(f"Collecting pull request events for {owner}/{repo}")
     
         # define GithubTaskSession to handle insertions, and store oauth keys 
@@ -339,26 +436,19 @@ def github_events(self, owner: str, repo: str):
     url = f"https://api.github.com/repos/{owner}/{repo}/issues/events"
     
     # returns an iterable of all issues at this url (this essentially means you can treat the issues variable as a list of the issues)
-    pr_events = GithubPaginator(url, session.oauths, logger)
+    events = GithubPaginator(url, session.oauths, logger)
 
     index = 0
 
-    data = []
-    for index, pr_event in enumerate(pr_events):
+    num_pages = events.get_num_pages()
+    
+    for page_data, page in events.iter_pages():
 
-        data.append(pr_event)
+        logger.info(f"Events Page {page} of {num_pages}")
 
-        if index != 0 and index % 100 == 0:
-            task = process_events.s(data, f"Task {index // 100}")
-            task.apply_async()
-            data = []
-
-    if len(data) != 0:
-        task = process_events.s(data, f"Final Events Task")
-        task.apply_async()
-        data = []
-
-    print("Completed events")
+        process_events.s(page_data, f"Events Page {page} Task").apply_async()
+        
+    logger.info("Completed events")
 
 @celery.task
 def process_events(events, task_name):
@@ -369,18 +459,17 @@ def process_events(events, task_name):
 
     # get repo_id
     repo_id = 1
-
     platform_id = 25150
     tool_source = "Pr event task"
     tool_version = "2.0"
     data_source = "Github API"
-    # TODO: Could replace this with "id" but it isn't stored on the table for some reason
-    pr_event_natural_keys = ["platform_id", "node_id"]
-    issue_event_natural_keys = ["issue_id", "issue_event_src_id"]
+   
     pr_event_dicts = []
     issue_event_dicts = []
 
     event_len = len(events)
+    total_time = 0
+    events_processed = 0
     for index, event in enumerate(events):
 
         if index % 100 == 0:
@@ -391,13 +480,13 @@ def process_events(events, task_name):
             if event_index_end > event_len:
                 event_index_end = event_len
 
-            logger.info(f"{task_name}: Proccessing event {event_index_start} to {event_index_end} of {event_len}")
-
         if 'pull_request' in list(event["issue"].keys()):
             pr_url = event["issue"]["pull_request"]["url"]
 
             try:
+                start_time = time.time()
                 related_pr = PullRequests.query.filter_by(pr_url=pr_url).one()
+                total_time += time.time() - start_time
             except s.orm.exc.NoResultFound:
                 logger.info("Could not find related pr")
                 logger.info(f"We were searching for: {pr_url}")
@@ -414,7 +503,9 @@ def process_events(events, task_name):
             issue_url = event["issue"]["url"]
 
             try:
+                start_time = time.time()
                 related_issue = Issues.query.filter_by(issue_url=issue_url).one()
+                total_time += time.time() - start_time
             except s.orm.exc.NoResultFound:
                 logger.info("Could not find related pr")
                 logger.info(f"We were searching for: {issue_url}")
@@ -426,20 +517,20 @@ def process_events(events, task_name):
                 extract_issue_event_data(event, related_issue.issue_id, platform_id, repo_id,
                                          tool_source, tool_version, data_source)
             )
+        events_processed +=1
+        print(f"Average time to fetch: {total_time / events_processed}")
 
-    logger.info(f"Issue event count: {len(issue_event_dicts)}")
-    logger.info(f"Pr event count: {len(pr_event_dicts)}")
-    logger.info(f"Total event count: {len(issue_event_dicts) + len(pr_event_dicts)}")
+    logger.info(f"{task_name}: Inserting {len(pr_event_dicts)} pr events and {len(issue_event_dicts)} issue events")
 
-    logger.info("Inserting all pr events")
+    # TODO: Could replace this with "id" but it isn't stored on the table for some reason
+    pr_event_natural_keys = ["platform_id", "node_id"]
     session.insert_data(pr_event_dicts, PullRequestEvents, pr_event_natural_keys)
 
-    logger.info("Inserting all issue events")
+    issue_event_natural_keys = ["issue_id", "issue_event_src_id"]
     session.insert_data(issue_event_dicts, IssueEvents, issue_event_natural_keys)
 
-
 @celery.task
-def github_comments(self, owner: str, repo: str) -> None:
+def collect_issue_and_pr_comments(self, owner: str, repo: str) -> None:
 
     # define logger for task
     logger = get_task_logger(github_comments.name)
@@ -454,29 +545,15 @@ def github_comments(self, owner: str, repo: str) -> None:
     # returns an iterable of all issues at this url (this essentially means you can treat the issues variable as a list of the issues)
     messages = GithubPaginator(url, session.oauths, logger)
 
+    num_pages = messages.get_num_pages()
+    
+    for page_data, page in messages.iter_pages():
 
+        logger.info(f"Github Messages Page {page} of {num_pages}")
 
-    message_len = len(messages)
-
-    total_pages = (message_len // 100) + 1
-    page_index = 1
-
-    data = []
-    for index, message in enumerate(messages):
-
-        data.append(message)
-
-        if index != 0 and index % 100 == 0:
-            task = process_messages.s(data, f"Message Task {index // 100}")
-            task.apply_async()
-            data = []
-
-    if len(data) != 0:
-        task = process_messages.s(data, f"Final Message Task")
-        task.apply_async()
-        data = []
-
-    print("Completed Messages")
+        process_messages.s(page_data, f"Github Messages Page {page} Task").apply_async()
+        
+    logger.info("Completed messages")
 
 @celery.task
 def process_messages(messages, task_name):
@@ -496,13 +573,7 @@ def process_messages(messages, task_name):
     message_dicts = []
     message_ref_mapping_data = []
 
-    logger.info(f"{task_name}: Processing {len(messages)} messages")
-
     for index, message in enumerate(messages):
-
-        # if index % 100 == 0:
-        #     logger.info(f"Processing page {page_index} of {total_pages}")
-        #     page_index += 1
 
         related_pr_of_issue_found = False
 
@@ -561,7 +632,7 @@ def process_messages(messages, task_name):
                             extract_needed_message_data(message, platform_id, repo_id, tool_source, tool_version, data_source)
             )
 
-
+    
     message_natural_keys = ["platform_msg_id"]
     message_return_columns = ["msg_id", "platform_msg_id"]
     message_return_data = session.insert_data(message_dicts, Message, message_natural_keys, message_return_columns)
@@ -589,19 +660,14 @@ def process_messages(messages, task_name):
             issue_message_ref_dicts.append(message_ref_data)
         else:
             pr_message_ref_dicts.append(message_ref_data)
-        
 
-
-    logger.info(f"Issue message count: {len(issue_message_ref_dicts)}")
-    logger.info(f"Pr message count: {len(pr_message_ref_dicts)}")
-
-    logger.info("Inserting all pr messages")
     pr_message_ref_natural_keys = ["pull_request_id", "pr_message_ref_src_comment_id"]
     session.insert_data(pr_message_ref_dicts, PullRequestMessageRef, pr_message_ref_natural_keys)
 
-    logger.info("Inserting all issue messages")
     issue_message_ref_natural_keys = ["issue_id", "issue_msg_ref_src_comment_id"]
     session.insert_data(issue_message_ref_dicts, IssueMessageRef, issue_message_ref_natural_keys)
+
+    logger.info(f"{task_name}: Inserted {len(message_dicts)} messages. {len(issue_message_ref_dicts)} from issues and {len(pr_message_ref_dicts)} from prs")
 
 
 
@@ -639,8 +705,6 @@ def pull_request_review_comments(self, owner: str, repo: str) -> None:
     pr_review_comments_len = len(pr_review_comments)
     logger.info(f"Pr comments len: {pr_review_comments_len}")
     for index, comment in enumerate(pr_review_comments):
-
-        logger.info(f"Processing pr review comment {index + 1} of {pr_review_comments_len}")
 
         pr_review_id = comment["pull_request_review_id"]
 
@@ -740,12 +804,128 @@ def pull_request_reviews(self, owner: str, repo: str, pr_number_list: [int]) -> 
 
     print(len(pr_review_dicts))
 
+
+
+"""
+Notes
+
+Date needed to process contributor: src_id and login
+
+Data must already be inserted into src_table before running the task 
+the issue is that most of the time we filter out needed
+
+[
+    {
+        "table": Pulls,
+        "pk": "pull_request_id",
+        "data": data
+    }
+]
+
+"""
+
+# for this task to work well universally we need all tables to name cntrb_id
+# @celery.task
+# def process_issue_contributors(contributors):
+
+#     logger = get_task_logger(process_issue_contributors.name)
+#     process_contributors(contributors, table=Issues, logger=logger, unique_keys=["issue_url"], pk_name="issue_id")
+
+# @celery.task
+# def process_issue_assignee_contributors(contributors):
+
+#     logger = get_task_logger(process_issue_assignee_contributors.name)
+#     # process_contributors(contributors, table=IssueAssignees, logger=logger, pk_name="issue_assignee_id")
+
+
+def process_contributors(contributors, table, logger, unique_keys, pk_name, cntrb_id_name="cntrb_id"):
+
+    session = GithubTaskSession(logger, config)
+
+    platform = 1
+    tool_source = "Pr comment task"
+    tool_version = "2.0"
+    data_source = "Github API"
+
+    if len(contributors) == 0:
+        return
+
+    update_dicts = []
+    contributor_dicts = []
+    index = 1
+    total_all_time =  0
+    start_time = time.time()
+    for contributor in contributors:
+
+        # get the primary key for the table that needs update with a cntrb_id
+        # primary_key = contributor[pk_name]
+        # del contributor[pk_name]
+
+        # create uuid from gh contributor id and platform id
+        uuid_cntrb_id = AugurUUID(platform, contributor["id"]).to_UUID()
+
+        # get the needed data from the gh api respones
+        contributor_data = extract_needed_contributor_data(contributor, uuid_cntrb_id, tool_source, tool_version, data_source)
+
+        # insert the contributor into the table
+
+        contributor_dicts.append(contributor_data)
+        # session.insert_data(contributor_data, Contributors, ["cntrb_id"])
+
+        # create list of dicts to update the table with the cntrb_ids
+        update_row = {}
+        update_row[cntrb_id_name] = uuid_cntrb_id
+
+        for field in unique_keys:
+            update_row[field] = contributor[field]
+        # update_row[pk_name] = primary_key
+
+        update_dicts.append(update_row)
+
+    s = time.time()
+
+    contrib_len = len(contributor_dicts)
+
+    print(f"Length of contributors: {contrib_len}")
+
+    unique_contrbs_logins = []
+    unique_contrbs = []
+    for contrb in contributor_dicts:
+
+        if contrb["cntrb_login"] not in unique_contrbs_logins:
+            unique_contrbs.append(contrb)
+            unique_contrbs_logins.append(contrb["cntrb_login"])
+
+        
+
+
+    contributor_dicts = [dict(y) for y in set(tuple(x.items()) for x in contributor_dicts)]
+
+    e = time.time() - s
+
+    print(f"Length of contributors: {len(unique_contrbs)}. Time to remove {contrib_len - len(unique_contrbs)}: {e} seconds")
+
+    session.insert_data(unique_contrbs, Contributors, ["cntrb_id"])    
+
+    total_time = time.time() - start_time
+
+    print(f"Seconds to proccess {len(update_dicts)} contributors: {total_time}")
+
+    # update table with cntrb_ids
+    start = time.time()
+    session.insert_data(update_dicts, table, unique_keys)
+    # session.bulk_update_mappings(table, update_dicts)
+    # session.commit()
+    total = time.time() - start
+
+    print(f"Seconds to update {len(update_dicts)} rows: {total}")
+
+
 def is_valid_pr_block(issue):
     return (
         'pull_request' in issue and issue['pull_request']
         and isinstance(issue['pull_request'], dict) and 'url' in issue['pull_request']
     )
-
 
 
 
