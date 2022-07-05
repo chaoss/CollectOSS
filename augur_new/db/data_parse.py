@@ -1,4 +1,4 @@
-
+from AugurUUID import AugurUUID
 """
 This file contains functions that take the api response 
 and return only the data that the database needs
@@ -47,7 +47,7 @@ def extract_needed_pr_assignee_data(assignees: [dict], platform_id: int, repo_id
 
         assignee_dict = {
             # store the pr_url data on in the pr assignee data for now so we can relate it back to a pr later
-            'contrib_id': None,
+            'contrib_id': assignee["cntrb_id"],
             'pr_assignee_src_id': int(assignee['id']),
             'tool_source': tool_source,
             'tool_version': tool_version,
@@ -69,7 +69,7 @@ def extract_needed_pr_reviewer_data(reviewers: [dict], platform_id: int, repo_id
     for reviewer in reviewers:
 
         reviewer_dict = {
-            'cntrb_id': None,
+            'cntrb_id': reviewer["cntrb_id"],
             'pr_reviewer_src_id': int(float(reviewer['id'])),
             'tool_source': tool_source,
             'tool_version': tool_version,
@@ -95,7 +95,7 @@ def extract_needed_pr_metadata(metadata_list: [dict], platform_id: int, repo_id:
             'pr_src_meta_ref': meta['ref'],
             'pr_sha': meta['sha'],
             # Cast as int for the `nan` user by SPG on 11/28/2021; removed 12/6/2021
-            'cntrb_id': None,
+            'cntrb_id': meta["cntrb_id"] if "cntrb_id" in meta else None,
             'tool_source': tool_source,
             'tool_version': tool_version,
             'data_source': data_source,
@@ -329,7 +329,7 @@ def extract_needed_pr_data(pr, repo_id, tool_source, tool_version):
         'pr_src_state': pr['state'],
         'pr_src_locked': pr['locked'],
         'pr_src_title': str(pr['title']),
-        'pr_augur_contributor_id': None,
+        'pr_augur_contributor_id': pr["cntrb_id"],
         ### Changed to int cast based on error 12/3/2021 SPG (int cast above is first change on 12/3)
         'pr_body': str(pr['body']).encode(encoding='UTF-8', errors='backslashreplace').decode(encoding='UTF-8', errors='ignore') if (
             pr['body']
@@ -372,9 +372,9 @@ def extract_needed_pr_data(pr, repo_id, tool_source, tool_version):
 def extract_needed_issue_data(issue: dict, repo_id: int, tool_source: str, tool_version: str, data_source: str):
 
     dict_data = {
-        'cntrb_id': issue["cntrb_id"], # this is added to the data by the function process_issue_contributors in issue_tasks.py
+        'cntrb_id': None, # this the contributor who closed the issue
         'repo_id': repo_id,
-        'reporter_id': None,
+        'reporter_id': issue["cntrb_id"], # this is the contributor who opened the issue
         'pull_request': None,
         'pull_request_id': None,
         'created_at': issue['created_at'],
@@ -414,7 +414,7 @@ def extract_needed_message_data(comment: dict, platform_id: int, repo_id: int, t
             comment['body']
         ) else None,
         'msg_timestamp': comment['created_at'],
-        'cntrb_id': None,
+        'cntrb_id': comment["cntrb_id"],
         'tool_source': tool_source,
         'tool_version': tool_version,
         'data_source': data_source,
@@ -459,9 +459,11 @@ def extract_need_pr_review_data(reviews, platform_id, repo_id, tool_version, dat
 
     return review_data
 
-def extract_needed_contributor_data(contributor, cntrb_id, tool_source, tool_version, data_source):
+def extract_needed_contributor_data(contributor, platform_id, tool_source, tool_version, data_source):
 
-    cntrb = {
+    cntrb_id = AugurUUID(platform_id, contributor["id"]).to_UUID()   
+
+    contributor = {
             "cntrb_id": cntrb_id,
             "cntrb_login": contributor['login'],
             "cntrb_created_at": contributor['created_at'] if 'created_at' in contributor else None,
@@ -495,7 +497,7 @@ def extract_needed_contributor_data(contributor, cntrb_id, tool_source, tool_ver
             "data_source": data_source
         }
 
-    return cntrb
+    return contributor
 
 
 

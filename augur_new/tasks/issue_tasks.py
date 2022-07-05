@@ -196,28 +196,22 @@ def process_issues(issues, task_name) -> None:
     # inserting issue assignees
     # we are using issue_assignee_src_id and issue_id to determine if the label is already in the database.
     issue_assignee_natural_keys = ['issue_assignee_src_id', 'issue_id']
-    session.insert_data(issue_assignee_dicts, IssueAssignees, issue_assignee_natural_keys, issue_assignee_return_columns)
+    session.insert_data(issue_assignee_dicts, IssueAssignees, issue_assignee_natural_keys)
 
 
 def process_issue_contributors(issue, platform_id, tool_source, tool_version, data_source):
 
     contributors = []
 
-    issue["cntrb_id"] = AugurUUID(platform_id, issue["user"]["id"]).to_UUID()
-
-    # add issue contributor to the list of contributors
-    contributors.append(
-            extract_needed_contributor_data(issue["user"], issue["cntrb_id"], tool_source, tool_version, data_source)
-    )
-
+    issue_cntrb = extract_needed_contributor_data(issue["user"], platform_id, tool_source, tool_version, data_source)
+    issue["cntrb_id"] = issue_cntrb["cntrb_id"]
+    contributors.append(issue_cntrb)
 
     for assignee in issue["assignees"]:
 
-        assignee["cntrb_id"] = AugurUUID(platform_id, assignee["id"]).to_UUID()
-
-        contributors.append(
-            extract_needed_contributor_data(assignee, assignee["cntrb_id"], tool_source, tool_version, data_source)
-        )
+        issue_assignee_cntrb = extract_needed_contributor_data(issue["user"], platform_id, tool_source, tool_version, data_source)
+        assignee["cntrb_id"] = issue_assignee_cntrb["cntrb_id"]
+        contributors.append(issue_assignee_cntrb)
 
     return issue, contributors
 
@@ -241,19 +235,12 @@ def collect_pull_requests(owner: str, repo: str) -> None:
     prs = GithubPaginator(url, session.oauths, logger)
 
     num_pages = prs.get_num_pages()
-
-    data = []
     
     for page_data, page in prs.iter_pages():
 
         logger.info(f"Prs Page {page} of {num_pages}")
 
-        data += page_data
-
-        if page == 2:
-            break
-
-    process_pull_requests.s(page_data, f"Pr Page {page} Task").apply_async()
+        process_pull_requests.s(page_data, f"Pr Page {page} Task").apply_async()
 
 
 @celery.task
@@ -417,42 +404,61 @@ def process_pull_requests(pull_requests, task_name):
     session.insert_data(pr_metadata_dicts, PullRequestMeta, pr_metadata_natural_keys)
 
 
+
+# TODO: Should we insert metadata without user relation?
+# NOTE: For contributor related operations: extract_needed_contributor_data takes a piece of github contributor data
+# and creates a cntrb_id (primary key for the contributors table) and gets the data needed for the table
 def process_pull_request_contributors(pr, platform_id, tool_source, tool_version, data_source):
 
     contributors = []
 
-    # set cntrb_id for pr
-    pr["cntrb_id"] = AugurUUID(platform_id, pr["user"]["id"]).to_UUID()    
-    pr_cntrb = extract_needed_contributor_data(pr["user"], pr["cntrb_id"], tool_source, tool_version, data_source)
+    # get contributor data and set pr cntrb_id
+    pr_cntrb = extract_needed_contributor_data(pr["user"], platform_id, tool_source, tool_version, data_source)
+    pr["cntrb_id"] = pr_cntrb["cntrb_id"]
 
-    # set cntrb_id for metadata (base and head)
-    base = pr["base"]
-    base["user"]["cntrb_id"] = AugurUUID(platform_id, base["user"]["id"]).to_UUID()
-    meta_base_cntrb = extract_needed_contributor_data(base["user"], base["user"]["cntrb_id"], tool_source, tool_version, data_source)    
-       
-    head = pr["head"]
-    head["user"]["cntrb_id"] = AugurUUID(platform_id, head["user"]["id"]).to_UUID()
-    meta_head_cntrb = extract_needed_contributor_data(base["user"], base["user"]["cntrb_id"], tool_source, tool_version, data_source) 
+    contributors.append(pr_cntrb)
 
-    contributors += [pr_cntrb, meta_base_cntrb, meta_head_cntrb]
+    try:
+
+        if pr["base"]["user"]:
+
+            # get contributor data and set pr metadat cntrb_id
+            pr_meta_base_cntrb = extract_needed_contributor_data(pr["base"]["user"], platform_id, tool_source, tool_version, data_source)
+            pr["base"]["cntrb_id"] = pr_meta_base_cntrb["cntrb_id"]
+
+            contributors.append(pr_meta_base_cntrb)
+
+        if pr["head"]["user"]:
+
+            pr_meta_head_cntrb = extract_needed_contributor_data(pr["head"]["user"], platform_id, tool_source, tool_version, data_source)
+            pr["head"]["cntrb_id"] = pr_meta_head_cntrb["cntrb_id"]
+
+            contributors.append(pr_meta_head_cntrb)
+
+    except Exception as e:
+
+        print(f"Head: {pr['head']}")
+        print(f"Base: {pr['base']}")
+        print(e)
+
+    contributors += [pr_cntrb]
 
     # set cntrb_id for assignees
     for assignee in pr["assignees"]:
 
-        assignee["cntrb_id"] = AugurUUID(platform_id, assignee["id"]).to_UUID()
+        pr_asignee_cntrb = extract_needed_contributor_data(assignee, platform_id, tool_source, tool_version, data_source)
+        assignee["cntrb_id"] = pr_asignee_cntrb["cntrb_id"]
 
-        contributors.append(
-            extract_needed_contributor_data(assignee, assignee["cntrb_id"], tool_source, tool_version, data_source)
-        )
+        contributors.append(pr_asignee_cntrb)
+
 
     # set cntrb_id for reviewers
     for reviewer in pr["requested_reviewers"]:
 
-        reviewer["cntrb_id"] = AugurUUID(platform_id, reviewer["id"]).to_UUID()
+        pr_reviwer_cntrb = extract_needed_contributor_data(reviewer, platform_id, tool_source, tool_version, data_source)
+        reviewer["cntrb_id"] = pr_reviwer_cntrb["cntrb_id"]
 
-        contributors.append(
-            extract_needed_contributor_data(reviewer, reviewer["cntrb_id"], tool_source, tool_version, data_source)
-        )
+        contributors.append(pr_reviwer_cntrb)
 
     return pr, contributors
 
@@ -599,19 +605,24 @@ def process_messages(messages, task_name):
     session = GithubTaskSession(logger, config)
 
     repo_id = 1
-    platform_id = 25150
+    platform_id = 1
     tool_source = "Pr comment task"
     tool_version = "2.0"
     data_source = "Github API"
 
     message_dicts = []
     message_ref_mapping_data = []
+    contributors = []
 
     for index, message in enumerate(messages):
 
         related_pr_of_issue_found = False
 
-        
+        # this adds the cntrb_id to the message data
+        # the returned contributor will be added to the contributors list later, if the related issue or pr are found
+        # this logic is used so we don't insert a contributor when the related message isn't inserted
+        message, contributor = process_github_comment_contributors(message, platform_id, tool_source, tool_version, data_source)
+
         if is_issue_message(message["html_url"]):
 
             try:
@@ -666,6 +677,8 @@ def process_messages(messages, task_name):
                             extract_needed_message_data(message, platform_id, repo_id, tool_source, tool_version, data_source)
             )
 
+            contributors.append(contributor)
+
     
     message_natural_keys = ["platform_msg_id"]
     message_return_columns = ["msg_id", "platform_msg_id"]
@@ -708,6 +721,16 @@ def process_messages(messages, task_name):
 def is_issue_message(html_url):
 
     return 'pull' not in html_url
+
+def process_github_comment_contributors(message, platform_id, tool_source, tool_version, data_source):
+
+    contributors = []
+
+    # set cntrb_id for pr
+    message["user"]["cntrb_id"] = AugurUUID(platform_id, messsage["user"]["id"]).to_UUID()    
+    contributor = extract_needed_contributor_data(messsage["user"], messsage["cntrb_id"], tool_source, tool_version, data_source)
+
+    return message, contributor
 
         
 @celery.task
