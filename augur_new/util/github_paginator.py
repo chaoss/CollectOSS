@@ -88,8 +88,9 @@ class GithubPaginator(collections.abc.Sequence):
         # get the amount of data on last page
         data, _ = self.retrieve_data(url)
 
-        
-        last_page_data_count = len(data)
+        last_page_data_count = 0
+        if data:    
+            last_page_data_count = len(data)
 
         data_length = (100 * (num_pages - 1)) + last_page_data_count
 
