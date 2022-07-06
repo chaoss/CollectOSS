@@ -34,7 +34,7 @@ import Default from '@/layouts/Default.vue';
 import AugurAPI from '@/AugurAPI';
 import AugurStats from '@/AugurStats';
 
-ShardsVue.install(Vue);
+//ShardsVue.install(Vue);
 
 Vue.component('default-layout', Default);
 
