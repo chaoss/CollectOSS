@@ -84,7 +84,7 @@ def setup_loggers(*args,**kwargs):
 @celery.task
 def analyze_commits_in_parallel(queue, repo_id, repo_location, multithreaded):
     #create new cfg for celery thread.
-    logger = logging.getLogger(facade_resolve_contribs.__name__)
+    logger = logging.getLogger(analyze_commits_in_parallel.__name__)
     cfg = Config(logger)
 
     for analyzeCommit in queue:    
@@ -483,7 +483,7 @@ def facade_grab_contribs(repo_id):
 
 @celery.task
 def process_commit_metadata(contributorQueue,repo_id):
-    logger = logging.getLogger(facade_grab_contribs.__name__)
+    logger = logging.getLogger(process_commit_metadata.__name__)
     session = FacadeSession(logger)
 
     for contributor in contributorQueue:
@@ -688,7 +688,7 @@ def process_commit_metadata(contributorQueue,repo_id):
 
 @celery.task
 def link_commits_to_contributor(contributorQueue):
-        logger = logging.getLogger(facade_resolve_contribs.name)
+        logger = logging.getLogger(link_commits_to_contributor.__name__)
         session = FacadeSession(logger)
 
         # iterate through all the commits with emails that appear in contributors and give them the relevant cntrb_id.

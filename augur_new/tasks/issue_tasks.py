@@ -30,7 +30,7 @@ import time
 @celery.task
 def issues(owner: str, repo: str) -> None:
 
-    logger = get_task_logger(__name__)
+    logger = logging.getLogger(issues.__name__)
 
     # define GithubTaskSession to handle insertions, and store oauth keys 
     session = GithubTaskSession(logger, config)
@@ -68,7 +68,7 @@ def issues(owner: str, repo: str) -> None:
 @celery.task
 def process_issues(issues, task_name) -> None:
 
-    logger = get_task_logger(process_issues.name)
+    logger = logging.getLogger(process_issues.__name__)
 
     # define GithubTaskSession to handle insertions, and store oauth keys 
     session = GithubTaskSession(logger, config)
@@ -163,7 +163,7 @@ def process_issues(issues, task_name) -> None:
 @celery.task
 def pull_requests(owner: str, repo: str) -> None:
 
-    logger = get_task_logger(pull_requests.name)
+    logger = logging.getLogger(pull_requests.__name__)
 
     # define GithubTaskSession to handle insertions, and store oauth keys 
     session = GithubTaskSession(logger, config)
@@ -196,7 +196,7 @@ def pull_requests(owner: str, repo: str) -> None:
 @celery.task
 def process_pull_requests(pull_requests, task_name):
 
-    logger = get_task_logger(process_pull_requests.name)
+    logger = logging.getLogger(process_pull_requests.__name__)
 
     # define GithubTaskSession to handle insertions, and store oauth keys 
     session = GithubTaskSession(logger, config)
@@ -348,7 +348,7 @@ def find_dict_in_list_of_dicts(data, key, value):
 @celery.task
 def github_events(self, owner: str, repo: str):
 
-    logger = get_task_logger(github_events.name)
+    logger = logging.getLogger(github_events.__name__)
     logger.info(f"Collecting pull request events for {owner}/{repo}")
     
         # define GithubTaskSession to handle insertions, and store oauth keys 
@@ -381,7 +381,7 @@ def github_events(self, owner: str, repo: str):
 @celery.task
 def process_events(events, task_name):
 
-    logger = get_task_logger(process_events.name)
+    logger = logging.getLogger(process_events.__name__)
         # define GithubTaskSession to handle insertions, and store oauth keys 
     session = GithubTaskSession(logger, config)
 
@@ -460,7 +460,7 @@ def process_events(events, task_name):
 def github_comments(self, owner: str, repo: str) -> None:
 
     # define logger for task
-    logger = get_task_logger(github_comments.name)
+    logger = logging.getLogger(github_comments.__name__)
     logger.info(f"Collecting github comments for {owner}/{repo}")
     
     # define database task session, that also holds autentication keys the GithubPaginator needs
@@ -500,7 +500,7 @@ def github_comments(self, owner: str, repo: str) -> None:
 def process_messages(messages, task_name):
 
     # define logger for task
-    logger = get_task_logger(process_messages.name)
+    logger = logging.getLogger(process_messages.__name__)
     
     # define database task session, that also holds autentication keys the GithubPaginator needs
     session = GithubTaskSession(logger, config)
@@ -631,7 +631,7 @@ def is_issue_message(html_url):
 @celery.task
 def pull_request_review_comments(self, owner: str, repo: str) -> None:
 
-    logger = get_task_logger(pull_request_review_comments.name)
+    logger = logging.getLogger(pull_request_review_comments.__name__)
     
     # define GithubTaskSession to handle insertions, and store oauth keys 
     session = GithubTaskSession(logger, config)
@@ -730,7 +730,7 @@ def pull_request_reviews(self, owner: str, repo: str, pr_number_list: [int]) -> 
     tool_version = "2.0"
     data_source = "Github API"
 
-    logger = get_task_logger(pull_request_reviews.name)
+    logger = logging.getLogger(pull_request_reviews.__name__)
         # define GithubTaskSession to handle insertions, and store oauth keys 
     session = GithubTaskSession(logger, config)
 
