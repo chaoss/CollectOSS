@@ -41,10 +41,10 @@ import AugurStats from '@/AugurStats';
 //import { createApp } from 'vue'
 
 // from https://dwightjack.github.io/vue-types/advanced/custom-instance.html#introducing-createtypes
-import createApp from 'vue-types'; 
+import VueTypes from 'vue-types' 
 
 
-const app = createApp({})
+const app = new({})
 
 app.use(ShardsVue, {
   /* optional options */
