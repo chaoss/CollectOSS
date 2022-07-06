@@ -140,31 +140,33 @@ class TaskSession(s.orm.Session):
         with self.engine.connect() as connection:
 
             # print(str(stmnt.compile(dialect=pg.dialect())))
-            try:
+            
                 # if there is no data to return then it executes the insert the returns nothing
-                if len(return_columns) == 0:
-                    connection.execute(stmnt)
-                    return
+            if len(return_columns) == 0:
 
-            except Exception as e:
-                    
-                    def split_list(a_list):
-                        half = len(a_list)//2
-                        return a_list[:half], a_list[half:]
+                # try:
+                connection.execute(stmnt)
+                return
 
-                    # pr_url_list = []
-                    # for value in data:
-                    #     pr_url_list.append(value["pr_url"])
+                # except Exception as e:
+                        
+                #         def split_list(a_list):
+                #             half = len(a_list)//2
+                #             return a_list[:half], a_list[half:]
 
-                    # duplicates = set([x for x in pr_url_list if pr_url_list.count(x) > 1])
-                    
-                    # print(f"DUPLICATES: {duplicates}. ERROR: {e}")
-                    # return_data_set = set()
-                    print("Error splitting the data into two pieces")
-                    print(f"Data length: {len(data)}")
-                    list_1, list_2 = split_list(data)
-                    self.insert_data(list_1, table, natural_keys, return_columns)
-                    self.insert_data(list_2, table, natural_keys, return_columns)
+                #         # pr_url_list = []
+                #         # for value in data:
+                #         #     pr_url_list.append(value["pr_url"])
+
+                #         # duplicates = set([x for x in pr_url_list if pr_url_list.count(x) > 1])
+                        
+                #         # print(f"DUPLICATES: {duplicates}. ERROR: {e}")
+                #         # return_data_set = set()
+                #         print("Error splitting the data into two pieces")
+                #         print(f"Data length: {len(data)}")
+                #         list_1, list_2 = split_list(data)
+                #         self.insert_data(list_1, table, natural_keys, return_columns)
+                #         self.insert_data(list_2, table, natural_keys, return_columns)
             
             # else it get the requested return columns and returns them as a list of dicts
             else:
@@ -197,34 +199,36 @@ class TaskSession(s.orm.Session):
                     for data in string_data_list:
                         print(f"Data: {data}\n\n")
 
-                except Exception as e:
+                # except Exception as e:
+
+                #     print(f"Exception is: {e}")
                     
-                    def split_list(a_list):
-                        half = len(a_list)//2
-                        return a_list[:half], a_list[half:]
+                #     def split_list(a_list):
+                #         half = len(a_list)//2
+                #         return a_list[:half], a_list[half:]
 
-                    # pr_url_list = []
-                    # for value in data:
-                    #     pr_url_list.append(value["pr_url"])
+                #     # pr_url_list = []
+                #     # for value in data:
+                #     #     pr_url_list.append(value["pr_url"])
 
-                    # duplicates = set([x for x in pr_url_list if pr_url_list.count(x) > 1])
+                #     # duplicates = set([x for x in pr_url_list if pr_url_list.count(x) > 1])
                     
-                    # print(f"DUPLICATES: {duplicates}. ERROR: {e}")
-                    # return_data_set = set()
-                    self.logger.info("Error splitting the data into two pieces")
-                    self.logger.info(f"Data length: {len(data)}")
-                    list_1, list_2 = split_list(data)
-                    self.insert_data(list_1, table, natural_keys, return_columns)
-                    self.insert_data(list_2, table, natural_keys, return_columns)
-                        # return_data_set.add(return_column_data)
+                #     # print(f"DUPLICATES: {duplicates}. ERROR: {e}")
+                #     # return_data_set = set()
+                #     self.logger.info("Error splitting the data into two pieces")
+                #     self.logger.info(f"Data length: {len(data)}")
+                #     list_1, list_2 = split_list(data)
+                #     self.insert_data(list_1, table, natural_keys, return_columns)
+                #     self.insert_data(list_2, table, natural_keys, return_columns)
+                #         # return_data_set.add(return_column_data)
 
-                    # return_data_tuples = list(return_data_set)
+                #     # return_data_tuples = list(return_data_set)
 
-                # return_data = []
-                # for data in return_data_tuples:
-                #     return_data.append(dict(data))
+                return_data = []
+                for data in return_data_tuples:
+                    return_data.append(dict(data))
 
-                # return return_data
+                return return_data
 
 
                    

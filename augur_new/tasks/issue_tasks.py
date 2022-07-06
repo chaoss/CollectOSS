@@ -24,39 +24,6 @@ import time
 # logging.warn("This is a warning message")
 # logging.error("This is an error message")
 
-pr_numbers = [70, 106, 170, 190, 192, 208, 213, 215, 216, 218, 223, 224, 226, 230, 237, 238, 240, 241, 248, 249, 250, 252, 253, 254, 255, 256, 257, 261, 268, 270, 273, 277, 281, 283, 288, 291, 303, 306, 309, 310, 311, 323, 324, 325, 334, 335, 338, 343, 346, 348, 350, 353, 355, 356, 357, 359, 360, 365, 369, 375, 381, 382, 388, 405, 408, 409, 410, 414, 418, 419, 420, 421, 422, 424, 425, 431, 433, 438, 445, 450, 454, 455, 456, 457, 460, 463, 468, 469, 470, 474, 475, 476, 477, 478, 479, 480, 481, 482, 484, 485, 486, 487, 488, 490, 491, 492, 493, 494, 495, 496, 497, 498, 499, 500, 501, 502, 504, 506, 507, 508, 509, 510, 512, 514]
-
-
-@celery.task
-def collect_all_repo_data(owner: str, repo):
-    
-    logger = get_task_logger(collect_all_repo_data.name)
-    session = TaskSession(logger, config)
-
-    logger.info(f"Collecting data for {owner}/{repo}")
- 
-    start_task_list = []
-    # start_task_list.append(collect_pull_requests.s(owner, repo))
-    # start_task_list.append(collect_issues.s(owner, repo))
-
-    start_tasks_group = group(start_task_list)
-    
-
-    secondary_task_list = []
-    # secondary_task_list.append(pull_request_reviews.s(owner, repo, pr_numbers))
-    secondary_task_list.append(collect_events.s(owner, repo))
-    # secondary_task_list.append(collect_issue_and_pr_comments.s(owner, repo))
-    
-    secondary_task_group = group(secondary_task_list)
-
-    job = chain(
-        start_tasks_group,
-        secondary_task_group,
-    )
-
-    job.apply_async()
-
-
 @celery.task
 def collect_issues(owner: str, repo: str) -> None:
 
@@ -79,16 +46,12 @@ def collect_issues(owner: str, repo: str) -> None:
     # many issues were collected
     # loop through the issues 
     num_pages = issues.get_num_pages()
-
-    data = []
     
     for page_data, page in issues.iter_pages():
 
         logger.info(f"Issues Page {page} of {num_pages}")
 
-        data += page_data
-
-    process_issues.s(data, f"Issues Page {page} Task").apply_async()
+        process_issues.s(page_data, f"Issues Page {page} Task").apply_async()
         
 
 @celery.task
@@ -692,9 +655,9 @@ def process_messages(messages, task_name):
 
     contributors = remove_duplicate_dicts(contributors)
 
-    # logger.info(f"Inserting {len(contributors)} contributors")
+    logger.info(f"Inserting {len(contributors)} contributors")
 
-    # session.insert_data(contributors, Contributors, ["cntrb_login"])
+    session.insert_data(contributors, Contributors, ["cntrb_login"])
 
     
     logger.info(f"Inserting {len(message_dicts)} messages")
@@ -910,9 +873,10 @@ the issue is that most of the time we filter out needed
 #     logger = get_task_logger(process_issue_assignee_contributors.name)
 #     # process_contributors(contributors, table=IssueAssignees, logger=logger, pk_name="issue_assignee_id")
 
+@celery.task
+def process_contributors(self):
 
-def process_contributors(contributors, table, logger, unique_keys, pk_name, cntrb_id_name="cntrb_id"):
-
+    logger = get_task_logger(process_contributors.name)
     session = GithubTaskSession(logger, config)
 
     platform = 1
@@ -920,78 +884,125 @@ def process_contributors(contributors, table, logger, unique_keys, pk_name, cntr
     tool_version = "2.0"
     data_source = "Github API"
 
-    if len(contributors) == 0:
+    contributors = Contributors.query.filter_by(data_source=data_source, cntrb_created_at=None, cntrb_last_used=None).all()
+
+    contributors_len = len(contributors)
+
+    if contributors_len == 0:
+        print("No contributors to enrich...returning...")
         return
 
-    update_dicts = []
-    contributor_dicts = []
-    index = 1
-    total_all_time =  0
-    start_time = time.time()
-    for contributor in contributors:
+    print(f"Length of contributors to enrich: {contributors_len}")
+    enriched_contributors = []
+    for index, contributor in enumerate(contributors):
 
-        # get the primary key for the table that needs update with a cntrb_id
-        # primary_key = contributor[pk_name]
-        # del contributor[pk_name]
+        logger.info(f"Contributor {index + 1} of {contributors_len}")
 
-        # create uuid from gh contributor id and platform id
-        uuid_cntrb_id = AugurUUID(platform, contributor["id"]).to_UUID()
+        contributor_dict = contributor.__dict__
 
-        # get the needed data from the gh api respones
-        contributor_data = extract_needed_contributor_data(contributor, uuid_cntrb_id, tool_source, tool_version, data_source)
+        del contributor_dict["_sa_instance_state"]
 
-        # insert the contributor into the table
+        url = f"https://api.github.com/users/{contributor_dict['cntrb_login']}" 
 
-        contributor_dicts.append(contributor_data)
-        # session.insert_data(contributor_data, Contributors, ["cntrb_id"])
+        data = retrieve_dict_data(url, session)
 
-        # create list of dicts to update the table with the cntrb_ids
-        update_row = {}
-        update_row[cntrb_id_name] = uuid_cntrb_id
+        if data is None:
+            print(f"Unable to get contributor data for: {contributor_dict['cntrb_login']}")
+            continue
 
-        for field in unique_keys:
-            update_row[field] = contributor[field]
-        # update_row[pk_name] = primary_key
+        new_contributor_data = {
+            "cntrb_created_at": data["created_at"],
+            "cntrb_last_used": data["updated_at"]
+        }
 
-        update_dicts.append(update_row)
+        contributor_dict.update(new_contributor_data)
 
-    s = time.time()
+        enriched_contributors.append(contributor_dict)
 
-    contrib_len = len(contributor_dicts)
+    logger.info(f"Enriching {len(enriched_contributors)} contributors")
+    session.insert_data(enriched_contributors, Contributors, ["cntrb_login"])
 
-    print(f"Length of contributors: {contrib_len}")
 
-    unique_contrbs_logins = []
-    unique_contrbs = []
-    for contrb in contributor_dicts:
 
-        if contrb["cntrb_login"] not in unique_contrbs_logins:
-            unique_contrbs.append(contrb)
-            unique_contrbs_logins.append(contrb["cntrb_login"])
+
+
+
+
+
+
+
+
+
+
+    # update_dicts = []
+    # contributor_dicts = []
+    # index = 1
+    # total_all_time =  0
+    # start_time = time.time()
+    # for contributor in contributors:
+
+    #     # get the primary key for the table that needs update with a cntrb_id
+    #     # primary_key = contributor[pk_name]
+    #     # del contributor[pk_name]
+
+    #     # create uuid from gh contributor id and platform id
+    #     uuid_cntrb_id = AugurUUID(platform, contributor["id"]).to_UUID()
+
+    #     # get the needed data from the gh api respones
+    #     contributor_data = extract_needed_contributor_data(contributor, uuid_cntrb_id, tool_source, tool_version, data_source)
+
+    #     # insert the contributor into the table
+
+    #     contributor_dicts.append(contributor_data)
+    #     # session.insert_data(contributor_data, Contributors, ["cntrb_id"])
+
+    #     # create list of dicts to update the table with the cntrb_ids
+    #     update_row = {}
+    #     update_row[cntrb_id_name] = uuid_cntrb_id
+
+    #     for field in unique_keys:
+    #         update_row[field] = contributor[field]
+    #     # update_row[pk_name] = primary_key
+
+    #     update_dicts.append(update_row)
+
+    # s = time.time()
+
+    # contrib_len = len(contributor_dicts)
+
+    # print(f"Length of contributors: {contrib_len}")
+
+    # unique_contrbs_logins = []
+    # unique_contrbs = []
+    # for contrb in contributor_dicts:
+
+    #     if contrb["cntrb_login"] not in unique_contrbs_logins:
+    #         unique_contrbs.append(contrb)
+    #         unique_contrbs_logins.append(contrb["cntrb_login"])
 
         
 
 
-    contributor_dicts = [dict(y) for y in set(tuple(x.items()) for x in contributor_dicts)]
+    # contributor_dicts = [dict(y) for y in set(tuple(x.items()) for x in contributor_dicts)]
 
-    e = time.time() - s
+    # e = time.time() - s
 
-    print(f"Length of contributors: {len(unique_contrbs)}. Time to remove {contrib_len - len(unique_contrbs)}: {e} seconds")
+    # print(f"Length of contributors: {len(unique_contrbs)}. Time to remove {contrib_len - len(unique_contrbs)}: {e} seconds")
 
-    session.insert_data(unique_contrbs, Contributors, ["cntrb_id"])    
+    # session.insert_data(unique_contrbs, Contributors, ["cntrb_id"])    
 
-    total_time = time.time() - start_time
+    # total_time = time.time() - start_time
 
-    print(f"Seconds to proccess {len(update_dicts)} contributors: {total_time}")
+    # print(f"Seconds to proccess {len(update_dicts)} contributors: {total_time}")
 
-    # update table with cntrb_ids
-    start = time.time()
-    session.insert_data(update_dicts, table, unique_keys)
-    # session.bulk_update_mappings(table, update_dicts)
-    # session.commit()
-    total = time.time() - start
+    # # update table with cntrb_ids
+    # start = time.time()
+    # session.insert_data(update_dicts, table, unique_keys)
+    # # session.bulk_update_mappings(table, update_dicts)
+    # # session.commit()
+    # total = time.time() - start
 
-    print(f"Seconds to update {len(update_dicts)} rows: {total}")
+    # print(f"Seconds to update {len(update_dicts)} rows: {total}")
 
 
 def is_valid_pr_block(issue):
@@ -1019,7 +1030,46 @@ def add_key_value_pair_to_list_of_dicts(data_list, key, value):
 def find_dict_in_list_of_dicts(data, key, value):
 
     return next((item for item in data if item[key] == value), None)
-    
+
+
+def retrieve_dict_data(url: str, session):
+
+    num_attempts = 0
+    while num_attempts <= 10:
+
+        response = hit_api(session, url)
+
+        # increment attempts
+        if response is None:
+            num_attempts += 1
+            continue
+        # update rate limit here
+
+        page_data = response.json()
+
+        if "message" in page_data:
+
+            if page_data['message'] == "Not Found":
+                logger.info(
+                    "Github repo was not found or does not exist for endpoint: "
+                    f"{response.url}\n"
+                )
+                break
+
+            elif "You have exceeded a secondary rate limit. Please wait a few minutes before you try again" in page_data['message']:
+                logger.info('\n\n\n\nSleeping for 100 seconds due to secondary rate limit issue.\n\n\n\n')
+                time.sleep(100)
+                continue
+
+            elif "You have triggered an abuse detection mechanism." in page_data['message']:
+                #self.update_rate_limit(response, temporarily_disable=True,platform=platform)
+                continue
+        else:
+            return page_data
+
+
+    return None
+
 
 
 

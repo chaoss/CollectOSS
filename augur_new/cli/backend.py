@@ -14,7 +14,7 @@ import sys
 import subprocess
 
 
-from tasks.issue_tasks import collect_all_repo_data
+from tasks.start_tasks import start_task
 from augur.application import Application
 from augur.gunicorn import AugurGunicornApp
 from tasks.redis import redis_connection 
@@ -52,7 +52,7 @@ def start(disable_collection):
         # repo = "celery"
 
         logger.info("Launch start task")
-        result = collect_all_repo_data.apply_async(args=[owner, repo])
+        result = start_task.apply_async(args=[owner, repo])
 
     augur_app = Application()
     logger.info("Augur application initialized")

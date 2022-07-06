@@ -9,7 +9,7 @@ import sqlalchemy as s
 import time
 import math
 
-
+"""
 def enrich_cntrb_id(
     self, data, key, action_map_additions={'insert': {'source': [], 'augur': []}},
     platform='github', prefix=''
