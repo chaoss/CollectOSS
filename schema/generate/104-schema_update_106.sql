@@ -21,8 +21,8 @@ ORDER BY
   avg_libyear desc;
 
 
-grant all privileges on table "augur_data"."explorer_libyear_all" to cali; 
-grant all privileges on table "augur_data"."explorer_libyear_all" to cali;
+GRANT SELECT ON
+    "augur_data"."explorer_libyear_all" TO PUBLIC;
  
 
 CREATE MATERIALIZED VIEW "augur_data"."explorer_libyear_detail"
@@ -53,8 +53,8 @@ ORDER BY
   a.repo_id, 
   b.requirement;
 
-grant all privileges on table "augur_data"."explorer_libyear_detail" to cali; 
-grant all privileges on table "augur_data"."explorer_libyear_detail" to cali;
+GRANT SELECT ON
+    "augur_data"."explorer_libyear_detail" TO PUBLIC;
 
 
 update "augur_operations"."augur_settings" set value = 106
