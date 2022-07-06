@@ -28,6 +28,7 @@ Augur's documentation; (pronounced awe-grrr), is split into seven (7) parts. If 
   :width: 700
   :alt: Development guide image overview of augur 
 
+
 What is Augur?
 ~~~~~~~~~~~~~~~~
 
