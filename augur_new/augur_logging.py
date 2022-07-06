@@ -36,7 +36,7 @@ class AugurLogConfig():
     def __init__(self,disable_logs=False,reset_logfiles=True,base_log_dir="/home/isaac/logs"):
         if reset_logfiles is True:
             try:
-                shutil.rmtree(LOGS_DIRECTORY)
+                shutil.rmtree(base_log_dir)
             except FileNotFoundError as e:
                 pass
 
