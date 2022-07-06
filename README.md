@@ -28,7 +28,7 @@ For more information on [how to get involved on the CHAOSS website](https://chao
 
 ## Collecting Data
 
-Augur's main focus is to measure the overall health and sustainability of open source projects.
+Augur collects more data about open source software projects than any other available software. Augur's main focus is to measure the overall health and sustainability of open source projects.
 One of Augur's core tenets is a desire to openly gather data that people can trust, and then provide useful and well-defined metrics that help give important context to the larger stories being told by that data. We do this in a variety of ways, one of which is doing all our own data collection in house. We currently collect data from a few main sources:
 
 1. Raw Git commit logs (commits, contributors)
