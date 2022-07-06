@@ -9,7 +9,8 @@ COPY ./util/docker/frontend/frontend.docker.config.json frontend.config.json
 # RUN cp frontend.docker.config.json frontend.config.json
 
 FROM build-stage as core-ui
-COPY frontend/package.json .
+COPY frontend/package.json . 
+COPY frontend/package-lock.json .
 RUN npm install
 RUN npm install @vue/cli
 COPY frontend/ .
