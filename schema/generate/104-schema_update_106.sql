@@ -8,8 +8,8 @@ SELECT
   date_part( 'month' :: TEXT, ( A.data_collection_date ) :: DATE ) AS MONTH,
   date_part( 'year' :: TEXT, ( A.data_collection_date ) :: DATE ) AS YEAR 
 FROM
-  repo a, 
-  repo_deps_libyear b
+  augur_data.repo a, 
+  augur_data.repo_deps_libyear b
 GROUP BY
   a.repo_id, 
   a.repo_name, 
@@ -38,8 +38,8 @@ SELECT
   libyear,
   max(b.data_collection_date)
 FROM
-  repo a, 
-  repo_deps_libyear b
+  augur_data.repo a, 
+  augur_data.repo_deps_libyear b
 GROUP BY
   a.repo_id,
   a.repo_name, 
