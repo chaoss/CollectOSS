@@ -34,35 +34,17 @@ import Default from '@/layouts/Default.vue';
 import AugurAPI from '@/AugurAPI';
 import AugurStats from '@/AugurStats';
 
-//commented out SPG 20220706
-//ShardsVue.install(Vue);
-
-//plugin setup from https://vuejs.org/guide/reusability/plugins.html#introduction
-//import { createApp } from 'vue'
-
-// from https://dwightjack.github.io/vue-types/advanced/custom-instance.html#introducing-createtypes
-import createApp from 'vue-types'; 
-
-
-const app = createApp({})
-
-app.use(ShardsVue, {
-  /* optional options */
-})
-
-app.use(VueVega, {
-  /* optional options */
-})
+ShardsVue.install(Vue);
 
 Vue.component('default-layout', Default);
 
 Vue.config.productionTip = false;
 Vue.prototype.$eventHub = new Vue();
 
-//app.use(ShardsVue);
-// app.use(Vuex)
-//app.use(VueVega);
-// app.use(VueRouter);
+Vue.use(ShardsVue);
+// Vue.use(Vuex)
+Vue.use(VueVega);
+// Vue.use(VueRouter);
 
 export default function Augur() {
   // AugurApp.store = store

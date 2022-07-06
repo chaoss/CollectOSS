@@ -39,7 +39,6 @@
     "vue-property-decorator": "^8.5.1",
     "vue-router": "^3.4.3",
     "vue-spinners": "^1.0.2",
-    "vue-types": "2.0.1-rc.1",
     "vue-vega": "^1.0.0-alpha.13",
     "vuex": "^3.5.1",
     "vuex-persistedstate": "^2.7.1"
