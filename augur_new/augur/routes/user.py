@@ -8,6 +8,8 @@ import requests
 import json
 from flask import request, Response, jsonify
 
+from db.models import Users
+
 logger = logging.getLogger(__name__)
 
 def generate_upgrade_request():
@@ -65,6 +67,11 @@ def create_routes(server):
             return jsonify({"status": "Missing argument"}), 400
 
         # TODO database stuff. See pseudocode below
+
+        user = User(username = name, password = password, email = email)
+
+        db.session.add(user)
+        db.commit()
 
         """
         - SELECT * FROM users WHERE id = user

@@ -1,4 +1,4 @@
-
+from AugurUUID import AugurUUID
 """
 This file contains functions that take the api response 
 and return only the data that the database needs
@@ -47,7 +47,7 @@ def extract_needed_pr_assignee_data(assignees: [dict], platform_id: int, repo_id
 
         assignee_dict = {
             # store the pr_url data on in the pr assignee data for now so we can relate it back to a pr later
-            'contrib_id': None,
+            'contrib_id': assignee["cntrb_id"],
             'pr_assignee_src_id': int(assignee['id']),
             'tool_source': tool_source,
             'tool_version': tool_version,
@@ -69,7 +69,7 @@ def extract_needed_pr_reviewer_data(reviewers: [dict], platform_id: int, repo_id
     for reviewer in reviewers:
 
         reviewer_dict = {
-            'cntrb_id': None,
+            'cntrb_id': reviewer["cntrb_id"],
             'pr_reviewer_src_id': int(float(reviewer['id'])),
             'tool_source': tool_source,
             'tool_version': tool_version,
@@ -95,7 +95,7 @@ def extract_needed_pr_metadata(metadata_list: [dict], platform_id: int, repo_id:
             'pr_src_meta_ref': meta['ref'],
             'pr_sha': meta['sha'],
             # Cast as int for the `nan` user by SPG on 11/28/2021; removed 12/6/2021
-            'cntrb_id': None,
+            'cntrb_id': meta["cntrb_id"] if "cntrb_id" in meta else None,
             'tool_source': tool_source,
             'tool_version': tool_version,
             'data_source': data_source,
@@ -181,7 +181,7 @@ def extract_pr_event_data(event: dict, pr_id: int, platform_id: int, repo_id: in
 
     pr_event = {
         'pull_request_id': pr_id,
-        'cntrb_id': None,
+        'cntrb_id': event["cntrb_id"] if "cntrb_id" in event else None,
         'action': event['event'],
         'action_commit_hash': None,
         'created_at': event['created_at'],
@@ -208,7 +208,7 @@ def extract_issue_event_data(event: dict, issue_id: int, platform_id: int, repo_
         'issue_id': issue_id,
         'node_id': event['node_id'],
         'node_url': event['url'],
-        'cntrb_id': None,
+        'cntrb_id': event["cntrb_id"] if "cntrb_id" in event else None,
         'created_at': event['created_at'] if (
             event['created_at']
         ) else None,
@@ -234,7 +234,7 @@ def extract_needed_issue_assignee_data(assignees: [dict], repo_id: int, tool_sou
     for assignee in assignees:
 
         assignee_dict = {
-            'cntrb_id': None,
+            'cntrb_id': assignee["cntrb_id"], # # this is added to the data by the function process_issue_contributors in issue_tasks.py
             'tool_source': tool_source,
             'tool_version': tool_version,
             'data_source': data_source,
@@ -311,6 +311,7 @@ def extract_needed_pr_message_ref_data(comment: dict, pull_request_id: int, repo
      
 
 def extract_needed_pr_data(pr, repo_id, tool_source, tool_version):
+    
 
     pr_dict = {
         'repo_id': repo_id,
@@ -328,7 +329,7 @@ def extract_needed_pr_data(pr, repo_id, tool_source, tool_version):
         'pr_src_state': pr['state'],
         'pr_src_locked': pr['locked'],
         'pr_src_title': str(pr['title']),
-        'pr_augur_contributor_id': None,
+        'pr_augur_contributor_id': pr["cntrb_id"],
         ### Changed to int cast based on error 12/3/2021 SPG (int cast above is first change on 12/3)
         'pr_body': str(pr['body']).encode(encoding='UTF-8', errors='backslashreplace').decode(encoding='UTF-8', errors='ignore') if (
             pr['body']
@@ -371,8 +372,9 @@ def extract_needed_pr_data(pr, repo_id, tool_source, tool_version):
 def extract_needed_issue_data(issue: dict, repo_id: int, tool_source: str, tool_version: str, data_source: str):
 
     dict_data = {
+        'cntrb_id': None, # this the contributor who closed the issue
         'repo_id': repo_id,
-        'reporter_id': None,
+        'reporter_id': issue["cntrb_id"], # this is the contributor who opened the issue
         'pull_request': None,
         'pull_request_id': None,
         'created_at': issue['created_at'],
@@ -412,7 +414,7 @@ def extract_needed_message_data(comment: dict, platform_id: int, repo_id: int, t
             comment['body']
         ) else None,
         'msg_timestamp': comment['created_at'],
-        'cntrb_id': None,
+        'cntrb_id': comment["cntrb_id"],
         'tool_source': tool_source,
         'tool_version': tool_version,
         'data_source': data_source,
@@ -456,6 +458,46 @@ def extract_need_pr_review_data(reviews, platform_id, repo_id, tool_version, dat
         review_data.append(pr_review_dict)
 
     return review_data
+
+def extract_needed_contributor_data(contributor, platform_id, tool_source, tool_version, data_source):
+
+    cntrb_id = AugurUUID(platform_id, contributor["id"]).to_UUID()   
+
+    contributor = {
+            "cntrb_id": cntrb_id,
+            "cntrb_login": contributor['login'],
+            "cntrb_created_at": contributor['created_at'] if 'created_at' in contributor else None,
+            "cntrb_email": contributor['email'] if 'email' in contributor else None,
+            "cntrb_company": contributor['company'] if 'company' in contributor else None,
+            "cntrb_location": contributor['location'] if 'location' in contributor else None,
+            # "cntrb_type": , dont have a use for this as of now ... let it default to null
+            "cntrb_canonical": contributor['email'] if 'email' in contributor else None,
+            "gh_user_id": contributor['id'],
+            "gh_login": str(contributor['login']),  ## cast as string by SPG on 11/28/2021 due to `nan` user
+            "gh_url": contributor['url'],
+            "gh_html_url": contributor['html_url'],
+            "gh_node_id": contributor['node_id'],
+            "gh_avatar_url": contributor['avatar_url'],
+            "gh_gravatar_id": contributor['gravatar_id'],
+            "gh_followers_url": contributor['followers_url'],
+            "gh_following_url": contributor['following_url'],
+            "gh_gists_url": contributor['gists_url'],
+            "gh_starred_url": contributor['starred_url'],
+            "gh_subscriptions_url": contributor['subscriptions_url'],
+            "gh_organizations_url": contributor['organizations_url'],
+            "gh_repos_url": contributor['repos_url'],
+            "gh_events_url": contributor['events_url'],
+            "gh_received_events_url": contributor['received_events_url'],
+            "gh_type": contributor['type'],
+            "gh_site_admin": contributor['site_admin'],
+            "cntrb_last_used" : None if 'updated_at' not in contributor else contributor['updated_at'],
+            "cntrb_full_name" : None if 'name' not in contributor else contributor['name'],
+            "tool_source": tool_source,
+            "tool_version": tool_version,
+            "data_source": data_source
+        }
+
+    return contributor
 
 
 

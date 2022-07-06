@@ -16,7 +16,7 @@ from augur_new.augur.config import AugurConfig
 
 from augur_new.util.random_key_auth import RandomKeyAuth
 from augur_new.tasks.redis import redis_connection as redis
-import psycopg2
+import psycopg2 
 # from .engine import engine
 
 #TODO: setup github headers in a method here.
@@ -103,7 +103,7 @@ class TaskSession(s.orm.Session):
                 return
 
         if len(data) == 0:
-            self.logger.info("Gave no data to insert, returning...")
+            # self.logger.info("Gave no data to insert, returning...")
             return
 
         if type(data[0]) != dict:
@@ -134,25 +134,104 @@ class TaskSession(s.orm.Session):
             #Columns to be updated
             set_ = setDict
         )
-        
 
-        # print(str(stmnt.compile(dialect=pg.dialect())))
+        with self.engine.connect() as connection:
 
-        # if there is no data to return then it executes the insert the returns nothing
-        if len(return_columns) == 0:
-            self.execute_sql(stmnt)
-            return
-        
-        # else it get the requested return columns and returns them as a list of dicts
-        else:
-            return_data_tuples = self.execute_sql(stmnt).fetchall()
+            # print(str(stmnt.compile(dialect=pg.dialect())))
+            
+                # if there is no data to return then it executes the insert the returns nothing
+            if len(return_columns) == 0:
 
-            # converts the return data to a list of dicts
-            return_data = []
-            for data in return_data_tuples:
-                return_data.append(dict(data))
+                # try:
+                connection.execute(stmnt)
+                return
 
-            return return_data
+                # except Exception as e:
+                        
+                #         def split_list(a_list):
+                #             half = len(a_list)//2
+                #             return a_list[:half], a_list[half:]
+
+                #         # pr_url_list = []
+                #         # for value in data:
+                #         #     pr_url_list.append(value["pr_url"])
+
+                #         # duplicates = set([x for x in pr_url_list if pr_url_list.count(x) > 1])
+                        
+                #         # print(f"DUPLICATES: {duplicates}. ERROR: {e}")
+                #         # return_data_set = set()
+                #         print("Error splitting the data into two pieces")
+                #         print(f"Data length: {len(data)}")
+                #         list_1, list_2 = split_list(data)
+                #         self.insert_data(list_1, table, natural_keys, return_columns)
+                #         self.insert_data(list_2, table, natural_keys, return_columns)
+            
+            # else it get the requested return columns and returns them as a list of dicts
+            else:
+                try:
+                    return_data_tuples = connection.execute(stmnt).fetchall()
+                     # converts the return data to a list of dicts
+                    return_data = []
+                    for data in return_data_tuples:
+                        return_data.append(dict(data))
+
+                    return return_data
+
+                except ValueError as e:
+                    print(f"ERROR: {e}")
+                    data_keys = list(data[0].keys())
+
+                    string_data_list = []
+                    # loop through data with potential errors
+                    for value in data:
+
+                        string_data = {}
+                        # find the fields that are strings for that data
+                        for key in data_keys:
+
+                            if type(value[key]) == str:
+                                string_data[field] = value[field]
+
+                        string_data_list.append(string_data)
+
+                    for data in string_data_list:
+                        print(f"Data: {data}\n\n")
+
+                # except Exception as e:
+
+                #     print(f"Exception is: {e}")
+                    
+                #     def split_list(a_list):
+                #         half = len(a_list)//2
+                #         return a_list[:half], a_list[half:]
+
+                #     # pr_url_list = []
+                #     # for value in data:
+                #     #     pr_url_list.append(value["pr_url"])
+
+                #     # duplicates = set([x for x in pr_url_list if pr_url_list.count(x) > 1])
+                    
+                #     # print(f"DUPLICATES: {duplicates}. ERROR: {e}")
+                #     # return_data_set = set()
+                #     self.logger.info("Error splitting the data into two pieces")
+                #     self.logger.info(f"Data length: {len(data)}")
+                #     list_1, list_2 = split_list(data)
+                #     self.insert_data(list_1, table, natural_keys, return_columns)
+                #     self.insert_data(list_2, table, natural_keys, return_columns)
+                #         # return_data_set.add(return_column_data)
+
+                #     # return_data_tuples = list(return_data_set)
+
+                return_data = []
+                for data in return_data_tuples:
+                    return_data.append(dict(data))
+
+                return return_data
+
+
+                   
+
+               
 
 #TODO: Test sql methods
 class GithubTaskSession(TaskSession):

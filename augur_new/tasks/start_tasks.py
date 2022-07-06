@@ -12,24 +12,29 @@ def start_task(owner: str, repo):
     logger.info(f"Collecting data for {owner}/{repo}")
  
     start_task_list = []
-    #start_task_list.append(pull_requests.s(owner, repo))
-    #start_task_list.append(issues.s(owner, repo))
+    start_task_list.append(collect_pull_requests.s(owner, repo))
+    start_task_list.append(collect_issues.s(owner, repo))
 
     start_tasks_group = group(start_task_list)
     
 
     secondary_task_list = []
     # secondary_task_list.append(pull_request_reviews.s(owner, repo, pr_numbers))
-    # secondary_task_list.append(github_events.s(owner, repo))
-    # secondary_task_list.append(github_comments.s(owner, repo))
+    # secondary_task_list.append(collect_events.s(owner, repo))
+    secondary_task_list.append(collect_issue_and_pr_comments.s(owner, repo))
     
     secondary_task_group = group(secondary_task_list)
+
+    third_task_list = []
+    third_task_list.append(process_contributors.s())
+    
+    third_task_group = group(third_task_list)
+
 
     job = chain(
         start_tasks_group,
         secondary_task_group,
+        process_contributors.s(),
     )
 
     job.apply_async()
-            
-

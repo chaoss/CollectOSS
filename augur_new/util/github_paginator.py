@@ -78,7 +78,7 @@ class GithubPaginator(collections.abc.Sequence):
 
     def __len__(self) -> int:
 
-        num_pages = self.get_last_page_number(self.url)
+        num_pages = self.get_num_pages()
 
         self.logger.info(f"Num pages: {num_pages}")
 
@@ -118,9 +118,35 @@ class GithubPaginator(collections.abc.Sequence):
             for data in data_list:
                 yield data
 
+    def iter_pages(self):
+
+        data_list, response = self.retrieve_data(self.url)
+
+        page_number = get_url_page_number(self.url)
+
+        if data_list is None:
+            yield None, page_number
+            return 
+
+        yield data_list, page_number
+
+        while 'next' in response.links.keys():
+            next_page = response.links['next']['url']
+
+            # Here we don't need to pass in params with the page, or the default params because the url from the headers already has those values
+            data_list, response = self.retrieve_data(next_page)
+
+            page_number = get_url_page_number(next_page)
+
+            if data_list is None:
+                return
+
+            yield data_list, page_number
+
+
     def hit_api(self, url: str, timeout, method='GET') -> httpx.Response:
 
-        self.logger.info(f"Hitting endpoint with {method} request: {url}...\n")
+        # self.logger.info(f"Hitting endpoint with {method} request: {url}...\n")
 
         with httpx.Client() as client:
 
@@ -162,7 +188,7 @@ class GithubPaginator(collections.abc.Sequence):
                 return page_data, response
 
             elif type(page_data) == dict:
-                result = process_dict_response(response, page_data, self.logger.info)
+                result = self.process_dict_response(response, page_data)
 
                 if result == "break":
                     break
@@ -170,7 +196,7 @@ class GithubPaginator(collections.abc.Sequence):
                     num_attempts -= 1
 
             elif type(page_data) == str:
-                result, data_loaded = process_str_response(response, page_data, self.logger.info)
+                result, data_loaded = self.process_str_response(response, page_data)
 
                 if data_loaded:
                     return result, response
@@ -181,7 +207,7 @@ class GithubPaginator(collections.abc.Sequence):
 
     async def __aiter__(self):
         
-        last_page_num = self.get_last_page_number(self.url)
+        last_page_num = self.get_num_pages()
 
 
         if last_page_num == 1:
@@ -252,7 +278,7 @@ class GithubPaginator(collections.abc.Sequence):
                 return page_data, response
 
             elif type(page_data) == dict:
-                result = process_dict_response(response, page_data)
+                result = self.process_dict_response(response, page_data)
 
                 if result == "break":
                     break
@@ -260,7 +286,7 @@ class GithubPaginator(collections.abc.Sequence):
                     num_attempts -= 1
 
             elif type(page_data) == str:
-                result, data_loaded = process_str_response(response, page_data)
+                result, data_loaded = self.process_str_response(response, page_data)
 
                 if data_loaded:
                     return result, response
@@ -269,12 +295,12 @@ class GithubPaginator(collections.abc.Sequence):
 
         return None, None
 
-    def get_last_page_number(self, url: str):
+    def get_num_pages(self):
         
         timeout = 5
         num_attempts = 0
         while num_attempts < 10:
-            r = self.hit_api(url, timeout=timeout, method="HEAD")
+            r = self.hit_api(self.url, timeout=timeout, method="HEAD")
 
             if r:
                 break
@@ -293,6 +319,52 @@ class GithubPaginator(collections.abc.Sequence):
             num_pages = int(parse_qs(parsed_url.query)['page'][0])
 
             return num_pages
+
+
+###################################################
+
+    # Methods to process api responses
+
+    def process_dict_response(self, response: httpx.Response, page_data: dict):
+        
+        self.logger.info("Request returned a dict: {}\n".format(page_data))
+        if page_data['message'] == "Not Found":
+            self.logger.info(
+                "Github repo was not found or does not exist for endpoint: "
+                f"{response.url}\n"
+            )
+            return "break"
+
+        if "You have exceeded a secondary rate limit. Please wait a few minutes before you try again" in page_data['message']:
+            self.logger.info('\n\n\n\nSleeping for 100 seconds due to secondary rate limit issue.\n\n\n\n')
+            time.sleep(100)
+
+            return "decrease_attempts"
+
+        if "You have triggered an abuse detection mechanism." in page_data['message']:
+            #self.update_rate_limit(response, temporarily_disable=True,platform=platform)
+
+            return "decrease_attempts"
+
+        if page_data['message'] == "Bad credentials":
+            self.logger.info("\n\n\n\n\n\n\n POSSIBLY BAD TOKEN \n\n\n\n\n\n\n")
+            #self.update_rate_limit(response, bad_credentials=True, platform=platform)
+            return "bad_credentials"
+
+    def process_str_response(self, response: httpx.Response, page_data: str):
+            self.logger.info(f"Warning! page_data was string: {page_data}\n")
+            if "<!DOCTYPE html>" in page_data:
+                self.logger.info("HTML was returned, trying again...\n")
+                return "html_response", False
+            elif len(page_data) == 0:
+                self.logger.info("Empty string, trying again...\n")
+                return "empty_string", False
+            else:
+                try:
+                    page_data = json.loads(page_data)
+                    return page_data, True
+                except:
+                    pass
 
 
 ################################################################################
@@ -322,51 +394,6 @@ def add_query_params(url: str, additional_params: dict) -> str:
     # _replace() is how you can create a new NamedTuple with a changed field
     return url_components._replace(query=updated_query).geturl()
 
-################################################################################
-
-# Methods to process api responses
-
-def process_dict_response(self, response: httpx.Response, page_data: dict, logger):
-    
-    logger.info("Request returned a dict: {}\n".format(page_data))
-    if page_data['message'] == "Not Found":
-        logger.info(
-            "Github repo was not found or does not exist for endpoint: "
-            f"{response.url}\n"
-        )
-        return "break"
-
-    if "You have exceeded a secondary rate limit. Please wait a few minutes before you try again" in page_data['message']:
-        logger.info('\n\n\n\nSleeping for 100 seconds due to secondary rate limit issue.\n\n\n\n')
-        time.sleep(100)
-
-        return "decrease_attempts"
-
-    if "You have triggered an abuse detection mechanism." in page_data['message']:
-        #self.update_rate_limit(response, temporarily_disable=True,platform=platform)
-
-        return "decrease_attempts"
-
-    if page_data['message'] == "Bad credentials":
-        logger.info("\n\n\n\n\n\n\n POSSIBLY BAD TOKEN \n\n\n\n\n\n\n")
-        #self.update_rate_limit(response, bad_credentials=True, platform=platform)
-        return "bad_credentials"
-
-def process_str_response(response: httpx.Response, page_data: str, logger):
-        logger.info(f"Warning! page_data was string: {page_data}\n")
-        if "<!DOCTYPE html>" in page_data:
-            logger.info("HTML was returned, trying again...\n")
-            return "html_response", False
-        elif len(page_data) == 0:
-            logger.info("Empty string, trying again...\n")
-            return "empty_string", False
-        else:
-            try:
-                page_data = json.loads(page_data)
-                return page_data, True
-            except:
-                pass
-
 
 ################################################################################
 
@@ -381,3 +408,17 @@ def is_key_depleted(response):
 
 
 ################################################################################
+
+
+def get_url_page_number(url):
+
+    parsed_url = urlparse(url)
+    
+    try:
+        page_number = int(parse_qs(parsed_url.query)['page'][0])
+    # if page is not a url query param then this is page 1
+
+    except KeyError:
+        return 1
+
+    return page_number

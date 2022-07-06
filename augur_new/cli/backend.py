@@ -40,8 +40,16 @@ def start(disable_collection):
     
     if not disable_collection:
 
+        # 1300 prs
+        # 456 issues
         owner = "chaoss"
         repo = "augur"
+
+
+        # 4200 issues
+        # 2500 prs
+        # owner = "celery"
+        # repo = "celery"
 
         logger.info("Launch start task")
         result = start_task.apply_async(args=[owner, repo])
