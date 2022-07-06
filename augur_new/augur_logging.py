@@ -48,6 +48,8 @@ class AugurLogConfig():
 
         task_files = [tasks.facade_tasks,tasks.issue_tasks,tasks.start_tasks]
 
+        self.logger_names = []
+
         self.__initLoggers(task_files,logging.INFO)
     
     def __initLoggers(self,task_modules,logLevel):
@@ -68,14 +70,19 @@ class AugurLogConfig():
             for task in allTasksInModule:
                 #Create logging profiles for each task in seperate files.
                 lg = logging.getLogger(task)
+                self.logger_names.append(task)
 
                 #Don't bother if logs are disabled.
                 if self.disable_logs:
                     lg.disabled = True
                     break
                 
+                #Put logs in seperate folders by module.
+                module_folder = Path(str(self.base_log_dir) + "/" + module.__name__ + "/")
+                module_folder.mkdir(exist_ok=True)
+
                 #Absolute path to log file
-                file = str(self.base_log_dir) + "/" + str(task)
+                file = str(module_folder) + "/" + str(task)
                 handler = FileHandler(filename=file,mode='a') 
                 handler.setLevel(logLevel)
 
@@ -95,6 +102,10 @@ class AugurLogConfig():
                     fmt = AugurLogConfig.simple_format_string
                 
                 coloredlogs.install(level=logLevel, logger=lg, fmt=fmt)
+        
+        def getLoggerNames(self):
+            return self.logger_names
+
 
 
 

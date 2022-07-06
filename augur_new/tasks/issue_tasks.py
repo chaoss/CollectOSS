@@ -1,4 +1,5 @@
 from .facade_tasks import *
+from tasks.celery import celery
 
 
 from augur_new.db.data_parse import *

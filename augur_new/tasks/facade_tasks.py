@@ -84,7 +84,7 @@ def setup_loggers(*args,**kwargs):
 @celery.task
 def analyze_commits_in_parallel(queue, repo_id, repo_location, multithreaded):
     #create new cfg for celery thread.
-    logger = get_task_logger(facade_resolve_contribs.name)
+    logger = logging.getLogger(facade_resolve_contribs.name)
     cfg = Config(logger)
 
     for analyzeCommit in queue:    
@@ -278,7 +278,7 @@ def analysis(cfg, multithreaded, session=None, processes=6):
 @celery.task
 def facade_commits_model():
 
-    logger = get_task_logger(facade_commits_model.name)
+    logger = logging.getLogger(facade_commits_model.name)
     session = FacadeSession(logger)
     # Figure out what we need to do
     limited_run = session.limited_run
@@ -472,7 +472,7 @@ def facade_commits_model():
 
 @celery.task
 def facade_grab_contribs(repo_id):
-    logger = get_task_logger(facade_grab_contribs.name)
+    logger = logging.getLogger(facade_grab_contribs.name)
     session = FacadeSession(logger)
     
     grab_committer_list(session,repo_id)
@@ -482,7 +482,7 @@ def facade_grab_contribs(repo_id):
 
 @celery.task
 def process_commit_metadata(contributorQueue,repo_id):
-    logger = get_task_logger(facade_grab_contribs.name)
+    logger = logging.getLogger(facade_grab_contribs.name)
     session = FacadeSession(logger)
 
     for contributor in contributorQueue:
@@ -687,7 +687,7 @@ def process_commit_metadata(contributorQueue,repo_id):
 
 @celery.task
 def link_commits_to_contributor(contributorQueue):
-        logger = get_task_logger(facade_resolve_contribs.name)
+        logger = logging.getLogger(facade_resolve_contribs.name)
         session = FacadeSession(logger)
 
         # iterate through all the commits with emails that appear in contributors and give them the relevant cntrb_id.
@@ -844,7 +844,7 @@ def insert_facade_contributors(session, repo_id,processes=4,multithreaded=True):
 
 @celery.task
 def facade_resolve_contribs():
-    logger = get_task_logger(facade_resolve_contribs.name)
+    logger = logging.getLogger(facade_resolve_contribs.name)
     session = FacadeSession(logger)
     ### moved up by spg on 12/1/2021
     #Interface with the contributor worker and inserts relevant data by repo
