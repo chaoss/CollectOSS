@@ -53,9 +53,6 @@ OWNED BY "augur_operations"."chaoss_user_repos"."user_repo_id";
 
 ALTER SEQUENCE "augur_operations"."chaoss_user_repos_user_repo_id_seq" OWNER TO "augur";
 
-grant all privileges on table augur_operations.chaoss_user to mlgsoc; 
-grant all privileges on table augur_operations.chaoss_user_repos to mlgsoc; 
-
 update "augur_operations"."augur_settings" set value = 105
   where setting = 'augur_data_version'; 
 
