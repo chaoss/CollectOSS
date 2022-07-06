@@ -33,7 +33,7 @@ class AugurLogConfig():
     config_format_string = "[%(levelname)s] %(message)s"
     error_format_string = "%(asctime)s [PID: %(process)d] %(name)s [%(funcName)s() in %(filename)s:L%(lineno)d] [%(levelname)s]: %(message)s"
 
-    def __init__(self,disable_logs=False,reset_logfiles=True,base_log_dir="/var/log/augur/"):
+    def __init__(self,disable_logs=False,reset_logfiles=True,base_log_dir="/home/isaac/logs"):
         if reset_logfiles is True:
             try:
                 shutil.rmtree(LOGS_DIRECTORY)
