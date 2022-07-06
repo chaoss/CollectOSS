@@ -38,7 +38,11 @@ import AugurStats from '@/AugurStats';
 //ShardsVue.install(Vue);
 
 //plugin setup from https://vuejs.org/guide/reusability/plugins.html#introduction
-import { createApp } from 'vue'
+//import { createApp } from 'vue'
+
+// from https://dwightjack.github.io/vue-types/advanced/custom-instance.html#introducing-createtypes
+import createApp from 'vue-types'; 
+
 
 const app = createApp({})
 
