@@ -19,6 +19,7 @@ from celery import group, chain, chord, signature
 from celery.utils.log import get_task_logger
 from celery.result import allow_join_result
 from celery.signals import after_setup_logger
+from datetime import timedelta
 import sqlalchemy as s
 
 # allows us to reference augur_new (the parent module)
@@ -464,7 +465,7 @@ def facade_commits_model():
     
     elapsed_time = time.time() - start_time
 
-    print('\nCompleted in %s\n' % datetime.timedelta(seconds=int(elapsed_time)))
+    print('\nCompleted in %s\n' % timedelta(seconds=int(elapsed_time)))
 
     session.cfg.cursor.close()
     #session.cfg.cursor_people.close()
