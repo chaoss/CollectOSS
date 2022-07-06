@@ -48,7 +48,7 @@ Keeping ``workers`` at 1 should be fine for small collection sets, but if you ha
 Worker-specific configuration options
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Next up are the configuration options specific to each worker (but some workers require no additional configuration beyond the defaults). The most pertinent of these options is the ``facade_worker``'s ``repo_directory``, so make sure to pay attention to that one.
+Next up are the configuration options specific to each worker (but some workers require no additional configuration beyond the defaults). The most pertinent of these options is the ``facade_worker's`` ``repo_directory``, so make sure to pay attention to that one.
 
 ``facade_worker``
 ::::::::::::::::::
