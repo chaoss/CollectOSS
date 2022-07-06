@@ -6,6 +6,7 @@ from augur_new.db.models import *
 import sqlalchemy as s
 import time
 import math
+from AugurUUID import AugurUUID
 
 """
 def enrich_cntrb_id(
