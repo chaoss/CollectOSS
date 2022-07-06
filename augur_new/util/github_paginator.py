@@ -88,6 +88,7 @@ class GithubPaginator(collections.abc.Sequence):
         # get the amount of data on last page
         data, _ = self.retrieve_data(url)
 
+        
         last_page_data_count = len(data)
 
         data_length = (100 * (num_pages - 1)) + last_page_data_count
@@ -337,6 +338,12 @@ class GithubPaginator(collections.abc.Sequence):
 
         if "You have exceeded a secondary rate limit. Please wait a few minutes before you try again" in page_data['message']:
             self.logger.info('\n\n\n\nSleeping for 100 seconds due to secondary rate limit issue.\n\n\n\n')
+            time.sleep(100)
+
+            return "decrease_attempts"
+        
+        if "API rate limit exceeded for user" in page_data['message']:
+            self.logger.info('\n\n\n\nSleeping for 100 seconds due to api rate limit being exceeded\n\n\n\n')
             time.sleep(100)
 
             return "decrease_attempts"
