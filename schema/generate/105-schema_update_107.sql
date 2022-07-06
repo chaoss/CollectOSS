@@ -7,8 +7,8 @@ SELECT repo.repo_id,
             COUNT(commits.cmt_id) AS num_of_commits,
             COUNT(DISTINCT commits.cmt_committer_raw_email) AS num_of_unique_committers
             from 
-            commits 
-            left join repo on repo.repo_id = commits.repo_id 
+            augur_data.commits 
+            left join augur_data.repo on repo.repo_id = commits.repo_id 
             group by 
             repo.repo_id,
             repo.repo_name,
