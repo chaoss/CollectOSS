@@ -278,6 +278,7 @@ def analysis(cfg, multithreaded, session=None, processes=6):
 @celery.task
 def facade_commits_model():
 
+    print(facade_commits_model.name)
     logger = logging.getLogger(facade_commits_model.name)
     session = FacadeSession(logger)
     # Figure out what we need to do
