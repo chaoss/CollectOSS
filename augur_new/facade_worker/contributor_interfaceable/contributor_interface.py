@@ -350,7 +350,7 @@ def create_endpoint_from_repo_id(session, repo_id):
         WHERE repo_id = :repo_id_bind
     """
     #ORM syntax of above statement
-    result = Repo.query.filter_by(repo_id=1).one()
+    result = Repo.query.filter_by(repo_id=repo_id).one()
 
     url = result.repo_git
     session.logger.info(f"Url: {url}")
