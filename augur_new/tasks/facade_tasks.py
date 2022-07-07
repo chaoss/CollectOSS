@@ -73,7 +73,7 @@ with open(config_path, 'r') as f:
 @after_setup_logger.connect
 def setup_loggers(*args,**kwargs):
     #load config
-    loggingConfig = AugurLogConfig()
+    loggingConfig = AugurLogConfig(base_log_dir=config["Logging"]["logs_directory"])
 
     
     
