@@ -11,6 +11,7 @@ from glob import glob
 import logging
 from sqlalchemy.sql import text
 from sqlalchemy.exc import ProgrammingError
+import re
 
 # revision identifiers, used by Alembic.
 revision = "0"
@@ -19,6 +20,11 @@ branch_labels = None
 depends_on = None
 
 logger = logging.getLogger("alembic.runtime.migration")
+
+def natural_sort_key(s, _nsre=re.compile('([0-9]+)')):
+    # thanks Claudiu and KetZoomer - https://stackoverflow.com/a/16090640
+    return [int(text) if text.isdigit() else text.lower()
+            for text in _nsre.split(s)]
 
 
 def upgrade():
@@ -36,13 +42,13 @@ def upgrade():
             logger.info(f"New database, will run all legacy migrations")
     legacy_folder = Path(__file__).parent / "legacy"
     relevant_legacy_migrations = filter(
-        lambda x: int(x.split(".")[0]) > augur_version,
-        glob("*.sql", root_dir=str(legacy_folder)),
+       lambda x: int(str(x.name).split(".")[0]) > augur_version,
+       legacy_folder.glob("*.sql"),
     )
     ordered_legacy_migrations = list(
         sorted(
-            relevant_legacy_migrations,
-            key=lambda x: int(x.split(".")[0]),
+            (f.name for f in relevant_legacy_migrations),
+            key=natural_sort_key,
         )
     )
     for legacy_migration_filename in ordered_legacy_migrations:
