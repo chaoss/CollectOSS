@@ -464,10 +464,9 @@ def request_dict_from_endpoint(session, url, timeout_wait=10):
     response_data = None
     success = False
 
-    # This borrow's the logic to safely hit an endpoint from paginate_endpoint.
     while attempts < 10:
         try:
-            response = requests.get(url=url, headers=get_header(session.access_token))
+            response = hit_api(session, url)
         except TimeoutError:
             session.logger.info(
                 f"User data request for enriching contributor data failed with {attempts} attempts! Trying again...")
@@ -480,16 +479,11 @@ def request_dict_from_endpoint(session, url, timeout_wait=10):
             response_data = json.loads(json.dumps(response.text))
 
         if type(response_data) == dict:
-            # Sometimes GitHub Sends us an error message in a dict instead of a string.
-            # While a bit annoying, it is easy to work around
-            if 'message' in response_data:
-                try:
-                    assert 'API rate limit exceeded' not in response_data['message']
-                except AssertionError as e:
-                    session.logger.info(
-                        f"Detected error in response data from gitHub. Trying again... Error: {e}")
-                    attempts += 1
-                    continue
+            err = process_dict_response(response,response_data)
+
+            #If we get an error message that's not None
+            if err:
+                continue
 
             # self.logger.info(f"Returned dict: {response_data}")
             success = True
@@ -508,6 +502,13 @@ def request_dict_from_endpoint(session, url, timeout_wait=10):
                 try:
                     # Sometimes raw text can be converted to a dict
                     response_data = json.loads(response_data)
+
+                    err = process_dict_response(response,response_data)
+
+                    #If we get an error message that's not None
+                    if err:
+                        continue
+                    
                     success = True
                     break
                 except:

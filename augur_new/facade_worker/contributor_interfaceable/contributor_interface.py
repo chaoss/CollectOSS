@@ -35,22 +35,17 @@ def create_endpoint_from_commit_sha(session,commit_sha, repo_id):
     # https://api.github.com/repos/chaoss/augur/commits/53b0cc122ac9ecc1588d76759dc2e8e437f45b48
 
 
-    stmnt = s.select(Repo.repo_path, Repo.repo_name).where(Repo.repo_id == repo_id)
+    #stmnt = s.select(Repo.repo_path, Repo.repo_name).where(Repo.repo_id == repo_id)
 
-    result = session.execute(stmnt)
+    result = Repo.query.filter_by(repo_id=repo_id).one()
 
-    # if not found
-    if not len(result) >= 1:
-        raise LookupError
-
-    if result[0].repo_path is None or result[0].repo_name is None:
+    if result.repo_path is None or result.repo_name is None:
         raise KeyError
-    # print(result)
 
     # Else put into a more readable local var
     session.logger.info(f"Result: {result}")
-    repo_path = result[0].repo_path.split(
-        "/")[1] + "/" + result[0].repo_name
+    repo_path = result.repo_path.split(
+        "/")[1] + "/" + result.repo_name
 
     url = "https://api.github.com/repos/" + repo_path + "/commits/" + commit_sha
 
@@ -84,15 +79,9 @@ def insert_alias(session, contributor, email):
     # Insert cntrb_id and email of the corresponding record into the alias table
     # Another database call to get the contributor id is needed because its an autokeyincrement that is accessed by multiple workers
     # Same principle as enrich_cntrb_id method.
-    #contributor_table_data = self.db.execute(
-    #    s.sql.select([s.column('cntrb_id'), s.column('cntrb_canonical')]).where(
-    #        self.contributors_table.c.gh_user_id == contributor["gh_user_id"]
-    #    )
-    #).fetchall()
 
-    stmnt = s.select(Contributors.cntrb_id, Contributors.cntrb_canonical).where(Contributors.gh_user_id == contributor["gh_user_id"])
-    result = session.execute(stmnt)
-    contributor_table_data = result.scalars().all()
+    
+    contributor_table_data = Contributors.query.filter_by(gh_user_id=contributor["gh_user_id"]).all()
     # self.logger.info(f"Contributor query: {contributor_table_data}")
 
     # Handle potential failures
@@ -121,23 +110,9 @@ def insert_alias(session, contributor, email):
     }
 
     # Insert new alias
-    newAlias = ContributorsAliases(**alias)
-    session.add(newAlias)
-    session.commit()
-    """
-    try:
-        self.db.execute(
-            self.contributors_aliases_table.insert().values(alias))
-    except s.exc.IntegrityError:
-        # It's expected to catch duplicates this way so no output is logged.
-        #pass
-        self.logger.info(f"alias {alias} already exists")
-    except Exception as e:
-        self.logger.info(
-            f"Ran into issue with alias: {alias}. Error: {e}
-    """
-
-
+    
+    session.insert_data(alias, ContributorsAliases, ['alias_email','canonical_email'])
+    
 
     return
 
@@ -259,11 +234,9 @@ def fetch_username_from_email(session, commit):
         session.logger.info(f"Inserting data to unresolved: {unresolved}")
 
         try:
-            #self.db.execute(
-            #    self.unresolved_commit_emails_table.insert().values(unresolved))
-            new_unresolved_commit_email = UnresolvedCommitEmails(**unresolved)
-            session.add(new_unresolved_commit_email)
-            session.commit()
+            
+            unresolved_natural_keys = ['email']
+            session.insert_data(unresolved, UnresolvedCommitEmails, unresolved_natural_keys)
         except Exception as e:
             session.logger.info(
                 f"Could not create new unresolved email {unresolved['email']}. Error: {e}")

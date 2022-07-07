@@ -358,6 +358,8 @@ class GithubPaginator(collections.abc.Sequence):
             self.logger.info("\n\n\n\n\n\n\n POSSIBLY BAD TOKEN \n\n\n\n\n\n\n")
             #self.update_rate_limit(response, bad_credentials=True, platform=platform)
             return "bad_credentials"
+        
+        return None
 
     def process_str_response(self, response: httpx.Response, page_data: str):
             self.logger.info(f"Warning! page_data was string: {page_data}\n")

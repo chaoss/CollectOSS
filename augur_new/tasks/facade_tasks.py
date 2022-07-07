@@ -504,9 +504,8 @@ def process_commit_metadata(contributorQueue,repo_id):
             ).fetchall()
             """
 
-            stmnt = select(ContributorsAliases.alias_email).where(ContributorsAliases.alias_email == email)
 
-            alias_table_data = session.execute(stmnt)
+            alias_table_data = ContributorsAliases.query.filter_by(alias_email=email).all()
             if len(alias_table_data) >= 1:
                 # Move on if email resolved
 
@@ -520,15 +519,8 @@ def process_commit_metadata(contributorQueue,repo_id):
         
         #Check the unresolved_commits table to avoid hitting endpoints that we know don't have relevant data needlessly
         try:
-            #unresolved_query_result = interface.db.execute(
-            #    s.sql.select([s.column('email'),s.column('name')]).where(
-            #        interface.unresolved_commit_emails_table.c.name == name and interface.unresolved_commit_emails_table.c.email == email
-            #    )
-            #).fetchall()
-
-            stmnt = select(UnresolvedCommitEmails.email,UnresolvedCommitEmails.name).where(UnresolvedCommitEmails.name == name and UnresolvedCommitEmails.email == email)
-
-            unresolved_query_result = session.execute(stmnt)
+            
+            unresolved_query_result = UnresolvedCommitEmails.query.filter_by(name=name).all()
 
             if len(unresolved_query_result) >= 1:
 
@@ -543,20 +535,9 @@ def process_commit_metadata(contributorQueue,repo_id):
     
         #Check the contributors table for a login for the given name
         try:
-            """
-            contributors_with_matching_name = interface.db.execute(
-                s.sql.select([s.column('gh_login')]).where(
-                    interface.contributors_table.c.cntrb_full_name == name
-                )
-            ).fetchall()
-            """
+            contributors_with_matching_name = Contributors.query.filter_by(cntrb_full_name=name).one()
 
-            stmnt = select(Contributors.gh_login).where(Contributors.cbtrb_full_name == name)
-
-            contributors_with_matching_name = session.execute(stmnt)
-
-            if len(contributors_with_matching_name) >= 1:
-                login = contributors_with_matching_name[0]['gh_login']
+            login = contributors_with_matching_name.gh_login
 
         except Exception as e:
             session.logger.error(f"Failed local login lookup with error: {e}")
@@ -592,9 +573,11 @@ def process_commit_metadata(contributorQueue,repo_id):
         name_field = contributor['commit_name'] if 'commit_name' in contributor else contributor['name']
 
         try:
-
+            
+            cntrb_id = AugurUUID(session.platform_id,contributor['id']).to_UUID()
             # try to add contributor to database
             cntrb = {
+                "cntrb_id" : cntrb_id,
                 "cntrb_login": user_data['login'],
                 "cntrb_created_at": user_data['created_at'],
                 "cntrb_email": user_data['email'] if 'email' in user_data else None,
@@ -628,7 +611,8 @@ def process_commit_metadata(contributorQueue,repo_id):
                 #"data_source": interface.data_source
             }
 
-        # interface.logger.info(f"{cntrb}")
+            session.logger.info(f"{cntrb}")
+
         except Exception as e:
             session.logger.info(f"Error when trying to create cntrb: {e}")
             continue
@@ -652,7 +636,8 @@ def process_commit_metadata(contributorQueue,repo_id):
         """
         
         #Executes an upsert with sqlalchemy 
-        session.insert_data([cntrb],Contributors,cntrb.keys())
+        cntrb_natural_keys = ['cntrb_login']
+        session.insert_data(cntrb,Contributors,cntrb_natural_keys)
 
         try:
             # Update alias after insertion. Insertion needs to happen first so we can get the autoincrementkey
@@ -669,17 +654,18 @@ def process_commit_metadata(contributorQueue,repo_id):
         # Resolve any unresolved emails if we get to this point.
         # They will get added to the alias table later
         # Do this last to absolutely make sure that the email was resolved before we remove it from the unresolved table.
-        #query = s.sql.text("""
-        #    DELETE FROM unresolved_commit_emails
-        #    WHERE email='{}'
-        #""".format(email))
+        query = s.sql.text("""
+            DELETE FROM unresolved_commit_emails
+            WHERE email='{}'
+        """.format(email))
 
         session.logger.info(f"Updating now resolved email {email}")
 
         try:
             #interface.db.execute(query)
-            session.query(UnresolvedCommitEmails).filter(UnresolvedCommitEmails.email == email).delete()
-            session.commit()
+            #session.query(UnresolvedCommitEmails).filter(UnresolvedCommitEmails.email == email).delete()
+            #session.commit()
+            session.execute_sql(query)
         except Exception as e:
             session.logger.info(
                 f"Deleting now resolved email failed with error: {e}")
@@ -765,7 +751,7 @@ def insert_facade_contributors(session, repo_id,processes=4,multithreaded=True):
     print(new_contribs)
     
     #json.loads(pd.read_sql(new_contrib_sql, self.db, params={
-                   #             'repo_id': repo_id}).to_json(orient="records"))
+    #             'repo_id': repo_id}).to_json(orient="records"))
 
     
     if len(new_contribs) > 2 and multithreaded:
