@@ -6,8 +6,9 @@ from sqlalchemy.orm import relationship
 from sqlalchemy import Index, UniqueConstraint, PrimaryKeyConstraint, ForeignKeyConstraint, create_engine, func, text
 from sqlalchemy.dialects.postgresql import UUID
 from datetime import datetime
-from augur_new.augur.config import AugurConfig
+# from augur_new.augur.config import AugurConfig
 import os
+import json
 
 
 ROOT_AUGUR_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
@@ -15,14 +16,23 @@ ROOT_AUGUR_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 # Import the flask app
 app = Flask(__name__)
 
+current_dir = os.getcwd()
 
-config = AugurConfig(ROOT_AUGUR_DIR)
+root_augur_dir = ''.join(current_dir.partition("augur/")[:2])
 
-user = config.get_value('Database', 'user')
-password = config.get_value('Database', 'password')
-host = config.get_value('Database', 'host')
-port = config.get_value('Database', 'port')
-database = config.get_value('Database', 'database')
+config_path = root_augur_dir + 'augur_new/augur.config.json'
+
+print(config_path)
+
+with open(config_path, 'r') as f:
+    config = json.load(f)
+
+db_data = config["Database"]
+user = db_data["user"]
+password = db_data["password"]
+host = db_data["host"]
+port = db_data["port"]
+database = db_data["database"]
 
 
 DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(
@@ -220,6 +230,20 @@ class Commits(db.Model):
         }
     )
 
+class Config(db.Model):
+    id = db.Column(db.SmallInteger, primary_key=True, nullable=False)
+    section_name = db.Column(db.String(), nullable=False)
+    setting_name = db.Column(db.String(), nullable=False)
+    value = db.Column(db.String())
+    type = db.Column(db.String())
+
+    
+    __tablename__ = 'config'
+    __table_args__ = (
+        UniqueConstraint('section_name', "setting_name", name='unique-config-setting'),
+        {"schema": "augur_operations",
+         "comment": "This table exists outside of relations with other tables. The purpose is to provide a dynamic, owner maintained (and augur augmented) list of affiliations. This table is processed in affiliation information in the DM_ tables generated when Augur is finished counting commits using the Facade Worker. "}
+    )
 
 # Current db has varchar with length but I changed that
 class ContributorAffiliations(db.Model):

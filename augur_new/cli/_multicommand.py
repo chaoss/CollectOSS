@@ -24,7 +24,6 @@ class AugurMultiCommand(click.MultiCommand):
         return rv
 
     def get_command(self, ctx, name):
-        print(f"Ctx: {ctx}. Name: {name}")
         try:
             module = importlib.import_module('.' + name, 'cli')
             return module.cli

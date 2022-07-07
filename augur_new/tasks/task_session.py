@@ -12,10 +12,10 @@ import time
 from db.models import * 
 from sqlalchemy.event import listen
 from sqlalchemy.event import listens_for
-from augur_new.augur.config import AugurConfig
+# from augur_new.augur.config import AugurConfig
 
-from augur_new.util.random_key_auth import RandomKeyAuth
-from augur_new.tasks.redis import redis_connection as redis
+from util.random_key_auth import RandomKeyAuth
+from tasks.redis import redis_connection as redis
 import psycopg2 
 # from .engine import engine
 
@@ -31,14 +31,16 @@ class TaskSession(s.orm.Session):
     def __init__(self, logger, config: dict = {}):
         
         self.logger = logger
+        self.config = config["Database"]
         
-        current_dir = os.getcwd()
+        # current_dir = os.getcwd()
 
-        self.root_augur_dir = ''.join(current_dir.partition("augur/")[:2])
-        self.__init_config(self.root_augur_dir)
+        # self.root_augur_dir = ''.join(current_dir.partition("augur/")[:2])
+        # self.__init_config(self.root_augur_dir)
         #print(self.config)
 
-        DB_STR = f'postgresql://{self.config["user_database"]}:{self.config["password_database"]}@{self.config["host_database"]}:{self.config["port_database"]}/{self.config["name_database"]}'
+
+        DB_STR = f'postgresql://{self.config["user"]}:{self.config["password"]}@{self.config["host"]}:{self.config["port"]}/{self.config["name"]}'
 
         self.config.update(config)
 
@@ -62,23 +64,23 @@ class TaskSession(s.orm.Session):
 
         super().__init__(self.engine)
 
-    def __init_config(self, root_augur_dir: str):
-        #Load config.
-        self.augur_config = AugurConfig(self.root_augur_dir)
-        self.config = {
-            'host': self.augur_config.get_value('Server', 'host')
-        }
-        self.config.update(self.augur_config.get_section("Logging"))
+    # def __init_config(self, root_augur_dir: str):
+    #     #Load config.
+    #     self.augur_config = AugurConfig(self.root_augur_dir)
+    #     self.config = {
+    #         'host': self.augur_config.get_value('Server', 'host')
+    #     }
+    #     self.config.update(self.augur_config.get_section("Logging"))
 
-        self.config.update({
-            'capture_output': False,
-            'host_database': self.augur_config.get_value('Database', 'host'),
-            'port_database': self.augur_config.get_value('Database', 'port'),
-            'user_database': self.augur_config.get_value('Database', 'user'),
-            'name_database': self.augur_config.get_value('Database', 'name'),
-            'password_database': self.augur_config.get_value('Database', 'password'),
-            'key_database' : self.augur_config.get_value('Database', 'key')
-        })
+    #     self.config.update({
+    #         'capture_output': False,
+    #         'host_database': self.augur_config.get_value('Database', 'host'),
+    #         'port_database': self.augur_config.get_value('Database', 'port'),
+    #         'user_database': self.augur_config.get_value('Database', 'user'),
+    #         'name_database': self.augur_config.get_value('Database', 'name'),
+    #         'password_database': self.augur_config.get_value('Database', 'password'),
+    #         'key_database' : self.augur_config.get_value('Database', 'key')
+    #     })
     
     def execute_sql(self, sql_text):
         connection = self.engine.connect()
