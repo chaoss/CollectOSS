@@ -8,8 +8,8 @@ SELECT
   date_part( 'month' :: TEXT, ( A.data_collection_date ) :: DATE ) AS MONTH,
   date_part( 'year' :: TEXT, ( A.data_collection_date ) :: DATE ) AS YEAR 
 FROM
-  repo a, 
-  repo_deps_libyear b
+  augur_data.repo a, 
+  augur_data.repo_deps_libyear b
 GROUP BY
   a.repo_id, 
   a.repo_name, 
@@ -21,8 +21,8 @@ ORDER BY
   avg_libyear desc;
 
 
-grant all privileges on table "augur_data"."explorer_libyear_all" to cali; 
-grant all privileges on table "augur_data"."explorer_libyear_all" to cali;
+GRANT SELECT ON
+    "augur_data"."explorer_libyear_all" TO PUBLIC;
  
 
 CREATE MATERIALIZED VIEW "augur_data"."explorer_libyear_detail"
@@ -38,8 +38,8 @@ SELECT
   libyear,
   max(b.data_collection_date)
 FROM
-  repo a, 
-  repo_deps_libyear b
+  augur_data.repo a, 
+  augur_data.repo_deps_libyear b
 GROUP BY
   a.repo_id,
   a.repo_name, 
@@ -53,8 +53,8 @@ ORDER BY
   a.repo_id, 
   b.requirement;
 
-grant all privileges on table "augur_data"."explorer_libyear_detail" to cali; 
-grant all privileges on table "augur_data"."explorer_libyear_detail" to cali;
+GRANT SELECT ON
+    "augur_data"."explorer_libyear_detail" TO PUBLIC;
 
 
 update "augur_operations"."augur_settings" set value = 106
