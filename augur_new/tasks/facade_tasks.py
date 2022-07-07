@@ -273,15 +273,7 @@ def analysis(cfg, multithreaded, session=None, processes=6):
     cfg.log_activity('Info','Running analysis (complete)')
 
 
-
-
-
-@celery.task
-def facade_commits_model():
-
-    print(facade_commits_model.__name__)
-    logger = logging.getLogger(facade_commits_model.__name__)
-    session = FacadeSession(logger)
+def facade_init(session):
     # Figure out what we need to do
     limited_run = session.limited_run
     delete_marked_repos = session.delete_marked_repos
@@ -408,6 +400,16 @@ def facade_commits_model():
         sys.exit(1)
 
     # Begin working
+
+
+@celery.task
+def facade_commits_model():
+
+    print(facade_commits_model.__name__)
+    logger = logging.getLogger(facade_commits_model.__name__)
+    session = FacadeSession(logger)
+    
+    facade_init(session)
 
     start_time = time.time()
     session.cfg.log_activity('Quiet','Running facade-worker')
@@ -834,6 +836,9 @@ def insert_facade_contributors(session, repo_id,processes=4,multithreaded=True):
 def facade_resolve_contribs():
     logger = logging.getLogger(facade_resolve_contribs.__name__)
     session = FacadeSession(logger)
+
+    facade_init(session)
+
     ### moved up by spg on 12/1/2021
     #Interface with the contributor worker and inserts relevant data by repo
     session.cfg.update_status('Updating Contributors')
