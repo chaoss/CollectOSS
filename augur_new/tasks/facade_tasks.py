@@ -274,25 +274,7 @@ def analysis(cfg, multithreaded, session=None, processes=6):
 
 
 def facade_init(session):
-    # Figure out what we need to do
-    limited_run = session.limited_run
-    delete_marked_repos = session.delete_marked_repos
-    pull_repos = session.pull_repos
-    clone_repos = session.clone_repos
-    check_updates = session.check_updates
-    force_updates = session.force_updates
-    run_analysis = session.run_analysis
-    force_analysis = session.force_analysis
-    nuke_stored_affiliations = session.nuke_stored_affiliations
-    fix_affiliations = session.fix_affiliations
-    force_invalidate_caches = session.force_invalidate_caches
-    rebuild_caches = session.rebuild_caches
-     #if abs((datetime.datetime.strptime(session.cfg.get_setting('aliases_processed')[:-3], 
-        # '%Y-%m-%d %I:%M:%S.%f') - datetime.datetime.now()).total_seconds()) // 3600 > int(session.cfg.get_setting(
-        #   'update_frequency')) else 0
-    force_invalidate_caches = session.force_invalidate_caches
-    create_xlsx_summary_files = session.create_xlsx_summary_files
-    multithreaded = session.multithreaded
+    
 
     
     
@@ -409,6 +391,26 @@ def facade_commits_model():
     logger = logging.getLogger(facade_commits_model.__name__)
     session = FacadeSession(logger)
     
+    # Figure out what we need to do
+    limited_run = session.limited_run
+    delete_marked_repos = session.delete_marked_repos
+    pull_repos = session.pull_repos
+    clone_repos = session.clone_repos
+    check_updates = session.check_updates
+    force_updates = session.force_updates
+    run_analysis = session.run_analysis
+    force_analysis = session.force_analysis
+    nuke_stored_affiliations = session.nuke_stored_affiliations
+    fix_affiliations = session.fix_affiliations
+    force_invalidate_caches = session.force_invalidate_caches
+    rebuild_caches = session.rebuild_caches
+     #if abs((datetime.datetime.strptime(session.cfg.get_setting('aliases_processed')[:-3], 
+        # '%Y-%m-%d %I:%M:%S.%f') - datetime.datetime.now()).total_seconds()) // 3600 > int(session.cfg.get_setting(
+        #   'update_frequency')) else 0
+    force_invalidate_caches = session.force_invalidate_caches
+    create_xlsx_summary_files = session.create_xlsx_summary_files
+    multithreaded = session.multithreaded
+
     facade_init(session)
 
     start_time = time.time()
@@ -839,6 +841,7 @@ def facade_resolve_contribs():
 
     facade_init(session)
 
+    multithreaded = session.multithreaded
     ### moved up by spg on 12/1/2021
     #Interface with the contributor worker and inserts relevant data by repo
     session.cfg.update_status('Updating Contributors')
