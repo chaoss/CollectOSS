@@ -14,7 +14,7 @@ import shutil
 import coloredlogs
 from copy import deepcopy
 import typing
-
+from celery.local import PromiseProxy
 import tasks.facade_tasks
 import tasks.issue_tasks
 import tasks.start_tasks
@@ -57,12 +57,12 @@ class AugurLogConfig():
         
         for module in task_modules:
             """
-            strange typechecking is because celery is strange. 
-            Celery task functions are of type Celery.local.PromiseProxy and I couldn't find how to import that
-            from the docs so I just do a string check.
-            might be a better way to do this.
+            get the name strings of all functions in each module that have the celery.task decorator.
+            
+            Celery task functions with the decorator are of type celery.local.PromiseProxy
             """
-            allTasksInModule = [str(obj[0]) for obj in getmembers(module) if 'local.PromiseProxy' in str(type(obj[1]))]
+
+            allTasksInModule = [str(obj[0]) for obj in getmembers(module) if isinstance(obj[1],PromiseProxy)]
             
             #seperate log files by module
             #module_dir = Path(str(self.base_log_dir) + "/" +)

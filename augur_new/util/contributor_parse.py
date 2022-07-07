@@ -362,6 +362,9 @@ def query_github_contributors(session, entry_info, repo_id):
 
     session.logger.info("Count of contributors needing insertion: " + str(len(contributor_list)) + "\n")
 
+
+    #TODO raise exception if repo not exist.
+
     if len(contributor_list) == 0:
         return
 
