@@ -1,9 +1,11 @@
 #SPDX-License-Identifier: MIT
+from __future__ import annotations
 import logging
 import logging.config
 import logging.handlers
 from logging import FileHandler, StreamHandler, Formatter
 from multiprocessing import Process, Queue, Event, current_process
+from inspect import getmembers, isfunction
 from time import sleep
 import os
 from pathlib import Path
@@ -11,10 +13,102 @@ import atexit
 import shutil
 import coloredlogs
 from copy import deepcopy
+import typing
+
+import tasks.facade_tasks
+import tasks.issue_tasks
+import tasks.start_tasks
 
 from augur import ROOT_AUGUR_DIRECTORY
 
 logger = logging.getLogger(__name__)
+
+
+#TODO dynamically define loggers for every task names.
+class AugurLogConfig():
+
+    simple_format_string = "[%(process)d] %(name)s [%(levelname)s] %(message)s"
+    verbose_format_string = "%(asctime)s,%(msecs)dms [PID: %(process)d] %(name)s [%(levelname)s] %(message)s"
+    cli_format_string = "CLI: [%(module)s.%(funcName)s] [%(levelname)s] %(message)s"
+    config_format_string = "[%(levelname)s] %(message)s"
+    error_format_string = "%(asctime)s [PID: %(process)d] %(name)s [%(funcName)s() in %(filename)s:L%(lineno)d] [%(levelname)s]: %(message)s"
+
+    def __init__(self,disable_logs=False,reset_logfiles=True,base_log_dir="/home/isaac/logs"):
+        if reset_logfiles is True:
+            try:
+                shutil.rmtree(base_log_dir)
+            except FileNotFoundError as e:
+                pass
+
+        self.base_log_dir = Path(base_log_dir)
+
+        self.disable_logs = disable_logs
+
+        self.base_log_dir.mkdir(exist_ok=True)
+
+        task_files = [tasks.facade_tasks,tasks.issue_tasks,tasks.start_tasks]
+
+        self.logger_names = []
+
+        self.__initLoggers(task_files,logging.INFO)
+    
+    def __initLoggers(self,task_modules,logLevel):
+        
+        
+        for module in task_modules:
+            """
+            strange typechecking is because celery is strange. 
+            Celery task functions are of type Celery.local.PromiseProxy and I couldn't find how to import that
+            from the docs so I just do a string check.
+            might be a better way to do this.
+            """
+            allTasksInModule = [str(obj[0]) for obj in getmembers(module) if 'local.PromiseProxy' in str(type(obj[1]))]
+            
+            #seperate log files by module
+            #module_dir = Path(str(self.base_log_dir) + "/" +)
+
+            for task in allTasksInModule:
+                #Create logging profiles for each task in seperate files.
+                lg = logging.getLogger(task)
+                self.logger_names.append(task)
+
+                #Don't bother if logs are disabled.
+                if self.disable_logs:
+                    lg.disabled = True
+                    break
+                
+                #Put logs in seperate folders by module.
+                module_folder = Path(str(self.base_log_dir) + "/" + module.__name__ + "/")
+                module_folder.mkdir(exist_ok=True)
+
+                #Absolute path to log file
+                file = str(module_folder) + "/" + str(task)
+                handler = FileHandler(filename=file,mode='a') 
+                handler.setLevel(logLevel)
+
+                lg.setLevel(logLevel)
+                lg.handlers = []
+                lg.addHandler(handler)
+                lg.propagate = False
+
+                fmt = ""
+
+                #Custom format for start
+                if logLevel == logging.DEBUG:
+                    fmt = AugurLogConfig.verbose_format_string
+                elif module == tasks.start_tasks:
+                    fmt = AugurLogConfig.cli_format_string
+                else:
+                    fmt = AugurLogConfig.simple_format_string
+                
+                coloredlogs.install(level=logLevel, logger=lg, fmt=fmt)
+        
+        def getLoggerNames(self):
+            return self.logger_names
+
+
+
+
 
 class AugurLogging():
 

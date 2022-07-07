@@ -35,7 +35,7 @@ main_port = 5000 #randint(5001,5300)
 
 
 
-from augur_new.augur.logging import ROOT_AUGUR_DIRECTORY
+from augur_logging import ROOT_AUGUR_DIRECTORY
 
 ENVVAR_PREFIX = "AUGUR_"
 CONFIG_HOME = f"{os.getenv('HOME', '~')}/.augur"

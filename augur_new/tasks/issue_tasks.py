@@ -1,4 +1,6 @@
 from .facade_tasks import *
+from tasks.celery import celery
+
 
 from augur_new.db.data_parse import *
 from celery.result import allow_join_result
@@ -27,7 +29,7 @@ import time
 @celery.task
 def collect_issues(owner: str, repo: str) -> None:
 
-    logger = get_task_logger(__name__)
+    logger = logging.getLogger(issues.__name__)
 
     # define GithubTaskSession to handle insertions, and store oauth keys 
     session = GithubTaskSession(logger, config)
@@ -57,7 +59,7 @@ def collect_issues(owner: str, repo: str) -> None:
 @celery.task
 def process_issues(issues, task_name) -> None:
 
-    logger = get_task_logger(process_issues.name)
+    logger = logging.getLogger(process_issues.__name__)
 
     # define GithubTaskSession to handle insertions, and store oauth keys 
     session = GithubTaskSession(logger, config)
@@ -184,7 +186,7 @@ def process_issue_contributors(issue, platform_id, tool_source, tool_version, da
 @celery.task
 def collect_pull_requests(owner: str, repo: str) -> None:
 
-    logger = get_task_logger(collect_pull_requests.name)
+    logger = logging.getLogger(collect_pull_requests.__name__)
 
     # define GithubTaskSession to handle insertions, and store oauth keys 
     session = GithubTaskSession(logger, config)
@@ -209,7 +211,7 @@ def collect_pull_requests(owner: str, repo: str) -> None:
 @celery.task
 def process_pull_requests(pull_requests, task_name):
 
-    logger = get_task_logger(process_pull_requests.name)
+    logger = logging.getLogger(process_pull_requests.__name__)
 
     # define GithubTaskSession to handle insertions, and store oauth keys 
     session = GithubTaskSession(logger, config)
@@ -423,7 +425,8 @@ def process_pull_request_contributors(pr, platform_id, tool_source, tool_version
 @celery.task
 def collect_events(self, owner: str, repo: str):
 
-    logger = get_task_logger(collect_events.name)
+    logger = logging.getLogger(collect_events.__name__)
+
     logger.info(f"Collecting pull request events for {owner}/{repo}")
     
         # define GithubTaskSession to handle insertions, and store oauth keys 
@@ -449,7 +452,7 @@ def collect_events(self, owner: str, repo: str):
 @celery.task
 def process_events(events, task_name):
 
-    logger = get_task_logger(process_events.name)
+    logger = logging.getLogger(process_events.__name__)
         # define GithubTaskSession to handle insertions, and store oauth keys 
     session = GithubTaskSession(logger, config)
 
@@ -547,7 +550,7 @@ def process_github_event_contributors(event, platform_id, tool_source, tool_vers
 def collect_issue_and_pr_comments(self, owner: str, repo: str) -> None:
 
     # define logger for task
-    logger = get_task_logger(collect_issue_and_pr_comments.name)
+    logger = logging.getLogger(collect_issue_and_pr_comments.__name__)
     logger.info(f"Collecting github comments for {owner}/{repo}")
     
     # define database task session, that also holds autentication keys the GithubPaginator needs
@@ -573,7 +576,7 @@ def collect_issue_and_pr_comments(self, owner: str, repo: str) -> None:
 def process_messages(messages, task_name):
 
     # define logger for task
-    logger = get_task_logger(process_messages.name)
+    logger = logging.getLogger(process_messages.__name__)
     
     # define database task session, that also holds autentication keys the GithubPaginator needs
     session = GithubTaskSession(logger, config)
@@ -715,7 +718,7 @@ def process_github_comment_contributors(message, platform_id, tool_source, tool_
 @celery.task
 def pull_request_review_comments(self, owner: str, repo: str) -> None:
 
-    logger = get_task_logger(pull_request_review_comments.name)
+    logger = logging.getLogger(pull_request_review_comments.__name__)
     
     # define GithubTaskSession to handle insertions, and store oauth keys 
     session = GithubTaskSession(logger, config)
@@ -812,7 +815,7 @@ def pull_request_reviews(self, owner: str, repo: str, pr_number_list: [int]) -> 
     tool_version = "2.0"
     data_source = "Github API"
 
-    logger = get_task_logger(pull_request_reviews.name)
+    logger = logging.getLogger(pull_request_reviews.__name__)
         # define GithubTaskSession to handle insertions, and store oauth keys 
     session = GithubTaskSession(logger, config)
 

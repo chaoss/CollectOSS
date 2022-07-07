@@ -18,6 +18,7 @@ import numpy as np
 from celery import group, chain, chord, signature
 from celery.utils.log import get_task_logger
 from celery.result import allow_join_result
+from celery.signals import after_setup_logger
 import sqlalchemy as s
 
 # allows us to reference augur_new (the parent module)
@@ -43,6 +44,8 @@ from augur_new.tasks.task_session import *
 
 from augur_new.facade_worker.facade_worker.facade00mainprogram import *
 
+from augur_logging import AugurLogConfig
+
 
 current_dir = os.getcwd()
 
@@ -50,15 +53,38 @@ root_augur_dir = ''.join(current_dir.partition("augur/")[:2])
 
 config_path = root_augur_dir + '/augur.config.json'
 
+#Have one log file for facade_tasks
+#facadeLogger = logging.getLogger(__name__)
+
+
 
 with open(config_path, 'r') as f:
     config = json.load(f)
+
+"""
+    You can prevent Celery from configuring any loggers at all by connecting 
+    the setup_logging signal. This allows you to completely override the 
+    logging configuration with your own.
+"""
+
+
+
+#Load logging config once at task definition
+@after_setup_logger.connect
+def setup_loggers(*args,**kwargs):
+    #load config
+    loggingConfig = AugurLogConfig()
+
+    
+    
+
+
 
 #enable celery multithreading
 @celery.task
 def analyze_commits_in_parallel(queue, repo_id, repo_location, multithreaded):
     #create new cfg for celery thread.
-    logger = get_task_logger(facade_resolve_contribs.name)
+    logger = logging.getLogger(analyze_commits_in_parallel.__name__)
     cfg = Config(logger)
 
     for analyzeCommit in queue:    
@@ -119,7 +145,7 @@ def analysis(cfg, multithreaded, session=None, processes=6):
         
         #Add committers for repo if session
         #if session != None:
-            #grab_committer_list(session,repo[0])
+        #    grab_committer_list(session,repo[0])
 
         update_analysis_log(repo[0],"Beginning analysis.")
         cfg.log_activity('Verbose','Analyzing repo: %s (%s)' % (repo[0],repo[3]))
@@ -252,7 +278,8 @@ def analysis(cfg, multithreaded, session=None, processes=6):
 @celery.task
 def facade_commits_model():
 
-    logger = get_task_logger(facade_commits_model.name)
+    print(facade_commits_model.__name__)
+    logger = logging.getLogger(facade_commits_model.__name__)
     session = FacadeSession(logger)
     # Figure out what we need to do
     limited_run = session.limited_run
@@ -446,7 +473,7 @@ def facade_commits_model():
 
 @celery.task
 def facade_grab_contribs(repo_id):
-    logger = get_task_logger(facade_grab_contribs.name)
+    logger = logging.getLogger(facade_grab_contribs.__name__)
     session = FacadeSession(logger)
     
     grab_committer_list(session,repo_id)
@@ -456,7 +483,7 @@ def facade_grab_contribs(repo_id):
 
 @celery.task
 def process_commit_metadata(contributorQueue,repo_id):
-    logger = get_task_logger(facade_grab_contribs.name)
+    logger = logging.getLogger(process_commit_metadata.__name__)
     session = FacadeSession(logger)
 
     for contributor in contributorQueue:
@@ -661,7 +688,7 @@ def process_commit_metadata(contributorQueue,repo_id):
 
 @celery.task
 def link_commits_to_contributor(contributorQueue):
-        logger = get_task_logger(facade_resolve_contribs.name)
+        logger = logging.getLogger(link_commits_to_contributor.__name__)
         session = FacadeSession(logger)
 
         # iterate through all the commits with emails that appear in contributors and give them the relevant cntrb_id.
@@ -818,7 +845,7 @@ def insert_facade_contributors(session, repo_id,processes=4,multithreaded=True):
 
 @celery.task
 def facade_resolve_contribs():
-    logger = get_task_logger(facade_resolve_contribs.name)
+    logger = logging.getLogger(facade_resolve_contribs.__name__)
     session = FacadeSession(logger)
     ### moved up by spg on 12/1/2021
     #Interface with the contributor worker and inserts relevant data by repo

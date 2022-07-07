@@ -97,20 +97,21 @@ class AugurUUID:
     def __iter__(self):
         return (byte for byte in self.bytes)
 
-# Some examples of using this class:
-id = AugurUUID()
+if __name__ == "__main__":
+    # Some examples of using this class:
+    id = AugurUUID()
 
-print(id)
+    print(id)
 
-id[0] = 17
+    id[0] = 17
 
-id.set_owner_id(1)
+    id.set_owner_id(1)
 
-print(int(id))
+    print(int(id))
 
-# for byte in id:
-#     print(byte)
+    # for byte in id:
+    #     print(byte)
 
-print(id[0])
+    print(id[0])
 
-print(AugurUUID(17, 1, 1).bytes)
+    print(AugurUUID(17, 1, 1).bytes)
