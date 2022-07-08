@@ -1,5 +1,5 @@
 # coding: utf-8
-from sqlalchemy import BigInteger, Column, Index, Integer, String, Table, text
+from sqlalchemy import BigInteger, SmallInteger, Column, Index, Integer, String, Table, text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import TIMESTAMP
 from augur.db.models.base import Base
 
@@ -57,21 +57,6 @@ t_repos_fetch_log = Table(
     schema="augur_operations",
     comment="For future use when we move all working tables to the augur_operations schema. ",
 )
-
-class Config(Base):
-    id = Column(SmallInteger, primary_key=True, nullable=False)
-    section_name =Column(String(), nullable=False)
-    setting_name =Column(String(), nullable=False)
-    value =Column(String())
-    type =Column(String())
-
-    
-    __tablename__ = 'config'
-    __table_args__ = (
-        UniqueConstraint('section_name', "setting_name", name='unique-config-setting'),
-        {"schema": "augur_operations",
-         "comment": "This table exists outside of relations with other tables. The purpose is to provide a dynamic, owner maintained (and augur augmented) list of affiliations. This table is processed in affiliation information in the DM_ tables generated when Augur is finished counting commits using the Facade Worker. "}
-    )
 
 class WorkerHistory(Base):
     __tablename__ = "worker_history"

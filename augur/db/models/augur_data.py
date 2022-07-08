@@ -408,16 +408,6 @@ class Exclude(Base):
     domain = Column(String, server_default=text("'NULL'::character varying"))
 
 
-t_issue_reporter_created_at = Table(
-    "issue_reporter_created_at",
-    metadata,
-    Column("reporter_id", BigInteger),
-    Column("created_at", TIMESTAMP(precision=0)),
-    Column("repo_id", BigInteger, index=True),
-    schema="augur_data",
-)
-
-
 class LstmAnomalyModel(Base):
     __tablename__ = "lstm_anomaly_models"
     __table_args__ = {"schema": "augur_data"}
@@ -846,19 +836,49 @@ class RepoGroupsListServe(Base):
 class Commit(Base):
     __tablename__ = "commits"
     __table_args__ = (
-        Index(
-            "author_email,author_affiliation,author_date",
-            "cmt_author_email",
-            "cmt_author_affiliation",
-            "cmt_author_date",
-        ),
-        Index("repo_id,commit", "repo_id", "cmt_commit_hash"),
+        # DB
+        Index("author_affiliation", "cmt_author_affiliation",
+                 postgresql_using='hash'),
+        Index("author_cntrb_id", "cmt_ght_author_id"),
+        Index("author_raw_email", "cmt_author_raw_email"),
+        Index("commited", "cmt_id"),
         Index(
             "commits_idx_cmt_email_cmt_date_cmt_name",
             "cmt_author_email",
             "cmt_author_date",
             "cmt_author_name",
         ),
+        Index("committer_affiliation", "cmt_committer_affiliation",
+                 postgresql_using='hash'),
+
+        Index(
+            "author_email,author_affiliation,author_date",
+            "cmt_author_email",
+            "cmt_author_affiliation",
+            "cmt_author_date",
+        ),
+        Index("committer_raw_email", "cmt_committer_raw_email"),
+        Index("repo_id,commit", "repo_id", "cmt_commit_hash"),
+
+
+
+        # Alembic migration
+        Index("cmt-author-date-idx2", "cmt_author_date"),
+        Index("cmt_author_contrib_worker", 
+            "cmt_author_name", "cmt_author_email", "cmt_author_date", postgresql_using='brin'),
+
+        Index("cmt_commiter_contrib_worker", "cmt_committer_name",
+            "cmt_committer_email", "cmt_committer_date", postgresql_using='brin'),
+
+        Index("commits_idx_repo_id_cmt_ema_cmt_dat_cmt_nam", "repo_id",
+                 "cmt_author_email", "cmt_author_date", "cmt_author_name"),
+
+        Index("commits_idx_repo_id_cmt_ema_cmt_dat_cmt_nam2", 
+            "repo_id", "cmt_committer_email", "cmt_committer_date", "cmt_committer_name"),
+        Index("committer_email,committer_affiliation,committer_date",
+                 "cmt_committer_email", "cmt_committer_affiliation", "cmt_committer_date"),
+
+
         {
             "schema": "augur_data",
             "comment": "Commits.\nEach row represents changes to one FILE within a single commit. So you will encounter multiple rows per commit hash in many cases. ",
@@ -868,7 +888,6 @@ class Commit(Base):
     cmt_id = Column(
         BigInteger,
         primary_key=True,
-        index=True,
         server_default=text("nextval('augur_data.commits_cmt_id_seq'::regclass)"),
     )
     repo_id = Column(
@@ -877,25 +896,25 @@ class Commit(Base):
     )
     cmt_commit_hash = Column(String(80), nullable=False)
     cmt_author_name = Column(String, nullable=False)
-    cmt_author_raw_email = Column(String, nullable=False, index=True)
+    cmt_author_raw_email = Column(String, nullable=False)
     cmt_author_email = Column(String, nullable=False)
     cmt_author_date = Column(String(10), nullable=False)
     cmt_author_affiliation = Column(
-        String, index=True, server_default=text("'NULL'::character varying")
+        String, server_default=text("'NULL'::character varying")
     )
     cmt_committer_name = Column(String, nullable=False)
     cmt_committer_raw_email = Column(String, nullable=False, index=True)
     cmt_committer_email = Column(String, nullable=False)
     cmt_committer_date = Column(String, nullable=False)
     cmt_committer_affiliation = Column(
-        String, index=True, server_default=text("'NULL'::character varying")
+        String, server_default=text("'NULL'::character varying")
     )
     cmt_added = Column(Integer, nullable=False)
     cmt_removed = Column(Integer, nullable=False)
     cmt_whitespace = Column(Integer, nullable=False)
     cmt_filename = Column(String, nullable=False)
     cmt_date_attempted = Column(TIMESTAMP(precision=0), nullable=False)
-    cmt_ght_author_id = Column(Integer, index=True)
+    cmt_ght_author_id = Column(Integer)
     cmt_ght_committer_id = Column(Integer)
     cmt_ght_committed_at = Column(TIMESTAMP(precision=0))
     cmt_committer_timestamp = Column(TIMESTAMP(True, 0))
@@ -903,13 +922,19 @@ class Commit(Base):
     cmt_author_platform_username = Column(
         ForeignKey(
             "augur_data.contributors.cntrb_login",
+            name="fk_commits_contributors_3",
             ondelete="CASCADE",
             onupdate="CASCADE",
+            initially="DEFERRED",
+            deferrable=True,
         ),
         ForeignKey(
             "augur_data.contributors.cntrb_login",
+            name="fk_commits_contributors_4",
             ondelete="CASCADE",
             onupdate="CASCADE",
+            initially="DEFERRED",
+            deferrable=True,
         ),
     )
     tool_source = Column(String)
