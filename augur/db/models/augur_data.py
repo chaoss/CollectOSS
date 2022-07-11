@@ -938,7 +938,7 @@ class Commit(Base):
         String, server_default=text("'NULL'::character varying")
     )
     cmt_committer_name = Column(String, nullable=False)
-    cmt_committer_raw_email = Column(String, nullable=False, index=True)
+    cmt_committer_raw_email = Column(String, nullable=False)
     cmt_committer_email = Column(String, nullable=False)
     cmt_committer_date = Column(String, nullable=False)
     cmt_committer_affiliation = Column(
