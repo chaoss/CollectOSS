@@ -1,5 +1,5 @@
 # coding: utf-8
-from sqlalchemy import BigInteger, Column, Index, Integer, String, Table, text
+from sqlalchemy import BigInteger, SmallInteger, Column, Index, Integer, String, Table, text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import TIMESTAMP
 from augur.db.models.base import Base
 
@@ -57,7 +57,6 @@ t_repos_fetch_log = Table(
     schema="augur_operations",
     comment="For future use when we move all working tables to the augur_operations schema. ",
 )
-
 
 class WorkerHistory(Base):
     __tablename__ = "worker_history"
