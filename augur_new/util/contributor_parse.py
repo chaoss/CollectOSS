@@ -479,7 +479,7 @@ def request_dict_from_endpoint(session, url, timeout_wait=10):
             response_data = json.loads(json.dumps(response.text))
 
         if type(response_data) == dict:
-            err = process_dict_response(response,response_data)
+            err = process_dict_response(session.logger,response,response_data)
 
             #If we get an error message that's not None
             if err:
@@ -503,7 +503,7 @@ def request_dict_from_endpoint(session, url, timeout_wait=10):
                     # Sometimes raw text can be converted to a dict
                     response_data = json.loads(response_data)
 
-                    err = process_dict_response(response,response_data)
+                    err = process_dict_response(session.logger,response,response_data)
 
                     #If we get an error message that's not None
                     if err:

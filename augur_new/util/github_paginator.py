@@ -31,6 +31,42 @@ def hit_api(session,url: str, method='GET') -> httpx.Response:
 
     return response 
 
+def process_dict_response(logger, response: httpx.Response, page_data: dict):
+        
+        logger.info("Request returned a dict: {}\n".format(page_data))
+        if page_data['message'] == "Not Found":
+            logger.info(
+                "Github repo was not found or does not exist for endpoint: "
+                f"{response.url}\n"
+            )
+            return "break"
+
+        if "You have exceeded a secondary rate limit. Please wait a few minutes before you try again" in page_data['message']:
+            logger.info('\n\n\n\nSleeping for 100 seconds due to secondary rate limit issue.\n\n\n\n')
+            time.sleep(100)
+
+            return "decrease_attempts"
+        
+        if "API rate limit exceeded for user" in page_data['message']:
+            logger.info('\n\n\n\nSleeping for 100 seconds due to api rate limit being exceeded\n\n\n\n')
+            time.sleep(100)
+
+            return "decrease_attempts"
+
+        if "You have triggered an abuse detection mechanism." in page_data['message']:
+            #self.update_rate_limit(response, temporarily_disable=True,platform=platform)
+
+            return "decrease_attempts"
+
+        if page_data['message'] == "Bad credentials":
+            logger.info("\n\n\n\n\n\n\n POSSIBLY BAD TOKEN \n\n\n\n\n\n\n")
+            #self.update_rate_limit(response, bad_credentials=True, platform=platform)
+            return "bad_credentials"
+        
+        return None
+
+
+
 
 
 class GithubPaginator(collections.abc.Sequence):
@@ -329,37 +365,7 @@ class GithubPaginator(collections.abc.Sequence):
 
     def process_dict_response(self, response: httpx.Response, page_data: dict):
         
-        self.logger.info("Request returned a dict: {}\n".format(page_data))
-        if page_data['message'] == "Not Found":
-            self.logger.info(
-                "Github repo was not found or does not exist for endpoint: "
-                f"{response.url}\n"
-            )
-            return "break"
-
-        if "You have exceeded a secondary rate limit. Please wait a few minutes before you try again" in page_data['message']:
-            self.logger.info('\n\n\n\nSleeping for 100 seconds due to secondary rate limit issue.\n\n\n\n')
-            time.sleep(100)
-
-            return "decrease_attempts"
-        
-        if "API rate limit exceeded for user" in page_data['message']:
-            self.logger.info('\n\n\n\nSleeping for 100 seconds due to api rate limit being exceeded\n\n\n\n')
-            time.sleep(100)
-
-            return "decrease_attempts"
-
-        if "You have triggered an abuse detection mechanism." in page_data['message']:
-            #self.update_rate_limit(response, temporarily_disable=True,platform=platform)
-
-            return "decrease_attempts"
-
-        if page_data['message'] == "Bad credentials":
-            self.logger.info("\n\n\n\n\n\n\n POSSIBLY BAD TOKEN \n\n\n\n\n\n\n")
-            #self.update_rate_limit(response, bad_credentials=True, platform=platform)
-            return "bad_credentials"
-        
-        return None
+        return process_dict_response(self.logger, response, page_data)
 
     def process_str_response(self, response: httpx.Response, page_data: str):
             self.logger.info(f"Warning! page_data was string: {page_data}\n")
