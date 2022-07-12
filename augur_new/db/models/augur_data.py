@@ -18,7 +18,7 @@ from sqlalchemy import (
     UniqueConstraint,
     text,
 )
-from sqlalchemy.dialects.postgresql import JSONB, TIMESTAMP
+from sqlalchemy.dialects.postgresql import JSONB, TIMESTAMP, UUID
 from sqlalchemy.orm import relationship
 from db.models.base import Base
 
@@ -156,9 +156,8 @@ class Contributor(Base):
         Index("contributor_worker_email_finder", "cntrb_email", postgresql_using='brin'),
         Index("contributor_worker_fullname_finder", "cntrb_full_name", postgresql_using='brin'),
 
-        # NOTE: removed these because they are the same as cntrb_login_platform_index
-        # Index("login", cntrb_login),
-        # Index("login-contributor-idx", cntrb_login),
+        Index("login", "cntrb_login"),
+        Index("login-contributor-idx", "cntrb_login"),
 
         {
             "schema": "augur_data",
@@ -167,7 +166,7 @@ class Contributor(Base):
     )
 
     cntrb_id = Column(
-        BigInteger,
+        UUID(as_uuid=True),
         primary_key=True,
         server_default=text(
             "nextval('augur_data.contributors_cntrb_id_seq'::regclass)"
@@ -728,6 +727,7 @@ class Repo(Base):
 
         Index("reponameindexbtree", "repo_name"),
         Index("rggrouponrepoindex", "repo_group_id"),
+        Index("therepo", "repo_id", unique=True),
 
         {
             "schema": "augur_data",
@@ -895,25 +895,6 @@ class Commit(Base):
         Index("committer_raw_email", "cmt_committer_raw_email"),
         Index("repo_id,commit", "repo_id", "cmt_commit_hash"),
 
-
-
-        # Alembic migration
-        Index("cmt-author-date-idx2", "cmt_author_date"),
-        Index("cmt_author_contrib_worker", 
-            "cmt_author_name", "cmt_author_email", "cmt_author_date", postgresql_using='brin'),
-
-        Index("cmt_commiter_contrib_worker", "cmt_committer_name",
-            "cmt_committer_email", "cmt_committer_date", postgresql_using='brin'),
-
-        Index("commits_idx_repo_id_cmt_ema_cmt_dat_cmt_nam", "repo_id",
-                 "cmt_author_email", "cmt_author_date", "cmt_author_name"),
-
-        Index("commits_idx_repo_id_cmt_ema_cmt_dat_cmt_nam2", 
-            "repo_id", "cmt_committer_email", "cmt_committer_date", "cmt_committer_name"),
-        Index("committer_email,committer_affiliation,committer_date",
-                 "cmt_committer_email", "cmt_committer_affiliation", "cmt_committer_date"),
-
-
         {
             "schema": "augur_data",
             "comment": "Commits.\nEach row represents changes to one FILE within a single commit. So you will encounter multiple rows per commit hash in many cases. ",
@@ -999,6 +980,7 @@ class Issue(Base):
         Index("issues_ibfk_4", "pull_request_id"),
 
         UniqueConstraint("repo_id", "gh_issue_id"),
+        UniqueConstraint("issue_url", name="issue-insert-unique"),
         {"schema": "augur_data"},
     )
 
@@ -1133,7 +1115,7 @@ class LstmAnomalyResult(Base):
 class Message(Base):
     __tablename__ = "message"
     __table_args__ = (
-        UniqueConstraint("platform_msg_id", "tool_source"),
+        UniqueConstraint("platform_msg_id", name="message-insert-unique"),
         Index("msg-cntrb-id-idx", "cntrb_id"),
         Index("platformgrouper", "msg_id", "pltfrm_id"),
         Index("messagegrouper", "msg_id", "rgls_id", unique=True),
@@ -1275,6 +1257,7 @@ class PullRequest(Base):
     __table_args__ = (
         UniqueConstraint("repo_id", "pr_src_id", name="unique-pr"),
         UniqueConstraint("repo_id", "pr_src_id", name="unique-prx"),
+        UniqueConstraint("pr_url", name="pull-request-insert-unique"),
         Index("id_node", "pr_src_id", "pr_src_node_id"),
         Index(
             "pull_requests_idx_repo_id_data_datex", "repo_id", "data_collection_date"
@@ -1909,6 +1892,7 @@ class IssueAssignee(Base):
     __tablename__ = "issue_assignees"
     __table_args__ = (
         Index("issue-cntrb-assign-idx-1", "cntrb_id"),
+        UniqueConstraint("issue_assignee_src_id", "issue_id", name="issue-assignee-insert-unique"),
         {"schema": "augur_data"}
     )
 
@@ -2053,7 +2037,7 @@ class IssueLabel(Base):
 class IssueMessageRef(Base):
     __tablename__ = "issue_message_ref"
     __table_args__ = (
-        UniqueConstraint("issue_msg_ref_src_comment_id", "tool_source"),
+        UniqueConstraint("issue_msg_ref_src_comment_id", "issue_id", name="issue-message-ref-insert-unique"),
         {"schema": "augur_data"},
     )
 
@@ -2557,7 +2541,7 @@ class PullRequestLabel(Base):
 class PullRequestMessageRef(Base):
     __tablename__ = "pull_request_message_ref"
     __table_args__ = (
-        UniqueConstraint("pr_message_ref_src_comment_id", "tool_source"),
+        UniqueConstraint("pr_message_ref_src_comment_id", "pull_request_id", name="pull-request-message-ref-insert-unique"),
         {"schema": "augur_data"},
     )
 
@@ -2608,6 +2592,7 @@ class PullRequestMeta(Base):
     __tablename__ = "pull_request_meta"
     __table_args__ = (
         Index("pr_meta-cntrbid-idx", "cntrb_id"),
+        UniqueConstraint("pull_request_id", "pr_head_or_base", 'pr_sha', name="pull-request-meta-insert-unique"),
         {"schema": "augur_data",
         "comment": 'Pull requests contain referencing metadata.  There are a few columns that are discrete. There are also head and base designations for the repo on each side of the pull request. Similar functions exist in GitLab, though the language here is based on GitHub. The JSON Being adapted to as of the development of this schema is here:      "base": {       "label": "chaoss:dev",       "ref": "dev",       "sha": "dc6c6f3947f7dc84ecba3d8bda641ef786e7027d",       "user": {         "login": "chaoss",         "id": 29740296,         "node_id": "MDEyOk9yZ2FuaXphdGlvbjI5NzQwMjk2",         "avatar_url": "https://avatars2.githubusercontent.com/u/29740296?v=4",         "gravatar_id": "",         "url": "https://api.github.com/users/chaoss",         "html_url": "https://github.com/chaoss",         "followers_url": "https://api.github.com/users/chaoss/followers",         "following_url": "https://api.github.com/users/chaoss/following{/other_user}",         "gists_url": "https://api.github.com/users/chaoss/gists{/gist_id}",         "starred_url": "https://api.github.com/users/chaoss/starred{/owner}{/repo}",         "subscriptions_url": "https://api.github.com/users/chaoss/subscriptions",         "organizations_url": "https://api.github.com/users/chaoss/orgs",         "repos_url": "https://api.github.com/users/chaoss/repos",         "events_url": "https://api.github.com/users/chaoss/events{/privacy}",         "received_events_url": "https://api.github.com/users/chaoss/received_events",         "type": "Organization",         "site_admin": false       },       "repo": {         "id": 78134122,         "node_id": "MDEwOlJlcG9zaXRvcnk3ODEzNDEyMg==",         "name": "augur",         "full_name": "chaoss/augur",         "private": false,         "owner": {           "login": "chaoss",           "id": 29740296,           "node_id": "MDEyOk9yZ2FuaXphdGlvbjI5NzQwMjk2",           "avatar_url": "https://avatars2.githubusercontent.com/u/29740296?v=4",           "gravatar_id": "",           "url": "https://api.github.com/users/chaoss",           "html_url": "https://github.com/chaoss",           "followers_url": "https://api.github.com/users/chaoss/followers",           "following_url": "https://api.github.com/users/chaoss/following{/other_user}",           "gists_url": "https://api.github.com/users/chaoss/gists{/gist_id}",           "starred_url": "https://api.github.com/users/chaoss/starred{/owner}{/repo}",           "subscriptions_url": "https://api.github.com/users/chaoss/subscriptions",           "organizations_url": "https://api.github.com/users/chaoss/orgs",           "repos_url": "https://api.github.com/users/chaoss/repos",           "events_url": "https://api.github.com/users/chaoss/events{/privacy}",           "received_events_url": "https://api.github.com/users/chaoss/received_events",           "type": "Organization",           "site_admin": false         }, '},
     )
@@ -2853,7 +2838,7 @@ class PullRequestRepo(Base):
 class PullRequestReviewMessageRef(Base):
     __tablename__ = "pull_request_review_message_ref"
     __table_args__ = (
-        UniqueConstraint("pr_review_msg_src_id", "tool_source"),
+        UniqueConstraint("pr_review_msg_src_id", name="pull-request-review-message-ref-insert-unique"),
         {"schema": "augur_data"},
     )
 

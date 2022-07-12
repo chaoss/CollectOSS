@@ -26,7 +26,7 @@ def start_task(owner: str, repo):
     secondary_task_group = group(secondary_task_list)
 
     third_task_list = []
-    third_task_list.append(process_contributors.s())
+    # third_task_list.append(process_contributors.s())
     
     third_task_group = group(third_task_list)
 

@@ -526,7 +526,7 @@ def process_events(events, task_name):
     logger.info(f"{task_name}: Inserting {len(pr_event_dicts)} pr events and {len(issue_event_dicts)} issue events")
 
     # TODO: Could replace this with "id" but it isn't stored on the table for some reason
-    pr_event_natural_keys = ["platform_id", "node_id"]
+    pr_event_natural_keys = ["node_id"]
     session.insert_data(pr_event_dicts, PullRequestEvents, pr_event_natural_keys)
 
     issue_event_natural_keys = ["issue_id", "issue_event_src_id"]
