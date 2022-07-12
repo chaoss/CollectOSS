@@ -814,7 +814,7 @@ def insert_facade_contributors(session, repo_id,processes=4,multithreaded=True):
     #existing_cntrb_emails = json.loads(pd.read_sql(resolve_email_to_cntrb_id_sql, self.db, params={
     #                                    'repo_id': repo_id}).to_json(orient="records"))
 
-    existing_cntrb_emails = session.execute_sql(resolve_email_to_cntrb_id_sql)
+    existing_cntrb_emails = session.execute_sql(resolve_email_to_cntrb_id_sql).fetchall()
     
     if len(existing_cntrb_emails) > 0 and multithreaded:
         
