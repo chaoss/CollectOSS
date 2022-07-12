@@ -747,7 +747,7 @@ def insert_facade_contributors(session, repo_id,processes=4,multithreaded=True):
                 commits.cmt_author_raw_email
             ORDER BY
             hash
-    """)
+    """).bindparams(repo_id=repo_id)
 
     #Execute statement with session.
     new_contribs = session.execute_sql(new_contrib_sql)
