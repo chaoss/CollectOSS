@@ -576,7 +576,7 @@ def process_commit_metadata(contributorQueue,repo_id):
 
         try:
             
-            cntrb_id = AugurUUID(session.platform_id,contributor['id']).to_UUID()
+            cntrb_id = AugurUUID(session.platform_id,user_data['id']).to_UUID()
             # try to add contributor to database
             cntrb = {
                 "cntrb_id" : cntrb_id,
