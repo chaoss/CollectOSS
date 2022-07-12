@@ -750,7 +750,7 @@ def insert_facade_contributors(session, repo_id,processes=4,multithreaded=True):
     """).bindparams(repo_id=repo_id)
 
     #Execute statement with session.
-    new_contribs = session.execute_sql(new_contrib_sql)
+    new_contribs = session.execute_sql(new_contrib_sql).fetchall()
 
     print(new_contribs)
     
