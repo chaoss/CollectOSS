@@ -97,6 +97,7 @@ def insert_alias(session, contributor, email):
 
     session.logger.info(f"Creating alias for email: {email}")
 
+    session.logger.info(f"{contributor_table_data} has type {type(contributor_table_data)}")
     # Insert a new alias that corresponds to where the contributor was found
     # use the email of the new alias for canonical_email if the api returns NULL
     # TODO: It might be better to have the canonical_email allowed to be NUll because right now it has a null constraint.
