@@ -165,7 +165,8 @@ class Commits(db.Model):
     cmt_whitespace = db.Column(db.Integer, nullable=False)
     cmt_filename = db.Column(db.String(), nullable=False)
     cmt_date_attempted = db.Column(db.TIMESTAMP(), nullable=False)
-    cmt_ght_author_id = db.Column(db.Integer)
+    cmt_ght_author_id = db.Column(UUID(as_uuid=True), db.ForeignKey('augur_data.contributors.cntrb_id', name='fk_contributor_commits_contributors_1', ondelete="RESTRICT",
+                         onupdate="CASCADE"))
     cmt_ght_committer_id = db.Column(db.Integer)
     cmt_ght_committed_at = db.Column(db.TIMESTAMP())
     cmt_committer_timestamp = db.Column(db.TIMESTAMP(timezone=True))
