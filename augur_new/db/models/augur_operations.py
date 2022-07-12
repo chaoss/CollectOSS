@@ -151,3 +151,17 @@ t_working_commits = Table(
     schema="augur_operations",
     comment="For future use when we move all working tables to the augur_operations schema. ",
 )
+
+
+class Config(Base):
+    id = Column(SmallInteger, primary_key=True, nullable=False)
+    section_name = Column(String, nullable=False)
+    setting_name = Column(String, nullable=False)
+    value = Column(String)
+    type = Column(String)
+
+    __tablename__ = 'config'
+    __table_args__ = (
+        UniqueConstraint('section_name', "setting_name", name='unique-config-setting'),
+        {"schema": "augur_operations"}
+    )
