@@ -90,10 +90,8 @@ def analyze_commits_in_parallel(queue, repo_id, repo_location, multithreaded):
 
     for analyzeCommit in queue:    
 
-        try:
-            analyze_commit(cfg, repo_id, repo_location, analyzeCommit, multithreaded)
-        except Exception as e:
-            cfg.log_activity('Info', 'Subprocess ran into error when trying to anaylyze commit with error: %s' % e)
+        analyze_commit(cfg, repo_id, repo_location, analyzeCommit, multithreaded)
+
 
 
 
