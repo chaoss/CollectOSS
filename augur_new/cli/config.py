@@ -24,28 +24,32 @@ ENVVAR_PREFIX = "AUGUR_"
 def cli():
     pass
 
-@cli.command('create-default')
-def create_default():
+@cli.command('init')
+@click.option('--github_api_key', help="GitHub API key for data collection from the GitHub API", envvar=ENVVAR_PREFIX + 'GITHUB_API_KEY')
+@click.option('--facade_repo_directory', help="Directory on the database server where Facade should clone repos", envvar=ENVVAR_PREFIX + 'FACADE_REPO_DIRECTORY')
+@click.option('--gitlab_api_key', help="GitLab API key for data collection from the GitLab API", envvar=ENVVAR_PREFIX + 'GITLAB_API_KEY')
+def init_config(github_api_key, facade_repo_directory, gitlab_api_key):
 
-    config =get_config()
+    keys = {}
 
-    session = TaskSession(logger, config)
+    if github_api_key:
+        keys["github_api_key"] = github_api_key
+    if gitlab_api_key:
+        keys["gitlab_api_key"] = gitlab_api_key
+
+    session = TaskSession(logger)
 
     config = AugurConfig(session)
 
-    if not config.empty():
+    default_config = config.default_config
 
-        print("Warning this will override your current config")
-        response = str(input("Would you like to continue: [y/N]: ")).lower()
+    default_config["Keys"] = keys
 
-        if response != "y" and response != "yes":
-            print("Did not recieve yes or y exiting...")
-            return
+    if facade_repo_directory:
+        default_config["Facade"]["repo_directory"] = facade_repo_directory
 
+    config.load_config_from_dict(default_config)
 
-        config.clear()
-
-    config.create_default_config()        
 
 @cli.command('load')
 @click.option('--file', required=True)
@@ -58,9 +62,7 @@ def load_config(file):
         print("Did not recieve yes or y exiting...")
         return
 
-    config = get_config()
-
-    session = TaskSession(logger, config)
+    session = TaskSession(logger)
 
     config = AugurConfig(session)
 
@@ -75,9 +77,7 @@ def load_config(file):
 @click.option('--file', required=True)
 def add_section(section_name, file):
 
-    config =get_config()
-
-    session = TaskSession(logger, config)
+    session = TaskSession(logger)
 
     config = AugurConfig(session)
 
@@ -105,9 +105,7 @@ def add_section(section_name, file):
 @click.option('--data-type', required=True)
 def config_set(section, setting, value, data_type):
 
-    config = get_config()
-
-    session = TaskSession(logger, config)
+    session = TaskSession(logger)
 
     config = AugurConfig(session)
 
@@ -124,17 +122,13 @@ def config_set(section, setting, value, data_type):
     }
 
     config.add_or_update_settings([setting])
-        
-        
 
 @cli.command('get')
 @click.option('--section', required=True)
 @click.option('--setting')
 def config_get(section, setting):
 
-    config = get_config()
-
-    session = TaskSession(logger, config)
+    session = TaskSession(logger)
 
     config = AugurConfig(session)
 
@@ -163,9 +157,7 @@ def config_get(section, setting):
 @cli.command('clear')
 def clear_config():
 
-    config = get_config()
-
-    session = TaskSession(logger, config)
+    session = TaskSession(logger)
 
     config = AugurConfig(session)
 
@@ -182,15 +174,3 @@ def clear_config():
 
     print("Config cleared")
 
-def get_config():
-
-    current_dir = os.getcwd()
-
-    root_augur_dir = ''.join(current_dir.partition("augur/")[:2])
-
-    config_path = root_augur_dir + '/augur_new/augur.config.json'
-
-    with open(config_path, 'r') as f:
-        config = json.load(f)
-
-    return config

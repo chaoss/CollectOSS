@@ -1,5 +1,6 @@
 
-from db.models import Config, db
+from db.models import Config
+from db.engine import engine
 import sqlalchemy as s
 import json
 
@@ -9,6 +10,7 @@ class AugurConfig():
 
         self.session = session
         self.accepted_types = ["str", "bool", "int", "float", "NoneType"]
+        self.default_config = self.get_default_config()
 
     """
     type is optional
@@ -159,15 +161,15 @@ class AugurConfig():
                 print(f"Error! {section_name}: {value} will not be added because a section must have a dict as its values (all of the top level keys in the config must have a value of type dict")
 
     def clear(self):
-
-        db.session.query(Config).delete()
-        db.session.commit()
+        pass
+        # db.session.query(Config).delete()
+        # db.session.commit()
 
     def remove_section(self, section_name):
 
         Config.query.filter_by(section_name=section_name).delete()
 
-        db.session.commit()
+        # db.session.commit()
 
 
     def create_default_config(self):
@@ -223,7 +225,7 @@ class AugurConfig():
                 "ssl_key_file": None 
             },
             "Logging": {
-                "logs_directory": "logs/",
+                "logs_directory": "",
                 "log_level": "INFO",
                 "verbose": 0,
                 "quiet": 0,

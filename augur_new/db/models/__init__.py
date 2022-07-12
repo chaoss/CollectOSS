@@ -97,4 +97,5 @@ from db.models.augur_operations import (
     WorkerJob,
     WorkerOauth,
     WorkerSettingsFacade,
+    Config
 )

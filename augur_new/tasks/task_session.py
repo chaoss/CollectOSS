@@ -16,9 +16,8 @@ from sqlalchemy.event import listens_for
 
 from util.random_key_auth import RandomKeyAuth
 from tasks.redis import redis_connection as redis
-import psycopg2 
-# from .engine import engine
-
+# import psycopg2 
+from db.engine import engine
 #TODO: setup github headers in a method here.
 #Encapsulate data for celery task worker api
 
@@ -28,59 +27,12 @@ class TaskSession(s.orm.Session):
 
     #ROOT_AUGUR_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
-    def __init__(self, logger, config: dict = {}):
+    def __init__(self, logger):
         
         self.logger = logger
-        self.config = config["Database"]
-        
-        # current_dir = os.getcwd()
-
-        # self.root_augur_dir = ''.join(current_dir.partition("augur/")[:2])
-        # self.__init_config(self.root_augur_dir)
-        #print(self.config)
-
-
-        DB_STR = f'postgresql://{self.config["user"]}:{self.config["password"]}@{self.config["host"]}:{self.config["port"]}/{self.config["name"]}'
-
-        self.config.update(config)
-
-        
-        #self.logger.info(f"path = {str(ROOT_AUGUR_DIR) + "augur.config.json"}")
-        
-
-        self.engine = s.create_engine(DB_STR)
-        # self.engine = engine
-    
-
-        #Derek 
-        @s.event.listens_for(self.engine, "connect", insert=True)
-        def set_search_path(dbapi_connection, connection_record):
-            existing_autocommit = dbapi_connection.autocommit
-            dbapi_connection.autocommit = True
-            cursor = dbapi_connection.cursor()
-            cursor.execute("SET SESSION search_path=public,augur_data,augur_operations,spdx")
-            cursor.close()
-            dbapi_connection.autocommit = existing_autocommit
+        self.engine = engine
 
         super().__init__(self.engine)
-
-    # def __init_config(self, root_augur_dir: str):
-    #     #Load config.
-    #     self.augur_config = AugurConfig(self.root_augur_dir)
-    #     self.config = {
-    #         'host': self.augur_config.get_value('Server', 'host')
-    #     }
-    #     self.config.update(self.augur_config.get_section("Logging"))
-
-    #     self.config.update({
-    #         'capture_output': False,
-    #         'host_database': self.augur_config.get_value('Database', 'host'),
-    #         'port_database': self.augur_config.get_value('Database', 'port'),
-    #         'user_database': self.augur_config.get_value('Database', 'user'),
-    #         'name_database': self.augur_config.get_value('Database', 'name'),
-    #         'password_database': self.augur_config.get_value('Database', 'password'),
-    #         'key_database' : self.augur_config.get_value('Database', 'key')
-    #     })
     
     def execute_sql(self, sql_text):
         connection = self.engine.connect()
@@ -242,7 +194,7 @@ class GithubTaskSession(TaskSession):
 
     def __init__(self, logger, config: dict = {}, platform: str ='GitHub'):
 
-        super().__init__(logger, config)
+        super().__init__(logger)
 
         keys = self.get_list_of_oauth_keys_from_db(self.engine, self.config["key_database"])
 

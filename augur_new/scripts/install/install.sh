@@ -24,6 +24,37 @@ echo "Done!"
 # scripts/install/workers.sh $target 2>&1 | tee logs/workers-install.log
 # echo "Done!"
 
+
+function create_config() {
+    echo "Loading default config"
+    read -r -p "Would you like to generate the default config? [Y/n] " response
+      case "$response" in
+          [yY][eE][sS]|[yY])
+              echo "Generating default config..."
+              augur config load --file "`dirname $0`"/../../default.config.json
+              echo "Default config loaded"
+              ;;
+          *)
+              ;;
+      esac
+}
+
+
+scripts/install/config.sh $target
+
+
+# if [ $AUGUR_DB ]
+# then
+#     create_config
+# else 
+#     scripts/install/config.sh $target
+# fi
+
+
+
+
+
+
 # if [[ ! -e augur.config.json && ! -e $HOME/.augur/augur.config.json ]]; then
 #   echo "No config file found. Generating..."
 #   scripts/install/config.sh $target
