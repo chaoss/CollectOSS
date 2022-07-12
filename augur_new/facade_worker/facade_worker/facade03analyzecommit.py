@@ -234,24 +234,20 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 	# penalty.
 
 	#if multithreaded:
-	#	db_local,cursor_local = cfg.database_connection(
-	#		db_host,
-	#		db_user,
-	#		db_pass,
-	#		db_name,
-	#		db_port, False, True)
+	db_local,cursor_local = cfg.database_connection(
+		db_host,
+		db_user,
+		db_pass,
+		db_name,
+		db_port, False, True)
 #
-	#	db_people_local,cursor_people_local = cfg.database_connection(
-	#		db_host_people,
-	#		db_user_people,
-	#		db_pass_people,
-	#		db_name_people,
-	#		db_port_people, True, True)
+	db_people_local,cursor_people_local = cfg.database_connection(
+		db_host_people,
+		db_user_people,
+		db_pass_people,
+		db_name_people,
+		db_port_people, True, True)
 #
-	#else:
-	
-	db_local = cfg.db
-	cursor_local = cfg.cursor
 
 	db_people_local = cfg.db_people
 	cursor_people_local = cfg.cursor_people
