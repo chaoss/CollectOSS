@@ -165,14 +165,9 @@ class Config:
 
         cursor = db.cursor()#pymysql.cursors.DictCursor)
 
-## TODO: Does this need a block for if the database connection IS multithreaded? I think so, @sgoggins
 
-        if people and not multi_threaded_connection:
-            self.cursor_people = cursor
-            self.db_people = db
-        elif not multi_threaded_connection:
-            self.cursor = cursor
-            self.db = db
+        self.cursor = cursor
+        self.db = db
 
         # Figure out how much we're going to log
         #self.log_level = self.get_setting('log_level')
