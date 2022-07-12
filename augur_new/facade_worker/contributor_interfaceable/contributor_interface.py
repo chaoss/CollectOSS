@@ -102,7 +102,7 @@ def insert_alias(session, contributor, email):
     # use the email of the new alias for canonical_email if the api returns NULL
     # TODO: It might be better to have the canonical_email allowed to be NUll because right now it has a null constraint.
     alias = {
-        "cntrb_id": contributor_table_data[0]['cntrb_id'],
+        "cntrb_id": contributor_table_data[0].cntrb_id,
         "alias_email": email,
         "canonical_email": contributor['cntrb_canonical'] if 'cntrb_canonical' in contributor and contributor['cntrb_canonical'] is not None else email,
         #"tool_source": #self.tool_source,
