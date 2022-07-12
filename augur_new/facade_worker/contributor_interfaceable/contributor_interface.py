@@ -112,7 +112,7 @@ def insert_alias(session, contributor, email):
 
     # Insert new alias
     
-    session.insert_data(alias, ContributorsAliases, ['cntrb_id'])
+    session.insert_data(alias, ContributorsAliases, ['alias_email'])
     
 
     return
