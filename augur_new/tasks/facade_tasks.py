@@ -807,7 +807,7 @@ def insert_facade_contributors(session, repo_id,processes=4,multithreaded=True):
             contributors_aliases.alias_email = commits.cmt_author_raw_email
                             AND contributors.cntrb_id = contributors_aliases.cntrb_id
             AND commits.repo_id = :repo_id
-    """)
+    """).bindparams(repo_id=repo_id)
 
     #self.logger.info("DEBUG: got passed the sql statement declaration")
     # Get a list of dicts that contain the emails and cntrb_id's of commits that appear in the contributor's table.
