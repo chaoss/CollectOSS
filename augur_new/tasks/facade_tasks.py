@@ -695,7 +695,7 @@ def link_commits_to_contributor(contributorQueue):
                     cmt_ght_author_id=cntrb_email['cntrb_id']
                 ).execution_options(synchronize_session="fetch")
 
-                result = session.execute(stmt)
+                result = session.execute(stmnt)
             except Exception as e:
                 logger.info(
                     f"Ran into problem when enriching commit data. Error: {e}")
