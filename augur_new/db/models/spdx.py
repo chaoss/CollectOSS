@@ -156,20 +156,20 @@ class SpdxPackage(Base):
     dosocs2_dir_code = Column(String(64))
 
     concluded_license = relationship(
-        "License", primaryjoin="Package.concluded_license_id == License.license_id"
+        "SpdxLicense", primaryjoin="SpdxPackage.concluded_license_id == SpdxLicense.license_id"
     )
     declared_license = relationship(
-        "License", primaryjoin="Package.declared_license_id == License.license_id"
+        "SpdxLicense", primaryjoin="SpdxPackage.declared_license_id == SpdxLicense.license_id"
     )
     originator = relationship(
-        "Creator", primaryjoin="Package.originator_id == Creator.creator_id"
+        "SpdxCreator", primaryjoin="SpdxPackage.originator_id == SpdxCreator.creator_id"
     )
     supplier = relationship(
-        "Creator", primaryjoin="Package.supplier_id == Creator.creator_id"
+        "SpdxCreator", primaryjoin="SpdxPackage.supplier_id == SpdxCreator.creator_id"
     )
     ver_code_excluded_file = relationship(
-        "PackagesFile",
-        primaryjoin="Package.ver_code_excluded_file_id == PackagesFile.package_file_id",
+        "SpdxPackagesFile",
+        primaryjoin="SpdxPackage.ver_code_excluded_file_id == SpdxPackagesFile.package_file_id",
     )
 
 
@@ -190,10 +190,10 @@ class SpdxPackagesFile(Base):
     license_comment = Column(Text, nullable=False)
     file_name = Column(Text, nullable=False)
 
-    concluded_license = relationship("License")
-    file = relationship("File")
+    concluded_license = relationship("SpdxLicense")
+    file = relationship("SpdxFile")
     package = relationship(
-        "Package", primaryjoin="PackagesFile.package_id == Package.package_id"
+        "SpdxPackage", primaryjoin="SpdxPackagesFile.package_id == SpdxPackage.package_id"
     )
 
 
@@ -261,7 +261,7 @@ class SpdxCreator(Base):
     name = Column(String(255), nullable=False)
     email = Column(String(255), nullable=False)
 
-    creator_type = relationship("CreatorType")
+    creator_type = relationship("SpdxCreatorType")
 
 
 class SpdxDocument(Base):
@@ -287,9 +287,9 @@ class SpdxDocument(Base):
     document_comment = Column(Text, nullable=False)
     package_id = Column(ForeignKey("spdx.packages.package_id"), nullable=False)
 
-    data_license = relationship("License")
-    document_namespace = relationship("DocumentNamespace", uselist=False)
-    package = relationship("Package")
+    data_license = relationship("SpdxLicense")
+    document_namespace = relationship("SpdxDocumentNamespace", uselist=False)
+    package = relationship("SpdxPackage")
 
 
 class SpdxFileContributor(Base):
@@ -306,7 +306,7 @@ class SpdxFileContributor(Base):
     file_id = Column(ForeignKey("spdx.files.file_id"), nullable=False)
     contributor = Column(Text, nullable=False)
 
-    file = relationship("File")
+    file = relationship("SpdxFile")
 
 
 class SpdxFilesLicense(Base):
@@ -324,8 +324,8 @@ class SpdxFilesLicense(Base):
     license_id = Column(ForeignKey("spdx.licenses.license_id"), nullable=False)
     extracted_text = Column(Text, nullable=False)
 
-    file = relationship("File")
-    license = relationship("License")
+    file = relationship("SpdxFile")
+    license = relationship("SpdxLicense")
 
 
 class SpdxFilesScan(Base):
@@ -340,8 +340,8 @@ class SpdxFilesScan(Base):
     file_id = Column(ForeignKey("spdx.files.file_id"), nullable=False)
     scanner_id = Column(ForeignKey("spdx.scanners.scanner_id"), nullable=False)
 
-    file = relationship("File")
-    scanner = relationship("Scanner")
+    file = relationship("SpdxFile")
+    scanner = relationship("SpdxScanner")
 
 
 class SpdxPackagesScan(Base):
@@ -358,8 +358,8 @@ class SpdxPackagesScan(Base):
     package_id = Column(ForeignKey("spdx.packages.package_id"), nullable=False)
     scanner_id = Column(ForeignKey("spdx.scanners.scanner_id"), nullable=False)
 
-    package = relationship("Package")
-    scanner = relationship("Scanner")
+    package = relationship("SpdxPackage")
+    scanner = relationship("SpdxScanner")
 
 
 class SpdxDocumentsCreator(Base):
@@ -376,8 +376,8 @@ class SpdxDocumentsCreator(Base):
     document_id = Column(ForeignKey("spdx.documents.document_id"), nullable=False)
     creator_id = Column(ForeignKey("spdx.creators.creator_id"), nullable=False)
 
-    creator = relationship("Creator")
-    document = relationship("Document")
+    creator = relationship("SpdxCreator")
+    document = relationship("SpdxDocument")
 
 
 class SpdxExternalRef(Base):
@@ -398,8 +398,8 @@ class SpdxExternalRef(Base):
     id_string = Column(String(255), nullable=False)
     sha256 = Column(String(64), nullable=False)
 
-    document = relationship("Document")
-    document_namespace = relationship("DocumentNamespace")
+    document = relationship("SpdxDocument")
+    document_namespace = relationship("SpdxDocumentNamespace")
 
 
 class SpdxAnnotation(Base):
@@ -420,10 +420,10 @@ class SpdxAnnotation(Base):
     created_ts = Column(TIMESTAMP(True, 6))
     comment = Column(Text, nullable=False)
 
-    annotation_type = relationship("AnnotationType")
-    creator = relationship("Creator")
-    document = relationship("Document")
-    identifier = relationship("Identifier")
+    annotation_type = relationship("SpdxAnnotationType")
+    creator = relationship("SpdxCreator")
+    document = relationship("SpdxDocument")
+    identifier = relationship("SpdxIdentifier")
 
 
 class SpdxRelationship(Base):
@@ -454,14 +454,14 @@ class SpdxRelationship(Base):
     relationship_comment = Column(Text, nullable=False)
 
     left_identifier = relationship(
-        "Identifier",
-        primaryjoin="Relationship.left_identifier_id == Identifier.identifier_id",
+        "SpdxIdentifier",
+        primaryjoin="SpdxRelationship.left_identifier_id == SpdxIdentifier.identifier_id",
         backref="to_relationships",
     )
-    relationship_type = relationship("RelationshipType")
+    relationship_type = relationship("SpdxRelationshipType")
     right_identifier = relationship(
-        "Identifier",
-        primaryjoin="Relationship.right_identifier_id == Identifier.identifier_id",
+        "SpdxIdentifier",
+        primaryjoin="SpdxRelationship.right_identifier_id == SpdxIdentifier.identifier_id",
         backref="from_relationships",
     )
 
@@ -492,10 +492,10 @@ class SpdxIdentifier(Base):
     package_id = Column(ForeignKey("spdx.packages.package_id"))
     package_file_id = Column(ForeignKey("spdx.packages_files.package_file_id"))
 
-    document = relationship("Document")
-    document_namespace = relationship("DocumentNamespace")
-    package_file = relationship("PackagesFile")
-    package = relationship("Package")
+    document = relationship("SpdxDocument")
+    document_namespace = relationship("SpdxDocumentNamespace")
+    package_file = relationship("SpdxPackagesFile")
+    package = relationship("SpdxPackage")
 
     to_identifiers = association_proxy("to_relationships", "right_identifier")
     from_identifiers = association_proxy("from_relationships", "left_identifier")
