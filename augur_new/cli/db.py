@@ -15,8 +15,7 @@ import pandas as pd
 import requests
 from sqlalchemy import exc
 
-from augur.cli import pass_config, pass_application
-from augur_new.db.engine import engine
+from db.engine import engine
 
 logger = logging.getLogger(__name__)
 
@@ -285,13 +284,13 @@ def get_api_key():
         logger.error("No Augur API key found.")
 
 
-@cli.command(
-    "check-pgpass",
-    short_help="Check the ~/.pgpass file for Augur's database credentials",
-)
-@pass_config
-def check_pgpass(config):
-    check_pgpass_credentials(config.get_raw_config())
+# @cli.command(
+#     "check-pgpass",
+#     short_help="Check the ~/.pgpass file for Augur's database credentials",
+# )
+# @pass_config
+# def check_pgpass(config):
+#     check_pgpass_credentials(config.get_raw_config())
 
 
 @cli.command("init-database")
