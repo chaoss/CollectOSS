@@ -13,10 +13,6 @@ List of Working Data Tables In Augur
 
     * commit_parents - this table keeps a record of parent commits that are squashed during Facade Worker execution.
         
-        * Worker Associated With It? 
-
-            * Facade Worker
-    
     Other working tables are: 
 
     * exclude
