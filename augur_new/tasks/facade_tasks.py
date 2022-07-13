@@ -840,6 +840,7 @@ def facade_resolve_contribs():
     facade_init(session)
 
     multithreaded = session.multithreaded
+    start_time = time.time()
     ### moved up by spg on 12/1/2021
     #Interface with the contributor worker and inserts relevant data by repo
     session.cfg.update_status('Updating Contributors')
@@ -855,4 +856,7 @@ def facade_resolve_contribs():
     for repo in all_repos:
         session.logger.info(f"Processing repo {repo}")
         insert_facade_contributors(session,repo[0],multithreaded=multithreaded)
-        session.logger.info(f"Processing repo contributors for repo: {repo}")
+    
+    elapsed_time = time.time() - start_time
+
+    print('\nCompleted in %s\n' % timedelta(seconds=int(elapsed_time)))
