@@ -17,11 +17,12 @@ from flask_cors import CORS
 import pandas as pd
 
 import augur
-from augur.routes import create_routes
+from api.routes import create_routes
 
 AUGUR_API_VERSION = 'api/unstable'
 
 logger = logging.getLogger(__name__)
+
 
 class Server(object):
     """
@@ -170,7 +171,7 @@ class Server(object):
                             mimetype="application/json")
         generated_function.__name__ = f"{endpoint_type}_" + func.__name__
         return generated_function
-
+        
     def add_standard_metric(self, function, endpoint, **kwargs):
         repo_endpoint = f'/{self.api_version}/repos/<repo_id>/{endpoint}'
         repo_group_endpoint = f'/{self.api_version}/repo-groups/<repo_group_id>/{endpoint}'

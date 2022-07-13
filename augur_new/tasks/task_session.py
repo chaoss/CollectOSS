@@ -16,6 +16,7 @@ from sqlalchemy.event import listens_for
 
 from util.random_key_auth import RandomKeyAuth
 from tasks.redis import redis_connection as redis
+from augur_config import AugurConfig
 # import psycopg2 
 from db.engine import engine
 #TODO: setup github headers in a method here.
@@ -192,15 +193,24 @@ class GithubTaskSession(TaskSession):
 
     #ROOT_AUGUR_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
-    def __init__(self, logger, config: dict = {}, platform: str ='GitHub'):
+    def __init__(self, logger, platform: str ='GitHub'):
 
         super().__init__(logger)
 
-        keys = self.get_list_of_oauth_keys_from_db(self.engine, self.config["key_database"])
+        config = AugurConfig(self)
+
+        api_key = config.get_value("Keys", "github_api_key")
+
+        print(api_key)
+
+        keys = self.get_list_of_oauth_keys_from_db(self.engine, config.get_value("Keys", "github_api_key"))
+
+        print(keys)
 
         self.oauths = RandomKeyAuth(keys)
 
-        result = Platform.query.filter_by(pltfrm_name=platform).one()
+        result = self.query(Platform).filter(Platform.pltfrm_name == platform).one()
+        print(result)
 
         self.platform_id = result.pltfrm_id
         

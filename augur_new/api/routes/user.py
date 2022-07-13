@@ -8,7 +8,7 @@ import requests
 import json
 from flask import request, Response, jsonify
 
-from db.models import Users
+from db.models import User
 
 logger = logging.getLogger(__name__)
 

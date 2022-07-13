@@ -74,20 +74,24 @@ function create_config(){
     "${cmd[@]}" 
 }
 
-function config_prompt() {
-    read -r -p "Would you like to generate a new config? [Y/n] " response
-      case "$response" in
-          ([yY][eE][sS]|[yY])
-              echo "Generating default config..."
-              create_config
-              echo "Default config loaded"
-              ;;
-          *)
-              ;;
-      esac
-}
+# function config_prompt() {
+#     read -r -p "Would you like to generate a new config? [Y/n] " response
+#       case "$response" in
+#           ([yY][eE][sS]|[yY])
+#               echo "Generating default config..."
+#               create_config
+#               echo "Config created"
+#               ;;
+#           *)
+#               ;;
+#       esac
+# }
 
-config_prompt
+echo "Collecting data for config..."
+create_config
+echo "Config created"
+
+# config_prompt
 
 
 

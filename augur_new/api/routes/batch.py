@@ -9,7 +9,7 @@ import requests
 import sqlalchemy as s
 from sqlalchemy import exc
 from flask import request, Response
-from augur.util import metric_metadata
+from api.util import metric_metadata
 import json
 
 logger = logging.getLogger(__name__)

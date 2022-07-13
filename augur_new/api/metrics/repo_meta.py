@@ -9,7 +9,7 @@ import pandas as pd
 import math
 import logging
 
-from augur.util import register_metric
+from api.util import register_metric
 
 logger = logging.getLogger("augur")
 

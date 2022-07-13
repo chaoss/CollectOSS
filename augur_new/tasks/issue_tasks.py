@@ -32,7 +32,7 @@ def collect_issues(owner: str, repo: str) -> None:
     logger = logging.getLogger(issues.__name__)
 
     # define GithubTaskSession to handle insertions, and store oauth keys 
-    session = GithubTaskSession(logger, config)
+    session = GithubTaskSession(logger)
 
     logger.info(f"Collecting issues for {owner}/{repo}")
 
@@ -62,7 +62,7 @@ def process_issues(issues, task_name) -> None:
     logger = logging.getLogger(process_issues.__name__)
 
     # define GithubTaskSession to handle insertions, and store oauth keys 
-    session = GithubTaskSession(logger, config)
+    session = GithubTaskSession(logger)
 
     # get repo_id or have it passed
     repo_id = 1
@@ -118,7 +118,7 @@ def process_issues(issues, task_name) -> None:
 
     # insert contributors from these issues
     logger.info(f"{task_name}: Inserting {len(contributors)} contributors")
-    session.insert_data(contributors, Contributors, ["cntrb_login"])
+    session.insert_data(contributors, Contributor, ["cntrb_login"])
                         
 
     # insert the issues into the issues table. 
@@ -189,7 +189,7 @@ def collect_pull_requests(owner: str, repo: str) -> None:
     logger = logging.getLogger(collect_pull_requests.__name__)
 
     # define GithubTaskSession to handle insertions, and store oauth keys 
-    session = GithubTaskSession(logger, config)
+    session = GithubTaskSession(logger)
 
     logger.info(f"Collecting pull requests for {owner}/{repo}")
 
@@ -214,7 +214,7 @@ def process_pull_requests(pull_requests, task_name):
     logger = logging.getLogger(process_pull_requests.__name__)
 
     # define GithubTaskSession to handle insertions, and store oauth keys 
-    session = GithubTaskSession(logger, config)
+    session = GithubTaskSession(logger)
 
      # get repo_id or have it passed
     repo_id = 1
@@ -293,7 +293,7 @@ def process_pull_requests(pull_requests, task_name):
 
     # insert contributors from these issues
     logger.info(f"{task_name}: Inserting {len(contributors)} contributors")
-    session.insert_data(contributors, Contributors, ["cntrb_login"])
+    session.insert_data(contributors, Contributor, ["cntrb_login"])
 
 
     # insert the prs into the pull_requests table. 
@@ -302,7 +302,7 @@ def process_pull_requests(pull_requests, task_name):
     logger.info(f"{task_name}: Inserting prs of length: {len(pr_dicts)}")
     pr_natural_keys = ["pr_url"]
     pr_return_columns = ["pull_request_id", "pr_url"]
-    pr_return_data = session.insert_data(pr_dicts, PullRequests, pr_natural_keys, return_columns=pr_return_columns)
+    pr_return_data = session.insert_data(pr_dicts, PullRequest, pr_natural_keys, return_columns=pr_return_columns)
 
     if pr_return_data is None:
         return
@@ -350,18 +350,18 @@ def process_pull_requests(pull_requests, task_name):
     # inserting pr labels
     # we are using pr_src_id and pull_request_id to determine if the label is already in the database.
     pr_label_natural_keys = ['pr_src_id', 'pull_request_id']
-    session.insert_data(pr_label_dicts, PullRequestLabels, pr_label_natural_keys)
+    session.insert_data(pr_label_dicts, PullRequestLabel, pr_label_natural_keys)
   
     # inserting pr assignees
     # we are using pr_assignee_src_id and pull_request_id to determine if the label is already in the database.
     pr_assignee_natural_keys = ['pr_assignee_src_id', 'pull_request_id']
-    session.insert_data(pr_assignee_dicts, PullRequestAssignees, pr_assignee_natural_keys)
+    session.insert_data(pr_assignee_dicts, PullRequestAssignee, pr_assignee_natural_keys)
 
  
     # inserting pr assignees
     # we are using pr_src_id and pull_request_id to determine if the label is already in the database.
     pr_reviewer_natural_keys = ["pull_request_id", "pr_reviewer_src_id"]
-    session.insert_data(pr_reviewer_dicts, PullRequestReviewers, pr_reviewer_natural_keys)
+    session.insert_data(pr_reviewer_dicts, PullRequestReviewer, pr_reviewer_natural_keys)
     
     # inserting pr metadata
     # we are using pull_request_id, pr_head_or_base, and pr_sha to determine if the label is already in the database.
@@ -430,7 +430,7 @@ def collect_events(self, owner: str, repo: str):
     logger.info(f"Collecting pull request events for {owner}/{repo}")
     
         # define GithubTaskSession to handle insertions, and store oauth keys 
-    session = GithubTaskSession(logger, config)
+    session = GithubTaskSession(logger)
     
     url = f"https://api.github.com/repos/{owner}/{repo}/issues/events"
     
@@ -454,7 +454,7 @@ def process_events(events, task_name):
 
     logger = logging.getLogger(process_events.__name__)
         # define GithubTaskSession to handle insertions, and store oauth keys 
-    session = GithubTaskSession(logger, config)
+    session = GithubTaskSession(logger)
 
     # get repo_id
     repo_id = 1
@@ -521,7 +521,7 @@ def process_events(events, task_name):
     # remove contributors that were found in the data more than once
     contributors = remove_duplicate_dicts(contributors)
 
-    session.insert_data(contributors, Contributors, ["cntrb_login"])
+    session.insert_data(contributors, Contributor, ["cntrb_login"])
 
     logger.info(f"{task_name}: Inserting {len(pr_event_dicts)} pr events and {len(issue_event_dicts)} issue events")
 
@@ -554,7 +554,7 @@ def collect_issue_and_pr_comments(self, owner: str, repo: str) -> None:
     logger.info(f"Collecting github comments for {owner}/{repo}")
     
     # define database task session, that also holds autentication keys the GithubPaginator needs
-    session = GithubTaskSession(logger, config)
+    session = GithubTaskSession(logger)
     
     # url to get issue and pull request comments
     url = f"https://api.github.com/repos/{owner}/{repo}/issues/comments"
@@ -579,7 +579,7 @@ def process_messages(messages, task_name):
     logger = logging.getLogger(process_messages.__name__)
     
     # define database task session, that also holds autentication keys the GithubPaginator needs
-    session = GithubTaskSession(logger, config)
+    session = GithubTaskSession(logger)
 
     repo_id = 1
     platform_id = 1
@@ -660,7 +660,7 @@ def process_messages(messages, task_name):
 
     logger.info(f"Inserting {len(contributors)} contributors")
 
-    session.insert_data(contributors, Contributors, ["cntrb_login"])
+    session.insert_data(contributors, Contributor, ["cntrb_login"])
 
     
     logger.info(f"Inserting {len(message_dicts)} messages")
@@ -721,7 +721,7 @@ def pull_request_review_comments(self, owner: str, repo: str) -> None:
     logger = logging.getLogger(pull_request_review_comments.__name__)
     
     # define GithubTaskSession to handle insertions, and store oauth keys 
-    session = GithubTaskSession(logger, config)
+    session = GithubTaskSession(logger)
 
     logger.info(f"Collecting pull request comments for {owner}/{repo}")
 
@@ -817,7 +817,7 @@ def pull_request_reviews(self, owner: str, repo: str, pr_number_list: [int]) -> 
 
     logger = logging.getLogger(pull_request_reviews.__name__)
         # define GithubTaskSession to handle insertions, and store oauth keys 
-    session = GithubTaskSession(logger, config)
+    session = GithubTaskSession(logger)
 
     logger.info(f"Collecting pull request reviews for {owner}/{repo}")
 
@@ -880,14 +880,14 @@ the issue is that most of the time we filter out needed
 def process_contributors(self):
 
     logger = get_task_logger(process_contributors.name)
-    session = GithubTaskSession(logger, config)
+    session = GithubTaskSession(logger)
 
     platform = 1
     tool_source = "Pr comment task"
     tool_version = "2.0"
     data_source = "Github API"
 
-    contributors = Contributors.query.filter_by(data_source=data_source, cntrb_created_at=None, cntrb_last_used=None).all()
+    contributors = Contributor.query.filter_by(data_source=data_source, cntrb_created_at=None, cntrb_last_used=None).all()
 
     contributors_len = len(contributors)
 
@@ -923,7 +923,7 @@ def process_contributors(self):
         enriched_contributors.append(contributor_dict)
 
     logger.info(f"Enriching {len(enriched_contributors)} contributors")
-    session.insert_data(enriched_contributors, Contributors, ["cntrb_login"])
+    session.insert_data(enriched_contributors, Contributor, ["cntrb_login"])
 
 
 
@@ -957,7 +957,7 @@ def process_contributors(self):
     #     # insert the contributor into the table
 
     #     contributor_dicts.append(contributor_data)
-    #     # session.insert_data(contributor_data, Contributors, ["cntrb_id"])
+    #     # session.insert_data(contributor_data, Contributor, ["cntrb_id"])
 
     #     # create list of dicts to update the table with the cntrb_ids
     #     update_row = {}
@@ -992,7 +992,7 @@ def process_contributors(self):
 
     # print(f"Length of contributors: {len(unique_contrbs)}. Time to remove {contrib_len - len(unique_contrbs)}: {e} seconds")
 
-    # session.insert_data(unique_contrbs, Contributors, ["cntrb_id"])    
+    # session.insert_data(unique_contrbs, Contributor, ["cntrb_id"])    
 
     # total_time = time.time() - start_time
 

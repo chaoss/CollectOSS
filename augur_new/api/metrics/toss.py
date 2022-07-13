@@ -2,7 +2,7 @@
 import datetime
 import sqlalchemy as s
 import pandas as pd
-from augur.util import register_metric
+from api.util import register_metric
 
 @register_metric(type="toss")
 def toss_pull_request_acceptance_rate(self, repo_id, begin_date=None, end_date=None, group_by='week'):

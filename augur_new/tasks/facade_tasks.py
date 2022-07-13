@@ -45,6 +45,7 @@ from augur_new.tasks.task_session import *
 from augur_new.facade_worker.facade_worker.facade00mainprogram import *
 
 from augur_logging import AugurLogConfig
+from augur_config import AugurConfig
 
 
 current_dir = os.getcwd()
@@ -54,26 +55,30 @@ root_augur_dir = ''.join(current_dir.partition("augur/")[:2])
 config_path = root_augur_dir + '/augur.config.json'
 
 #Have one log file for facade_tasks
-#facadeLogger = logging.getLogger(__name__)
+# facadeLogger = logging.getLogger(__name__)
 
 
 
-with open(config_path, 'r') as f:
-    config = json.load(f)
+
 
 """
     You can prevent Celery from configuring any loggers at all by connecting 
     the setup_logging signal. This allows you to completely override the 
     logging configuration with your own.
 """
-
+logger = logging.getLogger(__name__)
+config_db_session = TaskSession(logger)
+config = AugurConfig(config_db_session)
+logs_directory = config.get_value("logging", "logs_directory")
+if logs_directory is None:
+    logs_directory = ""
 
 
 #Load logging config once at task definition
 @after_setup_logger.connect
 def setup_loggers(*args,**kwargs):
     #load config
-    loggingConfig = AugurLogConfig(base_log_dir=config["Logging"]["logs_directory"])
+    loggingConfig = AugurLogConfig(base_log_dir=logs_directory)
 
     
     

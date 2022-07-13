@@ -165,3 +165,24 @@ class Config(Base):
         UniqueConstraint('section_name', "setting_name", name='unique-config-setting'),
         {"schema": "augur_operations"}
     )
+
+class User(Base):
+    user_id = Column(Integer, primary_key=True)
+    login_name = Column(String, nullable=False)
+    login_hashword = Column(String, nullable=False)
+    email = Column(String, nullable=False)
+    text_phone = Column(String)
+    first_name = Column(String, nullable=False)
+    last_name = Column(String, nullable=False)
+    tool_source = Column(String)
+    tool_version = Column(String)
+    data_source = Column(String)
+    data_collection_date = Column(TIMESTAMP(precision=0), server_default=text("CURRENT_TIMESTAMP"))
+    
+    __tablename__ = 'users'
+    __table_args__ = (
+        UniqueConstraint('email', name='user-unique-email'),
+        UniqueConstraint('login_name', name='user-unique-name'),
+        UniqueConstraint('text_phone', name='user-unique-phone'),
+        {"schema": "augur_operations"}
+    )

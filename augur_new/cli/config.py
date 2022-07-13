@@ -15,7 +15,7 @@ from augur.logging import ROOT_AUGUR_DIRECTORY
 
 from db.models import Config
 from tasks.task_session import TaskSession
-from db_config import AugurConfig
+from augur_config import AugurConfig
 
 logger = logging.getLogger(__name__)
 ENVVAR_PREFIX = "AUGUR_"

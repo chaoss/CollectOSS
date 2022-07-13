@@ -5,7 +5,7 @@ import datetime
 import base64
 import sqlalchemy as s
 import pandas as pd
-from augur.util import metric_metadata
+from api.util import metric_metadata
 import boto3
 import json
 from boto3.dynamodb.conditions import Key, Attr

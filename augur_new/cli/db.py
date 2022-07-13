@@ -16,7 +16,7 @@ import requests
 from sqlalchemy import exc
 
 from augur.cli import pass_config, pass_application
-from db.engine import engine
+from augur_new.db.engine import engine
 
 logger = logging.getLogger(__name__)
 

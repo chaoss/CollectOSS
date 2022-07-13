@@ -40,6 +40,12 @@ def get_cache(namespace, cache_manager=None):
         cache_manager = __memory_cache
     return cache_manager.get_cache(namespace)
 
+"""
+This is a decorator that defines a metric. It adds is_metric and the type to the function meatadata.
+These is used by the loop in api/metrics/__init__.py to determine which wether a function should be added 
+to the metrics class. It is also used in api/routes/__init__.py to determine which method to call when it 
+is looping through the methods on the class Metrics.  
+"""
 metric_metadata = []
 def register_metric(metadata=None, **kwargs):
     """

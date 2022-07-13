@@ -6,7 +6,7 @@ Metrics that provide data about commits & their associated activity
 import datetime
 import sqlalchemy as s
 import pandas as pd
-from augur.util import register_metric
+from api.util import register_metric
 
 @register_metric()
 def committers(self, repo_group_id, repo_id=None, begin_date=None, end_date=None, period='month'):

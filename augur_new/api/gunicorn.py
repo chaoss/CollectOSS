@@ -3,7 +3,7 @@ import logging
 import gunicorn.app.base
 from gunicorn.arbiter import Arbiter
 
-from augur.server import Server
+from api.server import Server
 
 logger = logging.getLogger(__name__)
 
@@ -13,6 +13,8 @@ class AugurGunicornApp(gunicorn.app.base.BaseApplication):
     """
 
     def __init__(self, options={}, augur_app=None):
+
+        print(f"Augur app passed to gunicorn: {augur_app}")
         self.options = options
         self.augur_app = augur_app
         self.server = None
@@ -43,5 +45,5 @@ class AugurGunicornApp(gunicorn.app.base.BaseApplication):
             try:
                 self.server = Server(augur_app=self.augur_app)
             except Exception as e:
-                logger.error(f"An error occured when Gunicorn tried to load the server: {e}")
+                print(f"An error occured when Gunicorn tried to load the server: {e}")
         return self.server.app

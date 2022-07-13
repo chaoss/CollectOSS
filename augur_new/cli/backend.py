@@ -15,8 +15,8 @@ import subprocess
 
 
 from tasks.start_tasks import start_task
-from augur.application import Application
-from augur.gunicorn import AugurGunicornApp
+from api.application import Application
+from api.gunicorn import AugurGunicornApp
 from tasks.redis import redis_connection 
 # from augur.server import Server
 
@@ -34,10 +34,8 @@ def start(disable_collection):
     Start Augur's backend server
     """
 
-    # logger.info("Starting workers")
-    # command = ["celery", "-A", "tasks.celery.celery", "worker", "--loglevel=info", "-E"]
-    # celery_process = subprocess.Popen(command)
-    
+
+    logger.info("Starting workers")
     if not disable_collection:
 
         # 1300 prs
@@ -55,22 +53,24 @@ def start(disable_collection):
         result = start_task.apply_async(args=[owner, repo])
 
     augur_app = Application()
-    logger.info("Augur application initialized")
-    logger.info(f"Using config file: {augur_app.config.config_file_location}")
+    print("Augur application initialized")
 
     augur_gunicorn_app = AugurGunicornApp(augur_app.gunicorn_options, augur_app=augur_app)
 
-    logger.info('Starting Gunicorn webserver...')
-    logger.info(f'Augur is running at: http://127.0.0.1:{augur_app.config.get_value("Server", "port")}')
-    logger.info('Gunicorn server logs & errors will be written to logs/gunicorn.log')
-    logger.info('Housekeeper update process logs will now take over.')
+    print('Starting Gunicorn webserver...')
+    print(f'Augur is running at: http://127.0.0.1:{augur_app.config.get_value("Server", "port")}')
+    print('Gunicorn server logs & errors will be written to logs/gunicorn.log')
+    print('Housekeeper update process logs will now take over.')
 
     gunicorn_arbiter = Arbiter(augur_gunicorn_app)
+
 
     atexit._clear()
     atexit.register(exit, gunicorn_arbiter)
 
     gunicorn_arbiter.run()
+
+
 
 
 @cli.command('stop')

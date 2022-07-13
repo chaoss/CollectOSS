@@ -32,6 +32,7 @@ class AugurConfig():
                 setting["type"] = None
 
         self.session.insert_data(settings, Config, ["section_name", "setting_name"])
+       
 
     def add_section_from_json(self, section_name, json_data):
 
@@ -77,7 +78,8 @@ class AugurConfig():
     def get_value(self, section_name, setting_name):
 
         try:
-            config_setting = Config.query.filter_by(section_name=section_name, setting_name=setting_name).one()
+            config_setting = self.session.query(Config).filter(Config.section_name == section_name, Config.setting_name == setting_name).one()
+            # config_setting = Config.query.filter_by(section_name=section_name, setting_name=setting_name).one()
         except s.orm.exc.NoResultFound:
             return None
 

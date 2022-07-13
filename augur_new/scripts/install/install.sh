@@ -39,8 +39,16 @@ function create_config() {
       esac
 }
 
+echo "Creating database schema"
+augur db create-schema
+echo "Schema successfully created!"
+
 
 scripts/install/config.sh $target
+
+echo "**********************************"
+echo "***** INSTALLATION COMPLETE *****"
+echo "**********************************"
 
 
 # if [ $AUGUR_DB ]
@@ -109,6 +117,4 @@ scripts/install/config.sh $target
 #   fi
 # fi
 
-# echo "**********************************"
-# echo "***** INSTALLATION COMPLETE *****"
-# echo "**********************************"
+

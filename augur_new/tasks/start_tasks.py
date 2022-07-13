@@ -7,7 +7,7 @@ pr_numbers = [70, 106, 170, 190, 192, 208, 213, 215, 216, 218, 223, 224, 226, 23
 def start_task(owner: str, repo):
     
     logger = logging.getLogger(start_task.__name__)
-    session = TaskSession(logger, config)
+    session = TaskSession(logger)
 
     logger.info(f"Collecting data for {owner}/{repo}")
  
