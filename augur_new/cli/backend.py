@@ -17,7 +17,7 @@ import subprocess
 from tasks.start_tasks import start_task
 from api.application import Application
 from api.gunicorn import AugurGunicornApp
-from tasks.redis import redis_connection 
+from tasks.redis_init import redis_connection 
 # from augur.server import Server
 
 
@@ -43,11 +43,6 @@ def start(disable_collection):
         owner = "chaoss"
         repo = "augur"
 
-
-        # 4200 issues
-        # 2500 prs
-        # owner = "celery"
-        # repo = "celery"
 
         logger.info("Launch start task")
         result = start_task.apply_async(args=[owner, repo])

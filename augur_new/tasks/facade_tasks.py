@@ -32,11 +32,11 @@ from augur_new.facade_worker.contributor_interfaceable.contributor_interface imp
 from augur_new.util.worker_util import create_grouped_task_load
 
 # from augur_new.server import redis_conn
-from tasks.celery import celery
+from tasks.celery_init import celery_app as celery
 
 
-from augur_new.db import data_parse
-from augur_new.db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestEvent, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, Issue, IssueEvent, IssueLabel, IssueAssignee, PullRequestMessageRef, IssueMessageRef, Contributor
+from augur_new.augur_db import data_parse
+from augur_new.augur_db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestEvent, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, Issue, IssueEvent, IssueLabel, IssueAssignee, PullRequestMessageRef, IssueMessageRef, Contributor
 
 from augur_new.util.github_paginator import GithubPaginator, hit_api
 from augur_new.util.gh_graphql_entities import PullRequest
@@ -44,8 +44,7 @@ from augur_new.tasks.task_session import *
 
 from augur_new.facade_worker.facade_worker.facade00mainprogram import *
 
-from augur_logging import AugurLogConfig
-from augur_config import AugurConfig
+
 
 
 current_dir = os.getcwd()

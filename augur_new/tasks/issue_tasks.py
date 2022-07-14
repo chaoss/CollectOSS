@@ -1,8 +1,7 @@
-from .facade_tasks import *
-from tasks.celery import celery
+from tasks.facade_tasks import *
+from tasks.celery_init import celery_app as celery
 
-
-from augur_new.db.data_parse import *
+from augur_db.data_parse import *
 from celery.result import allow_join_result
 from AugurUUID import AugurUUID
 import time
