@@ -483,6 +483,7 @@ def request_dict_from_endpoint(session, url, timeout_wait=10):
 
             #If we get an error message that's not None
             if err:
+                attempts += 1
                 continue
 
             # self.logger.info(f"Returned dict: {response_data}")
