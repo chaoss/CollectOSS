@@ -16,7 +16,7 @@ Schema
    .. table_datatree::
       :maxdepth: 1
 
-      used_data
+      working_tables
       regularly_used_data
       unused_data
 
