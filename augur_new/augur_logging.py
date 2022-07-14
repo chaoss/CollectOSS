@@ -33,7 +33,7 @@ ERROR_FORMAT_STRING = "%(asctime)s [PID: %(process)d] %(name)s [%(funcName)s() i
 #Deal with creating the handler in one line with proper handler and log level
 def genHandler(file,fmt,level):
     handler = FileHandler(filename=file,mode='a')
-    handler.setFormatter(fmt=fmt)
+    #handler.setFormatter(fmt=fmt)
     handler.setLevel(level)
 
     return handler
