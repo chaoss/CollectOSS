@@ -9,16 +9,15 @@ from sqlalchemy.inspection import inspect
 import re
 import time
 
-from db.models import * 
 from sqlalchemy.event import listen
 from sqlalchemy.event import listens_for
 # from augur_new.augur.config import AugurConfig
 
 from util.random_key_auth import RandomKeyAuth
-from tasks.redis import redis_connection as redis
+from tasks.redis_init import redis_connection as redis
 from augur_config import AugurConfig
 # import psycopg2 
-from db.engine import engine
+from augur_db.engine import engine
 #TODO: setup github headers in a method here.
 #Encapsulate data for celery task worker api
 

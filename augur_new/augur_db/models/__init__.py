@@ -1,4 +1,4 @@
-from db.models.augur_data import (
+from augur_db.models.augur_data import (
     ChaossMetricStatus,
     ChaossUser,
     ContributorAffiliation,
@@ -65,7 +65,7 @@ from db.models.augur_data import (
     PullRequestReviewMessageRef,
 )
 
-from db.models.spdx import (
+from augur_db.models.spdx import (
     SpdxAnnotationType,
     SpdxAugurRepoMap,
     SpdxCreatorType,
@@ -91,7 +91,7 @@ from db.models.spdx import (
     SpdxIdentifier,
 )
 
-from db.models.augur_operations import (
+from augur_db.models.augur_operations import (
     AugurSetting,
     WorkerHistory,
     WorkerJob,

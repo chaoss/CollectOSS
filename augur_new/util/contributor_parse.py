@@ -2,7 +2,7 @@
 from numpy.lib.utils import source
 from augur_new.tasks.task_session import *
 from augur_new.util.github_paginator import *
-from augur_new.db.models import *
+from augur_new.augur_db.models import *
 from AugurUUID import *
 import sqlalchemy as s
 import time

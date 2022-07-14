@@ -1,6 +1,6 @@
 
-from db.models import Config
-from db.engine import engine
+from augur_db.models import Config
+from augur_db.engine import engine
 import sqlalchemy as s
 import json
 

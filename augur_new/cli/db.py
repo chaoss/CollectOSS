@@ -15,7 +15,7 @@ import pandas as pd
 import requests
 from sqlalchemy import exc
 
-from db.engine import engine
+from augur_db.engine import engine
 
 logger = logging.getLogger(__name__)
 

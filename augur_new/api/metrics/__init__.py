@@ -7,7 +7,7 @@ import types
 import importlib
 import logging
 
-from db.engine import engine
+from augur_db.engine import engine
 
 logger = logging.getLogger(__name__)
 

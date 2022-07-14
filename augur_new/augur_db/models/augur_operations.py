@@ -1,7 +1,7 @@
 # coding: utf-8
 from sqlalchemy import BigInteger, SmallInteger, Column, Index, Integer, String, Table, text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import TIMESTAMP
-from db.models.base import Base
+from augur_db.models.base import Base
 
 metadata = Base.metadata
 

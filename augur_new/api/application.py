@@ -18,7 +18,7 @@ from augur import ROOT_AUGUR_DIRECTORY
 from api.metrics import Metrics
 from augur_config import AugurConfig
 from tasks.task_session import TaskSession
-from db.engine import engine
+from augur_db.engine import engine
 
 # from augur.logging import AugurLogging
 
