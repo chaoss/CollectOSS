@@ -750,7 +750,7 @@ def insert_facade_contributors(session, repo_id,processes=4,multithreaded=True):
     #Execute statement with session.
     new_contribs = session.execute_sql(new_contrib_sql).fetchall()
 
-    print(new_contribs)
+    #print(new_contribs)
     
     #json.loads(pd.read_sql(new_contrib_sql, self.db, params={
     #             'repo_id': repo_id}).to_json(orient="records"))
