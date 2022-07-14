@@ -21,6 +21,9 @@ from celery.result import allow_join_result
 from celery.signals import after_setup_logger
 import sqlalchemy as s
 
+from augur_logging import *
+from augur_config import AugurConfig
+
 # allows us to reference augur_new (the parent module)
 # even though the code is executed from augur_new
 sys.path.append("..")
