@@ -147,10 +147,6 @@ class Contributor(Base):
         Index("cntrb_canonica-idx11", "cntrb_canonical"),
         Index("cntrb_login_platform_index", "cntrb_login"),
 
-        # should already be in db but added postgresql='brin' was added here
-        Index("contributor_delete_finder", "cntrb_id", "cntrb_email", postgresql_using='brin'),
-        Index("contributor_worker_finder", "cntrb_login", "cntrb_email", "cntrb_id",   
-            postgresql_using='brin'),
 
         # added
         Index("contributor_worker_email_finder", "cntrb_email", postgresql_using='brin'),
