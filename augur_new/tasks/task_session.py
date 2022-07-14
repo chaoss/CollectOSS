@@ -202,16 +202,11 @@ class GithubTaskSession(TaskSession):
 
         api_key = config.get_value("Keys", "github_api_key")
 
-        print(api_key)
-
         keys = self.get_list_of_oauth_keys_from_db(self.engine, config.get_value("Keys", "github_api_key"))
-
-        print(keys)
 
         self.oauths = RandomKeyAuth(keys)
 
         result = self.query(Platform).filter(Platform.pltfrm_name == platform).one()
-        print(result)
 
         self.platform_id = result.pltfrm_id
         

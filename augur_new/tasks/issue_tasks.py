@@ -6,7 +6,7 @@ from celery.result import allow_join_result
 from AugurUUID import AugurUUID
 import time
 
-from util.github_paginator import GithubPaginator
+from util.github_paginator import GithubPaginator, hit_api
 from tasks.task_session import GithubTaskSession
 
 from augur_db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestEvent, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, Issue, IssueEvent, IssueLabel, IssueAssignee, PullRequestMessageRef, IssueMessageRef, Contributor
@@ -33,7 +33,7 @@ from augur_db.models import PullRequest, Message, PullRequestReview, PullRequest
 @celery.task
 def collect_issues(owner: str, repo: str) -> None:
 
-    logger = logging.getLogger(issues.__name__)
+    logger = logging.getLogger(collect_issues.__name__)
 
     # define GithubTaskSession to handle insertions, and store oauth keys 
     session = GithubTaskSession(logger)
@@ -72,7 +72,7 @@ def process_issues(issues, task_name) -> None:
     repo_id = 1
     tool_source = "Issue Task"
     tool_version = "2.0"
-    platform_id = 1
+    platform_id = 25150
     data_source = "Github API"
 
     issue_dicts = []
@@ -131,7 +131,7 @@ def process_issues(issues, task_name) -> None:
     logger.info(f"{task_name}: Inserting {len(issue_dicts)} issues")
     issue_natural_keys = ["issue_url"]
     issue_return_columns = ["issue_url", "issue_id"]
-    issue_return_data = session.insert_data(issue_dicts, Issues, issue_natural_keys, issue_return_columns)
+    issue_return_data = session.insert_data(issue_dicts, Issue, issue_natural_keys, issue_return_columns)
 
 
     # loop through the issue_return_data so it can find the labels and 
@@ -160,12 +160,12 @@ def process_issues(issues, task_name) -> None:
     # inserting issue labels
     # we are using label_src_id and issue_id to determine if the label is already in the database.
     issue_label_natural_keys = ['label_src_id', 'issue_id']
-    session.insert_data(issue_label_dicts, IssueLabels, issue_label_natural_keys)
+    session.insert_data(issue_label_dicts, IssueLabel, issue_label_natural_keys)
   
     # inserting issue assignees
     # we are using issue_assignee_src_id and issue_id to determine if the label is already in the database.
     issue_assignee_natural_keys = ['issue_assignee_src_id', 'issue_id']
-    session.insert_data(issue_assignee_dicts, IssueAssignees, issue_assignee_natural_keys)
+    session.insert_data(issue_assignee_dicts, IssueAssignee, issue_assignee_natural_keys)
 
 
 def process_issue_contributors(issue, platform_id, tool_source, tool_version, data_source):
@@ -224,7 +224,7 @@ def process_pull_requests(pull_requests, task_name):
     repo_id = 1
     tool_source = "Pr Task"
     tool_version = "2.0"
-    platform_id = 1
+    platform_id = 25150
     data_source = "Github API"
 
     pr_dicts = []
@@ -462,7 +462,7 @@ def process_events(events, task_name):
 
     # get repo_id
     repo_id = 1
-    platform_id = 1
+    platform_id = 25150
     tool_source = "Pr event task"
     tool_version = "2.0"
     data_source = "Github API"
@@ -481,7 +481,7 @@ def process_events(events, task_name):
 
             try:
                 start_time = time.time()
-                related_pr = PullRequests.query.filter_by(pr_url=pr_url).one()
+                related_pr = session.query(PullRequest).filter(PullRequest.pr_url == pr_url).one()
             except s.orm.exc.NoResultFound:
                 logger.info("Could not find related pr")
                 logger.info(f"We were searching for: {pr_url}")
@@ -499,7 +499,7 @@ def process_events(events, task_name):
 
             try:
                 start_time = time.time()
-                related_issue = Issues.query.filter_by(issue_url=issue_url).one()
+                related_issue = session.query(Issue).filter(Issue.issue_url == issue_url).one()
             except s.orm.exc.NoResultFound:
                 logger.info("Could not find related pr")
                 logger.info(f"We were searching for: {issue_url}")
@@ -531,10 +531,10 @@ def process_events(events, task_name):
 
     # TODO: Could replace this with "id" but it isn't stored on the table for some reason
     pr_event_natural_keys = ["node_id"]
-    session.insert_data(pr_event_dicts, PullRequestEvents, pr_event_natural_keys)
+    session.insert_data(pr_event_dicts, PullRequestEvent, pr_event_natural_keys)
 
     issue_event_natural_keys = ["issue_id", "issue_event_src_id"]
-    session.insert_data(issue_event_dicts, IssueEvents, issue_event_natural_keys)
+    session.insert_data(issue_event_dicts, IssueEvent, issue_event_natural_keys)
 
 
 # TODO: Should we skip an event if there is no contributor to resolve it o
@@ -586,7 +586,7 @@ def process_messages(messages, task_name):
     session = GithubTaskSession(logger)
 
     repo_id = 1
-    platform_id = 1
+    platform_id = 25150
     tool_source = "Pr comment task"
     tool_version = "2.0"
     data_source = "Github API"
@@ -607,7 +607,7 @@ def process_messages(messages, task_name):
         if is_issue_message(message["html_url"]):
 
             try:
-                related_issue = Issues.query.filter_by(issue_url=message["issue_url"]).one()
+                related_issue = session.query(Issue).filter(Issue.issue_url == message["issue_url"]).one()
                 related_pr_of_issue_found = True
 
             except s.orm.exc.NoResultFound:
@@ -631,7 +631,7 @@ def process_messages(messages, task_name):
         else:
 
             try:
-                related_pr = PullRequests.query.filter_by(pr_issue_url=message["issue_url"]).one()
+                related_pr = session.query(PullRequest).filter(PullRequest.pr_issue_url == message["issue_url"]).one()
                 related_pr_of_issue_found = True
 
             except s.orm.exc.NoResultFound:
@@ -891,7 +891,7 @@ def process_contributors(self):
     tool_version = "2.0"
     data_source = "Github API"
 
-    contributors = session.query(Contributor).filter(Contributor.data_source=data_source, Contributor.cntrb_created_at=None, cntrb_last_used=None).all()
+    contributors = session.query(Contributor).filter(Contributor.data_source == data_source, Contributor.cntrb_created_at == None, Contributor.cntrb_last_used == None).all()
 
     contributors_len = len(contributors)
 

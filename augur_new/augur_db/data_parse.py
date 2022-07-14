@@ -461,7 +461,7 @@ def extract_need_pr_review_data(reviews, platform_id, repo_id, tool_version, dat
 
 def extract_needed_contributor_data(contributor, platform_id, tool_source, tool_version, data_source):
 
-    cntrb_id = AugurUUID(platform_id, contributor["id"]).to_UUID()   
+    cntrb_id = AugurUUID(platform_id % 256, contributor["id"]).to_UUID()   
 
     contributor = {
             "cntrb_id": cntrb_id,
