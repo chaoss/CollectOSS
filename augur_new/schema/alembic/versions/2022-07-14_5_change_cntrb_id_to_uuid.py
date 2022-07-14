@@ -12,7 +12,7 @@ from sqlalchemy.sql import text
 from AugurUUID import AugurUUID
 
 # revision identifiers, used by Alembic.
-revision = '6'
+revision = '5'
 down_revision = '4'
 branch_labels = None
 depends_on = None

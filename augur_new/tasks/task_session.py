@@ -18,6 +18,8 @@ from tasks.redis_init import redis_connection as redis
 from augur_config import AugurConfig
 # import psycopg2 
 from augur_db.engine import engine
+
+from augur_db.models import Platform
 #TODO: setup github headers in a method here.
 #Encapsulate data for celery task worker api
 

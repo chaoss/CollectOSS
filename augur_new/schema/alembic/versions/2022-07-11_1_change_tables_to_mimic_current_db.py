@@ -39,7 +39,7 @@ def upgrade():
 
     # modify pr reviewers unique
     op.drop_constraint('unique_pr_src_reviewer_key', 'pull_request_reviewers', schema='augur_data', type_='unique')
-    op.create_unique_constraint('unique_pr_src_reviewer_key', 'pull_request_reviewers', ['pull_request_id', 'pr_reviewer_src_id'], schema='augur_data', initially='DEFERRED', deferrable=True)
+    op.create_unique_constraint('unique_pr_src_reviewer_key', 'pull_request_reviewers', ['pull_request_id', 'pr_reviewer_src_id'], schema='augur_data')
 
     op.create_unique_constraint('unique-pr', 'pull_requests', ['repo_id', 'pr_src_id'], schema='augur_data')
 

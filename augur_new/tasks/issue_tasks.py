@@ -6,6 +6,11 @@ from celery.result import allow_join_result
 from AugurUUID import AugurUUID
 import time
 
+from util.github_paginator import GithubPaginator
+from tasks.task_session import GithubTaskSession
+
+from augur_db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestEvent, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, Issue, IssueEvent, IssueLabel, IssueAssignee, PullRequestMessageRef, IssueMessageRef, Contributor
+
 # creates a class that is sub class of the sqlalchemy.orm.Session class that additional methods and fields added to it. 
 
 #NOTICE: A pull request is a type of issue as per Github.
@@ -886,7 +891,7 @@ def process_contributors(self):
     tool_version = "2.0"
     data_source = "Github API"
 
-    contributors = Contributor.query.filter_by(data_source=data_source, cntrb_created_at=None, cntrb_last_used=None).all()
+    contributors = session.query(Contributor).filter(Contributor.data_source=data_source, Contributor.cntrb_created_at=None, cntrb_last_used=None).all()
 
     contributors_len = len(contributors)
 
