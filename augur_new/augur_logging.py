@@ -30,6 +30,7 @@ CLI_FORMAT_STRING = "CLI: [%(module)s.%(funcName)s] [%(levelname)s] %(message)s"
 CONFIG_FORMAT_STRING = "[%(levelname)s] %(message)s"
 ERROR_FORMAT_STRING = "%(asctime)s [PID: %(process)d] %(name)s [%(funcName)s() in %(filename)s:L%(lineno)d] [%(levelname)s]: %(message)s"
 
+#Deal with creating the handler in one line with proper handler and log level
 def genHandler(file,fmt,level):
     handler = FileHandler(filename=file,mode='a')
     handler.setFormatter(fmt=fmt)
@@ -93,6 +94,7 @@ class TaskLogConfig():
                 #Absolute path to log file
                 file = str(module_folder) + "/" + str(task)
 
+                #Create file handlers for each relevant log level and make them colorful
                 lg.addHandler(genHandler((file + ".info"), SIMPLE_FORMAT_STRING, logging.INFO)) 
                 coloredlogs.install(level=logging.INFO,logger=lg,fmt=SIMPLE_FORMAT_STRING)
 
@@ -143,8 +145,11 @@ class AugurLogger():
         lg.addHandler(genHandler((file + ".debug"), VERBOSE_FORMAT_STRING, logging.DEBUG))
         coloredlogs.install(level=logging.DEBUG,logger=lg,fmt=VERBOSE_FORMAT_STRING)
     
-    def getLoggerName(self):
+    def __str__(self):
         return self.logger_name
+
+#Ex
+# logger = logging.getLogger(str(AugurLogger("housekeeper")))
 
 
 
