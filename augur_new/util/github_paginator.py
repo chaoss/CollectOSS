@@ -33,7 +33,7 @@ def hit_api(session,url: str, method='GET') -> httpx.Response:
 
 def process_dict_response(logger, response: httpx.Response, page_data: dict):
         
-        logger.info("Request returned a dict: {}\n".format(page_data))
+        #logger.info("Request returned a dict: {}\n".format(page_data))
 
         if 'message' not in page_data.keys():
             return None

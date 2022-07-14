@@ -44,7 +44,6 @@ def create_endpoint_from_commit_sha(session,commit_sha, repo_id):
 
     # Else put into a more readable local var
     session.logger.info(f"Result: {result}")
-    print(result.repo_name)
     repo_path = result.repo_path.split("/")[1] + "/" + result.repo_name
 
     url = "https://api.github.com/repos/" + repo_path + "/commits/" + commit_sha

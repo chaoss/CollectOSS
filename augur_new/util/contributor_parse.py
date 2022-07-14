@@ -458,7 +458,7 @@ def query_github_contributors(session, entry_info, repo_id):
 # Hit the endpoint specified by the url and return the json that it returns if it returns a dict.
 # Returns None on failure.
 def request_dict_from_endpoint(session, url, timeout_wait=10):
-    session.logger.info(f"Hitting endpoint: {url}")
+    #session.logger.info(f"Hitting endpoint: {url}")
 
     attempts = 0
     response_data = None
