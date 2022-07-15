@@ -11,7 +11,6 @@ import time
 
 from sqlalchemy.event import listen
 from sqlalchemy.event import listens_for
-# from augur_new.augur.config import AugurConfig
 
 from util.random_key_auth import RandomKeyAuth
 from tasks.redis_init import redis_connection as redis

@@ -1,8 +1,8 @@
 #Get everything that the base depends on.
 from numpy.lib.utils import source
-from augur_new.tasks.task_session import *
-from augur_new.util.github_paginator import *
-from augur_new.db.models import *
+from tasks.task_session import *
+from util.github_paginator import *
+from augur_db.models import *
 import sqlalchemy as s
 import time
 import math

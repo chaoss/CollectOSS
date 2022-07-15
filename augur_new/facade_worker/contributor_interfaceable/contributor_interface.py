@@ -1,9 +1,9 @@
 from requests.api import head
-from augur_new.tasks.task_session import *
+from tasks.task_session import *
 import logging
 from logging import FileHandler, Formatter, StreamHandler, log
-from augur_new.util.contributor_parse import *
-from augur_new.util import worker_util
+from util.contributor_parse import *
+from util import worker_util
 from psycopg2.errors import UniqueViolation
 from random import randint
 import json

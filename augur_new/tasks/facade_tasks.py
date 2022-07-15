@@ -25,28 +25,24 @@ import sqlalchemy as s
 from augur_logging import *
 from augur_config import AugurConfig
 
-# allows us to reference augur_new (the parent module)
-# even though the code is executed from augur_new
-sys.path.append("..")
 
-from augur_new.facade_worker.facade_worker.facade02utilitymethods import update_repo_log, trim_commit, store_working_author, trim_author
-from augur_new.facade_worker.facade_worker.facade03analyzecommit import analyze_commit
-from augur_new.facade_worker.contributor_interfaceable.contributor_interface import *
+from facade_worker.facade_worker.facade02utilitymethods import update_repo_log, trim_commit, store_working_author, trim_author
+from facade_worker.facade_worker.facade03analyzecommit import analyze_commit
+from facade_worker.contributor_interfaceable.contributor_interface import *
 
-from augur_new.util.worker_util import create_grouped_task_load
+from util.worker_util import create_grouped_task_load
 
-# from augur_new.server import redis_conn
 from tasks.celery_init import celery_app as celery
 
 
-from augur_new.augur_db import data_parse
-from augur_new.augur_db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestEvent, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, Issue, IssueEvent, IssueLabel, IssueAssignee, PullRequestMessageRef, IssueMessageRef, Contributor
+from augur_db import data_parse
+from augur_db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestEvent, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, Issue, IssueEvent, IssueLabel, IssueAssignee, PullRequestMessageRef, IssueMessageRef, Contributor
 
-from augur_new.util.github_paginator import GithubPaginator, hit_api
-from augur_new.util.gh_graphql_entities import PullRequest
-from augur_new.tasks.task_session import *
+from util.github_paginator import GithubPaginator, hit_api
+from util.gh_graphql_entities import PullRequest
+from tasks.task_session import *
 
-from augur_new.facade_worker.facade_worker.facade00mainprogram import *
+from facade_worker.facade_worker.facade00mainprogram import *
 
 from augur_logging import TaskLogConfig
 

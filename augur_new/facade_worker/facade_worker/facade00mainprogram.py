@@ -38,10 +38,10 @@ from .facade07rebuildcache import nuke_affiliations, fill_empty_affiliations, in
 
 #from contributor_interfaceable.facade08contributorinterfaceable import ContributorInterfaceable
 
-from augur_new.facade_worker.contributor_interfaceable.contributor_interface import *
+from facade_worker.contributor_interfaceable.contributor_interface import *
 
-from augur_new.util.worker_util import read_config
-from augur_new.tasks.task_session import GithubTaskSession
+from util.worker_util import read_config
+from tasks.task_session import GithubTaskSession
 
 class FacadeSession(GithubTaskSession):
     def __init__(self,logger,config={},platform='GitHub'):
