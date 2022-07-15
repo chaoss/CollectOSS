@@ -3,9 +3,9 @@ import axios from 'axios';
 import actions from './actions';
 import mutations from './mutations';
 import getters from './getters';
-import config from '../../../../frontend.config.json'
-import AugurAPIModule from '@/AugurAPI'
 
+var config = require('../../../../frontend.config.json')
+const AugurAPIModule = require('@/AugurAPI').default;
 var port = config['Frontend'] ? (config['Frontend']['port'] ? ':' + config['Frontend']['port'] : '') : (config['Server']['port'] ? ':' + config['Server']['port'] : '')
 var host = config['Frontend'] ? (config['Frontend']['host']) : (config['Server']['host'])
 const AugurAPI = new AugurAPIModule('http://' + host + port);

@@ -100,4 +100,4 @@ class DepsLibyearWorker(WorkerGitInterfaceable):
                     result = self.db.execute(self.repo_deps_libyear_table.insert().values(repo_deps))
                     self.logger.info(f"Added dep: {result.inserted_primary_key}")
         except Exception as e:
-            self.print_traceback("Deps_libyear_worker: generating and inserting data", e, True)
+            self.print_traceback("Deps_libyear_worker: Error generating and inserting data", e, True)

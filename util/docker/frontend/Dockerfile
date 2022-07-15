@@ -1,17 +1,19 @@
 #SPDX-License-Identifier: MIT
-FROM node:17 as build-stage
+FROM node:16 as build-stage
 
 LABEL maintainer="outdoors@acm.org"
-LABEL version="0.17.0"
+LABEL version="0.27.4"
 
 WORKDIR /augur/frontend/
 COPY ./util/docker/frontend/frontend.docker.config.json frontend.config.json
+# RUN cp frontend.docker.config.json frontend.config.json
 
 FROM build-stage as core-ui
 COPY frontend/package.json .
-RUN yarn install && yarn global add @vue/cli
+RUN npm install
+RUN npm install @vue/cli
 COPY frontend/ .
-RUN yarn build
+RUN npm run build
 
 # FROM build-stage as augurface
 # WORKDIR /augur/augurface/

@@ -210,7 +210,7 @@ default_config = {
                     "repo_group_id": 0
                 },
                 {
-                    "delay": 10000,
+                    "delay": 1000000,
                     "given":[
                         "git_url"
                     ],
@@ -218,21 +218,12 @@ default_config = {
                     "repo_group_id" : 0
                 },
                 {
-                    "delay": 10000,
+                    "delay": 1000000,
                     "given": [
                         "git_url"
                     ],
                     "model": "clustering",
                     "repo_group_id": 0
-                },
-                {
-                    "delay": 10000,
-                    "given": [
-                        "git_url"
-                    ],
-                    "model": "repo_library_experience",
-                    "repo_group_id": 0
-
                 },
                 {
                     "all_focused": 1,

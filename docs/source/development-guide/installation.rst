@@ -1,20 +1,20 @@
-Installing for development
+Installing for Development
 =============================
 
-Installing Augur for local development is pretty similar to the normal installation process. This guide will primarily detail the differences between the two instead of regurgitating all the information in the `Getting Started <../getting-started/toc.html>`_ section. If you are completely new to Augur, we recommend following the aforementioned getting started section first; once you feel more comfortable with Augur and how to use it, come back to this document.
+Installing Augur for local development is pretty similar to the normal installation process. This guide will primarily detail the differences between the two instead of regurgitating all the information in the `Getting Started <../getting-started/toc.html>`_ section. If you are completely new to Augur, we recommend following the aforementioned `Getting Started <../getting-started/toc.html>`_ section first; once you feel more comfortable with Augur and how to use it, come back to this document.
 
-Setting up the database
+Setting up the Database
 ------------------------
 
-If they so desired, developers can set up a persistent instance of PostgreSQL on either the local machine or a remote server. The instructions for doing so can be found in the `database <../getting-started/database.html>`_ portion of the Getting Started section
+If they so desire, developers can set up a persistent instance of PostgreSQL on either the local machine or a remote server. The instructions for doing so can be found in the `database <../getting-started/database.html>`_ portion of the Getting Started section
 
 
-However, during development, you might find that you need to reset your database often, especially if you are working on the data collection components of Augur. To this end, we recommend developers make use of our Docker images to quickly provision and terminate database instances in a lightweight and reproducible manner.
+However, during development, you might find that you need to reset your database often, especially if you are working on the data collection components of Augur. To this end, we recommend developers make use of our `Docker images <../docker/docker.html>`_ to quickly provision and terminate database instances in a lightweight and reproducible manner.
 
 
 More information about Augur's Docker images can be found `here <../docker/docker.html>`_. If you're new to our Docker process, we recommend following the `introduction section <../docker/toc.html>`_ first.
 
-Installing from source
+Installing from Source
 ----------------------------
 
 The process for installing Augur's source code for development is essentially the same as detailed in the `Installation <../getting-started/installation.html>`_ section of the Getting Started guide.

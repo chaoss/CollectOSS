@@ -49,6 +49,13 @@ go mod download github.com/maxbrunsfeld/counterfeiter/v6@v6.5.0
 
 if [ -d "$HOME/scorecard" ]; then
   echo " Scorecard already exists, skipping cloning ..."
+  echo " Updating Scorecard ... "
+  CURRENT_DIR=$PWD;
+  cd $HOME/scorecard; 
+  git pull; 
+  go build; 
+  echo "Scorecard build done."
+  cd $CURRENT_DIR
 else
   echo "Cloning OSSF Scorecard to generate scorecard data ..."
   git clone https://github.com/ossf/scorecard $HOME/scorecard

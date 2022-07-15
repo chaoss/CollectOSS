@@ -26,8 +26,7 @@ jobs:
           echo $PASSWORD | docker login $REGISTRY -u $LOGIN --password-stdin
 
           for i in util/docker/* ; do
-            CONTAINER=$(basename $i)
-            if [[ $CONTAINER != 'frontend' ]]; then
+              CONTAINER=$(basename $i)
               echo "Building $CONTAINER"
               export IMAGE=$LOGIN/augur_$CONTAINER
               DOCKERFILE=${i}/Dockerfile
@@ -42,7 +41,6 @@ jobs:
                 docker tag $REGISTRY/$IMAGE:latest $REGISTRY/$IMAGE:devel-latest
                 docker push $REGISTRY/$IMAGE:devel-latest
               fi
-            fi
           done
         env:
           REGISTRY: ghcr.io
