@@ -2,11 +2,11 @@
 from numpy.lib.utils import source
 from augur_new.tasks.task_session import *
 from augur_new.util.github_paginator import *
-from augur_new.augur_db.models import *
-from AugurUUID import *
+from augur_new.db.models import *
 import sqlalchemy as s
 import time
 import math
+from AugurUUID import AugurUUID
 
 """
 def enrich_cntrb_id(
@@ -362,6 +362,12 @@ def query_github_contributors(session, entry_info, repo_id):
 
     session.logger.info("Count of contributors needing insertion: " + str(len(contributor_list)) + "\n")
 
+
+    #TODO raise exception if repo not exist.
+
+    if len(contributor_list) == 0:
+        return
+
     for repo_contributor in contributor_list:
         try:
             # Need to hit this single contributor endpoint to get extra data including...
@@ -388,10 +394,10 @@ def query_github_contributors(session, entry_info, repo_id):
             #TODO get and store an owner id
             
             #Generate ID for cntrb table
-            cntrb_id = AugurUUID(platform=(session.platform_id % 256),repo=(repo_id % 256))
+            cntrb_id = AugurUUID(session.platform_id,contributor['id']).to_UUID()
 
             cntrb = {
-                "cntrb_id" : int(cntrb_id),
+                "cntrb_id" : cntrb_id,
                 "cntrb_login": contributor['login'],
                 "cntrb_created_at": contributor['created_at'],
                 "cntrb_email": email,
@@ -452,16 +458,15 @@ def query_github_contributors(session, entry_info, repo_id):
 # Hit the endpoint specified by the url and return the json that it returns if it returns a dict.
 # Returns None on failure.
 def request_dict_from_endpoint(session, url, timeout_wait=10):
-    session.logger.info(f"Hitting endpoint: {url}")
+    #session.logger.info(f"Hitting endpoint: {url}")
 
     attempts = 0
     response_data = None
     success = False
 
-    # This borrow's the logic to safely hit an endpoint from paginate_endpoint.
     while attempts < 10:
         try:
-            response = requests.get(url=url, headers=get_header(session.access_token))
+            response = hit_api(session, url)
         except TimeoutError:
             session.logger.info(
                 f"User data request for enriching contributor data failed with {attempts} attempts! Trying again...")
@@ -474,16 +479,12 @@ def request_dict_from_endpoint(session, url, timeout_wait=10):
             response_data = json.loads(json.dumps(response.text))
 
         if type(response_data) == dict:
-            # Sometimes GitHub Sends us an error message in a dict instead of a string.
-            # While a bit annoying, it is easy to work around
-            if 'message' in response_data:
-                try:
-                    assert 'API rate limit exceeded' not in response_data['message']
-                except AssertionError as e:
-                    session.logger.info(
-                        f"Detected error in response data from gitHub. Trying again... Error: {e}")
-                    attempts += 1
-                    continue
+            err = process_dict_response(session.logger,response,response_data)
+
+            #If we get an error message that's not None
+            if err:
+                attempts += 1
+                continue
 
             # self.logger.info(f"Returned dict: {response_data}")
             success = True
@@ -502,6 +503,13 @@ def request_dict_from_endpoint(session, url, timeout_wait=10):
                 try:
                     # Sometimes raw text can be converted to a dict
                     response_data = json.loads(response_data)
+
+                    err = process_dict_response(session.logger,response,response_data)
+
+                    #If we get an error message that's not None
+                    if err:
+                        continue
+                    
                     success = True
                     break
                 except:

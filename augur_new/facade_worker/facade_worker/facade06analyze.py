@@ -169,11 +169,7 @@ def analysis(cfg, multithreaded, session=None, processes=6):
 
             def analyze_commits_in_parallel(queue, cfg, repo_id, repo_location, multithreaded):
                 for analyzeCommit in queue:    
-
-                    try:
-                        analyze_commit(cfg, repo_id, repo_location, analyzeCommit, multithreaded)
-                    except Exception as e:
-                        cfg.log_activity('Info', 'Subprocess ran into error when trying to anaylyze commit with error: %s' % e)
+                    analyze_commit(cfg, repo_id, repo_location, analyzeCommit, multithreaded)
 
             #cfg.log_activity('Info','Type of missing_commits: %s' % type(missing_commits))
             
