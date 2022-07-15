@@ -718,6 +718,8 @@ class ContributorsAlias(Base):
 class Repo(Base):
     __tablename__ = "repo"
     __table_args__ = (
+        UniqueConstraint("repo_git", name="repo_git-unique"),
+
         Index("forked", "forked_from"),
         Index("repo_idx_repo_id_repo_namex", "repo_id", "repo_name"),
         Index("repogitindexrep", "repo_git"),
@@ -736,7 +738,6 @@ class Repo(Base):
     repo_id = Column(
         BigInteger,
         primary_key=True,
-        unique=True,
         server_default=text("nextval('augur_data.repo_repo_id_seq'::regclass)"),
     )
     repo_group_id = Column(
@@ -872,8 +873,12 @@ class Commit(Base):
     __tablename__ = "commits"
     __table_args__ = (
         # DB
+<<<<<<< HEAD
+        Index("author_affiliation", "cmt_author_affiliation"),
+=======
         Index("author_affiliation", "cmt_author_affiliation",
                  postgresql_using='hash'),
+>>>>>>> 9440ea62c52ce7636302f07c7c2d3df820d1c553
         Index("author_cntrb_id", "cmt_ght_author_id"),
         Index("author_raw_email", "cmt_author_raw_email"),
         Index("commited", "cmt_id"),
@@ -1273,7 +1278,8 @@ class MessageSentimentSummary(Base):
 class PullRequest(Base):
     __tablename__ = "pull_requests"
     __table_args__ = (
-        UniqueConstraint("repo_id", "pr_src_id"),
+        UniqueConstraint("repo_id", "pr_src_id", name="unique-pr"),
+        UniqueConstraint("repo_id", "pr_src_id", name="unique-prx"),
         Index("id_node", "pr_src_id", "pr_src_node_id"),
         Index(
             "pull_requests_idx_repo_id_data_datex", "repo_id", "data_collection_date"
@@ -2295,7 +2301,11 @@ class PullRequestAssignee(Base):
     __tablename__ = "pull_request_assignees"
     __table_args__ = (
         Index("pr_meta_cntrb-idx", "contrib_id"),
+<<<<<<< HEAD
+        UniqueConstraint("pull_request_id", "pr_assignee_src_id", name="assigniees-unique"),
+=======
         # UniqueConstraint("pull_request_id", "repo_id", name=""),
+>>>>>>> 9440ea62c52ce7636302f07c7c2d3df820d1c553
         {"schema": "augur_data"}
     )
 
@@ -2394,7 +2404,12 @@ class PullRequestEvent(Base):
     __table_args__ = (
         Index("pr_events_ibfk_1", "pull_request_id"),
         Index("pr_events_ibfk_2", "cntrb_id"),
+<<<<<<< HEAD
+        UniqueConstraint("platform_id", "node_id", name="unique-pr-event-id"),
+        UniqueConstraint("node_id", name="pr-unqiue-event"),
+=======
         UniqueConstraint("pr_platform_event_id", "platform_id"),
+>>>>>>> 9440ea62c52ce7636302f07c7c2d3df820d1c553
         {"schema": "augur_data"},
     )
 
@@ -2660,7 +2675,11 @@ class PullRequestReviewer(Base):
     __tablename__ = "pull_request_reviewers"
     __table_args__ = (
         Index("pr-reviewers-cntrb-idx1", "cntrb_id"),
+<<<<<<< HEAD
+        UniqueConstraint("pull_request_id", "pr_reviewer_src_id"),
+=======
         UniqueConstraint("pr_source_id", "pr_reviewer_src_id"),
+>>>>>>> 9440ea62c52ce7636302f07c7c2d3df820d1c553
         {"schema": "augur_data"},
     )
 
