@@ -883,7 +883,7 @@ the issue is that most of the time we filter out needed
 @celery.task
 def process_contributors(self):
 
-    logger = get_task_logger(process_contributors.name)
+    logger = logging.getLogger(process_contributors.__name__)
     session = GithubTaskSession(logger)
 
     platform = 1
