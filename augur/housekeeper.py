@@ -342,7 +342,7 @@ class Housekeeper:
             for url in repos_urls:
                 url = self.trim_git_suffix(url)
                 if url:
-                    r = requests.get(url)
+                    r = requests.get(url, timeout=(4.44, 7.01))
                     check_for_update = url != r.url
                     if check_for_update:
                         self.update_repo_url(url, r.url, self.update_redirects['repo_group_id'])

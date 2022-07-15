@@ -555,7 +555,9 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 {
                     'repo_id': self.repo_id,
                     'pr_url': pr['url'],
-                    'pr_src_id': int(str(pr['id']).encode(encoding='UTF-8').decode(encoding='UTF-8')),#1-22-2022 inconsistent casting; sometimes int, sometimes float in bulk_insert 
+                    'pr_src_id': int(str(pr['id']).encode(encoding='UTF-8').decode(encoding='UTF-8').rsplit(".")[0]),
+                     #1-22-2022 inconsistent casting; sometimes int, sometimes float in bulk_insert 
+                     #4-26-2022 String processing error for float on int in rare cases: add rsplit. 
                     'pr_src_node_id': pr['node_id'],  ## 9/20/2021 - This was null. No idea why.
                     'pr_html_url': pr['html_url'],
                     'pr_diff_url': pr['diff_url'],

@@ -1,7 +1,7 @@
 Collecting data
 ===============
 
-Now that you've installed Augur's application server, it's time to configure your data collection workers. If you just want to run Augur using the single repository in the default database, and default worker settings all you need to do is this: 
+Now that you’ve installed Augur’s application server, it’s time to configure your data collection workers. If you just want to run Augur using the one repository in the default database, and default worker settings, all you need to do is this:
 
 .. code-block:: bash
 
@@ -48,7 +48,7 @@ Keeping ``workers`` at 1 should be fine for small collection sets, but if you ha
 Worker-specific configuration options
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Next up are the configuration options specific to each worker (but some workers require no additional configuration beyond the defaults). The most pertinent of these options is the ``facade_worker``'s ``repo_directory``, so make sure to pay attention to that one.
+Next up are the configuration options specific to each worker (but some workers require no additional configuration beyond the defaults). The most pertinent of these options is the ``facade_worker's`` ``repo_directory``, so make sure to pay attention to that one.
 
 ``facade_worker``
 ::::::::::::::::::

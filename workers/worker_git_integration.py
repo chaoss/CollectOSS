@@ -8,6 +8,7 @@ from augur_new import db_models
 import sqlalchemy as s
 import time
 import math
+from random import randint
 
 """
 def enrich_cntrb_id(
@@ -166,7 +167,6 @@ def enrich_cntrb_id(
             except:
                 contributor = json.loads(json.dumps(response.text))
                 continue # added continue 12/3/2021 SPG
-
 
             if type(contributor) == dict:
                 self.logger.info("Request returned a dict!")
@@ -469,6 +469,7 @@ def request_dict_from_endpoint(session, url, timeout_wait=10):
         except:
             response_data = json.loads(json.dumps(response.text))
 
+
         if type(response_data) == dict:
             # Sometimes GitHub Sends us an error message in a dict instead of a string.
             # While a bit annoying, it is easy to work around
@@ -616,6 +617,7 @@ def query_gitlab_contributors(self, entry_info, repo_id):
 
     # list to hold contributors needing insertion or update
     contributors = self.paginate("https://gitlab.com/api/v4/projects/" + url_encoded_format + "/repository/contributors?per_page=100&page={}", duplicate_col_map, update_col_map, table, table_pkey, platform='gitlab')
+
 
     for repo_contributor in contributors:
         try:
@@ -794,6 +796,7 @@ def update_gh_rate_limit(self, response, bad_credentials=False, temporarily_disa
     self.logger.info(
         f"Updated rate limit, you have: {self.oauths[0]['rate_limit']} requests remaining."
     )
+
 
     #Stalls after here for some reason.
     if self.oauths[0]['rate_limit'] <= 0:

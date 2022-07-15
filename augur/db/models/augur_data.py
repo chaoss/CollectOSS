@@ -873,7 +873,12 @@ class Commit(Base):
     __tablename__ = "commits"
     __table_args__ = (
         # DB
+<<<<<<< HEAD
         Index("author_affiliation", "cmt_author_affiliation"),
+=======
+        Index("author_affiliation", "cmt_author_affiliation",
+                 postgresql_using='hash'),
+>>>>>>> 9440ea62c52ce7636302f07c7c2d3df820d1c553
         Index("author_cntrb_id", "cmt_ght_author_id"),
         Index("author_raw_email", "cmt_author_raw_email"),
         Index("commited", "cmt_id"),
@@ -2296,7 +2301,11 @@ class PullRequestAssignee(Base):
     __tablename__ = "pull_request_assignees"
     __table_args__ = (
         Index("pr_meta_cntrb-idx", "contrib_id"),
+<<<<<<< HEAD
         UniqueConstraint("pull_request_id", "pr_assignee_src_id", name="assigniees-unique"),
+=======
+        # UniqueConstraint("pull_request_id", "repo_id", name=""),
+>>>>>>> 9440ea62c52ce7636302f07c7c2d3df820d1c553
         {"schema": "augur_data"}
     )
 
@@ -2395,8 +2404,12 @@ class PullRequestEvent(Base):
     __table_args__ = (
         Index("pr_events_ibfk_1", "pull_request_id"),
         Index("pr_events_ibfk_2", "cntrb_id"),
+<<<<<<< HEAD
         UniqueConstraint("platform_id", "node_id", name="unique-pr-event-id"),
         UniqueConstraint("node_id", name="pr-unqiue-event"),
+=======
+        UniqueConstraint("pr_platform_event_id", "platform_id"),
+>>>>>>> 9440ea62c52ce7636302f07c7c2d3df820d1c553
         {"schema": "augur_data"},
     )
 
@@ -2662,7 +2675,11 @@ class PullRequestReviewer(Base):
     __tablename__ = "pull_request_reviewers"
     __table_args__ = (
         Index("pr-reviewers-cntrb-idx1", "cntrb_id"),
+<<<<<<< HEAD
         UniqueConstraint("pull_request_id", "pr_reviewer_src_id"),
+=======
+        UniqueConstraint("pr_source_id", "pr_reviewer_src_id"),
+>>>>>>> 9440ea62c52ce7636302f07c7c2d3df820d1c553
         {"schema": "augur_data"},
     )
 

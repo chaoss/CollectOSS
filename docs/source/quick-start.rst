@@ -3,67 +3,65 @@ Quickstart
 
 Get going fast! Intended for folks familiar with setting up DevOps environments. These instructions were tested using Ubuntu 20.04. Ubuntu 18x is no longer supported because the versions of Python3 available on it are not current. 
 
+:ref:`Complete installation instructions with more complete explanations are located in our "Getting Started" section.<Getting Started>`
 
 Setting up VirtualBox
 ~~~~~~~~~~~~~~~~~~~~~~~
-- Type "Download VirtualBox for windows" in the search bar.
-- Click on the websight by Oracle.
-.. image:: development-guide/images/A1.png
-  :width: 600  
-- Download VirtualBox for "windows hosts".
+- Go to the official box website to download using this `link <https://www.virtualbox.org/>`_.
+- Download VirtualBox for "Windows hosts".
 .. image:: development-guide/images/A2.png
   :width: 600  
-- Click on the downloaded VirtualBox and continue clicking NEXT with the default options.
+- Click on the downloaded VirtualBox and continue clicking Next with the default options.
 .. image:: development-guide/images/A3.png
   :width: 600  
-- Accept the warning for network Interfaces.
+- Accept the warning for Network Interfaces.
 .. image:: development-guide/images/A5.png
   :width: 600  
-- Give it all the permissions it wants.
+- Allow all permissions
 .. image:: development-guide/images/A4.png
   :width: 600  
-- Open the VirtualBox by clicking on the windows desktop icon.
-- Click on "machine" and then on "new".
+- Open the VirtualBox by clicking on the Windows desktop icon.
+- Click "Machine" and then "New".
 .. image:: development-guide/images/A6.png
   :width: 600  
-- Name the machine as you wish. In type select "Linux" and in version select "Ubuntu (64-bits)".
+- Name the Machine. In type select "Linux" and in version select "Ubuntu (64-bits)".
 .. image:: development-guide/images/A7.png
   :width: 600  
 .. image:: development-guide/images/A8.png
   :width: 600  
-- Allot it the memory size you want , then click on NEXT.
+- Choose memory size, then click Next.
 .. image:: development-guide/images/A9.png
   :width: 600  
-- Choose "Create a virtual hard disk now" and click on CREATE.
+- Choose "Create a virtual hard disk now" and click Create.
 .. image:: development-guide/images/A10.png
   :width: 600  
-- In hard disk file type choose VDI(VirtualBox Disk Image) and click on NEXT.
+- Hard disk file type choose VDI (VirtualBox Disk Image) and click Next.
 .. image:: development-guide/images/A11.png
   :width: 600  
-- In storage on physical hard disk choose "Dynamically allocated" and click on NEXT.
+- Storage on physical hard disk choose "Dynamically allocated" and click Next.
 .. image:: development-guide/images/A12.png
   :width: 600  
-- Continue with the default options by clicking on next. Your machine will be created.
-- Start the machine.
+- Continue with the default options by clicking Next. Your machine will be created.
+- Start the Machine.
 .. image:: development-guide/images/A13.png
   :width: 600  
 
 Ubuntu download 
 ~~~~~~~~~~~~~~~~~
-- Type "Download ubuntu" in the search bar.
-- Click on download (Prefer LTS version). Ubuntu will be downloaded.
+- Type "Download Ubuntu" in the search bar.
+- Click download (Prefer LTS version). Ubuntu will be downloaded.
 .. image:: development-guide/images/A14.png
   :width: 600  
 
 Installing Ubuntu in VirtualBox
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 - Open the machine which we have created earlier.
-- Now in the pop-up, click on the disk image where you have downloaded your ubuntu and click on finish.
+- Now in the pop-up, click on the disk image where you have downloaded your Ubuntu and click on finish.
 - In the welcome window select Install Ubuntu and move forward with the default options.
 .. image:: development-guide/images/Af.png
   :width: 600  
-- Select the keyboard layout you desire.
-- Select installation type as "Erase disk and install Ubuntu".
+- Select Keyboard layout.
+- Select Installation type "Erase disk and install Ubuntu".
 .. image:: development-guide/images/Ad.png
   :width: 600  
 - Enter your details and set a password.
@@ -71,7 +69,7 @@ Installing Ubuntu in VirtualBox
   :width: 600  
 .. image:: development-guide/images/Ab.png
   :width: 600  
-- Your Ubuntu will be ready to use in few minutes.
+- Your Ubuntu will be ready to use in a few minutes.
 .. image:: development-guide/images/Aa.png
   :width: 600  
 
@@ -94,11 +92,12 @@ PostgreSQL Installation
 
 .. code-block:: bash
 
+    $ sudo service postgresql start
     $ sudo su -
     $ su - postgres
     $ psql
 
-Then, once you've connected to your PostgreSQL instance\:
+Then, once you've connected to your PostgreSQL instance:
 
 .. code-block:: postgresql
 
@@ -117,7 +116,7 @@ Git Configuration
 	git config --global credential.helper cache
 	git config --global credential.helper 'cache --timeout=9999999999999'
 
-- For each platform, perform a command line login in order to cache Git credentials for the LINUX user who operates Augur. This step is required in order to prevent the Facade Commit Counting Diesel from stalling on a command line prompt when repositories move or disappear.
+- For each platform, perform a command-line login  to cache Git credentials for the LINUX user who operates Augur. This step is required in order to prevent the Facade Commit Counting Diesel from stalling on a command-line prompt when repositories move or disappear.
 
 Install Go
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -129,6 +128,17 @@ Two of Augur's workers use the Go programming language, which needs to be instal
 	sudo apt install snapd
 	sudo snap install go --classic
 
+Incase you encounter any problem following the above commands, try doing these first:
+
+.. code-block:: bash
+
+	sudo apt-get update && sudo apt-get install -yqq daemonize dbus-user-session fontconfig
+	sudo daemonize /usr/bin/unshare --fork --pid --mount-proc /lib/systemd/systemd --system-unit=basic.target
+	exec sudo nsenter -t $(pidof systemd) -a su - $LOGNAME
+	snap version
+
+If the last command returns successfully, you can try installing Go again using either of the two options above.
+	
 Python Virtual Environment Configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~
 - Set up a Python virtual environment (Python 3.8 and above are now required. Python 3.9 and python 3.10 work as well, though we have tested Python 3.9 on more platforms.)
@@ -136,7 +146,7 @@ Python Virtual Environment Configuration
 
 .. code-block:: bash
 
-	# Ensure you are logged in as your own user on Github and change the "<YOUR_GITHUB_USERNAME>" to your Github username (e.g. "sean")
+	# Ensure you are logged in as your user on Github and change the "<YOUR_GITHUB_USERNAME>" to your Github username (e.g. "sean")
 	git clone https://github.com/<YOUR_GITHUB_USERNAME>/augur.git
 	cd augur/
 	sudo apt install make
@@ -149,7 +159,7 @@ Python Virtual Environment Configuration
 	python -m pip install --upgrade pip
 	make install-dev {Follow prompts. You will need database credentials, a file location for cloned repositories, a GitHub Token, and a GitLab token.}
 
-- Seven sample repositories will load by default. You can delete them if you want to use your own repositories by deleting records from the `repo` table first, then deleting the records from the `repo_groups` table.
+- Seven sample repositories will load by default. You can delete them if you want to use your repositories by deleting records from the `repo` table first, then deleting the records from the `repo_groups` table.
 
 
 .. code-block:: bash

@@ -9,7 +9,7 @@ High-Level Steps to Server Installation of Augur
 1. Have a list of repositories and groups you want them to be in, following the format in the files `schema/repo_group_load_sample.csv` and `schema/repo_load_sample.csv`. 
 2. Have access to a server that meets the augur installation pre-requisites (Python, NodeJS, etc).
 3. Have nginx installed for front-end service. You can use another HTTP server, but we have instructions for nginx.
-4. Make sure you have a database available, owned by a user who has rights to create tables. 
+4. Make sure you have a database available, owned by a user who has the right to create tables. 
 5. Have a GitHub API Key handy.
 
 Detailed Steps
