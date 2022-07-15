@@ -206,9 +206,7 @@ class GithubTaskSession(TaskSession):
 
         self.oauths = RandomKeyAuth(keys)
 
-        result = self.query(Platform).filter(Platform.pltfrm_name == platform).one()
-
-        self.platform_id = result.pltfrm_id
+        self.platform_id = 1
         
 
     def get_list_of_oauth_keys_from_db(self, db_engine: s.engine.base.Engine, config_key: str) ->[str]:

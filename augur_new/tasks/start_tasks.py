@@ -15,8 +15,8 @@ def start_task(owner: str, repo):
     logger.info(f"Collecting data for {owner}/{repo}")
  
     start_task_list = []
-    # start_task_list.append(collect_pull_requests.s(owner, repo))
-    # start_task_list.append(collect_issues.s(owner, repo))
+    start_task_list.append(collect_pull_requests.s(owner, repo))
+    start_task_list.append(collect_issues.s(owner, repo))
 
     start_tasks_group = group(start_task_list)
     

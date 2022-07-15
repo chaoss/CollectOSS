@@ -19,6 +19,7 @@ from celery import group, chain, chord, signature
 from celery.utils.log import get_task_logger
 from celery.result import allow_join_result
 from celery.signals import after_setup_logger
+from datetime import timedelta
 import sqlalchemy as s
 
 from augur_logging import *
@@ -47,7 +48,7 @@ from augur_new.tasks.task_session import *
 
 from augur_new.facade_worker.facade_worker.facade00mainprogram import *
 
-
+from augur_logging import TaskLogConfig
 
 
 current_dir = os.getcwd()
@@ -80,7 +81,7 @@ if logs_directory is None:
 @after_setup_logger.connect
 def setup_loggers(*args,**kwargs):
     #load config
-    loggingConfig = AugurLogConfig(base_log_dir=logs_directory)
+    loggingConfig = TaskLogConfig(base_log_dir=logs_directory)
 
     
     
@@ -96,10 +97,8 @@ def analyze_commits_in_parallel(queue, repo_id, repo_location, multithreaded):
 
     for analyzeCommit in queue:    
 
-        try:
-            analyze_commit(cfg, repo_id, repo_location, analyzeCommit, multithreaded)
-        except Exception as e:
-            cfg.log_activity('Info', 'Subprocess ran into error when trying to anaylyze commit with error: %s' % e)
+        analyze_commit(cfg, repo_id, repo_location, analyzeCommit, multithreaded)
+
 
 
 
@@ -151,8 +150,8 @@ def analysis(cfg, multithreaded, session=None, processes=6):
 
         
         #Add committers for repo if session
-        #if session != None:
-        #    grab_committer_list(session,repo[0])
+        if session != None:
+            grab_committer_list(session,repo[0])
 
         update_analysis_log(repo[0],"Beginning analysis.")
         cfg.log_activity('Verbose','Analyzing repo: %s (%s)' % (repo[0],repo[3]))
@@ -279,34 +278,8 @@ def analysis(cfg, multithreaded, session=None, processes=6):
     cfg.log_activity('Info','Running analysis (complete)')
 
 
-
-
-
-@celery.task
-def facade_commits_model():
-
-    print(facade_commits_model.__name__)
-    logger = logging.getLogger(facade_commits_model.__name__)
-    session = FacadeSession(logger)
-    # Figure out what we need to do
-    limited_run = session.limited_run
-    delete_marked_repos = session.delete_marked_repos
-    pull_repos = session.pull_repos
-    clone_repos = session.clone_repos
-    check_updates = session.check_updates
-    force_updates = session.force_updates
-    run_analysis = session.run_analysis
-    force_analysis = session.force_analysis
-    nuke_stored_affiliations = session.nuke_stored_affiliations
-    fix_affiliations = session.fix_affiliations
-    force_invalidate_caches = session.force_invalidate_caches
-    rebuild_caches = session.rebuild_caches
-     #if abs((datetime.datetime.strptime(session.cfg.get_setting('aliases_processed')[:-3], 
-        # '%Y-%m-%d %I:%M:%S.%f') - datetime.datetime.now()).total_seconds()) // 3600 > int(session.cfg.get_setting(
-        #   'update_frequency')) else 0
-    force_invalidate_caches = session.force_invalidate_caches
-    create_xlsx_summary_files = session.create_xlsx_summary_files
-    multithreaded = session.multithreaded
+def facade_init(session):
+    
 
     
     
@@ -415,6 +388,36 @@ def facade_commits_model():
 
     # Begin working
 
+
+@celery.task
+def facade_commits_model():
+
+    print(facade_commits_model.__name__)
+    logger = logging.getLogger(facade_commits_model.__name__)
+    session = FacadeSession(logger)
+    
+    # Figure out what we need to do
+    limited_run = session.limited_run
+    delete_marked_repos = session.delete_marked_repos
+    pull_repos = session.pull_repos
+    clone_repos = session.clone_repos
+    check_updates = session.check_updates
+    force_updates = session.force_updates
+    run_analysis = session.run_analysis
+    force_analysis = session.force_analysis
+    nuke_stored_affiliations = session.nuke_stored_affiliations
+    fix_affiliations = session.fix_affiliations
+    force_invalidate_caches = session.force_invalidate_caches
+    rebuild_caches = session.rebuild_caches
+     #if abs((datetime.datetime.strptime(session.cfg.get_setting('aliases_processed')[:-3], 
+        # '%Y-%m-%d %I:%M:%S.%f') - datetime.datetime.now()).total_seconds()) // 3600 > int(session.cfg.get_setting(
+        #   'update_frequency')) else 0
+    force_invalidate_caches = session.force_invalidate_caches
+    create_xlsx_summary_files = session.create_xlsx_summary_files
+    multithreaded = session.multithreaded
+
+    facade_init(session)
+
     start_time = time.time()
     session.cfg.log_activity('Quiet','Running facade-worker')
 
@@ -471,7 +474,7 @@ def facade_commits_model():
     
     elapsed_time = time.time() - start_time
 
-    print('\nCompleted in %s\n' % datetime.timedelta(seconds=int(elapsed_time)))
+    print('\nCompleted in %s\n' % timedelta(seconds=int(elapsed_time)))
 
     session.cfg.cursor.close()
     #session.cfg.cursor_people.close()
@@ -510,9 +513,8 @@ def process_commit_metadata(contributorQueue,repo_id):
             ).fetchall()
             """
 
-            stmnt = select(ContributorsAliases.alias_email).where(ContributorsAliases.alias_email == email)
 
-            alias_table_data = session.execute(stmnt)
+            alias_table_data = ContributorsAliases.query.filter_by(alias_email=email).all()
             if len(alias_table_data) >= 1:
                 # Move on if email resolved
 
@@ -526,15 +528,8 @@ def process_commit_metadata(contributorQueue,repo_id):
         
         #Check the unresolved_commits table to avoid hitting endpoints that we know don't have relevant data needlessly
         try:
-            #unresolved_query_result = interface.db.execute(
-            #    s.sql.select([s.column('email'),s.column('name')]).where(
-            #        interface.unresolved_commit_emails_table.c.name == name and interface.unresolved_commit_emails_table.c.email == email
-            #    )
-            #).fetchall()
-
-            stmnt = select(UnresolvedCommitEmails.email,UnresolvedCommitEmails.name).where(UnresolvedCommitEmails.name == name and UnresolvedCommitEmails.email == email)
-
-            unresolved_query_result = session.execute(stmnt)
+            
+            unresolved_query_result = UnresolvedCommitEmails.query.filter_by(name=name).all()
 
             if len(unresolved_query_result) >= 1:
 
@@ -549,20 +544,9 @@ def process_commit_metadata(contributorQueue,repo_id):
     
         #Check the contributors table for a login for the given name
         try:
-            """
-            contributors_with_matching_name = interface.db.execute(
-                s.sql.select([s.column('gh_login')]).where(
-                    interface.contributors_table.c.cntrb_full_name == name
-                )
-            ).fetchall()
-            """
+            contributors_with_matching_name = Contributors.query.filter_by(cntrb_full_name=name).one()
 
-            stmnt = select(Contributors.gh_login).where(Contributors.cbtrb_full_name == name)
-
-            contributors_with_matching_name = session.execute(stmnt)
-
-            if len(contributors_with_matching_name) >= 1:
-                login = contributors_with_matching_name[0]['gh_login']
+            login = contributors_with_matching_name.gh_login
 
         except Exception as e:
             session.logger.error(f"Failed local login lookup with error: {e}")
@@ -598,9 +582,11 @@ def process_commit_metadata(contributorQueue,repo_id):
         name_field = contributor['commit_name'] if 'commit_name' in contributor else contributor['name']
 
         try:
-
+            
+            cntrb_id = AugurUUID(session.platform_id,user_data['id']).to_UUID()
             # try to add contributor to database
             cntrb = {
+                "cntrb_id" : cntrb_id,
                 "cntrb_login": user_data['login'],
                 "cntrb_created_at": user_data['created_at'],
                 "cntrb_email": user_data['email'] if 'email' in user_data else None,
@@ -634,7 +620,8 @@ def process_commit_metadata(contributorQueue,repo_id):
                 #"data_source": interface.data_source
             }
 
-        # interface.logger.info(f"{cntrb}")
+            session.logger.info(f"{cntrb}")
+
         except Exception as e:
             session.logger.info(f"Error when trying to create cntrb: {e}")
             continue
@@ -658,7 +645,8 @@ def process_commit_metadata(contributorQueue,repo_id):
         """
         
         #Executes an upsert with sqlalchemy 
-        session.insert_data([cntrb],Contributors,cntrb.keys())
+        cntrb_natural_keys = ['cntrb_login']
+        session.insert_data(cntrb,Contributors,cntrb_natural_keys)
 
         try:
             # Update alias after insertion. Insertion needs to happen first so we can get the autoincrementkey
@@ -675,17 +663,18 @@ def process_commit_metadata(contributorQueue,repo_id):
         # Resolve any unresolved emails if we get to this point.
         # They will get added to the alias table later
         # Do this last to absolutely make sure that the email was resolved before we remove it from the unresolved table.
-        #query = s.sql.text("""
-        #    DELETE FROM unresolved_commit_emails
-        #    WHERE email='{}'
-        #""".format(email))
+        query = s.sql.text("""
+            DELETE FROM unresolved_commit_emails
+            WHERE email='{}'
+        """.format(email))
 
         session.logger.info(f"Updating now resolved email {email}")
 
         try:
             #interface.db.execute(query)
-            session.query(UnresolvedCommitEmails).filter(UnresolvedCommitEmails.email == email).delete()
-            session.commit()
+            #session.query(UnresolvedCommitEmails).filter(UnresolvedCommitEmails.email == email).delete()
+            #session.commit()
+            session.execute_sql(query)
         except Exception as e:
             session.logger.info(
                 f"Deleting now resolved email failed with error: {e}")
@@ -713,7 +702,7 @@ def link_commits_to_contributor(contributorQueue):
                     cmt_ght_author_id=cntrb_email['cntrb_id']
                 ).execution_options(synchronize_session="fetch")
 
-                result = session.execute(stmt)
+                result = session.execute(stmnt)
             except Exception as e:
                 logger.info(
                     f"Ran into problem when enriching commit data. Error: {e}")
@@ -763,15 +752,15 @@ def insert_facade_contributors(session, repo_id,processes=4,multithreaded=True):
                 commits.cmt_author_raw_email
             ORDER BY
             hash
-    """)
+    """).bindparams(repo_id=repo_id)
 
     #Execute statement with session.
-    new_contribs = session.execute_sql(new_contrib_sql)
+    new_contribs = session.execute_sql(new_contrib_sql).fetchall()
 
-    print(new_contribs)
+    #print(new_contribs)
     
     #json.loads(pd.read_sql(new_contrib_sql, self.db, params={
-                   #             'repo_id': repo_id}).to_json(orient="records"))
+    #             'repo_id': repo_id}).to_json(orient="records"))
 
     
     if len(new_contribs) > 2 and multithreaded:
@@ -823,14 +812,14 @@ def insert_facade_contributors(session, repo_id,processes=4,multithreaded=True):
             contributors_aliases.alias_email = commits.cmt_author_raw_email
                             AND contributors.cntrb_id = contributors_aliases.cntrb_id
             AND commits.repo_id = :repo_id
-    """)
+    """).bindparams(repo_id=repo_id)
 
     #self.logger.info("DEBUG: got passed the sql statement declaration")
     # Get a list of dicts that contain the emails and cntrb_id's of commits that appear in the contributor's table.
     #existing_cntrb_emails = json.loads(pd.read_sql(resolve_email_to_cntrb_id_sql, self.db, params={
     #                                    'repo_id': repo_id}).to_json(orient="records"))
 
-    existing_cntrb_emails = session.execute_sql(resolve_email_to_cntrb_id_sql)
+    existing_cntrb_emails = session.execute_sql(resolve_email_to_cntrb_id_sql).fetchall()
     
     if len(existing_cntrb_emails) > 0 and multithreaded:
         
@@ -854,6 +843,11 @@ def insert_facade_contributors(session, repo_id,processes=4,multithreaded=True):
 def facade_resolve_contribs():
     logger = logging.getLogger(facade_resolve_contribs.__name__)
     session = FacadeSession(logger)
+
+    facade_init(session)
+
+    multithreaded = session.multithreaded
+    start_time = time.time()
     ### moved up by spg on 12/1/2021
     #Interface with the contributor worker and inserts relevant data by repo
     session.cfg.update_status('Updating Contributors')
@@ -869,4 +863,7 @@ def facade_resolve_contribs():
     for repo in all_repos:
         session.logger.info(f"Processing repo {repo}")
         insert_facade_contributors(session,repo[0],multithreaded=multithreaded)
-        session.logger.info(f"Processing repo contributors for repo: {repo}")
+    
+    elapsed_time = time.time() - start_time
+
+    print('\nCompleted in %s\n' % timedelta(seconds=int(elapsed_time)))
