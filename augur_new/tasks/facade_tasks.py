@@ -22,6 +22,9 @@ from celery.signals import after_setup_logger
 from datetime import timedelta
 import sqlalchemy as s
 
+from augur_logging import *
+from augur_config import AugurConfig
+
 # allows us to reference augur_new (the parent module)
 # even though the code is executed from augur_new
 sys.path.append("..")
@@ -33,11 +36,11 @@ from augur_new.facade_worker.contributor_interfaceable.contributor_interface imp
 from augur_new.util.worker_util import create_grouped_task_load
 
 # from augur_new.server import redis_conn
-from tasks.celery import celery
+from tasks.celery_init import celery_app as celery
 
 
-from augur_new.db import data_parse
-from augur_new.db.models import PullRequests, Message, PullRequestReviews, PullRequestLabels, PullRequestReviewers, PullRequestEvents, PullRequestMeta, PullRequestAssignees, PullRequestReviewMessageRef, SQLAlchemy, Issues, IssueEvents, IssueLabels, IssueAssignees, PullRequestMessageRef, IssueMessageRef, Contributors
+from augur_new.augur_db import data_parse
+from augur_new.augur_db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestEvent, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, Issue, IssueEvent, IssueLabel, IssueAssignee, PullRequestMessageRef, IssueMessageRef, Contributor
 
 from augur_new.util.github_paginator import GithubPaginator, hit_api
 from augur_new.util.gh_graphql_entities import PullRequest
@@ -55,26 +58,30 @@ root_augur_dir = ''.join(current_dir.partition("augur/")[:2])
 config_path = root_augur_dir + '/augur.config.json'
 
 #Have one log file for facade_tasks
-#facadeLogger = logging.getLogger(__name__)
+# facadeLogger = logging.getLogger(__name__)
 
 
 
-with open(config_path, 'r') as f:
-    config = json.load(f)
+
 
 """
     You can prevent Celery from configuring any loggers at all by connecting 
     the setup_logging signal. This allows you to completely override the 
     logging configuration with your own.
 """
-
+logger = logging.getLogger(__name__)
+config_db_session = TaskSession(logger)
+config = AugurConfig(config_db_session)
+logs_directory = config.get_value("logging", "logs_directory")
+if logs_directory is None:
+    logs_directory = ""
 
 
 #Load logging config once at task definition
 @after_setup_logger.connect
 def setup_loggers(*args,**kwargs):
     #load config
-    loggingConfig = TaskLogConfig()
+    loggingConfig = TaskLogConfig(base_log_dir=logs_directory)
 
     
     

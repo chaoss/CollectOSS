@@ -19,7 +19,8 @@ import tasks.facade_tasks
 import tasks.issue_tasks
 import tasks.start_tasks
 
-from augur import ROOT_AUGUR_DIRECTORY
+
+root_augur_dir = ''.join(os.getcwd().partition("augur/")[:2])
 
 logger = logging.getLogger(__name__)
 

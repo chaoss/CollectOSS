@@ -2,13 +2,14 @@
 Getting Started
 ==================
 
-This section of the documentation is an entry-level walkthrough of the Augur project. By the end, you'll hopefully have a fully functioning local installation of Augur ready to collect data.
+This section of the documentation is a no work experience required walkthrough of the Augur project. By the end, you’ll hopefully have a fully functioning local installation of Augur ready to collect data.
 
-If you want to get started as fast as possible, we have `Docker images <../docker/toc.html>`_; however, if you're looking to use Augur for long-term data collection or if you want to install it for development, you'll need to follow this walkthrough.
+If you want to get started as fast as possible, we have `Docker images <../docker/toc.html>`_; however, if you’re looking to use Augur for long-term data collection or if you want to install it for development, you’ll need to follow this walkthrough.
+
 
 .. note::
 
-    We currently officially support local installation of Augur from source on macOS, Ubuntu, and Fedora (but most UNIX-like systems will probably work with a few tweaks). If you are using Windows, we recommend either using the Docker images or setting up a virtual machine with a supported operating system installed.
+    We currently officially support the local installation of Augur from source on macOS, Ubuntu, and Fedora (but most UNIX-like systems will probably work with a few tweaks). We recommend either using the Docker images or setting up a virtual machine with a supported operating system installed if you are using Windows.
 
 To install from source, we'll need to do a few things:
 

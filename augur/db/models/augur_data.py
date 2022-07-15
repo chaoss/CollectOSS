@@ -28,7 +28,7 @@ metadata = Base.metadata
 t_analysis_log = Table(
     "analysis_log",
     metadata,
-    Column("repos_id", Integer, nullable=False, index=True),
+    Column("repos_id", Integer, nullable=False),
     Column("status", String, nullable=False),
     Column(
         "date_attempted",
@@ -38,6 +38,8 @@ t_analysis_log = Table(
     ),
     schema="augur_data",
 )
+Index('repos_id', t_analysis_log.c.repos_id)
+
 
 
 class ChaossMetricStatus(Base):
@@ -129,8 +131,35 @@ class ContributorAffiliation(Base):
 class Contributor(Base):
     __tablename__ = "contributors"
     __table_args__ = (
-        Index("contributor_delete_finder", "cntrb_id", "cntrb_email"),
-        Index("contributor_worker_finder", "cntrb_login", "cntrb_email", "cntrb_id"),
+        # add uniques explitcitly, they were inline before
+        UniqueConstraint('gh_login', name='GH-UNIQUE-C', initially="DEFERRED", deferrable=True),
+        UniqueConstraint('gl_id', name='GL-UNIQUE-B', initially="DEFERRED", deferrable=True),
+
+        # unique key for gitlab users on insertion
+        UniqueConstraint('gl_username', name='GL-UNIQUE-C', initially="DEFERRED", deferrable=True),
+        UniqueConstraint('cntrb_login', name='GL-cntrb-LOGIN-UNIQUE'),
+
+
+        # changed from inline to not inline
+        Index("cnt-fullname", "cntrb_full_name", postgresql_using='hash'),
+        Index("cntrb-theemail", "cntrb_email", postgresql_using='hash'),
+        Index("contributors_idx_cntrb_email3", "cntrb_email"),
+        Index("cntrb_canonica-idx11", "cntrb_canonical"),
+        Index("cntrb_login_platform_index", "cntrb_login"),
+
+        # should already be in db but added postgresql='brin' was added here
+        Index("contributor_delete_finder", "cntrb_id", "cntrb_email", postgresql_using='brin'),
+        Index("contributor_worker_finder", "cntrb_login", "cntrb_email", "cntrb_id",   
+            postgresql_using='brin'),
+
+        # added
+        Index("contributor_worker_email_finder", "cntrb_email", postgresql_using='brin'),
+        Index("contributor_worker_fullname_finder", "cntrb_full_name", postgresql_using='brin'),
+
+        # NOTE: removed these because they are the same as cntrb_login_platform_index
+        # Index("login", cntrb_login),
+        # Index("login-contributor-idx", cntrb_login),
+
         {
             "schema": "augur_data",
             "comment": "For GitHub, this should be repeated from gh_login. for other systems, it should be that systems login. \nGithub now allows a user to change their login name, but their user id remains the same in this case. So, the natural key is the combination of id and login, but there should never be repeated logins. ",
@@ -146,15 +175,13 @@ class Contributor(Base):
     )
     cntrb_login = Column(
         String,
-        unique=True,
         comment="Will be a double population with the same value as gh_login for github, but the local value for other systems. ",
     )
     cntrb_email = Column(
         String,
-        index=True,
         comment="This needs to be here for matching contributor ids, which are augur, to the commit information. ",
     )
-    cntrb_full_name = Column(String, index=True)
+    cntrb_full_name = Column(String)
     cntrb_company = Column(String)
     cntrb_created_at = Column(TIMESTAMP(precision=0))
     cntrb_type = Column(
@@ -168,14 +195,13 @@ class Contributor(Base):
     cntrb_state = Column(String)
     cntrb_city = Column(String)
     cntrb_location = Column(String)
-    cntrb_canonical = Column(String, index=True)
+    cntrb_canonical = Column(String)
     cntrb_last_used = Column(
         TIMESTAMP(True, 0), server_default=text("NULL::timestamp with time zone")
     )
     gh_user_id = Column(BigInteger)
     gh_login = Column(
         String,
-        unique=True,
         comment="populated with the github user name for github originated data. ",
     )
     gh_url = Column(String)
@@ -208,7 +234,6 @@ class Contributor(Base):
     )
     gl_username = Column(
         String,
-        unique=True,
         comment='“username” value from these API calls to GitLab, all for the same user\n\nhttps://gitlab.com/api/v4/users?username=computationalmystic\nhttps://gitlab.com/api/v4/users?search=s@goggins.com\nhttps://gitlab.com/api/v4/users?search=outdoors@acm.org\n\n[\n  {\n    "id": 5481034,\n    "name": "sean goggins",\n    "username": "computationalmystic",\n    "state": "active",\n    "avatar_url": "https://secure.gravatar.com/avatar/fb1fb43953a6059df2fe8d94b21d575c?s=80&d=identicon",\n    "web_url": "https://gitlab.com/computationalmystic"\n  }\n]',
     )
     gl_full_name = Column(
@@ -217,7 +242,6 @@ class Contributor(Base):
     )
     gl_id = Column(
         BigInteger,
-        unique=True,
         comment='"id" value from these API calls to GitLab, all for the same user\n\nhttps://gitlab.com/api/v4/users?username=computationalmystic\nhttps://gitlab.com/api/v4/users?search=s@goggins.com\nhttps://gitlab.com/api/v4/users?search=outdoors@acm.org\n\n[\n  {\n    "id": 5481034,\n    "name": "sean goggins",\n    "username": "computationalmystic",\n    "state": "active",\n    "avatar_url": "https://secure.gravatar.com/avatar/fb1fb43953a6059df2fe8d94b21d575c?s=80&d=identicon",\n    "web_url": "https://gitlab.com/computationalmystic"\n  }\n]',
     )
     tool_source = Column(String)
@@ -408,16 +432,6 @@ class Exclude(Base):
     domain = Column(String, server_default=text("'NULL'::character varying"))
 
 
-t_issue_reporter_created_at = Table(
-    "issue_reporter_created_at",
-    metadata,
-    Column("reporter_id", BigInteger),
-    Column("created_at", TIMESTAMP(precision=0)),
-    Column("repo_id", BigInteger, index=True),
-    schema="augur_data",
-)
-
-
 class LstmAnomalyModel(Base):
     __tablename__ = "lstm_anomaly_models"
     __table_args__ = {"schema": "augur_data"}
@@ -445,12 +459,14 @@ class LstmAnomalyModel(Base):
 
 class Platform(Base):
     __tablename__ = "platform"
-    __table_args__ = {"schema": "augur_data"}
+    __table_args__ = (
+        Index("plat", "pltfrm_id", unique=True),
+        {"schema": "augur_data"}
+    )
 
     pltfrm_id = Column(
         BigInteger,
         primary_key=True,
-        unique=True,
         server_default=text("nextval('augur_data.platform_pltfrm_id_seq'::regclass)"),
     )
     pltfrm_name = Column(String)
@@ -464,20 +480,21 @@ class Platform(Base):
 
 class RepoGroup(Base):
     __tablename__ = "repo_groups"
-    __table_args__ = {
-        "schema": "augur_data",
-        "comment": "rg_type is intended to be either a GitHub Organization or a User Created Repo Group. ",
-    }
+    __table_args__ = (
+        Index("rgidm", "repo_group_id", unique=True),
+        Index("rgnameindex", "rg_name"),
+        {"schema": "augur_data",
+        "comment": "rg_type is intended to be either a GitHub Organization or a User Created Repo Group. "},
+    )
 
     repo_group_id = Column(
         BigInteger,
         primary_key=True,
-        unique=True,
         server_default=text(
             "nextval('augur_data.repo_groups_repo_group_id_seq'::regclass)"
         ),
     )
-    rg_name = Column(String, nullable=False, index=True)
+    rg_name = Column(String, nullable=False)
     rg_description = Column(String, server_default=text("'NULL'::character varying"))
     rg_website = Column(String(128), server_default=text("'NULL'::character varying"))
     rg_recache = Column(SmallInteger, server_default=text("1"))
@@ -701,7 +718,17 @@ class ContributorsAlias(Base):
 class Repo(Base):
     __tablename__ = "repo"
     __table_args__ = (
+        UniqueConstraint("repo_git", name="repo_git-unique"),
+
+        Index("forked", "forked_from"),
         Index("repo_idx_repo_id_repo_namex", "repo_id", "repo_name"),
+        Index("repogitindexrep", "repo_git"),
+
+        Index("reponameindex", "repo_name", postgresql_using='hash'),
+
+        Index("reponameindexbtree", "repo_name"),
+        Index("rggrouponrepoindex", "repo_group_id"),
+
         {
             "schema": "augur_data",
             "comment": "This table is a combination of the columns in Facade’s repo table and GHTorrent’s projects table. ",
@@ -711,16 +738,15 @@ class Repo(Base):
     repo_id = Column(
         BigInteger,
         primary_key=True,
-        unique=True,
         server_default=text("nextval('augur_data.repo_repo_id_seq'::regclass)"),
     )
     repo_group_id = Column(
-        ForeignKey("augur_data.repo_groups.repo_group_id"), nullable=False, index=True
+        ForeignKey("augur_data.repo_groups.repo_group_id"), nullable=False
     )
-    repo_git = Column(String, nullable=False, index=True)
+    repo_git = Column(String, nullable=False)
     repo_path = Column(String, server_default=text("'NULL'::character varying"))
     repo_name = Column(
-        String, index=True, server_default=text("'NULL'::character varying")
+        String, server_default=text("'NULL'::character varying")
     )
     repo_added = Column(
         TIMESTAMP(precision=0), nullable=False, server_default=text("CURRENT_TIMESTAMP")
@@ -738,7 +764,7 @@ class Repo(Base):
     description = Column(String)
     primary_language = Column(String)
     created_at = Column(String)
-    forked_from = Column(String, index=True)
+    forked_from = Column(String)
     updated_at = Column(TIMESTAMP(precision=0))
     repo_archived_date_collected = Column(TIMESTAMP(True, 0))
     repo_archived = Column(Integer)
@@ -846,19 +872,53 @@ class RepoGroupsListServe(Base):
 class Commit(Base):
     __tablename__ = "commits"
     __table_args__ = (
-        Index(
-            "author_email,author_affiliation,author_date",
-            "cmt_author_email",
-            "cmt_author_affiliation",
-            "cmt_author_date",
-        ),
-        Index("repo_id,commit", "repo_id", "cmt_commit_hash"),
+        # DB
+<<<<<<< HEAD
+        Index("author_affiliation", "cmt_author_affiliation"),
+=======
+        Index("author_affiliation", "cmt_author_affiliation",
+                 postgresql_using='hash'),
+>>>>>>> 9440ea62c52ce7636302f07c7c2d3df820d1c553
+        Index("author_cntrb_id", "cmt_ght_author_id"),
+        Index("author_raw_email", "cmt_author_raw_email"),
+        Index("commited", "cmt_id"),
         Index(
             "commits_idx_cmt_email_cmt_date_cmt_name",
             "cmt_author_email",
             "cmt_author_date",
             "cmt_author_name",
         ),
+        Index("committer_affiliation", "cmt_committer_affiliation",
+                 postgresql_using='hash'),
+
+        Index(
+            "author_email,author_affiliation,author_date",
+            "cmt_author_email",
+            "cmt_author_affiliation",
+            "cmt_author_date",
+        ),
+        Index("committer_raw_email", "cmt_committer_raw_email"),
+        Index("repo_id,commit", "repo_id", "cmt_commit_hash"),
+
+
+
+        # Alembic migration
+        Index("cmt-author-date-idx2", "cmt_author_date"),
+        Index("cmt_author_contrib_worker", 
+            "cmt_author_name", "cmt_author_email", "cmt_author_date", postgresql_using='brin'),
+
+        Index("cmt_commiter_contrib_worker", "cmt_committer_name",
+            "cmt_committer_email", "cmt_committer_date", postgresql_using='brin'),
+
+        Index("commits_idx_repo_id_cmt_ema_cmt_dat_cmt_nam", "repo_id",
+                 "cmt_author_email", "cmt_author_date", "cmt_author_name"),
+
+        Index("commits_idx_repo_id_cmt_ema_cmt_dat_cmt_nam2", 
+            "repo_id", "cmt_committer_email", "cmt_committer_date", "cmt_committer_name"),
+        Index("committer_email,committer_affiliation,committer_date",
+                 "cmt_committer_email", "cmt_committer_affiliation", "cmt_committer_date"),
+
+
         {
             "schema": "augur_data",
             "comment": "Commits.\nEach row represents changes to one FILE within a single commit. So you will encounter multiple rows per commit hash in many cases. ",
@@ -868,7 +928,6 @@ class Commit(Base):
     cmt_id = Column(
         BigInteger,
         primary_key=True,
-        index=True,
         server_default=text("nextval('augur_data.commits_cmt_id_seq'::regclass)"),
     )
     repo_id = Column(
@@ -877,25 +936,25 @@ class Commit(Base):
     )
     cmt_commit_hash = Column(String(80), nullable=False)
     cmt_author_name = Column(String, nullable=False)
-    cmt_author_raw_email = Column(String, nullable=False, index=True)
+    cmt_author_raw_email = Column(String, nullable=False)
     cmt_author_email = Column(String, nullable=False)
     cmt_author_date = Column(String(10), nullable=False)
     cmt_author_affiliation = Column(
-        String, index=True, server_default=text("'NULL'::character varying")
+        String, server_default=text("'NULL'::character varying")
     )
     cmt_committer_name = Column(String, nullable=False)
-    cmt_committer_raw_email = Column(String, nullable=False, index=True)
+    cmt_committer_raw_email = Column(String, nullable=False)
     cmt_committer_email = Column(String, nullable=False)
     cmt_committer_date = Column(String, nullable=False)
     cmt_committer_affiliation = Column(
-        String, index=True, server_default=text("'NULL'::character varying")
+        String, server_default=text("'NULL'::character varying")
     )
     cmt_added = Column(Integer, nullable=False)
     cmt_removed = Column(Integer, nullable=False)
     cmt_whitespace = Column(Integer, nullable=False)
     cmt_filename = Column(String, nullable=False)
     cmt_date_attempted = Column(TIMESTAMP(precision=0), nullable=False)
-    cmt_ght_author_id = Column(Integer, index=True)
+    cmt_ght_author_id = Column(Integer)
     cmt_ght_committer_id = Column(Integer)
     cmt_ght_committed_at = Column(TIMESTAMP(precision=0))
     cmt_committer_timestamp = Column(TIMESTAMP(True, 0))
@@ -903,13 +962,19 @@ class Commit(Base):
     cmt_author_platform_username = Column(
         ForeignKey(
             "augur_data.contributors.cntrb_login",
+            name="fk_commits_contributors_3",
             ondelete="CASCADE",
             onupdate="CASCADE",
+            initially="DEFERRED",
+            deferrable=True,
         ),
         ForeignKey(
             "augur_data.contributors.cntrb_login",
+            name="fk_commits_contributors_4",
             ondelete="CASCADE",
             onupdate="CASCADE",
+            initially="DEFERRED",
+            deferrable=True,
         ),
     )
     tool_source = Column(String)
@@ -933,6 +998,11 @@ class Commit(Base):
 class Issue(Base):
     __tablename__ = "issues"
     __table_args__ = (
+        Index("issue-cntrb-dix2", "cntrb_id"),
+        Index("issues_ibfk_1", "repo_id"),
+        Index("issues_ibfk_2", "reporter_id"),
+        Index("issues_ibfk_4", "pull_request_id"),
+
         UniqueConstraint("repo_id", "gh_issue_id"),
         {"schema": "augur_data"},
     )
@@ -944,21 +1014,18 @@ class Issue(Base):
     )
     repo_id = Column(
         ForeignKey("augur_data.repo.repo_id", ondelete="CASCADE", onupdate="CASCADE"),
-        index=True,
     )
     reporter_id = Column(
         ForeignKey("augur_data.contributors.cntrb_id"),
-        index=True,
         comment="The ID of the person who opened the issue. ",
     )
     pull_request = Column(BigInteger)
-    pull_request_id = Column(BigInteger, index=True)
+    pull_request_id = Column(BigInteger)
     created_at = Column(TIMESTAMP(precision=0))
     issue_title = Column(String)
     issue_body = Column(String)
     cntrb_id = Column(
         ForeignKey("augur_data.contributors.cntrb_id"),
-        index=True,
         comment="The ID of the person who closed the issue. ",
     )
     comment_count = Column(BigInteger)
@@ -1072,6 +1139,7 @@ class Message(Base):
     __tablename__ = "message"
     __table_args__ = (
         UniqueConstraint("platform_msg_id", "tool_source"),
+        Index("msg-cntrb-id-idx", "cntrb_id"),
         Index("platformgrouper", "msg_id", "pltfrm_id"),
         Index("messagegrouper", "msg_id", "rgls_id", unique=True),
         {"schema": "augur_data"},
@@ -1104,7 +1172,6 @@ class Message(Base):
         ForeignKey(
             "augur_data.contributors.cntrb_id", ondelete="CASCADE", onupdate="CASCADE"
         ),
-        index=True,
         comment="Not populated for mailing lists. Populated for GitHub issues. ",
     )
     msg_text = Column(String)
@@ -1211,7 +1278,8 @@ class MessageSentimentSummary(Base):
 class PullRequest(Base):
     __tablename__ = "pull_requests"
     __table_args__ = (
-        UniqueConstraint("repo_id", "pr_src_id"),
+        UniqueConstraint("repo_id", "pr_src_id", name="unique-pr"),
+        UniqueConstraint("repo_id", "pr_src_id", name="unique-prx"),
         Index("id_node", "pr_src_id", "pr_src_node_id"),
         Index(
             "pull_requests_idx_repo_id_data_datex", "repo_id", "data_collection_date"
@@ -1557,7 +1625,10 @@ class RepoInsight(Base):
 
 class RepoInsightsRecord(Base):
     __tablename__ = "repo_insights_records"
-    __table_args__ = {"schema": "augur_data"}
+    __table_args__ = (
+        Index("dater", "ri_date"),
+        {"schema": "augur_data"}
+    )
 
     ri_id = Column(
         BigInteger,
@@ -1576,7 +1647,6 @@ class RepoInsightsRecord(Base):
     ri_value = Column(String, comment="The value of the endpoint in ri_field")
     ri_date = Column(
         TIMESTAMP(precision=6),
-        index=True,
         comment="The date the insight is for; in other words, some anomaly occurred on this date. ",
     )
     ri_score = Column(Float(53), comment="A Score, derived from the algorithm used. ")
@@ -1782,19 +1852,21 @@ class CommitCommentRef(Base):
 
 class CommitParent(Base):
     __tablename__ = "commit_parents"
-    __table_args__ = {"schema": "augur_data"}
+    __table_args__ = (
+        Index("commit_parents_ibfk_1", "cmt_id"),
+        Index("commit_parents_ibfk_2", "parent_id"),
+        {"schema": "augur_data"}
+    )
 
     cmt_id = Column(
         ForeignKey("augur_data.commits.cmt_id"),
         primary_key=True,
         nullable=False,
-        index=True,
     )
     parent_id = Column(
         ForeignKey("augur_data.commits.cmt_id"),
         primary_key=True,
         nullable=False,
-        index=True,
         server_default=text(
             "nextval('augur_data.commit_parents_parent_id_seq'::regclass)"
         ),
@@ -1840,7 +1912,10 @@ class DiscourseInsight(Base):
 
 class IssueAssignee(Base):
     __tablename__ = "issue_assignees"
-    __table_args__ = {"schema": "augur_data"}
+    __table_args__ = (
+        Index("issue-cntrb-assign-idx-1", "cntrb_id"),
+        {"schema": "augur_data"}
+    )
 
     issue_assignee_id = Column(
         BigInteger,
@@ -1853,7 +1928,7 @@ class IssueAssignee(Base):
     repo_id = Column(
         ForeignKey("augur_data.repo.repo_id", ondelete="RESTRICT", onupdate="CASCADE")
     )
-    cntrb_id = Column(ForeignKey("augur_data.contributors.cntrb_id"), index=True)
+    cntrb_id = Column(ForeignKey("augur_data.contributors.cntrb_id"))
     issue_assignee_src_id = Column(
         BigInteger,
         comment="This ID comes from the source. In the case of GitHub, it is the id that is the first field returned from the issue events API in the issue_assignees embedded JSON object. We may discover it is an ID for the person themselves; but my hypothesis is that its not.",
@@ -1877,7 +1952,12 @@ class IssueAssignee(Base):
 class IssueEvent(Base):
     __tablename__ = "issue_events"
     __table_args__ = (
-        UniqueConstraint("issue_id", "issue_event_src_id"),
+        UniqueConstraint('issue_id', 'issue_event_src_id', name='unique_event_id_key'),
+
+        Index("issue-cntrb-idx2", "issue_event_src_id"),
+        Index("issue_events_ibfk_1", "issue_id"),
+        Index("issue_events_ibfk_2", "cntrb_id"),
+
         {"schema": "augur_data"},
     )
 
@@ -1893,7 +1973,6 @@ class IssueEvent(Base):
             "augur_data.issues.issue_id", ondelete="CASCADE", onupdate="CASCADE"
         ),
         nullable=False,
-        index=True,
     )
     repo_id = Column(
         ForeignKey("augur_data.repo.repo_id", ondelete="RESTRICT", onupdate="CASCADE")
@@ -1903,7 +1982,6 @@ class IssueEvent(Base):
             "augur_data.contributors.cntrb_id", ondelete="RESTRICT", onupdate="CASCADE"
         ),
         nullable=False,
-        index=True,
     )
     action = Column(String, nullable=False)
     action_commit_hash = Column(String)
@@ -1923,7 +2001,6 @@ class IssueEvent(Base):
     )
     issue_event_src_id = Column(
         BigInteger,
-        index=True,
         comment="This ID comes from the source. In the case of GitHub, it is the id that is the first field returned from the issue events API",
     )
     tool_source = Column(String)
@@ -2041,7 +2118,10 @@ class IssueMessageRef(Base):
 
 class LibraryDependency(Base):
     __tablename__ = "library_dependencies"
-    __table_args__ = {"schema": "augur_data"}
+    __table_args__ = (
+        Index("REPO_DEP", "library_id"),
+        {"schema": "augur_data"}
+    )
 
     lib_dependency_id = Column(
         BigInteger,
@@ -2050,7 +2130,7 @@ class LibraryDependency(Base):
             "nextval('augur_data.library_dependencies_lib_dependency_id_seq'::regclass)"
         ),
     )
-    library_id = Column(ForeignKey("augur_data.libraries.library_id"), index=True)
+    library_id = Column(ForeignKey("augur_data.libraries.library_id"))
     manifest_platform = Column(String)
     manifest_filepath = Column(
         String(1000), server_default=text("NULL::character varying")
@@ -2175,8 +2255,6 @@ class MessageSentiment(Base):
 
 
 class PullRequestAnalysis(Base):
-    __tablename__ = "pull_request_analysis"
-    __table_args__ = {"schema": "augur_data"}
 
     pull_request_analysis_id = Column(
         BigInteger,
@@ -2191,12 +2269,10 @@ class PullRequestAnalysis(Base):
             ondelete="CASCADE",
             onupdate="CASCADE",
         ),
-        index=True,
         comment="It would be better if the pull request worker is run first to fetch the latest PRs before analyzing",
     )
     merge_probability = Column(
         Numeric(256, 250),
-        index=True,
         comment="Indicates the probability of the PR being merged",
     )
     mechanism = Column(
@@ -2210,12 +2286,28 @@ class PullRequestAnalysis(Base):
         TIMESTAMP(True, 6), nullable=False, server_default=text("CURRENT_TIMESTAMP")
     )
 
+    # metadata is specified down here so the index can reference the column and use .desc().nullslast()
+    __tablename__ = "pull_request_analysis"
+    __table_args__ = (
+        Index("pr_anal_idx", pull_request_id),
+        Index("probability_idx", merge_probability.desc().nullslast()),
+        {"schema": "augur_data"}
+    )
+
     pull_request = relationship("PullRequest")
 
 
 class PullRequestAssignee(Base):
     __tablename__ = "pull_request_assignees"
-    __table_args__ = {"schema": "augur_data"}
+    __table_args__ = (
+        Index("pr_meta_cntrb-idx", "contrib_id"),
+<<<<<<< HEAD
+        UniqueConstraint("pull_request_id", "pr_assignee_src_id", name="assigniees-unique"),
+=======
+        # UniqueConstraint("pull_request_id", "repo_id", name=""),
+>>>>>>> 9440ea62c52ce7636302f07c7c2d3df820d1c553
+        {"schema": "augur_data"}
+    )
 
     pr_assignee_map_id = Column(
         BigInteger,
@@ -2240,7 +2332,7 @@ class PullRequestAssignee(Base):
             initially="DEFERRED",
         )
     )
-    contrib_id = Column(ForeignKey("augur_data.contributors.cntrb_id"), index=True)
+    contrib_id = Column(ForeignKey("augur_data.contributors.cntrb_id"))
     pr_assignee_src_id = Column(BigInteger)
     tool_source = Column(String)
     tool_version = Column(String)
@@ -2310,7 +2402,14 @@ class PullRequestCommit(Base):
 class PullRequestEvent(Base):
     __tablename__ = "pull_request_events"
     __table_args__ = (
+        Index("pr_events_ibfk_1", "pull_request_id"),
+        Index("pr_events_ibfk_2", "cntrb_id"),
+<<<<<<< HEAD
+        UniqueConstraint("platform_id", "node_id", name="unique-pr-event-id"),
+        UniqueConstraint("node_id", name="pr-unqiue-event"),
+=======
         UniqueConstraint("pr_platform_event_id", "platform_id"),
+>>>>>>> 9440ea62c52ce7636302f07c7c2d3df820d1c553
         {"schema": "augur_data"},
     )
 
@@ -2328,7 +2427,6 @@ class PullRequestEvent(Base):
             onupdate="CASCADE",
         ),
         nullable=False,
-        index=True,
     )
     repo_id = Column(
         ForeignKey(
@@ -2340,7 +2438,7 @@ class PullRequestEvent(Base):
         )
     )
     cntrb_id = Column(
-        ForeignKey("augur_data.contributors.cntrb_id"), nullable=False, index=True
+        ForeignKey("augur_data.contributors.cntrb_id"), nullable=False
     )
     action = Column(String, nullable=False)
     action_commit_hash = Column(String)
@@ -2521,10 +2619,11 @@ class PullRequestMessageRef(Base):
 
 class PullRequestMeta(Base):
     __tablename__ = "pull_request_meta"
-    __table_args__ = {
-        "schema": "augur_data",
-        "comment": 'Pull requests contain referencing metadata.  There are a few columns that are discrete. There are also head and base designations for the repo on each side of the pull request. Similar functions exist in GitLab, though the language here is based on GitHub. The JSON Being adapted to as of the development of this schema is here:      "base": {       "label": "chaoss:dev",       "ref": "dev",       "sha": "dc6c6f3947f7dc84ecba3d8bda641ef786e7027d",       "user": {         "login": "chaoss",         "id": 29740296,         "node_id": "MDEyOk9yZ2FuaXphdGlvbjI5NzQwMjk2",         "avatar_url": "https://avatars2.githubusercontent.com/u/29740296?v=4",         "gravatar_id": "",         "url": "https://api.github.com/users/chaoss",         "html_url": "https://github.com/chaoss",         "followers_url": "https://api.github.com/users/chaoss/followers",         "following_url": "https://api.github.com/users/chaoss/following{/other_user}",         "gists_url": "https://api.github.com/users/chaoss/gists{/gist_id}",         "starred_url": "https://api.github.com/users/chaoss/starred{/owner}{/repo}",         "subscriptions_url": "https://api.github.com/users/chaoss/subscriptions",         "organizations_url": "https://api.github.com/users/chaoss/orgs",         "repos_url": "https://api.github.com/users/chaoss/repos",         "events_url": "https://api.github.com/users/chaoss/events{/privacy}",         "received_events_url": "https://api.github.com/users/chaoss/received_events",         "type": "Organization",         "site_admin": false       },       "repo": {         "id": 78134122,         "node_id": "MDEwOlJlcG9zaXRvcnk3ODEzNDEyMg==",         "name": "augur",         "full_name": "chaoss/augur",         "private": false,         "owner": {           "login": "chaoss",           "id": 29740296,           "node_id": "MDEyOk9yZ2FuaXphdGlvbjI5NzQwMjk2",           "avatar_url": "https://avatars2.githubusercontent.com/u/29740296?v=4",           "gravatar_id": "",           "url": "https://api.github.com/users/chaoss",           "html_url": "https://github.com/chaoss",           "followers_url": "https://api.github.com/users/chaoss/followers",           "following_url": "https://api.github.com/users/chaoss/following{/other_user}",           "gists_url": "https://api.github.com/users/chaoss/gists{/gist_id}",           "starred_url": "https://api.github.com/users/chaoss/starred{/owner}{/repo}",           "subscriptions_url": "https://api.github.com/users/chaoss/subscriptions",           "organizations_url": "https://api.github.com/users/chaoss/orgs",           "repos_url": "https://api.github.com/users/chaoss/repos",           "events_url": "https://api.github.com/users/chaoss/events{/privacy}",           "received_events_url": "https://api.github.com/users/chaoss/received_events",           "type": "Organization",           "site_admin": false         }, ',
-    }
+    __table_args__ = (
+        Index("pr_meta-cntrbid-idx", "cntrb_id"),
+        {"schema": "augur_data",
+        "comment": 'Pull requests contain referencing metadata.  There are a few columns that are discrete. There are also head and base designations for the repo on each side of the pull request. Similar functions exist in GitLab, though the language here is based on GitHub. The JSON Being adapted to as of the development of this schema is here:      "base": {       "label": "chaoss:dev",       "ref": "dev",       "sha": "dc6c6f3947f7dc84ecba3d8bda641ef786e7027d",       "user": {         "login": "chaoss",         "id": 29740296,         "node_id": "MDEyOk9yZ2FuaXphdGlvbjI5NzQwMjk2",         "avatar_url": "https://avatars2.githubusercontent.com/u/29740296?v=4",         "gravatar_id": "",         "url": "https://api.github.com/users/chaoss",         "html_url": "https://github.com/chaoss",         "followers_url": "https://api.github.com/users/chaoss/followers",         "following_url": "https://api.github.com/users/chaoss/following{/other_user}",         "gists_url": "https://api.github.com/users/chaoss/gists{/gist_id}",         "starred_url": "https://api.github.com/users/chaoss/starred{/owner}{/repo}",         "subscriptions_url": "https://api.github.com/users/chaoss/subscriptions",         "organizations_url": "https://api.github.com/users/chaoss/orgs",         "repos_url": "https://api.github.com/users/chaoss/repos",         "events_url": "https://api.github.com/users/chaoss/events{/privacy}",         "received_events_url": "https://api.github.com/users/chaoss/received_events",         "type": "Organization",         "site_admin": false       },       "repo": {         "id": 78134122,         "node_id": "MDEwOlJlcG9zaXRvcnk3ODEzNDEyMg==",         "name": "augur",         "full_name": "chaoss/augur",         "private": false,         "owner": {           "login": "chaoss",           "id": 29740296,           "node_id": "MDEyOk9yZ2FuaXphdGlvbjI5NzQwMjk2",           "avatar_url": "https://avatars2.githubusercontent.com/u/29740296?v=4",           "gravatar_id": "",           "url": "https://api.github.com/users/chaoss",           "html_url": "https://github.com/chaoss",           "followers_url": "https://api.github.com/users/chaoss/followers",           "following_url": "https://api.github.com/users/chaoss/following{/other_user}",           "gists_url": "https://api.github.com/users/chaoss/gists{/gist_id}",           "starred_url": "https://api.github.com/users/chaoss/starred{/owner}{/repo}",           "subscriptions_url": "https://api.github.com/users/chaoss/subscriptions",           "organizations_url": "https://api.github.com/users/chaoss/orgs",           "repos_url": "https://api.github.com/users/chaoss/repos",           "events_url": "https://api.github.com/users/chaoss/events{/privacy}",           "received_events_url": "https://api.github.com/users/chaoss/received_events",           "type": "Organization",           "site_admin": false         }, '},
+    )
 
     pr_repo_meta_id = Column(
         BigInteger,
@@ -2559,7 +2658,7 @@ class PullRequestMeta(Base):
     )
     pr_src_meta_ref = Column(String)
     pr_sha = Column(String)
-    cntrb_id = Column(ForeignKey("augur_data.contributors.cntrb_id"), index=True)
+    cntrb_id = Column(ForeignKey("augur_data.contributors.cntrb_id"))
     tool_source = Column(String)
     tool_version = Column(String)
     data_source = Column(String)
@@ -2575,7 +2674,12 @@ class PullRequestMeta(Base):
 class PullRequestReviewer(Base):
     __tablename__ = "pull_request_reviewers"
     __table_args__ = (
+        Index("pr-reviewers-cntrb-idx1", "cntrb_id"),
+<<<<<<< HEAD
+        UniqueConstraint("pull_request_id", "pr_reviewer_src_id"),
+=======
         UniqueConstraint("pr_source_id", "pr_reviewer_src_id"),
+>>>>>>> 9440ea62c52ce7636302f07c7c2d3df820d1c553
         {"schema": "augur_data"},
     )
 
@@ -2602,7 +2706,6 @@ class PullRequestReviewer(Base):
         ForeignKey(
             "augur_data.contributors.cntrb_id", ondelete="CASCADE", onupdate="CASCADE"
         ),
-        index=True,
     )
     pr_reviewer_src_id = Column(
         BigInteger,
@@ -2723,10 +2826,11 @@ class PullRequestTeam(Base):
 
 class PullRequestRepo(Base):
     __tablename__ = "pull_request_repo"
-    __table_args__ = {
-        "schema": "augur_data",
-        "comment": "This table is for storing information about forks that exist as part of a pull request. Generally we do not want to track these like ordinary repositories. ",
-    }
+    __table_args__ = (
+        Index("pr-cntrb-idx-repo", "pr_cntrb_id"),
+        {"schema": "augur_data",
+        "comment": "This table is for storing information about forks that exist as part of a pull request. Generally we do not want to track these like ordinary repositories. "},
+    )
 
     pr_repo_id = Column(
         BigInteger,
@@ -2751,7 +2855,7 @@ class PullRequestRepo(Base):
     pr_repo_name = Column(String)
     pr_repo_full_name = Column(String)
     pr_repo_private_bool = Column(Boolean)
-    pr_cntrb_id = Column(ForeignKey("augur_data.contributors.cntrb_id"), index=True)
+    pr_cntrb_id = Column(ForeignKey("augur_data.contributors.cntrb_id"))
     tool_source = Column(String)
     tool_version = Column(String)
     data_source = Column(String)

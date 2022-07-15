@@ -1,7 +1,7 @@
 // #SPDX-License-Identifier: MIT
 /* tslint:disable */
-import $ from 'jquery'
-import _ from 'lodash'
+var $ = require('jquery')
+var _ = require('lodash')
 
 interface __reverseEndpointMap {
   [key: string]: any; // Add index signature
@@ -136,16 +136,16 @@ export default class AugurAPI {
     })
   }
 
-  batchMapped(repos: any[], fields: string[]) {//{ forEach: (arg0: (field: any) => void) => void; }) {// { forEach: (arg0: (field: any) => void) => void; }) {
+  batchMapped (repos: any[], fields: string[]){//{ forEach: (arg0: (field: any) => void) => void; }) {// { forEach: (arg0: (field: any) => void) => void; }) {
     let endpoints: String[] | any[] = []
     let reverseMap: any = {}
     let processedData: any = {}
     // console.log(repos)
-    repos.forEach((repo: any) => {
+    repos.forEach((repo:any) => {
       // Array.prototype.push.apply(endpoints, repo.batch(fields, true))
       // _.assign(reverseMap, repo.__reverseEndpointMap)
       processedData[repo.toString()] = {}
-      fields.forEach((field: any) => {
+      fields.forEach((field:any) => {
         // console.log("endpoint_map: ", field, repo)
         // console.log(repo.__endpointMap[field])
         endpoints.push(repo.__endpointMap[field])
@@ -179,31 +179,31 @@ export default class AugurAPI {
     })
   }
 
-  Repo(repo: { githubURL?: string, gitURL?: string, url?: string, repo_id?: number, repo_group_id?: number, rg_name?: string, repo_name?: string }) {
+  Repo(repo: {githubURL?:string, gitURL?:string, url?:string, repo_id?: number, repo_group_id?:number, rg_name?:string, repo_name?:string}){
     return new Repo(this, repo)
   }
 
-  RepoGroup(rg: { rg_name?: any, repo_group_id?: number }) {
+  RepoGroup(rg: {rg_name?:any, repo_group_id?:number}) {
     return new RepoGroup(this, rg)
   }
 }
 
 abstract class BaseRepo {
   private parent: AugurAPI
-  public __endpointMap: { [key: string]: any }
-  public __reverseEndpointMap: { [key: string]: { name: string, owner: string } }
+  public __endpointMap: {[key:string]:any}
+  public __reverseEndpointMap: {[key:string]:{name:string, owner:string}}
   public _version: string
   public _host: string
   public gitURL?: string
   public githubURL?: string
-  public name?: string
-  public owner?: string
-  public repo_group_id?: number
-  public repo_id?: number
-  __URLFunctionFactory: (url: string) => any
+  public name?:string
+  public owner?:string
+  public repo_group_id?:number
+  public repo_id?:number
+  __URLFunctionFactory: (url:string) => any
   [k: string]: any
 
-  constructor(parent: AugurAPI) {
+  constructor(parent: AugurAPI){
     this._host = parent._host || 'http://localhost:5000'
     this._version = parent._version
     this.__URLFunctionFactory = parent.__URLFunctionFactory
@@ -213,7 +213,7 @@ abstract class BaseRepo {
   }
 
 
-  __Endpoint(name: string, url: string) {
+  __Endpoint(name: string, url: string){
     this[name] = this.__URLFunctionFactory(url)
     return this[name]
   }
@@ -230,7 +230,7 @@ abstract class BaseRepo {
     return this.__Endpoint(name, url)
   }
 
-  Timeseries(jsName: string, endpoint: string) {
+  Timeseries(jsName: string, endpoint: string){
     let func = this.Endpoint(jsName, 'timeseries/' + endpoint)
     // func.relativeTo = (baselineRepo:any, params:any, callback:any) => {
     //   var url = 'timeseries/' + endpoint + '/relative_to/' + baselineRepo.owner + '/' + baselineRepo.name
@@ -240,11 +240,11 @@ abstract class BaseRepo {
   }
 
   GitEndpoint(jsName: string, endpoint: string) {
-    var url = this.__endpointURL('git/' + endpoint + '/?repo_url_base=' + window.btoa(this.gitURL || ''))
+    var url = this.__endpointURL('git/' + endpoint + '/?repo_url_base=' + window.btoa(this.gitURL||''))
     return this.__Endpoint(jsName, url)
   }
 
-  addRepoMetric(jsName: string, endpoint: string) {
+  addRepoMetric(jsName: string, endpoint: string){
     var url = this.__endpointURL('repo-groups/' + this.repo_group_id + '/repos/' + this.repo_id + '/' + endpoint)
     var fullEndpoint = this._version + '/repo-groups/' + this.repo_group_id + '/repos/' + this.repo_id + '/' + endpoint
     this.__endpointMap[jsName] = fullEndpoint
@@ -252,7 +252,7 @@ abstract class BaseRepo {
     return this.__Endpoint(jsName, url)
   }
 
-  addRepoGroupMetric(jsName: string, endpoint: string) {
+  addRepoGroupMetric(jsName: string, endpoint: string){
     var url = this.__endpointURL('repo-groups/' + this.repo_group_id + '/' + endpoint)
     var fullEndpoint = this._version + '/' + 'repo-groups/' + this.repo_group_id + '/' + endpoint
     this.__endpointMap[jsName] = fullEndpoint
@@ -260,7 +260,7 @@ abstract class BaseRepo {
     return this.__Endpoint(jsName, url)
   }
 
-  abstract toString(): string
+  abstract toString():string
 
   batch(jsNameArray: Array<string>, noExecute: boolean) {
     var routes = jsNameArray.map((e: any) => { return this.__endpointMap[e] })
@@ -289,11 +289,11 @@ abstract class BaseRepo {
   }
 }
 
-class Repo extends BaseRepo {
-  public rg_name?: string
-  public repo_name?: string
-  public url?: string
-  constructor(parent: AugurAPI, metadata: { githubURL?: string, gitURL?: string, repo_id?: number, repo_group_id?: number, rg_name?: string, repo_name?: string }) {
+class Repo extends BaseRepo{
+  public rg_name?:string
+  public repo_name?:string
+  public url?:string
+  constructor(parent: AugurAPI, metadata:{githubURL?: string, gitURL?: string, repo_id?: number, repo_group_id?: number, rg_name?:string, repo_name?:string}){
     super(parent)
     // console.log(metadata)
     this.gitURL = metadata.gitURL || undefined
@@ -306,17 +306,17 @@ class Repo extends BaseRepo {
     this.setup()
   }
 
-  setup() {
+   setup(){
     this.retrieveID()
     this.initialDBMetric()
     this.initialLegacyMetric()
   }
 
-  toString() {
+  toString(){
     if (this.rg_name && this.repo_name) {
       return this.rg_name + '/' + this.repo_name
     } else {
-      return this.url || this.repo_group_id + '/' + this.repo_id
+      return this.url||this.repo_group_id +'/' + this.repo_id
     }
   }
 
@@ -327,32 +327,32 @@ class Repo extends BaseRepo {
     }
 
     if (this.rg_name && this.repo_name) {
-      $.ajax({
-        type: 'GET',
-        url: this.__endpointURL('rg-name/' + this.rg_name + '/repo-name/' + this.repo_name),
-        async: false,
-        success: (data: any) => {
-          this.repo_id = data[0].repo_id
-          this.repo_group_id = data[0].repo_group_id
-          this.gitURL = data[0].url
-          this.url = data[0].url
-          this.parseURL();
-        }
-      })
+        $.ajax({
+          type: 'GET',
+          url: this.__endpointURL('rg-name/' + this.rg_name + '/repo-name/' + this.repo_name),
+          async: false,
+          success: (data:any) => {
+            this.repo_id = data[0].repo_id
+            this.repo_group_id = data[0].repo_group_id
+            this.gitURL = data[0].url
+            this.url = data[0].url
+            this.parseURL();
+          }
+        })
     } else {
       this.parseURL();
-      if (this.owner && this.name) {
-        $.ajax({
-          type: "GET",
-          async: false,
-          url: this.__endpointURL('owner/' + this.owner + '/repo/' + this.name),
-          success: (data: any) => {
-            if (data.length != 0) {
-              this.repo_id = data[0].repo_id
-              this.repo_group_id = data[0].repo_group_id
-              this.rg_name = data[0].rg_name
-            }
-          }
+      if(this.owner && this.name) {
+         $.ajax({
+           type: "GET",
+           async: false,
+           url: this.__endpointURL('owner/' + this.owner + '/repo/' + this.name),
+           success: (data:any) => {
+             if (data.length != 0) {
+               this.repo_id = data[0].repo_id
+               this.repo_group_id = data[0].repo_group_id
+               this.rg_name = data[0].rg_name
+             }
+           }
         })
       }
     }
@@ -389,7 +389,7 @@ class Repo extends BaseRepo {
       // GROWTH, MATURITY, AND DECLINE
       this.Timeseries('closedIssues', 'issues/closed')
       this.Timeseries('closedIssueResolutionDuration', 'issues/time_to_close')
-      this.Timeseries('codeCommits', 'commits')
+      this.Timeseries( 'codeCommits', 'commits')
       // this.Timeseries('codeReviews', 'code_reviews')
       this.Timeseries('codeReviewIteration', 'code_review_iteration')
       this.Timeseries('contributionAcceptance', 'contribution_acceptance')
@@ -403,7 +403,7 @@ class Repo extends BaseRepo {
       this.Timeseries('pullRequestComments', 'pulls/comments')
       this.Timeseries('pullRequestsOpen', 'pulls')
 
-      this.Timeseries('linesOfCodeCommitCountsByCalendarYearGrouped', 'lines-of-code-commit-counts-by-calendar-year-grouped')
+      this.Timeseries('linesOfCodeCommitCountsByCalendarYearGrouped','lines-of-code-commit-counts-by-calendar-year-grouped')
 
       // RISK
 
@@ -447,7 +447,7 @@ class Repo extends BaseRepo {
       this.Timeseries('tags', 'tags')
     }
   }
-  initialDBMetric() {
+  initialDBMetric(){
     this.addRepoMetric('codeChanges', 'code-changes')
     this.addRepoMetric('codeChangesLines', 'code-changes-lines')
     this.addRepoMetric('issuesNew', 'issues-new')
@@ -465,14 +465,14 @@ class Repo extends BaseRepo {
     this.addRepoMetric('issuesClosedResolutionDuration', 'issues-closed-resolution-duration')
     this.addRepoMetric('issueActive', 'issues-active')
     this.addRepoMetric('getIssues', 'get-issues')
-    this.addRepoMetric('getForks', 'forks')
-    this.addRepoMetric('forkCount', 'fork-count')
-    this.addRepoMetric('languages', 'languages')
-    this.addRepoMetric('committers', 'committers')
-    this.addRepoMetric('licenseFiles', 'license-files')
-    this.addRepoMetric('licenseDeclared', 'license-declared')
-    this.addRepoMetric('sbom', 'sbom-download')
-    this.addRepoMetric('ciiBP', 'cii-best-practices-badge')
+    this.addRepoMetric('getForks','forks')
+    this.addRepoMetric('forkCount','fork-count')
+    this.addRepoMetric('languages','languages')
+    this.addRepoMetric('committers','committers')
+    this.addRepoMetric('licenseFiles','license-files')
+    this.addRepoMetric('licenseDeclared','license-declared')
+    this.addRepoMetric('sbom','sbom-download')
+    this.addRepoMetric('ciiBP','cii-best-practices-badge')
     this.addRepoMetric('changesByAuthor', 'lines-changed-by-author')
     this.addRepoMetric('pullRequestAcceptanceRate', 'pull-request-acceptance-rate')
     this.addRepoMetric('topCommitters', 'top-committers')
@@ -489,7 +489,7 @@ class Repo extends BaseRepo {
 
 class RepoGroup extends BaseRepo {
   public rg_name?: string
-  constructor(parent: AugurAPI, metadata: { rg_name?: any, repo_group_id?: number }) {
+  constructor(parent: AugurAPI, metadata:{rg_name?:any, repo_group_id?:number}){
     super(parent)
 
     this.repo_group_id = metadata.repo_group_id || undefined
@@ -510,24 +510,24 @@ class RepoGroup extends BaseRepo {
       type: 'GET',
       url: this.__endpointURL('rg-name/' + this.rg_name),
       async: false,
-      success: (data: any) => {
+      success: (data:any) => {
         this.repo_group_id = data[0].repo_group_id
       }
     })
   }
 
-  toString() {
+  toString(){
     return String(this.rg_name)
   }
 
-  initialMetric() {
+  initialMetric(){
     if (this.repo_group_id) {
       this.addRepoGroupMetric('codeChanges', 'code-changes')
       this.addRepoGroupMetric('codeChangesLines', 'code-changes-lines')
       this.addRepoGroupMetric('issuesNew', 'issues-new')
       this.addRepoGroupMetric('issuesClosed', 'issues-closed')
       this.addRepoGroupMetric('issueBacklog', 'issue-backlog')
-      this.addRepoGroupMetric('pullRequestsMergeContributorNew', 'pull-requests-merge-contributor-new')
+      this.addRepoGroupMetric('pullRequestsMergeContributorNew','pull-requests-merge-contributor-new')
       this.addRepoGroupMetric('issuesFirstTimeOpened', 'issues-first-time-opened')
       this.addRepoGroupMetric('issuesFirstTimeClosed', 'issues-first-time-closed')
       this.addRepoGroupMetric('subProject', 'sub-projects')
@@ -536,14 +536,14 @@ class RepoGroup extends BaseRepo {
       this.addRepoGroupMetric('openIssuesCount', 'open-issues-count')
       this.addRepoGroupMetric('closedIssuesCount', 'closed-issues-count')
       this.addRepoGroupMetric('issuesOpenAge', 'issues-open-age')
-      this.addRepoGroupMetric('issuesClosedResolutionDuration', 'issues-closed-resolution-duration')
+      this.addRepoGroupMetric('issuesClosedResolutionDuration','issues-closed-resolution-duration')
       this.addRepoGroupMetric('issueActive', 'issues-active')
       this.addRepoGroupMetric('getIssues', 'get-issues')
-      this.addRepoGroupMetric('getForks', 'forks')
-      this.addRepoGroupMetric('forkCount', 'fork-count')
-      this.addRepoGroupMetric('languages', 'languages')
-      this.addRepoGroupMetric('committers', 'committers')
-      this.addRepoGroupMetric('licenseDeclared', 'license-declared')
+      this.addRepoGroupMetric('getForks','forks')
+      this.addRepoGroupMetric('forkCount','fork-count')
+      this.addRepoGroupMetric('languages','languages')
+      this.addRepoGroupMetric('committers','committers')
+      this.addRepoGroupMetric('licenseDeclared','license-declared')
       this.addRepoGroupMetric('pullRequestAcceptanceRate', 'pull-request-acceptance-rate')
       this.addRepoGroupMetric('topInsights', 'top-insights')
       this.addRepoGroupMetric('changesByAuthor', 'lines-changed-by-author')
