@@ -45,7 +45,7 @@ from augur_new.tasks.task_session import *
 
 from augur_new.facade_worker.facade_worker.facade00mainprogram import *
 
-from augur_logging import AugurLogConfig
+from augur_logging import TaskLogConfig
 
 
 current_dir = os.getcwd()
@@ -74,7 +74,7 @@ with open(config_path, 'r') as f:
 @after_setup_logger.connect
 def setup_loggers(*args,**kwargs):
     #load config
-    loggingConfig = AugurLogConfig()
+    loggingConfig = TaskLogConfig()
 
     
     

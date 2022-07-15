@@ -24,14 +24,22 @@ from augur import ROOT_AUGUR_DIRECTORY
 logger = logging.getLogger(__name__)
 
 
-#TODO dynamically define loggers for every task names.
-class AugurLogConfig():
+SIMPLE_FORMAT_STRING = "[%(process)d] %(name)s [%(levelname)s] %(message)s"
+VERBOSE_FORMAT_STRING = "%(asctime)s,%(msecs)dms [PID: %(process)d] %(name)s [%(levelname)s] %(message)s"
+CLI_FORMAT_STRING = "CLI: [%(module)s.%(funcName)s] [%(levelname)s] %(message)s"
+CONFIG_FORMAT_STRING = "[%(levelname)s] %(message)s"
+ERROR_FORMAT_STRING = "%(asctime)s [PID: %(process)d] %(name)s [%(funcName)s() in %(filename)s:L%(lineno)d] [%(levelname)s]: %(message)s"
 
-    simple_format_string = "[%(process)d] %(name)s [%(levelname)s] %(message)s"
-    verbose_format_string = "%(asctime)s,%(msecs)dms [PID: %(process)d] %(name)s [%(levelname)s] %(message)s"
-    cli_format_string = "CLI: [%(module)s.%(funcName)s] [%(levelname)s] %(message)s"
-    config_format_string = "[%(levelname)s] %(message)s"
-    error_format_string = "%(asctime)s [PID: %(process)d] %(name)s [%(funcName)s() in %(filename)s:L%(lineno)d] [%(levelname)s]: %(message)s"
+#Deal with creating the handler in one line with proper handler and log level
+def genHandler(file,fmt,level):
+    handler = FileHandler(filename=file,mode='a')
+    #handler.setFormatter(fmt=fmt)
+    handler.setLevel(level)
+
+    return handler
+
+#TODO dynamically define loggers for every task names.
+class TaskLogConfig():
 
     def __init__(self,disable_logs=False,reset_logfiles=True,base_log_dir="/home/isaac/logs"):
         if reset_logfiles is True:
@@ -81,31 +89,67 @@ class AugurLogConfig():
                 module_folder = Path(str(self.base_log_dir) + "/" + module.__name__ + "/")
                 module_folder.mkdir(exist_ok=True)
 
+                lg.setLevel(logLevel)
+
                 #Absolute path to log file
                 file = str(module_folder) + "/" + str(task)
-                handler = FileHandler(filename=file,mode='a') 
-                handler.setLevel(logLevel)
 
-                lg.setLevel(logLevel)
-                lg.handlers = []
-                lg.addHandler(handler)
+                #Create file handlers for each relevant log level and make them colorful
+                lg.addHandler(genHandler((file + ".info"), SIMPLE_FORMAT_STRING, logging.INFO)) 
+                coloredlogs.install(level=logging.INFO,logger=lg,fmt=SIMPLE_FORMAT_STRING)
+
+                lg.addHandler(genHandler((file + ".err"), ERROR_FORMAT_STRING, logging.ERROR)) 
+                coloredlogs.install(level=logging.ERROR,logger=lg,fmt=ERROR_FORMAT_STRING)
+
+                lg.addHandler(genHandler((file + ".debug"), VERBOSE_FORMAT_STRING, logging.DEBUG)) 
+                coloredlogs.install(level=logging.DEBUG,logger=lg,fmt=VERBOSE_FORMAT_STRING)
+                
                 lg.propagate = False
 
-                fmt = ""
-
-                #Custom format for start
-                if logLevel == logging.DEBUG:
-                    fmt = AugurLogConfig.verbose_format_string
-                elif module == tasks.start_tasks:
-                    fmt = AugurLogConfig.cli_format_string
-                else:
-                    fmt = AugurLogConfig.simple_format_string
-                
-                coloredlogs.install(level=logLevel, logger=lg, fmt=fmt)
         
         def getLoggerNames(self):
             return self.logger_names
 
+
+class AugurLogger():
+    def __init__(self, logger_name, disable_logs=False,reset_logfiles=True,base_log_dir="/home/isaac/logs"):
+        if reset_logfiles is True:
+            try:
+                shutil.rmtree(base_log_dir)
+            except FileNotFoundError as e:
+                pass
+
+        self.base_log_dir = Path(base_log_dir)
+
+        self.disable_logs = disable_logs
+
+        self.base_log_dir.mkdir(exist_ok=True)
+
+        self.logger_name = logger_name
+
+        lg = logging.getLogger(self.logger_name)
+
+        #Don't bother if logs are disabled.
+        if self.disable_logs:
+            lg.disabled = True
+            return
+
+        file = str(self.base_log_dir) + "/" + str(self.logger_name)
+
+        lg.addHandler(genHandler((file + ".info"), SIMPLE_FORMAT_STRING, logging.INFO))
+        coloredlogs.install(level=logging.INFO,logger=lg,fmt=SIMPLE_FORMAT_STRING)
+
+        lg.addHandler(genHandler((file + ".err"), ERROR_FORMAT_STRING, logging.ERROR))
+        coloredlogs.install(level=logging.ERROR,logger=lg,fmt=ERROR_FORMAT_STRING)
+
+        lg.addHandler(genHandler((file + ".debug"), VERBOSE_FORMAT_STRING, logging.DEBUG))
+        coloredlogs.install(level=logging.DEBUG,logger=lg,fmt=VERBOSE_FORMAT_STRING)
+    
+    def __str__(self):
+        return self.logger_name
+
+#Ex
+# logger = logging.getLogger(str(AugurLogger("housekeeper")))
 
 
 
