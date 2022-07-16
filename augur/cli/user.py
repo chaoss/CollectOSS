@@ -40,7 +40,7 @@ class User(db.Model):
         self.email = email
         self.admin = admin
     
-    def set_password(self , password):
+    def set_password(self, password):
         self.password = generate_password_hash(password)
     def __repr__(self):
             return '%r' % (self.username)
@@ -71,7 +71,7 @@ def add_user(username, email, admin, password):
         db.session.add(new_user)
         db.session.commit()
         user_type = "admin user" if admin else "user"
-        message = f"Successfully added new {user_type}:\n {new_user}"
-        click.secho(message, fg="blue", bold=True)
+        message = f"Successfully added new {user_type}: {new_user}"
+        click.secho(message, bold=True)
         return 0
 '''Next step: admin model'''
