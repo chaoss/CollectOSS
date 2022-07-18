@@ -89,7 +89,7 @@ def setup_loggers(*args,**kwargs):
 def analyze_commits_in_parallel(queue, repo_id, repo_location, multithreaded):
     #create new cfg for celery thread.
     logger = logging.getLogger(analyze_commits_in_parallel.__name__)
-    cfg = Config(logger)
+    cfg = FacadeConfig(logger)
 
     for analyzeCommit in queue:    
 
