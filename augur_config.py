@@ -1,5 +1,5 @@
 
-from augur_db.models import Config
+from augur_db.models import Config as DatabaseConfig
 from augur_db.engine import engine
 import sqlalchemy as s
 import json
@@ -31,7 +31,7 @@ class AugurConfig():
             if setting["type"] == "NoneType":
                 setting["type"] = None
 
-        self.session.insert_data(settings, Config, ["section_name", "setting_name"])
+        self.session.insert_data(settings,DatabaseConfig, ["section_name", "setting_name"])
        
 
     def add_section_from_json(self, section_name, json_data):
@@ -59,7 +59,7 @@ class AugurConfig():
 
     def get_section(self, section_name):
 
-        section_data = Config.query.filter_by(section_name=section_name).all()
+        section_data =DatabaseConfig.query.filter_by(section_name=section_name).all()
 
         section_dict = {}
         for setting in section_data:
@@ -78,7 +78,7 @@ class AugurConfig():
     def get_value(self, section_name, setting_name):
 
         try:
-            config_setting = self.session.query(Config).filter(Config.section_name == section_name, Config.setting_name == setting_name).one()
+            config_setting = self.session.query(DatabaseConfig).filter(DatabaseConfig.section_name == section_name, DatabaseConfig.setting_name == setting_name).one()
             # config_setting = Config.query.filter_by(section_name=section_name, setting_name=setting_name).one()
         except s.orm.exc.NoResultFound:
             return None
@@ -119,7 +119,7 @@ class AugurConfig():
     def load_config(self) -> dict:
 
         # get all the sections in the config table
-        section_names = Config.query.with_entities(Config.section_name).distinct().all()
+        section_names = DatabaseConfig.query.with_entities(DatabaseConfig.section_name).distinct().all()
 
         config = {}
         # loop through and get the data for each section
@@ -169,7 +169,7 @@ class AugurConfig():
 
     def remove_section(self, section_name):
 
-        Config.query.filter_by(section_name=section_name).delete()
+        DatabaseConfig.query.filter_by(section_name=section_name).delete()
 
         # db.session.commit()
 
@@ -182,11 +182,11 @@ class AugurConfig():
 
     def is_section_in_config(self, section_name):
 
-        return Config.query.filter_by(section_name=section_name).first() is not None
+        return DatabaseConfig.query.filter_by(section_name=section_name).first() is not None
 
     def empty(self):
 
-        return Config.query.first() is None
+        return DatabaseConfig.query.first() is None
 
                             
     def get_default_config(self):
