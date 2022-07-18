@@ -47,12 +47,6 @@ from facade_worker.facade_worker.facade00mainprogram import *
 from augur_logging import TaskLogConfig
 
 
-current_dir = os.getcwd()
-
-root_augur_dir = ''.join(current_dir.partition("augur/")[:2])
-
-config_path = root_augur_dir + '/augur.config.json'
-
 #Have one log file for facade_tasks
 # facadeLogger = logging.getLogger(__name__)
 
