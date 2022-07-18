@@ -38,7 +38,8 @@ import xlsxwriter
 import configparser
 import traceback 
 
-from util.worker_util import read_config
+from facade_worker.facade01config import get_database_args_from_env
+
 
 def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 
@@ -217,12 +218,14 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 	added = 0
 	removed = 0
 	whitespace = 0
+	
+	db_credentials = get_database_args_from_env()
 
-	db_user = read_config('Database', 'user', 'AUGUR_DB_USER', 'augur')
-	db_pass = read_config('Database', 'password', 'AUGUR_DB_PASSWORD', 'augur')
-	db_name = read_config('Database', 'name', 'AUGUR_DB_NAME', 'augur')
-	db_host = read_config('Database', 'host', 'AUGUR_DB_HOST', 'localhost')
-	db_port = read_config('Database', 'port', 'AUGUR_DB_PORT', 5432)
+	db_user = db_credentials["db_user"]
+	db_pass = db_credentials["db_pass"]
+	db_name = db_credentials["db_name"]
+	db_host = db_credentials["db_host"]
+	db_port = db_credentials["db_port"]
 	db_user_people = db_user
 	db_pass_people = db_pass
 	db_name_people = db_name

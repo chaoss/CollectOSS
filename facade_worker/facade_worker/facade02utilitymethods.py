@@ -36,6 +36,7 @@ import os
 import getopt
 import xlsxwriter
 import configparser
+from facade_worker.facade01config import get_database_args_from_env
 
 def update_repo_log(cfg, repos_id,status):
 
@@ -62,11 +63,14 @@ def trim_commit(cfg, repo_id,commit):
 		cfg.db.commit()
 	except:
 		cfg.log_activity('Info','Cursor was closed, making another connection to db')
-		db_user = read_config('Database', 'user', 'AUGUR_DB_USER', 'augur')
-		db_pass = read_config('Database', 'password', 'AUGUR_DB_PASSWORD', 'augur')
-		db_name = read_config('Database', 'name', 'AUGUR_DB_NAME', 'augur')
-		db_host = read_config('Database', 'host', 'AUGUR_DB_HOST', 'localhost')
-		db_port = read_config('Database', 'port', 'AUGUR_DB_PORT', 5432)
+
+		db_credentials = get_database_args_from_env()
+
+		db_user = db_credentials["db_user"]
+		db_pass = db_credentials["db_pass"]
+		db_name = db_credentials["db_name"]
+		db_host = db_credentials["db_host"]
+		db_port = db_credentials["db_port"]
 		db_user_people = db_user
 		db_pass_people = db_pass
 		db_name_people = db_name

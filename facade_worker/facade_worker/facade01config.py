@@ -37,8 +37,30 @@ import configparser
 import psycopg2
 import json
 import logging
+from urllib.parse import urlparse
 
 from util.worker_util import read_config
+from tasks.task_session import *
+
+def get_database_args_from_env():
+    db_str = os.getenv("AUGUR_DB")
+
+    credentials = {}
+    if db_str:
+        parsedArgs = urlparse(db_str)
+
+        
+        credentials['db_user'] = parsedArgs.username#read_config('Database', 'user', 'AUGUR_DB_USER', 'augur')
+        credentials['db_pass'] = parsedArgs.password#read_config('Database', 'password', 'AUGUR_DB_PASSWORD', 'augur')
+        credentials['db_name'] = parsedArgs.hostname#read_config('Database', 'name', 'AUGUR_DB_NAME', 'augur')
+        credentials['db_host'] = parsedArgs.scheme#read_config('Database', 'host', 'AUGUR_DB_HOST', 'localhost')
+        credentials['db_port'] = parsedArgs.port#read_config('Database', 'port', 'AUGUR_DB_PORT', 5432)
+    else:
+        raise Exception("AUGUR_DB environment variable is not set, please set with command below\n\t  export AUGUR_DB=postgresql+psycopg2://<user>:<password>@<host>:<port>/<db_name>")
+    
+    return credentials
+
+
 
 class Config:
 
@@ -52,7 +74,11 @@ class Config:
         self.db = None
         self.db_people = None
 
-        worker_options = read_config("Workers", "facade_worker", None, None)
+        #worker_options = read_config("Workers", "facade_worker", None, None)
+        config_db_session = TaskSession(logger)
+        config = AugurConfig(config_db_session)
+        worker_options = config.get_section("Facade")
+
         if 'repo_directory' in worker_options:
             self.repo_base_directory = worker_options['repo_directory']
         else:
@@ -66,7 +92,7 @@ class Config:
         self.data_source = '\'Git Log\''
 
         # Figure out how much we're going to log
-        logging.basicConfig(filename='worker_{}.log'.format(worker_options['port']), filemode='w', level=logging.INFO)
+        #logging.basicConfig(filename='worker_{}.log'.format(worker_options['port']), filemode='w', level=logging.INFO)
         self.log_level = None #self.get_setting('log_level')
 
 
@@ -211,12 +237,14 @@ class Config:
         except Exception as e:
             self.logger.info('Error encountered: {}\n'.format(e))
 
+            db_credentials = get_database_args_from_env()
+
             # Set up the database
-            db_user = read_config('Database', 'user', 'AUGUR_DB_USER', 'augur')
-            db_pass = read_config('Database', 'password', 'AUGUR_DB_PASSWORD', 'augur')
-            db_name = read_config('Database', 'name', 'AUGUR_DB_NAME', 'augur')
-            db_host = read_config('Database', 'host', 'AUGUR_DB_HOST', 'localhost')
-            db_port = read_config('Database', 'port', 'AUGUR_DB_PORT', 5432)
+            db_user = db_credentials["db_user"]
+            db_pass = db_credentials["db_pass"]
+            db_name = db_credentials["db_name"]
+            db_host = db_credentials["db_host"]
+            db_port = db_credentials["db_port"]
             db_user_people = db_user
             db_pass_people = db_pass
             db_name_people = db_name
@@ -232,5 +260,8 @@ class Config:
             self.cursor.execute(query, (level, status))
             self.db.commit()
 
+
     def inc_repos_processed(self):
         self.repos_processed += 1
+
+
