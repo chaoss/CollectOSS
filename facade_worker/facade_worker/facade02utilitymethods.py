@@ -36,7 +36,7 @@ import os
 import getopt
 import xlsxwriter
 import configparser
-from facade_worker.facade01config import get_database_args_from_env
+from .facade01config import get_database_args_from_env
 
 def update_repo_log(cfg, repos_id,status):
 

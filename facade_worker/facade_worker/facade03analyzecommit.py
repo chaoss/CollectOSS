@@ -38,7 +38,7 @@ import xlsxwriter
 import configparser
 import traceback 
 
-from facade_worker.facade01config import get_database_args_from_env
+from .facade01config import get_database_args_from_env
 
 
 def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
