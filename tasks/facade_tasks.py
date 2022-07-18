@@ -68,9 +68,9 @@ config_path = root_augur_dir + '/augur.config.json'
 logger = logging.getLogger(__name__)
 config_db_session = TaskSession(logger)
 config = AugurConfig(config_db_session)
-logs_directory = config.get_value("logging", "logs_directory")
+logs_directory = config.get_value("Logging", "logs_directory")
 if logs_directory is None:
-    logs_directory = ""
+    raise FileNotFoundError
 
 
 #Load logging config once at task definition

@@ -90,10 +90,14 @@ class TaskLogConfig():
                 module_folder = Path(str(self.base_log_dir) + "/" + module.__name__ + "/")
                 module_folder.mkdir(exist_ok=True)
 
+                #Each task should have a seperate folder
+                task_folder = Path(str(module_folder) + "/" + str(task) + "/")
+                task_folder.mkdir(exist_ok=True)
+
                 lg.setLevel(logLevel)
 
                 #Absolute path to log file
-                file = str(module_folder) + "/" + str(task)
+                file = str(task_folder) + "/" + str(task)
 
                 #Create file handlers for each relevant log level and make them colorful
                 lg.addHandler(genHandler((file + ".info"), SIMPLE_FORMAT_STRING, logging.INFO)) 
