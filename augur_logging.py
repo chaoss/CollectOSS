@@ -19,7 +19,7 @@ import tasks.facade_tasks
 import tasks.issue_tasks
 import tasks.start_tasks
 
-from augur import ROOT_AUGUR_DIRECTORY
+from . import ROOT_AUGUR_DIRECTORY
 
 logger = logging.getLogger(__name__)
 
