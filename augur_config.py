@@ -59,7 +59,7 @@ class AugurConfig():
 
     def get_section(self, section_name):
 
-        section_data =DatabaseConfig.query.filter_by(section_name=section_name).all()
+        section_data = DatabaseConfig.query.filter_by(section_name=section_name).all()
 
         section_dict = {}
         for setting in section_data:
