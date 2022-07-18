@@ -19,7 +19,8 @@ import tasks.facade_tasks
 import tasks.issue_tasks
 import tasks.start_tasks
 
-from . import ROOT_AUGUR_DIRECTORY
+import os
+ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
 logger = logging.getLogger(__name__)
 
