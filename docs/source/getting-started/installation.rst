@@ -150,15 +150,20 @@ your installation of Python 3: on most systems, this is ``python3``, but yours m
     # to activate the environment
     $ source $HOME/.virtualenvs/augur_env/bin/activate
 
-3. Run the install script. This script will:
+3. Set AUGUR_DB environment variable with a postgres database connection string (if you have not setup a database yet, refer to :ref:`database setup<Creating a Database>`)
+
+.. code-block:: bash
+
+    # set postgres database connection string to AUGUR_DB environment variable
+    # replace <> variables with actual values
+    $ export AUGUR_DB=postgresql+psycopg2://<user>:<password>@<host>:<port>/<database_name>
+
+4. Run the install script. This script will:
 
 - Install Augur’s Python library and application server
-- Install Augur's data collection workers
-- Prompt you for configuration settings, including your database credentials
-- Generate a configuration file using your provided settings
 - Install Augur's schema in the configured database
-- Optionally, install Augur’s frontend and its dependencies
-- Generate and output an Augur API key
+- Prompt you for GitHub and GitLab keys
+- Add GitHub and GitLab keys to config table in the database
 
 .. note::
 
