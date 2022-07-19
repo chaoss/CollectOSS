@@ -58,6 +58,7 @@ def get_database_args_from_env():
     else:
         raise Exception("AUGUR_DB environment variable is not set, please set with command below\n\t  export AUGUR_DB=postgresql+psycopg2://<user>:<password>@<host>:<port>/<db_name>")
     
+    print(credentials)
     return credentials
 
 
