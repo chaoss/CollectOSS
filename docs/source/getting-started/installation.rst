@@ -157,7 +157,7 @@ your installation of Python 3: on most systems, this is ``python3``, but yours m
     # to activate the environment
     $ source $HOME/.virtualenvs/augur_env/bin/activate
 
-3. Set AUGUR_DB environment variable with a postgres database connection string (if you have not setup a database yet, refer to :ref:`database setup<Creating a Database>`)
+3. Set AUGUR_DB environment variable with a postgres database connection string (if you have not setup a database yet, refer to :ref:`database setup<Creating a Database>`) Note: Three terminals will be needed to collect data for augur, and AUGUR_DB needs to be set for 2 out of the 3. If you don't want to add it to both terminals you can add it permanently in your .bashrc file if running bash, or .zshrc file if in running zsh. 
 
 .. code-block:: bash
 
