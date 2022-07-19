@@ -91,6 +91,8 @@ class FacadeConfig:
         self.tool_version = '\'1.2.4\''
         self.data_source = '\'Git Log\''
 
+        self.worker_options = worker_options
+
         # Figure out how much we're going to log
         #logging.basicConfig(filename='worker_{}.log'.format(worker_options['port']), filemode='w', level=logging.INFO)
         self.log_level = None #self.get_setting('log_level')

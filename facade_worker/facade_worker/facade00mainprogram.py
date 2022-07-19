@@ -49,20 +49,21 @@ class FacadeSession(GithubTaskSession):
 
         super().__init__(logger,platform)
         # Figure out what we need to do
-        self.limited_run = self.augur_config.get_value("Facade", "limited_run")
-        self.delete_marked_repos = self.augur_config.get_value("Facade", "delete_marked_repos")
-        self.pull_repos = self.augur_config.get_value("Facade", "pull_repos")
-        self.clone_repos = self.augur_config.get_value("Facade", "clone_repos")
-        self.check_updates = self.augur_config.get_value("Facade", "check_updates")
-        self.force_updates = self.augur_config.get_value("Facade", "force_updates")
-        self.run_analysis = self.augur_config.get_value("Facade", "run_analysis")
-        self.force_analysis = self.augur_config.get_value("Facade", "force_analysis")
-        self.nuke_stored_affiliations = self.augur_config.get_value("Facade", "nuke_stored_affiliations")
-        self.fix_affiliations = self.augur_config.get_value("Facade", "fix_affiliations")
-        self.force_invalidate_caches = self.augur_config.get_value("Facade", "force_invalidate_caches")
-        self.rebuild_caches = self.augur_config.get_value("Facade", "rebuild_caches")
-        self.multithreaded = self.augur_config.get_value("Facade", "multithreaded")
-        self.create_xlsx_summary_files = self.augur_config.get_value("Facade", "create_xlsx_summary_files")
+
+        self.limited_run = self.cfg.worker_options["limited_run"]
+        self.delete_marked_repos = self.cfg.worker_options["delete_marked_repos"]
+        self.pull_repos = self.cfg.worker_options["pull_repos"]
+        self.clone_repos = self.cfg.worker_options["clone_repos"]
+        self.check_updates = self.cfg.worker_options["check_updates"]
+        self.force_updates = self.cfg.worker_options["force_updates"]
+        self.run_analysis = self.cfg.worker_options["run_analysis"]
+        self.force_analysis = self.cfg.worker_options["force_analysis"]
+        self.nuke_stored_affiliations = self.cfg.worker_options["nuke_stored_affiliations"]
+        self.fix_affiliations = self.cfg.worker_options["fix_affiliations"]
+        self.force_invalidate_caches = self.cfg.worker_options["force_invalidate_caches"]
+        self.rebuild_caches = self.cfg.worker_options["rebuild_caches"]
+        self.multithreaded = self.cfg.worker_options["multithreaded"]
+        self.create_xlsx_summary_files = self.cfg.worker_options["create_xlsx_summary_files"]
 
 
 
