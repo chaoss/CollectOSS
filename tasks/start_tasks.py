@@ -23,7 +23,7 @@ def start_task(owner: str, repo):
 
     secondary_task_list = []
     # secondary_task_list.append(pull_request_reviews.s(owner, repo, pr_numbers))
-    # secondary_task_list.append(collect_events.s(owner, repo))
+    secondary_task_list.append(collect_events.s(owner, repo))
     secondary_task_list.append(collect_issue_and_pr_comments.s(owner, repo))
     
     secondary_task_group = group(secondary_task_list)
