@@ -10,7 +10,7 @@ class AugurConfig():
 
         self.session = session
         self.accepted_types = ["str", "bool", "int", "float", "NoneType"]
-        # self.default_config = self.get_default_config()
+        self.default_config = self.get_default_config()
 
     """
     type is optional
