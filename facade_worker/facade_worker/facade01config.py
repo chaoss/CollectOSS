@@ -62,7 +62,7 @@ def get_database_args_from_env():
 
 
 
-class Config:
+class FacadeConfig:
 
     def __init__(self, logger):
         self.repos_processed = 0

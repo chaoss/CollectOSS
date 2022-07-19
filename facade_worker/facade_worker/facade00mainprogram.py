@@ -28,7 +28,7 @@
 import traceback
 import sys, platform, imp, time, datetime, html.parser, subprocess, os, getopt, xlsxwriter, configparser, logging
 from multiprocessing import Process, Queue
-from .facade01config import Config as FacadeConfig#increment_db, update_db, migrate_database_config, database_connection, get_setting, update_status, log_activity          
+from .facade01config import FacadeConfig as FacadeConfig#increment_db, update_db, migrate_database_config, database_connection, get_setting, update_status, log_activity          
 from .facade02utilitymethods import update_repo_log, trim_commit, store_working_author, trim_author   
 from .facade03analyzecommit import analyze_commit
 from .facade04postanalysiscleanup import git_repo_cleanup
