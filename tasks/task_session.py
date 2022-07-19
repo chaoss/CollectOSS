@@ -8,7 +8,9 @@ import httpx
 from sqlalchemy.inspection import inspect
 import re
 import time
+import sys
 
+sys.path.append("..")
 from sqlalchemy.event import listen
 from sqlalchemy.event import listens_for
 
@@ -19,6 +21,7 @@ from augur_config import AugurConfig
 from augur_db.engine import engine
 
 from augur_db.models import Platform
+sys.path.pop()
 #TODO: setup github headers in a method here.
 #Encapsulate data for celery task worker api
 
