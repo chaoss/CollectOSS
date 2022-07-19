@@ -69,12 +69,10 @@ setup(
         "toml",
         "mistune==0.8.4",
         "pyYaml",
-        "flask-sqlalchemy==2.5.1", 
         "redis==4.3.3",
         "XlsxWriter==1.3.7",
         "celery==5.2.7",
         "httpx==0.23.0",
-        "flask-migrate==3.1.0"
     ],
     extras_require={
         "dev": [
