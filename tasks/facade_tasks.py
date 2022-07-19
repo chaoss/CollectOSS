@@ -64,7 +64,7 @@ config_db_session = TaskSession(logger)
 config = AugurConfig(config_db_session)
 logs_directory = config.get_value("Logging", "logs_directory")
 if logs_directory is None:
-    raise FileNotFoundError
+    raise Exception('logs_directory not specified in config.')
 
 
 #Load logging config once at task definition
