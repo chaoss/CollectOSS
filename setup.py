@@ -73,6 +73,7 @@ setup(
         "XlsxWriter==1.3.7",
         "celery==5.2.7",
         "httpx==0.23.0",
+        "tornado==6.1" # added because it sometimes errors when tornado is not 6.1 even though nothing we install depends on it
     ],
     extras_require={
         "dev": [
