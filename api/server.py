@@ -16,7 +16,6 @@ from flask import Flask, request, Response, redirect
 from flask_cors import CORS
 import pandas as pd
 
-import augur
 from api.routes import create_routes
 
 AUGUR_API_VERSION = 'api/unstable'

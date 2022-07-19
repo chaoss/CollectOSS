@@ -14,7 +14,7 @@ from beaker.util import parse_cache_config_options
 import sqlalchemy as s
 import psycopg2
 
-from augur import ROOT_AUGUR_DIRECTORY
+# from augur import ROOT_AUGUR_DIRECTORY
 from api.metrics import Metrics
 from augur_config import AugurConfig
 from tasks.task_session import TaskSession
