@@ -11,8 +11,6 @@ fi
 target=${1-prod}
 
 scripts/install/backend.sh $target
-scripts/install/workers.sh $target
-scripts/install/frontend.sh
 
 echo
 echo "Checking database version..."
