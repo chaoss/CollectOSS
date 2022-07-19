@@ -23,6 +23,8 @@ Required:
 -  `GitLab Access Token <https://gitlab.com/profile/personal_access_tokens>`__
 -  `Python 3.6 - 3.8 <https://www.python.org/downloads/>`__
 
+
+  
 **Python 3.9 is not yet supported because TensorFlow, which we use in our machine learning workers, does not yet support Python 3.9.**
 
 Our REST API & data collection workers write in Python 3.6. We query the GitHub & GitLab API to collect data about issues, pull requests, contributors, and other information about a repository, so GitLab and GitHub access tokens are **required** for data collection.
@@ -36,8 +38,13 @@ Once you've installed Go, follow the appropriate steps for your system to instal
 
 -  Install gcc OpenMP Support: ``sudo apt-get install libgomp1`` -- Ubuntu 
 
-The ``message_insights_worker`` uses a system-level package called OpenMP. You will need this installed at the system level for that worker to work. 
+The ``message_insights_worker`` uses a system-level package called OpenMP. You will need this installed at the system level for that worker to work.
 
+Caching System (Redis)
+----------------
+* `Linux Installation <https://redis.io/docs/getting-started/installation/install-redis-on-linux/>`__
+* `Mac Installation <https://redis.io/docs/getting-started/installation/install-redis-on-mac-os/>`__
+* `Windows Installation <https://redis.io/docs/getting-started/installation/install-redis-on-windows/>`__
 
 Frontend
 ---------
