@@ -44,10 +44,10 @@ from util.worker_util import read_config
 from tasks.task_session import GithubTaskSession
 
 class FacadeSession(GithubTaskSession):
-    def __init__(self,logger,config={},platform='GitHub'):
+    def __init__(self,logger,platform='GitHub'):
         self.cfg = FacadeConfig(logger)
 
-        super().__init__(logger,config,platform)
+        super().__init__(logger,platform)
         # Figure out what we need to do
         self.limited_run = self.augur_config.get_value("Facade", "limited_run")
         self.delete_marked_repos = self.augur_config.get_value("Facade", "delete_marked_repos")
