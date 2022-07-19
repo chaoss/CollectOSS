@@ -52,8 +52,8 @@ def get_database_args_from_env():
         
         credentials['db_user'] = parsedArgs.username#read_config('Database', 'user', 'AUGUR_DB_USER', 'augur')
         credentials['db_pass'] = parsedArgs.password#read_config('Database', 'password', 'AUGUR_DB_PASSWORD', 'augur')
-        credentials['db_name'] = parsedArgs.hostname#read_config('Database', 'name', 'AUGUR_DB_NAME', 'augur')
-        credentials['db_host'] = parsedArgs.scheme#read_config('Database', 'host', 'AUGUR_DB_HOST', 'localhost')
+        credentials['db_name'] = parsedArgs.path.replace('/','')#read_config('Database', 'name', 'AUGUR_DB_NAME', 'augur')
+        credentials['db_host'] = parsedArgs.hostname#read_config('Database', 'host', 'AUGUR_DB_HOST', 'localhost')
         credentials['db_port'] = parsedArgs.port#read_config('Database', 'port', 'AUGUR_DB_PORT', 5432)
     else:
         raise Exception("AUGUR_DB environment variable is not set, please set with command below\n\t  export AUGUR_DB=postgresql+psycopg2://<user>:<password>@<host>:<port>/<db_name>")
