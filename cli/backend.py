@@ -18,7 +18,11 @@ from tasks.start_tasks import start_task
 from api.application import Application
 from api.gunicorn import AugurGunicornApp
 from tasks.redis_init import redis_connection 
+from augur_db.models import Repo
+from tasks.task_session import TaskSession
 # from augur.server import Server
+from celery import chain, signature
+
 
 
 logger = logging.getLogger("augur")
@@ -34,38 +38,67 @@ def start(disable_collection):
     Start Augur's backend server
     """
 
-
     logger.info("Starting workers")
     if not disable_collection:
 
-        # 1300 prs
-        # 456 issues
-        owner = "chaoss"
-        repo = "augur"
+        session = TaskSession(logger)
+
+        repos = session.query(Repo).all()
+
+        repos_to_collect = []
+        repo_task_list = []
+
+        print("Repos available for collection")
+        print_repos(repos)
+
+        if len(repos) > 1:
+
+            exclude_input = str(input("Would you like to exclude any repos from collection [y/N]: ")).lower()
+
+            if exclude_input == "y":
+                remove_repos(repos)
+                print("\n\nRepos after removing some")
+                print_repos(repos)
+
+        if len(repos) > 1:
+
+            order_input = str(input("Would you like to specify an order the repos are collected [y/N]: ")).lower()
+
+            if order_input == "y":
+                repos = order_repos(repos)
+                print("\n\n Repo order after reordering")
+                print_repos(repos)
+
+        # add confirmation
+
+        repo_task_list = [start_task.s(repo.repo_git) for repo in repos]
+
+        repos_chain = chain(repo_task_list)
+
+        print(repos_chain)
+
+        repos_chain.apply_async()
+
+    # augur_app = Application()
+    # print("Augur application initialized")
+
+    # augur_gunicorn_app = AugurGunicornApp(augur_app.gunicorn_options, augur_app=augur_app)
+
+    # print('Starting Gunicorn webserver...')
+    # print(f'Augur is running at: http://127.0.0.1:{augur_app.config.get_value("Server", "port")}')
+    # print('Gunicorn server logs & errors will be written to logs/gunicorn.log')
+    # print('Housekeeper update process logs will now take over.')
+
+    # gunicorn_arbiter = Arbiter(augur_gunicorn_app)
+
+    # atexit._clear()
+    # atexit.register(exit, gunicorn_arbiter)
+
+    # gunicorn_arbiter.run()
 
 
-        logger.info("Launch start task")
-        result = start_task.apply_async(args=[owner, repo])
 
-    augur_app = Application()
-    print("Augur application initialized")
-
-    augur_gunicorn_app = AugurGunicornApp(augur_app.gunicorn_options, augur_app=augur_app)
-
-    print('Starting Gunicorn webserver...')
-    print(f'Augur is running at: http://127.0.0.1:{augur_app.config.get_value("Server", "port")}')
-    print('Gunicorn server logs & errors will be written to logs/gunicorn.log')
-    print('Housekeeper update process logs will now take over.')
-
-    gunicorn_arbiter = Arbiter(augur_gunicorn_app)
-
-
-    atexit._clear()
-    atexit.register(exit, gunicorn_arbiter)
-
-    gunicorn_arbiter.run()
-
-
+    
 
 
 @cli.command('stop')
@@ -147,6 +180,101 @@ def _broadcast_signal_to_processes(signal=signal.SIGTERM, given_logger=None):
                     process.send_signal(signal)
                 except psutil.NoSuchProcess as e:
                     pass
+
+
+
+def print_repos(repos):
+
+    for index, repo in enumerate(repos):
+
+        repo_git = repo.repo_git
+        print(f"\t{index}: {repo_git}")
+
+def remove_repos(repos):
+
+    print("Note: To remove multiple repos at once use the python slice syntax")
+    print("For example '0:3' removes repo 0, 1, and 2")
+
+    while True:
+        if len(repos) == 1:
+            print("Only one repo left returning..")
+            return
+
+        print_repos(repos)
+        user_input = input("To exit enter: -1. Enter index of repo or slice to remove multiple: ")
+
+        if user_input == "-1":
+            break
+
+        if ":" in user_input:
+            user_slice = slice(*map(lambda x: int(x.strip()) if x.strip() else None, user_input.split(':')))
+            try:
+                del repos[user_slice]
+            except IndexError:
+                print("Invalid input. Please input a number or slice")
+                continue
+
+        else: 
+            try:
+                user_input = int(user_input)
+            except ValueError:
+                print("Invalid input. Please input a number or slice")
+                continue
+
+            try:
+                del repos[user_input]
+            except IndexError:
+                print("Invalid input. Please input a number or slice")
+                continue
+
+
+def order_repos(repos):
+
+    ordered_repos = []
+
+    print("\n\nPlease enter a comma indicating the order the repos should be collected")
+    print("If you would like to order some of them but randomize the rest just enter the order you would like and the rest will be randomized")
+    print("For example with 5 repos '3,4' would collect repo 3, then 4, and then repos 1, 2, and 5 would be randomly ordered")
+    print_repos(repos)
+
+    while True:
+        user_input = input("Order input: ")        
+
+        # creates a list of indexes in the order that the user wanted
+        ordered_index_strings = user_input.split(",")
+
+        try:
+            # convert list of strings to integers
+            ordered_index_ints = [int(i) for i in ordered_index_strings]
+        except ValueError:
+            print("Invalid input. Please input a comma separated list indicating the order")
+            continue
+
+        invalid_entry = False
+        for index in ordered_index_ints:
+            try:
+                repos[index]
+            except IndexError:
+                print(f"Invalid entry: {index}. Make sure your input is a comma separated list")
+                invalid_entry = True
+
+        if invalid_entry:
+            continue
+
+        break
+
+    # adds all the other indexes the user did not specify an order for
+    for index in range(0, len(repos)):
+
+        if index in ordered_index_ints:
+            continue
+
+        ordered_index_ints.append(index)
+
+    # converts list of indexes into list of repo git urls
+    repo_git_urls = [repos[index] for index in ordered_index_ints]
+
+    return repo_git_urls
 
 # def initialize_components(augur_app, disable_housekeeper):
 #     master = None
