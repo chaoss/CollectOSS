@@ -18,10 +18,11 @@ else
   echo
 fi
 
+
 # if there is no db.json or the AUGUR_DB environment variable is not set 
 #then create prompt the user for db credentials and make a db.json file
 FILE=db.json
-if [ -z "${AUGUR_DB}" ] && [ -f !"$FILE" ]
+if [ -z "${AUGUR_DB}" ] && [ ! -f "$FILE" ]
 then
     echo "Enter the database credentials to your database. This will create db.json"
     read -p "Database: " db_name
@@ -36,9 +37,6 @@ fi
 
 scripts/install/backend.sh $target 2>&1 | tee logs/backend-install.log
 echo "Done!"
-
-# scripts/install/workers.sh $target 2>&1 | tee logs/workers-install.log
-# echo "Done!"
 
 
 function create_config() {
