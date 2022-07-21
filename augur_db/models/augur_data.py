@@ -774,7 +774,7 @@ class Repo(Base):
     repo_group = relationship("RepoGroup")
 
 
-class RepoTestCoverage(Repo):
+class RepoTestCoverage(Base):
     __tablename__ = "repo_test_coverage"
     __table_args__ = {"schema": "augur_data"}
 

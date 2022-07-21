@@ -7,7 +7,9 @@ pr_numbers = [70, 106, 170, 190, 192, 208, 213, 215, 216, 218, 223, 224, 226, 23
 
 
 @celery.task
-def start_task(owner: str, repo):
+def start_task(repo_git: str):
+
+    owner, repo = get_owner_repo(repo_git)
     
     logger = logging.getLogger(start_task.__name__)
     session = TaskSession(logger)
@@ -15,16 +17,16 @@ def start_task(owner: str, repo):
     logger.info(f"Collecting data for {owner}/{repo}")
  
     start_task_list = []
-    start_task_list.append(collect_pull_requests.s(owner, repo))
-    start_task_list.append(collect_issues.s(owner, repo))
+    # start_task_list.append(collect_pull_requests.s(repo_git))
+    start_task_list.append(collect_issues.s(repo_git))
 
     start_tasks_group = group(start_task_list)
     
 
     secondary_task_list = []
     # secondary_task_list.append(pull_request_reviews.s(owner, repo, pr_numbers))
-    secondary_task_list.append(collect_events.s(owner, repo))
-    secondary_task_list.append(collect_issue_and_pr_comments.s(owner, repo))
+    # secondary_task_list.append(collect_events.s(repo_git))
+    # secondary_task_list.append(collect_issue_and_pr_comments.s(repo_git))
     
     secondary_task_group = group(secondary_task_list)
 
@@ -41,3 +43,19 @@ def start_task(owner: str, repo):
     )
 
     job.apply_async()
+
+def get_owner_repo(git_url):
+    """ Gets the owner and repository names of a repository from a git url
+
+    :param git_url: String, the git url of a repository
+    :return: Tuple, includes the owner and repository names in that order
+    """
+    split = git_url.split('/')
+
+    owner = split[-2]
+    repo = split[-1]
+
+    if '.git' == repo[-4:]:
+        repo = repo[:-4]
+
+    return owner, repo

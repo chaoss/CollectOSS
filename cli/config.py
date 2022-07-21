@@ -17,6 +17,9 @@ from augur_db.models import Config
 from tasks.task_session import TaskSession
 from augur_config import AugurConfig
 
+ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+
+
 logger = logging.getLogger(__name__)
 ENVVAR_PREFIX = "AUGUR_"
 
@@ -47,6 +50,8 @@ def init_config(github_api_key, facade_repo_directory, gitlab_api_key):
 
     if facade_repo_directory:
         default_config["Facade"]["repo_directory"] = facade_repo_directory
+
+    default_config["Logging"]["logs_directory"] = ROOT_AUGUR_DIRECTORY + "/logs/"
 
     config.load_config_from_dict(default_config)
 
