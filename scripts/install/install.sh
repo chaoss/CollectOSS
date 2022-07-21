@@ -18,6 +18,11 @@ else
   echo
 fi
 
+if [[ -z "${AUGUR_DB}" ]]; then
+  source scripts/install/db_env.sh
+fi
+echo $AUGUR_DB
+
 scripts/install/backend.sh $target 2>&1 | tee logs/backend-install.log
 echo "Done!"
 

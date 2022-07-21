@@ -50,51 +50,67 @@ def start(disable_collection):
 
         print("Repos available for collection")
         print_repos(repos)
+        while True:
+            try:
+                user_input = int(input("Please select a repo to collect: "))
 
-        if len(repos) > 1:
+                if user_input < 0 or user_input > len(repos)-1:
+                    print(f"Invalid input please input an integer between 0 and {len(repos)-1}")
+                    continue
 
-            exclude_input = str(input("Would you like to exclude any repos from collection [y/N]: ")).lower()
+                repo = repos[user_input]
+                break
 
-            if exclude_input == "y":
-                remove_repos(repos)
-                print("\n\nRepos after removing some")
-                print_repos(repos)
+            except (IndexError, ValueError):
+                print(f"Invalid input please input an integer between 0 and {len(repos)-1}")
 
-        if len(repos) > 1:
+        start_task.s(repo.repo_git).apply_async()
 
-            order_input = str(input("Would you like to specify an order the repos are collected [y/N]: ")).lower()
 
-            if order_input == "y":
-                repos = order_repos(repos)
-                print("\n\n Repo order after reordering")
-                print_repos(repos)
+        # if len(repos) > 1:
 
-        # add confirmation
+        #     exclude_input = str(input("Would you like to exclude any repos from collection [y/N]: ")).lower()
 
-        repo_task_list = [start_task.s(repo.repo_git) for repo in repos]
+        #     if exclude_input == "y":
+        #         remove_repos(repos)
+        #         print("\n\nRepos after removing some")
+        #         print_repos(repos)
 
-        repos_chain = chain(repo_task_list)
+        # if len(repos) > 1:
 
-        print(repos_chain)
+        #     order_input = str(input("Would you like to specify an order the repos are collected [y/N]: ")).lower()
 
-        repos_chain.apply_async()
+        #     if order_input == "y":
+        #         repos = order_repos(repos)
+        #         print("\n\n Repo order after reordering")
+        #         print_repos(repos)
 
-    # augur_app = Application()
-    # print("Augur application initialized")
+        # # add confirmation
 
-    # augur_gunicorn_app = AugurGunicornApp(augur_app.gunicorn_options, augur_app=augur_app)
+        # repo_task_list = [start_task.s(repo.repo_git) for repo in repos]
 
-    # print('Starting Gunicorn webserver...')
-    # print(f'Augur is running at: http://127.0.0.1:{augur_app.config.get_value("Server", "port")}')
-    # print('Gunicorn server logs & errors will be written to logs/gunicorn.log')
-    # print('Housekeeper update process logs will now take over.')
+        # repos_chain = chain(repo_task_list)
 
-    # gunicorn_arbiter = Arbiter(augur_gunicorn_app)
+        # print(repos_chain)
 
-    # atexit._clear()
-    # atexit.register(exit, gunicorn_arbiter)
+        # repos_chain.apply_async()
 
-    # gunicorn_arbiter.run()
+    augur_app = Application()
+    print("Augur application initialized")
+
+    augur_gunicorn_app = AugurGunicornApp(augur_app.gunicorn_options, augur_app=augur_app)
+
+    print('Starting Gunicorn webserver...')
+    print(f'Augur is running at: http://127.0.0.1:{augur_app.config.get_value("Server", "port")}')
+    print('Gunicorn server logs & errors will be written to logs/gunicorn.log')
+    print('Housekeeper update process logs will now take over.')
+
+    gunicorn_arbiter = Arbiter(augur_gunicorn_app)
+
+    atexit._clear()
+    atexit.register(exit, gunicorn_arbiter)
+
+    gunicorn_arbiter.run()
 
 
 

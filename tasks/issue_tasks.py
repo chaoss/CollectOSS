@@ -17,19 +17,6 @@ from augur_db.models import PullRequest, Message, PullRequestReview, PullRequest
 #So this file contains functionality for both prs and issues
 
 
-# import logging
-
-# logger = logging.getLogger()
-
-# # Initialize logging
-# formatter = "%(asctime)s: %(message)s"
-# logging.basicConfig(filename="augur_view.log", filemode='w', format=formatter, level=logging.INFO, datefmt="%H:%M:%S")
-
-# logging.debug("This is a debug message")
-# logging.info("This is an information message")
-# logging.warn("This is a warning message")
-# logging.error("This is an error message")
-
 @celery.task
 def collect_issues(repo_git: str) -> None:
 
@@ -41,7 +28,6 @@ def collect_issues(repo_git: str) -> None:
     owner, repo = get_owner_repo(repo_git)
 
     repo_id = session.query(Repo).filter(Repo.repo_git == repo_git).one().repo_id
-    print(repo_id)
 
     logger.info(f"Collecting issues for {owner}/{repo}")
 
@@ -681,37 +667,37 @@ def process_messages(messages, task_name):
     message_return_columns = ["msg_id", "platform_msg_id"]
     message_return_data = session.insert_data(message_dicts, Message, message_natural_keys, message_return_columns)
 
-    # pr_message_ref_dicts = []
-    # issue_message_ref_dicts = []
-    # for mapping_data in message_ref_mapping_data:
+    pr_message_ref_dicts = []
+    issue_message_ref_dicts = []
+    for mapping_data in message_ref_mapping_data:
 
-    #     value = mapping_data["platform_msg_id"]
-    #     key = "platform_msg_id"
+        value = mapping_data["platform_msg_id"]
+        key = "platform_msg_id"
 
-    #     issue_or_pr_message = find_dict_in_list_of_dicts(message_return_data, key, value)
+        issue_or_pr_message = find_dict_in_list_of_dicts(message_return_data, key, value)
 
-    #     if issue_or_pr_message:
+        if issue_or_pr_message:
 
-    #         msg_id = issue_or_pr_message["msg_id"]
-    #     else:
-    #         print("Count not find issue or pull request message to map to")
-    #         continue
+            msg_id = issue_or_pr_message["msg_id"]
+        else:
+            print("Count not find issue or pull request message to map to")
+            continue
 
-    #     message_ref_data = mapping_data["msg_ref_data"]
-    #     message_ref_data["msg_id"] = msg_id 
+        message_ref_data = mapping_data["msg_ref_data"]
+        message_ref_data["msg_id"] = msg_id 
 
-    #     if mapping_data["is_issue"] is True:
-    #         issue_message_ref_dicts.append(message_ref_data)
-    #     else:
-    #         pr_message_ref_dicts.append(message_ref_data)
+        if mapping_data["is_issue"] is True:
+            issue_message_ref_dicts.append(message_ref_data)
+        else:
+            pr_message_ref_dicts.append(message_ref_data)
 
-    # pr_message_ref_natural_keys = ["pull_request_id", "pr_message_ref_src_comment_id"]
-    # session.insert_data(pr_message_ref_dicts, PullRequestMessageRef, pr_message_ref_natural_keys)
+    pr_message_ref_natural_keys = ["pull_request_id", "pr_message_ref_src_comment_id"]
+    session.insert_data(pr_message_ref_dicts, PullRequestMessageRef, pr_message_ref_natural_keys)
 
-    # issue_message_ref_natural_keys = ["issue_id", "issue_msg_ref_src_comment_id"]
-    # session.insert_data(issue_message_ref_dicts, IssueMessageRef, issue_message_ref_natural_keys)
+    issue_message_ref_natural_keys = ["issue_id", "issue_msg_ref_src_comment_id"]
+    session.insert_data(issue_message_ref_dicts, IssueMessageRef, issue_message_ref_natural_keys)
 
-    # logger.info(f"{task_name}: Inserted {len(message_dicts)} messages. {len(issue_message_ref_dicts)} from issues and {len(pr_message_ref_dicts)} from prs")
+    logger.info(f"{task_name}: Inserted {len(message_dicts)} messages. {len(issue_message_ref_dicts)} from issues and {len(pr_message_ref_dicts)} from prs")
 
 
 
