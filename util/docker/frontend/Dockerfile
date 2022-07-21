@@ -12,6 +12,7 @@ FROM build-stage as core-ui
 COPY frontend/package.json . 
 COPY frontend/package-lock.json .
 RUN npm install
+RUN npx browserslist@latest --update-db
 RUN npm install @vue/cli
 COPY frontend/ .
 RUN npm run build
