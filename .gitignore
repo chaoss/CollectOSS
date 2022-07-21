@@ -6,6 +6,7 @@ pyenv.txt
 augur_export_env.sh
 .DS_Store
 *.config.json
+db.json
 !docker.config.json
 
 

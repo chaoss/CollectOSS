@@ -13,6 +13,7 @@ import click
 import sqlalchemy as s
 import pandas as pd
 import requests
+import json
 from sqlalchemy import exc
 
 from augur_db.engine import engine
@@ -284,13 +285,45 @@ def get_api_key():
         logger.error("No Augur API key found.")
 
 
-# @cli.command(
-#     "check-pgpass",
-#     short_help="Check the ~/.pgpass file for Augur's database credentials",
-# )
-# @pass_config
-# def check_pgpass(config):
-#     check_pgpass_credentials(config.get_raw_config())
+@cli.command(
+    "check-pgpass",
+    short_help="Check the ~/.pgpass file for Augur's database credentials",
+)
+def check_pgpass():
+    print("checking pg-pass")
+    if os.path.exists("db.json"):
+        with open("db.json", "r") as f:
+            config = json.load(f)
+            print(f"Config: {config}")
+            check_pgpass_credentials(config)
+    else:
+        db_string = os.getenv("AUGUR_DB")
+
+        db_string_array = db_string.split("@")
+
+        user_and_pass = db_string_array[0].split("/")[2].split(":")
+
+        user = user_and_pass[0]
+        password = user_and_pass[1]
+
+        host_port_db_name = db_string_array[1]
+
+        db_name = host_port_db_name.split("/")[1]
+
+        host_and_port = host_port_db_name.split("/")[0].split(":")
+
+        host = host_and_port[0]
+        port = host_and_port[1]
+
+        db_config = {
+            "user": user,
+            "password": password,
+            "host": host,
+            "port": port,
+            "database_name": database_name 
+        }
+
+        check_pgpass_credentials(db_config)
 
 
 @cli.command("init-database")
@@ -414,15 +447,15 @@ def check_pgpass_credentials(config):
         pgpass_file.seek(0)
 
         credentials_string = (
-            str(config["Database"]["host"])
+            str(config["host"])
             + ":"
-            + str(config["Database"]["port"])
+            + str(config["port"])
             + ":"
-            + str(config["Database"]["name"])
+            + str(config["database_name"])
             + ":"
-            + str(config["Database"]["user"])
+            + str(config["user"])
             + ":"
-            + str(config["Database"]["password"])
+            + str(config["password"])
         )
 
         if credentials_string.lower() not in [

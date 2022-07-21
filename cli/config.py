@@ -13,9 +13,9 @@ from pathlib import Path
 # from augur.cli import initialize_logging
 # from augur.logging import ROOT_AUGUR_DIRECTORY
 
-from augur_db.models import Config
-from tasks.task_session import TaskSession
-from augur_config import AugurConfig
+# from augur_db.models import Config
+# from tasks.task_session import TaskSession
+# from augur_config import AugurConfig
 
 ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
@@ -178,4 +178,25 @@ def clear_config():
     config.clear()
 
     print("Config cleared")
+
+@cli.command('db')
+@click.option('--user', required=True)
+@click.option('--password', required=True)
+@click.option('--host', required=True)
+@click.option('--port', required=True)
+@click.option('--database-name', required=True)
+def create_db_config(user, password, host, port, database_name):
+
+    db_config = {
+        "user": user,
+        "password": password,
+        "host": host,
+        "port": port,
+        "database_name": database_name 
+    }
+    print(db_config)
+    with open('db.json', 'w') as fp:
+        json.dump(db_config, fp)
+
+
 

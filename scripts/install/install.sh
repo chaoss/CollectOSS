@@ -18,10 +18,21 @@ else
   echo
 fi
 
-if [[ -z "${AUGUR_DB}" ]]; then
-  source scripts/install/db_env.sh
+# if there is no db.json or the AUGUR_DB environment variable is not set 
+#then create prompt the user for db credentials and make a db.json file
+FILE=db.json
+if [ -z "${AUGUR_DB}" ] && [ -f !"$FILE" ]
+then
+    echo "Enter the database credentials to your database. This will create db.json"
+    read -p "Database: " db_name
+    read -p "User: " db_user
+    read -s -p "Password: " password
+    echo
+    read -p "Host: " host
+    read -p "Port: " port
+
+    augur config-db init --user $db_user --password $password --host $host --port $port --database-name $db_name
 fi
-echo $AUGUR_DB
 
 scripts/install/backend.sh $target 2>&1 | tee logs/backend-install.log
 echo "Done!"
