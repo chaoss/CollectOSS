@@ -11,6 +11,7 @@ COPY augurface/package-lock.json .
 RUN npm install
 RUN npm install @vue/cli
 COPY augurface/ .
+RUN npx browserslist@latest --update-db
 RUN npm run build
 
 FROM nginx as production-stage
