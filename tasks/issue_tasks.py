@@ -9,7 +9,7 @@ import time
 from util.github_paginator import GithubPaginator, hit_api
 from tasks.task_session import GithubTaskSession
 
-from augur_db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestEvent, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, Issue, IssueEvent, IssueLabel, IssueAssignee, PullRequestMessageRef, IssueMessageRef, Contributor
+from augur_db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestEvent, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, Issue, IssueEvent, IssueLabel, IssueAssignee, PullRequestMessageRef, IssueMessageRef, Contributor, Repo
 
 # creates a class that is sub class of the sqlalchemy.orm.Session class that additional methods and fields added to it. 
 
@@ -17,31 +17,21 @@ from augur_db.models import PullRequest, Message, PullRequestReview, PullRequest
 #So this file contains functionality for both prs and issues
 
 
-# import logging
-
-# logger = logging.getLogger()
-
-# # Initialize logging
-# formatter = "%(asctime)s: %(message)s"
-# logging.basicConfig(filename="augur_view.log", filemode='w', format=formatter, level=logging.INFO, datefmt="%H:%M:%S")
-
-# logging.debug("This is a debug message")
-# logging.info("This is an information message")
-# logging.warn("This is a warning message")
-# logging.error("This is an error message")
-
 @celery.task
-def collect_issues(owner: str, repo: str) -> None:
+def collect_issues(repo_git: str) -> None:
 
     logger = logging.getLogger(collect_issues.__name__)
 
     # define GithubTaskSession to handle insertions, and store oauth keys 
     session = GithubTaskSession(logger)
 
+    owner, repo = get_owner_repo(repo_git)
+
+    repo_id = session.query(Repo).filter(Repo.repo_git == repo_git).one().repo_id
+
     logger.info(f"Collecting issues for {owner}/{repo}")
 
     url = f"https://api.github.com/repos/{owner}/{repo}/issues?state=all"
-
 
     # returns an iterable of all issues at this url (this essentially means you can treat the issues variable as a list of the issues)
     # Reference the code documenation for GithubPaginator for more details
@@ -57,11 +47,11 @@ def collect_issues(owner: str, repo: str) -> None:
 
         logger.info(f"Issues Page {page} of {num_pages}")
 
-        process_issues.s(page_data, f"Issues Page {page} Task").apply_async()
+        process_issues.s(page_data, f"Issues Page {page} Task", repo_id).apply_async()
         
 
 @celery.task
-def process_issues(issues, task_name) -> None:
+def process_issues(issues, task_name, repo_id) -> None:
 
     logger = logging.getLogger(process_issues.__name__)
 
@@ -69,7 +59,6 @@ def process_issues(issues, task_name) -> None:
     session = GithubTaskSession(logger)
 
     # get repo_id or have it passed
-    repo_id = 1
     tool_source = "Issue Task"
     tool_version = "2.0"
     platform_id = 25150
@@ -188,7 +177,9 @@ def process_issue_contributors(issue, platform_id, tool_source, tool_version, da
 # TODO: Rename pull_request_reviewers table to pull_request_requested_reviewers
 # TODO: Fix column names in pull request labels table
 @celery.task
-def collect_pull_requests(owner: str, repo: str) -> None:
+def collect_pull_requests(repo_git: str) -> None:
+
+    owner, repo = get_owner_repo(repo_git)
 
     logger = logging.getLogger(collect_pull_requests.__name__)
 
@@ -427,7 +418,9 @@ def process_pull_request_contributors(pr, platform_id, tool_source, tool_version
 
 # TODO: Why do I need self?
 @celery.task
-def collect_events(self, owner: str, repo: str):
+def collect_events(self, repo_git: str):
+
+    owner, repo = get_owner_repo(repo_git)
 
     logger = logging.getLogger(collect_events.__name__)
 
@@ -551,7 +544,9 @@ def process_github_event_contributors(event, platform_id, tool_source, tool_vers
     return event, event_cntrb
 
 @celery.task
-def collect_issue_and_pr_comments(self, owner: str, repo: str) -> None:
+def collect_issue_and_pr_comments(self, repo_git: str) -> None:
+
+    owner, repo = get_owner_repo(repo_git)
 
     # define logger for task
     logger = logging.getLogger(collect_issue_and_pr_comments.__name__)
@@ -672,37 +667,37 @@ def process_messages(messages, task_name):
     message_return_columns = ["msg_id", "platform_msg_id"]
     message_return_data = session.insert_data(message_dicts, Message, message_natural_keys, message_return_columns)
 
-    # pr_message_ref_dicts = []
-    # issue_message_ref_dicts = []
-    # for mapping_data in message_ref_mapping_data:
+    pr_message_ref_dicts = []
+    issue_message_ref_dicts = []
+    for mapping_data in message_ref_mapping_data:
 
-    #     value = mapping_data["platform_msg_id"]
-    #     key = "platform_msg_id"
+        value = mapping_data["platform_msg_id"]
+        key = "platform_msg_id"
 
-    #     issue_or_pr_message = find_dict_in_list_of_dicts(message_return_data, key, value)
+        issue_or_pr_message = find_dict_in_list_of_dicts(message_return_data, key, value)
 
-    #     if issue_or_pr_message:
+        if issue_or_pr_message:
 
-    #         msg_id = issue_or_pr_message["msg_id"]
-    #     else:
-    #         print("Count not find issue or pull request message to map to")
-    #         continue
+            msg_id = issue_or_pr_message["msg_id"]
+        else:
+            print("Count not find issue or pull request message to map to")
+            continue
 
-    #     message_ref_data = mapping_data["msg_ref_data"]
-    #     message_ref_data["msg_id"] = msg_id 
+        message_ref_data = mapping_data["msg_ref_data"]
+        message_ref_data["msg_id"] = msg_id 
 
-    #     if mapping_data["is_issue"] is True:
-    #         issue_message_ref_dicts.append(message_ref_data)
-    #     else:
-    #         pr_message_ref_dicts.append(message_ref_data)
+        if mapping_data["is_issue"] is True:
+            issue_message_ref_dicts.append(message_ref_data)
+        else:
+            pr_message_ref_dicts.append(message_ref_data)
 
-    # pr_message_ref_natural_keys = ["pull_request_id", "pr_message_ref_src_comment_id"]
-    # session.insert_data(pr_message_ref_dicts, PullRequestMessageRef, pr_message_ref_natural_keys)
+    pr_message_ref_natural_keys = ["pull_request_id", "pr_message_ref_src_comment_id"]
+    session.insert_data(pr_message_ref_dicts, PullRequestMessageRef, pr_message_ref_natural_keys)
 
-    # issue_message_ref_natural_keys = ["issue_id", "issue_msg_ref_src_comment_id"]
-    # session.insert_data(issue_message_ref_dicts, IssueMessageRef, issue_message_ref_natural_keys)
+    issue_message_ref_natural_keys = ["issue_id", "issue_msg_ref_src_comment_id"]
+    session.insert_data(issue_message_ref_dicts, IssueMessageRef, issue_message_ref_natural_keys)
 
-    # logger.info(f"{task_name}: Inserted {len(message_dicts)} messages. {len(issue_message_ref_dicts)} from issues and {len(pr_message_ref_dicts)} from prs")
+    logger.info(f"{task_name}: Inserted {len(message_dicts)} messages. {len(issue_message_ref_dicts)} from issues and {len(pr_message_ref_dicts)} from prs")
 
 
 
@@ -720,7 +715,9 @@ def process_github_comment_contributors(message, platform_id, tool_source, tool_
 
         
 @celery.task
-def pull_request_review_comments(self, owner: str, repo: str) -> None:
+def pull_request_review_comments(self, repo_git: str) -> None:
+
+    owner, repo = get_owner_repo(repo_git)
 
     logger = logging.getLogger(pull_request_review_comments.__name__)
     
@@ -810,7 +807,9 @@ def pull_request_review_comments(self, owner: str, repo: str) -> None:
 
 # do this task after others because we need to add the multi threading like we did it before
 @celery.task
-def pull_request_reviews(self, owner: str, repo: str, pr_number_list: [int]) -> None:
+def pull_request_reviews(self, repo_git: str, pr_number_list: [int]) -> None:
+
+    owner, repo = get_owner_repo(repo_git)
 
     pr_number_list = sorted(pr_number_list, reverse=False) 
 
@@ -1084,3 +1083,18 @@ def retrieve_dict_data(url: str, session):
 
 
 
+def get_owner_repo(git_url):
+    """ Gets the owner and repository names of a repository from a git url
+
+    :param git_url: String, the git url of a repository
+    :return: Tuple, includes the owner and repository names in that order
+    """
+    split = git_url.split('/')
+
+    owner = split[-2]
+    repo = split[-1]
+
+    if '.git' == repo[-4:]:
+        repo = repo[:-4]
+
+    return owner, repo
