@@ -100,6 +100,12 @@ class TaskLogConfig():
                 #Absolute path to log file
                 file = str(task_folder) + "/" + str(task)
 
+                stream = logging.StreamHandler()
+
+                stream.setLevel(logLevel)
+
+                lg.addHandler(stream)
+
                 #Create file handlers for each relevant log level and make them colorful
                 lg.addHandler(genHandler((file + ".info"), SIMPLE_FORMAT_STRING, logging.INFO)) 
                 coloredlogs.install(level=logging.INFO,logger=lg,fmt=SIMPLE_FORMAT_STRING)
