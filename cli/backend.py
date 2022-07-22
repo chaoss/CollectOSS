@@ -15,17 +15,19 @@ import subprocess
 
 
 from tasks.start_tasks import start_task
+from tasks.issue_tasks import process_contributors
 from api.application import Application
 from api.gunicorn import AugurGunicornApp
 from tasks.redis_init import redis_connection 
 from augur_db.models import Repo
 from tasks.task_session import TaskSession
+from augur_logging import AugurLogger
 # from augur.server import Server
 from celery import chain, signature
 
 
 
-logger = logging.getLogger("augur")
+logger = AugurLogger("backend", base_log_dir="/Users/andrew_brain/Augur/augur/logs/").get_logger()
 
 @click.group('server', short_help='Commands for controlling the backend API server & data collection workers')
 def cli():
@@ -48,23 +50,23 @@ def start(disable_collection):
         repos_to_collect = []
         repo_task_list = []
 
-        print("Repos available for collection")
+        logger.info("Repos available for collection")
         print_repos(repos)
-        while True:
-            try:
-                user_input = int(input("Please select a repo to collect: "))
+        # while True:
+        #     try:
+        #         user_input = int(input("Please select a repo to collect: "))
 
-                if user_input < 0 or user_input > len(repos)-1:
-                    print(f"Invalid input please input an integer between 0 and {len(repos)-1}")
-                    continue
+        #         if user_input < 0 or user_input > len(repos)-1:
+        #             print(f"Invalid input please input an integer between 0 and {len(repos)-1}")
+        #             continue
 
-                repo = repos[user_input]
-                break
+        #         repo = repos[user_input]
+        #         break
 
-            except (IndexError, ValueError):
-                print(f"Invalid input please input an integer between 0 and {len(repos)-1}")
+        #     except (IndexError, ValueError):
+        #         print(f"Invalid input please input an integer between 0 and {len(repos)-1}")
 
-        start_task.s(repo.repo_git).apply_async()
+        # start_task.s(repo.repo_git).apply_async()
 
 
         # if len(repos) > 1:
@@ -85,25 +87,25 @@ def start(disable_collection):
         #         print("\n\n Repo order after reordering")
         #         print_repos(repos)
 
-        # # add confirmation
+        # add confirmation
 
-        # repo_task_list = [start_task.s(repo.repo_git) for repo in repos]
+        repo_task_list = [start_task.si(repo.repo_git) for repo in repos] + [process_contributors.si(),]
 
-        # repos_chain = chain(repo_task_list)
+        repos_chain = chain(repo_task_list)
 
-        # print(repos_chain)
+        logger.info(repos_chain)
 
-        # repos_chain.apply_async()
+        repos_chain.apply_async()
 
     augur_app = Application()
-    print("Augur application initialized")
+    logger.info("Augur application initialized")
 
     augur_gunicorn_app = AugurGunicornApp(augur_app.gunicorn_options, augur_app=augur_app)
 
-    print('Starting Gunicorn webserver...')
-    print(f'Augur is running at: http://127.0.0.1:{augur_app.config.get_value("Server", "port")}')
-    print('Gunicorn server logs & errors will be written to logs/gunicorn.log')
-    print('Housekeeper update process logs will now take over.')
+    logger.info('Starting Gunicorn webserver...')
+    logger.info(f'Augur is running at: http://127.0.0.1:{augur_app.config.get_value("Server", "port")}')
+    logger.info('Gunicorn server logs & errors will be written to logs/gunicorn.log')
+    logger.info('Housekeeper update process logs will now take over.')
 
     gunicorn_arbiter = Arbiter(augur_gunicorn_app)
 

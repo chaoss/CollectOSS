@@ -45,9 +45,9 @@ def collect_issues(repo_git: str) -> None:
     
     for page_data, page in issues.iter_pages():
 
-        logger.info(f"Issues Page {page} of {num_pages}")
+        logger.info(f"{repo.capitalize()} Issues Page {page} of {num_pages}")
 
-        process_issues.s(page_data, f"Issues Page {page} Task", repo_id).apply_async()
+        process_issues.s(page_data, f"{repo.capitalize()} Issues Page {page} Task", repo_id).apply_async()
         
 
 @celery.task
@@ -416,9 +416,8 @@ def process_pull_request_contributors(pr, platform_id, tool_source, tool_version
     return pr, contributors
 
 
-# TODO: Why do I need self?
 @celery.task
-def collect_events(self, repo_git: str):
+def collect_events(repo_git: str):
 
     owner, repo = get_owner_repo(repo_git)
 
@@ -544,7 +543,7 @@ def process_github_event_contributors(event, platform_id, tool_source, tool_vers
     return event, event_cntrb
 
 @celery.task
-def collect_issue_and_pr_comments(self, repo_git: str) -> None:
+def collect_issue_and_pr_comments(repo_git: str) -> None:
 
     owner, repo = get_owner_repo(repo_git)
 
@@ -589,6 +588,13 @@ def process_messages(messages, task_name):
     message_dicts = []
     message_ref_mapping_data = []
     contributors = []
+
+    if messages is None:
+        logger.debug(f"{task_name}: Messages was Nonetype...exiting")
+        return
+
+    if len(messages) == 0:
+        logger.info(f"{task_name}: No messages to process")
 
     for index, message in enumerate(messages):
 
@@ -715,7 +721,7 @@ def process_github_comment_contributors(message, platform_id, tool_source, tool_
 
         
 @celery.task
-def pull_request_review_comments(self, repo_git: str) -> None:
+def pull_request_review_comments(repo_git: str) -> None:
 
     owner, repo = get_owner_repo(repo_git)
 
@@ -807,7 +813,7 @@ def pull_request_review_comments(self, repo_git: str) -> None:
 
 # do this task after others because we need to add the multi threading like we did it before
 @celery.task
-def pull_request_reviews(self, repo_git: str, pr_number_list: [int]) -> None:
+def pull_request_reviews(repo_git: str, pr_number_list: [int]) -> None:
 
     owner, repo = get_owner_repo(repo_git)
 
@@ -880,7 +886,7 @@ the issue is that most of the time we filter out needed
 #     # process_contributors(contributors, table=IssueAssignees, logger=logger, pk_name="issue_assignee_id")
 
 @celery.task
-def process_contributors(self):
+def process_contributors():
 
     logger = logging.getLogger(process_contributors.__name__)
     session = GithubTaskSession(logger)

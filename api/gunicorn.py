@@ -4,8 +4,10 @@ import gunicorn.app.base
 from gunicorn.arbiter import Arbiter
 
 from api.server import Server
+from augur_logging import AugurLogger
 
-logger = logging.getLogger(__name__)
+
+logger = AugurLogger("gunicorn", base_log_dir="/Users/andrew_brain/Augur/augur/logs/").get_logger()
 
 class AugurGunicornApp(gunicorn.app.base.BaseApplication):
     """
@@ -14,7 +16,6 @@ class AugurGunicornApp(gunicorn.app.base.BaseApplication):
 
     def __init__(self, options={}, augur_app=None):
 
-        print(f"Augur app passed to gunicorn: {augur_app}")
         self.options = options
         self.augur_app = augur_app
         self.server = None

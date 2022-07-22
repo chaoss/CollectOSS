@@ -13,9 +13,9 @@ from pathlib import Path
 # from augur.cli import initialize_logging
 # from augur.logging import ROOT_AUGUR_DIRECTORY
 
-# from augur_db.models import Config
-# from tasks.task_session import TaskSession
-# from augur_config import AugurConfig
+from augur_db.models import Config
+from tasks.task_session import TaskSession
+from augur_config import AugurConfig
 
 ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 

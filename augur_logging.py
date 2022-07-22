@@ -22,7 +22,7 @@ import tasks.start_tasks
 import os
 ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
-logger = logging.getLogger(__name__)
+# logger = logging.getLogger(__name__)
 
 
 SIMPLE_FORMAT_STRING = "[%(process)d] %(name)s [%(levelname)s] %(message)s"
@@ -132,24 +132,29 @@ class AugurLogger():
 
         self.logger_name = logger_name
 
-        lg = logging.getLogger(self.logger_name)
+        self.lg = logging.getLogger(self.logger_name)
 
         #Don't bother if logs are disabled.
         if self.disable_logs:
-            lg.disabled = True
+            self.lg.disabled = True
             return
 
         file = str(self.base_log_dir) + "/" + str(self.logger_name)
 
-        lg.addHandler(genHandler((file + ".info"), SIMPLE_FORMAT_STRING, logging.INFO))
-        coloredlogs.install(level=logging.INFO,logger=lg,fmt=SIMPLE_FORMAT_STRING)
+        self.lg.addHandler(genHandler((file + ".info"), SIMPLE_FORMAT_STRING, logging.INFO))
+        coloredlogs.install(level=logging.INFO,logger=self.lg,fmt=SIMPLE_FORMAT_STRING)
 
-        lg.addHandler(genHandler((file + ".err"), ERROR_FORMAT_STRING, logging.ERROR))
-        coloredlogs.install(level=logging.ERROR,logger=lg,fmt=ERROR_FORMAT_STRING)
+        self.lg.addHandler(genHandler((file + ".err"), ERROR_FORMAT_STRING, logging.ERROR))
+        coloredlogs.install(level=logging.ERROR,logger=self.lg,fmt=ERROR_FORMAT_STRING)
 
-        lg.addHandler(genHandler((file + ".debug"), VERBOSE_FORMAT_STRING, logging.DEBUG))
-        coloredlogs.install(level=logging.DEBUG,logger=lg,fmt=VERBOSE_FORMAT_STRING)
+        self.lg.addHandler(genHandler((file + ".debug"), VERBOSE_FORMAT_STRING, logging.DEBUG))
+        coloredlogs.install(level=logging.DEBUG,logger=self.lg,fmt=VERBOSE_FORMAT_STRING)
+
+        self.lg.propogate = False
     
     def __str__(self):
         return self.logger_name
+
+    def get_logger(self):
+        return self.lg
 

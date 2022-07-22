@@ -15,13 +15,14 @@ import logging
 from flask import Flask, request, Response, redirect
 from flask_cors import CORS
 import pandas as pd
+from augur_logging import AugurLogger
+
 
 from api.routes import create_routes
 
 AUGUR_API_VERSION = 'api/unstable'
 
-logger = logging.getLogger(__name__)
-
+logger = AugurLogger("server", base_log_dir="/Users/andrew_brain/Augur/augur/logs/").get_logger()
 
 class Server(object):
     """

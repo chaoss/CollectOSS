@@ -19,10 +19,12 @@ from api.metrics import Metrics
 from augur_config import AugurConfig
 from tasks.task_session import TaskSession
 from augur_db.engine import engine
+from augur_logging import AugurLogger
+
 
 # from augur.logging import AugurLogging
 
-logger = logging.getLogger(__name__)
+logger = AugurLogger("application", base_log_dir="/Users/andrew_brain/Augur/augur/logs/").get_logger()
 
 class Application():
     """Initalizes all classes from Augur using a config file or environment variables"""
