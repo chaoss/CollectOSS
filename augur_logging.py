@@ -34,7 +34,8 @@ ERROR_FORMAT_STRING = "%(asctime)s [PID: %(process)d] %(name)s [%(funcName)s() i
 #Deal with creating the handler in one line with proper handler and log level
 def genHandler(file,fmt,level):
     handler = FileHandler(filename=file,mode='a')
-    #handler.setFormatter(fmt=fmt)
+    formatter = logging.Formatter(fmt=fmt)
+    handler.setFormatter(fmt=formatter)
     handler.setLevel(level)
 
     return handler
@@ -42,7 +43,7 @@ def genHandler(file,fmt,level):
 #TODO dynamically define loggers for every task names.
 class TaskLogConfig():
 
-    def __init__(self,disable_logs=False,reset_logfiles=True,base_log_dir=ROOT_AUGUR_DIRECTORY + "/logs/"):
+    def __init__(self,disable_logs=False,reset_logfiles=True,base_log_dir=ROOT_AUGUR_DIRECTORY + "/logs/",logLevel=logging.INFO):
         if reset_logfiles is True:
             try:
                 shutil.rmtree(base_log_dir)
@@ -59,7 +60,7 @@ class TaskLogConfig():
 
         self.logger_names = []
 
-        self.__initLoggers(task_files,logging.INFO)
+        self.__initLoggers(task_files,logLevel)
     
     def __initLoggers(self,task_modules,logLevel):
         
@@ -106,8 +107,9 @@ class TaskLogConfig():
                 lg.addHandler(genHandler((file + ".err"), ERROR_FORMAT_STRING, logging.ERROR)) 
                 coloredlogs.install(level=logging.ERROR,logger=lg,fmt=ERROR_FORMAT_STRING)
 
-                lg.addHandler(genHandler((file + ".debug"), VERBOSE_FORMAT_STRING, logging.DEBUG)) 
-                coloredlogs.install(level=logging.DEBUG,logger=lg,fmt=VERBOSE_FORMAT_STRING)
+                if logLevel == logging.DEBUG:
+                    lg.addHandler(genHandler((file + ".debug"), VERBOSE_FORMAT_STRING, logging.DEBUG)) 
+                    coloredlogs.install(level=logging.DEBUG,logger=lg,fmt=VERBOSE_FORMAT_STRING)
                 
                 lg.propagate = False
 
@@ -117,7 +119,7 @@ class TaskLogConfig():
 
 
 class AugurLogger():
-    def __init__(self, logger_name, disable_logs=False,reset_logfiles=True,base_log_dir="/home/isaac/logs"):
+    def __init__(self, logger_name, disable_logs=False,reset_logfiles=True,base_log_dir="/home/isaac/logs",logLevel=logging.INFO):
         if reset_logfiles is True:
             try:
                 shutil.rmtree(base_log_dir)
@@ -139,6 +141,8 @@ class AugurLogger():
             lg.disabled = True
             return
 
+        lg.setLevel(logLevel)
+
         file = str(self.base_log_dir) + "/" + str(self.logger_name)
 
         lg.addHandler(genHandler((file + ".info"), SIMPLE_FORMAT_STRING, logging.INFO))
@@ -149,6 +153,8 @@ class AugurLogger():
 
         lg.addHandler(genHandler((file + ".debug"), VERBOSE_FORMAT_STRING, logging.DEBUG))
         coloredlogs.install(level=logging.DEBUG,logger=lg,fmt=VERBOSE_FORMAT_STRING)
+
+        lg.propagate = False
     
     def __str__(self):
         return self.logger_name
