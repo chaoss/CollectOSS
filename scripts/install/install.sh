@@ -18,32 +18,46 @@ else
   echo
 fi
 
-if [[ -z "${AUGUR_DB}" ]]; then
-  source scripts/install/db_env.sh
+function create_db_config() {
+    echo "Enter the database credentials to your database. This will create db.json"
+    read -p "User: " db_user
+    read -s -p "Password: " password
+    echo
+    read -p "Host: " host
+    read -p "Port: " port
+    read -p "Database: " db_name
+
+    augur config-db init --user $db_user --password $password --host $host --port $port --database-name $db_name
+}
+
+
+# if there is no db.json or the AUGUR_DB environment variable is not set 
+#then create prompt the user for db credentials and make a db.json file
+
+if [[ -z "${AUGUR_DB}" ]]
+then
+
+    FILE=db.json
+    if [[ -f "$FILE" ]]
+    then
+        echo "You db.json file contents"
+        cat $FILE
+        echo
+        echo
+        read -r -p "You already have a db.json (shown above). Would you like to override it? [y/N] " response
+
+        case "$response" in [yY][eE][sS]|[yY])
+            create_db_config
+        esac 
+    else 
+        create_db_config
+    fi
 fi
-echo $AUGUR_DB
 
 scripts/install/backend.sh $target 2>&1 | tee logs/backend-install.log
 echo "Done!"
 
-# scripts/install/workers.sh $target 2>&1 | tee logs/workers-install.log
-# echo "Done!"
-
-
-function create_config() {
-    echo "Loading default config"
-    read -r -p "Would you like to generate the default config? [Y/n] " response
-      case "$response" in
-          [yY][eE][sS]|[yY])
-              echo "Generating default config..."
-              augur config load --file "`dirname $0`"/../../default.config.json
-              echo "Default config loaded"
-              ;;
-          *)
-              ;;
-      esac
-}
-
+echo
 echo "Creating database schema"
 augur db create-schema
 echo "Schema successfully created!"

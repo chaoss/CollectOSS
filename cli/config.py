@@ -179,3 +179,24 @@ def clear_config():
 
     print("Config cleared")
 
+@cli.command('db')
+@click.option('--user', required=True)
+@click.option('--password', required=True)
+@click.option('--host', required=True)
+@click.option('--port', required=True)
+@click.option('--database-name', required=True)
+def create_db_config(user, password, host, port, database_name):
+
+    db_config = {
+        "user": user,
+        "password": password,
+        "host": host,
+        "port": port,
+        "database_name": database_name 
+    }
+    print(db_config)
+    with open('db.json', 'w') as fp:
+        json.dump(db_config, fp)
+
+
+
