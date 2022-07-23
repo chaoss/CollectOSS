@@ -15,9 +15,9 @@ import coloredlogs
 from copy import deepcopy
 import typing
 from celery.local import PromiseProxy
-import augur.tasks.git.facade_tasks as facade_tasks
-import augur.tasks.github.issue_tasks as issue_tasks
-import augur.tasks.start_tasks as start_tasks
+# import augur.tasks.git.facade_tasks as facade_tasks
+# import augur.tasks.github.issue_tasks as issue_tasks
+# import augur.tasks.start_tasks as start_tasks
 
 import os
 ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))

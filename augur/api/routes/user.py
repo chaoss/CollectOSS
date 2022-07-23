@@ -20,13 +20,13 @@ def generate_upgrade_request():
 
     return response, 426
 
-def create_routes(server):
+def create_routes(app):
 
     @server.app.errorhandler(405)
     def unsupported_method(error):
         return jsonify({"status": "Unsupported method"}), 405
 
-    @server.app.route(f"/{server.api_version}/user/validate", methods=['POST'])
+    @app.route(f"/{server.api_version}/user/validate", methods=['POST'])
     def validate_user():
         if not request.is_secure:
             return generate_upgrade_request()
@@ -54,7 +54,7 @@ def create_routes(server):
         - return jsonify({"status": "Validated"})
         """
 
-    @server.app.route(f"/{server.api_version}/user/create", methods=['POST'])
+    @app.route(f"/{server.api_version}/user/create", methods=['POST'])
     def create_user():
         if not request.is_secure:
             return generate_upgrade_request()

@@ -16,18 +16,21 @@ import subprocess
 
 from augur.tasks.start_tasks import start_task
 from augur.tasks.github.issue_tasks import process_contributors
-from augur.api.application import Application
-from augur.api.gunicorn import AugurGunicornApp
+# from augur.api.application import Application
+# from augur.api.gunicorn import AugurGunicornApp
 from augur.tasks.init.redis_connection import redis_connection 
 from augur.application.db.models import Repo
 from augur.tasks.util.task_session import TaskSession
 from augur.application.logs import AugurLogger
+from augur.application.config import AugurConfig
 # from augur.server import Server
 from celery import chain, signature
 
 
 
 logger = AugurLogger("backend", base_log_dir="/Users/andrew_brain/Augur/augur/logs/").get_logger()
+session = TaskSession(logger)
+config = AugurConfig(session)
 
 @click.group('server', short_help='Commands for controlling the backend API server & data collection workers')
 def cli():
@@ -40,18 +43,16 @@ def start(disable_collection):
     Start Augur's backend server
     """
 
-    logger.info("Starting workers")
-    if not disable_collection:
+    # logger.info("Starting workers")
+    # if not disable_collection:
 
-        session = TaskSession(logger)
+    #     repos = session.query(Repo).all()
 
-        repos = session.query(Repo).all()
+    #     repos_to_collect = []
+    #     repo_task_list = []
 
-        repos_to_collect = []
-        repo_task_list = []
-
-        logger.info("Repos available for collection")
-        print_repos(repos)
+    #     logger.info("Repos available for collection")
+    #     print_repos(repos)
         # while True:
         #     try:
         #         user_input = int(input("Please select a repo to collect: "))
@@ -88,30 +89,45 @@ def start(disable_collection):
         #         print_repos(repos)
 
 
-        repo_task_list = [start_task.si(repo.repo_git) for repo in repos] + [process_contributors.si(),]
+        # repo_task_list = [start_task.si(repo.repo_git) for repo in repos] + [process_contributors.si(),]
 
-        repos_chain = chain(repo_task_list)
+        # repos_chain = chain(repo_task_list)
 
-        logger.info(repos_chain)
+        # logger.info(repos_chain)
 
-        repos_chain.apply_async()
+        # repos_chain.apply_async()
 
-    augur_app = Application()
-    logger.info("Augur application initialized")
+    # augur_app = Application()
 
-    augur_gunicorn_app = AugurGunicornApp(augur_app.gunicorn_options, augur_app=augur_app)
+    # augur_gunicorn_app = AugurGunicornApp(augur_app.gunicorn_options, augur_app=augur_app)
 
-    logger.info('Starting Gunicorn webserver...')
-    logger.info(f'Augur is running at: http://127.0.0.1:{augur_app.config.get_value("Server", "port")}')
-    logger.info('Gunicorn server logs & errors will be written to logs/gunicorn.log')
-    logger.info('Housekeeper update process logs will now take over.')
+    # logger.info('Starting Gunicorn webserver...')
+    # logger.info(f'Augur is running at: http://127.0.0.1:{augur_app.config.get_value("Server", "port")}')
+    # logger.info('Gunicorn server logs & errors will be written to logs/gunicorn.log')
+    # logger.info('Housekeeper update process logs will now take over.')
 
-    gunicorn_arbiter = Arbiter(augur_gunicorn_app)
+    # gunicorn_arbiter = Arbiter(augur_gunicorn_app)
 
-    atexit._clear()
-    atexit.register(exit, gunicorn_arbiter)
+    gunicorn_location = "/Users/andrew_brain/Augur/augur/augur/api/gunicorn_conf.py"
+    bind = '%s:%s' % (config.get_value("Server", "host"), config.get_value("Server", "port"))
+    print(f"Binding gunicorn to {bind}")
+    print(f"gunicorn location: {str(gunicorn_location)}")
 
-    gunicorn_arbiter.run()
+    server = subprocess.Popen(["gunicorn", "-c", gunicorn_location, "-b", bind, "server:app"])
+
+    print(f"Server process: {server}")
+    print(f"Server args: {server.args}")
+
+    try:
+        server.wait()
+    except KeyboardInterrupt:
+        # Shutdown gracefully on interrupt
+        server.terminate()
+
+    # atexit._clear()
+    # atexit.register(exit, gunicorn_arbiter)
+
+    # gunicorn_arbiter.run()
 
 
 

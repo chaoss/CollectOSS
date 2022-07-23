@@ -12,9 +12,9 @@ from boto3.dynamodb.conditions import Key, Attr
 import os
 import requests
 
-def create_routes(server):
+def create_routes(app):
 
-    @server.app.route('/{}/metadata/repo_info'.format(server.api_version), methods=["GET"])
+    @app.route('/{}/metadata/repo_info'.format(server.api_version), methods=["GET"])
     def get_repo_info():
         repo_info_sql = s.sql.text("""
             SELECT
@@ -53,7 +53,7 @@ def create_routes(server):
                     status=200,
                     mimetype="application/json")
 
-    @server.app.route('/{}/metadata/contributions_count'.format(server.api_version), methods=["GET"])
+    @app.route('/{}/metadata/contributions_count'.format(server.api_version), methods=["GET"])
     def contributions_count():
         repo_info_sql = s.sql.text("""
             select repo_git, count(*) as contributions from contributor_repo
@@ -67,7 +67,7 @@ def create_routes(server):
                     status=200,
                     mimetype="application/json")
 
-    @server.app.route('/{}/metadata/contributors_count'.format(server.api_version), methods=["GET"])
+    @app.route('/{}/metadata/contributors_count'.format(server.api_version), methods=["GET"])
     def contributors_count():
         repo_info_sql = s.sql.text("""
             select repo_git, count(distinct(cntrb_id)) as contributors from contributor_repo

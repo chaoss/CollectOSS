@@ -14,9 +14,9 @@ import json
 
 logger = logging.getLogger(__name__)
 
-def create_routes(server):
+def create_routes(app):
 
-        @server.app.route('/{}/batch'.format(server.api_version), methods=['GET', 'POST'])
+        @app.route('/{}/batch'.format(server.api_version), methods=['GET', 'POST'])
         def batch():
             """
             Execute multiple requests, submitted as a batch.
@@ -101,7 +101,7 @@ def create_routes(server):
         @apiDescription Returns metadata of batch requests
         POST JSON of API requests metadata
         """
-        @server.app.route('/{}/batch/metadata'.format(server.api_version), methods=['GET', 'POST'])
+        @app.route('/{}/batch/metadata'.format(server.api_version), methods=['GET', 'POST'])
         def batch_metadata():
             """
             Returns endpoint metadata in batch format

@@ -62,9 +62,9 @@ def send_task(worker_proxy):
         worker_start(worker_id.split('.')[len(worker_id.split('.')) - 2])
 
 
-def create_routes(server):
+def create_routes(app):
 
-    @server.app.route('/{}/task'.format(server.api_version), methods=['POST'])
+    @app.route('/{}/task'.format(server.api_version), methods=['POST'])
     def task():
         """ AUGWOP route that is hit when data needs to be added to the database
         Retrieves a json consisting of task specifications that the broker will use to assign a worker
@@ -122,7 +122,7 @@ def create_routes(server):
                         status=200,
                         mimetype="application/json")
 
-    @server.app.route('/{}/workers'.format(server.api_version), methods=['POST'])
+    @app.route('/{}/workers'.format(server.api_version), methods=['POST'])
     def worker():
         """ AUGWOP route responsible for interpreting HELLO messages
             and telling the broker to add this worker to the set it maintains
@@ -158,7 +158,7 @@ def create_routes(server):
                         status=200,
                         mimetype="application/json")
 
-    @server.app.route('/{}/completed_task'.format(server.api_version), methods=['POST'])
+    @app.route('/{}/completed_task'.format(server.api_version), methods=['POST'])
     def sync_queue():
         task = request.json
         worker = task['worker_id']
@@ -179,7 +179,7 @@ def create_routes(server):
                         status=200,
                         mimetype="application/json")
 
-    @server.app.route('/{}/workers/status'.format(server.api_version), methods=['GET'])
+    @app.route('/{}/workers/status'.format(server.api_version), methods=['GET'])
     def get_status():
         all_workers_status = []
         for worker in server.broker.items():
@@ -199,7 +199,7 @@ def create_routes(server):
                         status=200,
                         mimetype="application/json")
 
-    @server.app.route('/{}/workers/remove'.format(server.api_version), methods=['POST'])
+    @app.route('/{}/workers/remove'.format(server.api_version), methods=['POST'])
     def remove_worker():
         worker = request.json
         logger.info("Recieved a message to disconnect worker: {}\n".format(worker))
@@ -208,7 +208,7 @@ def create_routes(server):
                         status=200,
                         mimetype="application/json")
 
-    @server.app.route('/{}/task_error'.format(server.api_version), methods=['POST'])
+    @app.route('/{}/task_error'.format(server.api_version), methods=['POST'])
     def task_error():
         task = request.json
         worker_id = task['worker_id']

@@ -4,9 +4,9 @@ import pandas as pd
 import json
 from flask import Response
 
-def create_routes(server):
+def create_routes(app):
 
-    @server.app.route('/{}/collection_status/commits'.format(server.api_version))
+    @app.route('/{}/collection_status/commits'.format(server.api_version))
     def commit_collection_status(): #TODO: make this name automatic - wrapper?
         commit_collection_sql = s.sql.text("""
             SELECT
@@ -37,7 +37,7 @@ def create_routes(server):
                         status=200,
                         mimetype="application/json")
 
-    @server.app.route('/{}/collection_status/issues'.format(server.api_version))
+    @app.route('/{}/collection_status/issues'.format(server.api_version))
     def issue_collection_status(): #TODO: make this name automatic - wrapper?
         issue_collection_sql = s.sql.text("""
             SELECT
@@ -98,7 +98,7 @@ def create_routes(server):
                         status=200,
                         mimetype="application/json")
 
-    @server.app.route('/{}/collection_status/pull_requests'.format(server.api_version))
+    @app.route('/{}/collection_status/pull_requests'.format(server.api_version))
     def pull_request_collection_status(): #TODO: make this name automatic - wrapper?
         pull_request_collection_sql = s.sql.text("""
             SELECT

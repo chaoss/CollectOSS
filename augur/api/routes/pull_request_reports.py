@@ -24,7 +24,7 @@ from bokeh.transform import dodge, factor_cmap, transform
 warnings.filterwarnings('ignore')
 
 
-def create_routes(server):
+def create_routes(app):
     def pull_request_data_collection(repo_id, start_date, end_date):
 
         pr_query = salc.sql.text(f"""
@@ -456,7 +456,7 @@ def create_routes(server):
             }
             return None, None, None, error
 
-    @server.app.route('/{}/pull_request_reports/average_commits_per_PR/'.format(server.api_version), methods=["GET"])
+    @app.route('/{}/pull_request_reports/average_commits_per_PR/'.format(server.api_version), methods=["GET"])
     def average_commits_per_PR():
 
         repo_id, start_date, end_date, error = get_repo_id_start_date_and_end_date()
@@ -601,7 +601,7 @@ def create_routes(server):
 
         return send_file(filename)
 
-    @server.app.route('/{}/pull_request_reports/average_comments_per_PR/'.format(server.api_version), methods=["GET"])
+    @app.route('/{}/pull_request_reports/average_comments_per_PR/'.format(server.api_version), methods=["GET"])
     def average_comments_per_PR():
 
         repo_id, start_date, end_date, error = get_repo_id_start_date_and_end_date()
@@ -782,7 +782,7 @@ def create_routes(server):
 
         return send_file(filename)
 
-    @server.app.route('/{}/pull_request_reports/PR_counts_by_merged_status/'.format(server.api_version),
+    @app.route('/{}/pull_request_reports/PR_counts_by_merged_status/'.format(server.api_version),
                       methods=["GET"])
     def PR_counts_by_merged_status():
 
@@ -974,7 +974,7 @@ def create_routes(server):
 
         return send_file(filename)
 
-    @server.app.route('/{}/pull_request_reports/mean_response_times_for_PR/'.format(server.api_version),
+    @app.route('/{}/pull_request_reports/mean_response_times_for_PR/'.format(server.api_version),
                       methods=["GET"])
     def mean_response_times_for_PR():
 
@@ -1273,7 +1273,7 @@ def create_routes(server):
 
         return send_file(filename)
 
-    @server.app.route('/{}/pull_request_reports/mean_days_between_PR_comments/'.format(server.api_version),
+    @app.route('/{}/pull_request_reports/mean_days_between_PR_comments/'.format(server.api_version),
                       methods=["GET"])
     def mean_days_between_PR_comments():
 
@@ -1441,7 +1441,7 @@ def create_routes(server):
 
         return send_file(filename)
 
-    @server.app.route('/{}/pull_request_reports/PR_time_to_first_response/'.format(server.api_version), methods=["GET"])
+    @app.route('/{}/pull_request_reports/PR_time_to_first_response/'.format(server.api_version), methods=["GET"])
     def PR_time_to_first_response():
 
         repo_id, start_date, end_date, error = get_repo_id_start_date_and_end_date()
@@ -1576,7 +1576,7 @@ def create_routes(server):
 
         return send_file(filename)
 
-    @server.app.route('/{}/pull_request_reports/average_PR_events_for_closed_PRs/'.format(server.api_version),
+    @app.route('/{}/pull_request_reports/average_PR_events_for_closed_PRs/'.format(server.api_version),
                       methods=["GET"])
     def average_PR_events_for_closed_PRs():
 
@@ -1765,7 +1765,7 @@ def create_routes(server):
 
         return send_file(filename)
 
-    @server.app.route('/{}/pull_request_reports/Average_PR_duration/'.format(server.api_version), methods=["GET"])
+    @app.route('/{}/pull_request_reports/Average_PR_duration/'.format(server.api_version), methods=["GET"])
     def Average_PR_duration():
 
         repo_id, start_date, end_date, error = get_repo_id_start_date_and_end_date()

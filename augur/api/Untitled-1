@@ -1,4 +1,13 @@
+Operation order
+1. augur backend start is invoked
+2. if disable collection is not true then start celery process
+3. Create flask app
+4. Import routes and add them to the flask app
+5. Import metrics and add them to the flask app
+6. Pass flask app to gunicorn subprocess
+ 
 
+ 
 Create Flask app 
     1. 
 

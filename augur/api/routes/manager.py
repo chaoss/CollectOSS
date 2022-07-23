@@ -19,11 +19,11 @@ import traceback
 
 logger = logging.getLogger(__name__)
 
-def create_routes(server):
+def create_routes(app):
 
     pass
 
-#     @server.app.route('/{}/add-repos'.format(server.api_version), methods=['POST'])
+#     @app.route('/{}/add-repos'.format(server.api_version), methods=['POST'])
 #     def add_repos():
 #         """ returns list of successfully inserted repos and repos that caused an error
 #             adds repos belonging to any user or group to an existing augur repo group
@@ -66,7 +66,7 @@ def create_routes(server):
 #                         status=status_code,
 #                         mimetype="application/json")
 
-#     @server.app.route('/{}/create-repo-group'.format(server.api_version), methods=['POST'])
+#     @app.route('/{}/create-repo-group'.format(server.api_version), methods=['POST'])
 #     def create_repo_group():
 #         if authenticate_request(server.augur_app, request):
 #             group = request.json['group']
@@ -101,7 +101,7 @@ def create_routes(server):
 #                         status=status_code, 
 #                         mimetype="application/json")
 
-#     @server.app.route('/{}/import-org'.format(server.api_version), methods=['POST'])
+#     @app.route('/{}/import-org'.format(server.api_version), methods=['POST'])
 #     def add_repo_group():
 #         """ creates a new augur repo group and adds to it the given organization or user's repos
 #             takes an organization or user name 

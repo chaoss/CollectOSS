@@ -8,9 +8,9 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-def create_routes(server):
+def create_routes(app):
 
-    @server.app.route('/{}/repo-groups'.format(server.api_version))
+    @app.route('/{}/repo-groups'.format(server.api_version))
     def get_all_repo_groups(): #TODO: make this name automatic - wrapper?
         repoGroupsSQL = s.sql.text("""
             SELECT *
@@ -23,7 +23,7 @@ def create_routes(server):
                         status=200,
                         mimetype="application/json")
 
-    @server.app.route('/{}/repos'.format(server.api_version))
+    @app.route('/{}/repos'.format(server.api_version))
     def get_all_repos():
 
         get_all_repos_sql = s.sql.text("""
@@ -62,7 +62,7 @@ def create_routes(server):
                         status=200,
                         mimetype="application/json")
 
-    @server.app.route('/{}/repo-groups/<repo_group_id>/repos'.format(server.api_version))
+    @app.route('/{}/repo-groups/<repo_group_id>/repos'.format(server.api_version))
     def get_repos_in_repo_group(repo_group_id):
         repos_in_repo_groups_SQL = s.sql.text("""
             SELECT
@@ -94,7 +94,7 @@ def create_routes(server):
                         status=200,
                         mimetype="application/json")
 
-    @server.app.route('/{}/owner/<owner>/repo/<repo>'.format(server.api_version))
+    @app.route('/{}/owner/<owner>/repo/<repo>'.format(server.api_version))
     def get_repo_by_git_name(owner, repo):
 
         get_repo_by_git_name_sql = s.sql.text("""
@@ -110,7 +110,7 @@ def create_routes(server):
                         status=200,
                         mimetype="application/json")
 
-    @server.app.route('/{}/rg-name/<rg_name>/repo-name/<repo_name>'.format(server.api_version))
+    @app.route('/{}/rg-name/<rg_name>/repo-name/<repo_name>'.format(server.api_version))
     def get_repo_by_name(rg_name, repo_name):
 
         get_repo_by_name_sql = s.sql.text("""
@@ -127,7 +127,7 @@ def create_routes(server):
                         status=200,
                         mimetype="application/json")
 
-    @server.app.route('/{}/rg-name/<rg_name>'.format(server.api_version))
+    @app.route('/{}/rg-name/<rg_name>'.format(server.api_version))
     def get_group_by_name(rg_name):
         groupSQL = s.sql.text("""
             SELECT repo_group_id, rg_name
@@ -140,7 +140,7 @@ def create_routes(server):
                         status=200,
                         mimetype="application/json")
 
-    @server.app.route('/{}/dosocs/repos'.format(server.api_version))
+    @app.route('/{}/dosocs/repos'.format(server.api_version))
     def get_repos_for_dosocs():
         get_repos_for_dosocs_SQL = s.sql.text("""
             SELECT b.repo_id, CONCAT(a.value || b.repo_group_id || chr(47) || b.repo_path || b.repo_name) AS path
@@ -154,8 +154,8 @@ def create_routes(server):
                         status=200,
                         mimetype='application/json')
 
-    @server.app.route('/{}/repo-groups/<repo_group_id>/get-issues'.format(server.api_version))
-    @server.app.route('/{}/repos/<repo_id>/get-issues'.format(server.api_version))
+    @app.route('/{}/repo-groups/<repo_group_id>/get-issues'.format(server.api_version))
+    @app.route('/{}/repos/<repo_id>/get-issues'.format(server.api_version))
     def get_issues(repo_group_id, repo_id=None):
         if not repo_id:
             get_issues_sql = s.sql.text("""
@@ -202,7 +202,7 @@ def create_routes(server):
                         status=200,
                         mimetype='application/json')
 
-    @server.app.route('/{}/api-port'.format(server.api_version))
+    @app.route('/{}/api-port'.format(server.api_version))
     def api_port():
         response = {'port': server.augur_app.config.get_value('Server', 'port')}
         return Response(response=json.dumps(response),

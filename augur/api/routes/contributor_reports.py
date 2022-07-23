@@ -21,7 +21,7 @@ from bokeh.transform import cumsum
 warnings.filterwarnings('ignore')
 
 
-def create_routes(server):
+def create_routes(app):
     def quarters(month, year):
         if 1 <= month <= 3:
             return '01' + '/' + year
@@ -585,7 +585,7 @@ def create_routes(server):
             print("Developer error, not null columns should be a subset of needed columns")
             return df
 
-    @server.app.route('/{}/contributor_reports/new_contributors_bar/'.format(server.api_version), methods=["GET"])
+    @app.route('/{}/contributor_reports/new_contributors_bar/'.format(server.api_version), methods=["GET"])
     def new_contributors_bar():
 
         repo_id, start_date, end_date, error = get_repo_id_start_date_and_end_date()
@@ -754,7 +754,7 @@ def create_routes(server):
 
         return send_file(filename)
 
-    @server.app.route('/{}/contributor_reports/new_contributors_stacked_bar/'.format(server.api_version),
+    @app.route('/{}/contributor_reports/new_contributors_stacked_bar/'.format(server.api_version),
                       methods=["GET"])
     def new_contributors_stacked_bar():
 
@@ -957,7 +957,7 @@ def create_routes(server):
 
         return send_file(filename)
 
-    @server.app.route('/{}/contributor_reports/returning_contributors_pie_chart/'.format(server.api_version),
+    @app.route('/{}/contributor_reports/returning_contributors_pie_chart/'.format(server.api_version),
                       methods=["GET"])
     def returning_contributors_pie_chart():
 
@@ -1089,7 +1089,7 @@ def create_routes(server):
 
         return send_file(filename)
 
-    @server.app.route('/{}/contributor_reports/returning_contributors_stacked_bar/'.format(server.api_version),
+    @app.route('/{}/contributor_reports/returning_contributors_stacked_bar/'.format(server.api_version),
                       methods=["GET"])
     def returning_contributors_stacked_bar():
 
