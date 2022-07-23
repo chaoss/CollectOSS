@@ -1,0 +1,12 @@
+
+Create Flask app 
+    1. 
+
+Gunicorn_conf.py
+
+    1. Connect to database and get all values
+
+Application.py
+
+    1. Create cache directories
+    2. Create metrics class
