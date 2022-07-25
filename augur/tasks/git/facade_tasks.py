@@ -503,7 +503,7 @@ def process_commit_metadata(contributorQueue,repo_id):
             """
 
 
-            alias_table_data = ContributorsAliases.query.filter_by(alias_email=email).all()
+            alias_table_data = session.query(ContributorsAlias).filter_by(alias_email=email).all()
             if len(alias_table_data) >= 1:
                 # Move on if email resolved
 
@@ -518,7 +518,7 @@ def process_commit_metadata(contributorQueue,repo_id):
         #Check the unresolved_commits table to avoid hitting endpoints that we know don't have relevant data needlessly
         try:
             
-            unresolved_query_result = UnresolvedCommitEmails.query.filter_by(name=name).all()
+            unresolved_query_result = session.query(UnresolvedCommitEmails).filter_by(name=name).all()
 
             if len(unresolved_query_result) >= 1:
 
@@ -533,7 +533,7 @@ def process_commit_metadata(contributorQueue,repo_id):
     
         #Check the contributors table for a login for the given name
         try:
-            contributors_with_matching_name = Contributors.query.filter_by(cntrb_full_name=name).one()
+            contributors_with_matching_name = session.query(Contributor).filter_by(cntrb_full_name=name).one()
 
             login = contributors_with_matching_name.gh_login
 
