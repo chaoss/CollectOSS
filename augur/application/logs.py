@@ -81,9 +81,13 @@ class TaskLogConfig():
                 lg = logging.getLogger(task)
                 self.logger_names.append(task)
 
+                stream = logging.StreamHandler()
+                stream.setLevel(logLevel)
+                lg.addHandler(stream)
+
                 #Don't bother if logs are disabled.
                 if self.disable_logs:
-                    lg.disabled = True
+                    #lg.disabled = True
                     break
                 
                 #Put logs in seperate folders by module.
@@ -98,10 +102,6 @@ class TaskLogConfig():
 
                 #Absolute path to log file
                 file = str(task_folder) + "/" + str(task)
-
-                stream = logging.StreamHandler()
-                stream.setLevel(logLevel)
-                lg.addHandler(stream)
 
                 #Create file handlers for each relevant log level and make them colorful
                 lg.addHandler(genHandler((file + ".info"), SIMPLE_FORMAT_STRING, logging.INFO)) 

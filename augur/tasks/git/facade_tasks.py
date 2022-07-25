@@ -61,15 +61,16 @@ logger = logging.getLogger(__name__)
 config_db_session = TaskSession(logger)
 config = AugurConfig(config_db_session)
 logs_directory = config.get_value("Logging", "logs_directory")
+ENABLE_LOG_TO_FILE = True
 if logs_directory is None:
-    raise Exception('logs_directory not specified in config.')
+    ENABLE_LOG_TO_FILE = False
 
 
 #Load logging config once at task definition
 @after_setup_logger.connect
 def setup_loggers(*args,**kwargs):
     #load config
-    loggingConfig = TaskLogConfig(base_log_dir=logs_directory)
+    loggingConfig = TaskLogConfig(disable_logs=ENABLE_LOG_TO_FILE, base_log_dir=logs_directory)
 
     
     
