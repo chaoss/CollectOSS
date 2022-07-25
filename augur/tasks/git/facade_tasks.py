@@ -744,7 +744,8 @@ def insert_facade_contributors(session, repo_id,processes=4,multithreaded=True):
     """).bindparams(repo_id=repo_id)
 
     #Execute statement with session.
-    new_contribs = session.execute_sql(new_contrib_sql).fetchall()
+    result = session.execute_sql(new_contrib_sql).fetchall()
+    new_contribs = [dict(zip(row.keys(), row)) for row in result]
 
     #print(new_contribs)
     
@@ -808,7 +809,8 @@ def insert_facade_contributors(session, repo_id,processes=4,multithreaded=True):
     #existing_cntrb_emails = json.loads(pd.read_sql(resolve_email_to_cntrb_id_sql, self.db, params={
     #                                    'repo_id': repo_id}).to_json(orient="records"))
 
-    existing_cntrb_emails = session.execute_sql(resolve_email_to_cntrb_id_sql).fetchall()
+    result = session.execute_sql(resolve_email_to_cntrb_id_sql).fetchall()
+    existing_cntrb_emails = [dict(zip(row.keys(), row)) for row in result]
     
     if len(existing_cntrb_emails) > 0 and multithreaded:
         
