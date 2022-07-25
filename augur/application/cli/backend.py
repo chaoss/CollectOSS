@@ -113,7 +113,7 @@ def start(disable_collection):
     print(f"Binding gunicorn to {bind}")
     print(f"gunicorn location: {str(gunicorn_location)}")
 
-    server = subprocess.Popen(["gunicorn", "-c", gunicorn_location, "-b", bind, "server:app"])
+    server = subprocess.Popen(["gunicorn", "-c", gunicorn_location, "-b", bind, "--preload", "augur.api.server:app"])
 
     print(f"Server process: {server}")
     print(f"Server args: {server.args}")

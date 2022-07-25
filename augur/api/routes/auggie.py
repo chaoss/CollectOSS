@@ -13,6 +13,10 @@ from boto3.dynamodb.conditions import Key, Attr
 import os
 import requests
 import slack
+from augur.application.db.engine import engine
+
+AUGUR_API_VERSION = 'api/unstable'
+
 
 # def annotate(metadata=None, **kwargs):
 #     """

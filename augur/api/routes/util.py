@@ -6,24 +6,36 @@ import json
 from flask import Response
 import logging
 
-logger = logging.getLogger(__name__)
+from augur.tasks.util.task_session import TaskSession
+from augur.application.logs import AugurLogger
+from augur.application.config import AugurConfig
+
+from augur.application.db.engine import engine
+
+logger = AugurLogger("server", base_log_dir="/Users/andrew_brain/Augur/augur/logs/").get_logger()
+session = TaskSession(logger)
+augur_config = AugurConfig(session)
+
+AUGUR_API_VERSION = 'api/unstable'
 
 def create_routes(app):
 
-    @app.route('/{}/repo-groups'.format(server.api_version))
+    logger.info("Creating util routes")
+
+    @app.route('/{}/repo-groups'.format(AUGUR_API_VERSION))
     def get_all_repo_groups(): #TODO: make this name automatic - wrapper?
         repoGroupsSQL = s.sql.text("""
             SELECT *
             FROM repo_groups
             ORDER BY rg_name
         """)
-        results = pd.read_sql(repoGroupsSQL, server.augur_app.database)
+        results = pd.read_sql(repoGroupsSQL, engine)
         data = results.to_json(orient="records", date_format='iso', date_unit='ms')
         return Response(response=data,
                         status=200,
                         mimetype="application/json")
 
-    @app.route('/{}/repos'.format(server.api_version))
+    @app.route('/{}/repos'.format(AUGUR_API_VERSION))
     def get_all_repos():
 
         get_all_repos_sql = s.sql.text("""
@@ -49,7 +61,7 @@ def create_routes(app):
                 JOIN repo_groups ON repo_groups.repo_group_id = repo.repo_group_id
             order by repo_name
         """)
-        results = pd.read_sql(get_all_repos_sql, server.augur_app.database)
+        results = pd.read_sql(get_all_repos_sql, engine)
         results['url'] = results['url'].apply(lambda datum: datum.split('//')[1])
 
         b64_urls = []
@@ -62,7 +74,7 @@ def create_routes(app):
                         status=200,
                         mimetype="application/json")
 
-    @app.route('/{}/repo-groups/<repo_group_id>/repos'.format(server.api_version))
+    @app.route('/{}/repo-groups/<repo_group_id>/repos'.format(AUGUR_API_VERSION))
     def get_repos_in_repo_group(repo_group_id):
         repos_in_repo_groups_SQL = s.sql.text("""
             SELECT
@@ -88,13 +100,13 @@ def create_routes(app):
             ORDER BY repo.repo_git
         """)
 
-        results = pd.read_sql(repos_in_repo_groups_SQL, server.augur_app.database, params={'repo_group_id': repo_group_id})
+        results = pd.read_sql(repos_in_repo_groups_SQL, engine, params={'repo_group_id': repo_group_id})
         data = results.to_json(orient="records", date_format='iso', date_unit='ms')
         return Response(response=data,
                         status=200,
                         mimetype="application/json")
 
-    @app.route('/{}/owner/<owner>/repo/<repo>'.format(server.api_version))
+    @app.route('/{}/owner/<owner>/repo/<repo>'.format(AUGUR_API_VERSION))
     def get_repo_by_git_name(owner, repo):
 
         get_repo_by_git_name_sql = s.sql.text("""
@@ -104,13 +116,13 @@ def create_routes(app):
             GROUP BY repo_id, rg_name
         """)
 
-        results = pd.read_sql(get_repo_by_git_name_sql, server.augur_app.database, params={'owner': '%{}_'.format(owner), 'repo': repo,})
+        results = pd.read_sql(get_repo_by_git_name_sql, engine, params={'owner': '%{}_'.format(owner), 'repo': repo,})
         data = results.to_json(orient="records", date_format='iso', date_unit='ms')
         return Response(response=data,
                         status=200,
                         mimetype="application/json")
 
-    @app.route('/{}/rg-name/<rg_name>/repo-name/<repo_name>'.format(server.api_version))
+    @app.route('/{}/rg-name/<rg_name>/repo-name/<repo_name>'.format(AUGUR_API_VERSION))
     def get_repo_by_name(rg_name, repo_name):
 
         get_repo_by_name_sql = s.sql.text("""
@@ -120,27 +132,27 @@ def create_routes(app):
             AND LOWER(rg_name) = LOWER(:rg_name)
             AND LOWER(repo_name) = LOWER(:repo_name)
         """)
-        results = pd.read_sql(get_repo_by_name_sql, server.augur_app.database, params={'rg_name': rg_name, 'repo_name': repo_name})
+        results = pd.read_sql(get_repo_by_name_sql, engine, params={'rg_name': rg_name, 'repo_name': repo_name})
         results['url'] = results['url'].apply(lambda datum: datum.split('//')[1])
         data = results.to_json(orient="records", date_format='iso', date_unit='ms')
         return Response(response=data,
                         status=200,
                         mimetype="application/json")
 
-    @app.route('/{}/rg-name/<rg_name>'.format(server.api_version))
+    @app.route('/{}/rg-name/<rg_name>'.format(AUGUR_API_VERSION))
     def get_group_by_name(rg_name):
         groupSQL = s.sql.text("""
             SELECT repo_group_id, rg_name
             FROM repo_groups
             WHERE lower(rg_name) = lower(:rg_name)
         """)
-        results = pd.read_sql(groupSQL, server.augur_app.database, params={'rg_name': rg_name})
+        results = pd.read_sql(groupSQL, engine, params={'rg_name': rg_name})
         data = results.to_json(orient="records", date_format='iso', date_unit='ms')
         return Response(response=data,
                         status=200,
                         mimetype="application/json")
 
-    @app.route('/{}/dosocs/repos'.format(server.api_version))
+    @app.route('/{}/dosocs/repos'.format(AUGUR_API_VERSION))
     def get_repos_for_dosocs():
         get_repos_for_dosocs_SQL = s.sql.text("""
             SELECT b.repo_id, CONCAT(a.value || b.repo_group_id || chr(47) || b.repo_path || b.repo_name) AS path
@@ -148,14 +160,14 @@ def create_routes(app):
             WHERE a.setting='repo_directory'
         """)
 
-        results = pd.read_sql(get_repos_for_dosocs_SQL, server.augur_app.database)
+        results = pd.read_sql(get_repos_for_dosocs_SQL, engine)
         data = results.to_json(orient="records", date_format='iso', date_unit='ms')
         return Response(response=data,
                         status=200,
                         mimetype='application/json')
 
-    @app.route('/{}/repo-groups/<repo_group_id>/get-issues'.format(server.api_version))
-    @app.route('/{}/repos/<repo_id>/get-issues'.format(server.api_version))
+    @app.route('/{}/repo-groups/<repo_group_id>/get-issues'.format(AUGUR_API_VERSION))
+    @app.route('/{}/repos/<repo_id>/get-issues'.format(AUGUR_API_VERSION))
     def get_issues(repo_group_id, repo_id=None):
         if not repo_id:
             get_issues_sql = s.sql.text("""
@@ -176,7 +188,7 @@ def create_routes(app):
                 GROUP BY issues.issue_id
                 ORDER by OPEN_DAY DESC
             """)
-            results = pd.read_sql(get_issues_sql, server.augur_app.database, params={'repo_group_id': repo_group_id})
+            results = pd.read_sql(get_issues_sql, engine, params={'repo_group_id': repo_group_id})
         else:
             get_issues_sql = s.sql.text("""
                 SELECT issue_title,
@@ -196,15 +208,15 @@ def create_routes(app):
                 GROUP BY issues.issue_id, repo_name
                 ORDER by OPEN_DAY DESC
             """)
-            results = pd.read_sql(get_issues_sql, server.augur_app.database, params={'repo_id': repo_id})
+            results = pd.read_sql(get_issues_sql, engine, params={'repo_id': repo_id})
         data = results.to_json(orient="records", date_format='iso', date_unit='ms')
         return Response(response=data,
                         status=200,
                         mimetype='application/json')
 
-    @app.route('/{}/api-port'.format(server.api_version))
+    @app.route('/{}/api-port'.format(AUGUR_API_VERSION))
     def api_port():
-        response = {'port': server.augur_app.config.get_value('Server', 'port')}
+        response = {'port': augur_config.get_value('Server', 'port')}
         return Response(response=json.dumps(response),
                         status=200,
                         mimetype="application/json")

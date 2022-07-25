@@ -7,8 +7,10 @@ import sqlalchemy as s
 import pandas as pd
 from augur.api.util import register_metric
 
+from augur.application.db.engine import engine
+
 @register_metric(type="repo_group_only")
-def top_insights(self, repo_group_id, num_repos=6):
+def top_insights(repo_group_id, num_repos=6):
     """
     Timeseries of pull request acceptance rate (expressed as the ratio of pull requests merged on a date to the count of pull requests opened on a date)
 
@@ -27,5 +29,5 @@ def top_insights(self, repo_group_id, num_repos=6):
             LIMIT :num_repos
         )
     """)
-    results = pd.read_sql(topInsightsSQL, self.database, params={'repo_group_id': repo_group_id, 'num_repos': num_repos})
+    results = pd.read_sql(topInsightsSQL, engine, params={'repo_group_id': repo_group_id, 'num_repos': num_repos})
     return results

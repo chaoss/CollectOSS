@@ -12,6 +12,10 @@ from augur.application.db.models import User
 
 logger = logging.getLogger(__name__)
 
+from augur.application.db.engine import engine
+
+AUGUR_API_VERSION = 'api/unstable'
+
 def generate_upgrade_request():
     # https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/426
     response = jsonify({"status": "SSL Required"})
@@ -22,11 +26,11 @@ def generate_upgrade_request():
 
 def create_routes(app):
 
-    @server.app.errorhandler(405)
+    @app.errorhandler(405)
     def unsupported_method(error):
         return jsonify({"status": "Unsupported method"}), 405
 
-    @app.route(f"/{server.api_version}/user/validate", methods=['POST'])
+    @app.route(f"/{AUGUR_API_VERSION}/user/validate", methods=['POST'])
     def validate_user():
         if not request.is_secure:
             return generate_upgrade_request()
@@ -54,7 +58,7 @@ def create_routes(app):
         - return jsonify({"status": "Validated"})
         """
 
-    @app.route(f"/{server.api_version}/user/create", methods=['POST'])
+    @app.route(f"/{AUGUR_API_VERSION}/user/create", methods=['POST'])
     def create_user():
         if not request.is_secure:
             return generate_upgrade_request()

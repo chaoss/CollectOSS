@@ -6,8 +6,11 @@ Metrics that provide data about software dependencies.
 import sqlalchemy as s
 import pandas as pd
 from augur.api.util import register_metric
+
+from augur.application.db.engine import engine
+
 @register_metric()
-def deps(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
+def deps(repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
     """
     Returns a list of all the dependencies in a project/repo/repo_group.
 
@@ -42,7 +45,7 @@ def deps(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_d
             AND repo_dependencies.repo_id = :repo_id
             """)
 
-        results = pd.read_sql(depsSQL, self.database)    	
+        results = pd.read_sql(depsSQL, engine)    	
 
     else:
 
@@ -66,7 +69,7 @@ def deps(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_d
             AND repo.repo_group_id = :repo_group_id
             """)
 
-        results = pd.read_sql(depsSQL, self.database)
+        results = pd.read_sql(depsSQL, engine)
     return results
 
 

@@ -8,8 +8,10 @@ import sqlalchemy as s
 import pandas as pd
 from augur.api.util import register_metric
 
+from augur.application.db.engine import engine
+
 @register_metric()
-def contributors(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
+def contributors(repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
     """
     Returns a timeseries of all the contributions to a project.
 
@@ -122,7 +124,7 @@ def contributors(self, repo_group_id, repo_id=None, period='day', begin_date=Non
             ORDER BY total DESC
         """)
 
-        results = pd.read_sql(contributorsSQL, self.database, params={'repo_id': repo_id, 'period': period,
+        results = pd.read_sql(contributorsSQL, engine, params={'repo_id': repo_id, 'period': period,
                                                                 'begin_date': begin_date, 'end_date': end_date})
     else:
         contributorsSQL = s.sql.text("""
@@ -208,12 +210,12 @@ def contributors(self, repo_group_id, repo_id=None, period='day', begin_date=Non
             ORDER BY total DESC
         """)
 
-        results = pd.read_sql(contributorsSQL, self.database, params={'repo_group_id': repo_group_id, 'period': period,
+        results = pd.read_sql(contributorsSQL, engine, params={'repo_group_id': repo_group_id, 'period': period,
                                                                 'begin_date': begin_date, 'end_date': end_date})
     return results
 
 @register_metric()
-def contributors_new(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
+def contributors_new(repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
     """
     Returns a timeseries of new contributions to a project.
 
@@ -278,7 +280,7 @@ def contributors_new(self, repo_group_id, repo_id=None, period='day', begin_date
             GROUP BY date, repo.repo_id, repo_name
             """)
 
-        results = pd.read_sql(contributorsNewSQL, self.database, params={'repo_id': repo_id, 'period': period,
+        results = pd.read_sql(contributorsNewSQL, engine, params={'repo_id': repo_id, 'period': period,
                                                                    'begin_date': begin_date, 'end_date': end_date})
     else:
         contributorsNewSQL = s.sql.text("""
@@ -327,12 +329,12 @@ def contributors_new(self, repo_group_id, repo_id=None, period='day', begin_date
             GROUP BY date, repo.repo_id, repo_name
             """)
 
-        results = pd.read_sql(contributorsNewSQL, self.database, params={'repo_group_id': repo_group_id, 'period': period,
+        results = pd.read_sql(contributorsNewSQL, engine, params={'repo_group_id': repo_group_id, 'period': period,
                                                                    'begin_date': begin_date, 'end_date': end_date})
     return results
     
 @register_metric()
-def lines_changed_by_author(self, repo_group_id, repo_id=None):
+def lines_changed_by_author(repo_group_id, repo_id=None):
     """
     Returns number of lines changed per author per day
 
@@ -348,7 +350,7 @@ def lines_changed_by_author(self, repo_group_id, repo_id=None):
             GROUP BY commits.repo_id, date_trunc('week', cmt_author_date::date), cmt_author_affiliation, cmt_author_email, repo_name
             ORDER BY date_trunc('week', cmt_author_date::date) ASC;
         """)
-        results = pd.read_sql(linesChangedByAuthorSQL, self.database, params={"repo_id": repo_id})
+        results = pd.read_sql(linesChangedByAuthorSQL, engine, params={"repo_id": repo_id})
         return results
     else:
         linesChangedByAuthorSQL = s.sql.text("""
@@ -359,11 +361,11 @@ def lines_changed_by_author(self, repo_group_id, repo_id=None):
             GROUP BY repo_id, date_trunc('week', cmt_author_date::date), cmt_author_affiliation, cmt_author_email
             ORDER BY date_trunc('week', cmt_author_date::date) ASC;
         """)
-        results = pd.read_sql(linesChangedByAuthorSQL, self.database, params={"repo_group_id": repo_group_id})
+        results = pd.read_sql(linesChangedByAuthorSQL, engine, params={"repo_group_id": repo_group_id})
         return results
 
 @register_metric()
-def contributors_code_development(self, repo_group_id, repo_id=None, period='all', begin_date=None, end_date=None):
+def contributors_code_development(repo_group_id, repo_id=None, period='all', begin_date=None, end_date=None):
     """
     Returns a timeseries of all the contributions to a project.
 
@@ -417,7 +419,7 @@ def contributors_code_development(self, repo_group_id, repo_id=None, period='all
             GROUP BY a.email, a.repo_id, repo_name
         """)
 
-        results = pd.read_sql(contributorsSQL, self.database, params={'repo_id': repo_id, 'period': period,
+        results = pd.read_sql(contributorsSQL, engine, params={'repo_id': repo_id, 'period': period,
                                                                 'begin_date': begin_date, 'end_date': end_date})
     else:
         contributorsSQL = s.sql.text("""
@@ -452,6 +454,6 @@ def contributors_code_development(self, repo_group_id, repo_id=None, period='all
             ORDER BY commits desc, email
         """)
 
-        results = pd.read_sql(contributorsSQL, self.database, params={'repo_group_id': repo_group_id, 'period': period,
+        results = pd.read_sql(contributorsSQL, engine, params={'repo_group_id': repo_group_id, 'period': period,
                                                                 'begin_date': begin_date, 'end_date': end_date})
     return results

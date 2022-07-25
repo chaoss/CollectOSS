@@ -17,13 +17,17 @@ import json
 import os 
 import traceback 
 
+from augur.application.db.engine import engine
+
+AUGUR_API_VERSION = 'api/unstable'
+
 logger = logging.getLogger(__name__)
 
 def create_routes(app):
 
     pass
 
-#     @app.route('/{}/add-repos'.format(server.api_version), methods=['POST'])
+#     @app.route('/{}/add-repos'.format(AUGUR_API_VERSION), methods=['POST'])
 #     def add_repos():
 #         """ returns list of successfully inserted repos and repos that caused an error
 #             adds repos belonging to any user or group to an existing augur repo group
@@ -31,7 +35,7 @@ def create_routes(app):
 #         """
 #         if authenticate_request(server.augur_app, request):
 #             group = request.json['group']
-#             repo_manager = Repo_insertion_manager(group, server.augur_app.database)
+#             repo_manager = Repo_insertion_manager(group, engine)
 #             group_id = repo_manager.get_org_id()
 #             errors = {}
 #             errors['invalid_inputs'] = []
@@ -66,11 +70,11 @@ def create_routes(app):
 #                         status=status_code,
 #                         mimetype="application/json")
 
-#     @app.route('/{}/create-repo-group'.format(server.api_version), methods=['POST'])
+#     @app.route('/{}/create-repo-group'.format(AUGUR_API_VERSION), methods=['POST'])
 #     def create_repo_group():
 #         if authenticate_request(server.augur_app, request):
 #             group = request.json['group']
-#             repo_manager = Repo_insertion_manager(group, server.augur_app.database)
+#             repo_manager = Repo_insertion_manager(group, engine)
 #             summary = {}
 #             summary['errors'] = []
 #             summary['repo_groups_created'] = []
@@ -101,14 +105,14 @@ def create_routes(app):
 #                         status=status_code, 
 #                         mimetype="application/json")
 
-#     @app.route('/{}/import-org'.format(server.api_version), methods=['POST'])
+#     @app.route('/{}/import-org'.format(AUGUR_API_VERSION), methods=['POST'])
 #     def add_repo_group():
 #         """ creates a new augur repo group and adds to it the given organization or user's repos
 #             takes an organization or user name 
 #         """
 #         if authenticate_request(server.augur_app, request):
 #             group = request.json['org']
-#             repo_manager = Repo_insertion_manager(group, server.augur_app.database)
+#             repo_manager = Repo_insertion_manager(group, engine)
 #             summary = {}
 #             summary['group_errors'] = []
 #             summary['failed_repo_records'] = []

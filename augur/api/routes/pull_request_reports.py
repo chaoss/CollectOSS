@@ -23,6 +23,9 @@ from bokeh.transform import dodge, factor_cmap, transform
 
 warnings.filterwarnings('ignore')
 
+from augur.application.db.engine import engine
+
+AUGUR_API_VERSION = 'api/unstable'
 
 def create_routes(app):
     def pull_request_data_collection(repo_id, start_date, end_date):
@@ -139,7 +142,7 @@ def create_routes(app):
                     ORDER BY
                        merged_count DESC
                         """)
-        pr_all = pd.read_sql(pr_query, server.augur_app.database)
+        pr_all = pd.read_sql(pr_query, engine)
 
         pr_all[['assigned_count',
                 'review_requested_count',
@@ -456,7 +459,7 @@ def create_routes(app):
             }
             return None, None, None, error
 
-    @app.route('/{}/pull_request_reports/average_commits_per_PR/'.format(server.api_version), methods=["GET"])
+    @app.route('/{}/pull_request_reports/average_commits_per_PR/'.format(AUGUR_API_VERSION), methods=["GET"])
     def average_commits_per_PR():
 
         repo_id, start_date, end_date, error = get_repo_id_start_date_and_end_date()
@@ -601,7 +604,7 @@ def create_routes(app):
 
         return send_file(filename)
 
-    @app.route('/{}/pull_request_reports/average_comments_per_PR/'.format(server.api_version), methods=["GET"])
+    @app.route('/{}/pull_request_reports/average_comments_per_PR/'.format(AUGUR_API_VERSION), methods=["GET"])
     def average_comments_per_PR():
 
         repo_id, start_date, end_date, error = get_repo_id_start_date_and_end_date()
@@ -782,7 +785,7 @@ def create_routes(app):
 
         return send_file(filename)
 
-    @app.route('/{}/pull_request_reports/PR_counts_by_merged_status/'.format(server.api_version),
+    @app.route('/{}/pull_request_reports/PR_counts_by_merged_status/'.format(AUGUR_API_VERSION),
                       methods=["GET"])
     def PR_counts_by_merged_status():
 
@@ -974,7 +977,7 @@ def create_routes(app):
 
         return send_file(filename)
 
-    @app.route('/{}/pull_request_reports/mean_response_times_for_PR/'.format(server.api_version),
+    @app.route('/{}/pull_request_reports/mean_response_times_for_PR/'.format(AUGUR_API_VERSION),
                       methods=["GET"])
     def mean_response_times_for_PR():
 
@@ -1273,7 +1276,7 @@ def create_routes(app):
 
         return send_file(filename)
 
-    @app.route('/{}/pull_request_reports/mean_days_between_PR_comments/'.format(server.api_version),
+    @app.route('/{}/pull_request_reports/mean_days_between_PR_comments/'.format(AUGUR_API_VERSION),
                       methods=["GET"])
     def mean_days_between_PR_comments():
 
@@ -1441,7 +1444,7 @@ def create_routes(app):
 
         return send_file(filename)
 
-    @app.route('/{}/pull_request_reports/PR_time_to_first_response/'.format(server.api_version), methods=["GET"])
+    @app.route('/{}/pull_request_reports/PR_time_to_first_response/'.format(AUGUR_API_VERSION), methods=["GET"])
     def PR_time_to_first_response():
 
         repo_id, start_date, end_date, error = get_repo_id_start_date_and_end_date()
@@ -1576,7 +1579,7 @@ def create_routes(app):
 
         return send_file(filename)
 
-    @app.route('/{}/pull_request_reports/average_PR_events_for_closed_PRs/'.format(server.api_version),
+    @app.route('/{}/pull_request_reports/average_PR_events_for_closed_PRs/'.format(AUGUR_API_VERSION),
                       methods=["GET"])
     def average_PR_events_for_closed_PRs():
 
@@ -1765,7 +1768,7 @@ def create_routes(app):
 
         return send_file(filename)
 
-    @app.route('/{}/pull_request_reports/Average_PR_duration/'.format(server.api_version), methods=["GET"])
+    @app.route('/{}/pull_request_reports/Average_PR_duration/'.format(AUGUR_API_VERSION), methods=["GET"])
     def Average_PR_duration():
 
         repo_id, start_date, end_date, error = get_repo_id_start_date_and_end_date()

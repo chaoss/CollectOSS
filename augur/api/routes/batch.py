@@ -12,22 +12,24 @@ from flask import request, Response
 from augur.api.util import metric_metadata
 import json
 
+from augur.application.db.engine import engine
+
+AUGUR_API_VERSION = 'api/unstable'
+
 logger = logging.getLogger(__name__)
 
 def create_routes(app):
 
-        @app.route('/{}/batch'.format(server.api_version), methods=['GET', 'POST'])
+        @app.route('/{}/batch'.format(AUGUR_API_VERSION), methods=['GET', 'POST'])
         def batch():
             """
             Execute multiple requests, submitted as a batch.
             :statuscode 207: Multi status
             """
 
-            server.show_metadata = False
-
             if request.method == 'GET':
                 """this will return sensible defaults in the future"""
-                return server.app.make_response('{"status": "501", "response": "Defaults for batch requests not implemented. Please POST a JSON array of requests to this endpoint for now."}')
+                return app.make_response('{"status": "501", "response": "Defaults for batch requests not implemented. Please POST a JSON array of requests to this endpoint for now."}')
 
             try:
                 requests = json.loads(request.data.decode('utf-8'))
@@ -47,8 +49,8 @@ def create_routes(app):
 
                     logger.debug('batch-internal-loop: %s %s' % (method, path))
 
-                    with server.app.server.app.context():
-                        with server.app.test_request_context(path,
+                    with app.server.app.context():
+                        with app.test_request_context(path,
                                                       method=method,
                                                       data=body):
                             try:
@@ -56,19 +58,19 @@ def create_routes(app):
                                 # flask.g of the root request for the batch
 
                                 # Pre process Request
-                                rv = server.app.preprocess_request()
+                                rv = app.preprocess_request()
 
                                 if rv is None:
                                     # Main Dispatch
-                                    rv = server.app.dispatch_request()
+                                    rv = app.dispatch_request()
 
                             except Exception as e:
-                                rv = server.app.handle_user_exception(e)
+                                rv = app.handle_user_exception(e)
 
-                            response = server.app.make_response(rv)
+                            response = app.make_response(rv)
 
                             # Post process Request
-                            response = server.app.process_response(response)
+                            response = app.process_response(response)
 
                     # Response is a Flask response object.
                     # _read_response(response) reads response.response
@@ -91,7 +93,7 @@ def create_routes(app):
 
             return Response(response=json.dumps(responses),
                             status=207,
-                            mimetype="server.app.ication/json")
+                            mimetype="application/json")
 
 
         """
@@ -101,16 +103,15 @@ def create_routes(app):
         @apiDescription Returns metadata of batch requests
         POST JSON of API requests metadata
         """
-        @app.route('/{}/batch/metadata'.format(server.api_version), methods=['GET', 'POST'])
+        @app.route('/{}/batch/metadata'.format(AUGUR_API_VERSION), methods=['GET', 'POST'])
         def batch_metadata():
             """
             Returns endpoint metadata in batch format
             """
-            server.show_metadata = True
 
             if request.method == 'GET':
                 """this will return sensible defaults in the future"""
-                return server.app.make_response(json.dumps(metric_metadata))
+                return app.make_response(json.dumps(metric_metadata))
 
             try:
                 requests = json.loads(request.data.decode('utf-8'))
@@ -126,18 +127,18 @@ def create_routes(app):
 
                 try:
                     logger.info('batch endpoint: ' + path)
-                    with server.app.server.app.context():
-                        with server.app.test_request_context(path,
+                    with app.server.app.context():
+                        with app.test_request_context(path,
                                                       method=method,
                                                       data=body):
                             try:
-                                rv = server.app.preprocess_request()
+                                rv = app.preprocess_request()
                                 if rv is None:
-                                    rv = server.app.dispatch_request()
+                                    rv = app.dispatch_request()
                             except Exception as e:
-                                rv = server.app.handle_user_exception(e)
-                            response = server.app.make_response(rv)
-                            response = server.app.process_response(response)
+                                rv = app.handle_user_exception(e)
+                            response = app.make_response(rv)
+                            response = app.process_response(response)
 
                     responses.append({
                         "path": path,
@@ -152,9 +153,7 @@ def create_routes(app):
                         "response": str(e)
                     })
 
-            server.show_metadata = False
-
             return Response(response=json.dumps(responses),
                             status=207,
-                            mimetype="server.app.ication/json")
+                            mimetype="application/json")
 

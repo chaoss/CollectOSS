@@ -8,8 +8,10 @@ import sqlalchemy as s
 import pandas as pd
 from augur.api.util import register_metric
 
+from augur.application.db.engine import engine
+
 @register_metric()
-def committers(self, repo_group_id, repo_id=None, begin_date=None, end_date=None, period='month'):
+def committers(repo_group_id, repo_id=None, begin_date=None, end_date=None, period='month'):
     """
     :param repo_id: The repository's id
     :param repo_group_id: The repository's group id
@@ -88,13 +90,13 @@ def committers(self, repo_group_id, repo_id=None, begin_date=None, end_date=None
             """
         )
 
-    results = pd.read_sql(committersSQL, self.database, params={'repo_id': repo_id, 
+    results = pd.read_sql(committersSQL, engine, params={'repo_id': repo_id, 
         'repo_group_id': repo_group_id,'begin_date': begin_date, 'end_date': end_date, 'period':period})
 
     return results
 
 @register_metric()
-def annual_commit_count_ranked_by_new_repo_in_repo_group(self, repo_group_id, repo_id=None, begin_date=None, end_date=None, period='month'):
+def annual_commit_count_ranked_by_new_repo_in_repo_group(repo_group_id, repo_id=None, begin_date=None, end_date=None, period='month'):
     """
     For each repository in a collection of repositories being managed, each REPO that first appears in the parameterized
     calendar year (a new repo in that year), show all commits for that year (total for year by repo).
@@ -164,12 +166,12 @@ def annual_commit_count_ranked_by_new_repo_in_repo_group(self, repo_group_id, re
             GROUP BY repo.repo_id, repo_name, YEAR
             ORDER BY YEAR ASC
         """.format(table, period))
-    results = pd.read_sql(cdRgNewrepRankedCommitsSQL, self.database, params={'repo_id': repo_id, 
+    results = pd.read_sql(cdRgNewrepRankedCommitsSQL, engine, params={'repo_id': repo_id, 
         'repo_group_id': repo_group_id,'begin_date': begin_date, 'end_date': end_date})
     return results
 
 @register_metric()
-def annual_commit_count_ranked_by_repo_in_repo_group(self, repo_group_id, repo_id=None, timeframe=None):
+def annual_commit_count_ranked_by_repo_in_repo_group(repo_group_id, repo_id=None, timeframe=None):
     """
     For each repository in a collection of repositories being managed, each REPO's total commits during the current Month,
     Year or Week. Result ranked from highest number of commits to lowest by default.
@@ -262,12 +264,12 @@ def annual_commit_count_ranked_by_repo_in_repo_group(self, repo_group_id, repo_i
                 LIMIT 10
             """)
 
-    results = pd.read_sql(cdRgTpRankedCommitsSQL, self.database, params={ "repo_group_id": repo_group_id,
+    results = pd.read_sql(cdRgTpRankedCommitsSQL, engine, params={ "repo_group_id": repo_group_id,
     "repo_id": repo_id})
     return results
 
 @register_metric()
-def top_committers(self, repo_group_id, repo_id=None, year=None, threshold=0.8):
+def top_committers(repo_group_id, repo_id=None, year=None, threshold=0.8):
     """
     Returns a list of contributors contributing N% of all commits.
 
@@ -293,7 +295,7 @@ def top_committers(self, repo_group_id, repo_id=None, year=None, threshold=0.8):
                 ORDER BY patches DESC) a
         """)
 
-        results = pd.read_sql(total_commits_SQL, self.database,
+        results = pd.read_sql(total_commits_SQL, engine,
                             params={'year': year, 'repo_group_id': repo_group_id})
     else:
         total_commits_SQL = s.sql.text("""
@@ -305,7 +307,7 @@ def top_committers(self, repo_group_id, repo_id=None, year=None, threshold=0.8):
                 ORDER BY patches DESC) a
         """)
 
-        results = pd.read_sql(total_commits_SQL, self.database,
+        results = pd.read_sql(total_commits_SQL, engine,
                             params={'year': year, 'repo_id': repo_id})
 
     total_commits = int(results.iloc[0]['sum'])
@@ -328,7 +330,7 @@ def top_committers(self, repo_group_id, repo_id=None, year=None, threshold=0.8):
             ORDER BY commits DESC
         """)
 
-        results = pd.read_sql(committers_SQL, self.database,
+        results = pd.read_sql(committers_SQL, engine,
                             params={'year': year, 'repo_group_id': repo_group_id})
     else:
         committers_SQL = s.sql.text("""
@@ -347,7 +349,7 @@ def top_committers(self, repo_group_id, repo_id=None, year=None, threshold=0.8):
             ORDER BY commits DESC
         """)
 
-        results = pd.read_sql(committers_SQL, self.database,
+        results = pd.read_sql(committers_SQL, engine,
                               params={'year': year, 'repo_id': repo_id})
 
     cumsum = 0
