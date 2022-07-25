@@ -70,7 +70,7 @@ if logs_directory is None:
 @after_setup_logger.connect
 def setup_loggers(*args,**kwargs):
     #load config
-    loggingConfig = TaskLogConfig(disable_logs=ENABLE_LOG_TO_FILE, base_log_dir=logs_directory)
+    loggingConfig = TaskLogConfig(disable_log_files=ENABLE_LOG_TO_FILE, base_log_dir=logs_directory)
 
     
     

@@ -42,7 +42,7 @@ def genHandler(file,fmt,level):
 #TODO dynamically define loggers for every task names.
 class TaskLogConfig():
 
-    def __init__(self,disable_logs=False,reset_logfiles=True,base_log_dir=ROOT_AUGUR_DIRECTORY + "/logs/"):
+    def __init__(self,disable_log_files=False,reset_logfiles=True,base_log_dir=ROOT_AUGUR_DIRECTORY + "/logs/",logLevel=logging.INFO):
         if reset_logfiles is True:
             try:
                 shutil.rmtree(base_log_dir)
@@ -51,7 +51,7 @@ class TaskLogConfig():
 
         self.base_log_dir = Path(base_log_dir)
 
-        self.disable_logs = disable_logs
+        self.disable_log_files = disable_log_files
 
         self.base_log_dir.mkdir(exist_ok=True)
 
@@ -59,7 +59,7 @@ class TaskLogConfig():
 
         self.logger_names = []
 
-        self.__initLoggers(task_files,logging.INFO)
+        self.__initLoggers(task_files,logLevel)
     
     def __initLoggers(self,task_modules,logLevel):
         
@@ -81,36 +81,32 @@ class TaskLogConfig():
                 lg = logging.getLogger(task)
                 self.logger_names.append(task)
 
+                lg.setLevel(logLevel)
+                
                 stream = logging.StreamHandler()
                 stream.setLevel(logLevel)
                 lg.addHandler(stream)
 
-                #Don't bother if logs are disabled.
-                if self.disable_logs:
-                    #lg.disabled = True
-                    break
+                if not self.disable_log_files:
                 
-                #Put logs in seperate folders by module.
-                module_folder = Path(str(self.base_log_dir) + "/" + module.__name__ + "/")
-                module_folder.mkdir(exist_ok=True)
+                    #Put logs in seperate folders by module.
+                    module_folder = Path(str(self.base_log_dir) + "/" + module.__name__ + "/")
+                    module_folder.mkdir(exist_ok=True)
 
-                #Each task should have a seperate folder
-                task_folder = Path(str(module_folder) + "/" + str(task) + "/")
-                task_folder.mkdir(exist_ok=True)
+                    #Each task should have a seperate folder
+                    task_folder = Path(str(module_folder) + "/" + str(task) + "/")
+                    task_folder.mkdir(exist_ok=True)
 
-                lg.setLevel(logLevel)
+                    #Absolute path to log file
+                    file = str(task_folder) + "/" + str(task)
 
-                #Absolute path to log file
-                file = str(task_folder) + "/" + str(task)
-
-                #Create file handlers for each relevant log level and make them colorful
-                lg.addHandler(genHandler((file + ".info"), SIMPLE_FORMAT_STRING, logging.INFO)) 
-                coloredlogs.install(level=logging.INFO,logger=lg,fmt=SIMPLE_FORMAT_STRING)
-
-                lg.addHandler(genHandler((file + ".err"), ERROR_FORMAT_STRING, logging.ERROR)) 
+                    #Create file handlers for each relevant log level and make them colorful
+                    lg.addHandler(genHandler((file + ".info"), SIMPLE_FORMAT_STRING, logging.INFO))
+                    lg.addHandler(genHandler((file + ".err"), ERROR_FORMAT_STRING, logging.ERROR))
+                    lg.addHandler(genHandler((file + ".debug"), VERBOSE_FORMAT_STRING, logging.DEBUG)) 
+                
+                coloredlogs.install(level=logging.INFO,logger=lg,fmt=SIMPLE_FORMAT_STRING)                
                 coloredlogs.install(level=logging.ERROR,logger=lg,fmt=ERROR_FORMAT_STRING)
-
-                lg.addHandler(genHandler((file + ".debug"), VERBOSE_FORMAT_STRING, logging.DEBUG)) 
                 coloredlogs.install(level=logging.DEBUG,logger=lg,fmt=VERBOSE_FORMAT_STRING)
                 
                 lg.propagate = False
@@ -121,7 +117,7 @@ class TaskLogConfig():
 
 
 class AugurLogger():
-    def __init__(self, logger_name, disable_logs=False,reset_logfiles=True,base_log_dir="/home/isaac/logs"):
+    def __init__(self, logger_name, disable_log_files=False,reset_logfiles=True,base_log_dir="/home/isaac/logs",logLevel=logging.INFO):
         if reset_logfiles is True:
             try:
                 shutil.rmtree(base_log_dir)
@@ -130,7 +126,7 @@ class AugurLogger():
 
         self.base_log_dir = Path(base_log_dir)
 
-        self.disable_logs = disable_logs
+        self.disable_log_files = disable_log_files
 
         self.base_log_dir.mkdir(exist_ok=True)
 
@@ -138,20 +134,19 @@ class AugurLogger():
 
         self.lg = logging.getLogger(self.logger_name)
 
-        #Don't bother if logs are disabled.
-        if self.disable_logs:
-            self.lg.disabled = True
-            return
+        stream = logging.StreamHandler()
+        stream.setLevel(logLevel)
+        lg.addHandler(stream)
 
-        file = str(self.base_log_dir) + "/" + str(self.logger_name)
+        #Don't bother if file logs are disabled.
+        if not self.disable_log_files:
+            file = str(self.base_log_dir) + "/" + str(self.logger_name)
+            self.lg.addHandler(genHandler((file + ".info"), SIMPLE_FORMAT_STRING, logging.INFO))
+            self.lg.addHandler(genHandler((file + ".err"), ERROR_FORMAT_STRING, logging.ERROR))
+            self.lg.addHandler(genHandler((file + ".debug"), VERBOSE_FORMAT_STRING, logging.DEBUG))
 
-        self.lg.addHandler(genHandler((file + ".info"), SIMPLE_FORMAT_STRING, logging.INFO))
         coloredlogs.install(level=logging.INFO,logger=self.lg,fmt=SIMPLE_FORMAT_STRING)
-
-        self.lg.addHandler(genHandler((file + ".err"), ERROR_FORMAT_STRING, logging.ERROR))
         coloredlogs.install(level=logging.ERROR,logger=self.lg,fmt=ERROR_FORMAT_STRING)
-
-        self.lg.addHandler(genHandler((file + ".debug"), VERBOSE_FORMAT_STRING, logging.DEBUG))
         coloredlogs.install(level=logging.DEBUG,logger=self.lg,fmt=VERBOSE_FORMAT_STRING)
 
         self.lg.propogate = False
