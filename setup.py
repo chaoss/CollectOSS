@@ -91,7 +91,7 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "augur=cli._multicommand:run"
+            "augur=augur.application.cli._multicommand:run"
         ],
     }
 )
