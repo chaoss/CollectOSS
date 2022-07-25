@@ -6,6 +6,7 @@ These versions of Augur are currently supported with security updates.
 
 | Version | Supported          |
 | ------- | ------------------ |
+| 0.27.x   | :white_check_mark: |
 | 0.26.x   | :white_check_mark: |
 | 0.25.x   | :white_check_mark: |
 | 0.24.x   | :white_check_mark: |
