@@ -1,7 +1,7 @@
 '''
-Todo: augur user add <username>
-augur user update <username> (On hold for now)
-augur user remove <username> (Might not be reqd -Sean)
+Augur commands for adding regular users or administrative users
+Add Regular user command: augur user add <username> <email>
+Add Admin command: augur user add <username> <email> --admin 
 '''
 
 import os
@@ -74,4 +74,3 @@ def add_user(username, email, admin, password):
         message = f"Successfully added new {user_type}: {new_user}"
         click.secho(message, bold=True)
         return 0
-'''Next step: admin model'''
