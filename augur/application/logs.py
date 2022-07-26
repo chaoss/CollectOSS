@@ -123,7 +123,7 @@ class AugurLogger():
 
         stream = logging.StreamHandler()
         stream.setLevel(logLevel)
-        lg.addHandler(stream)
+        self.lg.addHandler(stream)
 
         #Don't bother if file logs are disabled.
         if not self.disable_log_files:
