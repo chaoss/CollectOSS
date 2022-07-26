@@ -1,13 +1,13 @@
 # from augur import ROOT_AUGUR_DIRECTORY
 import multiprocessing
+import logging
 
-# from augur.application.config import AugurConfig
-# from augur.tasks.util.task_session import TaskSession
-# from augur.application.logs import *
+from augur.application.config import AugurConfig
+from augur.tasks.util.task_session import TaskSession
 
-# logger = AugurLogger("application", base_log_dir="/Users/andrew_brain/Augur/augur/logs/").get_logger()
-# session = TaskSession(logger)
-# augur_config = AugurConfig(session)
+logger = logging.getLogger(__name__)
+session = TaskSession(logger)
+augur_config = AugurConfig(session)
 
 
 workers = multiprocessing.cpu_count() * 2 + 1
@@ -17,17 +17,17 @@ reload = True
 accesslog = 'access.log'
 errorlog = 'error.log'
 
-# ssl_bool = augur_config.get_value('Server', 'ssl')
+ssl_bool = augur_config.get_value('Server', 'ssl')
 
-# if ssl_bool is True: 
+if ssl_bool is True: 
 
-#     workers = int(augur_config.get_value('Server', 'workers'))
-#     bind = '%s:%s' % (augur_config.get_value("Server", "host"), augur_config.get_value("Server", "port"))
-#     timeout = int(augur_config.get_value('Server', 'timeout'))
-#     certfile = str(augur_config.get_value('Server', 'ssl_cert_file'))
-#     keyfile = str(augur_config.get_value('Server', 'ssl_key_file'))
+    workers = int(augur_config.get_value('Server', 'workers'))
+    bind = '%s:%s' % (augur_config.get_value("Server", "host"), augur_config.get_value("Server", "port"))
+    timeout = int(augur_config.get_value('Server', 'timeout'))
+    certfile = str(augur_config.get_value('Server', 'ssl_cert_file'))
+    keyfile = str(augur_config.get_value('Server', 'ssl_key_file'))
     
-# else: 
-#     workers = int(augur_config.get_value('Server', 'workers'))
-#     bind = '%s:%s' % (augur_config.get_value("Server", "host"), augur_config.get_value("Server", "port"))
-#     timeout = int(augur_config.get_value('Server', 'timeout'))
+else: 
+    workers = int(augur_config.get_value('Server', 'workers'))
+    bind = '%s:%s' % (augur_config.get_value("Server", "host"), augur_config.get_value("Server", "port"))
+    timeout = int(augur_config.get_value('Server', 'timeout'))

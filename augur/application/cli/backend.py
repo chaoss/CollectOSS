@@ -43,16 +43,24 @@ def start(disable_collection):
     Start Augur's backend server
     """
 
-    # logger.info("Starting workers")
-    # if not disable_collection:
+    if not disable_collection:
+        logger.info("Starting workers")
 
-    #     repos = session.query(Repo).all()
+        repos = session.query(Repo).all()
 
-    #     repos_to_collect = []
-    #     repo_task_list = []
+        repo_task_list = [start_task.si(repo.repo_git) for repo in repos] + [process_contributors.si(),]
 
-    #     logger.info("Repos available for collection")
-    #     print_repos(repos)
+        repos_chain = chain(repo_task_list)
+
+        logger.info(repos_chain)
+
+        repos_chain.apply_async()
+
+        # repos_to_collect = []
+        # repo_task_list = []
+
+        # logger.info("Repos available for collection")
+        # print_repos(repos)
         # while True:
         #     try:
         #         user_input = int(input("Please select a repo to collect: "))
@@ -89,34 +97,14 @@ def start(disable_collection):
         #         print_repos(repos)
 
 
-        # repo_task_list = [start_task.si(repo.repo_git) for repo in repos] + [process_contributors.si(),]
+    logger.info('Starting Gunicorn webserver...')
+    logger.info(f'Augur is running at: http://127.0.0.1:{config.get_value("Server", "port")}')
+    logger.info('Gunicorn server logs & errors will be written to logs/gunicorn.log')
 
-        # repos_chain = chain(repo_task_list)
-
-        # logger.info(repos_chain)
-
-        # repos_chain.apply_async()
-
-    # augur_app = Application()
-
-    # augur_gunicorn_app = AugurGunicornApp(augur_app.gunicorn_options, augur_app=augur_app)
-
-    # logger.info('Starting Gunicorn webserver...')
-    # logger.info(f'Augur is running at: http://127.0.0.1:{augur_app.config.get_value("Server", "port")}')
-    # logger.info('Gunicorn server logs & errors will be written to logs/gunicorn.log')
-    # logger.info('Housekeeper update process logs will now take over.')
-
-    # gunicorn_arbiter = Arbiter(augur_gunicorn_app)
-
-    gunicorn_location = "/Users/andrew_brain/Augur/augur/augur/api/gunicorn_conf.py"
+    gunicorn_location = os.getcwd() + "/augur/api/gunicorn_conf.py"
     bind = '%s:%s' % (config.get_value("Server", "host"), config.get_value("Server", "port"))
-    print(f"Binding gunicorn to {bind}")
-    print(f"gunicorn location: {str(gunicorn_location)}")
 
     server = subprocess.Popen(["gunicorn", "-c", gunicorn_location, "-b", bind, "--preload", "augur.api.server:app"])
-
-    print(f"Server process: {server}")
-    print(f"Server args: {server.args}")
 
     try:
         server.wait()

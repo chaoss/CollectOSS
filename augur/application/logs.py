@@ -15,9 +15,7 @@ import coloredlogs
 from copy import deepcopy
 import typing
 from celery.local import PromiseProxy
-# import augur.tasks.git.facade_tasks as facade_tasks
-# import augur.tasks.github.issue_tasks as issue_tasks
-# import augur.tasks.start_tasks as start_tasks
+
 
 import os
 ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
@@ -43,7 +41,7 @@ def genHandler(file,fmt,level):
 #TODO dynamically define loggers for every task names.
 class TaskLogConfig():
 
-    def __init__(self,disable_logs=False,reset_logfiles=True,base_log_dir=ROOT_AUGUR_DIRECTORY + "/logs/",logLevel=logging.INFO):
+    def __init__(self,disable_logs=False,reset_logfiles=True,base_log_dir=ROOT_AUGUR_DIRECTORY + "/logs/",logLevel=logging.INFO, list_of_task_modules=None):
         if reset_logfiles is True:
             try:
                 shutil.rmtree(base_log_dir)
@@ -56,7 +54,7 @@ class TaskLogConfig():
 
         self.base_log_dir.mkdir(exist_ok=True)
 
-        task_files = [facade_tasks,issue_tasks,start_tasks]
+        task_files = list_of_task_modules
 
         self.logger_names = []
 
@@ -145,7 +143,7 @@ class AugurLogger():
             self.lg.disabled = True
             return
 
-        lg.setLevel(logLevel)
+        self.lg.setLevel(logLevel)
 
         file = str(self.base_log_dir) + "/" + str(self.logger_name)
 
@@ -155,10 +153,10 @@ class AugurLogger():
         self.lg.addHandler(genHandler((file + ".err"), ERROR_FORMAT_STRING, logging.ERROR))
         coloredlogs.install(level=logging.ERROR,logger=self.lg,fmt=ERROR_FORMAT_STRING)
 
-        lg.addHandler(genHandler((file + ".debug"), VERBOSE_FORMAT_STRING, logging.DEBUG))
-        coloredlogs.install(level=logging.DEBUG,logger=lg,fmt=VERBOSE_FORMAT_STRING)
+        self.lg.addHandler(genHandler((file + ".debug"), VERBOSE_FORMAT_STRING, logging.DEBUG))
+        coloredlogs.install(level=logging.DEBUG,logger=self.lg,fmt=VERBOSE_FORMAT_STRING)
 
-        lg.propagate = False
+        self.lg.propagate = False
     
     def __str__(self):
         return self.logger_name

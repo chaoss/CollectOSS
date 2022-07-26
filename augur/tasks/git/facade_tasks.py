@@ -69,12 +69,13 @@ if logs_directory is None:
 @after_setup_logger.connect
 def setup_loggers(*args,**kwargs):
     #load config
-    loggingConfig = TaskLogConfig(base_log_dir=logs_directory)
+    import augur.tasks.github.issue_tasks as issue_tasks
+    import augur.tasks.start_tasks as start_tasks
+    task_modules = [sys.modules[__name__], issue_tasks, start_tasks]
+    loggingConfig = TaskLogConfig(base_log_dir=logs_directory, )
 
     
     
-
-
 
 #enable celery multithreading
 @celery.task

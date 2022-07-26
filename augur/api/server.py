@@ -94,8 +94,6 @@ class Server():
 
         route_files = self.get_route_files()
 
-        self.logger.info(f"Route files: {route_files}")
-
         for route_file in route_files:
             module = importlib.import_module('.' + route_file, 'augur.api.routes')
             module.create_routes(app)

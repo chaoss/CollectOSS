@@ -20,8 +20,6 @@ AUGUR_API_VERSION = 'api/unstable'
 
 def create_routes(app):
 
-    logger.info("Creating util routes")
-
     @app.route('/{}/repo-groups'.format(AUGUR_API_VERSION))
     def get_all_repo_groups(): #TODO: make this name automatic - wrapper?
         repoGroupsSQL = s.sql.text("""
