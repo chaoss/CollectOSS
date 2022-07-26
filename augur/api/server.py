@@ -42,14 +42,22 @@ class Server():
         self.cache = self.create_cache()
         self.server_cache = self.get_server_cache()
         self.app = None
-        self.api_version = AUGUR_API_VERSION
         self.show_metadata = False
 
-
+    """
+        This function defines the flask app in the variable self.app and configures the routes for the app
+    """
     def create_app(self):
+
         self.app = Flask(__name__)
-        self.app.augur_api_version = AUGUR_API_VERSION
         self.logger.debug("Created Flask app")
+
+        # defines the api version on the flask app, 
+        # so when we pass the flask app to the routes files we 
+        # know can access the api version via the app variable
+        self.app.augur_api_version = AUGUR_API_VERSION
+
+        
         CORS(self.app)
         self.app.url_map.strict_slashes = False
 
@@ -57,7 +65,7 @@ class Server():
 
 
         self.logger.debug("Creating API routes...")
-        self.create_routes(self.app)
+        self.create_all_routes(self.app)
         self.create_metrics()
 
         #####################################
@@ -72,10 +80,10 @@ class Server():
             """
             Redirects to health check route
             """
-            return redirect(self.api_version)
+            return redirect(self.app.augur_api_version)
 
-        @self.app.route('/{}/'.format(self.api_version))
-        @self.app.route('/{}/status'.format(self.api_version))
+        @self.app.route('/{}/'.format(self.app.augur_api_version))
+        @self.app.route('/{}/status'.format(self.app.augur_api_version))
         def status():
             """
             Health check route
@@ -91,55 +99,103 @@ class Server():
     def get_app(self):
         return self.app
 
-    def create_routes(self, app):
+    """
+        This function adds all the routes defined in the files in the augur/api/routes directory to the flask app
+    """
+    def create_all_routes(self, app):
 
+        # gets a list of the routes files
         route_files = self.get_route_files()
 
         for route_file in route_files:
+
+            # imports the routes file
             module = importlib.import_module('.' + route_file, 'augur.api.routes')
+
+            # each file that contains routes must contain a create_routes function
+            # and this line is calling that function and passing the flask app,
+            # so that the routes in the files can be added to the flask app
             module.create_routes(app)
 
-
+    """
+    This function gets a list of all the routes files in the augur/api/routes directory
+    """
     def get_route_files(self):
-        route_files = []
 
+        route_files = []
         for filename in glob.iglob("augur/api/routes/*"):
             file_id = self.get_file_id(filename)
+
+            # this filters out files like __init__ and __pycache__. And makes sure it only get py files
             if not file_id.startswith('__') and filename.endswith('.py'):
                 route_files.append(file_id)
 
         return route_files
 
+
+    """
+        Gets the file id of a given path.
+        Example: If the path /augur/routes.py is given it will return routes
+    """
     def get_file_id(self, path):
         return os.path.splitext(os.path.basename(path))[0]
 
 
+    """
+        Starts process of adding all the functions 
+        from the metrics folder to the flask app as routes
+    """
     def create_metrics(self):
 
+        # get a list of the metrics files
         metric_files = self.get_metric_files()
 
-        # import the metric modules
+        # import the metric modules and add them to the flask app using self.add_metrics
         for file in metric_files:
             importlib.import_module(f"augur.api.metrics.{file}")
             self.add_metrics(f"augur.api.metrics.{file}")
 
+
+    """
+        This function takes modules that contains metrics, 
+        and adds them to the flask app via the self.add_standard_metric 
+        or self.add_toss_metric methods.
+
+        NOTE: The attribute is_metric and obj.metadata['type'] 
+        are set in file augur/api/routes/util.py in the function 
+        register_metric(). This function is a decorator and is 
+        how a function is defined as a metric.
+    """
     def add_metrics(self, module_name):
 
-       #  add the metric endpoints the the server
+        # gets all the members in the module and loops through them
         for name, obj in inspect.getmembers(sys.modules[module_name]):
+
+            # cheks if the object is a function
             if inspect.isfunction(obj) == True:
+
+                # checks if the function has the attribute is_metric. 
+                # If it does then it is a metric function and needs to be added to the flask app
                 if hasattr(obj, 'is_metric') == True:
+
+                    # determines the type of metric and calls the correct method to add it to the flask app
                     if obj.metadata['type'] == "standard":
                         self.add_standard_metric(obj, obj.metadata['endpoint'])
                     if obj.metadata['type'] == "toss":
                         self.add_toss_metric(obj, obj.metadata['endpoint'])
 
+
+    """
+    This function gets a list of all the metrics files in the augur/api/metrics directory
+    """
     def get_metric_files(self):
         metric_files = []
 
         for filename in glob.iglob("augur/api/metrics/**"):
             file_id = self.get_file_id(filename)
-            if not file_id.startswith('__') and filename.endswith('.py') and file_id != "metrics":
+            
+            # this filters out files like __init__ and __pycache__. And makes sure it only get py files
+            if not file_id.startswith('__') and filename.endswith('.py'):
                 metric_files.append(file_id)
 
         return metric_files
@@ -235,15 +291,15 @@ class Server():
         return generated_function
         
     def add_standard_metric(self, function, endpoint, **kwargs):
-        repo_endpoint = f'/{self.api_version}/repos/<repo_id>/{endpoint}'
-        repo_group_endpoint = f'/{self.api_version}/repo-groups/<repo_group_id>/{endpoint}'
-        deprecated_repo_endpoint = f'/{self.api_version}/repo-groups/<repo_group_id>/repos/<repo_id>/{endpoint}'
+        repo_endpoint = f'/{self.app.augur_api_version}/repos/<repo_id>/{endpoint}'
+        repo_group_endpoint = f'/{self.app.augur_api_version}/repo-groups/<repo_group_id>/{endpoint}'
+        deprecated_repo_endpoint = f'/{self.app.augur_api_version}/repo-groups/<repo_group_id>/repos/<repo_id>/{endpoint}'
         self.app.route(repo_endpoint)(self.routify(function, 'repo'))
         self.app.route(repo_group_endpoint)(self.routify(function, 'repo_group'))
         self.app.route(deprecated_repo_endpoint )(self.routify(function, 'deprecated_repo'))
 
     def add_toss_metric(self, function, endpoint, **kwargs):
-        repo_endpoint = f'/{self.api_version}/repos/<repo_id>/{endpoint}'
+        repo_endpoint = f'/{self.app.augur_api_version}/repos/<repo_id>/{endpoint}'
         self.app.route(repo_endpoint)(self.routify(function, 'repo'))
 
     def create_cache(self):
