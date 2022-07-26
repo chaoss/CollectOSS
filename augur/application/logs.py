@@ -40,7 +40,7 @@ def genHandler(file,fmt,level):
 
 #TODO dynamically define loggers for every task names.
 class TaskLogConfig():
-    def __init__(self, all_tasks, disable_log_files=False,reset_logfiles=True,base_log_dir="/var/log/augur",logLevel=logging.INFO,list_of_task_modules=None):
+    def __init__(self, all_tasks, disable_log_files=False,reset_logfiles=True,base_log_dir="/home/isaac/logs",logLevel=logging.INFO,list_of_task_modules=None):
         if reset_logfiles is True:
             try:
                 shutil.rmtree(base_log_dir)
@@ -104,7 +104,7 @@ class TaskLogConfig():
 
 
 class AugurLogger():
-    def __init__(self, logger_name, disable_log_files=False,reset_logfiles=True,base_log_dir="/var/log/augur",logLevel=logging.INFO):
+    def __init__(self, logger_name, disable_log_files=False,reset_logfiles=True,base_log_dir="/home/isaac/logs",logLevel=logging.INFO):
         if reset_logfiles is True:
             try:
                 shutil.rmtree(base_log_dir)
