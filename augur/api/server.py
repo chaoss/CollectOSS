@@ -23,8 +23,8 @@ from beaker.cache import CacheManager
 from augur.application.logs import AugurLogger
 from augur.application.config import AugurConfig
 from augur.tasks.util.task_session import TaskSession
-
 from augur.application.db.engine import engine
+from metadata import __version__ as augur_code_version
 
 AUGUR_API_VERSION = 'api/unstable'
 
@@ -82,6 +82,7 @@ class Server():
             """
             status = {
                 'status': 'OK',
+                'version': augur_code_version
             }
             return Response(response=json.dumps(status),
                             status=200,
