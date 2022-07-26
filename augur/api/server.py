@@ -199,11 +199,8 @@ class Server():
 
         return metric_files
         
-    """
-        The function takes a function as an argument, and it args and kwargs. Then it calls the function, and returns the result.
-        At the end it conversts it to json if possible
-    """
-    def transform(self, func, args=None, kwargs=None, repo_url_base=None, orient='records',
+
+    def transform(self, func, args=[], kwargs={}, repo_url_base=None, orient='records',
         group_by=None, on=None, aggregate='sum', resample=None, date_col='date'):
         """
         Serializes a dataframe in a JSON object and applies specified transformations
@@ -219,16 +216,6 @@ class Server():
             if repo_url_base:
                 kwargs['repo_url'] = str(base64.b64decode(repo_url_base).decode())
 
-            # if args and kwargs are empty call the function and get the result
-            if not args and not kwargs:
-                data = func()
-
-            # if args are defined and kwargs are empty call the function with args and get the result
-            elif args and not kwargs:
-                data = func(*args)
-
-            # if args and kwargs are set then pass them to the function and get the result
-            else:
                 data = func(*args, **kwargs)
             
             # most metrics return a pandas dataframe, which has the attribute to_json
@@ -302,7 +289,7 @@ class Server():
             # sets the kwargs as the query paramaters or the arguments sent in the headers 
             kwargs.update(request.args.to_dict())            
 
-            
+
             if 'repo_group_id' not in kwargs and func.metadata["type"] != "toss":
                 kwargs['repo_group_id'] = 1
 
