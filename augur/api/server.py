@@ -57,7 +57,7 @@ class Server():
         # know can access the api version via the app variable
         self.app.augur_api_version = AUGUR_API_VERSION
 
-        
+
         CORS(self.app)
         self.app.url_map.strict_slashes = False
 
@@ -67,10 +67,6 @@ class Server():
         self.logger.debug("Creating API routes...")
         self.create_all_routes(self.app)
         self.create_metrics()
-
-        #####################################
-        ###          UTILITY              ###
-        #####################################
 
         @self.app.route('/')
         @self.app.route('/ping')
@@ -96,6 +92,9 @@ class Server():
                             status=200,
                             mimetype="application/json")
 
+    """
+        This function returns the flask app
+    """
     def get_app(self):
         return self.app
 
@@ -200,7 +199,10 @@ class Server():
 
         return metric_files
         
-
+    """
+        The function takes a function as an argument, and it args and kwargs. Then it calls the function, and returns the result.
+        At the end it conversts it to json if possible
+    """
     def transform(self, func, args=None, kwargs=None, repo_url_base=None, orient='records',
         group_by=None, on=None, aggregate='sum', resample=None, date_col='date'):
         """
@@ -217,30 +219,48 @@ class Server():
             if repo_url_base:
                 kwargs['repo_url'] = str(base64.b64decode(repo_url_base).decode())
 
+            # if args and kwargs are empty call the function and get the result
             if not args and not kwargs:
                 data = func()
+
+            # if args are defined and kwargs are empty call the function with args and get the result
             elif args and not kwargs:
                 data = func(*args)
+
+            # if args and kwargs are set then pass them to the function and get the result
             else:
                 data = func(*args, **kwargs)
-
+            
+            # most metrics return a pandas dataframe, which has the attribute to_json
+            # so basically this is checking if it is a pandas dataframe
             if hasattr(data, 'to_json'):
+
+                # if group_by is defined it groups by the group_by value 
+                # and uses the aggregate to determine the operation performed
                 if group_by is not None:
                     data = data.group_by(group_by).aggregate(aggregate)
+
+                # This code block is resampling the pandas dataframe, here is the documentation for it
+                # https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.resample.html
                 if resample is not None:
                     data['idx'] = pd.to_datetime(data[date_col])
                     data = data.set_index('idx')
                     data = data.resample(resample).aggregate(aggregate)
                     data['date'] = data.index
+                
+                # converts pandas dataframe to json
                 result = data.to_json(orient=orient, date_format='iso', date_unit='ms')
             else:
+                # trys to convert dict to json
                 try:
+                    
                     result = json.dumps(data)
                 except:
                     result = data
         else:
             result = json.dumps(func.metadata)
 
+        # returns the result of the function
         return result
 
     def flaskify(self, function, cache=True):
