@@ -65,7 +65,7 @@ class TaskLogConfig():
                 lg = logging.getLogger(task)
                 self.logger_names.append(task)
 
-                lg.setLevel(logLevel)
+                #lg.setLevel(logLevel)
 
                 stream = logging.StreamHandler()
                 #stream.setLevel(logLevel)
