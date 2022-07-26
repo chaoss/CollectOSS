@@ -61,8 +61,9 @@ logger = logging.getLogger(__name__)
 config_db_session = TaskSession(logger)
 config = AugurConfig(config_db_session)
 logs_directory = config.get_value("Logging", "logs_directory")
+DISABLE_LOG_TO_FILE = False
 if logs_directory is None:
-    raise Exception('logs_directory not specified in config.')
+    DISABLE_LOG_TO_FILE = True
 
 
 #Load logging config once at task definition
@@ -72,9 +73,8 @@ def setup_loggers(*args,**kwargs):
     import augur.tasks.github.issue_tasks as issue_tasks
     import augur.tasks.start_tasks as start_tasks
     task_modules = [sys.modules[__name__], issue_tasks, start_tasks]
-    loggingConfig = TaskLogConfig(base_log_dir=logs_directory, )
+    loggingConfig = TaskLogConfig(disable_log_files=DISABLE_LOG_TO_FILE, base_log_dir=logs_directory)
 
-    
     
 
 #enable celery multithreading
@@ -503,7 +503,7 @@ def process_commit_metadata(contributorQueue,repo_id):
             """
 
 
-            alias_table_data = ContributorsAliases.query.filter_by(alias_email=email).all()
+            alias_table_data = session.query(ContributorsAlias).filter_by(alias_email=email).all()
             if len(alias_table_data) >= 1:
                 # Move on if email resolved
 
@@ -518,7 +518,7 @@ def process_commit_metadata(contributorQueue,repo_id):
         #Check the unresolved_commits table to avoid hitting endpoints that we know don't have relevant data needlessly
         try:
             
-            unresolved_query_result = UnresolvedCommitEmails.query.filter_by(name=name).all()
+            unresolved_query_result = session.query(UnresolvedCommitEmails).filter_by(name=name).all()
 
             if len(unresolved_query_result) >= 1:
 
@@ -533,7 +533,7 @@ def process_commit_metadata(contributorQueue,repo_id):
     
         #Check the contributors table for a login for the given name
         try:
-            contributors_with_matching_name = Contributors.query.filter_by(cntrb_full_name=name).one()
+            contributors_with_matching_name = session.query(Contributor).filter_by(cntrb_full_name=name).one()
 
             login = contributors_with_matching_name.gh_login
 
@@ -744,7 +744,8 @@ def insert_facade_contributors(session, repo_id,processes=4,multithreaded=True):
     """).bindparams(repo_id=repo_id)
 
     #Execute statement with session.
-    new_contribs = session.execute_sql(new_contrib_sql).fetchall()
+    result = session.execute_sql(new_contrib_sql).fetchall()
+    new_contribs = [dict(zip(row.keys(), row)) for row in result]
 
     #print(new_contribs)
     
@@ -808,7 +809,8 @@ def insert_facade_contributors(session, repo_id,processes=4,multithreaded=True):
     #existing_cntrb_emails = json.loads(pd.read_sql(resolve_email_to_cntrb_id_sql, self.db, params={
     #                                    'repo_id': repo_id}).to_json(orient="records"))
 
-    existing_cntrb_emails = session.execute_sql(resolve_email_to_cntrb_id_sql).fetchall()
+    result = session.execute_sql(resolve_email_to_cntrb_id_sql).fetchall()
+    existing_cntrb_emails = [dict(zip(row.keys(), row)) for row in result]
     
     if len(existing_cntrb_emails) > 0 and multithreaded:
         
