@@ -40,7 +40,7 @@ def genHandler(file,fmt,level):
 
 #TODO dynamically define loggers for every task names.
 class TaskLogConfig():
-    def __init__(self,disable_log_files=False,reset_logfiles=True,base_log_dir=ROOT_AUGUR_DIRECTORY + "/logs/",logLevel=logging.INFO,list_of_task_modules=None):
+    def __init__(self, task_names, disable_log_files=False,reset_logfiles=True,base_log_dir="var/log/augur",logLevel=logging.INFO,list_of_task_modules=None):
         if reset_logfiles is True:
             try:
                 shutil.rmtree(base_log_dir)
@@ -53,64 +53,49 @@ class TaskLogConfig():
 
         self.base_log_dir.mkdir(exist_ok=True)
 
-        task_files = list_of_task_modules
-
         self.logger_names = []
 
-        self.__initLoggers(task_files,logLevel)
+        self.__initLoggers(task_names, logLevel)
     
-    def __initLoggers(self,task_modules,logLevel):
-        
-        
-        for module in task_modules:
-            """
-            get the name strings of all functions in each module that have the celery.task decorator.
+    def __initLoggers(self,task_names,logLevel):
+
+        for task in task_names:
+            #Create logging profiles for each task in seperate files.
+            lg = logging.getLogger(task)
+            self.logger_names.append(task)
+
+            lg.setLevel(logLevel)
             
-            Celery task functions with the decorator are of type celery.local.PromiseProxy
-            """
+            stream = logging.StreamHandler()
+            stream.setLevel(logLevel)
+            lg.addHandler(stream)
 
-            allTasksInModule = [str(obj[0]) for obj in getmembers(module) if isinstance(obj[1],PromiseProxy)]
+            if not self.disable_log_files:
             
-            #seperate log files by module
-            #module_dir = Path(str(self.base_log_dir) + "/" +)
+                #Put logs in seperate folders by module.
+                module_folder = Path(str(self.base_log_dir) + "/" + module.__name__ + "/")
+                module_folder.mkdir(exist_ok=True)
 
-            for task in allTasksInModule:
-                #Create logging profiles for each task in seperate files.
-                lg = logging.getLogger(task)
-                self.logger_names.append(task)
+                #Each task should have a seperate folder
+                task_folder = Path(str(module_folder) + "/" + str(task) + "/")
+                task_folder.mkdir(exist_ok=True)
 
-                lg.setLevel(logLevel)
-                
-                stream = logging.StreamHandler()
-                stream.setLevel(logLevel)
-                lg.addHandler(stream)
+                #Absolute path to log file
+                file = str(task_folder) + "/" + str(task)
 
-                if not self.disable_log_files:
-                
-                    #Put logs in seperate folders by module.
-                    module_folder = Path(str(self.base_log_dir) + "/" + module.__name__ + "/")
-                    module_folder.mkdir(exist_ok=True)
-
-                    #Each task should have a seperate folder
-                    task_folder = Path(str(module_folder) + "/" + str(task) + "/")
-                    task_folder.mkdir(exist_ok=True)
-
-                    #Absolute path to log file
-                    file = str(task_folder) + "/" + str(task)
-
-                    #Create file handlers for each relevant log level and make them colorful
-                    lg.addHandler(genHandler((file + ".info"), SIMPLE_FORMAT_STRING, logging.INFO))
-                    lg.addHandler(genHandler((file + ".err"), ERROR_FORMAT_STRING, logging.ERROR))
-                    if logLevel == logging.DEBUG:
-                        lg.addHandler(genHandler((file + ".debug"), VERBOSE_FORMAT_STRING, logging.DEBUG))
-                
-                coloredlogs.install(level=logging.INFO,logger=lg,fmt=SIMPLE_FORMAT_STRING)                
-                coloredlogs.install(level=logging.ERROR,logger=lg,fmt=ERROR_FORMAT_STRING)
-
+                #Create file handlers for each relevant log level and make them colorful
+                lg.addHandler(genHandler((file + ".info"), SIMPLE_FORMAT_STRING, logging.INFO))
+                lg.addHandler(genHandler((file + ".err"), ERROR_FORMAT_STRING, logging.ERROR))
                 if logLevel == logging.DEBUG:
-                    coloredlogs.install(level=logging.DEBUG,logger=lg,fmt=VERBOSE_FORMAT_STRING)
-                
-                lg.propagate = False
+                    lg.addHandler(genHandler((file + ".debug"), VERBOSE_FORMAT_STRING, logging.DEBUG))
+            
+            coloredlogs.install(level=logging.INFO,logger=lg,fmt=SIMPLE_FORMAT_STRING)                
+            coloredlogs.install(level=logging.ERROR,logger=lg,fmt=ERROR_FORMAT_STRING)
+
+            if logLevel == logging.DEBUG:
+                coloredlogs.install(level=logging.DEBUG,logger=lg,fmt=VERBOSE_FORMAT_STRING)
+            
+            lg.propagate = False
 
         
         def getLoggerNames(self):
