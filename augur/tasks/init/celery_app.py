@@ -10,6 +10,21 @@ celery_app = Celery('tasks', broker=BROKER_URL,
              backend=BACKEND_URL, include=['augur.tasks.git.facade_tasks', 'augur.tasks.github.issue_tasks', 'augur.tasks.start_tasks'])   
 
 
+def split_tasks_into_groups(tasks):
+    grouped_tasks = {}
+
+    for task in tasks: 
+        task_divided = task.split(".")
+
+        try:
+            grouped_tasks[task_divided[-2]].append(task_divided[-1])
+        except:
+            grouped_tasks[task_divided[-2]] = [task_divided[-1]]
+    
+    return grouped_tasks
+
+
+
 #Load logging config once at task definition
 @after_setup_logger.connect
 def setup_loggers(*args,**kwargs):
@@ -18,9 +33,7 @@ def setup_loggers(*args,**kwargs):
     celery_tasks = list(current_app.tasks.keys())
 
     tasks = [task for task in celery_tasks if 'celery.' not in task]
-
-    print(tasks)
     
-    loggingConfig = TaskLogConfig(tasks)
+    loggingConfig = TaskLogConfig(split_tasks_into_groups(tasks))
 
     
