@@ -298,8 +298,11 @@ class Server():
         :param endpoint_type: The type of API endpoint, i.e. 'repo_group' or 'repo'
         """
         def generated_function(*args, **kwargs):
-            kwargs.update(request.args.to_dict())
 
+            # sets the kwargs as the query paramaters or the arguments sent in the headers 
+            kwargs.update(request.args.to_dict())            
+
+            
             if 'repo_group_id' not in kwargs and func.metadata["type"] != "toss":
                 kwargs['repo_group_id'] = 1
 
@@ -309,11 +312,23 @@ class Server():
                             mimetype="application/json")
         generated_function.__name__ = f"{endpoint_type}_" + func.__name__
         return generated_function
+
         
     def add_standard_metric(self, function, endpoint, **kwargs):
         repo_endpoint = f'/{self.app.augur_api_version}/repos/<repo_id>/{endpoint}'
         repo_group_endpoint = f'/{self.app.augur_api_version}/repo-groups/<repo_group_id>/{endpoint}'
         deprecated_repo_endpoint = f'/{self.app.augur_api_version}/repo-groups/<repo_group_id>/repos/<repo_id>/{endpoint}'
+
+        """
+            These three lines are defining routes on the flask app, and passing a function.
+            Essetially the strucutre of this is self.app.route(endpoint)(function).
+            So when the route is pinged, the self.routify(function, endpoint_type) returns a function callback.
+            And the function callback returns a Response object with the data
+            
+            Simply self.routify() is called by the route being pinged, and 
+            then self.routify() returns a function so it is called, 
+            and then that function returns a Response
+        """
         self.app.route(repo_endpoint)(self.routify(function, 'repo'))
         self.app.route(repo_group_endpoint)(self.routify(function, 'repo_group'))
         self.app.route(deprecated_repo_endpoint )(self.routify(function, 'deprecated_repo'))
