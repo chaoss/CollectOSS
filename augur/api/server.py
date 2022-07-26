@@ -217,7 +217,7 @@ class Server():
             if repo_url_base:
                 kwargs['repo_url'] = str(base64.b64decode(repo_url_base).decode())
 
-                data = func(*args, **kwargs)
+            data = func(*args, **kwargs)
 
             if hasattr(data, 'to_json'):
                 if group_by is not None:
