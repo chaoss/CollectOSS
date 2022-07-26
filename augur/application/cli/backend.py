@@ -96,15 +96,15 @@ def start(disable_collection):
         #         print("\n\n Repo order after reordering")
         #         print_repos(repos)
 
-
-    logger.info('Starting Gunicorn webserver...')
-    logger.info(f'Augur is running at: http://127.0.0.1:{config.get_value("Server", "port")}')
-    logger.info('Gunicorn server logs & errors will be written to logs/gunicorn.log')
-
     gunicorn_location = os.getcwd() + "/augur/api/gunicorn_conf.py"
     bind = '%s:%s' % (config.get_value("Server", "host"), config.get_value("Server", "port"))
 
     server = subprocess.Popen(["gunicorn", "-c", gunicorn_location, "-b", bind, "--preload", "augur.api.server:app"])
+
+    time.sleep(3)
+
+    logger.info('Gunicorn webserver started...')
+    logger.info(f'Augur is running at: http://127.0.0.1:{config.get_value("Server", "port")}')
 
     try:
         server.wait()

@@ -287,7 +287,9 @@ class Server():
         def generated_function(*args, **kwargs):
 
             # sets the kwargs as the query paramaters or the arguments sent in the headers 
-            kwargs.update(request.args.to_dict())            
+            kwargs.update(request.args.to_dict()) 
+
+            print(f"Kwargs: {kwargs}")           
 
 
             if 'repo_group_id' not in kwargs and func.metadata["type"] != "toss":
