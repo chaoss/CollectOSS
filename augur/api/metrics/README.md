@@ -42,4 +42,9 @@ results = pd.read_sql(repo_sql, engine, params={'repo_id': repo_id})
     - For example if we wanted to query the open_issue_count metric by repo, but only wanted the count of issues after 01-01-2020 and before 01-01-2021. Then we could use this url: `https://<host>:<port>/api/unstable/repos/<repo_id>/open-issue-count?begin_data=01-01-2020&end_date=01-01-2021`
 
 
+## How Metrics Actuall Work?
+
+
+
+
 
