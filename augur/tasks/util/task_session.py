@@ -100,7 +100,7 @@ class TaskSession(s.orm.Session):
                 # if there is no data to return then it executes the insert the returns nothing
             if len(return_columns) == 0:
 
-                # try:
+                try:
                 connection.execute(stmnt)
                 return
 

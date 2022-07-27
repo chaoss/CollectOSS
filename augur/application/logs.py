@@ -118,7 +118,7 @@ class TaskLogConfig():
 
 
 class AugurLogger():
-    def __init__(self, logger_name, disable_log_files=False,reset_logfiles=True,base_log_dir="/home/isaac/logs",logLevel=logging.INFO):
+    def __init__(self, logger_name, disable_log_files=False,reset_logfiles=True,base_log_dir=ROOT_AUGUR_DIRECTORY + "/logs/",logLevel=logging.INFO):
         if reset_logfiles is True:
             try:
                 shutil.rmtree(base_log_dir)

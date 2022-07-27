@@ -1,4 +1,4 @@
-from augur.tasks.util.AugurUUID import AugurUUID
+from augur.tasks.util.AugurUUID import GithubUUID
 """
 This file contains functions that take the api response 
 and return only the data that the database needs
@@ -461,10 +461,12 @@ def extract_need_pr_review_data(reviews, platform_id, repo_id, tool_version, dat
 
 def extract_needed_contributor_data(contributor, platform_id, tool_source, tool_version, data_source):
 
-    cntrb_id = AugurUUID(platform_id % 256, contributor["id"]).to_UUID()   
+    cntrb_id = GithubUUID()   
+    cntrb_id["platform"] = platform_id % 256
+    cntrb_id["user"] = contributor["id"]
 
     contributor = {
-            "cntrb_id": cntrb_id,
+            "cntrb_id": cntrb_id.to_UUID(),
             "cntrb_login": contributor['login'],
             "cntrb_created_at": contributor['created_at'] if 'created_at' in contributor else None,
             "cntrb_email": contributor['email'] if 'email' in contributor else None,
