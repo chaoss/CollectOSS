@@ -37,7 +37,7 @@ def create_endpoint_from_commit_sha(session,commit_sha, repo_id):
 
     #stmnt = s.select(Repo.repo_path, Repo.repo_name).where(Repo.repo_id == repo_id)
 
-    result = Repo.query.filter_by(repo_id=repo_id).one()
+    result = session.query(Repo).filter_by(repo_id=repo_id).one()
 
     if result.repo_path is None or result.repo_name is None:
         raise KeyError
@@ -80,7 +80,7 @@ def insert_alias(session, contributor, email):
     # Same principle as enrich_cntrb_id method.
 
     
-    contributor_table_data = Contributors.query.filter_by(gh_user_id=contributor["gh_user_id"]).all()
+    contributor_table_data = session.query(Contributors).filter_by(gh_user_id=contributor["gh_user_id"]).all()
     # self.logger.info(f"Contributor query: {contributor_table_data}")
 
     # Handle potential failures
@@ -323,7 +323,7 @@ def create_endpoint_from_repo_id(session, repo_id):
         WHERE repo_id = :repo_id_bind
     """
     #ORM syntax of above statement
-    result = Repo.query.filter_by(repo_id=repo_id).one()
+    result = session.query(Repo).filter_by(repo_id=repo_id).one()
 
     url = result.repo_git
     session.logger.info(f"Url: {url}")
