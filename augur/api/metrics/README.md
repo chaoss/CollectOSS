@@ -23,7 +23,7 @@ from augur.application.db.engine import engine
     4. Define a positonal paramater of repo_group_id first, then a keyword paramater of repo_id second
     5. Define any additional keyword paramater the function may need
         - Note: When querying the endpoint these will be passed as query paramaters
-4. Define any queries needed with s.sql.text(""" sql query here """). Then execute those queries using pandas. Example below
+4. Define any queries with the structure show below
 ```py
 repo_sql = s.sql.text(""" SELECT repo.repo_name FROM repo WHERE repo.repo_id = :repo_id """)
 results = pd.read_sql(repo_sql, engine, params={'repo_id': repo_id})
