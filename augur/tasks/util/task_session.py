@@ -1,4 +1,3 @@
-
 import os
 from sqlalchemy.dialects import postgresql as pg
 import sqlalchemy as s
@@ -6,6 +5,8 @@ import pandas as pd
 import json
 import httpx
 from sqlalchemy.inspection import inspect
+from psycopg2.errors import DeadlockDetected
+
 import re
 import time
 import sys
@@ -96,100 +97,36 @@ class TaskSession(s.orm.Session):
         with self.engine.connect() as connection:
 
             # print(str(stmnt.compile(dialect=pg.dialect())))
-            
-                # if there is no data to return then it executes the insert the returns nothing
+            attempts = 0
+            # if there is no data to return then it executes the insert the returns nothing
             if len(return_columns) == 0:
 
-                try:
-                connection.execute(stmnt)
+                while attempts < 10:
+                    try:
+                        connection.execute(stmnt)
+                    except DeadlockDetected:
+                        self.logger.debug("Deadlock detected...trying again")
+                        attempts += 1
+                        continue
+                        
                 return
-
-                # except Exception as e:
-                        
-                #         def split_list(a_list):
-                #             half = len(a_list)//2
-                #             return a_list[:half], a_list[half:]
-
-                #         # pr_url_list = []
-                #         # for value in data:
-                #         #     pr_url_list.append(value["pr_url"])
-
-                #         # duplicates = set([x for x in pr_url_list if pr_url_list.count(x) > 1])
-                        
-                #         # print(f"DUPLICATES: {duplicates}. ERROR: {e}")
-                #         # return_data_set = set()
-                #         print("Error splitting the data into two pieces")
-                #         print(f"Data length: {len(data)}")
-                #         list_1, list_2 = split_list(data)
-                #         self.insert_data(list_1, table, natural_keys, return_columns)
-                #         self.insert_data(list_2, table, natural_keys, return_columns)
             
             # else it get the requested return columns and returns them as a list of dicts
             else:
-                try:
-                    return_data_tuples = connection.execute(stmnt).fetchall()
-                     # converts the return data to a list of dicts
+                while attempts < 10:
+                    try:
+                        return_data_tuples = connection.execute(stmnt).fetchall()
+                    except DeadlockDetected:
+                        self.logger.debug("Deadlock detected...trying again")
+                        attempts += 1
+                        continue               
+
                     return_data = []
                     for data in return_data_tuples:
                         return_data.append(dict(data))
 
                     return return_data
 
-                except ValueError as e:
-                    print(f"ERROR: {e}")
-                    data_keys = list(data[0].keys())
-
-                    string_data_list = []
-                    # loop through data with potential errors
-                    for value in data:
-
-                        string_data = {}
-                        # find the fields that are strings for that data
-                        for key in data_keys:
-
-                            if type(value[key]) == str:
-                                string_data[field] = value[field]
-
-                        string_data_list.append(string_data)
-
-                    for data in string_data_list:
-                        print(f"Data: {data}\n\n")
-
-                # except Exception as e:
-
-                #     print(f"Exception is: {e}")
-                    
-                #     def split_list(a_list):
-                #         half = len(a_list)//2
-                #         return a_list[:half], a_list[half:]
-
-                #     # pr_url_list = []
-                #     # for value in data:
-                #     #     pr_url_list.append(value["pr_url"])
-
-                #     # duplicates = set([x for x in pr_url_list if pr_url_list.count(x) > 1])
-                    
-                #     # print(f"DUPLICATES: {duplicates}. ERROR: {e}")
-                #     # return_data_set = set()
-                #     self.logger.info("Error splitting the data into two pieces")
-                #     self.logger.info(f"Data length: {len(data)}")
-                #     list_1, list_2 = split_list(data)
-                #     self.insert_data(list_1, table, natural_keys, return_columns)
-                #     self.insert_data(list_2, table, natural_keys, return_columns)
-                #         # return_data_set.add(return_column_data)
-
-                #     # return_data_tuples = list(return_data_set)
-
-                return_data = []
-                for data in return_data_tuples:
-                    return_data.append(dict(data))
-
-                return return_data
-
-
-                   
-
-               
 
 #TODO: Test sql methods
 class GithubTaskSession(TaskSession):
