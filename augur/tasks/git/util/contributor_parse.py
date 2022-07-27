@@ -6,7 +6,7 @@ from augur.application.db.models import *
 import sqlalchemy as s
 import time
 import math
-from augur.tasks.util.AugurUUID import AugurUUID
+from augur.tasks.util.AugurUUID import AugurUUID, GithubUUID, UnresolvableUUID
 
 """
 def enrich_cntrb_id(
@@ -394,10 +394,12 @@ def query_github_contributors(session, entry_info, repo_id):
             #TODO get and store an owner id
             
             #Generate ID for cntrb table
-            cntrb_id = AugurUUID(session.platform_id,contributor['id']).to_UUID()
+            #cntrb_id = AugurUUID(session.platform_id,contributor['id']).to_UUID()
+            cntrb_id = GithubUUID()
+            cntrb_id["user"] = int(contributor['id'])
 
             cntrb = {
-                "cntrb_id" : cntrb_id,
+                "cntrb_id" : cntrb_id.to_UUID(),
                 "cntrb_login": contributor['login'],
                 "cntrb_created_at": contributor['created_at'],
                 "cntrb_email": email,
