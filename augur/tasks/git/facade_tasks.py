@@ -34,6 +34,7 @@ from augur.tasks.init.celery_app import celery_app as celery
 
 
 from augur.application.db import data_parse
+from augur.tasks.util.AugurUUID import GithubUUID, UnresolvableUUID
 from augur.application.db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestEvent, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, Issue, IssueEvent, IssueLabel, IssueAssignee, PullRequestMessageRef, IssueMessageRef, Contributor, Repo
 
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
@@ -50,7 +51,7 @@ from augur.application.logs import TaskLogConfig
 
 
 
-
+#TODO: split out the github platform specific stuff from facade
 
 """
     You can prevent Celery from configuring any loggers at all by connecting 
@@ -563,10 +564,14 @@ def process_commit_metadata(contributorQueue,repo_id):
 
         try:
             
-            cntrb_id = AugurUUID(session.platform_id,user_data['id']).to_UUID()
+            #cntrb_id = AugurUUID(session.platform_id,user_data['id']).to_UUID()
+
+            cntrb_id = GithubUUID()
+            cntrb_id["user"] = int(user_data['id'])
+
             # try to add contributor to database
             cntrb = {
-                "cntrb_id" : cntrb_id,
+                "cntrb_id" : cntrb_id.to_UUID(),
                 "cntrb_login": user_data['login'],
                 "cntrb_created_at": user_data['created_at'],
                 "cntrb_email": user_data['email'] if 'email' in user_data else None,
