@@ -40,7 +40,7 @@ def genHandler(file,fmt,level):
 
 #TODO dynamically define loggers for every task names.
 class TaskLogConfig():
-    def __init__(self,disable_log_files=False,reset_logfiles=True,base_log_dir=ROOT_AUGUR_DIRECTORY + "/logs/",logLevel=logging.INFO,list_of_task_modules=None):
+    def __init__(self, all_tasks, disable_log_files=False,reset_logfiles=True,base_log_dir="/home/isaac/logs",logLevel=logging.INFO):
         if reset_logfiles is True:
             try:
                 shutil.rmtree(base_log_dir)
@@ -53,34 +53,20 @@ class TaskLogConfig():
 
         self.base_log_dir.mkdir(exist_ok=True)
 
-        task_files = list_of_task_modules
-
         self.logger_names = []
 
-        self.__initLoggers(task_files,logLevel)
+        self.__initLoggers(all_tasks, logLevel)
     
-    def __initLoggers(self,task_modules,logLevel):
-        
-        
-        for module in task_modules:
-            """
-            get the name strings of all functions in each module that have the celery.task decorator.
-            
-            Celery task functions with the decorator are of type celery.local.PromiseProxy
-            """
+    def __initLoggers(self,task_names_grouped,logLevel):
 
-            allTasksInModule = [str(obj[0]) for obj in getmembers(module) if isinstance(obj[1],PromiseProxy)]
-            
-            #seperate log files by module
-            #module_dir = Path(str(self.base_log_dir) + "/" +)
-
-            for task in allTasksInModule:
+        for module, task_list in task_names_grouped.items():
+            for task in task_list:
                 #Create logging profiles for each task in seperate files.
                 lg = logging.getLogger(task)
                 self.logger_names.append(task)
 
-                lg.setLevel(logLevel)
-                
+                #lg.setLevel(logLevel)
+
                 stream = logging.StreamHandler()
                 stream.setLevel(logLevel)
                 lg.addHandler(stream)
@@ -88,7 +74,7 @@ class TaskLogConfig():
                 if not self.disable_log_files:
                 
                     #Put logs in seperate folders by module.
-                    module_folder = Path(str(self.base_log_dir) + "/" + module.__name__ + "/")
+                    module_folder = Path(str(self.base_log_dir) + "/" + str(module) + "/")
                     module_folder.mkdir(exist_ok=True)
 
                     #Each task should have a seperate folder
@@ -103,13 +89,13 @@ class TaskLogConfig():
                     lg.addHandler(genHandler((file + ".err"), ERROR_FORMAT_STRING, logging.ERROR))
                     if logLevel == logging.DEBUG:
                         lg.addHandler(genHandler((file + ".debug"), VERBOSE_FORMAT_STRING, logging.DEBUG))
-                
+
                 coloredlogs.install(level=logging.INFO,logger=lg,fmt=SIMPLE_FORMAT_STRING)                
                 coloredlogs.install(level=logging.ERROR,logger=lg,fmt=ERROR_FORMAT_STRING)
 
                 if logLevel == logging.DEBUG:
                     coloredlogs.install(level=logging.DEBUG,logger=lg,fmt=VERBOSE_FORMAT_STRING)
-                
+
                 lg.propagate = False
 
         

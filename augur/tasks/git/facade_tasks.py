@@ -67,16 +67,7 @@ if logs_directory is None:
     DISABLE_LOG_TO_FILE = True
 
 
-#Load logging config once at task definition
-@after_setup_logger.connect
-def setup_loggers(*args,**kwargs):
-    #load config
-    import augur.tasks.github.issue_tasks as issue_tasks
-    import augur.tasks.start_tasks as start_tasks
-    task_modules = [sys.modules[__name__], issue_tasks, start_tasks]
-    loggingConfig = TaskLogConfig(disable_log_files=DISABLE_LOG_TO_FILE, base_log_dir=logs_directory)
 
-    
 
 #enable celery multithreading
 @celery.task

@@ -12,7 +12,7 @@ from augur.application.config import AugurConfig
 
 from augur.application.db.engine import engine
 
-logger = AugurLogger("server", base_log_dir="/Users/andrew_brain/Augur/augur/logs/").get_logger()
+logger = AugurLogger("server", base_log_dir="/home/isaac/logs/").get_logger()
 session = TaskSession(logger)
 augur_config = AugurConfig(session)
 
