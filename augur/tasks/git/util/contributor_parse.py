@@ -442,14 +442,14 @@ def query_github_contributors(session, entry_info, repo_id):
             #).fetchall()
 
             #stmnt = select(Contributors.gh_node_id).where(Contributors.gh_node_id == cntrb["gh_node_id"])
-            existingMatchingContributors = session.query(Contributors).filter_by(gh_node_id=cntrb["gh_node_id"]).all() #session.execute(stmnt)
+            existingMatchingContributors = session.query(Contributor).filter_by(gh_node_id=cntrb["gh_node_id"]).all() #session.execute(stmnt)
 
             if len(existingMatchingContributors) > 0:
                 break #if contributor already exists in table
 
             cntrb_natural_keys = ['cntrb_login']
             #insert cntrb to table.
-            session.insert_data(cntrb,Contributors,cntrb_natural_keys)
+            session.insert_data(cntrb,Contributor,cntrb_natural_keys)
             
         except Exception as e:
             session.logger.error("Caught exception: {}".format(e))
@@ -592,7 +592,7 @@ def query_github_contributors_bulk(session, entry_info, repo_id):
             #'data_source': self.data_source
         })
 
-    session.insert_bulk_data(contributors_insert,Contributors,contributors_insert[0].keys())
+    session.insert_bulk_data(contributors_insert,Contributor,contributors_insert[0].keys())
 def query_gitlab_contributors(self, entry_info, repo_id):
 
     gitlab_url = (
