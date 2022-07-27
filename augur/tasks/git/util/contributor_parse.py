@@ -440,7 +440,7 @@ def query_github_contributors(session, entry_info, repo_id):
             #).fetchall()
 
             #stmnt = select(Contributors.gh_node_id).where(Contributors.gh_node_id == cntrb["gh_node_id"])
-            existingMatchingContributors = Contributors.query.filter_by(gh_node_id=cntrb["gh_node_id"]).all() #session.execute(stmnt)
+            existingMatchingContributors = session.query(Contributors).filter_by(gh_node_id=cntrb["gh_node_id"]).all() #session.execute(stmnt)
 
             if len(existingMatchingContributors) > 0:
                 break #if contributor already exists in table

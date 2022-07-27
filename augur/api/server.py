@@ -201,7 +201,7 @@ class Server():
         return metric_files
         
 
-    def transform(self, func, args=None, kwargs=None, repo_url_base=None, orient='records',
+    def transform(self, func, args=[], kwargs={}, repo_url_base=None, orient='records',
         group_by=None, on=None, aggregate='sum', resample=None, date_col='date'):
         """
         Serializes a dataframe in a JSON object and applies specified transformations
@@ -217,12 +217,7 @@ class Server():
             if repo_url_base:
                 kwargs['repo_url'] = str(base64.b64decode(repo_url_base).decode())
 
-            if not args and not kwargs:
-                data = func()
-            elif args and not kwargs:
-                data = func(*args)
-            else:
-                data = func(*args, **kwargs)
+            data = func(*args, **kwargs)
 
             if hasattr(data, 'to_json'):
                 if group_by is not None:
