@@ -1,6 +1,9 @@
 # from augur import ROOT_AUGUR_DIRECTORY
 import multiprocessing
 import logging
+import os
+from pathlib import Path
+import shutil
 
 from augur.application.config import AugurConfig
 from augur.tasks.util.task_session import TaskSession
@@ -9,13 +12,20 @@ logger = logging.getLogger(__name__)
 session = TaskSession(logger)
 augur_config = AugurConfig(session)
 
+# ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+
+# base_log_dir = ROOT_AUGUR_DIRECTORY + "/logs/"
+
+# Path(base_log_dir).mkdir(exist_ok=True)
+
+
 
 workers = multiprocessing.cpu_count() * 2 + 1
 umask = 0o007
 reload = True
 #logging
-accesslog = 'access.log'
-errorlog = 'error.log'
+accesslog = "augur/logs/gunicorn.log"
+errorlog = "augur/logs/gunicorn.log"
 
 ssl_bool = augur_config.get_value('Server', 'ssl')
 
