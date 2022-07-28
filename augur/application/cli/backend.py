@@ -28,7 +28,7 @@ from celery import chain, signature
 
 
 
-logger = AugurLogger("backend", reset_logfiles=True).get_logger()
+logger = AugurLogger("augur", reset_logfiles=True).get_logger()
 session = TaskSession(logger)
 config = AugurConfig(session)
 

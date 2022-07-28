@@ -35,7 +35,7 @@ class Server():
 
     def __init__(self):
 
-        self.logger = AugurLogger("server").get_logger()
+        self.logger = AugurLogger("augur").get_logger()
         self.session = TaskSession(self.logger)
         self.config = AugurConfig(self.session)
 

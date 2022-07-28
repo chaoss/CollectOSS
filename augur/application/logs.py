@@ -14,10 +14,7 @@ import shutil
 import coloredlogs
 from copy import deepcopy
 import typing
-from celery.local import PromiseProxy
 
-
-import os
 ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
 
@@ -78,6 +75,7 @@ class TaskLogConfig():
     def __init__(self, all_tasks, disable_log_files=False,reset_logfiles=False,base_log_dir=ROOT_AUGUR_DIRECTORY + "/logs/",logLevel=logging.INFO):
         if reset_logfiles is True:
             try:
+                print("(tasks) Reseting log files")
                 shutil.rmtree(base_log_dir)
             except FileNotFoundError as e:
                 pass
@@ -95,6 +93,8 @@ class TaskLogConfig():
         self.__initLoggers(all_tasks)
     
     def __initLoggers(self,task_names_grouped):
+
+        print("Creating task logs")
 
         for module, task_list in task_names_grouped.items():
             for task in task_list:
@@ -137,6 +137,7 @@ class AugurLogger():
     def __init__(self, logger_name, disable_log_files=False,reset_logfiles=False,base_log_dir=ROOT_AUGUR_DIRECTORY + "/logs/",logLevel=logging.INFO):
         if reset_logfiles is True:
             try:
+                print("(augur) Reseting log files")
                 shutil.rmtree(base_log_dir)
             except FileNotFoundError as e:
                 pass
