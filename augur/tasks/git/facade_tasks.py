@@ -630,7 +630,7 @@ def process_commit_metadata(contributorQueue,repo_id):
         """
         
         #Executes an upsert with sqlalchemy 
-        cntrb_natural_keys = ['cntrb_login','gh_login']
+        cntrb_natural_keys = ['cntrb_login']
         session.insert_data(cntrb,Contributor,cntrb_natural_keys)
 
         try:
