@@ -671,7 +671,7 @@ class ContributorRepo(Base):
 class ContributorsAlias(Base):
     __tablename__ = "contributors_aliases"
     __table_args__ = (
-        UniqueConstraint("alias_email", "canonical_email"),
+        UniqueConstraint("alias_email"),
         {
             "schema": "augur_data",
             "comment": "Every open source user may have more than one email used to make contributions over time. Augur selects the first email it encounters for a user as its “canonical_email”. \n\nThe canonical_email is also added to the contributors_aliases table, with the canonical_email and alias_email being identical.  Using this strategy, an email search will only need to join the alias table for basic email information, and can then more easily map the canonical email from each alias row to the same, more detailed information in the contributors table for a user. ",

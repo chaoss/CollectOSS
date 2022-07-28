@@ -510,7 +510,7 @@ def process_commit_metadata(contributorQueue,repo_id):
         #Check the unresolved_commits table to avoid hitting endpoints that we know don't have relevant data needlessly
         try:
             
-            unresolved_query_result = session.query(UnresolvedCommitEmails).filter_by(name=name).all()
+            unresolved_query_result = session.query(UnresolvedCommitEmail).filter_by(name=name).all()
 
             if len(unresolved_query_result) >= 1:
 
@@ -631,7 +631,7 @@ def process_commit_metadata(contributorQueue,repo_id):
         
         #Executes an upsert with sqlalchemy 
         cntrb_natural_keys = ['cntrb_login']
-        session.insert_data(cntrb,Contributors,cntrb_natural_keys)
+        session.insert_data(cntrb,Contributor,cntrb_natural_keys)
 
         try:
             # Update alias after insertion. Insertion needs to happen first so we can get the autoincrementkey
@@ -657,7 +657,7 @@ def process_commit_metadata(contributorQueue,repo_id):
 
         try:
             #interface.db.execute(query)
-            #session.query(UnresolvedCommitEmails).filter(UnresolvedCommitEmails.email == email).delete()
+            #session.query(UnresolvedCommitEmail).filter(UnresolvedCommitEmail.email == email).delete()
             #session.commit()
             session.execute_sql(query)
         except Exception as e:
@@ -683,7 +683,7 @@ def link_commits_to_contributor(contributorQueue):
                 #).values({
                 #    'cmt_ght_author_id': cntrb_email['cntrb_id']
                 #}))
-                stmnt = s.update(Commits).where(Commits.cmt_committer_email == cntrb_email['email']).values(
+                stmnt = s.update(Commit).where(Commit.cmt_committer_email == cntrb_email['email']).values(
                     cmt_ght_author_id=cntrb_email['cntrb_id']
                 ).execution_options(synchronize_session="fetch")
 
