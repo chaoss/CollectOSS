@@ -631,7 +631,7 @@ def process_commit_metadata(contributorQueue,repo_id):
         
         #Executes an upsert with sqlalchemy 
         cntrb_natural_keys = ['cntrb_login']
-        session.insert_data(cntrb,Contributors,cntrb_natural_keys)
+        session.insert_data(cntrb,Contributor,cntrb_natural_keys)
 
         try:
             # Update alias after insertion. Insertion needs to happen first so we can get the autoincrementkey
