@@ -24,7 +24,7 @@ from augur.tasks.util.task_session import TaskSession
 from augur.application.logs import AugurLogger
 from augur.application.config import AugurConfig
 # from augur.server import Server
-from celery import chain, signature
+from celery import chain, signature, group
 
 
 
@@ -49,9 +49,11 @@ def start(disable_collection):
 
         # repo_task_list = [start_task.si(repo.repo_git) for repo in repos] + [process_contributors.si(),]
 
-        # repos_chain = chain(repo_task_list)
+        # repos_chain = group(repo_task_list)
 
         # logger.info(repos_chain)
+
+        # celery_process = subprocess.Popen(['celery', '-A', 'augur.tasks.init.celery_app.celery_app', 'worker', '--loglevel=info'])
 
         # repos_chain.apply_async()
 

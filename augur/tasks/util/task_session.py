@@ -11,6 +11,7 @@ from sqlalchemy.exc import OperationalError
 import re
 import time
 import sys
+import random
 
 sys.path.append("..")
 from sqlalchemy.event import listen
@@ -31,12 +32,17 @@ sys.path.pop()
 #TODO: Test sql methods
 class TaskSession(s.orm.Session):
 
+    task_num = 0
+
     #ROOT_AUGUR_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
     def __init__(self, logger):
         
         self.logger = logger
         self.engine = engine
+        self.task_name = f"TASK {TaskSession.task_num}"
+
+        TaskSession.task_num +=1 
 
         super().__init__(self.engine)
     
@@ -95,46 +101,67 @@ class TaskSession(s.orm.Session):
             set_ = setDict
         )
 
-        with self.engine.connect() as connection:
 
-            # print(str(stmnt.compile(dialect=pg.dialect())))
-            attempts = 0
-            # if there is no data to return then it executes the insert the returns nothing
-            if len(return_columns) == 0:
+        # print(str(stmnt.compile(dialect=pg.dialect())))
+        attempts = 0
+        sleep_time_list = [x for x in range(1,11)]
+        sleep_time = random.sample(sleep_time_list, k=1)[0]
+        deadlock_detected = False
+        # if there is no data to return then it executes the insert the returns nothing
+        if len(return_columns) == 0:
 
-                while attempts < 10:
-                    try:
+            while attempts < 10:
+                try:
+                    with self.engine.connect() as connection:
                         connection.execute(stmnt)
-                    except OperationalError as e:
-                        print(type(e.orig))
-                        if isinstance(e.orig, DeadlockDetected):
-                            self.logger.info("Deadlock detected...trying again")
-                            attempts += 1
-                            continue
-                        else:
-                            raise OperationalError(f"An OperationalError other than DeadlockDetected occurred: {e}") 
-                        
-                return
-            
-            # else it get the requested return columns and returns them as a list of dicts
+                except OperationalError as e:
+                    # print(str(e).split("Process")[1].split(";")[0])
+                    if isinstance(e.orig, DeadlockDetected):
+                        deadlock_detected = True
+                        self.logger.debug(f"{self.task_name}: Deadlock detected on {table.__table__} table...trying again in {round(sleep_time)} seconds: transaction size: {len(data)}")
+                        time.sleep(sleep_time)
+
+                        attempts += 1
+                        continue
+                    else:
+                        raise OperationalError(f"An OperationalError other than DeadlockDetected occurred: {e}") 
+
             else:
-                while attempts < 10:
-                    try:
+                self.logger.error(f"{self.task_name}: Unable to insert data in 10 attempts")
+                return
+
+            if deadlock_detected == True:
+                self.logger.error(f"{self.task_name}: Made it through even though Deadlock was detected")
+                    
+            return
+        
+        # else it get the requested return columns and returns them as a list of dicts
+        else:
+            while attempts < 10:
+                try:
+                    with self.engine.connect() as connection:
                         return_data_tuples = connection.execute(stmnt).fetchall()
-                    except OperationalError as e:
-                        print(type(e.orig))
-                        if isinstance(e.orig, DeadlockDetected):
-                            self.logger.info("Deadlock detected...trying again")
-                            attempts += 1
-                            continue     
-                        else:
-                            raise OperationalError(f"An OperationalError other than DeadlockDetected occurred: {e}")          
+                    
+                except OperationalError as e:
+                    print(type(e.orig))
+                    if isinstance(e.orig, DeadlockDetected):
+                        self.logger.debug(f"{self.task_name}: Deadlock detected on {table.__table__} table...trying again")
+                        time.sleep(3)
 
-                    return_data = []
-                    for data in return_data_tuples:
-                        return_data.append(dict(data))
+                        attempts += 1
+                        continue     
+                    else:
+                        raise OperationalError(f"An OperationalError other than DeadlockDetected occurred: {e}")          
 
-                    return return_data
+            else:
+                self.logger.error(f"{self.task_name}: Unable to insert and return data in 10 attempts")
+                return []
+
+            return_data = []
+            for data in return_data_tuples:
+                return_data.append(dict(data))
+
+            return return_data
 
 
 #TODO: Test sql methods
