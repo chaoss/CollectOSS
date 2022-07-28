@@ -683,7 +683,7 @@ def link_commits_to_contributor(contributorQueue):
                 #).values({
                 #    'cmt_ght_author_id': cntrb_email['cntrb_id']
                 #}))
-                stmnt = s.update(Commits).where(Commits.cmt_committer_email == cntrb_email['email']).values(
+                stmnt = s.update(Commit).where(Commit.cmt_committer_email == cntrb_email['email']).values(
                     cmt_ght_author_id=cntrb_email['cntrb_id']
                 ).execution_options(synchronize_session="fetch")
 
