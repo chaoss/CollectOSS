@@ -6,6 +6,7 @@ import json
 import httpx
 from sqlalchemy.inspection import inspect
 from psycopg2.errors import DeadlockDetected
+from sqlalchemy.exc import OperationalError
 
 import re
 import time
@@ -104,10 +105,14 @@ class TaskSession(s.orm.Session):
                 while attempts < 10:
                     try:
                         connection.execute(stmnt)
-                    except DeadlockDetected:
-                        self.logger.debug("Deadlock detected...trying again")
-                        attempts += 1
-                        continue
+                    except OperationalError as e:
+                        print(type(e.orig))
+                        if isinstance(e.orig, DeadlockDetected):
+                            self.logger.info("Deadlock detected...trying again")
+                            attempts += 1
+                            continue
+                        else:
+                            raise OperationalError(f"An OperationalError other than DeadlockDetected occurred: {e}") 
                         
                 return
             
@@ -116,10 +121,14 @@ class TaskSession(s.orm.Session):
                 while attempts < 10:
                     try:
                         return_data_tuples = connection.execute(stmnt).fetchall()
-                    except DeadlockDetected:
-                        self.logger.debug("Deadlock detected...trying again")
-                        attempts += 1
-                        continue               
+                    except OperationalError as e:
+                        print(type(e.orig))
+                        if isinstance(e.orig, DeadlockDetected):
+                            self.logger.info("Deadlock detected...trying again")
+                            attempts += 1
+                            continue     
+                        else:
+                            raise OperationalError(f"An OperationalError other than DeadlockDetected occurred: {e}")          
 
                     return_data = []
                     for data in return_data_tuples:
