@@ -510,7 +510,7 @@ def process_commit_metadata(contributorQueue,repo_id):
         #Check the unresolved_commits table to avoid hitting endpoints that we know don't have relevant data needlessly
         try:
             
-            unresolved_query_result = session.query(UnresolvedCommitEmails).filter_by(name=name).all()
+            unresolved_query_result = session.query(UnresolvedCommitEmail).filter_by(name=name).all()
 
             if len(unresolved_query_result) >= 1:
 
@@ -657,7 +657,7 @@ def process_commit_metadata(contributorQueue,repo_id):
 
         try:
             #interface.db.execute(query)
-            #session.query(UnresolvedCommitEmails).filter(UnresolvedCommitEmails.email == email).delete()
+            #session.query(UnresolvedCommitEmail).filter(UnresolvedCommitEmail.email == email).delete()
             #session.commit()
             session.execute_sql(query)
         except Exception as e:

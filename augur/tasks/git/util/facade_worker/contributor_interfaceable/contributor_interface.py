@@ -236,7 +236,7 @@ def fetch_username_from_email(session, commit):
         try:
             
             unresolved_natural_keys = ['email']
-            session.insert_data(unresolved, UnresolvedCommitEmails, unresolved_natural_keys)
+            session.insert_data(unresolved, UnresolvedCommitEmail, unresolved_natural_keys)
         except Exception as e:
             session.logger.info(
                 f"Could not create new unresolved email {unresolved['email']}. Error: {e}")
