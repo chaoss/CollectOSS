@@ -132,18 +132,19 @@ class UnresolvableUUID(GithubUUID):
         super(GithubUUID, self).__init__(platform = 0)
 
 if __name__ == "__main__":
+    pass
     # Some examples of using this class:
-    id = GithubUUID()
+    # id = GithubUUID()
 
-    id["user"] = 15
-    id["repo"] = 65535
-    id["issue"] = 297
+    # id["user"] = 15
+    # id["repo"] = 65535
+    # id["issue"] = 297
 
-    print(id)
+    # print(id)
 
-    uid = UnresolvableUUID()
+    # uid = UnresolvableUUID()
 
-    print(uid)
+    # print(uid)
 
     # id = AugurUUID()
     #

@@ -20,8 +20,6 @@ from celery.local import PromiseProxy
 import os
 ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
-# logger = logging.getLogger(__name__)
-
 
 SIMPLE_FORMAT_STRING = "[%(process)d] %(name)s [%(levelname)s] %(message)s"
 VERBOSE_FORMAT_STRING = "%(asctime)s,%(msecs)dms [PID: %(process)d] %(name)s [%(levelname)s] %(message)s"
@@ -29,23 +27,62 @@ CLI_FORMAT_STRING = "CLI: [%(module)s.%(funcName)s] [%(levelname)s] %(message)s"
 CONFIG_FORMAT_STRING = "[%(levelname)s] %(message)s"
 ERROR_FORMAT_STRING = "%(asctime)s [PID: %(process)d] %(name)s [%(funcName)s() in %(filename)s:L%(lineno)d] [%(levelname)s]: %(message)s"
 
-#Deal with creating the handler in one line with proper handler and log level
-def genHandler(file,fmt,level):
-    handler = FileHandler(filename=file,mode='a')
-    formatter = logging.Formatter(fmt=fmt)
+# get formatter for the specified log level
+def getFormatter(logLevel):
+
+    if logLevel == logging.INFO:
+        return logging.Formatter(fmt=SIMPLE_FORMAT_STRING)
+
+    elif logLevel == logging.DEBUG:
+        return logging.Formatter(fmt=VERBOSE_FORMAT_STRING)
+
+    elif logLevel == logging.ERROR:
+        return logging.Formatter(fmt=ERROR_FORMAT_STRING)
+
+# create a file handler and set the format and log level
+def create_file_handler(file, formatter, level):
+    handler = FileHandler(filename=file, mode='a')
     handler.setFormatter(fmt=formatter)
     handler.setLevel(level)
 
     return handler
 
+# function to create two file handlers and add them to a logger  
+def initialize_file_handlers(logger, file, log_level):
+
+    # if DEBUG is enabled then create a DEBUG handler which will log all logs
+    if log_level == logging.DEBUG:
+        info_file_handler = create_file_handler(f"{file}.info", getFormatter(logging.DEBUG), logging.DEBUG)
+    else:
+        info_file_handler = create_file_handler(f"{file}.info", getFormatter(logging.INFO), logging.INFO)
+
+    error_file_handler = create_file_handler(f"{file}.error", getFormatter(logging.ERROR), logging.ERROR)
+
+    logger.addHandler(info_file_handler)
+    logger.addHandler(error_file_handler)
+
+
+    
+# function to create a StreamHandler and add them to a logger
+def initialize_stream_handler(logger, log_level):
+    
+    stream = logging.StreamHandler()
+    stream.setLevel(log_level)
+    stream.setFormatter(getFormatter(log_level))
+    logger.addHandler(stream)
+    coloredlogs.install(level=log_level,logger=logger) 
+
+
 #TODO dynamically define loggers for every task names.
 class TaskLogConfig():
-    def __init__(self, all_tasks, disable_log_files=False,reset_logfiles=True,base_log_dir="/home/isaac/logs",logLevel=logging.INFO):
+    def __init__(self, all_tasks, disable_log_files=False,reset_logfiles=False,base_log_dir=ROOT_AUGUR_DIRECTORY + "/logs/",logLevel=logging.INFO):
         if reset_logfiles is True:
             try:
                 shutil.rmtree(base_log_dir)
             except FileNotFoundError as e:
                 pass
+
+        self.logLevel = logLevel
 
         self.base_log_dir = Path(base_log_dir)
 
@@ -55,9 +92,9 @@ class TaskLogConfig():
 
         self.logger_names = []
 
-        self.__initLoggers(all_tasks, logLevel)
+        self.__initLoggers(all_tasks)
     
-    def __initLoggers(self,task_names_grouped,logLevel):
+    def __initLoggers(self,task_names_grouped):
 
         for module, task_list in task_names_grouped.items():
             for task in task_list:
@@ -65,51 +102,46 @@ class TaskLogConfig():
                 lg = logging.getLogger(task)
                 self.logger_names.append(task)
 
-                #lg.setLevel(logLevel)
+                # set the log level of the logger
+                lg.setLevel(self.logLevel)
 
-                stream = logging.StreamHandler()
-                stream.setLevel(logLevel)
-                lg.addHandler(stream)
-
+                initialize_stream_handler(lg, self.logLevel)
+                
                 if not self.disable_log_files:
                 
-                    #Put logs in seperate folders by module.
-                    module_folder = Path(str(self.base_log_dir) + "/" + str(module) + "/")
-                    module_folder.mkdir(exist_ok=True)
-
-                    #Each task should have a seperate folder
-                    task_folder = Path(str(module_folder) + "/" + str(task) + "/")
-                    task_folder.mkdir(exist_ok=True)
-
-                    #Absolute path to log file
-                    file = str(task_folder) + "/" + str(task)
-
-                    #Create file handlers for each relevant log level and make them colorful
-                    lg.addHandler(genHandler((file + ".info"), SIMPLE_FORMAT_STRING, logging.INFO))
-                    lg.addHandler(genHandler((file + ".err"), ERROR_FORMAT_STRING, logging.ERROR))
-                    if logLevel == logging.DEBUG:
-                        lg.addHandler(genHandler((file + ".debug"), VERBOSE_FORMAT_STRING, logging.DEBUG))
-
-                coloredlogs.install(level=logging.INFO,logger=lg,fmt=SIMPLE_FORMAT_STRING)                
-                coloredlogs.install(level=logging.ERROR,logger=lg,fmt=ERROR_FORMAT_STRING)
-
-                if logLevel == logging.DEBUG:
-                    coloredlogs.install(level=logging.DEBUG,logger=lg,fmt=VERBOSE_FORMAT_STRING)
+                    self.initialize_task_file_logging(lg, module, task)
 
                 lg.propagate = False
 
+    def initialize_task_file_logging(self, logger, module, task):
+
+        #Put logs in seperate folders by module.
+        module_folder = Path(str(self.base_log_dir) + "/" + str(module) + "/")
+        module_folder.mkdir(exist_ok=True)
+
+        #Each task should have a seperate folder
+        task_folder = Path(str(module_folder) + "/" + str(task) + "/")
+        task_folder.mkdir(exist_ok=True)
+
+        #Absolute path to log file
+        file = str(task_folder) + "/" + str(task)
+
+        initialize_file_handlers(logger, file, self.logLevel)
+
         
-        def getLoggerNames(self):
-            return self.logger_names
+    def getLoggerNames(self):
+        return self.logger_names
 
 
 class AugurLogger():
-    def __init__(self, logger_name, disable_log_files=False,reset_logfiles=True,base_log_dir="/home/isaac/logs",logLevel=logging.INFO):
+    def __init__(self, logger_name, disable_log_files=False,reset_logfiles=False,base_log_dir=ROOT_AUGUR_DIRECTORY + "/logs/",logLevel=logging.INFO):
         if reset_logfiles is True:
             try:
                 shutil.rmtree(base_log_dir)
             except FileNotFoundError as e:
                 pass
+
+        self.logLevel = logLevel
 
         self.base_log_dir = Path(base_log_dir)
 
@@ -121,22 +153,19 @@ class AugurLogger():
 
         self.lg = logging.getLogger(self.logger_name)
 
-        stream = logging.StreamHandler()
-        stream.setLevel(logLevel)
-        self.lg.addHandler(stream)
+        initialize_stream_handler(self.lg, self.logLevel)
 
         #Don't bother if file logs are disabled.
         if not self.disable_log_files:
-            file = str(self.base_log_dir) + "/" + str(self.logger_name)
-            self.lg.addHandler(genHandler((file + ".info"), SIMPLE_FORMAT_STRING, logging.INFO))
-            self.lg.addHandler(genHandler((file + ".err"), ERROR_FORMAT_STRING, logging.ERROR))
-            self.lg.addHandler(genHandler((file + ".debug"), VERBOSE_FORMAT_STRING, logging.DEBUG))
-
-        coloredlogs.install(level=logging.INFO,logger=self.lg,fmt=SIMPLE_FORMAT_STRING)
-        coloredlogs.install(level=logging.ERROR,logger=self.lg,fmt=ERROR_FORMAT_STRING)
-        coloredlogs.install(level=logging.DEBUG,logger=self.lg,fmt=VERBOSE_FORMAT_STRING)
+           self.initialize_augur_logger_file_logging(self.lg)
 
         self.lg.propagate = False
+
+    def initialize_augur_logger_file_logging(self, logger):
+
+        file = str(self.base_log_dir) + "/" + str(self.logger_name)
+
+        initialize_file_handlers(logger, file, self.logLevel)
     
     def __str__(self):
         return self.logger_name

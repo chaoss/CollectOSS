@@ -28,7 +28,7 @@ from celery import chain, signature
 
 
 
-logger = AugurLogger("backend").get_logger()
+logger = AugurLogger("backend", reset_logfiles=True).get_logger()
 session = TaskSession(logger)
 config = AugurConfig(session)
 
@@ -42,40 +42,41 @@ def start(disable_collection):
     """
     Start Augur's backend server
     """
-
+    celery_process = None
     if not disable_collection:
-        logger.info("Starting workers")
-
+    
         repos = session.query(Repo).all()
 
-        repo_task_list = [start_task.si(repo.repo_git) for repo in repos] + [process_contributors.si(),]
+        # repo_task_list = [start_task.si(repo.repo_git) for repo in repos] + [process_contributors.si(),]
 
-        repos_chain = chain(repo_task_list)
+        # repos_chain = chain(repo_task_list)
 
-        logger.info(repos_chain)
+        # logger.info(repos_chain)
 
-        repos_chain.apply_async()
+        # repos_chain.apply_async()
 
-        # repos_to_collect = []
-        # repo_task_list = []
+        repos_to_collect = []
+        repo_task_list = []
 
-        # logger.info("Repos available for collection")
-        # print_repos(repos)
-        # while True:
-        #     try:
-        #         user_input = int(input("Please select a repo to collect: "))
+        logger.info("Repos available for collection")
+        print_repos(repos)
+        while True:
+            try:
+                user_input = int(input("Please select a repo to collect: "))
 
-        #         if user_input < 0 or user_input > len(repos)-1:
-        #             print(f"Invalid input please input an integer between 0 and {len(repos)-1}")
-        #             continue
+                if user_input < 0 or user_input > len(repos)-1:
+                    print(f"Invalid input please input an integer between 0 and {len(repos)-1}")
+                    continue
 
-        #         repo = repos[user_input]
-        #         break
+                repo = repos[user_input]
+                break
 
-        #     except (IndexError, ValueError):
-        #         print(f"Invalid input please input an integer between 0 and {len(repos)-1}")
+            except (IndexError, ValueError):
+                print(f"Invalid input please input an integer between 0 and {len(repos)-1}")
 
-        # start_task.s(repo.repo_git).apply_async()
+        logger.info("Starting celery to work on tasks")
+        celery_process = subprocess.Popen(['celery', '-A', 'augur.tasks.init.celery_app.celery_app', 'worker', '--loglevel=info'])
+        start_task.s(repo.repo_git).apply_async()
 
 
         # if len(repos) > 1:
@@ -109,13 +110,17 @@ def start(disable_collection):
     try:
         server.wait()
     except KeyboardInterrupt:
-        # Shutdown gracefully on interrupt
-        server.terminate()
+        
+        if server:
+            logger.info("Shutting down server")
+            server.terminate()
 
-    # atexit._clear()
-    # atexit.register(exit, gunicorn_arbiter)
+        if celery_process:
+            logger.info("Shutting down celery process")
+            celery_process.terminate
 
-    # gunicorn_arbiter.run()
+        logger.info("Flushing redis cache")
+        redis_connection.flushdb()
 
 
 
@@ -333,18 +338,3 @@ def order_repos(repos):
 #         logger.info("{} #{} booted.".format(worker_name,instance_number+1))
 #     except KeyboardInterrupt as e:
 #         pass
-
-
-def exit(gunicorn_arbiter):
-
-    logger.info("Flushing redis cache")
-    redis_connection.flushdb()
-
-    logger.info(f"gunicorn_arbiter: {gunicorn_arbiter}")
-
-    if gunicorn_arbiter is not None:
-        logger.info("Shutting down Gunicorn server")
-        gunicorn_arbiter.halt()
-
-    logger.info("Shutdown complete")
-    sys.exit(0)
