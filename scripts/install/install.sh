@@ -19,7 +19,7 @@ else
 fi
 
 function create_db_config() {
-    echo "Enter the database credentials to your database. This will create db.json"
+    echo "Enter the database credentials to your database. This will create db.config.json"
     read -p "User: " db_user
     read -s -p "Password: " password
     echo
@@ -31,20 +31,20 @@ function create_db_config() {
 }
 
 
-# if there is no db.json or the AUGUR_DB environment variable is not set 
-#then create prompt the user for db credentials and make a db.json file
+# if there is no db.config.json or the AUGUR_DB environment variable is not set 
+#then create prompt the user for db credentials and make a db.config.json file
 
 if [[ -z "${AUGUR_DB}" ]]
 then
 
-    FILE=db.json
+    FILE=db.config.json
     if [[ -f "$FILE" ]]
     then
-        echo "You db.json file contents"
+        echo "Your db.config.json file contents"
         cat $FILE
         echo
         echo
-        read -r -p "You already have a db.json (shown above). Would you like to override it? [y/N] " response
+        read -r -p "You already have a db.config.json (shown above). Would you like to override it? [y/N] " response
 
         case "$response" in [yY][eE][sS]|[yY])
             create_db_config

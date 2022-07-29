@@ -1,6 +1,6 @@
 #SPDX-License-Identifier: MIT
 """
-Augur library script for generating a db.json config file
+Augur library script for generating a db.config.json config file
 """
 
 import os
@@ -10,7 +10,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-@click.group('db-config', short_help='Generate an augur.config.json')
+@click.group('db-config', short_help='Generate an db.config.json')
 def cli():
     pass
 
@@ -29,6 +29,7 @@ def create_db_config(user, password, host, port, database_name):
         "port": port,
         "database_name": database_name 
     }
-    with open('db.json', 'w') as fp:
+    with open('db.config.json', 'w') as fp:
         json.dump(db_config, fp, indent=4)
 
+s

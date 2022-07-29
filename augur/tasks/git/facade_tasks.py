@@ -53,18 +53,18 @@ from augur.application.logs import TaskLogConfig
 
 #TODO: split out the github platform specific stuff from facade
 
-"""
-    You can prevent Celery from configuring any loggers at all by connecting 
-    the setup_logging signal. This allows you to completely override the 
-    logging configuration with your own.
-"""
-logger = logging.getLogger(__name__)
-config_db_session = TaskSession(logger)
-config = AugurConfig(config_db_session)
-logs_directory = config.get_value("Logging", "logs_directory")
-DISABLE_LOG_TO_FILE = False
-if logs_directory is None:
-    DISABLE_LOG_TO_FILE = True
+# """
+#     You can prevent Celery from configuring any loggers at all by connecting 
+#     the setup_logging signal. This allows you to completely override the 
+#     logging configuration with your own.
+# """
+# logger = logging.getLogger(__name__)
+# config_db_session = TaskSession(logger)
+# config = AugurConfig(config_db_session)
+# logs_directory = config.get_value("Logging", "logs_directory")
+# DISABLE_LOG_TO_FILE = False
+# if logs_directory is None:
+#     DISABLE_LOG_TO_FILE = True
 
 
 

@@ -291,8 +291,8 @@ def get_api_key():
 )
 def check_pgpass():
     print("checking pg-pass")
-    if os.path.exists("db.json"):
-        with open("db.json", "r") as f:
+    if os.path.exists("db.config.json"):
+        with open("db.config.json", "r") as f:
             config = json.load(f)
             print(f"Config: {config}")
             check_pgpass_credentials(config)
