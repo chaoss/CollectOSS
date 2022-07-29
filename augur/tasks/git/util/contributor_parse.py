@@ -397,6 +397,7 @@ def query_github_contributors(session, entry_info, repo_id):
             #cntrb_id = AugurUUID(session.platform_id,contributor['id']).to_UUID()
             cntrb_id = GithubUUID()
             cntrb_id["user"] = int(contributor['id'])
+            cntrb_id["platform"] = session.platform_id
 
             cntrb = {
                 "cntrb_id" : cntrb_id.to_UUID(),
