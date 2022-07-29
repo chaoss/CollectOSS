@@ -927,7 +927,7 @@ class Commit(Base):
     cmt_whitespace = Column(Integer, nullable=False)
     cmt_filename = Column(String, nullable=False)
     cmt_date_attempted = Column(TIMESTAMP(precision=0), nullable=False)
-    cmt_ght_author_id = Column(Integer)
+    cmt_ght_author_id = Column(ForeignKey("augur_data.contributors.cntrb_id"))
     cmt_ght_committer_id = Column(Integer)
     cmt_ght_committed_at = Column(TIMESTAMP(precision=0))
     cmt_committer_timestamp = Column(TIMESTAMP(True, 0))
