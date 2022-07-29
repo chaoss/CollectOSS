@@ -462,7 +462,6 @@ def extract_need_pr_review_data(reviews, platform_id, repo_id, tool_version, dat
 def extract_needed_contributor_data(contributor, platform_id, tool_source, tool_version, data_source):
 
     cntrb_id = GithubUUID()   
-    cntrb_id["platform"] = platform_id % 256
     cntrb_id["user"] = contributor["id"]
 
     contributor = {
