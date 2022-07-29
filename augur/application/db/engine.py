@@ -3,13 +3,9 @@ import socket
 import json
 import sys
 from sqlalchemy import create_engine, event
-
 from sqlalchemy.exc import OperationalError 
 
 def test_database_connection(engine):
-
-    # chaoss.tv
-
 
     try:
         engine.connect()
@@ -45,8 +41,19 @@ def test_database_connection(engine):
             
         sys.exit()
 
-IPaddress=socket.gethostbyname(socket.gethostname())
-if IPaddress=="127.0.0.1":
+def is_connected():
+    try:
+        #try to ping google's dns server
+        socket.create_connection(("8.8.8.8",53))
+        return True
+    except OSError:
+        pass
+
+    return False
+
+
+# start of engine.py program
+if not is_connected():
     print("You are not connect to the internet. Please connect to the internet to run Augur")
     sys.exit()
 
