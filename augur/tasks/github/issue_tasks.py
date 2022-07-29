@@ -67,7 +67,7 @@ def process_issues(issues, task_name, repo_id) -> None:
     # get repo_id or have it passed
     tool_source = "Issue Task"
     tool_version = "2.0"
-    platform_id = 25150
+    platform_id = 1
     data_source = "Github API"
 
     issue_dicts = []
@@ -83,7 +83,7 @@ def process_issues(issues, task_name, repo_id) -> None:
             issue_total-=1
             continue
 
-        issue, contributor_data = process_issue_contributors(issue, platform_id, tool_source, tool_version, data_source)
+        issue, contributor_data = process_issue_contributors(issue, tool_source, tool_version, data_source)
 
         contributors += contributor_data
 
@@ -163,17 +163,17 @@ def process_issues(issues, task_name, repo_id) -> None:
     session.insert_data(issue_assignee_dicts, IssueAssignee, issue_assignee_natural_keys)
 
 
-def process_issue_contributors(issue, platform_id, tool_source, tool_version, data_source):
+def process_issue_contributors(issue, tool_source, tool_version, data_source):
 
     contributors = []
 
-    issue_cntrb = extract_needed_contributor_data(issue["user"], platform_id, tool_source, tool_version, data_source)
+    issue_cntrb = extract_needed_contributor_data(issue["user"], tool_source, tool_version, data_source)
     issue["cntrb_id"] = issue_cntrb["cntrb_id"]
     contributors.append(issue_cntrb)
 
     for assignee in issue["assignees"]:
 
-        issue_assignee_cntrb = extract_needed_contributor_data(issue["user"], platform_id, tool_source, tool_version, data_source)
+        issue_assignee_cntrb = extract_needed_contributor_data(issue["user"], tool_source, tool_version, data_source)
         assignee["cntrb_id"] = issue_assignee_cntrb["cntrb_id"]
         contributors.append(issue_assignee_cntrb)
 
@@ -191,6 +191,8 @@ def collect_pull_requests(repo_git: str) -> None:
 
     # define GithubTaskSession to handle insertions, and store oauth keys 
     session = GithubTaskSession(logger)
+
+    repo_id = session.query(Repo).filter(Repo.repo_git == repo_git).one().repo_id
 
     logger.info(f"Collecting pull requests for {owner}/{repo}")
 
@@ -213,11 +215,11 @@ def collect_pull_requests(repo_git: str) -> None:
             return
 
     
-        process_pull_requests.s(page_data, f"{repo.capitalize()} Pr Page {page} Task").apply_async()
+        process_pull_requests.s(page_data, f"{repo.capitalize()} Pr Page {page} Task", repo_id).apply_async()
 
 
 @celery.task
-def process_pull_requests(pull_requests, task_name):
+def process_pull_requests(pull_requests, task_name, repo_id):
 
     logger = logging.getLogger(process_pull_requests.__name__)
 
@@ -225,10 +227,9 @@ def process_pull_requests(pull_requests, task_name):
     session = GithubTaskSession(logger)
 
      # get repo_id or have it passed
-    repo_id = 1
     tool_source = "Pr Task"
     tool_version = "2.0"
-    platform_id = 25150
+    platform_id = 1
     data_source = "Github API"
 
     pr_dicts = []
@@ -240,7 +241,7 @@ def process_pull_requests(pull_requests, task_name):
 
         # adds cntrb_id to reference the contributors table to the 
         # prs, assignees, reviewers, and metadata
-        pr, contributor_data = process_pull_request_contributors(pr, platform_id, tool_source, tool_version, data_source)
+        pr, contributor_data = process_pull_request_contributors(pr, tool_source, tool_version, data_source)
 
         contributors += contributor_data
 
@@ -381,12 +382,12 @@ def process_pull_requests(pull_requests, task_name):
 # TODO: Should we insert metadata without user relation?
 # NOTE: For contributor related operations: extract_needed_contributor_data takes a piece of github contributor data
 # and creates a cntrb_id (primary key for the contributors table) and gets the data needed for the table
-def process_pull_request_contributors(pr, platform_id, tool_source, tool_version, data_source):
+def process_pull_request_contributors(pr, tool_source, tool_version, data_source):
 
     contributors = []
 
     # get contributor data and set pr cntrb_id
-    pr_cntrb = extract_needed_contributor_data(pr["user"], platform_id, tool_source, tool_version, data_source)
+    pr_cntrb = extract_needed_contributor_data(pr["user"], tool_source, tool_version, data_source)
     pr["cntrb_id"] = pr_cntrb["cntrb_id"]
 
     contributors.append(pr_cntrb)
@@ -395,14 +396,14 @@ def process_pull_request_contributors(pr, platform_id, tool_source, tool_version
     if pr["base"]["user"]:
 
         # get contributor data and set pr metadat cntrb_id
-        pr_meta_base_cntrb = extract_needed_contributor_data(pr["base"]["user"], platform_id, tool_source, tool_version, data_source)
+        pr_meta_base_cntrb = extract_needed_contributor_data(pr["base"]["user"], tool_source, tool_version, data_source)
         pr["base"]["cntrb_id"] = pr_meta_base_cntrb["cntrb_id"]
 
         contributors.append(pr_meta_base_cntrb)
 
     if pr["head"]["user"]:
 
-        pr_meta_head_cntrb = extract_needed_contributor_data(pr["head"]["user"], platform_id, tool_source, tool_version, data_source)
+        pr_meta_head_cntrb = extract_needed_contributor_data(pr["head"]["user"], tool_source, tool_version, data_source)
         pr["head"]["cntrb_id"] = pr_meta_head_cntrb["cntrb_id"]
 
         contributors.append(pr_meta_head_cntrb)
@@ -412,7 +413,7 @@ def process_pull_request_contributors(pr, platform_id, tool_source, tool_version
     # set cntrb_id for assignees
     for assignee in pr["assignees"]:
 
-        pr_asignee_cntrb = extract_needed_contributor_data(assignee, platform_id, tool_source, tool_version, data_source)
+        pr_asignee_cntrb = extract_needed_contributor_data(assignee, tool_source, tool_version, data_source)
         assignee["cntrb_id"] = pr_asignee_cntrb["cntrb_id"]
 
         contributors.append(pr_asignee_cntrb)
@@ -421,7 +422,7 @@ def process_pull_request_contributors(pr, platform_id, tool_source, tool_version
     # set cntrb_id for reviewers
     for reviewer in pr["requested_reviewers"]:
 
-        pr_reviwer_cntrb = extract_needed_contributor_data(reviewer, platform_id, tool_source, tool_version, data_source)
+        pr_reviwer_cntrb = extract_needed_contributor_data(reviewer, tool_source, tool_version, data_source)
         reviewer["cntrb_id"] = pr_reviwer_cntrb["cntrb_id"]
 
         contributors.append(pr_reviwer_cntrb)
@@ -436,10 +437,12 @@ def collect_events(repo_git: str):
 
     logger = logging.getLogger(collect_events.__name__)
 
-    logger.info(f"Collecting pull request events for {owner}/{repo}")
+    logger.info(f"Collecting Github events for {owner}/{repo}")
     
         # define GithubTaskSession to handle insertions, and store oauth keys 
     session = GithubTaskSession(logger)
+
+    repo_id = session.query(Repo).filter(Repo.repo_git == repo_git).one().repo_id
     
     url = f"https://api.github.com/repos/{owner}/{repo}/issues/events"
     
@@ -460,21 +463,19 @@ def collect_events(repo_git: str):
             logger.info(f"Events Page {page} of {num_pages}")
             return
 
-        process_events.s(page_data, f"{repo.capitalize()} Events Page {page} Task").apply_async()
+        process_events.s(page_data, f"{repo.capitalize()} Events Page {page} Task", repo_id).apply_async()
         
     logger.info("Completed events")
 
 @celery.task
-def process_events(events, task_name):
+def process_events(events, task_name, repo_id):
 
     logger = logging.getLogger(process_events.__name__)
         # define GithubTaskSession to handle insertions, and store oauth keys 
     session = GithubTaskSession(logger)
 
-    # get repo_id
-    repo_id = 1
-    platform_id = 25150
-    tool_source = "Pr event task"
+    platform_id = 1
+    tool_source = "Github events task"
     tool_version = "2.0"
     data_source = "Github API"
    
@@ -485,7 +486,7 @@ def process_events(events, task_name):
     event_len = len(events)
     for index, event in enumerate(events):
 
-        event, contributor = process_github_event_contributors(event, platform_id, tool_source, tool_version, data_source)
+        event, contributor = process_github_event_contributors(event, tool_source, tool_version, data_source)
 
         if 'pull_request' in list(event["issue"].keys()):
             pr_url = event["issue"]["pull_request"]["url"]
@@ -549,11 +550,11 @@ def process_events(events, task_name):
 
 
 # TODO: Should we skip an event if there is no contributor to resolve it o
-def process_github_event_contributors(event, platform_id, tool_source, tool_version, data_source):
+def process_github_event_contributors(event, tool_source, tool_version, data_source):
 
     if event["actor"]:
 
-        event_cntrb = extract_needed_contributor_data(event["actor"], platform_id, tool_source, tool_version, data_source)
+        event_cntrb = extract_needed_contributor_data(event["actor"], tool_source, tool_version, data_source)
         event["cntrb_id"] = event_cntrb["cntrb_id"]
 
     else:
@@ -572,7 +573,9 @@ def collect_issue_and_pr_comments(repo_git: str) -> None:
     
     # define database task session, that also holds autentication keys the GithubPaginator needs
     session = GithubTaskSession(logger)
-    
+
+    repo_id = session.query(Repo).filter(Repo.repo_git == repo_git).one().repo_id
+
     # url to get issue and pull request comments
     url = f"https://api.github.com/repos/{owner}/{repo}/issues/comments"
     
@@ -591,12 +594,12 @@ def collect_issue_and_pr_comments(repo_git: str) -> None:
 
         logger.info(f"Github Messages Page {page} of {num_pages}")
 
-        process_messages.s(page_data, f"Github Messages Page {page} Task").apply_async()
+        process_messages.s(page_data, f"Github Messages Page {page} Task", repo_id).apply_async()
         
     logger.info("Completed messages")
 
 @celery.task
-def process_messages(messages, task_name):
+def process_messages(messages, task_name, repo_id):
 
     # define logger for task
     logger = logging.getLogger(process_messages.__name__)
@@ -604,8 +607,7 @@ def process_messages(messages, task_name):
     # define database task session, that also holds autentication keys the GithubPaginator needs
     session = GithubTaskSession(logger)
 
-    repo_id = 1
-    platform_id = 25150
+    platform_id = 1
     tool_source = "Pr comment task"
     tool_version = "2.0"
     data_source = "Github API"
@@ -628,7 +630,7 @@ def process_messages(messages, task_name):
         # this adds the cntrb_id to the message data
         # the returned contributor will be added to the contributors list later, if the related issue or pr are found
         # this logic is used so we don't insert a contributor when the related message isn't inserted
-        message, contributor = process_github_comment_contributors(message, platform_id, tool_source, tool_version, data_source)
+        message, contributor = process_github_comment_contributors(message, tool_source, tool_version, data_source)
 
         if is_issue_message(message["html_url"]):
 
@@ -737,9 +739,9 @@ def is_issue_message(html_url):
     return 'pull' not in html_url
 
 
-def process_github_comment_contributors(message, platform_id, tool_source, tool_version, data_source):
+def process_github_comment_contributors(message, tool_source, tool_version, data_source):
 
-    message_cntrb = extract_needed_contributor_data(message["user"], platform_id, tool_source, tool_version, data_source)
+    message_cntrb = extract_needed_contributor_data(message["user"], tool_source, tool_version, data_source)
     message["cntrb_id"] = message_cntrb["cntrb_id"]
 
     return message, message_cntrb
@@ -763,9 +765,10 @@ def pull_request_review_comments(repo_git: str) -> None:
     pr_review_comments = GithubPaginator(url, session.oauths, logger)
 
     # get repo_id
-    repo_id = 1
+    repo_id = session.query(Repo).filter(Repo.repo_git == repo_git).one().repo_id
 
-    platform_id = 25150
+
+    platform_id = 1
     tool_source = "Pr review comment task"
     tool_version = "2.0"
     data_source = "Github API"
@@ -844,8 +847,9 @@ def pull_request_reviews(repo_git: str, pr_number_list: [int]) -> None:
 
     pr_number_list = sorted(pr_number_list, reverse=False) 
 
-    repo_id = 1
-    platform_id = 25150
+    repo_id = session.query(Repo).filter(Repo.repo_git == repo_git).one().repo_id
+
+    platform_id = 1
     tool_version = "2.0"
     data_source = "Github API"
 
@@ -916,8 +920,7 @@ def process_contributors():
     logger = logging.getLogger(process_contributors.__name__)
     session = GithubTaskSession(logger)
 
-    platform = 1
-    tool_source = "Pr comment task"
+    tool_source = "Contributors task"
     tool_version = "2.0"
     data_source = "Github API"
 
@@ -926,7 +929,7 @@ def process_contributors():
     contributors_len = len(contributors)
 
     if contributors_len == 0:
-        print("No contributors to enrich...returning...")
+        logger.info("No contributors to enrich...returning...")
         return
 
     print(f"Length of contributors to enrich: {contributors_len}")
