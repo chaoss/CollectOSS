@@ -14,6 +14,8 @@ from augur.application.db.models import PullRequest, Message, PullRequestReview,
 #NOTICE: A pull request is a type of issue as per Github.
 #So this file contains functionality for both prs and issues
 
+platform_id = 1
+
 
 @celery.task
 def collect_issues(repo_git: str) -> None:
@@ -67,7 +69,6 @@ def process_issues(issues, task_name, repo_id) -> None:
     # get repo_id or have it passed
     tool_source = "Issue Task"
     tool_version = "2.0"
-    platform_id = 1
     data_source = "Github API"
 
     issue_dicts = []
@@ -229,7 +230,6 @@ def process_pull_requests(pull_requests, task_name, repo_id):
      # get repo_id or have it passed
     tool_source = "Pr Task"
     tool_version = "2.0"
-    platform_id = 1
     data_source = "Github API"
 
     pr_dicts = []
@@ -474,7 +474,6 @@ def process_events(events, task_name, repo_id):
         # define GithubTaskSession to handle insertions, and store oauth keys 
     session = GithubTaskSession(logger)
 
-    platform_id = 1
     tool_source = "Github events task"
     tool_version = "2.0"
     data_source = "Github API"
@@ -607,7 +606,6 @@ def process_messages(messages, task_name, repo_id):
     # define database task session, that also holds autentication keys the GithubPaginator needs
     session = GithubTaskSession(logger)
 
-    platform_id = 1
     tool_source = "Pr comment task"
     tool_version = "2.0"
     data_source = "Github API"
@@ -768,7 +766,6 @@ def pull_request_review_comments(repo_git: str) -> None:
     repo_id = session.query(Repo).filter(Repo.repo_git == repo_git).one().repo_id
 
 
-    platform_id = 1
     tool_source = "Pr review comment task"
     tool_version = "2.0"
     data_source = "Github API"
@@ -849,7 +846,6 @@ def pull_request_reviews(repo_git: str, pr_number_list: [int]) -> None:
 
     repo_id = session.query(Repo).filter(Repo.repo_git == repo_git).one().repo_id
 
-    platform_id = 1
     tool_version = "2.0"
     data_source = "Github API"
 
