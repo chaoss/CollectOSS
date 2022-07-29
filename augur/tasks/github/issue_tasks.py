@@ -43,6 +43,14 @@ def collect_issues(repo_git: str) -> None:
     
     for page_data, page in issues.iter_pages():
 
+        if page_data == None:
+            return
+
+        elif len(page_data) == 0:
+            logger.debug(f"{repo.capitalize()} Issues Page {page} contains no data...returning")
+            logger.info(f"{repo.capitalize()} Issues Page {page} of {num_pages}")
+            return
+
         logger.info(f"{repo.capitalize()} Issues Page {page} of {num_pages}")
 
         process_issues.s(page_data, f"{repo.capitalize()} Issues Page {page} Task", repo_id).apply_async()
@@ -196,9 +204,16 @@ def collect_pull_requests(repo_git: str) -> None:
     
     for page_data, page in prs.iter_pages():
 
-        logger.info(f"Prs Page {page} of {num_pages}")
+        if page_data == None:
+            return
 
-        process_pull_requests.s(page_data, f"Pr Page {page} Task").apply_async()
+        elif len(page_data) == 0:
+            logger.debug(f"{repo.capitalize()} Prs Page {page} contains no data...returning")
+            logger.info(f"{repo.capitalize()} Prs Page {page} of {num_pages}")
+            return
+
+    
+        process_pull_requests.s(page_data, f"{repo.capitalize()} Pr Page {page} Task").apply_async()
 
 
 @celery.task
@@ -437,9 +452,15 @@ def collect_events(repo_git: str):
     
     for page_data, page in events.iter_pages():
 
-        logger.info(f"Events Page {page} of {num_pages}")
+        if page_data is None:
+            return
+            
+        elif len(page_data) == 0:
+            logger.debug(f"{repo.capitalize()} Events Page {page} contains no data...returning")
+            logger.info(f"Events Page {page} of {num_pages}")
+            return
 
-        process_events.s(page_data, f"Events Page {page} Task").apply_async()
+        process_events.s(page_data, f"{repo.capitalize()} Events Page {page} Task").apply_async()
         
     logger.info("Completed events")
 
@@ -561,6 +582,12 @@ def collect_issue_and_pr_comments(repo_git: str) -> None:
     num_pages = messages.get_num_pages()
     
     for page_data, page in messages.iter_pages():
+
+        if page_data is None:
+            return
+        elif len(page_data) == 0:
+            logger.debug(f"{repo.capitalize()} Messages Page {page} contains no data...returning")
+            logger.info(f"Github Messages Page {page} of {num_pages}")
 
         logger.info(f"Github Messages Page {page} of {num_pages}")
 
