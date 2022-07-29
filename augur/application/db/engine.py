@@ -1,6 +1,13 @@
 import os
+import socket
 import json
+import sys
 from sqlalchemy import create_engine, event
+
+IPaddress=socket.gethostbyname(socket.gethostname())
+if IPaddress=="127.0.0.1":
+    print("You are not connect to the internet. Please connect to the internet to run Augur")
+    sys.exit()
 
 augur_db_environment_var = os.getenv("AUGUR_DB")
 
