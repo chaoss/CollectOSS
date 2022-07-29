@@ -3,6 +3,8 @@ import json
 from sqlalchemy import create_engine, event
 
 augur_db_environment_var = os.getenv("AUGUR_DB")
+
+db_json_file_location = os.getcwd() + "/db.json"
 db_json_exists = os.path.exists("db.json")
 
 if not augur_db_environment_var and not db_json_exists:

@@ -266,7 +266,7 @@ def update_api_key(api_key):
 
     with engine.connect() as connection:
 
-        augur_app.database.execute(update_api_key_sql, api_key=api_key)
+        connection.execute(update_api_key_sql, api_key=api_key)
         logger.info(f"Updated Augur API key to: {api_key}")
 
 
@@ -282,7 +282,7 @@ def get_api_key():
         with engine.connect() as connection:
             print(connection.execute(get_api_key_sql).fetchone()[0])
     except TypeError:
-        logger.error("No Augur API key found.")
+        print("No Augur API key found.")
 
 
 @cli.command(

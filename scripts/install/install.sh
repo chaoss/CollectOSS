@@ -64,6 +64,8 @@ echo "Schema successfully created!"
 
 
 scripts/install/config.sh $target
+# scripts/install/api_key.sh
+
 
 echo "**********************************"
 echo "***** INSTALLATION COMPLETE *****"

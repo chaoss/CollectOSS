@@ -17,10 +17,10 @@ depends_on = None
 
 
 def upgrade():
-    op.drop_constraint(None, 'contributors_aliases', schema='augur_data', type_='unique')
+    op.drop_constraint("only-email-once", 'contributors_aliases', schema='augur_data', type_='unique')
     op.create_unique_constraint('contributor-alias-unique', 'contributors_aliases', ['alias_email'], schema='augur_data')
 
 
 def downgrade():
     op.drop_constraint('contributor-alias-unique', 'contributors_aliases', schema='augur_data', type_='unique')
-    op.create_unique_constraint(None, 'contributors_aliases', ['alias_email', 'canonical_email'], schema='augur_data', initially="DEFERRED", deferrable=True)
+    op.create_unique_constraint("only-email-once", 'contributors_aliases', ['alias_email', 'canonical_email'], schema='augur_data', initially="DEFERRED", deferrable=True)

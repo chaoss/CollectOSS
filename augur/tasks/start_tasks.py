@@ -39,6 +39,7 @@ def start_task(repo_git: str):
     job = chain(
         start_tasks_group,
         secondary_task_group,
+        process_contributors.si()
     )
 
     job.apply_async()

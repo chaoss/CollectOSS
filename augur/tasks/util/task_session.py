@@ -105,19 +105,21 @@ class TaskSession(s.orm.Session):
         # print(str(stmnt.compile(dialect=pg.dialect())))
         attempts = 0
         sleep_time_list = [x for x in range(1,11)]
-        sleep_time = random.sample(sleep_time_list, k=1)[0]
         deadlock_detected = False
         # if there is no data to return then it executes the insert the returns nothing
         if len(return_columns) == 0:
 
             while attempts < 10:
+                print("")
                 try:
                     with self.engine.connect() as connection:
                         connection.execute(stmnt)
+                        break
                 except OperationalError as e:
                     # print(str(e).split("Process")[1].split(";")[0])
                     if isinstance(e.orig, DeadlockDetected):
                         deadlock_detected = True
+                        sleep_time = random.choice(sleep_time_list)
                         self.logger.debug(f"{self.task_name}: Deadlock detected on {table.__table__} table...trying again in {round(sleep_time)} seconds: transaction size: {len(data)}")
                         time.sleep(sleep_time)
 
@@ -141,12 +143,12 @@ class TaskSession(s.orm.Session):
                 try:
                     with self.engine.connect() as connection:
                         return_data_tuples = connection.execute(stmnt).fetchall()
-                    
+                        break
                 except OperationalError as e:
-                    print(type(e.orig))
                     if isinstance(e.orig, DeadlockDetected):
-                        self.logger.debug(f"{self.task_name}: Deadlock detected on {table.__table__} table...trying again")
-                        time.sleep(3)
+                        sleep_time = random.choice(sleep_time_list)
+                        self.logger.debug(f"{self.task_name}: Deadlock detected on {table.__table__} table...trying again in {round(sleep_time)} seconds: transaction size: {len(data)}")
+                        time.sleep(sleep_time)
 
                         attempts += 1
                         continue     
@@ -156,6 +158,9 @@ class TaskSession(s.orm.Session):
             else:
                 self.logger.error(f"{self.task_name}: Unable to insert and return data in 10 attempts")
                 return []
+
+            if deadlock_detected == True:
+                self.logger.error(f"{self.task_name}: Made it through even though Deadlock was detected")
 
             return_data = []
             for data in return_data_tuples:
