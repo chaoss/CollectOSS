@@ -568,6 +568,7 @@ def process_commit_metadata(contributorQueue,repo_id):
 
             cntrb_id = GithubUUID()
             cntrb_id["user"] = int(user_data['id'])
+            cntrb_id["platform"] = session.platform_id
 
             # try to add contributor to database
             cntrb = {
