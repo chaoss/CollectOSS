@@ -20,7 +20,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import JSONB, TIMESTAMP, UUID
 from sqlalchemy.orm import relationship
-
+from sqlalchemy.sql import text
 from augur.application.db.models.base import Base
 
 metadata = Base.metadata
