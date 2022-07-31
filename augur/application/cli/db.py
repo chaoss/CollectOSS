@@ -15,6 +15,7 @@ import pandas as pd
 import requests
 import json
 from sqlalchemy import exc
+import re
 
 from augur.application.db.engine import engine
 
@@ -129,6 +130,11 @@ def add_github_org(organization_name):
     """
     Create new repo groups in Augur's database
     """
+
+    logger = logging.getLogger(__name__)
+    session = TaskSession(logger)
+    config = AugurConfig(session) 
+
     org_query_response = requests.get(
         f"https://api.github.com/orgs/{organization_name}"
     ).json()
@@ -142,7 +148,7 @@ def add_github_org(organization_name):
     page = 1
     repo_query_response = None
     headers = {
-        "Authorization": "token %s" % augur_app.config.get_value("Database", "key")
+        "Authorization": "token %s" % config.get_value("Keys", "github_api_key")
     }
     while repo_query_response != []:
         repo_query_response = requests.get(
@@ -290,40 +296,36 @@ def get_api_key():
     short_help="Check the ~/.pgpass file for Augur's database credentials",
 )
 def check_pgpass():
-    print("checking pg-pass")
-    if os.path.exists("db.config.json"):
-        with open("db.config.json", "r") as f:
+    augur_db_env_var = os.getenv("AUGUR_DB")
+    if augur_db_env_var:
+
+        # gets the user, passowrd, host, port, and database_name out of environment variable
+        # assumes database string of structure <beginning_of_db_string>//<user>:<password>@<host>:<port>/<database_name>
+        # it returns a tuple like (<user>, <password>, <host>, <port>, <database_name)
+        db_string_parsed = re.search(r"^.+:\/\/([a-zA-Z0-9_]+):(.+)@([a-zA-Z0-9-_~\.]+):(\d{1,5})\/([a-zA-Z0-9_-]+)", augur_db_env_var).groups()
+
+        if db_string_parsed:
+
+            db_config = {
+                "user": db_string_parsed[0],
+                "password": db_string_parsed[1],
+                "host":  db_string_parsed[2],
+                "port": db_string_parsed[3],
+                "database_name": db_string_parsed[4] 
+            }
+
+            check_pgpass_credentials(db_config)
+
+        else:
+            print("Database string is invalid and cannot be used")
+
+
+    else:
+         with open("db.config.json", "r") as f:
             config = json.load(f)
             print(f"Config: {config}")
             check_pgpass_credentials(config)
-    else:
-        db_string = os.getenv("AUGUR_DB")
 
-        db_string_array = db_string.split("@")
-
-        user_and_pass = db_string_array[0].split("/")[2].split(":")
-
-        user = user_and_pass[0]
-        password = user_and_pass[1]
-
-        host_port_db_name = db_string_array[1]
-
-        db_name = host_port_db_name.split("/")[1]
-
-        host_and_port = host_port_db_name.split("/")[0].split(":")
-
-        host = host_and_port[0]
-        port = host_and_port[1]
-
-        db_config = {
-            "user": user,
-            "password": password,
-            "host": host,
-            "port": port,
-            "database_name": database_name 
-        }
-
-        check_pgpass_credentials(db_config)
 
 
 @cli.command("init-database")
@@ -409,17 +411,34 @@ def run_psql_command_in_database(augur_app, target_type, target):
         logger.error("Invalid target type. Exiting...")
         exit(1)
 
+    augur_db_environment_var = os.getenv("AUGUR_DB")
+
+    db_json_file_location = os.getcwd() + "/db.config.json"
+    db_json_exists = os.path.exists(db_json_file_location)
+
+    if augur_db_environment_var:
+        pass
+    else:
+        with open("db.config.json", 'r') as f:
+            db_config = json.load(f)
+
+            host = db_config['host']
+            database_name = db_config['database_name']
+
+            db_conn_string = f"postgresql+psycopg2://{db_config['user']}:{db_config['password']}@{db_config['host']}:{db_config['port']}/{db_config['database_name']}"
+            engine = create_engine(db_conn_string)
+
     call(
         [
             "psql",
             "-h",
-            augur_app.config.get_value("Database", "host"),
+            host,
             "-d",
-            augur_app.config.get_value("Database", "name"),
+            database_name,
             "-U",
-            augur_app.config.get_value("Database", "user"),
+            user,
             "-p",
-            str(augur_app.config.get_value("Database", "port")),
+            port,
             "-a",
             "-w",
             target_type,
@@ -432,14 +451,14 @@ def check_pgpass_credentials(config):
     pgpass_file_path = environ["HOME"] + "/.pgpass"
 
     if not path.isfile(pgpass_file_path):
-        logger.info("~/.pgpass does not exist, creating.")
+        print("~/.pgpass does not exist, creating.")
         open(pgpass_file_path, "w+")
         chmod(pgpass_file_path, stat.S_IWRITE | stat.S_IREAD)
 
     pgpass_file_mask = oct(os.stat(pgpass_file_path).st_mode & 0o777)
 
     if pgpass_file_mask != "0o600":
-        logger.info("Updating ~/.pgpass file permissions.")
+        print("Updating ~/.pgpass file permissions.")
         chmod(pgpass_file_path, stat.S_IWRITE | stat.S_IREAD)
 
     with open(pgpass_file_path, "a+") as pgpass_file:
@@ -461,8 +480,8 @@ def check_pgpass_credentials(config):
         if credentials_string.lower() not in [
             "".join(line.split()).lower() for line in pgpass_file.readlines()
         ]:
-            logger.info("Adding credentials to $HOME/.pgpass")
+            print("Adding credentials to $HOME/.pgpass")
             pgpass_file.seek(end)
             pgpass_file.write(credentials_string + "\n")
         else:
-            logger.info("Credentials found in $HOME/.pgpass")
+            print("Credentials found in $HOME/.pgpass")

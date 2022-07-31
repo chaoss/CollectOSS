@@ -54,6 +54,8 @@ then
     fi
 fi
 
+
+
 scripts/install/backend.sh $target 2>&1 | tee logs/backend-install.log
 echo "Done!"
 
@@ -65,6 +67,8 @@ echo "Schema successfully created!"
 
 scripts/install/config.sh $target
 # scripts/install/api_key.sh
+
+augur db check-pgpass
 
 
 echo "**********************************"
