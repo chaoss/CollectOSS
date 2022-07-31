@@ -1,12 +1,75 @@
 #SPDX-License-Identifier: MIT
 import click
 from functools import update_wrapper
+import os
+import sys
+import socket
+import re
+
+from augur.application.db.engine import engine
+from sqlalchemy.exc import OperationalError 
 
 
+def test_connection(f):
+    @click.pass_context
+    def new_func(ctx, *args, **kwargs):
+        usage = re.search(r"Usage:\s(.*)\s\[OPTIONS\]", str(ctx.get_usage())).groups()[0]
+        try:
+            #try to ping google's dns server
+            socket.create_connection(("8.8.8.8",53))
+            return ctx.invoke(f, *args, **kwargs)
+        except OSError:
+            print(f"\n\n{usage} command setup failed\nYou are not connect to the internet. Please connect to the internet to run Augur\n")
+            sys.exit()
 
-# from augur.application import Application
-# from augur_new.config import AugurConfig
-# from augur_new.logging import AugurLogging, ROOT_AUGUR_DIRECTORY
+        except Exception as e:
+            print(f"Another exception occurred when testing internet exception\nPlease inform an augur maintainer or open an issue with this exception: {e}")
+            return ctx.invoke(f, *args, **kwargs)        
+        
+    return update_wrapper(new_func, f)
+
+def test_db_connection(f):
+    @click.pass_context
+    def new_func(ctx, *args, **kwargs):
+        usage = re.search(r"Usage:\s(.*)\s\[OPTIONS\]", str(ctx.get_usage())).groups()[0]
+        try:
+            engine.connect()
+            return ctx.invoke(f, *args, **kwargs)
+        except OperationalError as e:
+
+            augur_db_environment_var = os.getenv("AUGUR_DB")
+
+            # determine the location to print in error string
+            if augur_db_environment_var:
+                location = f"the AUGUR_DB environment variable\nAUGUR_DB={os.getenv('AUGUR_DB')}"
+            else:
+                with open("db.config.json", 'r') as f:
+                    db_config = json.load(f)
+                    location = f"db.config.json\nYour db.config.json is:{db_config}"
+            
+            incorrect_values = "host name is" 
+            #  determine which value in the database string is causing the error
+            if "could not translate host name" in str(e):
+                incorrect_values = "host name is" 
+
+            elif "Connection refused" in str(e):
+                incorrect_values = "port is"
+
+            elif "password authentication failed for user" in str(e):
+                incorrect_values = "username or password are"
+                
+            elif "database" in str(e) and "does not exist" in str(e):
+                incorrect_values = "database name is" 
+
+            else:
+                print(f"Database connection error: {e}")
+
+            if incorrect_values:
+                print(f"\n\n{usage} command setup failed\nError: connecting to database, the {incorrect_values} incorrectly specified in {location}\n")
+                
+            sys.exit()
+        
+    return update_wrapper(new_func, f)
 
 # def pass_application(f):
 #     @click.pass_context

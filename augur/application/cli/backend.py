@@ -26,7 +26,7 @@ from augur.application.config import AugurConfig
 # from augur.server import Server
 from celery import chain, signature, group
 
-
+from augur.application.cli import test_connection, test_db_connection 
 
 logger = AugurLogger("augur", reset_logfiles=True).get_logger()
 session = TaskSession(logger)
@@ -38,6 +38,8 @@ def cli():
 
 @cli.command("start")
 @click.option("--disable-collection", is_flag=True, default=False, help="Turns off data collection workers")
+@test_connection
+@test_db_connection
 def start(disable_collection):
     """
     Start Augur's backend server
