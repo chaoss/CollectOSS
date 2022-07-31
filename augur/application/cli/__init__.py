@@ -10,31 +10,33 @@ from augur.application.db.engine import engine
 from sqlalchemy.exc import OperationalError 
 
 
-def test_connection(f):
+def test_connection(function_internet_connection):
     @click.pass_context
     def new_func(ctx, *args, **kwargs):
         usage = re.search(r"Usage:\s(.*)\s\[OPTIONS\]", str(ctx.get_usage())).groups()[0]
         try:
             #try to ping google's dns server
             socket.create_connection(("8.8.8.8",53))
-            return ctx.invoke(f, *args, **kwargs)
+            print("Internet connection is stable")
+            return ctx.invoke(function_internet_connection, *args, **kwargs)
         except OSError:
             print(f"\n\n{usage} command setup failed\nYou are not connect to the internet. Please connect to the internet to run Augur\n")
             sys.exit()
 
         except Exception as e:
             print(f"Another exception occurred when testing internet exception\nPlease inform an augur maintainer or open an issue with this exception: {e}")
-            return ctx.invoke(f, *args, **kwargs)        
+            return ctx.invoke(function_internet_connection, *args, **kwargs)        
         
-    return update_wrapper(new_func, f)
+    return update_wrapper(new_func, function_internet_connection)
 
-def test_db_connection(f):
+def test_db_connection(function_db_connection):
     @click.pass_context
     def new_func(ctx, *args, **kwargs):
         usage = re.search(r"Usage:\s(.*)\s\[OPTIONS\]", str(ctx.get_usage())).groups()[0]
         try:
             engine.connect()
-            return ctx.invoke(f, *args, **kwargs)
+            print("Database connection is stable")
+            return ctx.invoke(function_db_connection, *args, **kwargs)
         except OperationalError as e:
 
             augur_db_environment_var = os.getenv("AUGUR_DB")
@@ -69,7 +71,7 @@ def test_db_connection(f):
                 
             sys.exit()
         
-    return update_wrapper(new_func, f)
+    return update_wrapper(new_func, function_db_connection)
 
 # def pass_application(f):
 #     @click.pass_context

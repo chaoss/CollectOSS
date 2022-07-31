@@ -17,6 +17,9 @@ import json
 from sqlalchemy import exc
 import re
 
+from augur.application.cli import test_connection, test_db_connection 
+
+
 from augur.application.db.engine import engine
 
 logger = logging.getLogger(__name__)
@@ -385,25 +388,12 @@ def init_database(
         f"GRANT ALL PRIVILEGES ON DATABASE {target_db_name} TO {target_user};",
     )
 
+@cli.command("test-connection")
+@test_connection
+@test_db_connection
+def test_db_connection():
+    pass
 
-def run_db_creation_psql_command(host, port, user, name, command):
-    call(
-        [
-            "psql",
-            "-h",
-            host,
-            "-p",
-            port,
-            "-U",
-            user,
-            "-d",
-            name,
-            "-a",
-            "-w",
-            "-c",
-            command,
-        ]
-    )
 
 
 def run_psql_command_in_database(augur_app, target_type, target):
