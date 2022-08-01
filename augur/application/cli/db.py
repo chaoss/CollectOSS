@@ -32,6 +32,8 @@ def cli():
 
 @cli.command("add-repos")
 @click.argument("filename", type=click.Path(exists=True))
+@test_connection
+@test_db_connection
 def add_repos(filename):
     """
     Add repositories to Augur's database
@@ -67,6 +69,8 @@ def add_repos(filename):
 
 
 @cli.command("get-repo-groups")
+@test_connection
+@test_db_connection
 def get_repo_groups():
     """
     List all repo groups and their associated IDs
@@ -85,6 +89,8 @@ def get_repo_groups():
 
 
 @cli.command("add-repo-groups")
+@test_connection
+@test_db_connection
 @click.argument("filename", type=click.Path(exists=True))
 def add_repo_groups(filename):
     """
@@ -129,6 +135,8 @@ def add_repo_groups(filename):
 
 @cli.command("add-github-org")
 @click.argument("organization_name")
+@test_connection
+@test_db_connection
 def add_github_org(organization_name):
     """
     Create new repo groups in Augur's database
@@ -205,7 +213,8 @@ def get_db_version():
 
 
 @cli.command("print-db-version")
-# @pass_application
+@test_connection
+@test_db_connection
 def print_db_version():
     """
     Get the version of the configured database
@@ -214,7 +223,8 @@ def print_db_version():
 
 
 @cli.command("upgrade-db-version")
-# @pass_application
+@test_connection
+@test_db_connection
 def upgrade_db_version():
     """
     Upgrade the configured database to the latest version
@@ -223,7 +233,8 @@ def upgrade_db_version():
 
 
 @cli.command("check-for-upgrade")
-# @pass_application
+@test_connection
+@test_db_connection
 def check_for_upgrade():
     """
     Upgrade the configured database to the latest version
@@ -232,7 +243,8 @@ def check_for_upgrade():
 
 
 @cli.command("create-schema")
-# @pass_application
+@test_connection
+@test_db_connection
 def create_schema():
     """
     Create schema in the configured database
@@ -259,6 +271,8 @@ def generate_api_key(ctx):
 
 @cli.command("update-api-key")
 @click.argument("api_key")
+@test_connection
+@test_db_connection
 def update_api_key(api_key):
     """
     Update the API key in the database to the given key
@@ -280,6 +294,8 @@ def update_api_key(api_key):
 
 
 @cli.command("get-api-key")
+@test_connection
+@test_db_connection
 def get_api_key():
     get_api_key_sql = s.sql.text(
         """
@@ -340,6 +356,7 @@ def check_pgpass():
 @click.option("--target-password", default="augur")
 @click.option("--host", default="localhost")
 @click.option("--port", default="5432")
+@test_connection
 def init_database(
     default_db_name,
     default_user,

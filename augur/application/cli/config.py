@@ -31,6 +31,8 @@ def cli():
 @click.option('--github_api_key', help="GitHub API key for data collection from the GitHub API", envvar=ENVVAR_PREFIX + 'GITHUB_API_KEY')
 @click.option('--facade_repo_directory', help="Directory on the database server where Facade should clone repos", envvar=ENVVAR_PREFIX + 'FACADE_REPO_DIRECTORY')
 @click.option('--gitlab_api_key', help="GitLab API key for data collection from the GitLab API", envvar=ENVVAR_PREFIX + 'GITLAB_API_KEY')
+@test_connection
+@test_db_connection
 def init_config(github_api_key, facade_repo_directory, gitlab_api_key):
 
     keys = {}
@@ -58,6 +60,8 @@ def init_config(github_api_key, facade_repo_directory, gitlab_api_key):
 
 @cli.command('load')
 @click.option('--file', required=True)
+@test_connection
+@test_db_connection
 def load_config(file):
 
     print("WARNING: This will override your current config")
@@ -80,6 +84,8 @@ def load_config(file):
 @cli.command('add-section')
 @click.option('--section-name', required=True)
 @click.option('--file', required=True)
+@test_connection
+@test_db_connection
 def add_section(section_name, file):
 
     session = TaskSession(logger)
@@ -108,6 +114,8 @@ def add_section(section_name, file):
 @click.option('--setting', required=True)
 @click.option('--value', required=True)
 @click.option('--data-type', required=True)
+@test_connection
+@test_db_connection
 def config_set(section, setting, value, data_type):
 
     session = TaskSession(logger)
@@ -131,6 +139,8 @@ def config_set(section, setting, value, data_type):
 @cli.command('get')
 @click.option('--section', required=True)
 @click.option('--setting')
+@test_connection
+@test_db_connection
 def config_get(section, setting):
 
     session = TaskSession(logger)
@@ -160,6 +170,8 @@ def config_get(section, setting):
             print(f"Error: {section} section not found in config")
 
 @cli.command('clear')
+@test_connection
+@test_db_connection
 def clear_config():
 
     session = TaskSession(logger)

@@ -163,6 +163,8 @@ def export_env(config):
     env_file.close()
 
 @cli.command('repo-reset')
+@test_connection
+@test_db_connection
 def repo_reset(augur_app):
     """
     Refresh repo collection to force data collection
@@ -172,7 +174,6 @@ def repo_reset(augur_app):
     logger.info("Repos successfully reset")
 
 @cli.command('processes')
-
 def processes():
     """
     Outputs the name/PID of all Augur server & worker processes"""
