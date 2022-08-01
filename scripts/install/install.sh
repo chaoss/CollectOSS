@@ -18,6 +18,22 @@ else
   echo
 fi
 
+connection_status=$(augur db test-connection)
+
+if [[ "$connection_status" =~ "You are not connect to the internet." ]]; then
+    echo
+    echo "No internet connection. Please check internet connection"
+    echo
+    exit 0
+fi
+if [[ "$connection_status" =~ "ERROR: connecting to database" ]]; then
+    echo
+    echo "Error connecting to database. Please check database configuration"
+    echo
+    exit 0
+fi
+
+
 function create_db_config() {
     echo "Enter the database credentials to your database. This will create db.config.json"
     read -p "User: " db_user
