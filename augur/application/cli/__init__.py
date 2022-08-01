@@ -5,6 +5,7 @@ import os
 import sys
 import socket
 import re
+import json
 
 from augur.application.db.engine import engine
 from sqlalchemy.exc import OperationalError 
@@ -47,7 +48,7 @@ def test_db_connection(function_db_connection):
             else:
                 with open("db.config.json", 'r') as f:
                     db_config = json.load(f)
-                    location = f"db.config.json\nYour db.config.json is:{db_config}"
+                    location = f"db.config.json\nYour db.config.json is: {db_config}"
             
             incorrect_values = "host name is" 
             #  determine which value in the database string is causing the error
@@ -67,7 +68,7 @@ def test_db_connection(function_db_connection):
                 print(f"Database connection error: {e}")
 
             if incorrect_values:
-                print(f"\n\n{usage} command setup failed\nError: connecting to database, the {incorrect_values} incorrectly specified in {location}\n")
+                print(f"\n\n{usage} command setup failed\nERROR: connecting to database\nHINT: The {incorrect_values} may be incorrectly specified in {location}\n")
                 
             sys.exit()
         
