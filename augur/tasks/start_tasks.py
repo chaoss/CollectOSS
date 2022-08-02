@@ -21,9 +21,10 @@ def deploy_dependent_task(*args,task_set):
     #parent task id to be consistant.
     task_set.apply_async(task_id=(self.request.id + "child"))
 
+
 #Class to control what tasks are run when the augur collection is started.
 #Groups are run asynchronously 
-class AugurCollection:
+class AugurTaskRoutine:
 
     def __init__(self,disabled_collection_groups=[]):
         self.logger = AugurLogger("data_collection_groups").get_logger()
@@ -34,6 +35,7 @@ class AugurCollection:
 
         self.dependency_relationships = {}
 
+    #Get and set dict values that correspond to celery task groups
     def __getitem__(self,key):
         return self.jobs_dict[key]
     
@@ -48,6 +50,7 @@ class AugurCollection:
         self.jobs_dict[key] = newJobs
         self.dependency_relationships[key] = []
 
+    #Make a group deleted from the dict and unable to be run or added.
     def disable_group(self,key):
         del self.jobs_dict[key]
         del self.dependency_relationships[key]
@@ -58,25 +61,24 @@ class AugurCollection:
 
         self.dependency_relationships[key].append(otherKey)
     
-    def _update_dependency_relationship_with_celery_id(self,celery_id,name,append=None):
+    def _update_dependency_relationship_with_celery_id(self,celery_id,dependency_name,append=None):
         #Replace dependency with active celery id once started so that dependent tasks can check status
         #append is to add the id of the child task before it starts. (Don't worry the parent task starts it before it dies and the child is added on the end)
         #IMPORTANT for the append to actually be on the end of the list.
         for group_name in self.dependency_relationships.keys():
             #self.dependency_relationships[group_name] = [celery_id if item == name else item for item in self.dependency_relationships[group_name]]
             for index,item in enumerate(self.dependency_relationships[group_name]):
-                if item == name:
+                if item == dependency_name:
                     self.dependency_relationships[group_name][index] = celery_id
 
                     if append:
                         self.dependency_relationships[group_name].append(append)
+                    
+                    break #break once dependency_name found. Should only occur once.
 
 
     def start_data_collection(self):
         #First, start all task groups that have no dependencies. 
-        #After they are started record the task_id so that dependent groups can monitor them
-        #The idea is to replace the names of the dependencies in the relationship dict with the celery ids of the started tasks for tracking
-        #Once all numbers are in the dict they are started and can be tracked with deploy_dependent_task
         for name, collection_set in self.jobs_dict.items():
             self.logger.info(f"Starting non dependant collection group {name}...")
 
