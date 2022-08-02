@@ -4,7 +4,8 @@ from flask import Flask, Response, jsonify, request
 #import gunicorn.app.base
 import numpy as np
 from celery import group
-
+from augur.application.logs import AugurLogger
+from augur.tasks.util.task_session import TaskSession
 
 def create_grouped_task_load(*args,processes=6,dataList=[],task=None):
     
@@ -73,6 +74,53 @@ def read_config(section, name=None, environment_variable=None, default=None, con
                 _config[section] = {}
 
     return value
+
+#Class to control what tasks are run when the augur collection is started.
+#Groups are run asynchronously 
+class AugurCollection:
+
+    def __init__(self,disabled_collection_groups=[]):
+        self.logger = AugurLogger("data_collection_groups").get_logger()
+        #self.session = TaskSession(self.logger)
+        self.jobs_dict = {}
+        self.disabled_collection_groups = disabled_collection_groups
+
+    def __getitem__(self,key):
+        return self.jobs_dict[key]
+    
+
+    
+    def __setitem__(self,key,newJobs):
+        if not hasattr(newJobs, 'apply_async') or not callable(newJobs.apply_async):
+            self.logger.error("Collection groups must be of celery types that can be called with \'apply_async\'")
+            raise AttributeError 
+        
+        if key in self.disabled_collection_groups:
+            self.logger.error("Group has been disabled")
+            return
+        self.jobs_dict[key] = newJobs
+
+    def disable_group(self,key):
+        del self.jobs_dict[key]
+        self.disabled_collection_groups.append(key)
+    
+    def start_data_collection(self):
+        for name, collection_set in self.jobs_dict.items():
+            self.logger.info(f"Starting collection group {name}...")
+
+            collection_set.apply_async()
+
+
+
+
+
+
+
+
+
+
+
+
 
 # def create_server(app, worker=None):
 #     """ Consists of AUGWOP endpoints for the broker to communicate to this worker
