@@ -12,6 +12,7 @@ import gunicorn.app.base
 from gunicorn.arbiter import Arbiter
 import sys
 import subprocess
+from redis.exceptions import ConnectionError as RedisConnectionError
 
 
 from augur.tasks.start_tasks import start_task
@@ -20,17 +21,16 @@ from augur.tasks.github.issue_tasks import process_contributors
 # from augur.api.gunicorn import AugurGunicornApp
 from augur.tasks.init.redis_connection import redis_connection 
 from augur.application.db.models import Repo
-from augur.tasks.util.task_session import TaskSession
+from augur.application.db.session import DatabaseSession
 from augur.application.logs import AugurLogger
-from augur.application.config import AugurConfig
+from augur.application.config import ReadAugurConfig
 # from augur.server import Server
 from celery import chain, signature, group
 
 from augur.application.cli import test_connection, test_db_connection 
 
 logger = AugurLogger("augur", reset_logfiles=True).get_logger()
-session = TaskSession(logger)
-config = AugurConfig(session)
+config = ReadAugurConfig(logger)
 
 @click.group('server', short_help='Commands for controlling the backend API server & data collection workers')
 def cli():
@@ -123,8 +123,12 @@ def start(disable_collection):
             logger.info("Shutting down celery process")
             celery_process.terminate
 
-        logger.info("Flushing redis cache")
-        redis_connection.flushdb()
+        try:
+            redis_connection.flushdb()
+            logger.info("Flushing redis cache")
+        except RedisConnectionError:
+            pass
+
 
 
 

@@ -21,9 +21,7 @@ from beaker.cache import CacheManager
 
 
 from augur.application.logs import AugurLogger
-from augur.application.config import AugurConfig
-from augur.tasks.util.task_session import TaskSession
-from augur.application.db.engine import engine
+from augur.application.config import ReadAugurConfig
 from metadata import __version__ as augur_code_version
 
 AUGUR_API_VERSION = 'api/unstable'
@@ -36,8 +34,7 @@ class Server():
     def __init__(self):
 
         self.logger = AugurLogger("augur").get_logger()
-        self.session = TaskSession(self.logger)
-        self.config = AugurConfig(self.session)
+        self.config = ReadAugurConfig(self.logger)
 
         self.cache = self.create_cache()
         self.server_cache = self.get_server_cache()

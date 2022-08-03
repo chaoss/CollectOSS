@@ -5,12 +5,10 @@ import os
 from pathlib import Path
 import shutil
 
-from augur.application.config import AugurConfig
-from augur.tasks.util.task_session import TaskSession
+from augur.application.config import ReadAugurConfig
+from augur.application.db.session import DatabaseSession
 
-logger = logging.getLogger(__name__)
-session = TaskSession(logger)
-augur_config = AugurConfig(session)
+augur_config = ReadAugurConfig()
 
 # ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 

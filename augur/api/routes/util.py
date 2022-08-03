@@ -6,15 +6,14 @@ import json
 from flask import Response
 import logging
 
-from augur.tasks.util.task_session import TaskSession
+from augur.application.db.session import DatabaseSession
 from augur.application.logs import AugurLogger
-from augur.application.config import AugurConfig
+from augur.application.config import ReadAugurConfig
 
 from augur.application.db.engine import engine
 
 logger = AugurLogger("augur").get_logger()
-session = TaskSession(logger)
-augur_config = AugurConfig(session)
+augur_config = ReadAugurConfig(logger)
 
 AUGUR_API_VERSION = 'api/unstable'
 

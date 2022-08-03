@@ -19,7 +19,7 @@ import re
 
 from augur.application.cli import test_connection, test_db_connection 
 
-
+from augur.application.config import ReadAugurConfig
 from augur.application.db.engine import engine
 
 logger = logging.getLogger(__name__)
@@ -143,8 +143,7 @@ def add_github_org(organization_name):
     """
 
     logger = logging.getLogger(__name__)
-    session = TaskSession(logger)
-    config = AugurConfig(session) 
+    config = ReadAugurConfig(logger) 
 
     org_query_response = requests.get(
         f"https://api.github.com/orgs/{organization_name}"

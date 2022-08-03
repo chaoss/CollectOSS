@@ -1,5 +1,5 @@
 from requests.api import head
-from augur.tasks.util.task_session import *
+from augur.tasks.util.github_task_session import *
 import logging
 from logging import FileHandler, Formatter, StreamHandler, log
 from augur.tasks.git.util.contributor_parse import *
