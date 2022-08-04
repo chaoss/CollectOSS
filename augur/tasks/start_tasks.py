@@ -23,7 +23,7 @@ def deserialize_task_set(dict_obj):
 #Use this task to listen for other tasks before deploying.
 #NOTE: celery pickles signature objects as dicts
 @celery.task
-def deploy_dependent_task(*args,task_set):
+def deploy_dependent_task(*args,task_set,bind=True):
     #prereqs = [AsyncResult(str(task_id)) for task_id in args]
     logger = logging.getLogger(deploy_dependent_task.__name__)
 
