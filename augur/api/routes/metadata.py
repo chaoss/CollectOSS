@@ -12,7 +12,8 @@ from boto3.dynamodb.conditions import Key, Attr
 import os
 import requests
 
-from augur.application.db.engine import engine
+from augur.application.db.engine import create_database_engine
+engine = create_datbase_engine()
 
 AUGUR_API_VERSION = 'api/unstable'
 

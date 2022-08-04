@@ -20,7 +20,8 @@ from sqlalchemy.event import listens_for
 
 from augur.tasks.util.random_key_auth import RandomKeyAuth
 # import psycopg2 
-from augur.application.db.engine import engine
+from augur.application.db.engine import create_database_engine
+engine = create_datbase_engine()
 
 from augur.application.config import AugurConfig
 

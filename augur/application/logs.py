@@ -16,7 +16,8 @@ from copy import deepcopy
 import typing
 from sqlalchemy.orm import sessionmaker
 
-from augur.application.db.engine import engine
+from augur.application.db.engine import create_database_engine
+engine = create_datbase_engine()
 from augur.application.db.models import Config 
 from augur.application.config import convert_type_of_value
 

@@ -8,7 +8,8 @@ from flask import Response
 from augur.api.metrics.repo_meta import license_files
 from augur.api.metrics.insight import top_insights
 
-from augur.application.db.engine import engine
+from augur.application.db.engine import create_database_engine
+engine = create_datbase_engine()
 # from augur.api.server import transform
 from augur.api.server import server
 

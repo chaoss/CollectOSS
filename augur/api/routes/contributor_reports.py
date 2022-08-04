@@ -18,7 +18,8 @@ from bokeh.palettes import Colorblind
 from bokeh.layouts import gridplot
 from bokeh.transform import cumsum
 
-from augur.application.db.engine import engine
+from augur.application.db.engine import create_database_engine
+engine = create_datbase_engine()
 
 AUGUR_API_VERSION = 'api/unstable'
 

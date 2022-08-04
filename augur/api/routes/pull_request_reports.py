@@ -23,7 +23,8 @@ from bokeh.transform import dodge, factor_cmap, transform
 
 warnings.filterwarnings('ignore')
 
-from augur.application.db.engine import engine
+from augur.application.db.engine import create_database_engine
+engine = create_datbase_engine()
 
 AUGUR_API_VERSION = 'api/unstable'
 

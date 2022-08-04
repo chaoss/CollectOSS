@@ -7,7 +7,8 @@ import socket
 import re
 import json
 
-from augur.application.db.engine import engine
+from augur.application.db.engine import create_database_engine
+engine = create_datbase_engine()
 from sqlalchemy.exc import OperationalError 
 
 
