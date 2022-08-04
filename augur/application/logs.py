@@ -16,7 +16,6 @@ from copy import deepcopy
 import typing
 from sqlalchemy.orm import Session
 
-from augur.application.db.engine import create_database_engine
 from augur.application.db.models import Config 
 from augur.application.config import convert_type_of_value
 
@@ -75,6 +74,9 @@ def initialize_stream_handler(logger, log_level):
     coloredlogs.install(level=log_level,logger=logger) 
 
 def get_log_config():
+    
+    from augur.application.db.engine import create_database_engine
+
     # we are using this session instead of the 
     # DatabaseSession class because the DatabaseSession 
     # class requires a logger, and we are setting up logger thigns here 
