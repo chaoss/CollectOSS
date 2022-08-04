@@ -41,6 +41,7 @@ def deploy_dependent_task(*args,task_set,bind=True):
     #The convention now is to just add the string 'child' after the autogen'd
     #parent task id to be consistant.
     to_execute = deserialize_task_set(task_set)
+    print(deploy_dependent_task.request.id )
     to_execute.apply_async(task_id=(deploy_dependent_task.request.id + "child"))
 
 
