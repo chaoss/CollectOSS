@@ -30,8 +30,6 @@ from celery import chain, signature, group
 from augur.application.cli import test_connection, test_db_connection 
 
 logger = AugurLogger("augur", reset_logfiles=True).get_logger()
-session = DatabaseSession(logger)
-config = session.config
 
 @click.group('server', short_help='Commands for controlling the backend API server & data collection workers')
 def cli():
@@ -45,6 +43,10 @@ def start(disable_collection):
     """
     Start Augur's backend server
     """
+
+    session = DatabaseSession(logger)
+    config = session.config
+
     celery_process = None
     if not disable_collection:
     
@@ -129,8 +131,6 @@ def start(disable_collection):
             logger.info("Flushing redis cache")
         except RedisConnectionError:
             pass
-
-
 
 
 @cli.command('stop')

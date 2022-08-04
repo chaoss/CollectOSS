@@ -44,8 +44,6 @@ from augur.tasks.github.util.github_task_session import *
 from augur.application.logs import AugurLogger
 
 logger = AugurLogger("cli").get_logger()
-session = DatabaseSession(logger)
-engine = session.engine
 
 def get_database_args_from_env():
     db_str = os.getenv("AUGUR_DB")

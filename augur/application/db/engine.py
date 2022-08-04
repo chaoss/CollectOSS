@@ -3,9 +3,13 @@ import socket
 import json
 import sys
 from sqlalchemy import create_engine, event
-from sqlalchemy.exc import OperationalError 
+from sqlalchemy.exc import OperationalError
 
 def create_database_engine():
+
+    global engine
+    if "engine" in globals():
+        return engine
 
     augur_db_environment_var = os.getenv("AUGUR_DB")
 
@@ -14,7 +18,7 @@ def create_database_engine():
 
     if not augur_db_environment_var and not db_json_exists:
 
-        raise Exception("Error no way to get connection to the database. There is no db.config.jons and the AUGUR_DB environment variable is not set. Please run make install-dev or set the AUGUR_DB environment then run make install-dev")
+        raise Exception("Error no way to get connection to the database. There is no db.config.json and the AUGUR_DB environment variable is not set. Please run make install-dev or set the AUGUR_DB environment then run make install-dev")
         sys.exit()
 
     if augur_db_environment_var:

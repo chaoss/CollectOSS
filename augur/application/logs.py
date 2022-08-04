@@ -17,10 +17,8 @@ import typing
 from sqlalchemy.orm import Session
 
 from augur.application.db.engine import create_database_engine
-engine = create_database_engine()
 from augur.application.db.models import Config 
 from augur.application.config import convert_type_of_value
-
 
 ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
@@ -80,6 +78,7 @@ def get_log_config():
     # we are using this session instead of the 
     # DatabaseSession class because the DatabaseSession 
     # class requires a logger, and we are setting up logger thigns here 
+    engine = create_database_engine()
     session = Session(engine)
 
     section_data = session.query(Config).filter_by(section_name="Logging").all()

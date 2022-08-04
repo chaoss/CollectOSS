@@ -21,8 +21,6 @@ from sqlalchemy.event import listens_for
 from augur.tasks.util.random_key_auth import RandomKeyAuth
 # import psycopg2 
 from augur.application.db.engine import create_database_engine
-engine = create_database_engine()
-
 from augur.application.config import AugurConfig
 
 from augur.application.db.models import Platform
@@ -36,7 +34,7 @@ class DatabaseSession(s.orm.Session):
     
         self.logger = logger
         self.config = AugurConfig(logger=logger, session=self)
-        self.engine = engine
+        self.engine = create_database_engine()
 
         super().__init__(self.engine)
     
