@@ -27,12 +27,7 @@ def start_task(repo_git: str):
     secondary_task_list.append(collect_issue_and_pr_comments.si(repo_git))
     
     secondary_task_group = group(secondary_task_list)
-
-    third_task_list = []
-\    
-    third_task_group = group(third_task_list)
-
-
+    
     job = chain(
         start_tasks_group,
         secondary_task_group
