@@ -17,6 +17,8 @@ from augur.application.db.models import Config
 from augur.tasks.util.task_session import TaskSession
 from augur.application.config import AugurConfig
 
+from augur.application.cli import test_connection, test_db_connection
+
 ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
 
