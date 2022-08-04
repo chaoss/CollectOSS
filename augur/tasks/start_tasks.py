@@ -2,6 +2,7 @@ from augur.tasks.github.issue_tasks import *
 
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.util.task_session import TaskSession
+from augur.application.logs import AugurLogger
 from celery.result import AsyncResult
 import time
 
