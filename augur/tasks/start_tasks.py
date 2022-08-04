@@ -5,11 +5,23 @@ from augur.tasks.util.task_session import TaskSession
 from augur.application.logs import AugurLogger
 from celery.result import AsyncResult
 from celery.result import allow_join_result
+from celery import signature
 import time
 
 pr_numbers = [70, 106, 170, 190, 192, 208, 213, 215, 216, 218, 223, 224, 226, 230, 237, 238, 240, 241, 248, 249, 250, 252, 253, 254, 255, 256, 257, 261, 268, 270, 273, 277, 281, 283, 288, 291, 303, 306, 309, 310, 311, 323, 324, 325, 334, 335, 338, 343, 346, 348, 350, 353, 355, 356, 357, 359, 360, 365, 369, 375, 381, 382, 388, 405, 408, 409, 410, 414, 418, 419, 420, 421, 422, 424, 425, 431, 433, 438, 445, 450, 454, 455, 456, 457, 460, 463, 468, 469, 470, 474, 475, 476, 477, 478, 479, 480, 481, 482, 484, 485, 486, 487, 488, 490, 491, 492, 493, 494, 495, 496, 497, 498, 499, 500, 501, 502, 504, 506, 507, 508, 509, 510, 512, 514]
 
+def deserialize_task_set(dict_obj):
+
+    if dict_obj['task'] == 'celery.group':
+        return group(dict(dict_obj))
+    else:
+        #assume its a signature
+        return signature(dict(dict_obj))
+
+
+
 #Use this task to listen for other tasks before deploying.
+#NOTE: celery pickles signature objects as dicts
 @celery.task
 def deploy_dependent_task(*args,task_set):
     #prereqs = [AsyncResult(str(task_id)) for task_id in args]
@@ -17,6 +29,9 @@ def deploy_dependent_task(*args,task_set):
 
     print(task_set)
     print(type(task_set))
+
+
+
     for task_id in args:
         prereq = AsyncResult(str(task_id))
         print(prereq.status)
@@ -25,11 +40,18 @@ def deploy_dependent_task(*args,task_set):
     
     #The convention now is to just add the string 'child' after the autogen'd
     #parent task id to be consistant.
-    task_set.apply_async(task_id=(self.request.id + "child"))
+    to_execute = deserialize_task_set(task_set)
+    to_execute.apply_async(task_id=(self.request.id + "child"))
 
 
 #Class to control what tasks are run when the augur collection is started.
 #Groups are run asynchronously 
+
+#routine = AugurTaskRoutine()
+#routine['facade'] = facade_commits_model.si()
+#routine['my_task_set'] = group(some_tasks)
+#routine.add_dependency_relationship('my_task_set','facade')
+#routine.start()
 class AugurTaskRoutine:
 
     def __init__(self,disabled_collection_groups=[]):
