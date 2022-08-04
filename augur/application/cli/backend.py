@@ -12,6 +12,7 @@ import gunicorn.app.base
 from gunicorn.arbiter import Arbiter
 import sys
 import subprocess
+from redis.exceptions import ConnectionError as RedisConnectionError
 
 
 from augur.tasks.start_tasks import start_task
@@ -20,17 +21,15 @@ from augur.tasks.github.issue_tasks import process_contributors
 # from augur.api.gunicorn import AugurGunicornApp
 from augur.tasks.init.redis_connection import redis_connection 
 from augur.application.db.models import Repo
-from augur.tasks.util.task_session import TaskSession
+from augur.application.db.session import DatabaseSession
 from augur.application.logs import AugurLogger
-from augur.application.config import AugurConfig
+
 # from augur.server import Server
 from celery import chain, signature, group
 
 from augur.application.cli import test_connection, test_db_connection 
 
 logger = AugurLogger("augur", reset_logfiles=True).get_logger()
-session = TaskSession(logger)
-config = AugurConfig(session)
 
 @click.group('server', short_help='Commands for controlling the backend API server & data collection workers')
 def cli():
@@ -44,43 +43,47 @@ def start(disable_collection):
     """
     Start Augur's backend server
     """
+
+    session = DatabaseSession(logger)
+    config = session.config
+
     celery_process = None
     if not disable_collection:
     
         repos = session.query(Repo).all()
 
-        # repo_task_list = [start_task.si(repo.repo_git) for repo in repos] + [process_contributors.si(),]
+        repo_task_list = [start_task.si(repo.repo_git) for repo in repos] + [process_contributors.si(),]
 
-        # repos_chain = group(repo_task_list)
+        repos_chain = group(repo_task_list)
 
-        # logger.info(repos_chain)
+        logger.info(repos_chain)
 
-        # celery_process = subprocess.Popen(['celery', '-A', 'augur.tasks.init.celery_app.celery_app', 'worker', '--loglevel=info'])
+        celery_process = subprocess.Popen(['celery', '-A', 'augur.tasks.init.celery_app.celery_app', 'worker', '--loglevel=info'])
 
-        # repos_chain.apply_async()
+        repos_chain.apply_async()
 
         repos_to_collect = []
         repo_task_list = []
 
-        logger.info("Repos available for collection")
-        print_repos(repos)
-        while True:
-            try:
-                user_input = int(input("Please select a repo to collect: "))
+        # logger.info("Repos available for collection")
+        # print_repos(repos)
+        # while True:
+        #     try:
+        #         user_input = int(input("Please select a repo to collect: "))
 
-                if user_input < 0 or user_input > len(repos)-1:
-                    print(f"Invalid input please input an integer between 0 and {len(repos)-1}")
-                    continue
+        #         if user_input < 0 or user_input > len(repos)-1:
+        #             print(f"Invalid input please input an integer between 0 and {len(repos)-1}")
+        #             continue
 
-                repo = repos[user_input]
-                break
+        #         repo = repos[user_input]
+        #         break
 
-            except (IndexError, ValueError):
-                print(f"Invalid input please input an integer between 0 and {len(repos)-1}")
+        #     except (IndexError, ValueError):
+        #         print(f"Invalid input please input an integer between 0 and {len(repos)-1}")
 
-        logger.info("Starting celery to work on tasks")
-        celery_process = subprocess.Popen(['celery', '-A', 'augur.tasks.init.celery_app.celery_app', 'worker', '--loglevel=info'])
-        start_task.s(repo.repo_git).apply_async()
+        # logger.info("Starting celery to work on tasks")
+        # celery_process = subprocess.Popen(['celery', '-A', 'augur.tasks.init.celery_app.celery_app', 'worker', '--loglevel=info'])
+        # start_task.s(repo.repo_git).apply_async()
 
 
         # if len(repos) > 1:
@@ -123,9 +126,11 @@ def start(disable_collection):
             logger.info("Shutting down celery process")
             celery_process.terminate
 
-        logger.info("Flushing redis cache")
-        redis_connection.flushdb()
-
+        try:
+            redis_connection.flushdb()
+            logger.info("Flushing redis cache")
+        except RedisConnectionError:
+            pass
 
 
 @cli.command('stop')

@@ -81,7 +81,7 @@ def read_config(section, name=None, environment_variable=None, default=None, con
 #     Can retrieve the workers config object
 #     """
 
-#     @app.route("/AUGWOP/task", methods=['POST', 'GET'])
+#     server.app.route("/AUGWOP/task", methods=['POST', 'GET'])
 #     def augwop_task():
 #         """ AUGWOP endpoint that gets hit to add a task to the workers queue or is used to get the heartbeat/status of worker
 #         """
@@ -101,14 +101,14 @@ def read_config(section, name=None, environment_variable=None, default=None, con
 #                         status=200,
 #                         mimetype="application/json")
 
-#     @app.route("/AUGWOP/heartbeat", methods=['GET'])
+#     server.app.route("/AUGWOP/heartbeat", methods=['GET'])
 #     def heartbeat():
 #         if request.method == 'GET':
 #             return jsonify({
 #                 "status": "alive"
 #             })
 
-#     @app.route("/AUGWOP/config")
+#     server.app.route("/AUGWOP/config")
 #     def augwop_config():
 #         """ Retrieve worker's config
 #         """

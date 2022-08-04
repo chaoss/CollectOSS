@@ -11,7 +11,8 @@ import logging
 
 from augur.api.util import register_metric
 
-from augur.application.db.engine import engine
+from augur.application.db.engine import create_database_engine
+engine = create_database_engine()
 
 logger = logging.getLogger("augur")
 
