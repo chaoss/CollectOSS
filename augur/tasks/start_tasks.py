@@ -100,8 +100,10 @@ class AugurTaskRoutine:
                     self.logger.info(f"Starting dependant collection group {name}...")
                     dependency_cycle = False
                     #task_collection = self.jobs_dict[name].apply_async()
+                    print(self.dependency_relationships[name])
                     dependent_task_collection = deploy_dependent_task.si(*self.dependency_relationships[name],task_set=self.jobs_dict[name])
                     result = dependent_task_collection.apply_async()
+                    print(result)
 
                     self._update_dependency_relationship_with_celery_id(task_collection.id,name,append=(task_collection.id + "child"))
                 
