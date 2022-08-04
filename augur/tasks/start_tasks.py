@@ -12,9 +12,11 @@ pr_numbers = [70, 106, 170, 190, 192, 208, 213, 215, 216, 218, 223, 224, 226, 23
 @celery.task
 def deploy_dependent_task(*args,task_set):
     #prereqs = [AsyncResult(str(task_id)) for task_id in args]
+    logger = logging.getLogger(deploy_dependent_task.__name__)
 
     for task_id in args:
         prereq = AsyncResult(str(task_id))
+        print(prereq.status)
 
         prereq.wait()
     
