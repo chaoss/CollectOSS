@@ -81,9 +81,8 @@ class AugurTaskRoutine:
     def start_data_collection(self):
         #First, start all task groups that have no dependencies. 
         for name, collection_set in self.jobs_dict.items():
-            self.logger.info(f"Starting non dependant collection group {name}...")
-
-            if not self.dependency_relationships[name]:
+            if not len(self.dependency_relationships[name]):
+                self.logger.info(f"Starting non dependant collection group {name}...")
                 self.started_jobs.append(name)
                 task_collection = collection_set.apply_async()
                 
@@ -98,6 +97,7 @@ class AugurTaskRoutine:
                 #Check that task group has no dependencies that haven't been started yet and that it has not already been started.
                 if not any(check in self.dependency_relationships[name] for check in list(self.jobs_dict.keys())) and not name in self.started_jobs:
                     self.started_jobs.append(name)
+                    self.logger.info(f"Starting dependant collection group {name}...")
                     dependency_cycle = False
                     #task_collection = self.jobs_dict[name].apply_async()
                     dependent_task_collection = deploy_dependent_task.si(*self.dependency_relationships[name],task_set=self.jobs_dict[name])
