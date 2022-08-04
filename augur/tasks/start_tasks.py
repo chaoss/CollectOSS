@@ -15,6 +15,7 @@ def deploy_dependent_task(*args,task_set):
     #prereqs = [AsyncResult(str(task_id)) for task_id in args]
     logger = logging.getLogger(deploy_dependent_task.__name__)
 
+    print(task_set)
     for task_id in args:
         prereq = AsyncResult(str(task_id))
         print(prereq.status)
