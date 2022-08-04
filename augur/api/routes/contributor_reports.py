@@ -18,14 +18,11 @@ from bokeh.palettes import Colorblind
 from bokeh.layouts import gridplot
 from bokeh.transform import cumsum
 
-from augur.application.db.engine import create_database_engine
-engine = create_datbase_engine()
-
 AUGUR_API_VERSION = 'api/unstable'
 
 warnings.filterwarnings('ignore')
 
-def create_routes(app):
+def create_routes(server):
     def quarters(month, year):
         if 1 <= month <= 3:
             return '01' + '/' + year
@@ -297,7 +294,7 @@ def create_routes(app):
                 WHERE RANK IN {rank_tuple}
 
          """)
-        df = pd.read_sql(contributor_query, engine)
+        df = pd.read_sql(contributor_query,  server.engine)
 
         df = df.loc[~df['full_name'].str.contains('bot', na=False)]
         df = df.loc[~df['login'].str.contains('bot', na=False)]
@@ -338,7 +335,7 @@ def create_routes(app):
                         FROM generate_series (TIMESTAMP '{start_date}', TIMESTAMP '{end_date}', INTERVAL '1 month' ) created_month ) d ) x 
             ) y
         """)
-        months_df = pd.read_sql(months_query, engine)
+        months_df = pd.read_sql(months_query,  server.engine)
 
         # add yearmonths to months_df
         months_df[['year', 'month']] = months_df[['year', 'month']].astype(float).astype(int).astype(str)
@@ -589,7 +586,7 @@ def create_routes(app):
             print("Developer error, not null columns should be a subset of needed columns")
             return df
 
-    @app.route('/{}/contributor_reports/new_contributors_bar/'.format(AUGUR_API_VERSION), methods=["GET"])
+    server.app.route('/{}/contributor_reports/new_contributors_bar/'.format(AUGUR_API_VERSION), methods=["GET"])
     def new_contributors_bar():
 
         repo_id, start_date, end_date, error = get_repo_id_start_date_and_end_date()
@@ -758,7 +755,7 @@ def create_routes(app):
 
         return send_file(filename)
 
-    @app.route('/{}/contributor_reports/new_contributors_stacked_bar/'.format(AUGUR_API_VERSION),
+    server.app.route('/{}/contributor_reports/new_contributors_stacked_bar/'.format(AUGUR_API_VERSION),
                       methods=["GET"])
     def new_contributors_stacked_bar():
 
@@ -961,7 +958,7 @@ def create_routes(app):
 
         return send_file(filename)
 
-    @app.route('/{}/contributor_reports/returning_contributors_pie_chart/'.format(AUGUR_API_VERSION),
+    server.app.route('/{}/contributor_reports/returning_contributors_pie_chart/'.format(AUGUR_API_VERSION),
                       methods=["GET"])
     def returning_contributors_pie_chart():
 
@@ -1093,7 +1090,7 @@ def create_routes(app):
 
         return send_file(filename)
 
-    @app.route('/{}/contributor_reports/returning_contributors_stacked_bar/'.format(AUGUR_API_VERSION),
+    server.app.route('/{}/contributor_reports/returning_contributors_stacked_bar/'.format(AUGUR_API_VERSION),
                       methods=["GET"])
     def returning_contributors_stacked_bar():
 

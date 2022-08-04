@@ -12,9 +12,6 @@ from augur.application.db.models import User
 
 logger = logging.getLogger(__name__)
 
-from augur.application.db.engine import create_database_engine
-engine = create_datbase_engine()
-
 AUGUR_API_VERSION = 'api/unstable'
 
 def generate_upgrade_request():
@@ -25,13 +22,13 @@ def generate_upgrade_request():
 
     return response, 426
 
-def create_routes(app):
+def create_routes(server):
 
     @app.errorhandler(405)
     def unsupported_method(error):
         return jsonify({"status": "Unsupported method"}), 405
 
-    @app.route(f"/{AUGUR_API_VERSION}/user/validate", methods=['POST'])
+    server.app.route(f"/{AUGUR_API_VERSION}/user/validate", methods=['POST'])
     def validate_user():
         if not request.is_secure:
             return generate_upgrade_request()
@@ -59,7 +56,7 @@ def create_routes(app):
         - return jsonify({"status": "Validated"})
         """
 
-    @app.route(f"/{AUGUR_API_VERSION}/user/create", methods=['POST'])
+    server.app.route(f"/{AUGUR_API_VERSION}/user/create", methods=['POST'])
     def create_user():
         if not request.is_secure:
             return generate_upgrade_request()

@@ -12,14 +12,11 @@ from boto3.dynamodb.conditions import Key, Attr
 import os
 import requests
 
-from augur.application.db.engine import create_database_engine
-engine = create_datbase_engine()
-
 AUGUR_API_VERSION = 'api/unstable'
 
-def create_routes(app):
+def create_routes(server):
 
-    @app.route('/{}/metadata/repo_info'.format(AUGUR_API_VERSION), methods=["GET"])
+    server.app.route('/{}/metadata/repo_info'.format(AUGUR_API_VERSION), methods=["GET"])
     def get_repo_info():
         repo_info_sql = s.sql.text("""
             SELECT
@@ -51,35 +48,35 @@ def create_routes(app):
             ORDER BY
                 repo.repo_name;
         """)
-        results = pd.read_sql(repo_info_sql, engine)
+        results = pd.read_sql(repo_info_sql,  server.engine)
         data = results.to_json(orient="records", date_format='iso', date_unit='ms')
         parsed_data = json.loads(data)
         return Response(response=data,
                     status=200,
                     mimetype="application/json")
 
-    @app.route('/{}/metadata/contributions_count'.format(AUGUR_API_VERSION), methods=["GET"])
+    server.app.route('/{}/metadata/contributions_count'.format(AUGUR_API_VERSION), methods=["GET"])
     def contributions_count():
         repo_info_sql = s.sql.text("""
             select repo_git, count(*) as contributions from contributor_repo
             group by repo_git 
             order by contributions desc;
         """)
-        results = pd.read_sql(repo_info_sql, engine)
+        results = pd.read_sql(repo_info_sql,  server.engine)
         data = results.to_json(orient="records", date_format='iso', date_unit='ms')
         parsed_data = json.loads(data)
         return Response(response=data,
                     status=200,
                     mimetype="application/json")
 
-    @app.route('/{}/metadata/contributors_count'.format(AUGUR_API_VERSION), methods=["GET"])
+    server.app.route('/{}/metadata/contributors_count'.format(AUGUR_API_VERSION), methods=["GET"])
     def contributors_count():
         repo_info_sql = s.sql.text("""
             select repo_git, count(distinct(cntrb_id)) as contributors from contributor_repo
             group by repo_git 
             order by contributors desc;  
         """)
-        results = pd.read_sql(repo_info_sql, engine)
+        results = pd.read_sql(repo_info_sql,  server.engine)
         data = results.to_json(orient="records", date_format='iso', date_unit='ms')
         parsed_data = json.loads(data)
         return Response(response=data,

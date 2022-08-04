@@ -16,5 +16,5 @@ class GithubTaskSession(DatabaseSession):
         super().__init__(logger)
 
         # creates the key authentication class and passes the session and config
-        self.oauths = GithubRandomKeyAuth(self)
+        self.oauths = GithubRandomKeyAuth(self, logger)
         

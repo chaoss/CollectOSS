@@ -13,8 +13,7 @@ from boto3.dynamodb.conditions import Key, Attr
 import os
 import requests
 import slack
-from augur.application.db.engine import create_database_engine
-engine = create_datbase_engine()
+
 
 AUGUR_API_VERSION = 'api/unstable'
 
@@ -243,10 +242,10 @@ AUGUR_API_VERSION = 'api/unstable'
    
 #     return filteredUser
 
-def create_routes(app):
+def create_routes(server):
 
 
-    @app.route('/auggie/get_user', methods=['POST'])
+    server.app.route('/auggie/get_user', methods=['POST'])
     def get_auggie_user():
         # arg = [request.json]
         # response = server.transform(metrics.get_auggie_user, args=arg)
@@ -272,7 +271,7 @@ def create_routes(app):
        
         return filteredUser
 
-    @app.route('/auggie/update_tracking', methods=['POST'])
+    server.app.route('/auggie/update_tracking', methods=['POST'])
     def update_auggie_user_tracking():
         # arg = [request.json]
         # response = server.transform(metrics.update_tracking, args=arg)
@@ -318,7 +317,7 @@ def create_routes(app):
 
         return filtered_values
 
-    @app.route('/auggie/slack_login', methods=['POST'])
+    server.app.route('/auggie/slack_login', methods=['POST'])
     def slack_login():
         # arg = [request.json]
         # response = server.transform(metrics.slack_login, args=arg)

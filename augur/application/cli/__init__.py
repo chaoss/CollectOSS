@@ -8,7 +8,6 @@ import re
 import json
 
 from augur.application.db.engine import create_database_engine
-engine = create_datbase_engine()
 from sqlalchemy.exc import OperationalError 
 
 
@@ -34,6 +33,7 @@ def test_connection(function_internet_connection):
 def test_db_connection(function_db_connection):
     @click.pass_context
     def new_func(ctx, *args, **kwargs):
+        engine = create_database_engine()
         usage = re.search(r"Usage:\s(.*)\s\[OPTIONS\]", str(ctx.get_usage())).groups()[0]
         try:
             engine.connect()

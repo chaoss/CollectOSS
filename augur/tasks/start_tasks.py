@@ -17,7 +17,7 @@ def start_task(repo_git: str):
     logger.info(f"Collecting data for {owner}/{repo}")
  
     start_task_list = []
-    start_task_list.append(collect_pull_requests.si(repo_git))
+    # start_task_list.append(collect_pull_requests.si(repo_git))
     start_task_list.append(collect_issues.si(repo_git))
 
     start_tasks_group = group(start_task_list)
@@ -25,8 +25,8 @@ def start_task(repo_git: str):
 
     secondary_task_list = []
     # secondary_task_list.append(pull_request_reviews.s(owner, repo, pr_numbers))
-    secondary_task_list.append(collect_events.si(repo_git))
-    secondary_task_list.append(collect_issue_and_pr_comments.si(repo_git))
+    # secondary_task_list.append(collect_events.si(repo_git))
+    # secondary_task_list.append(collect_issue_and_pr_comments.si(repo_git))
     
     secondary_task_group = group(secondary_task_list)
 

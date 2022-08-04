@@ -6,7 +6,7 @@ from sqlalchemy import pool
 from alembic import context
 from augur.application.db.models.base import Base
 from augur.application.db.engine import create_database_engine
-engine = create_datbase_engine()
+engine = create_database_engine()
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

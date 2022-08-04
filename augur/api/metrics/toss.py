@@ -5,7 +5,7 @@ import pandas as pd
 from augur.api.util import register_metric
 
 from augur.application.db.engine import create_database_engine
-engine = create_datbase_engine()
+engine = create_database_engine()
 
 @register_metric(type="toss") 
 def toss_pull_request_acceptance_rate(repo_id, begin_date=None, end_date=None, group_by='week'):

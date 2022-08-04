@@ -12,16 +12,13 @@ from flask import request, Response
 from augur.api.util import metric_metadata
 import json
 
-from augur.application.db.engine import create_database_engine
-engine = create_datbase_engine()
-
 AUGUR_API_VERSION = 'api/unstable'
 
 logger = logging.getLogger(__name__)
 
-def create_routes(app):
+def create_routes(server):
 
-        @app.route('/{}/batch'.format(AUGUR_API_VERSION), methods=['GET', 'POST'])
+        server.app.route('/{}/batch'.format(AUGUR_API_VERSION), methods=['GET', 'POST'])
         def batch():
             """
             Execute multiple requests, submitted as a batch.
@@ -104,7 +101,7 @@ def create_routes(app):
         @apiDescription Returns metadata of batch requests
         POST JSON of API requests metadata
         """
-        @app.route('/{}/batch/metadata'.format(AUGUR_API_VERSION), methods=['GET', 'POST'])
+        server.app.route('/{}/batch/metadata'.format(AUGUR_API_VERSION), methods=['GET', 'POST'])
         def batch_metadata():
             """
             Returns endpoint metadata in batch format
