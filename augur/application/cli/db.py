@@ -19,10 +19,12 @@ import re
 
 from augur.application.cli import test_connection, test_db_connection 
 
-from augur.application.config import ReadAugurConfig
-from augur.application.db.engine import engine
+from augur.application.db.session import DatabaseSession
+from augur.application.logs import AugurLogger
 
-logger = logging.getLogger(__name__)
+logger = AugurLogger("cli").get_logger()
+session = DatabaseSession(logger)
+engine = session.engine
 
 
 @click.group("db", short_help="Database utilities")
@@ -142,8 +144,7 @@ def add_github_org(organization_name):
     Create new repo groups in Augur's database
     """
 
-    logger = logging.getLogger(__name__)
-    config = ReadAugurConfig(logger) 
+    config = session.config
 
     org_query_response = requests.get(
         f"https://api.github.com/orgs/{organization_name}"

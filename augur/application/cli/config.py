@@ -15,13 +15,15 @@ from pathlib import Path
 
 from augur.application.db.models import Config
 from augur.application.db.session import DatabaseSession
-from augur.application.config import ReadWriteAugurConfig
+from augur.application.logs import AugurLogger
+from augur.application.cli import test_connection, test_db_connection 
 
 ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
 
-logger = logging.getLogger(__name__)
-config = ReadWriteAugurConfig(logger)
+logger = AugurLogger("cli").get_logger()
+session = DatabaseSession(logger)
+config = session.config
 
 ENVVAR_PREFIX = "AUGUR_"
 
@@ -69,8 +71,6 @@ def load_config(file):
         print("Did not recieve yes or y exiting...")
         return
 
-    session = DatabaseSession(logger)
-
     file_data = config.load_config_file(file)
 
     config.clear()
@@ -83,8 +83,6 @@ def load_config(file):
 @test_connection
 @test_db_connection
 def add_section(section_name, file):
-
-    session = DatabaseSession(logger)
 
     if config.is_section_in_config(section_name):
 
@@ -112,8 +110,6 @@ def add_section(section_name, file):
 @test_db_connection
 def config_set(section, setting, value, data_type):
 
-    session = DatabaseSession(logger)
-
     if data_type not in config.accepted_types:
         print(f"Error invalid type for config. Please use one of these types: {config.accepted_types}")
         return
@@ -134,8 +130,6 @@ def config_set(section, setting, value, data_type):
 @test_connection
 @test_db_connection
 def config_get(section, setting):
-
-    session = DatabaseSession(logger)
 
     if setting:
         config_value = config.get_value(section_name=section, setting_name=setting)
@@ -163,8 +157,6 @@ def config_get(section, setting):
 @test_connection
 @test_db_connection
 def clear_config():
-
-    session = DatabaseSession(logger)
 
     if not config.empty():
 

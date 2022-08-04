@@ -1,30 +1,40 @@
 import os
-import sys
-import random
-import logging
-import sqlalchemy as s
-
 from sqlalchemy.dialects import postgresql as pg
+import sqlalchemy as s
+import pandas as pd
+import json
+import httpx
+from sqlalchemy.inspection import inspect
 from psycopg2.errors import DeadlockDetected
 from sqlalchemy.exc import OperationalError
+import logging
+
+import re
+import time
+import sys
+import random
+
+sys.path.append("..")
 from sqlalchemy.event import listen
 from sqlalchemy.event import listens_for
 
+from augur.tasks.util.random_key_auth import RandomKeyAuth
+# import psycopg2 
 from augur.application.db.engine import engine
+
+from augur.application.config import AugurConfig
+
+from augur.application.db.models import Platform
+sys.path.pop()
+#TODO: setup github headers in a method here.
+#Encapsulate data for celery task worker api
 
 class DatabaseSession(s.orm.Session):
 
-    def __init__(self, logger=None):
-
-        # if no logger is passed make all log statments call print
-        if logger is None:
-            self.logger = logging.getLogger(__name__)
-            self.logger.info = print
-            self.logger.debug = print
-            self.logger.error = print
-        else:
-            self.logger = logger
-
+    def __init__(self, logger):
+    
+        self.logger = logger
+        self.config = AugurConfig(logger=logger, session=self)
         self.engine = engine
 
         super().__init__(self.engine)

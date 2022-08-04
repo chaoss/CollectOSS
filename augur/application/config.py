@@ -2,9 +2,6 @@ import sqlalchemy as s
 import json
 
 from augur.application.db.models import Config 
-from augur.application.db.engine import engine
-
-from augur.application.db.session import DatabaseSession
 
 default_config = {
             "Augur": {
@@ -50,17 +47,43 @@ default_config = {
             }
         }
 
-class ReadAugurConfig():
 
-    # by default logger is not defined
-    # this is to make it possible to get logging 
-    # configuration values from the database, without requiring a logger
-    def __init__(self, logger=None, session=None):
+def convert_type_of_value(config_dict, logger=None):
+        
+        data_type = config_dict["type"]
+
+        if data_type == "str" or data_type is None:
+            return config_dict
+
+        elif data_type == "int":
+            config_dict["value"] = int(config_dict["value"])
+
+        elif data_type == "bool":
+            value = config_dict["value"]
+            
+            if value.lower() == "false":
+                config_dict["value"] = False
+            else:
+                config_dict["value"] = True
+
+        elif data_type == "float":
+            config_dict["value"] = float(config_dict["value"])
+
+        else:
+            if logger:
+                logger.error(f"Need to add support for {data_type} types to config") 
+            else:
+                print(f"Need to add support for {data_type} types to config")
+
+        return config_dict
+
+class AugurConfig():
+
+    def __init__(self, logger, session):
 
         self.session = session
-        if session is None:
-            self.session = DatabaseSession(logger=logger)
-    
+        self.logger = logger
+
         self.accepted_types = ["str", "bool", "int", "float", "NoneType"]
         self.default_config = default_config
 
@@ -72,7 +95,7 @@ class ReadAugurConfig():
         for setting in section_data:
             setting_dict = setting.__dict__
 
-            setting_dict = self.convert_type_of_value(setting_dict)
+            setting_dict = convert_type_of_value(setting_dict, self.logger)
 
             setting_name = setting_dict["setting_name"]
             setting_value = setting_dict["value"]
@@ -92,7 +115,7 @@ class ReadAugurConfig():
 
         setting_dict = config_setting.__dict__
 
-        setting_dict = self.convert_type_of_value(setting_dict)
+        setting_dict = convert_type_of_value(setting_dict, self.logger)
 
         return setting_dict["value"]
 
@@ -121,32 +144,6 @@ class ReadAugurConfig():
 
         return config
 
-    
-    def convert_type_of_value(self, config_dict):
-        
-        data_type = config_dict["type"]
-
-        if data_type == "str" or data_type is None:
-            return config_dict
-
-        elif data_type == "int":
-            config_dict["value"] = int(config_dict["value"])
-
-        elif data_type == "bool":
-            value = config_dict["value"]
-            
-            if value.lower() == "false":
-                config_dict["value"] = False
-            else:
-                config_dict["value"] = True
-
-        elif data_type == "float":
-            config_dict["value"] = float(config_dict["value"])
-
-        else:
-            print(f"Need to add support for {data_type} types to config")
-
-        return config_dict
 
     def empty(self):
 
@@ -155,13 +152,6 @@ class ReadAugurConfig():
     def is_section_in_config(self, section_name):
 
         return Config.query.filter_by(section_name=section_name).first() is not None
-
-
-class ReadWriteAugurConfig(ReadAugurConfig):
-
-    def __init__(self, logger, session=None):
-
-        super().__init__(logger, session)
 
     """
     type is optional
@@ -195,7 +185,7 @@ class ReadWriteAugurConfig(ReadAugurConfig):
             value = json_data[key]
 
             if type(value) == dict:
-                print("Values cannot be of type dict")
+                self.logger.error("Values cannot be of type dict")
                 return
 
             setting = {
@@ -228,7 +218,7 @@ class ReadWriteAugurConfig(ReadAugurConfig):
                 self.add_section_from_json(section_name=section_name, json_data=value)
 
             else:
-                print(f"Error! {section_name}: {value} will not be added because a section must have a dict as its values (all of the top level keys in the config must have a value of type dict")
+                self.logger.error(f"Error! {section_name}: {value} will not be added because a section must have a dict as its values (all of the top level keys in the config must have a value of type dict")
 
     def clear(self):
         pass

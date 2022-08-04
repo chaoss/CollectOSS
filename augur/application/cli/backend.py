@@ -23,14 +23,14 @@ from augur.tasks.init.redis_connection import redis_connection
 from augur.application.db.models import Repo
 from augur.application.db.session import DatabaseSession
 from augur.application.logs import AugurLogger
-from augur.application.config import ReadAugurConfig
+
 # from augur.server import Server
 from celery import chain, signature, group
 
 from augur.application.cli import test_connection, test_db_connection 
 
 logger = AugurLogger("augur", reset_logfiles=True).get_logger()
-config = ReadAugurConfig(logger)
+config = DatabaseSession(logger).config
 
 @click.group('server', short_help='Commands for controlling the backend API server & data collection workers')
 def cli():

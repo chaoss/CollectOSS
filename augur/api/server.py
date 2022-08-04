@@ -20,11 +20,12 @@ from beaker.util import parse_cache_config_options
 from beaker.cache import CacheManager
 
 
+from augur.application.db.session import DatabaseSession
 from augur.application.logs import AugurLogger
-from augur.application.config import ReadAugurConfig
 from metadata import __version__ as augur_code_version
 
 AUGUR_API_VERSION = 'api/unstable'
+
 
 """
 Initializes the server, creating the Flask application
@@ -33,8 +34,8 @@ class Server():
 
     def __init__(self):
 
-        self.logger = AugurLogger("augur").get_logger()
-        self.config = ReadAugurConfig(self.logger)
+        self.logger = AugurLogger("server").get_logger()
+        self.config = DatabaseSession(self.logger).config
 
         self.cache = self.create_cache()
         self.server_cache = self.get_server_cache()

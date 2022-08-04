@@ -22,8 +22,6 @@ from celery.signals import after_setup_logger
 from datetime import timedelta
 import sqlalchemy as s
 
-from augur.application.config import ReadAugurConfig
-
 from augur.tasks.git.util.facade_worker.facade_worker.facade02utilitymethods import update_repo_log, trim_commit, store_working_author, trim_author
 from augur.tasks.git.util.facade_worker.facade_worker.facade03analyzecommit import analyze_commit
 from augur.tasks.git.util.facade_worker.contributor_interfaceable.contributor_interface import *
@@ -39,7 +37,7 @@ from augur.application.db.models import PullRequest, Message, PullRequestReview,
 
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
 from augur.tasks.github.util.gh_graphql_entities import PullRequest
-from augur.tasks.util.github_task_session import *
+from augur.tasks.github.util.github_task_session import *
 
 from augur.tasks.git.util.facade_worker.facade_worker.facade00mainprogram import *
 

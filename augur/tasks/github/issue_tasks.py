@@ -6,7 +6,7 @@ from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.data_parse import *
 from augur.tasks.util.AugurUUID import AugurUUID
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
-from augur.tasks.util.github_task_session import GithubTaskSession
+from augur.tasks.github.util.github_task_session import GithubTaskSession
 from augur.application.db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestEvent, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, Issue, IssueEvent, IssueLabel, IssueAssignee, PullRequestMessageRef, IssueMessageRef, Contributor, Repo
 
 # creates a class that is sub class of the sqlalchemy.orm.Session class that additional methods and fields added to it. 

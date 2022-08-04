@@ -40,8 +40,12 @@ import logging
 from urllib.parse import urlparse
 
 from augur.tasks.git.util.worker_util import read_config
-from augur.tasks.util.github_task_session import *
-from augur.application.config import ReadAugurConfig
+from augur.tasks.github.util.github_task_session import *
+from augur.application.logs import AugurLogger
+
+logger = AugurLogger("cli").get_logger()
+session = DatabaseSession(logger)
+engine = session.engine
 
 def get_database_args_from_env():
     db_str = os.getenv("AUGUR_DB")
@@ -77,8 +81,7 @@ class FacadeConfig:
         self.db_people = None
 
         #worker_options = read_config("Workers", "facade_worker", None, None)
-        config_db_session = DatabaseSession(logger)
-        config = ReadAugurConfig(config_db_session)
+        config = DatabaseSession(logger).config
         worker_options = config.get_section("Facade")
 
         if 'repo_directory' in worker_options:

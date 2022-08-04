@@ -8,12 +8,11 @@ import logging
 
 from augur.application.db.session import DatabaseSession
 from augur.application.logs import AugurLogger
-from augur.application.config import ReadAugurConfig
-
-from augur.application.db.engine import engine
 
 logger = AugurLogger("augur").get_logger()
-augur_config = ReadAugurConfig(logger)
+session = DatabaseSession(logger)
+augur_config = session.config
+engine = session.engine
 
 AUGUR_API_VERSION = 'api/unstable'
 
