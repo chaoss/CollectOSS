@@ -26,7 +26,7 @@ from augur.tasks.git.util.facade_worker.facade_worker.facade02utilitymethods imp
 from augur.tasks.git.util.facade_worker.facade_worker.facade03analyzecommit import analyze_commit
 from augur.tasks.git.util.facade_worker.contributor_interfaceable.contributor_interface import *
 
-from augur.tasks.git.util.worker_util import create_grouped_task_load
+from augur.tasks.util.worker_util import create_grouped_task_load
 
 from augur.tasks.init.celery_app import celery_app as celery
 

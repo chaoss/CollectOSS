@@ -40,7 +40,7 @@ from .facade07rebuildcache import nuke_affiliations, fill_empty_affiliations, in
 
 from augur.tasks.git.util.facade_worker.contributor_interfaceable.contributor_interface import *
 
-from augur.tasks.git.util.worker_util import read_config
+from augur.tasks.util.worker_util import read_config
 from augur.tasks.github.util.github_task_session import GithubTaskSession
 
 class FacadeSession(GithubTaskSession):
