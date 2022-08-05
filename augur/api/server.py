@@ -20,13 +20,12 @@ from beaker.util import parse_cache_config_options
 from beaker.cache import CacheManager
 
 
+from augur.application.db.session import DatabaseSession
 from augur.application.logs import AugurLogger
-from augur.application.config import AugurConfig
-from augur.tasks.util.task_session import TaskSession
-from augur.application.db.engine import engine
 from metadata import __version__ as augur_code_version
 
 AUGUR_API_VERSION = 'api/unstable'
+
 
 """
 Initializes the server, creating the Flask application
@@ -35,9 +34,10 @@ class Server():
 
     def __init__(self):
 
-        self.logger = AugurLogger("augur").get_logger()
-        self.session = TaskSession(self.logger)
-        self.config = AugurConfig(self.session)
+        self.logger = AugurLogger("server").get_logger()
+        self.session = DatabaseSession(self.logger)
+        self.config = self.session.config
+        self.engine = self.session.engine
 
         self.cache = self.create_cache()
         self.server_cache = self.get_server_cache()
@@ -65,7 +65,7 @@ class Server():
 
 
         self.logger.debug("Creating API routes...")
-        self.create_all_routes(self.app)
+        self.create_all_routes(self)
         self.create_metrics()
 
         @self.app.route('/')
@@ -101,7 +101,7 @@ class Server():
     """
         This function adds all the routes defined in the files in the augur/api/routes directory to the flask app
     """
-    def create_all_routes(self, app):
+    def create_all_routes(self, server):
 
         # gets a list of the routes files
         route_files = self.get_route_files()
@@ -114,7 +114,7 @@ class Server():
             # each file that contains routes must contain a create_routes function
             # and this line is calling that function and passing the flask app,
             # so that the routes in the files can be added to the flask app
-            module.create_routes(app)
+            module.create_routes(server)
 
     """
     This function gets a list of all the routes files in the augur/api/routes directory

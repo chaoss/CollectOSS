@@ -8,9 +8,6 @@ import inspect
 import types
 import sys
 import beaker
-import logging
-
-logger = logging.getLogger(__name__)
 
 __ROOT = os.path.abspath(os.path.dirname(__file__))
 def get_data_path(path):

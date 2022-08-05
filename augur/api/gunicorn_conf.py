@@ -5,20 +5,17 @@ import os
 from pathlib import Path
 import shutil
 
-from augur.application.config import AugurConfig
-from augur.tasks.util.task_session import TaskSession
+from augur.application.db.session import DatabaseSession
+from augur.application.logs import AugurLogger
 
-logger = logging.getLogger(__name__)
-session = TaskSession(logger)
-augur_config = AugurConfig(session)
+logger = AugurLogger("gunicorn configuration").get_logger()
+augur_config = DatabaseSession(logger).config
 
 # ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
 # base_log_dir = ROOT_AUGUR_DIRECTORY + "/logs/"
 
 # Path(base_log_dir).mkdir(exist_ok=True)
-
-
 
 workers = multiprocessing.cpu_count() * 2 + 1
 umask = 0o007

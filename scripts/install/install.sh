@@ -18,6 +18,9 @@ else
   echo
 fi
 
+scripts/install/backend.sh $target 2>&1 | tee logs/backend-install.log
+echo "Done!"
+
 connection_status=$(augur db test-connection)
 
 if [[ "$connection_status" =~ "You are not connect to the internet." ]]; then
@@ -69,11 +72,6 @@ then
         create_db_config
     fi
 fi
-
-
-
-scripts/install/backend.sh $target 2>&1 | tee logs/backend-install.log
-echo "Done!"
 
 echo
 echo "Creating database schema"
