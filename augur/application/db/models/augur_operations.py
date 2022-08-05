@@ -1,5 +1,5 @@
 # coding: utf-8
-from sqlalchemy import BigInteger, SmallInteger, Column, Index, Integer, String, Table, text, UniqueConstraint
+from sqlalchemy import BigInteger, SmallInteger, Column, Index, Integer, String, Table, text, UniqueConstraint, Boolean
 from sqlalchemy.dialects.postgresql import TIMESTAMP
 
 from augur.application.db.models.base import Base
@@ -167,6 +167,7 @@ class Config(Base):
         {"schema": "augur_operations"}
     )
 
+# add admit column to database
 class User(Base):
     user_id = Column(Integer, primary_key=True)
     login_name = Column(String, nullable=False)
@@ -175,6 +176,7 @@ class User(Base):
     text_phone = Column(String)
     first_name = Column(String, nullable=False)
     last_name = Column(String, nullable=False)
+    admin = Column(Boolean, nullable=False)
     tool_source = Column(String)
     tool_version = Column(String)
     data_source = Column(String)
