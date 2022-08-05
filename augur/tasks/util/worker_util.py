@@ -6,6 +6,8 @@ import numpy as np
 from celery import group
 from augur.application.logs import AugurLogger
 from augur.tasks.util.task_session import TaskSession
+from celery.result import AsyncResult
+from celery.result import allow_join_result
 
 def create_grouped_task_load(*args,processes=6,dataList=[],task=None):
     
@@ -21,6 +23,11 @@ def create_grouped_task_load(*args,processes=6,dataList=[],task=None):
 
     return jobs
 
+def wait_child_tasks(ids_list):
+    for task_id in ids_list:
+        prereq = AsyncResult(str(task_id))
+        with allow_join_result():
+            prereq.wait()
 
 
 # def create_server(app, worker=None):
