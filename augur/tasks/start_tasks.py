@@ -62,7 +62,7 @@ def deploy_dependent_task(*args,task_set,bind=True):
 class AugurTaskRoutine:
 
     def __init__(self,disabled_collection_groups=[]):
-        self.logger = AugurLogger("data_collection_groups").get_logger()
+        self.logger = AugurLogger("data_collection_jobs").get_logger()
         #self.session = TaskSession(self.logger)
         self.jobs_dict = {}
         self.started_jobs = []
@@ -91,10 +91,11 @@ class AugurTaskRoutine:
         del self.dependency_relationships[key]
         self.disabled_collection_groups.append(key)
 
-    def add_dependency_relationship(self,key,otherKey):
-        assert (key in self.jobs_dict.keys() and otherKey in self.jobs_dict.keys()), "One or both collection groups don't exist!"
+    #force these params to be kwargs so they are more readable
+    def add_dependency_relationship(self,job=None,depends_on=None):
+        assert (job in self.jobs_dict.keys() and depends_on in self.jobs_dict.keys()), "One or both collection groups don't exist!"
 
-        self.dependency_relationships[key].append(otherKey)
+        self.dependency_relationships[job].append(depends_on)
     
     def _update_dependency_relationship_with_celery_id(self,celery_id,dependency_name,append=None):
         #Replace dependency with active celery id once started so that dependent tasks can check status
