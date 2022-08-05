@@ -221,15 +221,14 @@ class AugurConfig():
                 self.logger.error(f"Error! {section_name}: {value} will not be added because a section must have a dict as its values (all of the top level keys in the config must have a value of type dict")
 
     def clear(self):
-        pass
-        # db.session.query(Config).delete()
-        # db.session.commit()
+
+        self.session.query(Config).delete()
+        self.session.commit()
 
     def remove_section(self, section_name):
 
-        Config.query.filter_by(section_name=section_name).delete()
-
-        # db.session.commit()
+        self.session.query(Config).filter(Config.section_name == section_name).delete()
+        self.session.commit()
 
 
     def create_default_config(self):

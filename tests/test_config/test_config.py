@@ -1,6 +1,7 @@
 from augur.application.config import AugurConfig
 import logging
 import os
+import json
 from sqlalchemy.sql import text
 
 logger = logging.getLogger(__name__)
@@ -275,25 +276,155 @@ def test_config_add_section_from_json(config, engine):
 
 def test_load_config_file(config):
 
-    file_path = "temp.json"
-    config_dict = {
-        "Network": {
-            "ip_standard": "ipv4",
-            "ip": "8.8.8.8",
-            "subnet_mask": "/24"
-        }     
-    }
+    try:
 
-    with open(file_path, 'w') as outfile:
-        json.dump(data, outfile)
+        file_path = "temp.json"
+        config_dict = {
+            "Network": {
+                "ip_standard": "ipv4",
+                "ip": "8.8.8.8",
+                "subnet_mask": "/24"
+            }     
+        }
 
-    result = config.load_config_file(file_path)
+        with open(file_path, 'w') as outfile:
+            json.dump(config_dict, outfile)
 
-    assert result == config_dict
+        result = config.load_config_file(file_path)
+
+        assert result == config_dict
 
     finally:
         if os.path.exists(file_path):
-            os.remove("demofile.txt")
+            os.remove(file_path)
+
+def test_config_load_config_from_dict(config, engine):
+
+    try:
+        config_dict = {
+            "Network": {
+                "ip_standard": "ipv4",
+                "ip": "8.8.8.8",
+                "subnet_mask": "/24"
+            },
+            "Computer": {
+                "cores": "8",
+                "cpu_speed": "3Ghz"
+            }     
+        }
+
+        config.load_config_from_dict(config_dict)
+
+        with engine.connect() as connection:
+
+            result = connection.execute("""SELECT * FROM augur_operations.config""").fetchall()
+
+            for row in result:
+                dict_data = dict(row)
+
+                section_name = dict_data["section_name"]
+                
+                assert section_name in config_dict.keys() 
+
+                setting_name = dict_data["setting_name"]
+                value = dict_data["value"]
+
+                assert config_dict[section_name][setting_name] == value
+
+    finally:
+        with engine.connect() as connection:
+            connection.execute("""DELETE FROM augur_operations.config""")
+
+def test_config_clear(config, engine):
+
+    try:
+        ip_standard = {"section_name": "Network", "setting_name": "ip_standard", "value": "ipv4"}
+        ip = {"section_name": "Network", "setting_name": "ip", "value": "8.8.8.8"}
+        subnet_mask = {"section_name": "Network", "setting_name": "subnet_mask", "value": "/24"}
+        all_data = [ip_standard, ip, subnet_mask]
+
+        with engine.connect() as connection:
+
+            for data in all_data:
+
+                query = text("""INSERT INTO "augur_operations"."config" ("section_name", "setting_name", "value", "type") VALUES (:section_name, :setting_name, :value, 'str');""")
+
+                connection.execute(query, **data)
+
+        config.clear()
+
+        with engine.connect() as connection:
+
+            result = connection.execute("""SELECT * FROM augur_operations.config""").fetchall()
+
+            assert len(result) == 0
+
+
+    finally:
+        with engine.connect() as connection:
+            connection.execute("""DELETE FROM augur_operations.config""")
+
+def test_remove_section(config, engine):
+
+    try:
+        section_removed = "Network"
+
+        ip_standard = {"section_name": "Network", "setting_name": "ip_standard", "value": "ipv4"}
+        ip = {"section_name": "Network", "setting_name": "ip", "value": "8.8.8.8"}
+        subnet_mask = {"section_name": "Network", "setting_name": "subnet_mask", "value": "/24"}
+        cpu_speed = {"section_name": "Computer", "setting_name": "cpu_speed", "value": "3GHZ"}
+        cores = {"section_name": "Computer", "setting_name": "cores", "value": "8"}
+        screen_size = {"section_name": "Computer", "setting_name": "screen_size", "value": "16in"}
+
+        all_data = [ip_standard, ip, subnet_mask, cpu_speed, cores, screen_size]
+
+        with engine.connect() as connection:
+
+            for data in all_data:
+
+                query = text("""INSERT INTO "augur_operations"."config" ("section_name", "setting_name", "value", "type") VALUES (:section_name, :setting_name, :value, 'str');""")
+
+                connection.execute(query, **data)
+
+        config.remove_section(section_removed)
+
+        with engine.connect() as connection:
+
+            result = connection.execute("""SELECT * FROM augur_operations.config""").fetchall()
+
+            for row in result:
+                dict_data = dict(row)
+
+                assert dict_data["section_name"] != section_removed
+
+
+    finally:
+        with engine.connect() as connection:
+            connection.execute("""DELETE FROM augur_operations.config""")
+
+
+
+def test_create_default_config(config, engine):
+
+    from augur.application.config import default_config
+
+    config.create_default_config()
+
+    try:
+
+        with engine.connect() as connection:
+
+            result = connection.execute("""SELECT * FROM augur_operations.config""").fetchall()
+
+            for row in result:
+                dict_data = dict(row)
+
+                assert dict_data["section_name"] != section_removed
+
+
+    finally:
+        with engine.connect() as connection:
+            connection.execute("""DELETE FROM augur_operations.config""")
 
 
 
