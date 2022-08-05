@@ -4,7 +4,8 @@ from flask import Flask, Response, jsonify, request
 #import gunicorn.app.base
 import numpy as np
 from celery import group
-
+from augur.application.logs import AugurLogger
+from augur.tasks.util.task_session import TaskSession
 
 def create_grouped_task_load(*args,processes=6,dataList=[],task=None):
     
@@ -73,6 +74,9 @@ def read_config(section, name=None, environment_variable=None, default=None, con
                 _config[section] = {}
 
     return value
+
+
+
 
 # def create_server(app, worker=None):
 #     """ Consists of AUGWOP endpoints for the broker to communicate to this worker

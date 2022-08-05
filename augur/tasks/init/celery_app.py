@@ -10,6 +10,9 @@ BACKEND_URL = 'redis://localhost:6379/1'
 celery_app = Celery('tasks', broker=BROKER_URL,
              backend=BACKEND_URL, include=['augur.tasks.git.facade_tasks', 'augur.tasks.github.issue_tasks', 'augur.tasks.start_tasks'])   
 
+#Setting to be able to see more detailed states of running tasks
+celery_app.conf.task_track_started = True
+
 
 def split_tasks_into_groups(tasks):
     grouped_tasks = {}
