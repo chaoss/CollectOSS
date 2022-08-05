@@ -29,11 +29,10 @@ def deserialize_task_set(dict_obj):
 #NOTE: celery pickles signature objects as dicts
 @celery.task
 def deploy_dependent_task(*args,task_set,bind=True):
-    #prereqs = [AsyncResult(str(task_id)) for task_id in args]
     logger = logging.getLogger(deploy_dependent_task.__name__)
 
-    print(task_set)
-    print(type(task_set))
+    #print(task_set)
+    #print(type(task_set))
 
 
 
@@ -46,9 +45,9 @@ def deploy_dependent_task(*args,task_set,bind=True):
     #The convention now is to just add the string 'child' after the autogen'd
     #parent task id to be consistant.
     to_execute = deserialize_task_set(task_set)
-    print(type(to_execute))
+    #print(type(to_execute))
 
-    print(deploy_dependent_task.request.id )
+    #print(deploy_dependent_task.request.id )
     to_execute.apply_async(task_id=(deploy_dependent_task.request.id + "child"))
 
 
@@ -123,17 +122,14 @@ class AugurTaskRoutine:
                 
                 self._update_dependency_relationship_with_celery_id(task_collection.id,name)
         
-        dependency_cycle = True
         #Check if there are any elements in any of the dependency_relationships lists
         #that still haven't been replaced by celery task ids.
         while not all( any(check in dependencies for check in list(self.jobs_dict.keys())) for dependencies in self.dependency_relationships.values()):
-            dependency_cycle = True
             for name in self.dependency_relationships.keys():
                 #Check that task group has no dependencies that haven't been started yet and that it has not already been started.
                 if not any(check in self.dependency_relationships[name] for check in list(self.jobs_dict.keys())) and not name in self.started_jobs:
                     self.started_jobs.append(name)
                     self.logger.info(f"Starting dependant collection group {name}...")
-                    dependency_cycle = False
                     #task_collection = self.jobs_dict[name].apply_async()
                     print(self.dependency_relationships[name])
                     dependent_task_collection = deploy_dependent_task.si(*self.dependency_relationships[name],task_set=self.jobs_dict[name])
@@ -143,8 +139,8 @@ class AugurTaskRoutine:
                     self._update_dependency_relationship_with_celery_id(task_collection.id,name,append=(task_collection.id + "child"))
                 
             
-            if dependency_cycle:
-                raise Exception("Task group dependency cycle found as all pending tasks have prereqs that cannot be run.")
+            #if dependency_cycle:
+            #    raise Exception("Task group dependency cycle found as all pending tasks have prereqs that cannot be run.")
 
 @celery.task
 def start_task(repo_git: str):
