@@ -13,7 +13,12 @@ pr_numbers = [70, 106, 170, 190, 192, 208, 213, 215, 216, 218, 223, 224, 226, 23
 def deserialize_task_set(dict_obj):
 
     if dict_obj['task'] == 'celery.group':
-        return group(dict(dict_obj))
+        #return group(dict(dict_obj))
+        task_list = []
+        for task in dict_obj['kwargs']['tasks']:
+            task_list.append(signature(dict(task)))
+        
+        return group(task_list)
     else:
         #assume its a signature
         return signature(dict(dict_obj))
