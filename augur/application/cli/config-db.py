@@ -31,5 +31,3 @@ def create_db_config(user, password, host, port, database_name):
     }
     with open('db.config.json', 'w') as fp:
         json.dump(db_config, fp, indent=4)
-
-s
