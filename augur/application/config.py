@@ -102,8 +102,6 @@ class AugurConfig():
 
             section_dict[setting_name] = setting_value
 
-        print(section_dict)
-
         return section_dict
 
 
@@ -125,13 +123,13 @@ class AugurConfig():
     def load_config(self) -> dict:
 
         # get all the sections in the config table
-        section_names = Config.query.with_entities(Config.section_name).distinct().all()
+        section_names = self.session.query(Config.section_name).all()
 
         config = {}
         # loop through and get the data for each section
         for section_name in section_names:
 
-            section_data = get_section(section_name[0])
+            section_data = self.get_section(section_name[0])
 
             # rows with a section of None are on the top level, 
             # so we are adding these values to the top level rather 
@@ -149,11 +147,11 @@ class AugurConfig():
 
     def empty(self):
 
-        return Config.query.first() is None
+        return self.session.query(Config).first() is None
 
     def is_section_in_config(self, section_name):
 
-        return Config.query.filter_by(section_name=section_name).first() is not None
+        return self.session.query(Config).filter(Config.section_name == section_name).first() is not None
 
     """
     type is optional

@@ -23,8 +23,8 @@ def test_connection(function_internet_connection):
             print(f"\n\n{usage} command setup failed\nYou are not connect to the internet. Please connect to the internet to run Augur\n")
             sys.exit()
 
-        except Exception as e:
-            print(f"Another exception occurred when testing internet exception\nPlease inform an augur maintainer or open an issue with this exception: {e}")
+        # except Exception as e:
+        #     print(f"Another exception occurred when testing internet exception\nPlease inform an augur maintainer or open an issue with this exception: {e}")
             return ctx.invoke(function_internet_connection, *args, **kwargs)        
         
     return update_wrapper(new_func, function_internet_connection)

@@ -17,6 +17,7 @@ from redis.exceptions import ConnectionError as RedisConnectionError
 
 from augur.tasks.start_tasks import start_task
 from augur.tasks.github.issue_tasks import process_contributors
+
 # from augur.api.application import Application
 # from augur.api.gunicorn import AugurGunicornApp
 from augur.tasks.init.redis_connection import redis_connection 
@@ -44,8 +45,12 @@ def start(disable_collection):
     Start Augur's backend server
     """
 
+    celery_process = subprocess.Popen(['celery', '-A', 'augur.tasks.init.celery_app.celery_app', 'worker', '--loglevel=info'])
+    time.sleep(10)
+
     session = DatabaseSession(logger)
     config = session.config
+
 
     celery_process = None
     if not disable_collection:
@@ -82,7 +87,8 @@ def start(disable_collection):
                 print(f"Invalid input please input an integer between 0 and {len(repos)-1}")
 
         logger.info("Starting celery to work on tasks")
-        celery_process = subprocess.Popen(['celery', '-A', 'augur.tasks.init.celery_app.celery_app', 'worker', '--loglevel=info'])
+        
+        logger.info(f"Collecting {repo.repo_git}")
         start_task.s(repo.repo_git).apply_async()
 
 
@@ -103,6 +109,8 @@ def start(disable_collection):
         #         repos = order_repos(repos)
         #         print("\n\n Repo order after reordering")
         #         print_repos(repos)
+
+    time.sleep(5)
 
     gunicorn_location = os.getcwd() + "/augur/api/gunicorn_conf.py"
     bind = '%s:%s' % (config.get_value("Server", "host"), config.get_value("Server", "port"))

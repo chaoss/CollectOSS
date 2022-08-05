@@ -5,17 +5,19 @@ import sys
 import logging
 from sqlalchemy import create_engine, event
 from augur.application.logs import initialize_stream_handler
-from sqlalchemy.exc import OperationalError    
+from sqlalchemy.exc import OperationalError  
+import inspect  
+import traceback
 
 
 def create_database_engine():
 
+
+
+    print("Creating database engine...")
+
     logger = logging.getLogger("engine")
     initialize_stream_handler(logger, logging.ERROR)
-
-    global engine
-    if "engine" in globals():
-        return engine
 
     augur_db_environment_var = os.getenv("AUGUR_DB")
 

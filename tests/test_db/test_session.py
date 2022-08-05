@@ -10,12 +10,7 @@ logger = logging.getLogger(__name__)
 not_provided_cntrb_id = '00000000-0000-0000-0000-000000000000'
 nan_cntrb_id = '01000000-0000-0000-0000-000000000000'
 
-@pytest.fixture
-def engine():
 
-    test_db_string = "postgresql+psycopg2://augur:mcguire18@chaoss.tv:5432/augur-test"
-
-    yield s.create_engine(test_db_string)
 
 
 def test_execute_sql(engine):

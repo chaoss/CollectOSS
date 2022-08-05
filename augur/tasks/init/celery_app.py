@@ -11,6 +11,8 @@ celery_app = Celery('tasks', broker=BROKER_URL,
              backend=BACKEND_URL, include=['augur.tasks.git.facade_tasks', 'augur.tasks.github.issue_tasks', 'augur.tasks.start_tasks'])   
 
 
+
+
 def split_tasks_into_groups(tasks):
     grouped_tasks = {}
 

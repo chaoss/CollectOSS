@@ -30,11 +30,14 @@ sys.path.pop()
 
 class DatabaseSession(s.orm.Session):
 
-    def __init__(self, logger):
+    def __init__(self, logger, engine=None):
     
         self.logger = logger
         self.config = AugurConfig(logger=logger, session=self)
-        self.engine = create_database_engine()
+
+        self.engine = engine
+        if self.engine is None:
+            self.engine = create_database_engine()
 
         super().__init__(self.engine)
 

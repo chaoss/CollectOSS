@@ -27,7 +27,7 @@ services:
     ports:
       - 5002:5000
     environment:
-      - "AUGUR_DB=postgresql+psycopg2://${AUGUR_DB_USER:-augur}:${AUGUR_DB_PASSWORD:-augur}@augur-db:${AUGUR_DB_PORT:-5432}/augur"
+      - "AUGUR_DB=postgresql+psycopg2://${AUGUR_DB_USER:-augur}:${AUGUR_DB_PASSWORD:-augur}@augur-db:5432/augur"
       - "AUGUR_DB_SCHEMA_BUILD=0"
       - "AUGUR_DB_HOST=augur-db"
       - "AUGUR_DB_NAME=augur"
