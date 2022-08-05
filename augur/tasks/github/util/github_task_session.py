@@ -17,4 +17,5 @@ class GithubTaskSession(DatabaseSession):
 
         # creates the key authentication class and passes the session and config
         self.oauths = GithubRandomKeyAuth(self, logger)
+        self.platform_id = 1
         

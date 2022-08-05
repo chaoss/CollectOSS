@@ -18,7 +18,6 @@ def test_connection(function_internet_connection):
         try:
             #try to ping google's dns server
             socket.create_connection(("8.8.8.8",53))
-            print("Internet connection is stable")
             return ctx.invoke(function_internet_connection, *args, **kwargs)
         except OSError:
             print(f"\n\n{usage} command setup failed\nYou are not connect to the internet. Please connect to the internet to run Augur\n")
@@ -37,7 +36,6 @@ def test_db_connection(function_db_connection):
         usage = re.search(r"Usage:\s(.*)\s\[OPTIONS\]", str(ctx.get_usage())).groups()[0]
         try:
             engine.connect()
-            print("Database connection is stable")
             return ctx.invoke(function_db_connection, *args, **kwargs)
         except OperationalError as e:
 

@@ -52,38 +52,38 @@ def start(disable_collection):
     
         repos = session.query(Repo).all()
 
-        repo_task_list = [start_task.si(repo.repo_git) for repo in repos] + [process_contributors.si(),]
+        # repo_task_list = [start_task.si(repo.repo_git) for repo in repos] + [process_contributors.si(),]
 
-        repos_chain = group(repo_task_list)
+        # repos_chain = group(repo_task_list)
 
-        logger.info(repos_chain)
+        # logger.info(repos_chain)
 
-        celery_process = subprocess.Popen(['celery', '-A', 'augur.tasks.init.celery_app.celery_app', 'worker', '--loglevel=info'])
+        # celery_process = subprocess.Popen(['celery', '-A', 'augur.tasks.init.celery_app.celery_app', 'worker', '--loglevel=info'])
 
-        repos_chain.apply_async()
+        # repos_chain.apply_async()
 
         repos_to_collect = []
         repo_task_list = []
 
-        # logger.info("Repos available for collection")
-        # print_repos(repos)
-        # while True:
-        #     try:
-        #         user_input = int(input("Please select a repo to collect: "))
+        logger.info("Repos available for collection")
+        print_repos(repos)
+        while True:
+            try:
+                user_input = int(input("Please select a repo to collect: "))
 
-        #         if user_input < 0 or user_input > len(repos)-1:
-        #             print(f"Invalid input please input an integer between 0 and {len(repos)-1}")
-        #             continue
+                if user_input < 0 or user_input > len(repos)-1:
+                    print(f"Invalid input please input an integer between 0 and {len(repos)-1}")
+                    continue
 
-        #         repo = repos[user_input]
-        #         break
+                repo = repos[user_input]
+                break
 
-        #     except (IndexError, ValueError):
-        #         print(f"Invalid input please input an integer between 0 and {len(repos)-1}")
+            except (IndexError, ValueError):
+                print(f"Invalid input please input an integer between 0 and {len(repos)-1}")
 
-        # logger.info("Starting celery to work on tasks")
-        # celery_process = subprocess.Popen(['celery', '-A', 'augur.tasks.init.celery_app.celery_app', 'worker', '--loglevel=info'])
-        # start_task.s(repo.repo_git).apply_async()
+        logger.info("Starting celery to work on tasks")
+        celery_process = subprocess.Popen(['celery', '-A', 'augur.tasks.init.celery_app.celery_app', 'worker', '--loglevel=info'])
+        start_task.s(repo.repo_git).apply_async()
 
 
         # if len(repos) > 1:

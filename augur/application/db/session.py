@@ -37,6 +37,9 @@ class DatabaseSession(s.orm.Session):
         self.engine = create_database_engine()
 
         super().__init__(self.engine)
+
+    def __del__(self):
+        self.close()
     
     def execute_sql(self, sql_text):
 

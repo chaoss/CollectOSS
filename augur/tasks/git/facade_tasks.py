@@ -370,7 +370,6 @@ def facade_init(session):
 @celery.task
 def facade_commits_model():
 
-    print(facade_commits_model.__name__)
     logger = logging.getLogger(facade_commits_model.__name__)
     session = FacadeSession(logger)
     

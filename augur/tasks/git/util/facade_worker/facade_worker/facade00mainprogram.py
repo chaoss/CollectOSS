@@ -47,7 +47,7 @@ class FacadeSession(GithubTaskSession):
     def __init__(self,logger,platform='GitHub'):
         self.cfg = FacadeConfig(logger)
 
-        super().__init__(logger,platform)
+        super().__init__(logger=logger)
         # Figure out what we need to do
 
         self.limited_run = self.cfg.worker_options["limited_run"]

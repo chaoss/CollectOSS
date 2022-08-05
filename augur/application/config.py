@@ -102,6 +102,8 @@ class AugurConfig():
 
             section_dict[setting_name] = setting_value
 
+        print(section_dict)
+
         return section_dict
 
 

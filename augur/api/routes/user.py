@@ -24,7 +24,7 @@ def generate_upgrade_request():
 
 def create_routes(server):
 
-    @app.errorhandler(405)
+    @server.app.errorhandler(405)
     def unsupported_method(error):
         return jsonify({"status": "Unsupported method"}), 405
 
