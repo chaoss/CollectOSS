@@ -80,6 +80,7 @@ class FacadeConfig:
 
         #worker_options = read_config("Workers", "facade_worker", None, None)
         config = DatabaseSession(logger).config
+        print("Config created")
         worker_options = config.get_section("Facade")
 
         if 'repo_directory' in worker_options:
