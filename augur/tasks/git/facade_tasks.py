@@ -22,8 +22,6 @@ from celery.signals import after_setup_logger
 from datetime import timedelta
 import sqlalchemy as s
 
-from augur.application.config import AugurConfig
-
 from augur.tasks.git.util.facade_worker.facade_worker.facade02utilitymethods import update_repo_log, trim_commit, store_working_author, trim_author
 from augur.tasks.git.util.facade_worker.facade_worker.facade03analyzecommit import analyze_commit
 from augur.tasks.git.util.facade_worker.contributor_interfaceable.contributor_interface import *
@@ -39,7 +37,7 @@ from augur.application.db.models import PullRequest, Message, PullRequestReview,
 
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
 from augur.tasks.github.util.gh_graphql_entities import PullRequest
-from augur.tasks.util.task_session import *
+from augur.tasks.github.util.github_task_session import *
 
 from augur.tasks.git.util.facade_worker.facade_worker.facade00mainprogram import *
 
@@ -59,8 +57,7 @@ from augur.application.logs import TaskLogConfig
 #     logging configuration with your own.
 # """
 # logger = logging.getLogger(__name__)
-# config_db_session = TaskSession(logger)
-# config = AugurConfig(config_db_session)
+# config = AugurConfig(logger)
 # logs_directory = config.get_value("Logging", "logs_directory")
 # DISABLE_LOG_TO_FILE = False
 # if logs_directory is None:
@@ -373,7 +370,6 @@ def facade_init(session):
 @celery.task
 def facade_commits_model():
 
-    print(facade_commits_model.__name__)
     logger = logging.getLogger(facade_commits_model.__name__)
     session = FacadeSession(logger)
     

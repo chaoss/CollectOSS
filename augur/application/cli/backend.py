@@ -12,25 +12,25 @@ import gunicorn.app.base
 from gunicorn.arbiter import Arbiter
 import sys
 import subprocess
+from redis.exceptions import ConnectionError as RedisConnectionError
 
 
 from augur.tasks.start_tasks import start_task
 from augur.tasks.github.issue_tasks import process_contributors
+
 # from augur.api.application import Application
 # from augur.api.gunicorn import AugurGunicornApp
 from augur.tasks.init.redis_connection import redis_connection 
 from augur.application.db.models import Repo
-from augur.tasks.util.task_session import TaskSession
+from augur.application.db.session import DatabaseSession
 from augur.application.logs import AugurLogger
-from augur.application.config import AugurConfig
+
 # from augur.server import Server
 from celery import chain, signature, group
 
 from augur.application.cli import test_connection, test_db_connection 
 
 logger = AugurLogger("augur", reset_logfiles=True).get_logger()
-session = TaskSession(logger)
-config = AugurConfig(session)
 
 @click.group('server', short_help='Commands for controlling the backend API server & data collection workers')
 def cli():
@@ -44,6 +44,14 @@ def start(disable_collection):
     """
     Start Augur's backend server
     """
+
+    celery_process = subprocess.Popen(['celery', '-A', 'augur.tasks.init.celery_app.celery_app', 'worker', '--loglevel=info'])
+    time.sleep(10)
+
+    session = DatabaseSession(logger)
+    config = session.config
+
+
     celery_process = None
     if not disable_collection:
     
@@ -79,7 +87,8 @@ def start(disable_collection):
                 print(f"Invalid input please input an integer between 0 and {len(repos)-1}")
 
         logger.info("Starting celery to work on tasks")
-        celery_process = subprocess.Popen(['celery', '-A', 'augur.tasks.init.celery_app.celery_app', 'worker', '--loglevel=info'])
+        
+        logger.info(f"Collecting {repo.repo_git}")
         start_task.s(repo.repo_git).apply_async()
 
 
@@ -100,6 +109,8 @@ def start(disable_collection):
         #         repos = order_repos(repos)
         #         print("\n\n Repo order after reordering")
         #         print_repos(repos)
+
+    time.sleep(5)
 
     gunicorn_location = os.getcwd() + "/augur/api/gunicorn_conf.py"
     bind = '%s:%s' % (config.get_value("Server", "host"), config.get_value("Server", "port"))
@@ -123,9 +134,11 @@ def start(disable_collection):
             logger.info("Shutting down celery process")
             celery_process.terminate
 
-        logger.info("Flushing redis cache")
-        redis_connection.flushdb()
-
+        try:
+            redis_connection.flushdb()
+            logger.info("Flushing redis cache")
+        except RedisConnectionError:
+            pass
 
 
 @cli.command('stop')

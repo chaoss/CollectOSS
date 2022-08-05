@@ -18,20 +18,8 @@ else
   echo
 fi
 
-connection_status=$(augur db test-connection)
-
-if [[ "$connection_status" =~ "You are not connect to the internet." ]]; then
-    echo
-    echo "ERROR: No internet connection. Please check internet connection"
-    echo
-    exit 0
-fi
-if [[ "$connection_status" =~ "ERROR: connecting to database" ]]; then
-    echo
-    echo "ERROR: Could not connect to database. Please check database configuration"
-    echo
-    exit 0
-fi
+scripts/install/backend.sh $target 2>&1 | tee logs/backend-install.log
+echo "Done!"
 
 
 function create_db_config() {
@@ -70,10 +58,20 @@ then
     fi
 fi
 
+connection_status=$(augur db test-connection)
 
-
-scripts/install/backend.sh $target 2>&1 | tee logs/backend-install.log
-echo "Done!"
+if [[ "$connection_status" =~ "You are not connect to the internet." ]]; then
+    echo
+    echo "ERROR: No internet connection. Please check internet connection"
+    echo
+    exit 0
+fi
+if [[ "$connection_status" =~ "ERROR: connecting to database" ]]; then
+    echo
+    echo "ERROR: Could not connect to database. Please check database configuration"
+    echo
+    exit 0
+fi
 
 echo
 echo "Creating database schema"

@@ -1,4 +1,4 @@
-from augur.tasks.util.task_session import *
+from augur.tasks.github.util.github_task_session import *
 import asyncio
 #from gql import gql, Client
 #from gql.transport.aiohttp import AIOHTTPTransport

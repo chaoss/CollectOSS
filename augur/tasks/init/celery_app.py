@@ -14,6 +14,8 @@ celery_app = Celery('tasks', broker=BROKER_URL,
 celery_app.conf.task_track_started = True
 
 
+
+
 def split_tasks_into_groups(tasks):
     grouped_tasks = {}
 

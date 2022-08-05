@@ -4,6 +4,8 @@ import os
 import pytest
 import sys
 
+FNULL = open(os.devnull, "w")
+
 
 start = subprocess.Popen(["celery", "-A", "tasks.celery_init.celery_app worker ", "--loglevel=info", "--concurrency=1"], stdout=FNULL, stderr=subprocess.STDOUT)
 print("Waiting for the celery to start...")

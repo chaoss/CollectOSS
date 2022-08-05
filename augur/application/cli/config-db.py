@@ -6,9 +6,6 @@ Augur library script for generating a db.config.json config file
 import os
 import click
 import json
-import logging
-
-logger = logging.getLogger(__name__)
 
 @click.group('db-config', short_help='Generate an db.config.json')
 def cli():

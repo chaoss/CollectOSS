@@ -14,6 +14,10 @@ import shutil
 import coloredlogs
 from copy import deepcopy
 import typing
+from sqlalchemy.orm import Session
+
+from augur.application.db.models import Config 
+from augur.application.config import convert_type_of_value
 
 ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
@@ -69,6 +73,31 @@ def initialize_stream_handler(logger, log_level):
     logger.addHandler(stream)
     coloredlogs.install(level=log_level,logger=logger) 
 
+def get_log_config():
+    
+    from augur.application.db.engine import create_database_engine
+
+    # we are using this session instead of the 
+    # DatabaseSession class because the DatabaseSession 
+    # class requires a logger, and we are setting up logger thigns here 
+    engine = create_database_engine()
+    session = Session(engine)
+
+    section_data = session.query(Config).filter_by(section_name="Logging").all()
+        
+    section_dict = {}
+    for setting in section_data:
+        setting_dict = setting.__dict__
+
+        setting_dict = convert_type_of_value(setting_dict)
+
+        setting_name = setting_dict["setting_name"]
+        setting_value = setting_dict["value"]
+
+        section_dict[setting_name] = setting_value
+
+    return section_dict
+
 
 #TODO dynamically define loggers for every task names.
 class TaskLogConfig():
@@ -79,6 +108,8 @@ class TaskLogConfig():
                 shutil.rmtree(base_log_dir)
             except FileNotFoundError as e:
                 pass
+
+        self.log_confg = get_log_config()
 
         self.logLevel = logLevel
 

@@ -1,7 +1,6 @@
 from augur.tasks.github.issue_tasks import *
 
 from augur.tasks.init.celery_app import celery_app as celery
-from augur.tasks.util.task_session import TaskSession
 from augur.application.logs import AugurLogger
 from celery.result import AsyncResult
 from celery.result import allow_join_result
@@ -148,17 +147,16 @@ def start_task(repo_git: str):
     owner, repo = get_owner_repo(repo_git)
     
     logger = logging.getLogger(start_task.__name__)
-    session = TaskSession(logger)
 
     logger.info(f"Collecting data for {owner}/{repo}")
  
     start_task_list = []
+    start_task_list.append(facade_commits_model.si())
     start_task_list.append(collect_pull_requests.si(repo_git))
     start_task_list.append(collect_issues.si(repo_git))
 
     start_tasks_group = group(start_task_list)
     
-
     secondary_task_list = []
     # secondary_task_list.append(pull_request_reviews.s(owner, repo, pr_numbers))
     secondary_task_list.append(collect_events.si(repo_git))
@@ -166,16 +164,9 @@ def start_task(repo_git: str):
     
     secondary_task_group = group(secondary_task_list)
 
-    third_task_list = []
-    # third_task_list.append(process_contributors.s())
-    
-    third_task_group = group(third_task_list)
-
-
     job = chain(
         start_tasks_group,
-        secondary_task_group,
-        process_contributors.si()
+        secondary_task_group
     )
 
     job.apply_async()

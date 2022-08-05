@@ -16,6 +16,7 @@ __pycache__/
 *$py.class
 *.pyc
 *.rdb
+yarn.lock
 Augur_Muskellunge.egg-info/
 runtime/
 logs/
