@@ -12,10 +12,6 @@ import traceback
 
 def create_database_engine():
 
-
-
-    print("Creating database engine...")
-
     logger = logging.getLogger("engine")
     initialize_stream_handler(logger, logging.ERROR)
 
