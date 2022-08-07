@@ -45,51 +45,57 @@ def start(disable_collection):
     Start Augur's backend server
     """
 
-    celery_process = subprocess.Popen(['celery', '-A', 'augur.tasks.init.celery_app.celery_app', 'worker', '--loglevel=info'])
-    time.sleep(10)
-
     session = DatabaseSession(logger)
     config = session.config
 
+    gunicorn_location = os.getcwd() + "/augur/api/gunicorn_conf.py"
+    bind = '%s:%s' % (config.get_value("Server", "host"), config.get_value("Server", "port"))
+
+    server = subprocess.Popen(["gunicorn", "-c", gunicorn_location, "-b", bind, "--preload", "augur.api.server:app"])
+
+    time.sleep(3)
+    logger.info('Gunicorn webserver started...')
+    logger.info(f'Augur is running at: http://127.0.0.1:{config.get_value("Server", "port")}')
 
     celery_process = None
     if not disable_collection:
+
+        celery_process = subprocess.Popen(['celery', '-A', 'augur.tasks.init.celery_app.celery_app', 'worker', '--loglevel=info'])
+        time.sleep(10)
     
         repos = session.query(Repo).all()
 
-        # repo_task_list = [start_task.si(repo.repo_git) for repo in repos] + [process_contributors.si(),]
+        repo_task_list = [start_task.si(repo.repo_git) for repo in repos] + [process_contributors.si(),]
 
-        # repos_chain = group(repo_task_list)
+        repos_chain = group(repo_task_list)
 
-        # logger.info(repos_chain)
+        logger.info(repos_chain)
 
-        # celery_process = subprocess.Popen(['celery', '-A', 'augur.tasks.init.celery_app.celery_app', 'worker', '--loglevel=info'])
+        repos_chain.apply_async()
 
-        # repos_chain.apply_async()
+        # repos_to_collect = []
+        # repo_task_list = []
 
-        repos_to_collect = []
-        repo_task_list = []
+        # logger.info("Repos available for collection")
+        # print_repos(repos)
+        # while True:
+        #     try:
+        #         user_input = int(input("Please select a repo to collect: "))
 
-        logger.info("Repos available for collection")
-        print_repos(repos)
-        while True:
-            try:
-                user_input = int(input("Please select a repo to collect: "))
+        #         if user_input < 0 or user_input > len(repos)-1:
+        #             print(f"Invalid input please input an integer between 0 and {len(repos)-1}")
+        #             continue
 
-                if user_input < 0 or user_input > len(repos)-1:
-                    print(f"Invalid input please input an integer between 0 and {len(repos)-1}")
-                    continue
+        #         repo = repos[user_input]
+        #         break
 
-                repo = repos[user_input]
-                break
+        #     except (IndexError, ValueError):
+        #         print(f"Invalid input please input an integer between 0 and {len(repos)-1}")
 
-            except (IndexError, ValueError):
-                print(f"Invalid input please input an integer between 0 and {len(repos)-1}")
-
-        logger.info("Starting celery to work on tasks")
+        # logger.info("Starting celery to work on tasks")
         
-        logger.info(f"Collecting {repo.repo_git}")
-        start_task.s(repo.repo_git).apply_async()
+        # logger.info(f"Collecting {repo.repo_git}")
+        # start_task.s(repo.repo_git).apply_async()
 
 
         # if len(repos) > 1:
@@ -110,17 +116,7 @@ def start(disable_collection):
         #         print("\n\n Repo order after reordering")
         #         print_repos(repos)
 
-    time.sleep(5)
-
-    gunicorn_location = os.getcwd() + "/augur/api/gunicorn_conf.py"
-    bind = '%s:%s' % (config.get_value("Server", "host"), config.get_value("Server", "port"))
-
-    server = subprocess.Popen(["gunicorn", "-c", gunicorn_location, "-b", bind, "--preload", "augur.api.server:app"])
-
-    time.sleep(3)
-
-    logger.info('Gunicorn webserver started...')
-    logger.info(f'Augur is running at: http://127.0.0.1:{config.get_value("Server", "port")}')
+    
 
     try:
         server.wait()

@@ -7,6 +7,7 @@ from augur.application.db.data_parse import *
 from augur.tasks.util.AugurUUID import AugurUUID
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
 from augur.tasks.github.util.github_task_session import GithubTaskSession
+from augur.tasks.util.worker_util import wait_child_tasks
 from augur.application.db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestEvent, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, Issue, IssueEvent, IssueLabel, IssueAssignee, PullRequestMessageRef, IssueMessageRef, Contributor, Repo
 
 # creates a class that is sub class of the sqlalchemy.orm.Session class that additional methods and fields added to it. 
@@ -42,7 +43,7 @@ def collect_issues(repo_git: str) -> None:
     # many issues were collected
     # loop through the issues 
     num_pages = issues.get_num_pages()
-    
+    ids = []
     for page_data, page in issues.iter_pages():
 
         if page_data == None:
@@ -55,7 +56,10 @@ def collect_issues(repo_git: str) -> None:
 
         logger.info(f"{repo.capitalize()} Issues Page {page} of {num_pages}")
 
-        process_issues.s(page_data, f"{repo.capitalize()} Issues Page {page} Task", repo_id).apply_async()
+        process_issue_task = process_issues.s(page_data, f"{repo.capitalize()} Issues Page {page} Task", repo_id).apply_async()
+        ids.append(process_issue_task.id)
+
+    wait_child_tasks(ids)
         
 
 @celery.task
@@ -204,7 +208,7 @@ def collect_pull_requests(repo_git: str) -> None:
     prs = GithubPaginator(url, session.oauths, logger)
 
     num_pages = prs.get_num_pages()
-    
+    ids = []
     for page_data, page in prs.iter_pages():
 
         if page_data == None:
@@ -216,8 +220,10 @@ def collect_pull_requests(repo_git: str) -> None:
             return
 
     
-        process_pull_requests.s(page_data, f"{repo.capitalize()} Pr Page {page} Task", repo_id).apply_async()
+        process_pr_task = process_pull_requests.s(page_data, f"{repo.capitalize()} Pr Page {page} Task", repo_id).apply_async()
+        ids.append(process_pr_task.id)
 
+    wait_child_tasks(ids)
 
 @celery.task
 def process_pull_requests(pull_requests, task_name, repo_id):
@@ -452,7 +458,7 @@ def collect_events(repo_git: str):
     index = 0
 
     num_pages = events.get_num_pages()
-    
+    ids = []
     for page_data, page in events.iter_pages():
 
         if page_data is None:
@@ -463,9 +469,11 @@ def collect_events(repo_git: str):
             logger.info(f"Events Page {page} of {num_pages}")
             return
 
-        process_events.s(page_data, f"{repo.capitalize()} Events Page {page} Task", repo_id).apply_async()
+        process_events_task = process_events.s(page_data, f"{repo.capitalize()} Events Page {page} Task", repo_id).apply_async()
+        ids.append(process_events_task.id)
+
+    wait_child_tasks(ids)
         
-    logger.info("Completed events")
 
 @celery.task
 def process_events(events, task_name, repo_id):
@@ -485,7 +493,7 @@ def process_events(events, task_name, repo_id):
     event_len = len(events)
     for index, event in enumerate(events):
 
-        event, contributor = process_github_event_contributors(event, tool_source, tool_version, data_source)
+        event, contributor = process_github_event_contributors(logger, event, tool_source, tool_version, data_source)
 
         if 'pull_request' in list(event["issue"].keys()):
             pr_url = event["issue"]["pull_request"]["url"]
@@ -525,18 +533,22 @@ def process_events(events, task_name, repo_id):
         
         # add contributor to list after porcessing the event, 
         # so if it fails processing for some reason the contributor is not inserted
-
+        # NOTE: contributor is none when there is no contributor data on the event
         if contributor:
             contributors.append(contributor)
-        
-        if type(contributor) == list:
-            print(f"Event: {event}")
-            print(f"Contributor: {contributor}")
 
     # remove contributors that were found in the data more than once
     contributors = remove_duplicate_dicts(contributors)
 
     session.insert_data(contributors, Contributor, ["cntrb_login"])
+
+    issue_events_len = len(issue_event_dicts)
+    pr_events_len = len(pr_event_dicts)
+    if event_len != (issue_events_len + pr_events_len):
+
+        unassigned_events = event_len - issue_events_len - pr_events_len
+
+        self.logger.error(f"{task_name}: {event_len} events were processed, but {pr_events_len} pr events were found and related to a pr, and {issue_events_len} issue events were found and related to an issue. For some reason {unassigned_events} events were not able to be processed. This is usually because pull requests or issues have not been collected, and the events are skipped because they cannot be related to a pr or issue")
 
     logger.info(f"{task_name}: Inserting {len(pr_event_dicts)} pr events and {len(issue_event_dicts)} issue events")
 
@@ -549,7 +561,7 @@ def process_events(events, task_name, repo_id):
 
 
 # TODO: Should we skip an event if there is no contributor to resolve it o
-def process_github_event_contributors(event, tool_source, tool_version, data_source):
+def process_github_event_contributors(logger, event, tool_source, tool_version, data_source):
 
     if event["actor"]:
 
@@ -557,6 +569,7 @@ def process_github_event_contributors(event, tool_source, tool_version, data_sou
         event["cntrb_id"] = event_cntrb["cntrb_id"]
 
     else:
+        event["cntrb_id"] = None
         return event, None
     
     return event, event_cntrb
@@ -582,7 +595,7 @@ def collect_issue_and_pr_comments(repo_git: str) -> None:
     messages = GithubPaginator(url, session.oauths, logger)
 
     num_pages = messages.get_num_pages()
-    
+    ids = []
     for page_data, page in messages.iter_pages():
 
         if page_data is None:
@@ -593,9 +606,11 @@ def collect_issue_and_pr_comments(repo_git: str) -> None:
 
         logger.info(f"Github Messages Page {page} of {num_pages}")
 
-        process_messages.s(page_data, f"Github Messages Page {page} Task", repo_id).apply_async()
+        process_message_task = process_messages.s(page_data, f"Github Messages Page {page} Task", repo_id).apply_async()
+        ids.append(process_message_task.id)
         
-    logger.info("Completed messages")
+    wait_child_tasks(ids)
+    
 
 @celery.task
 def process_messages(messages, task_name, repo_id):

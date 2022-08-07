@@ -5,7 +5,6 @@ from flask import Flask, Response, jsonify, request
 import numpy as np
 from celery import group
 from augur.application.logs import AugurLogger
-from augur.tasks.util.task_session import TaskSession
 from celery.result import AsyncResult
 from celery.result import allow_join_result
 

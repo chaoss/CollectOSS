@@ -1956,8 +1956,7 @@ class IssueEvent(Base):
     cntrb_id = Column(
         ForeignKey(
             "augur_data.contributors.cntrb_id", ondelete="RESTRICT", onupdate="CASCADE"
-        ),
-        nullable=False,
+        )
     )
     action = Column(String, nullable=False)
     action_commit_hash = Column(String)
@@ -2406,7 +2405,7 @@ class PullRequestEvent(Base):
         )
     )
     cntrb_id = Column(
-        ForeignKey("augur_data.contributors.cntrb_id"), nullable=False
+        ForeignKey("augur_data.contributors.cntrb_id")
     )
     action = Column(String, nullable=False)
     action_commit_hash = Column(String)

@@ -3,7 +3,6 @@ from augur.tasks.github.util.github_task_session import *
 import logging
 from logging import FileHandler, Formatter, StreamHandler, log
 from augur.tasks.git.util.contributor_parse import *
-from augur.tasks.git.util import worker_util
 from psycopg2.errors import UniqueViolation
 from random import randint
 import json
