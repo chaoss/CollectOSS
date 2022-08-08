@@ -53,6 +53,7 @@ def start(disable_collection):
     config = session.config
 
     gunicorn_location = os.getcwd() + "/augur/api/gunicorn_conf.py"
+    print(gunicorn_location)
     bind = '%s:%s' % (config.get_value("Server", "host"), config.get_value("Server", "port"))
 
     server = subprocess.Popen(["gunicorn", "-c", gunicorn_location, "-b", bind, "--preload", "augur.api.server:app"])
