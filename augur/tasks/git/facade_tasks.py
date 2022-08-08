@@ -428,7 +428,7 @@ def facade_commits_model():
 
     session.logger.info(session.cfg)
     if not limited_run or (limited_run and fix_affiliations):
-        fill_empty_affiliations(session.cfg)
+        fill_empty_affiliations(session)
 
     if force_invalidate_caches:
         invalidate_caches(session.cfg)

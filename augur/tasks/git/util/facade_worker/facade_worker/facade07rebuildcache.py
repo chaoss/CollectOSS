@@ -62,7 +62,9 @@ def nuke_affiliations(cfg):
 
     cfg.log_activity('Info','Nuking affiliations (complete)')
 
-def fill_empty_affiliations(cfg):
+def fill_empty_affiliations(session):
+
+    cfg = session.cfg
 
 # When a record is added, it has no affiliation data. Also, when an affiliation
 # mapping is changed via the UI, affiliation data will be set to NULL. This
@@ -274,29 +276,25 @@ def fill_empty_affiliations(cfg):
         set_author_to_null = ("UPDATE commits SET cmt_author_affiliation = NULL "
             "WHERE cmt_author_raw_email LIKE CONCAT('%%',%s)")
 
-        cfg.cursor.execute(set_author_to_null,(changed_alias[0], ))
-        cfg.db.commit()
+        session.insert_or_update_data(set_author_to_null, (changed_alias[0], ))
 
         set_committer_to_null = ("UPDATE commits SET cmt_committer_affiliation = NULL "
             "WHERE cmt_committer_raw_email LIKE CONCAT('%%',%s)")
 
-        cfg.cursor.execute(set_committer_to_null, (changed_alias[0], ))
-        cfg.db.commit()
+        session.insert_or_update_data(set_committer_to_null, (changed_alias[0], ))
 
         reset_author = ("UPDATE commits "
             "SET cmt_author_email = %s "
             "WHERE cmt_author_raw_email = %s")
 
-        cfg.cursor.execute(reset_author, (discover_alias(changed_alias[0]),changed_alias[0]))
-        cfg.db.commit
+        session.insert_or_update_data(reset_author, (discover_alias(changed_alias[0]),changed_alias[0]))
 
         reset_committer = ("UPDATE commits "
             "SET cmt_committer_email = %s "
             "WHERE cmt_committer_raw_email = %s")
 
-        cfg.cursor.execute(reset_committer, (discover_alias(changed_alias[0]),changed_alias[0]))
-        cfg.db.commit
-
+        session.insert_or_update_data(reset_committer, (discover_alias(changed_alias[0]),changed_alias[0]))
+        
     # Update the last fetched date, so we know where to start next time.
 
     update_aliases_date = ("UPDATE settings SET value=%s "
