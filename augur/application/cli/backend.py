@@ -61,9 +61,7 @@ def start(disable_collection):
     celery_process = None
     if not disable_collection:
 
-        with open("celery.config.json", 'r') as f:
-            celery_config = json.load(f)
-            worker_name = celery_config["instance_name"]
+        worker_hash = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(60))
 
         celery_process = subprocess.Popen(['celery', '-A', 'augur.tasks.init.celery_app.celery_app', 'worker', '--loglevel=info', "--concurrency=20", "-n" f"{worker_name}@%h"])
         time.sleep(10)
