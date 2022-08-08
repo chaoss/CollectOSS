@@ -34,7 +34,6 @@ function create_db_config() {
     augur config-db init --user $db_user --password $password --host $host --port $port --database-name $db_name
 }
 
-
 # if there is no db.config.json or the AUGUR_DB environment variable is not set 
 #then create prompt the user for db credentials and make a db.config.json file
 
@@ -56,6 +55,28 @@ then
     else 
         create_db_config
     fi
+fi
+
+function create_celery_config() {
+    echo "Enter augur instance name so if more than one instance on the same server, they won't conflict"
+    read -p "Instance Name: " instance_name
+    augur config-db init-celery --user $instance_name 
+}
+
+FILE=celery.config.json
+if [[ -f "$FILE" ]]
+then
+    echo "Your celery.config.json file contents"
+    cat $FILE
+    echo
+    echo
+    read -r -p "You already have a celery.config.json (shown above). Would you like to override it? [y/N] " response
+
+    case "$response" in [yY][eE][sS]|[yY])
+        create_celery_config
+    esac 
+else 
+    create_celery_config
 fi
 
 connection_status=$(augur db test-connection)

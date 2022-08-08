@@ -44,6 +44,9 @@ default_config = {
                 "verbose": 0,
                 "quiet": 0,
                 "debug": 0
+            },
+            "Celery": {
+                "concurrency": 12
             }
         }
 
