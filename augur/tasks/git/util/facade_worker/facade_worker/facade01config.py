@@ -45,21 +45,34 @@ from augur.application.logs import AugurLogger
 logger = AugurLogger("cli").get_logger()
 
 def get_database_args_from_env():
+    
     db_str = os.getenv("AUGUR_DB")
+    db_json_file_location = os.getcwd() + "/db.config.json"
+    db_json_exists = os.path.exists(db_json_file_location)
+
+    if not augur_db_environment_var and not db_json_exists:
+
+        logger.error("ERROR no way to get connection to the database. \n\t\t\t\t\t\t    There is no db.config.json and the AUGUR_DB environment variable is not set\n\t\t\t\t\t\t    Please run make install or set the AUGUR_DB environment then run make install")
+        sys.exit()
 
     credentials = {}
     if db_str:
         parsedArgs = urlparse(db_str)
 
-        
         credentials['db_user'] = parsedArgs.username#read_config('Database', 'user', 'AUGUR_DB_USER', 'augur')
         credentials['db_pass'] = parsedArgs.password#read_config('Database', 'password', 'AUGUR_DB_PASSWORD', 'augur')
         credentials['db_name'] = parsedArgs.path.replace('/','')#read_config('Database', 'name', 'AUGUR_DB_NAME', 'augur')
         credentials['db_host'] = parsedArgs.hostname#read_config('Database', 'host', 'AUGUR_DB_HOST', 'localhost')
         credentials['db_port'] = parsedArgs.port#read_config('Database', 'port', 'AUGUR_DB_PORT', 5432)
     else:
-        raise Exception("AUGUR_DB environment variable is not set, please set with command below\n\t  export AUGUR_DB=postgresql+psycopg2://<user>:<password>@<host>:<port>/<db_name>")
-    
+         with open("db.config.json", 'r') as f:
+            db_config = json.load(f)
+
+        credentials['db_user'] = db_config["user"]#read_config('Database', 'user', 'AUGUR_DB_USER', 'augur')
+        credentials['db_pass'] = db_config["password"]#read_config('Database', 'password', 'AUGUR_DB_PASSWORD', 'augur')
+        credentials['db_name'] = db_config["database_name"]#read_config('Database', 'name', 'AUGUR_DB_NAME', 'augur')
+        credentials['db_host'] = db_config["host"]#read_config('Database', 'host', 'AUGUR_DB_HOST', 'localhost')
+        credentials['db_port'] = db_config["port"]#read_config('Database', 'port', 'AUGUR_DB_PORT', 5432)
     #print(credentials)
     return credentials
 
