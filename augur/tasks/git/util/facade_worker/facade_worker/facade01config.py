@@ -45,7 +45,7 @@ from augur.application.logs import AugurLogger
 logger = AugurLogger("cli").get_logger()
 
 def get_database_args_from_env():
-    
+
     db_str = os.getenv("AUGUR_DB")
     db_json_file_location = os.getcwd() + "/db.config.json"
     db_json_exists = os.path.exists(db_json_file_location)
@@ -65,7 +65,7 @@ def get_database_args_from_env():
         credentials['db_host'] = parsedArgs.hostname#read_config('Database', 'host', 'AUGUR_DB_HOST', 'localhost')
         credentials['db_port'] = parsedArgs.port#read_config('Database', 'port', 'AUGUR_DB_PORT', 5432)
     else:
-         with open("db.config.json", 'r') as f:
+        with open("db.config.json", 'r') as f:
             db_config = json.load(f)
 
         credentials['db_user'] = db_config["user"]#read_config('Database', 'user', 'AUGUR_DB_USER', 'augur')
