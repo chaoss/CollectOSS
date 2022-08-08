@@ -185,7 +185,9 @@ def git_repo_initialize(cfg, repo_group_id=None):
     cfg.log_activity('Info', 'Fetching new repos (complete)')
 
     
-def check_for_repo_updates(cfg):
+def check_for_repo_updates(session):
+
+    cfg = session.cfg
 
 # Check the last time a repo was updated and if it has been longer than the
 # update_frequency, mark its project for updating during the next analysis.
@@ -242,8 +244,10 @@ def check_for_repo_updates(cfg):
     # ("UPDATE repos r LEFT JOIN repos s ON r.projects_id=s.projects_id "
     #     "SET r.status='Update' WHERE s.status='Update' AND "
     #     "r.status != 'Analyze' AND r.status != 'Empty'")
-    cfg.cursor.execute(update_project_status)
-    cfg.db.commit()
+
+    session.insert_or_update_data(update_project_status)
+    # cfg.cursor.execute(update_project_status)
+    # cfg.db.commit()
 
     cfg.log_activity('Info','Checking repos to update (complete)')
 

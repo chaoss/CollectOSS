@@ -64,6 +64,45 @@ class FacadeSession(GithubTaskSession):
         self.multithreaded = self.cfg.worker_options["multithreaded"]
         self.create_xlsx_summary_files = self.cfg.worker_options["create_xlsx_summary_files"]
 
+    def insert_or_update_data(self, query, params=None):
+
+        attempts = 0
+        sleep_time_list = [x for x in range(1,11)]
+        deadlock_detected = False
+        # if there is no data to return then it executes the insert the returns nothing
+
+        while attempts < 10:
+            try:
+                if params:
+                    self.cfg.cursor.execute(query, params)
+                else:
+                    self.cfg.cursor.execute(query)
+                self.cfg.db.commit()
+                break
+            except OperationalError as e:
+                # print(str(e).split("Process")[1].split(";")[0])
+                if isinstance(e.orig, DeadlockDetected):
+                    deadlock_detected = True
+                    sleep_time = random.choice(sleep_time_list)
+                    self.logger.debug(f"Deadlock detected on {table.__table__} table...trying again in {round(sleep_time)} seconds: transaction size: {len(data)}")
+                    time.sleep(sleep_time)
+
+                    attempts += 1
+                    continue
+                else:
+                    raise OperationalError(f"An OperationalError other than DeadlockDetected occurred: {e}") 
+
+        else:
+            self.logger.error(f"Unable to insert data in 10 attempts")
+            return
+
+        if deadlock_detected == True:
+            self.logger.error(f"Made it through even though Deadlock was detected")
+                    
+            return
+
+        
+
 
 
 

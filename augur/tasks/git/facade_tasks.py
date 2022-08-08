@@ -405,7 +405,7 @@ def facade_commits_model():
         git_repo_initialize(session.cfg)
 
     if not limited_run or (limited_run and check_updates):
-        check_for_repo_updates(session.cfg)
+        check_for_repo_updates(session)
 
     if force_updates:
         force_repo_updates(session.cfg)
