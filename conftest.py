@@ -6,6 +6,7 @@ import sqlalchemy as s
 
 from augur.application.db.session import DatabaseSession
 from augur.application.config import AugurConfig
+from augur.application.db.engine import get_database_string
 
 logger = logging.getLogger(__name__)
 
@@ -24,9 +25,16 @@ def create_full_routes(routes):
 @pytest.fixture
 def engine():
 
-    test_db_string = "postgresql+psycopg2://augur:mcguire18@chaoss.tv:5432/augur-test"
+    # creates database engine the normal way and then gets the database string
+    db_string = get_database_string()
 
-    yield s.create_engine(test_db_string)
+    db_string_without_db_name = re.search(r"(.+:\/\/.+\/).+", db_string).groups()[0]
+
+    testing_db_string = db_string_without_db_name + "augur-test"
+
+    print(testing_db_string)
+
+    yield s.create_engine(testing_db_string)
 
 @pytest.fixture
 def session(engine):

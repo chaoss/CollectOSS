@@ -6,10 +6,10 @@ from augur.tasks.util.redis_list import RedisList
 class GithubApiKeyHandler():
 
     # optionally takes a session and config 
-    def __init__(self, session, logger):
+    def __init__(self, session):
 
         self.session = session
-        self.logger = logger
+        self.logger = session.logger
 
         self.redis_key_list = RedisList("oauth_keys_list")
 
@@ -34,6 +34,8 @@ class GithubApiKeyHandler():
 
         if len(self.redis_key_list) > 0:
             return list(self.redis_key_list)
+
+        print(f"Config key: {self.config_key}")
 
         keys = self.get_api_keys_from_database() + [self.config_key]
 

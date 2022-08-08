@@ -9,11 +9,11 @@ from sqlalchemy.exc import OperationalError
 import inspect  
 import traceback
 
+logger = logging.getLogger("engine")
+initialize_stream_handler(logger, logging.ERROR)
 
-def create_database_engine():
 
-    logger = logging.getLogger("engine")
-    initialize_stream_handler(logger, logging.ERROR)
+def get_database_string():
 
     augur_db_environment_var = os.getenv("AUGUR_DB")
 
@@ -26,15 +26,22 @@ def create_database_engine():
         sys.exit()
 
     if augur_db_environment_var:
-        engine = create_engine(augur_db_environment_var)
+        return augur_db_environment_var
 
     else:
         with open("db.config.json", 'r') as f:
             db_config = json.load(f)
 
             db_conn_string = f"postgresql+psycopg2://{db_config['user']}:{db_config['password']}@{db_config['host']}:{db_config['port']}/{db_config['database_name']}"
-            engine = create_engine(db_conn_string)
 
+            return db_conn_string
+
+
+def create_database_engine():    
+
+    db_conn_string = get_database_string()
+
+    engine = create_engine(db_conn_string)
 
     @event.listens_for(engine, "connect", insert=True)
     def set_search_path(dbapi_connection, connection_record):
@@ -46,6 +53,11 @@ def create_database_engine():
         dbapi_connection.autocommit = existing_autocommit
 
     return engine
+
+
+            
+
+
 
 
 
