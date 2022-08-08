@@ -1,5 +1,5 @@
 import os
-from sqlalchemy.dialects import postgresql as pg
+from sqlalchemy.dialects import postgresql as pg_dialects
 import sqlalchemy as s
 import pandas as pd
 import json
@@ -80,7 +80,7 @@ class DatabaseSession(s.orm.Session):
         # that returns cols specificed in returning_args
         # and inserts the data specified in data
         # NOTE: if return_columns does not have an values this still works
-        stmnt = pg.insert(table).returning(*returning_args).values(data)
+        stmnt = pg_dialects.insert(table).returning(*returning_args).values(data)
 
         # create a dict that the on_conflict_do_update method requires to be able to map updates whenever there is a conflict. See sqlalchemy docs for more explanation and examples: https://docs.sqlalchemy.org/en/14/dialects/postgresql.html#updating-using-the-excluded-insert-values
         setDict = {}
@@ -96,7 +96,7 @@ class DatabaseSession(s.orm.Session):
         )
 
 
-        # print(str(stmnt.compile(dialect=pg.dialect())))
+        # print(str(stmnt.compile(dialect=pg_dialects.dialect())))
         attempts = 0
         sleep_time_list = [x for x in range(1,11)]
         deadlock_detected = False

@@ -669,26 +669,26 @@ def link_commits_to_contributor(contributorQueue):
         logger = logging.getLogger(link_commits_to_contributor.__name__)
         session = FacadeSession(logger)
 
-        # iterate through all the commits with emails that appear in contributors and give them the relevant cntrb_id.
-        for cntrb_email in contributorQueue:
-            logger.debug(
-                f"These are the emails and cntrb_id's  returned: {cntrb_email}")
+        # # iterate through all the commits with emails that appear in contributors and give them the relevant cntrb_id.
+        # for cntrb_email in contributorQueue:
+        #     logger.debug(
+        #         f"These are the emails and cntrb_id's  returned: {cntrb_email}")
 
-            try:
-                #database.execute(commits_table.update().where(
-                #    commits_table.c.cmt_committer_email == cntrb_email['email']
-                #).values({
-                #    'cmt_ght_author_id': cntrb_email['cntrb_id']
-                #}))
-                stmnt = s.update(Commit).where(Commit.cmt_committer_email == cntrb_email['email']).values(
-                    cmt_ght_author_id=cntrb_email['cntrb_id']
-                ).execution_options(synchronize_session="fetch")
+        #     try:
+        #         #database.execute(commits_table.update().where(
+        #         #    commits_table.c.cmt_committer_email == cntrb_email['email']
+        #         #).values({
+        #         #    'cmt_ght_author_id': cntrb_email['cntrb_id']
+        #         #}))
+        #         stmnt = s.update(Commit).where(Commit.cmt_committer_email == cntrb_email['email']).values(
+        #             cmt_ght_author_id=cntrb_email['cntrb_id']
+        #         ).execution_options(synchronize_session="fetch")
 
-                result = session.execute(stmnt)
-            except Exception as e:
-                logger.info(
-                    f"Ran into problem when enriching commit data. Error: {e}")
-                continue
+        #         result = session.execute(stmnt)
+        #     except Exception as e:
+        #         logger.info(
+        #             f"Ran into problem when enriching commit data. Error: {e}")
+        #         continue
         
         return
 
