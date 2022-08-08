@@ -30,7 +30,7 @@ def create_db_config(user, password, host, port, database_name):
         json.dump(db_config, fp, indent=4)
 
 @cli.command('init-celery')
-@click.option('--user', required=True)
+@click.option('--instance-name', required=True)
 def create_celery_config(instance_name):
 
     celery_config = {

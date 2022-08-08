@@ -60,7 +60,7 @@ fi
 function create_celery_config() {
     echo "Enter augur instance name so if more than one instance on the same server, they won't conflict"
     read -p "Instance Name: " instance_name
-    augur config-db init-celery --instance_name $instance_name 
+    augur config-db init-celery --instance-name $instance_name 
 }
 
 FILE=celery.config.json
