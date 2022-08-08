@@ -6,6 +6,7 @@ from augur.application.db.models import *
 import sqlalchemy as s
 import time
 import math
+import traceback
 from augur.tasks.util.AugurUUID import AugurUUID, GithubUUID, UnresolvableUUID
 
 """
