@@ -13,8 +13,10 @@ from gunicorn.arbiter import Arbiter
 import sys
 import json
 import random
+import string
 import subprocess
 from redis.exceptions import ConnectionError as RedisConnectionError
+import uuid
 
 
 from augur.tasks.start_tasks import start_task
@@ -62,9 +64,8 @@ def start(disable_collection):
     celery_process = None
     if not disable_collection:
 
-        worker_hash = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(60))
 
-        celery_process = subprocess.Popen(['celery', '-A', 'augur.tasks.init.celery_app.celery_app', 'worker', '--loglevel=info', "--concurrency=20", "-n" f"{worker_name}@%h"])
+        celery_process = subprocess.Popen(['celery', '-A', 'augur.tasks.init.celery_app.celery_app', 'worker', '--loglevel=info', "--concurrency=20", "-n" f"{str(uuid.uuid4().hex)}@%h"])
         time.sleep(10)
     
         repos = session.query(Repo).all()
