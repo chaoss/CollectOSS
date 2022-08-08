@@ -28,14 +28,3 @@ def create_db_config(user, password, host, port, database_name):
     }
     with open('db.config.json', 'w') as fp:
         json.dump(db_config, fp, indent=4)
-
-@cli.command('init-celery')
-@click.option('--instance-name', required=True)
-def create_celery_config(instance_name):
-
-    celery_config = {
-        "instance_name": instance_name
-    }
-
-    with open('celery.config.json', 'w') as fp:
-        json.dump(celery_config, fp, indent=4)
