@@ -11,7 +11,9 @@ class GithubApiKeyHandler():
         self.session = session
         self.logger = session.logger
 
-        self.redis_key_list = RedisList("oauth_keys_list")
+        self.oauth_redis_key = "oauth_keys_list"
+
+        self.redis_key_list = RedisList(self.oauth_redis_key)
 
         self.config_key = self.get_config_key()
 
@@ -35,26 +37,31 @@ class GithubApiKeyHandler():
         if len(self.redis_key_list) > 0:
             return list(self.redis_key_list)
 
-        print(f"Config key: {self.config_key}")
+        keys = self.get_api_keys_from_database()
+    
+        if self.config_key is not None:
+            keys += [self.config_key]
 
-        keys = self.get_api_keys_from_database() + [self.config_key]
+        if len(keys) == 0:
+            return []
 
+        valid_keys = []
         with httpx.Client() as client:
 
             for key in keys:
 
                 # removes key if it returns "Bad Credentials"
-                if self.is_bad_api_key(client, key):
-                      keys.remove(key)
+                if self.is_bad_api_key(client, key) is False:
+                    valid_keys.append(key)
 
         # just in case the mulitprocessing adds extra values to the list.
         # we are clearing it before we push the values we got
         self.redis_key_list.clear()
 
         # add all the keys to redis
-        self.redis_key_list.extend(keys)
+        self.redis_key_list.extend(valid_keys)
 
-        return keys
+        return valid_keys
 
     def is_bad_api_key(self, client: httpx.Client, oauth_key: str) -> None or True:
 

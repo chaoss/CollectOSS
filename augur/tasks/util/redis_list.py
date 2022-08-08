@@ -61,7 +61,9 @@ class RedisList(MutableSequence):
         redis.lrem(self.list, 0, value)
 
     def extend(self, data_list):
-        redis.rpush(self.list, *data_list)
+
+        if data_list:
+            redis.rpush(self.list, *data_list)
 
     def clear(self):
         redis.delete(self.list)

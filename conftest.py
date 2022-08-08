@@ -32,8 +32,6 @@ def engine():
 
     testing_db_string = db_string_without_db_name + "augur-test"
 
-    print(testing_db_string)
-
     yield s.create_engine(testing_db_string)
 
 @pytest.fixture

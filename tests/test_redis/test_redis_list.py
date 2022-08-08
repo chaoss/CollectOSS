@@ -26,11 +26,16 @@ def test_redis_list_append(redis_list):
     
         assert redis.lindex(list_name, i) == string_array[i]
 
-def test_redis_list_lenth(redis_list):
+length_data_1 = [1, 2, 3, 4, 5]
+length_data_2 = []
+@pytest.mark.parametrize("data", [length_data_1, length_data_2])
+def test_redis_list_length(redis_list, data):
 
-    redis.rpush(list_name, "hello", "world")
+    if data:
+        redis.rpush(list_name, *data)
 
-    assert len(redis_list) == 2
+    assert redis.llen(redis_list.list)  == len(data)
+
 
 def test_redis_list_contains(redis_list):
 
@@ -46,16 +51,16 @@ def test_redis_list_contains(redis_list):
     assert redis_list.contains(50) == False
 
 
-def test_redis_list_extend(redis_list):
+extend_data_1 = [i for i in range(2, 10, 2)]
+extend_data_2 = []
+@pytest.mark.parametrize("data", [extend_data_1, extend_data_2])
+def test_redis_list_extend(redis_list, data):
 
-    insert_values = [i for i in range(2, 10, 2)]
+    redis_list.extend(data)
 
-    redis_list.extend(insert_values)
-
-    for i in range(0, len(insert_values)):
+    for i in range(0, len(data)):
     
-        assert int(redis.lindex(list_name, i)) == insert_values[i]
-        
+        assert int(redis.lindex(list_name, i)) == data[i]        
 
 
 
