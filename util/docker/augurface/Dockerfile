@@ -19,7 +19,7 @@ RUN npm run build
 
 FROM nginx as production-stage
 COPY --from=augurface /augur/augurface/dist /usr/share/nginx/augurface
-COPY ./util/docker/frontend/nginx.conf /etc/nginx/nginx.conf
+COPY ./util/docker/augurface/nginx.conf /etc/nginx/nginx.conf
 
 EXPOSE 8080
 
