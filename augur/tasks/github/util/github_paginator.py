@@ -258,6 +258,8 @@ class GithubPaginator(collections.abc.Sequence):
             except:
                 page_data = json.loads(json.dumps(response.text))
 
+            # print(page_data)
+
             # if the data is a list, then return it and the response
             if type(page_data) == list:
                 return page_data, response

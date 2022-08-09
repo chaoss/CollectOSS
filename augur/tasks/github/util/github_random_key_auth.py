@@ -8,5 +8,9 @@ class GithubRandomKeyAuth(RandomKeyAuth):
     def __init__(self, session):
 
         github_api_keys = GithubApiKeyHandler(session).keys
+
+        header_name = "Authorization"
+        key_format = "token {0}"
+
         
-        super().__init__(github_api_keys)
+        super().__init__(github_api_keys, header_name, key_format)
