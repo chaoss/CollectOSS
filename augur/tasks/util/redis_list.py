@@ -78,25 +78,3 @@ def print_list(list):
     for i in range(key_list_length):
         print(redis.lindex(list, i))
 
-
-if __name__ == "__main__":
-
-
-    redis.flushdb()
-
-    redis_list = RedisList("list_1")
-
-    string_array = "hello world".split(" ")
-
-    insert_values = [i*0.2 for i in range(2, 10, 2)]
-    
-    redis_list.extend(string_array)
-
-    values = list(redis_list)
-
-    print(values)
-
-
-    # print_list(redis_list.list)
-
-    # redis_list.append("Hello")

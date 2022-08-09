@@ -139,10 +139,18 @@ def start(disable_collection):
             celery_process.terminate
 
         try:
-            redis_connection.flushdb()
-            logger.info("Flushing redis cache")
+            logger.info(f"Deleting redis keys for instance id: {instance_id}")
+            delete_redis_keys(instance_id)
+            
         except RedisConnectionError:
             pass
+
+def delete_redis_keys(instance_id):
+
+    for key in redis_connection.scan_iter():
+
+        if instance_id in key:
+            redis_connection.delete(key)
 
 
 @cli.command('stop')
