@@ -48,10 +48,10 @@ def create_routes(server):
             FROM
                 repo
                 left outer join
-                (select repo_id,    COUNT ( distinct commits.cmt_commit_hash ) AS commits_all_time from commits group by repo_id ) a on
+                (select * from api_get_all_repos_commits ) a on
                 repo.repo_id = a.repo_id
                 left outer join
-                (select repo_id, count ( * ) as issues_all_time from issues where issues.pull_request IS NULL  group by repo_id) b
+                (select * from api_get_all_repos_issues) b
                 on
                 repo.repo_id = b.repo_id
                 JOIN repo_groups ON repo_groups.repo_group_id = repo.repo_group_id

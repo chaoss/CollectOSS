@@ -2,7 +2,7 @@
 FROM python:3.8.11-slim-buster
 
 LABEL maintainer="outdoors@acm.org"
-LABEL version="0.27.6"
+LABEL version="0.27.8"
 
 ENV DEBIAN_FRONTEND=noninteractive
 
