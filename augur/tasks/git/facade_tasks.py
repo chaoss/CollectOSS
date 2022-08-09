@@ -214,9 +214,9 @@ def analysis(cfg, multithreaded, session=None, processes=6):
             #Split commits into mostly equal queues so each process starts with a workload and there is no
             #    overhead to pass into queue from the parent.            
             #Each task generates their own cfg as celery cannot serialize this data
-            
-            
             contrib_jobs = create_grouped_task_load(repo[0],repo_loc,multithreaded,processes=processes,dataList=missing_commits,task=analyze_commits_in_parallel)
+
+            print(contrib_jobs)
 
             group_result = contrib_jobs.apply_async()
             #Context manager needed for joining back to parent process properly.

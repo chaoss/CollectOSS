@@ -22,6 +22,7 @@ from augur import instance_id
 
 
 from augur.tasks.start_tasks import start_task
+from augur.tasks.git.facade_tasks import *
 from augur.tasks.github.issue_tasks import process_contributors
 
 # from augur.api.application import Application
@@ -74,9 +75,13 @@ def start(disable_collection):
     
         repos = session.query(Repo).all()
 
-        repo_task_list = [start_task.si(repo.repo_git) for repo in repos] + [process_contributors.si(),]
+        facade_task_list = [facade_commits_model.si(), facade_resolve_contribs.si()]
 
-        repos_chain = group(repo_task_list)
+        github_task_list = [start_task.si(repo.repo_git) for repo in repos]
+
+        task_list = facade_task_list + github_task_list + [process_contributors.si()]
+
+        repos_chain = chain(task_list)
 
         logger.info(repos_chain)
 

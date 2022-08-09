@@ -7,9 +7,6 @@ class RedisList(MutableSequence):
     def __init__(self, list_name):
         self.list = f"{instance_id}_{list_name}"
 
-    def __init__(self, list_name):
-        self.list = list_name
-
     def __len__(self):
         return redis.llen(self.list) 
 

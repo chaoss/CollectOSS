@@ -33,6 +33,8 @@ length_data_2 = []
 @pytest.mark.parametrize("data", [length_data_1, length_data_2])
 def test_redis_list_length(redis_list, data):
 
+    # print(f"Data: {data}. Data length: {len(data)}")
+
     if data:
         redis.rpush(redis_list.list, *data)
 

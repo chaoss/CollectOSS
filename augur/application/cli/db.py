@@ -249,7 +249,29 @@ def create_schema():
     """
     Create schema in the configured database
     """
+    install_default_config = False
+    while True:
+        user_input = input("Would you like to create install the default config? [Y/n]: ")
+
+        if user_input in ("y", "yes" " \n") or not user_input:
+            install_defualt_config = True
+            break
+
+        elif user_input in ("n", "no"):
+            install_defualt_config = False
+            break
+
+        else:
+            print("Invalid input")
+        
+
     call(["alembic", "upgrade", "head"])
+
+    if install_defualt_config:
+
+        call(["augur", "config", "init"])
+
+        
 
 
 def generate_key(length):
