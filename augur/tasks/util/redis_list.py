@@ -1,8 +1,11 @@
 from collections.abc import MutableSequence
 from augur.tasks.init.redis_connection import redis_connection as redis
-
+from augur import instance_id
 
 class RedisList(MutableSequence):
+
+    def __init__(self, list_name):
+        self.list = f"{instance_id}_{list_name}"
 
     def __init__(self, list_name):
         self.list = list_name

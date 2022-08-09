@@ -18,6 +18,8 @@ import subprocess
 from redis.exceptions import ConnectionError as RedisConnectionError
 import uuid
 
+from augur import instance_id
+
 
 from augur.tasks.start_tasks import start_task
 from augur.tasks.github.issue_tasks import process_contributors
@@ -66,7 +68,7 @@ def start(disable_collection):
     if not disable_collection:
 
 
-        celery_process = subprocess.Popen(['celery', '-A', 'augur.tasks.init.celery_app.celery_app', 'worker', '--loglevel=info', "--concurrency=20", "-n" f"{str(uuid.uuid4().hex)}@%h"])
+        celery_process = subprocess.Popen(['celery', '-A', 'augur.tasks.init.celery_app.celery_app', 'worker', '--loglevel=info', "--concurrency=20", "-n" f"{instance_id}@%h"])
         time.sleep(10)
     
         repos = session.query(Repo).all()
