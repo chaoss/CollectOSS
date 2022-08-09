@@ -21,6 +21,7 @@ from celery.result import allow_join_result
 from celery.signals import after_setup_logger
 from datetime import timedelta
 import sqlalchemy as s
+from augur import queue_name
 
 from augur.tasks.git.util.facade_worker.facade_worker.facade02utilitymethods import update_repo_log, trim_commit, store_working_author, trim_author
 from augur.tasks.git.util.facade_worker.facade_worker.facade03analyzecommit import analyze_commit
@@ -67,7 +68,7 @@ from augur.application.logs import TaskLogConfig
 
 
 #enable celery multithreading
-@celery.task
+@celery.task(queue=queue_name)
 def analyze_commits_in_parallel(queue, repo_id, repo_location, multithreaded):
     #create new cfg for celery thread.
     logger = logging.getLogger(analyze_commits_in_parallel.__name__)
@@ -367,7 +368,7 @@ def facade_init(session):
     # Begin working
 
 
-@celery.task
+@celery.task(queue=queue_name)
 def facade_commits_model():
 
     logger = logging.getLogger(facade_commits_model.__name__)
@@ -458,7 +459,7 @@ def facade_commits_model():
     session.cfg.db.close()
     #session.cfg.db_people.close()
 
-@celery.task
+@celery.task(queue=queue_name)
 def facade_grab_contribs(repo_id):
     logger = logging.getLogger(facade_grab_contribs.__name__)
     session = FacadeSession(logger)
@@ -468,7 +469,7 @@ def facade_grab_contribs(repo_id):
 
 #Method to parallelize, takes a queue of data and iterates over it
 
-@celery.task
+@celery.task(queue=queue_name)
 def process_commit_metadata(contributorQueue,repo_id):
     logger = logging.getLogger(process_commit_metadata.__name__)
     session = FacadeSession(logger)
@@ -664,7 +665,7 @@ def process_commit_metadata(contributorQueue,repo_id):
     
     return
 
-@celery.task
+@celery.task(queue=queue_name)
 def link_commits_to_contributor(contributorQueue):
         logger = logging.getLogger(link_commits_to_contributor.__name__)
         session = FacadeSession(logger)
@@ -823,7 +824,7 @@ def insert_facade_contributors(session, repo_id,processes=4,multithreaded=True):
     session.logger.info("Done with inserting and updating facade contributors")
     return
 
-@celery.task
+@celery.task(queue=queue_name)
 def facade_resolve_contribs():
     logger = logging.getLogger(facade_resolve_contribs.__name__)
     session = FacadeSession(logger)
