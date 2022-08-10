@@ -8,7 +8,7 @@ WORKDIR /augur/frontend/
 COPY ./docker/frontend/docker.config.json frontend.config.json
 
 FROM build-stage as augurface
-WORKDIR /augur/augurface/
+WORKDIR /augur/augur/augurface/
 COPY augur/augurface/package.json .
 COPY augur/augurface/package-lock.json .
 RUN npm install
