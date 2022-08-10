@@ -365,8 +365,10 @@ def facade_init(session):
     # Begin working
 
 
+#TODO: turn this into a dynamic chain with the various platform resolution tasks in a list.
+#TODO: refactor out the github stuff from this and make it less messy.
 @celery.task
-def facade_commits_model():
+def facade_commits_model(github_contrib_resolition=True):
 
     logger = logging.getLogger(facade_commits_model.__name__)
     with FacadeSession(logger) as session:
