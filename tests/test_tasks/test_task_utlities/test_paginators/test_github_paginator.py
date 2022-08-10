@@ -19,6 +19,8 @@ def key_auth():
 
     yield key_auth
 
+    session.close()
+
 def test_github_paginator_get_item(key_auth):
 
     first_augur_pr_id = 102777299

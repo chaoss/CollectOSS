@@ -18,6 +18,8 @@ def github_random_key_auth():
 
     yield key_auth
 
+    session.close()
+
 
 def test_github_api_rate_limit_after_setting_key(github_random_key_auth):
 

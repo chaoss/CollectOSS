@@ -22,10 +22,7 @@ from augur.application.cli import test_connection, test_db_connection
 
 ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
-
 logger = AugurLogger("cli").get_logger()
-session = DatabaseSession(logger)
-config = session.config
 
 ENVVAR_PREFIX = "AUGUR_"
 
@@ -41,23 +38,26 @@ def cli():
 @test_db_connection
 def init_config(github_api_key, facade_repo_directory, gitlab_api_key):
 
-    keys = {}
+    with DatabaseSession(logger) as session:
+        config = session.config
 
-    if github_api_key:
-        keys["github_api_key"] = github_api_key
-    if gitlab_api_key:
-        keys["gitlab_api_key"] = gitlab_api_key
+        keys = {}
 
-    default_config = config.default_config
+        if github_api_key:
+            keys["github_api_key"] = github_api_key
+        if gitlab_api_key:
+            keys["gitlab_api_key"] = gitlab_api_key
 
-    default_config["Keys"] = keys
+        default_config = config.default_config
 
-    if facade_repo_directory:
-        default_config["Facade"]["repo_directory"] = facade_repo_directory
+        default_config["Keys"] = keys
 
-    default_config["Logging"]["logs_directory"] = ROOT_AUGUR_DIRECTORY + "/logs/"
+        if facade_repo_directory:
+            default_config["Facade"]["repo_directory"] = facade_repo_directory
 
-    config.load_config_from_dict(default_config)
+        default_config["Logging"]["logs_directory"] = ROOT_AUGUR_DIRECTORY + "/logs/"
+
+        config.load_config_from_dict(default_config)
 
 
 @cli.command('load')
@@ -66,18 +66,21 @@ def init_config(github_api_key, facade_repo_directory, gitlab_api_key):
 @test_db_connection
 def load_config(file):
 
-    print("WARNING: This will override your current config")
-    response = str(input("Would you like to continue: [y/N]: ")).lower()
+    with DatabaseSession(logger) as session:
+        config = session.config
 
-    if response != "y" and response != "yes":
-        print("Did not recieve yes or y exiting...")
-        return
+        print("WARNING: This will override your current config")
+        response = str(input("Would you like to continue: [y/N]: ")).lower()
 
-    file_data = config.load_config_file(file)
+        if response != "y" and response != "yes":
+            print("Did not recieve yes or y exiting...")
+            return
 
-    config.clear()
-    
-    config.load_config_from_dict(file_data)
+        file_data = config.load_config_file(file)
+
+        config.clear()
+        
+        config.load_config_from_dict(file_data)
     
 @cli.command('add-section')
 @click.option('--section-name', required=True)
@@ -86,21 +89,24 @@ def load_config(file):
 @test_db_connection
 def add_section(section_name, file):
 
-    if config.is_section_in_config(section_name):
+    with DatabaseSession(logger) as session:
+        config = session.config
 
-        print(f"Warning there is already a {section_name} section in the config and it will be replaced")
-        response = str(input("Would you like to continue: [y/N]: ")).lower()
+        if config.is_section_in_config(section_name):
 
-        if response != "y" and response != "yes":
-            print("Did not recieve yes or y exiting...")
-            return
+            print(f"Warning there is already a {section_name} section in the config and it will be replaced")
+            response = str(input("Would you like to continue: [y/N]: ")).lower()
 
-    config.remove_section(section_name)
-            
-    with open(file, 'r') as f:
-        section_data = json.load(f)
+            if response != "y" and response != "yes":
+                print("Did not recieve yes or y exiting...")
+                return
 
-    config.add_section_from_json(section_name, section_data)
+        config.remove_section(section_name)
+                
+        with open(file, 'r') as f:
+            section_data = json.load(f)
+
+        config.add_section_from_json(section_name, section_data)
 
 
 @cli.command('set')
@@ -112,19 +118,22 @@ def add_section(section_name, file):
 @test_db_connection
 def config_set(section, setting, value, data_type):
 
-    if data_type not in config.accepted_types:
-        print(f"Error invalid type for config. Please use one of these types: {config.accepted_types}")
-        return
+    with DatabaseSession(logger) as session:
+        config = session.config
 
-    
-    setting = {
-        "section_name": section,
-        "setting_name": setting, 
-        "value": value,
-        "type": data_type
-    }
+        if data_type not in config.accepted_types:
+            print(f"Error invalid type for config. Please use one of these types: {config.accepted_types}")
+            return
 
-    config.add_or_update_settings([setting])
+        
+        setting = {
+            "section_name": section,
+            "setting_name": setting, 
+            "value": value,
+            "type": data_type
+        }
+
+        config.add_or_update_settings([setting])
 
 @cli.command('get')
 @click.option('--section', required=True)
@@ -133,44 +142,50 @@ def config_set(section, setting, value, data_type):
 @test_db_connection
 def config_get(section, setting):
 
-    if setting:
-        config_value = config.get_value(section_name=section, setting_name=setting)
+    with DatabaseSession(logger) as session:
+        config = session.config
 
-        if config_value is not None:
-            print(f"======================\n{setting}: {config_value}\n======================")
+        if setting:
+            config_value = config.get_value(section_name=section, setting_name=setting)
+
+            if config_value is not None:
+                print(f"======================\n{setting}: {config_value}\n======================")
+            else:
+                print(f"Error unable to find '{setting}' in the '{section}' section of the config")
+                
         else:
-            print(f"Error unable to find '{setting}' in the '{section}' section of the config")
-               
-    else:
-        section_data = config.get_section(section_name=section)
-        
-        if section_data:
-            print(f"======================\n{section}\n====")
-            section_data_keys = list(section_data.keys())
-            for key in section_data_keys:
-                print(f"{key}: {section_data[key]}")
+            section_data = config.get_section(section_name=section)
+            
+            if section_data:
+                print(f"======================\n{section}\n====")
+                section_data_keys = list(section_data.keys())
+                for key in section_data_keys:
+                    print(f"{key}: {section_data[key]}")
 
-            print("======================")
+                print("======================")
 
-        else:
-            print(f"Error: {section} section not found in config")
+            else:
+                print(f"Error: {section} section not found in config")
 
 @cli.command('clear')
 @test_connection
 @test_db_connection
 def clear_config():
 
-    if not config.empty():
+    with DatabaseSession(logger) as session:
+        config = session.config
 
-        print("Warning this delete the current config")
-        response = str(input("Would you like to continue: [y/N]: ")).lower()
+        if not config.empty():
 
-        if response != "y" and response != "yes":
-            print("Did not recieve yes or y exiting...")
-            return
+            print("Warning this delete the current config")
+            response = str(input("Would you like to continue: [y/N]: ")).lower()
 
-    config.clear()
+            if response != "y" and response != "yes":
+                print("Did not recieve yes or y exiting...")
+                return
 
-    print("Config cleared")
+        config.clear()
+
+        print("Config cleared")
 
 

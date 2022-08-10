@@ -36,7 +36,11 @@ def engine():
 
 @pytest.fixture
 def session(engine):
-    return DatabaseSession(logger, engine)
+    session = DatabaseSession(logger, engine)
+
+    yield session
+
+    session.close()
 
 @pytest.fixture
 def config(session):

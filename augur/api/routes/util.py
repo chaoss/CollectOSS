@@ -10,9 +10,6 @@ from augur.application.db.session import DatabaseSession
 from augur.application.logs import AugurLogger
 
 logger = AugurLogger("augur").get_logger()
-session = DatabaseSession(logger)
-augur_config = session.config
-engine = session.engine
 
 AUGUR_API_VERSION = 'api/unstable'
 
@@ -212,7 +209,10 @@ def create_routes(server):
 
     server.app.route('/{}/api-port'.format(AUGUR_API_VERSION))
     def api_port():
-        response = {'port': augur_config.get_value('Server', 'port')}
-        return Response(response=json.dumps(response),
-                        status=200,
-                        mimetype="application/json")
+
+        with DatabaseSession(logger) as session:
+
+            response = {'port': session.config.get_value('Server', 'port')}
+            return Response(response=json.dumps(response),
+                            status=200,
+                            mimetype="application/json")

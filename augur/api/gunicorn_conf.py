@@ -9,32 +9,32 @@ from augur.application.db.session import DatabaseSession
 from augur.application.logs import AugurLogger
 
 logger = AugurLogger("gunicorn configuration").get_logger()
-augur_config = DatabaseSession(logger).config
+with DatabaseSession(logger) as session:
+        
+    # ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
-# ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+    # base_log_dir = ROOT_AUGUR_DIRECTORY + "/logs/"
 
-# base_log_dir = ROOT_AUGUR_DIRECTORY + "/logs/"
+    # Path(base_log_dir).mkdir(exist_ok=True)
 
-# Path(base_log_dir).mkdir(exist_ok=True)
+    workers = multiprocessing.cpu_count() * 2 + 1
+    umask = 0o007
+    reload = True
+    #logging
+    accesslog = "augur/logs/gunicorn.log"
+    errorlog = "augur/logs/gunicorn.log"
 
-workers = multiprocessing.cpu_count() * 2 + 1
-umask = 0o007
-reload = True
-#logging
-accesslog = "augur/logs/gunicorn.log"
-errorlog = "augur/logs/gunicorn.log"
+    ssl_bool = session.config.get_value('Server', 'ssl')
 
-ssl_bool = augur_config.get_value('Server', 'ssl')
+    if ssl_bool is True: 
 
-if ssl_bool is True: 
-
-    workers = int(augur_config.get_value('Server', 'workers'))
-    bind = '%s:%s' % (augur_config.get_value("Server", "host"), augur_config.get_value("Server", "port"))
-    timeout = int(augur_config.get_value('Server', 'timeout'))
-    certfile = str(augur_config.get_value('Server', 'ssl_cert_file'))
-    keyfile = str(augur_config.get_value('Server', 'ssl_key_file'))
-    
-else: 
-    workers = int(augur_config.get_value('Server', 'workers'))
-    bind = '%s:%s' % (augur_config.get_value("Server", "host"), augur_config.get_value("Server", "port"))
-    timeout = int(augur_config.get_value('Server', 'timeout'))
+        workers = int(session.config.get_value('Server', 'workers'))
+        bind = '%s:%s' % (session.config.get_value("Server", "host"), session.config.get_value("Server", "port"))
+        timeout = int(session.config.get_value('Server', 'timeout'))
+        certfile = str(session.config.get_value('Server', 'ssl_cert_file'))
+        keyfile = str(session.config.get_value('Server', 'ssl_key_file'))
+        
+    else: 
+        workers = int(session.config.get_value('Server', 'workers'))
+        bind = '%s:%s' % (session.config.get_value("Server", "host"), session.config.get_value("Server", "port"))
+        timeout = int(session.config.get_value('Server', 'timeout'))

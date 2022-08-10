@@ -49,35 +49,35 @@ def start(disable_collection):
     Start Augur's backend server
     """
 
-    session = DatabaseSession(logger)
-    config = session.config
 
-    gunicorn_location = os.getcwd() + "/augur/api/gunicorn_conf.py"
-    print(gunicorn_location)
-    bind = '%s:%s' % (config.get_value("Server", "host"), config.get_value("Server", "port"))
+    with DatabaseSession(logger) as session:
+   
 
-    server = subprocess.Popen(["gunicorn", "-c", gunicorn_location, "-b", bind, "--preload", "augur.api.server:app"])
+        gunicorn_location = os.getcwd() + "/augur/api/gunicorn_conf.py"
+        bind = '%s:%s' % (session.config.get_value("Server", "host"), session.config.get_value("Server", "port"))
 
-    time.sleep(3)
-    logger.info('Gunicorn webserver started...')
-    logger.info(f'Augur is running at: http://127.0.0.1:{config.get_value("Server", "port")}')
+        server = subprocess.Popen(["gunicorn", "-c", gunicorn_location, "-b", bind, "--preload", "augur.api.server:app"])
 
-    celery_process = None
-    if not disable_collection:
+        time.sleep(3)
+        logger.info('Gunicorn webserver started...')
+        logger.info(f'Augur is running at: http://127.0.0.1:{session.config.get_value("Server", "port")}')
+
+        celery_process = None
+        if not disable_collection:
 
 
-        celery_process = subprocess.Popen(['celery', '-A', 'augur.tasks.init.celery_app.celery_app', 'worker', '--loglevel=info', "--concurrency=20", "-n" f"{str(uuid.uuid4().hex)}@%h"])
-        time.sleep(10)
-    
-        repos = session.query(Repo).all()
+            celery_process = subprocess.Popen(['celery', '-A', 'augur.tasks.init.celery_app.celery_app', 'worker', '--loglevel=info', "--concurrency=20", "-n" f"{str(uuid.uuid4().hex)}@%h"])
+            time.sleep(10)
+        
+            repos = session.query(Repo).all()
 
-        repo_task_list = [start_task.si(repo.repo_git) for repo in repos] + [process_contributors.si(),]
+            repo_task_list = [start_task.si(repo.repo_git) for repo in repos] + [process_contributors.si(),]
 
-        repos_chain = group(repo_task_list)
+            repos_chain = group(repo_task_list)
 
-        logger.info(repos_chain)
+            logger.info(repos_chain)
 
-        repos_chain.apply_async()
+            repos_chain.apply_async()
 
         # repos_to_collect = []
         # repo_task_list = []

@@ -23,7 +23,7 @@ def test_execute_sql(engine):
 
     try:
 
-        session = DatabaseSession(logger, engine=engine)
+       
 
         with engine.connect() as connection:
 
@@ -35,8 +35,10 @@ def test_execute_sql(engine):
 
         for data in all_data:
 
-            cntrb_id = data['cntrb_id']
-            result = session.execute_sql(f"SELECT * FROM augur_data.contributors WHERE cntrb_id='{cntrb_id}'").fetchall()
+            with DatabaseSession(logger) as session:
+
+                cntrb_id = data['cntrb_id']
+                result = session.execute_sql(f"SELECT * FROM augur_data.contributors WHERE cntrb_id='{cntrb_id}'").fetchall()
 
             assert result is not None
             assert isinstance(result[0], s.engine.result.RowProxy)
@@ -71,16 +73,16 @@ def test_insert_data_with_duplicates(engine):
 
     try:
 
-        session = DatabaseSession(logger, engine=engine)
+        with DatabaseSession(logger, engine=engine) as session:
 
-        for data in duplicate_data_list:
+            for data in duplicate_data_list:
 
-            session.insert_data(data, Contributor, ["cntrb_login"])
+                session.insert_data(data, Contributor, ["cntrb_login"])
 
 
-        
-        cntrb_id = data_1['cntrb_id']
-        result = session.execute_sql(f"SELECT * FROM augur_data.contributors WHERE cntrb_id!='{not_provided_cntrb_id}' AND cntrb_id!='{nan_cntrb_id}'").fetchall()
+            
+            cntrb_id = data_1['cntrb_id']
+            result = session.execute_sql(f"SELECT * FROM augur_data.contributors WHERE cntrb_id!='{not_provided_cntrb_id}' AND cntrb_id!='{nan_cntrb_id}'").fetchall()
 
         assert result is not None
         assert len(result) == 3
@@ -111,9 +113,9 @@ def test_insert_data_with_updates(engine):
 
             connection.execute(statement, **data_1)
 
-        session = DatabaseSession(logger, engine=engine)
+        with DatabaseSession(logger, engine=engine) as session:
 
-        session.insert_data(data_2, Contributor, ["cntrb_login"])
+            session.insert_data(data_2, Contributor, ["cntrb_login"])
 
         with engine.connect() as connection:
 
@@ -141,12 +143,12 @@ def test_insert_data_with_bulk(engine):
 
 
     try:
-        session = DatabaseSession(logger, engine=engine)
-        session.insert_data(all_data, Contributor, ["cntrb_login"])
+        with DatabaseSession(logger, engine=engine) as session:
+            session.insert_data(all_data, Contributor, ["cntrb_login"])
 
         with engine.connect() as connection:
 
-            result = session.execute_sql(f"SELECT * FROM augur_data.contributors WHERE cntrb_id!='{not_provided_cntrb_id}' AND cntrb_id!='{nan_cntrb_id}'").fetchall()
+            result = connection.execute(f"SELECT * FROM augur_data.contributors WHERE cntrb_id!='{not_provided_cntrb_id}' AND cntrb_id!='{nan_cntrb_id}'").fetchall()
 
             assert result is not None
             assert len(result) == 4
@@ -177,9 +179,9 @@ def test_insert_data_partial_update(engine):
 
             connection.execute(statement, **data_1)
 
-        session = DatabaseSession(logger, engine=engine)
+        with DatabaseSession(logger, engine=engine) as session:
 
-        session.insert_data(data_2, Contributor, ["cntrb_login"])
+            session.insert_data(data_2, Contributor, ["cntrb_login"])
 
         with engine.connect() as connection:
 

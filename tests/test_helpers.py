@@ -22,6 +22,10 @@ def db_session():
     logger = logging.getLogger(__name__)
     session = DatabaseSession(logger,engine=engine)
 
+    yield session
+
+    session.close()
+
 """
 
 temp_dir = os.path.join(os.getcwd(), "util")

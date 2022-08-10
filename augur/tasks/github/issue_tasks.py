@@ -23,20 +23,20 @@ def collect_issues(repo_git: str) -> None:
 
     logger = logging.getLogger(collect_issues.__name__)
 
-    # define GithubTaskSession to handle insertions, and store oauth keys 
-    session = GithubTaskSession(logger)
-
-    owner, repo = get_owner_repo(repo_git)
-
-    repo_id = session.query(Repo).filter(Repo.repo_git == repo_git).one().repo_id
-
     logger.info(f"Collecting issues for {owner}/{repo}")
 
     url = f"https://api.github.com/repos/{owner}/{repo}/issues?state=all"
 
-    # returns an iterable of all issues at this url (this essentially means you can treat the issues variable as a list of the issues)
-    # Reference the code documenation for GithubPaginator for more details
-    issues = GithubPaginator(url, session.oauths, logger)
+    owner, repo = get_owner_repo(repo_git)
+
+    # define GithubTaskSession to handle insertions, and store oauth keys 
+    with GithubTaskSession(logger) as session:
+
+        repo_id = session.query(Repo).filter(Repo.repo_git == repo_git).one().repo_id
+
+        # returns an iterable of all issues at this url (this essentially means you can treat the issues variable as a list of the issues)
+        # Reference the code documenation for GithubPaginator for more details
+        issues = GithubPaginator(url, session.oauths, logger)
 
     # this is defined so we can decrement it each time 
     # we come across a pr, so at the end we can log how 
@@ -60,16 +60,13 @@ def collect_issues(repo_git: str) -> None:
         ids.append(process_issue_task.id)
 
     wait_child_tasks(ids)
-        
+    
 
 @celery.task
 def process_issues(issues, task_name, repo_id) -> None:
 
     logger = logging.getLogger(process_issues.__name__)
-
-    # define GithubTaskSession to handle insertions, and store oauth keys 
-    session = GithubTaskSession(logger)
-
+    
     # get repo_id or have it passed
     tool_source = "Issue Task"
     tool_version = "2.0"
@@ -117,55 +114,57 @@ def process_issues(issues, task_name, repo_id) -> None:
         print("No issues found while processing")  
         return
 
-    # remove duplicate contributors before inserting
-    contributors = remove_duplicate_dicts(contributors)
+    with GithubTaskSession(logger) as session:
 
-    # insert contributors from these issues
-    logger.info(f"{task_name}: Inserting {len(contributors)} contributors")
-    session.insert_data(contributors, Contributor, ["cntrb_login"])
-                        
+        # remove duplicate contributors before inserting
+        contributors = remove_duplicate_dicts(contributors)
 
-    # insert the issues into the issues table. 
-    # issue_urls are gloablly unique across github so we are using it to determine whether an issue we collected is already in the table
-    # specified in issue_return_columns is the columns of data we want returned. This data will return in this form; {"issue_url": url, "issue_id": id}
-    logger.info(f"{task_name}: Inserting {len(issue_dicts)} issues")
-    issue_natural_keys = ["issue_url"]
-    issue_return_columns = ["issue_url", "issue_id"]
-    issue_return_data = session.insert_data(issue_dicts, Issue, issue_natural_keys, issue_return_columns)
+        # insert contributors from these issues
+        logger.info(f"{task_name}: Inserting {len(contributors)} contributors")
+        session.insert_data(contributors, Contributor, ["cntrb_login"])
+                            
 
-
-    # loop through the issue_return_data so it can find the labels and 
-    # assignees that corelate to the issue that was inserted labels 
-    issue_label_dicts = []
-    issue_assignee_dicts = []
-    for data in issue_return_data:
-
-        issue_url = data["issue_url"]
-        issue_id = data["issue_id"]
-
-        try:
-            other_issue_data = issue_mapping_data[issue_url]
-        except KeyError as e:
-            logger.info(f"Cold not find other issue data. This should never happen. Error: {e}")
+        # insert the issues into the issues table. 
+        # issue_urls are gloablly unique across github so we are using it to determine whether an issue we collected is already in the table
+        # specified in issue_return_columns is the columns of data we want returned. This data will return in this form; {"issue_url": url, "issue_id": id}
+        logger.info(f"{task_name}: Inserting {len(issue_dicts)} issues")
+        issue_natural_keys = ["issue_url"]
+        issue_return_columns = ["issue_url", "issue_id"]
+        issue_return_data = session.insert_data(issue_dicts, Issue, issue_natural_keys, issue_return_columns)
 
 
-        # add the issue id to the lables and assignees, then add them to a list of dicts that will be inserted soon
-        dict_key = "issue_id"
-        issue_label_dicts += add_key_value_pair_to_list_of_dicts(other_issue_data["labels"], "issue_id", issue_id)
-        issue_assignee_dicts += add_key_value_pair_to_list_of_dicts(other_issue_data["assignees"], "issue_id", issue_id)
+        # loop through the issue_return_data so it can find the labels and 
+        # assignees that corelate to the issue that was inserted labels 
+        issue_label_dicts = []
+        issue_assignee_dicts = []
+        for data in issue_return_data:
+
+            issue_url = data["issue_url"]
+            issue_id = data["issue_id"]
+
+            try:
+                other_issue_data = issue_mapping_data[issue_url]
+            except KeyError as e:
+                logger.info(f"Cold not find other issue data. This should never happen. Error: {e}")
 
 
-    logger.info(f"{task_name}: Inserting other issue data of lengths: Labels: {len(issue_label_dicts)} - Assignees: {len(issue_assignee_dicts)}")
+            # add the issue id to the lables and assignees, then add them to a list of dicts that will be inserted soon
+            dict_key = "issue_id"
+            issue_label_dicts += add_key_value_pair_to_list_of_dicts(other_issue_data["labels"], "issue_id", issue_id)
+            issue_assignee_dicts += add_key_value_pair_to_list_of_dicts(other_issue_data["assignees"], "issue_id", issue_id)
 
-    # inserting issue labels
-    # we are using label_src_id and issue_id to determine if the label is already in the database.
-    issue_label_natural_keys = ['label_src_id', 'issue_id']
-    session.insert_data(issue_label_dicts, IssueLabel, issue_label_natural_keys)
-  
-    # inserting issue assignees
-    # we are using issue_assignee_src_id and issue_id to determine if the label is already in the database.
-    issue_assignee_natural_keys = ['issue_assignee_src_id', 'issue_id']
-    session.insert_data(issue_assignee_dicts, IssueAssignee, issue_assignee_natural_keys)
+
+        logger.info(f"{task_name}: Inserting other issue data of lengths: Labels: {len(issue_label_dicts)} - Assignees: {len(issue_assignee_dicts)}")
+
+        # inserting issue labels
+        # we are using label_src_id and issue_id to determine if the label is already in the database.
+        issue_label_natural_keys = ['label_src_id', 'issue_id']
+        session.insert_data(issue_label_dicts, IssueLabel, issue_label_natural_keys)
+    
+        # inserting issue assignees
+        # we are using issue_assignee_src_id and issue_id to determine if the label is already in the database.
+        issue_assignee_natural_keys = ['issue_assignee_src_id', 'issue_id']
+        session.insert_data(issue_assignee_dicts, IssueAssignee, issue_assignee_natural_keys)
 
 
 def process_issue_contributors(issue, tool_source, tool_version, data_source):
@@ -190,22 +189,22 @@ def process_issue_contributors(issue, tool_source, tool_version, data_source):
 @celery.task
 def collect_pull_requests(repo_git: str) -> None:
 
-    owner, repo = get_owner_repo(repo_git)
 
     logger = logging.getLogger(collect_pull_requests.__name__)
 
-    # define GithubTaskSession to handle insertions, and store oauth keys 
-    session = GithubTaskSession(logger)
-
-    repo_id = session.query(Repo).filter(Repo.repo_git == repo_git).one().repo_id
-
     logger.info(f"Collecting pull requests for {owner}/{repo}")
 
-    url = f"https://api.github.com/repos/{owner}/{repo}/pulls?state=all&direction=desc"
-    
+    owner, repo = get_owner_repo(repo_git)
 
-    # returns an iterable of all prs at this url (this essentially means you can treat the prs variable as a list of the prs)
-    prs = GithubPaginator(url, session.oauths, logger)
+    url = f"https://api.github.com/repos/{owner}/{repo}/pulls?state=all&direction=desc"
+
+    # define GithubTaskSession to handle insertions, and store oauth keys 
+    with GithubTaskSession(logger) as session:
+
+        repo_id = session.query(Repo).filter(Repo.repo_git == repo_git).one().repo_id
+
+        # returns an iterable of all prs at this url (this essentially means you can treat the prs variable as a list of the prs)
+        prs = GithubPaginator(url, session.oauths, logger)
 
     num_pages = prs.get_num_pages()
     ids = []
@@ -229,9 +228,6 @@ def collect_pull_requests(repo_git: str) -> None:
 def process_pull_requests(pull_requests, task_name, repo_id):
 
     logger = logging.getLogger(process_pull_requests.__name__)
-
-    # define GithubTaskSession to handle insertions, and store oauth keys 
-    session = GithubTaskSession(logger)
 
      # get repo_id or have it passed
     tool_source = "Pr Task"
@@ -303,85 +299,87 @@ def process_pull_requests(pull_requests, task_name, repo_id):
         # create a list of pr numbers to pass for the pr reviews task
         pr_numbers.append(pr["number"]) 
 
-    # remove duplicate contributors before inserting
-    contributors = remove_duplicate_dicts(contributors)
+    with GithubTaskSession(logger) as session:
 
-    # insert contributors from these issues
-    logger.info(f"{task_name}: Inserting {len(contributors)} contributors")
-    session.insert_data(contributors, Contributor, ["cntrb_login"])
+        # remove duplicate contributors before inserting
+        contributors = remove_duplicate_dicts(contributors)
 
-
-    # insert the prs into the pull_requests table. 
-    # pr_urls are gloablly unique across github so we are using it to determine whether a pull_request we collected is already in the table
-    # specified in pr_return_columns is the columns of data we want returned. This data will return in this form; {"pr_url": url, "pull_request_id": id}
-    logger.info(f"{task_name}: Inserting prs of length: {len(pr_dicts)}")
-    pr_natural_keys = ["pr_url"]
-    pr_return_columns = ["pull_request_id", "pr_url"]
-    pr_return_data = session.insert_data(pr_dicts, PullRequest, pr_natural_keys, return_columns=pr_return_columns)
-
-    if pr_return_data is None:
-        return
+        # insert contributors from these issues
+        logger.info(f"{task_name}: Inserting {len(contributors)} contributors")
+        session.insert_data(contributors, Contributor, ["cntrb_login"])
 
 
-    # loop through the pr_return_data (which is a list of pr_urls 
-    # and pull_request_id in dicts) so we can find the labels, 
-    # assignees, reviewers, and assignees that match the pr
-    pr_label_dicts = []
-    pr_assignee_dicts = []
-    pr_reviewer_dicts = []
-    pr_metadata_dicts = []
-    pr_contributors = []
-    for data in pr_return_data:
+        # insert the prs into the pull_requests table. 
+        # pr_urls are gloablly unique across github so we are using it to determine whether a pull_request we collected is already in the table
+        # specified in pr_return_columns is the columns of data we want returned. This data will return in this form; {"pr_url": url, "pull_request_id": id}
+        logger.info(f"{task_name}: Inserting prs of length: {len(pr_dicts)}")
+        pr_natural_keys = ["pr_url"]
+        pr_return_columns = ["pull_request_id", "pr_url"]
+        pr_return_data = session.insert_data(pr_dicts, PullRequest, pr_natural_keys, return_columns=pr_return_columns)
 
-        pr_url = data["pr_url"]
-        pull_request_id = data["pull_request_id"]
-
-        try:
-            other_pr_data = pr_mapping_data[pr_url]
-        except KeyError as e:
-            logger.info(f"Cold not find other pr data. This should never happen. Error: {e}")
+        if pr_return_data is None:
+            return
 
 
-        # add the pull_request_id to the labels, assignees, reviewers, or metadata then add them to a list of dicts that will be inserted soon
-        dict_key = "pull_request_id"
-        pr_label_dicts += add_key_value_pair_to_list_of_dicts(other_pr_data["labels"], dict_key, pull_request_id)
-        pr_assignee_dicts += add_key_value_pair_to_list_of_dicts(other_pr_data["assignees"], dict_key, pull_request_id)
-        pr_reviewer_dicts += add_key_value_pair_to_list_of_dicts(other_pr_data["reviewers"], dict_key, pull_request_id)
-        pr_metadata_dicts += add_key_value_pair_to_list_of_dicts(other_pr_data["metadata"], dict_key, pull_request_id)
+        # loop through the pr_return_data (which is a list of pr_urls 
+        # and pull_request_id in dicts) so we can find the labels, 
+        # assignees, reviewers, and assignees that match the pr
+        pr_label_dicts = []
+        pr_assignee_dicts = []
+        pr_reviewer_dicts = []
+        pr_metadata_dicts = []
+        pr_contributors = []
+        for data in pr_return_data:
 
-        pr_contributors.append(
-            {
-            "pull_request_id": pull_request_id,
-            "contributor": other_pr_data["contributor"]
-            }
-        )
+            pr_url = data["pr_url"]
+            pull_request_id = data["pull_request_id"]
 
-    # starting task to process pr contributors
-    # process_contributors.s(pr_contributors, PullRequests).apply_async()
-        
+            try:
+                other_pr_data = pr_mapping_data[pr_url]
+            except KeyError as e:
+                logger.info(f"Cold not find other pr data. This should never happen. Error: {e}")
 
-    logger.info(f"{task_name}: Inserting other pr data of lengths: Labels: {len(pr_label_dicts)} - Assignees: {len(pr_assignee_dicts)} - Reviewers: {len(pr_reviewer_dicts)} - Metadata: {len(pr_metadata_dicts)}")
 
-    # inserting pr labels
-    # we are using pr_src_id and pull_request_id to determine if the label is already in the database.
-    pr_label_natural_keys = ['pr_src_id', 'pull_request_id']
-    session.insert_data(pr_label_dicts, PullRequestLabel, pr_label_natural_keys)
-  
-    # inserting pr assignees
-    # we are using pr_assignee_src_id and pull_request_id to determine if the label is already in the database.
-    pr_assignee_natural_keys = ['pr_assignee_src_id', 'pull_request_id']
-    session.insert_data(pr_assignee_dicts, PullRequestAssignee, pr_assignee_natural_keys)
+            # add the pull_request_id to the labels, assignees, reviewers, or metadata then add them to a list of dicts that will be inserted soon
+            dict_key = "pull_request_id"
+            pr_label_dicts += add_key_value_pair_to_list_of_dicts(other_pr_data["labels"], dict_key, pull_request_id)
+            pr_assignee_dicts += add_key_value_pair_to_list_of_dicts(other_pr_data["assignees"], dict_key, pull_request_id)
+            pr_reviewer_dicts += add_key_value_pair_to_list_of_dicts(other_pr_data["reviewers"], dict_key, pull_request_id)
+            pr_metadata_dicts += add_key_value_pair_to_list_of_dicts(other_pr_data["metadata"], dict_key, pull_request_id)
 
- 
-    # inserting pr assignees
-    # we are using pr_src_id and pull_request_id to determine if the label is already in the database.
-    pr_reviewer_natural_keys = ["pull_request_id", "pr_reviewer_src_id"]
-    session.insert_data(pr_reviewer_dicts, PullRequestReviewer, pr_reviewer_natural_keys)
+            pr_contributors.append(
+                {
+                "pull_request_id": pull_request_id,
+                "contributor": other_pr_data["contributor"]
+                }
+            )
+
+        # starting task to process pr contributors
+        # process_contributors.s(pr_contributors, PullRequests).apply_async()
+            
+
+        logger.info(f"{task_name}: Inserting other pr data of lengths: Labels: {len(pr_label_dicts)} - Assignees: {len(pr_assignee_dicts)} - Reviewers: {len(pr_reviewer_dicts)} - Metadata: {len(pr_metadata_dicts)}")
+
+        # inserting pr labels
+        # we are using pr_src_id and pull_request_id to determine if the label is already in the database.
+        pr_label_natural_keys = ['pr_src_id', 'pull_request_id']
+        session.insert_data(pr_label_dicts, PullRequestLabel, pr_label_natural_keys)
     
-    # inserting pr metadata
-    # we are using pull_request_id, pr_head_or_base, and pr_sha to determine if the label is already in the database.
-    pr_metadata_natural_keys = ['pull_request_id', 'pr_head_or_base', 'pr_sha']
-    session.insert_data(pr_metadata_dicts, PullRequestMeta, pr_metadata_natural_keys)
+        # inserting pr assignees
+        # we are using pr_assignee_src_id and pull_request_id to determine if the label is already in the database.
+        pr_assignee_natural_keys = ['pr_assignee_src_id', 'pull_request_id']
+        session.insert_data(pr_assignee_dicts, PullRequestAssignee, pr_assignee_natural_keys)
+
+    
+        # inserting pr assignees
+        # we are using pr_src_id and pull_request_id to determine if the label is already in the database.
+        pr_reviewer_natural_keys = ["pull_request_id", "pr_reviewer_src_id"]
+        session.insert_data(pr_reviewer_dicts, PullRequestReviewer, pr_reviewer_natural_keys)
+        
+        # inserting pr metadata
+        # we are using pull_request_id, pr_head_or_base, and pr_sha to determine if the label is already in the database.
+        pr_metadata_natural_keys = ['pull_request_id', 'pr_head_or_base', 'pr_sha']
+        session.insert_data(pr_metadata_dicts, PullRequestMeta, pr_metadata_natural_keys)
 
 
 
@@ -444,16 +442,16 @@ def collect_events(repo_git: str):
     logger = logging.getLogger(collect_events.__name__)
 
     logger.info(f"Collecting Github events for {owner}/{repo}")
-    
-        # define GithubTaskSession to handle insertions, and store oauth keys 
-    session = GithubTaskSession(logger)
 
-    repo_id = session.query(Repo).filter(Repo.repo_git == repo_git).one().repo_id
-    
     url = f"https://api.github.com/repos/{owner}/{repo}/issues/events"
     
-    # returns an iterable of all issues at this url (this essentially means you can treat the issues variable as a list of the issues)
-    events = GithubPaginator(url, session.oauths, logger)
+        # define GithubTaskSession to handle insertions, and store oauth keys 
+    with GithubTaskSession(logger) as session:
+
+        repo_id = session.query(Repo).filter(Repo.repo_git == repo_git).one().repo_id
+    
+        # returns an iterable of all issues at this url (this essentially means you can treat the issues variable as a list of the issues)
+        events = GithubPaginator(url, session.oauths, logger)
 
     index = 0
 
@@ -479,9 +477,7 @@ def collect_events(repo_git: str):
 def process_events(events, task_name, repo_id):
 
     logger = logging.getLogger(process_events.__name__)
-        # define GithubTaskSession to handle insertions, and store oauth keys 
-    session = GithubTaskSession(logger)
-
+    
     tool_source = "Github events task"
     tool_version = "2.0"
     data_source = "Github API"
@@ -490,74 +486,76 @@ def process_events(events, task_name, repo_id):
     issue_event_dicts = []
     contributors = []
 
-    event_len = len(events)
-    for index, event in enumerate(events):
+    with GithubTaskSession(logger) as session:
 
-        event, contributor = process_github_event_contributors(logger, event, tool_source, tool_version, data_source)
+        event_len = len(events)
+        for index, event in enumerate(events):
 
-        if 'pull_request' in list(event["issue"].keys()):
-            pr_url = event["issue"]["pull_request"]["url"]
+            event, contributor = process_github_event_contributors(logger, event, tool_source, tool_version, data_source)
 
-            try:
-                start_time = time.time()
-                related_pr = session.query(PullRequest).filter(PullRequest.pr_url == pr_url).one()
-            except s.orm.exc.NoResultFound:
-                logger.info("Could not find related pr")
-                logger.info(f"We were searching for: {pr_url}")
-                # TODO: Add table to log all errors
-                logger.info("Skipping")
-                continue
+            if 'pull_request' in list(event["issue"].keys()):
+                pr_url = event["issue"]["pull_request"]["url"]
 
-            pr_event_dicts.append(
-                extract_pr_event_data(event, related_pr.pull_request_id, platform_id, repo_id,
-                                      tool_source, tool_version, data_source)
-            )
+                try:
+                    start_time = time.time()
+                    related_pr = session.query(PullRequest).filter(PullRequest.pr_url == pr_url).one()
+                except s.orm.exc.NoResultFound:
+                    logger.info("Could not find related pr")
+                    logger.info(f"We were searching for: {pr_url}")
+                    # TODO: Add table to log all errors
+                    logger.info("Skipping")
+                    continue
 
-        else:
-            issue_url = event["issue"]["url"]
+                pr_event_dicts.append(
+                    extract_pr_event_data(event, related_pr.pull_request_id, platform_id, repo_id,
+                                        tool_source, tool_version, data_source)
+                )
 
-            try:
-                start_time = time.time()
-                related_issue = session.query(Issue).filter(Issue.issue_url == issue_url).one()
-            except s.orm.exc.NoResultFound:
-                logger.info("Could not find related pr")
-                logger.info(f"We were searching for: {issue_url}")
-                # TODO: Add table to log all errors
-                logger.info("Skipping")
-                continue
+            else:
+                issue_url = event["issue"]["url"]
 
-            issue_event_dicts.append(
-                extract_issue_event_data(event, related_issue.issue_id, platform_id, repo_id,
-                                         tool_source, tool_version, data_source)
-            )
-        
-        # add contributor to list after porcessing the event, 
-        # so if it fails processing for some reason the contributor is not inserted
-        # NOTE: contributor is none when there is no contributor data on the event
-        if contributor:
-            contributors.append(contributor)
+                try:
+                    start_time = time.time()
+                    related_issue = session.query(Issue).filter(Issue.issue_url == issue_url).one()
+                except s.orm.exc.NoResultFound:
+                    logger.info("Could not find related pr")
+                    logger.info(f"We were searching for: {issue_url}")
+                    # TODO: Add table to log all errors
+                    logger.info("Skipping")
+                    continue
 
-    # remove contributors that were found in the data more than once
-    contributors = remove_duplicate_dicts(contributors)
+                issue_event_dicts.append(
+                    extract_issue_event_data(event, related_issue.issue_id, platform_id, repo_id,
+                                            tool_source, tool_version, data_source)
+                )
+            
+            # add contributor to list after porcessing the event, 
+            # so if it fails processing for some reason the contributor is not inserted
+            # NOTE: contributor is none when there is no contributor data on the event
+            if contributor:
+                contributors.append(contributor)
 
-    session.insert_data(contributors, Contributor, ["cntrb_login"])
+        # remove contributors that were found in the data more than once
+        contributors = remove_duplicate_dicts(contributors)
 
-    issue_events_len = len(issue_event_dicts)
-    pr_events_len = len(pr_event_dicts)
-    if event_len != (issue_events_len + pr_events_len):
+        session.insert_data(contributors, Contributor, ["cntrb_login"])
 
-        unassigned_events = event_len - issue_events_len - pr_events_len
+        issue_events_len = len(issue_event_dicts)
+        pr_events_len = len(pr_event_dicts)
+        if event_len != (issue_events_len + pr_events_len):
 
-        self.logger.error(f"{task_name}: {event_len} events were processed, but {pr_events_len} pr events were found and related to a pr, and {issue_events_len} issue events were found and related to an issue. For some reason {unassigned_events} events were not able to be processed. This is usually because pull requests or issues have not been collected, and the events are skipped because they cannot be related to a pr or issue")
+            unassigned_events = event_len - issue_events_len - pr_events_len
 
-    logger.info(f"{task_name}: Inserting {len(pr_event_dicts)} pr events and {len(issue_event_dicts)} issue events")
+            self.logger.error(f"{task_name}: {event_len} events were processed, but {pr_events_len} pr events were found and related to a pr, and {issue_events_len} issue events were found and related to an issue. For some reason {unassigned_events} events were not able to be processed. This is usually because pull requests or issues have not been collected, and the events are skipped because they cannot be related to a pr or issue")
 
-    # TODO: Could replace this with "id" but it isn't stored on the table for some reason
-    pr_event_natural_keys = ["node_id"]
-    session.insert_data(pr_event_dicts, PullRequestEvent, pr_event_natural_keys)
+        logger.info(f"{task_name}: Inserting {len(pr_event_dicts)} pr events and {len(issue_event_dicts)} issue events")
 
-    issue_event_natural_keys = ["issue_id", "issue_event_src_id"]
-    session.insert_data(issue_event_dicts, IssueEvent, issue_event_natural_keys)
+        # TODO: Could replace this with "id" but it isn't stored on the table for some reason
+        pr_event_natural_keys = ["node_id"]
+        session.insert_data(pr_event_dicts, PullRequestEvent, pr_event_natural_keys)
+
+        issue_event_natural_keys = ["issue_id", "issue_event_src_id"]
+        session.insert_data(issue_event_dicts, IssueEvent, issue_event_natural_keys)
 
 
 # TODO: Should we skip an event if there is no contributor to resolve it o
@@ -582,17 +580,17 @@ def collect_issue_and_pr_comments(repo_git: str) -> None:
     # define logger for task
     logger = logging.getLogger(collect_issue_and_pr_comments.__name__)
     logger.info(f"Collecting github comments for {owner}/{repo}")
-    
-    # define database task session, that also holds autentication keys the GithubPaginator needs
-    session = GithubTaskSession(logger)
-
-    repo_id = session.query(Repo).filter(Repo.repo_git == repo_git).one().repo_id
 
     # url to get issue and pull request comments
     url = f"https://api.github.com/repos/{owner}/{repo}/issues/comments"
     
-    # returns an iterable of all issues at this url (this essentially means you can treat the issues variable as a list of the issues)
-    messages = GithubPaginator(url, session.oauths, logger)
+    # define database task session, that also holds autentication keys the GithubPaginator needs
+    with GithubTaskSession(logger) as session:
+
+        repo_id = session.query(Repo).filter(Repo.repo_git == repo_git).one().repo_id
+    
+        # returns an iterable of all issues at this url (this essentially means you can treat the issues variable as a list of the issues)
+        messages = GithubPaginator(url, session.oauths, logger)
 
     num_pages = messages.get_num_pages()
     ids = []
@@ -618,8 +616,7 @@ def process_messages(messages, task_name, repo_id):
     # define logger for task
     logger = logging.getLogger(process_messages.__name__)
     
-    # define database task session, that also holds autentication keys the GithubPaginator needs
-    session = GithubTaskSession(logger)
+    
 
     tool_source = "Pr comment task"
     tool_version = "2.0"
@@ -636,114 +633,116 @@ def process_messages(messages, task_name, repo_id):
     if len(messages) == 0:
         logger.info(f"{task_name}: No messages to process")
 
-    for index, message in enumerate(messages):
+    with GithubTaskSession(logger) as session:
 
-        related_pr_of_issue_found = False
+        for index, message in enumerate(messages):
 
-        # this adds the cntrb_id to the message data
-        # the returned contributor will be added to the contributors list later, if the related issue or pr are found
-        # this logic is used so we don't insert a contributor when the related message isn't inserted
-        message, contributor = process_github_comment_contributors(message, tool_source, tool_version, data_source)
+            related_pr_of_issue_found = False
 
-        if is_issue_message(message["html_url"]):
+            # this adds the cntrb_id to the message data
+            # the returned contributor will be added to the contributors list later, if the related issue or pr are found
+            # this logic is used so we don't insert a contributor when the related message isn't inserted
+            message, contributor = process_github_comment_contributors(message, tool_source, tool_version, data_source)
 
-            try:
-                related_issue = session.query(Issue).filter(Issue.issue_url == message["issue_url"]).one()
-                related_pr_of_issue_found = True
+            if is_issue_message(message["html_url"]):
 
-            except s.orm.exc.NoResultFound:
-                logger.info("Could not find related pr")
-                logger.info(f"We were searching for: {message['id']}")
-                logger.info("Skipping")
-                continue
+                try:
+                    related_issue = session.query(Issue).filter(Issue.issue_url == message["issue_url"]).one()
+                    related_pr_of_issue_found = True
 
-            issue_id = related_issue.issue_id
+                except s.orm.exc.NoResultFound:
+                    logger.info("Could not find related pr")
+                    logger.info(f"We were searching for: {message['id']}")
+                    logger.info("Skipping")
+                    continue
 
-            issue_message_ref_data = extract_needed_issue_message_ref_data(message, issue_id, repo_id, tool_source, tool_version, data_source)
+                issue_id = related_issue.issue_id
 
-            message_ref_mapping_data.append(
-                {
-                    "platform_msg_id": message["id"],
-                    "msg_ref_data": issue_message_ref_data,
-                    "is_issue": True
-                }
-            )
+                issue_message_ref_data = extract_needed_issue_message_ref_data(message, issue_id, repo_id, tool_source, tool_version, data_source)
 
-        else:
+                message_ref_mapping_data.append(
+                    {
+                        "platform_msg_id": message["id"],
+                        "msg_ref_data": issue_message_ref_data,
+                        "is_issue": True
+                    }
+                )
 
-            try:
-                related_pr = session.query(PullRequest).filter(PullRequest.pr_issue_url == message["issue_url"]).one()
-                related_pr_of_issue_found = True
+            else:
 
-            except s.orm.exc.NoResultFound:
-                logger.info("Could not find related pr")
-                logger.info(f"We were searching for: {message['issue_url']}")
-                logger.info("Skipping")
-                continue
+                try:
+                    related_pr = session.query(PullRequest).filter(PullRequest.pr_issue_url == message["issue_url"]).one()
+                    related_pr_of_issue_found = True
 
-            pull_request_id = related_pr.pull_request_id
+                except s.orm.exc.NoResultFound:
+                    logger.info("Could not find related pr")
+                    logger.info(f"We were searching for: {message['issue_url']}")
+                    logger.info("Skipping")
+                    continue
 
-            pr_message_ref_data = extract_needed_pr_message_ref_data(message, pull_request_id, repo_id, tool_source, tool_version, data_source)
+                pull_request_id = related_pr.pull_request_id
 
-            message_ref_mapping_data.append(
-                {
-                    "platform_msg_id": message["id"],
-                    "msg_ref_data": pr_message_ref_data,
-                    "is_issue": False
-                }
-            )
+                pr_message_ref_data = extract_needed_pr_message_ref_data(message, pull_request_id, repo_id, tool_source, tool_version, data_source)
+
+                message_ref_mapping_data.append(
+                    {
+                        "platform_msg_id": message["id"],
+                        "msg_ref_data": pr_message_ref_data,
+                        "is_issue": False
+                    }
+                )
+            
+            if related_pr_of_issue_found:
+
+                message_dicts.append(
+                                extract_needed_message_data(message, platform_id, repo_id, tool_source, tool_version, data_source)
+                )
+
+                contributors.append(contributor)
+
+        contributors = remove_duplicate_dicts(contributors)
+
+        logger.info(f"Inserting {len(contributors)} contributors")
+
+        session.insert_data(contributors, Contributor, ["cntrb_login"])
+
         
-        if related_pr_of_issue_found:
+        logger.info(f"Inserting {len(message_dicts)} messages")
+        message_natural_keys = ["platform_msg_id"]
+        message_return_columns = ["msg_id", "platform_msg_id"]
+        message_return_data = session.insert_data(message_dicts, Message, message_natural_keys, message_return_columns)
 
-            message_dicts.append(
-                            extract_needed_message_data(message, platform_id, repo_id, tool_source, tool_version, data_source)
-            )
+        pr_message_ref_dicts = []
+        issue_message_ref_dicts = []
+        for mapping_data in message_ref_mapping_data:
 
-            contributors.append(contributor)
+            value = mapping_data["platform_msg_id"]
+            key = "platform_msg_id"
 
-    contributors = remove_duplicate_dicts(contributors)
+            issue_or_pr_message = find_dict_in_list_of_dicts(message_return_data, key, value)
 
-    logger.info(f"Inserting {len(contributors)} contributors")
+            if issue_or_pr_message:
 
-    session.insert_data(contributors, Contributor, ["cntrb_login"])
+                msg_id = issue_or_pr_message["msg_id"]
+            else:
+                print("Count not find issue or pull request message to map to")
+                continue
 
-    
-    logger.info(f"Inserting {len(message_dicts)} messages")
-    message_natural_keys = ["platform_msg_id"]
-    message_return_columns = ["msg_id", "platform_msg_id"]
-    message_return_data = session.insert_data(message_dicts, Message, message_natural_keys, message_return_columns)
+            message_ref_data = mapping_data["msg_ref_data"]
+            message_ref_data["msg_id"] = msg_id 
 
-    pr_message_ref_dicts = []
-    issue_message_ref_dicts = []
-    for mapping_data in message_ref_mapping_data:
+            if mapping_data["is_issue"] is True:
+                issue_message_ref_dicts.append(message_ref_data)
+            else:
+                pr_message_ref_dicts.append(message_ref_data)
 
-        value = mapping_data["platform_msg_id"]
-        key = "platform_msg_id"
+        pr_message_ref_natural_keys = ["pull_request_id", "pr_message_ref_src_comment_id"]
+        session.insert_data(pr_message_ref_dicts, PullRequestMessageRef, pr_message_ref_natural_keys)
 
-        issue_or_pr_message = find_dict_in_list_of_dicts(message_return_data, key, value)
+        issue_message_ref_natural_keys = ["issue_id", "issue_msg_ref_src_comment_id"]
+        session.insert_data(issue_message_ref_dicts, IssueMessageRef, issue_message_ref_natural_keys)
 
-        if issue_or_pr_message:
-
-            msg_id = issue_or_pr_message["msg_id"]
-        else:
-            print("Count not find issue or pull request message to map to")
-            continue
-
-        message_ref_data = mapping_data["msg_ref_data"]
-        message_ref_data["msg_id"] = msg_id 
-
-        if mapping_data["is_issue"] is True:
-            issue_message_ref_dicts.append(message_ref_data)
-        else:
-            pr_message_ref_dicts.append(message_ref_data)
-
-    pr_message_ref_natural_keys = ["pull_request_id", "pr_message_ref_src_comment_id"]
-    session.insert_data(pr_message_ref_dicts, PullRequestMessageRef, pr_message_ref_natural_keys)
-
-    issue_message_ref_natural_keys = ["issue_id", "issue_msg_ref_src_comment_id"]
-    session.insert_data(issue_message_ref_dicts, IssueMessageRef, issue_message_ref_natural_keys)
-
-    logger.info(f"{task_name}: Inserted {len(message_dicts)} messages. {len(issue_message_ref_dicts)} from issues and {len(pr_message_ref_dicts)} from prs")
+        logger.info(f"{task_name}: Inserted {len(message_dicts)} messages. {len(issue_message_ref_dicts)} from issues and {len(pr_message_ref_dicts)} from prs")
 
 
 
@@ -765,132 +764,133 @@ def pull_request_review_comments(repo_git: str) -> None:
 
     owner, repo = get_owner_repo(repo_git)
 
-    logger = logging.getLogger(pull_request_review_comments.__name__)
-    
-    # define GithubTaskSession to handle insertions, and store oauth keys 
-    session = GithubTaskSession(logger)
-
-    logger.info(f"Collecting pull request comments for {owner}/{repo}")
-
     url = f"https://api.github.com/repos/{owner}/{repo}/pulls/comments"
 
-    # returns an iterable of all issues at this url (this essentially means you can treat the issues variable as a list of the issues)
-    pr_review_comments = GithubPaginator(url, session.oauths, logger)
-
-    # get repo_id
-    repo_id = session.query(Repo).filter(Repo.repo_git == repo_git).one().repo_id
-
-
-    tool_source = "Pr review comment task"
-    tool_version = "2.0"
-    data_source = "Github API"
-
-    pr_review_comment_dicts = []
-    pr_review_msg_mapping_data = []
-
-    pr_review_comments_len = len(pr_review_comments)
-    logger.info(f"Pr comments len: {pr_review_comments_len}")
-    for index, comment in enumerate(pr_review_comments):
-
-        pr_review_id = comment["pull_request_review_id"]
-
-        try:
-            related_pr_review = PullRequestReviews.query.filter_by(pr_review_src_id=pr_review_id).one()
-
-        # if we cannot find a pr review to relate the message to, then we skip the message and it is not inserted
-        except s.orm.exc.NoResultFound:
-            logger.info("Could not find related pr")
-            logger.info(f"We were searching for pr review with id: {pr_review_id}")
-            logger.info("Skipping")
-            continue
-
-        pr_review_comment_dicts.append(
-                                extract_needed_message_data(comment, platform_id, repo_id, tool_source, tool_version, data_source)
-        )
-
-        pr_review_id = related_pr_review.pr_review_id
-
-        pr_comment_ref = extract_pr_review_message_ref_data(comment, pr_review_id, repo_id, tool_source, tool_version, data_source)
-
-        pr_review_msg_mapping_data.append(
-             {
-                "platform_msg_id": message["id"],
-                "msg_ref_data": pr_comment_ref,
-             }
-         )
+    logger = logging.getLogger(pull_request_review_comments.__name__)
+    logger.info(f"Collecting pull request comments for {owner}/{repo}")
     
-    logger.info(f"Inserting {len(pr_review_comment_dicts)} pr review comments")
-    message_natural_keys = ["platform_msg_id"]
-    message_return_columns = ["msg_id", "platform_msg_id"]
-    message_return_data = session.insert_data(pr_review_comment_dicts, Message, message_natural_keys, message_return_columns)
+    # define GithubTaskSession to handle insertions, and store oauth keys 
+    with GithubTaskSession(logger) as session:
+
+        # returns an iterable of all issues at this url (this essentially means you can treat the issues variable as a list of the issues)
+        pr_review_comments = GithubPaginator(url, session.oauths, logger)
+
+        # get repo_id
+        repo_id = session.query(Repo).filter(Repo.repo_git == repo_git).one().repo_id
 
 
-    pr_review_message_ref_insert_data = []
-    for mapping_data in pr_review_msg_mapping_data:
+        tool_source = "Pr review comment task"
+        tool_version = "2.0"
+        data_source = "Github API"
 
-        value = mapping_data["platform_msg_id"]
-        key = "platform_msg_id"
+        pr_review_comment_dicts = []
+        pr_review_msg_mapping_data = []
 
-        issue_or_pr_message = find_dict_in_list_of_dicts(message_return_data, key, value)
+        pr_review_comments_len = len(pr_review_comments)
+        logger.info(f"Pr comments len: {pr_review_comments_len}")
+        for index, comment in enumerate(pr_review_comments):
 
-        if issue_or_pr_message:
+            pr_review_id = comment["pull_request_review_id"]
 
-            msg_id = issue_or_pr_message["msg_id"]
-        else:
-            print("Count not find issue or pull request message to map to")
-            continue
+            try:
+                related_pr_review = PullRequestReviews.query.filter_by(pr_review_src_id=pr_review_id).one()
 
-        message_ref_data = mapping_data["msg_ref_data"]
-        message_ref_data["msg_id"] = msg_id 
+            # if we cannot find a pr review to relate the message to, then we skip the message and it is not inserted
+            except s.orm.exc.NoResultFound:
+                logger.info("Could not find related pr")
+                logger.info(f"We were searching for pr review with id: {pr_review_id}")
+                logger.info("Skipping")
+                continue
 
-        pr_review_message_ref_insert_data.append(message_ref_data)
-       
+            pr_review_comment_dicts.append(
+                                    extract_needed_message_data(comment, platform_id, repo_id, tool_source, tool_version, data_source)
+            )
 
-    logger.info(f"Inserting {len(pr_review_message_ref_insert_data)} pr review refs")
-    pr_comment_ref_natural_keys = ["pr_review_msg_src_id"]
-    session.insert_data(pr_review_message_ref_insert_data, PullRequestReviewMessageRef, pr_comment_ref_natural_keys)
+            pr_review_id = related_pr_review.pr_review_id
+
+            pr_comment_ref = extract_pr_review_message_ref_data(comment, pr_review_id, repo_id, tool_source, tool_version, data_source)
+
+            pr_review_msg_mapping_data.append(
+                {
+                    "platform_msg_id": message["id"],
+                    "msg_ref_data": pr_comment_ref,
+                }
+            )
+        
+        logger.info(f"Inserting {len(pr_review_comment_dicts)} pr review comments")
+        message_natural_keys = ["platform_msg_id"]
+        message_return_columns = ["msg_id", "platform_msg_id"]
+        message_return_data = session.insert_data(pr_review_comment_dicts, Message, message_natural_keys, message_return_columns)
+
+
+        pr_review_message_ref_insert_data = []
+        for mapping_data in pr_review_msg_mapping_data:
+
+            value = mapping_data["platform_msg_id"]
+            key = "platform_msg_id"
+
+            issue_or_pr_message = find_dict_in_list_of_dicts(message_return_data, key, value)
+
+            if issue_or_pr_message:
+
+                msg_id = issue_or_pr_message["msg_id"]
+            else:
+                print("Count not find issue or pull request message to map to")
+                continue
+
+            message_ref_data = mapping_data["msg_ref_data"]
+            message_ref_data["msg_id"] = msg_id 
+
+            pr_review_message_ref_insert_data.append(message_ref_data)
+        
+
+        logger.info(f"Inserting {len(pr_review_message_ref_insert_data)} pr review refs")
+        pr_comment_ref_natural_keys = ["pr_review_msg_src_id"]
+        session.insert_data(pr_review_message_ref_insert_data, PullRequestReviewMessageRef, pr_comment_ref_natural_keys)
 
 
 # do this task after others because we need to add the multi threading like we did it before
 @celery.task
 def pull_request_reviews(repo_git: str, pr_number_list: [int]) -> None:
 
+    logger = logging.getLogger(pull_request_reviews.__name__)
+
     owner, repo = get_owner_repo(repo_git)
 
     pr_number_list = sorted(pr_number_list, reverse=False) 
 
-    repo_id = session.query(Repo).filter(Repo.repo_git == repo_git).one().repo_id
-
     tool_version = "2.0"
     data_source = "Github API"
 
-    logger = logging.getLogger(pull_request_reviews.__name__)
+    with GithubTaskSession(logger) as session:
+
+        repo_id = session.query(Repo).filter(Repo.repo_git == repo_git).one().repo_id
+
         # define GithubTaskSession to handle insertions, and store oauth keys 
-    session = GithubTaskSession(logger)
 
-    logger.info(f"Collecting pull request reviews for {owner}/{repo}")
+        logger.info(f"Collecting pull request reviews for {owner}/{repo}")
 
-    pr_review_dicts = []
+        pr_review_dicts = []
 
-    good_pr_numbers = []
-
-
-    for index, pr_number in enumerate(pr_number_list):
+        good_pr_numbers = []
 
 
-        logger.info(f"Processing pr number: {pr_number}")
-
-        reviews = PullRequest(session, owner, repo, pr_number).get_reviews_collection()
-
-        review_list = list(reviews)
-
-        for review in review_list:
-            print(review["comments"])
-
-        pr_review_dicts += extract_need_pr_review_data(reviews, platform_id, repo_id, tool_version, data_source)
+        for index, pr_number in enumerate(pr_number_list):
 
 
-    print(len(pr_review_dicts))
+            logger.info(f"Processing pr number: {pr_number}")
+
+            reviews = PullRequest(session, owner, repo, pr_number).get_reviews_collection()
+
+            review_list = list(reviews)
+
+            for review in review_list:
+                print(review["comments"])
+
+            pr_review_dicts += extract_need_pr_review_data(reviews, platform_id, repo_id, tool_version, data_source)
+
+
+        print(len(pr_review_dicts))
 
 
 
@@ -929,49 +929,50 @@ the issue is that most of the time we filter out needed
 def process_contributors():
 
     logger = logging.getLogger(process_contributors.__name__)
-    session = GithubTaskSession(logger)
 
     tool_source = "Contributors task"
     tool_version = "2.0"
     data_source = "Github API"
 
-    contributors = session.query(Contributor).filter(Contributor.data_source == data_source, Contributor.cntrb_created_at == None, Contributor.cntrb_last_used == None).all()
+    with GithubTaskSession(logger) as session:
 
-    contributors_len = len(contributors)
+        contributors = session.query(Contributor).filter(Contributor.data_source == data_source, Contributor.cntrb_created_at == None, Contributor.cntrb_last_used == None).all()
 
-    if contributors_len == 0:
-        logger.info("No contributors to enrich...returning...")
-        return
+        contributors_len = len(contributors)
 
-    print(f"Length of contributors to enrich: {contributors_len}")
-    enriched_contributors = []
-    for index, contributor in enumerate(contributors):
+        if contributors_len == 0:
+            logger.info("No contributors to enrich...returning...")
+            return
 
-        logger.info(f"Contributor {index + 1} of {contributors_len}")
+        print(f"Length of contributors to enrich: {contributors_len}")
+        enriched_contributors = []
+        for index, contributor in enumerate(contributors):
 
-        contributor_dict = contributor.__dict__
+            logger.info(f"Contributor {index + 1} of {contributors_len}")
 
-        del contributor_dict["_sa_instance_state"]
+            contributor_dict = contributor.__dict__
 
-        url = f"https://api.github.com/users/{contributor_dict['cntrb_login']}" 
+            del contributor_dict["_sa_instance_state"]
 
-        data = retrieve_dict_data(url, session)
+            url = f"https://api.github.com/users/{contributor_dict['cntrb_login']}" 
 
-        if data is None:
-            print(f"Unable to get contributor data for: {contributor_dict['cntrb_login']}")
-            continue
+            data = retrieve_dict_data(url, session)
 
-        new_contributor_data = {
-            "cntrb_created_at": data["created_at"],
-            "cntrb_last_used": data["updated_at"]
-        }
+            if data is None:
+                print(f"Unable to get contributor data for: {contributor_dict['cntrb_login']}")
+                continue
 
-        contributor_dict.update(new_contributor_data)
+            new_contributor_data = {
+                "cntrb_created_at": data["created_at"],
+                "cntrb_last_used": data["updated_at"]
+            }
 
-        enriched_contributors.append(contributor_dict)
+            contributor_dict.update(new_contributor_data)
 
-    logger.info(f"Enriching {len(enriched_contributors)} contributors")
-    session.insert_data(enriched_contributors, Contributor, ["cntrb_login"])
+            enriched_contributors.append(contributor_dict)
+
+        logger.info(f"Enriching {len(enriched_contributors)} contributors")
+        session.insert_data(enriched_contributors, Contributor, ["cntrb_login"])
 
 
 
