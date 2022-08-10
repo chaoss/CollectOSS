@@ -6,6 +6,15 @@ Your choice: "
 
 target=$1
 
+function get_github_username(){
+    echo
+    echo "Please provide your username for Github."
+    echo "** This is required for Augur to clone Github repos ***"
+    read -p "GitHub username: " github_username
+    echo
+}
+
+
 function get_github_api_key(){
     echo
     echo "Please provide a valid GitHub API key."
@@ -13,6 +22,14 @@ function get_github_api_key(){
     echo "https://oss-augur.readthedocs.io/en/dev/getting-started/installation.html#backend"
     echo "** This is required for Augur to gather data ***"
     read -p "GitHub API Key: " github_api_key
+    echo
+}
+
+function get_gitlab_username(){
+    echo
+    echo "Please provide your username for GitLab."
+    echo "** This is required for Augur to clone GitLab repos ***"
+    read -p "GitLab username: " gitlab_username
     echo
 }
 
@@ -84,6 +101,17 @@ function create_config(){
       github_api_key=$AUGUR_GITHUB_API_KEY
     fi
 
+    if [[ -z "${AUGUR_GITHUB_USERNAME}" ]]
+    then
+        get_github_username
+    else
+    echo
+    echo "Found AUGUR_GITHUB_USERNAME environment variable with value $AUGUR_GITHUB_USERNAME"
+    echo "Using it in the config" 
+    echo "Please unset AUGUR_GITHUB_USERNAME if you would like to be prompted for a github username"
+      github_username=$AUGUR_GITHUB_USERNAME
+    fi
+
     if [[ -z "${AUGUR_GITLAB_API_KEY}" ]]
     then
         get_gitlab_api_key
@@ -93,6 +121,18 @@ function create_config(){
     echo "Using it in the config" 
     echo "Please unset AUGUR_GITLAB_API_KEY if you would like to be prompted for a gitlab api key"
       gitlab_api_key=$AUGUR_GITLAB_API_KEY
+    fi
+
+
+    if [[ -z "${AUGUR_GITLAB_USERNAME}" ]]
+    then
+        get_gitlab_username
+    else
+    echo
+    echo "Found AUGUR_GITLAB_USERNAME environment variable with value $AUGUR_GITLAB_USERNAME"
+    echo "Using it in the config" 
+    echo "Please unset AUGUR_GITLAB_USERNAME if you would like to be prompted for a gitlab username"
+      gitlab_username=$AUGUR_GITLAB_USERNAME
     fi
 
     if [[ -z "${AUGUR_FACADE_REPO_DIRECTORY}" ]]
@@ -109,6 +149,13 @@ function create_config(){
     
     cmd=( augur config init --github_api_key $github_api_key --gitlab_api_key $gitlab_api_key --facade_repo_directory $facade_repo_directory )
 
+    #Create and cache credentials for github and gitlab
+    touch $facade_repo_directory/.git-credentials
+    
+    echo "https://$github_username:$github_api_key@github.com" >> $facade_repo_directory/.git-credentials
+    echo "https://$gitlab_username:$gitlab_api_key@gitlab.com" >> $facade_repo_directory/.git-credentials
+
+    git config --global credential.helper "store --file $facade_repo_directory/.git-credentials"
     "${cmd[@]}" 
 }
 echo

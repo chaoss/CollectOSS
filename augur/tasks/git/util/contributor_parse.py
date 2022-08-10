@@ -480,6 +480,7 @@ def request_dict_from_endpoint(session, url, timeout_wait=10):
         if not response:
             attempts += 1
             continue
+        
         try:
             response_data = response.json()
         except:
