@@ -18,7 +18,7 @@ services:
     image: augurlabs/augur:backend
     build:
       context: .
-      dockerfile: ./util/docker/backend/Dockerfile
+      dockerfile: ./docker/backend/Dockerfile
     volumes:
       - .:/augur
     #   - ./path/to/your/repo_groups.csv:/repo_groups.csv
@@ -40,7 +40,7 @@ services:
     image: augurlabs/augur:viteserver
     build:
       context: .
-      dockerfile: ./util/docker/frontend/dev.dockerfile
+      dockerfile: ./docker/frontend/dev.dockerfile
     volumes:
       - ./frontend:/augur/frontend
     restart: unless-stopped
