@@ -165,10 +165,8 @@ def start_task(repo_git: str):
     secondary_task_group = group(secondary_task_list)
 
     job = chain(
-        facade_commits_model.si(),
-        facade_resolve_contribs.si(),
         start_tasks_group,
-        # secondary_task_group
+        secondary_task_group
     )
 
     job.apply_async()

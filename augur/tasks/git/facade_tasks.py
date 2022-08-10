@@ -372,98 +372,104 @@ def facade_commits_model():
 
     logger = logging.getLogger(facade_commits_model.__name__)
     session = FacadeSession(logger)
+    try:
     
-    # Figure out what we need to do
-    limited_run = session.limited_run
-    delete_marked_repos = session.delete_marked_repos
-    pull_repos = session.pull_repos
-    clone_repos = session.clone_repos
-    check_updates = session.check_updates
-    force_updates = session.force_updates
-    run_analysis = session.run_analysis
-    force_analysis = session.force_analysis
-    nuke_stored_affiliations = session.nuke_stored_affiliations
-    fix_affiliations = session.fix_affiliations
-    force_invalidate_caches = session.force_invalidate_caches
-    rebuild_caches = session.rebuild_caches
-     #if abs((datetime.datetime.strptime(session.cfg.get_setting('aliases_processed')[:-3], 
-        # '%Y-%m-%d %I:%M:%S.%f') - datetime.datetime.now()).total_seconds()) // 3600 > int(session.cfg.get_setting(
-        #   'update_frequency')) else 0
-    force_invalidate_caches = session.force_invalidate_caches
-    create_xlsx_summary_files = session.create_xlsx_summary_files
-    multithreaded = session.multithreaded
+        # Figure out what we need to do
+        limited_run = session.limited_run
+        delete_marked_repos = session.delete_marked_repos
+        pull_repos = session.pull_repos
+        clone_repos = session.clone_repos
+        check_updates = session.check_updates
+        force_updates = session.force_updates
+        run_analysis = session.run_analysis
+        force_analysis = session.force_analysis
+        nuke_stored_affiliations = session.nuke_stored_affiliations
+        fix_affiliations = session.fix_affiliations
+        force_invalidate_caches = session.force_invalidate_caches
+        rebuild_caches = session.rebuild_caches
+        #if abs((datetime.datetime.strptime(session.cfg.get_setting('aliases_processed')[:-3], 
+            # '%Y-%m-%d %I:%M:%S.%f') - datetime.datetime.now()).total_seconds()) // 3600 > int(session.cfg.get_setting(
+            #   'update_frequency')) else 0
+        force_invalidate_caches = session.force_invalidate_caches
+        create_xlsx_summary_files = session.create_xlsx_summary_files
+        multithreaded = session.multithreaded
 
-    facade_init(session)
+        facade_init(session)
 
-    start_time = time.time()
-    session.cfg.log_activity('Quiet','Running facade-worker')
+        start_time = time.time()
+        session.cfg.log_activity('Quiet','Running facade-worker')
 
-    if not limited_run or (limited_run and delete_marked_repos):
-        git_repo_cleanup(session.cfg)
+        if not limited_run or (limited_run and delete_marked_repos):
+            git_repo_cleanup(session.cfg)
 
-    if not limited_run or (limited_run and clone_repos):
-        git_repo_initialize(session.cfg)
+        if not limited_run or (limited_run and clone_repos):
+            git_repo_initialize(session.cfg)
 
-    if not limited_run or (limited_run and check_updates):
-        check_for_repo_updates(session)
+        if not limited_run or (limited_run and check_updates):
+            check_for_repo_updates(session)
 
-    if force_updates:
-        force_repo_updates(session.cfg)
+        if force_updates:
+            force_repo_updates(session.cfg)
 
-    if not limited_run or (limited_run and pull_repos):
-        git_repo_updates(session.cfg)
+        if not limited_run or (limited_run and pull_repos):
+            git_repo_updates(session.cfg)
 
-    if force_analysis:
-        force_repo_analysis(session.cfg)
+        if force_analysis:
+            force_repo_analysis(session.cfg)
 
-    
-    #Give analysis the github interface so that it can make API calls
-    #if not limited_run or (limited_run and run_analysis):
-    analysis(session.cfg, multithreaded, session=session)
-    
-    ### end moved up
+        
+        #Give analysis the github interface so that it can make API calls
+        #if not limited_run or (limited_run and run_analysis):
+        analysis(session.cfg, multithreaded, session=session)
+        
+        ### end moved up
 
-    if nuke_stored_affiliations:
-        nuke_affiliations(session.cfg)
+        if nuke_stored_affiliations:
+            nuke_affiliations(session.cfg)
 
-    session.logger.info(session.cfg)
-    if not limited_run or (limited_run and fix_affiliations):
-        fill_empty_affiliations(session)
+        session.logger.info(session.cfg)
+        if not limited_run or (limited_run and fix_affiliations):
+            fill_empty_affiliations(session)
 
-    if force_invalidate_caches:
-        invalidate_caches(session.cfg)
+        if force_invalidate_caches:
+            invalidate_caches(session.cfg)
 
-    if not limited_run or (limited_run and rebuild_caches):
-        rebuild_unknown_affiliation_and_web_caches(session.cfg)
+        if not limited_run or (limited_run and rebuild_caches):
+            rebuild_unknown_affiliation_and_web_caches(session.cfg)
 
-    if not limited_run or (limited_run and create_xlsx_summary_files):
+        if not limited_run or (limited_run and create_xlsx_summary_files):
 
-        session.cfg.log_activity('Info','Creating summary Excel files')
+            session.cfg.log_activity('Info','Creating summary Excel files')
 
-        # from excel_generators import *
+            # from excel_generators import *
 
-        session.cfg.log_activity('Info','Creating summary Excel files (complete)')
+            session.cfg.log_activity('Info','Creating summary Excel files (complete)')
 
 
-    # All done
-    session.cfg.update_status('Idle')
-    session.cfg.log_activity('Quiet','facade-worker.py completed')
-    
-    elapsed_time = time.time() - start_time
+        # All done
+        session.cfg.update_status('Idle')
+        session.cfg.log_activity('Quiet','facade-worker.py completed')
+        
+        elapsed_time = time.time() - start_time
 
-    print('\nCompleted in %s\n' % timedelta(seconds=int(elapsed_time)))
+        print('\nCompleted in %s\n' % timedelta(seconds=int(elapsed_time)))
 
-    session.cfg.cursor.close()
-    #session.cfg.cursor_people.close()
-    session.cfg.db.close()
+        session.cfg.cursor.close()
+        #session.cfg.cursor_people.close()
+        session.cfg.db.close()
+    finally:
+        session.close()
     #session.cfg.db_people.close()
 
 @celery.task
 def facade_grab_contribs(repo_id):
     logger = logging.getLogger(facade_grab_contribs.__name__)
     session = FacadeSession(logger)
-    
-    grab_committer_list(session,repo_id)
+
+    try:
+        grab_committer_list(session,repo_id)
+    finally:
+        session.close()
     
 
 #Method to parallelize, takes a queue of data and iterates over it
@@ -473,194 +479,198 @@ def process_commit_metadata(contributorQueue,repo_id):
     logger = logging.getLogger(process_commit_metadata.__name__)
     session = FacadeSession(logger)
 
-    for contributor in contributorQueue:
-        # Get the email from the commit data
-        email = contributor['email_raw'] if 'email_raw' in contributor else contributor['email']
-    
-        name = contributor['name']
+    try:
 
-        # check the email to see if it already exists in contributor_aliases
-        try:
-            # Look up email to see if resolved
-            """
-            alias_table_data = interface.db.execute(
-                s.sql.select([s.column('alias_email')]).where(
-                    interface.contributors_aliases_table.c.alias_email == email
-                )
-            ).fetchall()
-            """
-
-
-            alias_table_data = session.query(ContributorsAlias).filter_by(alias_email=email).all()
-            if len(alias_table_data) >= 1:
-                # Move on if email resolved
-
-                #interface.logger.info(
-                #    f"Email {email} has been resolved earlier.")
-
-                continue
-        except Exception as e:
-            session.logger.info(
-                f"alias table query failed with error: {e}")
+        for contributor in contributorQueue:
+            # Get the email from the commit data
+            email = contributor['email_raw'] if 'email_raw' in contributor else contributor['email']
         
-        #Check the unresolved_commits table to avoid hitting endpoints that we know don't have relevant data needlessly
-        try:
+            name = contributor['name']
+
+            # check the email to see if it already exists in contributor_aliases
+            try:
+                # Look up email to see if resolved
+                """
+                alias_table_data = interface.db.execute(
+                    s.sql.select([s.column('alias_email')]).where(
+                        interface.contributors_aliases_table.c.alias_email == email
+                    )
+                ).fetchall()
+                """
+
+
+                alias_table_data = session.query(ContributorsAlias).filter_by(alias_email=email).all()
+                if len(alias_table_data) >= 1:
+                    # Move on if email resolved
+
+                    #interface.logger.info(
+                    #    f"Email {email} has been resolved earlier.")
+
+                    continue
+            except Exception as e:
+                session.logger.info(
+                    f"alias table query failed with error: {e}")
             
-            unresolved_query_result = session.query(UnresolvedCommitEmail).filter_by(name=name).all()
+            #Check the unresolved_commits table to avoid hitting endpoints that we know don't have relevant data needlessly
+            try:
+                
+                unresolved_query_result = session.query(UnresolvedCommitEmail).filter_by(name=name).all()
 
-            if len(unresolved_query_result) >= 1:
+                if len(unresolved_query_result) >= 1:
 
-                #interface.logger.info(f"Commit data with email {email} has been unresolved in the past, skipping...")
+                    #interface.logger.info(f"Commit data with email {email} has been unresolved in the past, skipping...")
 
-                continue
-        except Exception as e:
-            session.logger.info(f"Failed to query unresolved alias table with error: {e}")
-    
-
-        login = None
-    
-        #Check the contributors table for a login for the given name
-        try:
-            contributors_with_matching_name = session.query(Contributor).filter_by(cntrb_full_name=name).one()
-
-            login = contributors_with_matching_name.gh_login
-
-        except Exception as e:
-            session.logger.error(f"Failed local login lookup with error: {e}")
+                    continue
+            except Exception as e:
+                session.logger.info(f"Failed to query unresolved alias table with error: {e}")
         
 
-        # Try to get the login from the commit sha
-        if login == None or login == "":
-            login = get_login_with_commit_hash(session,contributor, repo_id)
-    
-        if login == None or login == "":
-            # Try to get the login from supplemental data if not found with the commit hash
-            login = get_login_with_supplemental_data(session,contributor)
-    
-        if login == None:
-            continue
+            login = None
+        
+            #Check the contributors table for a login for the given name
+            try:
+                contributors_with_matching_name = session.query(Contributor).filter_by(cntrb_full_name=name).one()
 
-        url = ("https://api.github.com/users/" + login)
+                login = contributors_with_matching_name.gh_login
 
-        user_data = request_dict_from_endpoint(session,url)
-
-        if user_data == None:
-            session.logger.warning(
-                f"user_data was unable to be reached. Skipping...")
-            continue
-
-        # Use the email found in the commit data if api data is NULL
-        emailFromCommitData = contributor['email_raw'] if 'email_raw' in contributor else contributor['email']
-
-        session.logger.info(
-            f"Successfully retrieved data from github for email: {emailFromCommitData}")
-
-        # Get name from commit if not found by GitHub
-        name_field = contributor['commit_name'] if 'commit_name' in contributor else contributor['name']
-
-        try:
+            except Exception as e:
+                session.logger.error(f"Failed local login lookup with error: {e}")
             
-            #cntrb_id = AugurUUID(session.platform_id,user_data['id']).to_UUID()
 
-            cntrb_id = GithubUUID()
-            cntrb_id["user"] = int(user_data['id'])
-            cntrb_id["platform"] = session.platform_id
-
-            # try to add contributor to database
-            cntrb = {
-                "cntrb_id" : cntrb_id.to_UUID(),
-                "cntrb_login": user_data['login'],
-                "cntrb_created_at": user_data['created_at'],
-                "cntrb_email": user_data['email'] if 'email' in user_data else None,
-                "cntrb_company": user_data['company'] if 'company' in user_data else None,
-                "cntrb_location": user_data['location'] if 'location' in user_data else None,
-                # "cntrb_type": , dont have a use for this as of now ... let it default to null
-                "cntrb_canonical": user_data['email'] if 'email' in user_data and user_data['email'] is not None else emailFromCommitData,
-                "gh_user_id": user_data['id'],
-                "gh_login": user_data['login'],
-                "gh_url": user_data['url'],
-                "gh_html_url": user_data['html_url'],
-                "gh_node_id": user_data['node_id'],
-                "gh_avatar_url": user_data['avatar_url'],
-                "gh_gravatar_id": user_data['gravatar_id'],
-                "gh_followers_url": user_data['followers_url'],
-                "gh_following_url": user_data['following_url'],
-                "gh_gists_url": user_data['gists_url'],
-                "gh_starred_url": user_data['starred_url'],
-                "gh_subscriptions_url": user_data['subscriptions_url'],
-                "gh_organizations_url": user_data['organizations_url'],
-                "gh_repos_url": user_data['repos_url'],
-                "gh_events_url": user_data['events_url'],
-                "gh_received_events_url": user_data['received_events_url'],
-                "gh_type": user_data['type'],
-                "gh_site_admin": user_data['site_admin'],
-                "cntrb_last_used": None if 'updated_at' not in user_data else user_data['updated_at'],
-                # Get name from commit if api doesn't get it.
-                "cntrb_full_name": name_field if 'name' not in user_data or user_data['name'] is None else user_data['name'],
-                #"tool_source": interface.tool_source,
-                #"tool_version": interface.tool_version,
-                #"data_source": interface.data_source
-            }
-
-            session.logger.info(f"{cntrb}")
-
-        except Exception as e:
-            session.logger.info(f"Error when trying to create cntrb: {e}")
-            continue
-        # Check if the github login exists in the contributors table and add the emails to alias' if it does.
-
-        # Also update the contributor record with commit data if we can.
-        """
-        try:
-            if not resolve_if_login_existing(session,cntrb):
-                try:
-                    #interface.db.execute(
-                    #    interface.contributors_table.insert().values(cntrb))
-                    newContrib = Contributors(**cntrb)
-                    session.add(newContrib)
-                    session.commit()
-                except Exception as e:
-                    session.logger.info(
-                        f"Ran into likely database collision. Assuming contributor exists in database. Error: {e}")
-            else:
-                interface.update_contributor(cntrb)
-        """
+            # Try to get the login from the commit sha
+            if login == None or login == "":
+                login = get_login_with_commit_hash(session,contributor, repo_id)
         
-        #Executes an upsert with sqlalchemy 
-        cntrb_natural_keys = ['cntrb_login']
-        session.insert_data(cntrb,Contributor,cntrb_natural_keys)
-
-        try:
-            # Update alias after insertion. Insertion needs to happen first so we can get the autoincrementkey
-            insert_alias(session,cntrb, emailFromCommitData)
-        except LookupError as e:
-            interface.logger.info(
-                ''.join(traceback.format_exception(None, e, e.__traceback__)))
-            interface.logger.info(
-                f"Contributor id not able to be found in database despite the user_id existing. Something very wrong is happening. Error: {e}")
-            return 
+            if login == None or login == "":
+                # Try to get the login from supplemental data if not found with the commit hash
+                login = get_login_with_supplemental_data(session,contributor)
         
+            if login == None:
+                continue
 
-        
-        # Resolve any unresolved emails if we get to this point.
-        # They will get added to the alias table later
-        # Do this last to absolutely make sure that the email was resolved before we remove it from the unresolved table.
-        query = s.sql.text("""
-            DELETE FROM unresolved_commit_emails
-            WHERE email='{}'
-        """.format(email))
+            url = ("https://api.github.com/users/" + login)
 
-        session.logger.info(f"Updating now resolved email {email}")
+            user_data = request_dict_from_endpoint(session,url)
 
-        try:
-            #interface.db.execute(query)
-            #session.query(UnresolvedCommitEmail).filter(UnresolvedCommitEmail.email == email).delete()
-            #session.commit()
-            session.execute_sql(query)
-        except Exception as e:
+            if user_data == None:
+                session.logger.warning(
+                    f"user_data was unable to be reached. Skipping...")
+                continue
+
+            # Use the email found in the commit data if api data is NULL
+            emailFromCommitData = contributor['email_raw'] if 'email_raw' in contributor else contributor['email']
+
             session.logger.info(
-                f"Deleting now resolved email failed with error: {e}")
-    
+                f"Successfully retrieved data from github for email: {emailFromCommitData}")
+
+            # Get name from commit if not found by GitHub
+            name_field = contributor['commit_name'] if 'commit_name' in contributor else contributor['name']
+
+            try:
+                
+                #cntrb_id = AugurUUID(session.platform_id,user_data['id']).to_UUID()
+
+                cntrb_id = GithubUUID()
+                cntrb_id["user"] = int(user_data['id'])
+                cntrb_id["platform"] = session.platform_id
+
+                # try to add contributor to database
+                cntrb = {
+                    "cntrb_id" : cntrb_id.to_UUID(),
+                    "cntrb_login": user_data['login'],
+                    "cntrb_created_at": user_data['created_at'],
+                    "cntrb_email": user_data['email'] if 'email' in user_data else None,
+                    "cntrb_company": user_data['company'] if 'company' in user_data else None,
+                    "cntrb_location": user_data['location'] if 'location' in user_data else None,
+                    # "cntrb_type": , dont have a use for this as of now ... let it default to null
+                    "cntrb_canonical": user_data['email'] if 'email' in user_data and user_data['email'] is not None else emailFromCommitData,
+                    "gh_user_id": user_data['id'],
+                    "gh_login": user_data['login'],
+                    "gh_url": user_data['url'],
+                    "gh_html_url": user_data['html_url'],
+                    "gh_node_id": user_data['node_id'],
+                    "gh_avatar_url": user_data['avatar_url'],
+                    "gh_gravatar_id": user_data['gravatar_id'],
+                    "gh_followers_url": user_data['followers_url'],
+                    "gh_following_url": user_data['following_url'],
+                    "gh_gists_url": user_data['gists_url'],
+                    "gh_starred_url": user_data['starred_url'],
+                    "gh_subscriptions_url": user_data['subscriptions_url'],
+                    "gh_organizations_url": user_data['organizations_url'],
+                    "gh_repos_url": user_data['repos_url'],
+                    "gh_events_url": user_data['events_url'],
+                    "gh_received_events_url": user_data['received_events_url'],
+                    "gh_type": user_data['type'],
+                    "gh_site_admin": user_data['site_admin'],
+                    "cntrb_last_used": None if 'updated_at' not in user_data else user_data['updated_at'],
+                    # Get name from commit if api doesn't get it.
+                    "cntrb_full_name": name_field if 'name' not in user_data or user_data['name'] is None else user_data['name'],
+                    #"tool_source": interface.tool_source,
+                    #"tool_version": interface.tool_version,
+                    #"data_source": interface.data_source
+                }
+
+                session.logger.info(f"{cntrb}")
+
+            except Exception as e:
+                session.logger.info(f"Error when trying to create cntrb: {e}")
+                continue
+            # Check if the github login exists in the contributors table and add the emails to alias' if it does.
+
+            # Also update the contributor record with commit data if we can.
+            """
+            try:
+                if not resolve_if_login_existing(session,cntrb):
+                    try:
+                        #interface.db.execute(
+                        #    interface.contributors_table.insert().values(cntrb))
+                        newContrib = Contributors(**cntrb)
+                        session.add(newContrib)
+                        session.commit()
+                    except Exception as e:
+                        session.logger.info(
+                            f"Ran into likely database collision. Assuming contributor exists in database. Error: {e}")
+                else:
+                    interface.update_contributor(cntrb)
+            """
+            
+            #Executes an upsert with sqlalchemy 
+            cntrb_natural_keys = ['cntrb_login']
+            session.insert_data(cntrb,Contributor,cntrb_natural_keys)
+
+            try:
+                # Update alias after insertion. Insertion needs to happen first so we can get the autoincrementkey
+                insert_alias(session,cntrb, emailFromCommitData)
+            except LookupError as e:
+                interface.logger.info(
+                    ''.join(traceback.format_exception(None, e, e.__traceback__)))
+                interface.logger.info(
+                    f"Contributor id not able to be found in database despite the user_id existing. Something very wrong is happening. Error: {e}")
+                return 
+            
+
+            
+            # Resolve any unresolved emails if we get to this point.
+            # They will get added to the alias table later
+            # Do this last to absolutely make sure that the email was resolved before we remove it from the unresolved table.
+            query = s.sql.text("""
+                DELETE FROM unresolved_commit_emails
+                WHERE email='{}'
+            """.format(email))
+
+            session.logger.info(f"Updating now resolved email {email}")
+
+            try:
+                #interface.db.execute(query)
+                #session.query(UnresolvedCommitEmail).filter(UnresolvedCommitEmail.email == email).delete()
+                #session.commit()
+                session.execute_sql(query)
+            except Exception as e:
+                session.logger.info(
+                    f"Deleting now resolved email failed with error: {e}")
+        
+    finally:
+        session.close()
     
     return
 
@@ -669,27 +679,31 @@ def link_commits_to_contributor(contributorQueue):
         logger = logging.getLogger(link_commits_to_contributor.__name__)
         session = FacadeSession(logger)
 
-        # # iterate through all the commits with emails that appear in contributors and give them the relevant cntrb_id.
-        # for cntrb_email in contributorQueue:
-        #     logger.debug(
-        #         f"These are the emails and cntrb_id's  returned: {cntrb_email}")
+        try:
+            pass
+            # # iterate through all the commits with emails that appear in contributors and give them the relevant cntrb_id.
+            # for cntrb_email in contributorQueue:
+            #     logger.debug(
+            #         f"These are the emails and cntrb_id's  returned: {cntrb_email}")
 
-        #     try:
-        #         #database.execute(commits_table.update().where(
-        #         #    commits_table.c.cmt_committer_email == cntrb_email['email']
-        #         #).values({
-        #         #    'cmt_ght_author_id': cntrb_email['cntrb_id']
-        #         #}))
-        #         stmnt = s.update(Commit).where(Commit.cmt_committer_email == cntrb_email['email']).values(
-        #             cmt_ght_author_id=cntrb_email['cntrb_id']
-        #         ).execution_options(synchronize_session="fetch")
+            #     try:
+            #         #database.execute(commits_table.update().where(
+            #         #    commits_table.c.cmt_committer_email == cntrb_email['email']
+            #         #).values({
+            #         #    'cmt_ght_author_id': cntrb_email['cntrb_id']
+            #         #}))
+            #         stmnt = s.update(Commit).where(Commit.cmt_committer_email == cntrb_email['email']).values(
+            #             cmt_ght_author_id=cntrb_email['cntrb_id']
+            #         ).execution_options(synchronize_session="fetch")
 
-        #         result = session.execute(stmnt)
-        #     except Exception as e:
-        #         logger.info(
-        #             f"Ran into problem when enriching commit data. Error: {e}")
-        #         continue
-        
+            #         result = session.execute(stmnt)
+            #     except Exception as e:
+            #         logger.info(
+            #             f"Ran into problem when enriching commit data. Error: {e}")
+            #         continue
+        finally:
+            session.close()
+
         return
 
 # Update the contributors table from the data facade has gathered.
@@ -828,26 +842,30 @@ def facade_resolve_contribs():
     logger = logging.getLogger(facade_resolve_contribs.__name__)
     session = FacadeSession(logger)
 
-    facade_init(session)
+    try:
+        facade_init(session)
 
-    multithreaded = session.multithreaded
-    start_time = time.time()
-    ### moved up by spg on 12/1/2021
-    #Interface with the contributor worker and inserts relevant data by repo
-    session.cfg.update_status('Updating Contributors')
-    session.cfg.log_activity('Info', 'Updating Contributors with commits')
-    query = ("SELECT repo_id FROM repo");
+        multithreaded = session.multithreaded
+        start_time = time.time()
+        ### moved up by spg on 12/1/2021
+        #Interface with the contributor worker and inserts relevant data by repo
+        session.cfg.update_status('Updating Contributors')
+        session.cfg.log_activity('Info', 'Updating Contributors with commits')
+        query = ("SELECT repo_id FROM repo");
 
-    session.cfg.cursor.execute(query)
+        session.cfg.cursor.execute(query)
 
-    all_repos = list(session.cfg.cursor)
+        all_repos = list(session.cfg.cursor)
 
-    #pdb.set_trace()
-    #breakpoint()
-    for repo in all_repos:
-        session.logger.info(f"Processing repo {repo}")
-        insert_facade_contributors(session,repo[0],multithreaded=multithreaded)
-    
-    elapsed_time = time.time() - start_time
+        #pdb.set_trace()
+        #breakpoint()
+        for repo in all_repos:
+            session.logger.info(f"Processing repo {repo}")
+            insert_facade_contributors(session,repo[0],multithreaded=multithreaded)
+        
+        elapsed_time = time.time() - start_time
 
-    print('\nCompleted in %s\n' % timedelta(seconds=int(elapsed_time)))
+        print('\nCompleted in %s\n' % timedelta(seconds=int(elapsed_time)))
+
+    finally:
+        session.close()

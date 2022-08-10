@@ -91,8 +91,13 @@ class FacadeConfig:
         self.db_people = None
 
         #worker_options = read_config("Workers", "facade_worker", None, None)
-        config = DatabaseSession(logger).config
-        worker_options = config.get_section("Facade")
+        try:
+            session = DatabaseSession(logger)
+            config = session.config
+            worker_options = config.get_section("Facade")
+        finally:
+            session.close()
+
 
         if 'repo_directory' in worker_options:
             self.repo_base_directory = worker_options['repo_directory']

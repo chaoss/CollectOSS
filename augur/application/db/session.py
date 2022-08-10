@@ -40,6 +40,12 @@ class DatabaseSession(s.orm.Session):
             self.engine = create_database_engine()
 
         super().__init__(self.engine)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exception_type, exception_value, exception_traceback):
+        self.close()
     
     def execute_sql(self, sql_text):
 
