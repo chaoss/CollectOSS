@@ -421,21 +421,22 @@ def facade_commits_model(github_contrib_resolition=True):
         #if not limited_run or (limited_run and run_analysis):
         analysis(session.cfg, multithreaded, session=session)
         
-        ### moved up by spg on 12/1/2021
-        #Interface with the contributor worker and inserts relevant data by repo
-        session.cfg.update_status('Updating Contributors')
-        session.cfg.log_activity('Info', 'Updating Contributors with commits')
-        query = ("SELECT repo_id FROM repo");
+        if github_contrib_resolition:
+            ### moved up by spg on 12/1/2021
+            #Interface with the contributor worker and inserts relevant data by repo
+            session.cfg.update_status('Updating Contributors')
+            session.cfg.log_activity('Info', 'Updating Contributors with commits')
+            query = ("SELECT repo_id FROM repo");
 
-        session.cfg.cursor.execute(query)
+            session.cfg.cursor.execute(query)
 
-        all_repos = list(session.cfg.cursor)
+            all_repos = list(session.cfg.cursor)
 
-        #pdb.set_trace()
-        #breakpoint()
-        for repo in all_repos:
-            session.logger.info(f"Processing repo {repo}")
-            insert_facade_contributors(session,repo[0],multithreaded=multithreaded)
+            #pdb.set_trace()
+            #breakpoint()
+            for repo in all_repos:
+                session.logger.info(f"Processing repo {repo}")
+                insert_facade_contributors(session,repo[0],multithreaded=multithreaded)
 
 
         ### end moved up
