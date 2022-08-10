@@ -75,7 +75,7 @@ def start(disable_collection):
         
             repos = session.query(Repo).all()
 
-            facade_task_list = [facade_commits_model.si(), facade_resolve_contribs.si()]
+            facade_task_list = [facade_commits_model.si()]
 
             github_task_list = [start_task.si(repo.repo_git) for repo in repos]
 

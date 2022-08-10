@@ -45,7 +45,7 @@ def start():
     """
     celery_process = None
 
-    celery_command = f"celery -A augur.tasks.init.celery_app.celery_app worker --loglevel=info --concurrency=20 -n {instance_id}@%h -Q {instance_id}_queue"
+    celery_command = f"celery -A augur.tasks.init.celery_app.celery_app worker --loglevel=info --concurrency=20 -n {instance_id}@%h"
     celery_process = subprocess.Popen(celery_command.split(" "))
 
     try:
