@@ -24,11 +24,11 @@ def collect_issues(repo_git: str) -> None:
 
     logger = logging.getLogger(collect_issues.__name__)
 
+    owner, repo = get_owner_repo(repo_git)
+
     logger.info(f"Collecting issues for {owner}/{repo}")
 
     url = f"https://api.github.com/repos/{owner}/{repo}/issues?state=all"
-
-    owner, repo = get_owner_repo(repo_git)
 
     # define GithubTaskSession to handle insertions, and store oauth keys 
     with GithubTaskSession(logger) as session:
@@ -190,12 +190,11 @@ def process_issue_contributors(issue, tool_source, tool_version, data_source):
 @celery.task
 def collect_pull_requests(repo_git: str) -> None:
 
+    owner, repo = get_owner_repo(repo_git)
 
     logger = logging.getLogger(collect_pull_requests.__name__)
 
     logger.info(f"Collecting pull requests for {owner}/{repo}")
-
-    owner, repo = get_owner_repo(repo_git)
 
     url = f"https://api.github.com/repos/{owner}/{repo}/pulls?state=all&direction=desc"
 
