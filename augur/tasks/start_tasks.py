@@ -5,6 +5,7 @@ from augur.application.logs import AugurLogger
 from celery.result import AsyncResult
 from celery.result import allow_join_result
 from celery import signature
+from augur import queue_name
 import time
 
 pr_numbers = [70, 106, 170, 190, 192, 208, 213, 215, 216, 218, 223, 224, 226, 230, 237, 238, 240, 241, 248, 249, 250, 252, 253, 254, 255, 256, 257, 261, 268, 270, 273, 277, 281, 283, 288, 291, 303, 306, 309, 310, 311, 323, 324, 325, 334, 335, 338, 343, 346, 348, 350, 353, 355, 356, 357, 359, 360, 365, 369, 375, 381, 382, 388, 405, 408, 409, 410, 414, 418, 419, 420, 421, 422, 424, 425, 431, 433, 438, 445, 450, 454, 455, 456, 457, 460, 463, 468, 469, 470, 474, 475, 476, 477, 478, 479, 480, 481, 482, 484, 485, 486, 487, 488, 490, 491, 492, 493, 494, 495, 496, 497, 498, 499, 500, 501, 502, 504, 506, 507, 508, 509, 510, 512, 514]
@@ -26,7 +27,7 @@ def deserialize_task_set(dict_obj):
 
 #Use this task to listen for other tasks before deploying.
 #NOTE: celery pickles signature objects as dicts
-@celery.task
+@celery.task(queue=queue_name)
 def deploy_dependent_task(*args,task_set,bind=True):
     logger = logging.getLogger(deploy_dependent_task.__name__)
 
@@ -142,7 +143,7 @@ class AugurTaskRoutine:
             #if dependency_cycle:
             #    raise Exception("Task group dependency cycle found as all pending tasks have prereqs that cannot be run.")
 
-@celery.task
+@celery.task(queue=queue_name)
 def start_task(repo_git: str):
 
     owner, repo = get_owner_repo(repo_git)
@@ -165,10 +166,8 @@ def start_task(repo_git: str):
     secondary_task_group = group(secondary_task_list)
 
     job = chain(
-        facade_commits_model.si(),
-        facade_resolve_contribs.si(),
         start_tasks_group,
-        # secondary_task_group
+        secondary_task_group
     )
 
     job.apply_async()

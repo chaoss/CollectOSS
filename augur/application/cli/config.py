@@ -38,22 +38,38 @@ def cli():
 @test_db_connection
 def init_config(github_api_key, facade_repo_directory, gitlab_api_key):
 
-    with DatabaseSession(logger) as session:
-        config = session.config
+    if not github_api_key:
+        github_api_key = os.getenv(ENVVAR_PREFIX + 'GITHUB_API_KEY')
 
-        keys = {}
+    if not gitlab_api_key:
+        gitlab_api_key = os.getenv(ENVVAR_PREFIX + 'GITLAB_API_KEY')
 
-        if github_api_key:
-            keys["github_api_key"] = github_api_key
-        if gitlab_api_key:
-            keys["gitlab_api_key"] = gitlab_api_key
+    if not facade_repo_directory:
+        facade_repo_directory = os.getenv(ENVVAR_PREFIX + 'FACADE_REPO_DIRECTORY')
+
+    if not github_api_key:
+
+        github_api_key = str(input("Please enter a valid github api key: "))
+
+    if not gitlab_api_key:
+
+        gitlab_api_key = str(input("Please enter a valid gitlab api key: "))
+
+    if not facade_repo_directory:
+
+        facade_repo_directory = str(input("Please enter an existing facade repo directory: "))
+            
+
+    keys = {}
+
+    keys["github_api_key"] = github_api_key
+    keys["gitlab_api_key"] = gitlab_api_key
 
         default_config = config.default_config
 
         default_config["Keys"] = keys
 
-        if facade_repo_directory:
-            default_config["Facade"]["repo_directory"] = facade_repo_directory
+    default_config["Facade"]["repo_directory"] = facade_repo_directory
 
         default_config["Logging"]["logs_directory"] = ROOT_AUGUR_DIRECTORY + "/logs/"
 

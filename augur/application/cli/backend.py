@@ -18,8 +18,11 @@ import subprocess
 from redis.exceptions import ConnectionError as RedisConnectionError
 import uuid
 
+from augur import instance_id
+
 
 from augur.tasks.start_tasks import start_task
+from augur.tasks.git.facade_tasks import *
 from augur.tasks.github.issue_tasks import process_contributors
 
 # from augur.api.application import Application
@@ -65,15 +68,21 @@ def start(disable_collection):
         celery_process = None
         if not disable_collection:
 
+        celery_command = f"celery -A augur.tasks.init.celery_app.celery_app worker --loglevel=info --concurrency=20 -n {instance_id}@%h -Q {instance_id}_queue"
+        celery_process = subprocess.Popen(celery_command.split(" "))
+        time.sleep(10)
+    
+        repos = session.query(Repo).all()
 
-            celery_process = subprocess.Popen(['celery', '-A', 'augur.tasks.init.celery_app.celery_app', 'worker', '--loglevel=info', "--concurrency=20", "-n" f"{str(uuid.uuid4().hex)}@%h"])
-            time.sleep(10)
-        
-            repos = session.query(Repo).all()
+        facade_task_list = [facade_commits_model.si(), facade_resolve_contribs.si()]
 
-            repo_task_list = [start_task.si(repo.repo_git) for repo in repos] + [process_contributors.si(),]
+        github_task_list = [start_task.si(repo.repo_git) for repo in repos]
 
-            repos_chain = group(repo_task_list)
+        task_list = facade_task_list + github_task_list + [process_contributors.si()]
+
+        print(task_list)
+
+        repos_chain = chain(task_list)
 
             logger.info(repos_chain)
 
@@ -137,10 +146,18 @@ def start(disable_collection):
             celery_process.terminate
 
         try:
-            redis_connection.flushdb()
-            logger.info("Flushing redis cache")
+            logger.info(f"Deleting redis keys for instance id: {instance_id}")
+            delete_redis_keys(instance_id)
+            
         except RedisConnectionError:
             pass
+
+def delete_redis_keys(instance_id):
+
+    for key in redis_connection.scan_iter():
+
+        if instance_id in key:
+            redis_connection.delete(key)
 
 
 @cli.command('stop')
