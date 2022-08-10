@@ -55,9 +55,9 @@ def git_repo_initialize(cfg, repo_group_id=None):
         print(all_repos)
 
         for repo in all_repos:
-            if not os.path.isdir(cfg.repo_base_directory + str(repo[0])):
-                new_repos.append(repo)
-                print(repo)
+            #if not os.path.isdir(cfg.repo_base_directory + str(repo[0])):
+            new_repos.append(repo)
+            print(repo)
     else:
         cfg.update_status('Fetching repos with repo group id: {}'.format(repo_group_id))
         cfg.log_activity('Info','Fetching repos with repo group id: {}'.format(repo_group_id))
