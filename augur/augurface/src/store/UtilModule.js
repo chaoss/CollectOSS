@@ -1,5 +1,5 @@
 // #SPDX-License-Identifier: MIT
-var configObject = require('../../../frontend/frontend.config.json')
+var configObject = require('../../../../frontend/frontend.config.json')
 import Vue from 'vue';
 
 // module for utility global state
