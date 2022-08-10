@@ -29,7 +29,7 @@ function get_gitlab_username(){
     echo
     echo "Please provide your username for GitLab."
     echo "** This is required for Augur to clone GitLab repos ***"
-    read -p "GitHub username: " gitlab_username
+    read -p "GitLab username: " gitlab_username
     echo
 }
 
@@ -152,8 +152,10 @@ function create_config(){
     #Create and cache credentials for github and gitlab
     touch $facade_repo_directory/.git-credentials
     
-    echo "https://{$github_username}"
+    echo "https://$github_username:$github_api_key@github.com" >> $facade_repo_directory/.git-credentials
+    echo "https://$gitlab_username:$gitlab_api_key@gitlab.com" >> $facade_repo_directory/.git-credentials
 
+    git config --global credential.helper "store --file $facade_repo_directory/.git-credentials"
     "${cmd[@]}" 
 }
 echo
