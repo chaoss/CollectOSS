@@ -2,7 +2,7 @@
 FROM python:3.8.11-slim-buster
 
 LABEL maintainer="outdoors@acm.org"
-LABEL version="0.27.8"
+LABEL version="0.42.0"
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -24,19 +24,18 @@ COPY ./augur/ augur/
 COPY ./metadata.py .
 COPY ./setup.py .
 COPY ./scripts/ scripts/
-COPY ./workers/ workers/
-COPY ./schema/ schema/
 
-COPY ./util/docker/backend/backend.docker.config.json .
+COPY ./docker/backend/docker.config.json .
 
 RUN set -x \
     && pip install .
 
 RUN ./scripts/docker/install-go.sh
-RUN ./scripts/install/workers.sh 
-RUN augur config init --rc-config-file /augur/backend.docker.config.json \
+# RUN ./scripts/install/workers.sh 
+
+RUN augur config init --rc-config-file /augur/docker.config.json \
     && mkdir -p repos/ logs/
 
-COPY ./util/docker/backend/entrypoint.sh /
+COPY ./docker/backend/entrypoint.sh /
 RUN chmod +x /entrypoint.sh
 ENTRYPOINT /entrypoint.sh
