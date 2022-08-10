@@ -1,4 +1,4 @@
 import pytest
 
-def test_issue_collection_():
+def test_pr_reviewers():
     pass
