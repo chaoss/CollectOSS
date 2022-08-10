@@ -81,9 +81,7 @@ def start(disable_collection):
 
             task_list = facade_task_list + github_task_list + [process_contributors.si()]
 
-            print(facade_task_list)
-
-            repos_chain = chain(facade_task_list)
+            repos_chain = chain(task_list)
 
             logger.info(repos_chain)
 
