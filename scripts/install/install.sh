@@ -75,7 +75,7 @@ fi
 
 echo
 echo "Creating database schema"
-augur db create-schema
+augur db create-schema 
 echo "Schema successfully created!"
 
 

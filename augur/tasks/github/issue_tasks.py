@@ -19,7 +19,7 @@ from augur import queue_name
 platform_id = 1
 
 
-@celery.task(queue=queue_name)
+@celery.task
 def collect_issues(repo_git: str) -> None:
 
     logger = logging.getLogger(collect_issues.__name__)
@@ -63,7 +63,7 @@ def collect_issues(repo_git: str) -> None:
     wait_child_tasks(ids)
     
 
-@celery.task(queue=queue_name)
+@celery.task
 def process_issues(issues, task_name, repo_id) -> None:
 
     logger = logging.getLogger(process_issues.__name__)
@@ -187,7 +187,7 @@ def process_issue_contributors(issue, tool_source, tool_version, data_source):
 
 # TODO: Rename pull_request_reviewers table to pull_request_requested_reviewers
 # TODO: Fix column names in pull request labels table
-@celery.task(queue=queue_name)
+@celery.task
 def collect_pull_requests(repo_git: str) -> None:
 
 
@@ -225,7 +225,7 @@ def collect_pull_requests(repo_git: str) -> None:
 
     wait_child_tasks(ids)
 
-@celery.task(queue=queue_name)
+@celery.task
 def process_pull_requests(pull_requests, task_name, repo_id):
 
     logger = logging.getLogger(process_pull_requests.__name__)
@@ -435,7 +435,7 @@ def process_pull_request_contributors(pr, tool_source, tool_version, data_source
     return pr, contributors
 
 
-@celery.task(queue=queue_name)
+@celery.task
 def collect_events(repo_git: str):
 
     owner, repo = get_owner_repo(repo_git)
@@ -474,7 +474,7 @@ def collect_events(repo_git: str):
     wait_child_tasks(ids)
         
 
-@celery.task(queue=queue_name)
+@celery.task
 def process_events(events, task_name, repo_id):
 
     logger = logging.getLogger(process_events.__name__)
@@ -573,7 +573,7 @@ def process_github_event_contributors(logger, event, tool_source, tool_version, 
     
     return event, event_cntrb
 
-@celery.task(queue=queue_name)
+@celery.task
 def collect_issue_and_pr_comments(repo_git: str) -> None:
 
     owner, repo = get_owner_repo(repo_git)
@@ -611,7 +611,7 @@ def collect_issue_and_pr_comments(repo_git: str) -> None:
     wait_child_tasks(ids)
     
 
-@celery.task(queue=queue_name)
+@celery.task
 def process_messages(messages, task_name, repo_id):
 
     # define logger for task
@@ -760,7 +760,7 @@ def process_github_comment_contributors(message, tool_source, tool_version, data
     return message, message_cntrb
 
         
-@celery.task(queue=queue_name)
+@celery.task
 def pull_request_review_comments(repo_git: str) -> None:
 
     owner, repo = get_owner_repo(repo_git)
@@ -851,7 +851,7 @@ def pull_request_review_comments(repo_git: str) -> None:
 
 
 # do this task after others because we need to add the multi threading like we did it before
-@celery.task(queue=queue_name)
+@celery.task
 def pull_request_reviews(repo_git: str, pr_number_list: [int]) -> None:
 
     logger = logging.getLogger(pull_request_reviews.__name__)
@@ -914,19 +914,19 @@ the issue is that most of the time we filter out needed
 """
 
 # for this task to work well universally we need all tables to name cntrb_id
-# @celery.task(queue=queue_name)
+# @celery.task
 # def process_issue_contributors(contributors):
 
 #     logger = get_task_logger(process_issue_contributors.name)
 #     process_contributors(contributors, table=Issues, logger=logger, unique_keys=["issue_url"], pk_name="issue_id")
 
-# @celery.task(queue=queue_name)
+# @celery.task
 # def process_issue_assignee_contributors(contributors):
 
 #     logger = get_task_logger(process_issue_assignee_contributors.name)
 #     # process_contributors(contributors, table=IssueAssignees, logger=logger, pk_name="issue_assignee_id")
 
-@celery.task(queue=queue_name)
+@celery.task
 def process_contributors():
 
     logger = logging.getLogger(process_contributors.__name__)

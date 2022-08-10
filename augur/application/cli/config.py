@@ -65,11 +65,15 @@ def init_config(github_api_key, facade_repo_directory, gitlab_api_key):
     keys["github_api_key"] = github_api_key
     keys["gitlab_api_key"] = gitlab_api_key
 
+    with DatabaseSession(logger) as session:
+
+        config = session.config
+
         default_config = config.default_config
 
         default_config["Keys"] = keys
 
-    default_config["Facade"]["repo_directory"] = facade_repo_directory
+        default_config["Facade"]["repo_directory"] = facade_repo_directory
 
         default_config["Logging"]["logs_directory"] = ROOT_AUGUR_DIRECTORY + "/logs/"
 

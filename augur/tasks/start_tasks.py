@@ -27,7 +27,7 @@ def deserialize_task_set(dict_obj):
 
 #Use this task to listen for other tasks before deploying.
 #NOTE: celery pickles signature objects as dicts
-@celery.task(queue=queue_name)
+@celery.task
 def deploy_dependent_task(*args,task_set,bind=True):
     logger = logging.getLogger(deploy_dependent_task.__name__)
 
@@ -143,7 +143,7 @@ class AugurTaskRoutine:
             #if dependency_cycle:
             #    raise Exception("Task group dependency cycle found as all pending tasks have prereqs that cannot be run.")
 
-@celery.task(queue=queue_name)
+@celery.task
 def start_task(repo_git: str):
 
     owner, repo = get_owner_repo(repo_git)

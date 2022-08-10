@@ -19,6 +19,8 @@ from redis.exceptions import ConnectionError as RedisConnectionError
 import uuid
 
 from augur import instance_id
+from augur import queue_name
+
 
 
 from augur.tasks.start_tasks import start_task
@@ -52,10 +54,8 @@ def start(disable_collection):
     Start Augur's backend server
     """
 
-
     with DatabaseSession(logger) as session:
    
-
         gunicorn_location = os.getcwd() + "/augur/api/gunicorn_conf.py"
         bind = '%s:%s' % (session.config.get_value("Server", "host"), session.config.get_value("Server", "port"))
 
@@ -68,21 +68,22 @@ def start(disable_collection):
         celery_process = None
         if not disable_collection:
 
-        celery_command = f"celery -A augur.tasks.init.celery_app.celery_app worker --loglevel=info --concurrency=20 -n {instance_id}@%h -Q {instance_id}_queue"
-        celery_process = subprocess.Popen(celery_command.split(" "))
-        time.sleep(10)
-    
-        repos = session.query(Repo).all()
+            celery_command = f"celery -A augur.tasks.init.celery_app.celery_app worker --loglevel=info --concurrency=20 -n {instance_id}@%h"
+            print(celery_command)
+            celery_process = subprocess.Popen(celery_command.split(" "))
+            time.sleep(10)
+        
+            repos = session.query(Repo).all()
 
-        facade_task_list = [facade_commits_model.si(), facade_resolve_contribs.si()]
+            facade_task_list = [facade_commits_model.si(), facade_resolve_contribs.si()]
 
-        github_task_list = [start_task.si(repo.repo_git) for repo in repos]
+            github_task_list = [start_task.si(repo.repo_git) for repo in repos]
 
-        task_list = facade_task_list + github_task_list + [process_contributors.si()]
+            task_list = facade_task_list + github_task_list + [process_contributors.si()]
 
-        print(task_list)
+            print(facade_task_list)
 
-        repos_chain = chain(task_list)
+            repos_chain = chain(facade_task_list)
 
             logger.info(repos_chain)
 

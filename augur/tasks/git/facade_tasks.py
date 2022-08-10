@@ -68,7 +68,7 @@ from augur.application.logs import TaskLogConfig
 
 
 #enable celery multithreading
-@celery.task(queue=queue_name)
+@celery.task
 def analyze_commits_in_parallel(queue, repo_id, repo_location, multithreaded):
     #create new cfg for celery thread.
     logger = logging.getLogger(analyze_commits_in_parallel.__name__)
@@ -77,9 +77,6 @@ def analyze_commits_in_parallel(queue, repo_id, repo_location, multithreaded):
     for analyzeCommit in queue:    
 
         analyze_commit(cfg, repo_id, repo_location, analyzeCommit, multithreaded)
-
-
-
 
 
 # if platform.python_implementation() == 'PyPy':
@@ -368,7 +365,7 @@ def facade_init(session):
     # Begin working
 
 
-@celery.task(queue=queue_name)
+@celery.task
 def facade_commits_model():
 
     logger = logging.getLogger(facade_commits_model.__name__)
@@ -459,7 +456,7 @@ def facade_commits_model():
         session.cfg.db.close()
         #session.cfg.db_people.close()
 
-@celery.task(queue=queue_name)
+@celery.task
 def facade_grab_contribs(repo_id):
     logger = logging.getLogger(facade_grab_contribs.__name__)
     with FacadeSession(logger) as session:
@@ -469,7 +466,7 @@ def facade_grab_contribs(repo_id):
 
 #Method to parallelize, takes a queue of data and iterates over it
 
-@celery.task(queue=queue_name)
+@celery.task
 def process_commit_metadata(contributorQueue,repo_id):
     logger = logging.getLogger(process_commit_metadata.__name__)
     with FacadeSession(logger) as session:
@@ -665,7 +662,7 @@ def process_commit_metadata(contributorQueue,repo_id):
         
     return
 
-@celery.task(queue=queue_name)
+@celery.task
 def link_commits_to_contributor(contributorQueue):
         logger = logging.getLogger(link_commits_to_contributor.__name__)
         with FacadeSession(logger) as session:
@@ -826,7 +823,7 @@ def insert_facade_contributors(session, repo_id,processes=4,multithreaded=True):
     session.logger.info("Done with inserting and updating facade contributors")
     return
 
-@celery.task(queue=queue_name)
+@celery.task
 def facade_resolve_contribs():
     logger = logging.getLogger(facade_resolve_contribs.__name__)
     with FacadeSession(logger) as session:
