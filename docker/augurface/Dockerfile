@@ -18,7 +18,7 @@ RUN npx browserslist@latest --update-db
 RUN npm run build
 
 FROM nginx as production-stage
-COPY --from=augurface /augur/augurface/dist /usr/share/nginx/augurface
+COPY --from=augurface /augur/augur/augurface/dist /usr/share/nginx/augurface
 COPY ./docker/augurface/nginx.conf /etc/nginx/nginx.conf
 
 EXPOSE 8080
