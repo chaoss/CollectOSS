@@ -52,9 +52,13 @@ def git_repo_initialize(cfg, repo_group_id=None):
         new_repos = []
         all_repos = list(cfg.cursor)
 
+        print(all_repos)
+
         for repo in all_repos:
-            if not os.path.isdir(cfg.repo_base_directory + str(repo[0])):
-                new_repos.append(repo)
+            #IM 8/10/22
+            #if not os.path.isdir(cfg.repo_base_directory + str(repo[0])):
+            new_repos.append(repo)
+            print(repo)
     else:
         cfg.update_status('Fetching repos with repo group id: {}'.format(repo_group_id))
         cfg.log_activity('Info','Fetching repos with repo group id: {}'.format(repo_group_id))
@@ -435,7 +439,8 @@ def git_repo_updates(cfg):
 
             cmdpull2 = ("git -C %s%s/%s%s pull"
                         % (cfg.repo_base_directory,row[1],row[4],row[3]))
-
+            
+            print(cmdpull2)
             return_code = subprocess.Popen([cmdpull2],shell=True).wait()
 
             attempt += 1

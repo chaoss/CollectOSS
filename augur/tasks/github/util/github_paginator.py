@@ -53,12 +53,8 @@ def process_dict_response(logger, response: httpx.Response, page_data: dict):
             return "decrease_attempts"
         
         if "API rate limit exceeded for user" in page_data['message']:
-            key_reset_time = (
-                                datetime.datetime.fromtimestamp(
-                                    int(response.headers["X-RateLimit-Reset"])
-                                ) - datetime.datetime.now()
-                            ).total_seconds()
-            logger.info('\n\n\n\nSleeping for 100 seconds due to api rate limit being exceeded\n\n\n\n')
+
+            key_reset_time = int(response.headers["X-RateLimit-Reset"]) - time.time()
             logger.info(f"\n\n\nAPI rate limit exceeded. Sleeping until the key resets ({key_reset_time} seconds)")
             time.sleep(key_reset_time)
 
