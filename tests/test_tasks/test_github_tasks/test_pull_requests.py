@@ -5,7 +5,8 @@ import logging
 from augur.tasks.github.pull_requests.core import *
 from augur.application.db.session import DatabaseSession
 from augur.application.db.models import Config 
-
+from augur.application.db.data_parse import extract_needed_contributor_data
+from augur.application.db.engine import create_database_engine
 
 logger = logging.getLogger(__name__)
 
@@ -115,8 +116,6 @@ def test_extract_data_from_pr_list(github_api_key_headers):
 
         url = base_url + str(pr_number)
 
-        print(url)
-
         with httpx.Client() as client:
 
             data = client.request(method="GET", url=url, headers=github_api_key_headers, timeout=180).json()
@@ -203,8 +202,81 @@ def test_extract_data_from_pr_list(github_api_key_headers):
         
 
 
-def test_insert_pr_contributors():
-    pass
+
+@pytest.mark.parametrize("pr_number", [26])
+def test_insert_pr_contributors(github_api_key_headers, session, pr_number):
+
+    not_provided_cntrb_id = '00000000-0000-0000-0000-000000000000'
+    nan_cntrb_id = '01000000-0000-0000-0000-000000000000'
+
+    try:
+
+        url = f"https://api.github.com/repos/operate-first/blueprint/pulls/{str(pr_number)}" 
+
+        contributors = []
+        with httpx.Client() as client:
+
+            data = client.request(method="GET", url=url, headers=github_api_key_headers, timeout=180).json()
+
+            metadata_keys = ["head", "base"]
+
+            try:
+                contributors.append(data["user"])
+            except KeyError:
+                pass
+
+            for key in metadata_keys:
+
+                # if login exists on metadata then add count to contributors
+                try:
+                    contributors.append(data[key]["user"])
+                except KeyError:
+                    pass
+
+            # count one contributor for every reviewer and assignee
+            for value in data["requested_reviewers"] + data["assignees"]:
+
+                try:
+                    contributors.append(value)
+                except KeyError:
+                    continue
+
+        tool_source = "Pr Task"
+        tool_version = "2.0"
+        data_source = "Github API"
+
+        contributors_to_pass_to_insert = []
+        unique_contributors = []
+        for cntrb in contributors:
+
+            contributors_to_pass_to_insert.append(
+                extract_needed_contributor_data(cntrb, tool_source, tool_version, data_source)
+            )
+
+            if cntrb["login"] not in unique_contributors:
+                unique_contributors.append(cntrb["login"])
+        
+
+        insert_pr_contributors(contributors_to_pass_to_insert, session, "Insert contrbibutors test")
+
+        with session.engine.connect() as connection:
+
+            result = connection.execute(f"SELECT * FROM augur_data.contributors WHERE cntrb_id!='{not_provided_cntrb_id}' AND cntrb_id!='{nan_cntrb_id}'").fetchall()
+
+            assert result is not None
+            assert len(result) == len(unique_contributors)
+
+            for row_tuple in result:
+                row = dict(row_tuple)
+
+                assert row["cntrb_login"] in unique_contributors
+
+    finally:
+
+         with session.engine.connect() as connection:
+
+                connection.execute(f"DELETE FROM augur_data.contributors WHERE cntrb_id!='{not_provided_cntrb_id}' AND cntrb_id!='{nan_cntrb_id}';")
+
 
 
 def insert_prs():

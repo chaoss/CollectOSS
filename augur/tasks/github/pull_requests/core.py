@@ -87,31 +87,80 @@ def extract_data_from_pr_list(pull_requests, repo_id, tool_source, tool_version,
     return pr_dicts, pr_mapping_data, pr_numbers, contributors
 
 
-def insert_pr_contributors(contributors):
+def insert_pr_contributors(contributors, session, task_name):
 
-    pass
+    # remove duplicate contributors before inserting
+    contributors = remove_duplicate_dicts(contributors)
 
-
-def insert_prs(prs):
-
-    pr_mapping_dict = None
-
-    return pr_mapping_dict
-
-def map_other_pr_data_to_pr(pr_mapping_dict, pr_dict):
-
-    labels = None
-    assignees = None
-    reviewers  = None
-    reviewers = None
-    metadata = None
-
-    return labels, assignees, reviewers, metadata 
+    # insert contributors from these prs
+    session.logger.info(f"{task_name}: Inserting {len(contributors)} contributors")
+    session.insert_data(contributors, Contributor, ["cntrb_login"])
 
 
-def insert_other_pr_data(labels, assignees, reviewers, metadata):
+def insert_prs(pr_dicts, session, task_name):
 
-    pass
+    session.logger.info(f"{task_name}: Inserting prs of length: {len(pr_dicts)}")
+    pr_natural_keys = ["pr_url"]
+    pr_return_columns = ["pull_request_id", "pr_url"]
+    pr_return_data = session.insert_data(pr_dicts, PullRequest, pr_natural_keys, return_columns=pr_return_columns)
+
+    return pr_return_data
+
+def map_other_pr_data_to_pr(pr_return_data, pr_mapping_data, logger):
+
+    pr_label_dicts = []
+    pr_assignee_dicts = []
+    pr_reviewer_dicts = []
+    pr_metadata_dicts = []
+    for data in pr_return_data:
+
+        pr_url = data["pr_url"]
+        pull_request_id = data["pull_request_id"]
+
+        try:
+            other_pr_data = pr_mapping_data[pr_url]
+        except KeyError as e:
+            logger.info(f"Cold not find other pr data. This should never happen. Error: {e}")
+
+
+        # add the pull_request_id to the labels, assignees, reviewers, or metadata then add them to a list of dicts that will be inserted soon
+        dict_key = "pull_request_id"
+        pr_label_dicts += add_key_value_pair_to_list_of_dicts(other_pr_data["labels"], dict_key, pull_request_id)
+        pr_assignee_dicts += add_key_value_pair_to_list_of_dicts(other_pr_data["assignees"], dict_key, pull_request_id)
+        pr_reviewer_dicts += add_key_value_pair_to_list_of_dicts(other_pr_data["reviewers"], dict_key, pull_request_id)
+        pr_metadata_dicts += add_key_value_pair_to_list_of_dicts(other_pr_data["metadata"], dict_key, pull_request_id)
+
+    return pr_label_dicts, pr_assignee_dicts, pr_reviewer_dicts, pr_metadata_dicts 
+
+
+def insert_pr_labels(labels):
+
+    # we are using pr_src_id and pull_request_id to determine if the label is already in the database.
+    pr_label_natural_keys = ['pr_src_id', 'pull_request_id']
+    session.insert_data(labels, PullRequestLabel, pr_label_natural_keys)
+
+
+def insert_pr_assignees(assignees):
+
+    # we are using pr_assignee_src_id and pull_request_id to determine if the label is already in the database.
+    pr_assignee_natural_keys = ['pr_assignee_src_id', 'pull_request_id']
+    session.insert_data(assignees, PullRequestAssignee, pr_assignee_natural_keys)
+
+
+def insert_pr_reviewers(reviewers):
+
+    # we are using pr_src_id and pull_request_id to determine if the label is already in the database.
+    pr_reviewer_natural_keys = ["pull_request_id", "pr_reviewer_src_id"]
+    session.insert_data(reviewers, PullRequestReviewer, pr_reviewer_natural_keys)
+
+
+def insert_pr_metadata(metadata):
+
+    # inserting pr metadata
+    # we are using pull_request_id, pr_head_or_base, and pr_sha to determine if the label is already in the database.
+    pr_metadata_natural_keys = ['pull_request_id', 'pr_head_or_base', 'pr_sha']
+    session.insert_data(metadata, PullRequestMeta, pr_metadata_natural_keys)
+
 
 
 
