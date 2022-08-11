@@ -77,7 +77,8 @@ def extract_needed_pr_reviewer_data(reviewers: [dict], platform_id: int, repo_id
             'repo_id': repo_id
         }
 
-    reviewer_dicts.append(reviewer_dict)
+        reviewer_dicts.append(reviewer_dict)
+
 
     return reviewer_dicts
 

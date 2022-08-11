@@ -86,50 +86,6 @@ def start(disable_collection):
             logger.info(repos_chain)
 
             repos_chain.apply_async()
-
-        # repos_to_collect = []
-        # repo_task_list = []
-
-        # logger.info("Repos available for collection")
-        # print_repos(repos)
-        # while True:
-        #     try:
-        #         user_input = int(input("Please select a repo to collect: "))
-
-        #         if user_input < 0 or user_input > len(repos)-1:
-        #             print(f"Invalid input please input an integer between 0 and {len(repos)-1}")
-        #             continue
-
-        #         repo = repos[user_input]
-        #         break
-
-        #     except (IndexError, ValueError):
-        #         print(f"Invalid input please input an integer between 0 and {len(repos)-1}")
-
-        # logger.info("Starting celery to work on tasks")
-        
-        # logger.info(f"Collecting {repo.repo_git}")
-        # start_task.s(repo.repo_git).apply_async()
-
-
-        # if len(repos) > 1:
-
-        #     exclude_input = str(input("Would you like to exclude any repos from collection [y/N]: ")).lower()
-
-        #     if exclude_input == "y":
-        #         remove_repos(repos)
-        #         print("\n\nRepos after removing some")
-        #         print_repos(repos)
-
-        # if len(repos) > 1:
-
-        #     order_input = str(input("Would you like to specify an order the repos are collected [y/N]: ")).lower()
-
-        #     if order_input == "y":
-        #         repos = order_repos(repos)
-        #         print("\n\n Repo order after reordering")
-        #         print_repos(repos)
-
     
 
     try:
