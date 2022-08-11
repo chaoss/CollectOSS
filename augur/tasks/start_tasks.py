@@ -1,5 +1,8 @@
+from __future__ import annotations
+from typing import List
 import time
 import logging
+import json
 
 from celery.result import AsyncResult
 from celery.result import allow_join_result
@@ -34,11 +37,7 @@ def deserialize_task_set(dict_obj):
 def deploy_dependent_task(*args,task_set,bind=True):
     logger = logging.getLogger(deploy_dependent_task.__name__)
 
-    #print(task_set)
-    #print(type(task_set))
-
-
-
+    logger.info(f"Ids are {args}...")
     for task_id in args:
         prereq = AsyncResult(str(task_id))
         print(prereq.status)
@@ -48,10 +47,12 @@ def deploy_dependent_task(*args,task_set,bind=True):
     #The convention now is to just add the string 'child' after the autogen'd
     #parent task id to be consistant.
     to_execute = deserialize_task_set(task_set)
-    #print(type(to_execute))
 
-    #print(deploy_dependent_task.request.id )
-    to_execute.apply_async(task_id=(deploy_dependent_task.request.id + "child"))
+    child = to_execute.apply_async(task_id=(deploy_dependent_task.request.id + "child"))
+
+    if bind:
+        with allow_join_result():
+            child.wait()#Return when the child does so that tasks that are dependent on this dependent task can know when it is complete.
 
 
 #Class to control what tasks are run when the augur collection is started.
@@ -64,7 +65,7 @@ def deploy_dependent_task(*args,task_set,bind=True):
 #routine.start()
 class AugurTaskRoutine:
 
-    def __init__(self,disabled_collection_groups=[]):
+    def __init__(self,disabled_collection_groups: List[str]=[]):
         self.logger = AugurLogger("data_collection_jobs").get_logger()
         #self.session = TaskSession(self.logger)
         self.jobs_dict = {}
@@ -73,11 +74,38 @@ class AugurTaskRoutine:
 
         self.dependency_relationships = {}
 
+    @classmethod
+    def from_json(cls,routine_as_json) -> AugurTaskRoutine:
+        routine = json.loads(routine_as_json)
+        obj = cls()
+
+        for key in routine.keys():
+            obj[key] = routine[key]['jobs']
+            
+            #add any deps
+            for dep in routine[key]['dependencies']:
+                obj.add_dependency_relationship(job=key,depends_on=dep)
+        
+        return obj
+        
+    @classmethod
+    def from_dict(cls,routine_as_dict: dict) -> AugurTaskRoutine:
+        obj = cls()
+
+        for key in routine_as_dict.keys():
+            obj[key] = routine_as_dict[key]['jobs']
+            
+            #add any deps
+            for dep in routine_as_dict[key]['dependencies']:
+                obj.add_dependency_relationship(job=key,depends_on=dep)
+        
+        return obj
+
     #Get and set dict values that correspond to celery task groups
-    def __getitem__(self,key):
+    def __getitem__(self,key: str) -> dict:
         return self.jobs_dict[key]
     
-    def __setitem__(self,key,newJobs):
+    def __setitem__(self,key: str,newJobs):
         if not hasattr(newJobs, 'apply_async') or not callable(newJobs.apply_async):
             self.logger.error("Collection groups must be of celery types that can be called with \'apply_async\'")
             raise AttributeError 
@@ -89,7 +117,7 @@ class AugurTaskRoutine:
         self.dependency_relationships[key] = []
 
     #Make a group deleted from the dict and unable to be run or added.
-    def disable_group(self,key):
+    def disable_group(self,key: str):
         del self.jobs_dict[key]
         del self.dependency_relationships[key]
         self.disabled_collection_groups.append(key)
@@ -97,22 +125,17 @@ class AugurTaskRoutine:
     #force these params to be kwargs so they are more readable
     def add_dependency_relationship(self,job=None,depends_on=None):
         assert (job in self.jobs_dict.keys() and depends_on in self.jobs_dict.keys()), "One or both collection groups don't exist!"
+        assert (job != depends_on), "Something can not depend on itself!"
 
         self.dependency_relationships[job].append(depends_on)
     
-    def _update_dependency_relationship_with_celery_id(self,celery_id,dependency_name,append=None):
+    def _update_dependency_relationship_with_celery_id(self,celery_id: str,dependency_name: str):
         #Replace dependency with active celery id once started so that dependent tasks can check status
-        #append is to add the id of the child task before it starts. (Don't worry the parent task starts it before it dies and the child is added on the end)
-        #IMPORTANT for the append to actually be on the end of the list.
         for group_name in self.dependency_relationships.keys():
             #self.dependency_relationships[group_name] = [celery_id if item == name else item for item in self.dependency_relationships[group_name]]
             for index,item in enumerate(self.dependency_relationships[group_name]):
                 if item == dependency_name:
-                    self.dependency_relationships[group_name][index] = celery_id
-
-                    if append:
-                        self.dependency_relationships[group_name].append(append)
-                    
+                    self.dependency_relationships[group_name][index] = celery_id    
                     break #break once dependency_name found. Should only occur once.
 
 
@@ -126,21 +149,19 @@ class AugurTaskRoutine:
                 
                 self._update_dependency_relationship_with_celery_id(task_collection.id,name)
         
-        #Check if there are any elements in any of the dependency_relationships lists
-        #that still haven't been replaced by celery task ids.
-        while not all( any(check in dependencies for check in list(self.jobs_dict.keys())) for dependencies in self.dependency_relationships.values()):
+        #Then try to go after tasks with dependencies.
+        #'loop while there are elements of the jobs dict that haven't been started'
+        while not all(job_name in self.started_jobs for job_name in self.jobs_dict.keys()):
             for name in self.dependency_relationships.keys():
                 #Check that task group has no dependencies that haven't been started yet and that it has not already been started.
-                if not any(check in self.dependency_relationships[name] for check in list(self.jobs_dict.keys())) and not name in self.started_jobs:
+                if not any(group_key in self.dependency_relationships[name] for group_key in list(self.jobs_dict.keys())) and not name in self.started_jobs:
                     self.started_jobs.append(name)
                     self.logger.info(f"Starting dependant collection group {name}...")
-                    #task_collection = self.jobs_dict[name].apply_async()
-                    print(self.dependency_relationships[name])
                     dependent_task_collection = deploy_dependent_task.si(*self.dependency_relationships[name],task_set=self.jobs_dict[name])
                     result = dependent_task_collection.apply_async()
                     print(result)
 
-                    self._update_dependency_relationship_with_celery_id(task_collection.id,name,append=(task_collection.id + "child"))
+                    self._update_dependency_relationship_with_celery_id(result.id,name)
                 
             
             #if dependency_cycle:
@@ -168,12 +189,6 @@ def start_task(repo_git: str):
     
     secondary_task_group = group(secondary_task_list)
 
-    job = chain(
-        start_tasks_group,
-        secondary_task_group
-    )
-
-    job.apply_async()
 
 def get_owner_repo(git_url):
     """ Gets the owner and repository names of a repository from a git url
