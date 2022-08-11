@@ -4,16 +4,23 @@ from celery.signals import after_setup_logger
 from augur.application.logs import TaskLogConfig
 import logging
 
+start_tasks = ['augur.tasks.start_tasks']
+
+github_tasks = ['augur.tasks.github.contributors.tasks', 'augur.tasks.github.issues.tasks', 'augur.tasks.github.pull_requests.tasks', 'augur.tasks.github.events.tasks', 'augur.tasks.github.messages.tasks']
+
+git_tasks = ['augur.tasks.git.facade_tasks']
+
+tasks = start_tasks + github_tasks + git_tasks
+
+
 # initialize the celery app
 BROKER_URL = 'redis://localhost:6379/0'
 BACKEND_URL = 'redis://localhost:6379/1'
 celery_app = Celery('tasks', broker=BROKER_URL,
-             backend=BACKEND_URL, include=['augur.tasks.git.facade_tasks', 'augur.tasks.github.issue_tasks', 'augur.tasks.start_tasks'])   
+             backend=BACKEND_URL, include=tasks)   
 
 #Setting to be able to see more detailed states of running tasks
 celery_app.conf.task_track_started = True
-
-
 
 
 def split_tasks_into_groups(tasks):
