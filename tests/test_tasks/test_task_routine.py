@@ -1,6 +1,6 @@
 #SPDX-License-Identifier: MIT
 from augur.tasks.init.celery_app import celery_app as celery
-from augur.tasks.github.issue_tasks import *
+from augur.tasks.github import *
 import pytest
 from tests.test_tasks.runner import *
 from augur.tasks.start_tasks import *
