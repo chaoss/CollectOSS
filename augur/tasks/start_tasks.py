@@ -37,6 +37,7 @@ def deserialize_task_set(dict_obj):
 def deploy_dependent_task(*args,task_set,bind=True):
     logger = logging.getLogger(deploy_dependent_task.__name__)
 
+    logger.info(f"Ids are {args}...")
     for task_id in args:
         prereq = AsyncResult(str(task_id))
         print(prereq.status)
@@ -124,6 +125,7 @@ class AugurTaskRoutine:
     #force these params to be kwargs so they are more readable
     def add_dependency_relationship(self,job=None,depends_on=None):
         assert (job in self.jobs_dict.keys() and depends_on in self.jobs_dict.keys()), "One or both collection groups don't exist!"
+        assert (job != depends_on), "Something can not depend on itself!"
 
         self.dependency_relationships[job].append(depends_on)
     
@@ -187,12 +189,13 @@ def start_task(repo_git: str):
     
     secondary_task_group = group(secondary_task_list)
 
-    job = chain(
-        start_tasks_group,
-        secondary_task_group
-    )
+    default_routine = AugurTaskRoutine()
+    default_routine['first_task_group'] = start_tasks_group
+    default_routine['second_task_group'] = secondary_task_group
 
-    job.apply_async()
+    default_routine.add_dependency_relationship(job='second_task_group',depends_on='first_task_group')
+
+    default_routine.start_data_collection()
 
 def get_owner_repo(git_url):
     """ Gets the owner and repository names of a repository from a git url
