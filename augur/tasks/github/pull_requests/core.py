@@ -14,15 +14,6 @@ from augur.application.db.models import PullRequest, Message, PullRequestReview,
 platform_id = 1
 
 
-def extract_data_from_pr_list(pr_list):
-
-    prs = None
-    other_pr_map_data = None
-    pr_numbers = None
-
-    return prs, other_pr_data_map, pr_numbers
-
-
 def extract_data_from_pr(pr_data, repo_id, tool_source, tool_version, data_source):
 
     # adds cntrb_id to reference the contributors table to the 
@@ -65,6 +56,36 @@ def extract_data_from_pr(pr_data, repo_id, tool_source, tool_version, data_sourc
                                                     tool_source, tool_version, data_source)                                                                      
 
     return pr_needed_data, pr_labels, pr_assignees, pr_reviewers, pr_metadata, contributor_data
+
+
+def extract_data_from_pr_list(pull_requests, repo_id, tool_source, tool_version, data_source):
+
+    pr_mapping_data = {}
+    pr_dicts = [] 
+    pr_numbers = []
+    contributors = []
+    
+    for pr in pull_requests:
+
+        pr_data, labels, assignees, reviewers, metadata, contributor_data = extract_data_from_pr(pr, repo_id, tool_source, tool_version, data_source)
+
+        contributors += contributor_data
+
+        pr_dicts.append(pr_data)
+       
+        mapping_data_key = pr_data["pr_url"]
+        pr_mapping_data[mapping_data_key] = {
+                                            "labels": labels,
+                                            "assignees": assignees,
+                                            "reviewers": reviewers,
+                                            "metadata": metadata,
+                                            }          
+       
+         # create a list of pr numbers to pass for the pr reviews task
+        pr_numbers.append(pr_data["pr_src_number"]) 
+
+    return pr_dicts, pr_mapping_data, pr_numbers, contributors
+
 
 def insert_pr_contributors(contributors):
 

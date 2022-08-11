@@ -25,7 +25,7 @@ from augur import queue_name
 
 from augur.tasks.start_tasks import start_task
 from augur.tasks.git.facade_tasks import *
-from augur.tasks.github.issue_tasks import process_contributors
+from augur.tasks.github.contributors.tasks import process_contributors
 
 # from augur.api.application import Application
 # from augur.api.gunicorn import AugurGunicornApp
@@ -75,11 +75,13 @@ def start(disable_collection):
         
             repos = session.query(Repo).all()
 
-            facade_task_list = [facade_commits_model.si()]
+            task_list = []
 
-            github_task_list = [start_task.si(repo.repo_git) for repo in repos]
+            task_list += [facade_commits_model.si()]
 
-            task_list = facade_task_list + github_task_list + [process_contributors.si()]
+            task_list += [start_task.si(repo.repo_git) for repo in repos]
+
+            task_list += [process_contributors.si()]
 
             repos_chain = chain(task_list)
 

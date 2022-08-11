@@ -2,7 +2,7 @@ import time
 import logging
 
 from augur import queue_name
-from augur.tasks.github.pull_requests.core import extract_data_from_pr
+from augur.tasks.github.pull_requests.core import extract_data_from_pr_list
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.data_parse import *
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
@@ -62,27 +62,7 @@ def process_pull_requests(pull_requests, task_name, repo_id):
     tool_version = "2.0"
     data_source = "Github API"
 
-    pr_dicts = []
-    pr_mapping_data = {}
-    pr_numbers = []
-    contributors = []
-
-    for index, pr in enumerate(pull_requests):
-
-        pr_data, labels, assignees, reviewers, metadata, contributors = extract_data_from_pr(pr, repo_id, tool_source, tool_version, data_source)
-
-        pr_dicts.append(pr_data)
-       
-        mapping_data_key = pr_data["pr_url"]
-        pr_mapping_data[mapping_data_key] = {
-                                            "labels": labels,
-                                            "assignees": assignees,
-                                            "reviewers": reviewers,
-                                            "metadata": metadata,
-                                            }          
-       
-         # create a list of pr numbers to pass for the pr reviews task
-        pr_numbers.append(pr_data["pr_src_number"]) 
+    pr_dicts, pr_mapping_data, pr_numbers, contributors = extract_data_from_pr_list(pull_requests, repo_id, tool_source, tool_version, data_source)
 
     with GithubTaskSession(logger) as session:
 
