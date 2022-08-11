@@ -189,13 +189,6 @@ def start_task(repo_git: str):
     
     secondary_task_group = group(secondary_task_list)
 
-    default_routine = AugurTaskRoutine()
-    default_routine['first_task_group'] = start_tasks_group
-    default_routine['second_task_group'] = secondary_task_group
-
-    default_routine.add_dependency_relationship(job='second_task_group',depends_on='first_task_group')
-
-    default_routine.start_data_collection()
 
 def get_owner_repo(git_url):
     """ Gets the owner and repository names of a repository from a git url
