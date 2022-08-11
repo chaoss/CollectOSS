@@ -229,16 +229,6 @@ def process_pull_requests(pull_requests, task_name, repo_id):
 
     logger = logging.getLogger(process_pull_requests.__name__)
 
-    reviewers = []
-    reviewers_map = {}
-    for pr in pull_requests:
-        reviewers = pr["requested_reviewers"]
-        reviewers_map[pr["number"]] = len(reviewers)
-        print(f"{len(reviewers)} reviewers found in pr number: {pr['number']}")
-        reviewers += reviewers
-
-    print(f"{task_name}: Length of pr reviewers at beginning of process prs: {len(reviewers)}")
-
      # get repo_id or have it passed
     tool_source = "Pr Task"
     tool_version = "2.0"
@@ -249,7 +239,6 @@ def process_pull_requests(pull_requests, task_name, repo_id):
     pr_numbers = []
     contributors = []
 
-    urls = []
     for index, pr in enumerate(pull_requests):
 
         # adds cntrb_id to reference the contributors table to the 
@@ -296,10 +285,8 @@ def process_pull_requests(pull_requests, task_name, repo_id):
                                                         tool_source, tool_version, data_source)                                                             
 
                                
-        print(f"{len(pr_reviewers)} vs. {len(pr['requested_reviewers'])}: pr: {pr['number']}")
 
         mapping_data_key = pr["url"]
-        urls.append(mapping_data_key)
         pr_mapping_data[mapping_data_key] = {
                                             "labels": pr_labels,
                                             "assignees": pr_assignees,
@@ -311,19 +298,6 @@ def process_pull_requests(pull_requests, task_name, repo_id):
 
         # create a list of pr numbers to pass for the pr reviews task
         pr_numbers.append(pr["number"]) 
-
-    mid_reviewers = []
-    for url in urls:
-        review_data = pr_mapping_data[url]["reviewers"]
-        pr_number = int(url.split("/")[-1])
-        
-        if reviewers_map[pr_number] != len(review_data):
-            print(f"Error the pr with number: {pr_number} is {reviewers_map[pr_number]} at beginning but is now {len(review_data)}")
-
-        # print(f"{len(review_data)} reviewers found in pr number: {url}")
-        mid_reviewers += review_data
-
-    print(f"{task_name}: Length of pr reviewers at in middle: {len(mid_reviewers)}")
 
     with GithubTaskSession(logger) as session:
 
@@ -396,7 +370,7 @@ def process_pull_requests(pull_requests, task_name, repo_id):
         pr_assignee_natural_keys = ['pr_assignee_src_id', 'pull_request_id']
         session.insert_data(pr_assignee_dicts, PullRequestAssignee, pr_assignee_natural_keys)
 
-        print(f"{task_name}: Length of pr reviewers at before insertion: {len(pr_reviewer_dicts)}")
+    
         # inserting pr assignees
         # we are using pr_src_id and pull_request_id to determine if the label is already in the database.
         pr_reviewer_natural_keys = ["pull_request_id", "pr_reviewer_src_id"]
