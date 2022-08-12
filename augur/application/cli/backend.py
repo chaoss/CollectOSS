@@ -27,8 +27,6 @@ from augur.tasks.start_tasks import start_task
 from augur.tasks.git.facade_tasks import *
 from augur.tasks.github.contributors.tasks import process_contributors
 
-# from augur.api.application import Application
-# from augur.api.gunicorn import AugurGunicornApp
 from augur.tasks.init.redis_connection import redis_connection 
 from augur.application.db.models import Repo
 from augur.application.db.session import DatabaseSession
@@ -69,7 +67,6 @@ def start(disable_collection):
         if not disable_collection:
 
             celery_command = f"celery -A augur.tasks.init.celery_app.celery_app worker --loglevel=info --concurrency=20 -n {instance_id}@%h"
-            print(celery_command)
             celery_process = subprocess.Popen(celery_command.split(" "))
             time.sleep(10)
         
