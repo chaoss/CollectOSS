@@ -7,7 +7,7 @@ if [[ "$AUGUR_DB_SCHEMA_BUILD" == "1" ]]; then
 fi
 
 target='docker'
-AUGUR_FACADE_REPO_DIRECTORY=/augur/facade/
+export AUGUR_FACADE_REPO_DIRECTORY=/augur/facade/
 
 ./scripts/install/config.sh $target
 
