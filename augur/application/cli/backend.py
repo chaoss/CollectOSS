@@ -86,7 +86,6 @@ def start(disable_collection):
 
             repos_chain.apply_async()
     
-
     try:
         server.wait()
     except KeyboardInterrupt:
@@ -97,21 +96,14 @@ def start(disable_collection):
 
         if celery_process:
             logger.info("Shutting down celery process")
-            celery_process.terminate
+            celery_process.terminate()
 
         try:
-            logger.info(f"Deleting redis keys for instance id: {instance_id}")
-            delete_redis_keys(instance_id)
+            logger.info(f"Flushing redis cache")
+            redis_connection.flushdb()
             
         except RedisConnectionError:
             pass
-
-def delete_redis_keys(instance_id):
-
-    for key in redis_connection.scan_iter():
-
-        if instance_id in key:
-            redis_connection.delete(key)
 
 
 @cli.command('stop')

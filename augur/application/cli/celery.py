@@ -57,8 +57,8 @@ def start():
             celery_process.terminate
 
         try:
-            logger.info(f"Deleting redis keys for instance id: {instance_id}")
-            delete_redis_keys(instance_id)
+            logger.info("Flusing redis cache")
+            redis_connection.flushdb()
             
         except RedisConnectionError:
             pass

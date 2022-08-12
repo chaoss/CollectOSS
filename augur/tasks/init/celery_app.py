@@ -4,6 +4,8 @@ from celery.signals import after_setup_logger
 from augur.application.logs import TaskLogConfig
 import logging
 
+from augur import database_one_id, database_two_id
+
 start_tasks = ['augur.tasks.start_tasks']
 
 github_tasks = ['augur.tasks.github.contributors.tasks', 'augur.tasks.github.issues.tasks', 'augur.tasks.github.pull_requests.tasks', 'augur.tasks.github.events.tasks', 'augur.tasks.github.messages.tasks']
@@ -14,8 +16,8 @@ tasks = start_tasks + github_tasks + git_tasks
 
 
 # initialize the celery app
-BROKER_URL = 'redis://localhost:6379/0'
-BACKEND_URL = 'redis://localhost:6379/1'
+BROKER_URL = f'redis://localhost:6379/{database_one_id}'
+BACKEND_URL = f'redis://localhost:6379/{database_two_id}'
 celery_app = Celery('tasks', broker=BROKER_URL,
              backend=BACKEND_URL, include=tasks)   
 
