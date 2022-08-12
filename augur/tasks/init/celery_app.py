@@ -4,7 +4,7 @@ from celery.signals import after_setup_logger
 from augur.application.logs import TaskLogConfig
 import logging
 
-from augur.tasks.init import redis_db_number
+from augur.tasks.init import redis_db_number, redis_conn_string
 
 start_tasks = ['augur.tasks.start_tasks']
 
@@ -16,8 +16,8 @@ tasks = start_tasks + github_tasks + git_tasks
 
 
 # initialize the celery app
-BROKER_URL = f'redis://localhost:6379/{redis_db_number}'
-BACKEND_URL = f'redis://localhost:6379/{redis_db_number+1}'
+BROKER_URL = f'{redis_conn_string}{redis_db_number}'
+BACKEND_URL = f'{redis_conn_string}{redis_db_number+1}'
 celery_app = Celery('tasks', broker=BROKER_URL,
              backend=BACKEND_URL, include=tasks)   
 
