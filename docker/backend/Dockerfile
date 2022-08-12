@@ -26,9 +26,10 @@ COPY ./setup.py .
 COPY ./scripts/ scripts/
 
 #COPY ./docker/backend/docker.config.json .
+RUN python3 -m venv /opt/venv
 
 RUN set -x \
-    && pip install .
+    && /opt/venv/bin/pip install .
 
 RUN ./scripts/docker/install-go.sh
 # RUN ./scripts/install/workers.sh 

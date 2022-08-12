@@ -2,6 +2,9 @@
 #SPDX-License-Identifier: MIT
 set -e
 
+source /opt/venv/bin/activate
+
+
 if [[ "$AUGUR_DB_SCHEMA_BUILD" == "1" ]]; then
     augur db create-schema
 fi
