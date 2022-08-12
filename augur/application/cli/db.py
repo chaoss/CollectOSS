@@ -23,7 +23,7 @@ from augur.application.db.session import DatabaseSession
 from augur.application.logs import AugurLogger
 from augur.application.db.engine import create_database_engine
 
-logger = AugurLogger("cli").get_logger()
+logger = logging.getLogger(__name__)
 
 @click.group("db", short_help="Database utilities")
 def cli():

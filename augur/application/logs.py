@@ -19,7 +19,7 @@ from sqlalchemy.orm import Session
 from augur.application.db.models import Config 
 from augur.application.config import convert_type_of_value
 
-ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
 
 SIMPLE_FORMAT_STRING = "[%(process)d] %(name)s [%(levelname)s] %(message)s"

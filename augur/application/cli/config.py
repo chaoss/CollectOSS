@@ -22,7 +22,7 @@ from augur.application.cli import test_connection, test_db_connection
 
 ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
-logger = AugurLogger("cli").get_logger()
+logger = logging.getLogger(__name__)
 
 ENVVAR_PREFIX = "AUGUR_"
 

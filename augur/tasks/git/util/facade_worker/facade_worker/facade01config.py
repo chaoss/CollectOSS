@@ -42,7 +42,7 @@ from urllib.parse import urlparse
 from augur.tasks.github.util.github_task_session import *
 from augur.application.logs import AugurLogger
 
-logger = AugurLogger("cli").get_logger()
+logger = logging.getLogger(__name__)
 
 def get_database_args_from_env():
 

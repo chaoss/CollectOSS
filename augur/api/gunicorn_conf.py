@@ -6,9 +6,8 @@ from pathlib import Path
 import shutil
 
 from augur.application.db.session import DatabaseSession
-from augur.application.logs import AugurLogger
 
-logger = AugurLogger("gunicorn configuration").get_logger()
+logger = logging.getLogger(__name__)
 with DatabaseSession(logger) as session:
         
     # ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
@@ -21,8 +20,8 @@ with DatabaseSession(logger) as session:
     umask = 0o007
     reload = True
     #logging
-    accesslog = "augur/logs/gunicorn.log"
-    errorlog = "augur/logs/gunicorn.log"
+    accesslog = "logs/gunicorn.log"
+    errorlog = "logs/gunicorn.log"
 
     ssl_bool = session.config.get_value('Server', 'ssl')
 
