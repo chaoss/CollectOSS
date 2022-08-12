@@ -19,16 +19,11 @@ from redis.exceptions import ConnectionError as RedisConnectionError
 import uuid
 
 from augur import instance_id
-from augur import queue_name
-
-
 
 from augur.tasks.start_tasks import start_task
 from augur.tasks.git.facade_tasks import *
 from augur.tasks.github.contributors.tasks import process_contributors
 
-# from augur.api.application import Application
-# from augur.api.gunicorn import AugurGunicornApp
 from augur.tasks.init.redis_connection import redis_connection 
 from augur.application.db.models import Repo
 from augur.application.db.session import DatabaseSession
@@ -69,7 +64,6 @@ def start(disable_collection):
         if not disable_collection:
 
             celery_command = f"celery -A augur.tasks.init.celery_app.celery_app worker --loglevel=info --concurrency=20 -n {instance_id}@%h"
-            print(celery_command)
             celery_process = subprocess.Popen(celery_command.split(" "))
             time.sleep(10)
         
@@ -89,7 +83,6 @@ def start(disable_collection):
 
             repos_chain.apply_async()
     
-
     try:
         server.wait()
     except KeyboardInterrupt:
@@ -100,21 +93,14 @@ def start(disable_collection):
 
         if celery_process:
             logger.info("Shutting down celery process")
-            celery_process.terminate
+            celery_process.terminate()
 
         try:
-            logger.info(f"Deleting redis keys for instance id: {instance_id}")
-            delete_redis_keys(instance_id)
+            logger.info(f"Flushing redis cache")
+            redis_connection.flushdb()
             
         except RedisConnectionError:
             pass
-
-def delete_redis_keys(instance_id):
-
-    for key in redis_connection.scan_iter():
-
-        if instance_id in key:
-            redis_connection.delete(key)
 
 
 @cli.command('stop')

@@ -47,6 +47,9 @@ default_config = {
             },
             "Celery": {
                 "concurrency": 12
+            },
+            "Redis": {
+                "database_number": 0
             }
         }
 

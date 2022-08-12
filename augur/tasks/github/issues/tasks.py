@@ -1,7 +1,7 @@
 import time
 import logging
 
-from augur import queue_name
+
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.data_parse import *
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
