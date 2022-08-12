@@ -29,6 +29,10 @@ services:
     environment:
       - "AUGUR_DB=postgresql+psycopg2://${AUGUR_DB_USER:-augur}:${AUGUR_DB_PASSWORD:-augur}@augur-db:5432/augur"
       - "AUGUR_DB_SCHEMA_BUILD=0"
+      - "AUGUR_GITHUB_API_KEY=${AUGUR_GITHUB_API_KEY}"
+      - "AUGUR_GITLAB_API_KEY=${AUGUR_GITLAB_API_KEY}"
+      - "AUGUR_GITHUB_USERNAME=${AUGUR_GITHUB_USERNAME}"
+      - "AUGUR_GITLAB_USERNAME=${AUGUR_GITLAB_USERNAME}"
     depends_on:
       - augur-db
 
