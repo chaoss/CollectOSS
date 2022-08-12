@@ -2,13 +2,18 @@ import pytest
 import httpx
 import logging
 
+from sqlalchemy.sql import text
+
 from augur.tasks.github.pull_requests.core import *
 from augur.application.db.session import DatabaseSession
 from augur.application.db.models import Config 
+from augur.tasks.util.AugurUUID import GithubUUID
 from augur.application.db.data_parse import extract_needed_contributor_data
 from augur.application.db.engine import create_database_engine
 
 logger = logging.getLogger(__name__)
+not_provided_cntrb_id = '00000000-0000-0000-0000-000000000000'
+nan_cntrb_id = '01000000-0000-0000-0000-000000000000'
 
 @pytest.fixture
 def github_api_key_headers():
@@ -20,6 +25,7 @@ def github_api_key_headers():
         headers = {"Authorization": f'token {api_key}'}
 
         yield headers
+
 
 @pytest.mark.parametrize("pr_number", [1, 2, 26])
 def test_extract_data_from_pr(github_api_key_headers, pr_number):
@@ -203,11 +209,8 @@ def test_extract_data_from_pr_list(github_api_key_headers):
 
 
 
-@pytest.mark.parametrize("pr_number", [26])
+@pytest.mark.parametrize("pr_number", [1, 2, 3, 4, 5, 6, 7, 26])
 def test_insert_pr_contributors(github_api_key_headers, session, pr_number):
-
-    not_provided_cntrb_id = '00000000-0000-0000-0000-000000000000'
-    nan_cntrb_id = '01000000-0000-0000-0000-000000000000'
 
     try:
 
@@ -277,17 +280,143 @@ def test_insert_pr_contributors(github_api_key_headers, session, pr_number):
 
                 connection.execute(f"DELETE FROM augur_data.contributors WHERE cntrb_id!='{not_provided_cntrb_id}' AND cntrb_id!='{nan_cntrb_id}';")
 
+repos = []
+repos.append({"owner": "chaoss", "repo": "augur"})
+repos.append({"owner": "operate-first", "repo": "blueprint"})
+@pytest.mark.parametrize("repo", repos)
+def test_insert_prs(github_api_key_headers, session, repo):
+
+    url = f"https://api.github.com/repos/{repo['owner']}/{repo['repo']}/pulls?state=all&direction=asc"
+
+    try:
+        with httpx.Client() as client:
+
+            prs = client.request(method="GET", url=url, headers=github_api_key_headers, timeout=180).json()
+
+            urls = [pr["url"] for pr in prs]
+
+            repo_id = 1
+            tool_source = "Pr Task"
+            tool_version = "2.0"
+            data_source = "Github API"
+
+            prs_insert = []
+            contributors_inserted = []
+            for pr in prs:
+
+                contributor = extract_needed_contributor_data(pr["user"], tool_source, tool_version, data_source)
+
+                # ensure we don't try to insert same contributor twice
+                if pr["user"]["login"] not in contributors_inserted:
+
+                    with session.engine.connect() as connection:
+
+                        # insert the cntrb_id and cntrb_login into the contributors table so the contributor is present. 
+                        # This is so we don't get a foreign key error on the cntrb_id when we insert the prs
+                        query = text("""INSERT INTO "augur_data"."contributors" ("cntrb_login", "cntrb_email", "cntrb_full_name", "cntrb_company", "cntrb_created_at", "cntrb_type", "cntrb_fake", "cntrb_deleted", "cntrb_long", "cntrb_lat", "cntrb_country_code", "cntrb_state", "cntrb_city", "cntrb_location", "cntrb_canonical", "cntrb_last_used", "gh_user_id", "gh_login", "gh_url", "gh_html_url", "gh_node_id", "gh_avatar_url", "gh_gravatar_id", "gh_followers_url", "gh_following_url", "gh_gists_url", "gh_starred_url", "gh_subscriptions_url", "gh_organizations_url", "gh_repos_url", "gh_events_url", "gh_received_events_url", "gh_type", "gh_site_admin", "gl_web_url", "gl_avatar_url", "gl_state", "gl_username", "gl_full_name", "gl_id", "tool_source", "tool_version", "data_source", "data_collection_date", "cntrb_id") VALUES (:cntrb_login, 'kannayoshihiro@gmail.com', 'KANNA Yoshihiro', 'UTMC', '2009-04-17 12:43:58', NULL, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, 'kannayoshihiro@gmail.com', '2021-01-28 21:56:10-06', 74832, :gh_login, 'https://api.github.com/users/nan', 'https://github.com/nan', 'MDQ6VXNlcjc0ODMy', 'https://avatars.githubusercontent.com/u/74832?v=4', '', 'https://api.github.com/users/nan/followers', 'https://api.github.com/users/nan/following{/other_user}', 'https://api.github.com/users/nan/gists{/gist_id}', 'https://api.github.com/users/nan/starred{/owner}{/repo}', 'https://api.github.com/users/nan/subscriptions', 'https://api.github.com/users/nan/orgs', 'https://api.github.com/users/nan/repos', 'https://api.github.com/users/nan/events{/privacy}', 'https://api.github.com/users/nan/received_events', 'User', 'false', NULL, NULL, NULL, NULL, NULL, NULL, 'GitHub API Worker', '1.0.0', 'GitHub API', '2021-10-28 15:23:46', :cntrb_id);""")
+
+                        connection.execute(query, **contributor)
+
+                        contributors_inserted.append(pr["user"]["login"])
+                
+                pr["cntrb_id"] = contributor["cntrb_id"]
+                
+                prs_insert.append(
+                        extract_needed_pr_data(pr, repo_id, tool_source, tool_version)
+                )
+               
+
+            return_data = insert_prs(prs_insert, session, "Insert contrbibutors test")
+
+            with session.engine.connect() as connection:
+
+                result = connection.execute(f"SELECT * FROM augur_data.pull_requests;").fetchall()
+
+                assert result is not None
+                assert len(result) == len(prs) == len(return_data)
+
+                if len(return_data) > 0:
+                    assert type(return_data[0]) == dict
+
+                for row_tuple in result:
+                    row = dict(row_tuple)
+
+                    assert row["pr_url"] in urls
+
+    finally:
+
+         with session.engine.connect() as connection:
+
+            connection.execute(f"DELETE FROM augur_data.pull_requests;")
+            connection.execute(f"DELETE FROM augur_data.contributors WHERE cntrb_id!='{not_provided_cntrb_id}' AND cntrb_id!='{nan_cntrb_id}';")
 
 
-def insert_prs():
 
-   pass
+def test_map_other_pr_data_to_pr(github_api_key_headers):
 
-def test_map_other_pr_data_to_pr():
+    pr_numbers = [1, 2, 3, 4, 5, 6]
+    base_url = "https://api.github.com/repos/operate-first/blueprint/pulls/"
 
-    pass
+    pr_return_data = []
+    raw_pr_data = []
+    pr_mapping_data = {}
 
-def test_insert_other_pr_data():
+    for number in pr_numbers:
 
-    pass
+        url = base_url + str(number)
+
+        pr_return_data.append({f'pull_request_id': number, 'pr_url': url})
+        
+        with httpx.Client() as client:
+
+            pr = client.request(method="GET", url=url, headers=github_api_key_headers, timeout=180).json()
+
+            raw_pr_data.append(pr)
+
+            mapping_data_key = pr["url"]
+            pr_mapping_data[mapping_data_key] = {
+                                                "labels": pr["labels"],
+                                                "assignees": pr["assignees"],
+                                                "reviewers": pr["requested_reviewers"],
+                                                "metadata": [pr["head"], pr["base"]]
+                                                }      
+
+    labels, assignees, reviewers, metadata  = map_other_pr_data_to_pr(pr_return_data, pr_mapping_data, logger)
+
+
+    for pr in raw_pr_data:
+
+        pr_number = pr["number"]
+
+        pr_labels = pr["labels"]
+        pr_assignees = pr["assignees"]
+        pr_reviewers = pr["requested_reviewers"]
+        pr_metadata = [pr["head"], pr["base"]]
+
+        related_labels = [label for label in labels if label["pull_request_id"] == pr_number]
+        related_assignees = [assignee for assignee in assignees if assignee["pull_request_id"] == pr_number]
+        related_reviewers = [reviewer for reviewer in reviewers if reviewer["pull_request_id"] == pr_number]
+        related_metadata = [meta for meta in metadata if meta["pull_request_id"] == pr_number]
+
+        for label in related_labels:
+
+            assert label["id"] in [pr_label["id"] for pr_label in pr_labels]
+    
+        for assignee in related_assignees:
+
+            assert assignee["id"] in [pr_assignee["id"] for pr_assignee in pr_assignees]
+
+        for reviewer in related_reviewers:
+
+            assert reviewer["id"] in [pr_reviewer["id"] for pr_reviewer in pr_reviewers]
+
+        for related_meta in related_metadata:
+
+            assert related_meta["sha"] in [pr_meta["sha"] for pr_meta in pr_metadata]
+
+
+
+# def test_insert_other_pr_data():
+
+#     pass
 
