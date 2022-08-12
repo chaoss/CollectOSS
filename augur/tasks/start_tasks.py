@@ -189,12 +189,9 @@ def start_task(repo_git: str):
     
     secondary_task_group = group(secondary_task_list)
 
-    task_chain = chain(
-        start_tasks_group, 
-        secondary_task_group, 
-    )
-
-    task_chain.apply_async()
+    routine = AugurTaskRoutine()
+    routine['start'] = chain(start_tasks_group,secondary_task_group)
+    routine.start_data_collection()
 
 
 def get_owner_repo(git_url):

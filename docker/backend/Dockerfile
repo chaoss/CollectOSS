@@ -25,16 +25,16 @@ COPY ./metadata.py .
 COPY ./setup.py .
 COPY ./scripts/ scripts/
 
-COPY ./docker/backend/docker.config.json .
+#COPY ./docker/backend/docker.config.json .
+RUN python3 -m venv /opt/venv
 
 RUN set -x \
-    && pip install .
+    && /opt/venv/bin/pip install .
 
 RUN ./scripts/docker/install-go.sh
 # RUN ./scripts/install/workers.sh 
 
-RUN augur config init --rc-config-file /augur/docker.config.json \
-    && mkdir -p repos/ logs/
+RUN mkdir -p repos/ logs/ facade/
 
 COPY ./docker/backend/entrypoint.sh /
 RUN chmod +x /entrypoint.sh
