@@ -24,7 +24,7 @@ def deserialize_task_set(dict_obj):
         for task in dict_obj['kwargs']['tasks']:
             task_list.append(signature(dict(task)))
         
-        return group(task_list)
+        return group(task_list) if dict_obj['task'] == 'celery.group' else chain(task_list)
     else:
         #assume its a signature
         return signature(dict(dict_obj))
