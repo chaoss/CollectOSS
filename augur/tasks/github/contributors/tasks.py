@@ -1,7 +1,7 @@
 import time
 import logging
 
-from augur import queue_name
+
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.data_parse import *
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
@@ -79,14 +79,14 @@ def retrieve_dict_data(url: str, session):
         if "message" in page_data:
 
             if page_data['message'] == "Not Found":
-                logger.info(
+                session.logger.info(
                     "Github repo was not found or does not exist for endpoint: "
                     f"{response.url}\n"
                 )
                 break
 
             elif "You have exceeded a secondary rate limit. Please wait a few minutes before you try again" in page_data['message']:
-                logger.info('\n\n\n\nSleeping for 100 seconds due to secondary rate limit issue.\n\n\n\n')
+                session.logger.info('\n\n\n\nSleeping for 100 seconds due to secondary rate limit issue.\n\n\n\n')
                 time.sleep(100)
                 continue
 

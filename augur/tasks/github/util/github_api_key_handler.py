@@ -19,7 +19,7 @@ class GithubApiKeyHandler():
 
         self.keys = self.get_api_keys()
 
-        self.logger.debug(f"Retrieved {len(self.keys)} github api keys for use")
+        # self.logger.debug(f"Retrieved {len(self.keys)} github api keys for use")
 
     def get_config_key(self):
 

@@ -9,7 +9,7 @@ from celery.result import allow_join_result
 from celery import signature
 from celery import group, chain, chord, signature
 
-from augur import queue_name
+
 from augur.tasks.github import *
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.logs import AugurLogger
@@ -188,6 +188,13 @@ def start_task(repo_git: str):
     secondary_task_list.append(collect_issue_and_pr_comments.si(repo_git))
     
     secondary_task_group = group(secondary_task_list)
+
+    task_chain = chain(
+        start_tasks_group, 
+        secondary_task_group, 
+    )
+
+    task_chain.apply_async()
 
 
 def get_owner_repo(git_url):

@@ -19,9 +19,6 @@ from redis.exceptions import ConnectionError as RedisConnectionError
 import uuid
 
 from augur import instance_id
-from augur import queue_name
-
-
 
 from augur.tasks.start_tasks import start_task
 from augur.tasks.git.facade_tasks import *

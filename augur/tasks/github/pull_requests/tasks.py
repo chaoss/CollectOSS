@@ -1,7 +1,7 @@
 import time
 import logging
 
-from augur import queue_name
+
 from augur.tasks.github.pull_requests.core import extract_data_from_pr_list
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.data_parse import *
