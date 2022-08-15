@@ -8,6 +8,9 @@ source /opt/venv/bin/activate
 if [[ "$AUGUR_DB" == *"localhost"* ]]; then
     echo "localhost db connection"
     export AUGUR_DB="${AUGUR_DB/localhost/host.docker.internal}"
+elif [[ "$AUGUR_DB" == *"127.0.0.1"* ]]; then
+    echo "localhost db connection"
+    export AUGUR_DB="${AUGUR_DB/127.0.0.1/host.docker.internal}"
 fi
 
 
