@@ -51,6 +51,9 @@ default_config = {
             "Redis": {
                 "cache_group": 0, 
                 "connection_string": "redis://localhost:6379/"
+            },
+            "Tasks": {
+                "collection_interval": 2592000
             }
         }
 
