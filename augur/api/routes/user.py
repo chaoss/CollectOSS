@@ -104,3 +104,32 @@ def create_routes(server):
             else:
                 connection.execute('DELETE FROM users WHERE login_name = login_name')
                 return jsonify({"status": "User deleted"}), 200
+    
+    server.app.route(f"/{AUGUR_API_VERSION}/user/update", methods=['GET', 'POST'])
+    def update_user():
+        with engine.connect() as connection:
+            login_name = request.args.get("username")
+            password = request.args.get("password")
+            email = request.args.get("email")
+            new_login_name = request.args.get("new_username")
+            if login_name is None:
+                return jsonify({"status": "Missing argument"}), 400
+            checkUsername = connection.execute("SELECT * FROM users WHERE login_name = %(login_name)s",{'login_name' : login_name }).fetchall()
+            if len(checkUsername) == 0:
+                return jsonify({"status": "User does not exist"})
+            if len(checkUsername) > 0:
+                if(email is not None):
+                    statement= text("UPDATE users SET email=:email WHERE login_name = :login_name",{'login_name' : login_name })
+                    connection.execute(statement, {'login_name': login_name, 'email': email})
+                    return jsonify({"status": "Email Updated"})
+                if(password is not None):
+                    hashing = hash_algorithm()
+                    hashing.update(password.encode('utf8'))
+                    login_hashword = hashing.hexdigest()
+                    statement= text("UPDATE users SET login_hashword=:login_hashword WHERE login_name = :login_name",{'login_name' : login_name })
+                    connection.execute(statement, {'login_name': login_name, 'login_hashword': login_hashword})
+                    return jsonify({"status": "Password Updated"})
+                if(new_login_name is not None):
+                    statement= text("UPDATE users SET login_name =:new_login_name WHERE login_name = :login_name",{'login_name' : login_name })
+                    connection.execute(statement, {'login_name': login_name, 'new_login_name': new_login_name})
+                    return jsonify({"status": "Username Updated"})
