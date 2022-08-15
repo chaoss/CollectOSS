@@ -26,11 +26,30 @@ Before you get off to such a quick start, go ahead and
     CREATE DATABASE augur;
     CREATE USER augur WITH ENCRYPTED PASSWORD 'password';
     GRANT ALL PRIVILEGES ON DATABASE augur TO augur;
-
-  2. Install Docker. If you're not familiar with Docker, their `starting guide <https://www.docker.com/resources/what-container>`_ is a great resource.
-  3. Execute the following script from the base directory of the Augur repository:
+  
+  2. Make sure you have an instance of redis running somewhere an external machine can access. On linux you can do this manually like this:
 
   .. code-block:: bash
 
-    sudo ./docker-setup.sh
+    redis-server --protected-mode no
+
+  3. Install Docker. If you're not familiar with Docker, their `starting guide <https://www.docker.com/resources/what-container>`_ is a great resource.
+
+  4. Create a file to store all relevant enviroment variables for running docker. Below is an example file.
+
+  .. code-block:: 
+
+    AUGUR_GITHUB_API_KEY=xxxxxxxxxxxxxxxxxxx
+    AUGUR_GITHUB_USERNAME=ExampleUser
+    AUGUR_GITLAB_API_KEY=xxxxxxxxxxxxxxxxxxx
+    AUGUR_GITLAB_USERNAME=ExampleUser
+    AUGUR_DB=postgresql://xxxx:xxxxxxxx@yourhost:5432/yourdb
+    REDIS_CONN_STRING=redis://yourhost:6379
+
+  4. Execute the code from the base directory of the Augur repository:
+
+  .. code-block:: bash
+
+    sudo docker build -t augur-docker -f docker/backend/Dockerfile .
+    sudo docker run --name augur --env-file <location where you saved your enviroment variables> --add-host host.docker.internal:host-gateway -t augur-docker
 
