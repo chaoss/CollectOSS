@@ -57,34 +57,35 @@ def create_routes(server):
                 return jsonify({"status": "Invalid password"})
             return jsonify({"status": "Validated"})
 
-    server.app.route(f"/{AUGUR_API_VERSION}/user/create", methods=['POST'])
+    server.app.route(f"/{AUGUR_API_VERSION}/user/create", methods=['POST', 'GET'])
     def create_user():
         if not request.is_secure:
             return generate_upgrade_request()
 
-        user = response.args.get("user_id")
-        password = response.args.get("password")
+        with engine.connect() as connection:
+            login_name = request.args.get("username")
+            password = request.args.get("password")
+            email = request.args.get("email")
+            first_name = request.args.get("first_name")
+            last_name = request.args.get("last_name")
 
-        if user is None or password is None:
-            # https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
-            return jsonify({"status": "Missing argument"}), 400
+            if login_name is None or password is None or email is None:
+                # https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
+                return jsonify({"status": "Missing argument"}), 400
 
-        # TODO database stuff. See pseudocode below
-
-        user = User(username = name, password = password, email = email)
-
-        db.session.add(user)
-        db.commit()
-
-        """
-        - SELECT * FROM users WHERE id = user
-
-        - if result:
-            return jsonify({"status": "User already exists"})
-
-        - Hash user's password
-
-        - INSERT INTO users VALUES (user, pass_hash)
-
-        - return jsonify({"status": "User created"})
-        """
+            checkUsername = connection.execute("SELECT * FROM users WHERE login_name = %(login_name)s",{ 'login_name' : login_name }).fetchall()
+            checkEmail = connection.execute("SELECT * FROM users WHERE email = %(email)s",{ 'email' : email }).fetchall()
+            if len(checkUsername) > 0:
+                return jsonify({"status": "User already exists"})
+            elif len(checkEmail) > 0:
+                return jsonify({"status": "Email already exists"})
+            else:
+                try:
+                    hashing = hash_algorithm()
+                    hashing.update(password.encode('utf8'))
+                    login_hashword = hashing.hexdigest()
+                    statement = text("INSERT INTO users (login_name, login_hashword, email, first_name, last_name) VALUES (:login_name, :login_hashword, :email, :first_name, :last_name)")
+                    connection.execute(statement, {'login_name': login_name, 'login_hashword': login_hashword, 'email': email, "first_name": first_name, "last_name": last_name})
+                    return jsonify({"status": "User created"})
+                except AssertionError as exception_message: 
+                        return jsonify(msg='Error: {}. '.format(exception_message)), 400
