@@ -89,3 +89,18 @@ def create_routes(server):
                     return jsonify({"status": "User created"})
                 except AssertionError as exception_message: 
                         return jsonify(msg='Error: {}. '.format(exception_message)), 400
+    
+    server.app.route(f"/{AUGUR_API_VERSION}/user/remove", methods=['GET', 'PUT','DELETE'])
+    def delete_user():
+        if not request.is_secure:
+            return generate_upgrade_request()
+        login_name = request.args.get("username")
+        if login_name is None:
+            return jsonify({"status": "Missing argument"}), 400
+        with engine.connect() as connection:
+            checkUsername = connection.execute("SELECT * FROM users WHERE login_name = %(login_name)s",{ 'login_name' : login_name }).fetchall()
+            if len(checkUsername) == 0:
+                return jsonify({"status": "User does not exist"})
+            else:
+                connection.execute('DELETE FROM users WHERE login_name = login_name')
+                return jsonify({"status": "User deleted"}), 200
