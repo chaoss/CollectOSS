@@ -5,6 +5,13 @@ set -e
 source /opt/venv/bin/activate
 
 
+if [[ "$AUGUR_DB" == *"localhost"* ]]; then
+    echo "localhost db connection"
+    export AUGUR_DB="${AUGUR_DB/localhost/host.docker.internal}"
+fi
+
+
+
 if [[ "$AUGUR_DB_SCHEMA_BUILD" == "1" ]]; then
     augur db create-schema
 fi
