@@ -41,9 +41,6 @@ default_config = {
             "Logging": {
                 "logs_directory": "",
                 "log_level": "INFO",
-                "verbose": 0,
-                "quiet": 0,
-                "debug": 0
             },
             "Celery": {
                 "concurrency": 12
