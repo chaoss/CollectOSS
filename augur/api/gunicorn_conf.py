@@ -19,9 +19,11 @@ with DatabaseSession(logger) as session:
     workers = multiprocessing.cpu_count() * 2 + 1
     umask = 0o007
     reload = True
-    #logging
-    accesslog = "logs/gunicorn.log"
-    errorlog = "logs/gunicorn.log"
+
+    # set the log location for gunicorn    
+    logs_directory = session.config.get_value('Logging', 'logs_directory')
+    accesslog = f"{logs_directory}/gunicorn.log"
+    errorlog = f"{logs_directory}/gunicorn.log"
 
     ssl_bool = session.config.get_value('Server', 'ssl')
 
