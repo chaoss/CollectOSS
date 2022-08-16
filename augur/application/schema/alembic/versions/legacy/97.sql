@@ -73,4 +73,4 @@ ALTER TABLE "augur_data"."repo_labor"
 --
 update "augur_operations"."augur_settings" set value = 97
   where setting = 'augur_data_version'; 
-COMMIT; 
+ 

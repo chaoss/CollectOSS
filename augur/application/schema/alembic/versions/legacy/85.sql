@@ -21,4 +21,4 @@ ALTER TABLE "augur_data"."issue_message_ref"
 update "augur_operations"."augur_settings" set value = 85 where setting = 'augur_data_version'; 
 
 
-COMMIT; 
+ 

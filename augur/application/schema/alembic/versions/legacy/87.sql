@@ -8,4 +8,4 @@ CREATE INDEX "committer_affiliation" ON "augur_data"."commits" USING hash (
 update "augur_operations"."augur_settings" set value = 87 where setting = 'augur_data_version'; 
 
 
-COMMIT; 
+ 

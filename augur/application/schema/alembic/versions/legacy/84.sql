@@ -4,4 +4,4 @@ ALTER TABLE "augur_data"."repo"
 update "augur_operations"."augur_settings" set value = 84 where setting = 'augur_data_version'; 
 
 
-COMMIT; 
+ 
