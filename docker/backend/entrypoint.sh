@@ -16,6 +16,7 @@ fi
 
 
 if [[ "$AUGUR_DB_SCHEMA_BUILD" == "1" ]]; then
+    echo "why"
     augur db create-schema
 fi
 
