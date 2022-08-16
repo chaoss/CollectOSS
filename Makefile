@@ -76,6 +76,18 @@ db:
 	@ docker run -p 5434:5432 --name augur_database augurlabs/augur:database
 
 
+lint:
+	@ pylint augur
+lint-count:
+	@ pylint augur | wc -l
+lint-docs:
+	@ pylint augur | grep docstring
+lint-docs-missing:
+	@ pylint augur | grep docstring | wc -l
+
+lint-github-tasks-count:
+	@ pylint augur | grep augur/tasks/github/ | wc -l
+
 #
 # Testing
 #
@@ -86,7 +98,10 @@ test-data:
 	@ - docker rm augur_test_data
 	@ docker run -p 5434:5432 --name augur_test_data augurlabs/augur:test_data@sha256:71da12114bf28584a9a64ede2fac0cbc8dffc8e2f4a2c61231206e2f82201c2f
 
-test: test-application test-metric-routes test-workers
+test:
+	@ pytest tests/test_tasks/test_github_tasks/
+	@ pytest tests/test_tasks/test_task_utlities/
+
 
 test-application:
 	@ bash -c 'tox -e py-application'
@@ -101,10 +116,6 @@ test-metric-routes:
 
 test-python-versions:
 	@ bash -c 'tox -e ALL'
-
-
-
-
 
 
 #

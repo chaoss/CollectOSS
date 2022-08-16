@@ -5,6 +5,7 @@ import logging
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.data_parse import *
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
+from augur.application.db.session import DatabaseSession
 from augur.tasks.github.util.github_task_session import GithubTaskSession
 from augur.tasks.util.worker_util import wait_child_tasks
 from augur.tasks.github.util.util import remove_duplicate_dicts, add_key_value_pair_to_list_of_dicts, get_owner_repo
@@ -133,33 +134,41 @@ def map_other_pr_data_to_pr(pr_return_data, pr_mapping_data, logger):
     return pr_label_dicts, pr_assignee_dicts, pr_reviewer_dicts, pr_metadata_dicts 
 
 
-def insert_pr_labels(labels):
+def insert_pr_labels(labels, logger):
 
-    # we are using pr_src_id and pull_request_id to determine if the label is already in the database.
-    pr_label_natural_keys = ['pr_src_id', 'pull_request_id']
-    session.insert_data(labels, PullRequestLabel, pr_label_natural_keys)
+    with DatabaseSession(logger) as session:
 
-
-def insert_pr_assignees(assignees):
-
-    # we are using pr_assignee_src_id and pull_request_id to determine if the label is already in the database.
-    pr_assignee_natural_keys = ['pr_assignee_src_id', 'pull_request_id']
-    session.insert_data(assignees, PullRequestAssignee, pr_assignee_natural_keys)
+        # we are using pr_src_id and pull_request_id to determine if the label is already in the database.
+        pr_label_natural_keys = ['pr_src_id', 'pull_request_id']
+        session.insert_data(labels, PullRequestLabel, pr_label_natural_keys)
 
 
-def insert_pr_reviewers(reviewers):
+def insert_pr_assignees(assignees, logger):
 
-    # we are using pr_src_id and pull_request_id to determine if the label is already in the database.
-    pr_reviewer_natural_keys = ["pull_request_id", "pr_reviewer_src_id"]
-    session.insert_data(reviewers, PullRequestReviewer, pr_reviewer_natural_keys)
+    with DatabaseSession(logger) as session:
+
+        # we are using pr_assignee_src_id and pull_request_id to determine if the label is already in the database.
+        pr_assignee_natural_keys = ['pr_assignee_src_id', 'pull_request_id']
+        session.insert_data(assignees, PullRequestAssignee, pr_assignee_natural_keys)
 
 
-def insert_pr_metadata(metadata):
+def insert_pr_reviewers(reviewers, logger):
 
-    # inserting pr metadata
-    # we are using pull_request_id, pr_head_or_base, and pr_sha to determine if the label is already in the database.
-    pr_metadata_natural_keys = ['pull_request_id', 'pr_head_or_base', 'pr_sha']
-    session.insert_data(metadata, PullRequestMeta, pr_metadata_natural_keys)
+    with DatabaseSession(logger) as session:
+
+        # we are using pr_src_id and pull_request_id to determine if the label is already in the database.
+        pr_reviewer_natural_keys = ["pull_request_id", "pr_reviewer_src_id"]
+        session.insert_data(reviewers, PullRequestReviewer, pr_reviewer_natural_keys)
+
+
+def insert_pr_metadata(metadata, logger):
+
+    with DatabaseSession(logger) as session:
+
+        # inserting pr metadata
+        # we are using pull_request_id, pr_head_or_base, and pr_sha to determine if the label is already in the database.
+        pr_metadata_natural_keys = ['pull_request_id', 'pr_head_or_base', 'pr_sha']
+        session.insert_data(metadata, PullRequestMeta, pr_metadata_natural_keys)
 
 
 
