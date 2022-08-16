@@ -37,5 +37,5 @@ DROP INDEX IF EXISTS "augur_data"."committer_email,committer_affiliation,committ
 
 update "augur_operations"."augur_settings" set value = 96
   where setting = 'augur_data_version'; 
-COMMIT; 
+ 
 

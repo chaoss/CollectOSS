@@ -3,7 +3,7 @@
 
 BEGIN;
 INSERT INTO "augur_data"."platform" VALUES (25150, 'GitHub', '3', '2019-06-05', 'Manual Entry', 'Sean Goggins', 'GitHub', '2019-06-05 17:23:42');
-COMMIT;
+
 
 BEGIN; 
 
@@ -11,13 +11,13 @@ INSERT INTO "augur_data"."contributors"("cntrb_id", "cntrb_login", "cntrb_email"
 
 INSERT INTO "augur_data"."repo_groups"("repo_group_id", "rg_name", "rg_description", "rg_website", "rg_recache", "rg_last_modified", "rg_type", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (1, 'Default Repo Group', 'The default repo group created by the schema generation script', '', 0, '2019-06-03 15:55:20', 'GitHub Organization', 'load', 'one', 'git', '2019-06-05 13:36:25');
 
-COMMIT; 
+ 
 
 BEGIN; 
 
 
 
-COMMIT; 
+ 
 
 -- ----------------------------
 -- Records of settings
@@ -37,7 +37,7 @@ INSERT INTO "augur_data"."settings" VALUES (9, 'aliases_processed', '2001-08-26 
 INSERT INTO "augur_data"."settings" VALUES (7, 'working_author', 'done', '1900-01-22 20:23:43');
 INSERT INTO "augur_data"."settings" VALUES (3, 'utility_status', 'Idle', '1900-01-22 20:38:07');
 
-COMMIT;
+
 
 
 
@@ -125,7 +125,7 @@ INSERT INTO "augur_data"."chaoss_metric_status" VALUES (78, 'experimental', 'ght
 INSERT INTO "augur_data"."chaoss_metric_status" VALUES (79, 'experimental', 'librariesio', 'metric', 'implemented', 'implemented', 'f', '/api/unstable/<owner>/<repo>/dependencies', NULL, 'Dependencies', 'experimental', '"dependencies"', 'Insight Worker', '0.0.1', 'librariesio', '2019-06-20 22:51:21', NULL);
 INSERT INTO "augur_data"."chaoss_metric_status" VALUES (80, 'experimental', 'librariesio', 'metric', 'implemented', 'implemented', 'f', '/api/unstable/<owner>/<repo>/dependency_stats', NULL, 'Dependency Stats', 'experimental', '"dependency-stats"', 'Insight Worker', '0.0.1', 'librariesio', '2019-06-20 22:51:23', NULL);
 INSERT INTO "augur_data"."chaoss_metric_status" VALUES (81, 'experimental', 'librariesio', 'metric', 'implemented', 'implemented', 'f', '/api/unstable/<owner>/<repo>/dependents', NULL, 'Dependents', 'experimental', '"dependents"', 'Insight Worker', '0.0.1', 'librariesio', '2019-06-20 22:51:25', NULL);
-COMMIT;
+
 
 -- SPDX Schema Required Metadata 
 
@@ -164,7 +164,7 @@ INSERT INTO "spdx"."relationship_types" VALUES (27, 'AMENDS');
 INSERT INTO "spdx"."relationship_types" VALUES (28, 'PREREQUISITE_FOR');
 INSERT INTO "spdx"."relationship_types" VALUES (29, 'HAS_PREREQUISITE');
 INSERT INTO "spdx"."relationship_types" VALUES (30, 'OTHER');
-COMMIT;
+
 
 
 
@@ -494,7 +494,7 @@ INSERT INTO "spdx"."licenses" VALUES (319, 'GNU Lesser General Public License v3
 INSERT INTO "spdx"."licenses" VALUES (320, 'GNU Library General Public License v2 or later', 'LGPL-2.0+', 'http://spdx.org/licenses/LGPL-2.0+', '', 't');
 INSERT INTO "spdx"."licenses" VALUES (321, 'Standard ML of New Jersey License', 'StandardML-NJ', 'http://spdx.org/licenses/StandardML-NJ', '', 't');
 INSERT INTO "spdx"."licenses" VALUES (322, 'wxWindows Library License', 'WXwindows', 'http://spdx.org/licenses/WXwindows', '', 't');
-COMMIT;
+
 
 
 
@@ -513,7 +513,7 @@ INSERT INTO "spdx"."file_types" VALUES (1, 'SOURCE');
 INSERT INTO "spdx"."file_types" VALUES (10, 'SPDX');
 INSERT INTO "spdx"."file_types" VALUES (7, 'TEXT');
 INSERT INTO "spdx"."file_types" VALUES (8, 'VIDEO');
-COMMIT;
+
 
 
 
@@ -528,7 +528,7 @@ BEGIN;
 INSERT INTO "spdx"."creator_types" VALUES (1, 'Person');
 INSERT INTO "spdx"."creator_types" VALUES (2, 'Organization');
 INSERT INTO "spdx"."creator_types" VALUES (3, 'Tool');
-COMMIT;
+
 
 
 -- ----------------------------
@@ -537,7 +537,7 @@ COMMIT;
 BEGIN;
 INSERT INTO "spdx"."annotation_types" VALUES (1, 'REVIEW');
 INSERT INTO "spdx"."annotation_types" VALUES (2, 'OTHER');
-COMMIT;
+
 
 
 -- ----------------------------
@@ -545,7 +545,7 @@ COMMIT;
 -- ----------------------------
 BEGIN;
 INSERT INTO "spdx"."creators" VALUES (1, 3, 'dosocs2-0.16.1', '');
-COMMIT;
+
 
 
 

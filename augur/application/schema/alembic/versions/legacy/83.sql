@@ -18,7 +18,7 @@ LANGUAGE plpgsql VOLATILE;
 update "augur_operations"."augur_settings" set value = 83 where setting = 'augur_data_version'; 
 
 
-COMMIT; 
+ 
 
 BEGIN; 
 
@@ -36,4 +36,4 @@ SELECT create_constraint_if_not_exists('augur_data.pull_request_commits', 'pr_co
 update "augur_operations"."augur_settings" set value = 83 where setting = 'augur_data_version'; 
 
 
-COMMIT; 
+ 

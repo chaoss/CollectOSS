@@ -26,6 +26,16 @@ def natural_sort_key(s, _nsre=re.compile('([0-9]+)')):
     return [int(text) if text.isdigit() else text.lower()
             for text in _nsre.split(s)]
 
+def is_newer_than_current_version(file_with_extension, augur_version):
+
+    file_with_extension_removed = str(file_with_extension.name).split(".")[0]
+
+    try:
+        file_version = int(file_with_extension_removed)
+    except ValueError:
+        return False
+
+    return file_version > augur_version
 
 def upgrade():
     # try:
@@ -42,8 +52,8 @@ def upgrade():
             logger.info(f"New database, will run all legacy migrations")
     legacy_folder = Path(__file__).parent / "legacy"
     relevant_legacy_migrations = filter(
-       lambda x: int(str(x.name).split(".")[0]) > augur_version,
-       legacy_folder.glob("*.sql"),
+        lambda file_name: is_newer_than_current_version(file_name, augur_version),
+       legacy_folder.glob("*.sql")
     )
     ordered_legacy_migrations = list(
         sorted(
@@ -56,6 +66,11 @@ def upgrade():
         with legacy_migration_file_path.open() as legacy_migration_file:
             logger.info(f"Running legacy migration {legacy_migration_filename}")
             op.execute(legacy_migration_file.read())
+
+    # execute the commit.sql file at then end of all the sql files to COMMIT everything in the first revision
+    commit_file_path = str(legacy_folder) + "/commit.sql"
+    with open(commit_file_path, "r") as commit_file:
+        op.execute(commit_file.read())
 
 
 def downgrade():
