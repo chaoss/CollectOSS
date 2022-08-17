@@ -60,28 +60,22 @@ def start(disable_collection):
         logger.info('Gunicorn webserver started...')
         logger.info(f'Augur is running at: http://127.0.0.1:{session.config.get_value("Server", "port")}')
 
-        celery_process = None
+        celery_worker_process = None
+        celery_beat_process = None
         if not disable_collection:
 
-            celery_command = f"celery -A augur.tasks.init.celery_app.celery_app worker --loglevel=info --concurrency=20 -n {instance_id}@%h"
-            celery_process = subprocess.Popen(celery_command.split(" "))
-            time.sleep(10)
-        
-            repos = session.query(Repo).all()
+            if os.path.exists("celerybeat-schedule.db"):
+                print("Deleting old task schedule")
+                os.remove("celerybeat-schedule.db")
 
-            task_list = []
+            celery_command = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=20 -n {instance_id}@%h"
+            celery_worker_process = subprocess.Popen(celery_command.split(" "))
+            time.sleep(5)
 
-            task_list += [facade_commits_model.si()]
+            collect_github = start_task.si().apply_async()
 
-            task_list += [start_task.si(repo.repo_git) for repo in repos]
-
-            task_list += [process_contributors.si()]
-
-            repos_chain = chain(task_list)
-
-            logger.info(repos_chain)
-
-            repos_chain.apply_async()
+            celery_command = f"celery -A augur.tasks.init.celery_app.celery_app beat -l debug"
+            celery_beat_process = subprocess.Popen(celery_command.split(" "))        
     
     try:
         server.wait()
@@ -91,9 +85,13 @@ def start(disable_collection):
             logger.info("Shutting down server")
             server.terminate()
 
-        if celery_process:
+        if celery_worker_process:
             logger.info("Shutting down celery process")
-            celery_process.terminate()
+            celery_worker_process.terminate()
+
+        if celery_beat_process:
+            logger.info("Shutting down celery beat process")
+            celery_beat_process.terminate()
 
         try:
             logger.info(f"Flushing redis cache")

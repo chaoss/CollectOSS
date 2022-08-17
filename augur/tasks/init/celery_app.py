@@ -2,6 +2,7 @@ from celery import Celery
 from celery import current_app 
 from celery.signals import after_setup_logger
 from augur.application.logs import TaskLogConfig
+from augur.application.db.session import DatabaseSession
 import logging
 
 from augur.tasks.init import redis_db_number, redis_conn_string
@@ -39,6 +40,15 @@ def split_tasks_into_groups(tasks):
     return grouped_tasks
 
 
+@celery_app.on_after_finalize.connect
+def setup_periodic_tasks(sender, **kwargs):
+    from augur.tasks.start_tasks import start_task
+
+    with DatabaseSession(logger) as session:
+
+        collection_interval = session.config.get_value('Tasks', 'collection_interval')
+        sender.add_periodic_task(collection_interval, start_task.s())
+
 
 #Load logging config once at task definition
 @after_setup_logger.connect
@@ -51,4 +61,3 @@ def setup_loggers(*args,**kwargs):
     
     loggingConfig = TaskLogConfig(split_tasks_into_groups(tasks), logLevel=logging.DEBUG)
 
-    
