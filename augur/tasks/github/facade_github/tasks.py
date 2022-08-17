@@ -12,6 +12,7 @@ from augur.application.db.models import PullRequest, Message, PullRequestReview,
 from augur.tasks.github.facade_github.core import *
 from augur.tasks.util.worker_util import create_grouped_task_load
 from celery.result import allow_join_result
+from augur.tasks.git.util.facade_worker.facade_worker.facade00mainprogram import *
 
 #Method to parallelize, takes a queue of data and iterates over it
 @celery.task

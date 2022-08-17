@@ -40,8 +40,6 @@ from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
 from augur.tasks.github.util.gh_graphql_entities import PullRequest
 from augur.tasks.github.util.github_task_session import *
 
-from augur.tasks.git.util.facade_worker.facade_worker.facade00mainprogram import *
-
 from augur.application.logs import TaskLogConfig
 
 

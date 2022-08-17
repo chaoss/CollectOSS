@@ -13,7 +13,7 @@ import math
 import traceback
 from augur.application.db.models import *
 from augur.tasks.util.AugurUUID import AugurUUID, GithubUUID, UnresolvableUUID
-
+from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api, process_dict_response
 # Debugger
 import traceback
 
@@ -28,6 +28,76 @@ import traceback
 A few interesting ideas: Maybe get the top committers from each repo first? curl https://api.github.com/repos/chaoss/augur/contributors
 
 """
+
+# Hit the endpoint specified by the url and return the json that it returns if it returns a dict.
+# Returns None on failure.
+def request_dict_from_endpoint(session, url, timeout_wait=10):
+    #session.logger.info(f"Hitting endpoint: {url}")
+
+    attempts = 0
+    response_data = None
+    success = False
+
+    while attempts < 10:
+        try:
+            response = hit_api(session, url)
+        except TimeoutError:
+            session.logger.info(
+                f"User data request for enriching contributor data failed with {attempts} attempts! Trying again...")
+            time.sleep(timeout_wait)
+            continue
+
+        if not response:
+            attempts += 1
+            continue
+        
+        try:
+            response_data = response.json()
+        except:
+            response_data = json.loads(json.dumps(response.text))
+
+        if type(response_data) == dict:
+            err = process_dict_response(session.logger,response,response_data)
+
+            #If we get an error message that's not None
+            if err:
+                attempts += 1
+                continue
+
+            # self.logger.info(f"Returned dict: {response_data}")
+            success = True
+            break
+        elif type(response_data) == list:
+            session.logger.warning("Wrong type returned, trying again...")
+            session.logger.info(f"Returned list: {response_data}")
+        elif type(response_data) == str:
+            session.logger.info(
+                f"Warning! page_data was string: {response_data}")
+            if "<!DOCTYPE html>" in response_data:
+                session.logger.info("HTML was returned, trying again...\n")
+            elif len(response_data) == 0:
+                session.logger.warning("Empty string, trying again...\n")
+            else:
+                try:
+                    # Sometimes raw text can be converted to a dict
+                    response_data = json.loads(response_data)
+
+                    err = process_dict_response(session.logger,response,response_data)
+
+                    #If we get an error message that's not None
+                    if err:
+                        continue
+                    
+                    success = True
+                    break
+                except:
+                    pass
+        attempts += 1
+    if not success:
+        return None
+
+    return response_data
+
 
 def create_endpoint_from_email(email):
     #self.logger.info(f"Trying to resolve contributor from email: {email}")

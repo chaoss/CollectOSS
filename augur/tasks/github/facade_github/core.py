@@ -147,79 +147,8 @@ def query_github_contributors(session, entry_info, repo_id):
             session.logger.error("Cascading Contributor Anomalie from missing repo contributor data: {} ...\n".format(cntrb_url))
             continue
 
-# Hit the endpoint specified by the url and return the json that it returns if it returns a dict.
-# Returns None on failure.
-def request_dict_from_endpoint(session, url, timeout_wait=10):
-    #session.logger.info(f"Hitting endpoint: {url}")
-
-    attempts = 0
-    response_data = None
-    success = False
-
-    while attempts < 10:
-        try:
-            response = hit_api(session, url)
-        except TimeoutError:
-            session.logger.info(
-                f"User data request for enriching contributor data failed with {attempts} attempts! Trying again...")
-            time.sleep(timeout_wait)
-            continue
-
-        if not response:
-            attempts += 1
-            continue
-        
-        try:
-            response_data = response.json()
-        except:
-            response_data = json.loads(json.dumps(response.text))
-
-        if type(response_data) == dict:
-            err = process_dict_response(session.logger,response,response_data)
-
-            #If we get an error message that's not None
-            if err:
-                attempts += 1
-                continue
-
-            # self.logger.info(f"Returned dict: {response_data}")
-            success = True
-            break
-        elif type(response_data) == list:
-            session.logger.warning("Wrong type returned, trying again...")
-            session.logger.info(f"Returned list: {response_data}")
-        elif type(response_data) == str:
-            session.logger.info(
-                f"Warning! page_data was string: {response_data}")
-            if "<!DOCTYPE html>" in response_data:
-                session.logger.info("HTML was returned, trying again...\n")
-            elif len(response_data) == 0:
-                session.logger.warning("Empty string, trying again...\n")
-            else:
-                try:
-                    # Sometimes raw text can be converted to a dict
-                    response_data = json.loads(response_data)
-
-                    err = process_dict_response(session.logger,response,response_data)
-
-                    #If we get an error message that's not None
-                    if err:
-                        continue
-                    
-                    success = True
-                    break
-                except:
-                    pass
-        attempts += 1
-    if not success:
-        return None
-
-    return response_data
-
-
 # Get all the committer data for a repo.
 # Used by facade in facade03analyzecommit
-
 def grab_committer_list(session, repo_id, platform="github"):
 
     # Create API endpoint from repo_id
