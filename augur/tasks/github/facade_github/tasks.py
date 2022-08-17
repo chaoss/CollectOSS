@@ -11,6 +11,7 @@ from augur.tasks.github.util.util import remove_duplicate_dicts, get_owner_repo
 from augur.application.db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestEvent, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, Issue, IssueEvent, IssueLabel, IssueAssignee, PullRequestMessageRef, IssueMessageRef, Contributor, Repo
 from augur.tasks.github.facade_github.core import *
 from augur.tasks.util.worker_util import create_grouped_task_load
+from celery.result import allow_join_result
 
 #Method to parallelize, takes a queue of data and iterates over it
 @celery.task

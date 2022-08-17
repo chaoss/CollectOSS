@@ -2,18 +2,18 @@ import pytest
 from augur.tasks.init.redis_connection import redis_connection as redis
 from augur.tasks.util.redis_list import RedisList
 from augur import instance_id
-from augur.application.cli.backend import delete_redis_keys
+#from augur.application.cli.backend import delete_redis_keys
 
 list_name = "list"
 
-@pytest.fixture()
-def redis_list():
-
-    redis_list = RedisList(list_name)
-
-    yield redis_list
-
-    delete_redis_keys(instance_id)
+#@pytest.fixture()
+#def redis_list():
+#
+#    redis_list = RedisList(list_name)
+#
+#    yield redis_list
+#
+#    delete_redis_keys(instance_id)
 
 def test_redis_list_append(redis_list):
 

@@ -20,7 +20,7 @@ from redis.exceptions import ConnectionError as RedisConnectionError
 import uuid
 
 from augur import instance_id
-from augur.application.cli.backend import delete_redis_keys
+#from augur.application.cli.backend import delete_redis_keys
 
 # from augur.api.application import Application
 # from augur.api.gunicorn import AugurGunicornApp
