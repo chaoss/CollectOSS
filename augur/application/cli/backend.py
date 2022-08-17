@@ -65,7 +65,7 @@ def start(disable_collection):
         if not disable_collection:
 
             if os.path.exists("celerybeat-schedule.db"):
-                print("Deleting old task schedule")
+                logger.info("Deleting old task schedule")
                 os.remove("celerybeat-schedule.db")
 
             celery_command = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=20 -n {instance_id}@%h"

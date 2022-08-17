@@ -43,6 +43,7 @@ def split_tasks_into_groups(tasks):
 @celery_app.on_after_finalize.connect
 def setup_periodic_tasks(sender, **kwargs):
     from augur.tasks.start_tasks import start_task
+    logger = logging.getLogger(__name__)
 
     with DatabaseSession(logger) as session:
 
@@ -59,5 +60,5 @@ def setup_loggers(*args,**kwargs):
 
     tasks = [task for task in celery_tasks if 'celery.' not in task]
     
-    loggingConfig = TaskLogConfig(split_tasks_into_groups(tasks), logLevel=logging.DEBUG)
+    loggingConfig = TaskLogConfig(split_tasks_into_groups(tasks))
 
