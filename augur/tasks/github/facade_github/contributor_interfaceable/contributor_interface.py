@@ -2,7 +2,6 @@ from requests.api import head
 from augur.tasks.github.util.github_task_session import *
 import logging
 from logging import FileHandler, Formatter, StreamHandler, log
-from augur.tasks.git.util.contributor_parse import *
 from psycopg2.errors import UniqueViolation
 from random import randint
 import json
@@ -25,6 +24,16 @@ import traceback
 A few interesting ideas: Maybe get the top committers from each repo first? curl https://api.github.com/repos/chaoss/augur/contributors
 
 """
+
+def create_endpoint_from_email(email):
+    #self.logger.info(f"Trying to resolve contributor from email: {email}")
+    # Note: I added "+type:user" to avoid having user owned organizations be returned
+    # Also stopped splitting per note above.
+    url = 'https://api.github.com/search/users?q={}+in:email+type:user'.format(
+        email)
+    
+
+    return url
 
 
 def create_endpoint_from_commit_sha(session,commit_sha, repo_id):
@@ -329,29 +338,5 @@ def create_endpoint_from_repo_id(session, repo_id):
 
     return url
 
-# Get all the committer data for a repo.
-# Used by facade in facade03analyzecommit
 
-def grab_committer_list(session, repo_id, platform="github"):
-
-    # Create API endpoint from repo_id
-    try:
-        endpoint = create_endpoint_from_repo_id(session, repo_id)
-    except Exception as e:
-        session.logger.info(
-            f"Could not create endpoint from repo {repo_id} because of ERROR: {e}")
-        # Exit on failure
-        return
-
-
-    contrib_entry_info = {
-        'given': {
-            'github_url': endpoint,
-            'git_url': endpoint,
-            'gitlab_url': endpoint
-        }
-    }
-
-    query_github_contributors(session,contrib_entry_info, repo_id)
-    
 

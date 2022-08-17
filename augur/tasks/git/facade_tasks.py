@@ -25,7 +25,7 @@ import sqlalchemy as s
 
 from augur.tasks.git.util.facade_worker.facade_worker.facade02utilitymethods import update_repo_log, trim_commit, store_working_author, trim_author
 from augur.tasks.git.util.facade_worker.facade_worker.facade03analyzecommit import analyze_commit
-from augur.tasks.git.util.facade_worker.contributor_interfaceable.contributor_interface import *
+from augur.tasks.github.facade_github.core import *
 
 from augur.tasks.util.worker_util import create_grouped_task_load
 
