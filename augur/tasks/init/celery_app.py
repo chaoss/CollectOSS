@@ -64,7 +64,6 @@ def setup_periodic_tasks(app: Celery, **kwargs):
     Returns
         The tasks so that they are grouped by the module they are defined in
     """
-    print(type(sender))
     from augur.tasks.start_tasks import start_task
     logger = logging.getLogger(__name__)
 

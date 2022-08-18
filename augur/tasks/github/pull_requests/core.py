@@ -57,19 +57,19 @@ def extract_data_from_pr(pr_data: dict,
     pr_needed_data = extract_needed_pr_data(pr_data, repo_id, tool_source,tool_version)
 
     # get only the needed data for the pull_request_labels table
-    pr_labels = extract_needed_pr_label_data(pr_data["labels"],  PLATFORM_ID, repo_id,
+    pr_labels = extract_needed_pr_label_data(pr_data["labels"], repo_id,
                                                     tool_source, tool_version, data_source)
 
     # get only the needed data for the pull_request_assignees table
-    pr_assignees = extract_needed_pr_assignee_data(pr_data["assignees"], PLATFORM_ID, repo_id,
+    pr_assignees = extract_needed_pr_assignee_data(pr_data["assignees"], repo_id,
                                                             tool_source, tool_version, data_source)
 
     # get only the needed data for the pull_request_reviewers table
-    pr_reviewers = extract_needed_pr_reviewer_data(pr_data["requested_reviewers"], PLATFORM_ID, repo_id,
+    pr_reviewers = extract_needed_pr_reviewer_data(pr_data["requested_reviewers"], repo_id,
                                                             tool_source, tool_version, data_source)
 
     # get only the needed data for the pull_request_meta table
-    pr_metadata = extract_needed_pr_metadata(pr_data["metadata"], PLATFORM_ID, repo_id,
+    pr_metadata = extract_needed_pr_metadata(pr_data["metadata"], repo_id,
                                                     tool_source, tool_version, data_source)                                                                      
 
     return pr_needed_data, pr_labels, pr_assignees, pr_reviewers, pr_metadata, contributor_data

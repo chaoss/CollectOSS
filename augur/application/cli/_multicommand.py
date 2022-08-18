@@ -4,7 +4,6 @@ Runs Augur with Gunicorn when called
 """
 
 import os
-import sys
 import click
 import importlib
 import traceback
@@ -28,8 +27,8 @@ class AugurMultiCommand(click.MultiCommand):
         try:
             module = importlib.import_module('.' + name, 'augur.application.cli')
             return module.cli
-        except ModuleNotFoundError as e:
-            print(f"Error")
+        except ModuleNotFoundError:
+            print("Error")
             print(traceback.format_exc())
   
 

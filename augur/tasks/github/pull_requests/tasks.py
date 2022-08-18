@@ -234,7 +234,8 @@ def pull_request_review_comments(repo_git: str) -> None:
 
             pr_review_id = related_pr_review.pr_review_id
 
-            pr_comment_ref = extract_pr_review_message_ref_data(comment, pr_review_id, repo_id, tool_source, tool_version, data_source)
+            # TODO: Map this like pr labels are to prs
+            pr_comment_ref = extract_pr_review_message_ref_data(comment, pr_review_id, repo_id, tool_version, data_source)
 
             pr_review_msg_mapping_data.append(
                 {

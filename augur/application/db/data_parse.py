@@ -1,13 +1,15 @@
-from augur.tasks.util.AugurUUID import GithubUUID
 """
 This file contains functions that take the api response 
 and return only the data that the database needs
 """
+from augur.tasks.util.AugurUUID import GithubUUID
+import sqlalchemy as s
 
+from typing import List
 
 
 # retrieve only the needed data for pr labels from the api response
-def extract_needed_pr_label_data(labels: [dict], platform_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> [dict]:
+def extract_needed_pr_label_data(labels: List[dict], repo_id: int, tool_source: str, tool_version: str, data_source: str) -> List[dict]:
 
     if len(labels) == 0:
         return []
@@ -36,7 +38,7 @@ def extract_needed_pr_label_data(labels: [dict], platform_id: int, repo_id: int,
     return label_dicts
 
 # retrieve only the needed data for pr assignees from the api response
-def extract_needed_pr_assignee_data(assignees: [dict], platform_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> [dict]:
+def extract_needed_pr_assignee_data(assignees: List[dict], repo_id: int, tool_source: str, tool_version: str, data_source: str) -> List[dict]:
 
     if len(assignees) == 0:
         return []
@@ -60,7 +62,7 @@ def extract_needed_pr_assignee_data(assignees: [dict], platform_id: int, repo_id
     return assignee_dicts
 
 # retrieve only the needed data for pr reviewers from the api response
-def extract_needed_pr_reviewer_data(reviewers: [dict], platform_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> [dict]:
+def extract_needed_pr_reviewer_data(reviewers: List[dict], repo_id: int, tool_source: str, tool_version: str, data_source: str) -> List[dict]:
 
     if len(reviewers) == 0:
         return []
@@ -82,7 +84,7 @@ def extract_needed_pr_reviewer_data(reviewers: [dict], platform_id: int, repo_id
 
     return reviewer_dicts
 
-def extract_needed_pr_metadata(metadata_list: [dict], platform_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> [dict]:
+def extract_needed_pr_metadata(metadata_list: List[dict], repo_id: int, tool_source: str, tool_version: str, data_source: str) -> List[dict]:
 
     if len(metadata_list) == 0:
         return []
@@ -108,13 +110,13 @@ def extract_needed_pr_metadata(metadata_list: [dict], platform_id: int, repo_id:
     return metadata_dicts
 
 
-def extract_pr_review_message_ref_data(comment: dict, pr_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> dict:
+def extract_pr_review_message_ref_data(comment: dict, pr_review_id, repo_id: int, tool_version: str, data_source: str) -> dict:
 
     pr_review_comment_message_ref = {
         # msg_id turned up null when I removed the cast to int ..
-        'msg_id': msg_id,
+        'msg_id': comment["msg_id"],
         'pr_review_msg_url': comment['url'],
-        'pr_review_src_id': int(comment['pull_request_review_id']),
+        'pr_review_src_id': int(pr_review_id),
         'pr_review_msg_src_id': int(comment['id']),
         'pr_review_msg_node_id': comment['node_id'],
         'pr_review_msg_diff_hunk': comment['diff_hunk'],
@@ -225,7 +227,7 @@ def extract_issue_event_data(event: dict, issue_id: int, platform_id: int, repo_
     return issue_event
 
 
-def extract_needed_issue_assignee_data(assignees: [dict], repo_id: int, tool_source: str, tool_version: str, data_source: str) -> [dict]:
+def extract_needed_issue_assignee_data(assignees: List[dict], repo_id: int, tool_source: str, tool_version: str, data_source: str) -> List[dict]:
 
     if len(assignees) == 0:
         return []
@@ -251,7 +253,7 @@ def extract_needed_issue_assignee_data(assignees: [dict], repo_id: int, tool_sou
 
 
 # retrieve only the needed data for pr labels from the api response
-def extract_needed_issue_label_data(labels: [dict], repo_id: int, tool_source: str, tool_version: str, data_source: str) -> [dict]:
+def extract_needed_issue_label_data(labels: List[dict], repo_id: int, tool_source: str, tool_version: str, data_source: str) -> List[dict]:
 
     if len(labels) == 0:
         return []
@@ -280,7 +282,7 @@ def extract_needed_issue_label_data(labels: [dict], repo_id: int, tool_source: s
 
 
 # retrieve only the needed data for pr labels from the api response
-def extract_needed_issue_message_ref_data(message: dict, issue_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> [dict]:
+def extract_needed_issue_message_ref_data(message: dict, issue_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> List[dict]:
 
     message_ref_dict = {
         'issue_id': issue_id,
@@ -295,7 +297,7 @@ def extract_needed_issue_message_ref_data(message: dict, issue_id: int, repo_id:
     return message_ref_dict
 
 # retrieve only the needed data for pr labels from the api response
-def extract_needed_pr_message_ref_data(comment: dict, pull_request_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> [dict]:
+def extract_needed_pr_message_ref_data(comment: dict, pull_request_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> List[dict]:
 
     message_ref_dict = {
             'pull_request_id': pull_request_id,

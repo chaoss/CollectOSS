@@ -2,23 +2,15 @@
 """
 Augur library script for generating a config file
 """
-
 import os
 import click
 import json
 import logging
-from pathlib import Path
-
-# from augur.config import default_config, ENVVAR_PREFIX, CONFIG_HOME
-# from augur.cli import initialize_logging
-# from augur.logging import ROOT_AUGUR_DIRECTORY
 
 from augur.application.db.models import Config
 from augur.application.db.session import DatabaseSession
 from augur.application.logs import AugurLogger
 from augur.application.cli import test_connection, test_db_connection 
-
-from augur.application.cli import test_connection, test_db_connection
 
 ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 
@@ -107,7 +99,7 @@ def load_config(file):
         print("WARNING: This will override your current config")
         response = str(input("Would you like to continue: [y/N]: ")).lower()
 
-        if response != "y" and response != "yes":
+        if response not in ("y", "yes"):
             print("Did not recieve yes or y exiting...")
             return
 
@@ -132,7 +124,7 @@ def add_section(section_name, file):
             print(f"Warning there is already a {section_name} section in the config and it will be replaced")
             response = str(input("Would you like to continue: [y/N]: ")).lower()
 
-            if response != "y" and response != "yes":
+            if response not in ("y", "yes"):
                 print("Did not recieve yes or y exiting...")
                 return
 
@@ -148,24 +140,23 @@ def add_section(section_name, file):
 @click.option('--section', required=True)
 @click.option('--setting', required=True)
 @click.option('--value', required=True)
-@click.option('--type', required=True)
+@click.option('--data-type', required=True)
 @test_connection
 @test_db_connection
-def config_set(section, setting, value, type):
+def config_set(section, setting, value, data_type):
 
     with DatabaseSession(logger) as session:
         config = session.config
 
-        if type not in config.accepted_types:
+        if data_type not in config.accepted_types:
             print(f"Error invalid type for config. Please use one of these types: {config.accepted_types}")
             return
 
-        
         setting_dict = {
             "section_name": section,
             "setting_name": setting, 
             "value": value,
-            "type": type
+            "type": data_type
         }
 
         config.add_or_update_settings([setting_dict])
@@ -216,7 +207,7 @@ def clear_config():
             print("Warning this delete the current config")
             response = str(input("Would you like to continue: [y/N]: ")).lower()
 
-            if response != "y" and response != "yes":
+            if response not in ("y", "yes"):
                 print("Did not recieve yes or y exiting...")
                 return
 
