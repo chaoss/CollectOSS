@@ -7,9 +7,6 @@ from copy import deepcopy
 import os, time, atexit, subprocess, click, atexit, logging, sys
 import psutil
 import signal
-import multiprocessing as mp
-import gunicorn.app.base
-from gunicorn.arbiter import Arbiter
 import sys
 import json
 import random
@@ -19,10 +16,6 @@ from redis.exceptions import ConnectionError as RedisConnectionError
 import uuid
 
 from augur import instance_id
-from augur.application.cli.backend import delete_redis_keys
-
-# from augur.api.application import Application
-# from augur.api.gunicorn import AugurGunicornApp
 from augur.application.logs import AugurLogger
 
 # from augur.server import Server

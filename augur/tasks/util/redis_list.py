@@ -1,10 +1,13 @@
 """This module defines the RedisList class. 
 It imports the redis_connection as redis which is a connection to a redis cahce
 """
+from typing import Iterable, Any, Union
 
 from collections.abc import MutableSequence
 from augur.tasks.init.redis_connection import redis_connection as redis
 from augur import instance_id
+from redis import exceptions
+
 
 class RedisList(MutableSequence):
     """Class to handler all operations of a redis list
@@ -35,7 +38,7 @@ class RedisList(MutableSequence):
         return redis.llen(self.redis_list_key) 
 
 
-    def __iter__(self) -> any:
+    def __iter__(self) -> Any:
         """Generator that yields the data in the list
 
         Yields:
@@ -45,7 +48,7 @@ class RedisList(MutableSequence):
         for index in range(0, self.__len__()):
             yield self.__getitem__(index)
 
-    def __getitem__(self, index: int):
+    def __getitem__(self, index: int) -> Any:
         """Gets an item from the redis list by index
 
         Note:
@@ -73,7 +76,7 @@ class RedisList(MutableSequence):
 
         return item
 
-    def __setitem__(self, index: int, data: any):
+    def __setitem__(self, index: int, data: Union[Any, Iterable[Any]]):
         """Set an item in the redis list by index
 
         Note:
@@ -82,12 +85,17 @@ class RedisList(MutableSequence):
 
         Args:
             index: index of desired item in list
-            data (any): item to add to list
+            data: item to add to list
         """
 
-        redis.lset(self.redis_list_key, index, data)
+
+        if redis.exists(self.redis_list_key):
+            redis.lset(self.redis_list_key, index, data)
+        else:
+            redis.rpush(self.redis_list_key, data)
+
     
-    def __delitem__(self, index: int):
+    def __delitem__(self, index: int) -> None:
         """Deletes an item from the list at a given index
 
         Note:
@@ -96,11 +104,13 @@ class RedisList(MutableSequence):
         Args:
             index: index of desired item in list
         """
-        
-        value = redis.lindex(self.redis_list_key, index)
-        redis.lrem(self.redis_list_key, value)
 
-    def contains(self, value: any):
+        items_before = redis.lpop(self.redis_list_key, index+1)
+        items_before.pop() 
+        if items_before:
+            redis.lpush(self.redis_list_key, *items_before)
+
+    def contains(self, value: Any):
         """Determiens whether the paramater value is in the list
 
         Args:
@@ -115,7 +125,7 @@ class RedisList(MutableSequence):
 
         return True
 
-    def insert(self, index: int, value: any):
+    def insert(self, index: int, value: Any):
         """Inserts the paramater value at the given index
 
         Note:
@@ -168,7 +178,7 @@ class RedisList(MutableSequence):
         redis.lrem(self.redis_list_key, 0, value)
 
 
-    def extend(self, values: list):
+    def extend(self, values: Iterable[Any]):
         """Adds values to the redis list
 
         Args:
@@ -192,3 +202,19 @@ class RedisList(MutableSequence):
 
         for i in range(key_list_length):
             print(redis.lindex(self.redis_list_key, i))
+
+if __name__ == "__main__":
+
+    redis.flushdb()
+    redis_list = RedisList("list")
+    
+    # redis_list.append(5)
+    # redis_list.append(15)
+    # redis_list.append(8)
+    # redis_list.append(8)
+    redis_list[0:4:2] = [0, 1]
+    print("List values")
+    redis_list.print_values()
+
+    redis.delete("list")
+    

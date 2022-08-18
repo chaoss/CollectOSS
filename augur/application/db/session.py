@@ -146,7 +146,7 @@ class DatabaseSession(s.orm.Session):
                     attempts += 1
                     continue   
 
-                raise e     
+                raise e
 
         else:
             self.logger.error("Unable to insert and return data in 10 attempts")
