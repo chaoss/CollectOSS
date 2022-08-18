@@ -43,31 +43,13 @@ from augur.tasks.github.util.github_task_session import *
 from augur.application.logs import TaskLogConfig
 
 
-#Have one log file for facade_tasks
-# facadeLogger = logging.getLogger(__name__)
-
-
-
-#TODO: split out the github platform specific stuff from facade
-
-# """
-#     You can prevent Celery from configuring any loggers at all by connecting 
-#     the setup_logging signal. This allows you to completely override the 
-#     logging configuration with your own.
-# """
-# logger = logging.getLogger(__name__)
-# config = AugurConfig(logger)
-# logs_directory = config.get_value("Logging", "logs_directory")
-# DISABLE_LOG_TO_FILE = False
-# if logs_directory is None:
-#     DISABLE_LOG_TO_FILE = True
-
-
-
 
 #enable celery multithreading
 @celery.task
-def analyze_commits_in_parallel(queue, repo_id, repo_location, multithreaded):
+def analyze_commits_in_parallel(queue: list, repo_id: int, repo_location: str, multithreaded: bool)-> None:
+    """
+    Take a large list of commit data to analyze and store in the database. Meant to be run in parallel with other instances of this task.
+    """
     #create new cfg for celery thread.
     logger = logging.getLogger(analyze_commits_in_parallel.__name__)
     cfg = FacadeConfig(logger)
@@ -82,17 +64,17 @@ def analyze_commits_in_parallel(queue, repo_id, repo_location, multithreaded):
 # else:
 #   import MySQLdb
 
-def analysis(cfg, multithreaded, session=None, processes=6):
+def analysis(cfg: FacadeConfig, multithreaded: bool, session: bool=None, processes: int=6)-> None:
+    """
+    Run the analysis by looping over all active repos. For each repo, we retrieve
+    the list of commits which lead to HEAD. If any are missing from the database,
+    they are filled in. Then we check to see if any commits in the database are
+    not in the list of parents, and prune them out.
 
-# Run the analysis by looping over all active repos. For each repo, we retrieve
-# the list of commits which lead to HEAD. If any are missing from the database,
-# they are filled in. Then we check to see if any commits in the database are
-# not in the list of parents, and prune them out.
-#
-# We also keep track of the last commit to be processed, so that if the analysis
-# is interrupted (possibly leading to partial data in the database for the
-# commit being analyzed at the time) we can recover.
-
+    We also keep track of the last commit to be processed, so that if the analysis
+    is interrupted (possibly leading to partial data in the database for the
+    commit being analyzed at the time) we can recover.
+    """
 ### Local helper functions ###
 
     def update_analysis_log(repos_id,status):
@@ -252,10 +234,10 @@ def analysis(cfg, multithreaded, session=None, processes=6):
     cfg.log_activity('Info','Running analysis (complete)')
 
 
-def facade_init(session):
-    
-
-    
+def facade_init(session: FacadeSession)-> None:
+    """
+    Meant to replicate calling facade from the command line. Calls facade in a particular configuration that can be overridden in the database config.
+    """
     
     opts,args = getopt.getopt(sys.argv[1:],'hdpcuUaAmnfIrx')
     for opt in opts:
@@ -365,7 +347,10 @@ def facade_init(session):
 
 #TODO: turn this into a dynamic chain with the various platform resolution tasks in a list.
 @celery.task
-def facade_commits_model(github_contrib_resolition=True):
+def facade_commits_model(github_contrib_resolition: bool=True)-> None:
+    """
+    The main facade task loop. Goes through and executes all collection options specified in the facade config
+    """
 
     logger = logging.getLogger(facade_commits_model.__name__)
     with FacadeSession(logger) as session:
