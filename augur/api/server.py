@@ -1,7 +1,5 @@
 #SPDX-License-Identifier: MIT
-"""
-Creates a WSGI server that serves the Augur REST API
-"""
+"""Creates a WSGI server that serves the Augur REST API."""
 
 import glob
 import sys
@@ -27,28 +25,37 @@ from metadata import __version__ as augur_code_version
 AUGUR_API_VERSION = 'api/unstable'
 
 
-"""
-Initializes the server, creating the Flask application
-"""
+
 class Server():
+    """Initializes the server, creating the Flask application.
+    
+    Attributes:
+        logger (logging.Logger): handles logging
+        session (DatabaseSession): used to create the config
+        config (AugurConfig): used to access the config in the database
+        engine: Sqlalchemy database connection engine
+        cache: ?
+        server_cache: ?
+        app: Flask application
+        show_metadata (bool): ?
+    """
 
     def __init__(self):
+        """Initialize the Server class."""
 
         self.logger = AugurLogger("server").get_logger()
         self.session = DatabaseSession(self.logger)
         self.config = self.session.config
         self.engine = self.session.engine
 
-        self.cache = self.create_cache()
+        self.cache_manager = self.create_cache_manager()
         self.server_cache = self.get_server_cache()
         self.app = None
         self.show_metadata = False
 
-    """
-        This function defines the flask app in the variable self.app and configures the routes for the app
-    """
-    def create_app(self):
 
+    def create_app(self):
+        """Define the flask app and configure the routes."""
         self.app = Flask(__name__)
         self.logger.debug("Created Flask app")
 
@@ -92,16 +99,22 @@ class Server():
                             status=200,
                             mimetype="application/json")
 
-    """
-        This function returns the flask app
-    """
-    def get_app(self):
+   
+    def get_app(self) -> Optional[Flask]:
+        """Get flask app.
+
+        Returns:
+            The flask applcation
+        """
         return self.app
 
-    """
-        This function adds all the routes defined in the files in the augur/api/routes directory to the flask app
-    """
-    def create_all_routes(self, server):
+
+    def create_all_routes(self, server: Server):
+        """Add all the routes defined in the files in the augur/api/routes directory to the flask app.
+
+        Args:
+            server: server class that holds the flask app and db engine
+        """
 
         # gets a list of the routes files
         route_files = self.get_route_files()
@@ -116,11 +129,13 @@ class Server():
             # so that the routes in the files can be added to the flask app
             module.create_routes(server)
 
-    """
-    This function gets a list of all the routes files in the augur/api/routes directory
-    """
-    def get_route_files(self):
-
+    
+    def get_route_files(self) -> List[str]:
+        """This function gets a list of all the routes files in the augur/api/routes directory.
+        
+        Returns:
+            list of file names as strings
+        """
         route_files = []
         for filename in glob.iglob("augur/api/routes/*"):
             file_id = self.get_file_id(filename)
@@ -132,20 +147,25 @@ class Server():
         return route_files
 
 
-    """
-        Gets the file id of a given path.
-        Example: If the path /augur/routes.py is given it will return routes
-    """
-    def get_file_id(self, path):
+    
+    def get_file_id(self, path: str) -> str:
+        """Gets the file id of a given path.
+
+        Args:
+            path: file path
+        
+        Examples: 
+            If the path /augur/best_routes.py is given it will return "best_routes"
+
+        Returns:
+            the filename as a string
+        """
         return os.path.splitext(os.path.basename(path))[0]
 
 
-    """
-        Starts process of adding all the functions 
-        from the metrics folder to the flask app as routes
-    """
+    
     def create_metrics(self):
-
+    """Starts process of adding all the functions from the metrics folder to the flask app as routes."""
         # get a list of the metrics files
         metric_files = self.get_metric_files()
 
@@ -155,17 +175,22 @@ class Server():
             self.add_metrics(f"augur.api.metrics.{file}")
 
 
-    """
+    def add_metrics(self, module_name: str):
+        """Determine type of metric and call function to add them to the flask app.
+        
         This function takes modules that contains metrics, 
         and adds them to the flask app via the self.add_standard_metric 
         or self.add_toss_metric methods.
 
-        NOTE: The attribute is_metric and obj.metadata['type'] 
-        are set in file augur/api/routes/util.py in the function 
-        register_metric(). This function is a decorator and is 
-        how a function is defined as a metric.
-    """
-    def add_metrics(self, module_name):
+        Note: 
+            The attribute is_metric and obj.metadata['type'] 
+            are set in file augur/api/routes/util.py in the function 
+            register_metric(). This function is a decorator and is 
+            how a function is defined as a metric.
+
+        Args:
+            module_name: path to the module
+        """
 
         # gets all the members in the module and loops through them
         for name, obj in inspect.getmembers(sys.modules[module_name]):
@@ -184,10 +209,13 @@ class Server():
                         self.add_toss_metric(obj, obj.metadata['endpoint'])
 
 
-    """
-    This function gets a list of all the metrics files in the augur/api/metrics directory
-    """
-    def get_metric_files(self):
+
+    def get_metric_files(self): List[str]:
+        """Get list of all the metrics files in the augur/api/metrics directory,
+
+        Returns:
+            list of file names
+        """
         metric_files = []
 
         for filename in glob.iglob("augur/api/metrics/**"):
@@ -199,16 +227,30 @@ class Server():
 
         return metric_files
         
-    """
-        This function takes a function and it arguments, calls the function, then converts it to json if possible.
-        It also does some manipulation of the data if paramaters like group_by, aggregate, and respample are set
-    """
-    def transform(self, func, args=[], kwargs={}, repo_url_base=None, orient='records',
-        group_by=None, on=None, aggregate='sum', resample=None, date_col='date'):
-        """
-        Serializes a dataframe in a JSON object and applies specified transformations
-        """
 
+    def transform(self, func: Any, args=[], kwargs={}, repo_url_base=None, orient='records',
+        group_by=None, on=None, aggregate='sum', resample=None, date_col='date') -> List[dict]:
+        """Call a metric function and apply data transformations.
+
+        Note:
+            This function takes a function and it arguments, calls the function, then converts it to json if possible.
+            It also does some manipulation of the data if paramaters like group_by, aggregate, and respample are set
+
+        Args:
+            func: function that is called
+            args:
+            kwargs:
+            repo_url_base:
+            orient: 
+            group_by
+            on
+            aggregate:
+            resample:
+            date_col:
+
+        Returns:
+            The result of calling the function and applying the data transformations
+        """
         # this defines the way a pandas dataframe is converted to json
         if orient is None:
             orient = 'records'
@@ -256,11 +298,9 @@ class Server():
         return result
 
     def flaskify(self, function, cache=True):
+        """Simplifies API endpoints that just accept owner and repo, transforms them and spits them out.
         """
-        Simplifies API endpoints that just accept owner and repo,
-        transforms them and spits them out
-        """
-        if self.cache:
+        if self.cache_manager:
             def generated_function(*args, **kwargs):
                 def heavy_lifting():
                     return self.transform(function, args, kwargs, **request.args.to_dict())
@@ -281,8 +321,7 @@ class Server():
             return generated_function
 
     def routify(self, func, endpoint_type):
-        """
-        Wraps a metric function allowing it to be mapped to a route,
+        """Wraps a metric function allowing it to be mapped to a route,
         get request args and also transforms the metric functions's
         output to json
 
@@ -321,6 +360,12 @@ class Server():
 
         
     def add_standard_metric(self, function, endpoint, **kwargs):
+        """Add standard metric routes to the flask app.
+        
+        Args:
+            function: the function that needs to be mapped to the routes
+            endpoint: the path that the endpoint should be defined as
+        """
         repo_endpoint = f'/{self.app.augur_api_version}/repos/<repo_id>/{endpoint}'
         repo_group_endpoint = f'/{self.app.augur_api_version}/repo-groups/<repo_group_id>/{endpoint}'
         deprecated_repo_endpoint = f'/{self.app.augur_api_version}/repo-groups/<repo_group_id>/repos/<repo_id>/{endpoint}'
@@ -340,10 +385,21 @@ class Server():
         self.app.route(deprecated_repo_endpoint )(self.routify(function, 'deprecated_repo'))
 
     def add_toss_metric(self, function, endpoint, **kwargs):
+        """Add toss metric routes to the flask app.
+        
+        Args:
+            function: the function that needs to be mapped to the routes
+            endpoint: the path that the endpoint should be defined as
+        """
         repo_endpoint = f'/{self.app.augur_api_version}/repos/<repo_id>/{endpoint}'
         self.app.route(repo_endpoint)(self.routify(function, 'repo'))
 
-    def create_cache(self):
+    def create_cache_manager(self) -> CacheManager:
+        """Create cache for endpoints?
+        
+        Returns:
+            manager of the cache
+        """
 
         cache_config = {
         'cache.type': 'file',
@@ -361,14 +417,19 @@ class Server():
         return cache
 
     def get_server_cache(self):
+        """Create the server cache, set expiration, and clear
+        
+        Returns:
+            server cache
+        """
 
         expire = int(self.config.get_value('Server', 'cache_expire'))
-        self.server_cache = self.cache.get_cache('server', expire=expire)
-        self.server_cache.clear()
+        server_cache = self.cache_manager.get_cache('server', expire=expire)
+        server_cache.clear()
 
-        return self.server_cache
+        return server_cache
 
 # this is where the flask app is defined and the server is insantiated
 server = Server()
-server.create_app()
+app = server.create_app()
 app = server.get_app()
