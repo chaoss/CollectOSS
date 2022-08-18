@@ -52,7 +52,7 @@ class FacadeSession(GithubTaskSession):
         This is mainly for compatibility with older functions from legacy facade.
 
     Attributes:
-        cfg (FacadeConfig): Class that handles randomly assigning github api keys to httpx requests
+        cfg (FacadeConfig): Class that supports the config and database functionality from legacy facade.
         limited_run (int): value that determines whether legacy facade is only doing a portion of its full run of commit analysis or not. By default all steps are run but if any options in particular are specified then only those are ran.
         delete_marked_repos (int): toggle that determines whether to delete git cloned git directories when they are marked for deletion
         pull_repos (int): toggles whether to update existing repos in the facade directory
