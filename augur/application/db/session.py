@@ -7,8 +7,8 @@ import logging
 import json
 import httpx
 import sqlalchemy as s
-import pandas as pd
 
+from typing import Optional, List, Union
 from psycopg2.errors import DeadlockDetected
 
 from augur.tasks.util.random_key_auth import RandomKeyAuth
@@ -44,7 +44,7 @@ class DatabaseSession(s.orm.Session):
             return connection.execute(sql_text)
 
 
-    def insert_data(self, data: [dict], table, natural_keys: [str], return_columns: [str] = None) -> None:
+    def insert_data(self, data: Union[List[dict], dict], table, natural_keys: List[str], return_columns: Optional[List[str]] = None) -> Optional[List[dict]]:
         
         if isinstance(data, list) is False:
             
@@ -67,8 +67,8 @@ class DatabaseSession(s.orm.Session):
 
         # creates list of arguments to tell sqlalchemy what columns to return after the data is inserted
 
+        returning_args = []
         if return_columns:
-            returning_args = []
             for column in return_columns:
                 argument = getattr(table, column)
                 returning_args.append(argument)
@@ -123,7 +123,7 @@ class DatabaseSession(s.orm.Session):
 
             else:
                 self.logger.error("Unable to insert data in 10 attempts")
-                return
+                return None
 
             if deadlock_detected is True:
                 self.logger.error("Made it through even though Deadlock was detected")

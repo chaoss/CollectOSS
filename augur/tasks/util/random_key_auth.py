@@ -1,7 +1,9 @@
 """This module defines the RandomKeyAuth class"""
+from typing import List, Optional, Generator
 
-from httpx import Auth
+from httpx import Auth, Request, Response
 from random import choice
+
 
 
 class RandomKeyAuth(Auth):
@@ -18,12 +20,12 @@ class RandomKeyAuth(Auth):
     # Optionally pass the key_format. This is a string that contains a {} so the key can be added and applied to the header in the correct way.
     # For example on github the keys are formatted like "token asdfasfdasf" where asdfasfdasf is the key. So for github 
     # the key_format="token {0}"
-    def __init__(self, list_of_keys: [str], header_name: str, key_format: str=None):
+    def __init__(self, list_of_keys: List[str], header_name: str, key_format: Optional[str] = None):
         self.list_of_keys = list_of_keys
         self.header_name = header_name
         self.key_format = key_format
 
-    def auth_flow(self, request):
+    def auth_flow(self, request: Request) -> Generator[Request, Response, None]:
 
         # the choice function is from the random library, and gets a random value from a list
         # this gets a random key from the list

@@ -1,3 +1,5 @@
+"""Logic to paginate the Github API."""
+
 import collections
 import httpx
 import time
@@ -13,78 +15,90 @@ from urllib.parse import urlencode, urlparse, parse_qs, urlunparse
 from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
 
 
-def hit_api(session,url: str, method='GET') -> Optional[httpx.Response]:
+def hit_api(key_manager, url: str, timeout: float = 10, method: str = 'GET') -> Optional[httpx.Response]:
+    """Ping the api and get the data back for the page.
 
-    session.logger.info(f"Hitting endpoint with {method} request: {url}...\n")
+    Returns:
+        A httpx response that contains the data. None if a timeout occurs
+    """
+    # self.logger.info(f"Hitting endpoint with {method} request: {url}...\n")
 
     with httpx.Client() as client:
 
         try:
             response = client.request(
-                method=method, url=url, auth=session.oauths)
+                method=method, url=url, auth=key_manager, timeout=timeout)
 
         except TimeoutError:
-            session.logger.info("Request timed out. Sleeping 10 seconds and trying again...\n")
-            time.sleep(10)
+            self.logger.info(f"Request timed out. Sleeping {round(timeout)} seconds and trying again...\n")
+            time.sleep(round(timeout))
             return None
         except httpx.TimeoutException:
-            session.logger.info("httpx.ReadTimeout. Sleeping 10 seconds and trying again...\n")
-            time.sleep(10)
+            self.logger.info(f"Request timed out. Sleeping {round(timeout)} seconds and trying again...\n")
+            time.sleep(round(timeout))
             return None
 
     return response 
 
-def process_dict_response(logger, response: httpx.Response, page_data: dict) -> Optional[str]:
-        
+def process_dict_response(logger: logging.Logger, response: httpx.Response, page_data: dict) -> Optional[str]:
+    """Process dict response from the api and return the status.
+
+    Args:
+        logger: handles logging
+        response: used to access the url of the request and the headers
+        page_data: dict response from the api
+
+    Returns:
+        A string explaining what happened is returned if what happened is determined, otherwise None is returned.
+    """
         #logger.info("Request returned a dict: {}\n".format(page_data))
 
-        if 'message' not in page_data.keys():
-            return None
-
-        if page_data['message'] == "Not Found":
-            logger.error(
-                "Github repo was not found or does not exist for endpoint: "
-                f"{response.url}"
-            )
-            return "Repo Not Found"
-
-        if "You have exceeded a secondary rate limit. Please wait a few minutes before you try again" in page_data['message']:
-            logger.info('\n\n\n\nSleeping for 100 seconds due to secondary rate limit issue.\n\n\n\n')
-            time.sleep(100)
-
-            return "do_not_increase_attempts"
-        
-        if "API rate limit exceeded for user" in page_data['message']:
-
-            current_epoch = int(time.time())
-            epoch_when_key_resets = int(response.headers["X-RateLimit-Reset"])
-            key_reset_time =  epoch_when_key_resets - current_epoch
-            
-            if key_reset_time < 0:
-                logger.error(f"Key reset time was less than 0 setting it to 0.\nThe current epoch is {current_epoch} and the epoch that the key resets at is {epoch_when_key_resets}")
-                key_reset_time = 0
-                
-            logger.info(f"\n\n\nAPI rate limit exceeded. Sleeping until the key resets ({key_reset_time} seconds)")
-            time.sleep(key_reset_time)
-
-            return "do_not_increase_attempts"
-
-        if "You have triggered an abuse detection mechanism." in page_data['message']:
-            #self.update_rate_limit(response, temporarily_disable=True,platform=platform)
-
-            return "decrease_attempts"
-
-        if page_data['message'] == "Bad credentials":
-            logger.error("\n\n\n\n\n\n\n Bad Token Detected \n\n\n\n\n\n\n")
-            #self.update_rate_limit(response, bad_credentials=True, platform=platform)
-            return "bad_credentials"
-        
+    if 'message' not in page_data.keys():
         return None
 
+    if page_data['message'] == "Not Found":
+        logger.error(
+            "Github repo was not found or does not exist for endpoint: "
+            f"{response.url}"
+        )
+        return "Repo Not Found"
+
+    if "You have exceeded a secondary rate limit. Please wait a few minutes before you try again" in page_data['message']:
+        logger.info('\n\n\n\nSleeping for 100 seconds due to secondary rate limit issue.\n\n\n\n')
+        time.sleep(100)
+
+        return "do_not_increase_attempts"
+    
+    if "API rate limit exceeded for user" in page_data['message']:
+
+        current_epoch = int(time.time())
+        epoch_when_key_resets = int(response.headers["X-RateLimit-Reset"])
+        key_reset_time =  epoch_when_key_resets - current_epoch
+        
+        if key_reset_time < 0:
+            logger.error(f"Key reset time was less than 0 setting it to 0.\nThe current epoch is {current_epoch} and the epoch that the key resets at is {epoch_when_key_resets}")
+            key_reset_time = 0
+            
+        logger.info(f"\n\n\nAPI rate limit exceeded. Sleeping until the key resets ({key_reset_time} seconds)")
+        time.sleep(key_reset_time)
+
+        return "do_not_increase_attempts"
+
+    if "You have triggered an abuse detection mechanism." in page_data['message']:
+        #self.update_rate_limit(response, temporarily_disable=True,platform=platform)
+
+        return "decrease_attempts"
+
+    if page_data['message'] == "Bad credentials":
+        logger.error("\n\n\n\n\n\n\n Bad Token Detected \n\n\n\n\n\n\n")
+        #self.update_rate_limit(response, bad_credentials=True, platform=platform)
+        return "bad_credentials"
+    
+    return None
 
 
 class GithubPaginator(collections.abc.Sequence):
-    """This class is a sequence that handles paginating through data on the Github API
+    """This class is a sequence that handles paginating through data on the Github API.
 
     Attributes:
         url (str): The url that we are collecting data
@@ -94,9 +108,16 @@ class GithubPaginator(collections.abc.Sequence):
         logger (logging.Logger): Logger that handler printing information to files and stdout
     """
 
-
     def __init__(self, url: str, key_manager: GithubRandomKeyAuth, logger: logging.Logger, from_datetime=None, to_datetime=None):
+        """Initialize the class GithubPaginator.
 
+        Args:
+            url: url that the data is being collected
+            key_manager: class that randomly selects a Github API key for each request
+            logger: handles logging
+            from_datetime: collects data after this datatime (not yet implemented)
+            to_datetime: collects data before this datatime (not yet implemented)
+        """
         remove_fields = ["per_page", "page"]
         url = clean_url(url, remove_fields)
 
@@ -117,7 +138,7 @@ class GithubPaginator(collections.abc.Sequence):
 
 
     def __getitem__(self, index: int) -> Optional[dict]:
-        """Gets the value at index of the Github API data returned from the url
+        """Get the value at index of the Github API data returned from the url.
 
         Args:
             index: The index of the desired data from the Github API
@@ -125,7 +146,6 @@ class GithubPaginator(collections.abc.Sequence):
         Returns:
             The value at the index
         """
-
         # if isinstance(index, slice) is True:
 
         #     data_slice = index
@@ -179,7 +199,7 @@ class GithubPaginator(collections.abc.Sequence):
 
 
     def __len__(self) -> int:
-        """This function gets the length of the Github API data returned
+        """Get the length of the Github API data.
 
         Returns:
             The length of the Github API data at the url.
@@ -190,7 +210,6 @@ class GithubPaginator(collections.abc.Sequence):
             issues = GithubPaginator(url, session.oauths, logger)
             issue_len = len(issues)
         """
-
         attempts = 0
         while attempts < 10:
 
@@ -220,12 +239,11 @@ class GithubPaginator(collections.abc.Sequence):
         
 
     def __iter__(self) -> Generator[Optional[dict], None, None]:
-        """Generator that yields one piece of data from the url at a time
+        """Provide data from Github API via a generator that yields one dict at a time.
 
         Yields:
             A piece of data from the github api as the specified url
         """
-
         data_list, response = self.retrieve_data(self.url)
 
         # if either the data or response is None then yield None and return
@@ -251,12 +269,11 @@ class GithubPaginator(collections.abc.Sequence):
                 yield data
 
     def iter_pages(self) -> Generator[Tuple[Optional[List[dict]], int], None, None]:
-        """Generator the returns one page of data from the Github API at a time
+        """Provide data from Github API via a generator that yields a page of dicts at a time.
 
         Returns:
             A page of data from the Github API at the specified url
         """
-
         # retrieves the data for the given url
         data_list, response = self.retrieve_data(self.url)
 
@@ -289,33 +306,8 @@ class GithubPaginator(collections.abc.Sequence):
             yield data_list, page_number
 
 
-    def hit_api(self, url: str, timeout, method='GET') -> Optional[httpx.Response]:
-        """Pings the api and get the data back for the page
-        Returns:
-            A httpx response that contains the data. None if a timeout occurs
-        """
-
-        # self.logger.info(f"Hitting endpoint with {method} request: {url}...\n")
-
-        with httpx.Client() as client:
-
-            try:
-                response = client.request(
-                    method=method, url=url, auth=self.key_manager, timeout=timeout)
-
-            except TimeoutError:
-                self.logger.info(f"Request timed out. Sleeping {round(timeout)} seconds and trying again...\n")
-                time.sleep(round(timeout))
-                return None
-            except httpx.TimeoutException:
-                self.logger.info(f"Request timed out. Sleeping {round(timeout)} seconds and trying again...\n")
-                time.sleep(round(timeout))
-                return None
-
-        return response 
-
     def retrieve_data(self, url: str) -> Tuple[Optional[List[dict]], Optional[httpx.Response]]:
-        """Tries the retrieve the data at the given url
+        """Attempt to retrieve data at given url.
 
         Args:
             url: The url to retrieve the data from
@@ -323,13 +315,12 @@ class GithubPaginator(collections.abc.Sequence):
         Returns
             The response object from hitting the url and the data on the page
         """
-
         timeout = 5.0
         timeout_count = 0
         num_attempts = 1
         while num_attempts <= 10:
 
-            response = self.hit_api(url, timeout)
+            response = hit_api(self.key_manager, url, timeout)
 
             if response is None:
                 if timeout_count == 10:
@@ -362,7 +353,6 @@ class GithubPaginator(collections.abc.Sequence):
                     self.logger.debug(f"Encountered new dict response from api on url: {url}. Response: {page_data}")
                     return None, None
 
-
                 if dict_processing_result == "Repo Not Found":
                     return None, None
 
@@ -385,16 +375,15 @@ class GithubPaginator(collections.abc.Sequence):
         return None, None
 
     def get_num_pages(self) -> Optional[int]:
-        """Gets the number of pages of data that a url can paginate through
+        """Get the number of pages of data that a url can paginate through.
 
         Returns:
             The number of pages a url can access
         """
-        
         timeout: float = 5
         num_attempts = 0
         while num_attempts < 10:
-            r = self.hit_api(self.url, timeout=timeout, method="HEAD")
+            r = hit_api(self.key_manager, self.url, timeout=timeout, method="HEAD")
 
             if r:
                 break
@@ -421,7 +410,7 @@ class GithubPaginator(collections.abc.Sequence):
 ###################################################
 
     def process_str_response(self, page_data: str) -> Union[str, List[dict]]:
-        """Processes an api response of type string
+        """Process an api response of type string.
 
         Args:
             page_data: the string response from the api that is being processed
@@ -430,7 +419,6 @@ class GithubPaginator(collections.abc.Sequence):
             html_response, empty_string, and failed_to_parse_jsonif the data is not processable. 
                 Or a list of dicts if the json was parasable
         """
-        
         self.logger.info(f"Warning! page_data was string: {page_data}\n")
         
         if "<!DOCTYPE html>" in page_data:
@@ -452,16 +440,15 @@ class GithubPaginator(collections.abc.Sequence):
 
 # Url Helper Method to remove query paramaters from the url
 def clean_url(url: str, keys: List[str]) -> str:
-    """Removes query params from url
+    """Remove query params from url.
 
-        Args:
-            url: the url that is being modified
-            keys: the query params that are being removed
-            
-        Returns:
-            A url with the params in keys removed
+    Args:
+        url: the url that is being modified
+        keys: the query params that are being removed
+        
+    Returns:
+        A url with the params in keys removed
     """
-
     u = urlparse(url)
     query = parse_qs(u.query, keep_blank_values=True)
 
@@ -474,7 +461,7 @@ def clean_url(url: str, keys: List[str]) -> str:
 
 
 def add_query_params(url: str, additional_params: dict) -> str:
-    """Adds query params to a url
+    """Add query params to a url.
 
     Args:
         url: the url that is being modified
@@ -498,7 +485,7 @@ def add_query_params(url: str, additional_params: dict) -> str:
 
 
 def get_url_page_number(url: str) -> int:
-    """Parses the page number from the url
+    """Parse the page number from the url.
 
     Note:
         If the url does not contain a page number the function returns 1
@@ -509,7 +496,6 @@ def get_url_page_number(url: str) -> int:
     Returns:
         The page number that the url contains
     """
-
     parsed_url = urlparse(url)
     try:
         # if page is not a url query param then this is page 1
