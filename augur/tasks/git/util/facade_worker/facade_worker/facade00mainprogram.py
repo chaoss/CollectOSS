@@ -96,7 +96,7 @@ class FacadeSession(GithubTaskSession):
             self.logger.error(f"Unable to insert data in 10 attempts")
             return
 
-        if deadlock_detected == True:
+        if deadlock_detected is True:
             self.logger.error(f"Made it through even though Deadlock was detected")
                     
             return

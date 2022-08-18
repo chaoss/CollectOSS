@@ -11,13 +11,28 @@ from augur.application.db.models import PullRequest, Message, PullRequestReview,
 
 PLATFORM_ID = 1
 
+#TODO: Document tool_source, tool_source, data_source
+
 def extract_data_from_pr(pr_data: dict, 
                         repo_id: int, 
                         tool_source: str, 
                         tool_version: str, 
                         data_source: str) -> Tuple[dict, List[dict], List[dict], List[dict], List[dict], List[dict]]:
-    
+    """Extract needed data from single pull request.
 
+    Args:
+        pr_data: a pull request from the github api
+        repo_id: an integer representing the repo a repo in the repos table
+
+    Returns:
+        A tuples that includes
+            The needed data from the pr
+            The needed data for pr labels
+            The needed data for pr assignees
+            The needed data for pr reviewers
+            The needed data for pr meatadata
+            The contributors found amongst all the pull request data
+    """
     # adds cntrb_id to reference the contributors table to the 
     # prs, assignees, reviewers, and metadata
     pr_data, contributor_data = process_pull_request_contributors(pr_data, tool_source, tool_version, data_source)
@@ -57,7 +72,6 @@ def extract_data_from_pr(pr_data: dict,
     pr_metadata = extract_needed_pr_metadata(pr_data["metadata"], PLATFORM_ID, repo_id,
                                                     tool_source, tool_version, data_source)                                                                      
 
-    
     return pr_needed_data, pr_labels, pr_assignees, pr_reviewers, pr_metadata, contributor_data
 
 
@@ -70,7 +84,25 @@ def extract_data_from_pr_list(pull_requests: List[dict],
                                                             List[int], 
                                                             List[dict]
                                                         ]:
+    """Extract needed data from list of pull requests
 
+    Note:
+        This also organizes the other pull request data like labels and assignees, in a way that will make it easy to map them to the pull requests after the pull request has been inserted
+
+    Args:
+        pull_requests: list of pr dicts
+        repo_id: an integer representing the repo a repo in the repos table
+
+    Returns:
+        A tuple containing
+            A list of pull requests with the data needed for insertion
+            A dictionairy with the keys being pr urls and the value being 
+                a dict containing labels, assignees, reviewers, and metadata. 
+                This is structured in this way to allow for easy mapping back 
+                to the prs after they are inserted
+            A list of pr numbers to pass to the pr reviews task
+            A list of contributors found amongst all the pull request data in the list
+    """            
     pr_mapping_data = {}
     pr_dicts = [] 
     pr_numbers = []
@@ -99,6 +131,13 @@ def extract_data_from_pr_list(pull_requests: List[dict],
 
 
 def insert_pr_contributors(contributors: List[dict], session: GithubTaskSession, task_name: str) -> None:
+    """Insert pr contributors
+    
+    Args:
+        contributors: the contributor data that is being inserted
+        session: database session to insert the data with
+        task_name: to differiante between log statements since there are multiple tasks of the same type
+    """
 
     # remove duplicate contributors before inserting
     contributors = remove_duplicate_dicts(contributors)
@@ -109,6 +148,17 @@ def insert_pr_contributors(contributors: List[dict], session: GithubTaskSession,
 
 
 def insert_prs(pr_dicts: List[dict], session: GithubTaskSession, task_name: str) -> Optional[List[dict]]:
+    """Insert pull requests
+    
+    Args:
+        pr_dicts: the pull request data that is being inserted
+        session: database session to insert the data with
+        task_name: to differiante between log statements since there are multiple tasks of the same type
+
+    Returns:
+        list of dicts that contain a pr_url and a pull_request_id. 
+            So we can determine what labels, assigness, and other data belong to each pr
+    """
 
     session.logger.info(f"{task_name}: Inserting prs of length: {len(pr_dicts)}")
     pr_natural_keys = ["pr_url"]
@@ -121,6 +171,21 @@ def map_other_pr_data_to_pr(
                             pr_return_data: List[dict], 
                             pr_mapping_data: Dict[str, Dict[str, List[dict]]], 
                             logger: logging.Logger) -> Tuple[List[dict], List[dict], List[dict], List[dict]]:
+    """Map labels, assigness, reviewers, and metadata to their respecive prs
+    
+    Args:
+        pr_return_data: list of dicts containing pr urls and pull request ids
+        pr_mapping_data: dict containing pr urls as the keys and the values 
+            being a dict containing other related pr data
+        logger: handles logging
+
+    Returns:
+        A tuple containing
+            list of labels that have pull request ids
+            list of assignees that have pull request ids
+            list of reviewers that have pull request ids
+            list of metadata that have pull request ids
+    """
 
     pr_label_dicts = []
     pr_assignee_dicts = []
@@ -147,8 +212,16 @@ def map_other_pr_data_to_pr(
     return pr_label_dicts, pr_assignee_dicts, pr_reviewer_dicts, pr_metadata_dicts 
 
 
-def insert_pr_labels(labels: List[dict], logger: logging.Logger):
+def insert_pr_labels(labels: List[dict], logger: logging.Logger) -> None:
+    """Insert pull request labels
 
+    Note:
+        This assumes the labels have pull request ids and only the data needed for the database
+
+    Args:
+        labels: list of labels to insert
+        logger: handles logging
+    """
     with DatabaseSession(logger) as session:
 
         # we are using pr_src_id and pull_request_id to determine if the label is already in the database.
@@ -156,8 +229,16 @@ def insert_pr_labels(labels: List[dict], logger: logging.Logger):
         session.insert_data(labels, PullRequestLabel, pr_label_natural_keys)
 
 
-def insert_pr_assignees(assignees: List[dict], logger: logging.Logger):
+def insert_pr_assignees(assignees: List[dict], logger: logging.Logger) -> None:
+    """Insert pull request assignees
 
+    Note:
+        This assumes the assignees have pull request ids and only the data needed for the database
+
+    Args:
+        assignees: list of assignees to insert
+        logger: handles logging
+    """
     with DatabaseSession(logger) as session:
 
         # we are using pr_assignee_src_id and pull_request_id to determine if the label is already in the database.
@@ -165,8 +246,16 @@ def insert_pr_assignees(assignees: List[dict], logger: logging.Logger):
         session.insert_data(assignees, PullRequestAssignee, pr_assignee_natural_keys)
 
 
-def insert_pr_reviewers(reviewers: List[dict], logger: logging.Logger):
+def insert_pr_reviewers(reviewers: List[dict], logger: logging.Logger) -> None:
+    """Insert pull request reviewers
 
+    Note:
+        This assumes the reviewers have pull request ids and only the data needed for the database
+
+    Args:
+        reviewers: list of reviewers to insert
+        logger: handles logging
+    """
     with DatabaseSession(logger) as session:
 
         # we are using pr_src_id and pull_request_id to determine if the label is already in the database.
@@ -174,8 +263,16 @@ def insert_pr_reviewers(reviewers: List[dict], logger: logging.Logger):
         session.insert_data(reviewers, PullRequestReviewer, pr_reviewer_natural_keys)
 
 
-def insert_pr_metadata(metadata: List[dict], logger: logging.Logger):
+def insert_pr_metadata(metadata: List[dict], logger: logging.Logger) -> None:
+    """Insert pull request metadata
 
+    Note:
+        This assumes the metadata have pull request ids and only the data needed for the database
+
+    Args:
+        metadata: list of metadata to insert
+        logger: handles logging
+    """
     with DatabaseSession(logger) as session:
 
         # inserting pr metadata

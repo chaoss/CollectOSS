@@ -548,21 +548,21 @@ def process_commit_metadata(contributorQueue,repo_id):
             
 
             # Try to get the login from the commit sha
-            if login == None or login == "":
+            if login is None or login == "":
                 login = get_login_with_commit_hash(session,contributor, repo_id)
         
-            if login == None or login == "":
+            if login is None or login == "":
                 # Try to get the login from supplemental data if not found with the commit hash
                 login = get_login_with_supplemental_data(session,contributor)
         
-            if login == None:
+            if login is None:
                 continue
 
             url = ("https://api.github.com/users/" + login)
 
             user_data = request_dict_from_endpoint(session,url)
 
-            if user_data == None:
+            if user_data is None:
                 session.logger.warning(
                     f"user_data was unable to be reached. Skipping...")
                 continue

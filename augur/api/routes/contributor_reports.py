@@ -523,13 +523,13 @@ def create_routes(server):
 
         total_rows_removed = 0
         for col in not_null_columns:
-            rows_removed = len(df.loc[df[col].isnull() == True])
+            rows_removed = len(df.loc[df[col].isnull() is True])
 
             if rows_removed > 0:
                 print(f"{rows_removed} rows have been removed because of null values in column {col}")
                 total_rows_removed += rows_removed
 
-            df = df.loc[df[col].isnull() == False]
+            df = df.loc[df[col].isnull() is False]
 
         if total_rows_removed > 0:
             print(f"\nTotal rows removed because of null data: {total_rows_removed}");

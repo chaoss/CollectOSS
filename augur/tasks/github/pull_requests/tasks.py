@@ -38,7 +38,7 @@ def collect_pull_requests(repo_git: str) -> None:
     ids = []
     for page_data, page in prs.iter_pages():
 
-        if page_data == None:
+        if page_data is None:
             return
 
         elif len(page_data) == 0:
