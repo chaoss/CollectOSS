@@ -1,3 +1,4 @@
+"""Defines the redis connection."""
 import redis
 from augur.tasks.init import redis_db_number, redis_conn_string
 

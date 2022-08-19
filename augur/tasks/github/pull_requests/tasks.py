@@ -8,7 +8,7 @@ from augur.application.db.data_parse import *
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
 from augur.tasks.github.util.github_task_session import GithubTaskSession
 from augur.tasks.util.worker_util import wait_child_tasks
-from augur.tasks.github.util.util import remove_duplicate_dicts, add_key_value_pair_to_list_of_dicts, get_owner_repo
+from augur.tasks.github.util.util import remove_duplicate_dicts, add_key_value_pair_to_dicts, get_owner_repo
 from augur.application.db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestEvent, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, PullRequestMessageRef, Contributor, Repo
 
 platform_id = 1
@@ -38,7 +38,7 @@ def collect_pull_requests(repo_git: str) -> None:
     ids = []
     for page_data, page in prs.iter_pages():
 
-        if page_data == None:
+        if page_data is None:
             return
 
         elif len(page_data) == 0:
@@ -106,10 +106,10 @@ def process_pull_requests(pull_requests, task_name, repo_id):
 
             # add the pull_request_id to the labels, assignees, reviewers, or metadata then add them to a list of dicts that will be inserted soon
             dict_key = "pull_request_id"
-            pr_label_dicts += add_key_value_pair_to_list_of_dicts(other_pr_data["labels"], dict_key, pull_request_id)
-            pr_assignee_dicts += add_key_value_pair_to_list_of_dicts(other_pr_data["assignees"], dict_key, pull_request_id)
-            pr_reviewer_dicts += add_key_value_pair_to_list_of_dicts(other_pr_data["reviewers"], dict_key, pull_request_id)
-            pr_metadata_dicts += add_key_value_pair_to_list_of_dicts(other_pr_data["metadata"], dict_key, pull_request_id)
+            pr_label_dicts += add_key_value_pair_to_dicts(other_pr_data["labels"], dict_key, pull_request_id)
+            pr_assignee_dicts += add_key_value_pair_to_dicts(other_pr_data["assignees"], dict_key, pull_request_id)
+            pr_reviewer_dicts += add_key_value_pair_to_dicts(other_pr_data["reviewers"], dict_key, pull_request_id)
+            pr_metadata_dicts += add_key_value_pair_to_dicts(other_pr_data["metadata"], dict_key, pull_request_id)
             
 
         logger.info(f"{task_name}: Inserting other pr data of lengths: Labels: {len(pr_label_dicts)} - Assignees: {len(pr_assignee_dicts)} - Reviewers: {len(pr_reviewer_dicts)} - Metadata: {len(pr_metadata_dicts)}")
@@ -234,7 +234,8 @@ def pull_request_review_comments(repo_git: str) -> None:
 
             pr_review_id = related_pr_review.pr_review_id
 
-            pr_comment_ref = extract_pr_review_message_ref_data(comment, pr_review_id, repo_id, tool_source, tool_version, data_source)
+            # TODO: Map this like pr labels are to prs
+            pr_comment_ref = extract_pr_review_message_ref_data(comment, pr_review_id, repo_id, tool_version, data_source)
 
             pr_review_msg_mapping_data.append(
                 {

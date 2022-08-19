@@ -183,7 +183,7 @@ def annual_commit_count_ranked_by_repo_in_repo_group(repo_group_id, repo_id=None
     :param end_date: Specifies the end date, defaults to datetime.now()
     :return: DataFrame of data
     """
-    if timeframe == None:
+    if timeframe is None:
         timeframe = 'all'
 
     cdRgTpRankedCommitsSQL = None

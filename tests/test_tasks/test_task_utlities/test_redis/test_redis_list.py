@@ -1,19 +1,17 @@
 import pytest
 from augur.tasks.init.redis_connection import redis_connection as redis
 from augur.tasks.util.redis_list import RedisList
-from augur import instance_id
-#from augur.application.cli.backend import delete_redis_keys
 
 list_name = "list"
 
-#@pytest.fixture()
-#def redis_list():
-#
-#    redis_list = RedisList(list_name)
-#
-#    yield redis_list
-#
-#    delete_redis_keys(instance_id)
+@pytest.fixture()
+def redis_list():
+
+    redis_list = RedisList(list_name)
+
+    yield redis_list
+
+    redis.flushdb()
 
 def test_redis_list_append(redis_list):
 
@@ -26,7 +24,7 @@ def test_redis_list_append(redis_list):
 
     for i in range(0, len(string_array)):
     
-        assert redis.lindex(redis_list.list, i) == string_array[i]
+        assert redis.lindex(redis_list.redis_list_key, i) == string_array[i]
 
 length_data_1 = [1, 2, 3, 4, 5]
 length_data_2 = []
@@ -36,16 +34,16 @@ def test_redis_list_length(redis_list, data):
     # print(f"Data: {data}. Data length: {len(data)}")
 
     if data:
-        redis.rpush(redis_list.list, *data)
+        redis.rpush(redis_list.redis_list_key, *data)
 
-    assert redis.llen(redis_list.list)  == len(data)
+    assert redis.llen(redis_list.redis_list_key)  == len(data)
 
 
 def test_redis_list_contains(redis_list):
 
     insert_values = [i for i in range(2, 10, 2)]
 
-    redis.rpush(redis_list.list, *insert_values)
+    redis.rpush(redis_list.redis_list_key, *insert_values)
 
     for item in insert_values:
         assert redis_list.contains(item) == True
@@ -64,7 +62,7 @@ def test_redis_list_extend(redis_list, data):
 
     for i in range(0, len(data)):
     
-        assert int(redis.lindex(redis_list.list, i)) == data[i]        
+        assert int(redis.lindex(redis_list.redis_list_key, i)) == data[i]        
 
 
 

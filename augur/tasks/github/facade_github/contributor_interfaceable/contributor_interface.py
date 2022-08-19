@@ -296,7 +296,7 @@ def fetch_username_from_email(session, commit):
         url, timeout_wait=30)
 
     # Check if the email result got anything, if it failed try a name search.
-    if login_json == None or 'total_count' not in login_json or login_json['total_count'] == 0:
+    if login_json is None or 'total_count' not in login_json or login_json['total_count'] == 0:
         session.logger.info(
             f"Could not resolve the username from {commit['email_raw']}")
 
@@ -339,7 +339,7 @@ def get_login_with_supplemental_data(session, commit_data):
     login_json = fetch_username_from_email(session,commit_data)
 
     # Check if the email result got anything, if it failed try a name search.
-    if login_json == None or 'total_count' not in login_json or login_json['total_count'] == 0:
+    if login_json is None or 'total_count' not in login_json or login_json['total_count'] == 0:
         session.logger.info(
             "Could not resolve the username from the email. Trying a name only search...")
 
@@ -354,7 +354,7 @@ def get_login_with_supplemental_data(session, commit_data):
             url, timeout_wait=30)
 
     # total_count is the count of username's found by the endpoint.
-    if login_json == None or 'total_count' not in login_json:
+    if login_json is None or 'total_count' not in login_json:
         session.logger.info(
             "Search query returned an empty response, moving on...\n")
         return None

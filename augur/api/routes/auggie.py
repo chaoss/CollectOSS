@@ -51,8 +51,8 @@ AUGUR_API_VERSION = 'api/unstable'
 #     # and bind them to the metrics class
 #     # Derek are you proud of me
 #     for name, obj in inspect.getmembers(sys.modules[module_name]):
-#         if inspect.isfunction(obj) == True:
-#             if hasattr(obj, 'metadata') == True:
+#         if inspect.isfunction(obj) is True:
+#             if hasattr(obj, 'metadata') is True:
 #                 setattr(metrics, name, types.MethodType(obj, metrics))
 
 
