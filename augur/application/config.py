@@ -56,6 +56,12 @@ default_config = {
             "Message_Insights": {
                     "insight_days": 30,
                     "models_dir": "message_models"
+            },
+            "Clustering_Task": {
+                "max_df": 0.9,
+                "max_features": 1000,
+                "min_df": 0.1,
+                "num_clusters": 4
             }
         }
 

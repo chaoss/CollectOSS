@@ -34,11 +34,6 @@ setup(
         'pandas==1.3.5',
         'matplotlib==3.5.1'
     ],
-    entry_points={
-        'console_scripts': [
-            'clustering_worker_start=workers.clustering_worker.runtime:main',
-        ],
-    },
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'License :: OSI Approved :: MIT License',
