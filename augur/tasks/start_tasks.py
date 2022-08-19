@@ -182,7 +182,7 @@ def start_task():
 
     task_list = []
 
-    # task_list += [facade_commits_model.si()]
+    task_list += [facade_commits_model.si()]
 
     task_list += [create_github_task_chain(repo.repo_git) for repo in repos]
 
