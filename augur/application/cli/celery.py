@@ -1,4 +1,5 @@
 #SPDX-License-Identifier: MIT
+
 """
 Augur library commands for controlling the backend components
 """

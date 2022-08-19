@@ -38,7 +38,7 @@ from .facade07rebuildcache import nuke_affiliations, fill_empty_affiliations, in
 
 #from contributor_interfaceable.facade08contributorinterfaceable import ContributorInterfaceable
 
-from augur.tasks.git.util.facade_worker.contributor_interfaceable.contributor_interface import *
+from augur.tasks.github.facade_github.contributor_interfaceable.contributor_interface import *
 
 from augur.tasks.github.util.github_task_session import GithubTaskSession
 

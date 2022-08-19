@@ -28,7 +28,7 @@ class AugurMultiCommand(click.MultiCommand):
             module = importlib.import_module('.' + name, 'augur.application.cli')
             return module.cli
         except ModuleNotFoundError:
-            print("Error")
+            print(f"Error")
             print(traceback.format_exc())
   
 
