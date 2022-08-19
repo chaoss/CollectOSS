@@ -21,6 +21,44 @@ import time
     PR_reviews, events, messages, pr_commits, pr_files(already done convert it)
 """
 
+def hit_api_graphql(keyAuth,url,logger,query,variables={}):
+    logger.debug(f"Sending query {query}  to github graphql")
+
+    response = None
+    with httpx.Client() as client:
+
+        try:
+            json_dict = {
+                'query' : query
+            }
+
+            #If there are bind variables bind them to the query here.
+            if variables:
+
+                json_dict['variables'] = variables
+                #Get rid of values tuple used to extract results so its not used in actual request.
+                json_dict['variables'].pop("values",None)
+                json_dict['variables'] = json_dict['variables']
+                #print(json_dict['variables'])
+            
+            #print(json.dumps(json_dict))
+            response = client.post(
+                url=url,auth=keyAuth,json=json_dict
+                )
+        
+        except TimeoutError:
+            logger.info("Request timed out. Sleeping 10 seconds and trying again...\n")
+            time.sleep(10)
+            return None
+        except httpx.TimeoutException:
+            logger.info("httpx.ReadTimeout. Sleeping 10 seconds and trying again...\n")
+            time.sleep(10)
+            return None
+    
+    return response
+    
+
+
 #Get data extraction logic for nested nodes in return data.
 
 #Should keep track of embedded data that is incomplete.
@@ -59,40 +97,7 @@ class GraphQlPageCollection(collections.abc.Sequence):
         
 
     def hit_api(self,query,variables={}):
-        self.logger.debug(f"Sending query {query}  to github graphql")
-
-        response = None
-        with httpx.Client() as client:
-
-            try:
-                json_dict = {
-                    'query' : query
-                }
-
-                #If there are bind variables bind them to the query here.
-                if variables:
-
-                    json_dict['variables'] = variables
-                    #Get rid of values tuple used to extract results so its not used in actual request.
-                    json_dict['variables'].pop("values",None)
-                    json_dict['variables'] = json_dict['variables']
-                    #print(json_dict['variables'])
-                
-                #print(json.dumps(json_dict))
-                response = client.post(
-                    url=self.url,auth=self.keyAuth,json=json_dict
-                    )
-            
-            except TimeoutError:
-                self.logger.info("Request timed out. Sleeping 10 seconds and trying again...\n")
-                time.sleep(10)
-                return None
-            except httpx.TimeoutException:
-                self.logger.info("httpx.ReadTimeout. Sleeping 10 seconds and trying again...\n")
-                time.sleep(10)
-                return None
-        
-        return response
+        return hit_api_graphql(self.keyAuth, self.url, self.logger, query,variables=variables)
     
     async def async_hit_api(self,client,query,variables={}):
         self.logger.debug(f"Sending query {query}  to github graphql")
