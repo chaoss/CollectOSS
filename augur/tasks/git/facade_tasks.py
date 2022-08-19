@@ -47,8 +47,7 @@ from augur.application.logs import TaskLogConfig
 #enable celery multithreading
 @celery.task
 def analyze_commits_in_parallel(queue: list, repo_id: int, repo_location: str, multithreaded: bool)-> None:
-    """
-    Take a large list of commit data to analyze and store in the database. Meant to be run in parallel with other instances of this task.
+    """Take a large list of commit data to analyze and store in the database. Meant to be run in parallel with other instances of this task.
     """
     #create new cfg for celery thread.
     logger = logging.getLogger(analyze_commits_in_parallel.__name__)
@@ -65,8 +64,7 @@ def analyze_commits_in_parallel(queue: list, repo_id: int, repo_location: str, m
 #   import MySQLdb
 
 def analysis(cfg: FacadeConfig, multithreaded: bool, session: bool=None, processes: int=6)-> None:
-    """
-    Run the analysis by looping over all active repos. For each repo, we retrieve
+    """Run the analysis by looping over all active repos. For each repo, we retrieve
     the list of commits which lead to HEAD. If any are missing from the database,
     they are filled in. Then we check to see if any commits in the database are
     not in the list of parents, and prune them out.
@@ -235,8 +233,7 @@ def analysis(cfg: FacadeConfig, multithreaded: bool, session: bool=None, process
 
 
 def facade_init(session: FacadeSession)-> None:
-    """
-    Meant to replicate calling facade from the command line. Calls facade in a particular configuration that can be overridden in the database config.
+    """Meant to replicate calling facade from the command line. Calls facade in a particular configuration that can be overridden in the database config.
     """
     
     opts,args = getopt.getopt(sys.argv[1:],'hdpcuUaAmnfIrx')
@@ -348,8 +345,7 @@ def facade_init(session: FacadeSession)-> None:
 #TODO: turn this into a dynamic chain with the various platform resolution tasks in a list.
 @celery.task
 def facade_commits_model(github_contrib_resolition: bool=True)-> None:
-    """
-    The main facade task loop. Goes through and executes all collection options specified in the facade config
+    """The main facade task loop. Goes through and executes all collection options specified in the facade config
     """
 
     logger = logging.getLogger(facade_commits_model.__name__)

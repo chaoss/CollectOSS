@@ -90,8 +90,7 @@ class AugurTaskRoutine:
 
     @classmethod
     def from_json(cls,routine_as_json) -> AugurTaskRoutine:
-        """
-        Alternate constructor that creates the class from a predefined json file.
+        """Alternate constructor that creates the class from a predefined json file.
         """
         routine = json.loads(routine_as_json)
         obj = cls()
@@ -107,8 +106,7 @@ class AugurTaskRoutine:
         
     @classmethod
     def from_dict(cls,routine_as_dict: dict) -> AugurTaskRoutine:
-        """
-        Alternate constructor that creates the class from a predefined dict.
+        """Alternate constructor that creates the class from a predefined dict.
         """
         obj = cls()
 
@@ -123,14 +121,12 @@ class AugurTaskRoutine:
 
     #Get and set dict values that correspond to celery task groups
     def __getitem__(self,key: str) -> dict:
-        """
-        Return the collection group with the specified key.
+        """Return the collection group with the specified key.
         """
         return self.jobs_dict[key]
     
     def __setitem__(self,key: str,newJobs):
-        """
-        Create a new collection job group with the name of the key specified.
+        """Create a new collection job group with the name of the key specified.
         """
         if not hasattr(newJobs, 'apply_async') or not callable(newJobs.apply_async):
             self.logger.error("Collection groups must be of celery types that can be called with \'apply_async\'")
@@ -144,8 +140,7 @@ class AugurTaskRoutine:
 
     
     def disable_group(self,key: str):
-        """
-        Make a group deleted from the dict and unable to be run or added.
+        """Make a group deleted from the dict and unable to be run or added.
         """
         del self.jobs_dict[key]
         del self.dependency_relationships[key]
@@ -153,8 +148,7 @@ class AugurTaskRoutine:
 
     #force these params to be kwargs so they are more readable
     def add_dependency_relationship(self,job=None,depends_on=None):
-        """
-        Mark one key in the outfacing dictionary to be dependent on a differant item with the other specified key. Set up one to listen for the other to finish before starting.
+        """Mark one key in the outfacing dictionary to be dependent on a differant item with the other specified key. Set up one to listen for the other to finish before starting.
         """
         assert (job in self.jobs_dict.keys() and depends_on in self.jobs_dict.keys()), "One or both collection groups don't exist!"
         assert (job != depends_on), "Something can not depend on itself!"
@@ -162,8 +156,7 @@ class AugurTaskRoutine:
         self.dependency_relationships[job].append(depends_on)
     
     def _update_dependency_relationship_with_celery_id(self,celery_id: str,dependency_name: str):
-        """
-        One a task is ran it is assigned a uuid by celery to represent the instance that is now running. 
+        """One a task is ran it is assigned a uuid by celery to represent the instance that is now running. 
         This replaces the dependency relationship to reflect a now-running task as what is actually being 
         waited on for dependencies. Now the id can be passed to a listener.
         """
@@ -177,8 +170,7 @@ class AugurTaskRoutine:
 
 
     def start_data_collection(self):
-        """
-        Start all task items and listeners and return.
+        """Start all task items and listeners and return.
         """
         #First, start all task groups that have no dependencies. 
         for name, collection_set in self.jobs_dict.items():
@@ -220,7 +212,7 @@ def start_task():
 
     task_list = []
 
-    # task_list += [facade_commits_model.si()]
+    task_list += [facade_commits_model.si()]
 
     task_list += [create_github_task_chain(repo.repo_git) for repo in repos]
 
@@ -256,7 +248,7 @@ def create_github_task_chain(repo_git):
 
 
 def get_owner_repo(git_url):
-    """ Gets the owner and repository names of a repository from a git url
+    """Gets the owner and repository names of a repository from a git url
 
     :param git_url: String, the git url of a repository
     :return: Tuple, includes the owner and repository names in that order
