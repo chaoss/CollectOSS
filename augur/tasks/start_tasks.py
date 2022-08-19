@@ -12,6 +12,7 @@ from celery import group, chain, chord, signature
 
 from augur.tasks.github import *
 from augur.tasks.git.facade_tasks import *
+from augur.tasks.data_analysis import *
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.logs import AugurLogger
 from augur.application.db.session import DatabaseSession

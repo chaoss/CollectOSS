@@ -52,6 +52,27 @@ default_config = {
             },
             "Tasks": {
                 "collection_interval": 2592000
+            },
+            "Message_Insights": {
+                    "insight_days": 30,
+                    "models_dir": "message_models"
+            },
+            "Clustering_Task": {
+                "max_df": 0.9,
+                "max_features": 1000,
+                "min_df": 0.1,
+                "num_clusters": 4
+            },
+            "Insight_Task": {
+                # TODO: How to store metrics in database config?
+                "metrics": {"issues-new": "issues", "code-changes": "commit_count", "code-changes-lines": "added",
+                           "reviews": "pull_requests", "contributors-new": "new_contributors"},
+                "confidence_interval": 95,
+                "contamination": 0.1,
+                "switch": 1,
+                "workers": 1,
+                "training_days": 1000,
+                "anomaly_days": 14
             }
         }
 
