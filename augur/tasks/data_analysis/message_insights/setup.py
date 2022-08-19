@@ -46,11 +46,6 @@ setup(
         'bs4==0.0.1',
         'xlrd==2.0.1'
     ],
-    entry_points={
-        'console_scripts': [
-            'message_insights_worker_start=workers.message_insights.runtime:main',
-        ],
-    },
     classifiers=[
         'Development Status :: 3 - Alpha',
         'License :: OSI Approved :: MIT License',

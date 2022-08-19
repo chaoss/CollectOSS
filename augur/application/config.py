@@ -52,6 +52,10 @@ default_config = {
             },
             "Tasks": {
                 "collection_interval": 2592000
+            },
+            "Message_Insights": {
+                    "insight_days": 30,
+                    "models_dir": "message_models"
             }
         }
 
