@@ -16,7 +16,10 @@ github_tasks = ['augur.tasks.github.contributors.tasks',
                 'augur.tasks.github.issues.tasks',
                 'augur.tasks.github.pull_requests.tasks',
                 'augur.tasks.github.events.tasks',
-                'augur.tasks.github.messages.tasks']
+                'augur.tasks.github.messages.tasks',
+                'augur.tasks.github.facade_github.tasks',
+                'augur.tasks.github.releases.tasks',
+                'augur.tasks.github.repo_info.tasks']
 
 git_tasks = ['augur.tasks.git.facade_tasks']
 
@@ -26,7 +29,6 @@ data_analysis_tasks = ['augur.tasks.data_analysis.message_insights.tasks',
                        'augur.tasks.data_analysis.pull_request_analysis_worker.tasks.py']
 
 tasks = start_tasks + github_tasks + git_tasks + data_analysis_tasks
-
 
 # initialize the celery app
 BROKER_URL = f'{redis_conn_string}{redis_db_number}'

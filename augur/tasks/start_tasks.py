@@ -16,6 +16,7 @@ from augur.tasks.data_analysis import *
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.logs import AugurLogger
 from augur.application.db.session import DatabaseSession
+from logging import Logger
 
 pr_numbers = [70, 106, 170, 190, 192, 208, 213, 215, 216, 218, 223, 224, 226, 230, 237, 238, 240, 241, 248, 249, 250, 252, 253, 254, 255, 256, 257, 261, 268, 270, 273, 277, 281, 283, 288, 291, 303, 306, 309, 310, 311, 323, 324, 325, 334, 335, 338, 343, 346, 348, 350, 353, 355, 356, 357, 359, 360, 365, 369, 375, 381, 382, 388, 405, 408, 409, 410, 414, 418, 419, 420, 421, 422, 424, 425, 431, 433, 438, 445, 450, 454, 455, 456, 457, 460, 463, 468, 469, 470, 474, 475, 476, 477, 478, 479, 480, 481, 482, 484, 485, 486, 487, 488, 490, 491, 492, 493, 494, 495, 496, 497, 498, 499, 500, 501, 502, 504, 506, 507, 508, 509, 510, 512, 514]
 
@@ -67,7 +68,18 @@ def deploy_dependent_task(*args,task_set,bind=True):
 #routine.add_dependency_relationship('my_task_set','facade')
 #routine.start()
 class AugurTaskRoutine:
+    """class to keep track of various groups of collection tasks as well as how they relate to one another.
+    Accessible like a dict, Best practice is to make groups of tasks that don't have dependencies with each 
+    other whithin the group for each group and then assign groups based on what they are dependent on. e.g.
+    You could make a group called 'facade_dependent' that contains all tasks that need to wait for facade until they can run.
 
+    Attributes:
+        logger (Logger): Get logger from AugurLogger
+        jobs_dict (dict): Dict of data collection groups to run
+        started_jobs (List[str]): List of keys in jobs_dict that have been started
+        disabled_collection_groups (List[str]): List of keys in jobs dict that have been marked as disabled
+        dependency_relationships (dict): Dict that represents relationships of dependency between items in the jobs_dict. Relationships between keys
+    """
     def __init__(self,disabled_collection_groups: List[str]=[]):
         self.logger = AugurLogger("data_collection_jobs").get_logger()
         #self.session = TaskSession(self.logger)
@@ -79,6 +91,8 @@ class AugurTaskRoutine:
 
     @classmethod
     def from_json(cls,routine_as_json) -> AugurTaskRoutine:
+        """Alternate constructor that creates the class from a predefined json file.
+        """
         routine = json.loads(routine_as_json)
         obj = cls()
 
@@ -93,6 +107,8 @@ class AugurTaskRoutine:
         
     @classmethod
     def from_dict(cls,routine_as_dict: dict) -> AugurTaskRoutine:
+        """Alternate constructor that creates the class from a predefined dict.
+        """
         obj = cls()
 
         for key in routine_as_dict.keys():
@@ -106,9 +122,13 @@ class AugurTaskRoutine:
 
     #Get and set dict values that correspond to celery task groups
     def __getitem__(self,key: str) -> dict:
+        """Return the collection group with the specified key.
+        """
         return self.jobs_dict[key]
     
     def __setitem__(self,key: str,newJobs):
+        """Create a new collection job group with the name of the key specified.
+        """
         if not hasattr(newJobs, 'apply_async') or not callable(newJobs.apply_async):
             self.logger.error("Collection groups must be of celery types that can be called with \'apply_async\'")
             raise AttributeError 
@@ -119,20 +139,28 @@ class AugurTaskRoutine:
         self.jobs_dict[key] = newJobs
         self.dependency_relationships[key] = []
 
-    #Make a group deleted from the dict and unable to be run or added.
+    
     def disable_group(self,key: str):
+        """Make a group deleted from the dict and unable to be run or added.
+        """
         del self.jobs_dict[key]
         del self.dependency_relationships[key]
         self.disabled_collection_groups.append(key)
 
     #force these params to be kwargs so they are more readable
     def add_dependency_relationship(self,job=None,depends_on=None):
+        """Mark one key in the outfacing dictionary to be dependent on a differant item with the other specified key. Set up one to listen for the other to finish before starting.
+        """
         assert (job in self.jobs_dict.keys() and depends_on in self.jobs_dict.keys()), "One or both collection groups don't exist!"
         assert (job != depends_on), "Something can not depend on itself!"
 
         self.dependency_relationships[job].append(depends_on)
     
     def _update_dependency_relationship_with_celery_id(self,celery_id: str,dependency_name: str):
+        """One a task is ran it is assigned a uuid by celery to represent the instance that is now running. 
+        This replaces the dependency relationship to reflect a now-running task as what is actually being 
+        waited on for dependencies. Now the id can be passed to a listener.
+        """
         #Replace dependency with active celery id once started so that dependent tasks can check status
         for group_name in self.dependency_relationships.keys():
             #self.dependency_relationships[group_name] = [celery_id if item == name else item for item in self.dependency_relationships[group_name]]
@@ -143,6 +171,8 @@ class AugurTaskRoutine:
 
 
     def start_data_collection(self):
+        """Start all task items and listeners and return.
+        """
         #First, start all task groups that have no dependencies. 
         for name, collection_set in self.jobs_dict.items():
             if not len(self.dependency_relationships[name]):
@@ -219,7 +249,7 @@ def create_github_task_chain(repo_git):
 
 
 def get_owner_repo(git_url):
-    """ Gets the owner and repository names of a repository from a git url
+    """Gets the owner and repository names of a repository from a git url
 
     :param git_url: String, the git url of a repository
     :return: Tuple, includes the owner and repository names in that order
