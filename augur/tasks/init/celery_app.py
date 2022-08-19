@@ -20,7 +20,8 @@ github_tasks = ['augur.tasks.github.contributors.tasks',
 
 git_tasks = ['augur.tasks.git.facade_tasks']
 
-data_analysis_tasks = ['augur.tasks.data_analysis.message_insights.tasks']
+data_analysis_tasks = ['augur.tasks.data_analysis.message_insights.tasks',
+                       'augur.tasks.data_analysis.clustering_worker.tasks']
 
 tasks = start_tasks + github_tasks + git_tasks + data_analysis_tasks
 
