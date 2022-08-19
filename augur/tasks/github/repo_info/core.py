@@ -1,6 +1,5 @@
 #SPDX-License-Identifier: MIT
 import logging, os, sys, time, requests, json
-from workers.worker_git_integration import WorkerGitInterfaceable
 from datetime import datetime
 from multiprocessing import Process, Queue
 import pandas as pd
@@ -101,10 +100,10 @@ def grab_repo_info_from_graphql_endpoint(session,query):
     return data
     
 
-def repo_info_model(session, repo_git, repo_id):
-    session.logger.info("Beginning filling the repo_info model for repo: " + repo_git + "\n")
+def repo_info_model(session, repo_orm_obj):
+    session.logger.info("Beginning filling the repo_info model for repo: " + repo_orm_obj.repo_git + "\n")
 
-    owner, repo = get_owner_repo(repo_git)
+    owner, repo = get_owner_repo(repo_orm_obj.repo_git)
 
     url = 'https://api.github.com/graphql'
 
@@ -218,8 +217,12 @@ def repo_info_model(session, repo_git, repo_id):
     #   }
     # }
 
-    data = grab_repo_info_from_graphql_endpoint(session, query)
-    
+    try:
+        data = grab_repo_info_from_graphql_endpoint(session, query)
+    except Exception as e:
+        session.logger.error(f"Could not grab info for repo {repo_orm_obj.repo_id}")
+        raise e
+        return
 
     # Just checking that the data is accessible (would not be if repo no longer exists)
     try:
@@ -232,9 +235,9 @@ def repo_info_model(session, repo_git, repo_id):
     committers_count = query_committers_count(session, owner, repo)
 
     # Put all data together in format of the table
-    session.logger.info(f'Inserting repo info for repo with id:{repo_id}, owner:{owner}, name:{repo}\n')
+    session.logger.info(f'Inserting repo info for repo with id:{repo_orm_obj.repo_id}, owner:{owner}, name:{repo}\n')
     rep_inf = {
-        'repo_id': repo_id,
+        'repo_id': repo_orm_obj.repo_id,
         'last_updated': data['updatedAt'] if 'updatedAt' in data else None,
         'issues_enabled': data['hasIssuesEnabled'] if 'hasIssuesEnabled' in data else None,
         'open_issues': data['issues']['totalCount'] if data['issues'] else None,
@@ -266,7 +269,7 @@ def repo_info_model(session, repo_git, repo_id):
         'pull_requests_merged': data['pr_merged']['totalCount'] if data['pr_merged'] else None
     }
 
-    result = session.insert_data(rep_inf,RepoInfo,['repo_id']) #result = self.db.execute(self.repo_info_table.insert().values(rep_inf))
+    result = session.insert_data(rep_inf,RepoInfo,['repo_info_id']) #result = self.db.execute(self.repo_info_table.insert().values(rep_inf))
 
     # Note that the addition of information about where a repository may be forked from, and whether a repository is archived, updates the `repo` table, not the `repo_info` table.
     forked = is_forked(session, owner, repo)
@@ -278,11 +281,18 @@ def repo_info_model(session, repo_git, repo_id):
     else:
         archived = 0
 
+    current_repo_dict = repo_orm_obj.__dict__
+
+    #delete irrelevant sqlalchemy metadata
+    del current_repo_dict['_sa_instance_state']
+
     rep_additional_data = {
         'forked_from': forked,
         'repo_archived': archived,
         'repo_archived_date_collected': archived_date_collected
     }
+
+    rep_additional_data.update(current_repo_dict)
     
     result = session.insert_data(rep_additional_data, Repo, ['repo_id'])
     #result = self.db.execute(self.repo_table.update().where(

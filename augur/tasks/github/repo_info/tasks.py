@@ -12,4 +12,7 @@ def collect_repo_info():
         repos = session.query(Repo).all()
 
         for repo in repos:
-            repo_info_model(session, repo.repo_git, repo.repo_id)
+            try:
+                repo_info_model(session, repo)
+            except Exception as e:
+                session.logger.error(f"Could not add repo info for repo {repo.repo_id}\n Error: {e}")

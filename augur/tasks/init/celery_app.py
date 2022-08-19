@@ -12,7 +12,7 @@ from augur.tasks.init import redis_db_number, redis_conn_string
 
 start_tasks = ['augur.tasks.start_tasks']
 
-github_tasks = ['augur.tasks.github.contributors.tasks', 'augur.tasks.github.issues.tasks', 'augur.tasks.github.pull_requests.tasks', 'augur.tasks.github.events.tasks', 'augur.tasks.github.messages.tasks', 'augur.tasks.github.facade_github.tasks', 'augur.tasks.github.releases.tasks']
+github_tasks = ['augur.tasks.github.contributors.tasks', 'augur.tasks.github.issues.tasks', 'augur.tasks.github.pull_requests.tasks', 'augur.tasks.github.events.tasks', 'augur.tasks.github.messages.tasks', 'augur.tasks.github.facade_github.tasks', 'augur.tasks.github.releases.tasks', 'augur.tasks.github.repo_info.tasks']
 
 git_tasks = ['augur.tasks.git.facade_tasks']
 
