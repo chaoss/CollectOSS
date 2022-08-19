@@ -12,11 +12,17 @@ from augur.tasks.init import redis_db_number, redis_conn_string
 
 start_tasks = ['augur.tasks.start_tasks']
 
-github_tasks = ['augur.tasks.github.contributors.tasks', 'augur.tasks.github.issues.tasks', 'augur.tasks.github.pull_requests.tasks', 'augur.tasks.github.events.tasks', 'augur.tasks.github.messages.tasks']
+github_tasks = ['augur.tasks.github.contributors.tasks',
+                'augur.tasks.github.issues.tasks',
+                'augur.tasks.github.pull_requests.tasks',
+                'augur.tasks.github.events.tasks',
+                'augur.tasks.github.messages.tasks']
 
 git_tasks = ['augur.tasks.git.facade_tasks']
 
-tasks = start_tasks + github_tasks + git_tasks
+data_analysis_tasks = ['augur.tasks.data_analysis.message_insights.tasks']
+
+tasks = start_tasks + github_tasks + git_tasks + data_analysis_tasks
 
 
 # initialize the celery app

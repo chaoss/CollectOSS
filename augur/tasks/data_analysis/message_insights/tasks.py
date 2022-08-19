@@ -8,8 +8,8 @@ import sqlalchemy as s
 from skimage.filters import threshold_otsu
 from sklearn.ensemble import IsolationForest
 
-from augur.tasks.message_insights.message_novelty import novelty_analysis
-from augur.tasks.message_insights.message_sentiment import get_senti_score
+from augur.tasks.data_analysis.message_insights.message_novelty import novelty_analysis
+from augur.tasks.data_analysis.message_insights.message_sentiment import get_senti_score
 
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.session import DatabaseSession

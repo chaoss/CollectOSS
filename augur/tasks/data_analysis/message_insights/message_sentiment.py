@@ -25,7 +25,7 @@ from xlrd import open_workbook
 
 # from openpyxl import load_workbook
 
-from augur.tasks.message_insights.preprocess_text import \
+from augur.tasks.data_analysis.message_insights.preprocess_text import \
     CONTRACTION_MAP as contraction_map
 
 warnings.filterwarnings('ignore')

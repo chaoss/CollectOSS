@@ -15,7 +15,7 @@ from scipy.spatial.distance import cosine
 from skimage.filters import threshold_otsu
 from sklearn import utils as skl_utils
 
-from augur.tasks.message_insights.preprocess_text import \
+from augur.tasks.data_analysis.message_insights.preprocess_text import \
     normalize_corpus as normalize_corpus
 
 ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
