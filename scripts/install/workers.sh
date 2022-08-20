@@ -14,6 +14,7 @@ do
    && $WORKER != *"template_worker"* \
    && $WORKER != *"metric_status_worker"* \
    && $WORKER != *"__pycache__"* \
+   && $WORKER != *"contributor_breadth_worker"* \
    ]]; then
 
       # make it pretty for formatting
