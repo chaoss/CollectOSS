@@ -40,7 +40,7 @@ def request_dict_from_endpoint(session, url, timeout_wait=10):
 
     while attempts < 10:
         try:
-            response = hit_api(session, url)
+            response = hit_api(session.oauths, url, session.logger)
         except TimeoutError:
             session.logger.info(
                 f"User data request for enriching contributor data failed with {attempts} attempts! Trying again...")

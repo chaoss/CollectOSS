@@ -66,7 +66,7 @@ def query_github_contributors(session, entry_info, repo_id):
 
             
             session.logger.info("Hitting endpoint: " + cntrb_url + " ...\n")
-            r = hit_api(session, cntrb_url)
+            r = hit_api(session.oauths, cntrb_url, session.logger)
             contributor = r.json()
 
             company = None

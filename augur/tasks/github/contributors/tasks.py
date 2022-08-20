@@ -66,7 +66,7 @@ def retrieve_dict_data(url: str, session):
     num_attempts = 0
     while num_attempts <= 10:
 
-        response = hit_api(session, url)
+        response = hit_api(session.oauths, url, session.logger)
 
         # increment attempts
         if response is None:

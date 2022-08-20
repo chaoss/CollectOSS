@@ -46,7 +46,7 @@ def is_forked(session, owner, repo): #/repos/:owner/:repo parent
     session.logger.info('Querying parent info to verify if the repo is forked\n')
     url = f'https://api.github.com/repos/{owner}/{repo}'
 
-    r = hit_api(session.oauths, url)#requests.get(url, headers=self.headers)
+    r = hit_api(session.oauths, url, session.logger)#requests.get(url, headers=self.headers)
 
     data = get_repo_data(session, url, r)
 
@@ -61,7 +61,7 @@ def is_archived(session, owner, repo):
     session.logger.info('Querying committers count\n')
     url = f'https://api.github.com/repos/{owner}/{repo}'
 
-    r = hit_api(session.oauths, url)#requests.get(url, headers=self.headers)
+    r = hit_api(session.oauths, url, session.logger)#requests.get(url, headers=self.headers)
     #self.update_gh_rate_limit(r)
 
     data = get_repo_data(session, url, r)
