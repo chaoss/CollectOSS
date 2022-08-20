@@ -21,8 +21,8 @@ fi
 scripts/install/backend.sh $target 2>&1 | tee logs/backend-install.log
 echo "Done!"
 
-scripts/install/workers.sh $target 2>&1 | tee logs/workers-install.log
-echo "Done!"
+#scripts/install/workers.sh $target 2>&1 | tee logs/workers-install.log
+#echo "Done!"
 
 
 function create_db_config() {

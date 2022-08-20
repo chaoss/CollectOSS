@@ -26,6 +26,7 @@ do
       echo "**********************************"
       echo
 
+      echo $WORKER
       cd $WORKER
       rm -rf build/*;
       rm -rf dist/*;

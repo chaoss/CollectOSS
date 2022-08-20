@@ -254,7 +254,8 @@ class AugurConfig():
             value = json_data[key]
 
             if isinstance(value, dict) is True:
-                self.logger.error("Values cannot be of type dict")
+                # TODO: Uncomment out when insights worker config stuff is resolved
+                # self.logger.error(f"Values cannot be of type dict: {value}")
                 return
 
             setting = {
