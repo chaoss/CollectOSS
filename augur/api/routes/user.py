@@ -9,11 +9,13 @@ import json
 import hashlib
 from flask import request, Response, jsonify
 from sqlalchemy.sql import text
+from sqlalchemy.orm import sessionmaker
 
 from augur.application.db.models import User
 
 logger = logging.getLogger(__name__)
 from augur.application.db.engine import engine
+Session = sessionmaker(bind=engine)
 
 AUGUR_API_VERSION = 'api/unstable'
 
@@ -94,16 +96,17 @@ def create_routes(server):
     def delete_user():
         if not request.is_secure:
             return generate_upgrade_request()
-        login_name = request.args.get("username")
-        if login_name is None:
+        session = Session()
+        username = request.args.get("username")
+        if username is None:
             return jsonify({"status": "Missing argument"}), 400
-        with engine.connect() as connection:
-            checkUsername = connection.execute("SELECT * FROM users WHERE login_name = %(login_name)s",{ 'login_name' : login_name }).fetchall()
-            if len(checkUsername) == 0:
-                return jsonify({"status": "User does not exist"})
-            else:
-                connection.execute('DELETE FROM users WHERE login_name = login_name')
-                return jsonify({"status": "User deleted"}), 200
+        user = session.query(User).filter(User.login_name == username).first()
+        if user is None:
+            return jsonify({"status": "User does not exist"})
+        else:
+            session.delete(user)
+            session.commit()
+            return jsonify({"status": "User deleted"}), 200
     
     server.app.route(f"/{AUGUR_API_VERSION}/user/update", methods=['GET', 'POST'])
     def update_user():
