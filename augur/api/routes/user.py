@@ -8,6 +8,7 @@ import requests
 import json
 import hashlib
 from flask import request, Response, jsonify
+from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.sql import text
 from sqlalchemy.orm import sessionmaker
 
@@ -64,33 +65,29 @@ def create_routes(server):
         if not request.is_secure:
             return generate_upgrade_request()
 
-        with engine.connect() as connection:
-            login_name = request.args.get("username")
-            password = request.args.get("password")
-            email = request.args.get("email")
-            first_name = request.args.get("first_name")
-            last_name = request.args.get("last_name")
+        session = Session()
+        username = request.args.get("username")
+        password = request.args.get("password")
+        email = request.args.get("email")
+        first_name = request.args.get("first_name")
+        last_name = request.args.get("last_name")
 
-            if login_name is None or password is None or email is None:
-                # https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
-                return jsonify({"status": "Missing argument"}), 400
-
-            checkUsername = connection.execute("SELECT * FROM users WHERE login_name = %(login_name)s",{ 'login_name' : login_name }).fetchall()
-            checkEmail = connection.execute("SELECT * FROM users WHERE email = %(email)s",{ 'email' : email }).fetchall()
-            if len(checkUsername) > 0:
-                return jsonify({"status": "User already exists"})
-            elif len(checkEmail) > 0:
-                return jsonify({"status": "Email already exists"})
-            else:
-                try:
-                    hashing = hash_algorithm()
-                    hashing.update(password.encode('utf8'))
-                    login_hashword = hashing.hexdigest()
-                    statement = text("INSERT INTO users (login_name, login_hashword, email, first_name, last_name) VALUES (:login_name, :login_hashword, :email, :first_name, :last_name)")
-                    connection.execute(statement, {'login_name': login_name, 'login_hashword': login_hashword, 'email': email, "first_name": first_name, "last_name": last_name})
-                    return jsonify({"status": "User created"})
-                except AssertionError as exception_message: 
-                        return jsonify(msg='Error: {}. '.format(exception_message)), 400
+        if username is None or password is None or email is None:
+            # https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
+            return jsonify({"status": "Missing argument"}), 400
+        user = session.query(User).filter(User.login_name == username).first()
+        if user is not None:
+            return jsonify({"status": "User already exists"})
+        emailCheck = session.query(User).filter(User.email == email).first()
+        if emailCheck is not None:
+            return jsonify({"status": "Email already exists"})
+        try:
+            user = User(login_name = username, login_hashword = generate_password_hash(password), email = email, first_name = first_name, last_name = last_name)
+            session.add(user)
+            session.commit()
+            return jsonify({"status": "User created"})
+        except AssertionError as exception_message: 
+            return jsonify(msg='Error: {}. '.format(exception_message)), 400
     
     server.app.route(f"/{AUGUR_API_VERSION}/user/remove", methods=['GET', 'PUT','DELETE'])
     def delete_user():
