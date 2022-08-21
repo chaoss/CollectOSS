@@ -41,24 +41,19 @@ def create_routes(server):
     def validate_user():
         if not request.is_secure:
             return generate_upgrade_request()
-
-        login_name = request.args.get("username")
+        session = Session()
+        username = request.args.get("username")
         password = request.args.get("password")
-
-        if login_name is None or password is None:
+        if username is None or password is None:
             # https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
             return jsonify({"status": "Missing argument"}), 400
-        with engine.connect() as connection:
-            hashing = hash_algorithm()
-            hashing.update(password.encode('utf8'))
-            pass_hash = hashing.hexdigest()
-            result = connection.execute("SELECT * FROM users WHERE login_name = %(login_name)s",{ 'login_name' : login_name }).fetchall()
-            checkPassword = connection.execute("SELECT login_hashword FROM users WHERE login_name = %(login_name)s",{ 'login_name' : login_name }).fetchall()
-            if not len(result) > 0:
-                return jsonify({"status": "Invalid username"})
-            if not pass_hash == checkPassword[0]['login_hashword']:
-                return jsonify({"status": "Invalid password"})
-            return jsonify({"status": "Validated"})
+        user = session.query(User).filter(User.login_name == username).first()
+        checkPassword = check_password_hash(user.login_hashword, password)
+        if user is None:
+            return jsonify({"status": "Invalid username"})
+        if checkPassword == False:
+            return jsonify({"status": "Invalid password"})
+        return jsonify({"status": "Validated"})
 
     server.app.route(f"/{AUGUR_API_VERSION}/user/create", methods=['POST', 'GET'])
     def create_user():
