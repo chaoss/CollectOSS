@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import requests
 import sqlalchemy as s
-from scikit-image import threshold_otsu
+from skimage.filters import threshold_otsu
 from sklearn.ensemble import IsolationForest
 
 from augur.tasks.data_analysis.message_insights.message_novelty import novelty_analysis

@@ -31,7 +31,7 @@ setup(
         'psycopg2-binary==2.9.3',
         'click==8.0.3',
         'scipy==1.7.3',
-        'sklearn==0.0',
+        'scikit-learn==0.24.2',
         'numpy==1.21.0',
         'nltk==3.6.6',
         'pandas==1.3.5',
