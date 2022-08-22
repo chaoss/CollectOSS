@@ -15,7 +15,7 @@ from urllib.parse import urlencode, urlparse, parse_qs, urlunparse
 from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
 
 
-def hit_api(session, url: str, logger: logging.Logger, timeout: float = 10, method: str = 'GET', ) -> Optional[httpx.Response]:
+def hit_api(key_manager, url: str, logger: logging.Logger, timeout: float = 10, method: str = 'GET', ) -> Optional[httpx.Response]:
     """Ping the api and get the data back for the page.
 
     Returns:
@@ -27,7 +27,7 @@ def hit_api(session, url: str, logger: logging.Logger, timeout: float = 10, meth
 
         try:
             response = client.request(
-                method=method, url=url, auth=session.oauths, timeout=timeout)
+                method=method, url=url, auth=key_manager, timeout=timeout)
 
         except TimeoutError:
             logger.info(f"Request timed out. Sleeping {round(timeout)} seconds and trying again...\n")
@@ -185,7 +185,7 @@ class GithubPaginator(collections.abc.Sequence):
         params = {"page": items_page}
         url = add_query_params(self.url, params)
 
-        data, _ = self.retrieve_data(url)
+        data, _, _ = self.retrieve_data(url)
 
         if data is None:
             return None
@@ -225,10 +225,15 @@ class GithubPaginator(collections.abc.Sequence):
             url = add_query_params(self.url, params)
 
             # get the amount of data on last page
-            data, _ = self.retrieve_data(url)
+            data, _, result = self.retrieve_data(url)
 
-            if data:  
+            if result == "success":  
                 return (100 * (num_pages -1)) + len(data)
+
+            print(f"Result when getting length: {result}")
+
+            if result == "Repo Not Found" or result == "timeout" or result == "Failed 10 times":
+                return None
 
             self.logger.debug("Unable to retrieve data length sleeping for 10 seconds then trying again...")
             time.sleep(10)
@@ -242,7 +247,7 @@ class GithubPaginator(collections.abc.Sequence):
         Yields:
             A piece of data from the github api as the specified url
         """
-        data_list, response = self.retrieve_data(self.url)
+        data_list, response, _ = self.retrieve_data(self.url)
 
         # if either the data or response is None then yield None and return
         if response is None or data_list is None:
@@ -258,7 +263,7 @@ class GithubPaginator(collections.abc.Sequence):
             next_page = response.links['next']['url']
 
             # Here we don't need to pass in params with the page, or the default params because the url from the headers already has those values
-            data_list, response = self.retrieve_data(next_page)
+            data_list, response, _ = self.retrieve_data(next_page)
 
             if data_list is None:
                 return
@@ -273,7 +278,7 @@ class GithubPaginator(collections.abc.Sequence):
             A page of data from the Github API at the specified url
         """
         # retrieves the data for the given url
-        data_list, response = self.retrieve_data(self.url)
+        data_list, response, _ = self.retrieve_data(self.url)
 
         # this retrieves the page for the given url
         page_number = get_url_page_number(self.url)
@@ -292,7 +297,7 @@ class GithubPaginator(collections.abc.Sequence):
             next_page = response.links['next']['url']
 
             # Here we don't need to pass in params with the page, or the default params because the url from the headers already has those values
-            data_list, response = self.retrieve_data(next_page)
+            data_list, response, _ = self.retrieve_data(next_page)
 
             page_number = get_url_page_number(next_page)
 
@@ -322,7 +327,7 @@ class GithubPaginator(collections.abc.Sequence):
             if response is None:
                 if timeout_count == 10:
                     self.logger.error(f"Request timed out 10 times for {url}")
-                    return None, None
+                    return None, None, "timeout"
 
                 timeout = timeout * 1.2
                 num_attempts += 1
@@ -340,18 +345,18 @@ class GithubPaginator(collections.abc.Sequence):
 
             # if the data is a list, then return it and the response
             if isinstance(page_data, list) is True:
-                return page_data, response
+                return page_data, response, "success"
 
             # if the data is a dict then call process_dict_response, and 
             if isinstance(page_data, dict) is True:
                 dict_processing_result = process_dict_response(self.logger, response, page_data)
 
                 if dict_processing_result is None:
-                    self.logger.debug(f"Encountered new dict response from api on url: {url}. Response: {page_data}")
-                    return None, None
+                    self.logger.info(f"Encountered new dict response from api on url: {url}. Response: {page_data}")
+                    return None, None, "New dict response"
 
                 if dict_processing_result == "Repo Not Found":
-                    return None, None
+                    return None, response, dict_processing_result
 
                 if dict_processing_result == "do_not_increase_attempts":
                     continue
@@ -364,12 +369,12 @@ class GithubPaginator(collections.abc.Sequence):
                 str_processing_result: Union[str, List[dict]] = self.process_str_response(page_data)
 
                 if isinstance(str_processing_result, list):
-                    return str_processing_result, response
+                    return str_processing_result, response, "success"
 
             num_attempts += 1
 
         self.logger.error("Unable to collect data in 10 attempts")
-        return None, None
+        return None, None, "Failed 10 times"
 
     def get_num_pages(self) -> Optional[int]:
         """Get the number of pages of data that a url can paginate through.
@@ -402,6 +407,10 @@ class GithubPaginator(collections.abc.Sequence):
             return None
 
         return num_pages
+
+    def hit_api(self, url, timeout):
+
+        return hit_api(self.key_manager, url, self.logger, timeout) 
 
 
 ###################################################

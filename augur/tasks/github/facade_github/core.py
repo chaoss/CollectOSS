@@ -49,10 +49,13 @@ def query_github_contributors(session, entry_info, repo_id):
     #list to hold contributors needing insertion or update
     contributor_list = GithubPaginator(contributors_url, session.oauths,session.logger)#paginate(contributors_url, duplicate_col_map, update_col_map, table, table_pkey)
 
+    len_contributor_list = len(contributor_list)
+
+    if not len_contributor_list:
+        session.logger.debug("Could not get length of contributor list")
+        return None
+
     session.logger.info("Count of contributors needing insertion: " + str(len(contributor_list)) + "\n")
-
-
-    #TODO raise exception if repo not exist.
 
     if len(contributor_list) == 0:
         return
