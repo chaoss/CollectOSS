@@ -74,10 +74,6 @@ setup(
         "XlsxWriter==1.3.7", # 3.0.3
         "celery==5.2.7", # 5.2.7
         "httpx==0.23.0", # 0.23.0
-        "scikit-image==0.19.1",
-        "scikit-learn==0.24.2", 
-        "gensim==3.8.3",
-        "keras==2.7.0",
         "tornado==6.1" # added because it sometimes errors when tornado is not 6.1 even though nothing we install depends on it
     ],
     extras_require={
