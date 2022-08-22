@@ -198,7 +198,7 @@ class GithubPaginator(collections.abc.Sequence):
         except KeyError as e:
             raise KeyError("Data does not exists for that index") from e
 
-    def __len__(self) -> int:
+    def __len__(self):
         """Get the length of the Github API data.
 
         Returns:
@@ -233,7 +233,7 @@ class GithubPaginator(collections.abc.Sequence):
             print(f"Result when getting length: {result}")
 
             if result == "Repo Not Found" or result == "timeout" or result == "Failed 10 times":
-                return None
+                return 0
 
             self.logger.debug("Unable to retrieve data length sleeping for 10 seconds then trying again...")
             time.sleep(10)
@@ -403,7 +403,7 @@ class GithubPaginator(collections.abc.Sequence):
         parsed_url = urlparse(last_page_url)
         try:
             num_pages = int(parse_qs(parsed_url.query)['page'][0])
-        except (KeyError, ValueError) as e:
+        except (KeyError, ValueError):
             return None
 
         return num_pages

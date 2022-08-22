@@ -39,7 +39,7 @@ def test_github_paginator_retrieve_data_valid_url(key_auth):
 
     url = "https://api.github.com/repos/chaoss/augur/pulls?state=all&direction=asc&per_page=100"
 
-    prs, response = GithubPaginator(url, key_auth, logger).retrieve_data(url)
+    prs, response, result = GithubPaginator(url, key_auth, logger).retrieve_data(url)
 
     assert prs is not None
     assert response is not None
@@ -52,10 +52,10 @@ def test_github_paginator_retrieve_data_bad_url(key_auth):
 
     url = "https://api.github.com/repos/chaoss/whitepaper/pulls?state=all&direction=asc&per_page=100"
 
-    prs, response = GithubPaginator(url, key_auth, logger).retrieve_data(url)
+    prs, response, result = GithubPaginator(url, key_auth, logger).retrieve_data(url)
 
     assert prs == None
-    assert response == None
+    assert result == "Repo Not Found"
 
 
 def test_github_paginator_hit_api(key_auth):
@@ -75,4 +75,34 @@ def test_github_paginator_hit_api_timeout(key_auth):
     response = GithubPaginator(url, key_auth, logger).hit_api(url, timeout=0.001)
 
     assert response == None
+
+def test_github_paginator_len(key_auth):
+
+    owner = "chaoss"
+    name = "whitepaper"
+
+    contributors_url = (
+        f"https://api.github.com/repos/{owner}/{name}/" +
+        "contributors?state=all"
+    )
+
+    contributors_list = GithubPaginator(contributors_url, key_auth, logger)
+
+    len_contributors_list = len(contributors_list)
+
+    assert len_contributors_list == 0
+
+def test_github_paginator_get_item(key_auth):
+
+    owner = "chaoss"
+    name = "whitepaper"
+
+    contributors_url = (
+        f"https://api.github.com/repos/{owner}/{name}/" +
+        "contributors?state=all"
+    )
+
+    contributors_list = GithubPaginator(contributors_url, key_auth, logger)
+
+    assert contributors_list[5] is None
 

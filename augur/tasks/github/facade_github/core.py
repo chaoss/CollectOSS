@@ -51,13 +51,9 @@ def query_github_contributors(session, entry_info, repo_id):
 
     len_contributor_list = len(contributor_list)
 
-    if not len_contributor_list:
-        session.logger.debug("Could not get length of contributor list")
-        return None
+    session.logger.info("Count of contributors needing insertion: " + str(len_contributor_list) + "\n")
 
-    session.logger.info("Count of contributors needing insertion: " + str(len(contributor_list)) + "\n")
-
-    if len(contributor_list) == 0:
+    if len_contributor_list == 0:
         return
 
     for repo_contributor in contributor_list:
