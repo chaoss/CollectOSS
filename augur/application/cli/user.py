@@ -9,7 +9,7 @@ import click
 import logging
 from werkzeug.security import generate_password_hash
 from sqlalchemy.orm import Session
-from augur.application.db.engine import engine
+from augur.application.db.engine import create_database_engine
 
 
 logger = logging.getLogger(__name__)
@@ -33,7 +33,7 @@ def cli():
 def add_user(username, email, firstname, lastname, phone_number, admin, password):
     """Add a new user to the database with email address = EMAIL."""
 
-    session = Session(engine)
+    session = Session(create_database_engine())
 
     if session.query(User).filter(User.login_name == username).first() is not None:
         return click.echo("username already taken")
