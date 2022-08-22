@@ -15,7 +15,7 @@ from urllib.parse import urlencode, urlparse, parse_qs, urlunparse
 from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
 
 
-def hit_api(session, url: str, logger: logging.Logger, timeout: float = 10, method: str = 'GET', ) -> Optional[httpx.Response]:
+def hit_api(key_manager, url: str, logger: logging.Logger, timeout: float = 10, method: str = 'GET', ) -> Optional[httpx.Response]:
     """Ping the api and get the data back for the page.
 
     Returns:
@@ -27,7 +27,7 @@ def hit_api(session, url: str, logger: logging.Logger, timeout: float = 10, meth
 
         try:
             response = client.request(
-                method=method, url=url, auth=session.oauths, timeout=timeout)
+                method=method, url=url, auth=key_manager, timeout=timeout)
 
         except TimeoutError:
             logger.info(f"Request timed out. Sleeping {round(timeout)} seconds and trying again...\n")
@@ -402,6 +402,10 @@ class GithubPaginator(collections.abc.Sequence):
             return None
 
         return num_pages
+
+    def hit_api(self, url, timeout):
+
+        return hit_api(self.key_manager, url, self.logger, timeout) 
 
 
 ###################################################

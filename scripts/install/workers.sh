@@ -26,7 +26,6 @@ do
       echo "**********************************"
       echo
 
-      echo $WORKER
       cd $WORKER
       rm -rf build/*;
       rm -rf dist/*;
@@ -35,7 +34,7 @@ do
       else
           pip install -e .[dev]
       fi
-      cd ../..
+      cd ../../../../
     fi
 
 done
