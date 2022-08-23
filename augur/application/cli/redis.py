@@ -14,10 +14,10 @@ logger = AugurLogger("augur").get_logger()
 def cli():
     """Placehodler func."""
 
-@cli.command("clear")
+@cli.command("clear-all")
 @test_connection
 @test_db_connection
-def clear():
+def clear_all():
     """Clears all redis caches on a redis instance."""
 
     while True:
@@ -38,3 +38,12 @@ def clear():
             return
         else:
             logger.error("Invalid input")
+
+@cli.command("clear")
+@test_connection
+@test_db_connection
+def clear():
+    """Clears the redis cache specified in the config"""
+
+    print("Clearing redis cache that is specified in the config")
+    redis_conn.flushdb()
