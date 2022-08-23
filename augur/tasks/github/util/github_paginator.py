@@ -11,14 +11,12 @@ import logging
 
 from typing import List, Optional, Union, Generator, Tuple
 from urllib.parse import urlencode, urlparse, parse_qs, urlunparse
+from enum import Enum
+
 
 from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
 
-from enum import Enum
  
-
-
-
 def hit_api(key_manager, url: str, logger: logging.Logger, timeout: float = 10, method: str = 'GET', ) -> Optional[httpx.Response]:
     """Ping the api and get the data back for the page.
 
@@ -106,6 +104,8 @@ def process_dict_response(logger: logging.Logger, response: httpx.Response, page
     return GithubApiResult.NEW_RESULT
 
 class GithubApiResult(Enum):
+    """All the different results of querying the Github API."""
+
     NEW_RESULT = -1
     SUCCESS = 0
     TIMEOUT = 1
