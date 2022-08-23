@@ -44,3 +44,11 @@ def start():
             
         except RedisConnectionError:
             pass
+
+@cli.command("tasks-clear")
+@test_connection
+@test_db_connection
+def clear():
+
+    celery_purge_command = f"celery -A augur.tasks.init.celery_app.celery_app purge"
+    subprocess.call(celery_purge_command.split(" "))
