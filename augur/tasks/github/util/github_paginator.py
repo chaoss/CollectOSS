@@ -208,7 +208,8 @@ class GithubPaginator(collections.abc.Sequence):
 
         data, _, result = self.retrieve_data(url)
 
-        if result in (GithubApiResult.REPO_NOT_FOUND, GithubApiResult.TIMEOUT, GithubApiResult.NO_MORE_ATTEMPTS):
+        if result != GithubApiResult.SUCCESS:
+            self.logger.debug("Unable to get item from the api")
             return None
 
         # get the position of data on the page
@@ -231,34 +232,22 @@ class GithubPaginator(collections.abc.Sequence):
             issues = GithubPaginator(url, session.oauths, logger)
             issue_len = len(issues)
         """
-        attempts = 0
-        while attempts < 10:
 
-            num_pages = self.get_num_pages()
+        num_pages = self.get_num_pages()
 
-            if not num_pages:
-                attempts += 1
-                continue
+        self.logger.info(f"Num pages: {num_pages}")
 
-            self.logger.info(f"Num pages: {num_pages}")
+        params = {"page": num_pages}
+        url = add_query_params(self.url, params)
 
-            params = {"page": num_pages}
-            url = add_query_params(self.url, params)
+        # get the amount of data on last page
+        data, _, result = self.retrieve_data(url)
 
-            # get the amount of data on last page
-            data, _, result = self.retrieve_data(url)
+        if result == GithubApiResult.SUCCESS:  
+            return (100 * (num_pages -1)) + len(data)
 
-            if result == GithubApiResult.SUCCESS:  
-                return (100 * (num_pages -1)) + len(data)
-
-            if result in (GithubApiResult.REPO_NOT_FOUND, GithubApiResult.TIMEOUT, GithubApiResult.NO_MORE_ATTEMPTS):
-                return 0
-
-            self.logger.debug(f"Unable to retrieve data length sleeping for 10 seconds then trying again... Retrieve data result: {result.name}")
-            time.sleep(10)
-
-        else:
-            raise RuntimeError("Unable to retrieve data length after trying 10 times")
+        self.logger.debug("Unable to retrieve data length from api")
+        return 0
 
     def __iter__(self) -> Generator[Optional[dict], None, None]:
         """Provide data from Github API via a generator that yields one dict at a time.
@@ -281,9 +270,10 @@ class GithubPaginator(collections.abc.Sequence):
             next_page = response.links['next']['url']
 
             # Here we don't need to pass in params with the page, or the default params because the url from the headers already has those values
-            data_list, response, _ = self.retrieve_data(next_page)
+            data_list, response, result = self.retrieve_data(next_page)
 
-            if data_list is None:
+            if result != GithubApiResult.SUCCESS:
+                self.logger.debug("Failed to retrieve the data even though 10 attempts were given")
                 return
 
             for data in data_list:
@@ -315,7 +305,11 @@ class GithubPaginator(collections.abc.Sequence):
             next_page = response.links['next']['url']
 
             # Here we don't need to pass in params with the page, or the default params because the url from the headers already has those values
-            data_list, response, _ = self.retrieve_data(next_page)
+            data_list, response, result = self.retrieve_data(next_page)
+
+            if result != GithubApiResult.SUCCESS:
+                self.logger.debug(f"Failed to retrieve the data for even though 10 attempts were given. Url: {next_page}")
+                return
 
             page_number = get_url_page_number(next_page)
 
@@ -359,7 +353,6 @@ class GithubPaginator(collections.abc.Sequence):
                 self.logger.error(f"Error invalid return from GitHub. Response was: {response.text}. Error: {e}")
                 page_data = json.loads(json.dumps(response.text))
 
-            # print(page_data)
 
             # if the data is a list, then return it and the response
             if isinstance(page_data, list) is True:
