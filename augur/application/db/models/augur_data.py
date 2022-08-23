@@ -1337,6 +1337,53 @@ class PullRequest(Base):
     pr_augur_contributor = relationship("Contributor")
     repo = relationship("Repo")
 
+    @classmethod
+    def from_github(cls, pr, repo_id, tool_source, tool_version):
+
+        pr_obj = cls()
+
+        pr_obj.repo_id = repo_id
+        pr_obj.pr_url = pr["url"]
+        pr_obj.pr_src_id = int(str(pr['id']).encode(encoding='UTF-8').decode(encoding='UTF-8')),
+        pr_obj.pr_src_node_id = pr['node_id'],
+        pr_obj.pr_html_url = pr['html_url'],
+        pr_obj.pr_diff_url = pr['diff_url'],
+        pr_obj.pr_patch_url = pr['patch_url'],
+        pr_obj.pr_issue_url = pr['issue_url'],
+        pr_obj.pr_augur_issue_id = None,
+        pr_obj.pr_src_number = pr['number'],
+        pr_obj.pr_src_state = pr['state'],
+        pr_obj.pr_src_locked = pr['locked'],
+        pr_obj.pr_src_title = str(pr['title']),
+        pr_obj.pr_augur_contributor_id = pr["cntrb_id"],
+        pr_obj.pr_body = str(pr['body']).encode(encoding='UTF-8', errors='backslashreplace').decode(encoding='UTF-8', errors='ignore') if (pr['body']) else None,
+        pr_obj.pr_created_at = pr['created_at'],
+        pr_obj.pr_updated_at = pr['updated_at'],
+        pr_obj.pr_closed_at = None if not (pr['closed_at']) else pr['closed_at'],
+        pr_obj.pr_merged_at = None if not (pr['merged_at']) else pr['merged_at'],
+        pr_obj.pr_merge_commit_sha = pr['merge_commit_sha'],
+        pr_obj.pr_teams = None,
+        pr_obj.pr_milestone = None,
+        pr_obj.pr_commits_url = pr['commits_url'],
+        pr_obj.pr_review_comments_url = pr['review_comments_url'],
+        pr_obj.pr_review_comment_url = pr['review_comment_url'],
+        pr_obj.pr_comments_url = pr['comments_url'],
+        pr_obj.pr_statuses_url = pr['statuses_url'],
+        pr_obj.pr_meta_head_id = None if not (pr['head']) else pr['head']['label'],
+        pr_obj.pr_meta_base_id = None if not (pr['base']) else pr['base']['label'],
+        pr_obj.pr_src_issue_url = pr['issue_url'],
+        pr_obj.pr_src_comments_url = pr['comments_url'],
+        pr_obj.pr_src_review_comments_url = pr['review_comments_url'],
+        pr_obj.pr_src_commits_url = pr['commits_url'],
+        pr_obj.pr_src_statuses_url = pr['statuses_url'],
+        pr_obj.pr_src_author_association = pr['author_association'],
+        pr_obj.tool_source = tool_source,
+        pr_obj.tool_version = tool_version,
+        pr_obj.data_source = 'GitHub API'
+
+        return pr_obj
+
+
 
 class Release(Base):
     __tablename__ = "releases"
@@ -2532,6 +2579,25 @@ class PullRequestLabel(Base):
 
     pull_request = relationship("PullRequest")
     repo = relationship("Repo")
+
+    @classmethod
+    def from_github(cls):
+
+        pr_label_obj = cls()
+
+        # store the pr_url data on in the pr label data for now so we can relate it back to a pr later
+        pr_label_obj.pr_src_id = int(label['id']),
+        pr_label_obj.pr_src_node_id = label['node_id'],
+        pr_label_obj.pr_src_url = label['url'],
+        pr_label_obj.pr_src_description = label['name'],
+        pr_label_obj.pr_src_color = label['color'],
+        pr_label_obj.pr_src_default_bool = label['default'],
+        pr_label_obj.tool_source = tool_source,
+        pr_label_obj.tool_version = tool_version,
+        pr_label_obj.data_source = data_source,
+        pr_label_obj.repo_id = repo_id
+
+        return pr_label_obj
 
 
 class PullRequestMessageRef(Base):
