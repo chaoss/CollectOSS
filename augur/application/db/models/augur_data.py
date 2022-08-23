@@ -2363,6 +2363,21 @@ class PullRequestAssignee(Base):
     pull_request = relationship("PullRequest")
     repo = relationship("Repo")
 
+    @classmethod
+    def from_github(cls):
+        
+        pr_assignee_ojb = cls()
+
+        # store the pr_url data on in the pr assignee data for now so we can relate it back to a pr later
+        pr_assignee_obj.contrib_id = assignee["cntrb_id"]
+        pr_assignee_obj.pr_assignee_src_id = int(assignee['id'])
+        pr_assignee_obj.tool_source = tool_source
+        pr_assignee_obj.tool_version = tool_version
+        pr_assignee_obj.data_source = data_source
+        pr_assignee_obj.repo_id = repo_id
+
+        return pr_assignee_obj
+
 
 class PullRequestCommit(Base):
     __tablename__ = "pull_request_commits"
@@ -2576,6 +2591,7 @@ class PullRequestLabel(Base):
     data_collection_date = Column(
         TIMESTAMP(precision=0), server_default=text("CURRENT_TIMESTAMP")
     )
+    
 
     pull_request = relationship("PullRequest")
     repo = relationship("Repo")
@@ -2586,15 +2602,15 @@ class PullRequestLabel(Base):
         pr_label_obj = cls()
 
         # store the pr_url data on in the pr label data for now so we can relate it back to a pr later
-        pr_label_obj.pr_src_id = int(label['id']),
-        pr_label_obj.pr_src_node_id = label['node_id'],
-        pr_label_obj.pr_src_url = label['url'],
-        pr_label_obj.pr_src_description = label['name'],
-        pr_label_obj.pr_src_color = label['color'],
-        pr_label_obj.pr_src_default_bool = label['default'],
-        pr_label_obj.tool_source = tool_source,
-        pr_label_obj.tool_version = tool_version,
-        pr_label_obj.data_source = data_source,
+        pr_label_obj.pr_src_id = int(label['id'])
+        pr_label_obj.pr_src_node_id = label['node_id']
+        pr_label_obj.pr_src_url = label['url']
+        pr_label_obj.pr_src_description = label['name']
+        pr_label_obj.pr_src_color = label['color']
+        pr_label_obj.pr_src_default_bool = label['default']
+        pr_label_obj.tool_source = tool_source
+        pr_label_obj.tool_version = tool_version
+        pr_label_obj.data_source = data_source
         pr_label_obj.repo_id = repo_id
 
         return pr_label_obj
