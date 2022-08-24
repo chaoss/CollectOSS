@@ -205,7 +205,7 @@ class AugurTaskRoutine:
                         result.results
                         self._update_dependency_relationship_with_celery_id([subtask.id for subtask in result.results],name)
                     except AttributeError:
-                        self._update_dependency_relationship_with_celery_id(result.id,name)
+                        self._update_dependency_relationship_with_celery_id([result.id],name)
                 
             
             #if dependency_cycle:
