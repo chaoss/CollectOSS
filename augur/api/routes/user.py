@@ -6,7 +6,6 @@ Creates routes for user login functionality
 import logging
 import requests
 import json
-import hashlib
 from flask import request, Response, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.sql import text
@@ -19,9 +18,6 @@ from augur.application.db.engine import engine
 Session = sessionmaker(bind=engine)
 
 AUGUR_API_VERSION = 'api/unstable'
-
-def hash_algorithm():
-    return hashlib.sha256()
 
 def generate_upgrade_request():
     # https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/426
@@ -102,29 +98,30 @@ def create_routes(server):
     
     server.app.route(f"/{AUGUR_API_VERSION}/user/update", methods=['GET', 'POST'])
     def update_user():
-        with engine.connect() as connection:
-            login_name = request.args.get("username")
-            password = request.args.get("password")
-            email = request.args.get("email")
-            new_login_name = request.args.get("new_username")
-            if login_name is None:
-                return jsonify({"status": "Missing argument"}), 400
-            checkUsername = connection.execute("SELECT * FROM users WHERE login_name = %(login_name)s",{'login_name' : login_name }).fetchall()
-            if len(checkUsername) == 0:
-                return jsonify({"status": "User does not exist"})
-            if len(checkUsername) > 0:
-                if(email is not None):
-                    statement= text("UPDATE users SET email=:email WHERE login_name = :login_name",{'login_name' : login_name })
-                    connection.execute(statement, {'login_name': login_name, 'email': email})
-                    return jsonify({"status": "Email Updated"})
-                if(password is not None):
-                    hashing = hash_algorithm()
-                    hashing.update(password.encode('utf8'))
-                    login_hashword = hashing.hexdigest()
-                    statement= text("UPDATE users SET login_hashword=:login_hashword WHERE login_name = :login_name",{'login_name' : login_name })
-                    connection.execute(statement, {'login_name': login_name, 'login_hashword': login_hashword})
-                    return jsonify({"status": "Password Updated"})
-                if(new_login_name is not None):
-                    statement= text("UPDATE users SET login_name =:new_login_name WHERE login_name = :login_name",{'login_name' : login_name })
-                    connection.execute(statement, {'login_name': login_name, 'new_login_name': new_login_name})
-                    return jsonify({"status": "Username Updated"})
+        session = Session()
+        username = request.args.get("username")
+        password = request.args.get("password")
+        email = request.args.get("email")
+        new_login_name = request.args.get("new_username")
+        new_password = request.args.get("new_password")
+        if username is None:
+            return jsonify({"status": "Missing argument"}), 400
+        user = session.query(User).filter(User.login_name == username).first()
+        checkPassword = check_password_hash(user.login_hashword, password)
+        if user is None:
+            return jsonify({"status": "User does not exist"})
+        if checkPassword == False:
+            return jsonify({"status": "Invalid password"}) 
+        if user:
+            if(email is not None and checkPassword is True):
+                user.email = email
+                session.commit()
+                return jsonify({"status": "Email Updated"})
+            if(new_password is not None and checkPassword is True):
+                user.login_hashword = generate_password_hash(new_password)
+                session.commit()
+                return jsonify({"status": "Password Updated"})
+            if(new_login_name is not None and checkPassword is True):
+                user.login_name = new_login_name
+                session.commit()
+                return jsonify({"status": "Username Updated"})
