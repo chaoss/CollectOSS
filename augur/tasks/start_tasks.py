@@ -41,7 +41,7 @@ def deserialize_task_set(dict_obj):
 def deploy_dependent_task(*args,task_set,bind=True):
     logger = logging.getLogger(deploy_dependent_task.__name__)
 
-    logger.info(f"Ids are {args}...")
+    logger.info(f"Ids are {args} ...")
     for task_id in args:
         prereq = AsyncResult(str(task_id))
         print(prereq.status)
@@ -53,6 +53,8 @@ def deploy_dependent_task(*args,task_set,bind=True):
     to_execute = deserialize_task_set(task_set)
 
     child = to_execute.apply_async(task_id=(deploy_dependent_task.request.id + "child"))
+
+    logger.info(f"Started child task with id {child.id} ...")
 
     if bind:
         with allow_join_result():
@@ -180,7 +182,7 @@ class AugurTaskRoutine:
                 
                 self.started_jobs.append(name)
                 task_collection = collection_set.apply_async()
-                self.logger.info(f"Starting non dependant collection group {name} with id {task_collection.id}...")
+                self.logger.info(f"Starting non dependant collection group {name} with id {task_collection.id}  ...")
                 try:
                     #test if group or not
                     task_collection.results
@@ -198,7 +200,7 @@ class AugurTaskRoutine:
                     
                     dependent_task_collection = deploy_dependent_task.si(*self.dependency_relationships[name],task_set=self.jobs_dict[name])
                     result = dependent_task_collection.apply_async()
-                    self.logger.info(f"Starting dependant collection group {name} with id {result.id}...")
+                    self.logger.info(f"Starting dependant collection group {name} with id {result.id}  ...")
                     print(result)
                     try:
                         #First try to update with sub ids if they exist.
@@ -216,7 +218,7 @@ def start_task():
 
     logger = logging.getLogger(start_task.__name__)
 
-    logger.info(f"Collecting data for git and github")
+    logger.info(f"Collecting data for git and github...")
 
     with DatabaseSession(logger) as session:
 
