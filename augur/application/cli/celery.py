@@ -45,10 +45,30 @@ def start():
         except RedisConnectionError:
             pass
 
-@cli.command("tasks-clear")
+@cli.command("clear-tasks")
 @test_connection
 @test_db_connection
 def clear():
 
-    celery_purge_command = f"celery -A augur.tasks.init.celery_app.celery_app purge"
-    subprocess.call(celery_purge_command.split(" "))
+
+    while True:
+
+        user_input = str(input("Warning this will remove all the tasks from all instances on this server!\nWould you like to proceed? [y/N]"))
+
+        if not user_input:
+            logger.info("Exiting")
+            return
+        
+        if user_input in ("y", "Y", "Yes", "yes"):
+            logger.info("Removing all tasks")
+            celery_purge_command = "celery -A augur.tasks.init.celery_app.celery_app purge -f"
+            subprocess.call(celery_purge_command.split(" "))
+            return
+
+        elif user_input in ("n", "N", "no", "NO"):
+            logger.info("Exiting")
+            return
+        else:
+            logger.error("Invalid input")
+
+    
