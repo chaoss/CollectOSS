@@ -83,8 +83,7 @@ def start(disable_collection):
             celery_beat_process.terminate()
 
         try:
-            logger.info("Flushing redis cache")
-            redis_connection.flushdb()
+            clear_redis_caches()
             
         except RedisConnectionError:
             pass
@@ -97,12 +96,24 @@ def stop():
     """
     _broadcast_signal_to_processes(given_logger=logging.getLogger("augur.cli"))
 
+    clear_redis_caches()
+
 @cli.command('kill')
 def kill():
     """
     Sends SIGKILL to all Augur server & worker processes
     """
     _broadcast_signal_to_processes(signal=signal.SIGKILL, given_logger=logging.getLogger("augur.cli"))
+
+    clear_redis_caches()
+
+def clear_redis_caches():
+    """Clears the redis databases that celery and redis use."""
+
+    logger.info("Flusing all redis databases this instance was using")
+    celery_purge_command = "celery -A augur.tasks.init.celery_app.celery_app purge -f"
+    subprocess.call(celery_purge_command.split(" "))
+    redis_connection.flushdb()
 
 @cli.command('export-env')
 def export_env(config):
