@@ -1074,12 +1074,12 @@ class Issue(Base):
         "Contributor", primaryjoin="Issue.reporter_id == Contributor.cntrb_id"
     )
 
-    @classmethod
-    def from_github(cls):
+    # @classmethod
+    # def from_github(cls):
         
-        issue_obj = cls()
+    #     issue_obj = cls()
 
-        return issue_obj
+    #     return issue_obj
 
 
 class Library(Base):
@@ -1219,12 +1219,12 @@ class Message(Base):
     repo = relationship("Repo")
     rgls = relationship("RepoGroupsListServe")
 
-    @classmethod
-    def from_github(cls):
+    # @classmethod
+    # def from_github(cls):
         
-        message_obj = cls()
+    #     message_obj = cls()
 
-        return message_obj
+    #     return message_obj
 
 
 class MessageAnalysisSummary(Base):
@@ -2687,12 +2687,12 @@ class PullRequestFile(Base):
     pull_request = relationship("PullRequest")
     repo = relationship("Repo")
 
-    @classmethod
-    def from_github(cls):
+    # @classmethod
+    # def from_github(cls):
         
-        pr_file_obj = cls()
+    #     pr_file_obj = cls()
 
-        return pr_file_obj
+    #     return pr_file_obj
 
 
 class PullRequestLabel(Base):
@@ -3002,12 +3002,12 @@ class PullRequestReview(Base):
     pull_request = relationship("PullRequest")
     repo = relationship("Repo")
 
-    @classmethod
-    def from_github(cls):
+    # @classmethod
+    # def from_github(cls):
         
-        pr_review_obj = cls()
+    #     pr_review_obj = cls()
 
-        return pr_reivew_obj
+    #     return pr_reivew_obj
 
 
 class PullRequestTeam(Base):
