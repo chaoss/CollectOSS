@@ -3,6 +3,7 @@ import os
 import json
 import sys
 import logging
+import inspect
 from sqlalchemy import create_engine, event
 from augur.application.logs import initialize_stream_handler
 
@@ -54,6 +55,11 @@ def create_database_engine():
     Returns:
         sqlalchemy database engine
     """ 
+
+    # curframe = inspect.currentframe()
+    # calframe = inspect.getouterframes(curframe, 2)
+    # print('file name:', calframe[1][1])
+    # print('function name:', calframe[1][3])
 
     db_conn_string = get_database_string()
 
