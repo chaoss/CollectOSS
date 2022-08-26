@@ -248,7 +248,7 @@ class Contributor(Base):
     )
 
     @classmethod
-    def from_github(cls):
+    def from_github(cls, contributor, tool_source, tool_version, data_source):
 
         cntrb_id = GithubUUID()   
         cntrb_id["user"] = contributor["id"]
@@ -2028,7 +2028,7 @@ class IssueAssignee(Base):
     repo = relationship("Repo")
 
     @classmethod
-    def from_github(cls):
+    def from_github(cls, assignee, repo_id, tool_source, tool_version, data_source):
         
         issue_assignee_obj = cls()
 
@@ -2109,7 +2109,7 @@ class IssueEvent(Base):
     repo = relationship("Repo")
 
     @classmethod
-    def from_github(cls):
+    def from_github(cls, event, repo_id, platform_id, tool_source, tool_version, data_source):
         
         issue_event_obj = cls()
 
@@ -2171,7 +2171,7 @@ class IssueLabel(Base):
     repo = relationship("Repo")
 
     @classmethod
-    def from_github(cls):
+    def from_github(cls, label, repo_id, tool_source, tool_version, data_source):
 
         issue_label_obj = cls()
 
@@ -2475,7 +2475,7 @@ class PullRequestAssignee(Base):
     repo = relationship("Repo")
 
     @classmethod
-    def from_github(cls):
+    def from_github(cls, assignee, repo_id, tool_source, tool_version, data_source):
         
         pr_assignee_ojb = cls()
 
@@ -2619,7 +2619,7 @@ class PullRequestEvent(Base):
     repo = relationship("Repo")
 
     @classmethod
-    def from_github(cls):
+    def from_github(cls, event, pr_id, repo_id, tool_source, tool_version, data_source):
         
         pr_event_obj = cls()
 
@@ -2737,7 +2737,7 @@ class PullRequestLabel(Base):
     repo = relationship("Repo")
 
     @classmethod
-    def from_github(cls):
+    def from_github(cls, label, repo_id, tool_source, tool_version, data_source):
 
         pr_label_obj = cls()
 
@@ -2861,7 +2861,7 @@ class PullRequestMeta(Base):
     repo = relationship("Repo")
 
     @classmethod
-    def from_github(cls):
+    def from_github(cls, meta, repo_id, tool_source, tool_version, data_source):
         
         pr_meta_obj = cls()
 
@@ -2926,7 +2926,7 @@ class PullRequestReviewer(Base):
     pull_request = relationship("PullRequest")
 
     @classmethod
-    def from_github(cls):
+    def from_github(cls, reviewer, repo_id, tool_source, tool_version, data_source):
 
         pr_reviewer_obj = cls()
 
