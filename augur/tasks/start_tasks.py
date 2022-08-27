@@ -213,16 +213,23 @@ def start_task():
 
     task_list = []
 
-    task_list += [facade_commits_model.si()]
+    for repo in repos:
+        repo_chain = create_github_task_chain(repo.repo_git)
+        repo_chain.apply_async()
+        time.sleep(5)
 
-    task_list += [create_github_task_chain(repo.repo_git) for repo in repos]
+    facade_commits_model.si().apply_async()
 
-    task_list += [process_contributors.si()]
+    # task_list += []
 
-    task_chain = group(task_list)
+    # task_list += [ for repo in repos]
+
+    # task_list += []
+
+    # task_chain = group(task_list)
 
 
-    result = task_chain.apply_async()
+    # result = task_chain.apply_async()
 
     
     # routine = AugurTaskRoutine()
@@ -243,7 +250,8 @@ def create_github_task_chain(repo_git):
     
     secondary_task_group = group(secondary_task_list)
 
-    github_task_chain = chain(start_tasks_group, secondary_task_group)
+    github_task_chain = chain(
+        start_tasks_group, secondary_task_group, process_contributors.si())
 
     return github_task_chain
 
