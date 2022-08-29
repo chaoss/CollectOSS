@@ -60,8 +60,8 @@ else
   echo "Cloning OSSF Scorecard to generate scorecard data ..."
   git clone https://github.com/ossf/scorecard $HOME/scorecard
   cd $HOME/scorecard
-  git checkout e42af75
-  git switch -c augur  
+  #git checkout e42af75
+  #git switch -c augur  
   CURRENT_DIR=$PWD;
   cd $CURRENT_DIR
   cd $HOME/scorecard;
