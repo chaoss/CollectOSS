@@ -33,7 +33,7 @@ def create_routes(server):
     def unsupported_method(error):
         return jsonify({"status": "Unsupported method"}), 405
 
-    server.app.route(f"/{AUGUR_API_VERSION}/user/validate", methods=['POST', 'GET'])
+    @server.app.route(f"/{AUGUR_API_VERSION}/user/validate", methods=['POST', 'GET'])
     def validate_user():
         if not request.is_secure:
             return generate_upgrade_request()
@@ -51,7 +51,7 @@ def create_routes(server):
             return jsonify({"status": "Invalid password"})
         return jsonify({"status": "Validated"})
 
-    server.app.route(f"/{AUGUR_API_VERSION}/user/create", methods=['POST', 'GET'])
+    @server.app.route(f"/{AUGUR_API_VERSION}/user/create", methods=['POST', 'GET'])
     def create_user():
         if not request.is_secure:
             return generate_upgrade_request()
@@ -80,7 +80,7 @@ def create_routes(server):
         except AssertionError as exception_message: 
             return jsonify(msg='Error: {}. '.format(exception_message)), 400
     
-    server.app.route(f"/{AUGUR_API_VERSION}/user/remove", methods=['GET', 'PUT','DELETE'])
+    @server.app.route(f"/{AUGUR_API_VERSION}/user/remove", methods=['GET', 'PUT','DELETE'])
     def delete_user():
         if not request.is_secure:
             return generate_upgrade_request()
@@ -96,7 +96,7 @@ def create_routes(server):
             session.commit()
             return jsonify({"status": "User deleted"}), 200
     
-    server.app.route(f"/{AUGUR_API_VERSION}/user/update", methods=['GET', 'POST'])
+    @server.app.route(f"/{AUGUR_API_VERSION}/user/update", methods=['GET', 'POST'])
     def update_user():
         session = Session()
         username = request.args.get("username")
