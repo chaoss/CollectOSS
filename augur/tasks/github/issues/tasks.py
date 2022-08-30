@@ -11,20 +11,27 @@ from augur.application.db.models import PullRequest, Message, PullRequestReview,
 
 
 @celery.task
-def issues_task(repo_git: str) -> None:
+def collect_issues(repo_git: str) -> None:
 
     logger = logging.getLogger(collect_issues.__name__)
+
+    owner, repo = get_owner_repo(repo_git)
 
     with GithubTaskSession(logger) as session:
 
         repo_id = session.query(Repo).filter(Repo.repo_git == repo_git).one().repo_id
 
-    issue_data = collect_issues(repo_git, logger, repo_id)
+    issue_data = retrieve_all_issue_data(repo_git, logger)
 
-    process_issues(issue_data, "Issue task", repo_id)
+    if issue_data:
+
+        process_issues(issue_data, "Issue task", repo_id, logger)
+
+    else:
+        logger.info(f"{owner}/{repo} has no issues")
 
 
-def collect_issues(repo_git, logger, repo_id) -> None:
+def retrieve_all_issue_data(repo_git, logger) -> None:
 
     owner, repo = get_owner_repo(repo_git)
 
@@ -49,22 +56,20 @@ def collect_issues(repo_git, logger, repo_id) -> None:
     for page_data, page in issues.iter_pages():
 
         if page_data is None:
-            return
+            return all_data
 
-        elif len(page_data) == 0:
-            logger.debug(f"{repo.capitalize()} Issues Page {page} contains no data...returning")
-            logger.info(f"{repo.capitalize()} Issues Page {page} of {num_pages}")
-            return
+        if len(page_data) == 0:
+            logger.debug(f"{repo} Issues Page {page} contains no data...returning")
+            logger.info(f"{repo} Issues Page {page} of {num_pages}")
+            return all_data
 
-        logger.info(f"{repo.capitalize()} Issues Page {page} of {num_pages}")
+        logger.info(f"{repo} Issues Page {page} of {num_pages}")
 
         all_data += page_data
 
     return all_data
     
-def process_issues(issues, task_name, repo_id) -> None:
-
-    logger = logging.getLogger(process_issues.__name__)
+def process_issues(issues, task_name, repo_id, logger) -> None:
     
     # get repo_id or have it passed
     tool_source = "Issue Task"

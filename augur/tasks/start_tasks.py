@@ -217,7 +217,7 @@ def start_task():
         repo_chain = create_github_task_chain(repo.repo_git)
         repo_chain.apply_async()
 
-    facade_commits_model.si().apply_async()
+    chain(facade_commits_model.si(), process_contributors.si()).apply_async()
 
     # task_list += []
 
@@ -239,18 +239,18 @@ def create_github_task_chain(repo_git):
 
     start_task_list = []
     start_task_list.append(collect_pull_requests.si(repo_git))
-    start_task_list.append(issues_task.si(repo_git))
+    start_task_list.append(collect_issues.si(repo_git))
 
     start_tasks_group = group(start_task_list)
     
     secondary_task_list = []
     secondary_task_list.append(collect_events.si(repo_git))
-    secondary_task_list.append(collect_issue_and_pr_comments.si(repo_git))
+    secondary_task_list.append(collect_github_messages.si(repo_git))
     
     secondary_task_group = group(secondary_task_list)
 
     github_task_chain = chain(
-        start_tasks_group, secondary_task_group, process_contributors.si())
+        start_tasks_group, secondary_task_group)
 
     return github_task_chain
 

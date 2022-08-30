@@ -13,14 +13,33 @@ from augur.application.db.models import PullRequest, Message, PullRequestReview,
 
 platform_id = 1
 
-# TODO: Rename pull_request_reviewers table to pull_request_requested_reviewers
-# TODO: Fix column names in pull request labels table
+
 @celery.task
 def collect_pull_requests(repo_git: str) -> None:
 
+    logger = logging.getLogger(collect_pull_requests.__name__)
+
     owner, repo = get_owner_repo(repo_git)
 
-    logger = logging.getLogger(collect_pull_requests.__name__)
+    with GithubTaskSession(logger) as session:
+
+        repo_id = session.query(Repo).filter(
+            Repo.repo_git == repo_git).one().repo_id
+
+    pr_data = retrieve_all_pr_data(repo_git, logger)
+
+    if pr_data:
+        process_pull_requests(pr_data, "Pr task", repo_id, logger)
+    else:
+        logger.info(f"{owner}/{repo} has no pull requests")
+
+    
+
+# TODO: Rename pull_request_reviewers table to pull_request_requested_reviewers
+# TODO: Fix column names in pull request labels table
+def retrieve_all_pr_data(repo_git: str, logger) -> None:
+
+    owner, repo = get_owner_repo(repo_git)
 
     logger.info(f"Collecting pull requests for {owner}/{repo}")
 
@@ -29,35 +48,30 @@ def collect_pull_requests(repo_git: str) -> None:
     # define GithubTaskSession to handle insertions, and store oauth keys 
     with GithubTaskSession(logger) as session:
 
-        repo_id = session.query(Repo).filter(Repo.repo_git == repo_git).one().repo_id
-
         # returns an iterable of all prs at this url (this essentially means you can treat the prs variable as a list of the prs)
         prs = GithubPaginator(url, session.oauths, logger)
 
+    all_data = []
     num_pages = prs.get_num_pages()
-    ids = []
     for page_data, page in prs.iter_pages():
 
         if page_data is None:
-            return
+            return all_data
 
-        elif len(page_data) == 0:
-            logger.debug(f"{repo.capitalize()} Prs Page {page} contains no data...returning")
-            logger.info(f"{repo.capitalize()} Prs Page {page} of {num_pages}")
-            return
+        if len(page_data) == 0:
+            logger.debug(f"{repo} Prs Page {page} contains no data...returning")
+            logger.info(f"{repo} Prs Page {page} of {num_pages}")
+            return all_data
+
+        logger.info(f"{repo} Prs Page {page} of {num_pages}")
+
+        all_data += page_data
+
+    return all_data
 
     
-        process_pr_task = process_pull_requests.s(page_data, f"{repo.capitalize()} Pr Page {page} Task", repo_id).apply_async()
-        ids.append(process_pr_task.id)
+def process_pull_requests(pull_requests, task_name, repo_id, logger):
 
-    wait_child_tasks(ids)
-
-@celery.task
-def process_pull_requests(pull_requests, task_name, repo_id):
-
-    logger = logging.getLogger(process_pull_requests.__name__)
-
-     # get repo_id or have it passed
     tool_source = "Pr Task"
     tool_version = "2.0"
     data_source = "Github API"
@@ -219,7 +233,7 @@ def pull_request_review_comments(repo_git: str) -> None:
             pr_review_id = comment["pull_request_review_id"]
 
             try:
-                related_pr_review = PullRequestReviews.query.filter_by(pr_review_src_id=pr_review_id).one()
+                related_pr_review = PullRequestReview.query.filter_by(pr_review_src_id=pr_review_id).one()
 
             # if we cannot find a pr review to relate the message to, then we skip the message and it is not inserted
             except s.orm.exc.NoResultFound:
@@ -239,7 +253,7 @@ def pull_request_review_comments(repo_git: str) -> None:
 
             pr_review_msg_mapping_data.append(
                 {
-                    "platform_msg_id": message["id"],
+                    "platform_msg_id": comment["id"],
                     "msg_ref_data": pr_comment_ref,
                 }
             )
