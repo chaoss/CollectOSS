@@ -7,6 +7,8 @@ Augur library commands for controlling the backend components
 import os
 import click
 import subprocess
+import uuid
+import time
 # from redis.exceptions import ConnectionError as RedisConnectionError
 
 from augur import instance_id
@@ -36,7 +38,7 @@ def start():
     time.sleep(5)
 
     try:
-        default_worker.wait()
+        default_worker_process.wait()
     except KeyboardInterrupt:
 
         if default_worker_process or cpu_worker_process:
