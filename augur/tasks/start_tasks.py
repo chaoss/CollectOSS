@@ -213,6 +213,9 @@ def start_task():
 
     task_list = []
 
+    collect_repo_info.si().apply_async()
+    collect_releases.si().apply_async()
+
     for repo in repos:
         repo_chain = create_github_task_chain(repo.repo_git)
         repo_chain.apply_async()
