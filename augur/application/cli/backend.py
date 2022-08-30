@@ -50,7 +50,8 @@ def start(disable_collection):
         logger.info('Gunicorn webserver started...')
         logger.info(f'Augur is running at: http://127.0.0.1:{session.config.get_value("Server", "port")}')
 
-        celery_worker_process = None
+        default_worker = None
+        cpu_worker = None
         celery_beat_process = None
         if not disable_collection:
 
