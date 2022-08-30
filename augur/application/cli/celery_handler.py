@@ -7,7 +7,7 @@ Augur library commands for controlling the backend components
 import os
 import click
 import subprocess
-from redis.exceptions import ConnectionError as RedisConnectionError
+# from redis.exceptions import ConnectionError as RedisConnectionError
 
 from augur import instance_id
 from augur.application.logs import AugurLogger
@@ -42,7 +42,7 @@ def start():
             logger.info("Flusing redis cache")
             redis_connection.flushdb()
             
-        except RedisConnectionError:
+        except Exception as e:
             pass
 
 @cli.command("clear-tasks")
