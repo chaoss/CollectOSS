@@ -25,7 +25,7 @@ def create_routes(server):
 
     pass
 
-#     server.app.route('/{}/add-repos'.format(AUGUR_API_VERSION), methods=['POST'])
+#    @server.app.route('/{}/add-repos'.format(AUGUR_API_VERSION), methods=['POST'])
 #     def add_repos():
 #         """ returns list of successfully inserted repos and repos that caused an error
 #             adds repos belonging to any user or group to an existing augur repo group
@@ -68,7 +68,7 @@ def create_routes(server):
 #                         status=status_code,
 #                         mimetype="application/json")
 
-#     server.app.route('/{}/create-repo-group'.format(AUGUR_API_VERSION), methods=['POST'])
+#    @server.app.route('/{}/create-repo-group'.format(AUGUR_API_VERSION), methods=['POST'])
 #     def create_repo_group():
 #         if authenticate_request(server.augur_app, request):
 #             group = request.json['group']
@@ -103,7 +103,7 @@ def create_routes(server):
 #                         status=status_code, 
 #                         mimetype="application/json")
 
-#     server.app.route('/{}/import-org'.format(AUGUR_API_VERSION), methods=['POST'])
+#    @server.app.route('/{}/import-org'.format(AUGUR_API_VERSION), methods=['POST'])
 #     def add_repo_group():
 #         """ creates a new augur repo group and adds to it the given organization or user's repos
 #             takes an organization or user name 
