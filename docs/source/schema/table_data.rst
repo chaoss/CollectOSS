@@ -5,7 +5,7 @@ Focus: Table of Data Collected
 .. toctree::
    :maxdepth: 2
 
-   working_tables
    regularly_used_data
+   working_tables
    unused_data
    overview
