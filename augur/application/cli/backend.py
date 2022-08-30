@@ -12,6 +12,7 @@ import signal
 import sys
 from redis.exceptions import ConnectionError as RedisConnectionError
 from celery import chain, signature, group
+import uuid
 
 
 from augur import instance_id
@@ -57,7 +58,8 @@ def start(disable_collection):
                 logger.info("Deleting old task schedule")
                 os.remove("celerybeat-schedule.db")
 
-            celery_command = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=20 -n {instance_id}@%h"
+            celery_command = f"celery -A augur.tasks.init.celery_app.celery_app worker -P eventlet -l info --concurrency=1000 -n {instance_id}@%h"
+            celery_command = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=20 -n {uuid.uuid4().hex}@%h -Q cpu"
             celery_worker_process = subprocess.Popen(celery_command.split(" "))
             time.sleep(5)
 

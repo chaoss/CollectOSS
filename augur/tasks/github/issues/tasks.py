@@ -6,15 +6,25 @@ from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.data_parse import *
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
 from augur.tasks.github.util.github_task_session import GithubTaskSession
-from augur.tasks.util.worker_util import wait_child_tasks
 from augur.tasks.github.util.util import remove_duplicate_dicts, add_key_value_pair_to_dicts, get_owner_repo
 from augur.application.db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestEvent, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, Issue, IssueEvent, IssueLabel, IssueAssignee, PullRequestMessageRef, IssueMessageRef, Contributor, Repo
 
 
 @celery.task
-def collect_issues(repo_git: str) -> None:
+def issues_task(repo_git: str) -> None:
 
     logger = logging.getLogger(collect_issues.__name__)
+
+    with GithubTaskSession(logger) as session:
+
+        repo_id = session.query(Repo).filter(Repo.repo_git == repo_git).one().repo_id
+
+    issue_data = collect_issues(repo_git, logger, repo_id)
+
+    process_issues(issue_data, "Issue task", repo_id)
+
+
+def collect_issues(repo_git, logger, repo_id) -> None:
 
     owner, repo = get_owner_repo(repo_git)
 
@@ -23,9 +33,8 @@ def collect_issues(repo_git: str) -> None:
     url = f"https://api.github.com/repos/{owner}/{repo}/issues?state=all"
 
     # define GithubTaskSession to handle insertions, and store oauth keys 
+    
     with GithubTaskSession(logger) as session:
-
-        repo_id = session.query(Repo).filter(Repo.repo_git == repo_git).one().repo_id
 
         # returns an iterable of all issues at this url (this essentially means you can treat the issues variable as a list of the issues)
         # Reference the code documenation for GithubPaginator for more details
@@ -35,8 +44,8 @@ def collect_issues(repo_git: str) -> None:
     # we come across a pr, so at the end we can log how 
     # many issues were collected
     # loop through the issues 
+    all_data = []
     num_pages = issues.get_num_pages()
-    ids = []
     for page_data, page in issues.iter_pages():
 
         if page_data is None:
@@ -49,13 +58,10 @@ def collect_issues(repo_git: str) -> None:
 
         logger.info(f"{repo.capitalize()} Issues Page {page} of {num_pages}")
 
-        process_issue_task = process_issues.s(page_data, f"{repo.capitalize()} Issues Page {page} Task", repo_id).apply_async()
-        ids.append(process_issue_task.id)
+        all_data += page_data
 
-    wait_child_tasks(ids)
+    return all_data
     
-
-@celery.task
 def process_issues(issues, task_name, repo_id) -> None:
 
     logger = logging.getLogger(process_issues.__name__)

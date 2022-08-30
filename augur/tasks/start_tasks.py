@@ -216,7 +216,6 @@ def start_task():
     for repo in repos:
         repo_chain = create_github_task_chain(repo.repo_git)
         repo_chain.apply_async()
-        time.sleep(5)
 
     facade_commits_model.si().apply_async()
 
@@ -240,7 +239,7 @@ def create_github_task_chain(repo_git):
 
     start_task_list = []
     start_task_list.append(collect_pull_requests.si(repo_git))
-    start_task_list.append(collect_issues.si(repo_git))
+    start_task_list.append(issues_task.si(repo_git))
 
     start_tasks_group = group(start_task_list)
     

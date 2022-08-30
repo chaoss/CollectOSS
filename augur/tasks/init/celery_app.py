@@ -36,6 +36,10 @@ BACKEND_URL = f'{redis_conn_string}{redis_db_number+1}'
 celery_app = Celery('tasks', broker=BROKER_URL,
              backend=BACKEND_URL, include=tasks)
 
+celery_app.conf.task_routes = {
+    'augur.tasks.git.facade_tasks.*': {'queue': 'cpu'}
+}
+
 #Setting to be able to see more detailed states of running tasks
 celery_app.conf.task_track_started = True
 
