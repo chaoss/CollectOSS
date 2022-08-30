@@ -69,8 +69,13 @@ class GithubApiKeyHandler():
             Valid Github api keys
         """
 
-        if len(self.redis_key_list) > 0:
-            return list(self.redis_key_list)
+        redis_key_count = len(self.redis_key_list)
+        if redis_key_count > 0:
+            
+            print(f"Getting api keys from cache length is {redis_key_count}")
+            redis_keys = list(self.redis_key_list)
+            print(f"Keys are: {redis_keys}")
+            return redis_keys
 
         keys = self.get_api_keys_from_database()
     
