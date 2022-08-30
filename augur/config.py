@@ -37,6 +37,8 @@ main_port = 5000 #randint(5001,5300)
 
 from augur.logging import ROOT_AUGUR_DIRECTORY
 
+loggy_var=ROOT_AUGUR_DIRECTORY+'/logs'
+
 ENVVAR_PREFIX = "AUGUR_"
 CONFIG_HOME = f"{os.getenv('HOME', '~')}/.augur"
 
@@ -396,7 +398,7 @@ default_config = {
             "ssl": False
         },
         "Logging": {
-            "logs_directory": "logs/",
+            "logs_directory": loggy_var,
             "log_level": "INFO",
             "verbose": 0,
             "quiet": 0,
