@@ -58,9 +58,10 @@ def start(disable_collection):
                 logger.info("Deleting old task schedule")
                 os.remove("celerybeat-schedule.db")
 
-            celery_command = f"celery -A augur.tasks.init.celery_app.celery_app worker -P eventlet -l info --concurrency=1000 -n {instance_id}@%h"
-            celery_command = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=20 -n {uuid.uuid4().hex}@%h -Q cpu"
-            celery_worker_process = subprocess.Popen(celery_command.split(" "))
+            default_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -P eventlet -l info --concurrency=1000 -n {instance_id}@%h"
+            cpu_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=20 -n {uuid.uuid4().hex}@%h -Q cpu"
+            default_worker_process = subprocess.Popen(default_worker.split(" "))
+            cpu_worker_process = subprocess.Popen(cpu_worker.split(" "))
             time.sleep(5)
 
             start_task.si().apply_async()
@@ -76,9 +77,13 @@ def start(disable_collection):
             logger.info("Shutting down server")
             server.terminate()
 
-        if celery_worker_process:
+        if default_worker_process:
             logger.info("Shutting down celery process")
-            celery_worker_process.terminate()
+            default_worker_process.terminate()
+
+        if cpu_worker_process:
+            logger.info("Shutting down celery process")
+            cpu_worker_process.terminate()
 
         if celery_beat_process:
             logger.info("Shutting down celery beat process")
