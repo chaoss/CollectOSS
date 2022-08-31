@@ -37,6 +37,11 @@ def hit_api(key_manager, url: str, logger: logging.Logger, timeout: float = 10, 
             logger.info(f"Request timed out. Sleeping {round(timeout)} seconds and trying again...\n")
             time.sleep(round(timeout))
             return None
+        except httpx.ReadError:
+            logger.info(f"Request timed out. Sleeping {round(timeout)} seconds and trying again...\n")
+            logger.debug("Read error timeout")
+            time.sleep(round(timeout))
+            return None
 
     return response 
 
