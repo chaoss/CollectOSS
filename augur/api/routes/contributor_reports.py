@@ -586,7 +586,7 @@ def create_routes(server):
             print("Developer error, not null columns should be a subset of needed columns")
             return df
 
-    server.app.route('/{}/contributor_reports/new_contributors_bar/'.format(AUGUR_API_VERSION), methods=["GET"])
+   @server.app.route('/{}/contributor_reports/new_contributors_bar/'.format(AUGUR_API_VERSION), methods=["GET"])
     def new_contributors_bar():
 
         repo_id, start_date, end_date, error = get_repo_id_start_date_and_end_date()
@@ -755,7 +755,7 @@ def create_routes(server):
 
         return send_file(filename)
 
-    server.app.route('/{}/contributor_reports/new_contributors_stacked_bar/'.format(AUGUR_API_VERSION),
+   @server.app.route('/{}/contributor_reports/new_contributors_stacked_bar/'.format(AUGUR_API_VERSION),
                       methods=["GET"])
     def new_contributors_stacked_bar():
 
@@ -958,7 +958,7 @@ def create_routes(server):
 
         return send_file(filename)
 
-    server.app.route('/{}/contributor_reports/returning_contributors_pie_chart/'.format(AUGUR_API_VERSION),
+   @server.app.route('/{}/contributor_reports/returning_contributors_pie_chart/'.format(AUGUR_API_VERSION),
                       methods=["GET"])
     def returning_contributors_pie_chart():
 
@@ -1090,7 +1090,7 @@ def create_routes(server):
 
         return send_file(filename)
 
-    server.app.route('/{}/contributor_reports/returning_contributors_stacked_bar/'.format(AUGUR_API_VERSION),
+   @server.app.route('/{}/contributor_reports/returning_contributors_stacked_bar/'.format(AUGUR_API_VERSION),
                       methods=["GET"])
     def returning_contributors_stacked_bar():
 
