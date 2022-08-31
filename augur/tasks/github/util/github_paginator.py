@@ -65,7 +65,7 @@ def process_dict_response(logger: logging.Logger, response: httpx.Response, page
         return "Repo Not Found"
 
     if "You have exceeded a secondary rate limit. Please wait a few minutes before you try again" in page_data['message']:
-        logger.info('\n\n\n\nSleeping for 100 seconds due to secondary rate limit issue.\n\n\n\n')
+        logger.info(f'\n\n\n\nSleeping for 100 seconds due to secondary rate limit issue. \n\nHeaders: \n\t{response.headers}\n\n\n\n')
         time.sleep(100)
 
         return "do_not_increase_attempts"
