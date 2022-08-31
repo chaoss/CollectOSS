@@ -19,7 +19,8 @@ github_tasks = ['augur.tasks.github.contributors.tasks',
                 'augur.tasks.github.messages.tasks',
                 'augur.tasks.github.facade_github.tasks',
                 'augur.tasks.github.releases.tasks',
-                'augur.tasks.github.repo_info.tasks']
+                'augur.tasks.github.repo_info.tasks',
+                'augur.tasks.github.detect_move.tasks']
 
 git_tasks = ['augur.tasks.git.facade_tasks']
 
