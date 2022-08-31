@@ -3,6 +3,7 @@ from typing import Any, List, Tuple
 from httpx import Response
 import logging
 import json
+import httpx
 
 def remove_duplicate_dicts(data: List[dict]) -> List[dict]:
     """Removed duplicate dics from a list

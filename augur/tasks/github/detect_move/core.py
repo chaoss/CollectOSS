@@ -4,6 +4,7 @@ from augur.tasks.github.util.github_paginator import GithubPaginator
 from augur.tasks.github.util.github_paginator import hit_api
 from augur.tasks.github.util.util import get_owner_repo
 from augur.tasks.github.util.util import parse_json_response
+import logging
 
 def extract_owner_and_repo_from_endpoint(session,url):
     response_from_gh = hit_api(session.oauths, url, session.logger)
@@ -28,6 +29,7 @@ def ping_github_for_repo_move(session,repo):
 
     #skip if not moved
     if 'message' not in page_data.keys() or page_data['message'] != "Moved Permanently":
+        session.logger.info(f"Repo found at url: {url}")
         return
     
     owner, name = extract_owner_and_repo_from_endpoint(session,page_data['url'])
