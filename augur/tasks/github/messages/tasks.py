@@ -14,22 +14,22 @@ from augur.application.db.models import PullRequest, Message, PullRequestReview,
 platform_id = 1
 
 @celery.task
-def collect_issue_and_pr_comments(repo_git: str) -> None:
-
-    owner, repo = get_owner_repo(repo_git)
-
+def collect_issue_and_pr_comments(repo_id: int) -> None:
     # define logger for task
     logger = logging.getLogger(collect_issue_and_pr_comments.__name__)
-    logger.info(f"Collecting github comments for {owner}/{repo}")
 
-    # url to get issue and pull request comments
-    url = f"https://api.github.com/repos/{owner}/{repo}/issues/comments"
-    
     # define database task session, that also holds autentication keys the GithubPaginator needs
     with GithubTaskSession(logger) as session:
 
-        repo_id = session.query(Repo).filter(Repo.repo_git == repo_git).one().repo_id
-    
+        repo_obj = session.query(Repo).filter(Repo.repo_id == repo_id).one()
+        repo_id = repo_obj.repo_id
+        repo_git = repo_obj.repo_git
+
+        owner, repo = get_owner_repo(repo_git)
+        logger.info(f"Collecting github comments for {owner}/{repo}")
+
+        # url to get issue and pull request comments
+        url = f"https://api.github.com/repos/{owner}/{repo}/issues/comments"
         # returns an iterable of all issues at this url (this essentially means you can treat the issues variable as a list of the issues)
         messages = GithubPaginator(url, session.oauths, logger)
 

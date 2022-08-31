@@ -33,7 +33,20 @@ class AugurTaskRoutine:
         self.logger = AugurLogger("data_collection_jobs").get_logger()
         self.disabled_collection_groups = disabled_collection_groups
 
-        preliminary_task_list = []
+        preliminary_task_list = [detect_github_repo_move.si()]
+
+        preliminary_tasks = group(preliminary_task_list)
+        #A chain is needed for each repo.
+
+        with DatabaseSession(self.logger) as session:
+            repos = session.query(Repo).all()
+
+            for repo in repos:
+                first_tasks = group(collect_issues.si(repo.repo_id),collect_pull_requests.si(repo.repo_id))
+                second_tasks = group(collect_events.si(repo.repo_id),collect_issue_and_pr_comments.si(repo.repo_id))
+
+
+
 
     def start_data_collection(self):
         """Start all task items and listeners and return.

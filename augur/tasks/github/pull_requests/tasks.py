@@ -16,24 +16,25 @@ platform_id = 1
 # TODO: Rename pull_request_reviewers table to pull_request_requested_reviewers
 # TODO: Fix column names in pull request labels table
 @celery.task
-def collect_pull_requests(repo_git: str) -> None:
-
-    owner, repo = get_owner_repo(repo_git)
+def collect_pull_requests(repo_id: int) -> None:
 
     logger = logging.getLogger(collect_pull_requests.__name__)
-
-    logger.info(f"Collecting pull requests for {owner}/{repo}")
-
-    url = f"https://api.github.com/repos/{owner}/{repo}/pulls?state=all&direction=desc"
 
     # define GithubTaskSession to handle insertions, and store oauth keys 
     with GithubTaskSession(logger) as session:
 
-        repo_id = session.query(Repo).filter(Repo.repo_git == repo_git).one().repo_id
+        repo_obj = session.query(Repo).filter(Repo.repo_id == repo_id).one()
+        repo_id = repo_obj.repo_id
+        repo_git = repo_obj.repo_git
 
+        owner, repo = get_owner_repo(repo_git)
+
+        logger.info(f"Collecting pull requests for {owner}/{repo}")
+
+        url = f"https://api.github.com/repos/{owner}/{repo}/pulls?state=all&direction=desc"
         # returns an iterable of all prs at this url (this essentially means you can treat the prs variable as a list of the prs)
         prs = GithubPaginator(url, session.oauths, logger)
-
+    
     num_pages = prs.get_num_pages()
     ids = []
     for page_data, page in prs.iter_pages():

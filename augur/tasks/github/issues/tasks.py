@@ -12,20 +12,22 @@ from augur.application.db.models import PullRequest, Message, PullRequestReview,
 
 
 @celery.task
-def collect_issues(repo_git: str) -> None:
+def collect_issues(repo_id: int) -> None:
 
     logger = logging.getLogger(collect_issues.__name__)
 
-    owner, repo = get_owner_repo(repo_git)
-
-    logger.info(f"Collecting issues for {owner}/{repo}")
-
-    url = f"https://api.github.com/repos/{owner}/{repo}/issues?state=all"
-
     # define GithubTaskSession to handle insertions, and store oauth keys 
     with GithubTaskSession(logger) as session:
+        
+        repo_obj = session.query(Repo).filter(Repo.repo_id == repo_id).one()
+        repo_id = repo_obj.repo_id
+        repo_git = repo_obj.repo_git
 
-        repo_id = session.query(Repo).filter(Repo.repo_git == repo_git).one().repo_id
+        owner, repo = get_owner_repo(repo_git)
+
+        logger.info(f"Collecting issues for {owner}/{repo}")
+
+        url = f"https://api.github.com/repos/{owner}/{repo}/issues?state=all"
 
         # returns an iterable of all issues at this url (this essentially means you can treat the issues variable as a list of the issues)
         # Reference the code documenation for GithubPaginator for more details
