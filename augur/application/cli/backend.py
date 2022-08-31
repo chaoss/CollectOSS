@@ -51,8 +51,8 @@ def start(disable_collection):
         logger.info(f'Augur is running at: http://127.0.0.1:{session.config.get_value("Server", "port")}')
 
         worker_1_process = None
-        worker_2_process = None
-        worker_3_process = None
+        # worker_2_process = None
+        # worker_3_process = None
         cpu_worker = None
         celery_beat_process = None
         if not disable_collection:
@@ -61,13 +61,13 @@ def start(disable_collection):
                 logger.info("Deleting old task schedule")
                 os.remove("celerybeat-schedule.db")
 
-            worker_1 = f"celery -A augur.tasks.init.celery_app.celery_app worker -P eventlet -l info --concurrency=20 -n {uuid.uuid4().hex}@%h"
-            worker_2 = f"celery -A augur.tasks.init.celery_app.celery_app worker -P eventlet -l info --concurrency=20 -n {uuid.uuid4().hex}@%h"
-            worker_3 = f"celery -A augur.tasks.init.celery_app.celery_app worker -P eventlet -l info --concurrency=20 -n {uuid.uuid4().hex}@%h"
+            worker_1 = f"celery -A augur.tasks.init.celery_app.celery_app worker -P eventlet -l info --concurrency=10 -n {uuid.uuid4().hex}@%h"
+            # worker_2 = f"celery -A augur.tasks.init.celery_app.celery_app worker -P eventlet -l info --concurrency=20 -n {uuid.uuid4().hex}@%h"
+            # worker_3 = f"celery -A augur.tasks.init.celery_app.celery_app worker -P eventlet -l info --concurrency=20 -n {uuid.uuid4().hex}@%h"
             cpu_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=20 -n {uuid.uuid4().hex}@%h -Q cpu"
             worker_1_process = subprocess.Popen(worker_1.split(" "))
-            worker_2_process = subprocess.Popen(worker_2.split(" "))
-            worker_3_process = subprocess.Popen(worker_3.split(" "))
+            # worker_2_process = subprocess.Popen(worker_2.split(" "))
+            # worker_3_process = subprocess.Popen(worker_3.split(" "))
 
             cpu_worker_process = subprocess.Popen(cpu_worker.split(" "))
             time.sleep(5)
@@ -89,13 +89,13 @@ def start(disable_collection):
             logger.info("Shutting down celery process")
             worker_1_process.terminate()
 
-        if worker_2_process:
-            logger.info("Shutting down celery process")
-            worker_2_process.terminate()
+        # if worker_2_process:
+        #     logger.info("Shutting down celery process")
+        #     worker_2_process.terminate()
 
-        if worker_3_process:
-            logger.info("Shutting down celery process")
-            worker_3_process.terminate()
+        # if worker_3_process:
+        #     logger.info("Shutting down celery process")
+        #     worker_3_process.terminate()
 
         if cpu_worker_process:
             logger.info("Shutting down celery process")
