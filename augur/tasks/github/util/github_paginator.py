@@ -65,9 +65,12 @@ def process_dict_response(logger: logging.Logger, response: httpx.Response, page
         return "Repo Not Found"
 
     if "You have exceeded a secondary rate limit. Please wait a few minutes before you try again" in page_data['message']:
+
+        # sleeps for the specified amount of time that github says to retry after
+        retry_after = int(response.headers["Retry-After"])
         logger.info(
-            f'\n\n\n\nSleeping for 100 seconds due to secondary rate limit issue. \n\nHeaders: \n\t{response.headers["Retry-After"]}\n\n\n\n')
-        time.sleep(100)
+            f'\n\n\n\nSleeping for {retry_after} seconds due to secondary rate limit issue.\n\n\n\n')
+        time.sleep(retry_after)
 
         return "do_not_increase_attempts"
     
