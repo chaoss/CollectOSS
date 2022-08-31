@@ -61,7 +61,7 @@ def start(disable_collection):
                 logger.info("Deleting old task schedule")
                 os.remove("celerybeat-schedule.db")
 
-            worker_1 = f"celery -A augur.tasks.init.celery_app.celery_app worker -P eventlet -l info --concurrency=10 -n {uuid.uuid4().hex}@%h"
+            worker_1 = f"celery -A augur.tasks.init.celery_app.celery_app worker -P eventlet -l info --concurrency=100 -n {uuid.uuid4().hex}@%h"
             # worker_2 = f"celery -A augur.tasks.init.celery_app.celery_app worker -P eventlet -l info --concurrency=20 -n {uuid.uuid4().hex}@%h"
             # worker_3 = f"celery -A augur.tasks.init.celery_app.celery_app worker -P eventlet -l info --concurrency=20 -n {uuid.uuid4().hex}@%h"
             cpu_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=20 -n {uuid.uuid4().hex}@%h -Q cpu"
@@ -75,7 +75,7 @@ def start(disable_collection):
             start_task.si().apply_async()
 
             celery_command = "celery -A augur.tasks.init.celery_app.celery_app beat -l debug"
-            celery_beat_process = subprocess.Popen(celery_command.split(" "))        
+            celery_beat_process = subprocess.Popen(celery_command.split(" "))       
     
     try:
         server.wait()
