@@ -61,9 +61,9 @@ def start(disable_collection):
                 logger.info("Deleting old task schedule")
                 os.remove("celerybeat-schedule.db")
 
-            worker_1 = f"celery -A augur.tasks.init.celery_app.celery_app worker -P eventlet -l info --concurrency=50 -n {uuid.uuid4().hex}@%h"
-            worker_2 = f"celery -A augur.tasks.init.celery_app.celery_app worker -P eventlet -l info --concurrency=50 -n {uuid.uuid4().hex}@%h"
-            worker_3 = f"celery -A augur.tasks.init.celery_app.celery_app worker -P eventlet -l info --concurrency=50 -n {uuid.uuid4().hex}@%h"
+            worker_1 = f"celery -A augur.tasks.init.celery_app.celery_app worker -P eventlet -l info --concurrency=20 -n {uuid.uuid4().hex}@%h"
+            worker_2 = f"celery -A augur.tasks.init.celery_app.celery_app worker -P eventlet -l info --concurrency=20 -n {uuid.uuid4().hex}@%h"
+            worker_3 = f"celery -A augur.tasks.init.celery_app.celery_app worker -P eventlet -l info --concurrency=20 -n {uuid.uuid4().hex}@%h"
             cpu_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=20 -n {uuid.uuid4().hex}@%h -Q cpu"
             worker_1_process = subprocess.Popen(worker_1.split(" "))
             worker_2_process = subprocess.Popen(worker_2.split(" "))

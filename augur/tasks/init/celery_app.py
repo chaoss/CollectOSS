@@ -36,7 +36,7 @@ tasks = start_tasks + github_tasks + git_tasks
 
 redis_db_number, redis_conn_string = get_redis_conn_values()
 
-task_annotations = {'*': {'rate_limit': '5/s'}}
+task_annotations = {'*': {'rate_limit': '20/m'}}
 
 # initialize the celery app
 BROKER_URL = f'{redis_conn_string}{redis_db_number}'
