@@ -3,10 +3,10 @@ import logging
 
 
 from augur.tasks.github.pull_requests.core import extract_data_from_pr_list
-from augur.tasks.init.celery_app import celery_app as celery
+from augur.tasks.init.celery_app import celery_app as celery, engine
 from augur.application.db.data_parse import *
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
-from augur.tasks.github.util.github_task_session import GithubTaskSession
+from augur.application.db.session import GithubTaskSession
 from augur.tasks.util.worker_util import wait_child_tasks
 from augur.tasks.github.util.util import remove_duplicate_dicts, add_key_value_pair_to_dicts, get_owner_repo
 from augur.application.db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestEvent, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, PullRequestMessageRef, Contributor, Repo
@@ -21,7 +21,7 @@ def collect_pull_requests(repo_git: str) -> None:
 
     owner, repo = get_owner_repo(repo_git)
 
-    with GithubTaskSession(logger) as session:
+    with GithubTaskSession(logger, engine) as session:
 
         repo_id = session.query(Repo).filter(
             Repo.repo_git == repo_git).one().repo_id
@@ -46,7 +46,7 @@ def retrieve_all_pr_data(repo_git: str, logger) -> None:
     url = f"https://api.github.com/repos/{owner}/{repo}/pulls?state=all&direction=desc"
 
     # define GithubTaskSession to handle insertions, and store oauth keys 
-    with GithubTaskSession(logger) as session:
+    with GithubTaskSession(logger, engine) as session:
 
         # returns an iterable of all prs at this url (this essentially means you can treat the prs variable as a list of the prs)
         prs = GithubPaginator(url, session.oauths, logger)
@@ -78,7 +78,7 @@ def process_pull_requests(pull_requests, task_name, repo_id, logger):
 
     pr_dicts, pr_mapping_data, pr_numbers, contributors = extract_data_from_pr_list(pull_requests, repo_id, tool_source, tool_version, data_source)
 
-    with GithubTaskSession(logger) as session:
+    with GithubTaskSession(logger, engine) as session:
 
         # remove duplicate contributors before inserting
         contributors = remove_duplicate_dicts(contributors)
@@ -210,7 +210,7 @@ def pull_request_review_comments(repo_git: str) -> None:
     logger.info(f"Collecting pull request comments for {owner}/{repo}")
     
     # define GithubTaskSession to handle insertions, and store oauth keys 
-    with GithubTaskSession(logger) as session:
+    with GithubTaskSession(logger, engine) as session:
 
         # returns an iterable of all issues at this url (this essentially means you can treat the issues variable as a list of the issues)
         pr_review_comments = GithubPaginator(url, session.oauths, logger)
@@ -303,7 +303,7 @@ def pull_request_reviews(repo_git: str, pr_number_list: [int]) -> None:
     tool_version = "2.0"
     data_source = "Github API"
 
-    with GithubTaskSession(logger) as session:
+    with GithubTaskSession(logger, engine) as session:
 
         repo_id = session.query(Repo).filter(Repo.repo_git == repo_git).one().repo_id
 

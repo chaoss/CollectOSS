@@ -3,6 +3,7 @@ from logging import Logger
 from augur.tasks.github.util.github_api_key_handler import GithubApiKeyHandler
 from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
 from augur.application.db.session import DatabaseSession
+from augur.tasks.init.celery_app import engine
 
 
 class GithubTaskSession(DatabaseSession):
@@ -16,9 +17,9 @@ class GithubTaskSession(DatabaseSession):
         platform_id (int): The id that refers to the Github platform
     """
 
-    def __init__(self, logger: Logger):
+    def __init__(self, logger: Logger, engine=None):
 
-        super().__init__(logger)
+        super().__init__(logger, engine=engine)
 
         self.oauths = GithubRandomKeyAuth(self)
         self.platform_id = 1
