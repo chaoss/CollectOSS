@@ -75,7 +75,7 @@ def split_tasks_into_groups(augur_tasks: List[str]) -> Dict[str, List[str]]:
 
 
 @celery_app.on_after_finalize.connect
-def setup_periodic_tasks(app: Celery, **kwargs):
+def setup_periodic_tasks(sender, **kwargs):
     """Setup task scheduler.
 
     Note:
@@ -93,7 +93,8 @@ def setup_periodic_tasks(app: Celery, **kwargs):
     with DatabaseSession(logger) as session:
 
         collection_interval = session.config.get_value('Tasks', 'collection_interval')
-        app.add_periodic_task(collection_interval, start_task.s())
+        logger.info(f"Scheduling collection every {collection_interval/60/60} hours")
+        sender.add_periodic_task(collection_interval, start_task.s())
 
 
 @after_setup_logger.connect
