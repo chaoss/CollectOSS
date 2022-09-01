@@ -67,11 +67,14 @@ class AugurTaskRoutine:
                 second_tasks_repo = group(collect_events.si(repo.repo_id),collect_issue_and_pr_comments.si(repo.repo_id))
 
                 repo_chain = chain(first_tasks_repo,second_tasks_repo)
-                all_task_by_repo_list.append(repo_chain)
+                tasks_with_repo_domain.append(repo_chain)
         
-        self.jobs_dict[AugurTaskPhase.REPO_COLLECT] = chain(
-                group(facade_commits_model.si(),*all_task_by_repo_list),
-                process_contributors.si())
+        self.jobs_dict[AugurTaskPhase.REPO_COLLECT] = group(
+            chain(group(*tasks_with_repo_domain),process_contributors.si()),
+            facade_commits_model.si(),
+            collect_releases.si(),
+            collect_repo_info.si()
+        )
 
                 
 
@@ -92,70 +95,19 @@ class AugurTaskRoutine:
             self.logger.error("Group has been disabled")
             return
         self.jobs_dict[key] = newJobs
-        self.dependency_relationships[key] = []
 
     
     def disable_group(self,key: str):
         """Make a group deleted from the dict and unable to be run or added.
         """
         del self.jobs_dict[key]
-        del self.dependency_relationships[key]
         self.disabled_collection_phases.append(key)
-
-    #force these params to be kwargs so they are more readable
-    def add_dependency_relationship(self,job=None,depends_on=None):
-        """Mark one key in the outfacing dictionary to be dependent on a differant item with the other specified key. Set up one to listen for the other to finish before starting.
-        """
-        assert (job in self.jobs_dict.keys() and depends_on in self.jobs_dict.keys()), "One or both collection groups don't exist!"
-        assert (job != depends_on), "Something can not depend on itself!"
-
-        self.dependency_relationships[job].append(depends_on)
-    
-    def _update_dependency_relationship_with_celery_id(self,celery_id: str,dependency_name: str):
-        """One a task is ran it is assigned a uuid by celery to represent the instance that is now running. 
-        This replaces the dependency relationship to reflect a now-running task as what is actually being 
-        waited on for dependencies. Now the id can be passed to a listener.
-        """
-        #Replace dependency with active celery id once started so that dependent tasks can check status
-        for group_name in self.dependency_relationships.keys():
-            #self.dependency_relationships[group_name] = [celery_id if item == name else item for item in self.dependency_relationships[group_name]]
-            for index,item in enumerate(self.dependency_relationships[group_name]):
-                if item == dependency_name:
-                    self.dependency_relationships[group_name][index] = celery_id    
-                    break #break once dependency_name found. Should only occur once.
 
 
     def start_data_collection(self):
-        """Start all task items and listeners and return.
+        """Start all task items and return.
         """
-        #First, start all task groups that have no dependencies. 
-        for name, collection_set in self.jobs_dict.items():
-            if not len(self.dependency_relationships[name]):
-                self.logger.info(f"Starting non dependant collection group {name}...")
-                self.started_jobs.append(name)
-                task_collection = collection_set.apply_async()
-                
-                self._update_dependency_relationship_with_celery_id(task_collection.id,name)
-        
-        #Then try to go after tasks with dependencies.
-        #'loop while there are elements of the jobs dict that haven't been started'
-        while not all(job_name in self.started_jobs for job_name in self.jobs_dict.keys()):
-            for name in self.dependency_relationships.keys():
-                #Check that task group has no dependencies that haven't been started yet and that it has not already been started.
-                if not any(group_key in self.dependency_relationships[name] for group_key in list(self.jobs_dict.keys())) and not name in self.started_jobs:
-                    self.started_jobs.append(name)
-                    self.logger.info(f"Starting dependant collection group {name}...")
-                    dependent_task_collection = deploy_dependent_task.si(*self.dependency_relationships[name],task_set=self.jobs_dict[name])
-                    result = dependent_task_collection.apply_async()
-                    print(result)
-
-                    self._update_dependency_relationship_with_celery_id(result.id,name)
-                
-            
-            #if dependency_cycle:
-            #    raise Exception("Task group dependency cycle found as all pending tasks have prereqs that cannot be run.")
-
-
+        raise NotImplementedError
 
 
 @celery.task
