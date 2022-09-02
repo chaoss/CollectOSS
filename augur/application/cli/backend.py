@@ -2,6 +2,7 @@
 """
 Augur library commands for controlling the backend components
 """
+import resource
 import os
 import time
 import subprocess
@@ -12,6 +13,7 @@ import signal
 import sys
 from redis.exceptions import ConnectionError as RedisConnectionError
 from celery import chain, signature, group
+import uuid
 
 
 from augur import instance_id
@@ -36,6 +38,8 @@ def cli():
 def start(disable_collection):
     """Start Augur's backend server."""
 
+    raise_open_file_limit(100000)
+
     with DatabaseSession(logger) as session:
    
         gunicorn_location = os.getcwd() + "/augur/api/gunicorn_conf.py"
@@ -49,7 +53,12 @@ def start(disable_collection):
         logger.info('Gunicorn webserver started...')
         logger.info(f'Augur is running at: http://127.0.0.1:{session.config.get_value("Server", "port")}')
 
-        celery_worker_process = None
+        worker_1_process = None
+        worker_2_process = None
+        worker_3_process = None
+        worker_4_process = None
+        worker_5_process = None
+        cpu_worker = None
         celery_beat_process = None
         if not disable_collection:
 
@@ -57,14 +66,25 @@ def start(disable_collection):
                 logger.info("Deleting old task schedule")
                 os.remove("celerybeat-schedule.db")
 
-            celery_command = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=20 -n {instance_id}@%h"
-            celery_worker_process = subprocess.Popen(celery_command.split(" "))
+            worker_1 = f"celery -A augur.tasks.init.celery_app.celery_app worker -P eventlet -l info --concurrency=100 -n {uuid.uuid4().hex}@%h"
+            # worker_2 = f"celery -A augur.tasks.init.celery_app.celery_app worker -P eventlet -l info --concurrency=15 -n {uuid.uuid4().hex}@%h"
+            # worker_3 = f"celery -A augur.tasks.init.celery_app.celery_app worker -P eventlet -l info --concurrency=15 -n {uuid.uuid4().hex}@%h"
+            # worker_4 = f"celery -A augur.tasks.init.celery_app.celery_app worker -P eventlet -l info --concurrency=15 -n {uuid.uuid4().hex}@%h"
+            # worker_5 = f"celery -A augur.tasks.init.celery_app.celery_app worker -P eventlet -l info --concurrency=15 -n {uuid.uuid4().hex}@%h"
+            cpu_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=20 -n {uuid.uuid4().hex}@%h -Q cpu"
+            worker_1_process = subprocess.Popen(worker_1.split(" "))
+            # worker_2_process = subprocess.Popen(worker_2.split(" "))
+            # worker_3_process = subprocess.Popen(worker_3.split(" "))
+            # worker_4_process = subprocess.Popen(worker_4.split(" "))
+            # worker_5_process = subprocess.Popen(worker_5.split(" "))
+
+            cpu_worker_process = subprocess.Popen(cpu_worker.split(" "))
             time.sleep(5)
 
             start_task.si().apply_async()
 
             celery_command = "celery -A augur.tasks.init.celery_app.celery_app beat -l debug"
-            celery_beat_process = subprocess.Popen(celery_command.split(" "))        
+            celery_beat_process = subprocess.Popen(celery_command.split(" "))       
     
     try:
         server.wait()
@@ -74,9 +94,29 @@ def start(disable_collection):
             logger.info("Shutting down server")
             server.terminate()
 
-        if celery_worker_process:
+        if worker_1_process:
             logger.info("Shutting down celery process")
-            celery_worker_process.terminate()
+            worker_1_process.terminate()
+
+        # if worker_2_process:
+        #     logger.info("Shutting down celery process")
+        #     worker_2_process.terminate()
+
+        # if worker_3_process:
+        #     logger.info("Shutting down celery process")
+        #     worker_3_process.terminate()
+
+        # if worker_4_process:
+        #     logger.info("Shutting down celery process")
+        #     worker_4_process.terminate()
+
+        # if worker_5_process:
+        #     logger.info("Shutting down celery process")
+        #     worker_5_process.terminate()
+
+        if cpu_worker_process:
+            logger.info("Shutting down celery process")
+            cpu_worker_process.terminate()
 
         if celery_beat_process:
             logger.info("Shutting down celery beat process")
@@ -180,6 +220,25 @@ def _broadcast_signal_to_processes(broadcast_signal=signal.SIGTERM, given_logger
                     process.send_signal(broadcast_signal)
                 except psutil.NoSuchProcess:
                     pass
+
+
+def raise_open_file_limit(num_files):
+    """
+    sets number of open files soft limit 
+    """
+    current_soft, current_hard = resource.getrlimit(resource.RLIMIT_NOFILE)
+
+    # if soft is already greater than the requested amount then don't change it
+    if current_soft > num_files:
+        return
+
+    # if the requested amount is greater than the hard limit then set the hard limit to the num_files value
+    if current_hard <= num_files:
+        current_hard = num_files
+
+    resource.setrlimit(resource.RLIMIT_NOFILE, (num_files, current_hard))
+
+    return
 
 
 def print_repos(repos):

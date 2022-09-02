@@ -2,7 +2,7 @@ import time
 import logging
 
 
-from augur.tasks.init.celery_app import celery_app as celery
+from augur.tasks.init.celery_app import celery_app as celery, engine
 from augur.application.db.data_parse import *
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
 from augur.tasks.github.util.github_task_session import GithubTaskSession
@@ -13,51 +13,66 @@ from augur.application.db.models import PullRequest, Message, PullRequestReview,
 
 platform_id = 1
 
+
 @celery.task
-def collect_issue_and_pr_comments(repo_git: str) -> None:
+def collect_github_messages(repo_git: str) -> None:
+
+    logger = logging.getLogger(collect_github_messages.__name__)
+
+    owner, repo = get_owner_repo(repo_git)
+
+    with GithubTaskSession(logger, engine) as session:
+
+        repo_id = session.query(Repo).filter(
+            Repo.repo_git == repo_git).one().repo_id
+
+    message_data = retrieve_all_pr_and_issue_messages(repo_git, logger)
+
+    if message_data:
+
+        process_messages(message_data, "Message task", repo_id, logger)
+
+    else:
+        logger.info(f"{owner}/{repo} has no messages")
+
+
+def retrieve_all_pr_and_issue_messages(repo_git: str, logger) -> None:
 
     owner, repo = get_owner_repo(repo_git)
 
     # define logger for task
-    logger = logging.getLogger(collect_issue_and_pr_comments.__name__)
     logger.info(f"Collecting github comments for {owner}/{repo}")
 
     # url to get issue and pull request comments
     url = f"https://api.github.com/repos/{owner}/{repo}/issues/comments"
     
     # define database task session, that also holds autentication keys the GithubPaginator needs
-    with GithubTaskSession(logger) as session:
-
-        repo_id = session.query(Repo).filter(Repo.repo_git == repo_git).one().repo_id
+    with GithubTaskSession(logger, engine) as session:
     
         # returns an iterable of all issues at this url (this essentially means you can treat the issues variable as a list of the issues)
         messages = GithubPaginator(url, session.oauths, logger)
 
     num_pages = messages.get_num_pages()
-    ids = []
+    all_data = []
     for page_data, page in messages.iter_pages():
 
         if page_data is None:
-            return
+            return all_data
+
         elif len(page_data) == 0:
             logger.debug(f"{repo.capitalize()} Messages Page {page} contains no data...returning")
             logger.info(f"Github Messages Page {page} of {num_pages}")
+            return all_data
 
         logger.info(f"Github Messages Page {page} of {num_pages}")
 
-        process_message_task = process_messages.s(page_data, f"Github Messages Page {page} Task", repo_id).apply_async()
-        ids.append(process_message_task.id)
+        all_data += page_data
         
-    wait_child_tasks(ids)
+
+    return all_data
     
 
-@celery.task
-def process_messages(messages, task_name, repo_id):
-
-    # define logger for task
-    logger = logging.getLogger(process_messages.__name__)
-    
-    
+def process_messages(messages, task_name, repo_id, logger):
 
     tool_source = "Pr comment task"
     tool_version = "2.0"
@@ -74,9 +89,9 @@ def process_messages(messages, task_name, repo_id):
     if len(messages) == 0:
         logger.info(f"{task_name}: No messages to process")
 
-    with GithubTaskSession(logger) as session:
+    with GithubTaskSession(logger, engine) as session:
 
-        for index, message in enumerate(messages):
+        for message in messages:
 
             related_pr_of_issue_found = False
 

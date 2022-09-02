@@ -2,7 +2,7 @@ import time
 import logging
 
 
-from augur.tasks.init.celery_app import celery_app as celery
+from augur.tasks.init.celery_app import celery_app as celery, engine
 from augur.application.db.data_parse import *
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
 from augur.tasks.github.util.github_task_session import GithubTaskSession
@@ -12,49 +12,63 @@ from augur.application.db.models import PullRequest, Message, PullRequestReview,
 
 platform_id = 1
 
+
 @celery.task
-def collect_events(repo_git: str):
+def collect_events(repo_git: str) -> None:
+
+    logger = logging.getLogger(collect_events.__name__)
 
     owner, repo = get_owner_repo(repo_git)
 
-    logger = logging.getLogger(collect_events.__name__)
+    with GithubTaskSession(logger, engine) as session:
+
+        repo_id = session.query(Repo).filter(
+            Repo.repo_git == repo_git).one().repo_id
+
+    event_data = retrieve_all_event_data(repo_git, logger)
+
+    if event_data:
+
+        process_events(event_data, "Event task", repo_id, logger)
+
+    else:
+        logger.info(f"{owner}/{repo} has no events")
+
+
+def retrieve_all_event_data(repo_git: str, logger):
+
+    owner, repo = get_owner_repo(repo_git)
 
     logger.info(f"Collecting Github events for {owner}/{repo}")
 
     url = f"https://api.github.com/repos/{owner}/{repo}/issues/events"
     
         # define GithubTaskSession to handle insertions, and store oauth keys 
-    with GithubTaskSession(logger) as session:
-
-        repo_id = session.query(Repo).filter(Repo.repo_git == repo_git).one().repo_id
+    with GithubTaskSession(logger, engine) as session:
     
         # returns an iterable of all issues at this url (this essentially means you can treat the issues variable as a list of the issues)
         events = GithubPaginator(url, session.oauths, logger)
 
-    index = 0
 
     num_pages = events.get_num_pages()
-    ids = []
+    all_data = []
     for page_data, page in events.iter_pages():
 
         if page_data is None:
-            return
+            return all_data
             
         elif len(page_data) == 0:
             logger.debug(f"{repo.capitalize()} Events Page {page} contains no data...returning")
             logger.info(f"Events Page {page} of {num_pages}")
-            return
+            return all_data
 
-        process_events_task = process_events.s(page_data, f"{repo.capitalize()} Events Page {page} Task", repo_id).apply_async()
-        ids.append(process_events_task.id)
+        logger.info(f"{repo} Events Page {page} of {num_pages}")
 
-    wait_child_tasks(ids)
-        
+        all_data += page_data
 
-@celery.task
-def process_events(events, task_name, repo_id):
+    return all_data        
 
-    logger = logging.getLogger(process_events.__name__)
+def process_events(events, task_name, repo_id, logger):
     
     tool_source = "Github events task"
     tool_version = "2.0"
@@ -64,10 +78,10 @@ def process_events(events, task_name, repo_id):
     issue_event_dicts = []
     contributors = []
 
-    with GithubTaskSession(logger) as session:
+    with GithubTaskSession(logger, engine) as session:
 
         event_len = len(events)
-        for index, event in enumerate(events):
+        for event in events:
 
             event, contributor = process_github_event_contributors(logger, event, tool_source, tool_version, data_source)
 
@@ -75,7 +89,6 @@ def process_events(events, task_name, repo_id):
                 pr_url = event["issue"]["pull_request"]["url"]
 
                 try:
-                    start_time = time.time()
                     related_pr = session.query(PullRequest).filter(PullRequest.pr_url == pr_url).one()
                 except s.orm.exc.NoResultFound:
                     logger.info("Could not find related pr")
@@ -93,7 +106,6 @@ def process_events(events, task_name, repo_id):
                 issue_url = event["issue"]["url"]
 
                 try:
-                    start_time = time.time()
                     related_issue = session.query(Issue).filter(Issue.issue_url == issue_url).one()
                 except s.orm.exc.NoResultFound:
                     logger.info("Could not find related pr")
