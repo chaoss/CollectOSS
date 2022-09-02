@@ -27,7 +27,7 @@ def hit_api(key_manager, url: str, logger: logging.Logger, timeout: float = 10, 
 
         try:
             response = client.request(
-                method=method, url=url, auth=key_manager, timeout=timeout)
+                method=method, url=url, auth=key_manager, timeout=timeout, follow_redirects=True)
 
         except TimeoutError:
             logger.info(f"Request timed out. Sleeping {round(timeout)} seconds and trying again...\n")
