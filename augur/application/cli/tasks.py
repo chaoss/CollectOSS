@@ -15,7 +15,7 @@ from augur import instance_id
 from augur.application.logs import AugurLogger
 from augur.tasks.init.redis_connection import redis_connection
 from augur.application.cli import test_connection, test_db_connection 
-from augur.application.cli.backend import clear_redis_caches
+from augur.application.cli.backend import clear_redis_caches, raise_open_file_limit
 
 logger = AugurLogger("augur", reset_logfiles=True).get_logger()
 
@@ -28,6 +28,9 @@ def cli():
 @test_db_connection
 def start():
     """Start Augur's celery process."""
+
+    raise_open_file_limit(100000)
+
     default_worker = None
     cpu_worker = None
 
