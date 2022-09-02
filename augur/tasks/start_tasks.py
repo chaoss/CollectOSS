@@ -11,6 +11,9 @@ from celery import group, chain, chord, signature
 
 
 from augur.tasks.github import *
+from augur.tasks.github.detect_move.tasks import detect_github_repo_move
+from augur.tasks.github.releases.tasks import collect_releases
+from augur.tasks.github.repo_info.tasks import collect_repo_info
 from augur.tasks.git.facade_tasks import *
 # from augur.tasks.data_analysis import *
 from augur.tasks.init.celery_app import celery_app as celery
@@ -38,14 +41,12 @@ class AugurTaskRoutine:
     Attributes:
         logger (Logger): Get logger from AugurLogger
         jobs_dict (dict): Dict of data collection phases to run
-        started_jobs (List[str]): List of keys in jobs_dict that have been started
         disabled_collection_groups (List[str]): List of keys in jobs dict that have been marked as disabled
     """
     def __init__(self,disabled_collection_phases: List[str]=[], disabled_collection_tasks: List[str]=[]):
         self.logger = AugurLogger("data_collection_jobs").get_logger()
         #self.session = TaskSession(self.logger)
         self.jobs_dict = {}
-        self.started_jobs = []
         self.disabled_collection_phases = disabled_collection_phases
         self.disabled_collection_tasks = disabled_collection_tasks
 
@@ -107,13 +108,25 @@ class AugurTaskRoutine:
     def start_data_collection(self):
         """Start all task items and return.
         """
-        raise NotImplementedError
+        self.logger.info("Starting augur collection")
+
+        self.logger.info(f"Enabled phases: {self.jobs_dict.keys()}")
+        augur_collection_list = []
+        for phaseName, job in self.jobs_dict.items():
+            augur_collection_list.append(job)
+        
+        augur_collection = chain(*augur_collection_list)
+        augur_collection.apply_async()
 
 
 @celery.task
 def start_task():
 
     logger = logging.getLogger(start_task.__name__)
+
+    default_augur_collection = AugurTaskRoutine()
+
+    default_augur_collection.start_data_collection()
 
 """
     logger.info(f"Collecting data for git and github...")
