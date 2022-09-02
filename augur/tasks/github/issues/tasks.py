@@ -2,11 +2,10 @@ import time
 import logging
 
 
-from augur.tasks.init.celery_app import celery_app as celery
+from augur.tasks.init.celery_app import celery_app as celery, engine
 from augur.application.db.data_parse import *
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
 from augur.tasks.github.util.github_task_session import GithubTaskSession
-from augur.tasks.util.worker_util import wait_child_tasks
 from augur.tasks.github.util.util import remove_duplicate_dicts, add_key_value_pair_to_dicts, get_owner_repo
 from augur.application.db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestEvent, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, Issue, IssueEvent, IssueLabel, IssueAssignee, PullRequestMessageRef, IssueMessageRef, Contributor, Repo
 
@@ -23,11 +22,27 @@ def collect_issues(repo_id: int) -> None:
         repo_id = repo_obj.repo_id
         repo_git = repo_obj.repo_git
 
-        owner, repo = get_owner_repo(repo_git)
+    issue_data = retrieve_all_issue_data(repo_git, logger)
 
-        logger.info(f"Collecting issues for {owner}/{repo}")
+    if issue_data:
 
-        url = f"https://api.github.com/repos/{owner}/{repo}/issues?state=all"
+        process_issues(issue_data, "Issue task", repo_id, logger)
+
+    else:
+        logger.info(f"{owner}/{repo} has no issues")
+
+
+def retrieve_all_issue_data(repo_git, logger) -> None:
+
+    owner, repo = get_owner_repo(repo_git)
+
+    logger.info(f"Collecting issues for {owner}/{repo}")
+
+    url = f"https://api.github.com/repos/{owner}/{repo}/issues?state=all"
+
+    # define GithubTaskSession to handle insertions, and store oauth keys 
+    
+    with GithubTaskSession(logger, engine) as session:
 
         # returns an iterable of all issues at this url (this essentially means you can treat the issues variable as a list of the issues)
         # Reference the code documenation for GithubPaginator for more details
@@ -37,30 +52,25 @@ def collect_issues(repo_id: int) -> None:
     # we come across a pr, so at the end we can log how 
     # many issues were collected
     # loop through the issues 
+    all_data = []
     num_pages = issues.get_num_pages()
-    ids = []
     for page_data, page in issues.iter_pages():
 
         if page_data is None:
-            return
+            return all_data
 
-        elif len(page_data) == 0:
-            logger.debug(f"{repo.capitalize()} Issues Page {page} contains no data...returning")
-            logger.info(f"{repo.capitalize()} Issues Page {page} of {num_pages}")
-            return
+        if len(page_data) == 0:
+            logger.debug(f"{repo} Issues Page {page} contains no data...returning")
+            logger.info(f"{repo} Issues Page {page} of {num_pages}")
+            return all_data
 
-        logger.info(f"{repo.capitalize()} Issues Page {page} of {num_pages}")
+        logger.info(f"{repo} Issues Page {page} of {num_pages}")
 
-        process_issue_task = process_issues.s(page_data, f"{repo.capitalize()} Issues Page {page} Task", repo_id).apply_async()
-        ids.append(process_issue_task.id)
+        all_data += page_data
 
-    wait_child_tasks(ids)
+    return all_data
     
-
-@celery.task
-def process_issues(issues, task_name, repo_id) -> None:
-
-    logger = logging.getLogger(process_issues.__name__)
+def process_issues(issues, task_name, repo_id, logger) -> None:
     
     # get repo_id or have it passed
     tool_source = "Issue Task"
@@ -109,7 +119,7 @@ def process_issues(issues, task_name, repo_id) -> None:
         print("No issues found while processing")  
         return
 
-    with GithubTaskSession(logger) as session:
+    with GithubTaskSession(logger, engine) as session:
 
         # remove duplicate contributors before inserting
         contributors = remove_duplicate_dicts(contributors)

@@ -28,7 +28,7 @@ def create_routes(server):
     def unsupported_method(error):
         return jsonify({"status": "Unsupported method"}), 405
 
-    server.app.route(f"/{AUGUR_API_VERSION}/user/validate", methods=['POST'])
+   @server.app.route(f"/{AUGUR_API_VERSION}/user/validate", methods=['POST'])
     def validate_user():
         if not request.is_secure:
             return generate_upgrade_request()
@@ -56,7 +56,7 @@ def create_routes(server):
         - return jsonify({"status": "Validated"})
         """
 
-    server.app.route(f"/{AUGUR_API_VERSION}/user/create", methods=['POST'])
+   @server.app.route(f"/{AUGUR_API_VERSION}/user/create", methods=['POST'])
     def create_user():
         if not request.is_secure:
             return generate_upgrade_request()

@@ -41,9 +41,9 @@ def get_database_string() -> str:
     with open("db.config.json", 'r') as f:
         db_config = json.load(f)
 
-        db_conn_string = f"postgresql+psycopg2://{db_config['user']}:{db_config['password']}@{db_config['host']}:{db_config['port']}/{db_config['database_name']}"
+    db_conn_string = f"postgresql+psycopg2://{db_config['user']}:{db_config['password']}@{db_config['host']}:{db_config['port']}/{db_config['database_name']}"
 
-        return db_conn_string
+    return db_conn_string
 
 
 def create_database_engine():  

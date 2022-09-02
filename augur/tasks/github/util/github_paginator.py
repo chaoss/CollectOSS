@@ -30,7 +30,7 @@ def hit_api(key_manager, url: str, logger: logging.Logger, timeout: float = 10, 
 
         try:
             response = client.request(
-                method=method, url=url, auth=key_manager, timeout=timeout)
+                method=method, url=url, auth=key_manager, timeout=timeout, follow_redirects=True)
 
         except TimeoutError:
             logger.info(f"Request timed out. Sleeping {round(timeout)} seconds and trying again...\n")
@@ -38,6 +38,11 @@ def hit_api(key_manager, url: str, logger: logging.Logger, timeout: float = 10, 
             return None
         except httpx.TimeoutException:
             logger.info(f"Request timed out. Sleeping {round(timeout)} seconds and trying again...\n")
+            time.sleep(round(timeout))
+            return None
+        except httpx.ReadError:
+            logger.info(f"Request timed out. Sleeping {round(timeout)} seconds and trying again...\n")
+            logger.debug("Read error timeout")
             time.sleep(round(timeout))
             return None
 
@@ -68,8 +73,12 @@ def process_dict_response(logger: logging.Logger, response: httpx.Response, page
         return GithubApiResult.REPO_NOT_FOUND
 
     if "You have exceeded a secondary rate limit. Please wait a few minutes before you try again" in page_data['message']:
-        logger.info('\n\n\n\nSleeping for 100 seconds due to secondary rate limit issue.\n\n\n\n')
-        time.sleep(100)
+
+        # sleeps for the specified amount of time that github says to retry after
+        retry_after = int(response.headers["Retry-After"])
+        logger.info(
+            f'\n\n\n\nSleeping for {retry_after} seconds due to secondary rate limit issue.\n\n\n\n')
+        time.sleep(retry_after)
 
         return GithubApiResult.SECONDARY_RATE_LIMIT
         # return "do_not_increase_attempts"
