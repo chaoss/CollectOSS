@@ -23,25 +23,31 @@ def ping_github_for_repo_move(session,repo):
     url = f"https://api.github.com/repos/{owner}/{name}"
 
     response_from_gh = hit_api(session.oauths, url, session.logger)
-    
-    page_data = parse_json_response(session.logger, response_from_gh)
-    
 
     #skip if not moved
-    if 'message' not in page_data.keys() or page_data['message'] != "Moved Permanently":
+    #301 moved permanently 
+    if response_from_gh.status_code != 301:
         session.logger.info(f"Repo found at url: {url}")
         return
     
-    owner, name = extract_owner_and_repo_from_endpoint(session,page_data['url'])
+    owner, name = extract_owner_and_repo_from_endpoint(session, response_from_gh.headers['location'])
 
     current_repo_dict = repo.__dict__
     del current_repo_dict['_sa_instance_state']
 
+
+    try:
+        old_description = str(repo.description)
+    except:
+        old_description = ""
+
     #Create new repo object to update existing
     repo_update_dict = {
         'repo_git': f"https://github.com/{owner}/{name}",
-        'repo_path': f"github.com/{owner}/",
-        'repo_name': name
+        'repo_path': None,
+        'repo_name': None,
+        'repo_status': 'New',
+        'description': f"(Originally hosted at {url}) {old_description}"
     }
 
     current_repo_dict.update(repo_update_dict)
