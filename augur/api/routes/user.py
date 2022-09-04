@@ -73,7 +73,7 @@ def create_routes(server):
         if emailCheck is not None:
             return jsonify({"status": "Email already exists"})
         try:
-            user = User(login_name = username, login_hashword = generate_password_hash(password), email = email, first_name = first_name, last_name = last_name)
+            user = User(login_name = username, login_hashword = generate_password_hash(password), email = email, first_name = first_name, last_name = last_name, tool_source="User API", tool_version=None, data_source="API")
             session.add(user)
             session.commit()
             return jsonify({"status": "User created"})
