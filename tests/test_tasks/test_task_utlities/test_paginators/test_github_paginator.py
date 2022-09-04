@@ -2,7 +2,7 @@ import pytest
 import logging
 import httpx
 
-from augur.tasks.github.util.github_paginator import GithubPaginator
+from augur.tasks.github.util.github_paginator import GithubPaginator, GithubApiResult
 from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
 from augur.tasks.util.random_key_auth import RandomKeyAuth
 from augur.application.db.session import DatabaseSession
@@ -44,7 +44,7 @@ def test_github_paginator_retrieve_data_valid_url(key_auth):
     assert prs is not None
     assert response is not None
 
-    assert type(prs) == list
+    assert isinstance(prs, list)
     assert len(prs) == 100
     assert response.status_code == 200
 
@@ -52,10 +52,10 @@ def test_github_paginator_retrieve_data_bad_url(key_auth):
 
     url = "https://api.github.com/repos/chaoss/whitepaper/pulls?state=all&direction=asc&per_page=100"
 
-    prs, response, result = GithubPaginator(url, key_auth, logger).retrieve_data(url)
+    prs, _, result = GithubPaginator(url, key_auth, logger).retrieve_data(url)
 
-    assert prs == None
-    assert result == "Repo Not Found"
+    assert prs is None
+    assert result == GithubApiResult.REPO_NOT_FOUND
 
 
 def test_github_paginator_hit_api(key_auth):
@@ -74,7 +74,7 @@ def test_github_paginator_hit_api_timeout(key_auth):
 
     response = GithubPaginator(url, key_auth, logger).hit_api(url, timeout=0.001)
 
-    assert response == None
+    assert response is None
 
 def test_github_paginator_len(key_auth):
 
