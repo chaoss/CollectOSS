@@ -54,10 +54,10 @@ def start(disable_collection):
         logger.info(f'Augur is running at: http://127.0.0.1:{session.config.get_value("Server", "port")}')
 
         worker_1_process = None
-        worker_2_process = None
-        worker_3_process = None
-        worker_4_process = None
-        worker_5_process = None
+        # worker_2_process = None
+        # worker_3_process = None
+        # worker_4_process = None
+        # worker_5_process = None
         cpu_worker = None
         celery_beat_process = None
         if not disable_collection:
