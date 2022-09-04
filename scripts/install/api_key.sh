@@ -1,7 +1,7 @@
 #!/bin/bash
 set -eo pipefail
 
-function get_api_key() {
+function generate_api_key() {
     api_key=$(augur db generate-api-key)
     echo
     echo "****** YOUR AUGUR API KEY ******"
@@ -16,18 +16,18 @@ function get_api_key() {
 }
 
 existing_api_key=$(augur db get-api-key)
-echo
-if [[ $existing_api_key != *"invalid_key"* ]]; then
+echo $existing_api_key
+if [[ "$existing_api_key" =~ "No Augur API key found." ]]; then
+  generate_api_key
+else
   read -r -p "We noticed you have an Augur API key already. Would you like to overwrite it with a new one? [Y/n] " response
   case "$response" in
       [yY][eE][sS]|[yY])
           echo
-          get_api_key
+          generate_api_key
           ;;
       *)
-          ;;
+          ;;  
   esac
-else
-    get_api_key
 fi
 

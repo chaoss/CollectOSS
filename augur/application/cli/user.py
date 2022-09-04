@@ -17,7 +17,6 @@ from sqlalchemy.orm import sessionmaker
 
 Session = sessionmaker(bind=engine)
 
-
 logger = logging.getLogger(__name__)
 
 #user subcommand

@@ -11,8 +11,11 @@ fi
 target=${1-prod}
 
 scripts/install/backend.sh $target
-scripts/install/workers.sh $target
 
 echo
-echo "Checking database version..."
+echo
+echo
+echo "Database history shown below if current is not head please run augur db upgrade-db-version"
+echo 
 augur db check-for-upgrade
+echo 

@@ -25,7 +25,7 @@ jobs:
 
           echo $PASSWORD | docker login $REGISTRY -u $LOGIN --password-stdin
 
-          for i in util/docker/* ; do
+          for i in docker/* ; do
               CONTAINER=$(basename $i)
               echo "Building $CONTAINER"
               export IMAGE=$LOGIN/augur_$CONTAINER
