@@ -245,7 +245,7 @@ AUGUR_API_VERSION = 'api/unstable'
 def create_routes(server):
 
 
-   @server.app.route('/auggie/get_user', methods=['POST'])
+    @server.app.route('/auggie/get_user', methods=['POST'])
     def get_auggie_user():
         # arg = [request.json]
         # response = server.transform(metrics.get_auggie_user, args=arg)
@@ -271,7 +271,7 @@ def create_routes(server):
        
         return filteredUser
 
-   @server.app.route('/auggie/update_tracking', methods=['POST'])
+    @server.app.route('/auggie/update_tracking', methods=['POST'])
     def update_auggie_user_tracking():
         # arg = [request.json]
         # response = server.transform(metrics.update_tracking, args=arg)
@@ -317,7 +317,7 @@ def create_routes(server):
 
         return filtered_values
 
-   @server.app.route('/auggie/slack_login', methods=['POST'])
+    @server.app.route('/auggie/slack_login', methods=['POST'])
     def slack_login():
         # arg = [request.json]
         # response = server.transform(metrics.slack_login, args=arg)

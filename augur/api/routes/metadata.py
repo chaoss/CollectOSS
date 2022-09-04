@@ -16,7 +16,7 @@ AUGUR_API_VERSION = 'api/unstable'
 
 def create_routes(server):
 
-   @server.app.route('/{}/metadata/repo_info'.format(AUGUR_API_VERSION), methods=["GET"])
+    @server.app.route('/{}/metadata/repo_info'.format(AUGUR_API_VERSION), methods=["GET"])
     def get_repo_info():
         repo_info_sql = s.sql.text("""
             SELECT

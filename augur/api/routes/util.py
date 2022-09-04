@@ -15,7 +15,7 @@ AUGUR_API_VERSION = 'api/unstable'
 
 def create_routes(server):
 
-   @server.app.route('/{}/repo-groups'.format(AUGUR_API_VERSION))
+    @server.app.route('/{}/repo-groups'.format(AUGUR_API_VERSION))
     def get_all_repo_groups(): #TODO: make this name automatic - wrapper?
         repoGroupsSQL = s.sql.text("""
             SELECT *
@@ -28,7 +28,7 @@ def create_routes(server):
                         status=200,
                         mimetype="application/json")
 
-   @server.app.route('/{}/repos'.format(AUGUR_API_VERSION))
+    @server.app.route('/{}/repos'.format(AUGUR_API_VERSION))
     def get_all_repos():
 
         get_all_repos_sql = s.sql.text("""
@@ -67,7 +67,7 @@ def create_routes(server):
                         status=200,
                         mimetype="application/json")
 
-   @server.app.route('/{}/repo-groups/<repo_group_id>/repos'.format(AUGUR_API_VERSION))
+    @server.app.route('/{}/repo-groups/<repo_group_id>/repos'.format(AUGUR_API_VERSION))
     def get_repos_in_repo_group(repo_group_id):
         repos_in_repo_groups_SQL = s.sql.text("""
             SELECT
@@ -99,7 +99,7 @@ def create_routes(server):
                         status=200,
                         mimetype="application/json")
 
-   @server.app.route('/{}/owner/<owner>/repo/<repo>'.format(AUGUR_API_VERSION))
+    @server.app.route('/{}/owner/<owner>/repo/<repo>'.format(AUGUR_API_VERSION))
     def get_repo_by_git_name(owner, repo):
 
         get_repo_by_git_name_sql = s.sql.text("""
@@ -115,7 +115,7 @@ def create_routes(server):
                         status=200,
                         mimetype="application/json")
 
-   @server.app.route('/{}/rg-name/<rg_name>/repo-name/<repo_name>'.format(AUGUR_API_VERSION))
+    @server.app.route('/{}/rg-name/<rg_name>/repo-name/<repo_name>'.format(AUGUR_API_VERSION))
     def get_repo_by_name(rg_name, repo_name):
 
         get_repo_by_name_sql = s.sql.text("""
@@ -132,7 +132,7 @@ def create_routes(server):
                         status=200,
                         mimetype="application/json")
 
-   @server.app.route('/{}/rg-name/<rg_name>'.format(AUGUR_API_VERSION))
+    @server.app.route('/{}/rg-name/<rg_name>'.format(AUGUR_API_VERSION))
     def get_group_by_name(rg_name):
         groupSQL = s.sql.text("""
             SELECT repo_group_id, rg_name
@@ -145,7 +145,7 @@ def create_routes(server):
                         status=200,
                         mimetype="application/json")
 
-   @server.app.route('/{}/dosocs/repos'.format(AUGUR_API_VERSION))
+    @server.app.route('/{}/dosocs/repos'.format(AUGUR_API_VERSION))
     def get_repos_for_dosocs():
         get_repos_for_dosocs_SQL = s.sql.text("""
             SELECT b.repo_id, CONCAT(a.value || b.repo_group_id || chr(47) || b.repo_path || b.repo_name) AS path
@@ -159,8 +159,8 @@ def create_routes(server):
                         status=200,
                         mimetype='application/json')
 
-   @server.app.route('/{}/repo-groups/<repo_group_id>/get-issues'.format(AUGUR_API_VERSION))
-   @server.app.route('/{}/repos/<repo_id>/get-issues'.format(AUGUR_API_VERSION))
+    @server.app.route('/{}/repo-groups/<repo_group_id>/get-issues'.format(AUGUR_API_VERSION))
+    @server.app.route('/{}/repos/<repo_id>/get-issues'.format(AUGUR_API_VERSION))
     def get_issues(repo_group_id, repo_id=None):
         if not repo_id:
             get_issues_sql = s.sql.text("""
@@ -207,7 +207,7 @@ def create_routes(server):
                         status=200,
                         mimetype='application/json')
 
-   @server.app.route('/{}/api-port'.format(AUGUR_API_VERSION))
+    @server.app.route('/{}/api-port'.format(AUGUR_API_VERSION))
     def api_port():
 
         with DatabaseSession(logger) as session:
