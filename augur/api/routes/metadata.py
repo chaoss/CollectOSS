@@ -16,7 +16,7 @@ AUGUR_API_VERSION = 'api/unstable'
 
 def create_routes(server):
 
-   @server.app.route('/{}/metadata/repo_info'.format(AUGUR_API_VERSION), methods=["GET"])
+    @server.app.route('/{}/metadata/repo_info'.format(AUGUR_API_VERSION), methods=["GET"])
     def get_repo_info():
         repo_info_sql = s.sql.text("""
             SELECT
@@ -55,7 +55,7 @@ def create_routes(server):
                     status=200,
                     mimetype="application/json")
 
-   @server.app.route('/{}/metadata/contributions_count'.format(AUGUR_API_VERSION), methods=["GET"])
+    @server.app.route('/{}/metadata/contributions_count'.format(AUGUR_API_VERSION), methods=["GET"])
     def contributions_count():
         repo_info_sql = s.sql.text("""
             select repo_git, count(*) as contributions from contributor_repo
@@ -69,7 +69,7 @@ def create_routes(server):
                     status=200,
                     mimetype="application/json")
 
-   @server.app.route('/{}/metadata/contributors_count'.format(AUGUR_API_VERSION), methods=["GET"])
+    @server.app.route('/{}/metadata/contributors_count'.format(AUGUR_API_VERSION), methods=["GET"])
     def contributors_count():
         repo_info_sql = s.sql.text("""
             select repo_git, count(distinct(cntrb_id)) as contributors from contributor_repo

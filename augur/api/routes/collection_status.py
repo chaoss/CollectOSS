@@ -8,7 +8,7 @@ AUGUR_API_VERSION = 'api/unstable'
 
 def create_routes(server):
 
-   @server.app.route('/{}/collection_status/commits'.format(AUGUR_API_VERSION))
+    @server.app.route('/{}/collection_status/commits'.format(AUGUR_API_VERSION))
     def commit_collection_status(): #TODO: make this name automatic - wrapper?
         commit_collection_sql = s.sql.text("""
             SELECT
@@ -39,7 +39,7 @@ def create_routes(server):
                         status=200,
                         mimetype="application/json")
 
-   @server.app.route('/{}/collection_status/issues'.format(AUGUR_API_VERSION))
+    @server.app.route('/{}/collection_status/issues'.format(AUGUR_API_VERSION))
     def issue_collection_status(): #TODO: make this name automatic - wrapper?
         issue_collection_sql = s.sql.text("""
             SELECT
@@ -100,7 +100,7 @@ def create_routes(server):
                         status=200,
                         mimetype="application/json")
 
-   @server.app.route('/{}/collection_status/pull_requests'.format(AUGUR_API_VERSION))
+    @server.app.route('/{}/collection_status/pull_requests'.format(AUGUR_API_VERSION))
     def pull_request_collection_status(): #TODO: make this name automatic - wrapper?
         pull_request_collection_sql = s.sql.text("""
             SELECT

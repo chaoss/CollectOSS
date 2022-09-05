@@ -378,7 +378,7 @@ class GithubPaginator(collections.abc.Sequence):
                 if dict_processing_result == GithubApiResult.REPO_NOT_FOUND:
                     return None, response, GithubApiResult.REPO_NOT_FOUND
 
-                if dict_processing_result in (GithubApiResult.SECONDARY_RATE_LIMIT, GithubApiResult.ABUSE_MECHANISM_DETECTED):
+                if dict_processing_result in (GithubApiResult.SECONDARY_RATE_LIMIT, GithubApiResult.ABUSE_MECHANISM_TRIGGERED):
                     continue
 
                 if dict_processing_result == GithubApiResult.RATE_LIMIT_EXCEEDED:

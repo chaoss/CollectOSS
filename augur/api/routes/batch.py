@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 def create_routes(server):
 
-       @server.app.route('/{}/batch'.format(AUGUR_API_VERSION), methods=['GET', 'POST'])
+        @server.app.route('/{}/batch'.format(AUGUR_API_VERSION), methods=['GET', 'POST'])
         def batch():
             """
             Execute multiple requests, submitted as a batch.
@@ -101,7 +101,7 @@ def create_routes(server):
         @apiDescription Returns metadata of batch requests
         POST JSON of API requests metadata
         """
-       @server.app.route('/{}/batch/metadata'.format(AUGUR_API_VERSION), methods=['GET', 'POST'])
+        @server.app.route('/{}/batch/metadata'.format(AUGUR_API_VERSION), methods=['GET', 'POST'])
         def batch_metadata():
             """
             Returns endpoint metadata in batch format
