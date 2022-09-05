@@ -300,7 +300,7 @@ class GithubPaginator(collections.abc.Sequence):
 
         if result != GithubApiResult.SUCCESS:
             self.logger.debug("Failed to retrieve the data even though 10 attempts were given")
-            yield None
+            yield None, None
             return
 
         # this retrieves the page for the given url
