@@ -42,11 +42,14 @@ def retrieve_all_pr_and_issue_messages(repo_git: str, logger) -> None:
     # define logger for task
     logger.info(f"Collecting github comments for {owner}/{repo}")
 
-    # define database task session, that also holds autentication keys the GithubPaginator needs
+    # url to get issue and pull request comments
+    url = f"https://api.github.com/repos/{owner}/{repo}/issues/comments"
+
+    # define database task session, that also holds authentication keys the GithubPaginator needs
     with GithubTaskSession(logger, engine) as session:
     
         # returns an iterable of all issues at this url (this essentially means you can treat the issues variable as a list of the issues)
-        messages = GithubPaginator(repo_git, session.oauths, logger)
+        messages = GithubPaginator(url, session.oauths, logger)
 
     num_pages = messages.get_num_pages()
     all_data = []
