@@ -39,6 +39,9 @@ def retrieve_all_pr_and_issue_messages(repo_git: str, logger) -> None:
 
     owner, repo = get_owner_repo(repo_git)
 
+    # url to get issue and pull request comments
+    url = f"https://api.github.com/repos/{owner}/{repo}/issues/comments"
+
     # define logger for task
     logger.info(f"Collecting github comments for {owner}/{repo}")
 
