@@ -21,6 +21,7 @@ def collect_issues(repo_id: int) -> None:
         repo_obj = session.query(Repo).filter(Repo.repo_id == repo_id).one()
         repo_id = repo_obj.repo_id
         repo_git = repo_obj.repo_git
+        owner, repo = get_owner_repo(repo_git)
 
     issue_data = retrieve_all_issue_data(repo_git, logger)
 
