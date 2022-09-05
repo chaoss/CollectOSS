@@ -46,7 +46,7 @@ def retrieve_all_pr_and_issue_messages(repo_git: str, logger) -> None:
     with GithubTaskSession(logger, engine) as session:
     
         # returns an iterable of all issues at this url (this essentially means you can treat the issues variable as a list of the issues)
-        messages = GithubPaginator(url, session.oauths, logger)
+        messages = GithubPaginator(repo_git, session.oauths, logger)
 
     num_pages = messages.get_num_pages()
     all_data = []
