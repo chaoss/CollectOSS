@@ -85,13 +85,21 @@ def process_events(events, task_name, repo_id, logger):
 
     with GithubTaskSession(logger, engine) as session:
 
+        not_mapable_event_count = 0
         event_len = len(events)
         for event in events:
 
             event, contributor = process_github_event_contributors(logger, event, tool_source, tool_version, data_source)
 
-            if 'pull_request' in list(event["issue"].keys()):
-                pr_url = event["issue"]["pull_request"]["url"]
+            # event_mapping_data is the pr or issue data needed to relate the event to an issue or pr
+            event_mapping_data = event["issue"]
+
+            if event_mapping_data is None:
+                not_mapable_event_count += 1
+                continue
+            
+            if 'pull_request' in list(event_mapping_data.keys()):
+                pr_url = event_mapping_data["pull_request"]["url"]
 
                 try:
                     related_pr = session.query(PullRequest).filter(PullRequest.pr_url == pr_url).one()
@@ -108,7 +116,7 @@ def process_events(events, task_name, repo_id, logger):
                 )
 
             else:
-                issue_url = event["issue"]["url"]
+                issue_url = event_mapping_data["url"]
 
                 try:
                     related_issue = session.query(Issue).filter(Issue.issue_url == issue_url).one()
@@ -141,7 +149,7 @@ def process_events(events, task_name, repo_id, logger):
 
             unassigned_events = event_len - issue_events_len - pr_events_len
 
-            logger.error(f"{task_name}: {event_len} events were processed, but {pr_events_len} pr events were found and related to a pr, and {issue_events_len} issue events were found and related to an issue. For some reason {unassigned_events} events were not able to be processed. This is usually because pull requests or issues have not been collected, and the events are skipped because they cannot be related to a pr or issue")
+            logger.error(f"{task_name}: {event_len} events were processed, but {pr_events_len} pr events were found and related to a pr, and {issue_events_len} issue events were found and related to an issue. {not_mapable_event_count} events were not related to a pr or issue due to the api returning insufficient data. For some reason {unassigned_events} events were not able to be processed even when the api returned sufficient data. This is usually because pull requests or issues have not been collected, and the events are skipped because they cannot be related to a pr or issue")
 
         logger.info(f"{task_name}: Inserting {len(pr_event_dicts)} pr events and {len(issue_event_dicts)} issue events")
 
