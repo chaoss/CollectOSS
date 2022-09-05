@@ -136,7 +136,8 @@ def process_issues(issues, task_name, repo_id, logger) -> None:
         logger.info(f"{task_name}: Inserting {len(issue_dicts)} issues")
         issue_natural_keys = ["issue_url"]
         issue_return_columns = ["issue_url", "issue_id"]
-        issue_return_data = session.insert_data(issue_dicts, Issue, issue_natural_keys, issue_return_columns)
+        issue_string_columns = ["issue_title", "issue_body"]
+        issue_return_data = session.insert_data(issue_dicts, Issue, issue_natural_keys, return_columns=issue_return_columns, string_fields=issue_string_columns)
 
 
         # loop through the issue_return_data so it can find the labels and 

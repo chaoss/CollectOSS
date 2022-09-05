@@ -17,6 +17,25 @@ from augur.application.config import AugurConfig
 from augur.application.db.models import Platform
 
 
+def remove_null_characters_from_list_of_dicts(data, fields):
+
+    for item in data:
+
+        for field in fields:
+
+            # ensure the field exits in the dict
+            try:
+                value = data[field]
+            except KeyError:
+                print(f"Error tried to remove null characters from the field: {field}, but it wasn't present in the dict")
+                continue
+
+            # ensure the string is not none
+            if value:
+                value = value.replace("\x00", "\uFFFD")
+
+    return data
+
 class DatabaseSession(s.orm.Session):
 
     def __init__(self, logger, engine=None):
@@ -43,9 +62,8 @@ class DatabaseSession(s.orm.Session):
 
             return connection.execute(sql_text)
 
+    def insert_data(self, data: Union[List[dict], dict], table, natural_keys: List[str], return_columns: Optional[List[str]] = None, string_fields: Optional[List[str]] = None) -> Optional[List[dict]]:
 
-    def insert_data(self, data: Union[List[dict], dict], table, natural_keys: List[str], return_columns: Optional[List[str]] = None) -> Optional[List[dict]]:
-        
         if isinstance(data, list) is False:
             
             # if a dict is passed to data then 
@@ -65,8 +83,12 @@ class DatabaseSession(s.orm.Session):
             self.logger.info("Must be list of dicts")
             return None
 
-        # creates list of arguments to tell sqlalchemy what columns to return after the data is inserted
+        # remove null data from string fields
+        if string_fields and isinstance(string_fields, list):
+            data = remove_null_characters_from_list_of_dicts(data, string_fields)
 
+
+        # creates list of arguments to tell sqlalchemy what columns to return after the data is inserted
         returning_args = []
         if return_columns:
             for column in return_columns:
@@ -103,7 +125,6 @@ class DatabaseSession(s.orm.Session):
         if not return_columns:
 
             while attempts < 10:
-                print("")
                 try:
                     with self.engine.connect() as connection:
                         connection.execute(stmnt)

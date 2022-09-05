@@ -63,3 +63,4 @@ def parse_json_response(logger: logging.Logger, response: httpx.Response) -> dic
     except json.decoder.JSONDecodeError as e:
         logger.error(f"Error invalid return from GitHub. Response was: {response.text}. Error: {e}")
         return json.loads(json.dumps(response.text))
+
