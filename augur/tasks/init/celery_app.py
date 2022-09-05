@@ -14,6 +14,8 @@ from augur.application.db.session import DatabaseSession
 from augur.application.db.engine import get_database_string
 from augur.tasks.init import get_redis_conn_values
 
+logger = logging.getLogger(__name__)
+
 start_tasks = ['augur.tasks.start_tasks']
 
 github_tasks = ['augur.tasks.github.contributors.tasks',
@@ -90,7 +92,6 @@ def setup_periodic_tasks(sender, **kwargs):
         The tasks so that they are grouped by the module they are defined in
     """
     from augur.tasks.start_tasks import start_task
-    logger = logging.getLogger(__name__)
 
     with DatabaseSession(logger) as session:
 
@@ -125,6 +126,6 @@ def init_worker(**kwargs):
 def shutdown_worker(**kwargs):
     global engine
     if engine:
-        print('Closing database connectionn for worker.')
-        engine.close()
+        logger.info('Closing database connectionn for worker')
+        engine.dispose()
 
