@@ -15,17 +15,16 @@ platform_id = 1
 
 
 @celery.task
-def collect_github_messages(repo_git: str) -> None:
+def collect_github_messages(repo_id: int) -> None:
 
     logger = logging.getLogger(collect_github_messages.__name__)
-
-    owner, repo = get_owner_repo(repo_git)
-
+    
     with GithubTaskSession(logger, engine) as session:
 
-        repo_id = session.query(Repo).filter(
-            Repo.repo_git == repo_git).one().repo_id
+        repo_git = session.query(Repo).filter(
+            Repo.repo_id == repo_id).one().repo_git
 
+    owner, repo = get_owner_repo(repo_git)
     message_data = retrieve_all_pr_and_issue_messages(repo_git, logger)
 
     if message_data:
@@ -43,9 +42,6 @@ def retrieve_all_pr_and_issue_messages(repo_git: str, logger) -> None:
     # define logger for task
     logger.info(f"Collecting github comments for {owner}/{repo}")
 
-    # url to get issue and pull request comments
-    url = f"https://api.github.com/repos/{owner}/{repo}/issues/comments"
-    
     # define database task session, that also holds autentication keys the GithubPaginator needs
     with GithubTaskSession(logger, engine) as session:
     

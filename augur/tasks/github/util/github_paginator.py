@@ -15,6 +15,7 @@ from enum import Enum
 
 
 from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
+from augur.tasks.github.util.util import parse_json_response
 
  
 def hit_api(key_manager, url: str, logger: logging.Logger, timeout: float = 10, method: str = 'GET', ) -> Optional[httpx.Response]:
@@ -354,13 +355,8 @@ class GithubPaginator(collections.abc.Sequence):
                 num_attempts += 1
                 continue
             
-            # try to get json from response
-            try:
-                
-                page_data = response.json()
-            except json.decoder.JSONDecodeError as e:
-                self.logger.error(f"Error invalid return from GitHub. Response was: {response.text}. Error: {e}")
-                page_data = json.loads(json.dumps(response.text))
+            
+            page_data = parse_json_response(self.logger, response)
 
 
             # if the data is a list, then return it and the response

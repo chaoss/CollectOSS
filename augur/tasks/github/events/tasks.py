@@ -14,16 +14,21 @@ platform_id = 1
 
 
 @celery.task
-def collect_events(repo_git: str) -> None:
+def collect_events(repo_id: int):
 
     logger = logging.getLogger(collect_events.__name__)
+    
+        # define GithubTaskSession to handle insertions, and store oauth keys 
+    with GithubTaskSession(logger) as session:
 
-    owner, repo = get_owner_repo(repo_git)
+        repo_obj = session.query(Repo).filter(Repo.repo_id == repo_id).one()
+        repo_id = repo_obj.repo_id
+        repo_git = repo_obj.repo_git
+        owner, repo = get_owner_repo(repo_git)
 
-    with GithubTaskSession(logger, engine) as session:
+        logger.info(f"Collecting Github events for {owner}/{repo}")
 
-        repo_id = session.query(Repo).filter(
-            Repo.repo_git == repo_git).one().repo_id
+        url = f"https://api.github.com/repos/{owner}/{repo}/issues/events"
 
     event_data = retrieve_all_event_data(repo_git, logger)
 

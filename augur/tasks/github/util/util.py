@@ -1,5 +1,9 @@
 """Utility functions that are useful for several Github tasks"""
 from typing import Any, List, Tuple
+from httpx import Response
+import logging
+import json
+import httpx
 
 def remove_duplicate_dicts(data: List[dict]) -> List[dict]:
     """Removed duplicate dics from a list
@@ -50,3 +54,12 @@ def get_owner_repo(git_url: str) -> Tuple[str, str]:
         repo = repo[:-4]
 
     return owner, repo
+
+
+def parse_json_response(logger: logging.Logger, response: httpx.Response) -> dict:
+    # try to get json from response
+    try:
+        return response.json()
+    except json.decoder.JSONDecodeError as e:
+        logger.error(f"Error invalid return from GitHub. Response was: {response.text}. Error: {e}")
+        return json.loads(json.dumps(response.text))
