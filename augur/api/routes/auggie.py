@@ -51,8 +51,8 @@ AUGUR_API_VERSION = 'api/unstable'
 #     # and bind them to the metrics class
 #     # Derek are you proud of me
 #     for name, obj in inspect.getmembers(sys.modules[module_name]):
-#         if inspect.isfunction(obj) == True:
-#             if hasattr(obj, 'metadata') == True:
+#         if inspect.isfunction(obj) is True:
+#             if hasattr(obj, 'metadata') is True:
 #                 setattr(metrics, name, types.MethodType(obj, metrics))
 
 
@@ -245,7 +245,7 @@ AUGUR_API_VERSION = 'api/unstable'
 def create_routes(server):
 
 
-    server.app.route('/auggie/get_user', methods=['POST'])
+   @server.app.route('/auggie/get_user', methods=['POST'])
     def get_auggie_user():
         # arg = [request.json]
         # response = server.transform(metrics.get_auggie_user, args=arg)
@@ -271,7 +271,7 @@ def create_routes(server):
        
         return filteredUser
 
-    server.app.route('/auggie/update_tracking', methods=['POST'])
+   @server.app.route('/auggie/update_tracking', methods=['POST'])
     def update_auggie_user_tracking():
         # arg = [request.json]
         # response = server.transform(metrics.update_tracking, args=arg)
@@ -317,7 +317,7 @@ def create_routes(server):
 
         return filtered_values
 
-    server.app.route('/auggie/slack_login', methods=['POST'])
+   @server.app.route('/auggie/slack_login', methods=['POST'])
     def slack_login():
         # arg = [request.json]
         # response = server.transform(metrics.slack_login, args=arg)

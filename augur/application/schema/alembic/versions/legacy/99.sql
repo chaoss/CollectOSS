@@ -21,4 +21,4 @@ ALTER TABLE "augur_data"."dm_repo_monthly"
 --
 update "augur_operations"."augur_settings" set value = 99
   where setting = 'augur_data_version'; 
-COMMIT; 
+ 

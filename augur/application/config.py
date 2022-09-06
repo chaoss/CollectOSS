@@ -1,5 +1,6 @@
 import sqlalchemy as s
 import json
+from typing import List, Any, Optional
 
 from augur.application.db.models import Config 
 
@@ -41,9 +42,6 @@ default_config = {
             "Logging": {
                 "logs_directory": "",
                 "log_level": "INFO",
-                "verbose": 0,
-                "quiet": 0,
-                "debug": 0
             },
             "Celery": {
                 "concurrency": 12
@@ -51,6 +49,30 @@ default_config = {
             "Redis": {
                 "cache_group": 0, 
                 "connection_string": "redis://localhost:6379/"
+            },
+            "Tasks": {
+                "collection_interval": 2592000
+            },
+            "Message_Insights": {
+                    "insight_days": 30,
+                    "models_dir": "message_models"
+            },
+            "Clustering_Task": {
+                "max_df": 0.9,
+                "max_features": 1000,
+                "min_df": 0.1,
+                "num_clusters": 4
+            },
+            "Insight_Task": {
+                # TODO: How to store metrics in database config?
+                "metrics": {"issues-new": "issues", "code-changes": "commit_count", "code-changes-lines": "added",
+                           "reviews": "pull_requests", "contributors-new": "new_contributors"},
+                "confidence_interval": 95,
+                "contamination": 0.1,
+                "switch": 1,
+                "workers": 1,
+                "training_days": 1000,
+                "anomaly_days": 14
             }
         }
 
@@ -94,8 +116,15 @@ class AugurConfig():
         self.accepted_types = ["str", "bool", "int", "float", "NoneType"]
         self.default_config = default_config
 
-    def get_section(self, section_name):
+    def get_section(self, section_name) -> dict:
+        """Get a section of data from the config.
 
+        Args:
+            section_name: The name of the section being retrieved
+
+        Returns:
+            The section data as a dict
+        """
         section_data = self.session.query(Config).filter_by(section_name=section_name).all()
         
         section_dict = {}
@@ -112,8 +141,16 @@ class AugurConfig():
         return section_dict
 
 
-    def get_value(self, section_name, setting_name):
+    def get_value(self, section_name: str, setting_name: str) -> Optional[Any]:
+        """Get the value of a setting from the config.
 
+        Args:
+            section_name: The name of the section that the setting belongs to 
+            setting_name: The name of the setting
+
+        Returns:
+            The value from config if found, and None otherwise
+        """
         try:
             config_setting = self.session.query(Config).filter(Config.section_name == section_name, Config.setting_name == setting_name).one()
             # config_setting = Config.query.filter_by(section_name=section_name, setting_name=setting_name).one()
@@ -128,7 +165,11 @@ class AugurConfig():
 
 
     def load_config(self) -> dict:
-
+        """Get full config as a dictionary.
+        
+        Returns:
+            The config from the database
+        """
         # get all the sections in the config table
         section_names = self.session.query(Config.section_name).all()
 
@@ -152,25 +193,41 @@ class AugurConfig():
         return config
 
 
-    def empty(self):
-
+    def empty(self) -> bool:
+        """Determine if a config is empty.
+        
+        Returns:
+            True if the config is empty, and False if it is not
+        """
         return self.session.query(Config).first() is None
 
-    def is_section_in_config(self, section_name):
+    def is_section_in_config(self, section_name: str) -> bool:
+        """Determine if a section is in the config.
+        
+        Args:
+            section_name: section to search for in config
 
+        Returns:
+            True if section is in the config, and False if it is not
+        """
         return self.session.query(Config).filter(Config.section_name == section_name).first() is not None
 
-    """
-    type is optional
-    config_row = {
-            "section_name": section_name,
-            "setting_name": setting_name,
-            "value": value,
-            "type": data_type # optional
-        }
-    """
-    def add_or_update_settings(self, settings):
 
+    def add_or_update_settings(self, settings: List[dict]):
+        """Add or update a list of settings.
+
+        Args:
+            list of settings with dicts containing section_name, setting_name, value, and optionally type
+
+        Examples:
+            type is optional
+            setting = {
+                    "section_name": section_name,
+                    "setting_name": setting_name,
+                    "value": value,
+                    "type": data_type # optional
+                }
+        """
         for setting in settings:
 
             if "type" not in setting:
@@ -182,8 +239,13 @@ class AugurConfig():
         self.session.insert_data(settings,Config, ["section_name", "setting_name"])
        
 
-    def add_section_from_json(self, section_name, json_data):
-
+    def add_section_from_json(self, section_name: str, json_data: dict) -> None:
+        """Add a section from a dict.
+        
+        Args:
+            section_name: The name of the section being added
+            json_data: The data being added
+        """
         data_keys = list(json_data.keys())
 
         settings = []
@@ -191,8 +253,9 @@ class AugurConfig():
 
             value = json_data[key]
 
-            if type(value) == dict:
-                self.logger.error("Values cannot be of type dict")
+            if isinstance(value, dict) is True:
+                # TODO: Uncomment out when insights worker config stuff is resolved
+                # self.logger.error(f"Values cannot be of type dict: {value}")
                 return
 
             setting = {
@@ -205,14 +268,26 @@ class AugurConfig():
         self.add_or_update_settings(settings)
 
 
-    def load_config_file(self, file_path):
+    def load_config_file(self, file_path: str) -> dict:
+        """Add a section from a dict.
+        
+        Args:
+            file_path: Path to json file being loaded
+
+        Returns:
+            data in the json file
+        """
         with open(file_path, 'r') as f:
             file_data = json.load(f)
 
             return file_data
 
-    def load_config_from_dict(self, dict_data):
-
+    def load_config_from_dict(self, dict_data: dict) -> None:
+        """Create config from a dict.
+        
+        Args:
+            dict_data: The data being loaded into the config
+        """
         section_names = list(dict_data.keys())
 
         for section_name in section_names:
@@ -221,23 +296,27 @@ class AugurConfig():
 
             # check for "sections" that are actually just a key value pair 
             # and not a key that has a value of type dict
-            if type(value) == dict:
+            if isinstance(value, dict) is True:
                 self.add_section_from_json(section_name=section_name, json_data=value)
 
             else:
                 self.logger.error(f"Error! {section_name}: {value} will not be added because a section must have a dict as its values (all of the top level keys in the config must have a value of type dict")
 
-    def clear(self):
-
+    def clear(self) -> None:
+        """Remove all values from the config."""
         self.session.query(Config).delete()
         self.session.commit()
 
-    def remove_section(self, section_name):
-
+    def remove_section(self, section_name: str) -> None:
+        """Remove a section from the config.
+        
+        Args:
+            section_name: The name of the section being deleted
+        """
         self.session.query(Config).filter(Config.section_name == section_name).delete()
         self.session.commit()
 
 
-    def create_default_config(self):
-
+    def create_default_config(self) -> None:
+        """Create default config in the database."""
         self.load_config_from_dict(self.default_config)

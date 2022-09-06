@@ -33,7 +33,7 @@ def create_routes(server):
     def unsupported_method(error):
         return jsonify({"status": "Unsupported method"}), 405
 
-    @server.app.route(f"/{AUGUR_API_VERSION}/user/validate", methods=['POST', 'GET'])
+    @server.app.route(f"/{AUGUR_API_VERSION}/user/validate", methods=['POST'])
     def validate_user():
         if not request.is_secure:
             return generate_upgrade_request()

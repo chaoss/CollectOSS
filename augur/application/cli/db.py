@@ -14,7 +14,7 @@ import sqlalchemy as s
 import pandas as pd
 import requests
 import json
-from sqlalchemy import exc
+import sqlalchemy as s
 import re
 
 from augur.application.cli import test_connection, test_db_connection 
@@ -35,9 +35,7 @@ def cli():
 @test_connection
 @test_db_connection
 def add_repos(filename):
-    """
-    Add repositories to Augur's database
-    """
+    """Add repositories to Augur's database."""
     with DatabaseSession(logger) as session:
 
         with session.engine.connect() as connection:
@@ -420,19 +418,20 @@ def test_db_connection():
     pass
 
 
-
-def run_psql_command_in_database(augur_app, target_type, target):
+# TODO: Fix this function
+def run_psql_command_in_database(target_type, target):
     if target_type not in ["-f", "-c"]:
         logger.error("Invalid target type. Exiting...")
         exit(1)
 
     augur_db_environment_var = os.getenv("AUGUR_DB")
 
-    db_json_file_location = os.getcwd() + "/db.config.json"
-    db_json_exists = os.path.exists(db_json_file_location)
+    # db_json_file_location = os.getcwd() + "/db.config.json"
+    # db_json_exists = os.path.exists(db_json_file_location)
 
     if augur_db_environment_var:
         pass
+        #TODO: Add functionality for environment variable
     else:
         with open("db.config.json", 'r') as f:
             db_config = json.load(f)
@@ -440,8 +439,9 @@ def run_psql_command_in_database(augur_app, target_type, target):
             host = db_config['host']
             database_name = db_config['database_name']
 
+
             db_conn_string = f"postgresql+psycopg2://{db_config['user']}:{db_config['password']}@{db_config['host']}:{db_config['port']}/{db_config['database_name']}"
-            engine = create_engine(db_conn_string)
+            engine = s.create_engine(db_conn_string)
 
     call(
         [

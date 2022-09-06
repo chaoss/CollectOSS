@@ -31,5 +31,5 @@ update "augur_operations"."augur_settings" set value = 94
   where setting = 'augur_data_version'; 
 
 
-COMMIT; 
+ 
 

@@ -7,7 +7,7 @@ from augur.application.db.data_parse import *
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
 from augur.tasks.github.util.github_task_session import GithubTaskSession
 from augur.tasks.util.worker_util import wait_child_tasks
-from augur.tasks.github.util.util import remove_duplicate_dicts, add_key_value_pair_to_list_of_dicts, get_owner_repo
+from augur.tasks.github.util.util import remove_duplicate_dicts, add_key_value_pair_to_dicts, get_owner_repo
 from augur.application.db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestEvent, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, Issue, IssueEvent, IssueLabel, IssueAssignee, PullRequestMessageRef, IssueMessageRef, Contributor, Repo
 
 
@@ -39,7 +39,7 @@ def collect_issues(repo_git: str) -> None:
     ids = []
     for page_data, page in issues.iter_pages():
 
-        if page_data == None:
+        if page_data is None:
             return
 
         elif len(page_data) == 0:
@@ -143,8 +143,8 @@ def process_issues(issues, task_name, repo_id) -> None:
 
             # add the issue id to the lables and assignees, then add them to a list of dicts that will be inserted soon
             dict_key = "issue_id"
-            issue_label_dicts += add_key_value_pair_to_list_of_dicts(other_issue_data["labels"], "issue_id", issue_id)
-            issue_assignee_dicts += add_key_value_pair_to_list_of_dicts(other_issue_data["assignees"], "issue_id", issue_id)
+            issue_label_dicts += add_key_value_pair_to_dicts(other_issue_data["labels"], "issue_id", issue_id)
+            issue_assignee_dicts += add_key_value_pair_to_dicts(other_issue_data["assignees"], "issue_id", issue_id)
 
 
         logger.info(f"{task_name}: Inserting other issue data of lengths: Labels: {len(issue_label_dicts)} - Assignees: {len(issue_assignee_dicts)}")

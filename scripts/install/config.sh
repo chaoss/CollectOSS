@@ -147,7 +147,16 @@ function create_config(){
       facade_repo_directory=$AUGUR_FACADE_REPO_DIRECTORY
     fi
     
-    cmd=( augur config init --github_api_key $github_api_key --gitlab_api_key $gitlab_api_key --facade_repo_directory $facade_repo_directory )
+    #special case for docker entrypoint
+    if [ $target = "docker" ]; then
+      cmd=( augur config init --github_api_key $github_api_key --gitlab_api_key $gitlab_api_key --facade_repo_directory $facade_repo_directory --redis-conn-string $redis_conn_string )
+      echo "init with redis $redis_conn_string"
+    else
+      cmd=( augur config init --github_api_key $github_api_key --gitlab_api_key $gitlab_api_key --facade_repo_directory $facade_repo_directory )
+    fi
+
+
+    
 
     #Create and cache credentials for github and gitlab
     touch $facade_repo_directory/.git-credentials

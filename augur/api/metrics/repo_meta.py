@@ -729,7 +729,7 @@ calendar year (a new repo in that year), show all commits for that year (total f
     :param calendar_year: the calendar year a repo is created in to be considered "new"
     :param repo_group: the group of repositories to analyze
     """
-    if calendar_year == None:
+    if calendar_year is None:
         calendar_year = datetime.datetime.now().strftime('%Y')
 
     cdRgNewrepRankedCommitsSQL = None
@@ -771,7 +771,7 @@ def annual_lines_of_code_count_ranked_by_repo_in_repo_group(repo_group_id, repo_
     :param repo_id: The repository's repo_id, defaults to None
     :param calendar_year: the calendar year a repo is created in to be considered "new"
     """
-    if timeframe == None:
+    if timeframe is None:
         timeframe = 'all'
 
     cdRgTpRankedCommitsSQL = None
@@ -868,10 +868,10 @@ def lines_of_code_commit_counts_by_calendar_year_grouped(repo_url, calendar_year
     :param interval: Month or week. The periodocity of which to examine data within the given calendar_year
     """
 
-    if calendar_year == None:
+    if calendar_year is None:
         calendar_year = datetime.datetime.now().strftime('%Y')
 
-    if interval == None:
+    if interval is None:
         interval = 'month'
 
     cdRepTpIntervalLocCommitsSQL = None
@@ -913,7 +913,7 @@ def lines_of_code_commit_counts_by_calendar_year_grouped(repo_url, calendar_year
 @register_metric()
 def average_weekly_commits(repo_group_id=None, repo_id=None, calendar_year=None):
 
-    if calendar_year == None:
+    if calendar_year is None:
         calendar_year = datetime.datetime.now().strftime('%Y')
 
     extra_and = "AND repo.repo_group_id = :repo_group_id" if repo_group_id and not repo_id else "AND repo.repo_id = :repo_id" if repo_group_id and repo_id else ""

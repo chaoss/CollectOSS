@@ -101,7 +101,13 @@ def get_log_config():
 
 #TODO dynamically define loggers for every task names.
 class TaskLogConfig():
-    def __init__(self, all_tasks, disable_log_files=False,reset_logfiles=False,base_log_dir=ROOT_AUGUR_DIRECTORY + "/logs/",logLevel=logging.INFO):
+    def __init__(self, all_tasks, disable_log_files=False,reset_logfiles=False,base_log_dir=ROOT_AUGUR_DIRECTORY + "/logs/"):
+        
+        log_config = get_log_config()
+
+        if log_config["logs_directory"] != "":
+            base_log_dir=log_config["logs_directory"]
+
         if reset_logfiles is True:
             try:
                 print("(tasks) Reseting log files")
@@ -109,9 +115,10 @@ class TaskLogConfig():
             except FileNotFoundError as e:
                 pass
 
-        self.log_confg = get_log_config()
-
-        self.logLevel = logLevel
+        if log_config["log_level"].lower() == "debug":
+            self.logLevel = logging.DEBUG
+        else:
+            self.logLevel = logging.INFO
 
         self.base_log_dir = Path(base_log_dir)
 
@@ -165,7 +172,13 @@ class TaskLogConfig():
 
 
 class AugurLogger():
-    def __init__(self, logger_name, disable_log_files=False,reset_logfiles=False,base_log_dir=ROOT_AUGUR_DIRECTORY + "/logs/",logLevel=logging.INFO):
+    def __init__(self, logger_name, disable_log_files=False,reset_logfiles=False,base_log_dir=ROOT_AUGUR_DIRECTORY + "/logs/"):
+        
+        log_config = get_log_config()
+        
+        if log_config["logs_directory"] != "":
+            base_log_dir=log_config["logs_directory"]
+
         if reset_logfiles is True:
             try:
                 print("(augur) Reseting log files")
@@ -173,7 +186,10 @@ class AugurLogger():
             except FileNotFoundError as e:
                 pass
 
-        self.logLevel = logLevel
+        if log_config["log_level"].lower() == "debug":
+            self.logLevel = logging.DEBUG
+        else:
+            self.logLevel = logging.INFO
 
         self.base_log_dir = Path(base_log_dir)
 

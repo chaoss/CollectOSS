@@ -1,5 +1,7 @@
 from __future__ import annotations
-import uuid, typing
+
+import uuid
+import typing
 
 class AugurUUID:
     struct = {
@@ -27,9 +29,9 @@ class AugurUUID:
         try:
             source = int(source)
             source_bytes = source.to_bytes(num_bytes, "big")
-        except ValueError as e:
+        except ValueError:
             raise ValueError("The source must be an integer") from None
-        except OverflowError as e:
+        except OverflowError:
             raise ValueError(f"The source must be at most {num_bytes} bytes in size: {source} is too big") from None
 
         self.set_bytes(source_bytes, start_byte)
@@ -46,9 +48,9 @@ class AugurUUID:
         try:
             platform_id = int(platform_id)
             platform_bytes = platform_id.to_bytes(1, "big")
-        except ValueError as e:
+        except ValueError:
             raise ValueError("The platform_id must be an integer") from None
-        except OverflowError as e:
+        except OverflowError:
             raise ValueError(f"The platform_id must be one byte in size: {platform_id} is too big") from None
 
         self.set_bytes(platform_bytes, 0)
@@ -69,9 +71,9 @@ class AugurUUID:
         try:
             value = int(value)
             value_byte = value.to_bytes(1, "big")
-        except ValueError as e:
+        except ValueError:
             raise ValueError("The value must be an integer") from None
-        except OverflowError as e:
+        except OverflowError:
             raise ValueError(f"The value must be one byte: {value} is too big") from None
         if not self.is_valid_index(index):
             raise IndexError(f"Index {index} out of bounds")

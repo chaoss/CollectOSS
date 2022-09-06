@@ -22,4 +22,4 @@ DROP INDEX "augur_data"."committer_cntrb_id";
 update "augur_operations"."augur_settings" set value = 90 where setting = 'augur_data_version'; 
 
 
-COMMIT; 
+ 

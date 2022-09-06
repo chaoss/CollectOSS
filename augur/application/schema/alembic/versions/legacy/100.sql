@@ -33,4 +33,4 @@ ALTER TABLE "augur_data"."chaoss_user" ADD CONSTRAINT "chaoss_user_pkey" PRIMARY
 --
 update "augur_operations"."augur_settings" set value = 100
   where setting = 'augur_data_version'; 
-COMMIT; 
+ 

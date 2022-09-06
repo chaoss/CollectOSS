@@ -21,7 +21,7 @@ def process_contributors():
 
     with GithubTaskSession(logger) as session:
 
-        contributors = session.query(Contributor).filter(Contributor.data_source == data_source, Contributor.cntrb_created_at == None, Contributor.cntrb_last_used == None).all()
+        contributors = session.query(Contributor).filter(Contributor.data_source == data_source, Contributor.cntrb_created_at is None, Contributor.cntrb_last_used is None).all()
 
         contributors_len = len(contributors)
 
@@ -66,7 +66,7 @@ def retrieve_dict_data(url: str, session):
     num_attempts = 0
     while num_attempts <= 10:
 
-        response = hit_api(session, url)
+        response = hit_api(session.oauths, url, session.logger)
 
         # increment attempts
         if response is None:

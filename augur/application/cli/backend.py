@@ -2,37 +2,26 @@
 """
 Augur library commands for controlling the backend components
 """
-
-from copy import deepcopy
-import os, time, atexit, subprocess, click, atexit, logging, sys
+import os
+import time
+import subprocess
+import click
+import logging
 import psutil
 import signal
-import multiprocessing as mp
-import gunicorn.app.base
-from gunicorn.arbiter import Arbiter
 import sys
-import json
-import random
-import string
-import subprocess
 from redis.exceptions import ConnectionError as RedisConnectionError
-import uuid
+from celery import chain, signature, group
+
 
 from augur import instance_id
-
 from augur.tasks.start_tasks import start_task
-from augur.tasks.git.facade_tasks import *
-from augur.tasks.github.contributors.tasks import process_contributors
-
 from augur.tasks.init.redis_connection import redis_connection 
 from augur.application.db.models import Repo
 from augur.application.db.session import DatabaseSession
 from augur.application.logs import AugurLogger
-
-# from augur.server import Server
-from celery import chain, signature, group
-
 from augur.application.cli import test_connection, test_db_connection 
+
 
 logger = AugurLogger("augur", reset_logfiles=True).get_logger()
 
@@ -45,43 +34,37 @@ def cli():
 @test_connection
 @test_db_connection
 def start(disable_collection):
-    """
-    Start Augur's backend server
-    """
+    """Start Augur's backend server."""
 
     with DatabaseSession(logger) as session:
    
         gunicorn_location = os.getcwd() + "/augur/api/gunicorn_conf.py"
-        bind = '%s:%s' % (session.config.get_value("Server", "host"), session.config.get_value("Server", "port"))
+        host = session.config.get_value("Server", "host")
+        port = session.config.get_value("Server", "port")
 
-        server = subprocess.Popen(["gunicorn", "-c", gunicorn_location, "-b", bind, "--preload", "augur.api.server:app"])
+        gunicorn_command = f"gunicorn -c {gunicorn_location} -b {host}:{port} --preload augur.api.server:app"
+        server = subprocess.Popen(gunicorn_command.split(" "))
 
         time.sleep(3)
         logger.info('Gunicorn webserver started...')
         logger.info(f'Augur is running at: http://127.0.0.1:{session.config.get_value("Server", "port")}')
 
-        celery_process = None
+        celery_worker_process = None
+        celery_beat_process = None
         if not disable_collection:
 
-            celery_command = f"celery -A augur.tasks.init.celery_app.celery_app worker --loglevel=info --concurrency=20 -n {instance_id}@%h"
-            celery_process = subprocess.Popen(celery_command.split(" "))
-            time.sleep(10)
-        
-            repos = session.query(Repo).all()
+            if os.path.exists("celerybeat-schedule.db"):
+                logger.info("Deleting old task schedule")
+                os.remove("celerybeat-schedule.db")
 
-            task_list = []
+            celery_command = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=20 -n {instance_id}@%h"
+            celery_worker_process = subprocess.Popen(celery_command.split(" "))
+            time.sleep(5)
 
-            task_list += [facade_commits_model.si()]
+            start_task.si().apply_async()
 
-            task_list += [start_task.si(repo.repo_git) for repo in repos]
-
-            task_list += [process_contributors.si()]
-
-            repos_chain = chain(task_list)
-
-            logger.info(repos_chain)
-
-            repos_chain.apply_async()
+            celery_command = "celery -A augur.tasks.init.celery_app.celery_app beat -l debug"
+            celery_beat_process = subprocess.Popen(celery_command.split(" "))        
     
     try:
         server.wait()
@@ -91,13 +74,16 @@ def start(disable_collection):
             logger.info("Shutting down server")
             server.terminate()
 
-        if celery_process:
+        if celery_worker_process:
             logger.info("Shutting down celery process")
-            celery_process.terminate()
+            celery_worker_process.terminate()
+
+        if celery_beat_process:
+            logger.info("Shutting down celery beat process")
+            celery_beat_process.terminate()
 
         try:
-            logger.info(f"Flushing redis cache")
-            redis_connection.flushdb()
+            clear_redis_caches()
             
         except RedisConnectionError:
             pass
@@ -110,12 +96,24 @@ def stop():
     """
     _broadcast_signal_to_processes(given_logger=logging.getLogger("augur.cli"))
 
+    clear_redis_caches()
+
 @cli.command('kill')
 def kill():
     """
     Sends SIGKILL to all Augur server & worker processes
     """
-    _broadcast_signal_to_processes(signal=signal.SIGKILL, given_logger=logging.getLogger("augur.cli"))
+    _broadcast_signal_to_processes(broadcast_signal=signal.SIGKILL, given_logger=logging.getLogger("augur.cli"))
+
+    clear_redis_caches()
+
+def clear_redis_caches():
+    """Clears the redis databases that celery and redis use."""
+
+    logger.info("Flusing all redis databases this instance was using")
+    celery_purge_command = "celery -A augur.tasks.init.celery_app.celery_app purge -f"
+    subprocess.call(celery_purge_command.split(" "))
+    redis_connection.flushdb()
 
 @cli.command('export-env')
 def export_env(config):
@@ -152,38 +150,36 @@ def repo_reset(augur_app):
 def processes():
     """
     Outputs the name/PID of all Augur server & worker processes"""
-    logger = logging.getLogger("augur.cli")
-    processes = get_augur_processes()
-    for process in processes:
+    augur_processes = get_augur_processes()
+    for process in augur_processes:
         logger.info(f"Found process {process.pid}")
 
 def get_augur_processes():
-    processes = []
+    augur_processes = []
     for process in psutil.process_iter(['cmdline', 'name', 'environ']):
         if process.info['cmdline'] is not None and process.info['environ'] is not None:
             try:
                 if os.getenv('VIRTUAL_ENV') in process.info['environ']['VIRTUAL_ENV'] and 'python' in ''.join(process.info['cmdline'][:]).lower():
                     if process.pid != os.getpid():
-                        processes.append(process)
+                        augur_processes.append(process)
             except KeyError:
                 pass
-    return processes
+    return augur_processes
 
-def _broadcast_signal_to_processes(signal=signal.SIGTERM, given_logger=None):
+def _broadcast_signal_to_processes(broadcast_signal=signal.SIGTERM, given_logger=None):
     if given_logger is None:
         _logger = logger
     else:
         _logger = given_logger
-    processes = get_augur_processes()
-    if processes != []:
-        for process in processes:
+    augur_processes = get_augur_processes()
+    if augur_processes:
+        for process in augur_processes:
             if process.pid != os.getpid():
                 logger.info(f"Stopping process {process.pid}")
                 try:
-                    process.send_signal(signal)
-                except psutil.NoSuchProcess as e:
+                    process.send_signal(broadcast_signal)
+                except psutil.NoSuchProcess:
                     pass
-
 
 
 def print_repos(repos):
@@ -232,8 +228,6 @@ def remove_repos(repos):
 
 
 def order_repos(repos):
-
-    ordered_repos = []
 
     print("\n\nPlease enter a comma indicating the order the repos should be collected")
     print("If you would like to order some of them but randomize the rest just enter the order you would like and the rest will be randomized")

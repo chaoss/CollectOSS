@@ -41,6 +41,7 @@ from urllib.parse import urlparse
 
 from augur.tasks.github.util.github_task_session import *
 from augur.application.logs import AugurLogger
+from logging import Logger
 
 logger = logging.getLogger(__name__)
 
@@ -79,16 +80,30 @@ def get_database_args_from_env():
 
 
 class FacadeConfig:
+    """Legacy facade config that holds facade's database functionality
+        
+        This is mainly for compatibility with older functions from legacy facade.
 
-    def __init__(self, logger):
+        Initializes database when it encounters a database exception
+
+    Attributes:
+        cfg (FacadeConfig): Class that supports the config and database functionality from legacy facade.
+        repos_processed (int): Counter for how many repos have been analyzed
+        cursor (psycopg2.extensions.cursor): database cursor for legacy facade.
+        logger (Logger): logger object inherited from the session object
+        db (psycopg2.extensions.connection): database connection object for legacy facade.
+        tool_source (str): String marking the source of data as from facade.
+        data_source (str): String indicating that facade gets data from git
+        tool_version (str): Facade version
+        worker_options (dict): Config options for facade.
+        log_level (str): Keyword indicating level of logging for legacy facade.
+    """
+    def __init__(self, logger: Logger):
         self.repos_processed = 0
-        self.upstream_db = 7
         self.cursor = None
-        self.cursor_people = None
         self.logger = logger
 
         self.db = None
-        self.db_people = None
 
         #worker_options = read_config("Workers", "facade_worker", None, None)
 
@@ -104,7 +119,7 @@ class FacadeConfig:
                 "to the directory in which you want to clone repos. Exiting...")
             sys.exit(1)
 
-        self.tool_source = '\'Facade Worker\''
+        self.tool_source = '\'Facade \''
         self.tool_version = '\'1.2.4\''
         self.data_source = '\'Git Log\''
 

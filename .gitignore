@@ -24,6 +24,7 @@ cache/
 frontend/public/api_docs/
 *.err
 .tox
+*.db
 
 # C extensions
 *.so

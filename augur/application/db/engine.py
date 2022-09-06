@@ -1,19 +1,27 @@
+"""Logic to create sqlalchemy database engine."""
 import os
-import socket
 import json
 import sys
 import logging
+import inspect
 from sqlalchemy import create_engine, event
 from augur.application.logs import initialize_stream_handler
-from sqlalchemy.exc import OperationalError  
-import inspect  
-import traceback
 
 logger = logging.getLogger("engine")
 initialize_stream_handler(logger, logging.ERROR)
 
+def get_database_string() -> str:
+    """Get database string from env or file
 
-def get_database_string():
+    Note:
+        If environment variable is defined the function 
+            will use that as the database string. And if the 
+            environment variable is not defined, it will use the 
+            db.config.json file to get the database string
+
+    Returns:
+        postgres database string
+    """
 
     augur_db_environment_var = os.getenv("AUGUR_DB")
 
@@ -29,16 +37,29 @@ def get_database_string():
     if augur_db_environment_var:
         return augur_db_environment_var
 
-    else:
-        with open("db.config.json", 'r') as f:
-            db_config = json.load(f)
 
-            db_conn_string = f"postgresql+psycopg2://{db_config['user']}:{db_config['password']}@{db_config['host']}:{db_config['port']}/{db_config['database_name']}"
+    with open("db.config.json", 'r') as f:
+        db_config = json.load(f)
 
-            return db_conn_string
+        db_conn_string = f"postgresql+psycopg2://{db_config['user']}:{db_config['password']}@{db_config['host']}:{db_config['port']}/{db_config['database_name']}"
+
+        return db_conn_string
 
 
-def create_database_engine():    
+def create_database_engine():  
+    """Create sqlalchemy database engine 
+
+    Note:
+        A new database engine is created each time the function is called
+
+    Returns:
+        sqlalchemy database engine
+    """ 
+
+    # curframe = inspect.currentframe()
+    # calframe = inspect.getouterframes(curframe, 2)
+    # print('file name:', calframe[1][1])
+    # print('function name:', calframe[1][3])
 
     db_conn_string = get_database_string()
 

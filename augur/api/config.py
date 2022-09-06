@@ -326,7 +326,7 @@ default_config = {
                     "switch": 0,
                     "workers": 1
                 },
-                "message_insights_worker": {
+                "message_insights": {
                     "port": message_insights_worker_p,
                     "switch": 0,
                     "workers": 1,

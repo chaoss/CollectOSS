@@ -124,7 +124,7 @@ def process_events(events, task_name, repo_id):
 
             unassigned_events = event_len - issue_events_len - pr_events_len
 
-            self.logger.error(f"{task_name}: {event_len} events were processed, but {pr_events_len} pr events were found and related to a pr, and {issue_events_len} issue events were found and related to an issue. For some reason {unassigned_events} events were not able to be processed. This is usually because pull requests or issues have not been collected, and the events are skipped because they cannot be related to a pr or issue")
+            logger.error(f"{task_name}: {event_len} events were processed, but {pr_events_len} pr events were found and related to a pr, and {issue_events_len} issue events were found and related to an issue. For some reason {unassigned_events} events were not able to be processed. This is usually because pull requests or issues have not been collected, and the events are skipped because they cannot be related to a pr or issue")
 
         logger.info(f"{task_name}: Inserting {len(pr_event_dicts)} pr events and {len(issue_event_dicts)} issue events")
 
