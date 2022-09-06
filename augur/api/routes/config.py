@@ -31,7 +31,7 @@ def create_routes(server):
         return jsonify({"status": "Unsupported method"}), 405
 
 
-    @server.app.route(f"/{AUGUR_API_VERSION}/config/get", methods=['POST'])
+    @server.app.route(f"/{AUGUR_API_VERSION}/config/get", methods=['GET', 'POST'])
     def get_config():
         if not request.is_secure:
             return generate_upgrade_request()
@@ -48,7 +48,7 @@ def create_routes(server):
         if not request.is_secure:
             return generate_upgrade_request()
 
-        update_dict= request.get_json()
+        update_dict = request.get_json()
 
         with DatabaseSession(logger) as session:
 

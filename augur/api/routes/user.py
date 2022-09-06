@@ -52,7 +52,21 @@ def create_routes(server):
             return jsonify({"status": "Invalid password"})
         return jsonify({"status": "Validated"})
 
-    @server.app.route(f"/{AUGUR_API_VERSION}/user/create", methods=['POST', 'GET'])
+        """
+        - SELECT * FROM users WHERE id = user
+
+        - if not result:
+            return jsonify({"status": "Invalid user ID"})
+
+        - Hash user's password
+
+        - if not pass_hash == password:
+            return jsonify({"status": "invalid password"})
+
+        - return jsonify({"status": "Validated"})
+        """
+
+    @server.app.route(f"/{AUGUR_API_VERSION}/user/create", methods=['POST'])
     def create_user():
         if not request.is_secure:
             return generate_upgrade_request()
