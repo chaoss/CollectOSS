@@ -29,7 +29,7 @@ def collect_github_messages(repo_id: int) -> None:
 
     if message_data:
 
-        process_messages(message_data, "Message task", repo_id, logger)
+        process_messages(message_data, f"{owner}/{repo}: Message task", repo_id, logger)
 
     else:
         logger.info(f"{owner}/{repo} has no messages")
@@ -63,10 +63,11 @@ def retrieve_all_pr_and_issue_messages(repo_git: str, logger) -> None:
 
         elif len(page_data) == 0:
             logger.debug(f"{repo.capitalize()} Messages Page {page} contains no data...returning")
-            logger.info(f"Github Messages Page {page} of {num_pages}")
+            logger.info(
+                f"{owner}/{repo}: Github Messages Page {page} of {num_pages}")
             return all_data
 
-        logger.info(f"Github Messages Page {page} of {num_pages}")
+        logger.info(f"{owner}/{repo}: Github Messages Page {page} of {num_pages}")
 
         all_data += page_data
         
@@ -109,9 +110,10 @@ def process_messages(messages, task_name, repo_id, logger):
                     related_pr_of_issue_found = True
 
                 except s.orm.exc.NoResultFound:
-                    logger.info("Could not find related pr")
-                    logger.info(f"We were searching for: {message['id']}")
-                    logger.info("Skipping")
+                    logger.info(f"{task_name}: Could not find related pr")
+                    logger.info(
+                        f"{task_name}: We were searching for: {message['id']}")
+                    logger.info(f"{task_name}: Skipping")
                     continue
 
                 issue_id = related_issue.issue_id
@@ -133,9 +135,9 @@ def process_messages(messages, task_name, repo_id, logger):
                     related_pr_of_issue_found = True
 
                 except s.orm.exc.NoResultFound:
-                    logger.info("Could not find related pr")
+                    logger.info(f"{task_name}: Could not find related pr")
                     logger.info(f"We were searching for: {message['issue_url']}")
-                    logger.info("Skipping")
+                    logger.info(f"{task_name}: Skipping")
                     continue
 
                 pull_request_id = related_pr.pull_request_id
@@ -160,12 +162,11 @@ def process_messages(messages, task_name, repo_id, logger):
 
         contributors = remove_duplicate_dicts(contributors)
 
-        logger.info(f"Inserting {len(contributors)} contributors")
+        logger.info(f"{task_name}: Inserting {len(contributors)} contributors")
 
         session.insert_data(contributors, Contributor, ["cntrb_login"])
 
-        
-        logger.info(f"Inserting {len(message_dicts)} messages")
+        logger.info(f"{task_name}: Inserting {len(message_dicts)} messages")
         message_natural_keys = ["platform_msg_id"]
         message_return_columns = ["msg_id", "platform_msg_id"]
         message_return_data = session.insert_data(message_dicts, Message, message_natural_keys, message_return_columns)

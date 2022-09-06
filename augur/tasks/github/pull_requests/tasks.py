@@ -28,7 +28,7 @@ def collect_pull_requests(repo_id: int) -> None:
     pr_data = retrieve_all_pr_data(repo_git, logger)
 
     if pr_data:
-        process_pull_requests(pr_data, "Pr task", repo_id, logger)
+        process_pull_requests(pr_data, f"{owner}/{repo}: Pr task", repo_id, logger)
     else:
         logger.info(f"{owner}/{repo} has no pull requests")
     
@@ -58,11 +58,12 @@ def retrieve_all_pr_data(repo_git: str, logger) -> None:
             return all_data
 
         if len(page_data) == 0:
-            logger.debug(f"{repo} Prs Page {page} contains no data...returning")
-            logger.info(f"{repo} Prs Page {page} of {num_pages}")
+            logger.debug(
+                f"{owner}/{repo} Prs Page {page} contains no data...returning")
+            logger.info(f"{owner}/{repo} Prs Page {page} of {num_pages}")
             return all_data
 
-        logger.info(f"{repo} Prs Page {page} of {num_pages}")
+        logger.info(f"{owner}/{repo} Prs Page {page} of {num_pages}")
 
         all_data += page_data
 

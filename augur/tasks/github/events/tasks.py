@@ -34,7 +34,7 @@ def collect_events(repo_id: int):
 
     if event_data:
 
-        process_events(event_data, "Event task", repo_id, logger)
+        process_events(event_data, f"{owner}/{repo}: Event task", repo_id, logger)
 
     else:
         logger.info(f"{owner}/{repo} has no events")
@@ -104,10 +104,10 @@ def process_events(events, task_name, repo_id, logger):
                 try:
                     related_pr = session.query(PullRequest).filter(PullRequest.pr_url == pr_url).one()
                 except s.orm.exc.NoResultFound:
-                    logger.info("Could not find related pr")
-                    logger.info(f"We were searching for: {pr_url}")
+                    logger.info(f"{task_name}: Could not find related pr")
+                    logger.info(f"{task_name}: We were searching for: {pr_url}")
                     # TODO: Add table to log all errors
-                    logger.info("Skipping")
+                    logger.info(f"{task_name}: Skipping")
                     continue
 
                 pr_event_dicts.append(
@@ -121,10 +121,11 @@ def process_events(events, task_name, repo_id, logger):
                 try:
                     related_issue = session.query(Issue).filter(Issue.issue_url == issue_url).one()
                 except s.orm.exc.NoResultFound:
-                    logger.info("Could not find related pr")
-                    logger.info(f"We were searching for: {issue_url}")
+                    logger.info(f"{task_name}: Could not find related pr")
+                    logger.info(
+                        f"{task_name}: We were searching for: {issue_url}")
                     # TODO: Add table to log all errors
-                    logger.info("Skipping")
+                    logger.info(f"{task_name}: Skipping")
                     continue
 
                 issue_event_dicts.append(

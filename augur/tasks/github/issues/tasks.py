@@ -27,7 +27,7 @@ def collect_issues(repo_id: int) -> None:
 
     if issue_data:
 
-        process_issues(issue_data, "Issue task", repo_id, logger)
+        process_issues(issue_data, f"{owner}/{repo}: Issue task", repo_id, logger)
 
     else:
         logger.info(f"{owner}/{repo} has no issues")
@@ -61,11 +61,12 @@ def retrieve_all_issue_data(repo_git, logger) -> None:
             return all_data
 
         if len(page_data) == 0:
-            logger.debug(f"{repo} Issues Page {page} contains no data...returning")
-            logger.info(f"{repo} Issues Page {page} of {num_pages}")
+            logger.debug(
+                f"{owner}/{repo}: Issues Page {page} contains no data...returning")
+            logger.info(f"{owner}/{repo}: Issues Page {page} of {num_pages}")
             return all_data
 
-        logger.info(f"{repo} Issues Page {page} of {num_pages}")
+        logger.info(f"{owner}/{repo}: Issues Page {page} of {num_pages}")
 
         all_data += page_data
 
@@ -152,7 +153,7 @@ def process_issues(issues, task_name, repo_id, logger) -> None:
             try:
                 other_issue_data = issue_mapping_data[issue_url]
             except KeyError as e:
-                logger.info(f"Cold not find other issue data. This should never happen. Error: {e}")
+                logger.info(f"{task_name}: Cold not find other issue data. This should never happen. Error: {e}")
 
 
             # add the issue id to the lables and assignees, then add them to a list of dicts that will be inserted soon
