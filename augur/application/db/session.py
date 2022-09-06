@@ -25,7 +25,7 @@ def remove_null_characters_from_list_of_dicts(data, fields):
 
             # ensure the field exits in the dict
             try:
-                value = data[field]
+                value = item[field]
             except KeyError:
                 print(f"Error tried to remove null characters from the field: {field}, but it wasn't present in the dict")
                 continue
