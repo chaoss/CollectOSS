@@ -5,9 +5,12 @@ Creates routes for config functionality
 import logging
 import requests
 import json
+import os
 from flask import request, jsonify, Response
 import sqlalchemy as s
 
+# Disable the requirement for SSL by setting env["AUGUR_DEV"] = True
+development = os.getenv("AUGUR_DEV") or False
 
 from augur.application.db.models import Config
 from augur.application.db.session import DatabaseSession
@@ -33,7 +36,7 @@ def create_routes(server):
 
     @server.app.route(f"/{AUGUR_API_VERSION}/config/get", methods=['GET', 'POST'])
     def get_config():
-        if not request.is_secure:
+        if not development and not request.is_secure:
             return generate_upgrade_request()
 
         with DatabaseSession(logger) as session:
@@ -45,7 +48,7 @@ def create_routes(server):
 
     @server.app.route(f"/{AUGUR_API_VERSION}/config/update", methods=['POST'])
     def update_config():
-        if not request.is_secure:
+        if not development and not request.is_secure:
             return generate_upgrade_request()
 
         update_dict = request.get_json()
