@@ -60,7 +60,7 @@ def process_dict_response(logger: logging.Logger, response: httpx.Response, page
     Returns:
         A string explaining what happened is returned if what happened is determined, otherwise None is returned.
     """
-    logger.info("Request returned a dict: {}\n".format(page_data))
+    #logger.info("Request returned a dict: {}\n".format(page_data))
 
     if 'message' not in page_data.keys():
         return GithubApiResult.NEW_RESULT

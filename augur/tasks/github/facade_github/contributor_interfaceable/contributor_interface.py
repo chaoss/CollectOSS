@@ -67,7 +67,7 @@ def request_dict_from_endpoint(session, url, timeout_wait=10):
                 session.logger.info(f"err: {err}")
                 continue
 
-            session.logger.info(f"Returned dict: {response_data}")
+            #session.logger.info(f"Returned dict: {response_data}")
             success = True
             break
         elif type(response_data) == list:
