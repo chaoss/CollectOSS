@@ -15,14 +15,14 @@ platform_id = 1
 
 
 @celery.task
-def collect_github_messages(repo_id: int) -> None:
+def collect_github_messages(repo_git: str) -> None:
 
     logger = logging.getLogger(collect_github_messages.__name__)
     
     with GithubTaskSession(logger, engine) as session:
 
-        repo_git = session.query(Repo).filter(
-            Repo.repo_id == repo_id).one().repo_git
+        repo_id = session.query(Repo).filter(
+            Repo.repo_git == repo_git).one().repo_id
 
     owner, repo = get_owner_repo(repo_git)
     message_data = retrieve_all_pr_and_issue_messages(repo_git, logger)

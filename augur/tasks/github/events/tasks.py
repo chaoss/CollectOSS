@@ -14,16 +14,16 @@ platform_id = 1
 
 
 @celery.task
-def collect_events(repo_id: int):
+def collect_events(repo_git: str):
 
     logger = logging.getLogger(collect_events.__name__)
     
         # define GithubTaskSession to handle insertions, and store oauth keys 
     with GithubTaskSession(logger) as session:
 
-        repo_obj = session.query(Repo).filter(Repo.repo_id == repo_id).one()
+        repo_obj = session.query(Repo).filter(Repo.repo_git == repo_git).one()
         repo_id = repo_obj.repo_id
-        repo_git = repo_obj.repo_git
+
         owner, repo = get_owner_repo(repo_git)
 
         logger.info(f"Collecting Github events for {owner}/{repo}")

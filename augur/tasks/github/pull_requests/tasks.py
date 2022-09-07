@@ -15,14 +15,14 @@ platform_id = 1
 
 
 @celery.task
-def collect_pull_requests(repo_id: int) -> None:
+def collect_pull_requests(repo_git: str) -> None:
 
     logger = logging.getLogger(collect_pull_requests.__name__)
 
     with GithubTaskSession(logger, engine) as session:
 
-        repo_git = session.query(Repo).filter(
-            Repo.repo_id == repo_id).one().repo_git
+        repo_id = session.query(Repo).filter(
+            Repo.repo_git == repo_git).one().repo_id
 
     owner, repo = get_owner_repo(repo_git)
     pr_data = retrieve_all_pr_data(repo_git, logger)
