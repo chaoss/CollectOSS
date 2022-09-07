@@ -16,6 +16,7 @@ from augur.tasks.util.AugurUUID import AugurUUID, GithubUUID, UnresolvableUUID
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api, process_dict_response
 # Debugger
 import traceback
+from augur.tasks.github.util.github_paginator import GithubApiResult
 
 ##TODO: maybe have a TaskSession class that holds information about the database, logger, config, etc.
 
@@ -59,12 +60,14 @@ def request_dict_from_endpoint(session, url, timeout_wait=10):
         if type(response_data) == dict:
             err = process_dict_response(session.logger,response,response_data)
 
+            
             #If we get an error message that's not None
-            if err:
+            if err and err != GithubApiResult.NEW_RESULT:
                 attempts += 1
+                session.logger.info(f"err: {err}")
                 continue
 
-            # self.logger.info(f"Returned dict: {response_data}")
+            session.logger.info(f"Returned dict: {response_data}")
             success = True
             break
         elif type(response_data) == list:
@@ -125,12 +128,12 @@ def create_endpoint_from_commit_sha(session,commit_sha, repo_id):
         raise KeyError
 
     # Else put into a more readable local var
-    session.logger.info(f"Result: {result}")
+    #session.logger.info(f"Result: {result}")
     repo_path = result.repo_path.split("/")[1] + "/" + result.repo_name
 
     url = "https://api.github.com/repos/" + repo_path + "/commits/" + commit_sha
 
-    #self.logger.info(f"Url: {url}")
+    session.logger.info(f"Url: {url}")
 
     return url
 
@@ -282,6 +285,7 @@ def fetch_username_from_email(session, commit):
     # email = commit['email_raw'] if 'email_raw' in commit else commit['email_raw']
 
     if len(commit['email_raw']) <= 2:
+        session.logger.info("Email less than two characters")
         return login_json  # Don't bother with emails that are blank or less than 2 characters
 
     try:
@@ -294,7 +298,7 @@ def fetch_username_from_email(session, commit):
 
     login_json = request_dict_from_endpoint(session,
         url, timeout_wait=30)
-
+    session.logger.info(f"email api url {url}")
     # Check if the email result got anything, if it failed try a name search.
     if login_json is None or 'total_count' not in login_json or login_json['total_count'] == 0:
         session.logger.info(
@@ -386,7 +390,7 @@ def get_login_with_commit_hash(session, commit_data, repo_id):
     login_json = request_dict_from_endpoint(session,url)
 
     if login_json is None or 'sha' not in login_json:
-        session.logger.info("Search query returned empty data. Moving on")
+        session.logger.info(f"Search query returned empty data. Moving on. Data: {login_json}")
         return None
 
     try:
