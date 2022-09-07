@@ -62,7 +62,7 @@ def process_dict_response(logger: logging.Logger, response: httpx.Response, page
     #logger.info("Request returned a dict: {}\n".format(page_data))
 
     if 'message' not in page_data.keys():
-        return GithubApiResult.NEW_RESULT
+        return GithubApiResult.SUCCESS
 
     if page_data['message'] == "Not Found":
         logger.error(
