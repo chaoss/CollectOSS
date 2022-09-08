@@ -37,6 +37,7 @@ import getopt
 import xlsxwriter
 import configparser
 import traceback 
+from sqlalchemy.exc import IntegrityError
 
 from .facade01config import get_database_args_from_env
 
@@ -141,16 +142,24 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 			cfg.log_activity('Info', 'Author contributor record already exists: {}'.format(author_em))
 		else: 
 			# add a contributor record for the author
-			cursor_local.execute(cntrb, (author_em, discover_alias(author_em), str(auth_nm)))
-			db_local.commit()
+			try:
+				cursor_local.execute(cntrb, (author_em, discover_alias(author_em), str(auth_nm)))
+				db_local.commit()
+			except IntegrityError:
+				pass
+
 			cfg.log_activity('Info','Stored author contributor with email: {}'.format(author_em))
 
 		if  contributor_exists(committer_em): 
 			cfg.log_activity('Info', 'Author contributor record already exists: {}'.format(committer_em))
 		else: 
 			#add a contributor record for the committer 
-			cursor_local.execute(cntrb, (committer_em, discover_alias(committer_em), str(cmtr_nm)))
-			db_local.commit()
+			try:
+				cursor_local.execute(cntrb, (committer_em, discover_alias(committer_em), str(cmtr_nm)))
+				db_local.commit()
+			except IntegrityError:
+				pass
+
 			cfg.log_activity('Info','Stored committer contributor with email: {}'.format(committer_em))
 				
 
