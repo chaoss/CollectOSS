@@ -4,10 +4,7 @@
 
 [![Build Docker images](https://github.com/chaoss/augur/actions/workflows/build_docker.yml/badge.svg)](https://github.com/chaoss/augur/actions/workflows/build_docker.yml)
 
-branch | status
-   --- | ---
-  main | [![Build Status](https://travis-ci.com/chaoss/augur.svg?branch=main)](https://travis-ci.com/chaoss/augur)
-   dev | [![Build Status](https://travis-ci.com/chaoss/augur.svg?branch=dev)](https://travis-ci.com/chaoss/augur)
+[![Hits-of-Code](https://hitsofcode.com/github/chaoss/augur?branch=main)](https://hitsofcode.com/github/chaoss/augur/view?branch=main)
 
 
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/2788/badge)](https://bestpractices.coreinfrastructure.org/projects/2788)

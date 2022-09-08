@@ -32,7 +32,6 @@ workers/spdx_worker/augur-spdx/
 workers/spdx_worker/ex-raw.txt
 workers/spdx_worker/ex.json
 
-
 # C extensions
 *.so
 
@@ -104,4 +103,3 @@ venv/
 ENV/
 env.bak/
 venv.bak/
-

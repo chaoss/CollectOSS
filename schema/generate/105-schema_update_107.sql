@@ -1,4 +1,5 @@
 BEGIN; 
+DROP MATERIALIZED VIEW IF EXISTS "augur_data"."explorer_commits_and_committers_daily_count";
 CREATE MATERIALIZED VIEW "augur_data"."explorer_commits_and_committers_daily_count"
 AS
 SELECT repo.repo_id,
