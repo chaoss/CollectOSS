@@ -1,7 +1,6 @@
 Descriptions of Tables & Purposes
 ==============================
 
-
 .. toctree::
    :maxdepth: 2
 
