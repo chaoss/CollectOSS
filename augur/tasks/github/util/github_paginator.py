@@ -62,7 +62,7 @@ def process_dict_response(logger: logging.Logger, response: httpx.Response, page
     #logger.info("Request returned a dict: {}\n".format(page_data))
 
     if 'message' not in page_data.keys():
-        return GithubApiResult.NEW_RESULT
+        return GithubApiResult.SUCCESS
 
     if page_data['message'] == "Not Found":
         logger.error(
@@ -96,14 +96,17 @@ def process_dict_response(logger: logging.Logger, response: httpx.Response, page
         time.sleep(key_reset_time)
 
         return GithubApiResult.RATE_LIMIT_EXCEEDED
-        # return "do_not_increase_attempts"
 
     if "You have triggered an abuse detection mechanism." in page_data['message']:
         # self.update_rate_limit(response, temporarily_disable=True,platform=platform)
-        logger.info("Abuse mechanism detected sleeping for 10 seconds")
+        
+
+        # sleeps for the specified amount of time that github says to retry after
+        retry_after = int(response.headers["Retry-After"])
+        logger.info(f"Abuse mechanism detected sleeping for {retry_after} seconds")
+        time.sleep(retry_after)
 
         return GithubApiResult.ABUSE_MECHANISM_TRIGGERED
-        # return "decrease_attempts"
 
     if page_data['message'] == "Bad credentials":
         logger.error("\n\n\n\n\n\n\n Bad Token Detected \n\n\n\n\n\n\n")
