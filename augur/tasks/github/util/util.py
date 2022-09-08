@@ -5,17 +5,6 @@ import logging
 import json
 import httpx
 
-def remove_duplicate_dicts(data: List[dict]) -> List[dict]:
-    """Removed duplicate dics from a list
-
-    Args:
-        data: list of dicts that is being modified
-
-    Returns:
-        list of unique dicts
-    """
-    return [dict(y) for y in set(tuple(x.items()) for x in data)]
-
 
 # This function adds a key value pair to a list of dicts and returns the modified list of dicts back
 def add_key_value_pair_to_dicts(data: List[dict], key: str, value: Any) -> List[dict]:

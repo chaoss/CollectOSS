@@ -15,7 +15,7 @@ from augur.tasks.util.random_key_auth import RandomKeyAuth
 from augur.application.db.engine import create_database_engine
 from augur.application.config import AugurConfig
 from augur.application.db.models import Platform
-
+from augur.tasks.util.worker_util import remove_duplicate_dicts
 
 def remove_null_characters_from_list_of_dicts(data, fields):
 
@@ -83,10 +83,13 @@ class DatabaseSession(s.orm.Session):
             self.logger.info("Must be list of dicts")
             return None
 
+        # remove any duplicate data 
+        # this only counts something as a duplicate if every field is the same
+        data = remove_duplicate_dicts(data)
+
         # remove null data from string fields
         if string_fields and isinstance(string_fields, list):
             data = remove_null_characters_from_list_of_dicts(data, string_fields)
-
 
         # creates list of arguments to tell sqlalchemy what columns to return after the data is inserted
         returning_args = []
