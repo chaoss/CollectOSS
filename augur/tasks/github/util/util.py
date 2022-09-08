@@ -1,0 +1,52 @@
+"""Utility functions that are useful for several Github tasks"""
+from typing import Any, List, Tuple
+
+def remove_duplicate_dicts(data: List[dict]) -> List[dict]:
+    """Removed duplicate dics from a list
+
+    Args:
+        data: list of dicts that is being modified
+
+    Returns:
+        list of unique dicts
+    """
+    return [dict(y) for y in set(tuple(x.items()) for x in data)]
+
+
+# This function adds a key value pair to a list of dicts and returns the modified list of dicts back
+def add_key_value_pair_to_dicts(data: List[dict], key: str, value: Any) -> List[dict]:
+    """Adds a key value pair to a list of dicts
+
+    Args:
+        data: list of dicts that is being modified
+        key: key that is being added to dicts
+        value: value that is being added to dicts
+
+    Returns:
+        list of dicts with the key value pair added
+    """
+
+    for item in data:
+
+        item[key] = value
+
+    return data
+
+def get_owner_repo(git_url: str) -> Tuple[str, str]:
+    """Gets the owner and repository names of a repository from a git url
+
+    Args:
+        git_url: the git url of a repository
+
+    Returns:
+        the owner and repository names in that order
+    """
+    split = git_url.split('/')
+
+    owner = split[-2]
+    repo = split[-1]
+
+    if '.git' == repo[-4:]:
+        repo = repo[:-4]
+
+    return owner, repo
