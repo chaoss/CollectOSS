@@ -88,7 +88,7 @@ def request_dict_from_endpoint(session, url, timeout_wait=10):
                     err = process_dict_response(session.logger,response,response_data)
 
                     #If we get an error message that's not None
-                    if err:
+                    if err and err != GithubApiResult.NEW_RESULT:
                         continue
                     
                     success = True

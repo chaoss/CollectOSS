@@ -6,22 +6,23 @@ from augur.tasks.init.celery_app import celery_app as celery, engine
 from augur.application.db.data_parse import *
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
 from augur.tasks.github.util.github_task_session import GithubTaskSession
-from augur.tasks.github.util.util import remove_duplicate_dicts, add_key_value_pair_to_dicts, get_owner_repo
+from augur.tasks.github.util.util import add_key_value_pair_to_dicts, get_owner_repo
+from augur.tasks.util.worker_util import remove_duplicate_dicts
 from augur.application.db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestEvent, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, Issue, IssueEvent, IssueLabel, IssueAssignee, PullRequestMessageRef, IssueMessageRef, Contributor, Repo
 
 
 @celery.task
-def collect_issues(repo_id: int) -> None:
+def collect_issues(repo_git: str) -> None:
 
     logger = logging.getLogger(collect_issues.__name__)
+    owner, repo = get_owner_repo(repo_git)
 
     # define GithubTaskSession to handle insertions, and store oauth keys 
     with GithubTaskSession(logger) as session:
         
-        repo_obj = session.query(Repo).filter(Repo.repo_id == repo_id).one()
+        repo_obj = session.query(Repo).filter(Repo.repo_git == repo_git).one()
         repo_id = repo_obj.repo_id
-        repo_git = repo_obj.repo_git
-        owner, repo = get_owner_repo(repo_git)
+        
 
     issue_data = retrieve_all_issue_data(repo_git, logger)
 

@@ -6,8 +6,8 @@ from augur.tasks.init.celery_app import celery_app as celery, engine
 from augur.application.db.data_parse import *
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
 from augur.tasks.github.util.github_task_session import GithubTaskSession
-from augur.tasks.util.worker_util import wait_child_tasks
-from augur.tasks.github.util.util import remove_duplicate_dicts, get_owner_repo
+from augur.tasks.util.worker_util import remove_duplicate_dicts
+from augur.tasks.github.util.util import get_owner_repo
 from augur.application.db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestEvent, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, Issue, IssueEvent, IssueLabel, IssueAssignee, PullRequestMessageRef, IssueMessageRef, Contributor, Repo
 
 
@@ -15,14 +15,14 @@ platform_id = 1
 
 
 @celery.task
-def collect_github_messages(repo_id: int) -> None:
+def collect_github_messages(repo_git: str) -> None:
 
     logger = logging.getLogger(collect_github_messages.__name__)
     
     with GithubTaskSession(logger, engine) as session:
 
-        repo_git = session.query(Repo).filter(
-            Repo.repo_id == repo_id).one().repo_git
+        repo_id = session.query(Repo).filter(
+            Repo.repo_git == repo_git).one().repo_id
 
     owner, repo = get_owner_repo(repo_git)
     message_data = retrieve_all_pr_and_issue_messages(repo_git, logger)

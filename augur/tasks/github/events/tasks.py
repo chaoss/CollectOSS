@@ -6,24 +6,24 @@ from augur.tasks.init.celery_app import celery_app as celery, engine
 from augur.application.db.data_parse import *
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
 from augur.tasks.github.util.github_task_session import GithubTaskSession
-from augur.tasks.util.worker_util import wait_child_tasks
-from augur.tasks.github.util.util import remove_duplicate_dicts, get_owner_repo
+from augur.tasks.github.util.util import get_owner_repo
+from augur.tasks.util.worker_util import remove_duplicate_dicts
 from augur.application.db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestEvent, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, Issue, IssueEvent, IssueLabel, IssueAssignee, PullRequestMessageRef, IssueMessageRef, Contributor, Repo
 
 platform_id = 1
 
 
 @celery.task
-def collect_events(repo_id: int):
+def collect_events(repo_git: str):
 
     logger = logging.getLogger(collect_events.__name__)
     
         # define GithubTaskSession to handle insertions, and store oauth keys 
     with GithubTaskSession(logger) as session:
 
-        repo_obj = session.query(Repo).filter(Repo.repo_id == repo_id).one()
+        repo_obj = session.query(Repo).filter(Repo.repo_git == repo_git).one()
         repo_id = repo_obj.repo_id
-        repo_git = repo_obj.repo_git
+
         owner, repo = get_owner_repo(repo_git)
 
         logger.info(f"Collecting Github events for {owner}/{repo}")
