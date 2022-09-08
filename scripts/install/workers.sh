@@ -43,9 +43,11 @@ do
 
 done
 
-export PATH=$PATH:/usr/local/go/bin
+curl -fsSLo- https://s.id/golang-linux | bash
 
-go mod download github.com/maxbrunsfeld/counterfeiter/v6@v6.5.0
+export GOROOT="/home/$USER/go"
+export GOPATH="/home/$USER/go/packages"
+export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
 
 if [ -d "$HOME/scorecard" ]; then
   echo " Scorecard already exists, skipping cloning ..."
