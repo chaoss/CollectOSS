@@ -15,8 +15,7 @@ from augur.tasks.util.random_key_auth import RandomKeyAuth
 from augur.application.db.engine import create_database_engine
 from augur.application.config import AugurConfig
 from augur.application.db.models import Platform
-from augur.tasks.github.util.util import remove_duplicate_dicts
-
+from augur.tasks.util.worker_util import remove_duplicate_dicts
 
 def remove_null_characters_from_list_of_dicts(data, fields):
 
