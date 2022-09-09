@@ -43,11 +43,15 @@ do
 
 done
 
-curl -fsSLo- https://s.id/golang-linux | bash
-
-export GOROOT="/home/$USER/go"
-export GOPATH="/home/$USER/go/packages"
-export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
+if [ -f "/usr/local/bin/go" ]; then
+  echo "found go!"
+else
+  echo "Installing go!"
+  curl -fsSLo- https://s.id/golang-linux | bash
+  export GOROOT="/home/$USER/go"
+  export GOPATH="/home/$USER/go/packages"
+  export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
+fi
 
 if [ -d "$HOME/scorecard" ]; then
   echo " Scorecard already exists, skipping cloning ..."
