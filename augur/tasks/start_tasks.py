@@ -28,8 +28,17 @@ pr_numbers = [70, 106, 170, 190, 192, 208, 213, 215, 216, 218, 223, 224, 226, 23
 #Predefine phases. For new phases edit this and the config to reflect.
 #The domain of tasks ran should be very explicit.
 def prelim_phase(logger):
-    preliminary_task_list = [detect_github_repo_move.si()]
-    preliminary_tasks = group(preliminary_task_list)
+
+    tasks_with_repo_domain = []
+
+    with DatabaseSession(logger) as session:
+        repos = session.query(Repo).all()
+
+        for repo in repos:
+            tasks_with_repo_domain.append(detect_github_repo_move.si(repo.repo_git))
+
+    #preliminary_task_list = [detect_github_repo_move.si()]
+    preliminary_tasks = group(*tasks_with_repo_domain)
     return preliminary_tasks
 
 def repo_collect_phase(logger):
