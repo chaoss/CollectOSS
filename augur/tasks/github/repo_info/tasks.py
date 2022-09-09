@@ -4,15 +4,13 @@ from augur.tasks.init.celery_app import celery_app as celery, engine
 
 
 @celery.task
-def collect_repo_info():
+def collect_repo_info(repo_git: str):
 
     logger = logging.getLogger(collect_repo_info.__name__)
 
     with GithubTaskSession(logger, engine) as session:
-        repos = session.query(Repo).all()
-
-        for repo in repos:
-            try:
-                repo_info_model(session, repo)
-            except Exception as e:
-                session.logger.error(f"Could not add repo info for repo {repo.repo_id}\n Error: {e}")
+        repo = session.query(Repo).filter(Repo.repo_git == repo_git).one()
+        try:
+            repo_info_model(session, repo)
+        except Exception as e:
+            session.logger.error(f"Could not add repo info for repo {repo.repo_id}\n Error: {e}")
