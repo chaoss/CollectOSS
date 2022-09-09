@@ -28,29 +28,42 @@ pr_numbers = [70, 106, 170, 190, 192, 208, 213, 215, 216, 218, 223, 224, 226, 23
 #Predefine phases. For new phases edit this and the config to reflect.
 #The domain of tasks ran should be very explicit.
 def prelim_phase(logger):
-    preliminary_task_list = [detect_github_repo_move.si()]
-    preliminary_tasks = group(preliminary_task_list)
+
+    tasks_with_repo_domain = []
+
+    with DatabaseSession(logger) as session:
+        repos = session.query(Repo).all()
+
+        for repo in repos:
+            tasks_with_repo_domain.append(detect_github_repo_move.si(repo.repo_git))
+
+    #preliminary_task_list = [detect_github_repo_move.si()]
+    preliminary_tasks = group(*tasks_with_repo_domain)
     return preliminary_tasks
 
 def repo_collect_phase(logger):
-    #store all tasks that taks a repo as an argument 
-    tasks_with_repo_domain = []
+    #Here the term issues also includes prs. This list is a bunch of chains that run in parallel to process issue data.
+    issue_dependent_tasks = []
+    #repo_info should run in a group
+    repo_info_tasks = []
     #A chain is needed for each repo.
     with DatabaseSession(logger) as session:
         repos = session.query(Repo).all()
+        #Just use list comprehension for simple group
+        repo_info_tasks = [collect_repo_info.si(repo.repo_git) for repo in repos]
 
         for repo in repos:
             first_tasks_repo = group(collect_issues.si(repo.repo_git),collect_pull_requests.si(repo.repo_git))
             second_tasks_repo = group(collect_events.si(repo.repo_git),collect_github_messages.si(repo.repo_git))
 
             repo_chain = chain(first_tasks_repo,second_tasks_repo)
-            tasks_with_repo_domain.append(repo_chain)
+            issue_dependent_tasks.append(repo_chain)
     
     return group(
-            chain(group(*tasks_with_repo_domain),process_contributors.si()),
+            *repo_info_tasks,
+            chain(group(*issue_dependent_tasks),process_contributors.si()),
             facade_commits_model.si(),
-            collect_releases.si(),
-            collect_repo_info.si()
+            collect_releases.si()
         )
 
 
