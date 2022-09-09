@@ -17,24 +17,38 @@ from augur.application.config import AugurConfig
 from augur.application.db.models import Platform
 from augur.tasks.util.worker_util import remove_duplicate_dicts
 
-def remove_null_characters_from_list_of_dicts(data, fields):
 
-    for item in data:
+def remove_null_characters_from_string(string):
 
-        for field in fields:
+    if string:
+        return string.replace("\x00", "\uFFFD")
 
-            # ensure the field exits in the dict
-            try:
-                value = item[field]
-            except KeyError:
-                print(f"Error tried to remove null characters from the field: {field}, but it wasn't present in the dict")
-                continue
+    return string
 
-            # ensure the string is not none
-            if value:
-                value = value.replace("\x00", "\uFFFD")
+def remove_null_characters_from_strings_in_dict(data, fields):
+
+    for field in fields:
+
+        # ensure the field exits in the dict
+        try:
+            data[field] = remove_null_characters_from_string(data[field])
+        except KeyError:
+            print(
+                f"Error tried to remove null characters from the field: {field}, but it wasn't present in the dict")
+            continue
+
+        except AttributeError:
+            continue
 
     return data
+
+def remove_null_characters_from_list_of_dicts(data_list, fields):
+
+    for value in data_list:
+        value = remove_null_characters_from_strings_in_dict(value, fields)
+
+    return data_list
+
 
 class DatabaseSession(s.orm.Session):
 
