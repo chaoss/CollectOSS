@@ -43,7 +43,7 @@ do
 
 done
 
-if [ -f "/usr/local/bin/go" ]; then
+if [ -f "/usr/local/bin/go" ] || [ -f "/usr/bin/go" ] || [ -f "/snap/bin/go" ]; then
   echo "found go!"
 else
   echo "Installing go!"
@@ -58,7 +58,8 @@ if [ -d "$HOME/scorecard" ]; then
   echo " Updating Scorecard ... "
   CURRENT_DIR=$PWD;
   cd $HOME/scorecard; 
-  git pull; 
+  git pull;
+  go mod tidy; 
   go build; 
   echo "Scorecard build done."
   cd $CURRENT_DIR
