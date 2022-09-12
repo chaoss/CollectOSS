@@ -129,7 +129,7 @@ def process_issues(issues, task_name, repo_id, logger) -> None:
 
         # insert contributors from these issues
         logger.info(f"{task_name}: Inserting {len(contributors)} contributors")
-        session.insert_data(contributors, Contributor, ["cntrb_login"])
+        session.insert_data(contributors, Contributor, ["cntrb_id"])
                             
 
         # insert the issues into the issues table. 

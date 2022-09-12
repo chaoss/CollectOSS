@@ -164,7 +164,7 @@ def process_messages(messages, task_name, repo_id, logger):
 
         logger.info(f"{task_name}: Inserting {len(contributors)} contributors")
 
-        session.insert_data(contributors, Contributor, ["cntrb_login"])
+        session.insert_data(contributors, Contributor, ["cntrb_id"])
 
         logger.info(f"{task_name}: Inserting {len(message_dicts)} messages")
         message_natural_keys = ["platform_msg_id"]

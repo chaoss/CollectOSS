@@ -272,7 +272,7 @@ def test_insert_pr_contributors(github_api_key_headers, session, pr_number):
             for row_tuple in result:
                 row = dict(row_tuple)
 
-                assert row["cntrb_login"] in unique_contributors
+                assert row["cntrb_id"] in unique_contributors
 
     finally:
 
