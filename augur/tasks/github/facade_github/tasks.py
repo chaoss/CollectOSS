@@ -189,7 +189,7 @@ def process_commit_metadata(contributorQueue,repo_id):
             except LookupError as e:
                 session.logger.info(
                     ''.join(traceback.format_exception(None, e, e.__traceback__)))
-                sessopm.logger.info(
+                session.logger.info(
                     f"Contributor id not able to be found in database despite the user_id existing. Something very wrong is happening. Error: {e}")
                 return 
             

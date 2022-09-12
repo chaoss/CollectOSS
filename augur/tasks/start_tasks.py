@@ -125,7 +125,15 @@ class AugurTaskRoutine:
             #Call the function stored in the dict to return the object to call apply_async on
             phaseResult = job(self.logger).apply_async()
             with allow_join_result():
-                phaseResult.join()
+                try:
+                    phaseResult.join()
+                except Exception as e:
+                    #Log full traceback if a phase fails.
+                    self.logger.error(
+                    ''.join(traceback.format_exception(None, e, e.__traceback__)))
+                    self.logger.error(
+                        f"Phase {phaseName} has failed during augur collection. Error: {e}")
+                    raise e
             #self.logger.info(f"Result of {phaseName} phase: {phaseResult.status}")
 
 
