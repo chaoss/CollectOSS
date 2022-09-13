@@ -168,7 +168,9 @@ def process_issues(issues, task_name, repo_id, logger) -> None:
         # inserting issue labels
         # we are using label_src_id and issue_id to determine if the label is already in the database.
         issue_label_natural_keys = ['label_src_id', 'issue_id']
-        session.insert_data(issue_label_dicts, IssueLabel, issue_label_natural_keys)
+        issue_label_string_fields = ["label_text", "label_description"]
+        session.insert_data(issue_label_dicts, IssueLabel,
+                            issue_label_natural_keys, string_fields=issue_label_string_fields)
     
         # inserting issue assignees
         # we are using issue_assignee_src_id and issue_id to determine if the label is already in the database.

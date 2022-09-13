@@ -94,7 +94,9 @@ def process_pull_requests(pull_requests, task_name, repo_id, logger):
         logger.info(f"{task_name}: Inserting prs of length: {len(pr_dicts)}")
         pr_natural_keys = ["pr_url"]
         pr_return_columns = ["pull_request_id", "pr_url"]
-        pr_return_data = session.insert_data(pr_dicts, PullRequest, pr_natural_keys, return_columns=pr_return_columns)
+        pr_string_fields = ["pr_src_title", "pr_body"]
+        pr_return_data = session.insert_data(pr_dicts, PullRequest, pr_natural_keys, 
+                                return_columns=pr_return_columns, string_fields=pr_string_fields)
 
         if pr_return_data is None:
             return
@@ -131,7 +133,8 @@ def process_pull_requests(pull_requests, task_name, repo_id, logger):
         # inserting pr labels
         # we are using pr_src_id and pull_request_id to determine if the label is already in the database.
         pr_label_natural_keys = ['pr_src_id', 'pull_request_id']
-        session.insert_data(pr_label_dicts, PullRequestLabel, pr_label_natural_keys)
+        pr_label_string_fields = ["pr_src_description"]
+        session.insert_data(pr_label_dicts, PullRequestLabel, pr_label_natural_keys, string_fields=pr_label_string_fields)
     
         # inserting pr assignees
         # we are using pr_assignee_src_id and pull_request_id to determine if the label is already in the database.
@@ -139,7 +142,7 @@ def process_pull_requests(pull_requests, task_name, repo_id, logger):
         session.insert_data(pr_assignee_dicts, PullRequestAssignee, pr_assignee_natural_keys)
 
     
-        # inserting pr assignees
+        # inserting pr requested reviewers
         # we are using pr_src_id and pull_request_id to determine if the label is already in the database.
         pr_reviewer_natural_keys = ["pull_request_id", "pr_reviewer_src_id"]
         session.insert_data(pr_reviewer_dicts, PullRequestReviewer, pr_reviewer_natural_keys)
@@ -147,7 +150,9 @@ def process_pull_requests(pull_requests, task_name, repo_id, logger):
         # inserting pr metadata
         # we are using pull_request_id, pr_head_or_base, and pr_sha to determine if the label is already in the database.
         pr_metadata_natural_keys = ['pull_request_id', 'pr_head_or_base', 'pr_sha']
-        session.insert_data(pr_metadata_dicts, PullRequestMeta, pr_metadata_natural_keys)
+        pr_metadata_string_fields = ["pr_src_meta_label"]
+        session.insert_data(pr_metadata_dicts, PullRequestMeta,
+                            pr_metadata_natural_keys, string_fields=pr_metadata_string_fields)
 
 
 
