@@ -44,6 +44,10 @@ def hit_api(key_manager, url: str, logger: logging.Logger, timeout: float = 10, 
             logger.info(f"Network Error. Sleeping {round(timeout)} seconds and trying again...\n")
             time.sleep(round(timeout))
             return None
+        except httpx.ProtocolError:
+            logger.info(f"Protocol Error. Sleeping {round(timeout*1.5)} seconds and trying again...\n")
+            time.sleep(round(timeout*1.5))
+            return None
 
     return response 
 
