@@ -136,7 +136,7 @@ def process_issues(issues, task_name, repo_id, logger) -> None:
         # issue_urls are gloablly unique across github so we are using it to determine whether an issue we collected is already in the table
         # specified in issue_return_columns is the columns of data we want returned. This data will return in this form; {"issue_url": url, "issue_id": id}
         logger.info(f"{task_name}: Inserting {len(issue_dicts)} issues")
-        issue_natural_keys = ["issue_url"]
+        issue_natural_keys = ["repo_id", "gh_issue_id"]
         issue_return_columns = ["issue_url", "issue_id"]
         issue_string_columns = ["issue_title", "issue_body"]
         issue_return_data = session.insert_data(issue_dicts, Issue, issue_natural_keys, return_columns=issue_return_columns, string_fields=issue_string_columns)
