@@ -169,7 +169,9 @@ def process_messages(messages, task_name, repo_id, logger):
         logger.info(f"{task_name}: Inserting {len(message_dicts)} messages")
         message_natural_keys = ["platform_msg_id"]
         message_return_columns = ["msg_id", "platform_msg_id"]
-        message_return_data = session.insert_data(message_dicts, Message, message_natural_keys, message_return_columns)
+        message_string_fields = ["msg_text"]
+        message_return_data = session.insert_data(message_dicts, Message, message_natural_keys, 
+                                                    return_columns=message_return_columns, string_fields=message_string_fields)
 
         pr_message_ref_dicts = []
         issue_message_ref_dicts = []
