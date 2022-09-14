@@ -152,6 +152,7 @@ def start_task():
     #Get list of disabled phases
     disabled_phases = [name for name, phase in phase_options.items() if phase == 0]
 
+    #print(f"disabled: {disabled_phases}")
     augur_collection = AugurTaskRoutine(disabled_collection_phases=disabled_phases)
 
     augur_collection.start_data_collection()
