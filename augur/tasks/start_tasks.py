@@ -150,7 +150,7 @@ def start_task():
         phase_options = config.get_section("Task_Routine")
 
     #Get list of disabled phases
-    disabled_phases = [name for name, phase in phase_options.items() if phase['switch'] == 0]
+    disabled_phases = [name for name, phase in phase_options.items() if phase == 0]
 
     augur_collection = AugurTaskRoutine(disabled_collection_phases=disabled_phases)
 

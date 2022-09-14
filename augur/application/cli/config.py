@@ -63,7 +63,8 @@ def init_config(github_api_key, facade_repo_directory, gitlab_api_key, redis_con
         config = session.config
 
         default_config = config.default_config
-
+        
+        #print(default_config)
         if redis_conn_string:
 
             try:
