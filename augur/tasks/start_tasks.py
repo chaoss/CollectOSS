@@ -104,7 +104,7 @@ class AugurTaskRoutine:
         """Create a new collection job group with the name of the key specified.
         """
         if key in self.disabled_collection_phases:
-            self.logger.error("Group has been disabled")
+            self.logger.info(f"Group {key} has been disabled")
             return
         self.jobs_dict[key] = newJobs
 
