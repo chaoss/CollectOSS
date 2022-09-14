@@ -73,6 +73,14 @@ default_config = {
                 "workers": 1,
                 "training_days": 1000,
                 "anomaly_days": 14
+            },
+            "Task_Routine": {
+                "prelim_phase": {
+                    "switch": 1
+                },
+                "repo_collect_phase": {
+                    "switch": 1
+                }
             }
         }
 

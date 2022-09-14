@@ -85,9 +85,11 @@ class AugurTaskRoutine:
 
         #Assemble default phases
         #These will then be able to be overridden through the config.
-        self.jobs_dict[prelim_phase.__name__] = prelim_phase
+        if prelim_phase.__name__ not in self.disabled_collection_phases:
+            self.jobs_dict[prelim_phase.__name__] = prelim_phase
         
-        self.jobs_dict[repo_collect_phase.__name__] = repo_collect_phase
+        if repo_collect_phase.__name__ not in self.disabled_collection_phases:
+            self.jobs_dict[repo_collect_phase.__name__] = repo_collect_phase
 
                 
 
@@ -142,9 +144,16 @@ def start_task():
 
     logger = logging.getLogger(start_task.__name__)
 
-    default_augur_collection = AugurTaskRoutine()
+    #Get phase options from the config
+    with DatabaseSession(logger) as session:
+        config = session.config
+        phase_options = config.get_section("Task_Routine")
 
-    default_augur_collection.start_data_collection()
+    #Get list of disabled phases
+    disabled_phases = [name for name, phase in phase_options.items() if phase['switch'] == 0]
 
+    augur_collection = AugurTaskRoutine(disabled_collection_phases=disabled_phases)
+
+    augur_collection.start_data_collection()
 
 
