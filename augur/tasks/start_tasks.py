@@ -66,6 +66,7 @@ def repo_collect_phase(logger):
             collect_releases.si()
         )
 
+DEFINED_COLLECTION_PHASES = [prelim_phase,repo_collect_phase]
 
 class AugurTaskRoutine:
     """class to keep track of various groups of collection tasks as well as how they relate to one another.
