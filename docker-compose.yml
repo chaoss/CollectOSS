@@ -1,5 +1,5 @@
 #SPDX-License-Identifier: MIT
-version: '3'
+version: '4'
 services:
   augur-db:
     image: postgres:14
@@ -10,19 +10,20 @@ services:
       - "POSTGRES_PASSWORD=${AUGUR_DB_PASSWORD:-augur}"
     ports:
       - "127.0.0.1:${AUGUR_DB_PORT:-5432}:5432"
-    volumes:
-      - augur:/var/lib/postgresql/data
-      - .:/augur
+
+  redis:
+    image: "redis:alpine"
+    ports:
+     - 6379:6379
+
 
   augur:
-    image: augurlabs/augur:backend
+    image: augurlabs/augur-new:latest
     build:
       context: .
       dockerfile: ./docker/backend/Dockerfile
     volumes:
-      - .:/augur
-    #   - ./path/to/your/repo_groups.csv:/repo_groups.csv
-    #   - ./path/to/your/repos.csv:/repos.csv
+      - facade:/augur/facade
     restart: unless-stopped
     ports:
       - 5002:5000
@@ -35,22 +36,9 @@ services:
       - "AUGUR_GITLAB_API_KEY=${AUGUR_GITLAB_API_KEY}"
       - "AUGUR_GITHUB_USERNAME=${AUGUR_GITHUB_USERNAME}"
       - "AUGUR_GITLAB_USERNAME=${AUGUR_GITLAB_USERNAME}"
-      - "REDIS_CONN_STRING=${REDIS_CONN_STRING}"
+      - REDIS_CONN_STRING=redis://redis:6379
     depends_on:
       - augur-db
+      - redis
 
-  augur-ui:
-    image: augurlabs/augur:viteserver
-    build:
-      context: .
-      dockerfile: ./docker/frontend/dev.dockerfile
-    volumes:
-      - ./frontend:/augur/frontend
-    restart: unless-stopped
-    ports:
-      - 8080:8080
-    depends_on:
-      - augur
 
-volumes:
-  augur:
