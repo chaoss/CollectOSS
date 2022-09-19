@@ -1,5 +1,5 @@
 #SPDX-License-Identifier: MIT
-version: '4'
+version: '3'
 services:
   augur-db:
     image: postgres:14
@@ -31,7 +31,7 @@ services:
       - "host.docker.internal:host-gateway" #Be able to ping services on the local machine
     environment:
       - "AUGUR_DB=postgresql+psycopg2://${AUGUR_DB_USER:-augur}:${AUGUR_DB_PASSWORD:-augur}@augur-db:5432/augur"
-      - "AUGUR_DB_SCHEMA_BUILD=0"
+      - "AUGUR_DB_SCHEMA_BUILD=1"
       - "AUGUR_GITHUB_API_KEY=${AUGUR_GITHUB_API_KEY}"
       - "AUGUR_GITLAB_API_KEY=${AUGUR_GITLAB_API_KEY}"
       - "AUGUR_GITHUB_USERNAME=${AUGUR_GITHUB_USERNAME}"
@@ -40,5 +40,9 @@ services:
     depends_on:
       - augur-db
       - redis
+  
+volumes:
+  facade:
+    driver: local
 
 
