@@ -90,6 +90,17 @@ class FacadeSession(GithubTaskSession):
         self.multithreaded = self.cfg.worker_options["multithreaded"]
         self.create_xlsx_summary_files = self.cfg.worker_options["create_xlsx_summary_files"]
 
+
+        # Get the location of the directory where git repos are stored
+        repo_base_directory = self.cfg.repo_base_directory
+
+        # Determine if it's safe to start the script
+        current_status = self.cfg.get_setting('utility_status')
+
+        if len(repo_base_directory) == 0:
+            self.cfg.log_activity('Error','No base directory. It is unsafe to continue.')
+            raise Exception('Failed: No base directory')
+
     def insert_or_update_data(self, query: TextClause, params: tuple=None)-> None:
         """Provide deadlock detection for postgres updates, inserts, and deletions for facade.
 

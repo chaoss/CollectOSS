@@ -42,6 +42,45 @@ from augur.tasks.github.util.github_task_session import *
 
 from augur.application.logs import TaskLogConfig
 
+#Predefine facade collection with tasks
+@celery.task
+def git_repo_cleanup_facade_task():
+    
+    logger = logging.getLogger(git_repo_cleanup_facade_task.__name__)
+    cfg = FacadeConfig(logger)
+    git_repo_cleanup(cfg)
+
+@celery.task
+def git_repo_initialize_facade_task():
+    logger = logging.getLogger(git_repo_initialize_facade_task.__name__)
+    cfg = FacadeConfig(logger)
+    git_repo_initialize(cfg)
+
+@celery.task
+def check_for_repo_updates_facade_task():
+    logger = logging.getLogger(check_for_repo_updates_facade_task.__name__)
+
+    with FacadeSession(logger) as session:
+        check_for_repo_updates(session)
+
+@celery.task
+def force_repo_updates_facade_task():
+    logger = logging.getLogger(force_repo_updates_facade_task.__name__)
+
+    cfg = FacadeConfig(logger)
+    force_repo_updates(cfg)
+
+@celery.task
+def git_repo_updates_facade_task():
+    logger = logging.getLogger(git_repo_updates_facade_task.__name__)
+
+    cfg = FacadeConfig(logger)
+    git_repo_updates(cfg)
+
+@celery.task
+def force_repo_analysis_facade_task():
+    logger = logging.getLogger(force_repo_analysis_facade_task.__name__)
+    force_repo_analysis(FacadeConfig(logger))
 
 
 #enable celery multithreading
@@ -232,117 +271,6 @@ def analysis(cfg: FacadeConfig, multithreaded: bool, session: bool=None, process
     cfg.log_activity('Info','Running analysis (complete)')
 
 
-def facade_init(session: FacadeSession)-> None:
-    """Meant to replicate calling facade from the command line. Calls facade in a particular configuration that can be overridden in the database config.
-    """
-    
-    opts,args = getopt.getopt(sys.argv[1:],'hdpcuUaAmnfIrx')
-    for opt in opts:
-        if opt[0] == '-h':
-            print("\nfacade-worker.py does everything by default except invalidating caches\n"
-                    "and forcing updates, unless invoked with one of the following options.\n"
-                    "In those cases, it will only do what you have selected.\n\n"
-                    "Options:\n"
-                    "   -d  Delete marked repos\n"
-                    "   -c  Run 'git clone' on new repos\n"
-                    "   -u  Check if any repos should be marked for updating\n"
-                    "   -U  Force all repos to be marked for updating\n"
-                    "   -p  Run 'git pull' on repos\n"
-                    "   -a  Analyze git repos\n"
-                    "   -A  Force all repos to be analyzed\n"
-                    "   -m  Disable multithreaded mode (but why?)\n"
-                    "   -n  Nuke stored affiliations (if mappings modified by hand)\n"
-                    "   -f  Fill empty affiliations\n"
-                    "   -I  Invalidate caches\n"
-                    "   -r  Rebuild unknown affiliation and web caches\n"
-                    "   -x  Create Excel summary files\n\n")
-            sys.exit(0)
-
-        elif opt[0] == '-d':
-            delete_marked_repos = 1
-            limited_run = 1
-            session.cfg.log_activity('Info','Option set: delete marked repos.')
-
-        elif opt[0] == '-c':
-            clone_repos = 1
-            limited_run = 1
-            session.cfg.log_activity('Info','Option set: clone new repos.')
-
-        elif opt[0] == '-u':
-            check_updates = 1
-            limited_run = 1
-            session.cfg.log_activity('Info','Option set: checking for repo updates')
-
-        elif opt[0] == '-U':
-            force_updates = 1
-            session.cfg.log_activity('Info','Option set: forcing repo updates')
-
-        elif opt[0] == '-p':
-            pull_repos = 1
-            limited_run = 1
-            session.cfg.log_activity('Info','Option set: update repos.')
-
-        elif opt[0] == '-a':
-            run_analysis = 1
-            limited_run = 1
-            session.cfg.log_activity('Info','Option set: running analysis.')
-
-        elif opt[0] == '-A':
-            force_analysis = 1
-            run_analysis = 1
-            limited_run = 1
-            session.cfg.log_activity('Info','Option set: forcing analysis.')
-
-        elif opt[0] == '-m':
-            multithreaded = 0
-            session.cfg.log_activity('Info','Option set: disabling multithreading.')
-
-        elif opt[0] == '-n':
-            nuke_stored_affiliations = 1
-            limited_run = 1
-            session.cfg.log_activity('Info','Option set: nuking all affiliations')
-
-        elif opt[0] == '-f':
-            fix_affiliations = 1
-            limited_run = 1
-            session.cfg.log_activity('Info','Option set: fixing affiliations.')
-
-        elif opt[0] == '-I':
-            force_invalidate_caches = 1
-            limited_run = 1
-            session.cfg.log_activity('Info','Option set: Invalidate caches.')
-
-        elif opt[0] == '-r':
-            rebuild_caches = 1
-            limited_run = 1
-            session.cfg.log_activity('Info','Option set: rebuilding caches.')
-
-        elif opt[0] == '-x':
-            create_xlsx_summary_files = 1
-            limited_run = 1
-            session.cfg.log_activity('Info','Option set: creating Excel summary files.')
-
-    
-    # Get the location of the directory where git repos are stored
-    repo_base_directory = session.cfg.repo_base_directory
-
-    # Determine if it's safe to start the script
-    current_status = session.cfg.get_setting('utility_status')
-
-    if current_status != 'Idle':
-        session.cfg.log_activity('Error','Something is already running, aborting maintenance '
-            'and analysis.\nIt is unsafe to continue.')
-        # sys.exit(1)
-
-    if len(repo_base_directory) == 0:
-        session.cfg.log_activity('Error','No base directory. It is unsafe to continue.')
-        session.cfg.update_status('Failed: No base directory')
-        sys.exit(1)
-
-    # Begin working
-
-
-#TODO: turn this into a dynamic chain with the various platform resolution tasks in a list.
 @celery.task
 def facade_commits_model(github_contrib_resolition: bool=True)-> None:
     """The main facade task loop. Goes through and executes all collection options specified in the facade config
@@ -370,8 +298,6 @@ def facade_commits_model(github_contrib_resolition: bool=True)-> None:
         force_invalidate_caches = session.force_invalidate_caches
         create_xlsx_summary_files = session.create_xlsx_summary_files
         multithreaded = session.multithreaded
-
-        facade_init(session)
 
         start_time = time.time()
         session.cfg.log_activity('Quiet','Running facade-worker')
@@ -454,3 +380,54 @@ def facade_commits_model(github_contrib_resolition: bool=True)-> None:
         session.cfg.db.close()
         #session.cfg.db_people.close()
 
+def generate_analysis_chain(logger):
+    
+
+
+
+def generate_facade_chain(logger):
+    #raise NotImplemented
+
+    with FacadeSession(logger) as session:
+        
+        # Figure out what we need to do
+        limited_run = session.limited_run
+        delete_marked_repos = session.delete_marked_repos
+        pull_repos = session.pull_repos
+        clone_repos = session.clone_repos
+        check_updates = session.check_updates
+        force_updates = session.force_updates
+        run_analysis = session.run_analysis
+        force_analysis = session.force_analysis
+        nuke_stored_affiliations = session.nuke_stored_affiliations
+        fix_affiliations = session.fix_affiliations
+        force_invalidate_caches = session.force_invalidate_caches
+        rebuild_caches = session.rebuild_caches
+        #if abs((datetime.datetime.strptime(session.cfg.get_setting('aliases_processed')[:-3], 
+            # '%Y-%m-%d %I:%M:%S.%f') - datetime.datetime.now()).total_seconds()) // 3600 > int(session.cfg.get_setting(
+            #   'update_frequency')) else 0
+        force_invalidate_caches = session.force_invalidate_caches
+        create_xlsx_summary_files = session.create_xlsx_summary_files
+        multithreaded = session.multithreaded
+
+        facade_sequence = []
+
+        if not limited_run or (limited_run and delete_marked_repos):
+            facade_sequence.append(git_repo_cleanup_facade_task.si())#git_repo_cleanup(session.cfg)
+
+        if not limited_run or (limited_run and clone_repos):
+            facade_sequence.append(git_repo_initialize_facade_task.si())#git_repo_initialize(session.cfg)
+
+        if not limited_run or (limited_run and check_updates):
+            facade_sequence.append(check_for_repo_updates_facade_task.si())#check_for_repo_updates(session)
+
+        if force_updates:
+            facade_sequence.append(force_repo_updates_facade_task.si())
+
+        if not limited_run or (limited_run and pull_repos):
+            facade_sequence.append(git_repo_updates_facade_task.si())
+
+        if force_analysis:
+            facade_sequence.append(force_repo_analysis_facade_task.si())
+
+        #Generate commit analysis task order.
