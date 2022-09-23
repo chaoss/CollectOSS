@@ -82,37 +82,23 @@ def force_repo_analysis_facade_task():
     logger = logging.getLogger(force_repo_analysis_facade_task.__name__)
     force_repo_analysis(FacadeConfig(logger))
 
-
-#enable celery multithreading
 @celery.task
-def analyze_commits_in_parallel(queue: list, repo_id: int, repo_location: str, multithreaded: bool)-> None:
-    """Take a large list of commit data to analyze and store in the database. Meant to be run in parallel with other instances of this task.
-    """
-    #create new cfg for celery thread.
-    logger = logging.getLogger(analyze_commits_in_parallel.__name__)
+def facade_analysis_init_facade_task():
+    logger = logging.getLogger(facade_analysis_init_facade_task.__name__)
     cfg = FacadeConfig(logger)
+    cfg.update_status('Running analysis')
+    cfg.log_activity('Info',f"Beginning analysis.")
 
-    for analyzeCommit in queue:    
+@celery.task
+def grab_comitter_list_facade_task(repo_id,platform="github"):
+    logger = logging.getLogger(grab_comitter_list_facade_task.__name__)
 
-        analyze_commit(cfg, repo_id, repo_location, analyzeCommit, multithreaded)
+    grab_committer_list(DatabaseSession(logger), repo_id,platform)
 
-
-# if platform.python_implementation() == 'PyPy':
-#   import pymysql
-# else:
-#   import MySQLdb
-
-def analysis(cfg: FacadeConfig, multithreaded: bool, session: bool=None, processes: int=6)-> None:
-    """Run the analysis by looping over all active repos. For each repo, we retrieve
-    the list of commits which lead to HEAD. If any are missing from the database,
-    they are filled in. Then we check to see if any commits in the database are
-    not in the list of parents, and prune them out.
-
-    We also keep track of the last commit to be processed, so that if the analysis
-    is interrupted (possibly leading to partial data in the database for the
-    commit being analyzed at the time) we can recover.
-    """
-### Local helper functions ###
+@celery.task
+def trim_commits_facade_task(repo_id):
+    logger = logging.getLogger(trim_commits_facade_task.__name__)
+    cfg = FacadeConfig(logger)
 
     def update_analysis_log(repos_id,status):
 
@@ -127,148 +113,113 @@ def analysis(cfg: FacadeConfig, multithreaded: bool, session: bool=None, process
         except:
             pass
 
-### The real function starts here ###
-
-    cfg.update_status('Running analysis')
-    cfg.log_activity('Info',f"Beginning analysis.")
-
-    start_date = cfg.get_setting('start_date')
-
-    repo_list = "SELECT repo_id,repo_group_id,repo_path,repo_name FROM repo WHERE repo_status='Analyze'"
-    cfg.cursor.execute(repo_list)
-    repos = list(cfg.cursor)
 
 
-    for repo in repos:
+    cfg.inc_repos_processed()
+    update_analysis_log(repo_id,"Beginning analysis.")
+    # First we check to see if the previous analysis didn't complete
 
-        
-        #Add committers for repo if session
-        if session != None:
-            grab_committer_list(session,repo[0])
+    get_status = ("SELECT working_commit FROM working_commits WHERE repos_id=%s")
 
-        update_analysis_log(repo[0],"Beginning analysis.")
-        cfg.log_activity('Verbose','Analyzing repo: %s (%s)' % (repo[0],repo[3]))
+    cfg.cursor.execute(get_status, (repo_id, ))
+    try:
+        working_commits = list(cfg.cursor)
+    except:
+        working_commits = []
+    #cfg.cursor.fetchone()[1]
 
-        cfg.inc_repos_processed()
+    # If there's a commit still there, the previous run was interrupted and
+    # the commit data may be incomplete. It should be trimmed, just in case.
+    for commit in working_commits:
+        trim_commit(cfg, repo_id,commit[0])
 
-        # First we check to see if the previous analysis didn't complete
+        # Remove the working commit.
+        remove_commit = ("DELETE FROM working_commits "
+            "WHERE repos_id = %s AND working_commit = %s")
+        cfg.cursor.execute(remove_commit, (repo_id,commit[0]))
+        cfg.db.commit()
+        cfg.log_activity('Debug','Removed working commit: %s' % commit[0])
 
-        get_status = ("SELECT working_commit FROM working_commits WHERE repos_id=%s")
+@celery.task
+def trim_commits_post_analysis_facade_task(repo_id,commits):
+    logger = logging.getLogger(trim_commits_post_analysis_facade_task.__name__)
+    cfg = FacadeConfig(logger)
 
-        cfg.cursor.execute(get_status, (repo[0], ))
+    def update_analysis_log(repos_id,status):
+
+    # Log a repo's analysis status
+
+        log_message = ("INSERT INTO analysis_log (repos_id,status) "
+            "VALUES (%s,%s)")
+
         try:
-            working_commits = list(cfg.cursor)
-        except:
-            working_commits = []
-        #cfg.cursor.fetchone()[1]
-
-        # If there's a commit still there, the previous run was interrupted and
-        # the commit data may be incomplete. It should be trimmed, just in case.
-        for commit in working_commits:
-            trim_commit(cfg, repo[0],commit[0])
-
-            # Remove the working commit.
-            remove_commit = ("DELETE FROM working_commits "
-                "WHERE repos_id = %s AND working_commit = %s")
-            cfg.cursor.execute(remove_commit, (repo[0],commit[0]))
+            cfg.cursor.execute(log_message, (repos_id,status))
             cfg.db.commit()
-
-            cfg.log_activity('Debug','Removed working commit: %s' % commit[0])
-
-        # Start the main analysis
-
-        update_analysis_log(repo[0],'Collecting data')
-
-        repo_loc = ('%s%s/%s%s/.git' % (cfg.repo_base_directory,
-            repo[1], repo[2],
-            repo[3]))
-        # Grab the parents of HEAD
-
-        parents = subprocess.Popen(["git --git-dir %s log --ignore-missing "
-            "--pretty=format:'%%H' --since=%s" % (repo_loc,start_date)],
-            stdout=subprocess.PIPE, shell=True)
-
-        parent_commits = set(parents.stdout.read().decode("utf-8",errors="ignore").split(os.linesep))
-
-        # If there are no commits in the range, we still get a blank entry in
-        # the set. Remove it, as it messes with the calculations
-
-        if '' in parent_commits:
-            parent_commits.remove('')
-
-        # Grab the existing commits from the database
-
-        existing_commits = set()
-
-        find_existing = ("SELECT DISTINCT cmt_commit_hash FROM commits WHERE repo_id=%s")
-
-        cfg.cursor.execute(find_existing, (repo[0], ))
-
-        try:
-            for commit in list(cfg.cursor):
-                existing_commits.add(commit[0])
-        except:
-            cfg.log_activity('Info', 'list(cfg.cursor) returned an error')
-
-        # Find missing commits and add them
-
-        missing_commits = parent_commits - existing_commits
-
-        cfg.log_activity('Debug','Commits missing from repo %s: %s' %
-            (repo[0],len(missing_commits)))
-
-        ## TODO: Verify if the multithreaded approach here is optimal for postgresql
-
-        if len(missing_commits) > 0:
-
-            
-
-            #cfg.log_activity('Info','Type of missing_commits: %s' % type(missing_commits))
-            
-            #Split commits into mostly equal queues so each process starts with a workload and there is no
-            #    overhead to pass into queue from the parent.            
-            #Each task generates their own cfg as celery cannot serialize this data
-            contrib_jobs = create_grouped_task_load(repo[0],repo_loc,multithreaded,processes=processes,dataList=missing_commits,task=analyze_commits_in_parallel)
-
-            print(contrib_jobs)
-
-            group_result = contrib_jobs.apply_async()
-            #Context manager needed for joining back to parent process properly.
-            with allow_join_result():
-                group_result.join()
-                
-            
-        elif len(missing_commits) > 0:
-            for commit in missing_commits:
-                analyze_commit(cfg, repo[0], repo_loc, commit, multithreaded)
-
-
-        update_analysis_log(repo[0],'Data collection complete')
-
-        update_analysis_log(repo[0],'Beginning to trim commits')
-
-        # Find commits which are out of the analysis range
-
-        trimmed_commits = existing_commits - parent_commits
-
-        cfg.log_activity('Debug','Commits to be trimmed from repo %s: %s' %
-            (repo[0],len(trimmed_commits)))
-
-        for commit in trimmed_commits:
-
-            trim_commit(cfg, repo[0],commit)
-
-        set_complete = "UPDATE repo SET repo_status='Complete' WHERE repo_id=%s and repo_status != 'Empty'"
-        try:
-            cfg.cursor.execute(set_complete, (repo[0], ))
         except:
             pass
+    
 
-        update_analysis_log(repo[0],'Commit trimming complete')
+    update_analysis_log(repo_id,'Data collection complete')
 
-        update_analysis_log(repo[0],'Complete')
+    update_analysis_log(repo_id,'Beginning to trim commits')
 
+    cfg.log_activity('Debug','Commits to be trimmed from repo %s: %s' %
+            (repo[0],len(trimmed_commits)))
+    
+    for commit in commits:
+        trim_commit(cfg,repo_id,commit)
+    
+    set_complete = "UPDATE repo SET repo_status='Complete' WHERE repo_id=%s and repo_status != 'Empty'"
+    try:
+        cfg.cursor.execute(set_complete, (repo[0], ))
+    except:
+        pass
+
+    update_analysis_log(repo[0],'Commit trimming complete')
+
+    update_analysis_log(repo[0],'Complete')
+
+@celery.task
+def facade_analysis_end_facade_task():
+    logger = logging.getLogger(facade_analysis_end_facade_task.__name__)
+    cfg = FacadeConfig(logger)
     cfg.log_activity('Info','Running analysis (complete)')
+
+
+#enable celery multithreading
+@celery.task
+def analyze_commits_in_parallel(queue: list, repo_id: int, repo_location: str, multithreaded: bool)-> None:
+    """Take a large list of commit data to analyze and store in the database. Meant to be run in parallel with other instances of this task.
+    """
+
+    ### Local helper functions ###
+    #create new cfg for celery thread.
+    logger = logging.getLogger(analyze_commits_in_parallel.__name__)
+    cfg = FacadeConfig(logger)
+
+    def update_analysis_log(repos_id,status):
+
+    # Log a repo's analysis status
+
+        log_message = ("INSERT INTO analysis_log (repos_id,status) "
+            "VALUES (%s,%s)")
+
+        try:
+            cfg.cursor.execute(log_message, (repos_id,status))
+            cfg.db.commit()
+        except:
+            pass
+    
+    
+    # Start the main analysis
+
+    update_analysis_log(repo_id,'Collecting data')
+
+
+
+    for analyzeCommit in queue:    
+
+        analyze_commit(cfg, repo_id, repo_location, analyzeCommit, multithreaded)
 
 
 @celery.task
@@ -380,8 +331,90 @@ def facade_commits_model(github_contrib_resolition: bool=True)-> None:
         session.cfg.db.close()
         #session.cfg.db_people.close()
 
-def generate_analysis_chain(logger):
-    
+def generate_analysis_sequence(logger):
+    """Run the analysis by looping over all active repos. For each repo, we retrieve
+    the list of commits which lead to HEAD. If any are missing from the database,
+    they are filled in. Then we check to see if any commits in the database are
+    not in the list of parents, and prune them out.
+
+    We also keep track of the last commit to be processed, so that if the analysis
+    is interrupted (possibly leading to partial data in the database for the
+    commit being analyzed at the time) we can recover.
+    """
+    analysis_sequence = []
+
+    with FacadeSession(logger) as session:
+        repo_list = "SELECT repo_id,repo_group_id,repo_path,repo_name FROM repo "
+        session.cfg.cursor.execute(repo_list)
+        repos = list(cfg.cursor)
+
+        analysis_sequence.append(facade_analysis_init_facade_task.si())
+        for repo in repos:
+            analysis_sequence.append(grab_comitter_list_facade_task.si(repo[0]))
+
+            analysis_sequence.append(trim_commits_facade_task.si(repo[0]))
+
+
+            #Get the huge list of commits to process.
+            repo_loc = ('%s%s/%s%s/.git' % (cfg.repo_base_directory,
+            repo[1], repo[2],
+            repo[3]))
+            # Grab the parents of HEAD
+
+            parents = subprocess.Popen(["git --git-dir %s log --ignore-missing "
+                "--pretty=format:'%%H' --since=%s" % (repo_loc,start_date)],
+                stdout=subprocess.PIPE, shell=True)
+
+            parent_commits = set(parents.stdout.read().decode("utf-8",errors="ignore").split(os.linesep))
+
+            # If there are no commits in the range, we still get a blank entry in
+            # the set. Remove it, as it messes with the calculations
+
+            if '' in parent_commits:
+                parent_commits.remove('')
+
+            # Grab the existing commits from the database
+
+            existing_commits = set()
+
+            find_existing = ("SELECT DISTINCT cmt_commit_hash FROM commits WHERE repo_id=%s")
+
+            cfg.cursor.execute(find_existing, (repo[0], ))
+
+            try:
+                for commit in list(cfg.cursor):
+                    existing_commits.add(commit[0])
+            except:
+                cfg.log_activity('Info', 'list(cfg.cursor) returned an error')
+
+            # Find missing commits and add them
+
+            missing_commits = parent_commits - existing_commits
+
+            cfg.log_activity('Debug','Commits missing from repo %s: %s' %
+                (repo[0],len(missing_commits)))
+            
+            if len(missing_commits) > 0:
+                #cfg.log_activity('Info','Type of missing_commits: %s' % type(missing_commits))
+
+                #Split commits into mostly equal queues so each process starts with a workload and there is no
+                #    overhead to pass into queue from the parent.            
+                #Each task generates their own cfg as celery cannot serialize this data
+                contrib_jobs = create_grouped_task_load(repo[0],repo_loc,multithreaded,processes=processes,dataList=missing_commits,task=analyze_commits_in_parallel)
+                analysis_sequence.append(contrib_jobs)
+            
+            # Find commits which are out of the analysis range
+
+            trimmed_commits = existing_commits - parent_commits
+            analysis_sequence.append(trim_commits_post_analysis_facade_task.si(repo[0],trimmed_commits))
+        
+        analysis_sequence.append(facade_analysis_end_facade_task.si())
+
+
+
+def generate_contributor_sequence(logger):
+    pass
+
 
 
 
@@ -431,3 +464,5 @@ def generate_facade_chain(logger):
             facade_sequence.append(force_repo_analysis_facade_task.si())
 
         #Generate commit analysis task order.
+        facade_sequence.append(generate_analysis_sequence(logger))
+
