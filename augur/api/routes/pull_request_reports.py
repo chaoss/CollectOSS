@@ -359,7 +359,8 @@ def create_routes(server):
 
         total_rows_removed = 0
         for col in not_null_columns:
-            rows_removed = len(df.loc[df[col].isnull() is True])
+            rows_removed = len(df.loc[df[col].isnull()])
+            #rows_removed = len(df.loc[df[col].isnull() is True])
 
             if rows_removed > 0:
                 print(f"{rows_removed} rows have been removed because of null values in column {col}")
@@ -415,7 +416,9 @@ def create_routes(server):
         if all(x in needed_columns for x in not_null_columns):
 
             df = get_needed_columns(df, needed_columns)
-            df = remove_rows_with_null_values(df, not_null_columns)
+            #Use the pandas method bc the other method was erroring on boolean index.
+            #IM - 9/23/22
+            df = df.dropna(subset=not_null_columns)#remove_rows_with_null_values(df, not_null_columns)
 
             return df
         else:
