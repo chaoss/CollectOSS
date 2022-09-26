@@ -137,19 +137,13 @@ def process_issues(issues, task_name, repo_id, logger) -> None:
         # issue_urls are gloablly unique across github so we are using it to determine whether an issue we collected is already in the table
         # specified in issue_return_columns is the columns of data we want returned. This data will return in this form; {"issue_url": url, "issue_id": id}
         logger.info(f"{task_name}: Inserting {len(issue_dicts)} issues")
-        issue_natural_keys = ["repo_id", "gh_issue_id"]
+        issue_natural_keys = ["issue_url"]
         issue_return_columns = ["issue_url", "issue_id"]
         issue_string_columns = ["issue_title", "issue_body"]
         try:
             issue_return_data = session.insert_data(issue_dicts, Issue, issue_natural_keys, return_columns=issue_return_columns, string_fields=issue_string_columns)
         except IntegrityError as e:
             logger.error(f"Ran into integrity error:{e} \n Offending data: \n{issue_dicts}")
-            #Get error string and determine what url caused the integrity error if any.
-            err_string = ''.join(traceback.format_exception(None, e, e.__traceback__))
-            urls = re.findall(r'(https?://[^\s]+)', err_string)
-            to_insert = [iss for iss in issue_dicts if iss['issue_url'] not in urls]
-            issue_return_data = session.insert_data(to_insert,Issue,issue_natural_keys, return_columns=issue_return_columns, string_fields=issue_string_columns)
-
         # loop through the issue_return_data so it can find the labels and 
         # assignees that corelate to the issue that was inserted labels 
         issue_label_dicts = []
