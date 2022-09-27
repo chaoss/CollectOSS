@@ -2,12 +2,12 @@ import time
 import logging
 
 
-from augur.tasks.init.celery_app import celery_app as celery
+from augur.tasks.init.celery_app import celery_app as celery, engine
 from augur.application.db.data_parse import *
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
 from augur.tasks.github.util.github_task_session import GithubTaskSession
-from augur.tasks.util.worker_util import wait_child_tasks
-from augur.tasks.github.util.util import remove_duplicate_dicts, get_owner_repo
+from augur.tasks.github.util.util import get_owner_repo
+from augur.tasks.util.worker_util import remove_duplicate_dicts
 from augur.application.db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestEvent, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, Issue, IssueEvent, IssueLabel, IssueAssignee, PullRequestMessageRef, IssueMessageRef, Contributor, Repo
 from augur.tasks.github.facade_github.core import *
 from augur.tasks.util.worker_util import create_grouped_task_load
@@ -81,10 +81,12 @@ def process_commit_metadata(contributorQueue,repo_id):
                 login = get_login_with_commit_hash(session,contributor, repo_id)
         
             if login == None or login == "":
+                session.logger.info("Failed to get login from commit hash")
                 # Try to get the login from supplemental data if not found with the commit hash
                 login = get_login_with_supplemental_data(session,contributor)
         
-            if login == None:
+            if login == None or login == "":
+                session.logger.error("Failed to get login from supplemental data!")
                 continue
 
             url = ("https://api.github.com/users/" + login)
@@ -175,15 +177,19 @@ def process_commit_metadata(contributorQueue,repo_id):
             
             #Executes an upsert with sqlalchemy 
             cntrb_natural_keys = ['cntrb_login']
-            session.insert_data(cntrb,Contributor,cntrb_natural_keys)
+            try:
+                session.insert_data(cntrb,Contributor,cntrb_natural_keys)
+            except Exception as e:
+                session.logger.error(f"Could not complete singular contributor insert!!\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
+                continue
 
             try:
                 # Update alias after insertion. Insertion needs to happen first so we can get the autoincrementkey
                 insert_alias(session,cntrb, emailFromCommitData)
             except LookupError as e:
-                interface.logger.info(
+                session.logger.info(
                     ''.join(traceback.format_exception(None, e, e.__traceback__)))
-                interface.logger.info(
+                session.logger.info(
                     f"Contributor id not able to be found in database despite the user_id existing. Something very wrong is happening. Error: {e}")
                 return 
             

@@ -1,20 +1,41 @@
 import time
 import logging
+import traceback
+import re
 
-
-from augur.tasks.init.celery_app import celery_app as celery
+from augur.tasks.init.celery_app import celery_app as celery, engine
 from augur.application.db.data_parse import *
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
 from augur.tasks.github.util.github_task_session import GithubTaskSession
-from augur.tasks.util.worker_util import wait_child_tasks
-from augur.tasks.github.util.util import remove_duplicate_dicts, add_key_value_pair_to_dicts, get_owner_repo
+from augur.tasks.github.util.util import add_key_value_pair_to_dicts, get_owner_repo
+from augur.tasks.util.worker_util import remove_duplicate_dicts
 from augur.application.db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestEvent, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, Issue, IssueEvent, IssueLabel, IssueAssignee, PullRequestMessageRef, IssueMessageRef, Contributor, Repo
-
+from sqlalchemy.exc import IntegrityError
 
 @celery.task
 def collect_issues(repo_git: str) -> None:
 
     logger = logging.getLogger(collect_issues.__name__)
+    owner, repo = get_owner_repo(repo_git)
+
+    # define GithubTaskSession to handle insertions, and store oauth keys 
+    with GithubTaskSession(logger) as session:
+        
+        repo_obj = session.query(Repo).filter(Repo.repo_git == repo_git).one()
+        repo_id = repo_obj.repo_id
+        
+
+    issue_data = retrieve_all_issue_data(repo_git, logger)
+
+    if issue_data:
+
+        process_issues(issue_data, f"{owner}/{repo}: Issue task", repo_id, logger)
+
+    else:
+        logger.info(f"{owner}/{repo} has no issues")
+
+
+def retrieve_all_issue_data(repo_git, logger) -> None:
 
     owner, repo = get_owner_repo(repo_git)
 
@@ -23,9 +44,8 @@ def collect_issues(repo_git: str) -> None:
     url = f"https://api.github.com/repos/{owner}/{repo}/issues?state=all"
 
     # define GithubTaskSession to handle insertions, and store oauth keys 
-    with GithubTaskSession(logger) as session:
-
-        repo_id = session.query(Repo).filter(Repo.repo_git == repo_git).one().repo_id
+    
+    with GithubTaskSession(logger, engine) as session:
 
         # returns an iterable of all issues at this url (this essentially means you can treat the issues variable as a list of the issues)
         # Reference the code documenation for GithubPaginator for more details
@@ -35,30 +55,26 @@ def collect_issues(repo_git: str) -> None:
     # we come across a pr, so at the end we can log how 
     # many issues were collected
     # loop through the issues 
+    all_data = []
     num_pages = issues.get_num_pages()
-    ids = []
     for page_data, page in issues.iter_pages():
 
         if page_data is None:
-            return
+            return all_data
 
-        elif len(page_data) == 0:
-            logger.debug(f"{repo.capitalize()} Issues Page {page} contains no data...returning")
-            logger.info(f"{repo.capitalize()} Issues Page {page} of {num_pages}")
-            return
+        if len(page_data) == 0:
+            logger.debug(
+                f"{owner}/{repo}: Issues Page {page} contains no data...returning")
+            logger.info(f"{owner}/{repo}: Issues Page {page} of {num_pages}")
+            return all_data
 
-        logger.info(f"{repo.capitalize()} Issues Page {page} of {num_pages}")
+        logger.info(f"{owner}/{repo}: Issues Page {page} of {num_pages}")
 
-        process_issue_task = process_issues.s(page_data, f"{repo.capitalize()} Issues Page {page} Task", repo_id).apply_async()
-        ids.append(process_issue_task.id)
+        all_data += page_data
 
-    wait_child_tasks(ids)
+    return all_data
     
-
-@celery.task
-def process_issues(issues, task_name, repo_id) -> None:
-
-    logger = logging.getLogger(process_issues.__name__)
+def process_issues(issues, task_name, repo_id, logger) -> None:
     
     # get repo_id or have it passed
     tool_source = "Issue Task"
@@ -107,14 +123,14 @@ def process_issues(issues, task_name, repo_id) -> None:
         print("No issues found while processing")  
         return
 
-    with GithubTaskSession(logger) as session:
+    with GithubTaskSession(logger, engine) as session:
 
         # remove duplicate contributors before inserting
         contributors = remove_duplicate_dicts(contributors)
 
         # insert contributors from these issues
         logger.info(f"{task_name}: Inserting {len(contributors)} contributors")
-        session.insert_data(contributors, Contributor, ["cntrb_login"])
+        session.insert_data(contributors, Contributor, ["cntrb_id"])
                             
 
         # insert the issues into the issues table. 
@@ -123,9 +139,11 @@ def process_issues(issues, task_name, repo_id) -> None:
         logger.info(f"{task_name}: Inserting {len(issue_dicts)} issues")
         issue_natural_keys = ["issue_url"]
         issue_return_columns = ["issue_url", "issue_id"]
-        issue_return_data = session.insert_data(issue_dicts, Issue, issue_natural_keys, issue_return_columns)
-
-
+        issue_string_columns = ["issue_title", "issue_body"]
+        try:
+            issue_return_data = session.insert_data(issue_dicts, Issue, issue_natural_keys, return_columns=issue_return_columns, string_fields=issue_string_columns)
+        except IntegrityError as e:
+            logger.error(f"Ran into integrity error:{e} \n Offending data: \n{issue_dicts}")
         # loop through the issue_return_data so it can find the labels and 
         # assignees that corelate to the issue that was inserted labels 
         issue_label_dicts = []
@@ -138,7 +156,7 @@ def process_issues(issues, task_name, repo_id) -> None:
             try:
                 other_issue_data = issue_mapping_data[issue_url]
             except KeyError as e:
-                logger.info(f"Cold not find other issue data. This should never happen. Error: {e}")
+                logger.info(f"{task_name}: Cold not find other issue data. This should never happen. Error: {e}")
 
 
             # add the issue id to the lables and assignees, then add them to a list of dicts that will be inserted soon
@@ -152,7 +170,9 @@ def process_issues(issues, task_name, repo_id) -> None:
         # inserting issue labels
         # we are using label_src_id and issue_id to determine if the label is already in the database.
         issue_label_natural_keys = ['label_src_id', 'issue_id']
-        session.insert_data(issue_label_dicts, IssueLabel, issue_label_natural_keys)
+        issue_label_string_fields = ["label_text", "label_description"]
+        session.insert_data(issue_label_dicts, IssueLabel,
+                            issue_label_natural_keys, string_fields=issue_label_string_fields)
     
         # inserting issue assignees
         # we are using issue_assignee_src_id and issue_id to determine if the label is already in the database.

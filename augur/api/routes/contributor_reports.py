@@ -579,14 +579,16 @@ def create_routes(server):
         if all(x in needed_columns for x in not_null_columns):
 
             df = get_needed_columns(df, needed_columns)
-            df = remove_rows_with_null_values(df, not_null_columns)
+            #Use the pandas method bc the other method was erroring on boolean index.
+            #IM - 9/23/22
+            df = df.dropna(subset=not_null_columns)#remove_rows_with_null_values(df, not_null_columns)
 
             return df
         else:
             print("Developer error, not null columns should be a subset of needed columns")
             return df
 
-    server.app.route('/{}/contributor_reports/new_contributors_bar/'.format(AUGUR_API_VERSION), methods=["GET"])
+    @server.app.route('/{}/contributor_reports/new_contributors_bar/'.format(AUGUR_API_VERSION), methods=["GET"])
     def new_contributors_bar():
 
         repo_id, start_date, end_date, error = get_repo_id_start_date_and_end_date()
@@ -605,7 +607,9 @@ def create_routes(server):
         not_null_columns = ['cntrb_id', 'created_at', 'month', 'year', 'repo_id', 'repo_name', 'login', 'action',
                             'rank', 'yearmonth', 'new_contributors', 'quarter']
 
-        input_df = remove_rows_with_null_values(input_df, not_null_columns)
+        #Use the pandas method bc the other method was erroring on boolean index.
+        #IM - 9/23/22
+        input_df = input_df.dropna(subset=not_null_columns)#remove_rows_with_null_values(input_df, not_null_columns)
 
         if len(input_df) == 0:
             return Response(response="There is no data for this repo, in the database you are accessing",
@@ -755,7 +759,7 @@ def create_routes(server):
 
         return send_file(filename)
 
-    server.app.route('/{}/contributor_reports/new_contributors_stacked_bar/'.format(AUGUR_API_VERSION),
+    @server.app.route('/{}/contributor_reports/new_contributors_stacked_bar/'.format(AUGUR_API_VERSION),
                       methods=["GET"])
     def new_contributors_stacked_bar():
 
@@ -958,7 +962,7 @@ def create_routes(server):
 
         return send_file(filename)
 
-    server.app.route('/{}/contributor_reports/returning_contributors_pie_chart/'.format(AUGUR_API_VERSION),
+    @server.app.route('/{}/contributor_reports/returning_contributors_pie_chart/'.format(AUGUR_API_VERSION),
                       methods=["GET"])
     def returning_contributors_pie_chart():
 
@@ -1090,7 +1094,7 @@ def create_routes(server):
 
         return send_file(filename)
 
-    server.app.route('/{}/contributor_reports/returning_contributors_stacked_bar/'.format(AUGUR_API_VERSION),
+    @server.app.route('/{}/contributor_reports/returning_contributors_stacked_bar/'.format(AUGUR_API_VERSION),
                       methods=["GET"])
     def returning_contributors_stacked_bar():
 

@@ -6,10 +6,11 @@ from flask import Response
 
 AUGUR_API_VERSION = 'api/unstable'
 
+
 def create_routes(server):
 
-    server.app.route('/{}/collection_status/commits'.format(AUGUR_API_VERSION))
-    def commit_collection_status(): #TODO: make this name automatic - wrapper?
+    @server.app.route('/{}/collection_status/commits'.format(AUGUR_API_VERSION))
+    def commit_collection_status():  # TODO: make this name automatic - wrapper?
         commit_collection_sql = s.sql.text("""
             SELECT
                 repo_id,
@@ -34,13 +35,14 @@ def create_routes(server):
                 repo_status = 'Complete'
         """)
         results = pd.read_sql(commit_collection_sql,  server.engine)
-        data = results.to_json(orient="records", date_format='iso', date_unit='ms')
+        data = results.to_json(
+            orient="records", date_format='iso', date_unit='ms')
         return Response(response=data,
                         status=200,
                         mimetype="application/json")
 
-    server.app.route('/{}/collection_status/issues'.format(AUGUR_API_VERSION))
-    def issue_collection_status(): #TODO: make this name automatic - wrapper?
+    @server.app.route('/{}/collection_status/issues'.format(AUGUR_API_VERSION))
+    def issue_collection_status():  # TODO: make this name automatic - wrapper?
         issue_collection_sql = s.sql.text("""
             SELECT
                 *
@@ -94,14 +96,15 @@ def create_routes(server):
             WHERE d.issues_enabled = 'true';
         """)
         results = pd.read_sql(issue_collection_sql,  server.engine)
-        data = results.to_json(orient="records", date_format='iso', date_unit='ms')
+        data = results.to_json(
+            orient="records", date_format='iso', date_unit='ms')
         parsed_data = json.loads(data)
         return Response(response=data,
                         status=200,
                         mimetype="application/json")
 
-    server.app.route('/{}/collection_status/pull_requests'.format(AUGUR_API_VERSION))
-    def pull_request_collection_status(): #TODO: make this name automatic - wrapper?
+    @server.app.route('/{}/collection_status/pull_requests'.format(AUGUR_API_VERSION))
+    def pull_request_collection_status():  # TODO: make this name automatic - wrapper?
         pull_request_collection_sql = s.sql.text("""
             SELECT
                 *
@@ -163,7 +166,8 @@ def create_routes(server):
                 ratio_abs;
         """)
         results = pd.read_sql(pull_request_collection_sql,  server.engine)
-        data = results.to_json(orient="records", date_format='iso', date_unit='ms')
+        data = results.to_json(
+            orient="records", date_format='iso', date_unit='ms')
         parsed_data = json.loads(data)
         return Response(response=data,
                         status=200,

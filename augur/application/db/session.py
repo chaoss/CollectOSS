@@ -15,6 +15,39 @@ from augur.tasks.util.random_key_auth import RandomKeyAuth
 from augur.application.db.engine import create_database_engine
 from augur.application.config import AugurConfig
 from augur.application.db.models import Platform
+from augur.tasks.util.worker_util import remove_duplicate_dicts
+
+
+def remove_null_characters_from_string(string):
+
+    if string:
+        return string.replace("\x00", "\uFFFD")
+
+    return string
+
+def remove_null_characters_from_strings_in_dict(data, fields):
+
+    for field in fields:
+
+        # ensure the field exits in the dict
+        try:
+            data[field] = remove_null_characters_from_string(data[field])
+        except KeyError:
+            print(
+                f"Error tried to remove null characters from the field: {field}, but it wasn't present in the dict")
+            continue
+
+        except AttributeError:
+            continue
+
+    return data
+
+def remove_null_characters_from_list_of_dicts(data_list, fields):
+
+    for value in data_list:
+        value = remove_null_characters_from_strings_in_dict(value, fields)
+
+    return data_list
 
 
 class DatabaseSession(s.orm.Session):
@@ -43,9 +76,8 @@ class DatabaseSession(s.orm.Session):
 
             return connection.execute(sql_text)
 
+    def insert_data(self, data: Union[List[dict], dict], table, natural_keys: List[str], return_columns: Optional[List[str]] = None, string_fields: Optional[List[str]] = None) -> Optional[List[dict]]:
 
-    def insert_data(self, data: Union[List[dict], dict], table, natural_keys: List[str], return_columns: Optional[List[str]] = None) -> Optional[List[dict]]:
-        
         if isinstance(data, list) is False:
             
             # if a dict is passed to data then 
@@ -65,8 +97,15 @@ class DatabaseSession(s.orm.Session):
             self.logger.info("Must be list of dicts")
             return None
 
-        # creates list of arguments to tell sqlalchemy what columns to return after the data is inserted
+        # remove any duplicate data 
+        # this only counts something as a duplicate if every field is the same
+        data = remove_duplicate_dicts(data)
 
+        # remove null data from string fields
+        if string_fields and isinstance(string_fields, list):
+            data = remove_null_characters_from_list_of_dicts(data, string_fields)
+
+        # creates list of arguments to tell sqlalchemy what columns to return after the data is inserted
         returning_args = []
         if return_columns:
             for column in return_columns:
@@ -103,7 +142,6 @@ class DatabaseSession(s.orm.Session):
         if not return_columns:
 
             while attempts < 10:
-                print("")
                 try:
                     with self.engine.connect() as connection:
                         connection.execute(stmnt)

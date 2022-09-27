@@ -3,6 +3,7 @@ import os
 import json
 import sys
 import logging
+import inspect
 from sqlalchemy import create_engine, event
 from augur.application.logs import initialize_stream_handler
 
@@ -40,9 +41,9 @@ def get_database_string() -> str:
     with open("db.config.json", 'r') as f:
         db_config = json.load(f)
 
-        db_conn_string = f"postgresql+psycopg2://{db_config['user']}:{db_config['password']}@{db_config['host']}:{db_config['port']}/{db_config['database_name']}"
+    db_conn_string = f"postgresql+psycopg2://{db_config['user']}:{db_config['password']}@{db_config['host']}:{db_config['port']}/{db_config['database_name']}"
 
-        return db_conn_string
+    return db_conn_string
 
 
 def create_database_engine():  
@@ -54,6 +55,11 @@ def create_database_engine():
     Returns:
         sqlalchemy database engine
     """ 
+
+    # curframe = inspect.currentframe()
+    # calframe = inspect.getouterframes(curframe, 2)
+    # print('file name:', calframe[1][1])
+    # print('function name:', calframe[1][3])
 
     db_conn_string = get_database_string()
 

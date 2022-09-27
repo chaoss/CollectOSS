@@ -2,7 +2,7 @@ import time
 import logging
 
 
-from augur.tasks.init.celery_app import celery_app as celery
+from augur.tasks.init.celery_app import celery_app as celery, engine
 from augur.application.db.data_parse import *
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
 from augur.tasks.github.util.github_task_session import GithubTaskSession
@@ -19,7 +19,7 @@ def process_contributors():
     tool_version = "2.0"
     data_source = "Github API"
 
-    with GithubTaskSession(logger) as session:
+    with GithubTaskSession(logger, engine) as session:
 
         contributors = session.query(Contributor).filter(Contributor.data_source == data_source, Contributor.cntrb_created_at is None, Contributor.cntrb_last_used is None).all()
 
@@ -57,7 +57,7 @@ def process_contributors():
             enriched_contributors.append(contributor_dict)
 
         logger.info(f"Enriching {len(enriched_contributors)} contributors")
-        session.insert_data(enriched_contributors, Contributor, ["cntrb_login"])
+        session.insert_data(enriched_contributors, Contributor, ["cntrb_id"])
 
 
 
@@ -66,7 +66,7 @@ def retrieve_dict_data(url: str, session):
     num_attempts = 0
     while num_attempts <= 10:
 
-        response = hit_api(session, url)
+        response = hit_api(session.oauths, url, session.logger)
 
         # increment attempts
         if response is None:

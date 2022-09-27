@@ -25,6 +25,7 @@
 # and checks for any parents of HEAD that aren't already accounted for in the
 # repos. It also rebuilds analysis data, checks any changed affiliations and
 # aliases, and caches data for display.
+from __future__ import annotations
 import traceback
 import sys, platform, imp, time, datetime, html.parser, subprocess, os, getopt, xlsxwriter, configparser, logging
 from multiprocessing import Process, Queue
@@ -41,9 +42,34 @@ from .facade07rebuildcache import nuke_affiliations, fill_empty_affiliations, in
 from augur.tasks.github.facade_github.contributor_interfaceable.contributor_interface import *
 
 from augur.tasks.github.util.github_task_session import GithubTaskSession
+from augur.tasks.init.celery_app import engine
+from logging import Logger
+from sqlalchemy.sql.elements import TextClause
 
 class FacadeSession(GithubTaskSession):
-    def __init__(self,logger,platform='GitHub'):
+    """ORM session used in facade tasks.
+
+        This class adds the various attributes needed for legacy facade as well as a modified version of the legacy FacadeConfig class.
+        This is mainly for compatibility with older functions from legacy facade.
+
+    Attributes:
+        cfg (FacadeConfig): Class that supports the config and database functionality from legacy facade.
+        limited_run (int): value that determines whether legacy facade is only doing a portion of its full run of commit analysis or not. By default all steps are run but if any options in particular are specified then only those are ran.
+        delete_marked_repos (int): toggle that determines whether to delete git cloned git directories when they are marked for deletion
+        pull_repos (int): toggles whether to update existing repos in the facade directory
+        clone_repos (int): toggles whether to run 'git clone' on repos that haven't been cloned yet.
+        check_updates (int): toggles whether to check if any repos are marked for update
+        force_updates (int): force all repos to have 'git pull' run on them
+        run_analysis (int): toggles analysis of repos in a limited run
+        force_analysis (int): forces all repos to have their commits analyzed by legacy facade.
+        nuke_stored_affiliations (int): toggles nuking facade affliations
+        fix_affiliations (int): toggles filling empty affilations
+        force_invalidate_caches (int): toggles whether to clear facade's backend caches
+        rebuild_caches (int): toggles whether to rebuild unknown affiliation and web caches
+        multithreaded (int): toggles whether to allow the facade task to execute subtasks in parallel
+        create_xlsx_summary_files (int): toggles whether to create excel summary files
+    """
+    def __init__(self,logger: Logger):
         self.cfg = FacadeConfig(logger)
 
         super().__init__(logger=logger)
@@ -64,7 +90,12 @@ class FacadeSession(GithubTaskSession):
         self.multithreaded = self.cfg.worker_options["multithreaded"]
         self.create_xlsx_summary_files = self.cfg.worker_options["create_xlsx_summary_files"]
 
-    def insert_or_update_data(self, query, params=None):
+    def insert_or_update_data(self, query: TextClause, params: tuple=None)-> None:
+        """Provide deadlock detection for postgres updates, inserts, and deletions for facade.
+
+        Returns:
+            A page of data from the Github API at the specified url
+        """
 
         attempts = 0
         sleep_time_list = [x for x in range(1,11)]

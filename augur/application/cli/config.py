@@ -11,7 +11,7 @@ from augur.application.db.models import Config
 from augur.application.db.session import DatabaseSession
 from augur.application.logs import AugurLogger
 from augur.application.cli import test_connection, test_db_connection 
-
+from augur.application.cli.inspect_without_import import get_phase_names_without_import
 ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 
 logger = logging.getLogger(__name__)
@@ -64,6 +64,14 @@ def init_config(github_api_key, facade_repo_directory, gitlab_api_key, redis_con
 
         default_config = config.default_config
 
+        print(f"Dir {os.getcwd()}")
+        phase_names = get_phase_names_without_import()
+
+        #Add all phases as enabled by default
+        for name in phase_names:
+            default_config['Task_Routine'].update({name : 1})
+
+        #print(default_config)
         if redis_conn_string:
 
             try:

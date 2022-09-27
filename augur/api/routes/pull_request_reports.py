@@ -359,7 +359,8 @@ def create_routes(server):
 
         total_rows_removed = 0
         for col in not_null_columns:
-            rows_removed = len(df.loc[df[col].isnull() is True])
+            rows_removed = len(df.loc[df[col].isnull()])
+            #rows_removed = len(df.loc[df[col].isnull() is True])
 
             if rows_removed > 0:
                 print(f"{rows_removed} rows have been removed because of null values in column {col}")
@@ -415,7 +416,9 @@ def create_routes(server):
         if all(x in needed_columns for x in not_null_columns):
 
             df = get_needed_columns(df, needed_columns)
-            df = remove_rows_with_null_values(df, not_null_columns)
+            #Use the pandas method bc the other method was erroring on boolean index.
+            #IM - 9/23/22
+            df = df.dropna(subset=not_null_columns)#remove_rows_with_null_values(df, not_null_columns)
 
             return df
         else:
@@ -457,7 +460,7 @@ def create_routes(server):
             }
             return None, None, None, error
 
-    server.app.route('/{}/pull_request_reports/average_commits_per_PR/'.format(AUGUR_API_VERSION), methods=["GET"])
+    @server.app.route('/{}/pull_request_reports/average_commits_per_PR/'.format(AUGUR_API_VERSION), methods=["GET"])
     def average_commits_per_PR():
 
         repo_id, start_date, end_date, error = get_repo_id_start_date_and_end_date()
@@ -602,7 +605,7 @@ def create_routes(server):
 
         return send_file(filename)
 
-    server.app.route('/{}/pull_request_reports/average_comments_per_PR/'.format(AUGUR_API_VERSION), methods=["GET"])
+    @server.app.route('/{}/pull_request_reports/average_comments_per_PR/'.format(AUGUR_API_VERSION), methods=["GET"])
     def average_comments_per_PR():
 
         repo_id, start_date, end_date, error = get_repo_id_start_date_and_end_date()
@@ -783,7 +786,7 @@ def create_routes(server):
 
         return send_file(filename)
 
-    server.app.route('/{}/pull_request_reports/PR_counts_by_merged_status/'.format(AUGUR_API_VERSION),
+    @server.app.route('/{}/pull_request_reports/PR_counts_by_merged_status/'.format(AUGUR_API_VERSION),
                       methods=["GET"])
     def PR_counts_by_merged_status():
 
@@ -975,7 +978,7 @@ def create_routes(server):
 
         return send_file(filename)
 
-    server.app.route('/{}/pull_request_reports/mean_response_times_for_PR/'.format(AUGUR_API_VERSION),
+    @server.app.route('/{}/pull_request_reports/mean_response_times_for_PR/'.format(AUGUR_API_VERSION),
                       methods=["GET"])
     def mean_response_times_for_PR():
 
@@ -1274,7 +1277,7 @@ def create_routes(server):
 
         return send_file(filename)
 
-    server.app.route('/{}/pull_request_reports/mean_days_between_PR_comments/'.format(AUGUR_API_VERSION),
+    @server.app.route('/{}/pull_request_reports/mean_days_between_PR_comments/'.format(AUGUR_API_VERSION),
                       methods=["GET"])
     def mean_days_between_PR_comments():
 
@@ -1442,7 +1445,7 @@ def create_routes(server):
 
         return send_file(filename)
 
-    server.app.route('/{}/pull_request_reports/PR_time_to_first_response/'.format(AUGUR_API_VERSION), methods=["GET"])
+    @server.app.route('/{}/pull_request_reports/PR_time_to_first_response/'.format(AUGUR_API_VERSION), methods=["GET"])
     def PR_time_to_first_response():
 
         repo_id, start_date, end_date, error = get_repo_id_start_date_and_end_date()
@@ -1577,7 +1580,7 @@ def create_routes(server):
 
         return send_file(filename)
 
-    server.app.route('/{}/pull_request_reports/average_PR_events_for_closed_PRs/'.format(AUGUR_API_VERSION),
+    @server.app.route('/{}/pull_request_reports/average_PR_events_for_closed_PRs/'.format(AUGUR_API_VERSION),
                       methods=["GET"])
     def average_PR_events_for_closed_PRs():
 
@@ -1766,7 +1769,7 @@ def create_routes(server):
 
         return send_file(filename)
 
-    server.app.route('/{}/pull_request_reports/Average_PR_duration/'.format(AUGUR_API_VERSION), methods=["GET"])
+    @server.app.route('/{}/pull_request_reports/Average_PR_duration/'.format(AUGUR_API_VERSION), methods=["GET"])
     def Average_PR_duration():
 
         repo_id, start_date, end_date, error = get_repo_id_start_date_and_end_date()

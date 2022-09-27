@@ -247,6 +247,48 @@ class Contributor(Base):
         TIMESTAMP(precision=0), server_default=text("CURRENT_TIMESTAMP")
     )
 
+    @classmethod
+    def from_github(cls, contributor, tool_source, tool_version, data_source):
+
+        cntrb_id = GithubUUID()   
+        cntrb_id["user"] = contributor["id"]
+        
+        contributor_obj = cls()
+
+        contributor_obj.cntrb_id = cntrb_id.to_UUID()
+        contributor_obj.cntrb_login = contributor['login']
+        contributor_obj.cntrb_created_at = contributor['created_at'] if 'created_at' in contributor else None
+        contributor_obj.cntrb_email = contributor['email'] if 'email' in contributor else None
+        contributor_obj.cntrb_company = contributor['company'] if 'company' in contributor else None
+        contributor_obj.cntrb_location = contributor['location'] if 'location' in contributor else None
+        # cntrb_type =  dont have a use for this as of now ... let it default to null
+        contributor_obj.cntrb_canonical = contributor['email'] if 'email' in contributor else None
+        contributor_obj.gh_user_id = contributor['id']
+        contributor_obj.gh_login = str(contributor['login'])  ## cast as string by SPG on 11/28/2021 due to `nan` user
+        contributor_obj.gh_url = contributor['url']
+        contributor_obj.gh_html_url = contributor['html_url']
+        contributor_obj.gh_node_id = contributor['node_id']
+        contributor_obj.gh_avatar_url = contributor['avatar_url']
+        contributor_obj.gh_gravatar_id = contributor['gravatar_id']
+        contributor_obj.gh_followers_url = contributor['followers_url']
+        contributor_obj.gh_following_url = contributor['following_url']
+        contributor_obj.gh_gists_url = contributor['gists_url']
+        contributor_obj.gh_starred_url = contributor['starred_url']
+        contributor_obj.gh_subscriptions_url = contributor['subscriptions_url']
+        contributor_obj.gh_organizations_url = contributor['organizations_url']
+        contributor_obj.gh_repos_url = contributor['repos_url']
+        contributor_obj.gh_events_url = contributor['events_url']
+        contributor_obj.gh_received_events_url = contributor['received_events_url']
+        contributor_obj.gh_type = contributor['type']
+        contributor_obj.gh_site_admin = contributor['site_admin']
+        contributor_obj.cntrb_last_used = None if 'updated_at' not in contributor else contributor['updated_at']
+        contributor_obj.cntrb_full_name = None if 'name' not in contributor else contributor['name']
+        contributor_obj.tool_source = tool_source
+        contributor_obj.tool_version = tool_version
+        contributor_obj.data_source = data_source
+
+        return contributor_obj
+
 
 t_dm_repo_annual = Table(
     "dm_repo_annual",
@@ -1032,6 +1074,13 @@ class Issue(Base):
         "Contributor", primaryjoin="Issue.reporter_id == Contributor.cntrb_id"
     )
 
+    # @classmethod
+    # def from_github(cls):
+        
+    #     issue_obj = cls()
+
+    #     return issue_obj
+
 
 class Library(Base):
     __tablename__ = "libraries"
@@ -1169,6 +1218,13 @@ class Message(Base):
     pltfrm = relationship("Platform")
     repo = relationship("Repo")
     rgls = relationship("RepoGroupsListServe")
+
+    # @classmethod
+    # def from_github(cls):
+        
+    #     message_obj = cls()
+
+    #     return message_obj
 
 
 class MessageAnalysisSummary(Base):
@@ -1337,13 +1393,60 @@ class PullRequest(Base):
     pr_augur_contributor = relationship("Contributor")
     repo = relationship("Repo")
 
+    @classmethod
+    def from_github(cls, pr, repo_id, tool_source, tool_version):
+
+        pr_obj = cls()
+
+        pr_obj.repo_id = repo_id
+        pr_obj.pr_url = pr["url"]
+        pr_obj.pr_src_id = int(str(pr['id']).encode(encoding='UTF-8').decode(encoding='UTF-8')),
+        pr_obj.pr_src_node_id = pr['node_id'],
+        pr_obj.pr_html_url = pr['html_url'],
+        pr_obj.pr_diff_url = pr['diff_url'],
+        pr_obj.pr_patch_url = pr['patch_url'],
+        pr_obj.pr_issue_url = pr['issue_url'],
+        pr_obj.pr_augur_issue_id = None,
+        pr_obj.pr_src_number = pr['number'],
+        pr_obj.pr_src_state = pr['state'],
+        pr_obj.pr_src_locked = pr['locked'],
+        pr_obj.pr_src_title = str(pr['title']),
+        pr_obj.pr_augur_contributor_id = pr["cntrb_id"],
+        pr_obj.pr_body = str(pr['body']).encode(encoding='UTF-8', errors='backslashreplace').decode(encoding='UTF-8', errors='ignore') if (pr['body']) else None,
+        pr_obj.pr_created_at = pr['created_at'],
+        pr_obj.pr_updated_at = pr['updated_at'],
+        pr_obj.pr_closed_at = None if not (pr['closed_at']) else pr['closed_at'],
+        pr_obj.pr_merged_at = None if not (pr['merged_at']) else pr['merged_at'],
+        pr_obj.pr_merge_commit_sha = pr['merge_commit_sha'],
+        pr_obj.pr_teams = None,
+        pr_obj.pr_milestone = None,
+        pr_obj.pr_commits_url = pr['commits_url'],
+        pr_obj.pr_review_comments_url = pr['review_comments_url'],
+        pr_obj.pr_review_comment_url = pr['review_comment_url'],
+        pr_obj.pr_comments_url = pr['comments_url'],
+        pr_obj.pr_statuses_url = pr['statuses_url'],
+        pr_obj.pr_meta_head_id = None if not (pr['head']) else pr['head']['label'],
+        pr_obj.pr_meta_base_id = None if not (pr['base']) else pr['base']['label'],
+        pr_obj.pr_src_issue_url = pr['issue_url'],
+        pr_obj.pr_src_comments_url = pr['comments_url'],
+        pr_obj.pr_src_review_comments_url = pr['review_comments_url'],
+        pr_obj.pr_src_commits_url = pr['commits_url'],
+        pr_obj.pr_src_statuses_url = pr['statuses_url'],
+        pr_obj.pr_src_author_association = pr['author_association'],
+        pr_obj.tool_source = tool_source,
+        pr_obj.tool_version = tool_version,
+        pr_obj.data_source = 'GitHub API'
+
+        return pr_obj
+
+
 
 class Release(Base):
     __tablename__ = "releases"
     __table_args__ = {"schema": "augur_data"}
 
     release_id = Column(
-        CHAR(64),
+        CHAR(128),
         primary_key=True,
         server_default=text("nextval('augur_data.releases_release_id_seq'::regclass)"),
     )
@@ -1924,6 +2027,21 @@ class IssueAssignee(Base):
     issue = relationship("Issue")
     repo = relationship("Repo")
 
+    @classmethod
+    def from_github(cls, assignee, repo_id, tool_source, tool_version, data_source):
+        
+        issue_assignee_obj = cls()
+
+        issue_assignee_obj.cntrb_id = assignee["cntrb_id"] # # this is added to the data by the function process_issue_contributors in issue_tasks.py
+        issue_assignee_obj.tool_source = tool_source
+        issue_assignee_obj.tool_version = tool_version
+        issue_assignee_obj.data_source = data_source
+        issue_assignee_obj.issue_assignee_src_id = int(assignee['id'])
+        issue_assignee_obj.issue_assignee_src_node = assignee['node_id']
+        issue_assignee_obj.repo_id = repo_id 
+
+        return issue_assignee_obj
+
 
 class IssueEvent(Base):
     __tablename__ = "issue_events"
@@ -1990,6 +2108,29 @@ class IssueEvent(Base):
     platform = relationship("Platform")
     repo = relationship("Repo")
 
+    @classmethod
+    def from_github(cls, event, repo_id, platform_id, tool_source, tool_version, data_source):
+        
+        issue_event_obj = cls()
+
+        issue_event_obj.issue_event_src_id = int(event['id'])
+        issue_event_obj.issue_id = issue_id
+        issue_event_obj.node_id = event['node_id']
+        issue_event_obj.node_url = event['url']
+        issue_event_obj.cntrb_id = event["cntrb_id"] if "cntrb_id" in event else None
+        issue_event_obj.created_at = event['created_at'] if (
+            event['created_at']
+        ) else None,
+        issue_event_obj.action = event['event']
+        issue_event_obj.action_commit_hash = event['commit_id']
+        issue_event_obj.tool_source = tool_source
+        issue_event_obj.tool_version = tool_version
+        issue_event_obj.data_source = data_source
+        issue_event_obj.repo_id = repo_id
+        issue_event_obj.platform_id = platform_id
+
+        return issue_event_obj
+
 
 class IssueLabel(Base):
     __tablename__ = "issue_labels"
@@ -2028,6 +2169,23 @@ class IssueLabel(Base):
 
     issue = relationship("Issue")
     repo = relationship("Repo")
+
+    @classmethod
+    def from_github(cls, label, repo_id, tool_source, tool_version, data_source):
+
+        issue_label_obj = cls()
+
+        issue_label_obj.label_text = label['name']
+        issue_label_obj.label_description = label['description'] if 'description' in label else None
+        issue_label_obj.label_color = label['color']
+        issue_label_obj.tool_source = tool_source
+        issue_label_obj.tool_version = tool_version
+        issue_label_obj.data_source = data_source
+        issue_label_obj.label_src_id = int(label['id'])
+        issue_label_obj.label_src_node_id = label['node_id']
+        issue_label_obj.repo_id = repo_id 
+
+        return issue_label_obj
 
 
 class IssueMessageRef(Base):
@@ -2316,6 +2474,21 @@ class PullRequestAssignee(Base):
     pull_request = relationship("PullRequest")
     repo = relationship("Repo")
 
+    @classmethod
+    def from_github(cls, assignee, repo_id, tool_source, tool_version, data_source):
+        
+        pr_assignee_ojb = cls()
+
+        # store the pr_url data on in the pr assignee data for now so we can relate it back to a pr later
+        pr_assignee_obj.contrib_id = assignee["cntrb_id"]
+        pr_assignee_obj.pr_assignee_src_id = int(assignee['id'])
+        pr_assignee_obj.tool_source = tool_source
+        pr_assignee_obj.tool_version = tool_version
+        pr_assignee_obj.data_source = data_source
+        pr_assignee_obj.repo_id = repo_id
+
+        return pr_assignee_obj
+
 
 class PullRequestCommit(Base):
     __tablename__ = "pull_request_commits"
@@ -2445,6 +2618,28 @@ class PullRequestEvent(Base):
     pull_request = relationship("PullRequest")
     repo = relationship("Repo")
 
+    @classmethod
+    def from_github(cls, event, pr_id, repo_id, tool_source, tool_version, data_source):
+        
+        pr_event_obj = cls()
+
+        pr_event_obj.pull_request_id = pr_id
+        pr_event_obj.cntrb_id = event["cntrb_id"] if "cntrb_id" in event else None
+        pr_event_obj.action = event['event']
+        pr_event_obj.action_commit_hash = None
+        pr_event_obj.created_at = event['created_at']
+        pr_event_obj.issue_event_src_id = int(event['issue']["id"])
+        pr_event_obj.node_id = event['node_id']
+        pr_event_obj.node_url = event['url']
+        pr_event_obj.tool_source = tool_source
+        pr_event_obj.tool_version = tool_version
+        pr_event_obj.data_source = data_source
+        pr_event_obj.pr_platform_event_id = int(event['issue']["id"])
+        pr_event_obj.platform_id = platform_id
+        pr_event_obj.repo_id = repo_id
+
+        return pr_event_obj
+
 
 class PullRequestFile(Base):
     __tablename__ = "pull_request_files"
@@ -2492,6 +2687,13 @@ class PullRequestFile(Base):
     pull_request = relationship("PullRequest")
     repo = relationship("Repo")
 
+    # @classmethod
+    # def from_github(cls):
+        
+    #     pr_file_obj = cls()
+
+    #     return pr_file_obj
+
 
 class PullRequestLabel(Base):
     __tablename__ = "pull_request_labels"
@@ -2529,9 +2731,29 @@ class PullRequestLabel(Base):
     data_collection_date = Column(
         TIMESTAMP(precision=0), server_default=text("CURRENT_TIMESTAMP")
     )
+    
 
     pull_request = relationship("PullRequest")
     repo = relationship("Repo")
+
+    @classmethod
+    def from_github(cls, label, repo_id, tool_source, tool_version, data_source):
+
+        pr_label_obj = cls()
+
+        # store the pr_url data on in the pr label data for now so we can relate it back to a pr later
+        pr_label_obj.pr_src_id = int(label['id'])
+        pr_label_obj.pr_src_node_id = label['node_id']
+        pr_label_obj.pr_src_url = label['url']
+        pr_label_obj.pr_src_description = label['name']
+        pr_label_obj.pr_src_color = label['color']
+        pr_label_obj.pr_src_default_bool = label['default']
+        pr_label_obj.tool_source = tool_source
+        pr_label_obj.tool_version = tool_version
+        pr_label_obj.data_source = data_source
+        pr_label_obj.repo_id = repo_id
+
+        return pr_label_obj
 
 
 class PullRequestMessageRef(Base):
@@ -2638,6 +2860,24 @@ class PullRequestMeta(Base):
     pull_request = relationship("PullRequest")
     repo = relationship("Repo")
 
+    @classmethod
+    def from_github(cls, meta, repo_id, tool_source, tool_version, data_source):
+        
+        pr_meta_obj = cls()
+
+        pr_meta_obj.pr_head_or_base = meta['pr_head_or_base']
+        pr_meta_obj.pr_src_meta_label = meta['label']
+        pr_meta_obj.pr_src_meta_ref = meta['ref']
+        pr_meta_obj.pr_sha = meta['sha']
+        # Cast as int for the `nan` user by SPG on 11/28/2021; removed 12/6/2021
+        pr_meta_obj.cntrb_id = meta["cntrb_id"] if "cntrb_id" in meta else None
+        pr_meta_obj.tool_source = tool_source
+        pr_meta_obj.tool_version = tool_version
+        pr_meta_obj.data_source = data_source
+        pr_meta_obj.repo_id = repo_id
+
+        return pr_meta_obj
+
 
 class PullRequestReviewer(Base):
     __tablename__ = "pull_request_reviewers"
@@ -2684,6 +2924,20 @@ class PullRequestReviewer(Base):
 
     cntrb = relationship("Contributor")
     pull_request = relationship("PullRequest")
+
+    @classmethod
+    def from_github(cls, reviewer, repo_id, tool_source, tool_version, data_source):
+
+        pr_reviewer_obj = cls()
+
+        pr_reviewer_obj.cntrb_id = reviewer["cntrb_id"]
+        pr_reviewer_obj.pr_reviewer_src_id = int(float(reviewer['id']))
+        pr_reviewer_obj.tool_source = tool_source
+        pr_reviewer_obj.tool_version = tool_version
+        pr_reviewer_obj.data_source = data_source
+        pr_reviewer_obj.repo_id = repo_id
+
+        return pr_reviewer_obj
 
 
 class PullRequestReview(Base):
@@ -2747,6 +3001,13 @@ class PullRequestReview(Base):
     platform = relationship("Platform")
     pull_request = relationship("PullRequest")
     repo = relationship("Repo")
+
+    # @classmethod
+    # def from_github(cls):
+        
+    #     pr_review_obj = cls()
+
+    #     return pr_reivew_obj
 
 
 class PullRequestTeam(Base):

@@ -20,6 +20,7 @@ EXPOSE 5000
 
 WORKDIR /augur
 COPY ./README.md .
+COPY ./alembic.ini .
 COPY ./augur/ augur/
 COPY ./metadata.py .
 COPY ./setup.py .

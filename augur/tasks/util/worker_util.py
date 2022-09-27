@@ -8,6 +8,9 @@ from augur.application.logs import AugurLogger
 from celery.result import AsyncResult
 from celery.result import allow_join_result
 
+from typing import Optional, List, Any, Tuple
+
+
 def create_grouped_task_load(*args,processes=6,dataList=[],task=None):
     
     if not dataList or not task:
@@ -27,6 +30,18 @@ def wait_child_tasks(ids_list):
         prereq = AsyncResult(str(task_id))
         with allow_join_result():
             prereq.wait()
+
+
+def remove_duplicate_dicts(data: List[dict]) -> List[dict]:
+    """Removed duplicate dics from a list
+
+    Args:
+        data: list of dicts that is being modified
+
+    Returns:
+        list of unique dicts
+    """
+    return [dict(y) for y in set(tuple(x.items()) for x in data)]
 
 
 # def create_server(app, worker=None):
