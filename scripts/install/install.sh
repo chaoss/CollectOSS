@@ -24,6 +24,8 @@ echo "Done!"
 scripts/install/workers.sh $target 2>&1 | tee logs/workers-install.log
 echo "Done!"
 
+scripts/install/nltk_dictionaries.sh
+
 
 function create_db_config() {
     echo "Enter the database credentials to your database. This will create db.config.json"
@@ -122,7 +124,7 @@ echo "**********************************"
 
 # scripts/install/frontend.sh
 # scripts/install/api_key.sh
-# scripts/install/nltk_dictionaries.sh
+
 
 # if [[ -e augur.config.json || -e $HOME/.augur/augur.config.json ]]; then
 #   if [[ -e augur.config.json ]]; then
