@@ -13,7 +13,7 @@ from augur.application.db.models import Contributor, Issue
 logger = logging.getLogger(__name__)
 
 
-def test_is_valid_repo(engine):
+def test_is_valid_repo():
 
     with GithubTaskSession(logger) as session:
 
@@ -39,6 +39,10 @@ def test_is_valid_repo(engine):
 
         # test correct repo git
         assert controller.is_valid_repo("https://github.com/chaoss/augur") is True
+
+        assert controller.is_valid_repo("https://github.com/chaoss/augur/") is True
+
+        assert controller.is_valid_repo("https://github.com/chaoss/augur.git") is True
 
 def test_get_repo_id(engine):
 
