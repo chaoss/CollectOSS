@@ -44,6 +44,14 @@ Traceback (most recent call last):
 Exception: <class 'sqlalchemy.exc.IntegrityError'>(['(psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "GL-cntrb-LOGIN-UNIQUE"\nDETAIL:  Key (cntrb_login)=(name) already exists.\n'])
 */
 
+ALTER TABLE "augur_data"."commits" DROP CONSTRAINT "fk_commits_contributors_3";
+
+ALTER TABLE "augur_data"."commits" DROP CONSTRAINT "fk_commits_contributors_4";
+
 ALTER TABLE "augur_data"."contributors" 
   DROP CONSTRAINT "GL-cntrb-LOGIN-UNIQUE",
   ADD CONSTRAINT "GL-cntrb-LOGIN-UNIQUE" UNIQUE ("cntrb_login") DEFERRABLE INITIALLY DEFERRED;
+
+ALTER TABLE "augur_data"."commits" ADD CONSTRAINT "fk_commits_contributors_3" FOREIGN KEY ("cmt_author_platform_username") REFERENCES "augur_data"."contributors" ("cntrb_login") ON DELETE RESTRIC ON UPDATE CASCADE DEFERRABLE INITIALLY DEFERRED;
+
+ALTER TABLE "augur_data"."commits" ADD CONSTRAINT "fk_commits_contributors_4" FOREIGN KEY ("cmt_author_platform_username") REFERENCES "augur_data"."contributors" ("cntrb_login") ON DELETE RESTRICT ON UPDATE CASCADE DEFERRABLE INITIALLY DEFERRED;
