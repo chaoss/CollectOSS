@@ -52,6 +52,6 @@ ALTER TABLE "augur_data"."contributors"
   DROP CONSTRAINT "GL-cntrb-LOGIN-UNIQUE",
   ADD CONSTRAINT "GL-cntrb-LOGIN-UNIQUE" UNIQUE ("cntrb_login") DEFERRABLE INITIALLY DEFERRED;
 
-ALTER TABLE "augur_data"."commits" ADD CONSTRAINT "fk_commits_contributors_3" FOREIGN KEY ("cmt_author_platform_username") REFERENCES "augur_data"."contributors" ("cntrb_login") ON DELETE RESTRIC ON UPDATE CASCADE DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE "augur_data"."commits" ADD CONSTRAINT "fk_commits_contributors_3" FOREIGN KEY ("cmt_author_platform_username") REFERENCES "augur_data"."contributors" ("cntrb_login") ON DELETE RESTRICT ON UPDATE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
 ALTER TABLE "augur_data"."commits" ADD CONSTRAINT "fk_commits_contributors_4" FOREIGN KEY ("cmt_author_platform_username") REFERENCES "augur_data"."contributors" ("cntrb_login") ON DELETE RESTRICT ON UPDATE CASCADE DEFERRABLE INITIALLY DEFERRED;
