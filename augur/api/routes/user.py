@@ -10,6 +10,9 @@ from flask import request, Response, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.sql import text
 from sqlalchemy.orm import sessionmaker
+from augur.application.db.session import DatabaseSession
+from augur.application.cli._repo_load_controller import RepoLoadController
+
 
 from augur.application.db.models import User
 
@@ -126,3 +129,65 @@ def create_routes(server):
                 user.login_name = new_login_name
                 session.commit()
                 return jsonify({"status": "Username Updated"})
+
+    @server.app.route(f"/{AUGUR_API_VERSION}/user/repos", methods=['GET', 'POST'])
+    def user_repos():
+        username = request.args.get("username")
+
+        with DatabaseSession(logger) as session:
+    
+            if username is None:
+                return jsonify({"status": "Missing argument"}), 400
+            user = session.query(User).filter(User.login_name == username).first()
+            if user is None:
+                return jsonify({"status": "User does not exist"})
+            
+            repo_load_controller = RepoLoadController(gh_session=session)
+
+            repo_ids = repo_load_controller.get_user_repo_ids(User.user_id)
+
+            return jsonify({"status": "success", "data": repo_ids})
+
+    @server.app.route(f"/{AUGUR_API_VERSION}/user/add_repos", methods=['GET', 'POST'])
+    def add_user_repo():
+        username = request.args.get("username")
+        repos = request.args.get("repos")
+
+        with DatabaseSession(logger) as session:
+
+            if username is None:
+                return jsonify({"status": "Missing argument"}), 400
+            user = session.query(User).filter(
+                User.login_name == username).first()
+            if user is None:
+                return jsonify({"status": "User does not exist"})
+
+            repo_load_controller = RepoLoadController(gh_session=session)
+
+            repo_load_controller.add_frontend_repos(repos, User.user_id)
+
+            return jsonify({"status": "Repos Added"})
+
+
+    @server.app.route(f"/{AUGUR_API_VERSION}/user/add_orgs", methods=['GET', 'POST'])
+    def add_user_org():
+        username = request.args.get("username")
+        orgs = request.args.get("orgs")
+
+        with DatabaseSession(logger) as session:
+
+            if username is None:
+                return jsonify({"status": "Missing argument"}), 400
+            user = session.query(User).filter(
+                User.login_name == username).first()
+            if user is None:
+                return jsonify({"status": "User does not exist"})
+
+            repo_load_controller = RepoLoadController(gh_session=session)
+
+            rrepo_load_controller.add_frontend_orgs(orgs, User.user_id)
+
+            return jsonify({"status": "Orgs Added"})
+
+
+        

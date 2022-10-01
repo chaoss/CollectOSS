@@ -280,6 +280,17 @@ class RepoLoadController:
                 self.add_cli_repos(data)
 
 
+    def get_user_repo_ids(self, user_id):
+
+        user_repo_id_query = s.sql.text(f"""SELECT * FROM augur_data.user_repo WHERE user_id={user_id};""")
 
 
+        result = self.session.execute_sql(user_repo_id_query).fetchall()
+
+        if len(result) == 0:
+            return []
+
+        repo_ids = [dict(row)["repo_id"] for row in result]
+
+        return repo_ids
 
