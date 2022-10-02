@@ -77,7 +77,7 @@ def create_routes(server):
         if emailCheck is not None:
             return jsonify({"status": "Email already exists"})
         try:
-            user = User(login_name = username, login_hashword = generate_password_hash(password), email = email, first_name = first_name, last_name = last_name, tool_source="User API", tool_version=None, data_source="API")
+            user = User(login_name = username, login_hashword = generate_password_hash(password), email = email, first_name = first_name, last_name = last_name, tool_source="User API", tool_version=None, data_source="API", admin=False)
             session.add(user)
             session.commit()
             return jsonify({"status": "User created"})
@@ -149,7 +149,7 @@ def create_routes(server):
             return jsonify({"status": "success", "data": repo_ids})
 
     @server.app.route(f"/{AUGUR_API_VERSION}/user/add_repos", methods=['GET', 'POST'])
-    def add_user_repo():
+    def add_user_repos():
         username = request.args.get("username")
         repos = request.args.get("repos")
 
@@ -170,7 +170,7 @@ def create_routes(server):
 
 
     @server.app.route(f"/{AUGUR_API_VERSION}/user/add_orgs", methods=['GET', 'POST'])
-    def add_user_org():
+    def add_user_orgs():
         username = request.args.get("username")
         orgs = request.args.get("orgs")
 
@@ -185,7 +185,7 @@ def create_routes(server):
 
             repo_load_controller = RepoLoadController(gh_session=session)
 
-            rrepo_load_controller.add_frontend_orgs(orgs, User.user_id)
+            repo_load_controller.add_frontend_orgs(orgs, User.user_id)
 
             return jsonify({"status": "Orgs Added"})
 
