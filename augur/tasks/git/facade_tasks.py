@@ -376,7 +376,7 @@ def generate_analysis_sequence(logger):
                 #Split commits into mostly equal queues so each process starts with a workload and there is no
                 #    overhead to pass into queue from the parent.            
                 #Each task generates their own cfg as celery cannot serialize this data
-                contrib_jobs = create_grouped_task_load(repo[0],repo_loc,multithreaded,processes=processes,dataList=missing_commits,task=analyze_commits_in_parallel)
+                contrib_jobs = create_grouped_task_load(repo[0],repo_loc,True,processes=processes,dataList=missing_commits,task=analyze_commits_in_parallel)
                 analysis_sequence.append(contrib_jobs)
             
             # Find commits which are out of the analysis range
@@ -439,22 +439,22 @@ def generate_facade_chain(logger):
         facade_sequence = []
 
         if not limited_run or (limited_run and delete_marked_repos):
-            facade_sequence.append(git_repo_cleanup_facade_task.si())#git_repo_cleanup(session.cfg)
+            git_repo_cleanup(session.cfg)
 
         if not limited_run or (limited_run and clone_repos):
-            facade_sequence.append(git_repo_initialize_facade_task.si())#git_repo_initialize(session.cfg)
+            git_repo_initialize(session.cfg)
 
         if not limited_run or (limited_run and check_updates):
-            facade_sequence.append(check_for_repo_updates_facade_task.si())#check_for_repo_updates(session)
+            check_for_repo_updates(session)
 
         if force_updates:
-            facade_sequence.append(force_repo_updates_facade_task.si())
+            force_repo_updates(session.cfg)#facade_sequence.append(force_repo_updates_facade_task.si())
 
         if not limited_run or (limited_run and pull_repos):
-            facade_sequence.append(git_repo_updates_facade_task.si())
+            git_repo_updates(session.cfg)#facade_sequence.append(git_repo_updates_facade_task.si())
 
         if force_analysis:
-            facade_sequence.append(force_repo_analysis_facade_task.si())
+            force_repo_analysis(session.cfg)#facade_sequence.append(force_repo_analysis_facade_task.si())
 
         #Generate commit analysis task order.
         facade_sequence.extend(generate_analysis_sequence(logger))
