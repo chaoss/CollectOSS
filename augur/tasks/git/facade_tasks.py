@@ -320,7 +320,9 @@ def generate_analysis_sequence(logger):
     with FacadeSession(logger) as session:
         repo_list = "SELECT repo_id,repo_group_id,repo_path,repo_name FROM repo "
         session.cfg.cursor.execute(repo_list)
-        repos = list(cfg.cursor)
+        repos = list(session.cfg.cursor)
+
+        start_date = session.cfg.get_setting('start_date')
 
         analysis_sequence.append(facade_analysis_init_facade_task.si())
         for repo in repos:
@@ -330,7 +332,7 @@ def generate_analysis_sequence(logger):
 
 
             #Get the huge list of commits to process.
-            repo_loc = ('%s%s/%s%s/.git' % (cfg.repo_base_directory,
+            repo_loc = ('%s%s/%s%s/.git' % (session.cfg.repo_base_directory,
             repo[1], repo[2],
             repo[3]))
             # Grab the parents of HEAD
@@ -353,19 +355,19 @@ def generate_analysis_sequence(logger):
 
             find_existing = ("SELECT DISTINCT cmt_commit_hash FROM commits WHERE repo_id=%s")
 
-            cfg.cursor.execute(find_existing, (repo[0], ))
+            session.cfg.cursor.execute(find_existing, (repo[0], ))
 
             try:
-                for commit in list(cfg.cursor):
+                for commit in list(session.cfg.cursor):
                     existing_commits.add(commit[0])
             except:
-                cfg.log_activity('Info', 'list(cfg.cursor) returned an error')
+                session.cfg.log_activity('Info', 'list(cfg.cursor) returned an error')
 
             # Find missing commits and add them
 
             missing_commits = parent_commits - existing_commits
 
-            cfg.log_activity('Debug','Commits missing from repo %s: %s' %
+            session.cfg.log_activity('Debug','Commits missing from repo %s: %s' %
                 (repo[0],len(missing_commits)))
             
             if len(missing_commits) > 0:
@@ -455,7 +457,7 @@ def generate_facade_chain(logger):
             facade_sequence.append(force_repo_analysis_facade_task.si())
 
         #Generate commit analysis task order.
-        facade_sequence.append(generate_analysis_sequence(logger))
+        facade_sequence.extend(generate_analysis_sequence(logger))
 
         #Generate contributor analysis task group.
         facade_sequence.append(generate_contributor_sequence(logger))

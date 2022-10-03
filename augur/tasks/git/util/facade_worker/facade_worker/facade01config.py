@@ -104,6 +104,28 @@ class FacadeConfig:
         self.logger = logger
 
         self.db = None
+        
+        #init db first thing 
+        db_credentials = get_database_args_from_env()
+
+        # Set up the database
+        db_user = db_credentials["db_user"]
+        db_pass = db_credentials["db_pass"]
+        db_name = db_credentials["db_name"]
+        db_host = db_credentials["db_host"]
+        db_port = db_credentials["db_port"]
+        db_user_people = db_user
+        db_pass_people = db_pass
+        db_name_people = db_name
+        db_host_people = db_host
+        db_port_people = db_port
+        # Open a general-purpose connection
+        db,cursor = self.database_connection(
+            db_host,
+            db_user,
+            db_pass,
+            db_name,
+            db_port, False, False)
 
         #worker_options = read_config("Workers", "facade_worker", None, None)
 
