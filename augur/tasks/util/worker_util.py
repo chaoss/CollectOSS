@@ -19,7 +19,9 @@ def create_grouped_task_load(*args,processes=6,dataList=[],task=None):
     numpyData = np.array(list(dataList))
     listsSplitForProcesses = np.array_split(numpyData, processes)
 
-    task_list = [task.s(data.tolist(), *args) for data in listsSplitForProcesses]
+    print("args")
+    print(args)
+    task_list = [task.si(data.tolist(), *args) for data in listsSplitForProcesses]
 
     jobs = group(task_list)
 
