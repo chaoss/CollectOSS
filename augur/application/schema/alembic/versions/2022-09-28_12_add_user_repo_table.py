@@ -39,5 +39,5 @@ def downgrade():
     op.drop_table('user_repos', schema='augur_operations')
 
     conn = op.get_bind()
-    conn.execute(text("""DELETE FROM "augur_operations"."users" WHERE user_id=1)"""))
+    conn.execute(text("""DELETE FROM "augur_operations"."users" WHERE user_id=1"""))
     # ### end Alembic commands ###
