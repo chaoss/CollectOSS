@@ -62,7 +62,7 @@ def repo_collect_phase(logger):
     return group(
             *repo_info_tasks,
             chain(group(*issue_dependent_tasks),process_contributors.si()),
-            facade_commits_model.si(),
+            generate_facade_chain(logger),
             collect_releases.si()
         )
 

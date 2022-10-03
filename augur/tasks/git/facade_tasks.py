@@ -49,12 +49,16 @@ def git_repo_cleanup_facade_task():
     logger = logging.getLogger(git_repo_cleanup_facade_task.__name__)
     cfg = FacadeConfig(logger)
     git_repo_cleanup(cfg)
+    cfg.cursor.close()
+    cfg.db.close()
 
 @celery.task
 def git_repo_initialize_facade_task():
     logger = logging.getLogger(git_repo_initialize_facade_task.__name__)
     cfg = FacadeConfig(logger)
     git_repo_initialize(cfg)
+    cfg.cursor.close()
+    cfg.db.close()
 
 @celery.task
 def check_for_repo_updates_facade_task():
@@ -62,6 +66,8 @@ def check_for_repo_updates_facade_task():
 
     with FacadeSession(logger) as session:
         check_for_repo_updates(session)
+        session.cfg.cursor.close()
+        session.cfg.db.close()
 
 @celery.task
 def force_repo_updates_facade_task():
@@ -69,6 +75,8 @@ def force_repo_updates_facade_task():
 
     cfg = FacadeConfig(logger)
     force_repo_updates(cfg)
+    cfg.cursor.close()
+    cfg.db.close()
 
 @celery.task
 def git_repo_updates_facade_task():
@@ -76,11 +84,15 @@ def git_repo_updates_facade_task():
 
     cfg = FacadeConfig(logger)
     git_repo_updates(cfg)
+    cfg.cursor.close()
+    cfg.db.close()
 
 @celery.task
 def force_repo_analysis_facade_task():
     logger = logging.getLogger(force_repo_analysis_facade_task.__name__)
     force_repo_analysis(FacadeConfig(logger))
+    cfg.cursor.close()
+    cfg.db.close()
 
 @celery.task
 def facade_analysis_init_facade_task():
@@ -88,6 +100,8 @@ def facade_analysis_init_facade_task():
     cfg = FacadeConfig(logger)
     cfg.update_status('Running analysis')
     cfg.log_activity('Info',f"Beginning analysis.")
+    cfg.cursor.close()
+    cfg.db.close()
 
 @celery.task
 def grab_comitter_list_facade_task(repo_id,platform="github"):
@@ -140,6 +154,8 @@ def trim_commits_facade_task(repo_id):
         cfg.db.commit()
         cfg.log_activity('Debug','Removed working commit: %s' % commit[0])
 
+    cfg.cursor.close()
+    cfg.db.close()
 @celery.task
 def trim_commits_post_analysis_facade_task(repo_id,commits):
     logger = logging.getLogger(trim_commits_post_analysis_facade_task.__name__)
@@ -178,12 +194,28 @@ def trim_commits_post_analysis_facade_task(repo_id,commits):
     update_analysis_log(repo[0],'Commit trimming complete')
 
     update_analysis_log(repo[0],'Complete')
+    cfg.cursor.close()
+    cfg.db.close()
 
 @celery.task
 def facade_analysis_end_facade_task():
     logger = logging.getLogger(facade_analysis_end_facade_task.__name__)
     cfg = FacadeConfig(logger)
     cfg.log_activity('Info','Running analysis (complete)')
+    cfg.cursor.close()
+    cfg.db.close()
+
+
+
+@celery.task
+def facade_start_contrib_analysis_task():
+    logger = logging.getLogger(facade_start_contrib_analysis_task.__name__)
+    cfg = FacadeConfig(logger)
+    #inserts relevant data by repo
+    cfg.update_status('Updating Contributors')
+    cfg.log_activity('Info', 'Updating Contributors with commits')
+    cfg.cursor.close()
+    cfg.db.close()
 
 
 #enable celery multithreading
@@ -221,115 +253,57 @@ def analyze_commits_in_parallel(queue: list, repo_id: int, repo_location: str, m
 
         analyze_commit(cfg, repo_id, repo_location, analyzeCommit, multithreaded)
 
+    cfg.cursor.close()
+    cfg.db.close()
+
 
 @celery.task
-def facade_commits_model(github_contrib_resolition: bool=True)-> None:
-    """The main facade task loop. Goes through and executes all collection options specified in the facade config
-    """
+def nuke_affiliations_facade_task():
+    logger = logging.getLogger(nuke_affiliations_facade_task.__name__)
+    cfg = FacadeConfig(logger)
 
-    logger = logging.getLogger(facade_commits_model.__name__)
+    nuke_affiliations(cfg)
+    cfg.cursor.close()
+    cfg.db.close()
+
+@celery.task
+def fill_empty_affiliations_facade_task():
+    logger = logging.getLogger(fill_empty_affiliations_facade_task.__name__)
     with FacadeSession(logger) as session:
-        
-        # Figure out what we need to do
-        limited_run = session.limited_run
-        delete_marked_repos = session.delete_marked_repos
-        pull_repos = session.pull_repos
-        clone_repos = session.clone_repos
-        check_updates = session.check_updates
-        force_updates = session.force_updates
-        run_analysis = session.run_analysis
-        force_analysis = session.force_analysis
-        nuke_stored_affiliations = session.nuke_stored_affiliations
-        fix_affiliations = session.fix_affiliations
-        force_invalidate_caches = session.force_invalidate_caches
-        rebuild_caches = session.rebuild_caches
-        #if abs((datetime.datetime.strptime(session.cfg.get_setting('aliases_processed')[:-3], 
-            # '%Y-%m-%d %I:%M:%S.%f') - datetime.datetime.now()).total_seconds()) // 3600 > int(session.cfg.get_setting(
-            #   'update_frequency')) else 0
-        force_invalidate_caches = session.force_invalidate_caches
-        create_xlsx_summary_files = session.create_xlsx_summary_files
-        multithreaded = session.multithreaded
-
-        start_time = time.time()
-        session.cfg.log_activity('Quiet','Running facade-worker')
-
-        if not limited_run or (limited_run and delete_marked_repos):
-            git_repo_cleanup(session.cfg)
-
-        if not limited_run or (limited_run and clone_repos):
-            git_repo_initialize(session.cfg)
-
-        if not limited_run or (limited_run and check_updates):
-            check_for_repo_updates(session)
-
-        if force_updates:
-            force_repo_updates(session.cfg)
-
-        if not limited_run or (limited_run and pull_repos):
-            git_repo_updates(session.cfg)
-
-        if force_analysis:
-            force_repo_analysis(session.cfg)
-
-        
-        #Give analysis the github interface so that it can make API calls
-        #if not limited_run or (limited_run and run_analysis):
-        analysis(session.cfg, multithreaded, session=session)
-        
-        if github_contrib_resolition:
-            ### moved up by spg on 12/1/2021
-            #Interface with the contributor worker and inserts relevant data by repo
-            session.cfg.update_status('Updating Contributors')
-            session.cfg.log_activity('Info', 'Updating Contributors with commits')
-            query = ("SELECT repo_id FROM repo");
-
-            session.cfg.cursor.execute(query)
-
-            all_repos = list(session.cfg.cursor)
-
-            #pdb.set_trace()
-            #breakpoint()
-            for repo in all_repos:
-                session.logger.info(f"Processing repo {repo}")
-                insert_facade_contributors(session,repo[0],multithreaded=multithreaded)
-
-
-        ### end moved up
-
-        if nuke_stored_affiliations:
-            nuke_affiliations(session.cfg)
-
-        session.logger.info(session.cfg)
-        if not limited_run or (limited_run and fix_affiliations):
-            fill_empty_affiliations(session)
-
-        if force_invalidate_caches:
-            invalidate_caches(session.cfg)
-
-        if not limited_run or (limited_run and rebuild_caches):
-            rebuild_unknown_affiliation_and_web_caches(session.cfg)
-
-        if not limited_run or (limited_run and create_xlsx_summary_files):
-
-            session.cfg.log_activity('Info','Creating summary Excel files')
-
-            # from excel_generators import *
-
-            session.cfg.log_activity('Info','Creating summary Excel files (complete)')
-
-
-        # All done
-        session.cfg.update_status('Idle')
-        session.cfg.log_activity('Quiet','facade-worker.py completed')
-        
-        elapsed_time = time.time() - start_time
-
-        print('\nCompleted in %s\n' % timedelta(seconds=int(elapsed_time)))
-
+        fill_empty_affiliations(session)
         session.cfg.cursor.close()
-        #session.cfg.cursor_people.close()
         session.cfg.db.close()
-        #session.cfg.db_people.close()
+
+@celery.task
+def invalidate_caches_facade_task():
+    logger = logging.getLogger(invalidate_caches_facade_task.__name__)
+    cfg = FacadeConfig(logger)
+
+    invalidate_caches(cfg)
+    cfg.cursor.close()
+    cfg.db.close()
+
+@celery.task
+def rebuild_unknown_affiliation_and_web_caches_facade_task():
+    logger = logging.getLogger(rebuild_unknown_affiliation_and_web_caches_facade_task.__name__)
+    cfg = FacadeConfig(logger)
+
+    rebuild_unknown_affiliation_and_web_caches(cfg)
+
+    cfg.cursor.close()
+    cfg.db.close()
+
+
+# All done
+#session.cfg.update_status('Idle')
+#session.cfg.log_activity('Quiet','facade-worker.py completed')
+
+#elapsed_time = time.time() - start_tim
+#print('\nCompleted in %s\n' % timedelta(seconds=int(elapsed_time))
+#session.cfg.cursor.close()
+#session.cfg.cursor_people.close()
+#session.cfg.db.close()
+#session.cfg.db_people.close()
 
 def generate_analysis_sequence(logger):
     """Run the analysis by looping over all active repos. For each repo, we retrieve
@@ -409,11 +383,28 @@ def generate_analysis_sequence(logger):
             analysis_sequence.append(trim_commits_post_analysis_facade_task.si(repo[0],trimmed_commits))
         
         analysis_sequence.append(facade_analysis_end_facade_task.si())
+    
+    return analysis_sequence
 
 
 
 def generate_contributor_sequence(logger):
-    pass
+    
+    contributor_sequence = []
+    with FacadeSession(logger) as session:
+        
+        contributor_sequence.append(facade_start_contrib_analysis_task.si())
+        query = ("SELECT repo_id FROM repo")
+
+        session.cfg.cursor.execute(query)
+
+        all_repos = list(session.cfg.cursor)
+        #pdb.set_trace()
+        #breakpoint()
+        for repo in all_repos:
+            contributor_sequence.append(insert_facade_contributors.si(repo[0]))
+
+    return group(contributor_sequence)
 
 
 
@@ -465,4 +456,22 @@ def generate_facade_chain(logger):
 
         #Generate commit analysis task order.
         facade_sequence.append(generate_analysis_sequence(logger))
+
+        #Generate contributor analysis task group.
+        facade_sequence.append(generate_contributor_sequence(logger))
+
+        if nuke_stored_affiliations:
+            facade_sequence.append(nuke_affiliations_facade_task.si())#nuke_affiliations(session.cfg)
+
+        #session.logger.info(session.cfg)
+        if not limited_run or (limited_run and fix_affiliations):
+            facade_sequence.append(fill_empty_affiliations_facade_task.si())#fill_empty_affiliations(session)
+
+        if force_invalidate_caches:
+            facade_sequence.append(invalidate_caches_facade_task.si())#invalidate_caches(session.cfg)
+
+        if not limited_run or (limited_run and rebuild_caches):
+            facade_sequence.append(rebuild_unknown_affiliation_and_web_caches_facade_task.si())#rebuild_unknown_affiliation_and_web_caches(session.cfg)
+        
+        return chain(*facade_sequence)
 

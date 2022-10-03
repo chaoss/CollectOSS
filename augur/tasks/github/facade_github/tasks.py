@@ -251,7 +251,10 @@ def link_commits_to_contributor(contributorQueue):
 
 
 # Update the contributors table from the data facade has gathered.
-def insert_facade_contributors(session, repo_id,processes=4,multithreaded=True):
+@celery.task
+def insert_facade_contributors(repo_id):
+    logger = logging.getLogger(grab_comitter_list_facade_task.__name__)
+    session = FacadeSession(logger)
     session.logger.info(
         "Beginning process to insert contributors from facade commits for repo w entry info: {}\n".format(repo_id))
 
@@ -304,23 +307,10 @@ def insert_facade_contributors(session, repo_id,processes=4,multithreaded=True):
     #             'repo_id': repo_id}).to_json(orient="records"))
 
     
-    if len(new_contribs) > 2 and multithreaded:
-        
-        #Split commits into mostly equal queues so each process starts with a workload and there is no
-        #    overhead to pass into queue from the parent.
-        
 
-        contrib_jobs = create_grouped_task_load(repo_id,processes=processes,dataList=new_contribs,task=process_commit_metadata)
-        
-        result = contrib_jobs.apply_async()
-
-        with allow_join_result():
-            result.join()
-
-    else:
-        #I think this is the right syntax for running a celery task directly
-        #It 'should' work like a function.
-        process_commit_metadata(list(new_contribs),repo_id)
+    #I think this is the right syntax for running a celery task directly
+    #It 'should' work like a function.
+    process_commit_metadata(list(new_contribs),repo_id)
 
     session.logger.debug("DEBUG: Got through the new_contribs")
     
@@ -363,20 +353,8 @@ def insert_facade_contributors(session, repo_id,processes=4,multithreaded=True):
     result = session.execute_sql(resolve_email_to_cntrb_id_sql).fetchall()
     existing_cntrb_emails = [dict(zip(row.keys(), row)) for row in result]
     
-    if len(existing_cntrb_emails) > 0 and multithreaded:
-        
-        #Split commits into mostly equal queues so each process starts with a workload and there is no
-        #    overhead to pass into queue from the parent.
-        
-        
-        update_jobs = create_grouped_task_load(processes=processes,dataList=existing_cntrb_emails,task=link_commits_to_contributor)
 
-        result = update_jobs.apply_async()
-
-        with allow_join_result():
-            result.join()
-    else:
-        link_commits_to_contributor(list(existing_cntrb_emails))
+    link_commits_to_contributor(list(existing_cntrb_emails))
 
     session.logger.info("Done with inserting and updating facade contributors")
     return
