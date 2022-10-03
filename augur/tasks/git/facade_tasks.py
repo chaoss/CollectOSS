@@ -107,7 +107,7 @@ def facade_analysis_init_facade_task():
 def grab_comitter_list_facade_task(repo_id,platform="github"):
     logger = logging.getLogger(grab_comitter_list_facade_task.__name__)
 
-    grab_committer_list(DatabaseSession(logger), repo_id,platform)
+    grab_committer_list(GithubTaskSession(logger), repo_id,platform)
 
 @celery.task
 def trim_commits_facade_task(repo_id):
