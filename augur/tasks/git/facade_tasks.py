@@ -180,7 +180,7 @@ def trim_commits_post_analysis_facade_task(repo_id,commits):
     update_analysis_log(repo_id,'Beginning to trim commits')
 
     cfg.log_activity('Debug','Commits to be trimmed from repo %s: %s' %
-            (repo[0],len(trimmed_commits)))
+            (repo_id,len(trimmed_commits)))
     
     for commit in commits:
         trim_commit(cfg,repo_id,commit)
