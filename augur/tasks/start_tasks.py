@@ -80,8 +80,8 @@ def machine_learning_phase(logger):
         for repo in repos:
             clustering_tasks.append(clustering_model.si(repo.repo_git))
             discourse_tasks.append(discourse_analysis_model.si(repo.repo_git))
-            insight_tasks.append(insights_model.si(repo.repo_git))
-            message_insights_tasks.append(message_insights_model.si(repo.repo_git))
+            insight_tasks.append(insight_model.si(repo.repo_git))
+            message_insights_tasks.append(message_insight_model.si(repo.repo_git))
             pull_request_analysis_tasks.append(pull_request_analysis_model.si(repo.repo_git))
 
 
