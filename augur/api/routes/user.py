@@ -147,7 +147,7 @@ def create_routes(server):
 
             repo_ids = repo_load_controller.get_user_repo_ids(user.user_id)
 
-            return jsonify({"status": "success", "data": repo_ids})
+            return jsonify({"status": "success", "repo_ids": repo_ids})
 
     @server.app.route(f"/{AUGUR_API_VERSION}/user/add_repo", methods=['GET', 'POST'])
     def add_user_repos():

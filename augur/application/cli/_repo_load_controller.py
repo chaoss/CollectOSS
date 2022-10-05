@@ -277,7 +277,7 @@ class RepoLoadController:
             list of repo ids
         """
 
-        user_repo_id_query = s.sql.text(f"""SELECT * FROM augur_data.user_repo WHERE user_id={user_id};""")
+        user_repo_id_query = s.sql.text(f"""SELECT * FROM augur_operations.user_repos WHERE user_id={user_id};""")
 
 
         result = self.session.execute_sql(user_repo_id_query).fetchall()
