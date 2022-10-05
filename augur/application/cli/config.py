@@ -32,15 +32,6 @@ def cli():
 def init_config(github_api_key, facade_repo_directory, gitlab_api_key, redis_conn_string):
 
     if not github_api_key:
-        github_api_key = os.getenv(ENVVAR_PREFIX + 'GITHUB_API_KEY')
-
-    if not gitlab_api_key:
-        gitlab_api_key = os.getenv(ENVVAR_PREFIX + 'GITLAB_API_KEY')
-
-    if not facade_repo_directory:
-        facade_repo_directory = os.getenv(ENVVAR_PREFIX + 'FACADE_REPO_DIRECTORY')
-
-    if not github_api_key:
 
         github_api_key = str(input("Please enter a valid github api key: "))
 
@@ -50,7 +41,17 @@ def init_config(github_api_key, facade_repo_directory, gitlab_api_key, redis_con
 
     if not facade_repo_directory:
 
-        facade_repo_directory = str(input("Please enter an existing facade repo directory: "))
+        while True:
+
+            facade_repo_directory = str(input("Please enter an existing facade repo directory: ")).strip()
+
+            if os.path.isdir(facade_repo_directory):
+                break
+            else:
+                print("Invalid directory")
+
+    if facade_repo_directory.endswith("/"):
+        facade_repo_directory = facade_repo_directory[:-1]
             
 
     keys = {}
