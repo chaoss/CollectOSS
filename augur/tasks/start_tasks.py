@@ -11,6 +11,7 @@ from celery import group, chain, chord, signature
 
 
 from augur.tasks.github import *
+from augur.tasks.data_analysis import *
 from augur.tasks.github.detect_move.tasks import detect_github_repo_move
 from augur.tasks.github.releases.tasks import collect_releases
 from augur.tasks.github.repo_info.tasks import collect_repo_info
@@ -66,7 +67,34 @@ def repo_collect_phase(logger):
             collect_releases.si()
         )
 
-DEFINED_COLLECTION_PHASES = [prelim_phase,repo_collect_phase]
+def machine_learning_phase(logger):
+
+    with DatabaseSession(logger) as session:
+        repos = session.query(Repo).all()
+
+        clustering_tasks = []
+        discourse_tasks = []
+        insight_tasks = []
+        message_insights_tasks = []
+        pull_request_analysis_tasks = []
+        for repo in repos:
+            clustering_tasks.append(clustering_model.si(repo.repo_git))
+            discourse_tasks.append(discourse_analysis_model.si(repo.repo_git))
+            insight_tasks.append(insights_model.si(repo.repo_git))
+            message_insights_tasks.append(message_insights_model.si(repo.repo_git))
+            pull_request_analysis_tasks.append(pull_request_analysis_model.si(repo.repo_git))
+
+
+        return chain(
+            chain(clustering_tasks),
+            chain(discourse_tasks),
+            chain(insight_tasks),
+            chain(message_insights_tasks),
+            chain(pull_request_analysis_tasks)
+        )
+
+
+DEFINED_COLLECTION_PHASES = [prelim_phase, repo_collect_phase, machine_learning_phase]
 
 class AugurTaskRoutine:
     """class to keep track of various groups of collection tasks as well as how they relate to one another.

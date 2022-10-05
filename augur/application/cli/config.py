@@ -69,7 +69,9 @@ def init_config(github_api_key, facade_repo_directory, gitlab_api_key, redis_con
 
         #Add all phases as enabled by default
         for name in phase_names:
-            default_config['Task_Routine'].update({name : 1})
+
+            if name not in default_config['Task_Routine']:
+                default_config['Task_Routine'].update({name : 1})
 
         #print(default_config)
         if redis_conn_string:
