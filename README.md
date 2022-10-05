@@ -13,17 +13,15 @@
 Augur is a software suite for collecting and measuring structured data
 about [free](https://www.fsf.org/about/) and [open-source](https://opensource.org/docs/osd) software (FOSS) communities.
 
-We gather trace data for a group of repositories, normalize
-it into our data model, and provide a variety of metrics about said
-data. The structure of our data model enables us to synthesize data
-across various platforms to provide meaningful context for meaningful
-questions about the way these communities evolve.
+We gather trace data for a group of repositories, normalize it into our data model, and provide a variety of metrics about said data. The structure of our data model enables us to synthesize data across various platforms to provide meaningful context for meaningful questions about the way these communities evolve.
 
 We are a [CHAOSS](https://chaoss.community) project, and many of our
 metrics are implementations of the metrics defined by our awesome community. You
 can find more information about [how to get involved on the CHAOSS website](https://chaoss.community/participate/).
 
 ## Collecting Data
+
+Augur supports Python3.6 through Python3.9 on all platforms. Python3.10 and above do not yet work because of machine learning worker dependencies. On OSX, you can create a Python 3.9 environment this way: `python3.9 -m venv path/to/venv`.
 
 Augur's main focus is to measure the overall health and sustainability of open source projects.
 One of Augur's core tenets is a desire to openly gather data that people can trust, and then provide useful and well-defined metrics that help give important context to the larger stories being told by that data. We do this in a variety of ways, one of which is doing all our own data collection in house. We currently collect data from a few main sources:
