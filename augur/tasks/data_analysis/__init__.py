@@ -1,5 +1,5 @@
 from augur.tasks.data_analysis.clustering_worker.tasks import clustering_model
-from augur.tasks.data_analysis.contributor_breadth_worker.tasks import contributor_breadth_model
+from augur.tasks.data_analysis.contributor_breadth_worker.contributor_breadth_worker import contributor_breadth_model
 from augur.tasks.data_analysis.discourse_analysis.tasks import discourse_analysis_model
 from augur.tasks.data_analysis.insight_worker.tasks import insights_model
 from augur.tasks.data_analysis.message_insights.tasks import message_insights_model
