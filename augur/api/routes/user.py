@@ -11,6 +11,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.sql import text
 from sqlalchemy.orm import sessionmaker
 from augur.application.db.session import DatabaseSession
+from augur.tasks.github.util.github_task_session import GithubTaskSession
 from augur.application.cli._repo_load_controller import RepoLoadController
 
 
@@ -57,8 +58,8 @@ def create_routes(server):
 
     @server.app.route(f"/{AUGUR_API_VERSION}/user/create", methods=['POST', 'GET'])
     def create_user():
-        if not request.is_secure:
-            return generate_upgrade_request()
+        # if not request.is_secure:
+        #     return generate_upgrade_request()
 
         session = Session()
         username = request.args.get("username")
@@ -148,12 +149,12 @@ def create_routes(server):
 
             return jsonify({"status": "success", "data": repo_ids})
 
-    @server.app.route(f"/{AUGUR_API_VERSION}/user/add_repos", methods=['GET', 'POST'])
+    @server.app.route(f"/{AUGUR_API_VERSION}/user/add_repo", methods=['GET', 'POST'])
     def add_user_repos():
         username = request.args.get("username")
-        repos = request.args.get("repos")
+        repo = request.args.get("repo_url")
 
-        with DatabaseSession(logger) as session:
+        with GithubTaskSession(logger) as session:
 
             if username is None:
                 return jsonify({"status": "Missing argument"}), 400
@@ -164,15 +165,15 @@ def create_routes(server):
 
             repo_load_controller = RepoLoadController(gh_session=session)
 
-            repo_load_controller.add_frontend_repos(repos, User.user_id)
+            repo_load_controller.add_frontend_repos([repo], User.user_id)
 
             return jsonify({"status": "Repos Added"})
 
 
-    @server.app.route(f"/{AUGUR_API_VERSION}/user/add_orgs", methods=['GET', 'POST'])
+    @server.app.route(f"/{AUGUR_API_VERSION}/user/add_org", methods=['GET', 'POST'])
     def add_user_orgs():
         username = request.args.get("username")
-        orgs = request.args.get("orgs")
+        org = request.args.get("org_url")
 
         with DatabaseSession(logger) as session:
 
@@ -185,7 +186,7 @@ def create_routes(server):
 
             repo_load_controller = RepoLoadController(gh_session=session)
 
-            repo_load_controller.add_frontend_orgs(orgs, User.user_id)
+            repo_load_controller.add_frontend_orgs([org], User.user_id)
 
             return jsonify({"status": "Orgs Added"})
 

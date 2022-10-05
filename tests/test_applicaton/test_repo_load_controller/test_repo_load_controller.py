@@ -46,60 +46,33 @@ def test_is_valid_repo():
 
         assert controller.is_valid_repo("https://github.com/chaoss/augur.git") is True
 
-# def test_get_repo_id(engine):
-
-#     with engine.connect() as connection:
-
-#         query = s.text("""DELETE FROM "augur_data"."repo";
-#                           DELETE FROM "augur_data"."repo_groups";
-#                           INSERT INTO "augur_data"."repo_groups" ("repo_group_id", "rg_name", "rg_description", "rg_website", "rg_recache", "rg_last_modified", "rg_type", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (1, 'Default Repo Group', 'The default repo group created by the schema generation script', '', 0, '2019-06-03 15:55:20', 'GitHub Organization', 'load', 'one', 'git', '2019-06-05 13:36:25');
-#                           INSERT INTO "augur_data"."repo_groups" ("repo_group_id", "rg_name", "rg_description", "rg_website", "rg_recache", "rg_last_modified", "rg_type", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (-1, 'User Repo Group', 'The default repo group created by the schema generation script', '', 0, '2019-06-03 15:55:20', 'GitHub Organization', 'load', 'one', 'git', '2019-06-05 13:36:25');
-#                           INSERT INTO "augur_data"."repo" ("repo_id", "repo_group_id", "repo_git", "repo_path", "repo_name", "repo_added", "repo_status", "repo_type", "url", "owner_id", "description", "primary_language", "created_at", "forked_from", "updated_at", "repo_archived_date_collected", "repo_archived", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (1, -1, 'https://github.com/18f/procurement-glossary', NULL, NULL, '2022-08-15 21:08:07', 'Complete', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'CLI', '1.0', 'Git', '2022-08-15 21:08:07');
-#                           INSERT INTO "augur_data"."repo" ("repo_id", "repo_group_id", "repo_git", "repo_path", "repo_name", "repo_added", "repo_status", "repo_type", "url", "owner_id", "description", "primary_language", "created_at", "forked_from", "updated_at", "repo_archived_date_collected", "repo_archived", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (2, 1, 'https://github.com/chaoss/augur', NULL, NULL, '2022-08-15 21:08:07', 'Complete', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'CLI', '1.0', 'Git', '2022-08-15 21:08:07');""")
-                          
-#         connection.execute(query)   
-
-#     with DatabaseSession(logger, engine) as session:
-
-#         controller = RepoLoadController(session)
-
-#         assert controller.get_repo_id("") is None
-#         assert controller.get_repo_id("chaoss/augur") is None
-
-#         # test with valid repo
-#         assert controller.get_repo_id("https://github.com/18f/procurement-glossary") == 1
-
-#         # test with repo that is present but isn't apart of the user repos
-#         assert controller.get_repo_id("https://github.com/choass/augur") is None
-
 
 def test_add_repo_row(engine):
 
     try:
 
+        data = {"rg_id": 1, "repo_id": 1, "tool_source": "Frontend",
+                "repo_url": "https://github.com/chaoss/augur"}
+
         with engine.connect() as connection:
 
             query = s.text("""DELETE FROM "augur_data"."repo";
                                 DELETE FROM "augur_data"."repo_groups";
-                                INSERT INTO "augur_data"."repo_groups" ("repo_group_id", "rg_name", "rg_description", "rg_website", "rg_recache", "rg_last_modified", "rg_type", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (1, 'Default Repo Group', 'The default repo group created by the schema generation script', '', 0, '2019-06-03 15:55:20', 'GitHub Organization', 'load', 'one', 'git', '2019-06-05 13:36:25');
-                                INSERT INTO "augur_data"."repo_groups" ("repo_group_id", "rg_name", "rg_description", "rg_website", "rg_recache", "rg_last_modified", "rg_type", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (-1, 'User Repo Group', 'The default repo group created by the schema generation script', '', 0, '2019-06-03 15:55:20', 'GitHub Organization', 'load', 'one', 'git', '2019-06-05 13:36:25');
+                                INSERT INTO "augur_data"."repo_groups" ("repo_group_id", "rg_name", "rg_description", "rg_website", "rg_recache", "rg_last_modified", "rg_type", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (:rg_id, 'Default Repo Group', 'The default repo group created by the schema generation script', '', 0, '2019-06-03 15:55:20', 'GitHub Organization', 'load', 'one', 'git', '2019-06-05 13:36:25');
                                 """)
 
-            connection.execute(query)
-
-        data = {"rg_id": 1, "repo_id": 1, "tool_source": "Frontend"}
-
+            connection.execute(query, **data)
 
         with DatabaseSession(logger, engine) as session:
 
             controller = RepoLoadController(session)
 
-            assert controller.add_repo_row("https://github.com/chaoss/augur", data["rg_id"], data["tool_source"]) is not None
+            assert controller.add_repo_row(data["repo_url"], data["rg_id"], data["tool_source"]) is not None
 
         with engine.connect() as connection:
 
             query = s.text(
-                """SELECT * FROM "augur_data"."repo" WHERE "repo_git"='https://github.com/chaoss/augur';""")
+                """SELECT * FROM "augur_data"."repo" WHERE "repo_git"=:repo_url;""")
 
             result = connection.execute(query, **data).fetchall()
 

@@ -169,13 +169,13 @@ class RepoLoadController:
             "data_source": "Git"
         }
 
-        with DatabaseSession(logger) as session:
+    
 
-            repo_unique = ["repo_git"]
-            return_columns = ["repo_id"]
-            result = session.insert_data(repo_data, Repo, repo_unique, return_columns)
+        repo_unique = ["repo_git"]
+        return_columns = ["repo_id"]
+        result = self.session.insert_data(repo_data, Repo, repo_unique, return_columns)
 
-            return result[0]["repo_id"]
+        return result[0]["repo_id"]
 
 
     def add_repo_to_user(self, repo_id, user_id=1):
@@ -191,10 +191,8 @@ class RepoLoadController:
             "user_id": user_id
         }
 
-        with DatabaseSession(logger) as session:
-
-            repo_user_unique = ["repo_id", "user_id"]
-            session.insert_data(repo_user_data, UserRepo, repo_user_unique)
+        repo_user_unique = ["repo_id", "user_id"]
+        self.session.insert_data(repo_user_data, UserRepo, repo_user_unique)
 
     def add_frontend_repos(self, urls: List[str], user_id: int):
         """Add list of repos to a users repos.
