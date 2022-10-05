@@ -253,7 +253,7 @@ def link_commits_to_contributor(contributorQueue):
 # Update the contributors table from the data facade has gathered.
 @celery.task
 def insert_facade_contributors(repo_id):
-    logger = logging.getLogger(grab_comitter_list_facade_task.__name__)
+    logger = logging.getLogger(insert_facade_contributors.__name__)
     session = FacadeSession(logger)
     session.logger.info(
         "Beginning process to insert contributors from facade commits for repo w entry info: {}\n".format(repo_id))

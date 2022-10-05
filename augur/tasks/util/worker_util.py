@@ -11,7 +11,7 @@ from celery.result import allow_join_result
 from typing import Optional, List, Any, Tuple
 
 
-def create_grouped_task_load(*args,processes=6,dataList=[],task=None):
+def create_grouped_task_load(*args,processes=8,dataList=[],task=None):
     
     if not dataList or not task:
         raise AssertionError
