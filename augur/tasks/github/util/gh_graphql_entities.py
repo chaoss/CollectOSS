@@ -245,6 +245,7 @@ class GraphQlPageCollection(collections.abc.Sequence):
 
             coreData = self.extract_paginate_result(result)
 
+            print(coreData)
             if len(coreData['edges']) == 0:
                 return
             

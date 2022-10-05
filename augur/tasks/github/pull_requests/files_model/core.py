@@ -72,16 +72,16 @@ def pull_request_files_model(repo_id,logger):
 
             pr_file_rows += [{
                 'pull_request_id': pr_info['pull_request_id'],
-                'pr_file_additions': pr_file['additions'],
-                'pr_file_deletions': pr_file['deletions'],
+                'pr_file_additions': pr_file['additions'] if 'additions' in pr_file else None,
+                'pr_file_deletions': pr_file['deletions'] if 'deletions' in pr_file else None,
                 'pr_file_path': pr_file['path'],
                 'data_source': 'GitHub API',
                 'repo_id': repo_id, 
-            } for pr_file in file_collection]
+                } for pr_file in file_collection if 'path' in pr_file]
 
 
 
         if len(pr_file_rows) > 0:
             #Execute a bulk upsert with sqlalchemy 
-            pr_file_natural_keys = ["pull_request_id", "repo_id", "pr_file_path "]
+            pr_file_natural_keys = ["pull_request_id", "repo_id", "pull_request_files.pr_file_path "]
             session.insert_data(pr_file_rows, PullRequestFile, pr_file_natural_keys)
