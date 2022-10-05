@@ -783,10 +783,8 @@ class Repo(Base):
         ForeignKey("augur_data.repo_groups.repo_group_id"), nullable=False
     )
     repo_git = Column(String, nullable=False)
-    repo_path = Column(String, server_default=text("'NULL'::character varying"))
-    repo_name = Column(
-        String, server_default=text("'NULL'::character varying")
-    )
+    repo_path = Column(String)
+    repo_name = Column(String)
     repo_added = Column(
         TIMESTAMP(precision=0), nullable=False, server_default=text("CURRENT_TIMESTAMP")
     )
