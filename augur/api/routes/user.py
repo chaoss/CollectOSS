@@ -145,7 +145,7 @@ def create_routes(server):
             
             repo_load_controller = RepoLoadController(gh_session=session)
 
-            repo_ids = repo_load_controller.get_user_repo_ids(User.user_id)
+            repo_ids = repo_load_controller.get_user_repo_ids(user.user_id)
 
             return jsonify({"status": "success", "data": repo_ids})
 
@@ -165,7 +165,7 @@ def create_routes(server):
 
             repo_load_controller = RepoLoadController(gh_session=session)
 
-            repo_load_controller.add_frontend_repos([repo], User.user_id)
+            repo_load_controller.add_frontend_repos([repo], user.user_id)
 
             return jsonify({"status": "Repos Added"})
 
@@ -175,7 +175,7 @@ def create_routes(server):
         username = request.args.get("username")
         org = request.args.get("org_url")
 
-        with DatabaseSession(logger) as session:
+        with GithubTaskSession(logger) as session:
 
             if username is None:
                 return jsonify({"status": "Missing argument"}), 400
@@ -186,7 +186,7 @@ def create_routes(server):
 
             repo_load_controller = RepoLoadController(gh_session=session)
 
-            repo_load_controller.add_frontend_orgs([org], User.user_id)
+            repo_load_controller.add_frontend_orgs([org], user.user_id)
 
             return jsonify({"status": "Orgs Added"})
 

@@ -187,11 +187,12 @@ class RepoLoadController:
         """
 
         repo_user_data = {
-            "repo_id": repo_id,
-            "user_id": user_id
+            "user_id": user_id,
+            "repo_id": repo_id
         }
-
-        repo_user_unique = ["repo_id", "user_id"]
+            
+            
+        repo_user_unique = ["user_id", "repo_id"]
         self.session.insert_data(repo_user_data, UserRepo, repo_user_unique)
 
     def add_frontend_repos(self, urls: List[str], user_id: int):
