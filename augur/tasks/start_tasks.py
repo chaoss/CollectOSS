@@ -120,6 +120,9 @@ class AugurTaskRoutine:
         if repo_collect_phase.__name__ not in self.disabled_collection_phases:
             self.jobs_dict[repo_collect_phase.__name__] = repo_collect_phase
 
+        if machine_learning_phase.__name__ not in self.disabled_collection_phases:
+            self.jobs_dict[machine_learning_phase.__name__] = machine_learning_phase
+
                 
 
     #Get and set dict values that correspond to phases of collection
