@@ -180,20 +180,20 @@ def trim_commits_post_analysis_facade_task(repo_id,commits):
     update_analysis_log(repo_id,'Beginning to trim commits')
 
     cfg.log_activity('Debug','Commits to be trimmed from repo %s: %s' %
-            (repo_id,len(trimmed_commits)))
+            (repo_id,len(commits)))
     
     for commit in commits:
         trim_commit(cfg,repo_id,commit)
     
     set_complete = "UPDATE repo SET repo_status='Complete' WHERE repo_id=%s and repo_status != 'Empty'"
     try:
-        cfg.cursor.execute(set_complete, (repo[0], ))
+        cfg.cursor.execute(set_complete, (repo_id, ))
     except:
         pass
 
-    update_analysis_log(repo[0],'Commit trimming complete')
+    update_analysis_log(repo_id,'Commit trimming complete')
 
-    update_analysis_log(repo[0],'Complete')
+    update_analysis_log(repo_id,'Complete')
     cfg.cursor.close()
     cfg.db.close()
 
