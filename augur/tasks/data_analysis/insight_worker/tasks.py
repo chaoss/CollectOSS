@@ -24,9 +24,9 @@ stemmer = nltk.stem.snowball.SnowballStemmer("english")
 warnings.filterwarnings('ignore')
 
 @celery.task
-def get_insights(repo_git: str) -> None:
+def insight_model(repo_git: str) -> None:
 
-    logger = logger.getLogger(analyze_messages.__name__)
+    logger = logger.getLogger(insight_model.__name__)
 
     refresh = True
     send_insights = True

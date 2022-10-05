@@ -23,9 +23,9 @@ from augur.application.db.engine import create_database_engine
 ######################
 
 @celery.task
-def analyze_messages() -> None:
+def contributor_breadth_model() -> None:
 
-    logger = logging.getLogger(analyze_messages.__name__)
+    logger = logging.getLogger(contributor_breadth_model.__name__)
 
     tool_source = 'Contributor Breadth Worker'
     tool_version = '0.0.1'

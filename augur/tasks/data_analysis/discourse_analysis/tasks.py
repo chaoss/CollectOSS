@@ -29,9 +29,9 @@ from augur.application.db.engine import create_database_engine
 stemmer = nltk.stem.snowball.SnowballStemmer("english")
 
 @celery.task
-def analyze_messages(repo_git: str) -> None:
+def discourse_analysis_model(repo_git: str) -> None:
 
-    logger = logging.getLogger(analyze_messages.__name__)
+    logger = logging.getLogger(discourse_analysis_model.__name__)
 
     tool_source = 'Discourse Worker'
     tool_version = '0.1.0'

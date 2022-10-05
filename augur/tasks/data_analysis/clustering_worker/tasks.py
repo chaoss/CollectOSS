@@ -29,9 +29,9 @@ stemmer = nltk.stem.snowball.SnowballStemmer("english")
 
 
 @celery.task
-def analyze_messages(repo_git: str) -> None:
+def clustering_model(repo_git: str) -> None:
 
-    logger = logging.getLogger(analyze_messages.__name__)
+    logger = logging.getLogger(clustering_model.__name__)
 
     ngram_range = (1, 4)
     clustering_by_content = True

@@ -20,9 +20,9 @@ from augur.application.db.engine import create_database_engine
 ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 
 @celery.task
-def analyze_messages(repo_git: str) -> None:
+def pull_request_analysis_model(repo_git: str) -> None:
 
-    logger = logging.getLogger(analyze_messages.__name__)
+    logger = logging.getLogger(pull_request_analysis_model.__name__)
 
     tool_source = 'Pull Request Analysis Worker'
     tool_version = '0.0.0'

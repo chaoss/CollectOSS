@@ -21,9 +21,9 @@ from augur.application.db.engine import create_database_engine
 ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 
 @celery.task
-def analyze_messages(repo_git: str) -> None:
+def message_insight_model(repo_git: str) -> None:
 
-    logger = logging.getLogger(analyze_messages.__name__)
+    logger = logging.getLogger(message_insight_model.__name__)
 
     full_train = True
     begin_date = ''
