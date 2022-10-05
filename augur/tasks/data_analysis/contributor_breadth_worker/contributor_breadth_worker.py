@@ -113,32 +113,32 @@ def contributor_breadth_model() -> None:
 
 def process_contributor_events(cntrb, cntrb_events, current_event_ids, logger):
 
-        if not cntrb_events:
-            logger.info("There are no events, or new events for this user.\n")
-            return
+    if not cntrb_events:
+        logger.info("There are no events, or new events for this user.\n")
+        return
 
-        ## current_event_ids are the ones ALREADY IN THE AUGUR DB. SKIP THOSE.
-        ## source_cntrb_events are the ones the API pulls.
-        cntrb_repos_insert = []
-        for event_id_api in cntrb_events:
-            logger.info(f"Keys of event_id_api: {event_id_api.keys()}")
-            #logger.info(f"Keys of current_event_ids: {current_event_ids.keys()}")
-            if int(event_id_api['id']) in current_event_ids:
-                continue
+    ## current_event_ids are the ones ALREADY IN THE AUGUR DB. SKIP THOSE.
+    ## source_cntrb_events are the ones the API pulls.
+    cntrb_repos_insert = []
+    for event_id_api in cntrb_events:
+        logger.info(f"Keys of event_id_api: {event_id_api.keys()}")
+        #logger.info(f"Keys of current_event_ids: {current_event_ids.keys()}")
+        if int(event_id_api['id']) in current_event_ids:
+            continue
 
 
-            cntrb_repos_insert.append({
-                "cntrb_id": cntrb['cntrb_id'],
-                "repo_git": event_id_api['repo']['url'],
-                "tool_source": tool_source,
-                "tool_version": tool_version,
-                "data_source": data_source,
-                "repo_name": event_id_api['repo']['name'],
-                "gh_repo_id": event_id_api['repo']['id'],
-                "cntrb_category": event_id_api['type'],
-                "event_id": event_id_api['id'],
-                "created_at": event_id_api['created_at']
-            })
+        cntrb_repos_insert.append({
+            "cntrb_id": cntrb['cntrb_id'],
+            "repo_git": event_id_api['repo']['url'],
+            "tool_source": tool_source,
+            "tool_version": tool_version,
+            "data_source": data_source,
+            "repo_name": event_id_api['repo']['name'],
+            "gh_repo_id": event_id_api['repo']['id'],
+            "cntrb_category": event_id_api['type'],
+            "event_id": event_id_api['id'],
+            "created_at": event_id_api['created_at']
+        })
 
 
 
