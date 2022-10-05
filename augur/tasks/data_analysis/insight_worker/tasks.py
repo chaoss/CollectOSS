@@ -18,15 +18,12 @@ from augur.application.db.session import DatabaseSession
 from augur.application.db.models import Repo, ChaossMetricStatus, RepoInsight, RepoInsightsRecord
 from augur.application.db.engine import create_database_engine
 
-MODEL_FILE_NAME = "kmeans_repo_messages"
-stemmer = nltk.stem.snowball.SnowballStemmer("english")
-
 warnings.filterwarnings('ignore')
 
 @celery.task
 def insight_model(repo_git: str) -> None:
 
-    logger = logger.getLogger(insight_model.__name__)
+    logger = logging.getLogger(insight_model.__name__)
 
     refresh = True
     send_insights = True
