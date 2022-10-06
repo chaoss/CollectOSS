@@ -138,6 +138,9 @@ class GraphQlPageCollection(collections.abc.Sequence):
         if "errors" in response: 
             print(response["errors"])
     
+        if 'data' not in response:
+            raise KeyError
+
         result_dict = response['data']
 
         #print(result_dict)
