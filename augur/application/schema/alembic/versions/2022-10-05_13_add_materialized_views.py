@@ -1,7 +1,7 @@
-"""Added account table
+"""Add materialized views
 
-Revision ID: 12
-Revises: 11
+Revision ID: 13
+Revises: 12
 Create Date: 2022-10-05 17:32:06.930711
 
 """
@@ -11,8 +11,8 @@ from sqlalchemy.sql import text
 
 
 # revision identifiers, used by Alembic.
-revision = '12'
-down_revision = '11'
+revision = '13'
+down_revision = '12'
 branch_labels = None
 depends_on = None
 
