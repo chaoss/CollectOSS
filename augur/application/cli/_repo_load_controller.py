@@ -173,7 +173,7 @@ class RepoLoadController:
 
         repo_unique = ["repo_git"]
         return_columns = ["repo_id"]
-        result = self.session.insert_data(repo_data, Repo, repo_unique, return_columns)
+        result = self.session.insert_data(repo_data, Repo, repo_unique, return_columns, on_conflict_update=False)
 
         return result[0]["repo_id"]
 

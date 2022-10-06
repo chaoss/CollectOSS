@@ -76,7 +76,7 @@ class DatabaseSession(s.orm.Session):
 
             return connection.execute(sql_text)
 
-    def insert_data(self, data: Union[List[dict], dict], table, natural_keys: List[str], return_columns: Optional[List[str]] = None, string_fields: Optional[List[str]] = None) -> Optional[List[dict]]:
+    def insert_data(self, data: Union[List[dict], dict], table, natural_keys: List[str], return_columns: Optional[List[str]] = None, string_fields: Optional[List[str]] = None, on_conflict_update:bool = True) -> Optional[List[dict]]:
 
         if isinstance(data, list) is False:
             
@@ -118,18 +118,26 @@ class DatabaseSession(s.orm.Session):
         # NOTE: if return_columns does not have an values this still works
         stmnt = s.dialects.postgresql.insert(table).returning(*returning_args).values(data)
 
-        # create a dict that the on_conflict_do_update method requires to be able to map updates whenever there is a conflict. See sqlalchemy docs for more explanation and examples: https://docs.sqlalchemy.org/en/14/dialects/postgresql.html#updating-using-the-excluded-insert-values
-        setDict = {}
-        for key in data[0].keys():
-                setDict[key] = getattr(stmnt.excluded, key)
-            
-        stmnt = stmnt.on_conflict_do_update(
-            #This might need to change
-            index_elements=natural_keys,
-            
-            #Columns to be updated
-            set_ = setDict
-        )
+
+        if on_conflict_update:
+
+            # create a dict that the on_conflict_do_update method requires to be able to map updates whenever there is a conflict. See sqlalchemy docs for more explanation and examples: https://docs.sqlalchemy.org/en/14/dialects/postgresql.html#updating-using-the-excluded-insert-values
+            setDict = {}
+            for key in data[0].keys():
+                    setDict[key] = getattr(stmnt.excluded, key)
+                
+            stmnt = stmnt.on_conflict_do_update(
+                #This might need to change
+                index_elements=natural_keys,
+                
+                #Columns to be updated
+                set_ = setDict
+            )
+
+        else:
+            stmnt = stmnt.on_conflict_do_nothing(
+                index_elements=natural_keys
+            )
 
 
         # print(str(stmnt.compile(dialect=s.dialects.postgresql.dialect())))
@@ -196,5 +204,32 @@ class DatabaseSession(s.orm.Session):
         return_data = []
         for data_tuple in return_data_tuples:
             return_data.append(dict(data_tuple))
+
+        # using on confilict do nothing does not return the 
+        # present values so this does gets the return values
+        if not on_conflict_update:
+
+            conditions = []
+            for column in natural_keys:
+
+                column_values = [value[column] for value in data]
+
+                column = getattr(table, column)
+
+                conditions.append(column.in_(tuple(column_values)))
+
+            result = (
+                self.query(table).filter(*conditions).all()
+            )
+
+            for row in result:
+
+                return_dict = {}
+                for field in return_columns:
+
+                    return_dict[field] = getattr(row, field)
+
+                return_data.append(return_dict)
+
 
         return return_data
