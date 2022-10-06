@@ -50,8 +50,8 @@ def init_config(github_api_key, facade_repo_directory, gitlab_api_key, redis_con
             else:
                 print("Invalid directory")
 
-    if facade_repo_directory.endswith("/"):
-        facade_repo_directory = facade_repo_directory[:-1]
+    if facade_repo_directory[-1] != "/":
+        facade_repo_directory += "/"
             
 
     keys = {}
