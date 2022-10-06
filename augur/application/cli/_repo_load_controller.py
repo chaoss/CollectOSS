@@ -9,7 +9,7 @@ from typing import List, Any, Dict
 from augur.tasks.github.util.github_paginator import hit_api
 from augur.tasks.github.util.github_task_session import GithubTaskSession
 from augur.application.db.session import DatabaseSession
-from augur.application.db.models import Repo, UserRepo
+from augur.application.db.models import Repo, UserRepo, RepoGroup
 
 
 logger = logging.getLogger(__name__)
@@ -107,7 +107,6 @@ class RepoLoadController:
 
         url = ORG_REPOS_ENDPOINT.format(owner)
 
-
         attempts = 0
         while attempts < 10:
             result = hit_api(self.session.oauths, url, logger)
@@ -120,7 +119,7 @@ class RepoLoadController:
             data = result.json()
 
             # if there are no repos return []
-            if not data:
+            if not data or isinstance(data, dict):
                 return []
 
             repos = result.json()
@@ -152,6 +151,14 @@ class RepoLoadController:
     #     else:
     #         return dict(result[0])["repo_id"]
 
+    def is_valid_repo_group_id(self, repo_group_id):
+        result = self.session.query(RepoGroup).filter(RepoGroup.repo_group_id == repo_group_id).one()
+
+        if result and result.repo_group_id == repo_group_id:
+            return True
+
+        return False
+
     def add_repo_row(self, url: str, repo_group_id: int, tool_source):
         """Add a repo to the repo table.
 
@@ -159,6 +166,9 @@ class RepoLoadController:
             url: repo url
             repo_group_id: group to assign repo to
         """
+
+        if not self.is_valid_repo_group_id(repo_group_id):
+            return None
 
         repo_data = {
             "repo_group_id": repo_group_id,
@@ -174,6 +184,9 @@ class RepoLoadController:
         repo_unique = ["repo_git"]
         return_columns = ["repo_id"]
         result = self.session.insert_data(repo_data, Repo, repo_unique, return_columns, on_conflict_update=False)
+
+        if not result:
+            return None
 
         return result[0]["repo_id"]
 
@@ -193,9 +206,15 @@ class RepoLoadController:
             
             
         repo_user_unique = ["user_id", "repo_id"]
-        self.session.insert_data(repo_user_data, UserRepo, repo_user_unique)
+        return_columns = ["user_id", "repo_id"]
+        data = self.session.insert_data(repo_user_data, UserRepo, repo_user_unique, return_columns)
 
-    def add_frontend_repos(self, urls: List[str], user_id: int):
+        if data[0]["user_id"] == user_id and data[0]["repo_id"] == repo_id:
+            return True
+
+        return False
+
+    def add_frontend_repo(self, url: List[str], user_id: int):
         """Add list of repos to a users repos.
 
         Args:
@@ -203,16 +222,24 @@ class RepoLoadController:
             user_id: id of user_id from users table
         """
 
-        for url in urls:
+        if not self.is_valid_repo(url):
+            return {"status": "Invalid repo", "repo_url": url}
 
-            if self.is_valid_repo(url):
+        repo_id = self.add_repo_row(url, DEFAULT_REPO_GROUP_ID, "Frontend")
 
-                repo_id = self.add_repo_row(url, DEFAULT_REPO_GROUP_ID, "Frontend")
+        if not repo_id:
+            return {"status": "Repo insertion failed", "repo_url": url}
 
-                self.add_repo_to_user(repo_id, user_id)
+        result = self.add_repo_to_user(repo_id, user_id)
 
+        if not result:
+            return {"status": "repo_user insertion failed", "repo_url": url}
 
-    def add_frontend_orgs(self, urls: List[str], user_id: int):
+        return {"status": "Repo Added", "repo_url": url}
+
+    
+
+    def add_frontend_org(self, url: List[str], user_id: int):
         """Add list of orgs and their repos to a users repos.
 
         Args:
@@ -220,51 +247,63 @@ class RepoLoadController:
             user_id: id of user_id from users table
         """
 
-        for url in urls:
+        repos = self.retrieve_org_repos(url)
 
-            repos = self.retrieve_org_repos(url)
-            
-            if repos:
-                self.add_frontend_repos(repos, user_id)
+        if not repos:
+            return {"status": "Invalid org", "org_url": url}
+        
+        failed_repos = []
+        for repo in repos:
 
-    def add_cli_repos(self, url_data: Dict[str, Any]):
+            result = self.add_frontend_repo(repo, user_id)
+
+            if result["status"] != "Repo Added":
+                failed_count += 1
+
+        failed_count = len(failed_repos)
+        if failed_count > 0:
+            # this should never happen because an org should never return invalid repos
+            return {"status": f"{failed_count} repos failed", "repo_urls": failed_repos, "org_url": url}
+
+        return {"status": "Org repos added", "org_url": url}
+
+    def add_cli_repo(self, repo_data: Dict[str, Any]):
         """Add list of repos to specified repo_groups
 
         Args:
             url_data: dict with repo_group_id and repo urls
         """
 
-        for data in url_data:
+        url = repo_data["url"]
+        repo_group_id = repo_data["repo_group_id"]
 
-            url = data["url"]
-            repo_group_id = data["repo_group_id"]
+        if self.is_valid_repo(url):
 
-            if self.is_valid_repo(url):
+            # if the repo doesn't exist it adds it
+            # if the repo does exist it updates the repo_group_id
+            repo_id = self.add_repo_row(url, repo_group_id, "CLI")
 
-                # if the repo doesn't exist it adds it
-                # if the repo does exist it updates the repo_group_id
-                repo_id = self.add_repo_row(url, repo_group_id, "CLI")
+            self.add_repo_to_user(repo_id, CLI_USER_ID)
 
-                self.add_repo_to_user(repo_id, CLI_USER_ID)
-
-    def add_cli_orgs(self, org_data):
+    def add_cli_org(self, org_name):
         """Add list of orgs and their repos to specified repo_groups
 
         Args:
             org_data: dict with repo_group_id and org urls
         """
 
-        for data in org_data:
+        url = f"https://github.com/{org_name}"
+        repos = self.retrieve_org_repos(url)
 
-            url = data[0]
-            repo_group_id = data[1]
+        if repos:
+    
+            rg = RepoGroup(rg_name=org_name, rg_description="", rg_website="", rg_recache=0, rg_type="Unknown",
+                        tool_source="Loaded by user", tool_version="1.0", data_source="Git")
+            self.session.add(rg)
+            repo_group_id = rg.repo_group_id
 
-            repos = self.retrieve_org_repos(url)
-
-            if repos:
-
-                data = [{"url": repo_url, "repo_group_id": repo_group_id} for repo_url in repos]
-                self.add_cli_repos(data)
+            for repo_url in repos:
+                self.add_cli_repo({"url": repo_url, "repo_group_id": repo_group_id})
 
 
     def get_user_repo_ids(self, user_id: int) -> List[int]:

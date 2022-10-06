@@ -184,10 +184,6 @@ def test_add_frontend_repos_with_duplicates(engine):
 
             url = "https://github.com/operate-first/operate-first-twitter"
 
-            urls = []
-            urls.append(url)
-            urls.append(url)
-
             data = {"user_id": 2, "default_repo_group_id": 1}
 
             query = s.text("""DELETE FROM "augur_data"."repo";
@@ -201,7 +197,8 @@ def test_add_frontend_repos_with_duplicates(engine):
 
             controller = RepoLoadController(session)
 
-            controller.add_frontend_repos(urls, data["user_id"])
+            controller.add_frontend_repo(url, data["user_id"])
+            controller.add_frontend_repo(url, data["user_id"])
 
         with engine.connect() as connection:
 
@@ -235,9 +232,6 @@ def test_add_frontend_repos_with_invalid_repo(engine):
 
             url = "https://github.com/chaoss/whitepaper"
 
-            urls = []
-            urls.append(url)
-
             data = {"user_id": 2, "default_repo_group_id": 1}
 
             query = s.text("""DELETE FROM "augur_data"."repo";
@@ -251,7 +245,7 @@ def test_add_frontend_repos_with_invalid_repo(engine):
 
             controller = RepoLoadController(session)
 
-            controller.add_frontend_repos(urls, data["user_id"])
+            controller.add_frontend_repo(url, data["user_id"])
 
         with engine.connect() as connection:
 
@@ -275,52 +269,49 @@ def test_add_frontend_repos_with_invalid_repo(engine):
                                 """)
 
 
-# def test_add_frontend_org_with_invalid_org(engine):
+def test_add_frontend_org_with_invalid_org(engine):
 
-#     try:
+    try:
 
-#         with engine.connect() as connection:
+        with engine.connect() as connection:
 
-#             url = "https://github.com/chaosssss/"
+            url = "https://github.com/chaosssss/"
 
-#             urls = []
-#             urls.append(url)
+            data = {"user_id": 2, "default_repo_group_id": 1}
 
-#             data = {"user_id": 2, "default_repo_group_id": 1}
+            query = s.text("""DELETE FROM "augur_data"."repo";
+                            DELETE FROM "augur_data"."repo_groups";
+                            INSERT INTO "augur_data"."repo_groups" ("repo_group_id", "rg_name", "rg_description", "rg_website", "rg_recache", "rg_last_modified", "rg_type", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (:default_repo_group_id, 'User Repo Group', 'The default repo group created by the schema generation script', '', 0, '2019-06-03 15:55:20', 'GitHub Organization', 'load', 'one', 'git', '2019-06-05 13:36:25');
+                            INSERT INTO "augur_operations"."users" ("user_id", "login_name", "login_hashword", "email", "first_name", "last_name", "admin") VALUES (:user_id, 'bil', 'pass', 'b@gmil.com', 'bill', 'bob', false);""")
 
-#             query = s.text("""DELETE FROM "augur_data"."repo";
-#                             DELETE FROM "augur_data"."repo_groups";
-#                             INSERT INTO "augur_data"."repo_groups" ("repo_group_id", "rg_name", "rg_description", "rg_website", "rg_recache", "rg_last_modified", "rg_type", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (:default_repo_group_id, 'User Repo Group', 'The default repo group created by the schema generation script', '', 0, '2019-06-03 15:55:20', 'GitHub Organization', 'load', 'one', 'git', '2019-06-05 13:36:25');
-#                             INSERT INTO "augur_operations"."users" ("user_id", "login_name", "login_hashword", "email", "first_name", "last_name", "admin") VALUES (:user_id, 'bil', 'pass', 'b@gmil.com', 'bill', 'bob', false);""")
+            connection.execute(query, **data)
 
-#             connection.execute(query, **data)
+        with GithubTaskSession(logger, engine) as session:
 
-#         with GithubTaskSession(logger, engine) as session:
+            controller = RepoLoadController(session)
 
-#             controller = RepoLoadController(session)
+            controller.add_frontend_org(url, data["user_id"])
 
-#             controller.add_frontend_orgs(urls, data["user_id"])
+        with engine.connect() as connection:
 
-#         with engine.connect() as connection:
+            query = s.text(
+                """SELECT * FROM "augur_data"."repo";""")
 
-#             query = s.text(
-#                 """SELECT * FROM "augur_data"."repo";""")
+            result = connection.execute(query, **data).fetchall()
 
-#             result = connection.execute(query, **data).fetchall()
+            assert result is not None
+            assert len(result) == 0
 
-#             assert result is not None
-#             assert len(result) == 0
+    finally:
 
-#     finally:
+        with engine.connect() as connection:
 
-#         with engine.connect() as connection:
-
-#             connection.execute("""
-#                                 DELETE FROM "augur_operations"."user_repos";
-#                                 DELETE FROM "augur_data"."repo";
-#                                 DELETE FROM "augur_data"."repo_groups";
-#                                 DELETE FROM "augur_operations"."users" WHERE user_id=2;
-#                                 """)
+            connection.execute("""
+                                DELETE FROM "augur_operations"."user_repos";
+                                DELETE FROM "augur_data"."repo";
+                                DELETE FROM "augur_data"."repo_groups";
+                                DELETE FROM "augur_operations"."users" WHERE user_id=2;
+                                """)
 
 
 def test_add_frontend_org_with_valid_org(engine):
@@ -331,8 +322,6 @@ def test_add_frontend_org_with_valid_org(engine):
 
             url = "https://github.com/chaoss/"
 
-            urls = []
-            urls.append(url)
 
             data = {"user_id": 2, "default_repo_group_id": 1}
 
@@ -349,7 +338,7 @@ def test_add_frontend_org_with_valid_org(engine):
 
             controller = RepoLoadController(session)
 
-            controller.add_frontend_orgs(urls, data["user_id"])
+            controller.add_frontend_org(url, data["user_id"])
 
             attempts = 0
             while attempts < 10:

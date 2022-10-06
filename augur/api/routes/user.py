@@ -150,7 +150,7 @@ def create_routes(server):
             return jsonify({"status": "success", "repo_ids": repo_ids})
 
     @server.app.route(f"/{AUGUR_API_VERSION}/user/add_repo", methods=['GET', 'POST'])
-    def add_user_repos():
+    def add_user_repo():
         username = request.args.get("username")
         repo = request.args.get("repo_url")
 
@@ -165,13 +165,13 @@ def create_routes(server):
 
             repo_load_controller = RepoLoadController(gh_session=session)
 
-            repo_load_controller.add_frontend_repos([repo], user.user_id)
+            result = repo_load_controller.add_frontend_repo(repo, user.user_id)
 
-            return jsonify({"status": "Repos Added"})
+            return jsonify(result)
 
 
     @server.app.route(f"/{AUGUR_API_VERSION}/user/add_org", methods=['GET', 'POST'])
-    def add_user_orgs():
+    def add_user_org():
         username = request.args.get("username")
         org = request.args.get("org_url")
 
@@ -186,9 +186,9 @@ def create_routes(server):
 
             repo_load_controller = RepoLoadController(gh_session=session)
 
-            repo_load_controller.add_frontend_orgs([org], user.user_id)
+            result = repo_load_controller.add_frontend_org(org, user.user_id)
 
-            return jsonify({"status": "Orgs Added"})
+            return jsonify(result)
 
 
         
