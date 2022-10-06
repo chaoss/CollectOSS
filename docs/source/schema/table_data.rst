@@ -1,6 +1,10 @@
-Focus: Table of Data Collected
+Descriptions of Tables & Purposes
 ==============================
 
-    used_data
-    regularly_used_data
-    unused_data
+.. toctree::
+   :maxdepth: 2
+
+   regularly_used_data
+   working_tables
+   unused_data
+   overview
