@@ -51,11 +51,10 @@ def add_repos(filename):
                 repo_data = {}
                 repo_data["url"] = row[1]
                 repo_data["repo_group_id"] = row[2]
-                repo_data = {}
 
         for repo in repos:
-
-            controller.add_cli_repos([repo])
+            logger.info(f"Inserting repo with Git URL `{repo["url"]}` into repo group {repo["repo_group_id"]}")
+            controller.add_cli_repo(repo)
 
 
 
@@ -142,27 +141,6 @@ def add_github_org(organization_name):
         controller = RepoLoadController(session)
 
         controller.add_cli_org([organization_name])
-
-    # with GithubTaskSession(logger) as session:
-
-        # org_query_response = requests.get(
-        #     f"https://api.github.com/orgs/{organization_name}"
-        # ).json()
-        # if "login" in org_query_response:
-        #     logger.info(f'Organization "{organization_name}" found')
-        # else:
-        #     logger.fatal(f"No organization with name {organization_name} could be found")
-        #     exit(1)
-
-
-            # logger.info(f"{organization_name} repo group created")
-
-            # for repo in all_repos:
-                # logger.info(f"Adding {organization_name}/{repo['name']} ({repo['clone_url']})")
-                # result = connection.execute(
-                #     insert_repo_sql, repo_group_id=new_repo_group_id, repo_git=repo["clone_url"]
-                # )
-
 
 # get_db_version is a helper function to print_db_version and upgrade_db_version
 def get_db_version():

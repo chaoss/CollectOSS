@@ -283,6 +283,9 @@ class RepoLoadController:
             # if the repo does exist it updates the repo_group_id
             repo_id = self.add_repo_row(url, repo_group_id, "CLI")
 
+            if not repo_id:
+                logger.warning(f"Invalid repo group id specified for {url}, skipping.")
+
             self.add_repo_to_user(repo_id, CLI_USER_ID)
 
     def add_cli_org(self, org_name):
@@ -295,15 +298,23 @@ class RepoLoadController:
         url = f"https://github.com/{org_name}"
         repos = self.retrieve_org_repos(url)
 
-        if repos:
-    
-            rg = RepoGroup(rg_name=org_name, rg_description="", rg_website="", rg_recache=0, rg_type="Unknown",
-                        tool_source="Loaded by user", tool_version="1.0", data_source="Git")
-            self.session.add(rg)
-            repo_group_id = rg.repo_group_id
+        if not repos:
+            logger.fatal(
+                f"No organization with name {org_name} could be found")
+            return
 
-            for repo_url in repos:
-                self.add_cli_repo({"url": repo_url, "repo_group_id": repo_group_id})
+        logger.info(f'Organization "{org_name}" found')
+
+        rg = RepoGroup(rg_name=org_name, rg_description="", rg_website="", rg_recache=0, rg_type="Unknown",
+                    tool_source="Loaded by user", tool_version="1.0", data_source="Git")
+        self.session.add(rg)
+        repo_group_id = rg.repo_group_id
+        logger.info(f"{org_name} repo group created")
+
+        for repo_url in repos:
+            logger.info(
+                f"Adding {repo_url}")
+            self.add_cli_repo({"url": repo_url, "repo_group_id": repo_group_id})
 
 
     def get_user_repo_ids(self, user_id: int) -> List[int]:
