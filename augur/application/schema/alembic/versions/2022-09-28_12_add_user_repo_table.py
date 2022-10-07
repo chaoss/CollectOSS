@@ -38,7 +38,7 @@ def upgrade():
     """))
     
 
-    default_repos_ids = [25452, 24441, 24442, 25445, 1, 25430, 25450]
+    default_repos_ids = [1]
     for repo_id in default_repos_ids:
         conn.execute(text(
             f"""INSERT INTO "augur_operations"."user_repos" ("user_id", "repo_id") VALUES ({cli_user_id}, {repo_id});"""))
