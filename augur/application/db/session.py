@@ -76,6 +76,10 @@ class DatabaseSession(s.orm.Session):
 
             return connection.execute(sql_text)
 
+    def fetchall_data_from_sql_text(self,sql_text):
+        result = self.execute_sql(sql_text).fetchall()
+        return [dict(zip(row.keys(), row)) for row in result]
+
     def insert_data(self, data: Union[List[dict], dict], table, natural_keys: List[str], return_columns: Optional[List[str]] = None, string_fields: Optional[List[str]] = None) -> Optional[List[dict]]:
 
         if isinstance(data, list) is False:

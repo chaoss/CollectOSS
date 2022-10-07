@@ -30,7 +30,7 @@ import traceback
 import sys, platform, imp, time, datetime, html.parser, subprocess, os, getopt, xlsxwriter, configparser, logging
 from multiprocessing import Process, Queue
 from .facade01config import FacadeConfig as FacadeConfig#increment_db, update_db, migrate_database_config, database_connection, get_setting, update_status, log_activity          
-from .facade02utilitymethods import update_repo_log, trim_commit, store_working_author, trim_author   
+from .facade02utilitymethods import trim_commit, store_working_author, trim_author   
 from .facade03analyzecommit import analyze_commit
 from .facade04postanalysiscleanup import git_repo_cleanup
 from .facade05repofetch import git_repo_initialize, check_for_repo_updates, force_repo_updates, force_repo_analysis, git_repo_updates
@@ -70,29 +70,33 @@ class FacadeSession(GithubTaskSession):
         create_xlsx_summary_files (int): toggles whether to create excel summary files
     """
     def __init__(self,logger: Logger):
-        self.cfg = FacadeConfig(logger)
+        #self.cfg = FacadeConfig(logger)
 
         super().__init__(logger=logger)
         # Figure out what we need to do
+        worker_options = self.config.get_section("Facade")
 
-        self.limited_run = self.cfg.worker_options["limited_run"]
-        self.delete_marked_repos = self.cfg.worker_options["delete_marked_repos"]
-        self.pull_repos = self.cfg.worker_options["pull_repos"]
-        self.clone_repos = self.cfg.worker_options["clone_repos"]
-        self.check_updates = self.cfg.worker_options["check_updates"]
-        self.force_updates = self.cfg.worker_options["force_updates"]
-        self.run_analysis = self.cfg.worker_options["run_analysis"]
-        self.force_analysis = self.cfg.worker_options["force_analysis"]
-        self.nuke_stored_affiliations = self.cfg.worker_options["nuke_stored_affiliations"]
-        self.fix_affiliations = self.cfg.worker_options["fix_affiliations"]
-        self.force_invalidate_caches = self.cfg.worker_options["force_invalidate_caches"]
-        self.rebuild_caches = self.cfg.worker_options["rebuild_caches"]
-        self.multithreaded = self.cfg.worker_options["multithreaded"]
-        self.create_xlsx_summary_files = self.cfg.worker_options["create_xlsx_summary_files"]
+        self.limited_run = worker_options["limited_run"]
+        self.delete_marked_repos = worker_options["delete_marked_repos"]
+        self.pull_repos = worker_options["pull_repos"]
+        self.clone_repos = worker_options["clone_repos"]
+        self.check_updates = worker_options["check_updates"]
+        self.force_updates = worker_options["force_updates"]
+        self.run_analysis = worker_options["run_analysis"]
+        self.force_analysis = worker_options["force_analysis"]
+        self.nuke_stored_affiliations = worker_options["nuke_stored_affiliations"]
+        self.fix_affiliations = worker_options["fix_affiliations"]
+        self.force_invalidate_caches = worker_options["force_invalidate_caches"]
+        self.rebuild_caches = worker_options["rebuild_caches"]
+        self.multithreaded = worker_options["multithreaded"]
+        self.create_xlsx_summary_files = worker_options["create_xlsx_summary_files"]
 
 
         # Get the location of the directory where git repos are stored
-        repo_base_directory = self.cfg.repo_base_directory
+        if 'repo_directory' in worker_options:
+            self.repo_base_directory = worker_options['repo_directory']
+        else:
+            self.repo_base_directory = None
 
         # Determine if it's safe to start the script
         current_status = self.cfg.get_setting('utility_status')
@@ -101,6 +105,33 @@ class FacadeSession(GithubTaskSession):
             self.cfg.log_activity('Error','No base directory. It is unsafe to continue.')
             raise Exception('Failed: No base directory')
 
+    def get_setting(self,setting):
+        #Get a setting from the db
+
+        query = s.sql.text("""SELECT value FROM settings WHERE setting=:settingParam ORDER BY
+            last_modified DESC LIMIT 1""").bindparams(settingParam=setting)
+        
+        result = self.execute_sql(query).one()
+        print(result)
+        return result
+        
+
+    def update_status(self, status):
+        query = s.sql.text("""UPDATE settings SET value=:statusParam WHERE setting='utility_status'
+            """).bindparams(statusParam=status)
+        
+        self.execute_sql(query)
+
+    def update_repo_log(self,repos_id,status):
+        self.logger.info(f"{status} {repos_id}")
+
+        log_message = s.sql.text("""INSERT INTO repos_fetch_log (repos_id,status) 
+            VALUES (:repo_id,:repo_status)""").bindparams(repo_id=repos_id,repo_status=status)
+        
+        try:
+            self.execute_sql(log_message)
+        except:
+            pass
     def insert_or_update_data(self, query: TextClause, params: tuple=None)-> None:
         """Provide deadlock detection for postgres updates, inserts, and deletions for facade.
 

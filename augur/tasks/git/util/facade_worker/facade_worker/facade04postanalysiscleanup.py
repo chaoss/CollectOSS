@@ -37,106 +37,101 @@ import getopt
 import xlsxwriter
 import configparser
 
-def git_repo_cleanup(cfg):
+def git_repo_cleanup(session):
 
 # Clean up any git repos that are pending deletion
 
-	cfg.update_status('Purging deleted repos')
-	cfg.log_activity('Info','Processing deletions')
+	session.update_status('Purging deleted repos')
+	session.logger.info("Processing deletions")
 
-	query = "SELECT repo_id,repo_group_id,repo_path,repo_name FROM repo WHERE repo_status='Delete'"
-	cfg.cursor.execute(query)
+	query = s.sql.text("""SELECT repo_id,repo_group_id,repo_path,repo_name FROM repo WHERE repo_status='Delete'""")
 
-	delete_repos = list(cfg.cursor)
+	delete_repos = session.fetchall_data_from_sql_text(query)
 
 	for row in delete_repos:
 
 		# Remove the files on disk
 
 		cmd = ("rm -rf %s%s/%s%s"
-			% (cfg.repo_base_directory,row[1],row[2],row[3]))
+			% (cfg.repo_base_directory,row['repo_group_id'],row['repo_path'],row['repo_name']))
 
 		return_code = subprocess.Popen([cmd],shell=True).wait()
 
 		# Remove the analysis data
 
-		remove_commits = "DELETE FROM commits WHERE repo_id=%s"
-		cfg.cursor.execute(remove_commits, (row[0], ))
+		remove_commits = s.sql.text("""DELETE FROM commits WHERE repo_id=:repo_id
+			""").bindparams(repo_id=row['repo_id'])
+		session.execute_sql(remove_commits)#cfg.cursor.execute(remove_commits, (row['repo_id'], ))
 
-		optimize_table = "OPTIMIZE TABLE commits"
-		cfg.cursor.execute(optimize_table)
-		cfg.db.commit()
+		optimize_table = s.sql.text("""OPTIMIZE TABLE commits""")
+		session.execute_sql(optimize_table)
 
 		# Remove cached repo data
 
-		remove_dm_repo_weekly = "DELETE FROM dm_repo_weekly WHERE repo_id=%s"
-		cfg.cursor.execute(remove_dm_repo_weekly, (row[0], ))
-		cfg.db.commit()
+		remove_dm_repo_weekly = s.sql.text("""DELETE FROM dm_repo_weekly WHERE repo_id=:repo_id
+			""").bindparams(repo_id=row['repo_id'])
+		session.execute_sql(remove_dm_repo_weekly)
 
-		optimize_table = "OPTIMIZE TABLE dm_repo_weekly"
-		cfg.cursor.execute(optimize_table)
-		cfg.db.commit()
+		optimize_table = s.sql.text("""OPTIMIZE TABLE dm_repo_weekly""")
+		session.execute_sql(optimize_table)
 
-		remove_dm_repo_monthly = "DELETE FROM dm_repo_monthly WHERE repo_id=%s"
-		cfg.cursor.execute(remove_dm_repo_monthly, (row[0], ))
-		cfg.db.commit()
+		remove_dm_repo_monthly = s.sql.text("""DELETE FROM dm_repo_monthly WHERE repo_id=:repo_id
+			""").bindparams(repo_id=row['repo_id'])
+		session.execute_sql(remove_dm_repo_monthly)
 
-		optimize_table = "OPTIMIZE TABLE dm_repo_monthly"
-		cfg.cursor.execute(optimize_table)
-		cfg.db.commit()
+		optimize_table = s.sql.text("""OPTIMIZE TABLE dm_repo_monthly""")
+		session.execute_sql(optimize_table)
 
-		remove_dm_repo_annual = "DELETE FROM dm_repo_annual WHERE repo_id=%s"
-		cfg.cursor.execute(remove_dm_repo_annual, (row[0], ))
-		cfg.db.commit()
+		remove_dm_repo_annual = s.sql.text("""DELETE FROM dm_repo_annual WHERE repo_id=:repo_id
+			""").bindparams(repo_id=row['repo_id'])
+		session.execute_sql(remove_dm_repo_annual)
 
-		optimize_table = "OPTIMIZE TABLE dm_repo_annual"
-		cfg.cursor.execute(optimize_table)
-		cfg.db.commit()
+		optimize_table = s.sql.text("""OPTIMIZE TABLE dm_repo_annual""")
+		session.execute_sql(optimize_table)
 
 		# Set project to be recached if just removing a repo
 
-		set_project_recache = ("UPDATE projects SET recache=TRUE "
-			"WHERE id=%s")
-		cfg.cursor.execute(set_project_recache,(row[1], ))
-		cfg.db.commit()
-
+		set_project_recache = s.sql.text("""UPDATE projects SET recache=TRUE
+			WHERE id=:repo_group_id""").bindparams(repo_group_id=row['repo_group_id'])
+		session.execute_sql(set_project_recache)
 		# Remove the entry from the repos table
 
-		query = "DELETE FROM repo WHERE repo_id=%s"
-		cfg.cursor.execute(query, (row[0], ))
-		cfg.db.commit()
+		query = s.sql.text("""DELETE FROM repo WHERE repo_id=:repo_id
+			""").bindparams(repo_id=row['repo_id'])
+		session.execute_sql(query)
 
-		log_activity('Verbose','Deleted repo %s' % row[0])
-
-		cleanup = '%s/%s%s' % (row[1],row[2],row[3])
+		#log_activity('Verbose','Deleted repo %s' % row[0])
+		session.logger.debug(f"Deleted repo {row['repo_id']}")
+		cleanup = '%s/%s%s' % (row['repo_group_id'],row['repo_path'],row['repo_name'])
 
 		# Remove any working commits
 
-		remove_working_commits = "DELETE FROM working_commits WHERE repos_id=%s"
-		cfg.cursor.execute(remove_working_commits, (row[0], ))
-		cfg.db.commit()
+		remove_working_commits = s.sql.text("""DELETE FROM working_commits WHERE repos_id=:repo_id
+			""").bindparams(repo_id=row['repo_id'])
+		session.execute_sql(remove_working_commits)
 
 		# Remove the repo from the logs
 
-		remove_logs = ("DELETE FROM repos_fetch_log WHERE repos_id = %s")
+		remove_logs = s.sql.text("""DELETE FROM repos_fetch_log WHERE repos_id =:repo_id
+			""").bindparams(repo_id=row['repo_id'])
 
-		cfg.cursor.execute(remove_logs, (row[0], ))
-		cfg.db.commit()
+		session.execute_sql(remove_logs)
 
-		optimize_table = "OPTIMIZE TABLE repos_fetch_log"
-		cfg.cursor.execute(optimize_table)
-		cfg.db.commit()
+		optimize_table = s.sql.text("""OPTIMIZE TABLE repos_fetch_log""")
+		session.execute_sql(optimize_table)
 
 		# Attempt to cleanup any empty parent directories
 
 		while (cleanup.find('/',0) > 0):
 			cleanup = cleanup[:cleanup.rfind('/',0)]
 
-			cmd = "rmdir %s%s" % (cfg.repo_base_directory,cleanup)
+			cmd = "rmdir %s%s" % (session.repo_base_directory,cleanup)
 			subprocess.Popen([cmd],shell=True).wait()
-			log_activity('Verbose','Attempted %s' % cmd)
+			#log_activity('Verbose','Attempted %s' % cmd)
+			session.logger.debug(f"Attempted {cmd}")
 
-		update_repo_log(row[0],'Deleted')
+		#update_repo_log(row[0],'Deleted')
+		session.update_repo_log(row['repo_id'],'Deleted')
 
 	# Clean up deleted projects
 
