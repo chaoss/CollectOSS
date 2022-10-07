@@ -86,11 +86,11 @@ def machine_learning_phase(logger):
 
 
         return chain(
-            chain(clustering_tasks),
-            chain(discourse_tasks),
-            chain(insight_tasks),
-            chain(message_insights_tasks),
-            chain(pull_request_analysis_tasks)
+            chain(*clustering_tasks),
+            chain(*discourse_tasks),
+            chain(*insight_tasks),
+            chain(*message_insights_tasks),
+            chain(*pull_request_analysis_tasks)
         )
 
 
