@@ -10,6 +10,7 @@ RUN set -x \
     && apt-get update \
     && apt-get -y install --no-install-recommends \
         git \
+        curl \
         gcc \
         python3-pip \
         wget \
@@ -20,6 +21,7 @@ EXPOSE 5000
 
 WORKDIR /augur
 COPY ./README.md .
+COPY ./alembic.ini .
 COPY ./augur/ augur/
 COPY ./metadata.py .
 COPY ./setup.py .

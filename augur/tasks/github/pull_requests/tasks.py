@@ -85,14 +85,14 @@ def process_pull_requests(pull_requests, task_name, repo_id, logger):
 
         # insert contributors from these prs
         logger.info(f"{task_name}: Inserting {len(contributors)} contributors")
-        session.insert_data(contributors, Contributor, ["cntrb_login"])
+        session.insert_data(contributors, Contributor, ["cntrb_id"])
 
 
         # insert the prs into the pull_requests table. 
         # pr_urls are gloablly unique across github so we are using it to determine whether a pull_request we collected is already in the table
         # specified in pr_return_columns is the columns of data we want returned. This data will return in this form; {"pr_url": url, "pull_request_id": id}
         logger.info(f"{task_name}: Inserting prs of length: {len(pr_dicts)}")
-        pr_natural_keys = ["repo_id", "pr_src_id"]
+        pr_natural_keys = ["pr_url"]
         pr_return_columns = ["pull_request_id", "pr_url"]
         pr_string_fields = ["pr_src_title", "pr_body"]
         pr_return_data = session.insert_data(pr_dicts, PullRequest, pr_natural_keys, 

@@ -579,7 +579,9 @@ def create_routes(server):
         if all(x in needed_columns for x in not_null_columns):
 
             df = get_needed_columns(df, needed_columns)
-            df = remove_rows_with_null_values(df, not_null_columns)
+            #Use the pandas method bc the other method was erroring on boolean index.
+            #IM - 9/23/22
+            df = df.dropna(subset=not_null_columns)#remove_rows_with_null_values(df, not_null_columns)
 
             return df
         else:
@@ -605,7 +607,9 @@ def create_routes(server):
         not_null_columns = ['cntrb_id', 'created_at', 'month', 'year', 'repo_id', 'repo_name', 'login', 'action',
                             'rank', 'yearmonth', 'new_contributors', 'quarter']
 
-        input_df = remove_rows_with_null_values(input_df, not_null_columns)
+        #Use the pandas method bc the other method was erroring on boolean index.
+        #IM - 9/23/22
+        input_df = input_df.dropna(subset=not_null_columns)#remove_rows_with_null_values(input_df, not_null_columns)
 
         if len(input_df) == 0:
             return Response(response="There is no data for this repo, in the database you are accessing",

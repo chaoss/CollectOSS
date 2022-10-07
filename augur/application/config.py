@@ -73,6 +73,11 @@ default_config = {
                 "workers": 1,
                 "training_days": 1000,
                 "anomaly_days": 14
+            },
+            "Task_Routine": {
+                "prelim_phase": 1,
+                "repo_collect_phase": 1,
+                "machine_learning_phase": 0
             }
         }
 
@@ -236,6 +241,7 @@ class AugurConfig():
             if setting["type"] == "NoneType":
                 setting["type"] = None
 
+        #print(f"\nsetting: {settings}")
         self.session.insert_data(settings,Config, ["section_name", "setting_name"])
        
 
@@ -293,7 +299,7 @@ class AugurConfig():
         for section_name in section_names:
             
             value = dict_data[section_name]
-
+            #print(f"\n{value}")
             # check for "sections" that are actually just a key value pair 
             # and not a key that has a value of type dict
             if isinstance(value, dict) is True:

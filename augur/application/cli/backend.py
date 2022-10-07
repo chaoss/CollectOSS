@@ -14,6 +14,7 @@ import sys
 from redis.exceptions import ConnectionError as RedisConnectionError
 from celery import chain, signature, group
 import uuid
+import traceback
 
 
 from augur import instance_id
@@ -38,8 +39,15 @@ def cli():
 def start(disable_collection):
     """Start Augur's backend server."""
 
-    raise_open_file_limit(100000)
+    try:
+        raise_open_file_limit(100000)
+    except Exception as e: 
+        logger.error(
+                    ''.join(traceback.format_exception(None, e, e.__traceback__)))
+        
+        logger.error("Failed to raise open file limit!")
 
+    
     with DatabaseSession(logger) as session:
    
         gunicorn_location = os.getcwd() + "/augur/api/gunicorn_conf.py"

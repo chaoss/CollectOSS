@@ -457,26 +457,50 @@ def license_coverage(repo_group_id, repo_id=None):
 
     if repo_id:
         license_declared_SQL = s.sql.text("""
-            SELECT a.name, b.total as total_files, a.licensed as license_declared_files, round(a.licensed/b.total::numeric, 3) as coverage
-            FROM (
-            SELECT packages.name as name, count(file_license_id) as licensed
-            FROM packages,
-                files_licenses,
-                packages_files,
-                repo
-            WHERE packages.name = repo.repo_name
-            and repo.repo_id = :repo_id
-            and packages.package_id = packages_files.package_id
-            and packages_files.file_id = files_licenses.file_id
-            GROUP BY packages.name) a, (SELECT packages.name as name, count(packages_files.file_id) as total
-            FROm packages, repo, packages_files
-            WHERE packages.name = repo.repo_name
-            and repo.repo_id = :repo_id
-            AND packages.package_id = packages_files.package_id
-            GROUP BY packages.name
-            )b
-            WHERE a.name = b.name
-            GROUP BY a.name, a.licensed, a.licensed, b.total
+        SELECT B.NAME,
+            b.total AS total_files,
+            COALESCE(A.licensed,0) AS license_declared_files,
+            round( COALESCE(A.licensed :: NUMERIC, 0) / b.total :: NUMERIC, 3 ) AS coverage 
+        FROM
+            (
+            SELECT
+                packages.NAME AS NAME,
+                COUNT ( packages_files.file_id ) AS total 
+            FROM
+                spdx.packages,
+                repo,
+                spdx.packages_files 
+            WHERE
+                packages.NAME = repo.repo_name 
+                AND repo.repo_id = :repo_id 
+                AND packages.package_id = packages_files.package_id 
+            GROUP BY
+                packages.NAME 
+            ) b 
+            left outer join 
+                (
+            SELECT
+                packages.NAME AS NAME,
+                COUNT ( * ) AS licensed 
+            FROM
+                spdx.packages,
+                spdx.files_licenses,
+                spdx.packages_files,
+                repo 
+            WHERE
+                packages.NAME = repo.repo_name 
+                AND repo.repo_id = :repo_id 
+                AND packages.package_id = packages_files.package_id 
+                AND packages_files.file_id = files_licenses.file_id 
+            GROUP BY
+                packages.NAME 
+            ) A
+        on 
+            A.NAME = b.NAME 
+        GROUP BY
+            B.NAME,
+            A.licensed,
+            b.total
         """)
     else:
         license_declared_SQL = s.sql.text("""

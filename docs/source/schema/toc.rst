@@ -3,20 +3,14 @@ Schema
 
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
+   table_data
    overview
    issues
    commits
    pull-requests
    contributors
    dependencies
-   table_data
-
-   .. table_datatree::
-      :maxdepth: 1
-
-      working_tables
-      regularly_used_data
-      unused_data
+   
 

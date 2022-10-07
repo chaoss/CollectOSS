@@ -146,7 +146,7 @@ def insert_pr_contributors(contributors: List[dict], session: GithubTaskSession,
 
     # insert contributors from these prs
     session.logger.info(f"{task_name}: Inserting {len(contributors)} contributors")
-    session.insert_data(contributors, Contributor, ["cntrb_login"])
+    session.insert_data(contributors, Contributor, ["cntrb_id"])
 
 
 def insert_prs(pr_dicts: List[dict], session: GithubTaskSession, task_name: str) -> Optional[List[dict]]:

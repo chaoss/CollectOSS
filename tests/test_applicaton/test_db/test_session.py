@@ -75,7 +75,7 @@ def test_insert_data_with_duplicates(engine):
 
             for data in duplicate_data_list:
 
-                session.insert_data(data, Contributor, ["cntrb_login"])
+                session.insert_data(data, Contributor, ["cntrb_id"])
 
 
             
@@ -113,7 +113,7 @@ def test_insert_data_with_updates(engine):
 
         with DatabaseSession(logger, engine=engine) as session:
 
-            session.insert_data(data_2, Contributor, ["cntrb_login"])
+            session.insert_data(data_2, Contributor, ["cntrb_id"])
 
         with engine.connect() as connection:
 
@@ -142,7 +142,7 @@ def test_insert_data_with_bulk(engine):
 
     try:
         with DatabaseSession(logger, engine=engine) as session:
-            session.insert_data(all_data, Contributor, ["cntrb_login"])
+            session.insert_data(all_data, Contributor, ["cntrb_id"])
 
         with engine.connect() as connection:
 
@@ -179,7 +179,7 @@ def test_insert_data_partial_update(engine):
 
         with DatabaseSession(logger, engine=engine) as session:
 
-            session.insert_data(data_2, Contributor, ["cntrb_login"])
+            session.insert_data(data_2, Contributor, ["cntrb_id"])
 
         with engine.connect() as connection:
 

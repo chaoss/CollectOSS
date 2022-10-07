@@ -11,6 +11,7 @@ from celery import group, chain, chord, signature
 
 
 from augur.tasks.github import *
+from augur.tasks.data_analysis import *
 from augur.tasks.github.detect_move.tasks import detect_github_repo_move
 from augur.tasks.github.releases.tasks import collect_releases
 from augur.tasks.github.repo_info.tasks import collect_repo_info
@@ -66,6 +67,34 @@ def repo_collect_phase(logger):
             collect_releases.si()
         )
 
+def machine_learning_phase(logger):
+
+    with DatabaseSession(logger) as session:
+        repos = session.query(Repo).all()
+
+        clustering_tasks = []
+        discourse_tasks = []
+        insight_tasks = []
+        message_insights_tasks = []
+        pull_request_analysis_tasks = []
+        for repo in repos:
+            clustering_tasks.append(clustering_model.si(repo.repo_git))
+            discourse_tasks.append(discourse_analysis_model.si(repo.repo_git))
+            insight_tasks.append(insight_model.si(repo.repo_git))
+            message_insights_tasks.append(message_insight_model.si(repo.repo_git))
+            pull_request_analysis_tasks.append(pull_request_analysis_model.si(repo.repo_git))
+
+
+        return chain(
+            chain(clustering_tasks),
+            chain(discourse_tasks),
+            chain(insight_tasks),
+            chain(message_insights_tasks),
+            chain(pull_request_analysis_tasks)
+        )
+
+
+DEFINED_COLLECTION_PHASES = [prelim_phase, repo_collect_phase, machine_learning_phase]
 
 class AugurTaskRoutine:
     """class to keep track of various groups of collection tasks as well as how they relate to one another.
@@ -85,9 +114,14 @@ class AugurTaskRoutine:
 
         #Assemble default phases
         #These will then be able to be overridden through the config.
-        self.jobs_dict[prelim_phase.__name__] = prelim_phase
+        if prelim_phase.__name__ not in self.disabled_collection_phases:
+            self.jobs_dict[prelim_phase.__name__] = prelim_phase
         
-        self.jobs_dict[repo_collect_phase.__name__] = repo_collect_phase
+        if repo_collect_phase.__name__ not in self.disabled_collection_phases:
+            self.jobs_dict[repo_collect_phase.__name__] = repo_collect_phase
+
+        if machine_learning_phase.__name__ not in self.disabled_collection_phases:
+            self.jobs_dict[machine_learning_phase.__name__] = machine_learning_phase
 
                 
 
@@ -101,7 +135,7 @@ class AugurTaskRoutine:
         """Create a new collection job group with the name of the key specified.
         """
         if key in self.disabled_collection_phases:
-            self.logger.error("Group has been disabled")
+            self.logger.info(f"Group {key} has been disabled")
             return
         self.jobs_dict[key] = newJobs
 
@@ -125,7 +159,15 @@ class AugurTaskRoutine:
             #Call the function stored in the dict to return the object to call apply_async on
             phaseResult = job(self.logger).apply_async()
             with allow_join_result():
-                phaseResult.join()
+                try:
+                    phaseResult.join()
+                except Exception as e:
+                    #Log full traceback if a phase fails.
+                    self.logger.error(
+                    ''.join(traceback.format_exception(None, e, e.__traceback__)))
+                    self.logger.error(
+                        f"Phase {phaseName} has failed during augur collection. Error: {e}")
+                    raise e
             #self.logger.info(f"Result of {phaseName} phase: {phaseResult.status}")
 
 
@@ -134,9 +176,17 @@ def start_task():
 
     logger = logging.getLogger(start_task.__name__)
 
-    default_augur_collection = AugurTaskRoutine()
+    #Get phase options from the config
+    with DatabaseSession(logger) as session:
+        config = session.config
+        phase_options = config.get_section("Task_Routine")
 
-    default_augur_collection.start_data_collection()
+    #Get list of disabled phases
+    disabled_phases = [name for name, phase in phase_options.items() if phase == 0]
 
+    #print(f"disabled: {disabled_phases}")
+    augur_collection = AugurTaskRoutine(disabled_collection_phases=disabled_phases)
+
+    augur_collection.start_data_collection()
 
 
