@@ -30,7 +30,13 @@ def upgrade():
     )
 
     conn = op.get_bind()
-    conn.execute(text("""INSERT INTO "augur_operations"."users" ("user_id", "login_name", "login_hashword", "email", "text_phone", "first_name", "last_name", "tool_source", "tool_version", "data_source", "data_collection_date", "admin") VALUES(1, 'cli_user', 'pbkdf2:sha256:260000$oDmAfipU8Ef8TAau$835fce1fc3290b57b5e02ec83aef4613cc06664e6e7535bb6d267dc44563d5d5', 'cli_user', NULL, 'cli_user', 'cli_user', 'Schema Generaation', NULL, 'Schema Generation', '2022-10-02 21:49:13', 'f')"""))
+    cli_user_id = 1
+    conn.execute(text(f"""INSERT INTO "augur_operations"."users" ("user_id", "login_name", "login_hashword", "email", "text_phone", "first_name", "last_name", "tool_source", "tool_version", "data_source", "data_collection_date", "admin") VALUES({cli_user_id}, 'cli_user', 'pbkdf2:sha256:260000$oDmAfipU8Ef8TAau$835fce1fc3290b57b5e02ec83aef4613cc06664e6e7535bb6d267dc44563d5d5', 'cli_user', NULL, 'cli_user', 'cli_user', 'Schema Generaation', NULL, 'Schema Generation', '2022-10-02 21:49:13', 'f')"""))
+
+    default_repos_ids = [25452, 24441, 24442, 25445, 1, 25430, 25450]
+    for repo_id in default_repos_ids:
+        conn.execute(text(
+            f"""INSERT INTO "augur_operations"."user_repos" ("user_id", "repo_id") VALUES ({cli_user_id}, {repo_id});"""))
     # ### end Alembic commands ###
 
 

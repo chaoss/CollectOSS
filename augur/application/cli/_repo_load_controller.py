@@ -285,6 +285,7 @@ class RepoLoadController:
 
             if not repo_id:
                 logger.warning(f"Invalid repo group id specified for {url}, skipping.")
+                return
 
             self.add_repo_to_user(repo_id, CLI_USER_ID)
 

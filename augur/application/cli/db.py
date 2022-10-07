@@ -37,24 +37,28 @@ def cli():
 def add_repos(filename):
     """Add repositories to Augur's database."""   
     from augur.tasks.github.util.github_task_session import GithubTaskSession
-    from augur.cli._repo_load_controller import RepoLoadController
+    from augur.application.cli._repo_load_controller import RepoLoadController
 
     with GithubTaskSession(logger) as session:
 
         controller = RepoLoadController(session)
 
-        repos = []
         with open(filename) as upload_repos_file:
             data = csv.reader(upload_repos_file, delimiter=",")
             for row in data:
                 
                 repo_data = {}
-                repo_data["url"] = row[1]
-                repo_data["repo_group_id"] = row[2]
+                repo_data["url"] = row[0]
+                try:
+                    repo_data["repo_group_id"] = int(row[1])
+                except ValueError:
+                    print(f"Invalid repo group_id: {row[1]} for Git url: `{repo_data['url']}`")
+                    continue
+                
 
-        for repo in repos:
-            logger.info(f"Inserting repo with Git URL `{repo["url"]}` into repo group {repo["repo_group_id"]}")
-            controller.add_cli_repo(repo)
+                print(
+                    f"Inserting repo with Git URL `{repo_data['url']}` into repo group {repo_data['repo_group_id']}")
+                controller.add_cli_repo(repo_data)
 
 
 
@@ -134,7 +138,7 @@ def add_github_org(organization_name):
     Create new repo groups in Augur's database
     """
     from augur.tasks.github.util.github_task_session import GithubTaskSession
-    from augur.cli._repo_load_controller import RepoLoadController
+    from augur.application.cli._repo_load_controller import RepoLoadController
 
     with GithubTaskSession(logger) as session:
 
