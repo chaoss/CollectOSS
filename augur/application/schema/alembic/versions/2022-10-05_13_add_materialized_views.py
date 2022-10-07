@@ -22,6 +22,19 @@ def upgrade():
 
     conn = op.get_bind()
     conn.execute(text("""
+    drop materialized view if exists augur_data.explorer_commits_and_committers_daily_count; 
+    drop materialized view if exists augur_data.api_get_all_repos_commits; 
+    drop materialized view if exists augur_data.api_get_all_repos_issues; 
+    drop materialized view if exists augur_data.augur_new_contributors; 
+    drop materialized view if exists augur_data.explorer_contributor_actions; 
+    drop materialized view if exists augur_data.explorer_entry_list; 
+    drop materialized view if exists augur_data.explorer_libyear_all; 
+    drop materialized view if exists augur_data.explorer_libyear_detail; 
+    drop materialized view if exists augur_data.explorer_new_contributors;""")) 
+
+
+    conn = op.get_bind()
+    conn.execute(text("""
 
     create materialized view augur_data.explorer_commits_and_committers_daily_count as
     SELECT repo.repo_id,
