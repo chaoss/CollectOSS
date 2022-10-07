@@ -135,55 +135,47 @@ def git_repo_cleanup(session):
 
 	# Clean up deleted projects
 
-	get_deleted_projects = "SELECT repo_group_id FROM repo_groups WHERE rg_name='(Queued for removal)'"
-	cfg.cursor.execute(get_deleted_projects)
+	get_deleted_projects = s.sql.text("""SELECT repo_group_id FROM repo_groups WHERE rg_name='(Queued for removal)""")
 
-	deleted_projects = list(cfg.cursor)
+	deleted_projects = session.fetchall_data_from_sql_text(get_deleted_projects)
 
 	for project in deleted_projects:
 
 		# Remove cached data for projects which were marked for deletion
 
-		clear_annual_cache = ("DELETE FROM dm_repo_group_annual WHERE "
-			"repo_group_id=%s")
-		cfg.cursor.execute(clear_annual_cache, (project[0], ))
-		cfg.db.commit()
+		clear_annual_cache = s.sql.text("""DELETE FROM dm_repo_group_annual WHERE
+			repo_group_id=:repo_group_id""").bindparams(repo_group_id=project['repo_group_id'])
+		session.execute_sql(clear_annual_cache)
 
-		optimize_table = "OPTIMIZE TABLE dm_repo_group_annual"
-		cfg.cursor.execute(optimize_table)
-		cfg.db.commit()
+		optimize_table = s.sql.text("""OPTIMIZE TABLE dm_repo_group_annual""")
+		session.execute_sql(optimize_table)
 
-		clear_monthly_cache = ("DELETE FROM dm_repo_group_monthly WHERE "
-			"repo_group_id=%s")
-		cfg.cursor.execute(clear_monthly_cache, (project[0], ))
-		cfg.db.commit()
+		clear_monthly_cache = s.sql.text("""DELETE FROM dm_repo_group_monthly WHERE
+			repo_group_id=:repo_group_id""").bindparams(repo_group_id=project['repo_group_id'])
+		session.execute_sql(clear_monthly_cache)
 
-		optimize_table = "OPTIMIZE TABLE dm_repo_group_monthly"
-		cfg.cursor.execute(optimize_table)
-		cfg.db.commit()
+		optimize_table = s.sql.text("""OPTIMIZE TABLE dm_repo_group_monthly""")
+		session.execute_sql(optimize_table)
 
-		clear_weekly_cache = ("DELETE FROM dm_repo_group_weekly WHERE "
-			"repo_group_id=%s")
-		cfg.cursor.execute(clear_weekly_cache, (project[0], ))
-		cfg.db.commit()
+		clear_weekly_cache = s.sql.text("""DELETE FROM dm_repo_group_weekly WHERE
+			repo_group_id=:repo_group_id""").bindparams(repo_group_id=project['repo_group_id'])
+		session.execute_sql(clear_weekly_cache)
 
-		optimize_table = "OPTIMIZE TABLE dm_repo_group_weekly"
-		cfg.cursor.execute(optimize_table)
-		cfg.db.commit()
+		optimize_table = s.sql.text("""OPTIMIZE TABLE dm_repo_group_weekly""")
+		session.execute_sql(optimize_table)
 
-		clear_unknown_cache = ("DELETE FROM unknown_cache WHERE "
-			"projects_id=%s")
-		cfg.cursor.execute(clear_unknown_cache, (project[0], ))
-		cfg.db.commit()
+		clear_unknown_cache = s.sql.text("""DELETE FROM unknown_cache WHERE
+			projects_id=:repo_group_id""").bindparams(repo_group_id=project['repo_group_id'])
+		session.execute_sql(clear_unknown_cache)
 
-		optimize_table = "OPTIMIZE TABLE dm_repo_group_weekly"
-		cfg.cursor.execute(optimize_table)
-		cfg.db.commit()
+		optimize_table = s.sql.text("""OPTIMIZE TABLE dm_repo_group_weekly""")
+		session.execute_sql(optimize_table)
 
 		# Remove any projects which were also marked for deletion
 
-		remove_project = "DELETE FROM repo_groups WHERE repo_group_id=%s"
-		cfg.cursor.execute(remove_project, (project[0], ))
-		cfg.db.commit()
+		remove_project = s.sql.text("""DELETE FROM repo_groups WHERE repo_group_id=:repo_group_id
+			""").bindparams(repo_group_id=project['repo_group_id'])
+		session.execute_sql(remove_project)
 
+	#CRITICAL TODO: Migrate old log_activity
 	cfg.log_activity('Info','Processing deletions (complete)')
