@@ -17,9 +17,7 @@ from augur.application.cli._repo_load_controller import RepoLoadController
 
 
 from augur.application.db.models import User
-
-# Disable the requirement for SSL by setting env["AUGUR_DEV"] = True
-development = os.getenv("AUGUR_DEV") or False
+from augur import development
 
 logger = logging.getLogger(__name__)
 from augur.application.db.engine import create_database_engine

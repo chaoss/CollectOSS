@@ -3,6 +3,9 @@ import logging
 import traceback
 import re
 
+from sqlalchemy.exc import IntegrityError
+
+
 from augur.tasks.init.celery_app import celery_app as celery, engine
 from augur.application.db.data_parse import *
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
@@ -10,11 +13,7 @@ from augur.tasks.github.util.github_task_session import GithubTaskSession
 from augur.tasks.github.util.util import add_key_value_pair_to_dicts, get_owner_repo
 from augur.tasks.util.worker_util import remove_duplicate_dicts
 from augur.application.db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestEvent, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, Issue, IssueEvent, IssueLabel, IssueAssignee, PullRequestMessageRef, IssueMessageRef, Contributor, Repo
-from sqlalchemy.exc import IntegrityError
-
-
-development = os.getenv("AUGUR_DEV") or False
-
+from augur import development
 
 @celery.task
 def collect_issues(repo_git: str) -> None:
