@@ -300,15 +300,16 @@ class RepoLoadController:
         repos = self.retrieve_org_repos(url)
 
         if not repos:
-            logger.fatal(
+            print(
                 f"No organization with name {org_name} could be found")
             return
 
-        logger.info(f'Organization "{org_name}" found')
+        print(f'Organization "{org_name}" found')
 
         rg = RepoGroup(rg_name=org_name, rg_description="", rg_website="", rg_recache=0, rg_type="Unknown",
                     tool_source="Loaded by user", tool_version="1.0", data_source="Git")
         self.session.add(rg)
+        self.session.commit()
         repo_group_id = rg.repo_group_id
         logger.info(f"{org_name} repo group created")
 

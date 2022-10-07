@@ -55,7 +55,6 @@ def add_repos(filename):
                     print(f"Invalid repo group_id: {row[1]} for Git url: `{repo_data['url']}`")
                     continue
                 
-
                 print(
                     f"Inserting repo with Git URL `{repo_data['url']}` into repo group {repo_data['repo_group_id']}")
                 controller.add_cli_repo(repo_data)
@@ -144,7 +143,7 @@ def add_github_org(organization_name):
 
         controller = RepoLoadController(session)
 
-        controller.add_cli_org([organization_name])
+        controller.add_cli_org(organization_name)
 
 # get_db_version is a helper function to print_db_version and upgrade_db_version
 def get_db_version():

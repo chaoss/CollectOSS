@@ -50,7 +50,6 @@ def test_is_valid_repo():
 def test_add_repo_row(engine):
 
     try:
-
         data = {"rg_id": 1, "repo_id": 1, "tool_source": "Frontend",
                 "repo_url": "https://github.com/chaoss/augur"}
 
@@ -91,7 +90,6 @@ def test_add_repo_row(engine):
 def test_add_repo_row_with_updated_data(engine):
 
     try:
-
         data = {"rg_id": 1, "repo_id": 1, "repo_id_2": 2, "tool_source": "Frontend",
                 "repo_url": "https://github.com/chaoss/augur", "repo_url_2": "https://github.com/chaoss/grimoirelab-perceval-opnfv",  "repo_status": "Complete"}
 
@@ -136,7 +134,6 @@ def test_add_repo_row_with_updated_data(engine):
 def test_add_repo_to_user(engine):
 
     try:
-
         with engine.connect() as connection:
 
             data = {"repo_id": 1, "user_id": 2, "user_repo_group_id": 1}
@@ -165,7 +162,6 @@ def test_add_repo_to_user(engine):
             assert len(result) > 0
 
     finally:
-
         with engine.connect() as connection:
 
             connection.execute("""
@@ -179,7 +175,6 @@ def test_add_repo_to_user(engine):
 def test_add_frontend_repos_with_duplicates(engine):
 
     try:
-
         with engine.connect() as connection:
 
             url = "https://github.com/operate-first/operate-first-twitter"
@@ -213,7 +208,6 @@ def test_add_frontend_repos_with_duplicates(engine):
             assert dict(result[0])["repo_git"] == url
 
     finally:
-
         with engine.connect() as connection:
 
             connection.execute("""
@@ -227,7 +221,6 @@ def test_add_frontend_repos_with_duplicates(engine):
 def test_add_frontend_repos_with_invalid_repo(engine):
 
     try:
-
         with engine.connect() as connection:
 
             url = "https://github.com/chaoss/whitepaper"
@@ -258,7 +251,6 @@ def test_add_frontend_repos_with_invalid_repo(engine):
             assert len(result) == 0
 
     finally:
-
         with engine.connect() as connection:
 
             connection.execute("""
@@ -272,7 +264,6 @@ def test_add_frontend_repos_with_invalid_repo(engine):
 def test_add_frontend_org_with_invalid_org(engine):
 
     try:
-
         with engine.connect() as connection:
 
             url = "https://github.com/chaosssss/"
@@ -303,7 +294,6 @@ def test_add_frontend_org_with_invalid_org(engine):
             assert len(result) == 0
 
     finally:
-
         with engine.connect() as connection:
 
             connection.execute("""
@@ -317,7 +307,6 @@ def test_add_frontend_org_with_invalid_org(engine):
 def test_add_frontend_org_with_valid_org(engine):
 
     try:
-
         with engine.connect() as connection:
 
             url = "https://github.com/chaoss/"
@@ -374,8 +363,74 @@ def test_add_frontend_org_with_valid_org(engine):
             assert user_repo_result is not None
             assert len(user_repo_result) == repo_count
             
+    finally:
 
-            
+        with engine.connect() as connection:
+
+            connection.execute("""
+                                DELETE FROM "augur_operations"."user_repos";
+                                DELETE FROM "augur_data"."repo";
+                                DELETE FROM "augur_data"."repo_groups";
+                                DELETE FROM "augur_operations"."users" WHERE user_id=2;
+                                """)
+
+
+def test_add_cli_org_with_valid_org(engine):
+
+    try:
+        with engine.connect() as connection:
+
+            data = {"user_id": 2, "default_repo_group_id": 1, "org_name": "chaoss"}
+
+            query = s.text("""DELETE FROM "augur_data"."repo";
+                            DELETE FROM "augur_data"."repo_groups";
+                            INSERT INTO "augur_data"."repo_groups" ("repo_group_id", "rg_name", "rg_description", "rg_website", "rg_recache", "rg_last_modified", "rg_type", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (:default_repo_group_id, 'User Repo Group', 'The default repo group created by the schema generation script', '', 0, '2019-06-03 15:55:20', 'GitHub Organization', 'load', 'one', 'git', '2019-06-05 13:36:25');
+                            INSERT INTO "augur_operations"."users" ("user_id", "login_name", "login_hashword", "email", "first_name", "last_name", "admin") VALUES (:user_id, 'bil', 'pass', 'b@gmil.com', 'bill', 'bob', false);""")
+
+            connection.execute(query, **data)
+
+        repo_count = None
+
+        with GithubTaskSession(logger, engine) as session:
+
+            controller = RepoLoadController(session)
+
+            controller.add_cli_org(data["org_name"])
+
+            attempts = 0
+            while attempts < 10:
+                result = hit_api(
+                    session.oauths, f"https://api.github.com/orgs/{data['org_name']}/repos", logger)
+
+                # if result is None try again
+                if not result:
+                    attempts += 1
+                    continue
+
+                response = result.json()
+
+                if response:
+                    repo_count = len(response)
+                    break
+
+        with engine.connect() as connection:
+
+            query = s.text(
+                """SELECT * FROM "augur_data"."repo";""")
+
+            result = connection.execute(query, **data).fetchall()
+
+            assert result is not None
+            assert len(result) == repo_count
+
+            user_repo_query = s.text(
+                """SELECT * FROM "augur_operations"."user_repos";""")
+
+            user_repo_result = connection.execute(
+                user_repo_query, **data).fetchall()
+
+            assert user_repo_result is not None
+            assert len(user_repo_result) == repo_count
 
     finally:
 
@@ -387,6 +442,56 @@ def test_add_frontend_org_with_valid_org(engine):
                                 DELETE FROM "augur_data"."repo_groups";
                                 DELETE FROM "augur_operations"."users" WHERE user_id=2;
                                 """)
+
+
+def test_add_cli_repos_with_duplicates(engine):
+
+    try:
+        with engine.connect() as connection:
+
+            url = "https://github.com/operate-first/operate-first-twitter"
+
+            data = {"user_id": 2, "default_repo_group_id": 1}
+
+            query = s.text("""DELETE FROM "augur_data"."repo";
+                            DELETE FROM "augur_data"."repo_groups";
+                            INSERT INTO "augur_data"."repo_groups" ("repo_group_id", "rg_name", "rg_description", "rg_website", "rg_recache", "rg_last_modified", "rg_type", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (:default_repo_group_id, 'User Repo Group', 'The default repo group created by the schema generation script', '', 0, '2019-06-03 15:55:20', 'GitHub Organization', 'load', 'one', 'git', '2019-06-05 13:36:25');
+                            INSERT INTO "augur_operations"."users" ("user_id", "login_name", "login_hashword", "email", "first_name", "last_name", "admin") VALUES (:user_id, 'bil', 'pass', 'b@gmil.com', 'bill', 'bob', false);""")
+
+            connection.execute(query, **data)
+
+        with GithubTaskSession(logger, engine) as session:
+
+            controller = RepoLoadController(session)
+
+            repo_data = {"url": url,
+                         "repo_group_id": data["default_repo_group_id"]}
+            controller.add_cli_repo(repo_data)
+            controller.add_cli_repo(repo_data)
+
+        with engine.connect() as connection:
+
+            query = s.text(
+                """SELECT * FROM "augur_data"."repo";""")
+
+            result = connection.execute(query, **data).fetchall()
+
+            assert result is not None
+            assert len(result) == 1
+
+            assert dict(result[0])["repo_git"] == url
+
+    finally:
+        with engine.connect() as connection:
+
+            connection.execute("""
+                                DELETE FROM "augur_operations"."user_repos";
+                                DELETE FROM "augur_data"."repo";
+                                DELETE FROM "augur_data"."repo_groups";
+                                DELETE FROM "augur_operations"."users" WHERE user_id=2;
+                                """)
+
+
 
 
 
