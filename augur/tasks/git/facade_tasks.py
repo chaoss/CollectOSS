@@ -451,7 +451,7 @@ def generate_facade_chain(logger):
             git_repo_updates(session)#facade_sequence.append(git_repo_updates_facade_task.si())
 
         if force_analysis:
-            force_repo_analysis(session.cfg)#facade_sequence.append(force_repo_analysis_facade_task.si())
+            force_repo_analysis(session)#facade_sequence.append(force_repo_analysis_facade_task.si())
 
         #Generate commit analysis task order.
         facade_sequence.extend(generate_analysis_sequence(logger))

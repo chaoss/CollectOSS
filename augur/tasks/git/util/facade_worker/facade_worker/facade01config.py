@@ -38,6 +38,7 @@ import psycopg2
 import json
 import logging
 from urllib.parse import urlparse
+import sqlalchemy as s
 
 from augur.tasks.github.util.github_task_session import *
 from augur.application.logs import AugurLogger
@@ -130,9 +131,9 @@ class FacadeSession(GithubTaskSession):
             self.repo_base_directory = None
 
         # Determine if it's safe to start the script
-        current_status = self.cfg.get_setting('utility_status')
+        current_status = self.get_setting('utility_status')
 
-        if len(repo_base_directory) == 0:
+        if len(self.repo_base_directory) == 0:
             self.cfg.log_activity('Error','No base directory. It is unsafe to continue.')
             raise Exception('Failed: No base directory')
 
@@ -142,7 +143,7 @@ class FacadeSession(GithubTaskSession):
         query = s.sql.text("""SELECT value FROM settings WHERE setting=:settingParam ORDER BY
             last_modified DESC LIMIT 1""").bindparams(settingParam=setting)
         
-        result = self.execute_sql(query).one()
+        result = self.execute_sql(query).fetchone()
         print(result)
         return result
         
@@ -182,7 +183,7 @@ class FacadeSession(GithubTaskSession):
             self.execute_sql(log_message)
         except:
             pass
-    def insert_or_update_data(self, query: TextClause, **bind_args)-> None:
+    def insert_or_update_data(self, query, **bind_args)-> None:
         """Provide deadlock detection for postgres updates, inserts, and deletions for facade.
 
         Returns:

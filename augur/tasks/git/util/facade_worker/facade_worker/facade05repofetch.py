@@ -36,6 +36,7 @@ import os
 import getopt
 import xlsxwriter
 import configparser
+import sqlalchemy as s
 from .facade02utilitymethods import update_repo_log, trim_commit, store_working_author, trim_author  
 from augur.application.db.models.augur_data import *
 
@@ -209,7 +210,7 @@ def check_for_repo_updates(session):
 
         get_last_update = s.sql.text("""SELECT NULL FROM repos_fetch_log WHERE
             repos_id=:repo_id AND status='Up-to-date' AND
-            date >= CURRENT_TIMESTAMP(6) - INTERVAL :update_freq HOUR """).bindparams(repo_id=repo['repo_id'],update_freq=update_frequency)
+            date >= CURRENT_TIMESTAMP(6) - INTERVAL :update_freq HOUR """).bindparams(repo_id=repo['repo_id'],update_freq=update_frequency[0])
         
         result = session.fetchall_data_from_sql_text(get_last_update)
         # If the repo has not been updated within the waiting period, mark it.
@@ -264,19 +265,20 @@ def force_repo_updates(session):
 
     session.log_activity('Info','Forcing repos to update (complete)')
 
-def force_repo_analysis(cfg):
+def force_repo_analysis(session):
 
 # Set the status of all non-new repos to "Analyze".
 
-    cfg.update_status('Forcing all non-new repos to be analyzed')
-    cfg.log_activity('Info','Forcing repos to be analyzed')
+    session.update_status('Forcing all non-new repos to be analyzed')
+    session.log_activity('Info','Forcing repos to be analyzed')
 
-    set_to_analyze = ("UPDATE repo SET repo_status='Analyze' WHERE repo_status "
-        "NOT LIKE 'New%' AND repo_status!='Delete' AND repo_status != 'Empty'")
-    cfg.cursor.execute(set_to_analyze)
-    cfg.db.commit()
+    set_to_analyze = s.sql.text("""UPDATE repo SET repo_status='Analyze' WHERE repo_status
+        NOT LIKE 'New%' AND repo_status!='Delete' AND repo_status != 'Empty'""")
+    #cfg.cursor.execute(set_to_analyze)
+    #cfg.db.commit()
+    session.execute_sql(set_to_analyze)
 
-    cfg.log_activity('Info','Forcing repos to be analyzed (complete)')
+    session.log_activity('Info','Forcing repos to be analyzed (complete)')
 
 def git_repo_updates(session):
 
@@ -371,7 +373,7 @@ def git_repo_updates(session):
 
 #                cfg.log_activity('Verbose', f'remote default is {logremotedefault}.')
 
-                getremotedefault = (f"git -C {session.repo_base_directory}{row['repo_group']}/{row['repo_path']}{row['repo_name']} remote show origin | sed -n '/HEAD branch/s/.*: //p'")
+                getremotedefault = (f"git -C {session.repo_base_directory}{row['repo_group_id']}/{row['repo_path']}{row['repo_name']} remote show origin | sed -n '/HEAD branch/s/.*: //p'")
 
                 return_code_remote = subprocess.Popen([getremotedefault],stdout=subprocess.PIPE,shell=True).wait()
 

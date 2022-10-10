@@ -36,6 +36,7 @@ import os
 import getopt
 import xlsxwriter
 import configparser
+import sqlalchemy as s
 
 def git_repo_cleanup(session):
 
@@ -139,7 +140,7 @@ def git_repo_cleanup(session):
 
 	# Clean up deleted projects
 
-	get_deleted_projects = s.sql.text("""SELECT repo_group_id FROM repo_groups WHERE rg_name='(Queued for removal)""")
+	get_deleted_projects = s.sql.text("""SELECT repo_group_id FROM repo_groups WHERE rg_name='(Queued for removal)'""")
 
 	deleted_projects = session.fetchall_data_from_sql_text(get_deleted_projects)
 
