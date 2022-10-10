@@ -182,7 +182,7 @@ class FacadeSession(GithubTaskSession):
             self.execute_sql(log_message)
         except:
             pass
-    def insert_or_update_data(self, query: TextClause, params: tuple=None)-> None:
+    def insert_or_update_data(self, query: TextClause, **bind_args)-> None:
         """Provide deadlock detection for postgres updates, inserts, and deletions for facade.
 
         Returns:
@@ -196,11 +196,11 @@ class FacadeSession(GithubTaskSession):
 
         while attempts < 10:
             try:
-                if params:
-                    self.cfg.cursor.execute(query, params)
+                if bind_args:
+                    #self.cfg.cursor.execute(query, params)
+                    self.execute_sql(query.bindparams(**bind_args))
                 else:
-                    self.cfg.cursor.execute(query)
-                self.cfg.db.commit()
+                    self.execute_sql(query)
                 break
             except OperationalError as e:
                 # print(str(e).split("Process")[1].split(";")[0])

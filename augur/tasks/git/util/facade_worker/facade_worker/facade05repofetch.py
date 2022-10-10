@@ -187,53 +187,53 @@ def git_repo_initialize(session, repo_group_id=None):
     
 def check_for_repo_updates(session):
 
-    cfg = session.cfg
+    #cfg = session.cfg
 
 # Check the last time a repo was updated and if it has been longer than the
 # update_frequency, mark its project for updating during the next analysis.
 
-    cfg.update_status('Checking if any repos need to update')
-    cfg.log_activity('Info','Checking repos to update')
+    session.update_status('Checking if any repos need to update')
+    session.log_activity('Info','Checking repos to update')
 
-    update_frequency = cfg.get_setting('update_frequency')
+    update_frequency = session.get_setting('update_frequency')
 
-    get_initialized_repos = ("SELECT repo_id FROM repo WHERE repo_status NOT LIKE 'New%' "
-        "AND repo_status != 'Delete' "
-        "AND repo_status != 'Analyze' AND repo_status != 'Empty'")
-    cfg.cursor.execute(get_initialized_repos)
-    repos = list(cfg.cursor)
+    get_initialized_repos = s.sql.text("""SELECT repo_id FROM repo WHERE repo_status NOT LIKE 'New%' 
+        AND repo_status != 'Delete' 
+        AND repo_status != 'Analyze' AND repo_status != 'Empty'""")
+    #cfg.cursor.execute(get_initialized_repos)
+    repos = session.fetchall_data_from_sql_text(get_initialized_repos)#list(cfg.cursor)
 
     for repo in repos:
 
         # Figure out which repos have been updated within the waiting period
 
-        get_last_update = ("SELECT NULL FROM repos_fetch_log WHERE "
-            "repos_id=%s AND status='Up-to-date' AND "
-            "date >= CURRENT_TIMESTAMP(6) - INTERVAL %s HOUR ")
-        cfg.cursor.execute(get_last_update, (repo[0], update_frequency)) #['id'], update_frequency))
-
+        get_last_update = s.sql.text("""SELECT NULL FROM repos_fetch_log WHERE
+            repos_id=:repo_id AND status='Up-to-date' AND
+            date >= CURRENT_TIMESTAMP(6) - INTERVAL :update_freq HOUR """).bindparams(repo_id=repo['repo_id'],update_freq=update_frequency)
+        
+        result = session.fetchall_data_from_sql_text(get_last_update)
         # If the repo has not been updated within the waiting period, mark it.
         # Also mark any other repos in the project, so we only recache the
         # project once per waiting period.
 
-        if cfg.cursor.rowcount == 0:
-            mark_repo = ("""UPDATE repo
+        if len(result) == 0:
+            mark_repo = s.sql.text("""UPDATE repo
                 SET repo_status='Update' 
                         WHERE repo.ctid IN (
                 SELECT repo.ctid FROM repo JOIN repo_groups ON repo.repo_group_id=repo_groups.repo_group_id
-                AND repo.repo_id=%s 
-                AND repo.repo_status != 'Empty')""")
+                AND repo.repo_id=:repo_id 
+                AND repo.repo_status != 'Empty')""").bindparams(repo_id=repo['repo_id'])
 
             # ("UPDATE repos r JOIN projects p ON p.id = r.projects_id "
             #     "SET status='Update' WHERE "
             #     "r.id=%s and r.status != 'Empty'")
-            cfg.cursor.execute(mark_repo, (repo[0], ))#['id'], ))
-            cfg.db.commit()
+            #cfg.cursor.execute(mark_repo, (repo[0], ))#['id'], ))
+            session.execute_sql(mark_repo)
 
     # Mark the entire project for an update, so that under normal
     # circumstances caches are rebuilt only once per waiting period.
 
-    update_project_status = ("""UPDATE repo
+    update_project_status = s.sql.text("""UPDATE repo
         SET repo_status='Update' 
                 WHERE repo.ctid IN (
         SELECT repo.ctid FROM repo LEFT JOIN repo a ON repo.repo_group_id=a.repo_group_id
@@ -249,7 +249,7 @@ def check_for_repo_updates(session):
     # cfg.cursor.execute(update_project_status)
     # cfg.db.commit()
 
-    cfg.log_activity('Info','Checking repos to update (complete)')
+    session.log_activity('Info','Checking repos to update (complete)')
 
 def force_repo_updates(cfg):
 
