@@ -77,10 +77,157 @@ def get_database_args_from_env():
     #print(credentials)
     return credentials
 
+class FacadeSession(GithubTaskSession):
+    """ORM session used in facade tasks.
+
+        This class adds the various attributes needed for legacy facade as well as a modified version of the legacy FacadeConfig class.
+        This is mainly for compatibility with older functions from legacy facade.
+
+    Attributes:
+        cfg (FacadeConfig): Class that supports the config and database functionality from legacy facade.
+        limited_run (int): value that determines whether legacy facade is only doing a portion of its full run of commit analysis or not. By default all steps are run but if any options in particular are specified then only those are ran.
+        delete_marked_repos (int): toggle that determines whether to delete git cloned git directories when they are marked for deletion
+        pull_repos (int): toggles whether to update existing repos in the facade directory
+        clone_repos (int): toggles whether to run 'git clone' on repos that haven't been cloned yet.
+        check_updates (int): toggles whether to check if any repos are marked for update
+        force_updates (int): force all repos to have 'git pull' run on them
+        run_analysis (int): toggles analysis of repos in a limited run
+        force_analysis (int): forces all repos to have their commits analyzed by legacy facade.
+        nuke_stored_affiliations (int): toggles nuking facade affliations
+        fix_affiliations (int): toggles filling empty affilations
+        force_invalidate_caches (int): toggles whether to clear facade's backend caches
+        rebuild_caches (int): toggles whether to rebuild unknown affiliation and web caches
+        multithreaded (int): toggles whether to allow the facade task to execute subtasks in parallel
+        create_xlsx_summary_files (int): toggles whether to create excel summary files
+    """
+    def __init__(self,logger: Logger):
+        #self.cfg = FacadeConfig(logger)
+
+        super().__init__(logger=logger)
+        # Figure out what we need to do
+        worker_options = self.config.get_section("Facade")
+
+        self.limited_run = worker_options["limited_run"]
+        self.delete_marked_repos = worker_options["delete_marked_repos"]
+        self.pull_repos = worker_options["pull_repos"]
+        self.clone_repos = worker_options["clone_repos"]
+        self.check_updates = worker_options["check_updates"]
+        self.force_updates = worker_options["force_updates"]
+        self.run_analysis = worker_options["run_analysis"]
+        self.force_analysis = worker_options["force_analysis"]
+        self.nuke_stored_affiliations = worker_options["nuke_stored_affiliations"]
+        self.fix_affiliations = worker_options["fix_affiliations"]
+        self.force_invalidate_caches = worker_options["force_invalidate_caches"]
+        self.rebuild_caches = worker_options["rebuild_caches"]
+        self.multithreaded = worker_options["multithreaded"]
+        self.create_xlsx_summary_files = worker_options["create_xlsx_summary_files"]
 
 
+        # Get the location of the directory where git repos are stored
+        if 'repo_directory' in worker_options:
+            self.repo_base_directory = worker_options['repo_directory']
+        else:
+            self.repo_base_directory = None
+
+        # Determine if it's safe to start the script
+        current_status = self.cfg.get_setting('utility_status')
+
+        if len(repo_base_directory) == 0:
+            self.cfg.log_activity('Error','No base directory. It is unsafe to continue.')
+            raise Exception('Failed: No base directory')
+
+    def get_setting(self,setting):
+        #Get a setting from the db
+
+        query = s.sql.text("""SELECT value FROM settings WHERE setting=:settingParam ORDER BY
+            last_modified DESC LIMIT 1""").bindparams(settingParam=setting)
+        
+        result = self.execute_sql(query).one()
+        print(result)
+        return result
+        
+
+    def update_status(self, status):
+        query = s.sql.text("""UPDATE settings SET value=:statusParam WHERE setting='utility_status'
+            """).bindparams(statusParam=status)
+        
+        self.execute_sql(query)
+
+    def log_activity(self, level, status):
+        # Log an activity based upon urgency and user's preference.  If the log level is
+        # "Debug", then just print it and don't save it in the database.
+        log_options = ('Error','Quiet','Info','Verbose','Debug')
+        self.logger.info(f"* {status}\n")
+
+        #Return if only debug 
+        if level == 'Debug':
+            return
+        
+        #Else write to database
+        query = s.sql.text("""INSERT INTO utility_log (level,status) VALUES (:levelParam,:statusParam)
+            """).bindparams(levelParam=level,statusParam=status)
+
+        try:
+            self.execute_sql(query)
+        except Exception as e:
+            self.logger.error(f"Error encountered: {e}")
+            raise e
+    def update_repo_log(self,repos_id,status):
+        self.logger.info(f"{status} {repos_id}")
+
+        log_message = s.sql.text("""INSERT INTO repos_fetch_log (repos_id,status) 
+            VALUES (:repo_id,:repo_status)""").bindparams(repo_id=repos_id,repo_status=status)
+        
+        try:
+            self.execute_sql(log_message)
+        except:
+            pass
+    def insert_or_update_data(self, query: TextClause, params: tuple=None)-> None:
+        """Provide deadlock detection for postgres updates, inserts, and deletions for facade.
+
+        Returns:
+            A page of data from the Github API at the specified url
+        """
+
+        attempts = 0
+        sleep_time_list = [x for x in range(1,11)]
+        deadlock_detected = False
+        # if there is no data to return then it executes the insert the returns nothing
+
+        while attempts < 10:
+            try:
+                if params:
+                    self.cfg.cursor.execute(query, params)
+                else:
+                    self.cfg.cursor.execute(query)
+                self.cfg.db.commit()
+                break
+            except OperationalError as e:
+                # print(str(e).split("Process")[1].split(";")[0])
+                if isinstance(e.orig, DeadlockDetected):
+                    deadlock_detected = True
+                    sleep_time = random.choice(sleep_time_list)
+                    self.logger.debug(f"Deadlock detected on {table.__table__} table...trying again in {round(sleep_time)} seconds: transaction size: {len(data)}")
+                    time.sleep(sleep_time)
+
+                    attempts += 1
+                    continue
+                else:
+                    raise OperationalError(f"An OperationalError other than DeadlockDetected occurred: {e}") 
+
+        else:
+            self.logger.error(f"Unable to insert data in 10 attempts")
+            return
+
+        if deadlock_detected is True:
+            self.logger.error(f"Made it through even though Deadlock was detected")
+                    
+            return
+
+
+"""
 class FacadeConfig:
-    """Legacy facade config that holds facade's database functionality
+    \"""Legacy facade config that holds facade's database functionality
         
         This is mainly for compatibility with older functions from legacy facade.
 
@@ -97,7 +244,7 @@ class FacadeConfig:
         tool_version (str): Facade version
         worker_options (dict): Config options for facade.
         log_level (str): Keyword indicating level of logging for legacy facade.
-    """
+    \"""
     def __init__(self, logger: Logger):
         self.repos_processed = 0
         self.cursor = None
@@ -261,8 +408,8 @@ class FacadeConfig:
 
     # Get a setting from the database
 
-        query = ("""SELECT value FROM settings WHERE setting=%s ORDER BY
-            last_modified DESC LIMIT 1""")
+        query = (\"""SELECT value FROM settings WHERE setting=%s ORDER BY
+            last_modified DESC LIMIT 1\""")
         self.cursor.execute(query, (setting, ))
         # print(type(self.cursor.fetchone()))
         return self.cursor.fetchone()[0]#["value"]
@@ -320,4 +467,4 @@ class FacadeConfig:
     def inc_repos_processed(self):
         self.repos_processed += 1
 
-
+"""

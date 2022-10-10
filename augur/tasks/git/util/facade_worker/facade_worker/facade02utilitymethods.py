@@ -37,17 +37,23 @@ import getopt
 import xlsxwriter
 import configparser
 from .facade01config import get_database_args_from_env
+from augur.application.db.models.augur_data import *
+#from augur.tasks.git.util.facade_worker.facade
 
-
-def update_repo_log(cfg, repos_id,status):
+def update_repo_log(session, repos_id,status):
 
 # Log a repo's fetch status
-	cfg.log_activity("Info","{} {}".format(status, repos_id))
-	log_message = ("INSERT INTO repos_fetch_log (repos_id,status) "
-		"VALUES (%s,%s)")
+	session.log_activity("Info",f"{status} {repos_id}")
+	#log_message = ("INSERT INTO repos_fetch_log (repos_id,status) "
+	#	"VALUES (%s,%s)")
 	try:
-		cfg.cursor.execute(log_message, (repos_id, status))
-		cfg.db.commit()
+		#cfg.cursor.execute(log_message, (repos_id, status))
+		#cfg.db.commit()
+		data = {
+			'repos_id': repos_id,
+			'status': status
+		}
+		session.insert_data(data,t_repos_fetch_log,['repos_id'])
 	except:
 		pass
 

@@ -439,7 +439,7 @@ def generate_facade_chain(logger):
             git_repo_cleanup(session)
 
         if not limited_run or (limited_run and clone_repos):
-            git_repo_initialize(session.cfg)
+            git_repo_initialize(session)
 
         if not limited_run or (limited_run and check_updates):
             check_for_repo_updates(session)
