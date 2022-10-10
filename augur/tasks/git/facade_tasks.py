@@ -445,10 +445,10 @@ def generate_facade_chain(logger):
             check_for_repo_updates(session)
 
         if force_updates:
-            force_repo_updates(session.cfg)#facade_sequence.append(force_repo_updates_facade_task.si())
+            force_repo_updates(session)#facade_sequence.append(force_repo_updates_facade_task.si())
 
         if not limited_run or (limited_run and pull_repos):
-            git_repo_updates(session.cfg)#facade_sequence.append(git_repo_updates_facade_task.si())
+            git_repo_updates(session)#facade_sequence.append(git_repo_updates_facade_task.si())
 
         if force_analysis:
             force_repo_analysis(session.cfg)#facade_sequence.append(force_repo_analysis_facade_task.si())
