@@ -315,27 +315,24 @@ def generate_analysis_sequence(logger):
     analysis_sequence = []
 
     with FacadeSession(logger) as session:
-        repo_list = "SELECT repo_id,repo_group_id,repo_path,repo_name FROM repo "
-        session.cfg.cursor.execute(repo_list)
-        repos = list(session.cfg.cursor)
+        repo_list = s.sql.text("""SELECT repo_id,repo_group_id,repo_path,repo_name FROM repo """)
+        #session.cfg.cursor.execute(repo_list)
+        repos = session.fetchall_data_from_sql_text(repo_list)#list(session.cfg.cursor)
 
-        start_date = session.cfg.get_setting('start_date')
+        start_date = session.get_setting('start_date')
 
         analysis_sequence.append(facade_analysis_init_facade_task.si())
         for repo in repos:
-            analysis_sequence.append(grab_comitter_list_facade_task.si(repo[0]))
+            analysis_sequence.append(grab_comitter_list_facade_task.si(repo['repo_id']))
 
-            analysis_sequence.append(trim_commits_facade_task.si(repo[0]))
+            analysis_sequence.append(trim_commits_facade_task.si(repo['repo_id']))
 
 
             #Get the huge list of commits to process.
-            repo_loc = ('%s%s/%s%s/.git' % (session.cfg.repo_base_directory,
-            repo[1], repo[2],
-            repo[3]))
+            repo_loc = (f"{session.repo_base_directory}{repo['repo_group_id']}/{repo['repo_path']}{repo['repo_name']}/.git")
             # Grab the parents of HEAD
 
-            parents = subprocess.Popen(["git --git-dir %s log --ignore-missing "
-                "--pretty=format:'%%H' --since=%s" % (repo_loc,start_date)],
+            parents = subprocess.Popen([f"git --git-dir {repo_loc} log --ignore-missing --pretty=format:'%%H' --since={start_date}"],
                 stdout=subprocess.PIPE, shell=True)
 
             parent_commits = set(parents.stdout.read().decode("utf-8",errors="ignore").split(os.linesep))
@@ -350,22 +347,22 @@ def generate_analysis_sequence(logger):
 
             existing_commits = set()
 
-            find_existing = ("SELECT DISTINCT cmt_commit_hash FROM commits WHERE repo_id=%s")
+            find_existing = s.sql.text("""SELECT DISTINCT cmt_commit_hash FROM commits WHERE repo_id=:repo_id
+                """).bindparams(repo_id=repo['repo_id'])
 
-            session.cfg.cursor.execute(find_existing, (repo[0], ))
+            #session.cfg.cursor.execute(find_existing, (repo[0], ))
 
             try:
-                for commit in list(session.cfg.cursor):
-                    existing_commits.add(commit[0])
+                for commit in session.fetchall_data_from_sql_text(find_existing):#list(session.cfg.cursor):
+                    existing_commits.add(commit['cmt_commit_hash'])
             except:
-                session.cfg.log_activity('Info', 'list(cfg.cursor) returned an error')
+                session.log_activity('Info', 'list(cfg.cursor) returned an error')
 
             # Find missing commits and add them
 
             missing_commits = parent_commits - existing_commits
 
-            session.cfg.log_activity('Debug','Commits missing from repo %s: %s' %
-                (repo[0],len(missing_commits)))
+            session.log_activity('Debug',f"Commits missing from repo {repo['repo_id']}: {len(missing_commits)}")
             
             if len(missing_commits) > 0:
                 #cfg.log_activity('Info','Type of missing_commits: %s' % type(missing_commits))
@@ -373,13 +370,13 @@ def generate_analysis_sequence(logger):
                 #Split commits into mostly equal queues so each process starts with a workload and there is no
                 #    overhead to pass into queue from the parent.            
                 #Each task generates their own cfg as celery cannot serialize this data
-                contrib_jobs = create_grouped_task_load(repo[0],repo_loc,True,dataList=list(missing_commits),task=analyze_commits_in_parallel)
+                contrib_jobs = create_grouped_task_load(repo['repo_id'],repo_loc,True,dataList=list(missing_commits),task=analyze_commits_in_parallel)
                 analysis_sequence.append(contrib_jobs)
             
             # Find commits which are out of the analysis range
 
             trimmed_commits = existing_commits - parent_commits
-            analysis_sequence.append(trim_commits_post_analysis_facade_task.si(repo[0],list(trimmed_commits)))
+            analysis_sequence.append(trim_commits_post_analysis_facade_task.si(repo['repo_id'],list(trimmed_commits)))
         
         analysis_sequence.append(facade_analysis_end_facade_task.si())
     
