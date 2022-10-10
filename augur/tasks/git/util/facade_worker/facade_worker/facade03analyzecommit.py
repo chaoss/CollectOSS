@@ -37,12 +37,13 @@ import getopt
 import xlsxwriter
 import configparser
 import traceback 
+import sqlalchemy as s
 from sqlalchemy.exc import IntegrityError
 
 from .facade01config import get_database_args_from_env
 
 
-def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
+def analyze_commit(session, repo_id, repo_loc, commit):
 
 # This function analyzes a given commit, counting the additions, removals, and
 # whitespace changes. It collects all of the metadata about the commit, and
@@ -73,7 +74,7 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 	# Sometimes people mix up their name and email in their git settings
 
 		if name.find('@') >= 0 and email.find('@') == -1:
-			cfg.log_activity('Debug','Found swapped email/name: %s/%s' % (email,name))
+			session.logger.debug(f"Found swapped email/name: {email}/{name}")
 			return email,name
 		else:
 			return name,email
@@ -84,7 +85,7 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 	# matching. This extra info is not used, so we discard it.
 
 		if email.count('@') > 1:
-			cfg.log_activity('Debug','Found extra @: %s' % email)
+			session.logger.debug(f"Found extra @: {email}")
 			return email[:email.find('@',email.find('@')+1)]
 		else:
 			return email
@@ -92,19 +93,16 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 	def discover_alias(email):
 
 	# Match aliases with their canonical email
-		fetch_canonical = ("SELECT canonical_email "
-			"FROM contributors_aliases "
-			"WHERE alias_email=%s "
-			"AND cntrb_active = 1")
+		fetch_canonical = s.sql.text("""SELECT canonical_email
+			FROM contributors_aliases
+			WHERE alias_email=:alias_email 
+			AND cntrb_active = 1""").bindparams(alias_email=email)
 
-		cursor_people_local.execute(fetch_canonical, (email, ))
-		db_people_local.commit()
-
-		canonical = list(cursor_people_local)
+		canonical = session.fetchall_data_from_sql_text(fetch_canonical)#list(cursor_people_local)
 
 		if canonical:
 			for email in canonical:
-				return email[0]
+				return email['canonical_email']
 		else:
 			return email
 

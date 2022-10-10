@@ -156,18 +156,20 @@ def trim_commits_facade_task(repo_id):
 @celery.task
 def trim_commits_post_analysis_facade_task(repo_id,commits):
     logger = logging.getLogger(trim_commits_post_analysis_facade_task.__name__)
-    cfg = FacadeConfig(logger)
+    #cfg = FacadeConfig(logger)
 
+    session = FacadeSession(logger)
     def update_analysis_log(repos_id,status):
 
-    # Log a repo's analysis status
+        # Log a repo's analysis status
 
-        log_message = ("INSERT INTO analysis_log (repos_id,status) "
-            "VALUES (%s,%s)")
+        log_message = s.sql.text("""INSERT INTO analysis_log (repos_id,status)
+            VALUES (:repo_id,:status)""").bindparams(repo_id=repos_id,status=status)
 
         try:
-            cfg.cursor.execute(log_message, (repos_id,status))
-            cfg.db.commit()
+            #cfg.cursor.execute(log_message, (repos_id,status))
+            #cfg.db.commit()
+            session.execute_sql(log_message)
         except:
             pass
     
@@ -176,22 +178,20 @@ def trim_commits_post_analysis_facade_task(repo_id,commits):
 
     update_analysis_log(repo_id,'Beginning to trim commits')
 
-    cfg.log_activity('Debug','Commits to be trimmed from repo %s: %s' %
-            (repo_id,len(commits)))
+    session.log_activity('Debug',f"Commits to be trimmed from repo {repo_id}: {len(commits)}")
     
     for commit in commits:
-        trim_commit(cfg,repo_id,commit)
+        trim_commit(session,repo_id,commit)
     
-    set_complete = "UPDATE repo SET repo_status='Complete' WHERE repo_id=%s and repo_status != 'Empty'"
+    set_complete = s.sql.text("""UPDATE repo SET repo_status='Complete' WHERE repo_id=:repo_id and repo_status != 'Empty'
+        """).bindparams(repo_id=repo_id)
     
-    cfg.cursor.execute(set_complete, (repo_id, ))
-
+    #cfg.cursor.execute(set_complete, (repo_id, ))
+    session.execute_sql(set_complete)
 
     update_analysis_log(repo_id,'Commit trimming complete')
 
     update_analysis_log(repo_id,'Complete')
-    cfg.cursor.close()
-    cfg.db.close()
 
 @celery.task
 def facade_analysis_end_facade_task():
@@ -223,18 +223,20 @@ def analyze_commits_in_parallel(queue: list, repo_id: int, repo_location: str, m
     ### Local helper functions ###
     #create new cfg for celery thread.
     logger = logging.getLogger(analyze_commits_in_parallel.__name__)
-    cfg = FacadeConfig(logger)
+    #cfg = FacadeConfig(logger)
+    session = FacadeSession(logger)
 
     def update_analysis_log(repos_id,status):
 
-    # Log a repo's analysis status
+        # Log a repo's analysis status
 
-        log_message = ("INSERT INTO analysis_log (repos_id,status) "
-            "VALUES (%s,%s)")
+        log_message = s.sql.text("""INSERT INTO analysis_log (repos_id,status)
+            VALUES (:repo_id,:status)""").bindparams(repo_id=repos_id,status=status)
 
         try:
-            cfg.cursor.execute(log_message, (repos_id,status))
-            cfg.db.commit()
+            #cfg.cursor.execute(log_message, (repos_id,status))
+            #cfg.db.commit()
+            session.execute_sql(log_message)
         except:
             pass
     
@@ -247,11 +249,7 @@ def analyze_commits_in_parallel(queue: list, repo_id: int, repo_location: str, m
 
     for analyzeCommit in queue:    
 
-        analyze_commit(cfg, repo_id, repo_location, analyzeCommit, multithreaded)
-
-    cfg.cursor.close()
-    cfg.db.close()
-
+        analyze_commit(session, repo_id, repo_location, analyzeCommit)
 
 @celery.task
 def nuke_affiliations_facade_task():
