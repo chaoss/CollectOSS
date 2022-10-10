@@ -122,6 +122,25 @@ class FacadeSession(GithubTaskSession):
         
         self.execute_sql(query)
 
+    def log_activity(self, level, status):
+        # Log an activity based upon urgency and user's preference.  If the log level is
+        # "Debug", then just print it and don't save it in the database.
+        log_options = ('Error','Quiet','Info','Verbose','Debug')
+        self.logger.info(f"* {status}\n")
+
+        #Return if only debug 
+        if level == 'Debug':
+            return
+        
+        #Else write to database
+        query = s.sql.text("""INSERT INTO utility_log (level,status) VALUES (:levelParam,:statusParam)
+            """).bindparams(levelParam=level,statusParam=status)
+
+        try:
+            self.execute_sql(query)
+        except Exception as e:
+            self.logger.error(f"Error encountered: {e}")
+            raise e
     def update_repo_log(self,repos_id,status):
         self.logger.info(f"{status} {repos_id}")
 

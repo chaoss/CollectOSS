@@ -47,10 +47,8 @@ from augur.application.logs import TaskLogConfig
 def git_repo_cleanup_facade_task():
     
     logger = logging.getLogger(git_repo_cleanup_facade_task.__name__)
-    cfg = FacadeConfig(logger)
-    git_repo_cleanup(cfg)
-    cfg.cursor.close()
-    cfg.db.close()
+    with FacadeSession(logger) as session:
+        git_repo_cleanup(session)
 
 @celery.task
 def git_repo_initialize_facade_task():

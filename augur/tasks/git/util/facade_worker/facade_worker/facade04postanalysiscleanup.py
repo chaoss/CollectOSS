@@ -42,7 +42,9 @@ def git_repo_cleanup(session):
 # Clean up any git repos that are pending deletion
 
 	session.update_status('Purging deleted repos')
-	session.logger.info("Processing deletions")
+	#session.logger.info("Processing deletions")
+	session.log_activity('Info','Processing deletions')
+
 
 	query = s.sql.text("""SELECT repo_id,repo_group_id,repo_path,repo_name FROM repo WHERE repo_status='Delete'""")
 
@@ -53,7 +55,7 @@ def git_repo_cleanup(session):
 		# Remove the files on disk
 
 		cmd = ("rm -rf %s%s/%s%s"
-			% (cfg.repo_base_directory,row['repo_group_id'],row['repo_path'],row['repo_name']))
+			% (session.repo_base_directory,row['repo_group_id'],row['repo_path'],row['repo_name']))
 
 		return_code = subprocess.Popen([cmd],shell=True).wait()
 
@@ -101,7 +103,8 @@ def git_repo_cleanup(session):
 		session.execute_sql(query)
 
 		#log_activity('Verbose','Deleted repo %s' % row[0])
-		session.logger.debug(f"Deleted repo {row['repo_id']}")
+		#session.logger.debug(f"Deleted repo {row['repo_id']}")
+		session.log_activity('Verbose',f"Deleted repo {row['repo_id']}")
 		cleanup = '%s/%s%s' % (row['repo_group_id'],row['repo_path'],row['repo_name'])
 
 		# Remove any working commits
@@ -128,7 +131,8 @@ def git_repo_cleanup(session):
 			cmd = "rmdir %s%s" % (session.repo_base_directory,cleanup)
 			subprocess.Popen([cmd],shell=True).wait()
 			#log_activity('Verbose','Attempted %s' % cmd)
-			session.logger.debug(f"Attempted {cmd}")
+			#session.logger.debug(f"Attempted {cmd}")
+			session.log_activity('Verbose',f"Attempted {cmd}")
 
 		#update_repo_log(row[0],'Deleted')
 		session.update_repo_log(row['repo_id'],'Deleted')
@@ -177,5 +181,5 @@ def git_repo_cleanup(session):
 			""").bindparams(repo_group_id=project['repo_group_id'])
 		session.execute_sql(remove_project)
 
-	#CRITICAL TODO: Migrate old log_activity
-	cfg.log_activity('Info','Processing deletions (complete)')
+	
+	session.log_activity('Info', 'Processing deletions (complete)')
