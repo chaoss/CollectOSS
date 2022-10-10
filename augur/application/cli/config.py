@@ -11,7 +11,7 @@ from augur.application.db.models import Config
 from augur.application.db.session import DatabaseSession
 from augur.application.logs import AugurLogger
 from augur.application.cli import test_connection, test_db_connection 
-from augur.application.cli.inspect_without_import import get_phase_names_without_import
+from augur.application.cli._inspect_without_import import get_phase_names_without_import
 ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 
 logger = logging.getLogger(__name__)
