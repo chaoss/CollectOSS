@@ -95,11 +95,10 @@ def force_repo_analysis_facade_task():
 @celery.task
 def facade_analysis_init_facade_task():
     logger = logging.getLogger(facade_analysis_init_facade_task.__name__)
-    cfg = FacadeConfig(logger)
-    cfg.update_status('Running analysis')
-    cfg.log_activity('Info',f"Beginning analysis.")
-    cfg.cursor.close()
-    cfg.db.close()
+    #cfg = FacadeConfig(logger)
+    with FacadeSession(logger) as session:
+        session.update_status('Running analysis')
+        session.log_activity('Info',f"Beginning analysis.")
 
 @celery.task
 def grab_comitter_list_facade_task(repo_id,platform="github"):
@@ -110,32 +109,34 @@ def grab_comitter_list_facade_task(repo_id,platform="github"):
 @celery.task
 def trim_commits_facade_task(repo_id):
     logger = logging.getLogger(trim_commits_facade_task.__name__)
-    cfg = FacadeConfig(logger)
+    #cfg = FacadeConfig(logger)
 
     def update_analysis_log(repos_id,status):
 
     # Log a repo's analysis status
 
-        log_message = ("INSERT INTO analysis_log (repos_id,status) "
-            "VALUES (%s,%s)")
+        log_message = s.sql.text("""INSERT INTO analysis_log (repos_id,status)
+            VALUES (:repo_id,:status)""").bindparams(repo_id=repos_id,status=status)
 
         try:
-            cfg.cursor.execute(log_message, (repos_id,status))
-            cfg.db.commit()
+            #cfg.cursor.execute(log_message, (repos_id,status))
+            #cfg.db.commit()
+            session.execute_sql(log_message)
         except:
             pass
 
 
 
-    cfg.inc_repos_processed()
+    session.inc_repos_processed()
     update_analysis_log(repo_id,"Beginning analysis.")
     # First we check to see if the previous analysis didn't complete
 
-    get_status = ("SELECT working_commit FROM working_commits WHERE repos_id=%s")
+    get_status = s.sql.text("""SELECT working_commit FROM working_commits WHERE repos_id=:repo_id
+        """).bindparams(repo_id=repo_id)
 
-    cfg.cursor.execute(get_status, (repo_id, ))
+    #cfg.cursor.execute(get_status, (repo_id, ))
     try:
-        working_commits = list(cfg.cursor)
+        working_commits = session.fetchall_data_from_sql_text(get_status)#list(cfg.cursor)
     except:
         working_commits = []
     #cfg.cursor.fetchone()[1]
@@ -143,17 +144,15 @@ def trim_commits_facade_task(repo_id):
     # If there's a commit still there, the previous run was interrupted and
     # the commit data may be incomplete. It should be trimmed, just in case.
     for commit in working_commits:
-        trim_commit(cfg, repo_id,commit[0])
+        trim_commit(session, repo_id,commit['working_commit'])
 
         # Remove the working commit.
-        remove_commit = ("DELETE FROM working_commits "
-            "WHERE repos_id = %s AND working_commit = %s")
-        cfg.cursor.execute(remove_commit, (repo_id,commit[0]))
-        cfg.db.commit()
-        cfg.log_activity('Debug','Removed working commit: %s' % commit[0])
+        remove_commit = s.sql.text("""DELETE FROM working_commits
+            WHERE repos_id = :repo_id AND 
+            working_commit = :commit""").bindparams(repo_id=repo_id,commit=commit['working_commit'])
+        session.execute_sql(remove_commit)
+        session.log_activity('Debug',f"Removed working commit: {commit['working_commit']}")
 
-    cfg.cursor.close()
-    cfg.db.close()
 @celery.task
 def trim_commits_post_analysis_facade_task(repo_id,commits):
     logger = logging.getLogger(trim_commits_post_analysis_facade_task.__name__)
@@ -390,15 +389,13 @@ def generate_contributor_sequence(logger):
     with FacadeSession(logger) as session:
         
         contributor_sequence.append(facade_start_contrib_analysis_task.si())
-        query = ("SELECT repo_id FROM repo")
+        query = s.sql.text("""SELECT repo_id FROM repo""")
 
-        session.cfg.cursor.execute(query)
-
-        all_repos = list(session.cfg.cursor)
+        all_repos = session.fetchall_data_from_sql_text(query)
         #pdb.set_trace()
         #breakpoint()
         for repo in all_repos:
-            contributor_sequence.append(insert_facade_contributors.si(repo[0]))
+            contributor_sequence.append(insert_facade_contributors.si(repo['repo_id']))
 
     return group(contributor_sequence)
 

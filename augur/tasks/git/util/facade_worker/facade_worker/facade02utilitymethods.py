@@ -36,6 +36,7 @@ import os
 import getopt
 import xlsxwriter
 import configparser
+import sqlalchemy as s
 from .facade01config import get_database_args_from_env
 from augur.application.db.models.augur_data import *
 #from augur.tasks.git.util.facade_worker.facade
@@ -57,51 +58,19 @@ def update_repo_log(session, repos_id,status):
 	except:
 		pass
 
-def trim_commit(cfg, repo_id,commit):
+def trim_commit(session, repo_id,commit):
 
 # Quickly remove a given commit
 
-	remove_commit = ("DELETE FROM commits "
-		"WHERE repo_id=%s "
-		"AND cmt_commit_hash=%s")
+	remove_commit = s.sql.text("""DELETE FROM commits
+		WHERE repo_id=:repo_id
+		AND cmt_commit_hash=:hash""").bindparams(repo_id=repo_id,hash=commit)
 
-	try:
-		cfg.cursor.execute(remove_commit, (repo_id, commit))
-		cfg.db.commit()
-	except:
-		cfg.log_activity('Info','Cursor was closed, making another connection to db')
+	#cfg.cursor.execute(remove_commit, (repo_id, commit))
+	#cfg.db.commit()
+	session.execute_sql(remove_commit)
 
-		db_credentials = get_database_args_from_env()
-
-		db_user = db_credentials["db_user"]
-		db_pass = db_credentials["db_pass"]
-		db_name = db_credentials["db_name"]
-		db_host = db_credentials["db_host"]
-		db_port = db_credentials["db_port"]
-		db_user_people = db_user
-		db_pass_people = db_pass
-		db_name_people = db_name
-		db_host_people = db_host
-		db_port_people = db_port
-
-		db,cursor = cfg.database_connection(
-			db_host,
-			db_user,
-			db_pass,
-			db_name,
-			db_port, False, False)
-
-		db_people,cursor_people = cfg.database_connection(
-			db_host_people,
-			db_user_people,
-			db_pass_people,
-			db_name_people,
-			db_port_people, True, False)
-
-		cfg.cursor.execute(remove_commit, (repo_id, commit))
-		cfg.db.commit()
-
-	cfg.log_activity('Debug','Trimmed commit: %s' % commit)
+	session.log_activity('Debug',f"Trimmed commit: {commit}")
 
 def store_working_author(cfg, email):
 

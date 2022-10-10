@@ -85,6 +85,7 @@ class FacadeSession(GithubTaskSession):
         This is mainly for compatibility with older functions from legacy facade.
 
     Attributes:
+        repos_processed (int): git repositories processed
         cfg (FacadeConfig): Class that supports the config and database functionality from legacy facade.
         limited_run (int): value that determines whether legacy facade is only doing a portion of its full run of commit analysis or not. By default all steps are run but if any options in particular are specified then only those are ran.
         delete_marked_repos (int): toggle that determines whether to delete git cloned git directories when they are marked for deletion
@@ -103,7 +104,7 @@ class FacadeSession(GithubTaskSession):
     """
     def __init__(self,logger: Logger):
         #self.cfg = FacadeConfig(logger)
-
+        self.repos_processed = 0
         super().__init__(logger=logger)
         # Figure out what we need to do
         worker_options = self.config.get_section("Facade")
@@ -224,7 +225,8 @@ class FacadeSession(GithubTaskSession):
             self.logger.error(f"Made it through even though Deadlock was detected")
                     
             return
-
+    def inc_repos_processed(self):
+        self.repos_processed += 1
 
 """
 class FacadeConfig:
@@ -465,7 +467,6 @@ class FacadeConfig:
             self.db.commit()
 
 
-    def inc_repos_processed(self):
-        self.repos_processed += 1
+
 
 """
