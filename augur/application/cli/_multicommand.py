@@ -19,13 +19,11 @@ class AugurMultiCommand(click.MultiCommand):
         rv = []
         for filename in os.listdir(self.__commands_folder()):
             if not filename.startswith('_') and filename.endswith('.py'):
-                print(f"Adding {filename}")
                 rv.append(filename[:-3])
         rv.sort()
         return rv
 
     def get_command(self, ctx, name):
-        print(f"Name: {name}")
         try:
             module = importlib.import_module('.' + name, 'augur.application.cli')
             return module.cli
