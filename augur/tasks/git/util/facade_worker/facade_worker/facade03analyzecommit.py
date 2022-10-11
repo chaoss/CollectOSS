@@ -106,61 +106,6 @@ def analyze_commit(session, repo_id, repo_loc, commit):
 		else:
 			return email
 
-	def update_contributors(author_em, committer_em, auth_nm, cmtr_nm): 
-
-		#Check if an email already exists in the database for either the committer or the author 
-		#There is a committer and an author on each commit, but only one record in the contributor table (ideally)
-		# For each email address. So, for each email address, we need to check if it exists in the contributor
-		# Table. 
-
-		## Refactor Facade for Contributors here: Note that we need to map to some kind of alias as defined by Gabe. 
-		## Sean Goggins, February 5, 2021
-		## %TODO
-		def contributor_exists(some_email):
-
-			#SQL String to insert values into the contributors table
-			some_email = some_email.replace("'","")
-			email_check = ("""SELECT cntrb_email, tool_source, tool_version, data_source FROM contributors WHERE cntrb_email = '{}'""".format(some_email))
-
-			cursor_local.execute(email_check)
-
-			if cursor_local.fetchone() is not None: 
-				db_local.commit()
-				emails_to_add = some_email
-				return True
-			else: 
-				return False
-		#SQL to update the contributors table 
-		cntrb = ("INSERT INTO contributors "
-			"(cntrb_email,cntrb_canonical,cntrb_full_name,tool_source, tool_version, data_source) "
-			"VALUES (%s,%s,%s,'FacadeAugur','1.2.4','git_repository')")
-
-		## Logic block for updating contributors. 
-		if contributor_exists(author_em): 
-			cfg.log_activity('Info', 'Author contributor record already exists: {}'.format(author_em))
-		else: 
-			# add a contributor record for the author
-			try:
-				cursor_local.execute(cntrb, (author_em, discover_alias(author_em), str(auth_nm)))
-				db_local.commit()
-			except IntegrityError:
-				pass
-
-			cfg.log_activity('Info','Stored author contributor with email: {}'.format(author_em))
-
-		if  contributor_exists(committer_em): 
-			cfg.log_activity('Info', 'Author contributor record already exists: {}'.format(committer_em))
-		else: 
-			#add a contributor record for the committer 
-			try:
-				cursor_local.execute(cntrb, (committer_em, discover_alias(committer_em), str(cmtr_nm)))
-				db_local.commit()
-			except IntegrityError:
-				pass
-
-			cfg.log_activity('Info','Stored committer contributor with email: {}'.format(committer_em))
-				
-
 	def store_commit(repos_id,commit,filename,
 		author_name,author_email,author_date,author_timestamp,
 		committer_name,committer_email,committer_date,committer_timestamp,
@@ -205,17 +150,6 @@ def analyze_commit(session, repo_id, repo_loc, commit):
 
 		cfg.log_activity('Debug','Stored commit: %s' % commit)
 
-		# Check if email already exists in db
-#		email_check = ("""SELECT cntrb_email, tool_source, tool_version, data_source
-#			FROM contributors WHERE cntrb_email = {augur_email} OR cntrb_email = {committer_email}}""")
-		
-		## Commented out so as to not update contributors
-		## sean: 11/6/2019
-		## Goal: Address with the contributors model worker
-		# try: 
-		# 	update_contributors(author_email, committer_email, author_name, committer_name) 
-		# except Exception: #print(e) 
-		# 	cfg.log_activity('Info', str(traceback.print_exc()))
 
 ### The real function starts here ###
 
