@@ -36,9 +36,9 @@ function create_db_config() {
     read -p "Port: " port
     read -p "Database: " db_name
 
-    echo "{\n\"user\":\"${db_user}\", \n\"password\":\"${password}\", \n\"host\":\"${host}\", \n\"port\":\"${port}\", \n\"database_name\":\"${db_name}\"}"
+    echo -e "{\n\t\"user\":\"${db_user}\", \n\t\"password\":\"${password}\", \n\t\"host\":\"${host}\", \n\t\"port\":\"${port}\", \n\t\"database_name\":\"${db_name}\"\n}"
 
-    echo "{\n\"user\":\"${db_user}\", \n\"password\":\"${password}\", \n\"host\":\"${host}\", \n\"port\":\"${port}\", \n\"database_name\":\"${db_name}\"}" > db.config.json
+    echo -e "{\n\t\"user\":\"${db_user}\", \n\t\"password\":\"${password}\", \n\t\"host\":\"${host}\", \n\t\"port\":\"${port}\", \n\t\"database_name\":\"${db_name}\"\n}" > db.config.json
 
     # {
     #     "user": "augur",
