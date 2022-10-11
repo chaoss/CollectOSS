@@ -10,11 +10,12 @@ from flask import request, jsonify, Response
 import sqlalchemy as s
 
 # Disable the requirement for SSL by setting env["AUGUR_DEV"] = True
-from augur import development
+from augur import get_development_flag
 from augur.application.db.models import Config
 from augur.application.db.session import DatabaseSession
 
 logger = logging.getLogger(__name__)
+development = get_development_flag()
 
 AUGUR_API_VERSION = 'api/unstable'
 
