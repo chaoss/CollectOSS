@@ -40,9 +40,6 @@ import traceback
 import sqlalchemy as s
 from sqlalchemy.exc import IntegrityError
 
-from .facade01config import get_database_args_from_env
-
-
 def analyze_commit(session, repo_id, repo_loc, commit):
 
 # This function analyzes a given commit, counting the additions, removals, and
@@ -173,42 +170,6 @@ def analyze_commit(session, repo_id, repo_loc, commit):
 	added = 0
 	removed = 0
 	whitespace = 0
-	
-	db_credentials = get_database_args_from_env()
-
-	db_user = db_credentials["db_user"]
-	db_pass = db_credentials["db_pass"]
-	db_name = db_credentials["db_name"]
-	db_host = db_credentials["db_host"]
-	db_port = db_credentials["db_port"]
-	db_user_people = db_user
-	db_pass_people = db_pass
-	db_name_people = db_name
-	db_host_people = db_host
-	db_port_people = db_port
-
-	# Set up new threadsafe database connections if multithreading. Otherwise
-	# use the gloabl database connections so we don't incur a performance
-	# penalty.
-
-	#if multithreaded:
-	db_local,cursor_local = cfg.database_connection(
-		db_host,
-		db_user,
-		db_pass,
-		db_name,
-		db_port, False, True)
-#
-	db_people_local,cursor_people_local = cfg.database_connection(
-		db_host_people,
-		db_user_people,
-		db_pass_people,
-		db_name_people,
-		db_port_people, True, True)
-#
-
-	#db_people_local = cfg.db_people
-	#cursor_people_local = cfg.cursor_people
 
 	# Go get the contributors (committers) for this repo here: 
 	# curl https://api.github.com/repos/chaoss/augur/contributors
@@ -217,24 +178,25 @@ def analyze_commit(session, repo_id, repo_loc, commit):
 
 	# Read the git log
 
-	git_log = subprocess.Popen(["git --git-dir %s log -p -M %s -n1 "
+	git_log = subprocess.Popen([f"git --git-dir {repo_loc} log -p -M {commit} -n1 "
 		"--pretty=format:'"
 		"author_name: %%an%%nauthor_email: %%ae%%nauthor_date:%%ai%%n"
 		"committer_name: %%cn%%ncommitter_email: %%ce%%ncommitter_date: %%ci%%n"
-		"parents: %%p%%nEndPatch' "
-		% (repo_loc,commit)], stdout=subprocess.PIPE, shell=True)
+		"parents: %%p%%nEndPatch' "], stdout=subprocess.PIPE, shell=True)
 
 	## 
 
 	# Stash the commit we're going to analyze so we can back it out if something
 	# goes wrong later.
-	store_working_commit = ("INSERT INTO working_commits "
-		"(repos_id,working_commit) VALUES (%s,%s)")
+	store_working_commit = s.sql.text("""INSERT INTO working_commits
+		(repos_id,working_commit) VALUES (:repo_id,:commit)
+		""").bindparams(repo_id=repo_id,commit=commit)
 
-	cursor_local.execute(store_working_commit, (repo_id,commit))
-	db_local.commit()
+	#cursor_local.execute(store_working_commit, (repo_id,commit))
+	#db_local.commit()
+	session.execute_sql(store_working_commit)
 
-	cfg.log_activity('Debug','Stored working commit and analyzing : %s' % commit)
+	session.log_activity('Debug',f"Stored working commit and analyzing : {commit}")
 
 	for line in git_log.stdout.read().decode("utf-8",errors="ignore").split(os.linesep):
 		if len(line) > 0:
@@ -372,20 +334,12 @@ def analyze_commit(session, repo_id, repo_loc, commit):
 
 	# Remove the working commit.
 	try: 
-		remove_commit = ("DELETE FROM working_commits "
-			"WHERE repos_id = %s AND working_commit = %s")
-		cursor_local.execute(remove_commit, (repo_id,commit))
-		db_local.commit()
+		remove_commit = s.sql.text("""DELETE FROM working_commits 
+			WHERE repos_id = :repo_id AND working_commit = :hash
+			""").bindparams(repo_id=repo_id,hash=commit)
+		session.execute_sql(remove_commit)
 
-		cfg.log_activity('Debug','Completed and removed working commit: %s' % commit)
+		session.log_activity('Debug',f"Completed and removed working commit: {commit}")
 	except:
-		cfg.log_activity('Info', 'Working Commit: %s' % commit)
+		session.log_activity('Info', f"Working Commit: {commit}")
 	# If multithreading, clean up the local database
-
-	if multithreaded:
-		cursor_local.close()
-		cursor_people_local.close()
-		db_local.close()
-		db_people_local.close()
-
-#### Facade main functions ####
