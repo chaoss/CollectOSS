@@ -121,34 +121,48 @@ def analyze_commit(session, repo_id, repo_loc, commit):
 		author_email = strip_extra_amp(author_email)
 		committer_email = strip_extra_amp(committer_email)
 
-		store = ("""INSERT INTO commits (repo_id,cmt_commit_hash,cmt_filename,
+		commit_record = {
+			'repo_id' : repos_id,
+			'commit' : str(commit),
+			'filename' : filename,
+			'author_name' : str(author_name),
+			'author_email_raw' : author_email,
+			'author_email' : discover_alias(author_email),
+			'author_date' : author_date,
+			'author_timestamp' : author_timestamp,
+			'committer_name' : committer_name,
+			'committer_email_raw' : committer_email,
+			'committer_email' : discover_alias(committer_email),
+			'committer_date' : committer_date,
+			'committer_timestamp' : committer_timestamp,
+			'added' : added,
+			'removed' : removed,
+			'whitespace' : whitespace,
+			'committer_date' : committer_date,
+			'tool_source' : "Facade",
+			'tool_version' : "0.42",
+			'data_source' : "git"
+		}
+
+		#TODO: replace with a postgres on conflict do nothing. - IM 10/11/22
+		store = s.sql.text("""INSERT INTO commits (repo_id,cmt_commit_hash,cmt_filename,
 			cmt_author_name,cmt_author_raw_email,cmt_author_email,cmt_author_date,cmt_author_timestamp,
 			cmt_committer_name,cmt_committer_raw_email,cmt_committer_email,cmt_committer_date,cmt_committer_timestamp,
 			cmt_added,cmt_removed,cmt_whitespace, cmt_date_attempted, tool_source, tool_version, data_source)
-			VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""")
+			VALUES (:repo_id,:commit,:filename,:author_name,:author_email_raw,:author_email,:author_date,:author_timestamp,
+			:committer_name,:committer_email_raw,:committer_email,:committer_date,:committer_timestamp,
+			:added,:removed,:whitespace,:committer_date,:tool_source,:tool_version,:data_source)
+			""").bindparams(**commit_record)
 
 		try:
-			cursor_local.execute(store, (
-				repos_id,str(commit),filename,
-				str(author_name),author_email,discover_alias(author_email),author_date,author_timestamp,
-				committer_name,committer_email,discover_alias(committer_email),committer_date,committer_timestamp,
-				added,removed,whitespace,committer_date,cfg.tool_source,cfg.tool_version,cfg.data_source,))
-
-			db_local.commit()
-		except:
+			session.execute_sql(store)
+		except Exception as e:
 		
-			cfg.log_activity('Info',"""Timezone error caught, inspect values: INSERT INTO commits (repo_id,cmt_commit_hash,cmt_filename,
-			cmt_author_name,cmt_author_raw_email,cmt_author_email,cmt_author_date,cmt_author_timestamp,
-			cmt_committer_name,cmt_committer_raw_email,cmt_committer_email,cmt_committer_date,cmt_committer_timestamp,
-			cmt_added,cmt_removed,cmt_whitespace, cmt_date_attempted, tool_source, tool_version, data_source)
-			VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""".format(
-				repos_id,str(commit),filename,
-				str(author_name),author_email,discover_alias(author_email),author_date,author_timestamp,
-				committer_name,committer_email,discover_alias(committer_email),committer_date,committer_timestamp,
-				added,removed,whitespace,committer_date,cfg.tool_source,cfg.tool_version,cfg.data_source))
+			session.logger.error(f"Ran into issue when trying to insert commit with values: \n {commit_record} \n Error: {e}")
+			raise e
 
 
-		cfg.log_activity('Debug','Stored commit: %s' % commit)
+		session.log_activity('Debug',f"Stored commit: {commit}")
 
 
 ### The real function starts here ###
