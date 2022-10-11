@@ -36,7 +36,19 @@ function create_db_config() {
     read -p "Port: " port
     read -p "Database: " db_name
 
-    augur config-db init --user $db_user --password $password --host $host --port $port --database-name $db_name
+    echo "{user:\"${db_user}\", password:\"${password}\", host:\"${host}\", port:\"${port}\", database_name:\"${db_name}\"}"
+
+    echo "{user:\"${db_user}\", password:\"${password}\", host:\"${host}\", port:\"${port}\", database_name:\"${db_name}\"}" > db.config.json
+
+    # {
+    #     "user": "augur",
+    #     "password": "mcguire18",
+    #     "host": "localhost",
+    #     "port": "5432",
+    #     "database_name": "test_132"
+    # }
+
+    # augur config-db init --user $db_user --password $password --host $host --port $port --database-name $db_name
 }
 
 # if there is no db.config.json or the AUGUR_DB environment variable is not set 
