@@ -72,19 +72,19 @@ def trim_commit(session, repo_id,commit):
 
 	session.log_activity('Debug',f"Trimmed commit: {commit}")
 
-def store_working_author(cfg, email):
+def store_working_author(session, email):
 
 # Store the working author during affiliation discovery, in case it is
 # interrupted and needs to be trimmed.
 
-	store = ("UPDATE settings "
-		"SET value = %s "
-		"WHERE setting = 'working_author'")
+	store = s.sql.text("""UPDATE settings
+		SET value = :email
+		WHERE setting = 'working_author'
+		""").bindparams(email=email)
 
-	cfg.cursor.execute(store, (email, ))
-	cfg.db.commit()
+	session.execute_sql(store)
 
-	cfg.log_activity('Debug','Stored working author: %s' % email)
+	session.log_activity('Debug',f"Stored working author: {email}")
 
 def trim_author(cfg, email):
 

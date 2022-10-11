@@ -196,22 +196,16 @@ def trim_commits_post_analysis_facade_task(repo_id,commits):
 @celery.task
 def facade_analysis_end_facade_task():
     logger = logging.getLogger(facade_analysis_end_facade_task.__name__)
-    cfg = FacadeConfig(logger)
-    cfg.log_activity('Info','Running analysis (complete)')
-    cfg.cursor.close()
-    cfg.db.close()
+    FacadeSession(logger).log_activity('Info','Running analysis (complete)')
 
 
 
 @celery.task
 def facade_start_contrib_analysis_task():
     logger = logging.getLogger(facade_start_contrib_analysis_task.__name__)
-    cfg = FacadeConfig(logger)
-    #inserts relevant data by repo
-    cfg.update_status('Updating Contributors')
-    cfg.log_activity('Info', 'Updating Contributors with commits')
-    cfg.cursor.close()
-    cfg.db.close()
+    session = FacadeSession(logger)
+    session.update_status('Updating Contributors')
+    session.log_activity('Info', 'Updating Contributors with commits')
 
 
 #enable celery multithreading
@@ -254,11 +248,9 @@ def analyze_commits_in_parallel(queue: list, repo_id: int, repo_location: str, m
 @celery.task
 def nuke_affiliations_facade_task():
     logger = logging.getLogger(nuke_affiliations_facade_task.__name__)
-    cfg = FacadeConfig(logger)
+    session = FacadeSession(logger)
 
-    nuke_affiliations(cfg)
-    cfg.cursor.close()
-    cfg.db.close()
+    nuke_affiliations(session)
 
 @celery.task
 def fill_empty_affiliations_facade_task():

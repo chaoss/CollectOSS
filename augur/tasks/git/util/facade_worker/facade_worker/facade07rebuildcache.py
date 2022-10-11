@@ -36,13 +36,14 @@ import os
 import getopt
 import xlsxwriter
 import configparser
+import sqlalchemy as s
 from .facade02utilitymethods import update_repo_log, trim_commit, store_working_author, trim_author
 # if platform.python_implementation() == 'PyPy':
 #   import pymysql
 # else:
 #   import MySQLdb
 
-def nuke_affiliations(cfg):
+def nuke_affiliations(session):
 
 # Delete all stored affiliations in the database. Normally when you
 # add/remove/change affiliation data via the web UI, any potentially affected
