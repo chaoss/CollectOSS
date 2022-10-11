@@ -17,8 +17,7 @@ from augur.application.cli._repo_load_controller import RepoLoadController
 
 
 from augur.application.db.models import User
-from augur import get_development_flag
-
+from augur.application.config import get_development_flag
 logger = logging.getLogger(__name__)
 development = get_development_flag()
 from augur.application.db.engine import create_database_engine

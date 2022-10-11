@@ -13,8 +13,7 @@ from augur.tasks.github.util.github_task_session import GithubTaskSession
 from augur.tasks.github.util.util import add_key_value_pair_to_dicts, get_owner_repo
 from augur.tasks.util.worker_util import remove_duplicate_dicts
 from augur.application.db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestEvent, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, Issue, IssueEvent, IssueLabel, IssueAssignee, PullRequestMessageRef, IssueMessageRef, Contributor, Repo
-from augur import get_development_flag
-
+from augur.application.config import get_development_flag
 development = get_development_flag()
 
 @celery.task
