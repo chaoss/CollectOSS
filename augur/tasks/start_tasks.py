@@ -70,6 +70,7 @@ def machine_learning_phase(logger):
     with DatabaseSession(logger) as session:
         repos = session.query(Repo).all()
 
+        ml_tasks = []
         clustering_tasks = []
         discourse_tasks = []
         insight_tasks = []
@@ -80,15 +81,17 @@ def machine_learning_phase(logger):
             discourse_tasks.append(discourse_analysis_model.si(repo.repo_git))
             insight_tasks.append(insight_model.si(repo.repo_git))
             message_insights_tasks.append(message_insight_model.si(repo.repo_git))
-            pull_request_analysis_tasks.append(pull_request_analysis_model.si(repo.repo_git))
+            pull_request_analysis_tasks.append(pull_request_analysis_model.si(repo.repo_git))   
+
+        ml_tasks.extend(clustering_tasks)
+        ml_tasks.extend(discourse_tasks)
+        ml_tasks.extend(insight_tasks)
+        ml_taks.extend(message_insights_tasks)
+        ml_taks.extend(pull_request_analysis_tasks)
 
 
         return chain(
-            chain(*clustering_tasks),
-            chain(*discourse_tasks),
-            chain(*insight_tasks),
-            chain(*message_insights_tasks),
-            chain(*pull_request_analysis_tasks)
+            *ml_tasks
         )
 
 
