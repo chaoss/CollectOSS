@@ -330,7 +330,7 @@ def generate_contributor_sequence(logger):
     contributor_sequence = []
     with FacadeSession(logger) as session:
         
-        contributor_sequence.append(facade_start_contrib_analysis_task.si())
+        #contributor_sequence.append(facade_start_contrib_analysis_task.si())
         query = s.sql.text("""SELECT repo_id FROM repo""")
 
         all_repos = session.fetchall_data_from_sql_text(query)
@@ -339,7 +339,7 @@ def generate_contributor_sequence(logger):
         for repo in all_repos:
             contributor_sequence.append(insert_facade_contributors.si(repo['repo_id']))
 
-    return group(contributor_sequence)
+    return chain(facade_start_contrib_analysis_task.si(),group(contributor_sequence))
 
 
 

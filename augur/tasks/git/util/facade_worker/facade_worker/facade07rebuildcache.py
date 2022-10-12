@@ -53,15 +53,14 @@ def nuke_affiliations(session):
 # this is the scorched earth way: remove them all to force a total rebuild.
 # Brutal but effective.
 
-    cfg.log_activity('Info','Nuking affiliations')
+    session.log_activity('Info','Nuking affiliations')
 
-    nuke = ("UPDATE commits SET cmt_author_affiliation = NULL, "
-            "cmt_committer_affiliation = NULL")
+    nuke = s.sql.text("""UPDATE commits SET cmt_author_affiliation = NULL,
+            cmt_committer_affiliation = NULL""")
 
-    cfg.cursor.execute(nuke)
-    cfg.db.commit()
+    session.execute_sql(nuke)
 
-    cfg.log_activity('Info','Nuking affiliations (complete)')
+    session.log_activity('Info','Nuking affiliations (complete)')
 
 def fill_empty_affiliations(session):
 
