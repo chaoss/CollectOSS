@@ -410,17 +410,27 @@ def test_create_default_config(config, engine):
 
     config.create_default_config()
 
+    config_sections = list(default_config.keys())
+
     try:
 
         with engine.connect() as connection:
 
             result = connection.execute("""SELECT * FROM augur_operations.config""").fetchall()
 
+            assert result is not None
+            assert len(result) > 0
+
+            result_sections = []
             for row in result:
                 dict_data = dict(row)
 
-                assert dict_data["section_name"] != section_removed
+                if dict_data["section_name"] not in result_sections:
+                    result_sections.append(dict_data["section_name"])
 
+                assert dict_data["section_name"] and dict_data["setting_name"]
+
+        assert len(config_sections) == len(result_sections)
 
     finally:
         with engine.connect() as connection:
