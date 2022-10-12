@@ -87,20 +87,20 @@ def test_add_repo_row(engine):
 
 
 
-def test_add_repo_row_with_updated_data(engine):
+def test_add_repo_row_with_updates(engine):
 
     try:
-        data = {"rg_id": 1, "repo_id": 1, "repo_id_2": 2, "tool_source": "Frontend",
+        data = {"old_rg_id": 1, "new_rg_id": 2, "repo_id": 1, "repo_id_2": 2, "tool_source": "CLI",
                 "repo_url": "https://github.com/chaoss/augur", "repo_url_2": "https://github.com/chaoss/grimoirelab-perceval-opnfv",  "repo_status": "Complete"}
 
         with engine.connect() as connection:
 
             query = s.text("""DELETE FROM "augur_data"."repo";
                                 DELETE FROM "augur_data"."repo_groups";
-                                INSERT INTO "augur_data"."repo_groups" ("repo_group_id", "rg_name", "rg_description", "rg_website", "rg_recache", "rg_last_modified", "rg_type", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (:rg_id, 'Default Repo Group', 'The default repo group created by the schema generation script', '', 0, '2019-06-03 15:55:20', 'GitHub Organization', 'load', 'one', 'git', '2019-06-05 13:36:25');
+                                INSERT INTO "augur_data"."repo_groups" ("repo_group_id", "rg_name", "rg_description", "rg_website", "rg_recache", "rg_last_modified", "rg_type", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (:old_rg_id, 'Default Repo Group', 'The default repo group created by the schema generation script', '', 0, '2019-06-03 15:55:20', 'GitHub Organization', 'load', 'one', 'git', '2019-06-05 13:36:25');
+                                INSERT INTO "augur_data"."repo_groups" ("repo_group_id", "rg_name", "rg_description", "rg_website", "rg_recache", "rg_last_modified", "rg_type", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (:new_rg_id, 'Default Repo Group', 'The default repo group created by the schema generation script', '', 0, '2019-06-03 15:55:20', 'GitHub Organization', 'load', 'one', 'git', '2019-06-05 13:36:25');
 
-                                INSERT INTO "augur_data"."repo" ("repo_id", "repo_group_id", "repo_git", "repo_path", "repo_name", "repo_added", "repo_status", "repo_type", "url", "owner_id", "description", "primary_language", "created_at", "forked_from", "updated_at", "repo_archived_date_collected", "repo_archived", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (:repo_id_2, :rg_id, :repo_url_2, NULL, NULL, '2022-08-15 21:08:07', :repo_status, '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'CLI', '1.0', 'Git', '2022-08-15 21:08:07');
-                                INSERT INTO "augur_data"."repo" ("repo_id", "repo_group_id", "repo_git", "repo_path", "repo_name", "repo_added", "repo_status", "repo_type", "url", "owner_id", "description", "primary_language", "created_at", "forked_from", "updated_at", "repo_archived_date_collected", "repo_archived", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (:repo_id, :rg_id, :repo_url, NULL, NULL, '2022-08-15 21:08:07', :repo_status, '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'CLI', '1.0', 'Git', '2022-08-15 21:08:07');
+                                INSERT INTO "augur_data"."repo" ("repo_id", "repo_group_id", "repo_git", "repo_path", "repo_name", "repo_added", "repo_status", "repo_type", "url", "owner_id", "description", "primary_language", "created_at", "forked_from", "updated_at", "repo_archived_date_collected", "repo_archived", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (:repo_id, :old_rg_id, :repo_url, NULL, NULL, '2022-08-15 21:08:07', :repo_status, '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'CLI', '1.0', 'Git', '2022-08-15 21:08:07');
                                 """)
 
             connection.execute(query, **data)
@@ -109,8 +109,8 @@ def test_add_repo_row_with_updated_data(engine):
 
             controller = RepoLoadController(session)
 
-            assert controller.add_repo_row(
-                data["repo_url"], data["rg_id"], data["tool_source"]) is not None
+            result = controller.add_repo_row(data["repo_url"], data["new_rg_id"], data["tool_source"]) is not None
+            assert result == data["repo_id"]
 
         with engine.connect() as connection:
 
@@ -121,7 +121,12 @@ def test_add_repo_row_with_updated_data(engine):
 
             assert result is not None
             assert len(result) == 1
-            assert dict(result[0])["repo_status"] == data["repo_status"]
+
+            value = dict(result[0])
+            assert value["repo_status"] == data["repo_status"]
+            assert value["repo_group_id"] == data["new_rg_id"]
+
+
 
     finally:
 
@@ -492,21 +497,3 @@ def test_add_cli_repos_with_duplicates(engine):
                                 """)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-
-
-    

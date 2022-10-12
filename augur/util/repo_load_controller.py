@@ -128,29 +128,6 @@ class RepoLoadController:
             return repo_urls
 
 
-    # def get_repo_id(self, url: str) -> int:
-    #     """Retrieve repo id of given url from repo table
-
-    #     Note:
-    #         If a repo doesn't exist is table, None is returned
-
-    #     Args:
-    #         url: repo url
-
-    #     Returns
-    #         The repo id or None if repo doesn't exist
-    #     """
-
-    #     query = s.sql.text(f"""SELECT * FROM augur_data.repo WHERE repo_git='{url}';""")
-
-    #     result = self.session.execute_sql(query).fetchall()
-
-    #     if len(result) == 0:
-    #         return None
-
-    #     else:
-    #         return dict(result[0])["repo_id"]
-
     def is_valid_repo_group_id(self, repo_group_id):
         result = self.session.query(RepoGroup).filter(RepoGroup.repo_group_id == repo_group_id).one()
 
@@ -179,14 +156,19 @@ class RepoLoadController:
             "data_source": "Git"
         }
 
-    
-
         repo_unique = ["repo_git"]
         return_columns = ["repo_id"]
         result = self.session.insert_data(repo_data, Repo, repo_unique, return_columns, on_conflict_update=False)
 
         if not result:
             return None
+
+        if repo_group_id != DEFAULT_REPO_GROUP_ID:
+            # update the repo group id 
+            repo = self.session.query(Repo).filter(Repo.repo_git == url).one()
+            repo.repo_group_id = repo_group_id
+            self.session.commit()
+        
 
         return result[0]["repo_id"]
 
