@@ -44,55 +44,6 @@ from augur.application.logs import TaskLogConfig
 
 #Predefine facade collection with tasks
 @celery.task
-def git_repo_cleanup_facade_task():
-    
-    logger = logging.getLogger(git_repo_cleanup_facade_task.__name__)
-    with FacadeSession(logger) as session:
-        git_repo_cleanup(session)
-
-@celery.task
-def git_repo_initialize_facade_task():
-    logger = logging.getLogger(git_repo_initialize_facade_task.__name__)
-    cfg = FacadeConfig(logger)
-    git_repo_initialize(cfg)
-    cfg.cursor.close()
-    cfg.db.close()
-
-@celery.task
-def check_for_repo_updates_facade_task():
-    logger = logging.getLogger(check_for_repo_updates_facade_task.__name__)
-
-    with FacadeSession(logger) as session:
-        check_for_repo_updates(session)
-        session.cfg.cursor.close()
-        session.cfg.db.close()
-
-@celery.task
-def force_repo_updates_facade_task():
-    logger = logging.getLogger(force_repo_updates_facade_task.__name__)
-
-    cfg = FacadeConfig(logger)
-    force_repo_updates(cfg)
-    cfg.cursor.close()
-    cfg.db.close()
-
-@celery.task
-def git_repo_updates_facade_task():
-    logger = logging.getLogger(git_repo_updates_facade_task.__name__)
-
-    cfg = FacadeConfig(logger)
-    git_repo_updates(cfg)
-    cfg.cursor.close()
-    cfg.db.close()
-
-@celery.task
-def force_repo_analysis_facade_task():
-    logger = logging.getLogger(force_repo_analysis_facade_task.__name__)
-    force_repo_analysis(FacadeConfig(logger))
-    cfg.cursor.close()
-    cfg.db.close()
-
-@celery.task
 def facade_analysis_init_facade_task():
     logger = logging.getLogger(facade_analysis_init_facade_task.__name__)
     #cfg = FacadeConfig(logger)
@@ -110,6 +61,7 @@ def grab_comitter_list_facade_task(repo_id,platform="github"):
 def trim_commits_facade_task(repo_id):
     logger = logging.getLogger(trim_commits_facade_task.__name__)
     #cfg = FacadeConfig(logger)
+    session = FacadeSession(logger)
 
     def update_analysis_log(repos_id,status):
 
