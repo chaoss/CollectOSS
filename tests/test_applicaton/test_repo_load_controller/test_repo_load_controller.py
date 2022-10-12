@@ -4,7 +4,7 @@ import uuid
 import sqlalchemy as s
 
 
-from augur.util.repo_load_controllerimport RepoLoadController
+from augur.util.repo_load_controller import RepoLoadController
 
 from augur.tasks.github.util.github_task_session import GithubTaskSession
 from augur.application.db.session import DatabaseSession
