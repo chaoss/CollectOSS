@@ -7,7 +7,7 @@ import sys
 
 FNULL = open(os.devnull, "w")
 
-start = subprocess.Popen(["augur", "backend", "start", "--disable-housekeeper", "--skip-cleanup"], stdout=FNULL, stderr=subprocess.STDOUT)
+start = subprocess.Popen(["augur", "backend", "start", "--disable-collection"], stdout=FNULL, stderr=subprocess.STDOUT)
 print("Waiting for the server to start...")
 time.sleep(5)
 
