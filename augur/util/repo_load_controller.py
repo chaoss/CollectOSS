@@ -166,10 +166,11 @@ class RepoLoadController:
         if repo_group_id != DEFAULT_REPO_GROUP_ID:
             # update the repo group id 
             repo = self.session.query(Repo).filter(Repo.repo_git == url).one()
-            repo.repo_group_id = repo_group_id
-            self.session.commit()
-        
 
+            if not repo.repo_group_id == repo_group_id:
+                repo.repo_group_id = repo_group_id
+                self.session.commit()
+        
         return result[0]["repo_id"]
 
 
