@@ -7,13 +7,13 @@ import sys
 
 FNULL = open(os.devnull, "w")
 
-start = subprocess.Popen(["augur", "backend", "start", "--disable-collection"], stdout=FNULL, stderr=subprocess.STDOUT)
+start = subprocess.Popen(["augur", "backend", "start", "--disable-collection"])
 print("Waiting for the server to start...")
 time.sleep(5)
 
 process = subprocess.run(["pytest", "tests/test_routes/"])
 time.sleep(2)
 
-subprocess.Popen(["augur", "backend", "kill"], stdout=FNULL, stderr=subprocess.STDOUT)
+subprocess.Popen(["augur", "backend", "kill"])
 print("Server successfully shutdown.")
 sys.exit(process.returncode)
