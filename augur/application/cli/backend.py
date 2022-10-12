@@ -34,9 +34,10 @@ def cli():
 
 @cli.command("start")
 @click.option("--disable-collection", is_flag=True, default=False, help="Turns off data collection workers")
+@click.option("--development", is_flag=True, default=False, help="Enable development mode, implies --disable-collection")
 @test_connection
 @test_db_connection
-def start(disable_collection):
+def start(disable_collection, development):
     """Start Augur's backend server."""
 
     try:
@@ -46,6 +47,11 @@ def start(disable_collection):
                     ''.join(traceback.format_exception(None, e, e.__traceback__)))
         
         logger.error("Failed to raise open file limit!")
+    
+    if development:
+        disable_collection = True
+        os.environ["AUGUR_DEV"] = "1"
+        logger.info("Starting in development mode")
 
     
     with DatabaseSession(logger) as session:
