@@ -64,26 +64,13 @@ def nuke_affiliations(session):
 
 def fill_empty_affiliations(session):
 
-    cfg = session.cfg
+    #cfg = session.cfg
 
 # When a record is added, it has no affiliation data. Also, when an affiliation
 # mapping is changed via the UI, affiliation data will be set to NULL. This
 # function finds any records with NULL affiliation data and fills them.
 
 ### Local helper functions ###
-
-    def update_affiliation(email_type,email,affiliation,start_date):
-
-        update = ("UPDATE commits "
-            "SET cmt_%s_affiliation = %%s "
-            "WHERE cmt_%s_email = %%s "
-            "AND cmt_%s_affiliation IS NULL "
-            "AND cmt_%s_date >= %%s" %
-            (email_type, email_type, email_type, email_type))
-
-        cfg.cursor.execute(update, (affiliation, email, start_date))
-        cfg.db.commit()
-
     def discover_null_affiliations(attribution,email):
 
     # Try a bunch of ways to match emails to attributions in the database. First it
