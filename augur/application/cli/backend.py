@@ -41,12 +41,14 @@ def start(disable_collection, development):
     """Start Augur's backend server."""
 
     try:
-        raise_open_file_limit(100000)
+        if os.environ.get('AUGUR_DOCKER_DEPLOY') != "1":
+            raise_open_file_limit(100000)
     except Exception as e: 
         logger.error(
                     ''.join(traceback.format_exception(None, e, e.__traceback__)))
         
         logger.error("Failed to raise open file limit!")
+        raise e
     
     if development:
         disable_collection = True
