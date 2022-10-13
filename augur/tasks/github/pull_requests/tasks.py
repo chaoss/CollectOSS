@@ -85,7 +85,7 @@ def process_pull_requests(pull_requests, task_name, repo_id, logger):
 
         # insert contributors from these prs
         logger.info(f"{task_name}: Inserting {len(contributors)} contributors")
-        session.insert_data(contributors, Contributor, ["cntrb_login"])
+        session.insert_data(contributors, Contributor, ["cntrb_id"])
 
 
         # insert the prs into the pull_requests table. 

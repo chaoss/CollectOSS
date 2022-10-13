@@ -11,7 +11,7 @@ from augur.application.db.models import Config
 from augur.application.db.session import DatabaseSession
 from augur.application.logs import AugurLogger
 from augur.application.cli import test_connection, test_db_connection 
-
+from augur.util.inspect_without_import import get_phase_names_without_import
 ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 
 logger = logging.getLogger(__name__)
@@ -32,15 +32,6 @@ def cli():
 def init_config(github_api_key, facade_repo_directory, gitlab_api_key, redis_conn_string):
 
     if not github_api_key:
-        github_api_key = os.getenv(ENVVAR_PREFIX + 'GITHUB_API_KEY')
-
-    if not gitlab_api_key:
-        gitlab_api_key = os.getenv(ENVVAR_PREFIX + 'GITLAB_API_KEY')
-
-    if not facade_repo_directory:
-        facade_repo_directory = os.getenv(ENVVAR_PREFIX + 'FACADE_REPO_DIRECTORY')
-
-    if not github_api_key:
 
         github_api_key = str(input("Please enter a valid github api key: "))
 
@@ -50,7 +41,17 @@ def init_config(github_api_key, facade_repo_directory, gitlab_api_key, redis_con
 
     if not facade_repo_directory:
 
-        facade_repo_directory = str(input("Please enter an existing facade repo directory: "))
+        while True:
+
+            facade_repo_directory = str(input("Please enter an existing facade repo directory: ")).strip()
+
+            if os.path.isdir(facade_repo_directory):
+                break
+            else:
+                print("Invalid directory")
+
+    if facade_repo_directory[-1] != "/":
+        facade_repo_directory += "/"
             
 
     keys = {}
@@ -64,6 +65,16 @@ def init_config(github_api_key, facade_repo_directory, gitlab_api_key, redis_con
 
         default_config = config.default_config
 
+        print(f"Dir {os.getcwd()}")
+        phase_names = get_phase_names_without_import()
+
+        #Add all phases as enabled by default
+        for name in phase_names:
+
+            if name not in default_config['Task_Routine']:
+                default_config['Task_Routine'].update({name : 1})
+
+        #print(default_config)
         if redis_conn_string:
 
             try:

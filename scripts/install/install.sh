@@ -21,8 +21,10 @@ fi
 scripts/install/backend.sh $target 2>&1 | tee logs/backend-install.log
 echo "Done!"
 
-# scripts/install/workers.sh $target 2>&1 | tee logs/workers-install.log
-# echo "Done!"
+scripts/install/workers.sh $target 2>&1 | tee logs/workers-install.log
+echo "Done!"
+
+scripts/install/nltk_dictionaries.sh
 
 
 function create_db_config() {
@@ -34,7 +36,7 @@ function create_db_config() {
     read -p "Port: " port
     read -p "Database: " db_name
 
-    augur config-db init --user $db_user --password $password --host $host --port $port --database-name $db_name
+    echo -e "{\n\t\"user\":\"${db_user}\", \n\t\"password\":\"${password}\", \n\t\"host\":\"${host}\", \n\t\"port\":\"${port}\", \n\t\"database_name\":\"${db_name}\"\n}" > db.config.json
 }
 
 # if there is no db.config.json or the AUGUR_DB environment variable is not set 
@@ -122,7 +124,7 @@ echo "**********************************"
 
 # scripts/install/frontend.sh
 # scripts/install/api_key.sh
-# scripts/install/nltk_dictionaries.sh
+
 
 # if [[ -e augur.config.json || -e $HOME/.augur/augur.config.json ]]; then
 #   if [[ -e augur.config.json ]]; then

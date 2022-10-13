@@ -57,7 +57,7 @@ def process_contributors():
             enriched_contributors.append(contributor_dict)
 
         logger.info(f"Enriching {len(enriched_contributors)} contributors")
-        session.insert_data(enriched_contributors, Contributor, ["cntrb_login"])
+        session.insert_data(enriched_contributors, Contributor, ["cntrb_id"])
 
 
 

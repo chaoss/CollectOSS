@@ -176,16 +176,20 @@ def process_commit_metadata(contributorQueue,repo_id):
             """
             
             #Executes an upsert with sqlalchemy 
-            cntrb_natural_keys = ['cntrb_login']
-            session.insert_data(cntrb,Contributor,cntrb_natural_keys)
+            cntrb_natural_keys = ['cntrb_id']
+            try:
+                session.insert_data(cntrb,Contributor,cntrb_natural_keys)
+            except Exception as e:
+                session.logger.error(f"Could not complete singular contributor insert!!\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
+                raise e
 
             try:
                 # Update alias after insertion. Insertion needs to happen first so we can get the autoincrementkey
                 insert_alias(session,cntrb, emailFromCommitData)
             except LookupError as e:
-                interface.logger.info(
+                session.logger.info(
                     ''.join(traceback.format_exception(None, e, e.__traceback__)))
-                interface.logger.info(
+                session.logger.info(
                     f"Contributor id not able to be found in database despite the user_id existing. Something very wrong is happening. Error: {e}")
                 return 
             

@@ -35,37 +35,30 @@ def cli():
 @test_connection
 @test_db_connection
 def add_repos(filename):
-    """Add repositories to Augur's database."""
-    with DatabaseSession(logger) as session:
+    """Add repositories to Augur's database."""   
+    from augur.tasks.github.util.github_task_session import GithubTaskSession
+    from augur.util.repo_load_controller import RepoLoadController
 
-        with session.engine.connect() as connection:
-            df = connection.execute(
-                s.sql.text("SELECT repo_group_id FROM augur_data.repo_groups")
-            )
-            repo_group_IDs = [group[0] for group in df.fetchall()]
+    with GithubTaskSession(logger) as session:
 
-            insertSQL = s.sql.text(
-                """
-                INSERT INTO augur_data.repo(repo_group_id, repo_git, repo_status,
-                tool_source, tool_version, data_source, data_collection_date)
-                VALUES (:repo_group_id, :repo_git, 'New', 'CLI', 1.0, 'Git', CURRENT_TIMESTAMP)
-            """
-            )
+        controller = RepoLoadController(session)
 
-            with open(filename) as upload_repos_file:
-                data = csv.reader(upload_repos_file, delimiter=",")
-                for row in data:
-                    logger.info(
-                        f"Inserting repo with Git URL `{row[1]}` into repo group {row[0]}"
-                    )
-                    if int(row[0]) in repo_group_IDs:
-                        result = connection.execute(
-                            insertSQL, repo_group_id=int(row[0]), repo_git=row[1]
-                        )
-                    else:
-                        logger.warning(
-                            f"Invalid repo group id specified for {row[1]}, skipping."
-                        )
+        with open(filename) as upload_repos_file:
+            data = csv.reader(upload_repos_file, delimiter=",")
+            for row in data:
+                
+                repo_data = {}
+                repo_data["url"] = row[0]
+                try:
+                    repo_data["repo_group_id"] = int(row[1])
+                except ValueError:
+                    print(f"Invalid repo group_id: {row[1]} for Git url: `{repo_data['url']}`")
+                    continue
+                
+                print(
+                    f"Inserting repo with Git URL `{repo_data['url']}` into repo group {repo_data['repo_group_id']}")
+                controller.add_cli_repo(repo_data)
+
 
 
 @cli.command("get-repo-groups")
@@ -143,63 +136,14 @@ def add_github_org(organization_name):
     """
     Create new repo groups in Augur's database
     """
+    from augur.tasks.github.util.github_task_session import GithubTaskSession
+    from augur.util.repo_load_controller import RepoLoadController
 
-    with DatabaseSession(logger) as session:
+    with GithubTaskSession(logger) as session:
 
-        config = session.config
+        controller = RepoLoadController(session)
 
-        org_query_response = requests.get(
-            f"https://api.github.com/orgs/{organization_name}"
-        ).json()
-        if "login" in org_query_response:
-            logger.info(f'Organization "{organization_name}" found')
-        else:
-            logger.fatal(f"No organization with name {organization_name} could be found")
-            exit(1)
-
-        all_repos = []
-        page = 1
-        repo_query_response = None
-        headers = {
-            "Authorization": "token %s" % config.get_value("Keys", "github_api_key")
-        }
-
-        while repo_query_response != []:
-            repo_query_response = requests.get(
-                org_query_response["repos_url"] + f"?per_page=100&page={page}",
-                headers=headers,
-            ).json()
-            for repo in repo_query_response:
-                all_repos.append(repo)
-            page += 1
-
-        insert_repo_group_sql = s.sql.text(
-            """
-        INSERT INTO "augur_data"."repo_groups"("rg_name", "rg_description", "rg_website", "rg_recache", "rg_last_modified", "rg_type", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (:repo_group_name, '', '', 0, CURRENT_TIMESTAMP, 'Unknown', 'Loaded by user', '1.0', 'Git', CURRENT_TIMESTAMP) RETURNING repo_group_id;
-        """
-        )
-
-        with session.engine.connect() as connection:
-
-            new_repo_group_id = connection.execute(
-                insert_repo_group_sql, repo_group_name=organization_name
-            ).fetchone()[0]
-
-            insert_repo_sql = s.sql.text(
-                """
-                INSERT INTO augur_data.repo(repo_group_id, repo_git, repo_status,
-                tool_source, tool_version, data_source, data_collection_date)
-                VALUES (:repo_group_id, :repo_git, 'New', 'CLI', 1.0, 'Git', CURRENT_TIMESTAMP)
-            """
-            )
-            logger.info(f"{organization_name} repo group created")
-
-            for repo in all_repos:
-                logger.info(f"Adding {organization_name}/{repo['name']} ({repo['clone_url']})")
-                result = connection.execute(
-                    insert_repo_sql, repo_group_id=new_repo_group_id, repo_git=repo["clone_url"]
-                )
-
+        controller.add_cli_org(organization_name)
 
 # get_db_version is a helper function to print_db_version and upgrade_db_version
 def get_db_version():

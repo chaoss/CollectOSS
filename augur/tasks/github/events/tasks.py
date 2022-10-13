@@ -142,7 +142,7 @@ def process_events(events, task_name, repo_id, logger):
         # remove contributors that were found in the data more than once
         contributors = remove_duplicate_dicts(contributors)
 
-        session.insert_data(contributors, Contributor, ["cntrb_login"])
+        session.insert_data(contributors, Contributor, ["cntrb_id"])
 
         issue_events_len = len(issue_event_dicts)
         pr_events_len = len(pr_event_dicts)
