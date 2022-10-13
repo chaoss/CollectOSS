@@ -37,7 +37,7 @@ class RepoLoadController:
             True if repo url is valid and False if not
         """
 
-        result = re.search(r"https:\/\/github\.com\/(.+)\/(.+)$", url)
+        result = re.search(r"https?:\/\/github\.com\/([[:alnum:] \- _]+)\/([[:alnum:] \- _]+)(.git)?\/?$", url)
 
         if not result:
             return False
@@ -89,7 +89,7 @@ class RepoLoadController:
             List of valid repo urls or empty list if invalid org
         """
 
-        result = re.search(r"https:\/\/github\.com\/(.+)$", url)
+        result = re.search(r"https?:\/\/github\.com\/([[:alnum:] \- _]+)\/?$", url)
 
         if not result:
             return False
@@ -123,6 +123,7 @@ class RepoLoadController:
                 return []
 
             repos = result.json()
+            print([repo["name"] for repo in repos])
             repo_urls = [repo["html_url"] for repo in repos]
 
             return repo_urls

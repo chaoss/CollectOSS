@@ -11,7 +11,7 @@ import sqlalchemy as s
 from typing import Optional, List, Union
 from psycopg2.errors import DeadlockDetected
 
-from augur.tasks.util.random_key_auth import RandomKeyAuth
+# from augur.tasks.util.random_key_auth import RandomKeyAuth
 from augur.application.db.engine import create_database_engine
 from augur.application.config import AugurConfig
 from augur.application.db.models import Platform

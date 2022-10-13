@@ -4,7 +4,7 @@ import httpx
 
 from augur.tasks.github.util.github_paginator import GithubPaginator, GithubApiResult
 from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
-from augur.tasks.util.random_key_auth import RandomKeyAuth
+# from augur.tasks.util.random_key_auth import RandomKeyAuth
 from augur.application.db.session import DatabaseSession
 
 logger = logging.getLogger(__name__)

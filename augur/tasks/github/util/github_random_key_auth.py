@@ -31,4 +31,4 @@ class GithubRandomKeyAuth(RandomKeyAuth):
         header_name = "Authorization"
         key_format = "token {0}"
 
-        super().__init__(github_api_keys, header_name, key_format)
+        super().__init__(github_api_keys, header_name, session.logger, key_format)
