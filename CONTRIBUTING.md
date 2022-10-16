@@ -24,20 +24,16 @@ $ git remote add upstream https://github.com/chaoss/augur.git
 ```bash
 $ git checkout -b my-new-branch
 ```
-4. Switch between branches
-```bash
-$ git checkout branch-name
-```
 
-5. Make your change(s).
+4. Make your change(s).
 
-6. Commit the change(s) and push to your fork
+5. Commit the change(s) and push to your fork
 ```bash
 $ git add .
 $ git commit -s -m "This is my first commit"
 $ git push -u origin my-new-branch
 ```
-7. Then, [submit a pull request](https://github.com/chaoss/augur/compare).
+6. Then, [submit a pull request](https://github.com/chaoss/augur/compare).
 
 At this point, you're waiting on us. We like to at least comment on pull requests
 within three business days (and, typically, one business day). Once one of our maintainers has had a chance to review your PR, we will either mark it as "needs review" and provide specific feedback on your changes, or we will go ahead and complete the pull request.
