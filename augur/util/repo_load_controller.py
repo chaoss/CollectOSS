@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 REPO_ENDPOINT = "https://api.github.com/repos/{}/{}"
-ORG_REPOS_ENDPOINT = "https://api.github.com/orgs/{}/repos"
+ORG_REPOS_ENDPOINT = "https://api.github.com/orgs/{}/repos?per_page=100"
 DEFAULT_REPO_GROUP_ID = 1
 CLI_USER_ID = 1
 
@@ -37,7 +37,12 @@ class RepoLoadController:
             True if repo url is valid and False if not
         """
 
-        result = re.search(r"https?:\/\/github\.com\/([[:alnum:] \- _]+)\/([[:alnum:] \- _]+)(.git)?\/?$", url)
+        if url.endswith(".github") or url.endswith(".github.io"):
+        
+            result = re.search(r"https?:\/\/github\.com\/([A-Za-z0-9 \- _]+)\/([A-Za-z0-9 \- _ \.]+)(.git)?\/?$", url)
+        else:
+
+            result = re.search(r"https?:\/\/github\.com\/([A-Za-z0-9 \- _]+)\/([A-Za-z0-9 \- _]+)(.git)?\/?$", url)
 
         if not result:
             return False
@@ -46,6 +51,8 @@ class RepoLoadController:
 
         owner = capturing_groups[0]
         repo = capturing_groups[1]
+
+        print(url, owner, repo)
 
         if not owner or not repo:
             return False
@@ -89,7 +96,7 @@ class RepoLoadController:
             List of valid repo urls or empty list if invalid org
         """
 
-        result = re.search(r"https?:\/\/github\.com\/([[:alnum:] \- _]+)\/?$", url)
+        result = re.search(r"https?:\/\/github\.com\/([A-Za-z0-9 \- _]+)\/?$", url)
 
         if not result:
             return False
@@ -242,7 +249,7 @@ class RepoLoadController:
             result = self.add_frontend_repo(repo, user_id)
 
             if result["status"] != "Repo Added":
-                failed_count += 1
+                failed_repos.append(repo)
 
         failed_count = len(failed_repos)
         if failed_count > 0:
