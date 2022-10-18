@@ -12,6 +12,8 @@ target=${1-prod}
 
 scripts/install/backend.sh $target
 
+pip install -e .
+
 echo
 echo "Checking database version..."
 augur db check-for-upgrade
