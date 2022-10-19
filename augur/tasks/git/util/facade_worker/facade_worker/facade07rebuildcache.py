@@ -115,7 +115,7 @@ def fill_empty_affiliations(session):
             #cfg.cursor.execute(find_exact_domain, (domain, ))
             #cfg.db.commit()
 
-            matches = session.fetchall_data_from_sql_text(find_exact_domain)#list(cfg.cursor)
+            matches = session.fetchall_data_from_sql_text(find_exact_domain)
 
         if not matches:
 
@@ -163,15 +163,12 @@ def fill_empty_affiliations(session):
 
     # Match aliases with their canonical email
 
-        fetch_canonical = ("SELECT canonical_email "
-            "FROM contributors_aliases "
-            "WHERE alias_email=%s "
-            "AND cntrb_active = 1")
+        fetch_canonical = s.sql.text("""SELECT canonical_email
+            FROM contributors_aliases
+            WHERE alias_email=:email
+            AND cntrb_active = 1""").bindparams(email=email)
 
-        cfg.cursor.execute(fetch_canonical, (email, ))
-        cfg.db.commit()
-
-        canonical = list(cfg.cursor)
+        canonical = session.fetchall_data_from_sql_text(fetch_canonical)#list(cfg.cursor)
 
         if canonical:
             for email in canonical:
@@ -181,124 +178,117 @@ def fill_empty_affiliations(session):
 
 ### The real function starts here ###
 
-    cfg.update_status('Filling empty affiliations')
-    cfg.log_activity('Info','Filling empty affiliations')
+    session.update_status('Filling empty affiliations')
+    session.log_activity('Info','Filling empty affiliations')
 
     # Process any changes to the affiliations or aliases, and set any existing
     # entries in commits to NULL so they are filled properly.
 
     # First, get the time we started fetching since we'll need it later
 
-    cfg.cursor.execute("SELECT current_timestamp(6) as fetched")
+    timefetch = s.sql.text("""SELECT current_timestamp(6) as fetched""")
 
-    affiliations_fetched = cfg.cursor.fetchone()[0]#['fetched']
-
+    affiliations_fetched = session.execute_sql(timefetch).fetchone()[0]#cfg.cursor.fetchone()[0]#['fetched']
+    print(affiliations_fetched)
     # Now find the last time we worked on affiliations, to figure out what's new
 
-    affiliations_processed = cfg.get_setting('affiliations_processed')
+    affiliations_processed = session.get_setting('affiliations_processed')
 
-    get_changed_affiliations = ("SELECT ca_domain FROM contributor_affiliations")# WHERE "
+    get_changed_affiliations = s.sql.text("""SELECT ca_domain FROM contributor_affiliations""")# WHERE "
         #"ca_last_used >= timestamptz  %s")
 
-    cfg.cursor.execute(get_changed_affiliations)#, (affiliations_processed, ))
+    #cfg.cursor.execute(get_changed_affiliations)#, (affiliations_processed, ))
 
-    changed_affiliations = list(cfg.cursor)
+    changed_affiliations = session.fetchall_data_from_sql_text(get_changed_affiliations)#list(cfg.cursor)
 
     # Process any affiliations which changed since we last checked
 
     for changed_affiliation in changed_affiliations:
 
-        cfg.log_activity('Debug','Resetting affiliation for %s' %
-            changed_affiliation[0])
+        session.log_activity('Debug',f"Resetting affiliation for {changed_affiliation['ca_domain']}")
 
-        set_author_to_null = ("UPDATE commits SET cmt_author_affiliation = NULL "
-            "WHERE cmt_author_email LIKE CONCAT('%%',%s)")
+        set_author_to_null = s.sql.text("""UPDATE commits SET cmt_author_affiliation = NULL
+            WHERE cmt_author_email LIKE CONCAT('%%',:affiliation)""").bindparams(affiliation=changed_affiliation['ca_domain'])
 
-        cfg.cursor.execute(set_author_to_null, (changed_affiliation[0], ))
-        cfg.db.commit()
+        session.execute_sql(set_author_to_null)
 
-        set_committer_to_null = ("UPDATE commits SET cmt_committer_affiliation = NULL "
-            "WHERE cmt_committer_email LIKE CONCAT('%%',%s)")
+        set_committer_to_null = s.sql.text("""UPDATE commits SET cmt_committer_affiliation = NULL
+            WHERE cmt_committer_email LIKE CONCAT('%%',:affiliation)""").bindparams(affiliation=changed_affiliation['ca_domain'])
 
-        cfg.cursor.execute(set_committer_to_null, (changed_affiliation[0], ))
-        cfg.db.commit()
+        session.execute_sql(set_committer_to_null)
 
     # Update the last fetched date, so we know where to start next time.
 
-    update_affiliations_date = ("UPDATE settings SET value=%s "
-        "WHERE setting = 'affiliations_processed'")
+    update_affiliations_date = s.sql.text("""UPDATE settings SET value=:affiliations
+        WHERE setting = 'affiliations_processed'""").bindparams(affiliations=affiliations_fetched)
 
-    cfg.cursor.execute(update_affiliations_date, (affiliations_fetched, ))
-    cfg.db.commit()
+    session.execute_sql(update_affliliations_date)
 
     # On to the aliases, now
 
     # First, get the time we started fetching since we'll need it later
 
-    cfg.cursor.execute("SELECT current_timestamp(6) as fetched")
+    get_time = s.sql.text("""SELECT current_timestamp(6) as fetched""")
 
-    aliases_fetched = cfg.cursor.fetchone()[0]#['fetched']
+    aliases_fetched = session.execute_sql(get_time).fetchone()[0]#['fetched']
 
     # Now find the last time we worked on aliases, to figure out what's new
 
-    aliases_processed = cfg.get_setting('aliases_processed')
+    aliases_processed = session.get_setting('aliases_processed')
 
-    get_changed_aliases = ("SELECT alias_email FROM contributors_aliases WHERE "
-        "cntrb_last_modified >= %s")
+    get_changed_aliases = s.sql.text("""SELECT alias_email FROM contributors_aliases WHERE
+        cntrb_last_modified >= :aliases""").bindparams(aliases=aliases_processed)
 
-    cfg.cursor.execute(get_changed_aliases, (aliases_processed, ))
-
-    changed_aliases = list(cfg.cursor)
+    changed_aliases = session.fetchall_data_from_sql_text(get_changed_aliases)#list(cfg.cursor)
 
     # Process any aliases which changed since we last checked
 
     for changed_alias in changed_aliases:
 
-        cfg.log_activity('Debug','Resetting affiliation for %s' %
-            changed_alias[0])
+        session.log_activity('Debug',f"Resetting affiliation for {changed_alias['alias_email']}")
 
-        set_author_to_null = ("UPDATE commits SET cmt_author_affiliation = NULL "
-            "WHERE cmt_author_raw_email LIKE CONCAT('%%',%s)")
+        set_author_to_null = s.sql.text("""UPDATE commits SET cmt_author_affiliation = NULL
+            WHERE cmt_author_raw_email LIKE CONCAT('%%',:alias)""").bindparams(alias=changed_alias['alias_email'])
 
-        session.insert_or_update_data(set_author_to_null, (changed_alias[0], ))
+        session.insert_or_update_data(set_author_to_null)
 
-        set_committer_to_null = ("UPDATE commits SET cmt_committer_affiliation = NULL "
-            "WHERE cmt_committer_raw_email LIKE CONCAT('%%',%s)")
+        set_committer_to_null = ("""UPDATE commits SET cmt_committer_affiliation = NULL 
+            WHERE cmt_committer_raw_email LIKE CONCAT('%%',:alias_email)""").bindparams(alias_email=changed_alias['alias_email'])
 
-        session.insert_or_update_data(set_committer_to_null, (changed_alias[0], ))
+        session.insert_or_update_data(set_committer_to_null)
 
-        reset_author = ("UPDATE commits "
-            "SET cmt_author_email = %s "
-            "WHERE cmt_author_raw_email = %s")
+        reset_author = s.sql.text("""UPDATE commits
+            SET cmt_author_email = :author_email 
+            WHERE cmt_author_raw_email = :raw_author_email
+            """).bindparams(author_email=discover_alias(changed_alias['alias_email']),raw_author_email=changed_alias['alias_email'])
 
-        session.insert_or_update_data(reset_author, (discover_alias(changed_alias[0]),changed_alias[0]))
+        session.insert_or_update_data(reset_author)
 
-        reset_committer = ("UPDATE commits "
-            "SET cmt_committer_email = %s "
-            "WHERE cmt_committer_raw_email = %s")
+        reset_committer = s.sql.text("""UPDATE commits
+            SET cmt_committer_email = :author_email 
+            WHERE cmt_committer_raw_email = :raw_author_email
+            """).bindparams(author_email=discover_alias(changed_alias['alias_email']), raw_author_email=changed_alias['alias_email'])
 
-        session.insert_or_update_data(reset_committer, (discover_alias(changed_alias[0]),changed_alias[0]))
+        session.insert_or_update_data(reset_committer)
         
     # Update the last fetched date, so we know where to start next time.
 
-    update_aliases_date = ("UPDATE settings SET value=%s "
-        "WHERE setting = 'aliases_processed'")
+    update_aliases_date = s.sql.text("""UPDATE settings SET value=:aliases
+        WHERE setting = 'aliases_processed'""").bindparams(aliases=aliases_fetched)
 
-    cfg.cursor.execute(update_aliases_date, (aliases_fetched, ))
-    cfg.db.commit()
+    session.execute_sql(update_aliases_date)
 
     # Now rebuild the affiliation data
 
-    working_author = cfg.get_setting('working_author')
+    working_author = session.get_setting('working_author')
 
     if working_author != 'done':
-        cfg.log_activity('Error','Trimming author data in affiliations: %s' %
-            working_author)
-        trim_author(cfg, working_author)
+        session.log_activity('Error',f"Trimming author data in affiliations: {working_author}")
+        trim_author(session, working_author)
 
     # Figure out which projects have NULL affiliations so they can be recached
 
-    set_recache = ("""UPDATE repo_groups 
+    set_recache = s.sql.text("""UPDATE repo_groups 
                 SET rg_recache=1  
                 FROM repo_groups x, repo y, commits z 
                 where x.repo_group_id = y.repo_group_id 
@@ -314,76 +304,68 @@ def fill_empty_affiliations(session):
     #   "SET rg_recache=TRUE WHERE "
     #   "author_affiliation IS NULL OR "
     #   "committer_affiliation IS NULL")
-    cfg.cursor.execute(set_recache)
-    cfg.db.commit()
+    session.execute_sql(set_recache)
 
     # Find any authors with NULL affiliations and fill them
 
-    find_null_authors = ("SELECT DISTINCT cmt_author_email AS email, "
-        "MIN(cmt_author_date) AS earliest "
-        "FROM commits "
-        "WHERE cmt_author_affiliation IS NULL "
-        "GROUP BY cmt_author_email")
+    find_null_authors = s.sql.text("""SELECT DISTINCT cmt_author_email AS email,
+        MIN(cmt_author_date) AS earliest 
+        FROM commits 
+        WHERE cmt_author_affiliation IS NULL 
+        GROUP BY cmt_author_email""")
 
-    cfg.cursor.execute(find_null_authors)
+    null_authors = session.fetchall_data_from_sql_text(find_null_authors)
 
-    null_authors = list(cfg.cursor)
-
-    cfg.log_activity('Debug','Found %s authors with NULL affiliation' %
-        len(null_authors))
+    session.log_activity('Debug',f"Found {len(null_authors)} authors with NULL affiliation")
 
     for null_author in null_authors:
 
-        email = null_author[0]
+        email = null_author['cmt_author_email']
 
-        store_working_author(cfg, email)
+        store_working_author(session, email)
 
         discover_null_affiliations('author',email)
 
-    store_working_author(cfg, 'done')
+    store_working_author(session, 'done')
 
     # Find any committers with NULL affiliations and fill them
 
-    find_null_committers = ("SELECT DISTINCT cmt_committer_email AS email, "
-        "MIN(cmt_committer_date) AS earliest "
-        "FROM commits "
-        "WHERE cmt_committer_affiliation IS NULL "
-        "GROUP BY cmt_committer_email")
+    find_null_committers = s.sql.text("""SELECT DISTINCT cmt_committer_email AS email, 
+        MIN(cmt_committer_date) AS earliest 
+        FROM commits 
+        WHERE cmt_committer_affiliation IS NULL
+        GROUP BY cmt_committer_email""")
 
-    cfg.cursor.execute(find_null_committers)
+    null_committers = session.fetchall_data_from_sql_text(find_null_committers)
 
-    null_committers = list(cfg.cursor)
-
-    cfg.log_activity('Debug','Found %s committers with NULL affiliation' %
-        len(null_committers))
+    session.log_activity('Debug',f"Found {len(null_committers)} committers with NULL affiliation")
 
     for null_committer in null_committers:
 
-        email = null_committer[0]
+        email = null_committer['cmt_committer_email']
 
-        store_working_author(cfg, email)
+        store_working_author(session, email)
 
         discover_null_affiliations('committer',email)
 
     # Now that we've matched as much as possible, fill the rest as (Unknown)
 
-    fill_unknown_author = ("UPDATE commits "
-        "SET cmt_author_affiliation = '(Unknown)' "
-        "WHERE cmt_author_affiliation IS NULL")
+    fill_unknown_author = s.sql.text("""UPDATE commits
+        SET cmt_author_affiliation = '(Unknown)'
+        WHERE cmt_author_affiliation IS NULL""")
 
-    cfg.cursor.execute(fill_unknown_author)
-    cfg.db.commit()
+    session.execute_sql(fill_unknown_author)
 
-    fill_unknown_committer = ("UPDATE commits "
-        "SET cmt_committer_affiliation = '(Unknown)' "
-        "WHERE cmt_committer_affiliation IS NULL")
+    fill_unknown_committer = s.sql.text("""UPDATE commits
+        SET cmt_committer_affiliation = '(Unknown)'
+        WHERE cmt_committer_affiliation IS NULL""")
 
-    cfg.cursor.execute(fill_unknown_committer)
-    cfg.db.commit()
+    session.execute_sql(fill_unknown_committer)
+    
 
-    store_working_author(cfg, 'done')
+    store_working_author(session, 'done')
 
-    cfg.log_activity('Info','Filling empty affiliations (complete)')
+    session.log_activity('Info','Filling empty affiliations (complete)')
 
 def invalidate_caches(cfg):
 

@@ -86,26 +86,28 @@ def store_working_author(session, email):
 
 	session.log_activity('Debug',f"Stored working author: {email}")
 
-def trim_author(cfg, email):
+def trim_author(session, email):
 
 # Remove the affiliations associated with an email. Used when an analysis is
 # interrupted during affiliation layering, and the data will be corrupt.
 
-	trim = ("UPDATE commits "
-		"SET cmt_author_affiliation = NULL "
-		"WHERE cmt_author_email = %s")
+	trim = s.sql.text("""UPDATE commits 
+		SET cmt_author_affiliation = NULL 
+		WHERE cmt_author_email = :email
+		""").bindparams(email=email)
 
-	cfg.cursor.execute(trim, (email, ))
-	cfg.db.commit()
+	#cfg.cursor.execute(trim, (email, ))
+	#cfg.db.commit()
+	session.execute_sql(trim)
 
-	trim = ("UPDATE commits "
-		"SET cmt_committer_affiliation = NULL "
-		"WHERE cmt_committer_email = %s")
+	trim = s.sql.text("""UPDATE commits
+		SET cmt_committer_affiliation = NULL
+		WHERE cmt_committer_email = :email
+		""").bindparams(email=email)
 
-	cfg.cursor.execute(trim, (email, ))
-	cfg.db.commit()
+	session.execute_sql(trim)
 
-	store_working_author(cfg, 'done')
+	store_working_author(session, 'done')
 
-	cfg.log_activity('Debug','Trimmed working author: %s' % email)
+	session.log_activity('Debug',f"Trimmed working author: {email}")
 
