@@ -81,22 +81,22 @@ def fill_empty_affiliations(session):
         # intentionally mangled emails (e.g. "developer at domain.com") that have
         # been added as an affiliation rather than an alias.
 
-        find_exact_match = ("SELECT ca_affiliation,ca_start_date "
-            "FROM contributor_affiliations "
-            "WHERE ca_domain = %s "
-            "AND ca_active = 1 "
-            "ORDER BY ca_start_date DESC")
+        find_exact_match = s.sql.text("""SELECT ca_affiliation,ca_start_date
+            FROM contributor_affiliations 
+            WHERE ca_domain = :email 
+            AND ca_active = 1 
+            ORDER BY ca_start_date DESC""").bindparams(email=email)
 
-        cfg.cursor.execute(find_exact_match, (email, ))
-        cfg.db.commit()
+        #cfg.cursor.execute(find_exact_match, (email, ))
+        #cfg.db.commit()
 
-        matches = list(cfg.cursor)
+        matches = session.fetchall_data_from_sql_text(find_exact_match)#list(cfg.cursor)
 
         if not matches and email.find('@') < 0:
 
             # It's not a properly formatted email, leave it NULL and log it.
 
-            cfg.log_activity('Info','Unmatchable email: %s' % email)
+            session.log_activity('Info',f"Unmatchable email: {email}")
 
             return
 
@@ -106,31 +106,29 @@ def fill_empty_affiliations(session):
 
             domain = email[email.find('@')+1:]
 
-            find_exact_domain = ("SELECT ca_affiliation,ca_start_date "
-                "FROM contributor_affiliations "
-                "WHERE ca_domain= %s "
-                "AND ca_active = 1 "
-                "ORDER BY ca_start_date DESC")
+            find_exact_domain = s.sql.text("""SELECT ca_affiliation,ca_start_date 
+                FROM contributor_affiliations 
+                WHERE ca_domain= :domain 
+                AND ca_active = 1 
+                ORDER BY ca_start_date DESC""").bindparams(domain=domain)
 
-            cfg.cursor.execute(find_exact_domain, (domain, ))
-            cfg.db.commit()
+            #cfg.cursor.execute(find_exact_domain, (domain, ))
+            #cfg.db.commit()
 
-            matches = list(cfg.cursor)
+            matches = session.fetchall_data_from_sql_text(find_exact_domain)#list(cfg.cursor)
 
         if not matches:
 
             # Then try stripping any subdomains.
 
-            find_domain = ("SELECT ca_affiliation,ca_start_date "
-                "FROM contributor_affiliations "
-                "WHERE ca_domain = %s "
-                "AND ca_active = 1 "
-                "ORDER BY ca_start_date DESC")
+            find_domain = s.sql.text("""SELECT ca_affiliation,ca_start_date 
+                FROM contributor_affiliations 
+                WHERE ca_domain = :strippedDomain 
+                AND ca_active = 1 
+                ORDER BY ca_start_date DESC""").bindparams(strippedDomain=domain[domain.rfind('.',0,domain.rfind('.',0))+1:])
 
-            cfg.cursor.execute(find_domain, (domain[domain.rfind('.',0,domain.rfind('.',0))+1:], ))
-            cfg.db.commit()
 
-            matches = list(cfg.cursor)
+            matches = session.fetchall_data_from_sql_text(find_domain)#list(cfg.cursor)
 
         if not matches:
 
@@ -143,24 +141,23 @@ def fill_empty_affiliations(session):
 
         if matches:
 
-            cfg.log_activity('Debug','Found domain match for %s' % email)
+            session.log_activity('Debug',f"Found domain match for {email}")
 
             for match in matches:
-                update = ("UPDATE commits "
-                    "SET cmt_%s_affiliation = %%s "
-                    "WHERE cmt_%s_email = %%s "
-                    "AND cmt_%s_affiliation IS NULL "
-                    "AND cmt_%s_date::date >= %%s::date" %
-                    (attribution, attribution, attribution, attribution))
+                update = s.sql.text(("UPDATE commits "
+                    f"SET cmt_{attribution}_affiliation = :affiliation "
+                    f"WHERE cmt_{attribution}_email = :email "
+                    f"AND cmt_{attribution}_affiliation IS NULL "
+                    f"AND cmt_{attribution}_date::date >= {match['ca_start_date']}::date")
+                    ).bindparams(affiliation=match['ca_affiliation'],email=email)
 
-                cfg.log_activity('Info', 'attr: {} \nmatch:{}\nsql: {}'.format(attribution, match, update))
+                session.log_activity('Info', f"attr: {attribution} \nmatch:{match}\nsql: {update}")
 
                 try: 
-                    cfg.cursor.execute(update, (match[0], email, match[1]))
-                    cfg.db.commit()
+                    session.execute_sql(update)
                 except Exception as e: 
-                    cfg.log_activity('Info', 'Error encountered: {}'.format(e))
-                    cfg.log_activity('Info', 'Affiliation insertion failed for %s ' %  email)
+                    session.log_activity('Info', f"Error encountered: {e}")
+                    session.log_activity('Info', f"Affiliation insertion failed for {email} ")
 
     def discover_alias(email):
 

@@ -209,8 +209,6 @@ def fill_empty_affiliations_facade_task():
     logger = logging.getLogger(fill_empty_affiliations_facade_task.__name__)
     with FacadeSession(logger) as session:
         fill_empty_affiliations(session)
-        session.cfg.cursor.close()
-        session.cfg.db.close()
 
 @celery.task
 def invalidate_caches_facade_task():
